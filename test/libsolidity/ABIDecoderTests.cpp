@@ -266,7 +266,6 @@ BOOST_AUTO_TEST_CASE(calldata_arrays_too_large)
 			}
 		}
 	)";
-	bool newEncoder = false;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		bytes args = encodeArgs(
@@ -275,9 +274,8 @@ BOOST_AUTO_TEST_CASE(calldata_arrays_too_large)
 		);
 		ABI_CHECK(
 			callContractFunction("f(uint256,uint256[],uint256)", args),
-			newEncoder ? encodeArgs() : encodeArgs(7)
+			encodeArgs()
 		);
-		newEncoder = true;
 	)
 }
 
@@ -449,13 +447,11 @@ BOOST_AUTO_TEST_CASE(short_input_value_type)
 			function f(uint a, uint b) public pure returns (uint) { return a; }
 		}
 	)";
-	bool newDecoder = false;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("f(uint256,uint256)", 1, 2), encodeArgs(1));
 		ABI_CHECK(callContractFunctionNoEncoding("f(uint256,uint256)", bytes(64, 0)), encodeArgs(0));
-		ABI_CHECK(callContractFunctionNoEncoding("f(uint256,uint256)", bytes(63, 0)), newDecoder ? encodeArgs() : encodeArgs(0));
-		newDecoder = true;
+		ABI_CHECK(callContractFunctionNoEncoding("f(uint256,uint256)", bytes(63, 0)), encodeArgs());
 	)
 }
 
@@ -466,15 +462,13 @@ BOOST_AUTO_TEST_CASE(short_input_array)
 			function f(uint[] a) public pure returns (uint) { return 7; }
 		}
 	)";
-	bool newDecoder = false;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 0)), encodeArgs(7));
-		ABI_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1)), newDecoder ? encodeArgs() : encodeArgs(7));
-		ABI_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1) + bytes(31, 0)), newDecoder ? encodeArgs() : encodeArgs(7));
+		ABI_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1)), encodeArgs());
+		ABI_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1) + bytes(31, 0)), encodeArgs());
 		ABI_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1) + bytes(32, 0)), encodeArgs(7));
 		ABI_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 2, 5, 6)), encodeArgs(7));
-		newDecoder = true;
 	)
 }
 
