@@ -49,6 +49,25 @@ namespace test
 
 BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, SolidityExecutionFramework)
 
+BOOST_AUTO_TEST_CASE(transaction_status)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() { }
+			function g() { revert(); }
+			function h() { assert(false); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("f()");
+	BOOST_CHECK(m_transactionSuccessful);
+	callContractFunction("g()");
+	BOOST_CHECK(!m_transactionSuccessful);
+	callContractFunction("h()");
+	BOOST_CHECK(!m_transactionSuccessful);
+}
+
+
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	char const* sourceCode = R"(
@@ -3106,9 +3125,11 @@ BOOST_AUTO_TEST_CASE(short_data_calls_fallback)
 	compileAndRun(sourceCode);
 	// should call fallback
 	sendMessage(asBytes("\xd8\x8e\x0b"), false, 0);
+	BOOST_CHECK(m_transactionSuccessful);
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(2));
 	// should call function
 	sendMessage(asBytes(string("\xd8\x8e\x0b") + string(1, 0)), false, 0);
+	BOOST_CHECK(m_transactionSuccessful);
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(3));
 }
 
@@ -3793,6 +3814,7 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 	compileAndRun(sourceCode);
 	bytes calldata1 = FixedHash<4>(dev::keccak256("f()")).asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
 	sendMessage(calldata1, false);
+	BOOST_CHECK(m_transactionSuccessful);
 	BOOST_CHECK(m_output == encodeArgs(dev::keccak256(bytes{'a', 'b', 'c'} + calldata1)));
 }
 
@@ -3928,7 +3950,8 @@ BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
 	ABI_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5), encodeArgs(true));
 	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	sendMessage(bytes(), false);
-	BOOST_CHECK(m_output == bytes());
+	BOOST_CHECK(m_transactionSuccessful);
+	BOOST_CHECK(m_output.empty());
 	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
@@ -6243,6 +6266,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 		}
 	)";
 	ABI_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "A"), encodeArgs());
+	BOOST_CHECK(!m_transactionSuccessful);
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed)

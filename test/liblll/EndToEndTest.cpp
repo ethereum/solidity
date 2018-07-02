@@ -50,6 +50,7 @@ BOOST_AUTO_TEST_CASE(bare_panic)
 {
 	char const* sourceCode = "(panic)";
 	compileAndRunWithoutCheck(sourceCode);
+	BOOST_REQUIRE(!m_transactionSuccessful);
 	BOOST_REQUIRE(m_output.empty());
 }
 
@@ -57,6 +58,7 @@ BOOST_AUTO_TEST_CASE(panic)
 {
 	char const* sourceCode = "{ (panic) }";
 	compileAndRunWithoutCheck(sourceCode);
+	BOOST_REQUIRE(!m_transactionSuccessful);
 	BOOST_REQUIRE(m_output.empty());
 }
 
@@ -69,6 +71,7 @@ BOOST_AUTO_TEST_CASE(macro_zeroarg)
 				(zeroarg)))
 	)";
 	compileAndRun(sourceCode);
+	BOOST_CHECK(m_transactionSuccessful);
 	BOOST_CHECK(callFallback() == encodeArgs(u256(0x1234)));
 }
 

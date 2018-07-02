@@ -142,6 +142,11 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		entry.data = fromHex(log.data, WhenError::Throw);
 		m_logs.push_back(entry);
 	}
+
+	if (!receipt.status.empty())
+		m_transactionSuccessful = (receipt.status == "1");
+	else
+		m_transactionSuccessful = (m_gas != m_gasUsed);
 }
 
 void ExecutionFramework::sendEther(Address const& _to, u256 const& _value)

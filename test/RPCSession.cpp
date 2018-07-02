@@ -163,6 +163,11 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
 	receipt.blockNumber = result["blockNumber"].asString();
+	if (m_receiptHasStatusField)
+	{
+		BOOST_REQUIRE(!result["status"].isNull());
+		receipt.status = result["status"].asString();
+	}
 	for (auto const& log: result["logs"])
 	{
 		LogEntry entry;
@@ -225,7 +230,10 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::spuriousDragon())
 		forks += "\"EIP158ForkBlock\": \"0x00\",\n";
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::byzantium())
+	{
 		forks += "\"byzantiumForkBlock\": \"0x00\",\n";
+		m_receiptHasStatusField = true;
+	}
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::constantinople())
 		forks += "\"constantinopleForkBlock\": \"0x00\",\n";
 	static string const c_configString = R"(

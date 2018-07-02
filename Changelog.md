@@ -39,6 +39,7 @@ Language Features:
 
 Compiler Features:
  * Type Checker: Show named argument in case of error.
+ * Tests: Determine transaction status during IPC calls.
 
 Bugfixes:
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.

@@ -72,6 +72,7 @@ public:
 	)
 	{
 		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments, _libraryAddresses);
+		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
@@ -234,6 +235,7 @@ protected:
 	unsigned m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_showMessages = false;
+	bool m_transactionSuccessful = true;
 	Address m_sender;
 	Address m_contractAddress;
 	u256 m_blockNumber;
