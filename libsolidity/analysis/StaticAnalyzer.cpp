@@ -58,8 +58,8 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 			_function.location(),
 			"No visibility specified. Defaulting to \"" +
 			Declaration::visibilityToString(_function.visibility()) +
-			"\". " +
-			(isInterface ? "In interfaces it defaults to external." : "")
+			"\"." +
+			(isInterface ? " In interfaces it defaults to external." : "")
 		);
 	if (_function.isImplemented())
 		m_currentFunction = &_function;
