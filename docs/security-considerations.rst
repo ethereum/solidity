@@ -180,13 +180,13 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.24;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
         address owner;
 
-        function TxUserWallet() public {
+        constructor() public {
             owner = msg.sender;
         }
 
@@ -200,7 +200,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity ^0.4.24;
 
     interface TxUserWallet {
         function transferTo(address dest, uint amount) public;
@@ -209,7 +209,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
     contract TxAttackWallet {
         address owner;
 
-        function TxAttackWallet() public {
+        constructor() public {
             owner = msg.sender;
         }
 

@@ -301,10 +301,10 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity ^0.4.24;
 
     contract owned {
-        function owned() public { owner = msg.sender; }
+        constructor() public { owner = msg.sender; }
         address owner;
 
         // This contract only defines a modifier but does not use
@@ -346,7 +346,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         mapping (address => bool) registeredAddresses;
         uint price;
 
-        function Register(uint initialPrice) public { price = initialPrice; }
+        constructor(uint initialPrice) public { price = initialPrice; }
 
         // It is important to also provide the
         // `payable` keyword here, otherwise the function will
@@ -1006,24 +1006,8 @@ default constructor: ``contructor() public {}``.
 
 A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
 
-.. note ::
-    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract. This syntax is now deprecated.
-
-::
-
-    pragma solidity ^0.4.11;
-
-    contract A {
-        uint public a;
-
-        function A(uint _a) internal {
-            a = _a;
-        }
-    }
-
-    contract B is A(1) {
-        function B() public {}
-    }
+.. warning ::
+    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract. This syntax was deprecated is not allowed anymore in version 0.5.0.
 
 
 .. index:: ! base;constructor
@@ -1402,7 +1386,7 @@ Using For
 *********
 
 The directive ``using A for B;`` can be used to attach library
-functions (from the library ``A``) to any type (``B``).  
+functions (from the library ``A``) to any type (``B``).
 These functions will receive the object they are called on
 as their first parameter (like the ``self`` variable in Python).
 

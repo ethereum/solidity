@@ -225,11 +225,11 @@ creation-dependencies are not possible.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.24;
 
     contract D {
         uint x;
-        function D(uint a) public payable {
+        constructor(uint a) public payable {
             x = a;
         }
     }

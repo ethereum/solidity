@@ -437,10 +437,10 @@ For example,
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity ^0.4.24;
 
     contract Test {
-      function Test() public { b = 0x12345678901234567890123456789012; }
+      constructor() public { b = 0x12345678901234567890123456789012; }
       event Event(uint indexed a, bytes32 b);
       event Event2(uint indexed a, bytes32 b);
       function foo(uint a) public { emit Event(a, b); }

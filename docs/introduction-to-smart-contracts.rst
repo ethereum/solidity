@@ -80,7 +80,7 @@ registering with username and password — all you need is an Ethereum keypair.
 
 ::
 
-    pragma solidity ^0.4.21;
+    pragma solidity ^0.4.24;
 
     contract Coin {
         // The keyword "public" makes those variables
@@ -94,7 +94,7 @@ registering with username and password — all you need is an Ethereum keypair.
 
         // This is the constructor whose code is
         // run only when the contract is created.
-        function Coin() public {
+        constructor() public {
             minter = msg.sender;
         }
 
