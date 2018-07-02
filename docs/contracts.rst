@@ -301,7 +301,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
 
-    pragma solidity ^0.4.24;
+    pragma solidity >0.4.24;
 
     contract owned {
         constructor() public { owner = msg.sender; }
