@@ -1,6 +1,5 @@
 library Lib {
-    function f() { }
+    function f() public { }
 }
 // ----
-// Warning: (18-34): No visibility specified. Defaulting to "public". 
-// Warning: (18-34): Function state mutability can be restricted to pure
+// Warning: (18-41): Function state mutability can be restricted to pure

@@ -1,6 +1,5 @@
 interface Interface {
-	function f();
+	function f() public;
 }
 // ----
-// Warning: (23-36): Functions in interfaces should be declared external.
-// Warning: (23-36): No visibility specified. Defaulting to "public". In interfaces it defaults to external.
+// Warning: (23-43): Functions in interfaces should be declared external.

@@ -1,5 +1,5 @@
 contract A {
-    function f() {
+    function f() public {
         uint x = 3;
         uint y = 1;
         uint z = (x > y) ? x : y;
@@ -7,7 +7,6 @@ contract A {
     }
 }
 // ----
-// Warning: (17-143): No visibility specified. Defaulting to "public". 
-// Warning: (80-86): Unused local variable.
-// Warning: (114-120): Unused local variable.
-// Warning: (17-143): Function state mutability can be restricted to pure
+// Warning: (87-93): Unused local variable.
+// Warning: (121-127): Unused local variable.
+// Warning: (17-150): Function state mutability can be restricted to pure

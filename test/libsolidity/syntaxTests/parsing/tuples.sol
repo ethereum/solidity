@@ -1,5 +1,5 @@
 contract C {
-	function f() {
+	function f() public {
 		uint a = (1);
 		(uint b,) = (1,);
 		(uint c, uint d) = (1, 2 + a);
@@ -8,10 +8,9 @@ contract C {
 	}
 }
 // ----
-// Warning: (47-63): Different number of components on the left hand side (2) than on the right hand side (1).
-// Warning: (100-121): Different number of components on the left hand side (2) than on the right hand side (3).
-// Warning: (14-136): No visibility specified. Defaulting to "public". 
-// Warning: (68-74): Unused local variable.
-// Warning: (76-82): Unused local variable.
-// Warning: (101-107): Unused local variable.
-// Warning: (14-136): Function state mutability can be restricted to pure
+// Warning: (54-70): Different number of components on the left hand side (2) than on the right hand side (1).
+// Warning: (107-128): Different number of components on the left hand side (2) than on the right hand side (3).
+// Warning: (75-81): Unused local variable.
+// Warning: (83-89): Unused local variable.
+// Warning: (108-114): Unused local variable.
+// Warning: (14-143): Function state mutability can be restricted to pure

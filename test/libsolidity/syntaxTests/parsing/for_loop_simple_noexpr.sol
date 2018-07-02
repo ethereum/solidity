@@ -1,5 +1,5 @@
 contract test {
-        function fun(uint256 a) {
+        function fun(uint256 a) public {
             uint256 i =0;
             for (;;) {
                 uint256 x = i; break; continue;
@@ -7,7 +7,6 @@ contract test {
         }
     }
 // ----
-// Warning: (24-170): No visibility specified. Defaulting to "public". 
 // Warning: (37-46): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (115-124): Unused local variable.
-// Warning: (24-170): Function state mutability can be restricted to pure
+// Warning: (122-131): Unused local variable.
+// Warning: (24-177): Function state mutability can be restricted to pure

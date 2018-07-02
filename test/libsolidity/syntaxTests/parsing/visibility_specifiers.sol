@@ -3,15 +3,12 @@ contract c {
     uint internal b;
     uint public c;
     uint d;
-    function f() {}
+    function f() public {}
     function f_priv() private {}
-    function f_public() public {}
     function f_internal() internal {}
 }
 // ----
 // Warning: (58-71): This declaration shadows an existing declaration.
-// Warning: (89-104): No visibility specified. Defaulting to "public". 
-// Warning: (89-104): Function state mutability can be restricted to pure
-// Warning: (109-137): Function state mutability can be restricted to pure
-// Warning: (142-171): Function state mutability can be restricted to pure
-// Warning: (176-209): Function state mutability can be restricted to pure
+// Warning: (89-111): Function state mutability can be restricted to pure
+// Warning: (116-144): Function state mutability can be restricted to pure
+// Warning: (149-182): Function state mutability can be restricted to pure

@@ -1,9 +1,8 @@
 contract test {
-    function fun(uint256 a) returns (uint) {
+    function fun(uint256 a) public returns (uint) {
         if (a >= 8) { return 2; } else { uint b = 7; }
     }
 }
 // ----
-// Warning: (20-121): No visibility specified. Defaulting to "public". 
-// Warning: (102-108): Unused local variable.
-// Warning: (20-121): Function state mutability can be restricted to pure
+// Warning: (109-115): Unused local variable.
+// Warning: (20-128): Function state mutability can be restricted to pure
