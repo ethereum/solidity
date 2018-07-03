@@ -2783,24 +2783,6 @@ BOOST_AUTO_TEST_CASE(virtual_function_usage_in_constructor_arguments)
 	ABI_CHECK(callContractFunction("getA()"), encodeArgs(2));
 }
 
-BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
-{
-	char const* sourceCode = R"(
-		contract BaseBase {
-			uint m_a;
-			constructor(uint a) {
-				m_a = a;
-			}
-		}
-		contract Base is BaseBase(2) { }
-		contract Derived is BaseBase(3), Base {
-			function getA() returns (uint r) { return m_a; }
-		}
-	)";
-	compileAndRun(sourceCode, 0, "Derived");
-	ABI_CHECK(callContractFunction("getA()"), encodeArgs(3));
-}
-
 BOOST_AUTO_TEST_CASE(internal_constructor)
 {
 	char const* sourceCode = R"(
@@ -5521,10 +5503,10 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base)
 			uint public m_i;
 		}
 		contract Base1 is Base {
-			constructor(uint k) Base(k*k) {}
+			constructor(uint k) Base(k) {}
 		}
 		contract Derived is Base, Base1 {
-			constructor(uint i) Base(i) Base1(i)
+			constructor(uint i) Base1(i)
 			{}
 		}
 		contract Final is Derived(4) {
@@ -5544,9 +5526,11 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 			}
 			uint public m_i;
 		}
-		contract Base1 is Base(3) {}
+		contract Base1 is Base {
+			constructor(uint k) {}
+		}
 		contract Derived is Base, Base1 {
-			constructor(uint i) Base(i) {}
+			constructor(uint i) Base(i) Base1(7) {}
 		}
 		contract Final is Derived(4) {
 		}
