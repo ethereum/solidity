@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// Warning: (84-95): Uninitialized storage pointer.
+// DeclarationError: (84-95): Uninitialized storage pointer.

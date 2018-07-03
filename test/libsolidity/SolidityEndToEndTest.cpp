@@ -7878,6 +7878,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 	char const* sourceCode = R"(
 		contract C {
 			uint[] data;
+			uint[] m_c;
 			function g() internal returns (uint a, uint b, uint[] storage c) {
 				return (1, 2, data);
 			}
@@ -7890,7 +7891,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 				uint a; uint b;
 				(a, b) = this.h();
 				if (a != 5 || b != 6) return 1;
-				uint[] storage c;
+				uint[] storage c = m_c;
 				(a, b, c) = g();
 				if (a != 1 || b != 2 || c[0] != 3) return 2;
 				(a, b) = (b, a);
@@ -9610,7 +9611,7 @@ BOOST_AUTO_TEST_CASE(calling_uninitialized_function_through_array)
 					{ assembly { mstore(0, 7) return(0, 0x20) } }
 				mutex = 1;
 				// Avoid re-executing this function if we jump somewhere.
-				function() internal returns (uint)[200] x;
+				function() internal returns (uint)[200] memory x;
 				x[0]();
 				return 2;
 			}
@@ -10138,7 +10139,7 @@ BOOST_AUTO_TEST_CASE(copy_internal_function_array_to_storage)
 			function() internal returns (uint)[20] x;
 			int mutex;
 			function one() public returns (uint) {
-				function() internal returns (uint)[20] xmem;
+				function() internal returns (uint)[20] memory xmem;
 				x = xmem;
 				return 3;
 			}

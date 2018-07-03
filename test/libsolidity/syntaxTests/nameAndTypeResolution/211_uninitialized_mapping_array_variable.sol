@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (52-85): Uninitialized storage pointer.
+// DeclarationError: (52-85): Uninitialized storage pointer.
