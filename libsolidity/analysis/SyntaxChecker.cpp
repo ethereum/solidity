@@ -213,8 +213,6 @@ bool SyntaxChecker::visit(ContractDefinition const& _contract)
 
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (_function.noVisibilitySpecified())
 	{
 		string suggestedVisibility = _function.isFallback() || m_isInterface ? "external" : "public";
@@ -225,12 +223,8 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 	}
 
 	if (!_function.isImplemented() && !_function.modifiers().empty())
-	{
-		if (v050)
-			m_errorReporter.syntaxError(_function.location(), "Functions without implementation cannot have modifiers.");
-		else
-			m_errorReporter.warning(_function.location(), "Modifiers of functions without implementation are ignored." );
-	}
+		m_errorReporter.syntaxError(_function.location(), "Functions without implementation cannot have modifiers.");
+
 	return true;
 }
 
