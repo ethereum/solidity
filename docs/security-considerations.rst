@@ -103,7 +103,7 @@ outlined further below:
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            var share = shares[msg.sender];
+            uint share = shares[msg.sender];
             shares[msg.sender] = 0;
             msg.sender.transfer(share);
         }
@@ -224,7 +224,6 @@ If your wallet had checked ``msg.sender`` for authorization, it would get the ad
 Minor Details
 =============
 
-- In ``for (var i = 0; i < arrayName.length; i++) { ... }``, the type of ``i`` will be ``uint8``, because this is the smallest type that is required to hold the value ``0``. If the array has more than 255 elements, the loop will not terminate.
 - Types that do not occupy the full 32 bytes might contain "dirty higher order bits".
   This is especially important if you access ``msg.data`` - it poses a malleability risk:
   You can craft transactions that call a function ``f(uint8 x)`` with a raw byte argument

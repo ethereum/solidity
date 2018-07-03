@@ -136,14 +136,9 @@ See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-
 How do for loops work?
 ======================
 
-Very similar to JavaScript. There is one point to watch out for, though:
+Very similar to JavaScript. Such as the following example:
 
-If you use ``for (var i = 0; i < a.length; i ++) { a[i] = i; }``, then
-the type of ``i`` will be inferred only from ``0``, whose type is ``uint8``.
-This means that if ``a`` has more than ``255`` elements, your loop will
-not terminate because ``i`` can only hold values up to ``255``.
-
-Better use ``for (uint i = 0; i < a.length...``
+``for (uint i = 0; i < a.length; i ++) { a[i] = i; }``
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
