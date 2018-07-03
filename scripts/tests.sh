@@ -109,9 +109,18 @@ function run_eth()
     sleep 2
 }
 
+function check_eth() {
+    printTask "Running IPC tests with $ETH_PATH..."
+    if ! hash $ETH_PATH 2>/dev/null; then
+      printError "$ETH_PATH not found"    
+      exit 1
+    fi
+}
+
 if [ "$IPC_ENABLED" = true ];
 then
     download_eth
+    check_eth
     ETH_PID=$(run_eth /tmp/test)
 fi
 
