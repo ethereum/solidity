@@ -218,7 +218,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			templ("body", "cleaned := iszero(iszero(value))");
 			break;
 		case Type::Category::FixedPoint:
-			return cleanupFunction(*dynamic_cast<FixedPointType const&>(_type).asIntegerType());
+			return cleanupFunction(*dynamic_cast<FixedPointType const&>(_type).asIntegerType(), _revertOnFailure);
 		case Type::Category::Array:
 		case Type::Category::Struct:
 			solAssert(_type.dataStoredIn(DataLocation::Storage), "Cleanup requested for non-storage reference type.");
