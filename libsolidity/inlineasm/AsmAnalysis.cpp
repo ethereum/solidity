@@ -57,7 +57,7 @@ bool AsmAnalyzer::operator()(Label const& _label)
 	solAssert(!_label.name.empty(), "");
 	checkLooseFeature(
 		_label.location,
-		"The use of labels is deprecated. Please use \"if\", \"switch\", \"for\" or function calls instead."
+		"The use of labels is disallowed. Please use \"if\", \"switch\", \"for\" or function calls instead."
 	);
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
@@ -68,7 +68,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
 	checkLooseFeature(
 		_instruction.location,
-		"The use of non-functional instructions is deprecated. Please use functional notation instead."
+		"The use of non-functional instructions is disallowed. Please use functional notation instead."
 	);
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
@@ -201,7 +201,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
 	checkLooseFeature(
 		_assignment.location,
-		"The use of stack assignment is deprecated. Please use assignment in functional notation instead."
+		"The use of stack assignment is disallowed. Please use assignment in functional notation instead."
 	);
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
