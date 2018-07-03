@@ -401,7 +401,6 @@ Modifiers
 - ``view`` for functions: Disallows modification of state - this is not enforced yet.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
 - ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
-- ``constant`` for functions: Same as ``view``.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
 

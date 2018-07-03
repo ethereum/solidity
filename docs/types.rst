@@ -376,7 +376,7 @@ be passed via and returned from external function calls.
 
 Function types are notated as follows::
 
-    function (<parameter types>) {internal|external} [pure|constant|view|payable] [returns (<return types>)]
+    function (<parameter types>) {internal|external} [pure|view|payable] [returns (<return types>)]
 
 In contrast to the parameter types, the return types cannot be empty - if the
 function type should not return anything, the whole ``returns (<return types>)``

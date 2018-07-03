@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	// we previously considered. This of course reduces accuracy.
 	char const* sourceCode = R"(
 		contract log {
-			function ln(int128 x) constant returns (int128 result) {
+			function ln(int128 x) pure returns (int128 result) {
 				int128 t = x / 256;
 				int128 y = 5545177;
 				x = t;
