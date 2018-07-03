@@ -306,48 +306,11 @@ independent copy of the state variable is created in memory and
 is another issue). The modifications to this independent copy do not
 carry back to ``data1`` or ``data2``.
 
-A common mistake is to declare a local variable and assume that it will
-be created in memory, although it will be created in storage::
-
-    /// THIS CONTRACT CONTAINS AN ERROR
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        uint someVariable;
-        uint[] data;
-
-        function f() public {
-            uint[] x;
-            x.push(2);
-            data = x;
-        }
-    }
-
-The type of the local variable ``x`` is ``uint[] storage``, but since
-storage is not dynamically allocated, it has to be assigned from
-a state variable before it can be used. So no space in storage will be
-allocated for ``x``, but instead it functions only as an alias for
-a pre-existing variable in storage.
-
-What will happen is that the compiler interprets ``x`` as a storage
-pointer and will make it point to the storage slot ``0`` by default.
-This has the effect that ``someVariable`` (which resides at storage
-slot ``0``) is modified by ``x.push(2)``.
-
-The correct way to do this is the following::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        uint someVariable;
-        uint[] data;
-
-        function f() public {
-            uint[] x = data;
-            x.push(2);
-        }
-    }
+.. warning::
+    Prior to version 0.5.0, a common mistake was to declare a local variable and assume that it will
+    be created in memory, although it will be created in storage. Using such a variable without initializing
+    it could lead to unexpected behavior. Starting from 0.5.0, however, storage variables have to be initialized,
+    which should prevent these kinds of mistakes.
 
 ******************
 Advanced Questions
