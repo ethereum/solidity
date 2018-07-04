@@ -7,10 +7,6 @@ macro (eth_policy)
 	# let cmake autolink dependencies on windows
 	cmake_policy(SET CMP0020 NEW)
 
-	# CMake 2.8.12 and lower allowed the use of targets and files with double
-	# colons in target_link_libraries,
-	cmake_policy(SET CMP0028 OLD)
-
 	if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 
 		# fix MACOSX_RPATH
