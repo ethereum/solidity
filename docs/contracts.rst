@@ -295,7 +295,7 @@ is no good way to provide the key for the mapping.
 Function Modifiers
 ******************
 
-Modifiers can be used to easily change the behavior of functions.  For example,
+Modifiers can be used to easily change the behaviour of functions.  For example,
 they can automatically check a condition prior to executing the function. Modifiers are
 inheritable properties of contracts and may be overridden by derived contracts.
 
@@ -1054,7 +1054,7 @@ One way is directly in the inheritance list (``is Base(7)``).  The other is in
 the way a modifier would be invoked as part of the header of
 the derived constructor (``Base(_y * _y)``). The first way to
 do it is more convenient if the constructor argument is a
-constant and defines the behavior of the contract or
+constant and defines the behaviour of the contract or
 describes it. The second way has to be used if the
 constructor arguments of the base depend on those of the
 derived contract. Arguments have to be given either in the

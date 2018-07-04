@@ -363,7 +363,7 @@ Function Types
 Function types are the types of functions. Variables of function type
 can be assigned from functions and function parameters of function type
 can be used to pass functions to and return functions from function calls.
-Function types come in two flavors - *internal* and *external* functions:
+Function types come in two flavours - *internal* and *external* functions:
 
 Internal functions can only be called inside the current contract (more specifically,
 inside the current code unit, which also includes internal library functions
@@ -823,7 +823,7 @@ shown in the following example:
 
         function contribute(uint campaignID) public payable {
             Campaign storage c = campaigns[campaignID];
-            // Creates a new temporary memory struct, initialized with the given values
+            // Creates a new temporary memory struct, initialised with the given values
             // and copies it over to storage.
             // Note that you can also use Funder(msg.sender, msg.value) to initialise.
             c.funders[c.numFunders++] = Funder({addr: msg.sender, amount: msg.value});
@@ -981,7 +981,7 @@ Explicit Conversions
 
 If the compiler does not allow implicit conversion but you know what you are
 doing, an explicit type conversion is sometimes possible. Note that this may
-give you some unexpected behavior so be sure to test to ensure that the
+give you some unexpected behaviour so be sure to test to ensure that the
 result is what you want! Take the following example where you are converting
 a negative ``int8`` to a ``uint``:
 
