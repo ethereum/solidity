@@ -510,7 +510,7 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 			codecopy(memptr, codesize(), size)
 			memptr := add(memptr, size)
 		})");
-		templ("element_size", to_string(_type.baseType()->memoryHeadSize()));
+		templ("element_size", to_string(_type.isByteArray() ? 1 : _type.baseType()->memoryHeadSize()));
 		m_context.appendInlineAssembly(templ.render(), {"length", "memptr"});
 	}
 	else
