@@ -52,6 +52,12 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
+The bit size of an integer determines its range, for example, for ``uint256``, this is 0 up to 2 :sup:`256` -1. If the result of an operation doesn't fit inside this range, it is truncated. These truncations can have `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so use code like the below to avoid certain attacks and check a value is what you expect it to be.
+
+::
+
+    require((balanceOf[_to] + _value) >= balanceOf[_to]);
+
 Division always truncates (it is just compiled to the ``DIV`` opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
