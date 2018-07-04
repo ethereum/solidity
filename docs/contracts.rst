@@ -451,6 +451,10 @@ View Functions
 
 Functions can be declared ``view`` in which case they promise not to modify the state.
 
+.. note::
+  If the compiler's EVM target is Byzantium or newer (default) the opcode
+  ``STATICCALL`` is used.
+
 The following statements are considered modifying the state:
 
 #. Writing to state variables.
@@ -464,7 +468,7 @@ The following statements are considered modifying the state:
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >0.4.24;
 
     contract C {
         function f(uint a, uint b) public view returns (uint) {
@@ -479,11 +483,12 @@ The following statements are considered modifying the state:
   Getter methods are marked ``view``.
 
 .. note::
-  If invalid explicit type conversions are used, state modifications are possible
-  even though a ``view`` function was called.
-  You can switch the compiler to use ``STATICCALL`` when calling such functions and thus
-  prevent modifications to the state on the level of the EVM by adding
-  ``pragma experimental "v0.5.0";``
+  Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
+  for ``view`` functions.
+  This enabled state modifications in ``view`` functions through the use of
+  invalid explicit type conversions.
+  By using  ``STATICCALL`` for ``view`` functions, modifications to the
+  state are prevented on the level of the EVM.
 
 .. index:: ! pure function, function;pure
 
@@ -493,6 +498,9 @@ Pure Functions
 ==============
 
 Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
+
+.. note::
+  If the compiler's EVM target is Byzantium or newer (default) the opcode ``STATICCALL`` is used.
 
 In addition to the list of state modifying statements explained above, the following are considered reading from the state:
 
@@ -504,7 +512,7 @@ In addition to the list of state modifying statements explained above, the follo
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >0.4.24;
 
     contract C {
         function f(uint a, uint b) public pure returns (uint) {
@@ -513,11 +521,12 @@ In addition to the list of state modifying statements explained above, the follo
     }
 
 .. note::
-  If invalid explicit type conversions are used, state modifications are possible
-  even though a ``pure`` function was called.
-  You can switch the compiler to use ``STATICCALL`` when calling such functions and thus
-  prevent modifications to the state on the level of the EVM by adding
-  ``pragma experimental "v0.5.0";``
+  Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
+  for ``pure`` functions.
+  This enabled state modifications in ``pure`` functions through the use of
+  invalid explicit type conversions.
+  By using  ``STATICCALL`` for ``pure`` functions, modifications to the
+  state are prevented on the level of the EVM.
 
 .. warning::
   It is not possible to prevent functions from reading the state at the level

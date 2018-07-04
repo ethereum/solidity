@@ -1810,15 +1810,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (_functionType.bound())
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
-	bool const v050 = m_context.experimentalFeatureActive(ExperimentalFeature::V050);
 	auto funKind = _functionType.kind();
 	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
-	bool useStaticCall =
-		_functionType.stateMutability() <= StateMutability::View &&
-		v050 &&
-		m_context.evmVersion().hasStaticCall();
+	bool useStaticCall = _functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall();
 
 	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
 	unsigned retSize = 0;
