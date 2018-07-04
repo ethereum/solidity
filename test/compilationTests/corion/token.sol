@@ -47,8 +47,8 @@ contract token is safeMath, module, announcementTypes {
     bool    public isICO                   = true;
     
     mapping(address => bool) public genesis;
-    
-    constructor(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] genesisAddr, uint256[] genesisValue) payable {
+
+    constructor(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] genesisAddr, uint256[] genesisValue) public payable {
         /*
             Installation function
             
@@ -154,8 +154,8 @@ contract token is safeMath, module, announcementTypes {
         require( db.setAllowance(msg.sender, spender, amount, nonce) );
         emit Approval(msg.sender, spender, amount);
     }
-    
-    function allowance(address owner, address spender) view returns (uint256 remaining, uint256 nonce) {
+
+    function allowance(address owner, address spender) public view returns (uint256 remaining, uint256 nonce) {
         /*
             Get the quantity of tokens given to be used
             
@@ -471,8 +471,8 @@ contract token is safeMath, module, announcementTypes {
         }
         return _codeLength > 0;
     }
-    
-    function balanceOf(address owner) view returns (uint256 value) {
+
+    function balanceOf(address owner) public view returns (uint256 value) {
         /*
             Token balance query
             
@@ -482,8 +482,8 @@ contract token is safeMath, module, announcementTypes {
         */
         return db.balanceOf(owner);
     }
-    
-    function totalSupply() view returns (uint256 value) {
+
+    function totalSupply() public view returns (uint256 value) {
         /*
             Total token quantity query
             

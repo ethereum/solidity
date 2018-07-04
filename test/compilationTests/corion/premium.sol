@@ -39,8 +39,8 @@ contract premium is module, safeMath {
     bool    public  isICO;
     
     mapping(address => bool) public genesis;
-    
-    constructor(bool forReplace, address moduleHandler, address dbAddress, address icoContractAddr, address[] genesisAddr, uint256[] genesisValue) {
+
+    constructor(bool forReplace, address moduleHandler, address dbAddress, address icoContractAddr, address[] genesisAddr, uint256[] genesisValue) public {
         /*
             Setup function.
             If an ICOaddress is defined then the balance of the genesis addresses will be set as well.
@@ -139,8 +139,8 @@ contract premium is module, safeMath {
         require( db.setAllowance(msg.sender, spender, amount, nonce) );
         emit Approval(msg.sender, spender, amount);
     }
-    
-    function allowance(address owner, address spender) view returns (uint256 remaining, uint256 nonce) {
+
+    function allowance(address owner, address spender) public view returns (uint256 remaining, uint256 nonce) {
         /*
             Get the quantity of tokens given to be used
             
@@ -318,8 +318,8 @@ contract premium is module, safeMath {
         }
         return _codeLength > 0;
     }
-    
-    function balanceOf(address owner) view returns (uint256 value) {
+
+    function balanceOf(address owner) public view returns (uint256 value) {
         /*
             Token balance query
             
@@ -328,8 +328,8 @@ contract premium is module, safeMath {
         */
         return db.balanceOf(owner);
     }
-    
-    function totalSupply() view returns (uint256 value) {
+
+    function totalSupply() public view returns (uint256 value) {
         /*
             Total token quantity query
             

@@ -12,7 +12,7 @@ contract multiOwner is safeMath {
     /*
         Constructor
     */
-    constructor(address[] newOwners) {
+    constructor(address[] newOwners) public {
         for ( uint256 a=0 ; a<newOwners.length ; a++ ) {
             _addOwner(newOwners[a]);
         }

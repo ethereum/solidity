@@ -23,7 +23,7 @@ contract StandardToken is ERC20, BasicToken {
    * @param _to address The address which you want to transfer to
    * @param _value uint256 the amout of tokens to be transfered
    */
-  function transferFrom(address _from, address _to, uint256 _value) {
+  function transferFrom(address _from, address _to, uint256 _value) public {
     uint256 _allowance = allowed[_from][msg.sender];
 
     // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
@@ -40,7 +40,7 @@ contract StandardToken is ERC20, BasicToken {
    * @param _spender The address which will spend the funds.
    * @param _value The amount of tokens to be spent.
    */
-  function approve(address _spender, uint256 _value) {
+  function approve(address _spender, uint256 _value) public {
 
     // To change the approve amount you first have to reduce the addresses`
     //  allowance to zero by calling `approve(_spender, 0)` if it is not
@@ -58,7 +58,7 @@ contract StandardToken is ERC20, BasicToken {
    * @param _spender address The address which will spend the funds.
    * @return A uint256 specifing the amount of tokens still avaible for the spender.
    */
-  function allowance(address _owner, address _spender) view returns (uint256 remaining) {
+  function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
     return allowed[_owner][_spender];
   }
 

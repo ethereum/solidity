@@ -19,7 +19,7 @@ contract TokenTimelock {
   // timestamp when token release is enabled
   uint releaseTime;
 
-  constructor(ERC20Basic _token, address _beneficiary, uint _releaseTime) {
+  constructor(ERC20Basic _token, address _beneficiary, uint _releaseTime) public {
     require(_releaseTime > now);
     token = _token;
     beneficiary = _beneficiary;
@@ -29,7 +29,7 @@ contract TokenTimelock {
   /**
    * @dev beneficiary claims tokens held by time lock
    */
-  function claim() {
+  function claim() public {
     require(msg.sender == beneficiary);
     require(now >= releaseTime);
 

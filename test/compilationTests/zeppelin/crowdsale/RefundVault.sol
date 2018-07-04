@@ -22,31 +22,31 @@ contract RefundVault is Ownable {
   event RefundsEnabled();
   event Refunded(address indexed beneficiary, uint256 weiAmount);
 
-  constructor(address _wallet) {
+  constructor(address _wallet) public {
     require(_wallet != address(0x0));
     wallet = _wallet;
     state = State.Active;
   }
 
-  function deposit(address investor) onlyOwner payable {
+  function deposit(address investor) public onlyOwner payable {
     require(state == State.Active);
     deposited[investor] = deposited[investor].add(msg.value);
   }
 
-  function close() onlyOwner {
+  function close() public onlyOwner {
     require(state == State.Active);
     state = State.Closed;
     emit Closed();
     wallet.transfer(this.balance);
   }
 
-  function enableRefunds() onlyOwner {
+  function enableRefunds() public onlyOwner {
     require(state == State.Active);
     state = State.Refunding;
     emit RefundsEnabled();
   }
 
-  function refund(address investor) {
+  function refund(address investor) public {
     require(state == State.Refunding);
     uint256 depositedValue = deposited[investor];
     deposited[investor] = 0;

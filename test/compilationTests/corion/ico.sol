@@ -49,8 +49,8 @@ contract ico is safeMath {
     mapping (address => mapping(uint256 => interest_s)) public interestDB;
     uint256 public totalMint;
     uint256 public totalPremiumMint;
-    
-    constructor(address foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] genesisAddr, uint256[] genesisValue) {
+
+    constructor(address foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] genesisAddr, uint256[] genesisValue) public {
         /*
             Installation function.
             
@@ -283,8 +283,8 @@ contract ico is safeMath {
         require( isICO() );
         require( buy(msg.sender, address(0x00)) );
     }
-    
-    function buy(address beneficiaryAddress, address affilateAddress) payable returns (bool success) {
+
+    function buy(address beneficiaryAddress, address affilateAddress) public payable returns (bool success) {
         /*
             Buying a token
             

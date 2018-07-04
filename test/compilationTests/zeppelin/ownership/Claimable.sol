@@ -26,14 +26,14 @@ contract Claimable is Ownable {
    * @dev Allows the current owner to set the pendingOwner address. 
    * @param newOwner The address to transfer ownership to. 
    */
-  function transferOwnership(address newOwner) onlyOwner {
+  function transferOwnership(address newOwner) public onlyOwner {
     pendingOwner = newOwner;
   }
 
   /**
    * @dev Allows the pendingOwner address to finalize the transfer.
    */
-  function claimOwnership() onlyPendingOwner {
+  function claimOwnership() public onlyPendingOwner {
     owner = pendingOwner;
     pendingOwner = address(0x0);
   }

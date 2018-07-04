@@ -25,19 +25,19 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
    * @param _owners A list of owners.
    * @param _required The amount required for a transaction to be approved.
    */
-  constructor(address[] _owners, uint256 _required, uint256 _daylimit)       
+  constructor(address[] _owners, uint256 _required, uint256 _daylimit)
     Shareable(_owners, _required)
-    DayLimit(_daylimit) { }
+    DayLimit(_daylimit) public { }
 
-  /** 
-   * @dev destroys the contract sending everything to `_to`. 
+  /**
+   * @dev destroys the contract sending everything to `_to`.
    */
   function destroy(address _to) onlymanyowners(keccak256(msg.data)) external {
     selfdestruct(_to);
   }
 
-  /** 
-   * @dev Fallback function, receives value and emits a deposit event. 
+  /**
+   * @dev Fallback function, receives value and emits a deposit event.
    */
   function() external payable {
     // just being sent some cash?
@@ -46,10 +46,10 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
   }
 
   /**
-   * @dev Outside-visible transaction entry point. Executes transaction immediately if below daily 
-   * spending limit. If not, goes into multisig process. We provide a hash on return to allow the 
-   * sender to provide shortcuts for the other confirmations (allowing them to avoid replicating 
-   * the _to, _value, and _data arguments). They still get the option of using them if they want, 
+   * @dev Outside-visible transaction entry point. Executes transaction immediately if below daily
+   * spending limit. If not, goes into multisig process. We provide a hash on return to allow the
+   * sender to provide shortcuts for the other confirmations (allowing them to avoid replicating
+   * the _to, _value, and _data arguments). They still get the option of using them if they want,
    * anyways.
    * @param _to The receiver address
    * @param _value The value to send
@@ -76,11 +76,11 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
   }
 
   /**
-   * @dev Confirm a transaction by providing just the hash. We use the previous transactions map, 
+   * @dev Confirm a transaction by providing just the hash. We use the previous transactions map,
    * txs, in order to determine the body of the transaction from the hash provided.
    * @param _h The transaction hash to approve.
    */
-  function confirm(bytes32 _h) onlymanyowners(_h) returns (bool) {
+  function confirm(bytes32 _h) onlymanyowners(_h) public returns (bool) {
     if (txs[_h].to != address(0)) {
       if (!txs[_h].to.call.value(txs[_h].value)(txs[_h].data)) {
         throw;
@@ -91,15 +91,15 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
     }
   }
 
-  /** 
-   * @dev Updates the daily limit value. 
+  /**
+   * @dev Updates the daily limit value.
    * @param _newLimit  uint256 to represent the new limit.
    */
   function setDailyLimit(uint256 _newLimit) onlymanyowners(keccak256(msg.data)) external {
     _setDailyLimit(_newLimit);
   }
 
-  /** 
+  /**
    * @dev Resets the value spent to enable more spending
    */
   function resetSpentToday() onlymanyowners(keccak256(msg.data)) external {
@@ -108,7 +108,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
 
 
   // INTERNAL METHODS
-  /** 
+  /**
    * @dev Clears the list of transactions pending approval.
    */
   function clearPending() internal {

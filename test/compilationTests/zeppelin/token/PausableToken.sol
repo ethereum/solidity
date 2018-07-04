@@ -11,11 +11,11 @@ import '../lifecycle/Pausable.sol';
 
 contract PausableToken is StandardToken, Pausable {
 
-  function transfer(address _to, uint _value) whenNotPaused {
+  function transfer(address _to, uint _value) public whenNotPaused {
     super.transfer(_to, _value);
   }
 
-  function transferFrom(address _from, address _to, uint _value) whenNotPaused {
+  function transferFrom(address _from, address _to, uint _value) public whenNotPaused {
     super.transferFrom(_from, _to, _value);
   }
 }

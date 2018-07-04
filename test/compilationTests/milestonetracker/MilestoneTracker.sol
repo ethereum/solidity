@@ -112,7 +112,7 @@ contract MilestoneTracker {
         address _arbitrator,
         address _donor,
         address _recipient
-    ) {
+    ) public {
         arbitrator = _arbitrator;
         donor = _donor;
         recipient = _recipient;
@@ -124,7 +124,7 @@ contract MilestoneTracker {
 /////////
 
     /// @return The number of milestones ever created even if they were canceled
-    function numberOfMilestones() view returns (uint) {
+    function numberOfMilestones() public view returns (uint) {
         return milestones.length;
     }
 
@@ -135,19 +135,19 @@ contract MilestoneTracker {
 
     /// @notice `onlyArbitrator` Reassigns the arbitrator to a new address
     /// @param _newArbitrator The new arbitrator
-    function changeArbitrator(address _newArbitrator) onlyArbitrator {
+    function changeArbitrator(address _newArbitrator) public onlyArbitrator {
         arbitrator = _newArbitrator;
     }
 
     /// @notice `onlyDonor` Reassigns the `donor` to a new address
     /// @param _newDonor The new donor
-    function changeDonor(address _newDonor) onlyDonor {
+    function changeDonor(address _newDonor) public onlyDonor {
         donor = _newDonor;
     }
 
     /// @notice `onlyRecipient` Reassigns the `recipient` to a new address
     /// @param _newRecipient The new recipient
-    function changeRecipient(address _newRecipient) onlyRecipient {
+    function changeRecipient(address _newRecipient) public onlyRecipient {
         recipient = _newRecipient;
     }
 
@@ -176,7 +176,7 @@ contract MilestoneTracker {
     ///       address paymentSource,
     ///       bytes payData,
     function proposeMilestones(bytes _newMilestones
-    ) onlyRecipient campaignNotCanceled {
+    ) public onlyRecipient campaignNotCanceled {
         proposedMilestones = _newMilestones;
         changingMilestones = true;
         emit NewMilestoneListProposed();
@@ -189,7 +189,7 @@ contract MilestoneTracker {
 
     /// @notice `onlyRecipient` Cancels the proposed milestones and reactivates
     ///  the previous set of milestones
-    function unproposeMilestones() onlyRecipient campaignNotCanceled {
+    function unproposeMilestones() public onlyRecipient campaignNotCanceled {
         delete proposedMilestones;
         changingMilestones = false;
         emit NewMilestoneListUnproposed();
@@ -200,7 +200,7 @@ contract MilestoneTracker {
     ///  bytecode; this confirms that the `donor` knows the set of milestones
     ///  they are approving
     function acceptProposedMilestones(bytes32 _hashProposals
-    ) onlyDonor campaignNotCanceled {
+    ) public onlyDonor campaignNotCanceled {
 
         uint i;
 
@@ -256,7 +256,7 @@ contract MilestoneTracker {
     ///  ready for review
     /// @param _idMilestone ID of the milestone that has been completed
     function markMilestoneComplete(uint _idMilestone)
-        campaignNotCanceled notChanging
+        public campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
         Milestone milestone = milestones[_idMilestone];
@@ -274,7 +274,7 @@ contract MilestoneTracker {
     /// @notice `onlyReviewer` Approves a specific milestone
     /// @param _idMilestone ID of the milestone that is approved
     function approveCompletedMilestone(uint _idMilestone)
-        campaignNotCanceled notChanging
+        public campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
         Milestone milestone = milestones[_idMilestone];
@@ -289,7 +289,7 @@ contract MilestoneTracker {
     ///  state
     /// @param _idMilestone ID of the milestone that is being rejected
     function rejectMilestone(uint _idMilestone)
-        campaignNotCanceled notChanging
+        public campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
         Milestone milestone = milestones[_idMilestone];
@@ -305,7 +305,7 @@ contract MilestoneTracker {
     ///  `reviewTime` has elapsed
     /// @param _idMilestone ID of the milestone to be paid out
     function requestMilestonePayment(uint _idMilestone
-        ) campaignNotCanceled notChanging {
+        ) public campaignNotCanceled notChanging {
         if (_idMilestone >= milestones.length) throw;
         Milestone milestone = milestones[_idMilestone];
         if (  (msg.sender != milestone.milestoneLeadLink)
@@ -321,7 +321,7 @@ contract MilestoneTracker {
     /// @notice `onlyRecipient` Cancels a previously accepted milestone
     /// @param _idMilestone ID of the milestone to be canceled
     function cancelMilestone(uint _idMilestone)
-        onlyRecipient campaignNotCanceled notChanging
+        public onlyRecipient campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
         Milestone milestone = milestones[_idMilestone];
@@ -337,7 +337,7 @@ contract MilestoneTracker {
     /// has not been paid or canceled
     /// @param _idMilestone ID of the milestone to be paid out
     function arbitrateApproveMilestone(uint _idMilestone
-    ) onlyArbitrator campaignNotCanceled notChanging {
+    ) public onlyArbitrator campaignNotCanceled notChanging {
         if (_idMilestone >= milestones.length) throw;
         Milestone milestone = milestones[_idMilestone];
         if  ((milestone.status != MilestoneStatus.AcceptedAndInProgress) &&
@@ -348,7 +348,7 @@ contract MilestoneTracker {
 
     /// @notice `onlyArbitrator` Cancels the entire campaign voiding all
     ///  milestones.
-    function arbitrateCancelCampaign() onlyArbitrator campaignNotCanceled {
+    function arbitrateCancelCampaign() public onlyArbitrator campaignNotCanceled {
         campaignCanceled = true;
         emit CampaignCanceled();
     }

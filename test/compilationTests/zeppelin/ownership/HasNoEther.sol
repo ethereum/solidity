@@ -21,7 +21,7 @@ contract HasNoEther is Ownable {
   * constructor. By doing it this way we prevent a payable constructor from working. Alternatively 
   * we could use assembly to access msg.value.
   */
-  constructor() payable {
+  constructor() public payable {
     if(msg.value > 0) {
       throw;
     }

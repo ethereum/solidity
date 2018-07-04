@@ -60,8 +60,8 @@ contract tokenDB is safeMath, ownedDB {
         allowance[owner][spender].nonce = nonce;
         return true;
     }
-    
-    function getAllowance(address owner, address spender) view returns(bool success, uint256 remaining, uint256 nonce) {
+
+    function getAllowance(address owner, address spender) public view returns(bool success, uint256 remaining, uint256 nonce) {
         /*
             Get allowance from the database.
             

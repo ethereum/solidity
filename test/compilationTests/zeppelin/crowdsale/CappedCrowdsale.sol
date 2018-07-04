@@ -12,7 +12,7 @@ contract CappedCrowdsale is Crowdsale {
 
   uint256 public cap;
 
-  constructor(uint256 _cap) {
+  constructor(uint256 _cap) public {
     cap = _cap;
   }
 
