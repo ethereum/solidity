@@ -43,13 +43,11 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	vector<string> view{
 		"block.coinbase",
 		"block.timestamp",
-		"block.blockhash(7)",
 		"block.difficulty",
 		"block.number",
 		"block.gaslimit",
 		"blockhash(7)",
 		"gasleft()",
-		"msg.gas",
 		"msg.value",
 		"msg.sender",
 		"tx.origin",
@@ -90,12 +88,11 @@ BOOST_AUTO_TEST_CASE(environment_access)
 			"Statement has no effect."
 	}));
 
-	CHECK_WARNING_ALLOW_MULTI(
+	CHECK_ERROR(
 		"contract C { function f() view public { block.blockhash; } }",
-		(std::vector<std::string>{
-			"Function state mutability can be restricted to pure",
-			"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
-	}));
+		TypeError,
+		"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
+	);
 }
 
 BOOST_AUTO_TEST_CASE(assembly_staticcall)
