@@ -833,20 +833,19 @@ bool ContractCompiler::visit(VariableDeclarationStatement const& _variableDeclar
 			valueTypes = tupleType->components();
 		else
 			valueTypes = TypePointers{expression->annotation().type};
-		auto const& assignments = _variableDeclarationStatement.annotation().assignments;
-		solAssert(assignments.size() == valueTypes.size(), "");
-		for (size_t i = 0; i < assignments.size(); ++i)
+		auto const& declarations = _variableDeclarationStatement.declarations();
+		solAssert(declarations.size() == valueTypes.size(), "");
+		for (size_t i = 0; i < declarations.size(); ++i)
 		{
-			size_t j = assignments.size() - i - 1;
+			size_t j = declarations.size() - i - 1;
 			solAssert(!!valueTypes[j], "");
-			VariableDeclaration const* varDecl = assignments[j];
-			if (!varDecl)
-				utils.popStackElement(*valueTypes[j]);
-			else
+			if (VariableDeclaration const* varDecl = declarations[j].get())
 			{
 				utils.convertType(*valueTypes[j], *varDecl->annotation().type);
 				utils.moveToStackVariable(*varDecl);
 			}
+			else
+				utils.popStackElement(*valueTypes[j]);
 		}
 	}
 	checker.check();
