@@ -1856,7 +1856,7 @@ BOOST_AUTO_TEST_CASE(uncalled_blockhash)
 		contract C {
 			function f() public view returns (bytes32)
 			{
-				return (block.blockhash)(block.number - 1);
+				return (blockhash)(block.number - 1);
 			}
 		}
 	)";

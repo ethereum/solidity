@@ -524,31 +524,16 @@ BOOST_AUTO_TEST_CASE(gas_left)
 	char const* sourceCode = R"(
 		contract test {
 			function f() returns (uint256 val) {
-				return msg.gas;
+				return gasleft();
 			}
 		}
 	)";
 	bytes code = compileFirstExpression(
 		sourceCode, {}, {},
-		{make_shared<MagicVariableDeclaration>("msg", make_shared<MagicType>(MagicType::Kind::Message))}
-	);
-
-	bytes expectation({byte(Instruction::GAS)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-
-	sourceCode = R"(
-		contract test {
-			function f() returns (uint256 val) {
-				return gasleft();
-			}
-		}
-	)";
-	code = compileFirstExpression(
-		sourceCode, {}, {},
 		{make_shared<MagicVariableDeclaration>("gasleft", make_shared<FunctionType>(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
 	);
 
-	expectation = bytes({byte(Instruction::GAS)});
+	bytes expectation = bytes({byte(Instruction::GAS)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
