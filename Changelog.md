@@ -3,6 +3,7 @@
 How to update your code:
  * Change every ``.call()`` to a ``.call("")`` and every ``.call(signature, a, b, c)`` to use ``.call(abi.encodeWithSignature(signature, a, b, c))`` (the last one only works for value types).
  * Change every ``keccak256(a, b, c)`` to ``keccak256(abi.encodePacked(a, b, c))``.
+ * Add ``public`` to every function that does not specify its visibility already.
  * Make your fallback functions ``external``.
  * Explicitly state the storage location for local variables of struct and array types, e.g. change ``uint[] x = m_x`` to ``uint[] storage x = m_x``.
 
@@ -49,6 +50,7 @@ Breaking Changes:
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/soldity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.
  * References Resolver: Turn missing storage locations into an error. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Named return values in function types are an error.
+ * Syntax Checker: Strictly require visibility specifier. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Disallow unary ``+``. This was already the case in the experimental 0.5.0 mode.
  * View Pure Checker: Strictly enfore state mutability. This was already the case in the experimental 0.5.0 mode.
 

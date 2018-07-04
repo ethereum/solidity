@@ -201,7 +201,7 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
 	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
-	if (v050 && _function.noVisibilitySpecified())
+	if (_function.noVisibilitySpecified())
 		m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
 
 	if (_function.isOldStyleConstructor())

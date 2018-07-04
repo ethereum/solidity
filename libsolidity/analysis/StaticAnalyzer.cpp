@@ -51,16 +51,6 @@ void StaticAnalyzer::endVisit(ContractDefinition const&)
 
 bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 {
-	const bool isInterface = m_currentContract->contractKind() == ContractDefinition::ContractKind::Interface;
-
-	if (_function.noVisibilitySpecified())
-		m_errorReporter.warning(
-			_function.location(),
-			"No visibility specified. Defaulting to \"" +
-			Declaration::visibilityToString(_function.visibility()) +
-			"\"." +
-			(isInterface ? " In interfaces it defaults to external." : "")
-		);
 	if (_function.isImplemented())
 		m_currentFunction = &_function;
 	else

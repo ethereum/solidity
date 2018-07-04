@@ -465,10 +465,10 @@ The following example shows how an error string can be used together with revert
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >0.4.24;
 
     contract VendingMachine {
-        function buy(uint amount) payable {
+        function buy(uint amount) public payable {
             if (amount > msg.value / 2 ether)
                 revert("Not enough Ether provided.");
             // Alternative way to do it:
