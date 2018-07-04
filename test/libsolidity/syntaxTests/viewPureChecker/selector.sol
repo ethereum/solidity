@@ -5,4 +5,8 @@ contract C {
     function g() pure public returns (bytes4) {
         return this.f.selector ^ this.x.selector;
     }
+    function h() view public returns (bytes4) {
+        x;
+        return this.f.selector ^ this.x.selector;
+    }
 }

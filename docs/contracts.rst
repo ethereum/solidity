@@ -485,9 +485,6 @@ The following statements are considered modifying the state:
   prevent modifications to the state on the level of the EVM by adding
   ``pragma experimental "v0.5.0";``
 
-.. warning::
-  The compiler does not enforce yet that a ``view`` method is not modifying state. It raises a warning though.
-
 .. index:: ! pure function, function;pure
 
 .. _pure-functions:
@@ -529,11 +526,14 @@ In addition to the list of state modifying statements explained above, the follo
   It is a non-circumventable runtime checks done by the EVM.
 
 .. warning::
-  Before version 0.4.17 the compiler didn't enforce that ``pure`` is not reading the state.
+  Before version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
   It is a compile-time type check, which can be circumvented doing invalid explicit conversions
   between contract types, because the compiler can verify that the type of the contract does
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
+
+.. warning::
+  Before version 0.5.0 the compiler did not enforce that ``view`` is not writing the state.
 
 .. index:: ! fallback function, function;fallback
 
