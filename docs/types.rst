@@ -607,7 +607,9 @@ number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are mu
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
 
-You can initialize an array inline using syntax such as ``string[] myarray = ["a", "b"];``. However, this only works for statically sized memory arrays. For example:
+You can initialize an array inline using syntax such as ``string[] myarray = ["a", "b"];``. However, this only works for statically sized memory arrays. For example.
+
+::
 
     pragma solidity ^0.4.16;
 
@@ -847,7 +849,9 @@ It is not possible for a struct to contain a member of its own type, although th
 ...note::
     All the functions above assign a ``struct`` type to a local variable (of the default storage data location). This does not copy the ``struct`` but only stores a reference so that assignments to members of the local variable actually write to the state.
 
-If you copy a struct over another struct, for example:
+If you copy a struct over another struct, for example.
+
+::
 
     struct User {
         mapping(string => string) comments;
