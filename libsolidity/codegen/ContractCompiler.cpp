@@ -446,6 +446,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		if (auto c = m_context.nextConstructor(dynamic_cast<ContractDefinition const&>(*_function.scope())))
 			appendBaseConstructor(*c);
 
+	solAssert(m_returnTags.empty(), "");
 	m_breakTags.clear();
 	m_continueTags.clear();
 	m_currentFunction = &_function;
@@ -666,8 +667,6 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 	eth::AssemblyItem loopEnd = m_context.newTag();
 	m_breakTags.push_back({loopEnd, m_context.stackHeight()});
 
-	visitLoop(&_whileStatement);
-
 	m_context << loopStart;
 
 	if (_whileStatement.isDoWhile())
@@ -710,7 +709,7 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 	eth::AssemblyItem loopEnd = m_context.newTag();
 	eth::AssemblyItem loopNext = m_context.newTag();
 
-	visitLoop(&_forStatement);
+	storeStackHeight(&_forStatement);
 
 	if (_forStatement.initializationExpression())
 		_forStatement.initializationExpression()->accept(*this);
@@ -754,7 +753,7 @@ bool ContractCompiler::visit(Continue const& _continueStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _continueStatement);
 	solAssert(!m_continueTags.empty(), "");
-	popAndJump(m_context.stackHeight() - m_continueTags.back().second, m_continueTags.back().first);
+	CompilerUtils(m_context).popAndJump(m_continueTags.back().second, m_continueTags.back().first);
 	return false;
 }
 
@@ -762,7 +761,7 @@ bool ContractCompiler::visit(Break const& _breakStatement)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _breakStatement);
 	solAssert(!m_breakTags.empty(), "");
-	popAndJump(m_context.stackHeight() - m_breakTags.back().second, m_breakTags.back().first);
+	CompilerUtils(m_context).popAndJump(m_breakTags.back().second, m_breakTags.back().first);
 	return false;
 }
 
@@ -789,7 +788,7 @@ bool ContractCompiler::visit(Return const& _return)
 			CompilerUtils(m_context).moveToStackVariable(*retVariable);
 	}
 
-	popAndJump(m_context.stackHeight() - m_returnTags.back().second, m_returnTags.back().first);
+	CompilerUtils(m_context).popAndJump(m_returnTags.back().second, m_returnTags.back().first);
 	return false;
 }
 
@@ -872,7 +871,7 @@ bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 
 bool ContractCompiler::visit(Block const& _block)
 {
-	m_scopeStackHeight[m_modifierDepth][&_block] = m_context.stackHeight();
+	storeStackHeight(&_block);
 	return true;
 }
 
@@ -999,7 +998,7 @@ eth::AssemblyPointer ContractCompiler::cloneRuntime() const
 
 void ContractCompiler::popScopedVariables(ASTNode const* _node)
 {
-	unsigned blockHeight = m_scopeStackHeight[m_modifierDepth][_node];
+	unsigned blockHeight = m_scopeStackHeight.at(m_modifierDepth).at(_node);
 	unsigned stackDiff = m_context.stackHeight() - blockHeight;
 	CompilerUtils(m_context).popStackSlots(stackDiff);
 	m_context.removeVariablesAboveStackHeight(blockHeight);
@@ -1008,14 +1007,7 @@ void ContractCompiler::popScopedVariables(ASTNode const* _node)
 		m_scopeStackHeight.erase(m_modifierDepth);
 }
 
-void ContractCompiler::visitLoop(BreakableStatement const* _loop)
+void ContractCompiler::storeStackHeight(ASTNode const* _node)
 {
-	m_scopeStackHeight[m_modifierDepth][_loop] = m_context.stackHeight();
-}
-
-void ContractCompiler::popAndJump(unsigned _amount, eth::AssemblyItem const& _jumpTo)
-{
-	CompilerUtils(m_context).popStackSlots(_amount);
-	m_context.appendJumpTo(_jumpTo);
-	m_context.adjustStackOffset(_amount);
+	m_scopeStackHeight[m_modifierDepth][_node] = m_context.stackHeight();
 }

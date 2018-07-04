@@ -241,6 +241,10 @@ public:
 	void popStackElement(Type const& _type);
 	/// Removes element from the top of the stack _amount times.
 	void popStackSlots(size_t _amount);
+	/// Pops slots from the stack such that its height is _toHeight.
+	/// Adds jump to _jumpTo.
+	/// Readjusts the stack offset to the original value.
+	void popAndJump(unsigned _toHeight, eth::AssemblyItem const& _jumpTo);
 
 	template <class T>
 	static unsigned sizeOnStack(std::vector<T> const& _variables);

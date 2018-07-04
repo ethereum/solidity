@@ -1170,6 +1170,14 @@ void CompilerUtils::popStackSlots(size_t _amount)
 		m_context << Instruction::POP;
 }
 
+void CompilerUtils::popAndJump(unsigned _toHeight, eth::AssemblyItem const& _jumpTo)
+{
+	unsigned amount = m_context.stackHeight() - _toHeight;
+	popStackSlots(amount);
+	m_context.appendJumpTo(_jumpTo);
+	m_context.adjustStackOffset(amount);
+}
+
 unsigned CompilerUtils::sizeOnStack(vector<shared_ptr<Type const>> const& _variableTypes)
 {
 	unsigned size = 0;

@@ -128,12 +128,8 @@ private:
 	/// Frees the variables of a certain scope (to be used when leaving).
 	void popScopedVariables(ASTNode const* _node);
 
-	/// Pops _amount slots from the stack and jumps to _jumpTo.
-	/// Also readjusts the stack offset to the original value.
-	void popAndJump(unsigned _amount, eth::AssemblyItem const& _jumpTo);
-
 	/// Sets the stack height for the visited loop.
-	void visitLoop(BreakableStatement const* _loop);
+	void storeStackHeight(ASTNode const* _node);
 
 	bool const m_optimise;
 	/// Pointer to the runtime compiler in case this is a creation compiler.
