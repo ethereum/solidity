@@ -10,7 +10,7 @@ import sys
 import re
 import os
 import hashlib
-from os.path import join
+from os.path import join, isfile
 
 def extract_test_cases(path):
     lines = open(path, 'rb').read().splitlines()
@@ -77,24 +77,31 @@ def write_cases(tests):
     for test in tests:
         open('test_%s.sol' % hashlib.sha256(test).hexdigest(), 'wb').write(test)
 
+
+def extract_and_write(f, path):
+        if docs:
+            cases = extract_docs_cases(path)
+        else:
+            if f.endswith(".sol"):
+                cases = [open(path, "r").read()]
+            else:
+                cases = extract_test_cases(path)
+        write_cases(cases)
+
 if __name__ == '__main__':
     path = sys.argv[1]
     docs = False
     if len(sys.argv) > 2 and sys.argv[2] == 'docs':
       docs = True
 
-    for root, subdirs, files in os.walk(path):
-        if '_build' in subdirs:
-          subdirs.remove('_build')
-        if 'compilationTests' in subdirs:
-          subdirs.remove('compilationTests')
-        for f in files:
-            path = join(root, f)
-            if docs:
-              cases = extract_docs_cases(path)
-            else:
-              if f.endswith(".sol"):
-                cases = [open(path, "r").read()]
-              else:
-                cases = extract_test_cases(path)
-            write_cases(cases)
+    if isfile(path):
+        extract_and_write(path, path)
+    else: 
+        for root, subdirs, files in os.walk(path):
+            if '_build' in subdirs:
+                subdirs.remove('_build')
+            if 'compilationTests' in subdirs:
+                subdirs.remove('compilationTests')
+            for f in files:
+                path = join(root, f)
+                extract_and_write(f, path)
