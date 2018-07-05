@@ -749,19 +749,10 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		if (!_variable.value())
 			m_errorReporter.typeError(_variable.location(), "Uninitialized \"constant\" variable.");
 		else if (!_variable.value()->annotation().isPure)
-		{
-			if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-				m_errorReporter.typeError(
-					_variable.value()->location(),
-					"Initial value for constant variable has to be compile-time constant."
-				);
-			else
-				m_errorReporter.warning(
-					_variable.value()->location(),
-					"Initial value for constant variable has to be compile-time constant. "
-					"This will fail to compile with the next breaking version change."
-				);
-		}
+			m_errorReporter.typeError(
+				_variable.value()->location(),
+				"Initial value for constant variable has to be compile-time constant."
+			);
 	}
 	if (!_variable.isStateVariable())
 	{
