@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(literal_true)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() { bool x = true; }
+			function f() public { bool x = true; }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(unary_inc_dec)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns (uint x) { x = --a ^ (a-- ^ (++a ^ a++)); }
+			function f(uint a) public returns (uint x) { x = --a ^ (a-- ^ (++a ^ a++)); }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "x"}});
@@ -509,9 +509,9 @@ BOOST_AUTO_TEST_CASE(blockhash)
 		}
 	)";
 
-	auto blockhashFun = make_shared<FunctionType>(strings{"uint256"}, strings{"bytes32"}, 
+	auto blockhashFun = make_shared<FunctionType>(strings{"uint256"}, strings{"bytes32"},
 		FunctionType::Kind::BlockHash, false, StateMutability::View);
-	
+
 	bytes code = compileFirstExpression(sourceCode, {}, {}, {make_shared<MagicVariableDeclaration>("blockhash", blockhashFun)});
 
 	bytes expectation({byte(Instruction::PUSH1), 0x03,
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(gas_left)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns (uint256 val) {
+			function f() public returns (uint256 val) {
 				return gasleft();
 			}
 		}

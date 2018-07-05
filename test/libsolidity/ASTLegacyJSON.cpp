@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(enum_value)
 BOOST_AUTO_TEST_CASE(modifier_definition)
 {
 	CompilerStack c;
-	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) {} }");
+	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) public {} }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(modifier_definition)
 BOOST_AUTO_TEST_CASE(modifier_invocation)
 {
 	CompilerStack c;
-	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) {} }");
+	c.addSource("a", "contract C { modifier M(uint i) { _; } function F() M(1) public {} }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(array_type_name)
 BOOST_AUTO_TEST_CASE(short_type_name)
 {
 	CompilerStack c;
-	c.addSource("a", "contract c { function f() { uint[] memory x; } }");
+	c.addSource("a", "contract c { function f() public { uint[] memory x; } }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(short_type_name)
 BOOST_AUTO_TEST_CASE(short_type_name_ref)
 {
 	CompilerStack c;
-	c.addSource("a", "contract c { function f() { uint[][] memory rows; } }");
+	c.addSource("a", "contract c { function f() public { uint[][] memory rows; } }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(placeholder_statement)
 BOOST_AUTO_TEST_CASE(non_utf8)
 {
 	CompilerStack c;
-	c.addSource("a", "contract C { function f() { var x = hex\"ff\"; } }");
+	c.addSource("a", "contract C { function f() public { var x = hex\"ff\"; } }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;

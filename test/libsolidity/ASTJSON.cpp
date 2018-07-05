@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_SUITE(SolidityASTJSON)
 BOOST_AUTO_TEST_CASE(short_type_name)
 {
 	CompilerStack c;
-	c.addSource("a", "contract c { function f() { uint[] memory x; } }");
+	c.addSource("a", "contract c { function f() public { uint[] memory x; } }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(short_type_name)
 BOOST_AUTO_TEST_CASE(short_type_name_ref)
 {
 	CompilerStack c;
-	c.addSource("a", "contract c { function f() { uint[][] memory rows; } }");
+	c.addSource("a", "contract c { function f() public { uint[][] memory rows; } }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;

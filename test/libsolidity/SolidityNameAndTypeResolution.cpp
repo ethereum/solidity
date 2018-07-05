@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		contract base { function foo(); }
+		contract base { function foo() public; }
 		contract derived is base { function foo() public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		contract base { function foo(bool); }
+		contract base { function foo(bool) public; }
 		contract derived is base { function foo(uint) public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		contract base { function foo(); }
+		contract base { function foo() public; }
 		contract foo is base { constructor() public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);

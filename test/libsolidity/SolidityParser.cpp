@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 		contract test {
 			uint256 stateVar;
 			/// This is a test function
-			function functionName(bytes32 input) returns (bytes32 out) {}
+			function functionName(bytes32 input) public returns (bytes32 out) {}
 		}
 	)";
 	BOOST_CHECK(successParse(text));
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 		contract test {
 			uint256 stateVar;
 			// We won't see this comment
-			function functionName(bytes32 input) returns (bytes32 out) {}
+			function functionName(bytes32 input) public returns (bytes32 out) {}
 		}
 	)";
 	BOOST_CHECK(successParse(text));
@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 		contract test {
 			uint256 stateVar;
 			/// This is test function 1
-			function functionName1(bytes32 input) returns (bytes32 out) {}
+			function functionName1(bytes32 input) public returns (bytes32 out) {}
 			/// This is test function 2
-			function functionName2(bytes32 input) returns (bytes32 out) {}
+			function functionName2(bytes32 input) public returns (bytes32 out) {}
 			// nothing to see here
-			function functionName3(bytes32 input) returns (bytes32 out) {}
+			function functionName3(bytes32 input) public returns (bytes32 out) {}
 			/// This is test function 4
-			function functionName4(bytes32 input) returns (bytes32 out) {}
+			function functionName4(bytes32 input) public returns (bytes32 out) {}
 		}
 	)";
 	BOOST_CHECK(successParse(text));
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 			uint256 stateVar;
 			/// This is a test function
 			/// and it has 2 lines
-			function functionName1(bytes32 input) returns (bytes32 out) {}
+			function functionName1(bytes32 input) public returns (bytes32 out) {}
 		}
 	)";
 	BOOST_CHECK(successParse(text));
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 			}
 			/// This is a test function
 			/// and it has 2 lines
-			function fun(bytes32 input) returns (bytes32 out) {}
+			function fun(bytes32 input) public returns (bytes32 out) {}
 		}
 	)";
 	BOOST_CHECK(successParse(text));
