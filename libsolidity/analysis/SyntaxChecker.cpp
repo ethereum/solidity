@@ -22,6 +22,7 @@
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
+#include <boost/algorithm/cxx11/all_of.hpp>
 
 using namespace std;
 using namespace dev;
@@ -250,6 +251,18 @@ bool SyntaxChecker::visit(FunctionTypeName const& _node)
 	for (auto const& decl: _node.returnParameterTypeList()->parameters())
 		if (!decl->name().empty())
 			m_errorReporter.syntaxError(decl->location(), "Return parameters in function types may not be named.");
+
+	return true;
+}
+
+bool SyntaxChecker::visit(VariableDeclarationStatement const& _statement)
+{
+	// Report if none of the variable components in the tuple have a name (only possible via deprecated "var")
+	if (boost::algorithm::all_of_equal(_statement.declarations(), nullptr))
+		m_errorReporter.syntaxError(
+			_statement.location(),
+			"The use of the \"var\" keyword is disallowed. The declaration part of the statement can be removed, since it is empty."
+		);
 
 	return true;
 }
