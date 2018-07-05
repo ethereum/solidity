@@ -82,8 +82,8 @@ def extract_and_write(f, path):
         if docs:
             cases = extract_docs_cases(path)
         else:
-            if f.endswith(".sol"):
-                cases = [open(path, "r").read()]
+            if f.endswith('.sol'):
+                cases = [open(path, 'r').read()]
             else:
                 cases = extract_test_cases(path)
         write_cases(cases)
