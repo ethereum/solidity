@@ -2267,11 +2267,9 @@ void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 
 void TypeChecker::endVisit(Literal const& _literal)
 {
-	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (_literal.looksLikeAddress())
 	{
-		// Assign type here if it even looks like an address. This prevents double error in 050 mode for invalid address
+		// Assign type here if it even looks like an address. This prevents double errors for invalid addresses
 		_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
 
 		string msg;
@@ -2298,20 +2296,11 @@ void TypeChecker::endVisit(Literal const& _literal)
 	}
 
 	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
-	{
-		if (v050)
-			m_errorReporter.fatalTypeError(
-				_literal.location(),
-				"Hexadecimal numbers cannot be used with unit denominations. "
-				"You can use an expression of the form \"0x1234 * 1 day\" instead."
-			);
-		else
-			m_errorReporter.warning(
-				_literal.location(),
-				"Hexadecimal numbers with unit denominations are deprecated. "
-				"You can use an expression of the form \"0x1234 * 1 day\" instead."
-			);
-	}
+		m_errorReporter.fatalTypeError(
+			_literal.location(),
+			"Hexadecimal numbers cannot be used with unit denominations. "
+			"You can use an expression of the form \"0x1234 * 1 day\" instead."
+		);
 
 	if (_literal.subDenomination() == Literal::SubDenomination::Year)
 		m_errorReporter.typeError(
