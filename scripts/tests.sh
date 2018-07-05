@@ -73,9 +73,9 @@ fi
 function download_eth()
 {
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        ETH_PATH="$REPO_ROOT/eth"
+        ETH_PATH="$REPO_ROOT/aleth"
     elif [ -z $CI ]; then
-        ETH_PATH="eth"
+        ETH_PATH="aleth"
     else
         mkdir -p /tmp/test
         if grep -i trusty /etc/lsb-release >/dev/null 2>&1
