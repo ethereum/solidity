@@ -1873,45 +1873,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 				&it.second->declaration()
 			));
 	}
-	// In 0.5.0 address members are not populated into the contract.
-	if (!_contract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-		addNonConflictingAddressMembers(members);
 	return members;
-}
-
-void ContractType::addNonConflictingAddressMembers(MemberList::MemberMap& _members)
-{
-	MemberList::MemberMap addressMembers = IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr);
-	for (auto const& addressMember: addressMembers)
-	{
-		bool clash = false;
-		for (auto const& member: _members)
-		{
-			if (
-				member.name == addressMember.name &&
-				(
-					// Members with different types are not allowed
-					member.type->category() != addressMember.type->category() ||
-					// Members must overload functions without clash
-					(
-						member.type->category() == Type::Category::Function &&
-						dynamic_cast<FunctionType const&>(*member.type).hasEqualArgumentTypes(dynamic_cast<FunctionType const&>(*addressMember.type))
-					)
-				)
-			)
-			{
-				clash = true;
-				break;
-			}
-		}
-
-		if (!clash)
-			_members.push_back(MemberList::Member(
-				addressMember.name,
-				addressMember.type,
-				addressMember.declaration
-			));
-	}
 }
 
 shared_ptr<FunctionType const> const& ContractType::newExpressionType() const

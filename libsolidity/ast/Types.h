@@ -740,8 +740,6 @@ public:
 	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables() const;
 
 private:
-	static void addNonConflictingAddressMembers(MemberList::MemberMap& _members);
-
 	ContractDefinition const& m_contract;
 	/// If true, it is the "super" type of the current contract, i.e. it contains only inherited
 	/// members.

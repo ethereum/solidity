@@ -5,5 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (65-75): Using contract member "transfer" inherited from the address type is deprecated. Convert the contract to "address" type to access the member, for example use "address(contract).transfer" instead.
-// TypeError: (65-75): Value transfer to a contract without a payable fallback function.
+// TypeError: (65-75): Member "transfer" not found or not visible after argument-dependent lookup in contract C

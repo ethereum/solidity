@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning: (52-69): Using contract member "delegatecall" inherited from the address type is deprecated. Convert the contract to "address" type to access the member, for example use "address(contract).delegatecall" instead.
+// TypeError: (52-69): Member "delegatecall" not found or not visible after argument-dependent lookup in contract C
