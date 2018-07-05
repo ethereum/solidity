@@ -23,7 +23,7 @@ contract LimitBalance {
    * @dev Checks if limit was reached. Case true, it throws.
    */
   modifier limitedPayable() {
-    if (this.balance > limit) {
+    if (address(this).balance > limit) {
       throw;
     }
     _;

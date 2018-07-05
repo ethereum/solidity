@@ -231,7 +231,7 @@ contract ico is safeMath {
         require( ! aborted );
         require( token(tokenAddr).mint(foundationAddress, token(tokenAddr).totalSupply() * 96 / 100) );
         require( premium(premiumAddr).mint(foundationAddress, totalMint / 5000 - totalPremiumMint) );
-        require( foundationAddress.send(this.balance) );
+        require( foundationAddress.send(address(this).balance) );
         require( token(tokenAddr).closeIco() );
         require( premium(premiumAddr).closeIco() );
     }

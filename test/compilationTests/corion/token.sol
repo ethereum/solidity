@@ -73,7 +73,7 @@ contract token is safeMath, module, announcementTypes {
         if ( ! forReplace ) {
             require( db.replaceOwner(this) );
             assert( genesisAddr.length == genesisValue.length );
-            require( this.balance >= genesisAddr.length * 0.2 ether );
+            require( address(this).balance >= genesisAddr.length * 0.2 ether );
             for ( uint256 a=0 ; a<genesisAddr.length ; a++ ) {
                 genesis[genesisAddr[a]] = true;
                 require( db.increase(genesisAddr[a], genesisValue[a]) );
