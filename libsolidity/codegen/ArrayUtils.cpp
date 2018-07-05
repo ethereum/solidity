@@ -346,7 +346,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			return;
 		}
 
-		// memcpy using the built-in contract
+		// memcopy
 		if (_sourceType.isDynamicallySized())
 		{
 			// change pointer to data part
@@ -361,10 +361,8 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		// We can resort to copying full 32 bytes only if
 		// - the length is known to be a multiple of 32 or
 		// - we will pad to full 32 bytes later anyway.
-		if (((baseSize % 32) == 0) || _padToWordBoundaries)
-			utils.memoryCopy32();
-		else
-			utils.memoryCopy();
+		bool const copyFullWords = ((baseSize % 32) == 0) || _padToWordBoundaries;
+		utils.memoryCopy(copyFullWords);
 
 		m_context << Instruction::SWAP1 << Instruction::POP;
 		// stack: <target> <size>

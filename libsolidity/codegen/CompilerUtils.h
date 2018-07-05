@@ -175,16 +175,12 @@ public:
 	/// Stack post: <updated_memptr>
 	void zeroInitialiseMemoryArray(ArrayType const& _type);
 
-	/// Copies full 32 byte words in memory (regions cannot overlap), i.e. may copy more than length.
+	/// Copies areas in memory that might overlap.
 	/// Length can be zero, in this case, it copies nothing.
+	/// @param _copyFullWords if set, copies full 32 byte words, i.e. may copy more than length.
 	/// Stack pre: <size> <target> <source>
 	/// Stack post:
-	void memoryCopy32();
-	/// Copies data in memory (regions cannot overlap).
-	/// Length can be zero, in this case, it copies nothing.
-	/// Stack pre: <size> <target> <source>
-	/// Stack post:
-	void memoryCopy();
+	void memoryCopy(bool _copyFullWords);
 
 	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
 	/// external function type <address><function identifier> into two stack slots:
