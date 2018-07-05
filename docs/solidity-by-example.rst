@@ -645,4 +645,63 @@ Safe Remote Purchase
 Micropayment Channel
 ********************
 
-To be written.
+::
+
+    pragma solidity ^0.4.11;
+
+    contract PaymentChannel {
+        address initiator;
+        address acceptor;
+        uint deposit;
+        uint timeout;
+        uint closeTimestamp;
+        uint closeSequenceNumber;
+        uint closeBalanceInitiator;
+
+        enum State { Opened, Accepted, Closing, Closed }
+        State state;
+
+        function PaymentChannel(address _other, uint _timeout) payable {
+            initator = msg.sender;
+            acceptor = _other;
+            deposit = msg.value;
+            require(deposit < 2**250);
+            require(_timeout < 2 days);
+            timeout = _timeout;
+        }
+
+        function accept() payable {
+            require(msg.sender == acceptor);
+            require(msg.value == deposit);
+            require(state == State.Opened);
+            state = State.Accepted;
+        }
+
+        function counterpartyAddress(uint _sequenceNumber) internal returns (address) {
+            return (_sequenceNumber % 2 == 1) ? acceptor : initiator;
+        }
+
+        function requestClose(uint _balanceInitiator, uint _sequenceNumber, uint8 _v, bytes32 _r, bytes32 _s) {
+            require(state == State.Accepted || state == State.Closing);
+            require(_sequenceNumber > closeSequenceNumber);
+            require(_balanceInitiator <= 2 * deposit);
+            require(closeTimestamp == 0 || now <= closeTimestamp + timeout);
+            require(ecrecover(sha3(_balanceInitiator, _sequenceNumber), _v, _r, _s) == counterpartyAddress(_sequenceNumber));
+            closeTimestamp = now;
+            closeSequenceNumber = _sequenceNumber;
+            closeBalanceInitiator = _balanceInitiator;
+            state = State.Closing;
+        }
+
+        function close()
+        {
+            // TODO Can we actually include this second condition?
+            require(now >= closeTimestamp + timeout || msg.sender == counteryPartyAddress(closeSequenceNumber + 1));
+            require(state == State.Closing || state == State.Closed);
+            state = State.Closed;
+            if (initator.send(closeBalanceInitiator))
+                closeBalanceInitiator = 0;
+            if (acceptor.send(2 * deposit - closeBalanceInitiator))
+                deposit = 0;
+        }
+    }
