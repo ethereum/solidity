@@ -5,6 +5,7 @@ How to update your code:
  * Change every ``keccak256(a, b, c)`` to ``keccak256(abi.encodePacked(a, b, c))``.
  * Make your fallback functions ``external``.
  * Explicitly state the storage location for local variables of struct and array types, e.g. change ``uint[] x = m_x`` to ``uint[] storage x = m_x``.
+ * Explicitly convert ``contract`` to ``address`` before using an ``address`` member. Example: if ``c`` is a variable of type ``contract``, change ``c.transfer(...)`` to ``address(c).transfer(...)``.
 
 
 Breaking Changes:
@@ -46,6 +47,7 @@ Breaking Changes:
  * Type Checker: Only accept a single ``bytes`` type for ``.call()`` (and family), ``keccak256()``, ``sha256()`` and ``ripemd160()``.
  * Type Checker: Fallback function must be external. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Interface functions must be declared external. This was already the case in the experimental 0.5.0 mode.
+ * Type Checker: ``Contract`` does not have access to ``address`` members anymore. An explicit conversion is now required before invoking an ``address`` member from a ``contract``.
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/soldity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.
  * References Resolver: Turn missing storage locations into an error. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Named return values in function types are an error.
