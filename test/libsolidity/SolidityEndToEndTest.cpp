@@ -523,6 +523,45 @@ BOOST_AUTO_TEST_CASE(do_while_loop_continue)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(42));
 }
 
+BOOST_AUTO_TEST_CASE(array_multiple_local_vars)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint256[] seq) public pure returns (uint256) {
+				uint i = 0;
+				uint sum = 0;
+				while (i < seq.length)
+				{
+					uint idx = i;
+					if (idx >= 10) break;
+					uint x = seq[idx];
+					if (x >= 1000) {
+						uint n = i + 1;
+						i = n;
+						continue;
+					}
+					else {
+						uint y = sum + x;
+						sum = y;
+					}
+					if (sum >= 500) return sum;
+					i++;
+				}
+				return sum;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("f(uint256[])", 32, 3, u256(1000), u256(1), u256(2)), encodeArgs(3));
+	ABI_CHECK(callContractFunction("f(uint256[])", 32, 3, u256(100), u256(500), u256(300)), encodeArgs(600));
+	ABI_CHECK(callContractFunction(
+		"f(uint256[])", 32, 11,
+		u256(1), u256(2), u256(3), u256(4), u256(5), u256(6), u256(7), u256(8), u256(9), u256(10), u256(111)
+		), encodeArgs(55));
+}
+
+
 BOOST_AUTO_TEST_CASE(do_while_loop_multiple_local_vars)
 {
 	char const* sourceCode = R"(
@@ -628,21 +667,30 @@ BOOST_AUTO_TEST_CASE(nested_loops)
 BOOST_AUTO_TEST_CASE(nested_loops_multiple_local_vars)
 {
 	// tests that break and continue statements in nested loops jump to the correct place
+	// and free local variables properly
 	char const* sourceCode = R"(
 		contract test {
 			function f(uint x) returns(uint y) {
 				while (x > 0) {
 					uint z = x + 10;
 					uint k = z + 1;
-					if (k > 20) break;
+					if (k > 20) {
+						break;
+						uint p = 100;
+						k += p;
+					}
 					if (k > 15) {
 						x--;
 						continue;
+						uint t = 1000;
+						x += t;
 					}
 					while (k > 10) {
 						uint m = k - 1;
 						if (m == 10) return x;
 						return k;
+						uint h = 10000;
+						z += h;
 					}
 					x--;
 					break;
@@ -727,6 +775,66 @@ BOOST_AUTO_TEST_CASE(for_loop_multiple_local_vars)
 	testContractAgainstCppOnRange("f(uint256)", for_loop, 0, 12);
 }
 
+BOOST_AUTO_TEST_CASE(nested_for_loop_multiple_local_vars)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) public pure returns(uint r) {
+				for (uint i = 0; i < 5; i++)
+				{
+					uint z = x + 1;
+					if (z < 3) {
+						break;
+						uint p = z + 2;
+					}
+					for (uint j = 0; j < 5; j++)
+					{
+						uint k = z * 2;
+						if (j + k < 8) {
+							x++;
+							continue;
+							uint t = z * 3;
+						}
+						x++;
+						if (x > 20) {
+							return 84;
+							uint h = x + 42;
+						}
+					}
+					if (x > 30) {
+					    return 42;
+						uint b = 0xcafe;
+					}
+				}
+				return 42;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	auto for_loop = [](u256 n) -> u256
+	{
+		for (u256 i = 0; i < 5; i++)
+		{
+			u256 z = n + 1;
+			if (z < 3) break;
+			for (u256 j = 0; j < 5; j++)
+			{
+				u256 k = z * 2;
+				if (j + k < 8) {
+					n++;
+					continue;
+				}
+				n++;
+				if (n > 20) return 84;
+			}
+			if (n > 30) return 42;
+		}
+		return 42;
+	};
+
+	testContractAgainstCppOnRange("f(uint256)", for_loop, 0, 12);
+}
 
 BOOST_AUTO_TEST_CASE(for_loop)
 {
@@ -9394,6 +9502,50 @@ BOOST_AUTO_TEST_CASE(break_in_modifier)
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(0)));
 	ABI_CHECK(callContractFunction("f()"), encodeArgs());
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(continue_in_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier run() {
+				for (uint i = 0; i < 10; i++) {
+					if (i % 2 == 1) continue;
+					_;
+				}
+			}
+			function f() run {
+				x++;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(return_in_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier run() {
+				for (uint i = 1; i < 10; i++) {
+					if (i == 5) return;
+					_;
+				}
+			}
+			function f() run {
+				x++;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(4)));
 }
 
 BOOST_AUTO_TEST_CASE(stacked_return_with_modifiers)

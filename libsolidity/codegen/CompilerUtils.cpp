@@ -1172,6 +1172,7 @@ void CompilerUtils::popStackSlots(size_t _amount)
 
 void CompilerUtils::popAndJump(unsigned _toHeight, eth::AssemblyItem const& _jumpTo)
 {
+	solAssert(m_context.stackHeight() >= _toHeight, "");
 	unsigned amount = m_context.stackHeight() - _toHeight;
 	popStackSlots(amount);
 	m_context.appendJumpTo(_jumpTo);

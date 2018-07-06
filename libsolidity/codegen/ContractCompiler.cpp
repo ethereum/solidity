@@ -999,6 +999,7 @@ eth::AssemblyPointer ContractCompiler::cloneRuntime() const
 void ContractCompiler::popScopedVariables(ASTNode const* _node)
 {
 	unsigned blockHeight = m_scopeStackHeight.at(m_modifierDepth).at(_node);
+	solAssert(m_context.stackHeight() >= blockHeight, "");
 	unsigned stackDiff = m_context.stackHeight() - blockHeight;
 	CompilerUtils(m_context).popStackSlots(stackDiff);
 	m_context.removeVariablesAboveStackHeight(blockHeight);
