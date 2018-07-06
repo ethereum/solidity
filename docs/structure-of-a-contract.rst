@@ -31,9 +31,9 @@ See the :ref:`types` section for valid state variable types and
 :ref:`visibility-and-getters` for possible choices for
 visibility.
 
-You can initialise a state variable inline for all types (even for structs). But for arrays you must declare them as static memory arrays. This initialisation happens before the constructor is run.
+You can initialise a state variable inline for all types (even for structs). But for arrays you must declare them as static storage arrays. For example::
 
-For example::
+.. TODO: Keep the below?
 
     pragma solidity ^0.4.0;
 

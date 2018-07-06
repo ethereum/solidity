@@ -2,7 +2,7 @@
 Expressions and Control Structures
 ##################################
 
-.. index:: ! parameter, parameter;input, parameter;output
+.. index:: ! parameter, parameter;input, parameter;output, parameter;multiple
 
 Input Parameters and Output Parameters
 ======================================
@@ -54,25 +54,15 @@ write::
 
 The names of output parameters can be omitted.
 The output values can also be specified using ``return`` statements.
-The ``return`` statements are also capable of returning multiple
-values, see :ref:`multi-return`.
+
+The ``return`` statements are also capable of returning multiple values using ``return (v0, v1, ..., vn)``. The number of parameters must equal the number of output parameters.
+
 Return parameters are initialized to zero; if they are not explicitly
 set, they stay to be zero.
 
 Input parameters and output parameters can be used as expressions in
 the function body.  There, they are also usable in the left-hand side
 of assignment.
-
-
-.. _multi-return:
-
-Returning Multiple Values
--------------------------
-
-When a function has multiple output parameters, ``return (v0, v1, ...,
-vn)`` can return multiple values.  The number of components must be
-the same as the number of output parameters.
-
 
 .. index:: return array, return string, array, string, array of strings, dynamic array, variable sized array
 

@@ -641,10 +641,10 @@ You can initialize an array inline using syntax such as ``string[] myarray = ["a
         }
     }
 
-You can create and initialize multi-dimensional arrays in the same ways, but note that filling arrays can cost a lot of gas, so make sure you optimize how you use them.
+You can create and initialise multi-dimensional arrays in the same ways, but filling arrays can cost a lot of gas, so make sure you optimise how you use them.
 
 ...note::
-    Optimizing storage access can reduce the gas costs considerably, because you can store 32 ``uint8`` values in a single slot. These optimizations do not work across loops and also have a problem with bounds checking.
+    Optimising storage access can reduce the gas costs considerably, because you can store 32 ``uint8`` values in a single slot. These optimisations do not work across loops and also have a problem with bounds checking.
 
 It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index will become a required parameter for the getter.
