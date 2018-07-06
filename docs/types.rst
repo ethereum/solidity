@@ -304,11 +304,6 @@ String literals are written with either double or single-quotes (``"foo"`` or ``
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
-Solidity doesn't have any inbuilt string utility functions, you first have to convert it to a ``bytes`` type before any comparisons or manipulation.
-
-You can find examples of utility functions in `stringUtils.sol <https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol>`_ and `solidity-stringutils <https://github.com/Arachnid/solidity-stringutils>`_.
-.. index:: literal, bytes
-
 Hexadecimal Literals
 --------------------
 
@@ -323,7 +318,7 @@ Hexademical Literals behave like String Literals and have the same convertibilit
 Enums
 -----
 
-Enums are one way to create a user-defined type in Solidity. They are explicitly convertible to and from all integer types but implicit conversion is not allowed.  The explicit conversions check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
+Enums are one way to create a user-defined type in Solidity. They are explicitly convertible to and from all integer types but implicit conversion is not allowed. The explicit conversions check the value ranges at runtime and a failure causes an exception. Enums need at least one member.
 
 
 ::
@@ -575,6 +570,32 @@ Forced data location:
 Default data location:
  - parameters (also return) of functions: memory
  - all other local variables: storage
+
+
+.. index:: copy an array, copy a struct
+
+Copying Reference Types
+-----------------------
+
+If you copy an array or struct over another then the mapping of the target is ignored as there is 
+no list of mapped keys and it's impossible to know which values to copy. For example.
+
+::
+
+    struct User {
+        mapping(string => string) comments;
+    }
+
+    function somefunction public {
+       User user1;
+       user1.comments["Hello"] = "World";
+       User user2 = user1;
+    }
+
+
+
+
+
 
 .. index:: ! array
 
@@ -848,23 +869,6 @@ It is not possible for a struct to contain a member of its own type, although th
 
 ...note::
     All the functions above assign a ``struct`` type to a local variable (of the default storage data location). This does not copy the ``struct`` but only stores a reference so that assignments to members of the local variable actually write to the state.
-
-If you copy a struct over another struct, for example.
-
-::
-
-    struct User {
-        mapping(string => string) comments;
-    }
-
-    function somefunction public {
-       User user1;
-       user1.comments["Hello"] = "World";
-       User user2 = user1;
-    }
-
-Then the mapping of the struct being copied over is ignored as there is no list of mapped keys and it's not possible to find out which values should be copied over.
-
 
 You can also directly access the members of the struct without assigning it to a local variable, as in ``campaigns[campaignID].amount = 0``.
 

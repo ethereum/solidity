@@ -310,4 +310,4 @@ Decompiler
 There is no decompiler for Solidity, but `Porosity <https://github.com/comaeio/porosity>`_ is close.
 Because some information like variable names, comments, and source code formatting is lost in the compilation process, it is not possible to completely recover the original source code.
 
-Several blockchain explorers allow you to disassemble bytecode to opcodes, but you should publish the source of blockchain contracts on a blockchain if 3rd parties are allowed to use them.
+Several blockchain explorers allow you to disassemble bytecode to opcodes, but you should publish the source of blockchain contracts on a blockchain if third parties are allowed to use them.

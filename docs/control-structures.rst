@@ -29,7 +29,7 @@ something like::
     }
 
 ...note::
-    A function cannot accept a multi-dimensional array as an inpur parameter.
+    A function cannot accept a multi-dimensional array as an input parameter. This functionality is possible if you enable the experimental ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your smart contract.
 
 Output Parameters
 -----------------
@@ -83,10 +83,6 @@ Returning Strings and Arrays
 
 You can return strings and arrays from Solidity functions, see `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_ for an example.
 
-What is problematic, though, is returning any variably-sized data (e.g. a variably-sized array like ``uint[]`` or an array of strings ``string[]``) from a function **called from within Solidity**. This is a limitation of the EVM and will be solved with the next protocol update.
-
-Returning variably-sized data as part of an external transaction or call doesn't have this problem.
-
 .. index:: return struct, struct
 
 .. _return-struct:
@@ -101,6 +97,9 @@ You can return a ``struct`` from a Solidity function, but only from ``internal``
 Control Structures
 ===================
 
+Supported Expressions
+---------------------
+
 Most of the `control structures from JavaScript <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Control_flow_and_error_handling>`_ are available in Solidity except for ``switch`` and ``goto``. The full list is:
 
 - ``if``
@@ -114,14 +113,6 @@ Most of the `control structures from JavaScript <https://developer.mozilla.org/e
 - ``? :``
 
 All with the usual semantics from C or JavaScript, with the following caveats.
-
-``for`` loops
--------------
-
-If you use syntax like ``for (var i = 0; i < a.length; i ++) { a[i] = i; }``, then Solidity implies the type of ``i`` only from ``0``, whose type is ``uint8``. This means that if ``a`` has more than ``255`` elements, your loop will not terminate because ``i`` can only hold values up to ``255``.
-
-It's better to use syntax like ``for (uint i = 0; i < a.length; i ++) { a[i] = i; }``, see `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_ for an example.
-
 
 Conditional Values
 ------------------
@@ -164,7 +155,7 @@ instance) are also valid function calls, but this time, the function
 will be called "externally", via a message call and not directly via jumps.
 
 ...note::
-     You cannot use the function calls on ``this`` in the constructor, as the actual contract has not been created yet.
+     You cannot use function calls on ``this`` in the constructor, as the actual contract has not been created yet.
 
 Functions of other contracts have to be called externally. For an external call,
 all function arguments have to be copied to memory.
@@ -215,7 +206,7 @@ throws an exception or goes out of gas.
     so your contract is not vulnerable to a reentrancy exploit.
 
 ...note::
-    A function call from one contract to another does not create its own transaction, you have to look in the overall transaction. This is also the reason why several block explorer do not show Ether sent between contracts correctly.
+    A function call from one contract to another does not create its own transaction, it is a message call as part of the overall transaction. This is also why several block explorer do not show Ether sent between contracts correctly.
 
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------

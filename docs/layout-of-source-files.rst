@@ -212,4 +212,4 @@ for the two input parameters and two returned values.
     }
 
 .. note::
-    Comments are removed during compilation and don't consume any additional gas.
+    Comments are removed during compilation and do not consume any additional gas.

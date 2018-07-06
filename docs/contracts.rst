@@ -24,7 +24,7 @@ Creating contracts programatically on Ethereum is best done via using the JavaSc
 As of today it has a method called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
-When a contract is created, its constructor (a function declared with the ``constructor`` keyword) is executed once, making it useful if you want to execute code when the contract is first mined. See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_ for an example.
+When a contract is created, its constructor (a function declared with the ``constructor`` keyword) is executed once, including any code in the constructor.
 
 A constructor is optional. Only one constructor is allowed, and this means
 overloading is not supported.
