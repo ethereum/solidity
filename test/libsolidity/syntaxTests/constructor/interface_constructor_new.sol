@@ -1,7 +1,7 @@
 interface I {
-	constructor() external;
+	constructor() public;
 }
 // ----
-// TypeError: (15-38): Constructor must be public or internal.
-// TypeError: (15-38): Constructor cannot be defined in interfaces.
-// TypeError: (15-38): Constructor must be implemented if declared.
+// Warning: (15-36): Functions in interfaces should be declared external.
+// TypeError: (15-36): Constructor cannot be defined in interfaces.
+// TypeError: (15-36): Constructor must be implemented if declared.
