@@ -62,6 +62,9 @@ public:
 	/// VariableDeclarationStatements.
 	void activateVariable(ASTString const& _name);
 
+	/// @returns true if declaration is currently invisible.
+	bool isInvisible(ASTString const& _name) const;
+
 	/// @returns existing declaration names similar to @a _name.
 	/// Searches this and all parent containers.
 	std::vector<ASTString> similarNames(ASTString const& _name) const;

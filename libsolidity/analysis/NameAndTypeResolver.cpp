@@ -156,7 +156,8 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 void NameAndTypeResolver::activateVariable(string const& _name)
 {
 	solAssert(m_currentScope, "");
-	m_currentScope->activateVariable(_name);
+	if (m_currentScope->isInvisible(_name))
+		m_currentScope->activateVariable(_name);
 }
 
 vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, ASTNode const* _scope) const
