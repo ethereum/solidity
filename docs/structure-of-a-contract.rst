@@ -33,8 +33,6 @@ visibility.
 
 You can initialise a state variable inline for all types (even for structs). But for arrays you must declare them as static storage arrays. For example::
 
-.. TODO: Keep the below?
-
     pragma solidity ^0.4.0;
 
     contract C {
@@ -51,6 +49,8 @@ You can initialise a state variable inline for all types (even for structs). But
     contract D {
         C c = new C();
     }
+
+.. TODO: Keep the above example?
 
 .. _structure-functions:
 
