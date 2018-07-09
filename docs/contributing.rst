@@ -209,6 +209,7 @@ At this stage you should be able to see a message similar to the following:
 If the instrumentation messages did not appear, try switching the cmake flags pointing to AFL's clang binaries:
 
 ::
+
     # if previously failed
     make clean
     cmake .. -DCMAKE_C_COMPILER=path/to/afl-clang -DCMAKE_CXX_COMPILER=path/to/afl-clang++
