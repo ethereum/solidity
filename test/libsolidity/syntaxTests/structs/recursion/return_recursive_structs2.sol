@@ -1,6 +1,6 @@
 contract C {
     struct S { uint a; S[2][] sub; }
-    function f() public pure returns (uint, S) {
+    function f() public pure returns (uint, S memory) {
     }
 }
 // ----

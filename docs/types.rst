@@ -475,11 +475,11 @@ Another example that uses external function types::
       }
       Request[] requests;
       event NewRequest(uint);
-      function query(bytes data, function(bytes memory) external callback) public {
+      function query(bytes memory data, function(bytes memory) external callback) public {
         requests.push(Request(data, callback));
         emit NewRequest(requests.length - 1);
       }
-      function reply(uint requestID, bytes response) public {
+      function reply(uint requestID, bytes memory response) public {
         // Here goes the check that the reply comes from a trusted source
         requests[requestID].callback(response);
       }
@@ -490,7 +490,7 @@ Another example that uses external function types::
       function buySomething() {
         oracle.query("USD", this.oracleResponse);
       }
-      function oracleResponse(bytes response) public {
+      function oracleResponse(bytes memory response) public {
         require(
             msg.sender == address(oracle),
             "Only oracle can call this."
@@ -520,7 +520,8 @@ Every complex type, i.e. *arrays* and *structs*, has an additional
 annotation, the "data location", about whether it is stored in memory or in storage. Depending on the
 context, there is always a default, but it can be overridden by appending
 either ``storage`` or ``memory`` to the type. The default for function parameters (including return parameters) is ``memory``, the default for local variables is ``storage`` and the location is forced
-to ``storage`` for state variables (obviously).
+to ``storage`` for state variables (obviously). As of version 0.5.0, data locations for function parameters and function return parameters no longer have a default location, and ``memory`` or ``storage``
+must be provided, with the exception being parameters (not return parameters) for external functions which are talked about below.
 
 There is also a third data location, ``calldata``, which is a non-modifiable,
 non-persistent area where function arguments are stored. Function parameters
@@ -544,7 +545,7 @@ memory-stored reference type do not create a copy.
         uint[] x; // the data location of x is storage
 
         // the data location of memoryArray is memory
-        function f(uint[] memoryArray) public {
+        function f(uint[] memory memoryArray) public {
             x = memoryArray; // works, copies the whole array to storage
             uint[] storage y = x; // works, assigns a pointer, data location of y is storage
             y[7]; // fine, returns the 8th element
@@ -561,7 +562,7 @@ memory-stored reference type do not create a copy.
         }
 
         function g(uint[] storage storageArray) internal {}
-        function h(uint[] memoryArray) public {}
+        function h(uint[] memory memoryArray) public {}
     }
 
 Summary
@@ -572,7 +573,7 @@ Forced data location:
  - state variables: storage
 
 Default data location:
- - parameters (also return) of functions: memory
+ - parameters (also return) of functions: data location must be provided
  - all other local variables: storage
 
 .. index:: ! array
@@ -650,7 +651,7 @@ assigned to a variable right away.
         function f() public pure {
             g([uint(1), 2, 3]);
         }
-        function g(uint[3] _data) public pure {
+        function g(uint[3] memory _data) public pure {
             // ...
         }
     }
@@ -717,7 +718,7 @@ Members
         bool[2][] m_pairsOfFlags;
         // newPairs is stored in memory - the default for function arguments
 
-        function setAllFlagPairs(bool[2][] newPairs) public {
+        function setAllFlagPairs(bool[2][] memory newPairs) public {
             // assignment to a storage array replaces the complete array
             m_pairsOfFlags = newPairs;
         }
@@ -743,7 +744,7 @@ Members
 
         bytes m_byteData;
 
-        function byteArrays(bytes data) public {
+        function byteArrays(bytes memory data) public {
             // byte arrays ("bytes") are different as they are stored without padding,
             // but can be treated identical to "uint8[]"
             m_byteData = data;
@@ -752,11 +753,11 @@ Members
             delete m_byteData[2];
         }
 
-        function addFlag(bool[2] flag) public returns (uint) {
+        function addFlag(bool[2] memory flag) public returns (uint) {
             return m_pairsOfFlags.push(flag);
         }
 
-        function createMemoryArray(uint size) public pure returns (bytes) {
+        function createMemoryArray(uint size) public pure returns (bytes memory) {
             // Dynamic memory arrays are created using `new`:
             uint[2][] memory arrayOfPairs = new uint[2][](size);
             // Create a dynamic byte array:

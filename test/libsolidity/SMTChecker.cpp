@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(warn_on_struct)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			struct A { uint a; uint b; }
-			function f() public pure returns (A) {
+			function f() public pure returns (A memory) {
 				return A({ a: 1, b: 2 });
 			}
 		}

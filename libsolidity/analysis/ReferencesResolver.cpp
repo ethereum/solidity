@@ -301,6 +301,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		using Location = VariableDeclaration::Location;
 		Location varLoc = _variable.referenceLocation();
 		DataLocation typeLoc = DataLocation::Memory;
+		bool const v050 = _variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 		// References are forced to calldata for external function parameters (not return)
 		// and memory for parameters (also return) of publicly visible functions.
 		// They default to memory for function parameters and storage for local variables.
@@ -347,7 +348,17 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 						"(remove the \"storage\" or \"calldata\" keyword)."
 					);
 				if (varLoc == Location::Default || !contract.isLibrary())
+				{
+					if (varLoc == Location::Default && !_variable.isEventParameter())
+					{
+						typeError(
+							_variable.location(),
+							"Location must be specified as \"memory\" "
+							"for parameters in publicly visible functions."
+						);
+					}
 					typeLoc = DataLocation::Memory;
+				}
 				else
 				{
 					if (varLoc == Location::CallData)
@@ -372,13 +383,19 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				else if (varLoc == Location::Default)
 				{
 					if (_variable.isCallableParameter())
-						typeLoc = DataLocation::Memory;
+					{
+						typeError(
+							_variable.location(),
+							"Location must be specified as either "
+							"\"memory\" or \"storage\" for parameters."
+						);
+					}
 					else
 					{
 						typeLoc = DataLocation::Storage;
 						if (_variable.isLocalVariable())
 						{
-							if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
+							if (v050)
 								typeError(
 									_variable.location(),
 									"Data location must be specified as either \"memory\" or \"storage\"."

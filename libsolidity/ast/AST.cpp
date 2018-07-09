@@ -480,6 +480,11 @@ bool VariableDeclaration::canHaveAutoType() const
 	return isLocalVariable() && !isCallableParameter();
 }
 
+bool VariableDeclaration::isEventParameter() const
+{
+	return dynamic_cast<EventDefinition const*>(scope()) != nullptr;
+}
+
 TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;
