@@ -7,5 +7,5 @@ contract C {
     }
 }
 // ----
-// SyntaxError: (75-82): The use of non-functional instructions is deprecated. Please use functional notation instead.
-// SyntaxError: (95-98): The use of non-functional instructions is deprecated. Please use functional notation instead.
+// SyntaxError: (75-82): The use of non-functional instructions is disallowed. Please use functional notation instead.
+// SyntaxError: (95-98): The use of non-functional instructions is disallowed. Please use functional notation instead.

@@ -11261,7 +11261,7 @@ BOOST_AUTO_TEST_CASE(invalid_instruction)
 		contract C {
 			function f() public {
 				assembly {
-					invalid
+					invalid()
 				}
 			}
 		}
@@ -11688,19 +11688,10 @@ BOOST_AUTO_TEST_CASE(keccak256_assembly)
 					ret := keccak256(0, 0)
 				}
 			}
-			function g() public pure returns (bytes32 ret) {
-				assembly {
-					0
-					0
-					keccak256
-					=: ret
-				}
-			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("f()"), fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
-	ABI_CHECK(callContractFunction("g()"), fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
 }
 
 BOOST_AUTO_TEST_CASE(multi_modifiers)
@@ -12599,26 +12590,17 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople)
 		contract C {
 			function shl(uint a, uint b) public returns (uint c) {
 				assembly {
-					a
-					b
-					shl
-					=: c
+					c := shl(b, a)
 				}
 			}
 			function shr(uint a, uint b) public returns (uint c) {
 				assembly {
-					a
-					b
-					shr
-					=: c
+					c := shr(b, a)
 				}
 			}
 			function sar(uint a, uint b) public returns (uint c) {
 				assembly {
-					a
-					b
-					sar
-					=: c
+					c := sar(b, a)
 				}
 			}
 		}
@@ -12646,10 +12628,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shl_1() public returns (bool) {
 				uint c;
 				assembly {
-					1
-					2
-					shl
-					=: c
+					c := shl(2, 1)
 				}
 				assert(c == 4);
 				return true;
@@ -12657,10 +12636,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shl_2() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					1
-					shl
-					=: c
+					c := shl(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe);
 				return true;
@@ -12668,10 +12644,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shl_3() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					256
-					shl
-					=: c
+					c := shl(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0);
 				return true;
@@ -12679,10 +12652,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shr_1() public returns (bool) {
 				uint c;
 				assembly {
-					3
-					1
-					shr
-					=: c
+					c := shr(1, 3)
 				}
 				assert(c == 1);
 				return true;
@@ -12690,10 +12660,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shr_2() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					1
-					shr
-					=: c
+					c := shr(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 				return true;
@@ -12701,10 +12668,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shr_3() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					256
-					shr
-					=: c
+					c := shr(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0);
 				return true;

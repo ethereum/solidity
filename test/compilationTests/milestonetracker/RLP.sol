@@ -381,19 +381,16 @@ library RLP {
      // we can write entire words, and just overwrite any excess.
      assembly {
          {
-                 let i := 0 // Start at arr + 0x20
                  let words := div(add(btsLen, 31), 32)
                  let rOffset := btsPtr
                  let wOffset := add(tgt, 0x20)
-             tag_loop:
-                 jumpi(end, eq(i, words))
+
+                 // Start at arr + 0x20
+                 for { let i := 0 } not(eq(i, words)) { i := add(i, 1) }
                  {
                      let offset := mul(i, 0x20)
                      mstore(add(wOffset, offset), mload(add(rOffset, offset)))
-                     i := add(i, 1)
                  }
-                 jump(tag_loop)
-             end:
                  mstore(add(tgt, add(0x20, mload(tgt))), 0)
          }
      }
