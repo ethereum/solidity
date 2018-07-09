@@ -232,9 +232,9 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | swap1 ... swap16        | `*` | F | swap topmost and ith stack slot below it                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| mload(p)                |     | F | mem[p..(p+32))                                                  |
+| mload(p)                |     | F | mem[p...(p+32))                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| mstore(p, v)            | `-` | F | mem[p..(p+32)) := v                                             |
+| mstore(p, v)            | `-` | F | mem[p...(p+32)) := v                                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | mstore8(p, v)           | `-` | F | mem[p] := v & 0xff (only modifies a single byte)                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -272,16 +272,16 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | returndatacopy(t, f, s) | `-` | B | copy s bytes from returndata at position f to mem at position t |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| create(v, p, s)         |     | F | create new contract with code mem[p..(p+s)) and send v wei      |
+| create(v, p, s)         |     | F | create new contract with code mem[p...(p+s)) and send v wei     |
 |                         |     |   | and return the new address                                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| create2(v, n, p, s)     |     | C | create new contract with code mem[p..(p+s)) at address          |
-|                         |     |   | keccak256(<address> . n . keccak256(mem[p..(p+s))) and send v   |
+| create2(v, n, p, s)     |     | C | create new contract with code mem[p...(p+s)) at address         |
+|                         |     |   | keccak256(<address> . n . keccak256(mem[p...(p+s))) and send v  |
 |                         |     |   | wei and return the new address                                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| call(g, a, v, in,       |     | F | call contract at address a with input mem[in..(in+insize))      |
+| call(g, a, v, in,       |     | F | call contract at address a with input mem[in...(in+insize))     |
 | insize, out, outsize)   |     |   | providing g gas and v wei and output area                       |
-|                         |     |   | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
+|                         |     |   | mem[out...(out+outsize)) returning 0 on error (eg. out of gas)  |
 |                         |     |   | and 1 on success                                                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | callcode(g, a, v, in,   |     | F | identical to ``call`` but only use the code from a and stay     |
@@ -293,23 +293,23 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 | staticcall(g, a, in,    |     | B | identical to ``call(g, a, 0, in, insize, out, outsize)`` but do |
 | insize, out, outsize)   |     |   | not allow state modifications                                   |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| return(p, s)            | `-` | F | end execution, return data mem[p..(p+s))                        |
+| return(p, s)            | `-` | F | end execution, return data mem[p...(p+s))                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| revert(p, s)            | `-` | B | end execution, revert state changes, return data mem[p..(p+s))  |
+| revert(p, s)            | `-` | B | end execution, revert state changes, return data mem[p...(p+s)) |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | selfdestruct(a)         | `-` | F | end execution, destroy current contract and send funds to a     |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | invalid                 | `-` | F | end execution with invalid instruction                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log0(p, s)              | `-` | F | log without topics and data mem[p..(p+s))                       |
+| log0(p, s)              | `-` | F | log without topics and data mem[p...(p+s))                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log1(p, s, t1)          | `-` | F | log with topic t1 and data mem[p..(p+s))                        |
+| log1(p, s, t1)          | `-` | F | log with topic t1 and data mem[p...(p+s))                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log2(p, s, t1, t2)      | `-` | F | log with topics t1, t2 and data mem[p..(p+s))                   |
+| log2(p, s, t1, t2)      | `-` | F | log with topics t1, t2 and data mem[p...(p+s))                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log3(p, s, t1, t2, t3)  | `-` | F | log with topics t1, t2, t3 and data mem[p..(p+s))               |
+| log3(p, s, t1, t2, t3)  | `-` | F | log with topics t1, t2, t3 and data mem[p...(p+s))              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p..(p+s))           |
+| log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p...(p+s))          |
 | t4)                     |     |   |                                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | origin                  |     | F | transaction sender                                              |
