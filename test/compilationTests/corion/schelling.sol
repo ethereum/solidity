@@ -45,7 +45,7 @@ contract schellingDB is safeMath, schellingVars {
     /*
         Constructor
     */
-    constructor() {
+    constructor() public {
         rounds.length = 2;
         rounds[0].blockHeight = block.number;
         currentSchellingRound = 1;
@@ -54,7 +54,7 @@ contract schellingDB is safeMath, schellingVars {
         Funds
     */
     mapping(address => uint256) private funds;
-    function getFunds(address _owner) view returns(bool, uint256) {
+    function getFunds(address _owner) public view returns(bool, uint256) {
         return (true, funds[_owner]);
     }
     function setFunds(address _owner, uint256 _amount) isOwner external returns(bool) {
@@ -65,7 +65,7 @@ contract schellingDB is safeMath, schellingVars {
         Rounds
     */
     _rounds[] private rounds;
-    function getRound(uint256 _id) view returns(bool, uint256, uint256, uint256, uint256, bool) {
+    function getRound(uint256 _id) public view returns(bool, uint256, uint256, uint256, uint256, bool) {
         if ( rounds.length <= _id ) { return (false, 0, 0, 0, 0, false); }
         else { return (true, rounds[_id].totalAboveWeight, rounds[_id].totalBelowWeight, rounds[_id].reward, rounds[_id].blockHeight, rounds[_id].voted); }
     }
@@ -76,14 +76,14 @@ contract schellingDB is safeMath, schellingVars {
         rounds[_id] = _rounds(_totalAboveWeight, _totalBelowWeight, _reward, _blockHeight, _voted);
         return true;
     }
-    function getCurrentRound() view returns(bool, uint256) {
+    function getCurrentRound() public view returns(bool, uint256) {
         return (true, rounds.length-1);
     }
     /*
         Voter
     */
     mapping(address => _voter) private voter;
-    function getVoter(address _owner) view returns(bool success, uint256 roundID,
+    function getVoter(address _owner) public view returns(bool success, uint256 roundID,
         bytes32 hash, voterStatus status, bool voteResult, uint256 rewards) {
         roundID         = voter[_owner].roundID;
         hash            = voter[_owner].hash;
@@ -106,7 +106,7 @@ contract schellingDB is safeMath, schellingVars {
         Schelling Token emission
     */
     mapping(uint256 => uint256) private schellingExpansion;
-    function getSchellingExpansion(uint256 _id) view returns(bool, uint256) {
+    function getSchellingExpansion(uint256 _id) public view returns(bool, uint256) {
         return (true, schellingExpansion[_id]);
     }
     function setSchellingExpansion(uint256 _id, uint256 _expansion) isOwner external returns(bool) {
@@ -121,7 +121,7 @@ contract schellingDB is safeMath, schellingVars {
         currentSchellingRound = _id;
         return true;
     }
-    function getCurrentSchellingRound() view returns(bool, uint256) {
+    function getCurrentSchellingRound() public view returns(bool, uint256) {
         return (true, currentSchellingRound);
     }
 }
@@ -246,8 +246,8 @@ contract schelling is module, announcementTypes, schellingVars {
     bytes1 public aboveChar = 0x31;
     bytes1 public belowChar = 0x30;
     schellingDB private db;
-    
-    constructor(address _moduleHandler, address _db, bool _forReplace) {
+
+    constructor(address _moduleHandler, address _db, bool _forReplace) public {
         /*
             Installation function.
             

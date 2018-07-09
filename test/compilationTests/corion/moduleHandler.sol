@@ -34,10 +34,10 @@ contract moduleHandler is multiOwner, announcementTypes {
     modules_s[] public modules;
     address public foundationAddress;
     uint256 debugModeUntil = block.number + 1000000;
-    
-    
-    constructor(address[] newOwners) multiOwner(newOwners) {}
-    function load(address foundation, bool forReplace, address Token, address Premium, address Publisher, address Schelling, address Provider) {
+
+
+    constructor(address[] newOwners) multiOwner(newOwners) public {}
+    function load(address foundation, bool forReplace, address Token, address Premium, address Publisher, address Schelling, address Provider) public {
         /*
             Loading modulest to ModuleHandler.
             
