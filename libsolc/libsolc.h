@@ -37,6 +37,10 @@ char const* compileJSONMulti(char const* _input, bool _optimize);
 char const* compileJSONCallback(char const* _input, bool _optimize, CStyleReadFileCallback _readCallback);
 char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback);
 
+char const* solidity_license();
+char const* solidity_version();
+char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback);
+
 #ifdef __cplusplus
 }
 #endif

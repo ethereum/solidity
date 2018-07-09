@@ -43,6 +43,7 @@ Language Features:
  * General: Scoping rules now follow the C99-style.
 
 Compiler Features:
+ * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
  * Type Checker: Show named argument in case of error.
  * Tests: Determine transaction status during IPC calls.
 

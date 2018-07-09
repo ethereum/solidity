@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for solc/jsonCompiler.cpp.
+ * Unit tests for libsolc/libsolc.cpp.
  */
 
 #include <string>
@@ -70,7 +70,7 @@ Json::Value compile(string const& _input)
 
 } // end anonymous namespace
 
-BOOST_AUTO_TEST_SUITE(JSONCompiler)
+BOOST_AUTO_TEST_SUITE(LibSolc)
 
 BOOST_AUTO_TEST_CASE(read_version)
 {
@@ -199,6 +199,26 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 	// Only tests some assumptions. The StandardCompiler is tested properly in another suite.
 	BOOST_CHECK(result.isMember("sources"));
 	BOOST_CHECK(result.isMember("contracts"));
+}
+
+BOOST_AUTO_TEST_CASE(new_api)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	BOOST_CHECK_EQUAL(string(version()), string(solidity_version()));
+	BOOST_CHECK_EQUAL(string(license()), string(solidity_license()));
+	BOOST_CHECK_EQUAL(
+		string(compileStandard(input, nullptr)),
+		string(solidity_compile(input, nullptr))
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
