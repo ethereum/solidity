@@ -56,7 +56,6 @@ fi
 function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
 function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
 
-
 printTask "Running commandline tests..."
 "$REPO_ROOT/test/cmdlineTests.sh" &
 CMDLINE_PID=$!
@@ -70,58 +69,58 @@ then
     fi
 fi
 
-function download_eth()
+function download_aleth()
 {
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        ETH_PATH="$REPO_ROOT/eth"
+        ALETH_PATH="$REPO_ROOT/aleth"
     elif [ -z $CI ]; then
-        ETH_PATH="eth"
+        ALETH_PATH="aleth"
     else
         mkdir -p /tmp/test
         if grep -i trusty /etc/lsb-release >/dev/null 2>&1
         then
             # built from d661ac4fec0aeffbedcdc195f67f5ded0c798278 at 2018-06-20
-            ETH_BINARY=aleth_2018-06-20_trusty
-            ETH_HASH="54b8a5455e45b295e3a962f353ff8f1580ed106c"
+            ALETH_BINARY=aleth_2018-06-20_trusty
+            ALETH_HASH="54b8a5455e45b295e3a962f353ff8f1580ed106c"
         else
             # built from d661ac4fec0aeffbedcdc195f67f5ded0c798278 at 2018-06-20
-            ETH_BINARY=aleth_2018-06-20_artful
-            ETH_HASH="02e6c4b3d98299885e73f7db6c9e3fbe3d66d444"
+            ALETH_BINARY=aleth_2018-06-20_artful
+            ALETH_HASH="02e6c4b3d98299885e73f7db6c9e3fbe3d66d444"
         fi
-        wget -q -O /tmp/test/eth https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ETH_BINARY
-        test "$(shasum /tmp/test/eth)" = "$ETH_HASH  /tmp/test/eth"
+        ALETH_PATH="/tmp/test/aleth"
+        wget -q -O $ALETH_PATH https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ALETH_BINARY
+        test "$(shasum $ALETH_PATH)" = "$ALETH_HASH  $ALETH_PATH"
         sync
-        chmod +x /tmp/test/eth
+        chmod +x $ALETH_PATH
         sync # Otherwise we might get a "text file busy" error
-        ETH_PATH="/tmp/test/eth"
     fi
 
 }
 
 # $1: data directory
 # echos the PID
-function run_eth()
+function run_aleth()
 {
-    $ETH_PATH --test -d "$1" >/dev/null 2>&1 &
+    $ALETH_PATH --test -d "$1" >/dev/null 2>&1 &
     echo $!
     # Wait until the IPC endpoint is available.
     while [ ! -S "$1"/geth.ipc ] ; do sleep 1; done
     sleep 2
 }
 
-function check_eth() {
-    printTask "Running IPC tests with $ETH_PATH..."
-    if ! hash $ETH_PATH 2>/dev/null; then
-      printError "$ETH_PATH not found"    
+function check_aleth() {
+    printTask "Running IPC tests with $ALETH_PATH..."
+    if ! hash $ALETH_PATH 2>/dev/null; then
+      printError "$ALETH_PATH not found"
       exit 1
     fi
 }
 
 if [ "$IPC_ENABLED" = true ];
 then
-    download_eth
-    check_eth
-    ETH_PID=$(run_eth /tmp/test)
+    download_aleth
+    check_aleth
+    ALETH_PID=$(run_aleth /tmp/test)
 fi
 
 progress="--show-progress"
@@ -166,7 +165,7 @@ fi
 
 if [ "$IPC_ENABLED" = true ]
 then
-    pkill "$ETH_PID" || true
+    pkill "$ALETH_PID" || true
     sleep 4
-    pgrep "$ETH_PID" && pkill -9 "$ETH_PID" || true
+    pgrep "$ALETH_PID" && pkill -9 "$ALETH_PID" || true
 fi
