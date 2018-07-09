@@ -1,8 +1,8 @@
 interface I {
-	function I();
+	function I() public;
 }
 // ----
-// Warning: (15-28): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
-// Warning: (15-28): Functions in interfaces should be declared external.
-// TypeError: (15-28): Constructor cannot be defined in interfaces.
-// TypeError: (15-28): Constructor must be implemented if declared.
+// Warning: (15-35): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
+// Warning: (15-35): Functions in interfaces should be declared external.
+// TypeError: (15-35): Constructor cannot be defined in interfaces.
+// TypeError: (15-35): Constructor must be implemented if declared.

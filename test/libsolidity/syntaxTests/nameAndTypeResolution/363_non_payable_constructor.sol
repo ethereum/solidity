@@ -1,5 +1,5 @@
 contract C {
-    constructor() { }
+    constructor() public { }
 }
 contract D {
     function f() public returns (uint) {
@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError: (99-112): Member "value" not found or not visible after argument-dependent lookup in function () returns (contract C) - did you forget the "payable" modifier?
+// TypeError: (106-119): Member "value" not found or not visible after argument-dependent lookup in function () returns (contract C) - did you forget the "payable" modifier?

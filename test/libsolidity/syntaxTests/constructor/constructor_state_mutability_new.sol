@@ -1,9 +1,9 @@
 contract test1 {
-  constructor() view {}
+  constructor() public view {}
 }
 contract test2 {
-  constructor() pure {}
+  constructor() public pure {}
 }
 // ----
-// TypeError: (19-40): Constructor must be payable or non-payable, but is "view".
-// TypeError: (62-83): Constructor must be payable or non-payable, but is "pure".
+// TypeError: (19-47): Constructor must be payable or non-payable, but is "view".
+// TypeError: (69-97): Constructor must be payable or non-payable, but is "pure".

@@ -1,6 +1,6 @@
 contract c {
-    function func() {}
+    function func() public {}
     function g() public { fun(); }
 }
 // ----
-// DeclarationError: (62-65): Undeclared identifier. Did you mean "func"?
+// DeclarationError: (69-72): Undeclared identifier. Did you mean "func"?

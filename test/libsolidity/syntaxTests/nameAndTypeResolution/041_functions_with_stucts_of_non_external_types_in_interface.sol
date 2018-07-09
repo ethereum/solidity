@@ -2,7 +2,7 @@ pragma experimental ABIEncoderV2;
 
 contract C {
     struct S { function() internal a; }
-    function f(S) {}
+    function f(S) public {}
 }
 // ----
 // Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
