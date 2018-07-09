@@ -647,49 +647,43 @@ Micropayment Channel
 
 In this section we will learn how to build a simple implementation
 of a payment channel. It use cryptographics signatures to make
-repeated transfers of Ether securely, instantaneously, and
+repeated transfers of Ether between the same parties secure, instantaneous, and
 without transaction fees. To do it we need to understand how to
 sign and verify signatures, and setup the payment channel.
 
 Creating and verifying signatures
 =================================
 
-Imagine the Alice wants to send a quantity in Ether to the Bob,
+Imagine Alice wants to send a quantity of Ether to Bob, i.e.
 Alice is the sender and the Bob is the recipient.
-So all that Alice will do now is using cryptographics signatures
-that she will make and send off-chain (e.g. via email) to the Bob.
-She will call the contract as ReceiverPays, it will works a lot like
-writing a check.
+Alice only needs to send cryptographically signed messages off-chain
+(e.g. via email) to Bob and it will be very similar to writing checks.
+
 Signatures are used to authorize transactions,
 and they are a general tool that is available to
 smart contracts. Alice will build a simple
 smart contract that lets her transmit Ether, but
 in a unusual way, instead of calling a function herself
 to initiate a payment, she will let Bob
-does that, and therefore pay the transaction fee.
-The contract will works like that:
+do that, and therefore pay the transaction fee.
+The contract will work as follows:
 
-    1. The Alice deploys ReceiverPays, attaching enough Ether to cover the payments that will be made.
-    2. The Alice authorizes a payment by signing a message with their private key.
-    3. The Alice sends the cryptographically signed message to Bob. The message does not need to be kept secret (you will understand it later), and the mechanism for sending it doesn't matter.
-    4. The Bob claims their payment by presenting the signed message to the smart contract, it verifies the authenticity of the message and then releases the funds.
+    1. Alice deploys the ``ReceiverPays`` contract, attaching enough Ether to cover the payments that will be made.
+    2. Alice authorizes a payment by signing a message with their private key.
+    3. Alice sends the cryptographically signed message to Bob. The message does not need to be kept secret
+       (you will understand it later), and the mechanism for sending it does not matter.
+    4. Bob claims their payment by presenting the signed message to the smart contract, it verifies the
+       authenticity of the message and then releases the funds.
 
 Creating the signature
 ----------------------
 
-The Alice don't need to interact with Ethereum network to
-sign the transaction. The proccess is completely offline, and the
-every major programming language has the libraries to do it.
-The `Elliptic Curve Signature Algorithm(ECDCSA) <https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm>`_
-is the signature algorithm Ethereum has to do it.
-In this tutorial, we will signing messages in the web browser
-using web3.js and MetaMask. We can sign messages in too many ways.
-We will use the standard way provided in `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
+Alice does not need to interact with Ethereum network to
+sign the transaction, the proccess is completely offline.
+In this tutorial, we will sign messages in the browser
+using ``web3.js`` and ``MetaMask``.
+In particular, we will use the standard way described in `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
 as it provides a number of other security benefits.
-Is recommended to keep with the most standard format of signing,
-as specified by the `eth_sign JSON-RPC method <https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign>`_
-In MetaMask, this algorithm is followed best by the web3.js function `web3.personal.sign`,
-doing it using:
 
 ::
 
@@ -698,9 +692,9 @@ doing it using:
     web3.personal.sign(hash, web3.eth.defaultAccount, function () {...});
 
 
-Note: Remind that the prefix includes the length of the message.
-Hashing first means the message will always be 32 bytes long,
-which means the prefix is always the same, this makes everything easier.
+Note that the ``web3.personal.sign`` prepends the length of the message to the signed data.
+Since we hash first, the message will always be exactly 32 bytes long,
+and thus this length prefix is always the same, making everything easier.
 
 What to Sign
 ------------
@@ -709,46 +703,48 @@ For a contract that fulfills payments, the signed message must include:
 
     1. The recipient's address
     2. The amount to be transferred
-    3. An additional data to protects against replay attacks
+    3. Protection against replay attacks
 
-A replay attack is when a signature is reused to claim authorization for
+A replay attack is when a signed message is reused to claim authorization for
 a second action.
 To avoid replay attacks we will use the same as in Ethereum transactions
-themselves, a nonce. A nonce is the number of transactions sent by an 
+themselves, a so-called nonce, which is the number of transactions sent by an 
 account.
-And the Alice's smart contract will check if that nonce is reused.
+The smart contract will check if a nonce is used multiple times.
+
 There is another type of replay attacks, it occurs when the
-owner deploy a ReceiverPays smart contract, make some payments,
-and then destroy the contract. Later, he decide to deploy the
-RecipientPays smart contract again, but the new contract doesn't
+owner deploys a ``ReceiverPays`` smart contract, performs some payments,
+and then destroy the contract. Later, she decides to deploy the
+``RecipientPays`` smart contract again, but the new contract does not
 know the nonces used in the previous deployment, so the attacker
-can use the old messages again. The Alice can protect against it including
-the contract's address in our message, and only accepting the
-messages containing contract's address itself.
-You can see this function reading the  *first two lines* in the *claimPayment()* function in the full contract,
-it is at the end of this chapter.
+can use the old messages again.
+
+Alice can protect against it including
+the contract's address in the message, and only
+messages containing contract's address itself will be accepted.
+This functionality can be found in the first two lines of the ``claimPayment()`` function in the full contract
+at the end of this chapter.
 
 Packing arguments
 -----------------
 
 Now that we have identified what information to include in the
 signed message, we are ready to put the message together, hash it,
-and sign it. Solidity's `keccak256/sha3 function <http://solidity.readthedocs.io/en/develop/units-and-global-variables.html#mathematical-and-cryptographic-functions>`_
-hashes by first concatenating them in a tightly packed form.
-For the hash generated on the client match the one generated in the smart contract,
-the arguments must be concatenated in the same way. The 
+and sign it. For simplicity, we just concatenate the data.
+The 
 `ethereumjs-abi <https://github.com/ethereumjs/ethereumjs-abi>`_ library provides
-a function called `soliditySHA3` that mimics the behavior
-of Solidity's `keccak256` function.
-Putting it all together, here is a **JavaScript function** that
-creates the proper signature for the `ReceiverPays` example:
+a function called ``soliditySHA3`` that mimics the behavior
+of Solidity's ``keccak256`` function applied to arguments encoded
+using ``abi.encodePacked``.
+Putting it all together, here is a JavaScript function that
+creates the proper signature for the ``ReceiverPays`` example:
 
 ::
 
-    /// recipient is the address that should be paid.
-    /// amount, in wei, specifies how much ether should be sent.
-    /// nonce can be any unique number, do you remind the replay attacks? we are preventing them here
-    /// contractAddress do you remind the cross-contract replay attacks?
+    // recipient is the address that should be paid.
+    // amount, in wei, specifies how much ether should be sent.
+    // nonce can be any unique number to prevent replay attacks
+    // contractAddress is used to prevent cross-contract replay attacks
     function signPayment(recipient, amount, nonce, contractAddress, callback) {
         var hash = "0x" + ethereumjs.ABI.soliditySHA3(
             ["address", "uint256", "uint256", "address"],
@@ -761,33 +757,34 @@ creates the proper signature for the `ReceiverPays` example:
 Recovering the Message Signer in Solidity
 -----------------------------------------
 
-In general, ECDSA signatures consist of two parameters, *r* and *s*.
-Signatures in Ethereum include a thir parameter *v*, that can be used
+In general, ECDSA signatures consist of two parameters, ``r`` and ``s``.
+Signatures in Ethereum include a third parameter called ``v``, that can be used
 to recover which account's private key was used to sign in the message,
-the transaction's sender. Solidity provides a built-in function `ecrecover <https://solidity.readthedocs.io/en/develop/units-and-global-variables.html#mathematical-and-cryptographic-functions>`_
-that accepts a message along with the *r*, *s* and *v* parameters and
+the transaction's sender. Solidity provides a built-in function
+`ecrecover <mathematical-and-cryptographic-functions>`_
+that accepts a message along with the ``r``, ``s`` and ``v`` parameters and
 returns the address that was used to sign the message.
 
 Extracting the Signature Parameters
 -----------------------------------
 
-Signatures produced by web3.js are the concatenation of *r*, *s* and *v*,
-so the 1st step is sppliting those parameters back out. It can be done on the client,
+Signatures produced by web3.js are the concatenation of ``r``, ``s`` and ``v``,
+so the first step is splitting those parameters back out. It can be done on the client,
 but doing it inside the smart contract means only one signature parameter
 needs to be sent rather than three.
-Sppliting apart a bytes array into component parts is a little messy.
-We will use the `inline assembly <https://solidity.readthedocs.io/en/develop/assembly.html>`_ to do the job
-in the *splitSignature* function, it is the 3rd function in the full contract, this is at the end of this
-chapter.
+Splitting apart a byte array into component parts is a little messy.
+We will use `inline assembly <assembly>`_ to do the job
+in the ``splitSignature`` function (the third function in the full contract
+at the end of this chapter).
 
 Computing the Message Hash
 --------------------------
  
 The smart contract needs to know exactly what parameters were signed,
 and so it must recreate the message from the parameters and use that
-for signature verification. We need the functions *prefixed* and
-*recoverSigner* to do it, in function *claimPayment* you can see the
-use of that functions.
+for signature verification. The functions ``prefixed`` and
+``recoverSigner`` do this and their use can be found in the
+``claimPayment`` function.
 
 
 The full contract
@@ -826,19 +823,15 @@ The full contract
         function splitSignature(bytes sig)
             internal
             pure
-            returns (uint8, bytes32, bytes32)
+            returns (uint8 v, bytes32 r, bytes32 s)
         {
             require(sig.length == 65);
 
-            bytes32 r;
-            bytes32 s;
-            uint8 v;
-
             assembly {
                 // first 32 bytes, after the length prefix.
-                r := mload(add(sig,32))
+                r := mload(add(sig, 32))
                 // second 32 bytes.
-                s := mload(add(sig,64))
+                s := mload(add(sig, 64))
                 // final byte (first byte of the next 32 bytes).
                 v := byte(0, mload(add(sig, 96)))
             }
@@ -851,11 +844,7 @@ The full contract
             pure
             returns (address)
         {
-            uint8 v;
-            bytes32 r;
-            bytes32 s;
-
-            (v, r, s) = splitSignature(sig);
+            (uint8 v, bytes32 r, bytes32 s) = splitSignature(sig);
 
             return ecrecover(message, v, r, s);
         }
@@ -870,10 +859,9 @@ The full contract
 Writing a Simple Payment Channel
 ================================
 
-Do you remember Alice and Bob? They are here again.
-The Alice will build a simple, but complete, implementation of a payment channel.
+Alice will now build a simple but complete implementation of a payment channel.
 Payment channels use cryptographic signatures to make repeated transfers
-of Ether securely, instantaneously, and without transaction fees. but...
+of Ether securely, instantaneously, and without transaction fees.
 
 What is a Payment Channel?
 --------------------------
@@ -883,17 +871,17 @@ using transactions. This means that the delays and fees associated with transact
 can be avoided. We are going to explore a simple unidirectional payment channel between
 two parties (Alice and Bob). Using it involves three steps:
 
-    1. The Alice funds a smart contract with Ether. This "opens" the payment channel.
-    2. The Alice signs messages that specify how much of that Ether is owed to the recipient. This step is repeated for each payment.
-    3. The Bob "closes" the payment channel, withdrawing their portion of the ether and sending the remainder back to the sender.
+    1. Alice funds a smart contract with Ether. This "opens" the payment channel.
+    2. Alice signs messages that specify how much of that Ether is owed to the recipient. This step is repeated for each payment.
+    3. Bob "closes" the payment channel, withdrawing their portion of the Ether and sending the remainder back to the sender.
     
-A note: only steps 1 and 3 require Ethereum transactions, the step 2 means that
-the sender a cryptographic signature to the recipient via off chain ways (e.g. email).
+Not ethat only steps 1 and 3 require Ethereum transactions, step 2 means that
+the sender transmits a cryptographically signed message to the recipient via off chain ways (e.g. email).
 This means only two transactions are required to support any number of transfers.
 
-The Bob is guaranteed to receive their funds because the smart contract escrows
+Bob is guaranteed to receive their funds because the smart contract escrows
 the Ether and honors a valid signed message. The smart contract also enforces a timeout,
-so the Alice is guaranteed to eventually recover their funds even if the recipient refuses
+so Alice is guaranteed to eventually recover their funds even if the recipient refuses
 to close the channel.
 It is up to the participants in a payment channel to decide how long to keep it open.
 For a short-lived transaction, such as paying an internet cafe for each minute of network access,
@@ -902,15 +890,15 @@ or for a longer relationship, such as paying an employee an hourly wage, a payme
 Opening the Payment Channel
 ---------------------------
 
-To open the payment channel, the Alice deploys the smart contract,
+To open the payment channel, Alice deploys the smart contract,
 attaching the Ether to be escrowed and specifying the intendend recipient
 and a maximum duration for the channel to exist. It is the function
-*SimplePaymentChannel* in the contract, that is at the end of this chapter.
+``SimplePaymentChannel`` in the contract, that is at the end of this chapter.
 
 Making Payments
 ---------------
 
-The Alice makes payments by sending signed messages to the Bob.
+Alice makes payments by sending signed messages to Bob.
 This step is performed entirely outside of the Ethereum network.
 Messages are cryptographically signed by the sender and then transmitted directly to the recipient.
 
@@ -924,11 +912,11 @@ Because of this, only one of the messages sent will be redeemed. This is why
 each message specifies a cumulative total amount of Ether owed, rather than the
 amount of the individual micropayment. The recipient will naturally choose to
 redeem the most recent message because that is the one with the highest total.
-We don't need anymore the nonce per-message, because the smart contract will
+The nonce per-message is not needed anymore, because the smart contract will
 only honor a single message. The address of the smart contract is still used
 to prevent a message intended for one payment channel from being used for a different channel.
 
-Here's the modified **javascript code** to cryptographic a message from the previous chapter:
+Here is the modified javascript code to cryptographically sign a message from the previous chapter:
 
 ::
 
@@ -955,42 +943,43 @@ Here's the modified **javascript code** to cryptographic a message from the prev
         signMessage(message, callback);
     }
 
+
 Closing the Payment Channel
 ---------------------------
 
-When the Bob is ready to receive their funds, it is time to
-close the payment channel by calling a *close* function on the smart contract.
-Closing the channel pays the recipient the Ether they're owed and destroys the contract,
-sending any remaining Ether back to the Alice.
-To close the channel, the Bob needs to share a message signed by the Alice.
+When Bob is ready to receive their funds, it is time to
+close the payment channel by calling a ``close`` function on the smart contract.
+Closing the channel pays the recipient the Ether they are owed and destroys the contract,
+sending any remaining Ether back to Alice.
+To close the channel, Bob needs to provide a message signed by Alice.
 
 The smart contract must verify that the message contains a valid signature from the sender.
 The process for doing this verification is the same as the process the recipient uses.
-The Solidity functions *isValidSignature* and *recoverSigner* work just like their
+The Solidity functions ``isValidSignature`` and ``recoverSigner`` work just like their
 JavaScript counterparts in the previous section. The latter is borrowed from the
-*ReceiverPays* contract in the previous chapter.
+``ReceiverPays`` contract in the previous chapter.
 
-The *close* function can only be called by the payment channel recipient,
+The ``close`` function can only be called by the payment channel recipient,
 who will naturally pass the most recent payment message because that message
 carries the highest total owed. If the sender were allowed to call this function,
 they could provide a message with a lower amount and cheat the recipient out of what they are owed.
 
 The function verifies the signed message matches the given parameters.
 If everything checks out, the recipient is sent their portion of the Ether,
-and the sender is sent the rest via a *selfdestruct*.
-You can see the *close* function in the full contract.
+and the sender is sent the rest via a ``selfdestruct``.
+You can see the ``close`` function in the full contract.
 
 Channel Expiration
 -------------------
 
-The Bob can close the payment channel at any time, but if they fail to do so,
-the Alice needs a way to recover their escrowed funds. An *expiration* time was set
-at the time of contract deployment. Once that time is reached, the Alice can call
-*claimTimeout* to recover their funds. You can see the *claimTimeout* function in the
+Bob can close the payment channel at any time, but if they fail to do so,
+Alice needs a way to recover their escrowed funds. An *expiration* time was set
+at the time of contract deployment. Once that time is reached, Alice can call
+``claimTimeout`` to recover their funds. You can see the ``claimTimeout`` function in the
 full contract.
 
-After this function is called, the Bob can no longer receive any Ether,
-so it is important that the Bob close the channel before the expiration is reached.
+After this function is called, Bob can no longer receive any Ether,
+so it is important that Bob closes the channel before the expiration is reached.
 
 
 The full contract
@@ -1015,9 +1004,9 @@ The full contract
         }
 
         function isValidSignature(uint256 amount, bytes signature)
-        internal
-        view
-        returns (bool)
+            internal
+            view
+            returns (bool)
         {
             bytes32 message = prefixed(keccak256(abi.encodePacked(this, amount)));
 
@@ -1051,24 +1040,15 @@ The full contract
             selfdestruct(sender);
         }
 
-        /// from here to the end of this contract, all the functions we already wrote, in
-        /// the 'creating and verifying signatures' chapter, so if you already know what them
-        /// does, you can skip it.
-
-        /// the same functions we wrote in the 'creating and verifying signatures' chapter,
-        /// you can go there to find the full explanations.
-        /// please read the notes below this contract.
+        /// All functions below this are just taken from the chapter
+        /// 'creating and verifying signatures' chapter.
 
         function splitSignature(bytes sig)
             internal
             pure
-            returns (uint8, bytes32, bytes32)
+            returns (uint8 v, bytes32 r, bytes32 s)
         {
             require(sig.length == 65);
-
-            bytes32 r;
-            bytes32 s;
-            uint8 v;
 
             assembly {
                 // first 32 bytes, after the length prefix
@@ -1087,11 +1067,7 @@ The full contract
             pure
             returns (address)
         {
-            uint8 v;
-            bytes32 r;
-            bytes32 s;
-
-            (v, r, s) = splitSignature(sig);
+            (uint8 v, bytes32 r, bytes32 s) = splitSignature(sig);
 
             return ecrecover(message, v, r, s);
         }
@@ -1103,9 +1079,9 @@ The full contract
     }
 
 
-Note: The function *splitSignature* uses the code from the `gist <https://gist.github.com/axic/5b33912c6f61ae6fd96d6c4a47afde6d>`_. In
-a real implementation should be used a more tested library, such as the
-openzepplin's fork of the original code, `library <https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ECRecovery.sol>`_.
+Note: The function ``splitSignature`` is very simple and does not use all security checks.
+A real implementation should use a more rigorously tested library, such as
+openzepplin's `version <https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ECRecovery.sol>`_ of this code.
 
   
 
