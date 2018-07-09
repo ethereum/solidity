@@ -25,7 +25,7 @@ Breaking Changes:
    ``sizeof``, ``supports``, ``typedef`` and ``unchecked``.
  * General: Remove assembly instruction aliases ``sha3`` and ``suicide``
  * General: C99-style scoping rules are enforced now. This was already the case in the experimental 0.5.0 mode.
- * General: Disallow combining hex numbers with unit denominations (e.g. 0x1e wei). This was already the case in the experimental 0.5.0 mode.
+ * General: Disallow combining hex numbers with unit denominations (e.g. ``0x1e wei``). This was already the case in the experimental 0.5.0 mode.
  * Optimizer: Remove the no-op ``PUSH1 0 NOT AND`` sequence.
  * Parser: Disallow trailing dots that are not followed by a number.
  * Parser: Remove ``constant`` as function state mutability modifer.
