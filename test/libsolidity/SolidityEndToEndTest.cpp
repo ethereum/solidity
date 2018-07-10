@@ -7895,7 +7895,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 				if (a != 1 || b != 2 || c[0] != 3) return 2;
 				(a, b) = (b, a);
 				if (a != 2 || b != 1) return 3;
-				(a, , b, ) = (8, 9, 10, 11, 12);
+				(a, , b, , ) = (8, 9, 10, 11, 12);
 				if (a != 8 || b != 10) return 4;
 			}
 		}
@@ -7983,38 +7983,13 @@ BOOST_AUTO_TEST_CASE(destructuring_assignment)
 				if (loc != 3) return 9;
 				if (memArray.length != arrayData.length) return 10;
 				bytes memory memBytes;
-				(x, memBytes, y[2], ) = (456, s, 789, 101112, 131415);
+				(x, memBytes, y[2], , ) = (456, s, 789, 101112, 131415);
 				if (x != 456 || memBytes.length != s.length || y[2] != 789) return 11;
 			}
 		}
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f(bytes)", u256(0x20), u256(5), string("abcde")), encodeArgs(u256(0)));
-}
-
-BOOST_AUTO_TEST_CASE(destructuring_assignment_wildcard)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (uint) {
-				uint a;
-				uint b;
-				uint c;
-				(a,) = (1,);
-				if (a != 1) return 1;
-				(,b) = (2,3,4);
-				if (b != 4) return 2;
-				(, c,) = (5,6,7);
-				if (c != 6) return 3;
-				(a, b,) = (11, 12, 13);
-				if (a != 11 || b != 12) return 4;
-				(, a, b) = (11, 12, 13);
-				if (a != 12 || b != 13) return 5;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0)));
 }
 
 BOOST_AUTO_TEST_CASE(lone_struct_array_type)

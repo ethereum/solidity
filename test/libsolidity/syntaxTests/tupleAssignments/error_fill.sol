@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// TypeError: (126-136): Different number of components on the left hand side (2) than on the right hand side (3).
-// TypeError: (140-150): Different number of components on the left hand side (2) than on the right hand side (3).
+// TypeError: (133-136): Type tuple(uint256,uint256,bytes32) is not implicitly convertible to expected type tuple(uint256,).
+// TypeError: (147-150): Type tuple(uint256,uint256,bytes32) is not implicitly convertible to expected type tuple(,bytes32).

@@ -293,11 +293,6 @@ These can then either be assigned to newly declared variables or to pre-existing
             (x, y) = (y, x);
             // Components can be left out (also for variable declarations).
             (data.length,,) = f(); // Sets the length to 7
-            // Components can only be left out at the left-hand-side of assignments, with
-            // one exception:
-            (x,) = (1,);
-            // (1,) is the only way to specify a 1-component tuple, because (1) is
-            // equivalent to 1.
         }
     }
 

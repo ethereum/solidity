@@ -2238,25 +2238,13 @@ bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 		TypePointers const& targets = tupleType->components();
 		if (targets.empty())
 			return components().empty();
-		if (components().size() != targets.size() && !targets.front() && !targets.back())
-			return false; // (,a,) = (1,2,3,4) - unable to position `a` in the tuple.
-		size_t minNumValues = targets.size();
-		if (!targets.back() || !targets.front())
-			--minNumValues; // wildcards can also match 0 components
-		if (components().size() < minNumValues)
+		if (components().size() != targets.size())
 			return false;
-		if (components().size() > targets.size() && targets.front() && targets.back())
-			return false; // larger source and no wildcard
-		bool fillRight = !targets.back() || targets.front();
-		for (size_t i = 0; i < min(targets.size(), components().size()); ++i)
-		{
-			auto const& s = components()[fillRight ? i : components().size() - i - 1];
-			auto const& t = targets[fillRight ? i : targets.size() - i - 1];
-			if (!s && t)
+		for (size_t i = 0; i < targets.size(); ++i)
+			if (!components()[i] && targets[i])
 				return false;
-			else if (s && t && !s->isImplicitlyConvertibleTo(*t))
+			else if (components()[i] && targets[i] && !components()[i]->isImplicitlyConvertibleTo(*targets[i]))
 				return false;
-		}
 		return true;
 	}
 	else
