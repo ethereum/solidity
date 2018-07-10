@@ -1250,13 +1250,12 @@ private:
 };
 
 /**
- * Definition of a variable as a statement inside a function. It requires a type name (which can
- * also be "var") but the actual assignment can be missing.
- * Examples: var a = 2; uint256 a;
- * As a second form, multiple variables can be declared, cannot have a type and must be assigned
- * right away. If the first or last component is unnamed, it can "consume" an arbitrary number
- * of components.
- * Examples: var (a, b) = f(); var (a,,,c) = g(); var (a,) = d();
+ * Definition of one or more variables as a statement inside a function.
+ * If multiple variables are declared, a value has to be assigned directly.
+ * If only a single variable is declared, the value can be missing.
+ * Examples:
+ * uint[] memory a; uint a = 2;
+ * (uint a, bytes32 b, ) = f(); (, uint a, , StructName storage x) = g();
  */
 class VariableDeclarationStatement: public Statement
 {
@@ -1278,6 +1277,9 @@ public:
 
 private:
 	/// List of variables, some of which can be empty pointers (unnamed components).
+	/// Note that the ``m_value`` member of these is unused. Instead, ``m_initialValue``
+	/// below is used, because the initial value can be a single expression assigned
+	/// to all variables.
 	std::vector<ASTPointer<VariableDeclaration>> m_variables;
 	/// The assigned expression / initial value.
 	ASTPointer<Expression> m_initialValue;
