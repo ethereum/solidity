@@ -21,10 +21,9 @@ often hard to address the correct stack slot and provide arguments to opcodes at
 point on the stack. Solidity's inline assembly tries to facilitate that and other issues
 arising when writing manual assembly by the following features:
 
-* functional-style opcodes: ``mul(1, add(2, 3))`` instead of ``push1 3 push1 2 add push1 1 mul``
+* functional-style opcodes: ``mul(1, add(2, 3))``
 * assembly-local variables: ``let x := add(2, 3)  let y := mload(0x40)  x := add(x, y)``
 * access to external variables: ``function f(uint x) public { assembly { x := sub(x, 1) } }``
-* labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
 * loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
 * if statements: ``if slt(x, 0) { x := sub(0, x) }``
 * switch statements: ``switch x case 0 { y := mul(x, 2) } default { y := 0 }``
@@ -134,7 +133,6 @@ usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { .
 these curly braces, the following can be used (see the later sections for more details)
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
- - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
  - opcodes in functional style, e.g. ``add(1, mlod(0))``
  - labels, e.g. ``name:``
  - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
@@ -416,57 +414,8 @@ changes during the call, and thus references to local variables will be wrong.
 Labels
 ------
 
-.. note::
-    Labels are deprecated. Please use functions, loops, if or switch statements instead.
-
-Another problem in EVM assembly is that ``jump`` and ``jumpi`` use absolute addresses
-which can change easily. Solidity inline assembly provides labels to make the use of
-jumps easier. Note that labels are a low-level feature and it is possible to write
-efficient assembly without labels, just using assembly functions, loops, if and switch instructions
-(see below). The following code computes an element in the Fibonacci series.
-
-.. code::
-
-    {
-        let n := calldataload(4)
-        let a := 1
-        let b := a
-    loop:
-        jumpi(loopend, eq(n, 0))
-        a add swap1
-        n := sub(n, 1)
-        jump(loop)
-    loopend:
-        mstore(0, a)
-        return(0, 0x20)
-    }
-
-Please note that automatically accessing stack variables can only work if the
-assembler knows the current stack height. This fails to work if the jump source
-and target have different stack heights. It is still fine to use such jumps, but
-you should just not access any stack variables (even assembly variables) in that case.
-
-Furthermore, the stack height analyser goes through the code opcode by opcode
-(and not according to control flow), so in the following case, the assembler
-will have a wrong impression about the stack height at label ``two``:
-
-.. code::
-
-    {
-        let x := 8
-        jump(two)
-        one:
-            // Here the stack height is 2 (because we pushed x and 7),
-            // but the assembler thinks it is 1 because it reads
-            // from top to bottom.
-            // Accessing the stack variable x here will lead to errors.
-            x := 9
-            jump(three)
-        two:
-            7 // push something onto the stack
-            jump(one)
-        three:
-    }
+Support for labels has been removed in version 0.5.0 of Solidity.
+Please use functions, loops, if or switch statements instead.
 
 Declaring Assembly-Local Variables
 ----------------------------------
