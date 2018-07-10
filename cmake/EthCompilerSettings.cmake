@@ -132,17 +132,6 @@ elseif (DEFINED MSVC)
 	add_compile_options(-D_WIN32_WINNT=0x0600)		# declare Windows Vista API requirement
 	add_compile_options(-DNOMINMAX)					# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
 
-	# Always use Release variant of C++ runtime.
-	# We don't want to provide Debug variants of all dependencies. Some default
-	# flags set by CMake must be tweaked.
-	string(REPLACE "/MDd" "/MD" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-	string(REPLACE "/D_DEBUG" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-	string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-	string(REPLACE "/MDd" "/MD" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-	string(REPLACE "/D_DEBUG" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-	string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-	set_property(GLOBAL PROPERTY DEBUG_CONFIGURATIONS OFF)
-
 	# disable empty object file warning
 	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /ignore:4221")
 	# warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
