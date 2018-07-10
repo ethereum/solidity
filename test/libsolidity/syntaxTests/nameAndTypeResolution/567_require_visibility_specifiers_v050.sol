@@ -3,4 +3,4 @@ contract C {
     function f() pure { }
 }
 // ----
-// SyntaxError: (47-68): No visibility specified.
+// SyntaxError: (47-68): No visibility specified. Did you intend to add "public"?
