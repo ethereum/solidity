@@ -156,6 +156,11 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 void NameAndTypeResolver::activateVariable(string const& _name)
 {
 	solAssert(m_currentScope, "");
+	// Scoped local variables are invisible before activation.
+	// When a local variable is activated, its name is removed
+	// from a scope's invisible variables.
+	// This is used to avoid activation of variables of same name
+	// in the same scope (an error is returned).
 	if (m_currentScope->isInvisible(_name))
 		m_currentScope->activateVariable(_name);
 }
