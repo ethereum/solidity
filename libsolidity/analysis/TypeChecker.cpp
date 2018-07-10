@@ -1466,11 +1466,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (components.size() == 1)
 				_tuple.annotation().type = type(*components[0]);
 			else
-			{
-				if (components.size() == 2 && !components[1])
-					types.pop_back();
 				_tuple.annotation().type = make_shared<TupleType>(types);
-			}
 		}
 
 	}
