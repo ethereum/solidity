@@ -679,7 +679,7 @@ Creating the signature
 ----------------------
 
 Alice does not need to interact with Ethereum network to
-sign the transaction, the proccess is completely offline.
+sign the transaction, the process is completely offline.
 In this tutorial, we will sign messages in the browser
 using ``web3.js`` and ``MetaMask``.
 In particular, we will use the standard way described in `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
@@ -1034,7 +1034,7 @@ The full contract
         }
 
         /// if the timeout is reached without the recipient closing the channel,
-        /// then the Ether is realeased back to the sender.
+        /// then the Ether is released back to the sender.
         function clainTimeout() public {
             require(now >= expiration);
             selfdestruct(sender);

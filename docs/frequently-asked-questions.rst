@@ -69,7 +69,7 @@ Can you return an array or a ``string`` from a solidity function call?
 Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
 
 What is problematic, though, is returning any variably-sized data (e.g. a
-variably-sized array like ``uint[]``) from a fuction **called from within Solidity**.
+variably-sized array like ``uint[]``) from a function **called from within Solidity**.
 This is a limitation of the EVM and will be solved with the next protocol update.
 
 Returning variably-sized data as part of an external transaction or call is fine.
@@ -260,7 +260,7 @@ The third one is the stack, which is used to hold small local variables.
 It is almost free to use, but can only hold a limited amount of values.
 
 For almost all types, you cannot specify where they should be stored, because
-they are copied everytime they are used.
+they are copied every time they are used.
 
 The types where the so-called storage location is important are structs
 and arrays. If you e.g. pass such variables in function calls, their

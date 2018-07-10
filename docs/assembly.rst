@@ -212,9 +212,9 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | sar(x, y)               |     | C | arithmetic shift right y by x bits                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| addmod(x, y, m)         |     | F | (x + y) % m with arbitrary precision arithmetics                |
+| addmod(x, y, m)         |     | F | (x + y) % m with arbitrary precision arithmetic                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| mulmod(x, y, m)         |     | F | (x * y) % m with arbitrary precision arithmetics                |
+| mulmod(x, y, m)         |     | F | (x * y) % m with arbitrary precision arithmetic                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | signextend(i, x)        |     | F | sign extend from (i*8+7)th bit counting from least significant  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -228,9 +228,9 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | pop(x)                  | `-` | F | remove the element pushed by x                                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| dup1 ... dup16          |     | F | copy ith stack slot to the top (counting from top)              |
+| dup1 ... dup16          |     | F | copy nth stack slot to the top (counting from top)              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| swap1 ... swap16        | `*` | F | swap topmost and ith stack slot below it                        |
+| swap1 ... swap16        | `*` | F | swap topmost and nth stack slot below it                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | mload(p)                |     | F | mem[p...(p+32))                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
