@@ -1,6 +1,6 @@
 contract C {
     uint[] x;
-    function() public { 
+    function() external { 
         uint[] storage y = x;
         assembly {
             pop(y_slot)
