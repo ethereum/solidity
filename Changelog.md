@@ -708,7 +708,7 @@ Bugfixes:
  * Conditional: `x ? y : z`
  * Bugfix: Fixed several bugs where the optimizer generated invalid code.
  * Bugfix: Enums and structs were not accessible to other contracts.
- * Bugfix: Fixed segfault connected to function paramater types, appeared during gas estimation.
+ * Bugfix: Fixed segfault connected to function parameter types, appeared during gas estimation.
  * Bugfix: Type checker crash for wrong number of base constructor parameters.
  * Bugfix: Allow function overloads with different array types.
  * Bugfix: Allow assignments of type `(x) = 7`.

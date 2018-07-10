@@ -119,7 +119,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		julia::EVMAssembly assembly(true);
 		julia::CodeTransform(assembly, *m_analysisInfo, m_language == Language::Yul, true)(*m_parserResult);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
-		/// TOOD: fill out text representation
+		/// TODO: fill out text representation
 		return object;
 	}
 	case Machine::eWasm:

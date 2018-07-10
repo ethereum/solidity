@@ -448,7 +448,7 @@ void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefi
 {
 	m_errorReporter.typeError(
 		function.location(),
-		SecondarySourceLocation().append("Overriden function is here:", super.location()),
+		SecondarySourceLocation().append("Overridden function is here:", super.location()),
 		message
 	);
 }

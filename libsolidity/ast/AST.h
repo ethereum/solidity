@@ -1169,11 +1169,11 @@ public:
 	Statement const& body() const { return *m_body; }
 
 private:
-	/// For statement's initialization expresion. for(XXX; ; ). Can be empty
+	/// For statement's initialization expression. for(XXX; ; ). Can be empty
 	ASTPointer<Statement> m_initExpression;
-	/// For statement's condition expresion. for(; XXX ; ). Can be empty
+	/// For statement's condition expression. for(; XXX ; ). Can be empty
 	ASTPointer<Expression> m_condExpression;
-	/// For statement's loop expresion. for(;;XXX). Can be empty
+	/// For statement's loop expression. for(;;XXX). Can be empty
 	ASTPointer<ExpressionStatement> m_loopExpression;
 	/// The body of the loop
 	ASTPointer<Statement> m_body;

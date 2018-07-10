@@ -1751,7 +1751,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		{
 			if (c_valueSigned)
 				// In the following assembly snippet, xor_mask will be zero, if value_to_shift is positive.
-				// Therefor xor'ing with xor_mask is the identity and the computation reduces to
+				// Therefore xor'ing with xor_mask is the identity and the computation reduces to
 				// div(value_to_shift, exp(2, shift_amount)), which is correct, since for positive values
 				// arithmetic right shift is dividing by a power of two (which, as a bitwise operation, results
 				// in discarding bits on the right and filling with zeros from the left).
@@ -1879,7 +1879,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		{
 			m_context << u256(0);
 			utils().fetchFreeMemoryPointer();
-			// This touches too much, but that way we save some rounding arithmetics
+			// This touches too much, but that way we save some rounding arithmetic
 			m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
 		}
 	}

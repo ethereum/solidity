@@ -949,7 +949,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	RationalNumberType const& other = dynamic_cast<RationalNumberType const&>(*_other);
 	if (Token::isCompareOp(_operator))
 	{
-		// Since we do not have a "BoolConstantType", we have to do the acutal comparison
+		// Since we do not have a "BoolConstantType", we have to do the actual comparison
 		// at runtime and convert to mobile typse first. Such a comparison is not a very common
 		// use-case and will be optimized away.
 		TypePointer thisMobile = mobileType();
