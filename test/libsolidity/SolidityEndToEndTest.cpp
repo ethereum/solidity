@@ -7915,7 +7915,7 @@ BOOST_AUTO_TEST_CASE(string_tuples)
 				return (h(), "def");
 			}
 			function h() public returns (string) {
-				return ("abc",);
+				return ("abc");
 			}
 		}
 	)";
