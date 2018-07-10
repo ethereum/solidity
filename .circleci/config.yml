@@ -158,6 +158,23 @@ jobs:
       - store_artifacts: *solc_artifact
       - persist_to_workspace: *all_artifacts
 
+  test_check_spelling:
+    docker:
+      - image: circleci/python:3.6
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            pip install --user codespell
+      - run:
+          name: Check spelling
+          command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
+
   test_x86_linux:
     docker:
       - image: buildpack-deps:artful
@@ -220,6 +237,7 @@ workflows:
   version: 2
   build_all:
     jobs:
+      - test_check_spelling: *build_on_tags
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
           <<: *build_on_tags
