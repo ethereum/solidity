@@ -35,6 +35,7 @@ ExternalProject_Add(jsoncpp-project
                -DJSONCPP_WITH_TESTS=OFF
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
                -DCMAKE_CXX_FLAGS=${JSONCPP_EXTRA_FLAGS}
+               -DCMAKE_BUILD_TYPE=Release
     # Overwrite build and install commands to force Release build on MSVC.
     BUILD_COMMAND cmake --build <BINARY_DIR> --config Release
     INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install
