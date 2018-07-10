@@ -8,5 +8,5 @@ contract C {
     }
 }
 // ----
-// Warning: (162-165): Tuple component cannot be empty.
-// Warning: (181-184): Tuple component cannot be empty.
+// TypeError: (162-165): Tuple component cannot be empty.
+// TypeError: (181-184): Tuple component cannot be empty.
