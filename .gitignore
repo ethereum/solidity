@@ -35,6 +35,7 @@ build/
 docs/_build
 docs/utils/__pycache__
 docs/utils/*.pyc
+/deps/downloads/
 
 # vim stuff
 *.swp
@@ -43,3 +44,5 @@ docs/utils/*.pyc
 .idea
 browse.VC.db
 CMakeLists.txt.user
+/CMakeSettings.json
+/.vs
