@@ -1052,47 +1052,45 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 	m_insideEmitStatement = false;
 }
 
+namespace
+{
 /**
- * Creates a tuple declaration syntax from a vector of variable declarations.
- *
- * @param decls a tuple of variables
- *
- * @returns a Solidity language confirming string of a tuple variable declaration.
+ * @returns a suggested left-hand-side of a multi-variable declaration contairing
+ * the variable declarations given in @a _decls.
  */
-static string createTupleDecl(vector<VariableDeclaration const*> const & decls)
+string createTupleDecl(vector<VariableDeclaration const*> const& _decls)
 {
 	vector<string> components;
-	for (VariableDeclaration const* decl : decls)
+	for (VariableDeclaration const* decl: _decls)
 		if (decl)
 			components.emplace_back(decl->annotation().type->toString(false) + " " + decl->name());
 		else
 			components.emplace_back();
 
-	if (decls.size() == 1)
+	if (_decls.size() == 1)
 		return components.front();
 	else
 		return "(" + boost::algorithm::join(components, ", ") + ")";
 }
 
-static bool typeCanBeExpressed(vector<VariableDeclaration const*> const & decls)
+bool typeCanBeExpressed(vector<VariableDeclaration const*> const& decls)
 {
-	for (VariableDeclaration const* decl : decls)
+	for (VariableDeclaration const* decl: decls)
 	{
 		// skip empty tuples (they can be expressed of course)
 		if (!decl)
 			continue;
 
 		if (auto functionType = dynamic_cast<FunctionType const*>(decl->annotation().type.get()))
-		{
 			if (
 				functionType->kind() != FunctionType::Kind::Internal &&
 				functionType->kind() != FunctionType::Kind::External
 			)
 				return false;
-		}
 	}
 
 	return true;
+}
 }
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
@@ -1302,20 +1300,17 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 	if (autoTypeDeductionNeeded)
 	{
 		if (!typeCanBeExpressed(assignments))
-		{
-			m_errorReporter.syntaxError(_statement.location(),
+			m_errorReporter.syntaxError(
+				_statement.location(),
 				"Use of the \"var\" keyword is disallowed. "
-				"Type cannot be expressed in syntax.");
-		}
+				"Type cannot be expressed in syntax."
+			);
 		else
-		{
-			// report with trivial snipped `uint i = ...`
-			string const typeName = createTupleDecl(assignments);
-
-			m_errorReporter.syntaxError(_statement.location(),
+			m_errorReporter.syntaxError(
+				_statement.location(),
 				"Use of the \"var\" keyword is disallowed. "
-				"Use explicit declaration `" + typeName + " = ...´ instead.");
-		}
+				"Use explicit declaration `" + createTupleDecl(assignments) + " = ...´ instead."
+			);
 	}
 
 	return false;
