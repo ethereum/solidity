@@ -1408,14 +1408,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	}
 	else
 	{
-		bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 		bool isPure = true;
 		TypePointer inlineArrayType;
 
 		for (size_t i = 0; i < components.size(); ++i)
 		{
-			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
-			if (!components[i] && !(i == 1 && components.size() == 2))
+			if (!components[i])
 				m_errorReporter.fatalTypeError(_tuple.location(), "Tuple component cannot be empty.");
 			else if (components[i])
 			{
@@ -1427,10 +1425,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 					{
 						if (_tuple.isInlineArray())
 							m_errorReporter.fatalTypeError(components[i]->location(), "Array component cannot be empty.");
-						if (v050)
-							m_errorReporter.fatalTypeError(components[i]->location(), "Tuple component cannot be empty.");
-						else
-							m_errorReporter.warning(components[i]->location(), "Tuple component cannot be empty.");
+						m_errorReporter.typeError(components[i]->location(), "Tuple component cannot be empty.");
 					}
 
 				// Note: code generation will visit each of the expression even if they are not assigned from.
@@ -1468,11 +1463,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (components.size() == 1)
 				_tuple.annotation().type = type(*components[0]);
 			else
-			{
-				if (components.size() == 2 && !components[1])
-					types.pop_back();
 				_tuple.annotation().type = make_shared<TupleType>(types);
-			}
 		}
 
 	}
