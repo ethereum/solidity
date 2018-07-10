@@ -1,11 +1,9 @@
 contract C {
-    function f() public {
-        uint[] storage x;
+    uint[] m_x;
+    function f() public view {
+        uint[] storage x = m_x;
         uint[] memory y;
-        uint[] memory z;
-        x;y;z;
+        x;y;
     }
 }
 // ----
-// Warning: (47-63): Uninitialized storage pointer.
-// Warning: (17-135): Function state mutability can be restricted to pure

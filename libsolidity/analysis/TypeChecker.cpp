@@ -1073,10 +1073,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				if (varDecl.referenceLocation() == VariableDeclaration::Location::Default)
 					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
 				solAssert(m_scope, "");
-				if (v050)
-					m_errorReporter.declarationError(varDecl.location(), errorText);
-				else
-					m_errorReporter.warning(varDecl.location(), errorText);
+				m_errorReporter.declarationError(varDecl.location(), errorText);
 			}
 		}
 		else if (dynamic_cast<MappingType const*>(type(varDecl).get()))
