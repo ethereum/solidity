@@ -199,29 +199,6 @@ See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/cont
 and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
 
-
-What is the relationship between ``bytes32`` and ``string``? Why is it that ``bytes32 somevar = "stringliteral";`` works and what does the saved 32-byte hex value mean?
-========================================================================================================================================================================
-
-The type ``bytes32`` can hold 32 (raw) bytes. In the assignment ``bytes32 samevar = "stringliteral";``,
-the string literal is interpreted in its raw byte form and if you inspect ``somevar`` and
-see a 32-byte hex value, this is just ``"stringliteral"`` in hex.
-
-The type ``bytes`` is similar, only that it can change its length.
-
-Finally, ``string`` is basically identical to ``bytes`` only that it is assumed
-to hold the UTF-8 encoding of a real string. Since ``string`` stores the
-data in UTF-8 encoding it is quite expensive to compute the number of
-characters in the string (the encoding of some characters takes more
-than a single byte). Because of that, ``string s; s.length`` is not yet
-supported and not even index access ``s[2]``. But if you want to access
-the low-level byte encoding of the string, you can use
-``bytes(s).length`` and ``bytes(s)[2]`` which will result in the number
-of bytes in the UTF-8 encoding of the string (not the number of
-characters) and the second byte (not character) of the UTF-8 encoded
-string, respectively.
-
-
 Can a contract pass an array (static size) or string or ``bytes`` (dynamic size) to another contract?
 =====================================================================================================
 
