@@ -284,8 +284,23 @@ It will generate a function of the following form::
         b = data[arg1][arg2][arg3].b;
     }
 
-Note that the mapping in the struct is omitted because there
-is no good way to provide the key for the mapping.
+If you have a `public` state variable of array type, then it only returns individual elements to reduce the gas cost of returning an entire array. You can use parameters to specify which element to return, for example ``data[0]``. If you want to return an entire array, then you need to write a helper function, for example::
+
+    // public state variable
+    uint[] public myArray;
+
+    // caller function
+    function myArray(uint i) returns (uint) { 
+        return myArray[i]; 
+    }
+
+    // helper function
+    function getArray() returns ( uint[] ) { 
+        return myArray; 
+    }
+    
+.. note::
+    The mapping in the struct is omitted because there is no good way to provide the key for the mapping.
 
 .. index:: ! function;modifier
 

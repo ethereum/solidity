@@ -52,6 +52,12 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
+The bit size of an integer determines its range, for example, for ``uint256``, this is 0 up to 2 :sup:`256` -1. If the result of an operation doesn't fit inside this range, it is truncated. These truncations can have `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so use code like the below to avoid certain attacks and check a value is what you expect it to be.
+
+::
+
+    require((balanceOf[_to] + _value) >= balanceOf[_to]);
+
 Division always truncates (it is just compiled to the ``DIV`` opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
 
@@ -296,12 +302,18 @@ a non-rational number).
     uint128 a = 1;
     uint128 b = 2.5 + a + 0.5;
 
-.. index:: literal, literal;string, string
+.. index:: literal, literal;string, string, string length, string size
 
 String Literals
 ---------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``. For example, with ::
+
+  bytes32 samevar = "stringliteral";
+
+The string literal is interpreted in its raw byte form and if you inspect ``somevar``, you see a 32-byte hex value, which is the ``"stringliteral"`` in hex.
+
+Using a ``string`` type is basically identical to ``bytes``, but it is assumed to hold the UTF-8 encoding of a real string. Since ``string`` UTF-8 encoding of some characters takes more than a single byte, it is quite expensive to compute the number of characters in the string. Because of this, Solidity does not support length methods ``string s; s.length``, or accessing an item at an array index ``s[2]``. If you want to access the low-level byte encoding of the string, you can use ``bytes(s).length`` and ``bytes(s)[2]`` which returns the number of bytes in the UTF-8 encoding of the string (not the number of characters) and the second byte (not character) of the UTF-8 encoded string, respectively.
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
@@ -983,4 +995,3 @@ converted to a matching size. This makes alignment and padding explicit::
     uint16 x = 0xffff;
     bytes32(uint256(x)); // pad on the left
     bytes32(bytes2(x)); // pad on the right
-
