@@ -1848,7 +1848,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		if (functionType->takesArbitraryParameters())
 			m_errorReporter.typeError(
 				_functionCall.location(),
-				"Named arguments cannnot be used for functions that take arbitrary parameters."
+				"Named arguments cannot be used for functions that take arbitrary parameters."
 			);
 		else if (parameterNames.size() > argumentNames.size())
 			m_errorReporter.typeError(_functionCall.location(), "Some argument names are missing.");
