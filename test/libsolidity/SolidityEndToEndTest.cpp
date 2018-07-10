@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(nested_loops_multiple_local_vars)
 	// and free local variables properly
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint x) returns(uint y) {
+			function f(uint x) public returns(uint y) {
 				while (x > 0) {
 					uint z = x + 10;
 					uint k = z + 1;
@@ -9536,7 +9536,7 @@ BOOST_AUTO_TEST_CASE(continue_in_modifier)
 					_;
 				}
 			}
-			function f() run {
+			function f() run public {
 				uint k = x;
 				uint t = k + 1;
 				x = t;
@@ -9560,7 +9560,7 @@ BOOST_AUTO_TEST_CASE(return_in_modifier)
 					_;
 				}
 			}
-			function f() run {
+			function f() run public {
 				uint k = x;
 				uint t = k + 1;
 				x = t;
