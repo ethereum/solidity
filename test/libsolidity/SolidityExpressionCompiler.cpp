@@ -77,7 +77,7 @@ Declaration const& resolveDeclaration(
 )
 {
 	ASTNode const* scope = &_sourceUnit;
-	// bracers are required, cause msvc couldnt handle this macro in for statement
+	// bracers are required, cause msvc couldn't handle this macro in for statement
 	for (string const& namePart: _namespacedName)
 	{
 		auto declarations = _resolver.resolveName(namePart, scope);
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
-BOOST_AUTO_TEST_CASE(arithmetics)
+BOOST_AUTO_TEST_CASE(arithmetic)
 {
 	char const* sourceCode = R"(
 		contract test {

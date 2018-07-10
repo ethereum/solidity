@@ -22,7 +22,7 @@ pragma solidity ^0.4.6;
 /// @dev This contract tracks the
 
 
-/// is rules the relation betwen a donor and a recipient
+/// is rules the relation between a donor and a recipient
 ///  in order to guaranty to the donor that the job will be done and to guaranty
 ///  to the recipient that he will be paid
 

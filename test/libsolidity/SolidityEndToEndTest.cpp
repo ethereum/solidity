@@ -6387,9 +6387,9 @@ BOOST_AUTO_TEST_CASE(return_multiple_strings_of_various_sizes)
 		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
 		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
 	);
-	vector<size_t> lengthes{0, 30, 32, 63, 64, 65, 210, 300};
-	for (auto l1: lengthes)
-		for (auto l2: lengthes)
+	vector<size_t> lengths{0, 30, 32, 63, 64, 65, 210, 300};
+	for (auto l1: lengths)
+		for (auto l2: lengths)
 		{
 			bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
 			bytes dyn2 = encodeArgs(u256(l2), s2.substr(0, l2));
@@ -6456,9 +6456,9 @@ BOOST_AUTO_TEST_CASE(bytes_in_function_calls)
 	compileAndRun(sourceCode, 0, "Main");
 	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
 	string s2("ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ");
-	vector<size_t> lengthes{0, 31, 64, 65};
-	for (auto l1: lengthes)
-		for (auto l2: lengthes)
+	vector<size_t> lengths{0, 31, 64, 65};
+	for (auto l1: lengths)
+		for (auto l2: lengths)
 		{
 			bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
 			bytes dyn2 = encodeArgs(u256(l2), s2.substr(0, l2));
@@ -6497,8 +6497,8 @@ BOOST_AUTO_TEST_CASE(return_bytes_internal)
 	)";
 	compileAndRun(sourceCode, 0, "Main");
 	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
-	vector<size_t> lengthes{0, 31, 64, 65};
-	for (auto l1: lengthes)
+	vector<size_t> lengths{0, 31, 64, 65};
+	for (auto l1: lengths)
 	{
 		bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
 		bytes args1 = encodeArgs(u256(0x20)) + dyn1;

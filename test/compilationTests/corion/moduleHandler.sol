@@ -63,7 +63,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     function addModule(modules_s input, bool call) internal {
         /*
             Inside function for registration of the modules in the database.
-            If the call is false, wont happen any direct call.
+            If the call is false, won't happen any direct call.
             
             @input  _Structure of module.
             @call   Is connect to the module or not.
@@ -88,7 +88,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @name       Name of module.
             @addr       Address of module.
             @found      Is there any result.
-            @success    Was the transaction succesfull or not.
+            @success    Was the transaction successful or not.
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByName(name);
         if ( _success && _found ) { return (true, true, modules[_id].addr); }
@@ -204,7 +204,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             Deleting module from the database. Can be called only by the Publisher contract.
             
             @name           Name of module to delete.
-            @bool           Was the function successfull?
+            @bool           Was the function successful?
             @callCallback   Call the replaceable module to confirm replacement or not.
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
@@ -245,7 +245,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @from       from who.
             @to         to who.
             @value      amount.
-            @bool       Was the function successfull?
+            @bool       Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Token') );
@@ -264,7 +264,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             
             @roundID        Number of Schelling round.
             @reward         Coin emission in this Schelling round.
-            @bool           Was the function successfull?
+            @bool           Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Schelling') );
@@ -283,7 +283,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             Every module will be informed about the ModuleHandler replacement.
             
             @newHandler     Address of the new ModuleHandler.
-            @bool           Was the function successfull?
+            @bool           Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success );
@@ -304,7 +304,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             
             @owner     address
             @value      balance.
-            @success    was the function successfull?
+            @success    was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByName('Token');
         require( _success && _found );
@@ -315,7 +315,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             Query of the whole token amount.
             
             @value      amount.
-            @success    was the function successfull?
+            @success    was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByName('Token');
         require( _success && _found );
@@ -326,7 +326,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             Query of ICO state
             
             @ico        Is ICO in progress?.
-            @success    was the function successfull?
+            @success    was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByName('Token');
         require( _success && _found );
@@ -337,7 +337,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             Query of number of the actual Schelling round.
             
             @round      Schelling round.
-            @success    was the function successfull?
+            @success    was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByName('Schelling');
         require( _success && _found );
@@ -350,7 +350,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @to         Place of new token
             @value      Token amount
             
-            @success    Was the function successfull?
+            @success    Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Provider') );
@@ -367,7 +367,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @to         To who.
             @value      Token amount.
             @fee        Transaction fee will be charged or not?
-            @success    Was the function successfull?
+            @success    Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found );
@@ -382,7 +382,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             
             @from       From who.
             @value      Token amount.
-            @success    Was the function successfull?
+            @success    Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Provider') );
@@ -397,7 +397,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             
             @from       From who.
             @value      Token amount.
-            @success    Was the function successfull?
+            @success    Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success && _found && modules[_id].name == keccak256('Schelling') );
@@ -413,7 +413,7 @@ contract moduleHandler is multiOwner, announcementTypes {
             @moduleName Module name which will be configured
             @aType      Type of variable (announcementType).
             @value      New value
-            @success    Was the function successfull?
+            @success    Was the function successful?
         */
         (bool _success, bool _found, uint256 _id) = getModuleIDByAddress(msg.sender);
         require( _success );
@@ -431,7 +431,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     function freezing(bool forever) external {
         /*
             Freezing CORION Platform. Can be called only by the owner.
-            Freez can not be recalled!
+            Freeze can not be recalled!
             
             @forever    Is it forever or not?
         */

@@ -69,7 +69,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
   }
 
   /**
-   * @dev Revoke the grant of tokens of a specifed address.
+   * @dev Revoke the grant of tokens of a specified address.
    * @param _holder The address which will have its tokens revoked.
    * @param _grantId The id of the token grant.
    */
@@ -135,13 +135,13 @@ contract VestedToken is StandardToken, LimitedTransferToken {
   }
 
   /**
-   * @dev Calculate amount of vested tokens at a specifc time.
-   * @param tokens uint256 The amount of tokens grantted.
+   * @dev Calculate amount of vested tokens at a specific time.
+   * @param tokens uint256 The amount of tokens granted.
    * @param time uint64 The time to be checked
-   * @param start uint64 A time representing the begining of the grant
+   * @param start uint64 A time representing the beginning of the grant
    * @param cliff uint64 The cliff period.
    * @param vesting uint64 The vesting period.
-   * @return An uint256 representing the amount of vested tokensof a specif grant.
+   * @return An uint256 representing the amount of vested tokens of a specific grant.
    *  transferableTokens
    *   |                         _/--------   vestedTokens rect
    *   |                       _/
@@ -186,7 +186,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
   }
 
   /**
-   * @dev Get all information about a specifc grant.
+   * @dev Get all information about a specific grant.
    * @param _holder The address which will have its tokens revoked.
    * @param _grantId The id of the token grant.
    * @return Returns all the values that represent a TokenGrant(address, value, start, cliff,
@@ -226,7 +226,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
    * @dev Calculate the amount of non vested tokens at a specific time.
    * @param grant TokenGrant The grant to be checked.
    * @param time uint64 The time to be checked
-   * @return An uint256 representing the amount of non vested tokens of a specifc grant on the 
+   * @return An uint256 representing the amount of non vested tokens of a specific grant on the 
    * passed time frame.
    */
   function nonVestedTokens(TokenGrant grant, uint64 time) private view returns (uint256) {

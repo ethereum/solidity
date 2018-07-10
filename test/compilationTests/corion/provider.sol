@@ -18,7 +18,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     function transferEvent(address from, address to, uint256 value) external returns (bool success) {
         /*
-            Transaction completed. This function is ony available for the modulehandler.
+            Transaction completed. This function is only available for the modulehandler.
             It should be checked if the sender or the acceptor does not connect to the provider or it is not a provider itself if so than the change should be recorded.
             
             @from       From whom?
@@ -35,7 +35,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             New schelling round. This function is only available for the moduleHandler.
             We are recording the new schelling round and we are storing the whole current quantity of the tokens.
-            We generate a reward quantity of tokens directed to the providers address. The collected interest will be tranfered from this contract.
+            We generate a reward quantity of tokens directed to the providers address. The collected interest will be transferred from this contract.
             
             @roundID        Number of the schelling round.
             @reward         token emission 
@@ -228,7 +228,7 @@ contract provider is module, safeMath, announcementTypes {
             @website        Provider’s website
             @country        Provider’s country
             @info           Provider’s short introduction.
-            @rate           Rate of the emission what is going to be transfered to the client by the provider.
+            @rate           Rate of the emission what is going to be transferred to the client by the provider.
             @isForRent      is for Rent or not?
             @admin          The admin’s address
         */
@@ -328,7 +328,7 @@ contract provider is module, safeMath, announcementTypes {
 
             @addr           Address of the provider
             @height         Height
-            @rate           The rate of the emission which will be transfered to the client.
+            @rate           The rate of the emission which will be transferred to the client.
             @isForRent      Rent or not.
             @clientsCount   Number of the clients.
             @priv           Private or not?
@@ -356,7 +356,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     function closeProvider() isReady external {
         /*
-            Closing and inactivate the provider.
+            Closing and deactivating the provider.
             It is only possible to close that active provider which is owned by the sender itself after calling the whole share of the emission.
             Whom were connected to the provider those clients will have to disconnect after they’ve called their share of emission which was not called before.
         */
@@ -373,7 +373,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Permition of the user to be able to connect to the provider.
             This can only be invited by the provider’s admin.
-            With this kind of call only 100 address can be permited. 
+            With this kind of call only 100 address can be permitted. 
             
             @addr       Array of the addresses for whom the connection is allowed.
         */
@@ -391,7 +391,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Disable of the user not to be able to connect to the provider.
             It is can called only for the admin of the provider.
-            With this kind of call only 100 address can be permited. 
+            With this kind of call only 100 address can be permitted. 
             
             @addr      Array of the addresses for whom the connection is allowed.
         */
@@ -411,7 +411,7 @@ contract provider is module, safeMath, announcementTypes {
             Providers can not connect to other providers.
             If is a client at any provider, then it is not possible to connect to other provider one.
             It is only possible to connect to valid and active providers.
-            If is an active provider then the client can only connect, if address is permited at the provider (Whitelist).
+            If is an active provider then the client can only connect, if address is permitted at the provider (Whitelist).
             At private providers, the number of the client is restricted. If it reaches the limit no further clients are allowed to connect.
             This process has a transaction fee based on the senders whole token quantity.
             
@@ -487,12 +487,12 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Polling the share from the token emission token emission for clients and for providers.
 
-            It is optionaly possible to give an address of a beneficiary for whom we can transfer the accumulated amount. In case we don’t enter any address then the amount will be transfered to the caller’s address.
+            It is optionally possible to give an address of a beneficiary for whom we can transfer the accumulated amount. In case we don’t enter any address then the amount will be transferred to the caller’s address.
             As the interest should be checked at each schelling round in order to get the share from that so to avoid the overflow of the gas the number of the check-rounds should be limited.
-            Opcionalisan megadhato az ellenorzes koreinek szama. It is possible to enter optionaly the number of the check-rounds.  If it is 0 then it is automatic.
+            Opcionalisan megadhato az ellenorzes koreinek szama. It is possible to enter optionally the number of the check-rounds.  If it is 0 then it is automatic.
             Provider variable should only be entered if the real owner of the provider is not the caller’s address.
             In case the client/provider was far behind then it is possible that this function should be called several times to check the total generated schelling rounds and to collect the share.
-            If is neighter a client nor a provider then the function is not available.
+            If is neither a client nor a provider then the function is not available.
             The tokens will be sent to the beneficiary from the address of the provider without any transaction fees.
             
             @beneficiary        Address of the beneficiary
@@ -784,7 +784,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Inner function to check the ICO status.
             
-            @isICO      Is the ICO in proccess or not?
+            @isICO      Is the ICO in process or not?
         */
         (bool _success, bool _isICO) = moduleHandler(moduleHandlerAddress).isICO();
         require( _success );

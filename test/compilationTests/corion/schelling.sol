@@ -147,7 +147,7 @@ contract schelling is module, announcementTypes, schellingVars {
             @from      From who
             @to        To who
             @value     Amount
-            @bool      Was the transaction succesfull?
+            @bool      Was the transaction successful?
         */
         require( super.isModuleHandler(msg.sender) );
         if ( to == address(this) ) {
@@ -442,14 +442,14 @@ contract schelling is module, announcementTypes, schellingVars {
         if ( ! round.voted ) {
             newRound.reward = round.reward;
         }
-        uint256 aboves;
+        uint256 above;
         for ( uint256 a=currentRound ; a>=currentRound-interestCheckRounds ; a-- ) {
             if (a == 0) { break; }
             prevRound = getRound(a);
-            if ( prevRound.totalAboveWeight > prevRound.totalBelowWeight ) { aboves++; }
+            if ( prevRound.totalAboveWeight > prevRound.totalBelowWeight ) { above++; }
         }
         uint256 expansion;
-        if ( aboves >= interestCheckAboves ) {
+        if ( above >= interestCheckAboves ) {
             expansion = getTotalSupply() * interestRate / interestRateM / 100;
         }
         

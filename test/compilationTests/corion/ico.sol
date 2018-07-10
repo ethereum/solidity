@@ -277,7 +277,7 @@ contract ico is safeMath {
     
     function () external payable {
         /*
-            Callback function. Simply calls the buy function as a beneficiary and there is no affilate address.
+            Callback function. Simply calls the buy function as a beneficiary and there is no affiliate address.
             If they call the contract without any function then this process will be taken place.
         */
         require( isICO() );
@@ -290,9 +290,9 @@ contract ico is safeMath {
             
             If there is not at least 0.2 ether balance on the beneficiaryAddress then the amount of the ether which was intended for the purchase will be reduced by 0.2 and that will be sent to the address of the beneficiary.
             From the remaining amount calculate the reward with the help of the getIcoReward function.
-            Only that affilate address is valid which has some token on it’s account.
-            If there is a valid affilate address then calculate and credit the reward as well in the following way:
-            With more than 1e12 token contract credit 5% reward based on the calculation that how many tokens did they buy when he was added as an affilate.
+            Only that affiliate address is valid which has some token on it’s account.
+            If there is a valid affiliate address then calculate and credit the reward as well in the following way:
+            With more than 1e12 token contract credit 5% reward based on the calculation that how many tokens did they buy when he was added as an affiliate.
                 More than 1e11 token: 4%
                 More than 1e10 token: 3%
                 More than 1e9 token: 2% below 1%
@@ -345,7 +345,7 @@ contract ico is safeMath {
         /*
             Crediting the premium token
         
-            @owner The corion token balance of this address will be set based on the calculation which shows that how many times can be the amount of the purchased tokens devided by 5000. So after each 5000 token we give 1 premium token.
+            @owner The corion token balance of this address will be set based on the calculation which shows that how many times can be the amount of the purchased tokens divided by 5000. So after each 5000 token we give 1 premium token.
         */
         uint256 _reward = (brought[owner].cor / 5e9) - brought[owner].corp;
         if ( _reward > 0 ) {
@@ -372,5 +372,5 @@ contract ico is safeMath {
         return startBlock <= block.number && block.number <= icoDelay && ( ! aborted ) && ( ! closed );
     }
     
-    event EICO(address indexed Address, uint256 indexed value, address Affilate, uint256 AffilateValue);
+    event EICO(address indexed Address, uint256 indexed value, address Affiliate, uint256 AffilateValue);
 }
