@@ -6,12 +6,11 @@
 Types
 *****
 
-Solidity is a statically typed language, which means that the type of each
-variable (state and local) needs to be specified.
-Solidity provides several elementary types which can be combined to form complex types.
+Solidity is a statically typed language, which means that you need to specify the type of each variable (state and local). Solidity provides elementary types which you can combine to form complex types.
 
-In addition, types can interact with each other in expressions containing
-operators. For a quick reference of the various operators, see :ref:`order`.
+Types can interact in expressions containing operators. For a quick reference of the various operators, see :ref:`order`.
+
+Types can not return an ``undefined`` or "null" value. To handle any unexpected values you can 'throw' on error, which also reverts the whole transaction.
 
 .. index:: ! value type, ! type;value
 
@@ -983,4 +982,3 @@ converted to a matching size. This makes alignment and padding explicit::
     uint16 x = 0xffff;
     bytes32(uint256(x)); // pad on the left
     bytes32(bytes2(x)); // pad on the right
-

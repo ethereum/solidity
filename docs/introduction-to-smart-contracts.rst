@@ -357,10 +357,12 @@ made to the state in the current call frame.
 Storage, Memory and the Stack
 =============================
 
-Each account has a persistent memory area which is called **storage**.
+The Ethereum Virtual Machine has three areas where it can store items.
+
+Each account has a memory area called **storage**, which is persistent between function calls.
 Storage is a key-value store that maps 256-bit words to 256-bit words.
 It is not possible to enumerate storage from within a contract
-and it is comparatively costly to read and even more so, to modify
+and it is comparatively costly to read and to modify
 storage. A contract can neither read nor write to any storage apart
 from its own.
 
@@ -384,6 +386,16 @@ the operation) elements from the stack and push the result onto the stack.
 Of course it is possible to move stack elements to storage or memory,
 but it is not possible to just access arbitrary elements deeper in the stack
 without first removing the top of the stack.
+
+For almost all :doc:`types`, you cannot specify where they should be stored, because
+they are copied every time they are used.
+
+There are defaults for the storage location depending on the variable type:
+
+* state variables are in storage.
+* function arguments are in memory.
+* local variables of struct, array or mapping type are in storage.
+* local variables of value type (i.e. neither array, nor struct nor mapping) are in the stack.
 
 .. index:: ! instruction
 
