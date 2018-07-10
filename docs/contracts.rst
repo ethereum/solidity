@@ -983,10 +983,10 @@ virtual method lookup.
 
 Constructors
 ============
+
 A constructor is an optional function declared with the ``constructor`` keyword which is executed upon contract creation.
 Constructor functions can be either ``public`` or ``internal``. If there is no constructor, the contract will assume the
-default constructor: ``contructor() public {}``.
-
+default constructor: ``constructor() public {}``.
 
 ::
 
@@ -1005,6 +1005,8 @@ default constructor: ``contructor() public {}``.
     }
 
 A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
+
+A constructor returns the code of the contract, calculating the gas cost depending on the length of the code. The supplied gas may not be enough for this cost, and this is the only situation where an "out of gas" exception does not revert changes to the state, in this case the initialisation of the state variables.
 
 .. warning ::
     Prior to version 0.4.22, constructors were defined as functions with the same name as the contract. This syntax was deprecated and is not allowed anymore in version 0.5.0.

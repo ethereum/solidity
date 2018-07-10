@@ -160,20 +160,6 @@ to create an independent copy of the storage value in memory
 and not a copy is passed.
 
 
-What could have happened if an account has storage value(s) but no code?  Example: http://test.ether.camp/account/5f740b3a43fbb99724ce93a879805f4dc89178b5
-==========================================================================================================================================================
-
-The last thing a constructor does is returning the code of the contract.
-The gas costs for this depend on the length of the code and it might be
-that the supplied gas is not enough. This situation is the only one
-where an "out of gas" exception does not revert changes to the state,
-i.e. in this case the initialisation of the state variables.
-
-https://github.com/ethereum/wiki/wiki/Subtleties
-
-After a successful CREATE operation's sub-execution, if the operation returns x, 5 * len(x) gas is subtracted from the remaining gas before the contract is created. If the remaining gas is less than 5 * len(x), then no gas is subtracted, the code of the created contract becomes the empty string, but this is not treated as an exceptional condition - no reverts happen.
-
-
 
 More Questions?
 ===============
