@@ -558,10 +558,8 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 				toString(parameterTypes.size()) +
 				"."
 			);
-			if (arguments->size() != 0)
-				return;
 		}
-		for (size_t i = 0; i < arguments->size(); ++i)
+		for (size_t i = 0; i < std::min(arguments->size(), parameterTypes.size()); ++i)
 			if (!type(*(*arguments)[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				m_errorReporter.typeError(
 					(*arguments)[i]->location(),
