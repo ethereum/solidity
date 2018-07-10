@@ -2,14 +2,14 @@
 
 .. _ABI:
 
-******************************************
-Application Binary Interface Specification
-******************************************
+**************************
+Contract ABI Specification
+**************************
 
 Basic Design
 ============
 
-The Application Binary Interface (ABI) is the standard way to interact with contracts in the Ethereum ecosystem, both
+The Contract Application Binary Interface (ABI) is the standard way to interact with contracts in the Ethereum ecosystem, both
 from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
 as described in this specification.  The encoding is not self describing and thus requires a schema in order to decode.
 
