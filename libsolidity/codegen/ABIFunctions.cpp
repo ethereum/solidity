@@ -1188,7 +1188,8 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
 	if (!_type.isDynamicallySized())
 		solAssert(_type.length() < u256("0xffffffffffffffff"), "");
-	solAssert(!_type.baseType()->isDynamicallyEncoded(), "");
+	if (_type.baseType()->isDynamicallyEncoded())
+		solUnimplemented("Calldata arrays with non-value base types are not yet supported by Solidity.");
 	solAssert(_type.baseType()->calldataEncodedSize() < u256("0xffffffffffffffff"), "");
 
 	string functionName =
