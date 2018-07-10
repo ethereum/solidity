@@ -200,33 +200,6 @@ and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/cont
 
 
 
-
-How do I initialize a contract with only a specific amount of wei?
-==================================================================
-
-Currently the approach is a little ugly, but there is little that can be done to improve it.
-In the case of a ``contract A`` calling a new instance of ``contract B``, parentheses have to be used around
-``new B`` because ``B.value`` would refer to a member of ``B`` called ``value``.
-You will need to make sure that you have both contracts aware of each other's presence and that ``contract B`` has a ``payable`` constructor.
-In this example::
-
-    pragma solidity ^0.4.0;
-
-    contract B {
-        function B() public payable {}
-    }
-
-    contract A {
-        address child;
-
-        function test() public {
-            child = (new B).value(10)(); //construct a new B with 10 wei
-        }
-    }
-
-.. TODO: Does this mean it does work for internal?
-
-
 What is the relationship between ``bytes32`` and ``string``? Why is it that ``bytes32 somevar = "stringliteral";`` works and what does the saved 32-byte hex value mean?
 ========================================================================================================================================================================
 
