@@ -1337,7 +1337,6 @@ bool TypeChecker::visit(Conditional const& _conditional)
 
 bool TypeChecker::visit(Assignment const& _assignment)
 {
-	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	requireLValue(_assignment.leftHandSide());
 	TypePointer t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
@@ -1354,25 +1353,8 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		expectType(_assignment.rightHandSide(), *tupleType);
 
 		// expectType does not cause fatal errors, so we have to check again here.
-		if (TupleType const* rhsType = dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
-		{
+		if (dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
 			checkDoubleStorageAssignment(_assignment);
-			// @todo For 0.5.0, this code shoud move to TupleType::isImplicitlyConvertibleTo,
-			// but we cannot do it right now.
-			if (rhsType->components().size() != tupleType->components().size())
-			{
-				string message =
-					"Different number of components on the left hand side (" +
-					toString(tupleType->components().size()) +
-					") than on the right hand side (" +
-					toString(rhsType->components().size()) +
-					").";
-				if (v050)
-					m_errorReporter.typeError(_assignment.location(), message);
-				else
-					m_errorReporter.warning(_assignment.location(), message);
-			}
-		}
 	}
 	else if (t->category() == Type::Category::Mapping)
 	{
