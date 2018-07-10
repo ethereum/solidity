@@ -128,6 +128,8 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 {
 	solAssert(m_asm->deposit() >= 0 && unsigned(m_asm->deposit()) >= _offsetToCurrent, "");
 	unsigned sizeOnStack = _declaration.annotation().type->sizeOnStack();
+	// Variables should not have stack size other than [1, 2],
+	// but that might change when new types are introduced.
 	solAssert(sizeOnStack == 1 || sizeOnStack == 2, "");
 	m_localVariables[&_declaration].push_back(unsigned(m_asm->deposit()) - _offsetToCurrent);
 }
@@ -146,11 +148,17 @@ void CompilerContext::removeVariablesAboveStackHeight(unsigned _stackHeight)
 	for (auto _var: m_localVariables)
 	{
 		solAssert(!_var.second.empty(), "");
+		solAssert(_var.second.back() <= stackHeight(), "");
 		if (_var.second.back() >= _stackHeight)
 			toRemove.push_back(_var.first);
 	}
 	for (auto _var: toRemove)
 		removeVariable(*_var);
+}
+
+unsigned CompilerContext::numberOfLocalVariables() const
+{
+	return m_localVariables.size();
 }
 
 eth::Assembly const& CompilerContext::compiledContract(const ContractDefinition& _contract) const

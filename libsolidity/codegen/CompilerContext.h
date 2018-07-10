@@ -74,6 +74,8 @@ public:
 	void removeVariable(Declaration const& _declaration);
 	/// Removes all local variables currently allocated above _stackHeight.
 	void removeVariablesAboveStackHeight(unsigned _stackHeight);
+	/// Returns the number of currently allocated local variables.
+	unsigned numberOfLocalVariables() const;
 
 	void setCompiledContracts(std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts) { m_compiledContracts = _contracts; }
 	eth::Assembly const& compiledContract(ContractDefinition const& _contract) const;

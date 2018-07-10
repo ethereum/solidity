@@ -802,7 +802,7 @@ BOOST_AUTO_TEST_CASE(nested_for_loop_multiple_local_vars)
 						}
 					}
 					if (x > 30) {
-					    return 42;
+						return 42;
 						uint b = 0xcafe;
 					}
 				}
@@ -9494,7 +9494,9 @@ BOOST_AUTO_TEST_CASE(break_in_modifier)
 				}
 			}
 			function f() run {
-				x++;
+				uint k = x;
+				uint t = k + 1;
+				x = t;
 			}
 		}
 	)";
@@ -9516,7 +9518,9 @@ BOOST_AUTO_TEST_CASE(continue_in_modifier)
 				}
 			}
 			function f() run {
-				x++;
+				uint k = x;
+				uint t = k + 1;
+				x = t;
 			}
 		}
 	)";
@@ -9538,7 +9542,9 @@ BOOST_AUTO_TEST_CASE(return_in_modifier)
 				}
 			}
 			function f() run {
-				x++;
+				uint k = x;
+				uint t = k + 1;
+				x = t;
 			}
 		}
 	)";
@@ -9560,7 +9566,9 @@ BOOST_AUTO_TEST_CASE(stacked_return_with_modifiers)
 				}
 			}
 			function f() run {
-				x++;
+				uint k = x;
+				uint t = k + 1;
+				x = t;
 			}
 		}
 	)";

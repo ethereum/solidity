@@ -498,8 +498,12 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	m_context.adjustStackOffset(-(int)c_returnValuesSize);
 
 	/// The constructor and the fallback function doesn't to jump out.
-	if (!_function.isConstructor() && !_function.isFallback())
-		m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+	if (!_function.isConstructor())
+	{
+		solAssert(m_context.numberOfLocalVariables() == 0, "");
+		if (!_function.isFallback())
+			m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+	}
 
 	return false;
 }
@@ -999,10 +1003,10 @@ eth::AssemblyPointer ContractCompiler::cloneRuntime() const
 void ContractCompiler::popScopedVariables(ASTNode const* _node)
 {
 	unsigned blockHeight = m_scopeStackHeight.at(m_modifierDepth).at(_node);
+	m_context.removeVariablesAboveStackHeight(blockHeight);
 	solAssert(m_context.stackHeight() >= blockHeight, "");
 	unsigned stackDiff = m_context.stackHeight() - blockHeight;
 	CompilerUtils(m_context).popStackSlots(stackDiff);
-	m_context.removeVariablesAboveStackHeight(blockHeight);
 	m_scopeStackHeight[m_modifierDepth].erase(_node);
 	if (m_scopeStackHeight[m_modifierDepth].size() == 0)
 		m_scopeStackHeight.erase(m_modifierDepth);
