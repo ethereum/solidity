@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(array_multiple_local_vars)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint256[] seq) public pure returns (uint256) {
+			function f(uint256[] seq) external pure returns (uint256) {
 				uint i = 0;
 				uint sum = 0;
 				while (i < seq.length)
