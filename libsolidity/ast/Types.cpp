@@ -771,20 +771,23 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		}
 		else if (expPoint != _literal.value().end())
 		{
-			// Parse base and exponent. Checks numeric limit.
+			// Parse mantissa and exponent. Checks numeric limit.
+			tuple<bool, rational> mantissa = parseRational(string(_literal.value().begin(), expPoint));
+
+			if (!get<0>(mantissa))
+				return make_tuple(false, rational(0));
+			value = get<1>(mantissa);
+
+			// 0E... is always zero.
+			if (value == 0)
+				return make_tuple(true, rational(0));
+
 			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
 
 			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
 				return make_tuple(false, rational(0));
 
 			uint32_t expAbs = bigint(abs(exp)).convert_to<uint32_t>();
-
-
-			tuple<bool, rational> base = parseRational(string(_literal.value().begin(), expPoint));
-
-			if (!get<0>(base))
-				return make_tuple(false, rational(0));
-			value = get<1>(base);
 
 			if (exp < 0)
 			{
