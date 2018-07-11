@@ -1651,8 +1651,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(returnTypes);
 
-	bool const v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 	{
 		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::SHA3)
@@ -1672,23 +1670,15 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			auto const& argType = type(*arguments[i]);
 			if (auto literal = dynamic_cast<RationalNumberType const*>(argType.get()))
 			{
-				/* If no mobile type is available an error will be raised elsewhere. */
 				if (literal->mobileType())
+					m_errorReporter.typeError(
+						arguments[i]->location(),
+						"Cannot perform packed encoding for a literal. Please convert it to an explicit type first."
+					);
+				else
 				{
-					if (v050)
-						m_errorReporter.typeError(
-							arguments[i]->location(),
-							"Cannot perform packed encoding for a literal. Please convert it to an explicit type first."
-						);
-					else
-						m_errorReporter.warning(
-							arguments[i]->location(),
-							"The type of \"" +
-							argType->toString() +
-							"\" was inferred as " +
-							literal->mobileType()->toString() +
-							". This is probably not desired. Use an explicit type to silence this warning."
-						);
+					/* If no mobile type is available an error will be raised elsewhere. */
+					solAssert(m_errorReporter.hasErrors(), "");
 				}
 			}
 		}

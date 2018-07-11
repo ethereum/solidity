@@ -92,6 +92,12 @@ public:
 
 	void clear();
 
+	/// @returns true iff there is any error (ignores warnings).
+	bool hasErrors() const
+	{
+		return m_errorCount > 0;
+	}
+
 private:
 	void error(Error::Type _type,
 		SourceLocation const& _location,
