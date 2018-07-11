@@ -119,7 +119,7 @@ contract multiowned {
 		// make sure they're an owner
 		if (ownerIndex == 0) return;
 		uint ownerIndexBit = 2**ownerIndex;
-		PendingState pending = m_pending[_operation];
+		PendingState storage pending = m_pending[_operation];
 		if (pending.ownersDone & ownerIndexBit > 0) {
 			pending.yetNeeded++;
 			pending.ownersDone -= ownerIndexBit;
@@ -178,7 +178,7 @@ contract multiowned {
 	}
 
 	function hasConfirmed(bytes32 _operation, address _owner) view returns (bool) {
-		PendingState pending = m_pending[_operation];
+		PendingState storage pending = m_pending[_operation];
 		uint ownerIndex = m_ownerIndex[uint(_owner)];
 
 		// make sure they're an owner
@@ -201,7 +201,7 @@ contract multiowned {
 		// make sure they're an owner
 		if (ownerIndex == 0) return;
 
-		PendingState pending = m_pending[_operation];
+		PendingState storage pending = m_pending[_operation];
 		// if we're not yet working on this operation, switch over and reset the confirmation status.
 		if (pending.yetNeeded == 0) {
 			// reset count of confirmations needed.

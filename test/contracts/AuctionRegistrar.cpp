@@ -142,7 +142,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 				throw;
 			bid(_name, msg.sender, msg.value);
 		} else {
-			Record record = m_toRecord[_name];
+			Record storage record = m_toRecord[_name];
 			if (record.owner != 0x0000000000000000000000000000000000000000)
 				throw;
 			m_toRecord[_name].owner = msg.sender;

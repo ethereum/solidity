@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(external_structs)
 			struct X { bytes32 x; Test t; Simple[] s; }
 			function f(ActionChoices, uint, Simple) external {}
 			function g(Test, Nested) external {}
-			function h(function(Nested) external returns (uint)[]) external {}
+			function h(function(Nested memory) external returns (uint)[]) external {}
 			function i(Nested[]) external {}
 		}
 	)";
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 			struct X { bytes32 x; Test t; Simple[] s; }
 			function f(ActionChoices, uint, Simple) external {}
 			function g(Test, Nested) external {}
-			function h(function(Nested) external returns (uint)[]) external {}
+			function h(function(Nested memory) external returns (uint)[]) external {}
 			function i(Nested[]) external {}
 		}
 	)";
