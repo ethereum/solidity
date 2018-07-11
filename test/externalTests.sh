@@ -28,13 +28,14 @@
 
 set -e
 
-if [ ! -f "$1" ]
+if [ ! -f "$1" -o ! -f "$2" ]
 then
-  echo "Usage: $0 <path to soljson.js>"
+  echo "Usage: $0 <path to soljson.js> <path to soljson.wasm>"
   exit 1
 fi
 
 SOLJSON="$1"
+SOLJSON_WASM="$2"
 
 function test_truffle
 {
@@ -56,6 +57,7 @@ function test_truffle
       echo "Current commit hash: `git rev-parse HEAD`"
       npm install
       find . -name soljson.js -exec cp "$SOLJSON" {} \;
+      cp "$SOLJSON_WASM" .
       if [ "$name" == "Gnosis" ]; then
         echo "Replaced fixed-version pragmas..."
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
