@@ -227,7 +227,7 @@ contract MilestoneTracker {
 
             RLP.RLPItem memory itmProposal = itrProposals.next();
 
-            Milestone milestone = milestones[milestones.length ++];
+            Milestone storage milestone = milestones[milestones.length ++];
 
             if (!itmProposal.isList()) throw;
 
@@ -259,7 +259,7 @@ contract MilestoneTracker {
         public campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
-        Milestone milestone = milestones[_idMilestone];
+        Milestone storage milestone = milestones[_idMilestone];
         if (  (msg.sender != milestone.milestoneLeadLink)
             &&(msg.sender != recipient))
             throw;
@@ -277,7 +277,7 @@ contract MilestoneTracker {
         public campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
-        Milestone milestone = milestones[_idMilestone];
+        Milestone storage milestone = milestones[_idMilestone];
         if ((msg.sender != milestone.reviewer) ||
             (milestone.status != MilestoneStatus.Completed)) throw;
 
@@ -292,7 +292,7 @@ contract MilestoneTracker {
         public campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
-        Milestone milestone = milestones[_idMilestone];
+        Milestone storage milestone = milestones[_idMilestone];
         if ((msg.sender != milestone.reviewer) ||
             (milestone.status != MilestoneStatus.Completed)) throw;
 
@@ -307,7 +307,7 @@ contract MilestoneTracker {
     function requestMilestonePayment(uint _idMilestone
         ) public campaignNotCanceled notChanging {
         if (_idMilestone >= milestones.length) throw;
-        Milestone milestone = milestones[_idMilestone];
+        Milestone storage milestone = milestones[_idMilestone];
         if (  (msg.sender != milestone.milestoneLeadLink)
             &&(msg.sender != recipient))
             throw;
@@ -324,7 +324,7 @@ contract MilestoneTracker {
         public onlyRecipient campaignNotCanceled notChanging
     {
         if (_idMilestone >= milestones.length) throw;
-        Milestone milestone = milestones[_idMilestone];
+        Milestone storage milestone = milestones[_idMilestone];
         if  ((milestone.status != MilestoneStatus.AcceptedAndInProgress) &&
              (milestone.status != MilestoneStatus.Completed))
             throw;
@@ -339,7 +339,7 @@ contract MilestoneTracker {
     function arbitrateApproveMilestone(uint _idMilestone
     ) public onlyArbitrator campaignNotCanceled notChanging {
         if (_idMilestone >= milestones.length) throw;
-        Milestone milestone = milestones[_idMilestone];
+        Milestone storage milestone = milestones[_idMilestone];
         if  ((milestone.status != MilestoneStatus.AcceptedAndInProgress) &&
              (milestone.status != MilestoneStatus.Completed))
            throw;
@@ -356,7 +356,7 @@ contract MilestoneTracker {
     // @dev This internal function is executed when the milestone is paid out
     function authorizePayment(uint _idMilestone) internal {
         if (_idMilestone >= milestones.length) throw;
-        Milestone milestone = milestones[_idMilestone];
+        Milestone storage milestone = milestones[_idMilestone];
         // Recheck again to not pay twice
         if (milestone.status == MilestoneStatus.AuthorizedForPayment) throw;
         milestone.status = MilestoneStatus.AuthorizedForPayment;
