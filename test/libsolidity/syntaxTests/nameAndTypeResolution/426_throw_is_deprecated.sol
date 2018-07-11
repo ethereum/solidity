@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning: (52-57): "throw" is deprecated in favour of "revert()", "require()" and "assert()".
+// SyntaxError: (52-57): "throw" is deprecated in favour of "revert()", "require()" and "assert()".
