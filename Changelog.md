@@ -61,6 +61,7 @@ Compiler Features:
 Bugfixes:
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.
  * Code Generator: Fix allocation of byte arrays (zeroed out too much memory).
+ * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
 
 ### 0.4.24 (2018-05-16)
