@@ -84,7 +84,7 @@ contract FixedFeeRegistrar is Registrar {
 	function disown(string memory _name, address _refund) onlyrecordowner(_name) {
 		delete m_recordData[uint(keccak256(bytes(_name))) / 8];
 		if (!_refund.send(c_fee))
-			throw;
+			revert();
 		emit Changed(_name);
 	}
 	function transfer(string memory _name, address _newOwner) onlyrecordowner(_name) {

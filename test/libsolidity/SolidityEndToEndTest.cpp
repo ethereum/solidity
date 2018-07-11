@@ -2095,7 +2095,7 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 
 		contract C {
 			function () external payable {
-				throw;
+				revert();
 			}
 		}
 	)";
@@ -7741,7 +7741,7 @@ BOOST_AUTO_TEST_CASE(simple_throw)
 				if (x > 10)
 					return x + 10;
 				else
-					throw;
+					revert();
 				return 2;
 			}
 		}
@@ -9603,7 +9603,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 		contract mutexed {
 			bool locked;
 			modifier protected {
-				if (locked) throw;
+				if (locked) revert();
 				locked = true;
 				_;
 				locked = false;
@@ -9615,16 +9615,16 @@ BOOST_AUTO_TEST_CASE(mutex)
 			function withdraw(uint amount) protected returns (uint) {
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
-				if (amount > shares) throw;
-				if (!msg.sender.call.value(amount)("")) throw;
+				if (amount > shares) revert();
+				if (!msg.sender.call.value(amount)("")) revert();
 				shares -= amount;
 				return shares;
 			}
 			function withdrawUnprotected(uint amount) public returns (uint) {
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
-				if (amount > shares) throw;
-				if (!msg.sender.call.value(amount)("")) throw;
+				if (amount > shares) revert();
+				if (!msg.sender.call.value(amount)("")) revert();
 				shares -= amount;
 				return shares;
 			}
@@ -11159,7 +11159,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_in_modifiers)
 					a := 2
 				}
 				if (a != 2)
-					throw;
+					revert();
 				_;
 			}
 			function f() m public returns (bool) {
