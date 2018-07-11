@@ -51,7 +51,7 @@ WORKSPACE=/root/project
 # Increase nodejs stack size
 if [ -e ~/.emscripten ]
 then
-    sed -i -e 's/NODE_JS="nodejs"/NODE_JS=["nodejs", "--stack_size=65536"]/' ~/.emscripten
+    sed -i -e 's/NODE_JS=.*/NODE_JS=["nodejs", "--stack_size=65536"]/' ~/.emscripten
 else
     echo 'NODE_JS=["nodejs", "--stack_size=65536"]' > ~/.emscripten
 fi
