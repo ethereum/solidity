@@ -33,14 +33,14 @@ version: 2
 jobs:
   build_emscripten:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: trzeci/emscripten:sdk-tag-1.37.37-64bit
     environment:
       TERM: xterm
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Boost build
-          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
+#      - restore_cache:
+#          name: Restore Boost build
+#          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
       - run:
           name: Bootstrap Boost
           command: |
@@ -49,11 +49,11 @@ jobs:
           name: Build
           command: |
             scripts/travis-emscripten/build_emscripten.sh
-      - save_cache:
-          name: Save Boost build
-          key: *boost-cache-key
-          paths:
-            - boost_1_57_0
+#      - save_cache:
+#          name: Save Boost build
+#          key: *boost-cache-key
+#          paths:
+#            - boost_1_57_0
       - store_artifacts:
           path: build/libsolc/soljson.js
           destination: soljson.js
@@ -67,7 +67,7 @@ jobs:
             - version.txt
   test_emscripten_solcjs:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: trzeci/emscripten:sdk-tag-1.37.37-64bit
     environment:
       TERM: xterm
     steps:
@@ -93,7 +93,7 @@ jobs:
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
   test_emscripten_external:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: trzeci/emscripten:sdk-tag-1.37.37-64bit
     environment:
       TERM: xterm
     steps:
