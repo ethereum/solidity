@@ -273,8 +273,10 @@ of variable it concerns:
 
 * state variables are always in storage
 * function arguments are in memory by default
-* local variables of struct, array or mapping type reference storage by default
+* local variables of mapping type reference storage by default
 * local variables of value type (i.e. neither array, nor struct nor mapping) are stored in the stack
+
+For local variables of struct or array type the storage location has to be stated explicitly.
 
 Example::
 
@@ -309,8 +311,9 @@ carry back to ``data1`` or ``data2``.
 .. warning::
     Prior to version 0.5.0, a common mistake was to declare a local variable and assume that it will
     be created in memory, although it will be created in storage. Using such a variable without initializing
-    it could lead to unexpected behavior. Starting from 0.5.0, however, storage variables have to be initialized,
-    which should prevent these kinds of mistakes.
+    could lead to unexpected behavior. Starting from 0.5.0, however, the storage location for local variables
+    has to be specified explicitly and local storage variables have to be initialized, which should prevent
+    these kinds of mistakes.
 
 ******************
 Advanced Questions
