@@ -1,0 +1,58 @@
+# Build matrix / environment variable are explained on:
+# http://about.travis-ci.org/docs/user/build-configuration/
+# This file can be validated on:
+# http://lint.travis-ci.org/
+# See also
+# http://stackoverflow.com/questions/22111549/travis-ci-with-clang-3-4-and-c11/30925448#30925448
+# to allow C++11, though we are not yet building with -std=c++11
+
+before_install: pyenv install 3.5.4 && pyenv global 3.5.4
+install:
+- if [[ $TRAVIS_OS_NAME == osx ]]; then
+     brew update;
+     brew install python3 ninja;
+     python3 -m venv venv;
+     source venv/bin/activate;
+  elif [[ $TRAVIS_OS_NAME == linux ]]; then
+     wget https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip;
+     unzip -q ninja-linux.zip -d build;
+  fi
+- pip3 install meson
+# /usr/bin/gcc is 4.6 always, but gcc-X.Y is available.
+- if [[ $CXX = g++ ]]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+# /usr/bin/clang has a conflict with gcc, so use clang-X.Y.
+- if [[ $CXX = clang++ ]]; then export CXX="clang++-3.5" CC="clang-3.5"; fi
+- echo ${PATH}
+- ls /usr/local
+- ls /usr/local/bin
+- export PATH="${PWD}"/build:/usr/local/bin:/usr/bin:${PATH}
+- echo ${CXX}
+- ${CXX} --version
+- which valgrind
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise-3.5
+    packages:
+    - gcc-4.9
+    - g++-4.9
+    - clang-3.5
+    - valgrind
+    - aspell
+    - aspell-en
+os:
+  - linux
+language: cpp
+compiler:
+  - gcc
+  - clang
+script: ./travis.sh
+env:
+  matrix:
+    - LIB_TYPE=static BUILD_TYPE=release
+    - LIB_TYPE=shared BUILD_TYPE=debug
+notifications:
+  email: false
+dist: trusty
+sudo: false
