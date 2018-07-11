@@ -24,7 +24,7 @@ contract LimitBalance {
    */
   modifier limitedPayable() {
     if (address(this).balance > limit) {
-      throw;
+      revert();
     }
     _;
 

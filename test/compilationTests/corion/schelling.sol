@@ -389,7 +389,7 @@ contract schelling is module, announcementTypes, schellingVars {
             }
             delete voter.status;
             delete voter.roundID;
-        } else { throw; }
+        } else { revert(); }
         
         setVoter(msg.sender, voter);
         setFunds(msg.sender, funds);

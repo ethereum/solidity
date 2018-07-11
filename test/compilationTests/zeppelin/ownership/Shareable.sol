@@ -37,7 +37,7 @@ contract Shareable {
   // simple single-sig function modifier.
   modifier onlyOwner {
     if (!isOwner(msg.sender)) {
-      throw;
+      revert();
     }
     _;
   }
@@ -68,7 +68,7 @@ contract Shareable {
     }
     required = _required;
     if (required > owners.length) {
-      throw;
+      revert();
     }
   }
 
@@ -139,7 +139,7 @@ contract Shareable {
     uint256 index = ownerIndex[msg.sender];
     // make sure they're an owner
     if (index == 0) {
-      throw;
+      revert();
     }
 
     PendingState memory pending = pendings[_operation];

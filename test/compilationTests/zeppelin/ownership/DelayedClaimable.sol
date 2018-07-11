@@ -22,7 +22,7 @@ contract DelayedClaimable is Claimable {
    */
   function setLimits(uint256 _start, uint256 _end) public onlyOwner {
     if (_start > _end)
-        throw;
+        revert();
     end = _end;
     start = _start;
   }
@@ -34,7 +34,7 @@ contract DelayedClaimable is Claimable {
    */
   function claimOwnership() public onlyPendingOwner {
     if ((block.number > end) || (block.number < start))
-        throw;
+        revert();
     owner = pendingOwner;
     pendingOwner = address(0x0);
     end = 0;

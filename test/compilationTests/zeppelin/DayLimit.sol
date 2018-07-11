@@ -68,7 +68,7 @@ contract DayLimit {
    */
   modifier limitedDaily(uint256 _value) {
     if (!underLimit(_value)) {
-      throw;
+      revert();
     }
     _;
   }

@@ -27,7 +27,7 @@ contract ReentrancyGuard {
       _;
       rentrancy_lock = false;
     } else {
-      throw;
+      revert();
     }
   }
 

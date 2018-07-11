@@ -23,7 +23,7 @@ contract LimitedTransferToken is ERC20 {
    * @dev Checks whether it can transfer or otherwise throws.
    */
   modifier canTransfer(address _sender, uint256 _value) {
-   if (_value > transferableTokens(_sender, uint64(now))) throw;
+   if (_value > transferableTokens(_sender, uint64(now))) revert();
    _;
   }
 

@@ -23,7 +23,7 @@ contract HasNoEther is Ownable {
   */
   constructor() public payable {
     if(msg.value > 0) {
-      throw;
+      revert();
     }
   }
 
@@ -38,7 +38,7 @@ contract HasNoEther is Ownable {
    */
   function reclaimEther() external onlyOwner {
     if(!owner.send(address(this).balance)) {
-      throw;
+      revert();
     }
   }
 }

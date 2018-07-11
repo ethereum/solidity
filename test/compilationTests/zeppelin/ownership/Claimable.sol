@@ -17,7 +17,7 @@ contract Claimable is Ownable {
    */
   modifier onlyPendingOwner() {
     if (msg.sender != pendingOwner) {
-      throw;
+      revert();
     }
     _;
   }

@@ -19,7 +19,7 @@ contract HasNoTokens is Ownable {
   * @param data_ Bytes The data passed from the caller.
   */
   function tokenFallback(address from_, uint256 value_, bytes data_) external {
-    throw;
+    revert();
   }
 
   /**
