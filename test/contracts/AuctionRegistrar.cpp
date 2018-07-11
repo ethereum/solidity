@@ -43,20 +43,20 @@ static char const* registrarCode = R"DELIMITER(
 pragma solidity ^0.4.0;
 
 contract NameRegister {
-	function addr(string memory _name) view returns (address o_owner);
-	function name(address _owner) view returns (string memory o_name);
+	function addr(string memory _name) public view returns (address o_owner);
+	function name(address _owner) public view returns (string memory o_name);
 }
 
 contract Registrar is NameRegister {
 	event Changed(string indexed name);
 	event PrimaryChanged(string indexed name, address indexed addr);
 
-	function owner(string memory _name) view returns (address o_owner);
-	function addr(string memory _name) view returns (address o_address);
-	function subRegistrar(string memory _name) view returns (address o_subRegistrar);
-	function content(string memory _name) view returns (bytes32 o_content);
+	function owner(string memory _name) public view returns (address o_owner);
+	function addr(string memory _name) public view returns (address o_address);
+	function subRegistrar(string memory _name) public view returns (address o_subRegistrar);
+	function content(string memory _name) public view returns (bytes32 o_content);
 
-	function name(address _owner) view returns (string memory o_name);
+	function name(address _owner) public view returns (string memory o_name);
 }
 
 contract AuctionSystem {
@@ -112,7 +112,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 	uint constant c_renewalInterval = 365 days;
 	uint constant c_freeBytes = 12;
 
-	function Registrar() {
+	function Registrar() public {
 		// TODO: Populate with hall-of-fame.
 	}
 
@@ -156,12 +156,12 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 
 	modifier onlyrecordowner(string memory _name) { if (m_toRecord[_name].owner == msg.sender) _; }
 
-	function transfer(string memory _name, address _newOwner) onlyrecordowner(_name) {
+	function transfer(string memory _name, address _newOwner) onlyrecordowner(_name) public {
 		m_toRecord[_name].owner = _newOwner;
 		emit Changed(_name);
 	}
 
-	function disown(string memory _name) onlyrecordowner(_name) {
+	function disown(string memory _name) onlyrecordowner(_name) public {
 		if (stringsEqual(m_toName[m_toRecord[_name].primary], _name))
 		{
 			emit PrimaryChanged(_name, m_toRecord[_name].primary);
@@ -171,7 +171,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		emit Changed(_name);
 	}
 
-	function setAddress(string memory _name, address _a, bool _primary) onlyrecordowner(_name) {
+	function setAddress(string memory _name, address _a, bool _primary) onlyrecordowner(_name) public {
 		m_toRecord[_name].primary = _a;
 		if (_primary)
 		{
@@ -180,11 +180,11 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		}
 		emit Changed(_name);
 	}
-	function setSubRegistrar(string memory _name, address _registrar) onlyrecordowner(_name) {
+	function setSubRegistrar(string memory _name, address _registrar) onlyrecordowner(_name) public {
 		m_toRecord[_name].subRegistrar = _registrar;
 		emit Changed(_name);
 	}
-	function setContent(string memory _name, bytes32 _content) onlyrecordowner(_name) {
+	function setContent(string memory _name, bytes32 _content) onlyrecordowner(_name) public {
 		m_toRecord[_name].content = _content;
 		emit Changed(_name);
 	}
@@ -201,11 +201,11 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		return true;
 	}
 
-	function owner(string memory _name) view returns (address) { return m_toRecord[_name].owner; }
-	function addr(string memory _name) view returns (address) { return m_toRecord[_name].primary; }
-	function subRegistrar(string memory _name) view returns (address) { return m_toRecord[_name].subRegistrar; }
-	function content(string memory _name) view returns (bytes32) { return m_toRecord[_name].content; }
-	function name(address _addr) view returns (string memory o_name) { return m_toName[_addr]; }
+	function owner(string memory _name) public view returns (address) { return m_toRecord[_name].owner; }
+	function addr(string memory _name) public view returns (address) { return m_toRecord[_name].primary; }
+	function subRegistrar(string memory _name) public view returns (address) { return m_toRecord[_name].subRegistrar; }
+	function content(string memory _name) public view returns (bytes32) { return m_toRecord[_name].content; }
+	function name(address _addr) public view returns (string memory o_name) { return m_toName[_addr]; }
 
 	mapping (address => string) m_toName;
 	mapping (string => Record) m_toRecord;
