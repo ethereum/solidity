@@ -68,6 +68,7 @@ function test_truffle
         rm "$assertsol"
         wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
       fi
+      find -name "wrapper.js" -exec sed -i -e 's/Runtime.//g' '{}' \;
       npm run test
     )
     rm -rf "$DIR"

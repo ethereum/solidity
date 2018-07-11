@@ -33,7 +33,7 @@ version: 2
 jobs:
   build_emscripten:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.37-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
     environment:
       TERM: xterm
     steps:
@@ -67,7 +67,7 @@ jobs:
             - version.txt
   test_emscripten_solcjs:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.37-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
     environment:
       TERM: xterm
     steps:
@@ -93,7 +93,7 @@ jobs:
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
   test_emscripten_external:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.37-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
     environment:
       TERM: xterm
     steps:

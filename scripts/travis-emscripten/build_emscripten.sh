@@ -98,6 +98,7 @@ cmake \
   -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY="$WORKSPACE"/boost_1_67_0/libboost_unit_test_framework.a \
   -DBoost_UNIT_TEST_FRAMEWORK_LIBRARIES="$WORKSPACE"/boost_1_67_0/libboost_unit_test_framework.a \
   -DTESTS=0 \
+  -DCMAKE_EXE_LINKER_FLAGS="-s \"EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'Runtime', 'addFunction', 'removeFunction', 'Pointer_stringify', 'lengthBytesUTF8', '_malloc', 'stringToUTF8', 'setValue']\" -s WASM=0" \
   ..
 make -j 4
 
