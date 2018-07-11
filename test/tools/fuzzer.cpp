@@ -135,6 +135,10 @@ void testCompiler(bool optimize)
 		for (Json::Value const& error: outputJson["errors"])
 		{
 			string invalid = contains(error.asString(), vector<string>{
+				// StandardJSON error types
+				"Exception",
+				"InternalCompilerError",
+				// Old-school error messages
 				"Internal compiler error",
 				"Exception during compilation",
 				"Unknown exception during compilation",
