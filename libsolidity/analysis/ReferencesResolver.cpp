@@ -377,19 +377,10 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					{
 						typeLoc = DataLocation::Storage;
 						if (_variable.isLocalVariable())
-						{
-							if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-								typeError(
-									_variable.location(),
-									"Data location must be specified as either \"memory\" or \"storage\"."
-								);
-							else
-								m_errorReporter.warning(
-									_variable.location(),
-									"Variable is declared as a storage pointer. "
-									"Use an explicit \"storage\" keyword to silence this warning."
-								);
-						}
+							typeError(
+								_variable.location(),
+								"Data location must be specified as either \"memory\" or \"storage\"."
+							);
 					}
 				}
 				else
