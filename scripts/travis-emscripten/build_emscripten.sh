@@ -49,13 +49,11 @@ fi
 WORKSPACE=/root/project
 
 # Increase nodejs stack size
-if [ -e ~/.emscripten ]
-then
-    sed -i -e 's/NODE_JS=.*/NODE_JS=["nodejs", "--stack_size=65536"]/' ~/.emscripten
-else
-    echo 'NODE_JS=["nodejs", "--stack_size=65536"]' > ~/.emscripten
-fi
-
+test -e /emsdk_portable/node/bin/node_orig || (
+  mv /emsdk_portable/node/bin/node /emsdk_portable/node/bin/node_orig
+  echo -e '#!/bin/sh\nexec /emsdk_portable/node/bin/node_orig --stack-size=8192 $@' > /emsdk_portable/node/bin/node
+  chmod 755 /emsdk_portable/node/bin/node
+)
 
 # Boost
 echo -en 'travis_fold:start:compiling_boost\\r'
