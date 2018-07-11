@@ -37,6 +37,7 @@ Breaking Changes:
  * Type Checker: Disallow conversions between ``bytesX`` and ``uintY`` of different size.
  * Type Checker: Disallow empty tuple components. This was partly already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow specifying base constructor arguments multiple times in the same inheritance hierarchy. This was already the case in the experimental 0.5.0 mode.
+ * Type Checker: Disallow calling constructor with wrong argument count. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow uninitialized storage variables. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Only accept a single ``bytes`` type for ``.call()`` (and family), ``keccak256()``, ``sha256()`` and ``ripemd160()``.
  * Type Checker: Fallback function must be external. This was already the case in the experimental 0.5.0 mode.

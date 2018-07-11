@@ -548,33 +548,18 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 
 	if (arguments)
 	{
-		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 		if (parameterTypes.size() != arguments->size())
 		{
-			if (arguments->size() == 0 && !v050)
-				m_errorReporter.warning(
-					_inheritance.location(),
-					"Wrong argument count for constructor call: " +
-					toString(arguments->size()) +
-					" arguments given but expected " +
-					toString(parameterTypes.size()) +
-					"."
-				);
-			else
-			{
-				m_errorReporter.typeError(
-					_inheritance.location(),
-					"Wrong argument count for constructor call: " +
-					toString(arguments->size()) +
-					" arguments given but expected " +
-					toString(parameterTypes.size()) +
-					"."
-				);
-				return;
-			}
+			m_errorReporter.typeError(
+				_inheritance.location(),
+				"Wrong argument count for constructor call: " +
+				toString(arguments->size()) +
+				" arguments given but expected " +
+				toString(parameterTypes.size()) +
+				". Remove parentheses if you do not want to provide arguments here."
+			);
 		}
-		for (size_t i = 0; i < arguments->size(); ++i)
+		for (size_t i = 0; i < std::min(arguments->size(), parameterTypes.size()); ++i)
 			if (!type(*(*arguments)[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				m_errorReporter.typeError(
 					(*arguments)[i]->location(),
