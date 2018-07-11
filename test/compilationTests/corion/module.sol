@@ -131,7 +131,7 @@ contract module {
         /*
             Check self for ready for functions or not.
             
-            @success    Function call was successfull or not
+            @success    Function call was successful or not
             @active     Ready for functions or not
         */
         return (true, moduleStatus == status.Connected && block.number >= disabledUntil);

@@ -279,13 +279,13 @@ All together, the encoding is (newline after function selector and each 32-bytes
 
 Let us apply the same principle to encode the data for a function with a signature ``g(uint[][],string[])`` with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most atomic parts of the encoding:
 
-First we encode the length and data of the first embeded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
+First we encode the length and data of the first embedded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
 
  - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first array, 2; the elements themselves are ``1``  and ``2``)
  - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (first element)
  - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (second element)
 
-Then we encode the length and data of the second embeded dynamic array ``[3]`` of the first root array ``[[1, 2], [3]]``:
+Then we encode the length and data of the second embedded dynamic array ``[3]`` of the first root array ``[[1, 2], [3]]``:
 
  - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
  - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
@@ -307,7 +307,7 @@ Offset ``a`` points to the start of the content of the array ``[1, 2]`` which is
 Offset ``b`` points to the start of the content of the array ``[3]`` which is line 5 (160 bytes); thus ``b = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
 
 
-Then we encode the embeded strings of the second root array:
+Then we encode the embedded strings of the second root array:
 
  - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"one"``)
  - ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"one"``)
@@ -337,7 +337,7 @@ Offset ``d`` points to the start of the content of the string ``"two"`` which is
 Offset ``e`` points to the start of the content of the string ``"three"`` which is line 7 (224 bytes); thus ``e = 0x00000000000000000000000000000000000000000000000000000000000000e0``.
 
 
-Note that the encodings of the embeded elements of the root arrays are not dependent on each other and have the same encodings for a fuction with a signature ``g(string[],uint[][])``.
+Note that the encodings of the embedded elements of the root arrays are not dependent on each other and have the same encodings for a function with a signature ``g(string[],uint[][])``.
 
 Then we encode the length of the first root array:
 

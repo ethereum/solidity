@@ -95,7 +95,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 
 void SMTChecker::endVisit(FunctionDefinition const&)
 {
-	// TOOD we could check for "reachability", i.e. satisfiability here.
+	// TODO we could check for "reachability", i.e. satisfiability here.
 	// We only handle local variables, so we clear at the beginning of the function.
 	// If we add storage variables, those should be cleared differently.
 	removeLocalVariables();

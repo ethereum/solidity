@@ -363,8 +363,8 @@ void CompilerUtils::encodeToMemory(
 
 	// Stack during operation:
 	// <v1> <v2> ... <vn> <mem_start> <dyn_head_1> ... <dyn_head_r> <end_of_mem>
-	// The values dyn_head_i are added during the first loop and they point to the head part
-	// of the ith dynamic parameter, which is filled once the dynamic parts are processed.
+	// The values dyn_head_n are added during the first loop and they point to the head part
+	// of the nth dynamic parameter, which is filled once the dynamic parts are processed.
 
 	// store memory start pointer
 	m_context << Instruction::DUP1;

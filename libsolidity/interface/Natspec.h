@@ -45,7 +45,7 @@ public:
 	/// @param _contractDef The contract definition
 	/// @return             A JSON representation of the contract's user documentation
 	static Json::Value userDocumentation(ContractDefinition const& _contractDef);
-	/// Genereates the Developer's documentation of the contract
+	/// Generates the Developer's documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A JSON representation
 	///                     of the contract's developer documentation

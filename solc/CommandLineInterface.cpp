@@ -447,7 +447,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
 	if (m_sourceCodes.size() == 0)
 	{
-		cerr << "No input files given. If you wish to use the standard input please specify \"-\" explicity." << endl;
+		cerr << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
 		return false;
 	}
 

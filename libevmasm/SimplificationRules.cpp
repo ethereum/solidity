@@ -67,7 +67,7 @@ void Rules::addRule(SimplificationRule<Pattern> const& _rule)
 
 Rules::Rules()
 {
-	// Multiple occurences of one of these inside one rule must match the same equivalence class.
+	// Multiple occurrences of one of these inside one rule must match the same equivalence class.
 	// Constants.
 	Pattern A(Push);
 	Pattern B(Push);

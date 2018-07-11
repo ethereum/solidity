@@ -20,7 +20,7 @@ Contracts can be created "from outside" via Ethereum transactions or from within
 
 IDEs, such as `Remix <https://remix.ethereum.org/>`_, make the creation process seamless using UI elements.
 
-Creating contracts programatically on Ethereum is best done via using the JavaScript API `web3.js <https://github.com/ethereum/web3.js>`_.
+Creating contracts programmatically on Ethereum is best done via using the JavaScript API `web3.js <https://github.com/ethereum/web3.js>`_.
 As of today it has a method called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
@@ -1042,7 +1042,7 @@ constant and defines the behaviour of the contract or
 describes it. The second way has to be used if the
 constructor arguments of the base depend on those of the
 derived contract. Arguments have to be given either in the
-inheritance list or in modifier-style in the derived constuctor.
+inheritance list or in modifier-style in the derived constructor.
 Specifying arguments in both places is an error.
 
 If a derived contract doesn't specify the arguments to all of its base

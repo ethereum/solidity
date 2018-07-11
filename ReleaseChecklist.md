@@ -8,7 +8,7 @@ Checklist for making a release:
  - [ ] Make a final check that there are no platform-dependency issues in the ``solc-test-bytecode`` repository.
  - [ ] Wait for the tests for the commit on ``release``, create a release in Github, creating the tag.
  - [ ] Thank voluntary contributors in the Github release page (use ``git shortlog -s -n -e origin/release..origin/develop``).
- - [ ] Wait for the CI runs on the tag itself (they should push artefacts onto the Github release page).
+ - [ ] Wait for the CI runs on the tag itself (they should push artifacts onto the Github release page).
  - [ ] Run ``scripts/release_ppa.sh release`` to create the PPA release (you need the relevant openssl key).
  - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems, run ``./scripts/docker_deploy_manual.sh release``).
  - [ ] Update the homebrew realease in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb (version and hash)

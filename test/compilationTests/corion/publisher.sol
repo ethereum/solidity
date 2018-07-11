@@ -264,7 +264,7 @@ contract publisher is announcementTypes, module, safeMath {
     function checkICO() internal returns (bool isICO) {
         /*
             Inner function to check the ICO status.
-            @bool       Is the ICO in proccess or not?
+            @bool       Is the ICO in process or not?
         */
         (bool _success, bool _isICO) = moduleHandler(moduleHandlerAddress).isICO();
         require( _success );

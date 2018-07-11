@@ -90,7 +90,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		if (EMSCRIPTEN)
 			# Do not emit a separate memory initialiser file
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0")
-			# Leave only exported symbols as public and agressively remove others
+			# Leave only exported symbols as public and aggressively remove others
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -ffunction-sections -Wl,--gc-sections -fvisibility=hidden")
 			# Optimisation level
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")

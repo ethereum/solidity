@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"this",
 		"address(1).balance"
 	};
-	// ``block.blockhash`` and ``blockhash`` are tested seperately below because their usage will
+	// ``block.blockhash`` and ``blockhash`` are tested separately below because their usage will
 	// produce warnings that can't be handled in a generic way.
 	vector<string> pure{
 		"msg.data",

@@ -188,8 +188,8 @@ Event Definitions and Event Emitters
 Yes::
 
     event LongAndLotsOfArgs(
-        adress sender,
-        adress recipient,
+        address sender,
+        address recipient,
         uint256 publicKey,
         uint256 amount,
         bytes32[] options
@@ -205,8 +205,8 @@ Yes::
 
 No::
 
-    event LongAndLotsOfArgs(adress sender,
-                            adress recipient,
+    event LongAndLotsOfArgs(address sender,
+                            address recipient,
                             uint256 publicKey,
                             uint256 amount,
                             bytes32[] options);
@@ -830,7 +830,7 @@ The naming recommendations given here are intended to improve the readability,
 and thus they are not rules, but rather guidelines to try and help convey the
 most information through the names of things.
 
-Lastly, consistency within a codebase should always supercede any conventions
+Lastly, consistency within a codebase should always supersede any conventions
 outlined in this document.
 
 

@@ -1031,7 +1031,7 @@ public:
 	/// @param _selfType if the function is bound, this has to be supplied and is the type of the
 	/// expression the function is called on.
 	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
-	/// @returns true if the types of parameters are equal (does't check return parameter types)
+	/// @returns true if the types of parameters are equal (doesn't check return parameter types)
 	bool hasEqualArgumentTypes(FunctionType const& _other) const;
 
 	/// @returns true if the ABI is used for this call (only meaningful for external calls)

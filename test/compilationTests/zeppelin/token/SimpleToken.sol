@@ -18,7 +18,7 @@ contract SimpleToken is StandardToken {
   uint256 public INITIAL_SUPPLY = 10000;
 
   /**
-   * @dev Contructor that gives msg.sender all of existing tokens. 
+   * @dev Constructor that gives msg.sender all of existing tokens. 
    */
   constructor() public {
     totalSupply = INITIAL_SUPPLY;

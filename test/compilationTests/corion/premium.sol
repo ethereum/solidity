@@ -118,7 +118,7 @@ contract premium is module, safeMath {
             @extraData      Extra data to be received by the receiver
             @nonce          Transaction count
             
-            @sucess         Was the Function successful?
+            @success         Was the Function successful?
         */
         _approve(spender, amount, nonce);
         require( thirdPartyPContractAbstract(spender).approvedCorionPremiumToken(msg.sender, amount, extraData) );

@@ -59,7 +59,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 {
 	std::vector<SimplificationRule<Pattern>> rules;
 	rules += std::vector<SimplificationRule<Pattern>>{
-		// arithmetics on constants
+		// arithmetic on constants
 		{{Instruction::ADD, {A, B}}, [=]{ return A.d() + B.d(); }, false},
 		{{Instruction::MUL, {A, B}}, [=]{ return A.d() * B.d(); }, false},
 		{{Instruction::SUB, {A, B}}, [=]{ return A.d() - B.d(); }, false},

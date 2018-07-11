@@ -39,7 +39,7 @@ write::
     pragma solidity ^0.4.16;
 
     contract Simple {
-        function arithmetics(uint _a, uint _b)
+        function arithmetic(uint _a, uint _b)
             public
             pure
             returns (uint o_sum, uint o_product)
