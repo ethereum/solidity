@@ -39,7 +39,7 @@ test "$(shasum boost.tar.xz)" = "77e73c9fd7bf85b14067767b9e8fdc39b49ee0f2  boost
 tar -xzf boost.tar.xz
 rm boost.tar.xz
 cd boost_1_67_0
-./bootstrap.sh --with-toolset=gcc
+./bootstrap.sh
 wget -q 'https://raw.githubusercontent.com/tee3/boost-build-emscripten/master/emscripten.jam'
 test "$(shasum emscripten.jam)" = "a7e13fc2c1e53b0e079ef440622f879aa6da3049  emscripten.jam"
 echo "using emscripten : : em++ ;" >> project-config.jam
