@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(dynamic_nested_arrays)
 					public pure returns (uint, uint, uint, uint, uint, uint, uint) {
 				return (a, b.length, b[1].length, b[1][1], c[1].length, c[1][1][1], d);
 			}
-			function test() view returns (uint, uint, uint, uint, uint, uint, uint) {
+			function test() public view returns (uint, uint, uint, uint, uint, uint, uint) {
 				uint16[][] memory b = new uint16[][](3);
 				b[0] = new uint16[](2);
 				b[0][0] = 0x55;

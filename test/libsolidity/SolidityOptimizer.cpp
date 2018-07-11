@@ -104,7 +104,7 @@ public:
 							"\nOptimized:     " + toHex(optimizedOutput));
 	}
 
-	/// @returns the number of instructions in the given bytecode, not taking the metadata hash
+	/// @returns the number of intructions in the given bytecode, not taking the metadata hash
 	/// into account.
 	size_t numInstructions(bytes const& _bytecode, boost::optional<Instruction> _which = boost::optional<Instruction>{})
 	{
@@ -394,12 +394,12 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 				g();
 				return 1;
 			}
-			function g() {
+			function g() public {
 				m_b = 0x817416927846239487123469187231298734162934871263941234127518276;
 				m_c = 0x817416927846239487123469187231298734162934871263941234127518276;
 				h();
 			}
-			function h() {
+			function h() public {
 				m_d = 0xff05694900000000000000000000000000000000000000000000000000000000;
 			}
 			function get() public returns (uint ra, uint rb, uint rc, uint rd) {
@@ -600,7 +600,7 @@ BOOST_AUTO_TEST_CASE(init_empty_dynamic_arrays)
 	// not use any memory.
 	char const* sourceCode = R"(
 		contract Test {
-			function f() pure returns (uint r) {
+			function f() public pure returns (uint r) {
 				uint[][] memory x = new uint[][](20000);
 				return x.length;
 			}
