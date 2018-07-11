@@ -87,16 +87,11 @@ cmake \
   -DBoost_USE_STATIC_LIBS=1 \
   -DBoost_USE_STATIC_RUNTIME=1 \
   -DBoost_INCLUDE_DIR="$WORKSPACE"/boost_1_67_0/ \
-  -DBoost_FILESYSTEM_LIBRARY="$WORKSPACE"/boost_1_67_0/libboost_filesystem.a \
-  -DBoost_FILESYSTEM_LIBRARIES="$WORKSPACE"/boost_1_67_0/libboost_filesystem.a \
-  -DBoost_PROGRAM_OPTIONS_LIBRARY="$WORKSPACE"/boost_1_67_0/libboost_program_options.a \
-  -DBoost_PROGRAM_OPTIONS_LIBRARIES="$WORKSPACE"/boost_1_67_0/libboost_program_options.a \
-  -DBoost_REGEX_LIBRARY="$WORKSPACE"/boost_1_67_0/libboost_regex.a \
-  -DBoost_REGEX_LIBRARIES="$WORKSPACE"/boost_1_67_0/libboost_regex.a \
-  -DBoost_SYSTEM_LIBRARY="$WORKSPACE"/boost_1_67_0/libboost_system.a \
-  -DBoost_SYSTEM_LIBRARIES="$WORKSPACE"/boost_1_67_0/libboost_system.a \
-  -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY="$WORKSPACE"/boost_1_67_0/libboost_unit_test_framework.a \
-  -DBoost_UNIT_TEST_FRAMEWORK_LIBRARIES="$WORKSPACE"/boost_1_67_0/libboost_unit_test_framework.a \
+  -DBoost_FILESYSTEM_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_filesystem.a \
+  -DBoost_PROGRAM_OPTIONS_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_program_options.a \
+  -DBoost_REGEX_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_regex.a \
+  -DBoost_SYSTEM_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_system.a \
+  -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_unit_test_framework.a \
   -DTESTS=0 \
   -DCMAKE_EXE_LINKER_FLAGS="-s \"EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'Runtime', 'addFunction', 'removeFunction', 'Pointer_stringify', 'lengthBytesUTF8', '_malloc', 'stringToUTF8', 'setValue']\" -s WASM=0" \
   ..
