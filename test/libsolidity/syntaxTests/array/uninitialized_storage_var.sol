@@ -1,9 +1,9 @@
 contract C {
-	function f() {
+	function f() public {
 		uint[] storage x;
 		uint[10] storage y;
 	}
 }
 // ----
-// DeclarationError: (31-47): Uninitialized storage pointer.
-// DeclarationError: (51-69): Uninitialized storage pointer.
+// DeclarationError: (38-54): Uninitialized storage pointer.
+// DeclarationError: (58-76): Uninitialized storage pointer.
