@@ -96,6 +96,11 @@ void DeclarationContainer::activateVariable(ASTString const& _name)
 	m_invisibleDeclarations.erase(_name);
 }
 
+bool DeclarationContainer::isInvisible(ASTString const& _name) const
+{
+	return m_invisibleDeclarations.count(_name);
+}
+
 bool DeclarationContainer::registerDeclaration(
 	Declaration const& _declaration,
 	ASTString const* _name,
