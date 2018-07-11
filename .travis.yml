@@ -151,11 +151,11 @@ matrix:
 git:
     depth: 2
 
-cache:
-    ccache: true
-    directories:
-        - boost_1_57_0
-        - $HOME/.local
+#cache:
+#    ccache: true
+#    directories:
+#        - boost_1_57_0
+#        - $HOME/.local
 
 install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
