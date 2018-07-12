@@ -60,8 +60,8 @@ contract StandardMarket is Market {
         atStage(Stages.MarketCreated)
     {
         // Request collateral tokens and allow event contract to transfer them to buy all outcomes
-        require(   eventContract.collateralToken().transferFrom(msg.sender, this, _funding)
-                && eventContract.collateralToken().approve(eventContract, _funding));
+        require(   eventContract.collateralToken().transferFrom(msg.sender, address(this), _funding)
+                && eventContract.collateralToken().approve(address(eventContract), _funding));
         eventContract.buyAllOutcomes(_funding);
         funding = _funding;
         stage = Stages.MarketFunded;
@@ -76,7 +76,7 @@ contract StandardMarket is Market {
     {
         uint8 outcomeCount = eventContract.getOutcomeCount();
         for (uint8 i = 0; i < outcomeCount; i++)
-            require(eventContract.outcomeTokens(i).transfer(creator, eventContract.outcomeTokens(i).balanceOf(this)));
+            require(eventContract.outcomeTokens(i).transfer(creator, eventContract.outcomeTokens(i).balanceOf(address(this))));
         stage = Stages.MarketClosed;
         emit MarketClosing();
     }
@@ -88,7 +88,7 @@ contract StandardMarket is Market {
         isCreator
         returns (uint fees)
     {
-        fees = eventContract.collateralToken().balanceOf(this);
+        fees = eventContract.collateralToken().balanceOf(address(this));
         // Transfer fees
         require(eventContract.collateralToken().transfer(creator, fees));
         emit FeeWithdrawal(fees);
@@ -112,8 +112,8 @@ contract StandardMarket is Market {
         // Check cost doesn't exceed max cost
         require(cost > 0 && cost <= maxCost);
         // Transfer tokens to markets contract and buy all outcomes
-        require(   eventContract.collateralToken().transferFrom(msg.sender, this, cost)
-                && eventContract.collateralToken().approve(eventContract, outcomeTokenCost));
+        require(   eventContract.collateralToken().transferFrom(msg.sender, address(this), cost)
+                && eventContract.collateralToken().approve(address(eventContract), outcomeTokenCost));
         // Buy all outcomes
         eventContract.buyAllOutcomes(outcomeTokenCost);
         // Transfer outcome tokens to buyer
@@ -142,7 +142,7 @@ contract StandardMarket is Market {
         // Check profit is not too low
         require(profit > 0 && profit >= minProfit);
         // Transfer outcome tokens to markets contract to sell all outcomes
-        require(eventContract.outcomeTokens(outcomeTokenIndex).transferFrom(msg.sender, this, outcomeTokenCount));
+        require(eventContract.outcomeTokens(outcomeTokenIndex).transferFrom(msg.sender, address(this), outcomeTokenCount));
         // Sell all outcomes
         eventContract.sellAllOutcomes(outcomeTokenProfit);
         // Transfer profit to seller
@@ -164,11 +164,11 @@ contract StandardMarket is Market {
         returns (uint cost)
     {
         // Buy all outcomes
-        require(   eventContract.collateralToken().transferFrom(msg.sender, this, outcomeTokenCount)
-                && eventContract.collateralToken().approve(eventContract, outcomeTokenCount));
+        require(   eventContract.collateralToken().transferFrom(msg.sender, address(this), outcomeTokenCount)
+                && eventContract.collateralToken().approve(address(eventContract), outcomeTokenCount));
         eventContract.buyAllOutcomes(outcomeTokenCount);
         // Short sell selected outcome
-        eventContract.outcomeTokens(outcomeTokenIndex).approve(this, outcomeTokenCount);
+        eventContract.outcomeTokens(outcomeTokenIndex).approve(address(this), outcomeTokenCount);
         uint profit = this.sell(outcomeTokenIndex, outcomeTokenCount, minProfit);
         cost = outcomeTokenCount - profit;
         // Transfer outcome tokens to buyer

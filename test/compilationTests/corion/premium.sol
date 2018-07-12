@@ -56,7 +56,7 @@ contract premium is module, safeMath {
         require( dbAddress != address(0x00) );
         db = ptokenDB(dbAddress);
         if ( ! forReplace ) {
-            require( db.replaceOwner(this) );
+            require( db.replaceOwner(address(this)) );
             isICO = true;
             icoAddr = icoContractAddr;
             assert( genesisAddr.length == genesisValue.length );

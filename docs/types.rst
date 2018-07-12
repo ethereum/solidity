@@ -901,7 +901,7 @@ for each ``_KeyType``, recursively.
         function f() public returns (uint) {
             MappingExample m = new MappingExample();
             m.update(100);
-            return m.balances(this);
+            return m.balances(address(this));
         }
     }
 

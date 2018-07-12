@@ -102,12 +102,12 @@ contract Campaign {
         timedTransitions
         atStage(Stages.AuctionStarted)
     {
-        uint raisedAmount = eventContract.collateralToken().balanceOf(this);
+        uint raisedAmount = eventContract.collateralToken().balanceOf(address(this));
         uint maxAmount = funding.sub(raisedAmount);
         if (maxAmount < amount)
             amount = maxAmount;
         // Collect collateral tokens
-        require(eventContract.collateralToken().transferFrom(msg.sender, this, amount));
+        require(eventContract.collateralToken().transferFrom(msg.sender, address(this), amount));
         contributions[msg.sender] = contributions[msg.sender].add(amount);
         if (amount == maxAmount)
             stage = Stages.AuctionSuccessful;
@@ -138,7 +138,7 @@ contract Campaign {
         returns (Market)
     {
         market = marketFactory.createMarket(eventContract, marketMaker, fee);
-        require(eventContract.collateralToken().approve(market, funding));
+        require(eventContract.collateralToken().approve(address(market), funding));
         market.fund(funding);
         stage = Stages.MarketCreated;
         emit MarketCreation(market);
@@ -156,7 +156,7 @@ contract Campaign {
         market.close();
         market.withdrawFees();
         eventContract.redeemWinnings();
-        finalBalance = eventContract.collateralToken().balanceOf(this);
+        finalBalance = eventContract.collateralToken().balanceOf(address(this));
         stage = Stages.MarketClosed;
         emit MarketClosing();
     }

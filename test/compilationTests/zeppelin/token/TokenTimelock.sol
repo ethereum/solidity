@@ -33,7 +33,7 @@ contract TokenTimelock {
     require(msg.sender == beneficiary);
     require(now >= releaseTime);
 
-    uint amount = token.balanceOf(this);
+    uint amount = token.balanceOf(address(this));
     require(amount > 0);
 
     token.transfer(beneficiary, amount);

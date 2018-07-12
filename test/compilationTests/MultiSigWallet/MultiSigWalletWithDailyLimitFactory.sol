@@ -16,7 +16,7 @@ contract MultiSigWalletWithDailyLimitFactory is Factory {
         public
         returns (address wallet)
     {
-        wallet = new MultiSigWalletWithDailyLimit(_owners, _required, _dailyLimit);
+        wallet = address(new MultiSigWalletWithDailyLimit(_owners, _required, _dailyLimit));
         register(wallet);
     }
 }

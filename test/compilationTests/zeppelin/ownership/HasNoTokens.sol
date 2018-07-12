@@ -28,7 +28,7 @@ contract HasNoTokens is Ownable {
    */
   function reclaimToken(address tokenAddr) external onlyOwner {
     ERC20Basic tokenInst = ERC20Basic(tokenAddr);
-    uint256 balance = tokenInst.balanceOf(this);
+    uint256 balance = tokenInst.balanceOf(address(this));
     tokenInst.transfer(owner, balance);
   }
 }

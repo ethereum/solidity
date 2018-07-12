@@ -31,8 +31,8 @@ contract Bounty is PullPayment, Destructible {
    */
   function createTarget() public returns(Target) {
     Target target = Target(deployContract());
-    researchers[target] = msg.sender;
-    emit TargetCreated(target);
+    researchers[address(target)] = msg.sender;
+    emit TargetCreated(address(target));
     return target;
   }
 
@@ -47,7 +47,7 @@ contract Bounty is PullPayment, Destructible {
    * @param target contract
    */
   function claim(Target target) public {
-    address researcher = researchers[target];
+    address researcher = researchers[address(target)];
     if (researcher == address(0)) {
       revert();
     }

@@ -15,7 +15,7 @@ contract MultiSigWalletFactory is Factory {
         public
         returns (address wallet)
     {
-        wallet = new MultiSigWallet(_owners, _required);
+        wallet = address(new MultiSigWallet(_owners, _required));
         register(wallet);
     }
 }

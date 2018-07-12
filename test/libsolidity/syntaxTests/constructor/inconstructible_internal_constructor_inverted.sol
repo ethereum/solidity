@@ -7,6 +7,7 @@ contract B {
 	}
 }
 contract A {
-	constructor(address) public {}
+	constructor(address) internal {}
 }
 // ----
+// TypeError: (141-146): Contract with internal constructor cannot be created directly.

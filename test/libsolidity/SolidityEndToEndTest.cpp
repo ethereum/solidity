@@ -9428,7 +9428,7 @@ BOOST_AUTO_TEST_CASE(failed_create)
 				if (depth < 1024)
 					return this.stack(depth - 1);
 				else
-					return f(0);
+					return address(f(0));
 			}
 		}
 	)";

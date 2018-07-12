@@ -379,7 +379,7 @@ In this example::
     }
 
     contract A {
-        address child;
+        B child;
 
         function test() public {
             child = (new B).value(10)(); //construct a new B with 10 wei

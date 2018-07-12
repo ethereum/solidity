@@ -71,7 +71,7 @@ contract token is safeMath, module, announcementTypes {
         exchangeAddress = exchangeContractAddress;
         isICO = ! forReplace;
         if ( ! forReplace ) {
-            require( db.replaceOwner(this) );
+            require( db.replaceOwner(address(this)) );
             assert( genesisAddr.length == genesisValue.length );
             require( address(this).balance >= genesisAddr.length * 0.2 ether );
             for ( uint256 a=0 ; a<genesisAddr.length ; a++ ) {
