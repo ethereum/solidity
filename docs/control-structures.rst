@@ -297,9 +297,9 @@ These can then either be assigned to newly declared variables or to pre-existing
     }
 
 .. note::
-    Prior to version 0.4.24 it was possible to assign to tuples of smaller size, either
+    Prior to version 0.5.0 it was possible to assign to tuples of smaller size, either
     filling up on the left or on the right side (which ever was empty). This is
-    now deprecated, both sides have to have the same number of components.
+    now disallowed, so both sides have to have the same number of components.
 
 Complications for Arrays and Structs
 ------------------------------------
