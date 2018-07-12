@@ -1,4 +1,4 @@
 contract M {
-    function f(uint[]) public;
-    function f(int[]) public;
+    function f(uint[] memory) public;
+    function f(int[] memory) public;
 }

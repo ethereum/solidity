@@ -2,7 +2,7 @@
 library L {
     struct S { uint d; }
     using S for S;
-    function f(S _s) internal {
+    function f(S memory _s) internal {
         _s.d = 1;
     }
 }

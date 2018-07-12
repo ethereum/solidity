@@ -4,7 +4,7 @@ contract A {
         int x;
         int y;
     }
-    function g() public returns (T) {
+    function g() public returns (T memory) {
         return this.g();
     }
 }

@@ -1,5 +1,5 @@
 contract C {
-    function f() public returns (string) {
+    function f() public returns (string memory) {
         string memory x = "Hello";
         string memory y = "World";
         string[2] memory z = [x, y];
@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning: (17-191): Function state mutability can be restricted to pure
+// Warning: (17-198): Function state mutability can be restricted to pure
