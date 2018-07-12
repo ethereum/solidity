@@ -69,6 +69,8 @@ private:
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(FunctionTypeName const& _node) override;
 
+	virtual bool visit(VariableDeclarationStatement const& _statement) override;
+
 	virtual bool visit(StructDefinition const& _struct) override;
 
 	ErrorReporter& m_errorReporter;
