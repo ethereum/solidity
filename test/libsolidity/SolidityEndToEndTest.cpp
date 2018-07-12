@@ -1535,7 +1535,7 @@ BOOST_AUTO_TEST_CASE(struct_reference)
 			function set() public {
 				data.z = 2;
 				mapping(uint8 => s2) map = data.recursive;
-				s2 inner = map[0];
+				s2 storage inner = map[0];
 				inner.z = 3;
 				inner.recursive[0].z = inner.recursive[1].z + 1;
 			}
@@ -6374,7 +6374,7 @@ BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 			}
 			function assign() public returns (uint ret_local, uint ret_global, uint ret_global3, uint ret_global1)
 			{
-				testStruct x = data1; //x is a reference data1.m_value == 2 as well as x.m_value = 2
+				testStruct storage x = data1; //x is a reference data1.m_value == 2 as well as x.m_value = 2
 				data2 = data1; // should copy data. data2.m_value == 2
 
 				ret_local = x.m_value; // = 2
@@ -6406,7 +6406,7 @@ BOOST_AUTO_TEST_CASE(struct_delete_member)
 			}
 			function deleteMember() public returns (uint ret_value)
 			{
-				testStruct x = data1; //should not copy the data. data1.m_value == 2 but x.m_value = 0
+				testStruct storage x = data1; //should not copy the data. data1.m_value == 2 but x.m_value = 0
 				x.m_value = 4;
 				delete x.m_value;
 				ret_value = data1.m_value;
@@ -8873,7 +8873,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_access_via_pointer)
 			Data public a;
 			uint public separator2;
 			function f() public returns (bool) {
-				Data x = a;
+				Data storage x = a;
 				uint off;
 				assembly {
 					sstore(x_slot, 7)

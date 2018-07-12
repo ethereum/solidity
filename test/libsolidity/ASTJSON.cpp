@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(long_type_name_binary_operation)
 BOOST_AUTO_TEST_CASE(long_type_name_identifier)
 {
 	CompilerStack c;
-	c.addSource("a", "contract c { uint[] a; function f() public { uint[] b = a; } }");
+	c.addSource("a", "contract c { uint[] a; function f() public { uint[] storage b = a; } }");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 	map<string, unsigned> sourceIndices;

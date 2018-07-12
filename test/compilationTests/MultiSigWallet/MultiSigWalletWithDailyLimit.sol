@@ -42,7 +42,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         public
         notExecuted(transactionId)
     {
-        Transaction tx = transactions[transactionId];
+        Transaction storage tx = transactions[transactionId];
         bool confirmed = isConfirmed(transactionId);
         if (confirmed || tx.data.length == 0 && isUnderLimit(tx.value)) {
             tx.executed = true;

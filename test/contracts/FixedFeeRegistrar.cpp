@@ -75,7 +75,7 @@ contract FixedFeeRegistrar is Registrar {
 	modifier onlyrecordowner(string _name) { if (m_record(_name).owner == msg.sender) _; }
 
 	function reserve(string _name) payable {
-		Record rec = m_record(_name);
+		Record storage rec = m_record(_name);
 		if (rec.owner == 0x0000000000000000000000000000000000000000 && msg.value >= c_fee) {
 			rec.owner = msg.sender;
 			emit Changed(_name);
@@ -105,7 +105,7 @@ contract FixedFeeRegistrar is Registrar {
 	}
 
 	function record(string _name) view returns (address o_addr, address o_subRegistrar, bytes32 o_content, address o_owner) {
-		Record rec = m_record(_name);
+		Record storage rec = m_record(_name);
 		o_addr = rec.addr;
 		o_subRegistrar = rec.subRegistrar;
 		o_content = rec.content;

@@ -518,8 +518,8 @@ BOOST_AUTO_TEST_CASE(inconsistency)
 
 			// Called with params: containerIndex=0, valueIndex=0
 			function levelIII(uint containerIndex, uint valueIndex) private {
-				Container container = containers[containerIndex];
-				Value value = container.values[valueIndex];
+				Container storage container = containers[containerIndex];
+				Value storage value = container.values[valueIndex];
 				debug = container.valueIndices[value.number];
 			}
 			function levelII() private {
@@ -530,7 +530,7 @@ BOOST_AUTO_TEST_CASE(inconsistency)
 
 			function trigger() public returns (uint) {
 				containers.length++;
-				Container container = containers[0];
+				Container storage container = containers[0];
 
 				container.values.push(Value({
 					badnum: 9000,
