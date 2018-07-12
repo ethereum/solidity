@@ -1,6 +1,6 @@
 contract C {
     uint[] data;
-    function f(uint[] x) public {
+    function f(uint[] memory x) public {
         data = x;
     }
 }
