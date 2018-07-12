@@ -36,6 +36,10 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
+	string notice = extractDoc(_contractDef.annotation().docTags, "notice");
+	if (!notice.empty())
+		doc["notice"] = Json::Value(notice);
+
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
 			if (auto const* f = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
@@ -65,6 +69,9 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	auto title = extractDoc(_contractDef.annotation().docTags, "title");
 	if (!title.empty())
 		doc["title"] = title;
+	auto dev = extractDoc(_contractDef.annotation().docTags, "dev");
+	if (!dev.empty())
+		doc["details"] = Json::Value(dev);
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 	{
