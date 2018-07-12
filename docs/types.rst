@@ -6,12 +6,11 @@
 Types
 *****
 
-Solidity is a statically typed language, which means that the type of each
-variable (state and local) needs to be specified.
-Solidity provides several elementary types which can be combined to form complex types.
+Solidity is a statically typed language, which means that you need to specify the type of each variable (state and local). Solidity provides elementary types which you can combine to form complex types.
 
-In addition, types can interact with each other in expressions containing
-operators. For a quick reference of the various operators, see :ref:`order`.
+Types can interact in expressions containing operators. For a quick reference of the various operators, see :ref:`order`.
+
+Types can not return an ``undefined`` or "null" value. To handle any unexpected values you can 'throw' on error, which also reverts the whole transaction.
 
 .. index:: ! value type, ! type;value
 
@@ -51,6 +50,12 @@ Operators:
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
+
+The bit size of an integer determines its range, for example, for ``uint256``, this is 0 up to 2 :sup:`256` -1. If the result of an operation doesn't fit inside this range, it is truncated. These truncations can have `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so use code like the below to avoid certain attacks and check a value is what you expect it to be.
+
+::
+
+    require((balanceOf[_to] + _value) >= balanceOf[_to]);
 
 Division always truncates (it is just compiled to the ``DIV`` opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
@@ -296,16 +301,26 @@ a non-rational number).
     uint128 a = 1;
     uint128 b = 2.5 + a + 0.5;
 
-.. index:: literal, literal;string, string
+.. index:: literal, literal;string, string, string length, string size
 
 String Literals
 ---------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``. For example, with ::
+
+  bytes32 samevar = "stringliteral";
+
+The string literal is interpreted in its raw byte form and if you inspect ``somevar``, you see a 32-byte hex value, which is the ``"stringliteral"`` in hex.
+
+Using a ``string`` type is basically identical to ``bytes``, but it is assumed to hold the UTF-8 encoding of a real string. Since ``string`` UTF-8 encoding of some characters takes more than a single byte, it is quite expensive to compute the number of characters in the string. Because of this, Solidity does not support length methods ``string s; s.length``, or accessing an item at an array index ``s[2]``. If you want to access the low-level byte encoding of the string, you can use ``bytes(s).length`` and ``bytes(s)[2]`` which returns the number of bytes in the UTF-8 encoding of the string (not the number of characters) and the second byte (not character) of the UTF-8 encoded string, respectively.
+
+  bytes32 samevar = "stringliteral";
+
+The string literal is interpreted in its raw byte form and if you inspect ``somevar``, you see a 32-byte hex value, which is the ``"stringliteral"`` in hex.
+
+Using a ``string`` type is basically identical to ``bytes``, but it is assumed to hold the UTF-8 encoding of a real string. Since ``string`` UTF-8 encoding of some characters takes more than a single byte, it is quite expensive to compute the number of characters in the string. Because of this, Solidity does not support length methods ``string s; s.length``, or accessing an item at an array index ``s[2]``. If you want to access the low-level byte encoding of the string, you can use ``bytes(s).length`` and ``bytes(s)[2]`` which returns the number of bytes in the UTF-8 encoding of the string (not the number of characters) and the second byte (not character) of the UTF-8 encoded string, respectively.
 
 String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
-
-.. index:: literal, bytes
 
 Hexadecimal Literals
 --------------------
@@ -321,9 +336,8 @@ Hexademical Literals behave like String Literals and have the same convertibilit
 Enums
 -----
 
-Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
-to and from all integer types but implicit conversion is not allowed.  The explicit conversions
-check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
+Enums are one way to create a user-defined type in Solidity. They are explicitly convertible to and from all integer types but implicit conversion is not allowed. The explicit conversions check the value ranges at runtime and a failure causes an exception. Enums need at least one member.
+
 
 ::
 
@@ -575,6 +589,32 @@ Default data location:
  - parameters (also return) of functions: memory
  - all other local variables: storage
 
+
+.. index:: copy an array, copy a struct
+
+Copying Reference Types
+-----------------------
+
+If you copy an array or struct over another then the mapping of the target is ignored as there is
+no list of mapped keys and it's impossible to know which values to copy. For example.
+
+::
+
+    struct User {
+        mapping(string => string) comments;
+    }
+
+    function somefunction public {
+       User user1;
+       user1.comments["Hello"] = "World";
+       User user2 = user1;
+    }
+
+
+
+
+
+
 .. index:: ! array
 
 .. _arrays:
@@ -582,10 +622,7 @@ Default data location:
 Arrays
 ------
 
-Arrays can have a compile-time fixed size or they can be dynamic.
-For storage arrays, the element type can be arbitrary (i.e. also other
-arrays, mappings or structs). For memory arrays, it cannot be a mapping and
-has to be an ABI type if it is an argument of a publicly-visible function.
+Arrays can have a compile-time fixed size or they can be dynamic. For storage arrays, the element type can be arbitrary (i.e. also other arrays, mappings or structs). For memory arrays, it cannot be a mapping and has to be an ABI type if it is an argument of a publicly-visible function.
 
 An array of fixed size ``k`` and element type ``T`` is written as ``T[k]``,
 an array of dynamic size as ``T[]``. As an example, an array of 5 dynamic
@@ -608,6 +645,21 @@ number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are mu
     ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
+
+You can initialise a statically sized memory array inline using syntax such as ``string[] memory myarray = new string[](4);``. For example.
+
+::
+
+    pragma solidity ^0.4.16;
+
+    contract C {
+        function f() public pure returns (uint8[5]) {
+            string[4] memory adaArr = ["This", "is", "an", "array"];
+            return [1, 2, 3, 4, 5];
+        }
+    }
+
+You can create and initialise multi-dimensional arrays in the same ways, but filling arrays can cost a lot of gas, so make sure you optimise how you use them.
 
 It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index will become a required parameter for the getter.
@@ -687,8 +739,7 @@ Members
 
 **length**:
     Arrays have a ``length`` member to hold their number of elements.
-    Dynamic arrays can be resized in storage (not in memory) by changing the
-    ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
+    You can resize dynamic arrays in storage (**not in memory**) by changing the ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created. If you try to resize a non dynamic array that isn't in storage, you receive a ``Value must be an lvalue`` error.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that can be used to append an element at the end of the array. The function returns the new length.
 **pop**:
@@ -827,22 +878,14 @@ shown in the following example:
     }
 
 The contract does not provide the full functionality of a crowdfunding
-contract, but it contains the basic concepts necessary to understand structs.
-Struct types can be used inside mappings and arrays and they can itself
-contain mappings and arrays.
+contract, but it contains the basic concepts necessary to understand structs. Struct types can be used inside mappings and arrays and they can itself contain mappings and arrays.
 
-It is not possible for a struct to contain a member of its own type,
-although the struct itself can be the value type of a mapping member.
-This restriction is necessary, as the size of the struct has to be finite.
+It is not possible for a struct to contain a member of its own type, although the struct itself can be the value type of a mapping member. This restriction is necessary, as the size of the struct has to be finite.
 
-Note how in all the functions, a struct type is assigned to a local variable
-(of the default storage data location).
-This does not copy the struct but only stores a reference so that assignments to
-members of the local variable actually write to the state.
+...note::
+    All the functions above assign a ``struct`` type to a local variable (of the default storage data location). This does not copy the ``struct`` but only stores a reference so that assignments to members of the local variable actually write to the state.
 
-Of course, you can also directly access the members of the struct without
-assigning it to a local variable, as in
-``campaigns[campaignID].amount = 0``.
+You can also directly access the members of the struct without assigning it to a local variable, as in ``campaigns[campaignID].amount = 0``.
 
 .. index:: !mapping
 
@@ -984,3 +1027,24 @@ converted to a matching size. This makes alignment and padding explicit::
     bytes32(uint256(x)); // pad on the left
     bytes32(bytes2(x)); // pad on the right
 
+.. index:: ! type;deduction, ! var
+
+.. _type-deduction:
+
+Type Deduction
+--------------
+For convenience, it is not always necessary to explicitly specify the type of a
+variable, the compiler automatically infers it from the type of the first
+expression that is assigned to the variable::
+
+    uint24 x = 0x123;
+    var y = x;
+
+Here, the type of ``y`` will be ``uint24``. Using ``var`` is not possible for function
+parameters or return parameters.
+
+.. warning::
+    The type is only deduced from the first assignment, so
+    the loop in the following snippet is infinite, as ``i`` will have the type
+    ``uint8`` and the highest value of this type is smaller than ``2000``.
+    ``for (var i = 0; i < 2000; i++) { ... }``
