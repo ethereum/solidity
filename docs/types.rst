@@ -846,7 +846,7 @@ Mappings
 ========
 
 Mapping types are declared as ``mapping(_KeyType => _ValueType)``.
-Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, an enum and a struct.
+Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, a function, an enum and a struct.
 ``_ValueType`` can actually be any type, including mappings.
 
 Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are virtually initialized such that
