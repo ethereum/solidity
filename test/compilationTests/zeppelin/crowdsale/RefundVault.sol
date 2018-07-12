@@ -37,7 +37,7 @@ contract RefundVault is Ownable {
     require(state == State.Active);
     state = State.Closed;
     emit Closed();
-    wallet.transfer(this.balance);
+    wallet.transfer(address(this).balance);
   }
 
   function enableRefunds() public onlyOwner {

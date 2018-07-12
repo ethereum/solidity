@@ -181,6 +181,10 @@ For more information, see the section on :ref:`address`.
     Use a pattern where the recipient withdraws the money.
 
 .. note::
+   Prior to version 0.5.0, Solidity allowed address members to be accessed by a contract instance, for example ``this.balance``.
+   This is now forbidden and an explicit conversion to address must be done: ``address(this).balance``.
+
+.. note::
    If storage variables are accessed via a low-level delegatecall, the storage layout of the two contracts
    must align in order for the called contract to correctly access the storage variables of the calling contract by name.
    This is of course not the case if storage pointers are passed as function arguments as in the case for

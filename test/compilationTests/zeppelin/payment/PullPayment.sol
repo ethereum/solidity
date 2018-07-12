@@ -36,7 +36,7 @@ contract PullPayment {
       throw;
     }
 
-    if (this.balance < payment) {
+    if (address(this).balance < payment) {
       throw;
     }
 

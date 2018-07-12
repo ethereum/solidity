@@ -55,7 +55,7 @@ contract Bounty is PullPayment, Destructible {
     if (target.checkInvariant()) {
       throw;
     }
-    asyncSend(researcher, this.balance);
+    asyncSend(researcher, address(this).balance);
     claimed = true;
   }
 

@@ -406,7 +406,7 @@ Constant State Variables
 
 State variables can be declared as ``constant``. In this case, they have to be
 assigned from an expression which is a constant at compile time. Any expression
-that accesses storage, blockchain data (e.g. ``now``, ``this.balance`` or
+that accesses storage, blockchain data (e.g. ``now``, ``address(this).balance`` or
 ``block.number``) or
 execution data (``msg.value`` or ``gasleft()``) or make calls to external contracts are disallowed. Expressions
 that might have a side-effect on memory allocation are allowed, but those that
@@ -505,7 +505,7 @@ Functions can be declared ``pure`` in which case they promise not to read from o
 In addition to the list of state modifying statements explained above, the following are considered reading from the state:
 
 #. Reading from state variables.
-#. Accessing ``this.balance`` or ``<address>.balance``.
+#. Accessing ``address(this).balance`` or ``<address>.balance``.
 #. Accessing any of the members of ``block``, ``tx``, ``msg`` (with the exception of ``msg.sig`` and ``msg.data``).
 #. Calling any function not marked ``pure``.
 #. Using inline assembly that contains certain opcodes.
@@ -580,7 +580,7 @@ Like any function, the fallback function can execute complex operations as long 
     but do not define a fallback function
     throw an exception, sending back the Ether (this was different
     before Solidity v0.4.0). So if you want your contract to receive Ether,
-    you have to implement a fallback function.
+    you have to implement a payable fallback function.
 
 .. warning::
     A contract without a payable fallback function can receive Ether as a recipient of a `coinbase transaction` (aka `miner block reward`)
@@ -588,11 +588,11 @@ Like any function, the fallback function can execute complex operations as long 
 
     A contract cannot react to such Ether transfers and thus also cannot reject them. This is a design choice of the EVM and Solidity cannot work around it.
 
-    It also means that ``this.balance`` can be higher than the sum of some manual accounting implemented in a contract (i.e. having a counter updated in the fallback function).
+    It also means that ``address(this).balance`` can be higher than the sum of some manual accounting implemented in a contract (i.e. having a counter updated in the fallback function).
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >0.4.24;
 
     contract Test {
         // This function is called for all messages sent to
@@ -613,14 +613,13 @@ Like any function, the fallback function can execute complex operations as long 
 
     contract Caller {
         function callTest(Test test) public {
-            test.call(abi.encodeWithSignature("nonExistingFunction()"));
+            address(test).call(abi.encodeWithSignature("nonExistingFunction()"));
             // results in test.x becoming == 1.
 
-            // The following will not compile, but even
-            // if someone sends ether to that contract,
+            // If someone sends ether to that contract,
             // the transaction will fail and reject the
             // Ether.
-            //test.send(2 ether);
+            address(test).send(2 ether);
         }
     }
 
