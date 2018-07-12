@@ -386,10 +386,6 @@ By default, function types are internal, so the ``internal`` keyword can be
 omitted. In contrast, contract functions themselves are public by default,
 only when used as the name of a type, the default is internal.
 
-There are two ways to access a function in the current contract: Either directly
-by its name, ``f``, or using ``this.f``. The former will result in an internal
-function, the latter in an external function.
-
 If a function type variable is not initialized, calling it will result
 in an exception. The same happens if you call a function after using ``delete``
 on it.
