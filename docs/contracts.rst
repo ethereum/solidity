@@ -1150,6 +1150,7 @@ Interfaces
 Interfaces are similar to abstract contracts, but they cannot have any functions implemented. There are further restrictions:
 
 - Cannot inherit other contracts or interfaces.
+- All declared functions must be external.
 - Cannot define constructor.
 - Cannot define variables.
 - Cannot define structs.
@@ -1167,7 +1168,7 @@ Interfaces are denoted by their own keyword:
     pragma solidity ^0.4.11;
 
     interface Token {
-        function transfer(address recipient, uint amount) public;
+        function transfer(address recipient, uint amount) external;
     }
 
 Contracts can inherit interfaces as they would inherit other contracts.

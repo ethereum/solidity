@@ -1,7 +1,6 @@
 interface I {
-    function f() public {
+    function f() external pure {
     }
 }
 // ----
-// TypeError: (18-45): Functions in interfaces cannot have an implementation.
-// Warning: (18-45): Functions in interfaces should be declared external.
+// TypeError: (18-52): Functions in interfaces cannot have an implementation.
