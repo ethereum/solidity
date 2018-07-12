@@ -30,6 +30,7 @@
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/interface/ErrorReporter.h>
+#include <libdevcore/Algorithms.h>
 
 using namespace std;
 using namespace dev;
@@ -593,28 +594,24 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 			m_errorReporter.typeError(member->location(), "Type cannot be used in struct.");
 
 	// Check recursion, fatal error if detected.
-	using StructPointer = StructDefinition const*;
-	using StructPointersSet = set<StructPointer>;
-	function<void(StructPointer,StructPointersSet const&)> check = [&](StructPointer _struct, StructPointersSet const& _parents)
+	auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector)
 	{
-		if (_parents.count(_struct))
-			m_errorReporter.fatalTypeError(_struct->location(), "Recursive struct definition.");
-		StructPointersSet parents = _parents;
-		parents.insert(_struct);
-		for (ASTPointer<VariableDeclaration> const& member: _struct->members())
-			if (type(*member)->category() == Type::Category::Struct)
+		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
+		{
+			Type const* memberType = type(*member).get();
+			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
 			{
-				auto const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->typeName());
-				check(&dynamic_cast<StructDefinition const&>(*typeName.annotation().referencedDeclaration), parents);
+				if (arrayType->isDynamicallySized())
+					break;
+				memberType = arrayType->baseType().get();
 			}
-			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(*member).get()))
-			{
-				if (!arrayType->isDynamicallySized())
-					if (auto structType = dynamic_cast<StructType const*>(arrayType->baseType().get()))
-						check(&structType->structDefinition(), parents);
-			}
+			if (auto structType = dynamic_cast<StructType const*>(memberType))
+				if (_cycleDetector.run(structType->structDefinition()))
+					return;
+		}
 	};
-	check(&_struct, StructPointersSet{});
+	if (CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
+		m_errorReporter.fatalTypeError(_struct.location(), "Recursive struct definition.");
 
 	ASTNode::listAccept(_struct.members(), *this);
 
