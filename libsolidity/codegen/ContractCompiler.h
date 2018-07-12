@@ -109,6 +109,8 @@ private:
 	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
 	virtual bool visit(PlaceholderStatement const&) override;
+	virtual bool visit(Block const& _block) override;
+	virtual void endVisit(Block const& _block) override;
 
 	/// Repeatedly visits all function which are referenced but which are not compiled yet.
 	void appendMissingFunctions();
@@ -123,19 +125,31 @@ private:
 	/// @returns the runtime assembly for clone contracts.
 	eth::AssemblyPointer cloneRuntime() const;
 
+	/// Frees the variables of a certain scope (to be used when leaving).
+	void popScopedVariables(ASTNode const* _node);
+
+	/// Sets the stack height for the visited loop.
+	void storeStackHeight(ASTNode const* _node);
+
 	bool const m_optimise;
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;
-	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
-	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement
-	/// Tag to jump to for a "return" statement, needs to be stacked because of modifiers.
-	std::vector<eth::AssemblyItem> m_returnTags;
+	/// Tag to jump to for a "break" statement and the stack height after freeing the local loop variables.
+	std::vector<std::pair<eth::AssemblyItem, unsigned>> m_breakTags;
+	/// Tag to jump to for a "continue" statement and the stack height after freeing the local loop variables.
+	std::vector<std::pair<eth::AssemblyItem, unsigned>> m_continueTags;
+	/// Tag to jump to for a "return" statement and the stack height after freeing the local function or modifier variables.
+	/// Needs to be stacked because of modifiers.
+	std::vector<std::pair<eth::AssemblyItem, unsigned>> m_returnTags;
 	unsigned m_modifierDepth = 0;
 	FunctionDefinition const* m_currentFunction = nullptr;
-	unsigned m_stackCleanupForReturn = 0; ///< this number of stack elements need to be removed before jump to m_returnTag
+
 	// arguments for base constructors, filled in derived-to-base order
 	std::map<FunctionDefinition const*, ASTNode const*> const* m_baseArguments;
+
+	/// Stores the variables that were declared inside a specific scope, for each modifier depth.
+	std::map<unsigned, std::map<ASTNode const*, unsigned>> m_scopeStackHeight;
 };
 
 }

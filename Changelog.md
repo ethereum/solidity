@@ -55,6 +55,7 @@ Compiler Features:
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
  * Type Checker: Show named argument in case of error.
  * Tests: Determine transaction status during IPC calls.
+ * Code Generator: Allocate and free local variables according to their scope.
 
 Bugfixes:
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.

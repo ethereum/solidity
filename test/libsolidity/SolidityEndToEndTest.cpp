@@ -523,6 +523,96 @@ BOOST_AUTO_TEST_CASE(do_while_loop_continue)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(42));
 }
 
+BOOST_AUTO_TEST_CASE(array_multiple_local_vars)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint256[] seq) external pure returns (uint256) {
+				uint i = 0;
+				uint sum = 0;
+				while (i < seq.length)
+				{
+					uint idx = i;
+					if (idx >= 10) break;
+					uint x = seq[idx];
+					if (x >= 1000) {
+						uint n = i + 1;
+						i = n;
+						continue;
+					}
+					else {
+						uint y = sum + x;
+						sum = y;
+					}
+					if (sum >= 500) return sum;
+					i++;
+				}
+				return sum;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("f(uint256[])", 32, 3, u256(1000), u256(1), u256(2)), encodeArgs(3));
+	ABI_CHECK(callContractFunction("f(uint256[])", 32, 3, u256(100), u256(500), u256(300)), encodeArgs(600));
+	ABI_CHECK(callContractFunction(
+		"f(uint256[])", 32, 11,
+		u256(1), u256(2), u256(3), u256(4), u256(5), u256(6), u256(7), u256(8), u256(9), u256(10), u256(111)
+		), encodeArgs(55));
+}
+
+
+BOOST_AUTO_TEST_CASE(do_while_loop_multiple_local_vars)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) public pure returns(uint r) {
+				uint i = 0;
+				do
+				{
+					uint z = x * 2;
+					if (z < 4) break;
+					else {
+						uint k = z + 1;
+						if (k < 8) {
+							x++;
+							continue;
+						}
+					}
+					if (z > 12) return 0;
+					x++;
+					i++;
+				} while (true);
+				return 42;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	auto do_while = [](u256 n) -> u256
+	{
+		u256 i = 0;
+		do
+		{
+			u256 z = n * 2;
+			if (z < 4) break;
+			else {
+				u256 k = z + 1;
+				if (k < 8) {
+					n++;
+					continue;
+				}
+			}
+			if (z > 12) return 0;
+			n++;
+			i++;
+		} while (true);
+		return 42;
+	};
+
+	testContractAgainstCppOnRange("f(uint256)", do_while, 0, 12);
+}
+
 BOOST_AUTO_TEST_CASE(nested_loops)
 {
 	// tests that break and continue statements in nested loops jump to the correct place
@@ -572,6 +662,178 @@ BOOST_AUTO_TEST_CASE(nested_loops)
 	};
 
 	testContractAgainstCppOnRange("f(uint256)", nested_loops_cpp, 0, 12);
+}
+
+BOOST_AUTO_TEST_CASE(nested_loops_multiple_local_vars)
+{
+	// tests that break and continue statements in nested loops jump to the correct place
+	// and free local variables properly
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) returns(uint y) {
+				while (x > 0) {
+					uint z = x + 10;
+					uint k = z + 1;
+					if (k > 20) {
+						break;
+						uint p = 100;
+						k += p;
+					}
+					if (k > 15) {
+						x--;
+						continue;
+						uint t = 1000;
+						x += t;
+					}
+					while (k > 10) {
+						uint m = k - 1;
+						if (m == 10) return x;
+						return k;
+						uint h = 10000;
+						z += h;
+					}
+					x--;
+					break;
+				}
+				return x;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	auto nested_loops_cpp = [](u256 n) -> u256
+	{
+		while (n > 0)
+		{
+			u256 z = n + 10;
+			u256 k = z + 1;
+			if (k > 20) break;
+			if (k > 15) {
+				n--;
+				continue;
+			}
+			while (k > 10)
+			{
+				u256 m = k - 1;
+				if (m == 10) return n;
+				return k;
+			}
+			n--;
+			break;
+		}
+
+		return n;
+	};
+
+	testContractAgainstCppOnRange("f(uint256)", nested_loops_cpp, 0, 12);
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_multiple_local_vars)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) public pure returns(uint r) {
+				for (uint i = 0; i < 12; i++)
+				{
+					uint z = x + 1;
+					if (z < 4) break;
+					else {
+						uint k = z * 2;
+						if (i + k < 10) {
+							x++;
+							continue;
+						}
+					}
+					if (z > 8) return 0;
+					x++;
+				}
+				return 42;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	auto for_loop = [](u256 n) -> u256
+	{
+		for (u256 i = 0; i < 12; i++)
+		{
+			u256 z = n + 1;
+			if (z < 4) break;
+			else {
+				u256 k = z * 2;
+				if (i + k < 10) {
+					n++;
+					continue;
+				}
+			}
+			if (z > 8) return 0;
+			n++;
+		}
+		return 42;
+	};
+
+	testContractAgainstCppOnRange("f(uint256)", for_loop, 0, 12);
+}
+
+BOOST_AUTO_TEST_CASE(nested_for_loop_multiple_local_vars)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) public pure returns(uint r) {
+				for (uint i = 0; i < 5; i++)
+				{
+					uint z = x + 1;
+					if (z < 3) {
+						break;
+						uint p = z + 2;
+					}
+					for (uint j = 0; j < 5; j++)
+					{
+						uint k = z * 2;
+						if (j + k < 8) {
+							x++;
+							continue;
+							uint t = z * 3;
+						}
+						x++;
+						if (x > 20) {
+							return 84;
+							uint h = x + 42;
+						}
+					}
+					if (x > 30) {
+						return 42;
+						uint b = 0xcafe;
+					}
+				}
+				return 42;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	auto for_loop = [](u256 n) -> u256
+	{
+		for (u256 i = 0; i < 5; i++)
+		{
+			u256 z = n + 1;
+			if (z < 3) break;
+			for (u256 j = 0; j < 5; j++)
+			{
+				u256 k = z * 2;
+				if (j + k < 8) {
+					n++;
+					continue;
+				}
+				n++;
+				if (n > 20) return 84;
+			}
+			if (n > 30) return 42;
+		}
+		return 42;
+	};
+
+	testContractAgainstCppOnRange("f(uint256)", for_loop, 0, 12);
 }
 
 BOOST_AUTO_TEST_CASE(for_loop)
@@ -9232,7 +9494,9 @@ BOOST_AUTO_TEST_CASE(break_in_modifier)
 				}
 			}
 			function f() run {
-				x++;
+				uint k = x;
+				uint t = k + 1;
+				x = t;
 			}
 		}
 	)";
@@ -9240,6 +9504,54 @@ BOOST_AUTO_TEST_CASE(break_in_modifier)
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(0)));
 	ABI_CHECK(callContractFunction("f()"), encodeArgs());
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(1)));
+}
+
+BOOST_AUTO_TEST_CASE(continue_in_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier run() {
+				for (uint i = 0; i < 10; i++) {
+					if (i % 2 == 1) continue;
+					_;
+				}
+			}
+			function f() run {
+				uint k = x;
+				uint t = k + 1;
+				x = t;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(return_in_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			modifier run() {
+				for (uint i = 1; i < 10; i++) {
+					if (i == 5) return;
+					_;
+				}
+			}
+			function f() run {
+				uint k = x;
+				uint t = k + 1;
+				x = t;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs());
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(4)));
 }
 
 BOOST_AUTO_TEST_CASE(stacked_return_with_modifiers)
@@ -9254,7 +9566,9 @@ BOOST_AUTO_TEST_CASE(stacked_return_with_modifiers)
 				}
 			}
 			function f() run {
-				x++;
+				uint k = x;
+				uint t = k + 1;
+				x = t;
 			}
 		}
 	)";
