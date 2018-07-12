@@ -333,13 +333,6 @@ The key point is that the calling contract needs to know about the function it i
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_
 and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-Get contract to do something when it is first mined
-===================================================
-
-Use the constructor. Anything inside it will be executed when the contract is first mined.
-
-See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
-
 How do you create 2-dimensional arrays?
 =======================================
 
@@ -506,28 +499,6 @@ Is it possible to return an array of strings (``string[]``) from a Solidity func
 =====================================================================================
 
 Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic array itself).
-
-If you issue a call for an array, it is possible to retrieve the whole array? Or must you write a helper function for that?
-===========================================================================================================================
-
-The automatic :ref:`getter function<getter-functions>`  for a public state variable of array type only returns
-individual elements. If you want to return the complete array, you have to
-manually write a function to do that.
-
-
-What could have happened if an account has storage value(s) but no code?  Example: http://test.ether.camp/account/5f740b3a43fbb99724ce93a879805f4dc89178b5
-==========================================================================================================================================================
-
-The last thing a constructor does is returning the code of the contract.
-The gas costs for this depend on the length of the code and it might be
-that the supplied gas is not enough. This situation is the only one
-where an "out of gas" exception does not revert changes to the state,
-i.e. in this case the initialisation of the state variables.
-
-https://github.com/ethereum/wiki/wiki/Subtleties
-
-After a successful CREATE operation's sub-execution, if the operation returns x, 5 * len(x) gas is subtracted from the remaining gas before the contract is created. If the remaining gas is less than 5 * len(x), then no gas is subtracted, the code of the created contract becomes the empty string, but this is not treated as an exceptional condition - no reverts happen.
-
 
 What does the following strange check do in the Custom Token contract?
 ======================================================================
