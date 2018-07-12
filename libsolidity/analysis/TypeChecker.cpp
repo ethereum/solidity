@@ -607,6 +607,12 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 				auto const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->typeName());
 				check(&dynamic_cast<StructDefinition const&>(*typeName.annotation().referencedDeclaration), parents);
 			}
+			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(*member).get()))
+			{
+				if (!arrayType->isDynamicallySized())
+					if (auto structType = dynamic_cast<StructType const*>(arrayType->baseType().get()))
+						check(&structType->structDefinition(), parents);
+			}
 	};
 	check(&_struct, StructPointersSet{});
 
