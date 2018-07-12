@@ -38,11 +38,6 @@ has it (which includes `Remix <https://remix.ethereum.org/>`_), then
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
 examples.
 
-Can you return an array or a ``string`` from a solidity function call?
-======================================================================
-
-Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
-
 Is it possible to in-line initialize an array like so: ``string[] myarray = ["a", "b"];``
 =========================================================================================
 
@@ -60,11 +55,6 @@ Example::
             return [1, 2, 3, 4, 5];
         }
     }
-
-Can a contract function return a ``struct``?
-============================================
-
-Yes, but only in ``internal`` function calls or if ``pragma experimental "ABIEncoderV2";`` is used.
 
 If I return an ``enum``, I only get integer values in web3.js. How to get the named values?
 ===========================================================================================
@@ -100,15 +90,6 @@ Examples::
 
 How do structs work?
 ====================
-
-See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
-
-How do for loops work?
-======================
-
-Very similar to JavaScript. Such as the following example:
-
-``for (uint i = 0; i < a.length; i ++) { a[i] = i; }``
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
@@ -291,12 +272,6 @@ In this example::
             child = (new B).value(10)(); //construct a new B with 10 wei
         }
     }
-
-Can a contract function accept a two-dimensional array?
-=======================================================
-
-If you want to pass two-dimensional arrays across non-internal functions,
-you most likely need to use ``pragma experimental "ABIEncoderV2";``.
 
 What is the relationship between ``bytes32`` and ``string``? Why is it that ``bytes32 somevar = "stringliteral";`` works and what does the saved 32-byte hex value mean?
 ========================================================================================================================================================================

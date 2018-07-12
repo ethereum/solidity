@@ -2,7 +2,7 @@
 Expressions and Control Structures
 ##################################
 
-.. index:: ! parameter, parameter;input, parameter;output
+.. index:: ! parameter, parameter;input, parameter;output, parameter;multiple
 
 Input Parameters and Output Parameters
 ======================================
@@ -32,6 +32,8 @@ something like::
 Input parameters can be used just as any other local variable
 can be used, they can also be assigned to.
 
+.. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
+
 Output Parameters
 -----------------
 
@@ -54,11 +56,20 @@ write::
     }
 
 The names of output parameters can be omitted.
-The output values can also be specified using ``return`` statements,
+The return values can be specified using ``return`` statements,
 which are also capable of :ref:`returning multiple values<multi-return>`.
 Return parameters can be used as any other local variable and they
 are zero-initialized; if they are not explicitly
 set, they stay zero.
+
+
+.. note::
+    You cannot return some types from non-internal functions, notably
+    multi-dimensional dynamic arrays and structs. If you enable the
+    new experimental ``ABIEncoderV2`` feature by adding ``pragma experimental
+    ABIEncoderV2;`` to your source file then more types are available, but
+    ``mapping`` types are still limited to inside a single contract and you
+    cannot transfer them.
 
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
@@ -120,8 +131,8 @@ External Function Calls
 The expressions ``this.g(8);`` and ``c.g(2);`` (where ``c`` is a contract
 instance) are also valid function calls, but this time, the function
 will be called "externally", via a message call and not directly via jumps.
-Please note that function calls on ``this`` cannot be used in the constructor, as the
-actual contract has not been created yet.
+Please note that function calls on ``this`` cannot be used in the constructor,
+as the actual contract has not been created yet.
 
 Functions of other contracts have to be called externally. For an external call,
 all function arguments have to be copied to memory.
@@ -130,8 +141,10 @@ all function arguments have to be copied to memory.
     A function call from one contract to another does not create its own transaction,
     it is a message call as part of the overall transaction.
 
-When calling functions of other contracts, the amount of Wei sent with the call and
-the gas can be specified with special options ``.value()`` and ``.gas()``, respectively::
+When calling functions of other contracts, you can specify the amount of Wei or gas sent with the call with the special options ``.value()`` and ``.gas()``, respectively. Any Wei you send to the contract is added to the total balance of the contract:
+
+
+::
 
     pragma solidity >=0.4.0 <0.6.0;
 
@@ -400,7 +413,7 @@ In any case, you will get a warning about the outer variable being shadowed.
         }
     }
 
-.. index:: ! exception, ! throw, ! assert, ! require, ! revert
+.. index:: ! exception, ! throw, ! assert, ! require, ! revert, ! errors
 
 .. _assert-and-require:
 
