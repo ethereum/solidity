@@ -28,20 +28,22 @@
 
 set -e
 
-if [ ! -f "$1" -o -z "$2" ]
+if [ ! -f "$1" -o ! -f "$2" -o -z "$3" ]
 then
-  echo "Usage: $0 <path to soljson.js> <version>"
+  echo "Usage: $0 <path to soljson.js> <path to soljson.wasm> <version>"
   exit 1
 fi
 
 SOLJSON="$1"
-VERSION="$2"
+SOLJSON_WASM="$2"
+VERSION="$3"
 
 DIR=$(mktemp -d)
 (
     echo "Preparing solc-js..."
     git clone --depth 1 https://github.com/ethereum/solc-js "$DIR"
     cd "$DIR"
+    sed -i -e 's/Runtime.//g' wrapper.js
     # disable "prepublish" script which downloads the latest version
     # (we will replace it anyway and it is often incorrectly cached
     # on travis)
@@ -52,6 +54,8 @@ DIR=$(mktemp -d)
     echo "Replacing soljson.js"
     rm -f soljson.js
     cp "$SOLJSON" soljson.js
+    rm -f soljson.wasm
+    cp "$SOLJSON_WASM" soljson.wasm
 
     # ensure to use always 0.5.0 sources
     # FIXME: should be removed once the version bump in this repo is done

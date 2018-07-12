@@ -28,13 +28,14 @@
 
 set -e
 
-if [ ! -f "$1" ]
+if [ ! -f "$1" -o ! -f "$2" ]
 then
-  echo "Usage: $0 <path to soljson.js>"
+  echo "Usage: $0 <path to soljson.js> <path to soljson.wasm>"
   exit 1
 fi
 
 SOLJSON="$1"
+SOLJSON_WASM="$2"
 
 function test_truffle
 {
@@ -56,6 +57,7 @@ function test_truffle
       echo "Current commit hash: `git rev-parse HEAD`"
       npm install
       find . -name soljson.js -exec cp "$SOLJSON" {} \;
+      cp "$SOLJSON_WASM" .
       if [ "$name" == "Gnosis" ]; then
         echo "Replaced fixed-version pragmas..."
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
@@ -68,6 +70,7 @@ function test_truffle
         rm "$assertsol"
         wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
       fi
+      find -name "wrapper.js" -exec sed -i -e 's/Runtime.//g' '{}' \;
       npm run test
     )
     rm -rf "$DIR"

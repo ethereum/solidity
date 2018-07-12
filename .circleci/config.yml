@@ -33,14 +33,14 @@ version: 2
 jobs:
   build_emscripten:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
     environment:
       TERM: xterm
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Boost build
-          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
+#      - restore_cache:
+#          name: Restore Boost build
+#          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
       - run:
           name: Bootstrap Boost
           command: |
@@ -49,25 +49,30 @@ jobs:
           name: Build
           command: |
             scripts/travis-emscripten/build_emscripten.sh
-      - save_cache:
-          name: Save Boost build
-          key: *boost-cache-key
-          paths:
-            - boost_1_57_0
+#      - save_cache:
+#          name: Save Boost build
+#          key: *boost-cache-key
+#          paths:
+#            - boost_1_57_0
       - store_artifacts:
           path: build/libsolc/soljson.js
           destination: soljson.js
+      - store_artifacts:
+          path: build/libsolc/soljson.wasm
+          destination: soljson.wasm
       - run: mkdir -p workspace
       - run: cp build/libsolc/soljson.js workspace/soljson.js
+      - run: cp build/libsolc/soljson.wasm workspace/soljson.wasm
       - run: scripts/get_version.sh > workspace/version.txt
       - persist_to_workspace:
           root: workspace
           paths:
             - soljson.js
+            - soljson.wasm
             - version.txt
   test_emscripten_solcjs:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
     environment:
       TERM: xterm
     steps:
@@ -90,10 +95,10 @@ jobs:
           name: Test solcjs
           command: |
             . /usr/local/nvm/nvm.sh
-            test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+            test/solcjsTests.sh /tmp/workspace/soljson.js /tmp/workspace/soljson.wasm $(cat /tmp/workspace/version.txt)
   test_emscripten_external:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
     environment:
       TERM: xterm
     steps:
@@ -116,7 +121,7 @@ jobs:
           name: External tests
           command: |
             . /usr/local/nvm/nvm.sh
-            test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
+            test/externalTests.sh /tmp/workspace/soljson.js /tmp/workspace/soljson.wasm || test/externalTests.sh /tmp/workspace/soljson.js /tmp/workspace/soljson.wasm
   build_x86_linux:
     docker:
       - image: buildpack-deps:artful
