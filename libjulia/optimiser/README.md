@@ -1,3 +1,7 @@
+Note that the Yul optimiser is still in research phase. Because of that,
+the following description might not fully reflect the current or even
+planned state of the optimiser.
+
 ## Yul Optimiser
 
 The Yul optimiser consists of several stages and components that all transform
