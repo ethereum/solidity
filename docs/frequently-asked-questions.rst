@@ -9,21 +9,11 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-Is it possible to do something on a specific block number? (e.g. publish a contract or execute a transaction)
-=============================================================================================================
-
-Transactions are not guaranteed to happen on the next block or any future
-specific block, since it is up to the miners to include transactions and not up
-to the submitter of the transaction. This applies to function calls/transactions and contract
-creation transactions.
-
-If you want to schedule future calls of your contract, you can use the
-`alarm clock <http://www.ethereum-alarm-clock.com/>`_.
-
 What is the transaction "payload"?
 ==================================
 
 This is just the bytecode "data" sent along with the request.
+
 
 Create a contract that can be killed and return funds
 =====================================================
@@ -167,11 +157,6 @@ arguments for you.
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_ and
 `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-Is unused gas automatically refunded?
-=====================================
-
-Yes and it is immediate, i.e. done as part of the transaction.
-
 When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or "null"-like value?
 ============================================================================================================
 
@@ -229,76 +214,6 @@ No, a function call from one contract to another does not create its own transac
 you have to look in the overall transaction. This is also the reason why several
 block explorer do not show Ether sent between contracts correctly.
 
-What is the ``memory`` keyword? What does it do?
-================================================
-
-The Ethereum Virtual Machine has three areas where it can store items.
-
-The first is "storage", where all the contract state variables reside.
-Every contract has its own storage and it is persistent between function calls
-and quite expensive to use.
-
-The second is "memory", this is used to hold temporary values. It
-is erased between (external) function calls and is cheaper to use.
-
-The third one is the stack, which is used to hold small local variables.
-It is almost free to use, but can only hold a limited amount of values.
-
-For almost all types, you cannot specify where they should be stored, because
-they are copied every time they are used.
-
-The types where the so-called storage location is important are structs
-and arrays. If you e.g. pass such variables in function calls, their
-data is not copied if it can stay in memory or stay in storage.
-This means that you can modify their content in the called function
-and these modifications will still be visible in the caller.
-
-There are defaults for the storage location depending on which type
-of variable it concerns:
-
-* state variables are always in storage
-* function arguments are in memory by default
-* local variables of mapping type reference storage by default
-* local variables of value type (i.e. neither array, nor struct nor mapping) are stored in the stack
-
-For local variables of struct or array type the storage location has to be stated explicitly.
-
-Example::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        uint[] data1;
-        uint[] data2;
-
-        function appendOne() public {
-            append(data1);
-        }
-
-        function appendTwo() public {
-            append(data2);
-        }
-
-        function append(uint[] storage d) internal {
-            d.push(1);
-        }
-    }
-
-The function ``append`` can work both on ``data1`` and ``data2`` and its modifications will be
-stored permanently. If you remove the ``storage`` keyword, the default
-is to use ``memory`` for function arguments. This has the effect that
-at the point where ``append(data1)`` or ``append(data2)`` is called, an
-independent copy of the state variable is created in memory and
-``append`` operates on this copy (which does not support ``.push`` - but that
-is another issue). The modifications to this independent copy do not
-carry back to ``data1`` or ``data2``.
-
-.. warning::
-    Prior to version 0.5.0, a common mistake was to declare a local variable and assume that it will
-    be created in memory, although it will be created in storage. Using such a variable without initializing
-    could lead to unexpected behavior. Starting from 0.5.0, however, the storage location for local variables
-    has to be specified explicitly and local storage variables have to be initialized, which should prevent
-    these kinds of mistakes.
 
 ******************
 Advanced Questions
