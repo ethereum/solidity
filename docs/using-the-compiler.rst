@@ -305,6 +305,6 @@ Error types
 Decompiler
 ~~~~~~~~~~
 
-There is no decompiler for Solidity, because some information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code.
+Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.
 
 Several blockchain explorers allow you to disassemble bytecode to opcodes, but you should publish the source of blockchain contracts on a blockchain if third parties are allowed to use them.
