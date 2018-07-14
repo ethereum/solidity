@@ -175,18 +175,10 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 
 bool SyntaxChecker::visit(Throw const& _throwStatement)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
-	if (v050)
-		m_errorReporter.syntaxError(
-			_throwStatement.location(),
-			"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
-		);
-	else
-		m_errorReporter.warning(
-			_throwStatement.location(),
-			"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
-		);
+	m_errorReporter.syntaxError(
+		_throwStatement.location(),
+		"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
+	);
 
 	return true;
 }
@@ -207,32 +199,20 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
-	if (v050 && _function.noVisibilitySpecified())
+	if (_function.noVisibilitySpecified())
 		m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
 
 	if (_function.isOldStyleConstructor())
 	{
-		if (v050)
-			m_errorReporter.syntaxError(
-				_function.location(),
-				"Functions are not allowed to have the same name as the contract. "
-				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
-			);
-		else
-			m_errorReporter.warning(
-				_function.location(),
-				"Defining constructors as functions with the same name as the contract is deprecated. "
-				"Use \"constructor(...) { ... }\" instead."
-			);
+		m_errorReporter.syntaxError(
+			_function.location(),
+			"Functions are not allowed to have the same name as the contract. "
+			"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
+		);
 	}
 	if (!_function.isImplemented() && !_function.modifiers().empty())
 	{
-		if (v050)
-			m_errorReporter.syntaxError(_function.location(), "Functions without implementation cannot have modifiers.");
-		else
-			m_errorReporter.warning(_function.location(), "Modifiers of functions without implementation are ignored." );
+		m_errorReporter.syntaxError(_function.location(), "Functions without implementation cannot have modifiers.");
 	}
 	if (_function.name() == "constructor")
 		m_errorReporter.warning(_function.location(),
