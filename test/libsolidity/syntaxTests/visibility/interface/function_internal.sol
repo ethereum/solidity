@@ -2,4 +2,4 @@ interface I {
 	function f() internal;
 }
 // ----
-// TypeError: (15-37): Functions in interfaces cannot be internal or private.
+// TypeError: (15-37): Functions in interfaces must be declared external.

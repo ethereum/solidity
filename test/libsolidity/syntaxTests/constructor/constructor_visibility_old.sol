@@ -9,5 +9,5 @@ contract B is A {
   }
 }
 // ----
-// Warning: (91-129): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
+// SyntaxError: (91-129): Functions are not allowed to have the same name as the contract. If you intend this to be a constructor, use "constructor(...) { ... }" to define it.
 // TypeError: (251-255): Explicit type conversion not allowed from "string memory" to "contract A".

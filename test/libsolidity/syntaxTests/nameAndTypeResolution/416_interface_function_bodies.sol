@@ -4,4 +4,4 @@ interface I {
 }
 // ----
 // TypeError: (18-45): Functions in interfaces cannot have an implementation.
-// Warning: (18-45): Functions in interfaces should be declared external.
+// TypeError: (18-45): Functions in interfaces must be declared external.

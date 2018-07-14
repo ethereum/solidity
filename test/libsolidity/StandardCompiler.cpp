@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract)
 		},
 		"sources": {
 			"fileA": {
-				"content": "contract B { } contract A { function f() { new B(); } }"
+				"content": "contract B { } contract A { function f() public { new B(); } }"
 			}
 		}
 	}
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
 		},
 		"sources": {
 			"fileA": {
-				"content": "import \"fileB\"; contract A { function f() { new B(); } }"
+				"content": "import \"fileB\"; contract A { function f() public { new B(); } }"
 			},
 			"fileB": {
 				"content": "contract B { }"
@@ -712,7 +712,7 @@ BOOST_AUTO_TEST_CASE(library_linking)
 				"content": "library L { function g() public returns (uint) { return 1; } }"
 			},
 			"library2.sol": {
-				"content": "library L2 { function g() { } }"
+				"content": "library L2 { function g() public { } }"
 			}
 		}
 	}

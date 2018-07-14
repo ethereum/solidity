@@ -10,6 +10,6 @@ contract A {
 	function A(address a) internal {}
 }
 // ----
-// Warning: (112-155): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
-// Warning: (172-205): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
+// SyntaxError: (112-155): Functions are not allowed to have the same name as the contract. If you intend this to be a constructor, use "constructor(...) { ... }" to define it.
+// SyntaxError: (172-205): Functions are not allowed to have the same name as the contract. If you intend this to be a constructor, use "constructor(...) { ... }" to define it.
 // TypeError: (140-145): Contract with internal constructor cannot be created directly.

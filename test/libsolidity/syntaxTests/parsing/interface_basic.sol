@@ -2,4 +2,4 @@ interface Interface {
 	function f() public;
 }
 // ----
-// Warning: (23-43): Functions in interfaces should be declared external.
+// TypeError: (23-43): Functions in interfaces must be declared external.
