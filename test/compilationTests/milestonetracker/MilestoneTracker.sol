@@ -175,7 +175,7 @@ contract MilestoneTracker {
     ///       uint reviewTime
     ///       address paymentSource,
     ///       bytes payData,
-    function proposeMilestones(bytes _newMilestones
+    function proposeMilestones(bytes memory _newMilestones
     ) public onlyRecipient campaignNotCanceled {
         proposedMilestones = _newMilestones;
         changingMilestones = true;

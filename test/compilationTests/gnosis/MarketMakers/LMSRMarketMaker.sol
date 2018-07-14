@@ -108,7 +108,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @param netOutcomeTokensSold Net outcome tokens sold by market
     /// @param funding Initial funding for market
     /// @return Cost level
-    function calcCostLevel(int logN, int[] netOutcomeTokensSold, uint funding)
+    function calcCostLevel(int logN, int[] memory netOutcomeTokensSold, uint funding)
         private
         view
         returns(int costLevel)
@@ -129,7 +129,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @param funding Initial funding for market
     /// @param outcomeIndex Index of exponential term to extract (for use by marginal price function)
     /// @return A result structure composed of the sum, the offset used, and the summand associated with the supplied index
-    function sumExpOffset(int logN, int[] netOutcomeTokensSold, uint funding, uint8 outcomeIndex)
+    function sumExpOffset(int logN, int[] memory netOutcomeTokensSold, uint funding, uint8 outcomeIndex)
         private
         view
         returns (uint sum, int offset, uint outcomeExpTerm)
@@ -171,7 +171,7 @@ contract LMSRMarketMaker is MarketMaker {
     function getNetOutcomeTokensSold(Market market)
         private
         view
-        returns (int[] quantities)
+        returns (int[] memory quantities)
     {
         quantities = new int[](market.eventContract().getOutcomeCount());
         for (uint8 i = 0; i < quantities.length; i++)

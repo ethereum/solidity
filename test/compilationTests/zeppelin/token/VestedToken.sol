@@ -212,7 +212,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
    * @param time The time to be checked
    * @return An uint256 representing the amount of vested tokens of a specific grant at a specific time.
    */
-  function vestedTokens(TokenGrant grant, uint64 time) private view returns (uint256) {
+  function vestedTokens(TokenGrant memory grant, uint64 time) private view returns (uint256) {
     return calculateVestedTokens(
       grant.value,
       uint256(time),
@@ -229,7 +229,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
    * @return An uint256 representing the amount of non vested tokens of a specific grant on the 
    * passed time frame.
    */
-  function nonVestedTokens(TokenGrant grant, uint64 time) private view returns (uint256) {
+  function nonVestedTokens(TokenGrant memory grant, uint64 time) private view returns (uint256) {
     return grant.value.sub(vestedTokens(grant, time));
   }
 

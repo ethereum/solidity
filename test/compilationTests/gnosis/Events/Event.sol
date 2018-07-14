@@ -101,7 +101,7 @@ contract Event {
     function getOutcomeTokens()
         public
         view
-        returns (OutcomeToken[])
+        returns (OutcomeToken[] memory)
     {
         return outcomeTokens;
     }
@@ -111,7 +111,7 @@ contract Event {
     function getOutcomeTokenDistribution(address owner)
         public
         view
-        returns (uint[] outcomeTokenDistribution)
+        returns (uint[] memory outcomeTokenDistribution)
     {
         outcomeTokenDistribution = new uint[](outcomeTokens.length);
         for (uint8 i = 0; i < outcomeTokenDistribution.length; i++)

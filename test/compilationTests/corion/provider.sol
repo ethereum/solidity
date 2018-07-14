@@ -299,7 +299,7 @@ contract provider is module, safeMath, announcementTypes {
         providers[addr].data[currHeight].currentRate     = rate;
         emit EProviderDetailsChanged(addr, currHeight, website, country, info, rate, admin);
     }
-    function getProviderInfo(address addr, uint256 height) public view returns (string name, string website, string country, string info, uint256 create) {
+    function getProviderInfo(address addr, uint256 height) public view returns (string memory name, string memory website, string memory country, string memory info, uint256 create) {
         /*
             for the infos of the provider.
             In case the height is unknown then the system will use the last known height.

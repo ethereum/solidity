@@ -193,9 +193,9 @@ Given the contract:
     pragma solidity ^0.4.16;
 
     contract Foo {
-      function bar(bytes3[2]) public pure {}
+      function bar(bytes3[2] memory) public pure {}
       function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
-      function sam(bytes, bool, uint[]) public pure {}
+      function sam(bytes memory, bool, uint[] memory) public pure {}
     }
 
 
@@ -490,8 +490,8 @@ As an example, the code
     contract Test {
       struct S { uint a; uint[] b; T[] c; }
       struct T { uint x; uint y; }
-      function f(S s, T t, uint a) public { }
-      function g() public returns (S s, T t, uint a) {}
+      function f(S memory s, T memory t, uint a) public { }
+      function g() public returns (S memory s, T memory t, uint a) {}
     }
 
 would result in the JSON:

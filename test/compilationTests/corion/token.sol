@@ -48,7 +48,7 @@ contract token is safeMath, module, announcementTypes {
     
     mapping(address => bool) public genesis;
 
-    constructor(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] genesisAddr, uint256[] genesisValue) public payable {
+    constructor(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] memory genesisAddr, uint256[] memory genesisValue) public payable {
         /*
             Installation function
             
@@ -288,7 +288,7 @@ contract token is safeMath, module, announcementTypes {
         return true;
     }
     
-    function _transferToContract(address from, address to, uint256 amount, bytes extraData) internal {
+    function _transferToContract(address from, address to, uint256 amount, bytes memory extraData) internal {
         /*
             Internal function to start transactions to a contract
             

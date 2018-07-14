@@ -103,7 +103,7 @@ contract MultiSigWallet {
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
-    constructor(address[] _owners, uint _required)
+    constructor(address[] memory _owners, uint _required)
         public
         validRequirement(_owners.length, _required)
     {
@@ -185,7 +185,7 @@ contract MultiSigWallet {
     /// @param value Transaction ether value.
     /// @param data Transaction data payload.
     /// @return Returns transaction ID.
-    function submitTransaction(address destination, uint value, bytes data)
+    function submitTransaction(address destination, uint value, bytes memory data)
         public
         returns (uint transactionId)
     {
@@ -261,7 +261,7 @@ contract MultiSigWallet {
     /// @param value Transaction ether value.
     /// @param data Transaction data payload.
     /// @return Returns transaction ID.
-    function addTransaction(address destination, uint value, bytes data)
+    function addTransaction(address destination, uint value, bytes memory data)
         internal
         notNull(destination)
         returns (uint transactionId)
@@ -313,7 +313,7 @@ contract MultiSigWallet {
     function getOwners()
         public
         view
-        returns (address[])
+        returns (address[] memory)
     {
         return owners;
     }
@@ -324,7 +324,7 @@ contract MultiSigWallet {
     function getConfirmations(uint transactionId)
         public
         view
-        returns (address[] _confirmations)
+        returns (address[] memory _confirmations)
     {
         address[] memory confirmationsTemp = new address[](owners.length);
         uint count = 0;
@@ -348,7 +348,7 @@ contract MultiSigWallet {
     function getTransactionIds(uint from, uint to, bool pending, bool executed)
         public
         view
-        returns (uint[] _transactionIds)
+        returns (uint[] memory _transactionIds)
     {
         uint[] memory transactionIdsTemp = new uint[](transactionCount);
         uint count = 0;

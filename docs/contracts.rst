@@ -1295,12 +1295,12 @@ custom types without the overhead of external function calls:
             uint[] limbs;
         }
 
-        function fromUint(uint x) internal pure returns (bigint r) {
+        function fromUint(uint x) internal pure returns (bigint memory r) {
             r.limbs = new uint[](1);
             r.limbs[0] = x;
         }
 
-        function add(bigint _a, bigint _b) internal pure returns (bigint r) {
+        function add(bigint memory _a, bigint memory _b) internal pure returns (bigint memory r) {
             r.limbs = new uint[](max(_a.limbs.length, _b.limbs.length));
             uint carry = 0;
             for (uint i = 0; i < r.limbs.length; ++i) {
@@ -1323,7 +1323,7 @@ custom types without the overhead of external function calls:
             }
         }
 
-        function limb(bigint _a, uint _limb) internal pure returns (uint) {
+        function limb(bigint memory _a, uint _limb) internal pure returns (uint) {
             return _limb < _a.limbs.length ? _a.limbs[_limb] : 0;
         }
 

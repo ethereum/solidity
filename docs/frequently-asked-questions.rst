@@ -85,7 +85,7 @@ Example::
     pragma solidity ^0.4.16;
 
     contract C {
-        function f() public pure returns (uint8[5]) {
+        function f() public pure returns (uint8[5] memory) {
             string[4] memory adaArr = ["This", "is", "an", "array"];
             return ([1, 2, 3, 4, 5]);
         }
@@ -445,7 +445,7 @@ independent copies will be created::
             h(x);
         }
 
-        function g(uint[20] y) internal pure {
+        function g(uint[20] memory y) internal pure {
             y[2] = 3;
         }
 
@@ -455,10 +455,9 @@ independent copies will be created::
     }
 
 The call to ``g(x)`` will not have an effect on ``x`` because it needs
-to create an independent copy of the storage value in memory
-(the default storage location is memory). On the other hand,
-``h(x)`` successfully modifies ``x`` because only a reference
-and not a copy is passed.
+to create an independent copy of the storage value in memory.
+On the other hand, ``h(x)`` successfully modifies ``x`` because only
+a reference and not a copy is passed.
 
 Sometimes, when I try to change the length of an array with ex: ``arrayname.length = 7;`` I get a compiler error ``Value must be an lvalue``. Why?
 ==================================================================================================================================================
