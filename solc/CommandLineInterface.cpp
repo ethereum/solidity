@@ -438,8 +438,8 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
-				path = boost::filesystem::canonical(infile).string();
+				m_sourceCodes[infile.generic_string()] = dev::readFileAsString(infile.generic_string());
+				path = boost::filesystem::canonical(infile).generic_string();
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
@@ -511,7 +511,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	// Do not try creating the directory if the first item is . or ..
 	if (p.filename() != "." && p.filename() != "..")
 		fs::create_directories(p);
-	string pathName = (p / _fileName).string();
+	string pathName = (p / _fileName).generic_string();
 	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
 	{
 		cerr << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
@@ -723,8 +723,8 @@ bool CommandLineInterface::processInput()
 			if (!boost::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
 
-			auto contents = dev::readFileAsString(canonicalPath.string());
-			m_sourceCodes[path.string()] = contents;
+			auto contents = dev::readFileAsString(canonicalPath.generic_string());
+			m_sourceCodes[path.generic_string()] = contents;
 			return ReadCallback::Result{true, contents};
 		}
 		catch (Exception const& _exception)
@@ -1009,7 +1009,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 					postfix += "_json";
 				}
 				boost::filesystem::path path(sourceCode.first);
-				createFile(path.filename().string() + postfix + ".ast", data.str());
+				createFile(path.filename().generic_string() + postfix + ".ast", data.str());
 			}
 		}
 		else
