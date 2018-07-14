@@ -43,20 +43,20 @@ static char const* registrarCode = R"DELIMITER(
 pragma solidity ^0.4.0;
 
 contract NameRegister {
-	function addr(string _name) view returns (address o_owner);
-	function name(address _owner) view returns (string o_name);
+	function addr(string _name) public view returns (address o_owner);
+	function name(address _owner) public view returns (string o_name);
 }
 
 contract Registrar is NameRegister {
 	event Changed(string indexed name);
 	event PrimaryChanged(string indexed name, address indexed addr);
 
-	function owner(string _name) view returns (address o_owner);
-	function addr(string _name) view returns (address o_address);
-	function subRegistrar(string _name) view returns (address o_subRegistrar);
-	function content(string _name) view returns (bytes32 o_content);
+	function owner(string _name) public view returns (address o_owner);
+	function addr(string _name) public view returns (address o_address);
+	function subRegistrar(string _name) public view returns (address o_subRegistrar);
+	function content(string _name) public view returns (bytes32 o_content);
 
-	function name(address _owner) view returns (string o_name);
+	function name(address _owner) public view returns (string o_name);
 }
 
 contract AuctionSystem {
@@ -112,7 +112,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 	uint constant c_renewalInterval = 365 days;
 	uint constant c_freeBytes = 12;
 
-	function Registrar() {
+	constructor() public {
 		// TODO: Populate with hall-of-fame.
 	}
 
@@ -124,27 +124,22 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		record.owner = auction.highestBidder;
 		emit Changed(_name);
 		if (previousOwner != 0x0000000000000000000000000000000000000000) {
-			if (!record.owner.send(auction.sumOfBids - auction.highestBid / 100))
-				throw;
+			require(record.owner.send(auction.sumOfBids - auction.highestBid / 100));
 		} else {
-			if (!auction.highestBidder.send(auction.highestBid - auction.secondHighestBid))
-				throw;
+			require(auction.highestBidder.send(auction.highestBid - auction.secondHighestBid));
 		}
 	}
 
 	function reserve(string _name) external payable {
-		if (bytes(_name).length == 0)
-			throw;
+		require(bytes(_name).length != 0);
 		bool needAuction = requiresAuction(_name);
 		if (needAuction)
 		{
-			if (now < m_toRecord[_name].renewalDate)
-				throw;
+			require(now >= m_toRecord[_name].renewalDate);
 			bid(_name, msg.sender, msg.value);
 		} else {
 			Record storage record = m_toRecord[_name];
-			if (record.owner != 0x0000000000000000000000000000000000000000)
-				throw;
+			require(record.owner == 0x0000000000000000000000000000000000000000);
 			m_toRecord[_name].owner = msg.sender;
 			emit Changed(_name);
 		}
@@ -156,12 +151,12 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 
 	modifier onlyrecordowner(string _name) { if (m_toRecord[_name].owner == msg.sender) _; }
 
-	function transfer(string _name, address _newOwner) onlyrecordowner(_name) {
+	function transfer(string _name, address _newOwner) public onlyrecordowner(_name) {
 		m_toRecord[_name].owner = _newOwner;
 		emit Changed(_name);
 	}
 
-	function disown(string _name) onlyrecordowner(_name) {
+	function disown(string _name) public onlyrecordowner(_name) {
 		if (stringsEqual(m_toName[m_toRecord[_name].primary], _name))
 		{
 			emit PrimaryChanged(_name, m_toRecord[_name].primary);
@@ -171,7 +166,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		emit Changed(_name);
 	}
 
-	function setAddress(string _name, address _a, bool _primary) onlyrecordowner(_name) {
+	function setAddress(string _name, address _a, bool _primary) public onlyrecordowner(_name) {
 		m_toRecord[_name].primary = _a;
 		if (_primary)
 		{
@@ -180,11 +175,11 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		}
 		emit Changed(_name);
 	}
-	function setSubRegistrar(string _name, address _registrar) onlyrecordowner(_name) {
+	function setSubRegistrar(string _name, address _registrar) public onlyrecordowner(_name) {
 		m_toRecord[_name].subRegistrar = _registrar;
 		emit Changed(_name);
 	}
-	function setContent(string _name, bytes32 _content) onlyrecordowner(_name) {
+	function setContent(string _name, bytes32 _content) public onlyrecordowner(_name) {
 		m_toRecord[_name].content = _content;
 		emit Changed(_name);
 	}
@@ -201,11 +196,11 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		return true;
 	}
 
-	function owner(string _name) view returns (address) { return m_toRecord[_name].owner; }
-	function addr(string _name) view returns (address) { return m_toRecord[_name].primary; }
-	function subRegistrar(string _name) view returns (address) { return m_toRecord[_name].subRegistrar; }
-	function content(string _name) view returns (bytes32) { return m_toRecord[_name].content; }
-	function name(address _addr) view returns (string o_name) { return m_toName[_addr]; }
+	function owner(string _name) public view returns (address) { return m_toRecord[_name].owner; }
+	function addr(string _name) public view returns (address) { return m_toRecord[_name].primary; }
+	function subRegistrar(string _name) public view returns (address) { return m_toRecord[_name].subRegistrar; }
+	function content(string _name) public view returns (bytes32) { return m_toRecord[_name].content; }
+	function name(address _addr) public view returns (string o_name) { return m_toName[_addr]; }
 
 	mapping (address => string) m_toName;
 	mapping (string => Record) m_toRecord;

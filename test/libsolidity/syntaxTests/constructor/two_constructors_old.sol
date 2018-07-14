@@ -3,6 +3,6 @@ contract test {
 	function test() public {}
 }
 // ----
-// Warning: (17-49): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
-// Warning: (51-76): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
+// SyntaxError: (17-49): Functions are not allowed to have the same name as the contract. If you intend this to be a constructor, use "constructor(...) { ... }" to define it.
+// SyntaxError: (51-76): Functions are not allowed to have the same name as the contract. If you intend this to be a constructor, use "constructor(...) { ... }" to define it.
 // DeclarationError: (51-76): More than one constructor defined.

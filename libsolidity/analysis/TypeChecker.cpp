@@ -278,8 +278,6 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 
 void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
 {
-	bool const v050 = _contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
 
 	// Determine the arguments that are used for the base constructors.
@@ -289,23 +287,20 @@ void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const
 			for (auto const& modifier: constructor->modifiers())
 			{
 				auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name()));
-				if (modifier->arguments())
+				if (baseContract)
 				{
-					if (baseContract && baseContract->constructor())
-						annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
-				}
-				else
-				{
-					if (v050)
+					if (modifier->arguments())
+					{
+						if (baseContract->constructor())
+							annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
+					}
+					else
+					{
 						m_errorReporter.declarationError(
 							modifier->location(),
 							"Modifier-style base constructor call without arguments."
 						);
-					else
-						m_errorReporter.warning(
-							modifier->location(),
-							"Modifier-style base constructor call without arguments."
-						);
+					}
 				}
 			}
 
@@ -671,11 +666,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
-		if (_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-		{
-			if (_function.visibility() != FunctionDefinition::Visibility::External)
-				m_errorReporter.typeError(_function.location(), "Functions in interfaces must be declared external.");
-		}
+		if (_function.visibility() != FunctionDefinition::Visibility::External)
+			m_errorReporter.typeError(_function.location(), "Functions in interfaces must be declared external.");
 		else
 		{
 			if (_function.visibility() < FunctionDefinition::Visibility::Public)
@@ -940,10 +932,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	};
 	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
 	_inlineAssembly.annotation().analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	boost::optional<Error::Type> errorTypeForLoose =
-		m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050) ?
-		Error::Type::SyntaxError :
-		Error::Type::Warning;
+	boost::optional<Error::Type> errorTypeForLoose = Error::Type::SyntaxError;
 	assembly::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
@@ -2003,20 +1992,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	if (exprType->category() == Type::Category::Contract)
 	{
-		// Warn about using address members on contracts
-		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-		for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
-			if (addressMember.name == memberName && *annotation.type == *addressMember.type)
-			{
-				solAssert(!v050, "Address member still present on contract in v0.5.0.");
-				m_errorReporter.warning(
-					_memberAccess.location(),
-					"Using contract member \"" + memberName +"\" inherited from the address type is deprecated." +
-					" Convert the contract to \"address\" type to access the member,"
-					" for example use \"address(contract)." + memberName + "\" instead."
-				);
-			}
-
 		// Warn about using send or transfer with a non-payable fallback function.
 		if (auto callType = dynamic_cast<FunctionType const*>(type(_memberAccess).get()))
 		{

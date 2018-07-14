@@ -3,5 +3,5 @@ contract C {
     constructor() public x;
 }
 // ----
-// Warning: (83-106): Modifiers of functions without implementation are ignored.
+// SyntaxError: (83-106): Functions without implementation cannot have modifiers.
 // DeclarationError: (104-105): Undeclared identifier.
