@@ -671,18 +671,10 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
-		if (_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-		{
-			if (_function.visibility() != FunctionDefinition::Visibility::External)
-				m_errorReporter.typeError(_function.location(), "Functions in interfaces must be declared external.");
-		}
-		else
-		{
-			if (_function.visibility() < FunctionDefinition::Visibility::Public)
-				m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot be internal or private.");
-			else if (_function.visibility() != FunctionDefinition::Visibility::External)
-				m_errorReporter.warning(_function.location(), "Functions in interfaces should be declared external.");
-		}
+
+		if (_function.visibility() != FunctionDefinition::Visibility::External)
+			m_errorReporter.typeError(_function.location(), "Functions in interfaces must be declared external.");
+
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
 	}

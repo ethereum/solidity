@@ -11649,7 +11649,7 @@ BOOST_AUTO_TEST_CASE(interface_contract)
 	char const* sourceCode = R"(
 		interface I {
 			event A();
-			function f() public returns (bool);
+			function f() external returns (bool);
 			function() external payable;
 		}
 

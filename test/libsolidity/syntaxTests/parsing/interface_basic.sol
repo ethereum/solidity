@@ -1,5 +1,4 @@
 interface Interface {
-	function f() public;
+	function f() external;
 }
 // ----
-// Warning: (23-43): Functions in interfaces should be declared external.
