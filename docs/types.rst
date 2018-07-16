@@ -10,7 +10,7 @@ Solidity is a statically typed language, which means that you need to specify th
 
 Types can interact in expressions containing operators. For a quick reference of the various operators, see :ref:`order`.
 
-Types can not return an ``undefined`` or "null" value. To handle any unexpected values you can 'throw' on error, which also reverts the whole transaction.
+The concept of "undefined" or "null" values do not exist in Solidity. To handle any unexpected values, you should use ``revert("Error message")`` to revert the whole transaction.
 
 .. index:: ! value type, ! type;value
 
@@ -51,7 +51,7 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
-The bit size of an integer determines its range, for example, for ``uint256``, this is 0 up to 2 :sup:`256` -1. If the result of an operation doesn't fit inside this range, it is truncated. These truncations can have `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so use code like the below to avoid certain attacks and check a value is what you expect it to be.
+The bit size of an unsigned integer determines its range, for example, for ``uint256``, this is 0 up to 2 :sup:`256` -1. If the result of an operation doesn't fit inside this range, it is truncated. Not taking these truncations into account can have `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so use code like the below to avoid attacks and check a value is what you expect it to be.
 
 ::
 
@@ -303,24 +303,26 @@ a non-rational number).
 
 .. index:: literal, literal;string, string, string length, string size
 
-String Literals
+String Literals and Types
 ---------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``. For example, with ::
+String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible from ``bytes1`` through ``bytes32``, if they fit, and to ``bytes`` and to ``string``. For example, with ::
+
+  "stringliteral";
+
+The string literal is interpreted in its raw byte form and with certain tools, if you inspect ``somevar``, you see a 32-byte hex value, which is the ``"stringliteral"`` in hex.
+
+String literals support escape characters, such as ``\n`` for line breaks, ``\xNN`` and ``\uNNNN`` for special characters. ``\xNN`` takes a hex value and inserts the appropriate character, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 character.
+
+
+String Types
+^^^^^^^^^^^^
+
+A string literal becomes a ``string`` type when you assign it to a variable, for example::
 
   bytes32 samevar = "stringliteral";
 
-The string literal is interpreted in its raw byte form and if you inspect ``somevar``, you see a 32-byte hex value, which is the ``"stringliteral"`` in hex.
-
-Using a ``string`` type is basically identical to ``bytes``, but it is assumed to hold the UTF-8 encoding of a real string. Since ``string`` UTF-8 encoding of some characters takes more than a single byte, it is quite expensive to compute the number of characters in the string. Because of this, Solidity does not support length methods ``string s; s.length``, or accessing an item at an array index ``s[2]``. If you want to access the low-level byte encoding of the string, you can use ``bytes(s).length`` and ``bytes(s)[2]`` which returns the number of bytes in the UTF-8 encoding of the string (not the number of characters) and the second byte (not character) of the UTF-8 encoded string, respectively.
-
-  bytes32 samevar = "stringliteral";
-
-The string literal is interpreted in its raw byte form and if you inspect ``somevar``, you see a 32-byte hex value, which is the ``"stringliteral"`` in hex.
-
-Using a ``string`` type is basically identical to ``bytes``, but it is assumed to hold the UTF-8 encoding of a real string. Since ``string`` UTF-8 encoding of some characters takes more than a single byte, it is quite expensive to compute the number of characters in the string. Because of this, Solidity does not support length methods ``string s; s.length``, or accessing an item at an array index ``s[2]``. If you want to access the low-level byte encoding of the string, you can use ``bytes(s).length`` and ``bytes(s)[2]`` which returns the number of bytes in the UTF-8 encoding of the string (not the number of characters) and the second byte (not character) of the UTF-8 encoded string, respectively.
-
-String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
+A ``string`` type is basically identical to ``bytes``, but it is assumed to hold the UTF-8 encoding of a real string. Since ``string`` UTF-8 encoding of some characters takes more than a single byte, it is quite expensive to compute the number of characters in the string. Because of this, Solidity does not support length methods ``string s; s.length``, or accessing an item at an array index ``s[2]``. If you want to access the low-level byte encoding of the string, you can use ``bytes(s).length`` and ``bytes(s)[2]`` which returns the number of bytes in the UTF-8 encoding of the string (not the number of characters) and the second byte (not character) of the UTF-8 encoded string, respectively.
 
 Hexadecimal Literals
 --------------------
@@ -592,6 +594,7 @@ Default data location:
 
 .. index:: copy an array, copy a struct
 
+
 Copying Reference Types
 -----------------------
 
@@ -645,21 +648,6 @@ number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are mu
     ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters!
-
-You can initialise a statically sized memory array inline using syntax such as ``string[] memory myarray = new string[](4);``. For example.
-
-::
-
-    pragma solidity ^0.4.16;
-
-    contract C {
-        function f() public pure returns (uint8[5]) {
-            string[4] memory adaArr = ["This", "is", "an", "array"];
-            return [1, 2, 3, 4, 5];
-        }
-    }
-
-You can create and initialise multi-dimensional arrays in the same ways, but filling arrays can cost a lot of gas, so make sure you optimise how you use them.
 
 It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index will become a required parameter for the getter.
@@ -731,6 +719,19 @@ possible:
 
 It is planned to remove this restriction in the future but currently creates
 some complications because of how arrays are passed in the ABI.
+
+You can initialise a statically sized memory array inline using syntax such as ``string[] memory myarray = new string[](4);``. For example::
+
+    pragma solidity ^0.4.16;
+
+    contract C {
+        function f() public pure returns (uint8[5]) {
+            string[4] memory adaArr = ["This", "is", "an", "array"];
+            return [1, 2, 3, 4, 5];
+        }
+    }
+
+You can create and initialise multi-dimensional arrays in the same ways, but filling arrays can cost a lot of gas, so make sure you optimise how you use them.
 
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
@@ -1028,23 +1029,3 @@ converted to a matching size. This makes alignment and padding explicit::
     bytes32(bytes2(x)); // pad on the right
 
 .. index:: ! type;deduction, ! var
-
-.. _type-deduction:
-
-Type Deduction
---------------
-For convenience, it is not always necessary to explicitly specify the type of a
-variable, the compiler automatically infers it from the type of the first
-expression that is assigned to the variable::
-
-    uint24 x = 0x123;
-    var y = x;
-
-Here, the type of ``y`` will be ``uint24``. Using ``var`` is not possible for function
-parameters or return parameters.
-
-.. warning::
-    The type is only deduced from the first assignment, so
-    the loop in the following snippet is infinite, as ``i`` will have the type
-    ``uint8`` and the highest value of this type is smaller than ``2000``.
-    ``for (var i = 0; i < 2000; i++) { ... }``
