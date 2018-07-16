@@ -104,7 +104,7 @@ public:
 							"\nOptimized:     " + toHex(optimizedOutput));
 	}
 
-	/// @returns the number of intructions in the given bytecode, not taking the metadata hash
+	/// @returns the number of instructions in the given bytecode, not taking the metadata hash
 	/// into account.
 	size_t numInstructions(bytes const& _bytecode, boost::optional<Instruction> _which = boost::optional<Instruction>{})
 	{

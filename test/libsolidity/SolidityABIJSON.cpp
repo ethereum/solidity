@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 
 BOOST_AUTO_TEST_CASE(multiple_methods_order)
 {
-	// methods are expected to be in alpabetical order
+	// methods are expected to be in alphabetical order
 	char const* sourceCode = R"(
 		contract test {
 			function f(uint a) public returns (uint d) { return a * 7; }

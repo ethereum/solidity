@@ -385,7 +385,7 @@ contract Wallet is multisig, multiowned, daylimit {
 			emit Deposit(msg.sender, msg.value);
 	}
 
-	// Outside-visible transact entry point. Executes transacion immediately if below daily spend limit.
+	// Outside-visible transact entry point. Executes transaction immediately if below daily spend limit.
 	// If not, goes into multisig process. We provide a hash on return to allow the sender to provide
 	// shortcuts for the other confirmations (allowing them to avoid replicating the _to, _value
 	// and _data arguments). They still get the option of using them if they want, anyways.

@@ -2344,7 +2344,7 @@ BOOST_AUTO_TEST_CASE(packed_keccak256)
 			function a(bytes32 input) public returns (bytes32 hash) {
 				uint24 b = 65536;
 				uint c = 256;
-				return keccak256(abi.encodePacked(8, input, b, input, c));
+				return keccak256(abi.encodePacked(uint8(8), input, b, input, c));
 			}
 		}
 	)";
@@ -2396,7 +2396,7 @@ BOOST_AUTO_TEST_CASE(packed_sha256)
 			function a(bytes32 input) public returns (bytes32 hash) {
 				uint24 b = 65536;
 				uint c = 256;
-				return sha256(abi.encodePacked(8, input, b, input, c));
+				return sha256(abi.encodePacked(uint8(8), input, b, input, c));
 			}
 		}
 	)";
@@ -2423,7 +2423,7 @@ BOOST_AUTO_TEST_CASE(packed_ripemd160)
 			function a(bytes32 input) public returns (bytes32 hash) {
 				uint24 b = 65536;
 				uint c = 256;
-				return ripemd160(abi.encodePacked(8, input, b, input, c));
+				return ripemd160(abi.encodePacked(uint8(8), input, b, input, c));
 			}
 		}
 	)";
@@ -3822,7 +3822,7 @@ BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments_with_numeric_literals)
 		contract c {
 			function foo(uint a, uint16 b) public returns (bytes32 d)
 			{
-				d = keccak256(abi.encodePacked(a, b, 145));
+				d = keccak256(abi.encodePacked(a, b, uint8(145)));
 			}
 		}
 	)";
@@ -3847,7 +3847,7 @@ BOOST_AUTO_TEST_CASE(keccak256_multiple_arguments_with_string_literals)
 			}
 			function bar(uint a, uint16 b) public returns (bytes32 d)
 			{
-				d = keccak256(abi.encodePacked(a, b, 145, "foo"));
+				d = keccak256(abi.encodePacked(a, b, uint8(145), "foo"));
 			}
 		}
 	)";
@@ -6649,9 +6649,9 @@ BOOST_AUTO_TEST_CASE(return_multiple_strings_of_various_sizes)
 		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
 		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
 	);
-	vector<size_t> lengthes{0, 30, 32, 63, 64, 65, 210, 300};
-	for (auto l1: lengthes)
-		for (auto l2: lengthes)
+	vector<size_t> lengths{0, 30, 32, 63, 64, 65, 210, 300};
+	for (auto l1: lengths)
+		for (auto l2: lengths)
 		{
 			bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
 			bytes dyn2 = encodeArgs(u256(l2), s2.substr(0, l2));
@@ -6718,9 +6718,9 @@ BOOST_AUTO_TEST_CASE(bytes_in_function_calls)
 	compileAndRun(sourceCode, 0, "Main");
 	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
 	string s2("ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ");
-	vector<size_t> lengthes{0, 31, 64, 65};
-	for (auto l1: lengthes)
-		for (auto l2: lengthes)
+	vector<size_t> lengths{0, 31, 64, 65};
+	for (auto l1: lengths)
+		for (auto l2: lengths)
 		{
 			bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
 			bytes dyn2 = encodeArgs(u256(l2), s2.substr(0, l2));
@@ -6759,8 +6759,8 @@ BOOST_AUTO_TEST_CASE(return_bytes_internal)
 	)";
 	compileAndRun(sourceCode, 0, "Main");
 	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
-	vector<size_t> lengthes{0, 31, 64, 65};
-	for (auto l1: lengthes)
+	vector<size_t> lengths{0, 31, 64, 65};
+	for (auto l1: lengths)
 	{
 		bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
 		bytes args1 = encodeArgs(u256(0x20)) + dyn1;
