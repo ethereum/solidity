@@ -49,7 +49,8 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 		dynamic_cast<MagicVariableDeclaration const*>(&_declaration)
 	)
 	{
-		// check that all other declarations are of the same kind
+		// check that all other declarations are of the same kind (in which
+		// case the type checker will ensure that the signatures are different)
 		for (Declaration const* declaration: declarations)
 		{
 			if (
