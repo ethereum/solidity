@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(sequence_number_for_calls)
 	// to storage), so the sequence number should be incremented.
 	char const* sourceCode = R"(
 		contract test {
-			function f(string a, string b) public returns (bool) { return sha256(bytes(a)) == sha256(bytes(b)); }
+			function f(string memory a, string memory b) public returns (bool) { return sha256(bytes(a)) == sha256(bytes(b)); }
 		}
 	)";
 	compileBothVersions(sourceCode);
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE(optimise_multi_stores)
 			struct S { uint16 a; uint16 b; uint16[3] c; uint[] dyn; }
 			uint padding;
 			S[] s;
-			function f() public returns (uint16, uint16, uint16[3], uint) {
+			function f() public returns (uint16, uint16, uint16[3] memory, uint) {
 				uint16[3] memory c;
 				c[0] = 7;
 				c[1] = 8;

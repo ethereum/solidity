@@ -756,7 +756,7 @@ BOOST_AUTO_TEST_CASE(library_function)
 	char const* sourceCode = R"(
 		library test {
 			struct StructType { uint a; }
-			function f(StructType storage b, uint[] storage c, test d) public returns (uint[] e, StructType storage f) {}
+			function f(StructType storage b, uint[] storage c, test d) public returns (uint[] memory e, StructType storage f) {}
 		}
 	)";
 
@@ -891,7 +891,7 @@ BOOST_AUTO_TEST_CASE(return_structs)
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[2] x; }
-			function f() public returns (uint x, S s) {
+			function f() public returns (uint x, S memory s) {
 			}
 		}
 	)";
@@ -940,7 +940,7 @@ BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { C[] x; C y; }
-			function f() public returns (S s, C c) {
+			function f() public returns (S memory s, C c) {
 			}
 		}
 	)";
@@ -1042,7 +1042,7 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 			struct S { uint a; T[] sub; bytes b; }
 			struct T { uint[2] x; }
 			function f(L.S storage s) {}
-			function g(L.S s) {}
+			function g(L.S memory s) {}
 		}
 	)";
 	char const* interface = R"(
