@@ -96,8 +96,7 @@ Travis CI even runs some additional tests (including ``solc-js`` and testing thi
 .. note ::
 
     While any version of ``cpp-ethereum`` should be usable, this cannot be guaranteed, and it is suggested to use the same version that is used by the Solidity continuous integration tests.
-    To find the current commit hash of `cpp-ethereum`` being used have a look at the ``scripts/tests.sh``, which downloads pre-built ``cpp-ethereum`` binaries and should have a comment like
-    ``built from d661ac4fec0aeffbedcdc195f67f5ded0c798278 at 2018-06-20``.
+    Currently the CI uses ``d661ac4fec0aeffbedcdc195f67f5ded0c798278`` of ``cpp-ethereum``.
 
 Writing and running syntax tests
 --------------------------------
