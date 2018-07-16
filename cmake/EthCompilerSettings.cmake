@@ -26,7 +26,7 @@ eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 
 	# Use ISO C++11 standard language.
-	set(CMAKE_CXX_FLAGS -std=c++11)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
