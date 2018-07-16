@@ -46,10 +46,10 @@ contract VestedToken is StandardToken, LimitedTransferToken {
 
     // Check for date inconsistencies that may cause unexpected behavior
     if (_cliff < _start || _vesting < _cliff) {
-      throw;
+      revert();
     }
 
-    if (tokenGrantsCount(_to) > MAX_GRANTS_PER_ADDRESS) throw;   // To prevent a user being spammed and have his balance locked (out of gas attack when calculating vesting).
+    if (tokenGrantsCount(_to) > MAX_GRANTS_PER_ADDRESS) revert();   // To prevent a user being spammed and have his balance locked (out of gas attack when calculating vesting).
 
     uint256 count = grants[_to].push(
                 TokenGrant(
@@ -77,11 +77,11 @@ contract VestedToken is StandardToken, LimitedTransferToken {
     TokenGrant storage grant = grants[_holder][_grantId];
 
     if (!grant.revokable) { // Check if grant was revokable
-      throw;
+      revert();
     }
 
     if (grant.granter != msg.sender) { // Only granter can revoke it
-      throw;
+      revert();
     }
 
     address receiver = grant.burnsOnRevoke ? 0xdead : msg.sender;

@@ -125,26 +125,26 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		emit Changed(_name);
 		if (previousOwner != 0x0000000000000000000000000000000000000000) {
 			if (!record.owner.send(auction.sumOfBids - auction.highestBid / 100))
-				throw;
+				revert();
 		} else {
 			if (!auction.highestBidder.send(auction.highestBid - auction.secondHighestBid))
-				throw;
+				revert();
 		}
 	}
 
 	function reserve(string _name) external payable {
 		if (bytes(_name).length == 0)
-			throw;
+			revert();
 		bool needAuction = requiresAuction(_name);
 		if (needAuction)
 		{
 			if (now < m_toRecord[_name].renewalDate)
-				throw;
+				revert();
 			bid(_name, msg.sender, msg.value);
 		} else {
 			Record storage record = m_toRecord[_name];
 			if (record.owner != 0x0000000000000000000000000000000000000000)
-				throw;
+				revert();
 			m_toRecord[_name].owner = msg.sender;
 			emit Changed(_name);
 		}

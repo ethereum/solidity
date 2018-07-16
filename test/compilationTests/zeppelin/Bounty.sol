@@ -20,7 +20,7 @@ contract Bounty is PullPayment, Destructible {
    */
   function() external payable {
     if (claimed) {
-      throw;
+      revert();
     }
   }
 
@@ -49,11 +49,11 @@ contract Bounty is PullPayment, Destructible {
   function claim(Target target) public {
     address researcher = researchers[target];
     if (researcher == address(0)) {
-      throw;
+      revert();
     }
     // Check Target contract invariants
     if (target.checkInvariant()) {
-      throw;
+      revert();
     }
     asyncSend(researcher, address(this).balance);
     claimed = true;

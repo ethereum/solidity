@@ -33,49 +33,49 @@ contract MultiSigWallet {
 
     modifier onlyWallet() {
         if (msg.sender != address(this))
-            throw;
+            revert();
         _;
     }
 
     modifier ownerDoesNotExist(address owner) {
         if (isOwner[owner])
-            throw;
+            revert();
         _;
     }
 
     modifier ownerExists(address owner) {
         if (!isOwner[owner])
-            throw;
+            revert();
         _;
     }
 
     modifier transactionExists(uint transactionId) {
         if (transactions[transactionId].destination == address(0))
-            throw;
+            revert();
         _;
     }
 
     modifier confirmed(uint transactionId, address owner) {
         if (!confirmations[transactionId][owner])
-            throw;
+            revert();
         _;
     }
 
     modifier notConfirmed(uint transactionId, address owner) {
         if (confirmations[transactionId][owner])
-            throw;
+            revert();
         _;
     }
 
     modifier notExecuted(uint transactionId) {
         if (transactions[transactionId].executed)
-            throw;
+            revert();
         _;
     }
 
     modifier notNull(address _address) {
         if (_address == address(0))
-            throw;
+            revert();
         _;
     }
 
@@ -84,7 +84,7 @@ contract MultiSigWallet {
             || _required > ownerCount
             || _required == 0
             || ownerCount == 0)
-            throw;
+            revert();
         _;
     }
 
@@ -109,7 +109,7 @@ contract MultiSigWallet {
     {
         for (uint i=0; i<_owners.length; i++) {
             if (isOwner[_owners[i]] || _owners[i] == address(0))
-                throw;
+                revert();
             isOwner[_owners[i]] = true;
         }
         owners = _owners;

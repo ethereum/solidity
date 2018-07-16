@@ -33,18 +33,18 @@ contract PullPayment {
     uint256 payment = payments[payee];
 
     if (payment == 0) {
-      throw;
+      revert();
     }
 
     if (address(this).balance < payment) {
-      throw;
+      revert();
     }
 
     totalPayments = totalPayments.sub(payment);
     payments[payee] = 0;
 
     if (!payee.send(payment)) {
-      throw;
+      revert();
     }
   }
 }

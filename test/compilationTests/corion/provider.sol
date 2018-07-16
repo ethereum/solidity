@@ -514,7 +514,7 @@ contract provider is module, safeMath, announcementTypes {
         } else if ( clients[msg.sender].providerAddress != address(0x00) ) {
             clientReward = getClientReward(_limit);
         } else {
-            throw;
+            revert();
         }
         if ( clientReward > 0 ) {
             require( moduleHandler(moduleHandlerAddress).transfer(address(this), _beneficiary, clientReward, false) );

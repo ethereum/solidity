@@ -19,7 +19,7 @@ contract Pausable is Ownable {
    * @dev modifier to allow actions only when the contract IS paused
    */
   modifier whenNotPaused() {
-    if (paused) throw;
+    if (paused) revert();
     _;
   }
 
@@ -27,7 +27,7 @@ contract Pausable is Ownable {
    * @dev modifier to allow actions only when the contract IS NOT paused
    */
   modifier whenPaused {
-    if (!paused) throw;
+    if (!paused) revert();
     _;
   }
 

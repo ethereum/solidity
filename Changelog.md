@@ -20,6 +20,7 @@ Breaking Changes:
  * General: Disallow raw ``callcode`` (was already deprecated in 0.4.12). It is still possible to use it via inline assembly.
  * General: Disallow ``var`` keyword.
  * General: Disallow ``sha3`` and ``suicide`` aliases.
+ * General: Disallow the ``throw`` statement. This was already the case in the experimental 0.5.0 mode.
  * General: Disallow the ``years`` unit denomination (was already deprecated in 0.4.24)
  * General: Introduce ``emit`` as a keyword instead of parsing it as identifier.
  * General: New keywords: ``calldata``
