@@ -34,7 +34,7 @@ contract CentralizedOracle is Oracle {
      */
     /// @dev Constructor sets owner address and IPFS hash
     /// @param _ipfsHash Hash identifying off chain event description
-    constructor(address _owner, bytes _ipfsHash)
+    constructor(address _owner, bytes memory _ipfsHash)
         public
     {
         // Description hash cannot be null

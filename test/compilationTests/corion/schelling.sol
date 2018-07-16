@@ -174,7 +174,7 @@ contract schelling is module, announcementTypes, schellingVars {
     function setFunds(address addr, uint256 amount) internal {
         require( db.setFunds(addr, amount) );
     }
-    function setVoter(address owner, _voter voter) internal {
+    function setVoter(address owner, _voter memory voter) internal {
         require( db.setVoter(owner, 
             voter.roundID,
             voter.hash,
@@ -182,13 +182,13 @@ contract schelling is module, announcementTypes, schellingVars {
             voter.voteResult,
             voter.rewards
             ) );
-    }    
-    function getVoter(address addr) internal view returns (_voter) {
+    }
+    function getVoter(address addr) internal view returns (_voter memory) {
         (bool a, uint256 b, bytes32 c, schellingVars.voterStatus d, bool e, uint256 f) = db.getVoter(addr);
         require( a );
         return _voter(b, c, d, e, f);
     }
-    function setRound(uint256 id, _rounds round) internal {
+    function setRound(uint256 id, _rounds memory round) internal {
         require( db.setRound(id, 
             round.totalAboveWeight,
             round.totalBelowWeight,
@@ -197,8 +197,8 @@ contract schelling is module, announcementTypes, schellingVars {
             round.voted
             ) );
     }
-    function pushRound(_rounds round) internal returns (uint256) {
-        (bool a, uint256 b) = db.pushRound( 
+    function pushRound(_rounds memory round) internal returns (uint256) {
+        (bool a, uint256 b) = db.pushRound(
             round.totalAboveWeight,
             round.totalBelowWeight,
             round.reward,
@@ -208,7 +208,7 @@ contract schelling is module, announcementTypes, schellingVars {
         require( a );
         return b;
     }
-    function getRound(uint256 id) internal returns (_rounds) {
+    function getRound(uint256 id) internal returns (_rounds memory) {
         (bool a, uint256 b, uint256 c, uint256 d, uint256 e, bool f) = db.getRound(id);
         require( a );
         return _rounds(b, c, d, e, f);
@@ -529,7 +529,7 @@ contract schelling is module, announcementTypes, schellingVars {
             return belowW;
         }
     }
-    function isWinner(_rounds round, bool aboveVote) internal returns (bool) {
+    function isWinner(_rounds memory round, bool aboveVote) internal returns (bool) {
         /*
             Inside function for calculating the result of the game.
             

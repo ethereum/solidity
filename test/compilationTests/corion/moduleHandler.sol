@@ -36,7 +36,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     uint256 debugModeUntil = block.number + 1000000;
 
 
-    constructor(address[] newOwners) multiOwner(newOwners) public {}
+    constructor(address[] memory newOwners) multiOwner(newOwners) public {}
     function load(address foundation, bool forReplace, address Token, address Premium, address Publisher, address Schelling, address Provider) public {
         /*
             Loading modulest to ModuleHandler.
@@ -60,7 +60,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         addModule( modules_s(Schelling,  keccak256('Schelling'),  false, true),   ! forReplace);
         addModule( modules_s(Provider,   keccak256('Provider'),   true, true),    ! forReplace);
     }
-    function addModule(modules_s input, bool call) internal {
+    function addModule(modules_s memory input, bool call) internal {
         /*
             Inside function for registration of the modules in the database.
             If the call is false, won't happen any direct call.
@@ -81,7 +81,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         modules[id] = input;
     }
-    function getModuleAddressByName(string name) public view returns( bool success, bool found, address addr ) {
+    function getModuleAddressByName(string memory name) public view returns( bool success, bool found, address addr ) {
         /*
             Search by name for module. The result is an Ethereum address.
             
@@ -109,7 +109,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         return (true, false, 0);
     }
-    function getModuleIDByName(string name) public view returns( bool success, bool found, uint256 id ) {
+    function getModuleIDByName(string memory name) public view returns( bool success, bool found, uint256 id ) {
         /*
             Search by name for module. The result is an index array.
             
@@ -177,7 +177,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( abstractModule(modules[_id].addr).replaceModule(newModule) );
         return true;
     }
-    
+
     function newModule(string name, address addr, bool schellingEvent, bool transferEvent) external returns (bool success) {
         /*
             Adding new module to the database. Can be called only by the Publisher contract.

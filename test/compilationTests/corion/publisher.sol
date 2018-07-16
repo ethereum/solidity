@@ -70,7 +70,7 @@ contract publisher is announcementTypes, module, safeMath {
         super.registerModuleHandler(moduleHandler);
     }
     
-    function Announcements(uint256 id) public view returns (uint256 Type, uint256 Start, uint256 End, bool Closed, string Announcement, string Link, bool Opposited, string _str, uint256 _uint, address _addr) {
+    function Announcements(uint256 id) public view returns (uint256 Type, uint256 Start, uint256 End, bool Closed, string memory Announcement, string memory Link, bool Opposited, string memory _str, uint256 _uint, address _addr) {
         /*
             Announcement data query
             

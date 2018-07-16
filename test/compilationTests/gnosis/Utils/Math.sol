@@ -176,7 +176,7 @@ library Math {
     /// @dev Returns maximum of an array
     /// @param nums Numbers to look through
     /// @return Maximum number
-    function max(int[] nums)
+    function max(int[] memory nums)
         public
         pure
         returns (int max)
