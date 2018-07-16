@@ -1035,7 +1035,7 @@ The full contract
 
         /// if the timeout is reached without the recipient closing the channel,
         /// then the Ether is released back to the sender.
-        function clainTimeout() public {
+        function claimTimeout() public {
             require(now >= expiration);
             selfdestruct(sender);
         }
