@@ -1951,7 +1951,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			_memberAccess.location(),
 			"Member \"" + memberName + "\" not found or not visible "
 			"after argument-dependent lookup in " + exprType->toString() +
-			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : "")
+			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".")
 		);
 	}
 	else if (possibleMembers.size() > 1)
@@ -1959,7 +1959,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			_memberAccess.location(),
 			"Member \"" + memberName + "\" not unique "
 			"after argument-dependent lookup in " + exprType->toString() +
-			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : "")
+			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".")
 		);
 
 	auto& annotation = _memberAccess.annotation();
@@ -1971,7 +1971,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			m_errorReporter.typeError(
 				_memberAccess.location(),
 				"Function \"" + memberName + "\" cannot be called on an object of type " +
-				exprType->toString() + " (expected " + funType->selfType()->toString() + ")"
+				exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
 			);
 
 	if (exprType->category() == Type::Category::Struct)

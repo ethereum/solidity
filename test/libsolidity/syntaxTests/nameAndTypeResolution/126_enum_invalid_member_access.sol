@@ -6,4 +6,4 @@ contract test {
     ActionChoices choices;
 }
 // ----
-// TypeError: (121-159): Member "RunAroundWavingYourHands" not found or not visible after argument-dependent lookup in type(enum test.ActionChoices)
+// TypeError: (121-159): Member "RunAroundWavingYourHands" not found or not visible after argument-dependent lookup in type(enum test.ActionChoices).

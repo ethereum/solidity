@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (100-103): Member "l" not found or not visible after argument-dependent lookup in library L
+// TypeError: (100-103): Member "l" not found or not visible after argument-dependent lookup in library L.

@@ -11,4 +11,4 @@ contract A {
     }
 }
 // ----
-// TypeError: (137-140): Member "b" not found or not visible after argument-dependent lookup in bytes memory
+// TypeError: (137-140): Member "b" not found or not visible after argument-dependent lookup in bytes memory.

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (66-74): Member "pop" not found or not visible after argument-dependent lookup in uint256[3] storage ref
+// TypeError: (66-74): Member "pop" not found or not visible after argument-dependent lookup in uint256[3] storage ref.

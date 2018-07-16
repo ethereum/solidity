@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (115-125): Member "selector" not found or not visible after argument-dependent lookup in function () pure
+// TypeError: (115-125): Member "selector" not found or not visible after argument-dependent lookup in function () pure.

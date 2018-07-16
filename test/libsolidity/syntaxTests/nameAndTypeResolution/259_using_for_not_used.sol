@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (305-313): Member "double" not found or not visible after argument-dependent lookup in uint16
+// TypeError: (305-313): Member "double" not found or not visible after argument-dependent lookup in uint16.

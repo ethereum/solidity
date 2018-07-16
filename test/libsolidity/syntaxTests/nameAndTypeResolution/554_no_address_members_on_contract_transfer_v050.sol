@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (77-90): Member "transfer" not found or not visible after argument-dependent lookup in contract C
+// TypeError: (77-90): Member "transfer" not found or not visible after argument-dependent lookup in contract C.
