@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (77-89): Member "balance" not found or not visible after argument-dependent lookup in contract C
+// TypeError: (77-89): Member "balance" not found or not visible after argument-dependent lookup in contract C.

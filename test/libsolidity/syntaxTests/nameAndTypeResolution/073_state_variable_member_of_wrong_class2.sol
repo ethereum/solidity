@@ -9,4 +9,4 @@ contract Child is Parent2 {
     uint256 public m_aMember3;
 }
 // ----
-// TypeError: (200-216): Member "m_aMember2" not found or not visible after argument-dependent lookup in type(contract Child)
+// TypeError: (200-216): Member "m_aMember2" not found or not visible after argument-dependent lookup in type(contract Child).

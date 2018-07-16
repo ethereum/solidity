@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (227-235): Member "double" not found or not visible after argument-dependent lookup in uint256
+// TypeError: (227-235): Member "double" not found or not visible after argument-dependent lookup in uint256.

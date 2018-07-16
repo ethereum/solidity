@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (99-109): Member "selector" not found or not visible after argument-dependent lookup in function ()
+// TypeError: (99-109): Member "selector" not found or not visible after argument-dependent lookup in function ().
