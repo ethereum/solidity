@@ -591,33 +591,6 @@ Default data location:
  - parameters (also return) of functions: memory
  - all other local variables: storage
 
-
-.. index:: copy an array, copy a struct
-
-
-Copying Reference Types
------------------------
-
-If you copy an array or struct over another then the mapping of the target is ignored as there is
-no list of mapped keys and it's impossible to know which values to copy. For example.
-
-::
-
-    struct User {
-        mapping(string => string) comments;
-    }
-
-    function somefunction public {
-       User user1;
-       user1.comments["Hello"] = "World";
-       User user2 = user1;
-    }
-
-
-
-
-
-
 .. index:: ! array
 
 .. _arrays:
