@@ -29,6 +29,10 @@
 #include <fstream>
 #include <queue>
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
@@ -242,8 +246,30 @@ TestStats TestTool::processPath(
 
 }
 
+void setupTerminal()
+{
+#if defined(_WIN32) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+	// Set output mode to handle virtual terminal (ANSI escape sequences)
+	// ignore any error, as this is just a "nice-to-have"
+	// only windows needs to be taken care of, as other platforms (Linux/OSX) support them natively.
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hOut == INVALID_HANDLE_VALUE)
+		return;
+
+	DWORD dwMode = 0;
+	if (!GetConsoleMode(hOut, &dwMode))
+		return;
+
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (!SetConsoleMode(hOut, dwMode))
+		return;
+#endif
+}
+
 int main(int argc, char *argv[])
 {
+	setupTerminal();
+
 	if (getenv("EDITOR"))
 		TestTool::editor = getenv("EDITOR");
 	else if (fs::exists("/usr/bin/editor"))
