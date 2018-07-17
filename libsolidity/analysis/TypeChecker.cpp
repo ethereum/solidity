@@ -1930,6 +1930,9 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			else
 				++it;
 	}
+
+	auto& annotation = _memberAccess.annotation();
+
 	if (possibleMembers.size() == 0)
 	{
 		if (initialMemberCount == 0)
@@ -1947,11 +1950,20 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					" outside of storage."
 				);
 		}
+		string errorMsg = "Member \"" + memberName + "\" not found or not visible "
+				"after argument-dependent lookup in " + exprType->toString() +
+				(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".");
+		if (exprType->category() == Type::Category::Contract)
+			for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
+				if (addressMember.name == memberName)
+				{
+					Identifier const& var = dynamic_cast<Identifier const&>(_memberAccess.expression());
+					errorMsg += " Use \"address(" + var.name() + ")." + memberName + "\" to access this address member.";
+					break;
+				}
 		m_errorReporter.fatalTypeError(
 			_memberAccess.location(),
-			"Member \"" + memberName + "\" not found or not visible "
-			"after argument-dependent lookup in " + exprType->toString() +
-			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".")
+			errorMsg
 		);
 	}
 	else if (possibleMembers.size() > 1)
@@ -1962,7 +1974,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".")
 		);
 
-	auto& annotation = _memberAccess.annotation();
 	annotation.referencedDeclaration = possibleMembers.front().declaration;
 	annotation.type = possibleMembers.front().type;
 
@@ -1995,20 +2006,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	if (exprType->category() == Type::Category::Contract)
 	{
-		// Warn about using address members on contracts
-		bool v050 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-		for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
-			if (addressMember.name == memberName && *annotation.type == *addressMember.type)
-			{
-				solAssert(!v050, "Address member still present on contract in v0.5.0.");
-				m_errorReporter.warning(
-					_memberAccess.location(),
-					"Using contract member \"" + memberName +"\" inherited from the address type is deprecated." +
-					" Convert the contract to \"address\" type to access the member,"
-					" for example use \"address(contract)." + memberName + "\" instead."
-				);
-			}
-
 		// Warn about using send or transfer with a non-payable fallback function.
 		if (auto callType = dynamic_cast<FunctionType const*>(type(_memberAccess).get()))
 		{
