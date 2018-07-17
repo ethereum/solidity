@@ -347,7 +347,17 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 						"(remove the \"storage\" or \"calldata\" keyword)."
 					);
 				if (varLoc == Location::Default || !contract.isLibrary())
+				{
+					if (varLoc == Location::Default && !_variable.isEventParameter())
+					{
+						typeError(
+							_variable.location(),
+							"Location must be specified as \"memory\" "
+							"for parameters in publicly visible functions."
+						);
+					}
 					typeLoc = DataLocation::Memory;
+				}
 				else
 				{
 					if (varLoc == Location::CallData)
@@ -372,7 +382,13 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				else if (varLoc == Location::Default)
 				{
 					if (_variable.isCallableParameter())
-						typeLoc = DataLocation::Memory;
+					{
+						typeError(
+							_variable.location(),
+							"Location must be specified as either "
+							"\"memory\" or \"storage\" for parameters."
+						);
+					}
 					else
 					{
 						typeLoc = DataLocation::Storage;
