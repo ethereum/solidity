@@ -482,15 +482,7 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	Declaration const* shadowedDeclaration = nullptr;
 	if (_warnOnShadow && !name.empty() && _container.enclosingContainer())
 		for (auto const* decl: _container.enclosingContainer()->resolveName(name, true, true))
-			// Do not warn about functions shadowing a contract.
-			if (
-				!(
-					dynamic_cast<ContractDefinition const*>(decl) &&
-					dynamic_cast<FunctionDefinition const*>(&_declaration) &&
-					name == decl->name()
-				)
-			)
-				shadowedDeclaration = decl;
+			shadowedDeclaration = decl;
 
 	// We use "invisible" for both inactive variables in blocks and for members invisible in contracts.
 	// They cannot both be true at the same time.
