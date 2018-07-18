@@ -1957,8 +1957,9 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
 				if (addressMember.name == memberName)
 				{
-					Identifier const& var = dynamic_cast<Identifier const&>(_memberAccess.expression());
-					errorMsg += " Use \"address(" + var.name() + ")." + memberName + "\" to access this address member.";
+					Identifier const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());
+					string varName = var ? var->name() : "...";
+					errorMsg += " Use \"address(" + varName + ")." + memberName + "\" to access this address member.";
 					break;
 				}
 		m_errorReporter.fatalTypeError(
