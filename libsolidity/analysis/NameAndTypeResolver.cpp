@@ -710,10 +710,6 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 		dynamic_cast<EventDefinition const*>(m_currentScope)
 	)
 		warnAboutShadowing = false;
-	// Do not warn about the constructor shadowing the contract.
-	if (auto fun = dynamic_cast<FunctionDefinition const*>(&_declaration))
-		if (fun->isConstructor())
-			warnAboutShadowing = false;
 
 	// Register declaration as inactive if we are in block scope.
 	bool inactive =
