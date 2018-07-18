@@ -390,6 +390,27 @@ MemberList const& Type::members(ContractDefinition const* _currentScope) const
 	return *m_members[_currentScope];
 }
 
+TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _packed) const
+{
+	TypePointer encodingType = mobileType();
+	if (encodingType)
+		encodingType = encodingType->interfaceType(_inLibraryCall);
+	if (encodingType)
+		encodingType = encodingType->encodingType();
+	if (auto structType = dynamic_cast<StructType const*>(encodingType.get()))
+	{
+		// Structs are fine in the following circumstances:
+		// - ABIv2 without packed encoding or,
+		// - storage struct for a library
+		if (!(
+			(_encoderV2 && !_packed) ||
+			(structType->location() == DataLocation::Storage && _inLibraryCall)
+		))
+			return TypePointer();
+	}
+	return encodingType;
+}
+
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
 {
 	// Normalise data location of type.
