@@ -76,6 +76,7 @@ function download_aleth()
     elif [ -z $CI ]; then
         ALETH_PATH="aleth"
     else
+        # Any time the hash is updated here, the "Running compiler tests" section should also be updated.
         mkdir -p /tmp/test
         if grep -i trusty /etc/lsb-release >/dev/null 2>&1
         then
