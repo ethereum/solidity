@@ -404,8 +404,15 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				}
 				isPointer = !_variable.isStateVariable();
 			}
-
 			type = ref->copyForLocation(typeLoc, isPointer);
+		}
+		else if (dynamic_cast<MappingType const*>(type.get()))
+		{
+			if (_variable.isLocalVariable() && varLoc != Location::Storage)
+				typeError(
+					_variable.location(),
+					"Data location for mappings must be specified as \"storage\"."
+				);
 		}
 		else if (varLoc != Location::Default && !ref)
 			typeError(_variable.location(), "Data location can only be given for array or struct types.");

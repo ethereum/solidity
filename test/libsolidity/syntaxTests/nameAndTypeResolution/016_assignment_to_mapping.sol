@@ -4,9 +4,9 @@ contract test {
     }
     str data;
     function fun() public {
-        mapping(uint=>uint) a = data.map;
+        mapping(uint=>uint) storage a = data.map;
         data.map = a;
     }
 }
 // ----
-// TypeError: (164-176): Mappings cannot be assigned to.
+// TypeError: (172-184): Mappings cannot be assigned to.

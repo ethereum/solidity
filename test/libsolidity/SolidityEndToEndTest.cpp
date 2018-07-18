@@ -1534,7 +1534,7 @@ BOOST_AUTO_TEST_CASE(struct_reference)
 			}
 			function set() public {
 				data.z = 2;
-				mapping(uint8 => s2) map = data.recursive;
+				mapping(uint8 => s2) storage map = data.recursive;
 				s2 storage inner = map[0];
 				inner.z = 3;
 				inner.recursive[0].z = inner.recursive[1].z + 1;
