@@ -1,3 +1,3 @@
 contract A { constructor() {} }
 // ----
-// Warning: (13-29): No visibility specified. Defaulting to "public".
+// SyntaxError: (13-29): No visibility specified. Did you intend to add "public"?

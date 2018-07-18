@@ -197,12 +197,24 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 	return true;
 }
 
+bool SyntaxChecker::visit(ContractDefinition const& _contract)
+{
+	m_isInterface = _contract.contractKind() == ContractDefinition::ContractKind::Interface;
+	return true;
+}
+
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
 	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 
-	if (v050 && _function.noVisibilitySpecified())
-		m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
+	if (_function.noVisibilitySpecified())
+	{
+		string suggestedVisibility = _function.isFallback() || m_isInterface ? "external" : "public";
+		m_errorReporter.syntaxError(
+			_function.location(),
+			"No visibility specified. Did you intend to add \"" + suggestedVisibility + "\"?"
+		);
+	}
 
 	if (_function.isOldStyleConstructor())
 	{
