@@ -3179,6 +3179,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		return MemberList::MemberMap({
 			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
 			{"asset", make_shared<IntegerType>(160,IntegerType::Modifier::Address)},
+			{"assetvalue", make_shared<IntegerType>(256)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},

@@ -172,7 +172,8 @@ const std::map<std::string, Instruction> dev::solidity::c_instructions =
 	{"BALANCEOF",Instruction::BALANCEOF},
     {"TRANSFERASSET", Instruction::TRANSFERASSET},
 	{"SENDASSET", Instruction::SENDASSET},
-	{"ASSET", Instruction::ASSET}
+	{"ASSET", Instruction::ASSET},
+	{"ASSETVALUE", Instruction::ASSETVALUE}
 
 };
 
@@ -211,6 +212,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::CALLER,		{ "CALLER",			0, 0, 1, false, Tier::Base } },
 	{ Instruction::CALLVALUE,	{ "CALLVALUE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::ASSET,		{ "ASSET",			0, 0, 1, false, Tier::Base } },
+	{ Instruction::ASSETVALUE,	{ "ASSETVALUE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::CALLDATALOAD,{ "CALLDATALOAD",	0, 1, 1, false, Tier::VeryLow } },
 	{ Instruction::CALLDATASIZE,{ "CALLDATASIZE",	0, 0, 1, false, Tier::Base } },
 	{ Instruction::CALLDATACOPY,{ "CALLDATACOPY",	0, 3, 0, true, Tier::VeryLow } },

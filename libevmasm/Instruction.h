@@ -191,7 +191,8 @@ enum class Instruction: uint8_t
 	BALANCEOF = 0xe0,   ///< get balance of one asset: address.BalanceOf(address)
 	TRANSFERASSET,		///< transfer asset: address.TransferAsset(asset, amount) 
 	SENDASSET,			///< send asset :address.SendAsset(asset,amount) returns (bool)
-	ASSET,				///< msg.asset, get the assetID of a transaction, if msg.asset == address(0), it means the main token.
+	ASSET,				///< msg.asset, get the assetID of a transaction.
+	ASSETVALUE,			///< msg.assetvalue, get the asset value of a transaction. msg.value means the mainchain token, and this assetvalue means user token value specified by msg.asset.
 
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account

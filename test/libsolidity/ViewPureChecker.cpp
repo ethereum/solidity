@@ -118,6 +118,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"msg.value",
 		"msg.sender",
 		"msg.asset",
+		"msg.assetvalue",
 		"tx.origin",
 		"tx.gasprice",
 		"this",
