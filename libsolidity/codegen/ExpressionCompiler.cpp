@@ -1214,63 +1214,52 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	switch (_memberAccess.expression().annotation().type->category())
 	{
 	case Type::Category::Contract:
-	case Type::Category::Integer:
 	{
-		bool alsoSearchInteger = false;
-		if (_memberAccess.expression().annotation().type->category() == Type::Category::Contract)
+		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.expression().annotation().type);
+		if (type.isSuper())
 		{
-			ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.expression().annotation().type);
-			if (type.isSuper())
-			{
-				solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
-				utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
-					dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
-					type.contractDefinition()
-				));
-			}
+			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
+			utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
+				dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
+				type.contractDefinition()
+			));
+		}
+		// ordinary contract type
+		else if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
+		{
+			u256 identifier;
+			if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration))
+				identifier = FunctionType(*variable).externalIdentifier();
+			else if (auto const* function = dynamic_cast<FunctionDefinition const*>(declaration))
+				identifier = FunctionType(*function).externalIdentifier();
 			else
-			{
-				// ordinary contract type
-				if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
-				{
-					u256 identifier;
-					if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration))
-						identifier = FunctionType(*variable).externalIdentifier();
-					else if (auto const* function = dynamic_cast<FunctionDefinition const*>(declaration))
-						identifier = FunctionType(*function).externalIdentifier();
-					else
-						solAssert(false, "Contract member is neither variable nor function.");
-					utils().convertType(type, IntegerType(160, IntegerType::Modifier::Address), true);
-					m_context << identifier;
-				}
-				else
-					// not found in contract, search in members inherited from address
-					alsoSearchInteger = true;
-			}
+				solAssert(false, "Contract member is neither variable nor function.");
+			utils().convertType(type, IntegerType(160, IntegerType::Modifier::Address), true);
+			m_context << identifier;
 		}
 		else
-			alsoSearchInteger = true;
-
-		if (alsoSearchInteger)
+			solAssert(false, "Invalid member access in contract");
+		break;
+	}
+	case Type::Category::Integer:
+	{
+		if (member == "balance")
 		{
-			if (member == "balance")
-			{
-				utils().convertType(
-					*_memberAccess.expression().annotation().type,
-					IntegerType(160, IntegerType::Modifier::Address),
-					true
-				);
-				m_context << Instruction::BALANCE;
-			}
-			else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
-				utils().convertType(
-					*_memberAccess.expression().annotation().type,
-					IntegerType(160, IntegerType::Modifier::Address),
-					true
-				);
-			else
-				solAssert(false, "Invalid member access to integer");
+			utils().convertType(
+				*_memberAccess.expression().annotation().type,
+				IntegerType(160, IntegerType::Modifier::Address),
+				true
+			);
+			m_context << Instruction::BALANCE;
 		}
+		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
+			utils().convertType(
+				*_memberAccess.expression().annotation().type,
+				IntegerType(160, IntegerType::Modifier::Address),
+				true
+			);
+		else
+			solAssert(false, "Invalid member access to integer");
 		break;
 	}
 	case Type::Category::Function:

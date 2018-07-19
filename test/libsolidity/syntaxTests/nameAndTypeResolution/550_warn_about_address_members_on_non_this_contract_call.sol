@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (65-71): Using contract member "call" inherited from the address type is deprecated. Convert the contract to "address" type to access the member, for example use "address(contract).call" instead.
+// TypeError: (65-71): Member "call" not found or not visible after argument-dependent lookup in contract C. Use "address(c).call" to access this address member.
