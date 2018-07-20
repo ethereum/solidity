@@ -375,7 +375,7 @@ This is a very interesting question. Suppose that we have a contract field set u
        User user2 = user1;
     }
 
-In this case, the mapping of the struct being copied over into the userList is ignored as there is no "list of mapped keys".
+In this case, the mapping of the struct being copied over into ``user2`` is ignored as there is no "list of mapped keys".
 Therefore it is not possible to find out which values should be copied over.
 
 How do I initialize a contract with only a specific amount of wei?
