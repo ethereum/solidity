@@ -56,13 +56,13 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 	if (!_quiet)
 		cout << "Testing compiler " << (_optimize ? "with" : "without") << " optimizer." << endl;
 
-	Json::Value config = Json::objectValue;
+	Json config = Json::object();
 	config["language"] = "Solidity";
-	config["sources"] = Json::objectValue;
-	config["sources"][""] = Json::objectValue;
+	config["sources"] = Json::object();
+	config["sources"][""] = Json::object();
 	config["sources"][""]["content"] = _input;
-	config["settings"] = Json::objectValue;
-	config["settings"]["optimizer"] = Json::objectValue;
+	config["settings"] = Json::object();
+	config["settings"]["optimizer"] = Json::object();
 	config["settings"]["optimizer"]["enabled"] = _optimize;
 	config["settings"]["optimizer"]["runs"] = static_cast<int>(OptimiserSettings{}.expectedExecutionsPerDeployment);
 	config["settings"]["evmVersion"] = "berlin";
@@ -146,23 +146,23 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 	// This should be safe given the above copies the output.
 	solidity_reset();
 
-	Json::Value output;
+	Json output;
 	if (!jsonParseStrict(outputString, output))
 	{
 		string msg{"Compiler produced invalid JSON output."};
 		cout << msg << endl;
 		BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 	}
-	if (output.isMember("errors"))
+	if (output.contains("errors"))
 		for (auto const& error: output["errors"])
 		{
-			string invalid = findAnyOf(error["type"].asString(), vector<string>{
+			string invalid = findAnyOf(error["type"].get<string>(), vector<string>{
 					"Exception",
 					"InternalCompilerError"
 			});
 			if (!invalid.empty())
 			{
-				string msg = "Invalid error: \"" + error["type"].asString() + "\"";
+				string msg = "Invalid error: \"" + error["type"].get<string>() + "\"";
 				cout << msg << endl;
 				BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 			}

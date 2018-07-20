@@ -37,30 +37,30 @@ namespace
 
 /// TODO: share this between StandardCompiler.cpp
 /// Helper to match a specific error type and message
-bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
+bool containsError(Json const& _compilerResult, string const& _type, string const& _message)
 {
-	if (!_compilerResult.isMember("errors"))
+	if (!_compilerResult.contains("errors"))
 		return false;
 
 	for (auto const& error: _compilerResult["errors"])
 	{
-		BOOST_REQUIRE(error.isObject());
-		BOOST_REQUIRE(error["type"].isString());
-		BOOST_REQUIRE(error["message"].isString());
-		if ((error["type"].asString() == _type) && (error["message"].asString() == _message))
+		BOOST_REQUIRE(error.is_object());
+		BOOST_REQUIRE(error["type"].is_string());
+		BOOST_REQUIRE(error["message"].is_string());
+		if ((error["type"].get<string>() == _type) && (error["message"].get<string>() == _message))
 			return true;
 	}
 
 	return false;
 }
 
-Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
+Json compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
 {
 	char* output_ptr = solidity_compile(_input.c_str(), _callback, nullptr);
 	string output(output_ptr);
 	solidity_free(output_ptr);
 	solidity_reset();
-	Json::Value ret;
+	Json ret;
 	BOOST_REQUIRE(util::jsonParseStrict(output, ret));
 	return ret;
 }
@@ -101,14 +101,14 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 		}
 	}
 	)";
-	Json::Value result = compile(input);
-	BOOST_REQUIRE(result.isObject());
+	Json result = compile(input);
+	BOOST_REQUIRE(result.is_object());
 
 	// Only tests some assumptions. The StandardCompiler is tested properly in another suite.
-	BOOST_CHECK(result.isMember("sources"));
+	BOOST_CHECK(result.contains("sources"));
 	// This used to test that it is a member, but we did not actually request any output,
 	// so there should not be a contract member.
-	BOOST_CHECK(!result.isMember("contracts"));
+	BOOST_CHECK(!result.contains("contracts"));
 }
 
 BOOST_AUTO_TEST_CASE(missing_callback)
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(missing_callback)
 		}
 	}
 	)";
-	Json::Value result = compile(input);
-	BOOST_REQUIRE(result.isObject());
+	Json result = compile(input);
+	BOOST_REQUIRE(result.is_object());
 
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: File not supplied initially."));
 }
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(with_callback)
 		}
 	};
 
-	Json::Value result = compile(input, callback);
-	BOOST_REQUIRE(result.isObject());
+	Json result = compile(input, callback);
+	BOOST_REQUIRE(result.is_object());
 
 	// This ensures that "found.sol" was properly loaded which triggered the second import statement.
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));

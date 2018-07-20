@@ -112,7 +112,7 @@ ostream& phaser::operator<<(ostream& _stream, Program const& _program)
 
 string Program::toJson() const
 {
-	Json::Value serializedAst = AsmJsonConverter(0)(*m_ast);
+	Json serializedAst = AsmJsonConverter(0)(*m_ast);
 	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 

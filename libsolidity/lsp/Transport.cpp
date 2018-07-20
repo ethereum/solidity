@@ -41,7 +41,7 @@ using namespace std;
 using namespace solidity::lsp;
 
 // {{{ Transport
-optional<Json::Value> Transport::receive()
+optional<Json> Transport::receive()
 {
 	auto const headers = parseHeaders();
 	if (!headers)
@@ -58,10 +58,10 @@ optional<Json::Value> Transport::receive()
 
 	string const data = readBytes(stoul(headers->at("content-length")));
 
-	Json::Value jsonMessage;
+	Json jsonMessage;
 	string jsonParsingErrors;
 	solidity::util::jsonParseStrict(data, jsonMessage, &jsonParsingErrors);
-	if (!jsonParsingErrors.empty() || !jsonMessage || !jsonMessage.isObject())
+	if (!jsonParsingErrors.empty() || !jsonMessage || !jsonMessage.is_object())
 	{
 		error({}, ErrorCode::ParseError, "Could not parse RPC JSON payload. " + jsonParsingErrors);
 		return nullopt;
@@ -70,12 +70,12 @@ optional<Json::Value> Transport::receive()
 	return {std::move(jsonMessage)};
 }
 
-void Transport::trace(std::string _message, Json::Value _extra)
+void Transport::trace(std::string _message, Json _extra)
 {
 	if (m_logTrace != TraceValue::Off)
 	{
-		Json::Value params;
-		if (_extra.isObject())
+		Json params;
+		if (_extra.is_object())
 			params = std::move(_extra);
 		params["message"] = std::move(_message);
 		notify("$/logTrace", std::move(params));
@@ -104,34 +104,34 @@ optional<map<string, string>> Transport::parseHeaders()
 	return {std::move(headers)};
 }
 
-void Transport::notify(string _method, Json::Value _message)
+void Transport::notify(string _method, Json _message)
 {
-	Json::Value json;
+	Json json;
 	json["method"] = std::move(_method);
 	json["params"] = std::move(_message);
 	send(std::move(json));
 }
 
-void Transport::reply(MessageID _id, Json::Value _message)
+void Transport::reply(MessageID _id, Json _message)
 {
-	Json::Value json;
+	Json json;
 	json["result"] = std::move(_message);
 	send(std::move(json), _id);
 }
 
 void Transport::error(MessageID _id, ErrorCode _code, string _message)
 {
-	Json::Value json;
+	Json json;
 	json["error"]["code"] = static_cast<int>(_code);
 	json["error"]["message"] = std::move(_message);
 	send(std::move(json), _id);
 }
 
-void Transport::send(Json::Value _json, MessageID _id)
+void Transport::send(Json _json, MessageID _id)
 {
-	solAssert(_json.isObject());
+	solAssert(_json.is_object());
 	_json["jsonrpc"] = "2.0";
-	if (_id != Json::nullValue)
+	if (_id != Json{})
 		_json["id"] = _id;
 
 	// Trailing CRLF only for easier readability.

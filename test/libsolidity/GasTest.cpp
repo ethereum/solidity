@@ -82,18 +82,15 @@ void GasTest::parseExpectations(std::istream& _stream)
 
 void GasTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
 {
-	Json::Value estimates = compiler().gasEstimates(compiler().lastContractName());
-	for (auto groupIt = estimates.begin(); groupIt != estimates.end(); ++groupIt)
+	Json estimates = compiler().gasEstimates(compiler().lastContractName());
+	for (auto const& [group, content]: estimates.items())
 	{
-		_stream << _linePrefix << groupIt.key().asString() << ":" << std::endl;
-		for (auto it = groupIt->begin(); it != groupIt->end(); ++it)
+		_stream << _linePrefix << group << ":" << std::endl;
+		for (auto const& [function, gas]: content.items())
 		{
 			_stream << _linePrefix << "  ";
-			if (it.key().asString().empty())
-				_stream << "fallback";
-			else
-				_stream << it.key().asString();
-			_stream << ": " << it->asString() << std::endl;
+			_stream << (function.empty() ? "fallback" : function);
+			_stream << ": " << gas << std::endl;
 		}
 	}
 }
@@ -123,14 +120,14 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 		return TestResult::FatalError;
 	}
 
-	Json::Value estimateGroups = compiler().gasEstimates(compiler().lastContractName());
+	Json estimateGroups = compiler().gasEstimates(compiler().lastContractName());
 	if (
 		m_expectations.size() == estimateGroups.size() &&
 		boost::all(m_expectations, [&](auto const& expectations) {
-		auto const& estimates = estimateGroups[expectations.first];
+		Json const& estimates = estimateGroups[expectations.first];
 		return estimates.size() == expectations.second.size() &&
 			boost::all(expectations.second, [&](auto const& entry) {
-				return entry.second == estimates[entry.first].asString();
+				return entry.second == estimates[entry.first].template get<string>();
 			});
 		})
 	)

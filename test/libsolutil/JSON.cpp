@@ -35,50 +35,46 @@ BOOST_AUTO_TEST_SUITE(JsonTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(json_types)
 {
-	auto check = [](Json::Value value, string const& expectation) {
+	auto check = [](Json value, string const& expectation) {
 		BOOST_CHECK(jsonCompactPrint(value) == expectation);
 	};
 
-	Json::Value value;
+	Json value;
 	BOOST_CHECK(value.empty());
 	value = {};
 	BOOST_CHECK(value.empty());
-	value = Json::Value();
+	value = Json();
 	BOOST_CHECK(value.empty());
-	value = Json::nullValue;
+	value = Json(nullptr);
 	BOOST_CHECK(value.empty());
 
 	check(value, "null");
 	check({}, "null");
-	check(Json::Value(), "null");
-	check(Json::nullValue, "null");
-	check(Json::objectValue, "{}");
-	check(Json::arrayValue, "[]");
-	check(Json::UInt(1), "1");
-	check(Json::UInt(-1), "4294967295");
-	check(Json::UInt64(1), "1");
-	check(Json::UInt64(-1), "18446744073709551615");
-	check(Json::LargestUInt(1), "1");
-	check(Json::LargestUInt(-1), "18446744073709551615");
-	check(Json::LargestUInt(0xffffffff), "4294967295");
-	check(Json::Value("test"), "\"test\"");
+	check(Json(), "null");
+	check(Json(nullptr), "null");
+	check(Json::object(), "{}");
+	check(Json::array(), "[]");
+	check(Json::number_unsigned_t(1), "1");
+	check(Json::number_unsigned_t(-1), "18446744073709551615");
+	check(Json::number_unsigned_t(0xffffffff), "4294967295");
+	check(Json("test"), "\"test\"");
 	check("test", "\"test\"");
 	check(true, "true");
 
-	value = Json::objectValue;
+	value = Json::object();
 	value["key"] = "value";
 	check(value, "{\"key\":\"value\"}");
 
-	value = Json::arrayValue;
-	value.append(1);
-	value.append(2);
+	value = Json::array();
+	value.emplace_back(1);
+	value.emplace_back(2);
 	check(value, "[1,2]");
 }
 
 BOOST_AUTO_TEST_CASE(json_pretty_print)
 {
-	Json::Value json;
-	Json::Value jsonChild;
+	Json json;
+	Json jsonChild;
 
 	jsonChild["3.1"] = "3.1";
 	jsonChild["3.2"] = 2;
@@ -90,12 +86,12 @@ BOOST_AUTO_TEST_CASE(json_pretty_print)
 
 	BOOST_CHECK(
 	"{\n"
-	"  \"1\": 1,\n"
-	"  \"2\": \"2\",\n"
-	"  \"3\":\n"
+	"  \"1\" : 1,\n"
+	"  \"2\" : \"2\",\n"
+	"  \"3\" : \n"
 	"  {\n"
-	"    \"3.1\": \"3.1\",\n"
-	"    \"3.2\": 2\n"
+	"    \"3.1\" : \"3.1\",\n"
+	"    \"3.2\" : 2\n"
 	"  },\n"
 	"  \"4\": \"\\u0911 \\u0912 \\u0913 \\u0914 \\u0915 \\u0916\",\n"
 	"  \"5\": \"\\ufffd\"\n"
@@ -104,8 +100,8 @@ BOOST_AUTO_TEST_CASE(json_pretty_print)
 
 BOOST_AUTO_TEST_CASE(json_compact_print)
 {
-	Json::Value json;
-	Json::Value jsonChild;
+	Json json;
+	Json jsonChild;
 
 	jsonChild["3.1"] = "3.1";
 	jsonChild["3.2"] = 2;
@@ -123,7 +119,7 @@ BOOST_AUTO_TEST_CASE(parse_json_strict)
 	// In this test we check conformance against JSON.parse (https://tc39.es/ecma262/multipage/structured-data.html#sec-json.parse)
 	// and ECMA-404 (https://www.ecma-international.org/publications-and-standards/standards/ecma-404/)
 
-	Json::Value json;
+	Json json;
 	std::string errors;
 
 	// Just parse a valid json input
@@ -135,31 +131,28 @@ BOOST_AUTO_TEST_CASE(parse_json_strict)
 
 	// Trailing garbage is not allowed in ECMA-262
 	BOOST_CHECK(!jsonParseStrict("{\"1\":2,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":3}}}}}}}}}}", json, &errors));
+	BOOST_CHECK(errors == "[json.exception.parse_error.101] parse error at line 1, column 42: syntax error while parsing value - unexpected '}'; expected end of input");
 
 	// Comments are not allowed in ECMA-262
-	// ... but JSONCPP allows them
-	BOOST_CHECK(jsonParseStrict(
+	BOOST_CHECK(!jsonParseStrict(
 		"{\"1\":3, // awesome comment\n\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":5}}", json, &errors
 	));
-	BOOST_CHECK(json["1"] == 3);
-	BOOST_CHECK(json["2"] == "2");
-	BOOST_CHECK(json["3"]["3.1"] == "3.1");
-	BOOST_CHECK(json["3"]["3.2"] == 5);
+	BOOST_CHECK(errors == "[json.exception.parse_error.101] parse error at line 1, column 9: syntax error while parsing object key - invalid literal; last read: '3, /'; expected string literal");
 
 	// According to ECMA-404 object, array, number, string, true, false, null are allowed
 	// ... but JSONCPP disallows value types
 	BOOST_CHECK(jsonParseStrict("[]", json, &errors));
-	BOOST_CHECK(json.isArray());
+	BOOST_CHECK(json.is_array());
 	BOOST_CHECK(jsonParseStrict("{}", json, &errors));
-	BOOST_CHECK(json.isObject());
-	BOOST_CHECK(!jsonParseStrict("1", json, &errors));
-	// BOOST_CHECK(json.isNumeric());
-	BOOST_CHECK(!jsonParseStrict("\"hello\"", json, &errors));
-	// BOOST_CHECK(json.isString());
-	BOOST_CHECK(!jsonParseStrict("true", json, &errors));
-	// BOOST_CHECK(json.isBool());
-	BOOST_CHECK(!jsonParseStrict("null", json, &errors));
-	// BOOST_CHECK(json.isNull());
+	BOOST_CHECK(json.is_object());
+	BOOST_CHECK(jsonParseStrict("1", json, &errors));
+	BOOST_CHECK(json.is_number());
+	BOOST_CHECK(jsonParseStrict("\"hello\"", json, &errors));
+	BOOST_CHECK(json.is_string());
+	BOOST_CHECK(jsonParseStrict("true", json, &errors));
+	BOOST_CHECK(json.is_boolean());
+	BOOST_CHECK(jsonParseStrict("null", json, &errors));
+	BOOST_CHECK(json.is_null());
 
 	// Single quotes are also disallowed by ECMA-404
 	BOOST_CHECK(!jsonParseStrict("'hello'", json, &errors));
@@ -172,15 +165,12 @@ BOOST_AUTO_TEST_CASE(parse_json_strict)
 	// a few control characters (\b, \f, \n, \r, \t)
 	//
 	// More lenient parsers allow hex escapes as long as they translate to a valid UTF-8 encoding.
-	//
-	// ... but JSONCPP allows any hex escapes
-	BOOST_CHECK(jsonParseStrict("[ \"\x80\xec\x80\" ]", json, &errors));
-	BOOST_CHECK(json.isArray());
-	BOOST_CHECK(json[0] == "\x80\xec\x80");
+	BOOST_CHECK(!jsonParseStrict("[ \"\x80\xec\x80\" ]", json, &errors));
+	BOOST_CHECK(errors == "[json.exception.parse_error.101] parse error at line 1, column 4: syntax error while parsing value - invalid string: ill-formed UTF-8 byte; last read: '\"?'");
 
 	// This would be valid more lenient parsers.
 	BOOST_CHECK(jsonParseStrict("[ \"\xF0\x9F\x98\x8A\" ]", json, &errors));
-	BOOST_CHECK(json.isArray());
+	BOOST_CHECK(json.is_array());
 	BOOST_CHECK(json[0] == "😊");
 }
 

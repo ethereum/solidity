@@ -48,11 +48,11 @@ CallableDeclaration const* extractCallableDeclaration(FunctionCall const& _funct
 
 }
 
-void RenameSymbol::operator()(MessageID _id, Json::Value const& _args)
+void RenameSymbol::operator()(MessageID _id, Json const& _args)
 {
 	auto const&& [sourceUnitName, lineColumn] = extractSourceUnitNameAndLineColumn(_args);
-	string const newName = _args["newName"].asString();
-	string const uri = _args["textDocument"]["uri"].asString();
+	string const newName = _args["newName"].get<string>();
+	string const uri = _args["textDocument"]["uri"].get<string>();
 
 	ASTNode const* sourceNode = m_server.astNodeAtSourceLocation(sourceUnitName, lineColumn);
 
@@ -91,10 +91,10 @@ void RenameSymbol::operator()(MessageID _id, Json::Value const& _args)
 	// Apply changes in reverse order (will iterate in reverse)
 	sort(m_locations.begin(), m_locations.end());
 
-	Json::Value reply = Json::objectValue;
-	reply["changes"] = Json::objectValue;
+	Json reply = Json::object();
+	reply["changes"] = Json::object();
 
-	Json::Value edits = Json::arrayValue;
+	Json edits = Json::array();
 
 	for (auto i = m_locations.rbegin(); i != m_locations.rend(); i++)
 	{
@@ -106,16 +106,16 @@ void RenameSymbol::operator()(MessageID _id, Json::Value const& _args)
 		buffer.replace((size_t)i->start, (size_t)(i->end - i->start), newName);
 		fileRepository().setSourceByUri(uri, std::move(buffer));
 
-		Json::Value edit = Json::objectValue;
+		Json edit = Json::object();
 		edit["range"] = toRange(*i);
 		edit["newText"] = newName;
 
 		// Record changes for the client
-		edits.append(edit);
+		edits.emplace_back(edit);
 		if (i + 1 == m_locations.rend() || (i + 1)->sourceName != i->sourceName)
 		{
 			reply["changes"][uri] = edits;
-			edits = Json::arrayValue;
+			edits = Json::array();
 		}
 	}
 

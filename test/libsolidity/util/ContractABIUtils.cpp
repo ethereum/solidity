@@ -141,16 +141,16 @@ optional<ABIType> isFixedPoint(string const& type)
 	return fixedPointType;
 }
 
-string functionSignatureFromABI(Json::Value const& _functionABI)
+string functionSignatureFromABI(Json const& _functionABI)
 {
 	auto inputs = _functionABI["inputs"];
-	string signature = {_functionABI["name"].asString() + "("};
+	string signature = {_functionABI["name"].get<string>() + "("};
 	size_t parameterCount = 0;
 
 	for (auto const& input: inputs)
 	{
 		parameterCount++;
-		signature += input["type"].asString();
+		signature += input["type"].get<string>();
 		if (parameterCount < inputs.size())
 			signature += ",";
 	}
@@ -162,7 +162,7 @@ string functionSignatureFromABI(Json::Value const& _functionABI)
 
 std::optional<solidity::frontend::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(
 	ErrorReporter& _errorReporter,
-	Json::Value const& _contractABI,
+	Json const& _contractABI,
 	string const& _functionSignature
 )
 {
@@ -178,7 +178,7 @@ std::optional<solidity::frontend::test::ParameterList> ContractABIUtils::paramet
 
 			for (auto const& output: function["outputs"])
 			{
-				string type = output["type"].asString();
+				string type = output["type"].get<string>();
 
 				ABITypes inplaceTypes;
 				ABITypes dynamicTypes;
@@ -210,13 +210,13 @@ std::optional<solidity::frontend::test::ParameterList> ContractABIUtils::paramet
 }
 
 bool ContractABIUtils::appendTypesFromName(
-	Json::Value const& _functionOutput,
+	Json const& _functionOutput,
 	ABITypes& _inplaceTypes,
 	ABITypes& _dynamicTypes,
 	bool _isCompoundType
 )
 {
-	string type = _functionOutput["type"].asString();
+	string type = _functionOutput["type"].get<string>();
 	if (isBool(type))
 		_inplaceTypes.push_back(ABIType{ABIType::Boolean});
 	else if (isUint(type))

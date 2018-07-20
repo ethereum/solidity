@@ -23,8 +23,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/JSON.h>
 
-#include <json/json.h>
-
 #include <iosfwd>
 #include <numeric>
 #include <stdexcept>
@@ -94,7 +92,7 @@ public:
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
 	void setGasCost(std::string const& _runType, u256 const& _gasCost) { m_gasCosts[_runType] = _gasCost; }
-	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
+	void setContractABI(Json _contractABI) { m_contractABI = std::move(_contractABI); }
 	void setSideEffects(std::vector<std::string> _sideEffects) { m_call.actualSideEffects = _sideEffects; }
 
 private:
@@ -147,7 +145,7 @@ private:
 	bool m_failure = true;
 	/// JSON object which holds the contract ABI and that is used to set the output formatting
 	/// in the interactive update routine.
-	Json::Value m_contractABI = Json::Value{};
+	Json m_contractABI = Json{};
 	/// Flags that the test failed because the called function is not known to exist on the contract.
 	bool m_calledNonExistingFunction = false;
 };

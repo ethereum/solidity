@@ -38,12 +38,12 @@ class HandlerBase
 public:
 	explicit HandlerBase(LanguageServer& _server): m_server{_server} {}
 
-	Json::Value toRange(langutil::SourceLocation const& _location) const;
-	Json::Value toJson(langutil::SourceLocation const& _location) const;
+	Json toRange(langutil::SourceLocation const& _location) const;
+	Json toJson(langutil::SourceLocation const& _location) const;
 
 	/// @returns source unit name and the line column position as extracted
 	/// from the JSON-RPC parameters.
-	std::pair<std::string, langutil::LineColumn> extractSourceUnitNameAndLineColumn(Json::Value const& _params) const;
+	std::pair<std::string, langutil::LineColumn> extractSourceUnitNameAndLineColumn(Json const& _params) const;
 
 	langutil::CharStreamProvider const& charStreamProvider() const noexcept { return m_server.compilerStack(); }
 	FileRepository& fileRepository() const noexcept { return m_server.fileRepository(); }

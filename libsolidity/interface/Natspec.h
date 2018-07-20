@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include <json/json.h>
 #include <memory>
 #include <string>
 #include <libsolidity/ast/AST.h>
+#include <libsolutil/JSON.h>
 
 namespace solidity::frontend
 {
@@ -46,32 +46,32 @@ public:
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A JSON representation of the contract's user documentation
-	static Json::Value userDocumentation(ContractDefinition const& _contractDef);
+	static Json userDocumentation(ContractDefinition const& _contractDef);
 	/// Generates the Developer's documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A JSON representation
 	///                     of the contract's developer documentation
-	static Json::Value devDocumentation(ContractDefinition const& _contractDef);
+	static Json devDocumentation(ContractDefinition const& _contractDef);
 
 private:
 	/// @returns concatenation of all content under the given tag name.
 	static std::string extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name);
 
 	/// Extract all custom tags from @a _tags.
-	static Json::Value extractCustomDoc(std::multimap<std::string, DocTag> const& _tags);
+	static Json extractCustomDoc(std::multimap<std::string, DocTag> const& _tags);
 
 	/// Helper-function that will create a json object with dev specific annotations, if present.
 	/// @param _tags docTags that are used.
 	/// @return      A JSON representation
 	///              of the contract's developer documentation
-	static Json::Value devDocumentation(std::multimap<std::string, DocTag> const& _tags);
+	static Json devDocumentation(std::multimap<std::string, DocTag> const& _tags);
 
 	/// Helper-function that will create a json object for the "returns" field for a given function definition.
 	/// @param _tags docTags that are used.
 	/// @param _returnParameterNames names of the return parameters
 	/// @return      A JSON representation
 	///              of a method's return notice documentation
-	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames);
+	static Json extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames);
 };
 
 }

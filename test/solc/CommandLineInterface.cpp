@@ -1018,6 +1018,16 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "base/");
 }
 
+namespace {
+set<string> getMemberNames(Json const& _json)
+{
+	set<string> keys;
+	for (auto const& [key, _]: _json.items())
+		keys.insert(key);
+	return keys;
+}
+}
+
 BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 {
 	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
@@ -1094,15 +1104,15 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 
 	OptionsReaderAndMessages result = runCLI(commandLine, standardJsonInput);
 
-	Json::Value parsedStdout;
+	Json parsedStdout;
 	string jsonParsingErrors;
 	BOOST_TEST(util::jsonParseStrict(result.stdoutContent, parsedStdout, &jsonParsingErrors));
 	BOOST_TEST(jsonParsingErrors == "");
-	for (Json::Value const& errorDict: parsedStdout["errors"])
+	for (Json const& errorDict: parsedStdout["errors"])
 		// The error list might contain pre-release compiler warning
 		BOOST_TEST(errorDict["severity"] != "error");
 	BOOST_TEST(
-		(parsedStdout["sources"].getMemberNames() | ranges::to<set>) ==
+		(getMemberNames(parsedStdout["sources"]) | ranges::to<set>) ==
 		(expectedSources | ranges::views::keys | ranges::to<set>) + set<string>{"main.sol"}
 	);
 

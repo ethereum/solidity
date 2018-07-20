@@ -34,8 +34,6 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
 
-#include <json/json.h>
-
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view/enumerate.hpp>
 
@@ -222,11 +220,12 @@ string Assembly::assemblyString(
 	return tmp.str();
 }
 
-Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, bool _includeSourceList) const
+Json Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, bool _includeSourceList) const
 {
-	Json::Value root;
-	root[".code"] = Json::arrayValue;
-	Json::Value& code = root[".code"];
+	Json root{Json::object()};
+	root[".code"] = Json::array();
+
+	Json& code = root[".code"];
 	for (AssemblyItem const& item: m_items)
 	{
 		int sourceIndex = -1;
@@ -238,7 +237,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 		}
 
 		auto [name, data] = item.nameAndData();
-		Json::Value jsonItem;
+		Json jsonItem;
 		jsonItem["name"] = name;
 		jsonItem["begin"] = item.location().start;
 		jsonItem["end"] = item.location().end;
@@ -254,32 +253,32 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 		if (!data.empty())
 			jsonItem["value"] = data;
 		jsonItem["source"] = sourceIndex;
-		code.append(std::move(jsonItem));
+		code.emplace_back(std::move(jsonItem));
 
 		if (item.type() == AssemblyItemType::Tag)
 		{
-			Json::Value jumpdest;
+			Json jumpdest;
 			jumpdest["name"] = "JUMPDEST";
 			jumpdest["begin"] = item.location().start;
 			jumpdest["end"] = item.location().end;
 			jumpdest["source"] = sourceIndex;
 			if (item.m_modifierDepth != 0)
 				jumpdest["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
-			code.append(std::move(jumpdest));
+			code.emplace_back(std::move(jumpdest));
 		}
 	}
 	if (_includeSourceList)
 	{
-		root["sourceList"] = Json::arrayValue;
-		Json::Value& jsonSourceList = root["sourceList"];
+		root["sourceList"] = Json::array();
+		Json& jsonSourceList = root["sourceList"];
 		for (auto const& [name, index]: _sourceIndices)
 			jsonSourceList[index] = name;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
-		root[".data"] = Json::objectValue;
-		Json::Value& data = root[".data"];
+		root[".data"] = Json::object();
+		Json& data = root[".data"];
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
 				data[util::toHex(toBigEndian((u256)i.first), util::HexPrefix::DontAdd, util::HexCase::Upper)] = util::toHex(i.second);

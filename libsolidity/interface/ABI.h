@@ -21,9 +21,9 @@
 
 #pragma once
 
-#include <json/json.h>
 #include <memory>
 #include <string>
+#include <libsolutil/JSON.h>
 
 namespace solidity::frontend
 {
@@ -38,14 +38,14 @@ public:
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A JSONrepresentation of the contract's ABI Interface
-	static Json::Value generate(ContractDefinition const& _contractDef);
+	static Json generate(ContractDefinition const& _contractDef);
 private:
 	/// @returns a json value suitable for a list of types in function input or output
 	/// parameters or other places. If @a _forLibrary is true, complex types are referenced
 	/// by name, otherwise they are anonymously expanded.
 	/// @a _solidityTypes is the list of original Solidity types where @a _encodingTypes is the list of
 	/// ABI types used for the actual encoding.
-	static Json::Value formatTypeList(
+	static Json formatTypeList(
 		std::vector<std::string> const& _names,
 		std::vector<Type const*> const& _encodingTypes,
 		std::vector<Type const*> const& _solidityTypes,
@@ -56,7 +56,7 @@ private:
 	/// If it is possible to express the type as a single string, it is allowed to return a single string.
 	/// @a _solidityType is the original Solidity type and @a _encodingTypes is the
 	/// ABI type used for the actual encoding.
-	static Json::Value formatType(
+	static Json formatType(
 		std::string const& _name,
 		Type const& _encodingType,
 		Type const& _solidityType,

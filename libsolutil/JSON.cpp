@@ -33,8 +33,8 @@
 using namespace std;
 
 static_assert(
-	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 3),
-	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.3."
+	(NLOHMANN_JSON_VERSION_MAJOR == 3) && (NLOHMANN_JSON_VERSION_MINOR == 10) && (NLOHMANN_JSON_VERSION_PATCH == 2),
+	"Unexpected nlohmann-json version. Expecting 3.10.2."
 );
 
 namespace solidity::util
@@ -43,53 +43,9 @@ namespace solidity::util
 namespace
 {
 
-/// StreamWriterBuilder that can be constructed with specific settings
-class StreamWriterBuilder: public Json::StreamWriterBuilder
-{
-public:
-	explicit StreamWriterBuilder(map<string, Json::Value> const& _settings)
-	{
-		for (auto const& iter: _settings)
-			this->settings_[iter.first] = iter.second;
-	}
-};
-
-/// CharReaderBuilder with strict-mode settings
-class StrictModeCharReaderBuilder: public Json::CharReaderBuilder
-{
-public:
-	StrictModeCharReaderBuilder()
-	{
-		Json::CharReaderBuilder::strictMode(&this->settings_);
-	}
-};
-
-/// Serialise the JSON object (@a _input) with specific builder (@a _builder)
-/// \param _input JSON input string
-/// \param _builder StreamWriterBuilder that is used to create new Json::StreamWriter
-/// \return serialized json object
-string print(Json::Value const& _input, Json::StreamWriterBuilder const& _builder)
-{
-	stringstream stream;
-	unique_ptr<Json::StreamWriter> writer(_builder.newStreamWriter());
-	writer->write(_input, &stream);
-	return stream.str();
-}
-
-/// Parse a JSON string (@a _input) with specified builder (@ _builder) and writes resulting JSON object to (@a _json)
-/// \param _builder CharReaderBuilder that is used to create new Json::CharReaders
-/// \param _input JSON input string
-/// \param _json [out] resulting JSON object
-/// \param _errs [out] Formatted error messages
-/// \return \c true if the document was successfully parsed, \c false if an error occurred.
-bool parse(Json::CharReaderBuilder& _builder, string const& _input, Json::Value& _json, string* _errs)
-{
-	unique_ptr<Json::CharReader> reader(_builder.newCharReader());
-	return reader->parse(_input.c_str(), _input.c_str() + _input.length(), &_json, _errs);
-}
-
+#if 0
 /// Takes a JSON value (@ _json) and removes all its members with value 'null' recursively.
-void removeNullMembersHelper(Json::Value& _json)
+void removeNullMembersHelper(Json& _json)
 {
 	if (_json.type() == Json::ValueType::arrayValue)
 		for (auto& child: _json)
@@ -104,46 +60,54 @@ void removeNullMembersHelper(Json::Value& _json)
 				removeNullMembersHelper(value);
 		}
 }
+#endif
 
 } // end anonymous namespace
 
-Json::Value removeNullMembers(Json::Value _json)
+Json removeNullMembers(Json _json)
 {
-	removeNullMembersHelper(_json);
+	// TODO: Support this.
+	// removeNullMembersHelper(_json);
 	return _json;
 }
 
-string jsonPrettyPrint(Json::Value const& _input)
+string jsonPrettyPrint(Json const& _input)
 {
 	return jsonPrint(_input, JsonFormat{ JsonFormat::Pretty });
 }
 
-string jsonCompactPrint(Json::Value const& _input)
+string jsonCompactPrint(Json const& _input)
 {
 	return jsonPrint(_input, JsonFormat{ JsonFormat::Compact });
 }
 
-string jsonPrint(Json::Value const& _input, JsonFormat const& _format)
+string jsonPrint(Json const& _input, JsonFormat const& _format)
 {
-	map<string, Json::Value> settings;
-	if (_format.format == JsonFormat::Pretty)
-	{
-		settings["indentation"] = string(_format.indent, ' ');
-		settings["enableYAMLCompatibility"] = true;
-	}
-	else
-		settings["indentation"] = "";
-	StreamWriterBuilder writerBuilder(settings);
-	string result = print(_input, writerBuilder);
-	if (_format.format == JsonFormat::Pretty)
-		boost::replace_all(result, " \n", "\n");
-	return result;
+	// NOTE: -1 here means no new lines (it is also the default setting)
+	return _input.dump(
+		/* indent */ (_format.format == JsonFormat::Pretty) ? static_cast<int>(_format.indent) : -1,
+		/* indent_char */ ' ',
+		/* ensure_ascii */ true
+	);
 }
 
-bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* = nullptr */)
+bool jsonParseStrict(string const& _input, Json& _json, string* _errs /* = nullptr */)
 {
-	static StrictModeCharReaderBuilder readerBuilder;
-	return parse(readerBuilder, _input, _json, _errs);
+	try
+	{
+		_json = Json::parse(_input);
+		_errs = {};
+		return true;
+	}
+	catch (Json::parse_error const& e)
+	{
+		// NOTE: e.id() gives the code and e.byte() gives the byte offset
+		if (_errs)
+		{
+			*_errs = e.what();
+		}
+		return false;
+	}
 }
 
 } // namespace solidity::util
