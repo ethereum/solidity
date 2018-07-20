@@ -20,8 +20,8 @@ crowdfunding, blind auctions, multi-signature wallets and more.
     The best way to try out Solidity right now is using
     `Remix <https://remix.ethereum.org/>`_
     (it can take a while to load, please be patient). Remix is a web browser
-    based IDE that allows you to write Solidity smart contracts, then deploy 
-    and run the smart contracts. 
+    based IDE that allows you to write Solidity smart contracts, then deploy
+    and run the smart contracts.
 
 .. warning::
     Since software is written by humans, it can have bugs. Thus, also
@@ -83,7 +83,7 @@ Available Solidity Integrations
 
 * `Solium <https://github.com/duaraghav8/Solium/>`_
     Linter to identify and fix style and security issues in Solidity.
-    
+
 * `Solhint <https://github.com/protofire/solhint>`_
     Solidity linter that provides security, style guide and best practice rules for smart contract validation.
 
@@ -104,7 +104,7 @@ Discontinued:
 * `Mix IDE <https://github.com/ethereum/mix/>`_
     Qt based IDE for designing, debugging and testing solidity smart contracts.
 
-* `Ethereum Studio <https://live.ether.camp/>`_		
+* `Ethereum Studio <https://live.ether.camp/>`_
     Specialized web IDE that also provides shell access to a complete Ethereum environment.
 
 Solidity Tools
@@ -119,11 +119,14 @@ Solidity Tools
 * `solgraph <https://github.com/raineorshine/solgraph>`_
     Visualize Solidity control flow and highlight potential security vulnerabilities.
 
+* `Doxity <https://github.com/DigixGlobal/doxity>`_
+    Documentation Generator for Solidity.
+
 * `evmdis <https://github.com/Arachnid/evmdis>`_
     EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
 
-* `Doxity <https://github.com/DigixGlobal/doxity>`_
-    Documentation Generator for Solidity.
+.. note::
+  Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.
 
 Third-Party Solidity Parsers and Grammars
 -----------------------------------------
