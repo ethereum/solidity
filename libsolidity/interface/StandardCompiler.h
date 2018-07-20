@@ -63,7 +63,7 @@ public:
 	/// output. Parsing errors are returned as regular errors.
 	std::string compile(std::string const& _input) noexcept;
 
-	static Json::Value formatFunctionDebugData(
+	static Json formatFunctionDebugData(
 		std::map<std::string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
 	);
 
@@ -86,14 +86,14 @@ private:
 		bool metadataLiteralSources = false;
 		CompilerStack::MetadataFormat metadataFormat = CompilerStack::defaultMetadataFormat();
 		CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::IPFS;
-		Json::Value outputSelection;
+		Json outputSelection;
 		ModelCheckerSettings modelCheckerSettings = ModelCheckerSettings{};
 		bool viaIR = false;
 	};
 
 	/// Parses the input json (and potentially invokes the read callback) and either returns
 	/// it in condensed form or an error as a json object.
-	std::variant<InputsAndSettings, Json::Value> parseInput(Json::Value const& _input);
+	std::variant<InputsAndSettings, Json> parseInput(Json const& _input);
 
 	std::map<std::string, Json::Value> parseAstFromInput(StringMap const& _sources);
 	Json::Value importEVMAssembly(InputsAndSettings _inputsAndSettings);

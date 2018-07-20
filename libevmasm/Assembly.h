@@ -29,11 +29,10 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
+#include <libsolutil/JSON.h>
 #include <libsolutil/Keccak256.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
-
-#include <json/json.h>
 
 #include <iostream>
 #include <sstream>

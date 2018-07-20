@@ -149,7 +149,7 @@ std::string functionSignatureFromABI(Json::Value const& _functionABI)
 	for (auto const& input: inputs)
 	{
 		parameterCount++;
-		signature += input["type"].asString();
+		signature += input["type"].get<string>();
 		if (parameterCount < inputs.size())
 			signature += ",";
 	}

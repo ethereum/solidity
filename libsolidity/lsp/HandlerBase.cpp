@@ -30,7 +30,7 @@ using namespace solidity::langutil;
 using namespace solidity::lsp;
 using namespace solidity::util;
 
-Json::Value HandlerBase::toRange(SourceLocation const& _location) const
+Json HandlerBase::toRange(SourceLocation const& _location) const
 {
 	if (!_location.hasText())
 		return toJsonRange({}, {});
@@ -42,10 +42,10 @@ Json::Value HandlerBase::toRange(SourceLocation const& _location) const
 	return toJsonRange(start, end);
 }
 
-Json::Value HandlerBase::toJson(SourceLocation const& _location) const
+Json HandlerBase::toJson(SourceLocation const& _location) const
 {
 	solAssert(_location.sourceName);
-	Json::Value item = Json::objectValue;
+	Json item = Json::object();
 	item["uri"] = fileRepository().sourceUnitNameToUri(*_location.sourceName);
 	item["range"] = toRange(_location);
 	return item;

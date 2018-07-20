@@ -459,32 +459,32 @@ Json::Value Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourc
 		if (!data.empty())
 			jsonItem["value"] = data;
 		jsonItem["source"] = sourceIndex;
-		code.append(std::move(jsonItem));
+		code.emplace_back(std::move(jsonItem));
 
 		if (item.type() == AssemblyItemType::Tag)
 		{
-			Json::Value jumpdest;
+			Json jumpdest;
 			jumpdest["name"] = "JUMPDEST";
 			jumpdest["begin"] = item.location().start;
 			jumpdest["end"] = item.location().end;
 			jumpdest["source"] = sourceIndex;
 			if (item.m_modifierDepth != 0)
 				jumpdest["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
-			code.append(std::move(jumpdest));
+			code.emplace_back(std::move(jumpdest));
 		}
 	}
 	if (_includeSourceList)
 	{
-		root["sourceList"] = Json::arrayValue;
-		Json::Value& jsonSourceList = root["sourceList"];
+		root["sourceList"] = Json::array();
+		Json& jsonSourceList = root["sourceList"];
 		for (auto const& [name, index]: _sourceIndices)
 			jsonSourceList[index] = name;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
-		root[".data"] = Json::objectValue;
-		Json::Value& data = root[".data"];
+		root[".data"] = Json::object();
+		Json& data = root[".data"];
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
 				data[util::toHex(toBigEndian((u256)i.first), util::HexPrefix::DontAdd, util::HexCase::Upper)] = util::toHex(i.second);

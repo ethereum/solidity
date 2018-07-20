@@ -358,18 +358,18 @@ void CommandLineInterface::handleSignatureHashes(std::string const& _contract)
 	for (auto const& name: interfaceSymbols["methods"].getMemberNames())
 		out += interfaceSymbols["methods"][name].asString() + ": " + name + "\n";
 
-	if (interfaceSymbols.isMember("errors"))
+	if (interfaceSymbols.contains("errors"))
 	{
 		out += "\nError signatures:\n";
-		for (auto const& name: interfaceSymbols["errors"].getMemberNames())
-			out += interfaceSymbols["errors"][name].asString() + ": " + name + "\n";
+		for (auto const& [name, value]: interfaceSymbols["errors"].items())
+			out += value.get<string>() + ": " + name + "\n";
 	}
 
-	if (interfaceSymbols.isMember("events"))
+	if (interfaceSymbols.contains("events"))
 	{
 		out += "\nEvent signatures:\n";
-		for (auto const& name: interfaceSymbols["events"].getMemberNames())
-			out += interfaceSymbols["events"][name].asString() + ": " + name + "\n";
+		for (auto const& [name, value]: interfaceSymbols["events"].items())
+			out += value.get<string>() + ": " + name + "\n";
 	}
 
 	if (!m_options.output.dir.empty())
@@ -479,7 +479,7 @@ void CommandLineInterface::handleGasEstimation(std::string const& _contract)
 		sout() << " = " << creation["totalCost"].asString() << std::endl;
 	}
 
-	if (estimates["external"].isObject())
+	if (estimates["external"].is_object())
 	{
 		Json::Value externalFunctions = estimates["external"];
 		sout() << "external:" << std::endl;
@@ -493,7 +493,7 @@ void CommandLineInterface::handleGasEstimation(std::string const& _contract)
 		}
 	}
 
-	if (estimates["internal"].isObject())
+	if (estimates["internal"].is_object())
 	{
 		Json::Value internalFunctions = estimates["internal"];
 		sout() << "internal:" << std::endl;
@@ -509,10 +509,6 @@ void CommandLineInterface::readInputFiles()
 {
 	solAssert(!m_standardJsonInput.has_value());
 
-	if (m_options.input.noImportCallback)
-		m_universalCallback.resetImportCallback();
-
-	static std::set<frontend::InputMode> const noInputFiles{
 		frontend::InputMode::Help,
 		frontend::InputMode::License,
 		frontend::InputMode::Version
@@ -622,16 +618,16 @@ std::map<std::string, Json::Value> CommandLineInterface::parseAstFromInput()
 
 	for (SourceCode const& sourceCode: m_fileReader.sourceUnits() | ranges::views::values)
 	{
-		Json::Value ast;
+		Json ast;
 		astAssert(jsonParseStrict(sourceCode, ast), "Input file could not be parsed to JSON");
-		astAssert(ast.isMember("sources"), "Invalid Format for import-JSON: Must have 'sources'-object");
+		astAssert(ast.contains("sources"), "Invalid Format for import-JSON: Must have 'sources'-object");
 
-		for (auto& src: ast["sources"].getMemberNames())
+		for (auto const& [src, _]: ast["sources"].items())
 		{
-			std::string astKey = ast["sources"][src].isMember("ast") ? "ast" : "AST";
+			std::string astKey = ast["sources"][src].contains("ast") ? "ast" : "AST";
 
-			astAssert(ast["sources"][src].isMember(astKey), "astkey is not member");
-			astAssert(ast["sources"][src][astKey]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
+			astAssert(ast["sources"][src].contains(astKey), "astkey is not member");
+			astAssert(ast["sources"][src][astKey]["nodeType"].get<string>() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
 			astAssert(sourceJsons.count(src) == 0, "All sources must have unique names");
 			sourceJsons.emplace(src, std::move(ast["sources"][src][astKey]));
 			tmpSources[src] = util::jsonCompactPrint(ast);
@@ -942,7 +938,7 @@ void CommandLineInterface::handleCombinedJSON()
 	if (!m_options.compiler.combinedJsonRequests.has_value())
 		return;
 
-	Json::Value output(Json::objectValue);
+	Json output(Json::object());
 
 	output[g_strVersion] = frontend::VersionString;
 	std::vector<std::string> contracts = m_assemblyStack->contractNames();
@@ -1013,7 +1009,7 @@ void CommandLineInterface::handleCombinedJSON()
 	if (needsSourceList)
 	{
 		// Indices into this array are used to abbreviate source names in source locations.
-		output[g_strSourceList] = Json::Value(Json::arrayValue);
+		output[g_strSourceList] = Json::array();
 
 		for (auto const& source: m_assemblyStack->sourceNames())
 			output[g_strSourceList].append(source);

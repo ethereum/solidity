@@ -33,13 +33,13 @@ using namespace langutil;
 
 std::optional<LineColumn> parseLineColumn(Json::Value const& _lineColumn)
 {
-	if (_lineColumn.isObject() && _lineColumn["line"].isInt() && _lineColumn["character"].isInt())
-		return LineColumn{_lineColumn["line"].asInt(), _lineColumn["character"].asInt()};
+	if (_lineColumn.is_object() && _lineColumn["line"].is_number_integer() && _lineColumn["character"].is_number_integer())
+		return LineColumn{_lineColumn["line"].get<int>(), _lineColumn["character"].get<int>()};
 	else
 		return std::nullopt;
 }
 
-Json::Value toJson(LineColumn const& _pos)
+Json toJson(LineColumn const& _pos)
 {
 	Json::Value json = Json::objectValue;
 	json["line"] = std::max(_pos.line, 0);
@@ -48,9 +48,9 @@ Json::Value toJson(LineColumn const& _pos)
 	return json;
 }
 
-Json::Value toJsonRange(LineColumn const& _start, LineColumn const& _end)
+Json toJsonRange(LineColumn const& _start, LineColumn const& _end)
 {
-	Json::Value json;
+	Json json;
 	json["start"] = toJson(_start);
 	json["end"] = toJson(_end);
 	return json;

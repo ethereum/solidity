@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <json/json.h>
 #include <liblangutil/SourceLocation.h>
+#include <libsolutil/JSON.h>
 #include <libyul/ASTForward.h>
 
 #include <utility>
@@ -41,36 +41,36 @@ public:
 	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames):
 		m_sourceNames(_sourceNames)
 	{}
-	yul::Block createBlock(Json::Value const& _node);
+	yul::Block createBlock(Json const& _node);
 
 private:
-	langutil::SourceLocation const createSourceLocation(Json::Value const& _node);
+	langutil::SourceLocation const createSourceLocation(Json const& _node);
 	template <class T>
-	T createAsmNode(Json::Value const& _node);
+	T createAsmNode(Json const& _node);
 	/// helper function to access member functions of the JSON
 	/// and throw an error if it does not exist
-	Json::Value member(Json::Value const& _node, std::string const& _name);
+	Json member(Json const& _node, std::string const& _name);
 
-	yul::Statement createStatement(Json::Value const& _node);
-	yul::Expression createExpression(Json::Value const& _node);
-	std::vector<yul::Statement> createStatementVector(Json::Value const& _array);
-	std::vector<yul::Expression> createExpressionVector(Json::Value const& _array);
+	yul::Statement createStatement(Json const& _node);
+	yul::Expression createExpression(Json const& _node);
+	std::vector<yul::Statement> createStatementVector(Json const& _array);
+	std::vector<yul::Expression> createExpressionVector(Json const& _array);
 
-	yul::TypedName createTypedName(Json::Value const& _node);
-	yul::Literal createLiteral(Json::Value const& _node);
-	yul::Leave createLeave(Json::Value const& _node);
-	yul::Identifier createIdentifier(Json::Value const& _node);
-	yul::Assignment createAssignment(Json::Value const& _node);
-	yul::FunctionCall createFunctionCall(Json::Value const& _node);
-	yul::ExpressionStatement createExpressionStatement(Json::Value const& _node);
-	yul::VariableDeclaration createVariableDeclaration(Json::Value const& _node);
-	yul::FunctionDefinition createFunctionDefinition(Json::Value const& _node);
-	yul::If createIf(Json::Value const& _node);
-	yul::Case createCase(Json::Value const& _node);
-	yul::Switch createSwitch(Json::Value const& _node);
-	yul::ForLoop createForLoop(Json::Value const& _node);
-	yul::Break createBreak(Json::Value const& _node);
-	yul::Continue createContinue(Json::Value const& _node);
+	yul::TypedName createTypedName(Json const& _node);
+	yul::Literal createLiteral(Json const& _node);
+	yul::Leave createLeave(Json const& _node);
+	yul::Identifier createIdentifier(Json const& _node);
+	yul::Assignment createAssignment(Json const& _node);
+	yul::FunctionCall createFunctionCall(Json const& _node);
+	yul::ExpressionStatement createExpressionStatement(Json const& _node);
+	yul::VariableDeclaration createVariableDeclaration(Json const& _node);
+	yul::FunctionDefinition createFunctionDefinition(Json const& _node);
+	yul::If createIf(Json const& _node);
+	yul::Case createCase(Json const& _node);
+	yul::Switch createSwitch(Json const& _node);
+	yul::ForLoop createForLoop(Json const& _node);
+	yul::Break createBreak(Json const& _node);
+	yul::Continue createContinue(Json const& _node);
 
 	std::vector<std::shared_ptr<std::string const>> const& m_sourceNames;
 };

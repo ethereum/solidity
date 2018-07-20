@@ -62,12 +62,12 @@ std::optional<std::string> compileAndCheckLicenseMetadata(std::string const& _co
 	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
-	BOOST_REQUIRE(metadata["sources"].isMember("A.sol"));
+	BOOST_REQUIRE(metadata["sources"].contains("A.sol"));
 
-	if (metadata["sources"]["A.sol"].isMember("license"))
+	if (metadata["sources"]["A.sol"].contains("license"))
 	{
-		BOOST_REQUIRE(metadata["sources"]["A.sol"]["license"].isString());
-		return metadata["sources"]["A.sol"]["license"].asString();
+		BOOST_REQUIRE(metadata["sources"]["A.sol"]["license"].is_string());
+		return metadata["sources"]["A.sol"]["license"].get<string>();
 	}
 	else
 		return std::nullopt;
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
-	BOOST_CHECK(metadata["sources"].isMember("A"));
+	BOOST_CHECK(metadata["sources"].contains("A"));
 }
 
 BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
@@ -334,9 +334,9 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 	BOOST_CHECK_EQUAL(metadata["sources"].size(), 3);
-	BOOST_CHECK(metadata["sources"].isMember("A"));
-	BOOST_CHECK(metadata["sources"].isMember("B"));
-	BOOST_CHECK(metadata["sources"].isMember("C"));
+	BOOST_CHECK(metadata["sources"].contains("A"));
+	BOOST_CHECK(metadata["sources"].contains("B"));
+	BOOST_CHECK(metadata["sources"].contains("C"));
 }
 
 BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
@@ -360,13 +360,13 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 		Json::Value metadata;
 		BOOST_REQUIRE(util::jsonParseStrict(metadata_str, metadata));
 		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
-		BOOST_CHECK(metadata.isMember("settings"));
-		BOOST_CHECK(metadata["settings"].isMember("metadata"));
-		BOOST_CHECK(metadata["settings"]["metadata"].isMember("bytecodeHash"));
+		BOOST_CHECK(metadata.contains("settings"));
+		BOOST_CHECK(metadata["settings"].contains("metadata"));
+		BOOST_CHECK(metadata["settings"]["metadata"].contains("bytecodeHash"));
 		if (_literal)
 		{
-			BOOST_CHECK(metadata["settings"]["metadata"].isMember("useLiteralContent"));
-			BOOST_CHECK(metadata["settings"]["metadata"]["useLiteralContent"].asBool());
+			BOOST_CHECK(metadata["settings"]["metadata"].contains("useLiteralContent"));
+			BOOST_CHECK(metadata["settings"]["metadata"]["useLiteralContent"].get<bool>());
 		}
 	};
 
@@ -391,17 +391,17 @@ BOOST_AUTO_TEST_CASE(metadata_viair)
 		compilerStack.setViaIR(_viaIR);
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
-		Json::Value metadata;
+		Json metadata;
 		BOOST_REQUIRE(util::jsonParseStrict(compilerStack.metadata("test"), metadata));
 		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
-		BOOST_CHECK(metadata.isMember("settings"));
+		BOOST_CHECK(metadata.contains("settings"));
 		if (_viaIR)
 		{
-			BOOST_CHECK(metadata["settings"].isMember("viaIR"));
-			BOOST_CHECK(metadata["settings"]["viaIR"].asBool());
+			BOOST_CHECK(metadata["settings"].contains("viaIR"));
+			BOOST_CHECK(metadata["settings"]["viaIR"].get<bool>());
 		}
 		else
-			BOOST_CHECK(!metadata["settings"].isMember("viaIR"));
+			BOOST_CHECK(!metadata["settings"].contains("viaIR"));
 
 		BOOST_CHECK(compilerStack.cborMetadata("test") == compilerStack.cborMetadata("test", _viaIR));
 		BOOST_CHECK(compilerStack.cborMetadata("test") != compilerStack.cborMetadata("test", !_viaIR));
@@ -472,9 +472,9 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 		Json::Value metadata;
 		BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
-		BOOST_CHECK(metadata["settings"]["optimizer"].isMember("details"));
-		BOOST_CHECK(metadata["settings"]["optimizer"]["details"].isMember("yulDetails"));
-		BOOST_CHECK(metadata["settings"]["optimizer"]["details"]["yulDetails"].isMember("optimizerSteps"));
+		BOOST_CHECK(metadata["settings"]["optimizer"].contains("details"));
+		BOOST_CHECK(metadata["settings"]["optimizer"]["details"].contains("yulDetails"));
+		BOOST_CHECK(metadata["settings"]["optimizer"]["details"]["yulDetails"].contains("optimizerSteps"));
 
 		std::string const metadataOptimizerSteps = metadata["settings"]["optimizer"]["details"]["yulDetails"]["optimizerSteps"].asString();
 		std::string const expectedMetadataOptimiserSteps = _optimizerSequence + ":" + _optimizerCleanupSequence;

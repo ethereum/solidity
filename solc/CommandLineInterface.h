@@ -120,7 +120,7 @@ private:
 	/// such that they can be imported into the compiler  (importASTs())
 	/// (produced by --combined-json ast <file.sol>
 	/// or standard-json output
-	std::map<std::string, Json::Value> parseAstFromInput();
+	std::map<std::string, Json> parseAstFromInput();
 
 	/// Create a file in the given directory
 	/// @arg _fileName the name of the file
