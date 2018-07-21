@@ -29,12 +29,18 @@
 #include <tuple>
 #include <memory>
 #include <ostream>
-#pragma warning(push)
-#pragma GCC diagnostic push
+
+#if defined(__clang__)
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wredeclared-class-member"
+#endif // defined(__clang__)
+
 #include <boost/bimap.hpp>
-#pragma warning(pop)
-#pragma GCC diagnostic pop
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif // defined(__clang__)
+
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>

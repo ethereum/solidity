@@ -36,13 +36,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wextra)
 	add_compile_options(-Werror)
 
-	# Disable warnings about unknown pragmas (which is enabled by -Wall).  I assume we have external
-	# dependencies (probably Boost) which have some of these.   Whatever the case, we shouldn't be
-	# disabling these globally.   Instead, we should pragma around just the problem #includes.
-	#
-	# TODO - Track down what breaks if we do NOT do this.
-	add_compile_options(-Wno-unknown-pragmas)
-
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
@@ -73,13 +66,13 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			# TODO - Is this even necessary?  Why?
 			# See http://stackoverflow.com/questions/19774778/when-is-it-necessary-to-use-use-the-flag-stdlib-libstdc.
 			add_compile_options(-stdlib=libstdc++)
-			
+
 			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
 			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
-			
+
 			# Use fancy colors in the compiler diagnostics
 			add_compile_options(-fcolor-diagnostics)
-			
+
 			# See "How to silence unused command line argument error with clang without disabling it?"
 			# When using -Werror with clang, it transforms "warning: argument unused during compilation" messages
 			# into errors, which makes sense.

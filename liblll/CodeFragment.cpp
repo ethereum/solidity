@@ -22,12 +22,18 @@
 #include "CodeFragment.h"
 
 #include <boost/algorithm/string.hpp>
-#pragma warning(push)
+
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif // defined(__GNUC__)
+
 #include <boost/spirit/include/support_utree.hpp>
-#pragma warning(pop)
+
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif // defined(__GNUC__)
+
 #include <libdevcore/CommonIO.h>
 #include <libevmasm/Instruction.h>
 #include "CompilerState.h"

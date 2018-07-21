@@ -40,7 +40,6 @@
 #include <libdevcore/vector_ref.h>
 
 #if defined(__GNUC__)
-#pragma warning(push)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif // defined(__GNUC__)
@@ -57,7 +56,6 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #if defined(__GNUC__)
-#pragma warning(pop)
 #pragma GCC diagnostic pop
 #endif // defined(__GNUC__)
 
