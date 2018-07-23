@@ -418,6 +418,9 @@ A function description is a JSON object with the fields:
 
 Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
 
+.. warning::
+    The fields ``constant`` and ``payable`` are deprecated and will be removed in the future. Instead, the ``stateMutability`` field can be used to determine the same properties.
+
 .. note::
     Sending non-zero ether to non-payable function will revert the transaction.
 
