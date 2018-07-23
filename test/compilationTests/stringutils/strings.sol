@@ -702,7 +702,7 @@ library strings {
         uint retptr;
         assembly { retptr := add(ret, 32) }
 
-        for(i = 0; i < parts.length; i++) {
+        for(uint i = 0; i < parts.length; i++) {
             memcpy(retptr, parts[i]._ptr, parts[i]._len);
             retptr += parts[i]._len;
             if (i < parts.length - 1) {
