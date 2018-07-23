@@ -14,7 +14,7 @@ defaults:
       command: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo $CMAKE_OPTIONS
         make -j4
   - run_tests: &run_tests
       name: Tests
@@ -122,6 +122,7 @@ jobs:
       - image: buildpack-deps:artful
     environment:
       TERM: xterm
+      CMAKE_OPTIONS: -DCOVERAGE=ON
     steps:
       - checkout
       - run:
@@ -191,9 +192,19 @@ jobs:
           name: Install dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install libz3-dev libleveldb1v5
+            apt-get -qy install libz3-dev libleveldb1v5 python-pip
+            pip install codecov
       - run: mkdir -p test_results
+      - run:
+          name: Test type checker
+          command: build/test/soltest -t 'syntaxTest*' -- --no-ipc --testpath test
+      - run:
+          name: Coverage of type checker
+          command: codecov --flags type_checker --gcov-root build
       - run: *run_tests
+      - run:
+          name: Coverage of all
+          command: codecov --flags all --gcov-root build
       - store_test_results:
           path: test_results/
 
