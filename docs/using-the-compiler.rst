@@ -301,3 +301,10 @@ Error types
 11. ``CompilerError``: Invalid use of the compiler stack - this should be reported as an issue.
 12. ``FatalError``: Fatal error not processed correctly - this should be reported as an issue.
 13. ``Warning``: A warning, which didn't stop the compilation, but should be addressed if possible.
+
+Decompiler
+~~~~~~~~~~
+
+Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.
+
+Several blockchain explorers allow you to disassemble bytecode to opcodes, but you should publish the source of blockchain contracts on a blockchain if third parties are allowed to use them.
