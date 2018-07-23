@@ -1,8 +1,8 @@
 contract C {
     function f() public {
-        mapping(uint => uint) x;
+        mapping(uint => uint) storage x;
         x;
     }
 }
 // ----
-// TypeError: (47-70): Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable.
+// TypeError: (47-78): Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable.

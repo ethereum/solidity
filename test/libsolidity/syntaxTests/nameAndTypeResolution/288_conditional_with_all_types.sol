@@ -71,7 +71,7 @@ contract C {
         (uint n, uint o) = true ? (1, 2) : (3, 4);
         (n, o) = (o, n); // Avoid unused var warning
         // mapping
-        mapping(uint8 => uint8) p = true ? table1 : table2;
+        mapping(uint8 => uint8) storage p = true ? table1 : table2;
         p[0] = 0; // Avoid unused var warning
         // typetype
         uint32 q = true ? uint32(1) : uint32(2);
