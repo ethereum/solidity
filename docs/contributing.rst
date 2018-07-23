@@ -62,6 +62,10 @@ Finally, please make sure you respect the `coding style
 for this project. Also, even though we do CI testing, please test your code and
 ensure that it builds locally before submitting a pull request.
 
+Please note that this project is released with a `Contributor Code of Conduct
+<https://raw.githubusercontent.com/ethereum/solidity/develop/CONDUCT.md>`_.
+By participating in this project you agree to abide by its terms.
+
 Thank you for your help!
 
 Running the compiler tests
