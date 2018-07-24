@@ -151,21 +151,23 @@ if (SANITIZE)
 	endif()
 endif()
 
-if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")))
-	set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
-	set(CMAKE_C_FLAGS "-g ${CMAKE_C_FLAGS}")
-	add_definitions(-DETH_PROFILING_GPERF)
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lprofiler")
-#	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} -lprofiler")
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
-endif ()
+# Code coverage support.
+# Copied from Cable:
+# https://github.com/ethereum/cable/blob/v0.2.4/CableCompilerSettings.cmake#L118-L132
+option(COVERAGE "Build with code coverage support" OFF)
+if(COVERAGE)
+	# Set the linker flags first, they are required to properly test the compiler flag.
+	set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
 
-if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")))
-        set(CMAKE_CXX_FLAGS "-g --coverage ${CMAKE_CXX_FLAGS}")
-        set(CMAKE_C_FLAGS "-g --coverage ${CMAKE_C_FLAGS}")
-        set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS} -lprofiler")
-        set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
-endif ()
+	set(CMAKE_REQUIRED_LIBRARIES "--coverage ${CMAKE_REQUIRED_LIBRARIES}")
+	check_cxx_compiler_flag(--coverage have_coverage)
+	string(REPLACE "--coverage " "" CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+	if(NOT have_coverage)
+		message(FATAL_ERROR "Coverage not supported")
+	endif()
+	add_compile_options(-g --coverage)
+endif()
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	option(USE_LD_GOLD "Use GNU gold linker" ON)
