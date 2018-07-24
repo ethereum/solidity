@@ -156,6 +156,6 @@ InlineAssemblyBlock = '{' AssemblyItem* '}'
 
 AssemblyItem = Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyLocalBinding | AssemblyAssignment | AssemblyLabel | NumberLiteral | StringLiteral | HexLiteral
 AssemblyLocalBinding = 'let' Identifier ':=' FunctionalAssemblyExpression
-AssemblyAssignment = ( Identifier ':=' FunctionalAssemblyExpression ) | ( '=:' Identifier )
+AssemblyAssignment = ( Identifier ':=' ( Identifier | FunctionalAssemblyExpression ) ) | ( '=:' Identifier )
 AssemblyLabel = Identifier ':'
 FunctionalAssemblyExpression = Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
