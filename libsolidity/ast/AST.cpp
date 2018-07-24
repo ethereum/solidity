@@ -347,15 +347,6 @@ string FunctionDefinition::externalSignature() const
 	return FunctionType(*this).externalSignature();
 }
 
-string FunctionDefinition::fullyQualifiedName() const
-{
-	auto const* contract = dynamic_cast<ContractDefinition const*>(scope());
-	solAssert(contract, "Enclosing scope of function definition was not set.");
-
-	auto fname = name().empty() ? "<fallback>" : name();
-	return sourceUnitName() + ":" + contract->name() + "." + fname;
-}
-
 FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 {
 	if (!m_annotation)
