@@ -429,7 +429,14 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 	case Token::Div:
 	{
 		solAssert(_op.annotation().commonType, "");
-		solAssert(_op.annotation().commonType->category() == Type::Category::Integer, "");
+		if (_op.annotation().commonType->category() != Type::Category::Integer)
+		{
+			m_errorReporter.warning(
+				_op.location(),
+				"Assertion checker does not yet implement this operator on non-integer types."
+			);
+			break;
+		}
 		auto const& intType = dynamic_cast<IntegerType const&>(*_op.annotation().commonType);
 		smt::Expression left(expr(_op.leftExpression()));
 		smt::Expression right(expr(_op.rightExpression()));
