@@ -64,6 +64,14 @@ BOOST_AUTO_TEST_CASE(string_escapes)
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa");
 }
 
+BOOST_AUTO_TEST_CASE(string_escapes_all)
+{
+	Scanner scanner(CharStream("  { \"a\\x61\\b\\f\\n\\r\\t\\v\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa\b\f\n\r\t\v");
+}
+
 BOOST_AUTO_TEST_CASE(string_escapes_with_zero)
 {
 	Scanner scanner(CharStream("  { \"a\\x61\\x00abc\""));
