@@ -6,8 +6,7 @@ macro (eth_policy)
 
 	if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 
-		# fix MACOSX_RPATH
-		cmake_policy(SET CMP0042 OLD)
+		cmake_policy(SET CMP0042 NEW)
 
 		# ignore COMPILE_DEFINITIONS_<Config> properties
 		cmake_policy(SET CMP0043 OLD)
