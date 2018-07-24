@@ -4,9 +4,6 @@ macro (eth_policy)
 	# link_directories() treats paths relative to the source dir.
 	cmake_policy(SET CMP0015 NEW)
 
-	# let cmake autolink dependencies on windows
-	cmake_policy(SET CMP0020 NEW)
-
 	if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 
 		# fix MACOSX_RPATH
