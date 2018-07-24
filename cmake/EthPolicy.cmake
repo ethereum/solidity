@@ -6,10 +6,9 @@ macro (eth_policy)
 
 	if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 
+		# Avoid warnings in CMake 3.0.2:
 		cmake_policy(SET CMP0042 NEW)
-
-		# ignore COMPILE_DEFINITIONS_<Config> properties
-		cmake_policy(SET CMP0043 OLD)
+		cmake_policy(SET CMP0043 NEW)
 
 		# allow VERSION argument in project()
 		cmake_policy(SET CMP0048 NEW)
