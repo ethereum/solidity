@@ -752,6 +752,7 @@ void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _varia
 	set<VariableDeclaration const*> uniqueVars(_variables.begin(), _variables.end());
 	for (auto const* decl: uniqueVars)
 	{
+		solAssert(_countersEndTrue.count(decl) && _countersEndFalse.count(decl), "");
 		int trueCounter = _countersEndTrue.at(decl).index();
 		int falseCounter = _countersEndFalse.at(decl).index();
 		solAssert(trueCounter != falseCounter, "");
