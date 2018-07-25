@@ -345,6 +345,7 @@
     }, 
     "0.4.11": {
         "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput", 
@@ -354,6 +355,7 @@
     }, 
     "0.4.12": {
         "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput"
@@ -362,6 +364,7 @@
     }, 
     "0.4.13": {
         "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
             "ECRecoverMalformedInput"
@@ -370,6 +373,7 @@
     }, 
     "0.4.14": {
         "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue"
         ], 
@@ -377,28 +381,35 @@
     }, 
     "0.4.15": {
         "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "ZeroFunctionSelector"
         ], 
         "released": "2017-08-08"
     }, 
     "0.4.16": {
         "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "ZeroFunctionSelector"
         ], 
         "released": "2017-08-24"
     }, 
     "0.4.17": {
         "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "ZeroFunctionSelector"
         ], 
         "released": "2017-09-21"
     }, 
     "0.4.18": {
-        "bugs": [], 
+        "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays"
+        ], 
         "released": "2017-10-18"
     }, 
     "0.4.19": {
-        "bugs": [], 
+        "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays"
+        ], 
         "released": "2017-11-30"
     }, 
     "0.4.2": {
@@ -415,11 +426,15 @@
         "released": "2016-09-17"
     }, 
     "0.4.20": {
-        "bugs": [], 
+        "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays"
+        ], 
         "released": "2018-02-14"
     }, 
     "0.4.21": {
-        "bugs": [], 
+        "bugs": [
+            "PublicLibFunctionsDoNotReturnNestedArrays"
+        ], 
         "released": "2018-03-07"
     }, 
     "0.4.22": {

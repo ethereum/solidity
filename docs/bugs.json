@@ -1,4 +1,12 @@
 [
+	{
+		"name": "PublicLibFunctionsDoNotReturnNestedArrays",
+		"summary": "Calls to public library functions (internal functions are safe) that return nested arrays return only zeroes.",
+		"description": "The compiler does not complain about public library functions (internal functions are safe) returning nested arrays, but it also does not return it correctly. Thus, the function caller receives only zeroes.",
+		"introduced": "0.4.11",
+		"fixed": "0.4.22",
+		"severity": "low"
+	},
     {
         "name": "OneOfTwoConstructorsSkipped",
         "summary": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored.",
