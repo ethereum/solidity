@@ -64,6 +64,14 @@ BOOST_AUTO_TEST_CASE(string_escapes)
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa");
 }
 
+BOOST_AUTO_TEST_CASE(string_escapes_all)
+{
+	Scanner scanner(CharStream("  { \"a\\x61\\b\\f\\n\\r\\t\\v\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa\b\f\n\r\t\v");
+}
+
 BOOST_AUTO_TEST_CASE(string_escapes_with_zero)
 {
 	Scanner scanner(CharStream("  { \"a\\x61\\x00abc\""));
@@ -199,7 +207,7 @@ BOOST_AUTO_TEST_CASE(locations)
 BOOST_AUTO_TEST_CASE(ambiguities)
 {
 	// test scanning of some operators which need look-ahead
-	Scanner scanner(CharStream("<=""<""+ +=a++ =>""<<"));
+	Scanner scanner(CharStream("<=" "<" "+ +=a++ =>" "<<" ">>" " >>=" ">>>" ">>>=" " >>>>>=><<="));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LessThanOrEqual);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LessThan);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Add);
@@ -208,6 +216,15 @@ BOOST_AUTO_TEST_CASE(ambiguities)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Inc);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Arrow);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SHL);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SAR);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignSar);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SHR);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignShr);
+	// the last "monster" token combination
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SHR);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignSar);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::GreaterThan);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignShl);
 }
 
 BOOST_AUTO_TEST_CASE(documentation_comments_parsed_begin)
