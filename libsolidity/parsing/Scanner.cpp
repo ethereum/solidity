@@ -714,11 +714,11 @@ Token::Value Scanner::scanHexString()
 	{
 		char c = m_char;
 		if (!scanHexByte(c))
-			return Token::Illegal;
+			return Token::Illegal_Hex;
 		addLiteralChar(c);
 	}
 	if (m_char != quote)
-		return Token::Illegal;
+		return Token::Illegal_Hex;
 	literal.complete();
 	advance();  // consume quote
 	return Token::StringLiteral;

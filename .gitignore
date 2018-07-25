@@ -1,6 +1,9 @@
 commit_hash.txt
 prerelease.txt
 
+# dependancies
+/deps
+
 # Compiled Object files
 *.slo
 *.lo

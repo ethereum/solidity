@@ -1531,7 +1531,18 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			m_scanner->next();
 		}
 		else
-			fatalParserError(string("Expected primary expression."));
+		{
+			if (token == Token::Illegal_Hex)
+			{
+				fatalParserError(string("Odd nibble count in hex string literal."));
+			}
+			else if (0/*your new illegal token check*/)
+			{
+				fatalParserError(string("my_error_description"));
+			}
+			else
+				fatalParserError(string("Expected primary expression."));
+		}
 		break;
 	}
 	return expression;
