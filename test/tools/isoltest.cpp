@@ -119,7 +119,7 @@ TestTool::Result TestTool::process()
 			"Exception during syntax test: " << _e.what() << endl;
 		return Result::Exception;
 	}
-	catch(...)
+	catch (...)
 	{
 		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
 			"Unknown exception during syntax test." << endl;

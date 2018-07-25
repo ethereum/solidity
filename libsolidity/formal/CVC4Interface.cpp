@@ -115,7 +115,7 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 				values.push_back(toString(m_solver.getValue(toCVC4Expr(e))));
 		}
 	}
-	catch (CVC4::Exception & e)
+	catch (CVC4::Exception const&)
 	{
 		result = CheckResult::ERROR;
 		values.clear();
