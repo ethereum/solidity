@@ -153,3 +153,18 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 
 	return 0;
 }
+
+// BOOST_TEST_DYN_LINK should be defined if user want to link against shared boost test library
+#ifdef BOOST_TEST_DYN_LINK
+
+// Because we want to have customized initialization function and support shared boost libraries at the same time,
+// we are forced to customize the entry point.
+// see: https://www.boost.org/doc/libs/1_67_0/libs/test/doc/html/boost_test/adv_scenarios/shared_lib_customizations/init_func.html
+
+int main(int argc, char* argv[])
+{
+	auto init_unit_test = []() -> bool { init_unit_test_suite(0, nullptr); return true; };
+	return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+}
+
+#endif
