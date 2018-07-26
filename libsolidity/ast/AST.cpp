@@ -485,6 +485,61 @@ bool VariableDeclaration::isEventParameter() const
 	return dynamic_cast<EventDefinition const*>(scope()) != nullptr;
 }
 
+bool VariableDeclaration::isReferenceType() const
+{
+	return dynamic_cast<ReferenceType const*>(typeName()->annotation().type.get());
+}
+
+set<VariableDeclaration::Location> VariableDeclaration::getAllowedStorageLocations() const
+{
+	using Location = VariableDeclaration::Location;
+
+	if (isReferenceType())
+	{
+		if (isEventParameter())
+			return set<Location>{ Location::Default };
+		else if (isConstant())
+			return set<Location>{ Location::Default, Location::Memory };
+		else if (isExternalCallableParameter())
+		{
+			auto const& contract = dynamic_cast<ContractDefinition const&>(
+					*dynamic_cast<Declaration const&>(*scope()).scope()
+			);
+			if (contract.isLibrary())  // External Library function parameter.
+				return set<Location>{ Location::CallData, Location::Default, Location::Storage };
+			else  // External func function parameter.
+				return set<Location>{ Location::CallData, Location::Default };
+		}
+		else if (isCallableParameter())
+		{
+			auto const& varScope = dynamic_cast<Declaration const&>(*scope());
+			auto const& contract = dynamic_cast<ContractDefinition const&>(
+					*dynamic_cast<Declaration const&>(*scope()).scope()
+			);
+			if (varScope.isPublic())  // Public function parameter.
+			{
+				if (contract.isLibrary())
+					return set<Location>{ Location::Memory, Location::Storage };
+				else
+					return set<Location>{ Location::Memory };
+			}
+			else  // Internal or private function parameter (or external return parameter).
+				return set<Location>{ Location::Memory, Location::Storage };
+		}
+		else  // Variable. TODO: add DataLocation::Calldata once implemented for local variables.
+		{
+			if (!isLocalVariable())
+			{
+				return set<Location>{ Location::Memory, Location::Storage, Location::Default };
+			}
+			else
+				return set<Location>{ Location::Memory, Location::Storage };
+		}
+	} else {
+		return set<Location>{ Location::Default };
+	}
+}
+
 TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;

@@ -657,6 +657,24 @@ class VariableDeclaration: public Declaration
 public:
 	enum Location { Default, Storage, Memory, CallData };
 
+	static std::string locationToString(VariableDeclaration::Location _location)
+	{
+		switch(_location)
+		{
+			case Location::Memory:
+				return "memory";
+			case Location::Storage:
+				return "storage";
+			case Location::CallData:
+				return "calldata";
+			case Location::Default:
+				return "none";
+			default:
+				solAssert(false, "Invalid location specifier.");
+		}
+		return std::string();
+	}
+
 	VariableDeclaration(
 		SourceLocation const& _sourceLocation,
 		ASTPointer<TypeName> const& _type,
@@ -699,10 +717,14 @@ public:
 	bool canHaveAutoType() const;
 	/// @returns true if this variable is a parameter from an event.
 	bool isEventParameter() const;
+	/// @returns true if the variable is a ReferenceType, i.e. array or struct.
+	bool isReferenceType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
 	Location referenceLocation() const { return m_location; }
+	/// @returns a set of allowed storage locations for the variable.
+	std::set<Location> getAllowedStorageLocations() const;
 
 	virtual TypePointer type() const override;
 
