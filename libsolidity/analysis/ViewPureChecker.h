@@ -31,16 +31,6 @@ namespace dev
 namespace solidity
 {
 
-class ASTNode;
-class FunctionDefinition;
-class ModifierDefinition;
-class Identifier;
-class MemberAccess;
-class IndexAccess;
-class ModifierInvocation;
-class FunctionCall;
-class InlineAssembly;
-
 class ViewPureChecker: private ASTConstVisitor
 {
 public:
@@ -50,6 +40,11 @@ public:
 	bool check();
 
 private:
+	struct MutabilityAndLocation
+	{
+		StateMutability mutability;
+		SourceLocation location;
+	};
 
 	virtual bool visit(FunctionDefinition const& _funDef) override;
 	virtual void endVisit(FunctionDefinition const& _funDef) override;
@@ -65,15 +60,19 @@ private:
 
 	/// Called when an element of mutability @a _mutability is encountered.
 	/// Creates appropriate warnings and errors and sets @a m_currentBestMutability.
-	void reportMutability(StateMutability _mutability, SourceLocation const& _location);
+	void reportMutability(
+		StateMutability _mutability,
+		SourceLocation const& _location,
+		boost::optional<SourceLocation> const& _nestedLocation = {}
+	);
 
 	std::vector<std::shared_ptr<ASTNode>> const& m_ast;
 	ErrorReporter& m_errorReporter;
 
 	bool m_errors = false;
-	StateMutability m_currentBestMutability = StateMutability::Payable;
+	MutabilityAndLocation m_bestMutabilityAndLocation = MutabilityAndLocation{StateMutability::Payable, SourceLocation()};
 	FunctionDefinition const* m_currentFunction = nullptr;
-	std::map<ModifierDefinition const*, StateMutability> m_inferredMutability;
+	std::map<ModifierDefinition const*, MutabilityAndLocation> m_inferredMutability;
 };
 
 }
