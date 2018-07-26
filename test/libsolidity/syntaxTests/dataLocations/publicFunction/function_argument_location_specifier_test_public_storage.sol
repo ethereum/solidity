@@ -2,4 +2,4 @@ contract test {
     function f(bytes storage) public;
 }
 // ----
-// TypeError: (31-36): Location has to be memory for publicly visible functions (remove the "storage" or "calldata" keyword).
+// TypeError: (31-36): Storage location must be: "memory" for parameter in public function, but "storage" was given.

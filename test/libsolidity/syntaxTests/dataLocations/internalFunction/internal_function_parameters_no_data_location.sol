@@ -2,4 +2,4 @@ contract C {
     function g(uint[]) internal pure {}
 }
 // ----
-// TypeError: (28-34): Location must be specified as either "memory" or "storage" for parameters.
+// TypeError: (28-34): Storage location must be one of: "storage", "memory" for parameter in internal function, but none was given.

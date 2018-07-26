@@ -1,7 +1,5 @@
 library L {
-    function f(uint[]) private pure {}
-    function g(uint[]) internal pure {}
     function h(uint[]) public pure {}
 }
 // ----
-// TypeError: (27-33): Location must be specified as either "memory" or "storage" for parameters.
+// TypeError: (27-33): Storage location must be one of: "storage", "memory" for parameter in public function, but none was given.
