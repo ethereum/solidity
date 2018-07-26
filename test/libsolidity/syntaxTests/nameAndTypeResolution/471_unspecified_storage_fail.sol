@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (104-107): Data location must be specified as either "memory" or "storage".
-// TypeError: (123-131): Data location must be specified as either "memory" or "storage".
+// TypeError: (104-107): Location has to be storage or memory for local variables. Use an explicit data location keyword to fix this error.
+// TypeError: (123-131): Location has to be storage or memory for local variables. Use an explicit data location keyword to fix this error.

@@ -70,6 +70,7 @@ private:
 	virtual void endVisit(ModifierDefinition const& _modifierDefinition) override;
 	virtual void endVisit(UserDefinedTypeName const& _typeName) override;
 	virtual void endVisit(FunctionTypeName const& _typeName) override;
+	virtual bool visit(FunctionTypeName const& _typeName) override;
 	virtual void endVisit(Mapping const& _typeName) override;
 	virtual void endVisit(ArrayTypeName const& _typeName) override;
 	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
@@ -88,10 +89,28 @@ private:
 	/// Adds a new error to the list of errors and throws to abort reference resolving.
 	void fatalDeclarationError(SourceLocation const& _location, std::string const& _description);
 
+ 	/// Infer the data location of a variable, will call typeError if the inference fails.
+ 	/// @param _var the variable. Probably already have a VariableDeclaration::Location assigned to it.
+ 	/// @param _legitLocations legit locations for this variable.
+	/// @param _defaultLocation set this parameter to boost::none to enforce explicit location.
+ 	/// @param _varDescription the description of the variable. Will be printed in error messages.
+	/// @returns determined data location
+	DataLocation inferDataLocation(
+		VariableDeclaration const& _var,
+		std::vector<DataLocation> const& _legitLocations,
+		boost::optional<DataLocation> const& _defaultLocation = boost::none,
+		std::string const& _varDescription = ""
+	);
+
+	/// convert VariableDeclaration::Location to corresponding DataLocation
+	DataLocation variableLocationToDataLocation(VariableDeclaration::Location const& _varLoc) const;
+
 	ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	/// Stack of return parameters.
 	std::vector<ParameterList const*> m_returnParameters;
+	/// Stack of function type name
+	std::vector<FunctionTypeName const*> m_functionTypeNames;
 	bool const m_resolveInsideCode;
 	bool m_errorOccurred = false;
 	bool m_experimental050Mode = false;
