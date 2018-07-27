@@ -12538,50 +12538,6 @@ BOOST_AUTO_TEST_CASE(staticcall_for_view_and_pure)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(swap_peephole_optimisation)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function lt(uint a, uint b) public returns (bool c) {
-				assembly {
-					a
-					b
-					swap1
-					lt
-					=: c
-				}
-			}
-			function add(uint a, uint b) public returns (uint c) {
-				assembly {
-					a
-					b
-					swap1
-					add
-					=: c
-				}
-			}
-			function div(uint a, uint b) public returns (uint c) {
-				assembly {
-					a
-					b
-					swap1
-					div
-					=: c
-				}
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("lt(uint256,uint256)", u256(1), u256(2)) == encodeArgs(u256(1)));
-	BOOST_CHECK(callContractFunction("lt(uint256,uint256)", u256(2), u256(1)) == encodeArgs(u256(0)));
-	BOOST_CHECK(callContractFunction("add(uint256,uint256)", u256(1), u256(2)) == encodeArgs(u256(3)));
-	BOOST_CHECK(callContractFunction("add(uint256,uint256)", u256(100), u256(200)) == encodeArgs(u256(300)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(2), u256(1)) == encodeArgs(u256(2)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(200), u256(10)) == encodeArgs(u256(20)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(1), u256(0)) == encodeArgs(u256(0)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(0), u256(1)) == encodeArgs(u256(0)));
-}
-
 BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople)
 {
 	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
