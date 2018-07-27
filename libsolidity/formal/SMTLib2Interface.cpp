@@ -112,7 +112,7 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 		result = CheckResult::ERROR;
 
 	vector<string> values;
-	if (result != CheckResult::UNSATISFIABLE && result != CheckResult::ERROR)
+	if (result == CheckResult::SATISFIABLE && result != CheckResult::ERROR)
 		values = parseValues(find(response.cbegin(), response.cend(), '\n'), response.cend());
 	return make_pair(result, values);
 }
