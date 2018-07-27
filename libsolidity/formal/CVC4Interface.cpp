@@ -109,7 +109,7 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 			solAssert(false, "");
 		}
 
-		if (result != CheckResult::UNSATISFIABLE && !_expressionsToEvaluate.empty())
+		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		{
 			for (Expression const& e: _expressionsToEvaluate)
 				values.push_back(toString(m_solver.getValue(toCVC4Expr(e))));

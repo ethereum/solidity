@@ -92,7 +92,7 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 			solAssert(false, "");
 		}
 
-		if (result != CheckResult::UNSATISFIABLE && !_expressionsToEvaluate.empty())
+		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		{
 			z3::model m = m_solver.get_model();
 			for (Expression const& e: _expressionsToEvaluate)
