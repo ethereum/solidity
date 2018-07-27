@@ -33,12 +33,12 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
+using namespace dev::lll;
 namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 namespace sp = boost::spirit;
 
-void dev::eth::killBigints(sp::utree const& _this)
+void dev::lll::killBigints(sp::utree const& _this)
 {
 	switch (_this.which())
 	{
@@ -48,7 +48,7 @@ void dev::eth::killBigints(sp::utree const& _this)
 	}
 }
 
-void dev::eth::debugOutAST(ostream& _out, sp::utree const& _this)
+void dev::lll::debugOutAST(ostream& _out, sp::utree const& _this)
 {
 	switch (_this.which())
 	{
@@ -74,7 +74,8 @@ void dev::eth::debugOutAST(ostream& _out, sp::utree const& _this)
 	}
 }
 
-namespace dev { namespace eth {
+namespace dev {
+namespace lll {
 namespace parseTreeLLL_ {
 
 template<unsigned N>
@@ -88,11 +89,11 @@ struct tagNode
 
 }}}
 
-void dev::eth::parseTreeLLL(string const& _s, sp::utree& o_out)
+void dev::lll::parseTreeLLL(string const& _s, sp::utree& o_out)
 {
 	using qi::standard::space;
 	using qi::standard::space_type;
-	using dev::eth::parseTreeLLL_::tagNode;
+	using dev::lll::parseTreeLLL_::tagNode;
 	using symbol_type = sp::basic_string<std::string, sp::utree_type::symbol_type>;
 	using it = string::const_iterator;
 

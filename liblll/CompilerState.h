@@ -26,7 +26,7 @@
 
 namespace dev
 {
-namespace eth
+namespace lll
 {
 
 struct Macro

@@ -33,7 +33,7 @@
 #define SUCCESS       encodeArgs(1)
 
 using namespace std;
-using namespace dev::eth;
+using namespace dev::lll;
 
 namespace dev
 {

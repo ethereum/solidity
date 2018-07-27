@@ -32,7 +32,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
-using namespace dev::eth;
+using namespace dev::lll;
 
 static string const VersionString =
 	string(ETH_PROJECT_VERSION) +
