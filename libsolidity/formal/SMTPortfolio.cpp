@@ -27,9 +27,9 @@
 #include <libsolidity/formal/SMTLib2Interface.h>
 #endif
 
+namespace dev { namespace solidity { namespace smt {
+
 using namespace std;
-using namespace dev;
-using namespace dev::solidity::smt;
 
 SMTPortfolio::SMTPortfolio(ReadCallback::Callback const& _readCallback)
 {
@@ -149,3 +149,5 @@ bool SMTPortfolio::solverAnswered(CheckResult result)
 {
 	return result == CheckResult::SATISFIABLE || result == CheckResult::UNSATISFIABLE;
 }
+
+} } }
