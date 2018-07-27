@@ -49,6 +49,7 @@ static void help()
 		<< "    -a,--assembly  Only parse and compile; show assembly." << endl
 		<< "    -t,--parse-tree  Only parse; show parse tree." << endl
 		<< "    -o,--optimise  Turn on/off the optimiser; off by default." << endl
+		<< "    -d,--disassemble  Disassemble input into an opcode stream." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
 		<< "    -V,--version  Show the version and exit." << endl;
 	exit(0);
