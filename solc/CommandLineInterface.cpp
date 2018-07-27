@@ -438,7 +438,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
+				m_sourceCodes[infile.generic_string()] = dev::readFileAsString(infile.string());
 				path = boost::filesystem::canonical(infile).string();
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
@@ -724,7 +724,7 @@ bool CommandLineInterface::processInput()
 				return ReadCallback::Result{false, "Not a valid file."};
 
 			auto contents = dev::readFileAsString(canonicalPath.string());
-			m_sourceCodes[path.string()] = contents;
+			m_sourceCodes[path.generic_string()] = contents;
 			return ReadCallback::Result{true, contents};
 		}
 		catch (Exception const& _exception)

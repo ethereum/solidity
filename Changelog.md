@@ -77,6 +77,7 @@ Compiler Features:
 Bugfixes:
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.
  * Code Generator: Fix allocation of byte arrays (zeroed out too much memory).
+ * Commandline Interface: Correctly handle paths with backslashes on windows.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * References Resolver: Enforce ``storage`` as data location for mappings.
  * References Resolver: Report error instead of assertion fail when FunctionType has an undeclared type as parameter.
