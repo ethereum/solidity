@@ -50,23 +50,20 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-Expression CVC4Interface::newFunction(string _name, Sort _domain, Sort _codomain)
+void CVC4Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
 	CVC4::Type fType = m_context.mkFunctionType(cvc4Sort(_domain), cvc4Sort(_codomain));
 	m_functions.insert({_name, m_context.mkVar(_name.c_str(), fType)});
-	return SolverInterface::newFunction(move(_name), _domain, _codomain);
 }
 
-Expression CVC4Interface::newInteger(string _name)
+void CVC4Interface::declareInteger(string _name)
 {
 	m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.integerType())});
-	return SolverInterface::newInteger(move(_name));
 }
 
-Expression CVC4Interface::newBool(string _name)
+void CVC4Interface::declareBool(string _name)
 {
 	m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.booleanType())});
-	return SolverInterface::newBool(std::move(_name));
 }
 
 void CVC4Interface::addAssertion(Expression const& _expr)

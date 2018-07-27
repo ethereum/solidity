@@ -39,7 +39,7 @@ namespace smt
 
 enum class CheckResult
 {
-	SATISFIABLE, UNSATISFIABLE, UNKNOWN, ERROR
+	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
 };
 
 enum class Sort
@@ -199,8 +199,10 @@ public:
 	virtual void push() = 0;
 	virtual void pop() = 0;
 
-	virtual Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
+	virtual void declareFunction(std::string _name, Sort _domain, Sort _codomain) = 0;
+	Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
 	{
+		declareFunction(_name, _domain, _codomain);
 		solAssert(_domain == Sort::Int, "Function sort not supported.");
 		// Subclasses should do something here
 		switch (_codomain)
@@ -214,14 +216,18 @@ public:
 			break;
 		}
 	}
-	virtual Expression newInteger(std::string _name)
+	virtual void declareInteger(std::string _name) = 0;
+	Expression newInteger(std::string _name)
 	{
 		// Subclasses should do something here
+		declareInteger(_name);
 		return Expression(std::move(_name), {}, Sort::Int);
 	}
-	virtual Expression newBool(std::string _name)
+	virtual void declareBool(std::string _name) = 0;
+	Expression newBool(std::string _name)
 	{
 		// Subclasses should do something here
+		declareBool(_name);
 		return Expression(std::move(_name), {}, Sort::Bool);
 	}
 
