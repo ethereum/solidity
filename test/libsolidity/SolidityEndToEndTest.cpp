@@ -8910,52 +8910,6 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_access_via_pointer)
 	ABI_CHECK(callContractFunction("separator2()"), encodeArgs(u256(0)));
 }
 
-BOOST_AUTO_TEST_CASE(inline_assembly_jumps)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public {
-				assembly {
-					let n := calldataload(4)
-					let a := 1
-					let b := a
-				loop:
-					jumpi(loopend, eq(n, 0))
-					a add swap1
-					n := sub(n, 1)
-					jump(loop)
-				loopend:
-					mstore(0, a)
-					return(0, 0x20)
-				}
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()", u256(5)), encodeArgs(u256(13)));
-	ABI_CHECK(callContractFunction("f()", u256(7)), encodeArgs(u256(34)));
-}
-
-BOOST_AUTO_TEST_CASE(inline_assembly_function_access)
-{
-	char const* sourceCode = R"(
-		contract C {
-			uint public x;
-			function g(uint y) public { x = 2 * y; assembly { stop } }
-			function f(uint _x) public {
-				assembly {
-					_x
-					jump(g)
-					pop
-				}
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f(uint256)", u256(5)), encodeArgs());
-	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(10)));
-}
-
 BOOST_AUTO_TEST_CASE(inline_assembly_function_call)
 {
 	char const* sourceCode = R"(
