@@ -231,8 +231,11 @@ public:
 	/// is available. Throws SMTSolverError on error.
 	virtual std::pair<CheckResult, std::vector<std::string>>
 	check(std::vector<Expression> const& _expressionsToEvaluate) = 0;
-};
 
+protected:
+	// SMT query timeout in milliseconds.
+	static int const queryTimeout = 10000;
+};
 
 }
 }

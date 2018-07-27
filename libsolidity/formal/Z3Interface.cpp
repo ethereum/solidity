@@ -28,7 +28,10 @@ using namespace dev::solidity::smt;
 Z3Interface::Z3Interface():
 	m_solver(m_context)
 {
+	// This needs to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
+	// This needs to be set in the context.
+	m_context.set("timeout", queryTimeout);
 }
 
 void Z3Interface::reset()
