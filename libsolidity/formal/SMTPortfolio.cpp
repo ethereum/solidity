@@ -29,6 +29,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
 SMTPortfolio::SMTPortfolio(ReadCallback::Callback const& _readCallback)
