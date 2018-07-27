@@ -30,7 +30,11 @@ set -e
 
 REPO_ROOT="$(dirname "$0")"/..
 
+WORKDIR=`mktemp -d`
 IPC_ENABLED=true
+ALETH_PID=
+CMDLINE_PID=
+
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     SMT_FLAGS="--no-smt"
@@ -40,6 +44,49 @@ then
         IPC_FLAGS="--no-ipc"
     fi
 fi
+
+safe_kill() {
+    local PID=${1}
+    local NAME=${2:-${1}}
+    local n=1
+
+    # only proceed if $PID does exist
+    kill -0 $PID 2>/dev/null || return
+
+    echo "Sending SIGTERM to ${NAME} (${PID}) ..."
+    kill $PID
+
+    # wait until process terminated gracefully
+    while kill -0 $PID 2>/dev/null && [[ $n -le 4 ]]; do
+        echo "Waiting ($n) ..."
+        sleep 1
+        n=$[n + 1]
+    done
+
+    # process still alive? then hard-kill
+    if kill -0 $PID 2>/dev/null; then
+        echo "Sending SIGKILL to ${NAME} (${PID}) ..."
+        kill -9 $PID
+    fi
+}
+
+cleanup() {
+	# ensure failing commands don't cause termination during cleanup (especially within safe_kill)
+	set +e
+
+    if [[ "$IPC_ENABLED" = true ]] && [[ -n "${ALETH_PID}" ]]
+    then
+        safe_kill $ALETH_PID $ALETH_PATH
+    fi
+    if [[ -n "$CMDLINE_PID" ]]
+    then
+        safe_kill $CMDLINE_PID "Commandline tests"
+    fi
+
+    echo "Cleaning up working directory ${WORKDIR} ..."
+    rm -rf "$WORKDIR" || true
+}
+trap cleanup INT TERM
 
 if [ "$1" = --junit_report ]
 then
@@ -57,12 +104,13 @@ function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
 function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
 
 printTask "Running commandline tests..."
-"$REPO_ROOT/test/cmdlineTests.sh" &
-CMDLINE_PID=$!
 # Only run in parallel if this is run on CI infrastructure
-if [ -z "$CI" ]
+if [[ -n "$CI" ]]
 then
-    if ! wait $CMDLINE_PID
+    "$REPO_ROOT/test/cmdlineTests.sh" &
+    CMDLINE_PID=$!
+else
+    if ! $REPO_ROOT/test/cmdlineTests.sh
     then
         printError "Commandline tests FAILED"
         exit 1
@@ -102,10 +150,10 @@ function download_aleth()
 # echos the PID
 function run_aleth()
 {
-    $ALETH_PATH --test -d "$1" >/dev/null 2>&1 &
+    $ALETH_PATH --test -d "${WORKDIR}" >/dev/null 2>&1 &
     echo $!
     # Wait until the IPC endpoint is available.
-    while [ ! -S "$1"/geth.ipc ] ; do sleep 1; done
+    while [ ! -S "${WORKDIR}/geth.ipc" ] ; do sleep 1; done
     sleep 2
 }
 
@@ -121,7 +169,7 @@ if [ "$IPC_ENABLED" = true ];
 then
     download_aleth
     check_aleth
-    ALETH_PID=$(run_aleth /tmp/test)
+    ALETH_PID=$(run_aleth)
 fi
 
 progress="--show-progress"
@@ -154,19 +202,15 @@ do
         log=--logger=JUNIT,test_suite,$log_directory/noopt_$vm.xml $testargs_no_opt
       fi
     fi
-    "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS  --ipcpath /tmp/test/geth.ipc
+    "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS  --ipcpath "${WORKDIR}/geth.ipc"
   done
 done
 
-if ! wait $CMDLINE_PID
+if [[ -n $CMDLINE_PID ]] && ! wait $CMDLINE_PID
 then
     printError "Commandline tests FAILED"
+    CMDLINE_PID=
     exit 1
 fi
 
-if [ "$IPC_ENABLED" = true ]
-then
-    pkill "$ALETH_PID" || true
-    sleep 4
-    pgrep "$ALETH_PID" && pkill -9 "$ALETH_PID" || true
-fi
+cleanup
