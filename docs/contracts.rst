@@ -603,10 +603,10 @@ Like any function, the fallback function can execute complex operations as long 
             // results in test.x becoming == 1.
 
             // The following will not compile, but even
-            // if someone sends ether to that contract,
+            // if someone sends trx to that contract,
             // the transaction will fail and reject the
             // Ether.
-            //test.send(2 ether);
+            //test.send(2 trx);
         }
     }
 

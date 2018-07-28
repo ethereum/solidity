@@ -204,7 +204,7 @@ restrictions highly readable.
         function forceOwnerChange(address _newOwner)
             public
             payable
-            costs(200 ether)
+            costs(200 trx)
         {
             owner = _newOwner;
             // just some example condition

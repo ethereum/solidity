@@ -242,7 +242,7 @@ creation-dependencies are not possible.
         }
 
         function createAndEndowD(uint arg, uint amount) public payable {
-            // Send ether along with the creation
+            // Send trx along with the creation
             D newD = (new D).value(amount)(arg);
         }
     }
@@ -529,11 +529,11 @@ The following example shows how an error string can be used together with revert
 
     contract VendingMachine {
         function buy(uint amount) payable {
-            if (amount > msg.value / 2 ether)
+            if (amount > msg.value / 2 trx)
                 revert("Not enough Ether provided.");
             // Alternative way to do it:
             require(
-                amount <= msg.value / 2 ether,
+                amount <= msg.value / 2 trx,
                 "Not enough Ether provided."
             );
             // Perform the purchase.

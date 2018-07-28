@@ -472,13 +472,13 @@ BOOST_AUTO_TEST_CASE(add_owners)
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(account(1), h256::AlignRight)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(account(1), h256::AlignRight)) == encodeArgs(true));
 	// now let the new owner add someone
-	sendEther(account(1), 10 * ether);
+	sendEther(account(1), 10 * trx);
 	m_sender = account(1);
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x13)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x13)) == encodeArgs(true));
 	// and check that a non-owner cannot add a new owner
 	m_sender = account(0);
-	sendEther(account(2), 10 * ether);
+	sendEther(account(2), 10 * trx);
 	m_sender = account(2);
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x20)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x20)) == encodeArgs(false));
@@ -557,17 +557,17 @@ BOOST_AUTO_TEST_CASE(multisig_value_transfer)
 	Address destination = Address("0x5c6d6026d3fb35cd7175fd0054ae8df50d8f8b41");
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	m_sender = account(0);
-	sendEther(account(1), 10 * ether);
+	sendEther(account(1), 10 * trx);
 	m_sender = account(1);
 	auto ophash = callContractFunction("execute(address,uint256,bytes)", h256(destination, h256::AlignRight), 100, 0x60, 0x00);
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	m_sender = account(0);
-	sendEther(account(2), 10 * ether);
+	sendEther(account(2), 10 * trx);
 	m_sender = account(2);
 	callContractFunction("confirm(bytes32)", ophash);
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	m_sender = account(0);
-	sendEther(account(3), 10 * ether);
+	sendEther(account(3), 10 * trx);
 	m_sender = account(3);
 	callContractFunction("confirm(bytes32)", ophash);
 	// now it should go through
@@ -588,7 +588,7 @@ BOOST_AUTO_TEST_CASE(revoke_addOwner)
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(false));
 	m_sender = account(0);
-	sendEther(account(1), 10 * ether);
+	sendEther(account(1), 10 * trx);
 	m_sender = account(1);
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(false));
@@ -596,12 +596,12 @@ BOOST_AUTO_TEST_CASE(revoke_addOwner)
 	m_sender = deployer;
 	BOOST_REQUIRE(callContractFunction("revoke(bytes32)", opHash) == encodeArgs());
 	m_sender = account(0);
-	sendEther(account(2), 10 * ether);
+	sendEther(account(2), 10 * trx);
 	m_sender = account(2);
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(false));
 	m_sender = account(0);
-	sendEther(account(3), 10 * ether);
+	sendEther(account(3), 10 * trx);
 	m_sender = account(3);
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(true));
@@ -620,24 +620,24 @@ BOOST_AUTO_TEST_CASE(revoke_transaction)
 	Address destination = Address("0x5c6d6026d3fb35cd7175fd0054ae8df50d8f8b41");
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	m_sender = account(0);
-	sendEther(account(1), 10 * ether);
+	sendEther(account(1), 10 * trx);
 	m_sender = account(1);
 	auto opHash = callContractFunction("execute(address,uint256,bytes)", h256(destination, h256::AlignRight), 100, 0x60, 0x00);
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	m_sender = account(0);
-	sendEther(account(2), 10 * ether);
+	sendEther(account(2), 10 * trx);
 	m_sender = account(2);
 	callContractFunction("confirm(bytes32)", opHash);
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	m_sender = account(0);
-	sendEther(account(1), 10 * ether);
+	sendEther(account(1), 10 * trx);
 	m_sender = account(1);
 	BOOST_REQUIRE(callContractFunction("revoke(bytes32)", opHash) == encodeArgs());
 	m_sender = deployer;
 	callContractFunction("confirm(bytes32)", opHash);
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	m_sender = account(0);
-	sendEther(account(3), 10 * ether);
+	sendEther(account(3), 10 * trx);
 	m_sender = account(3);
 	callContractFunction("confirm(bytes32)", opHash);
 	// now it should go through
@@ -659,7 +659,7 @@ BOOST_AUTO_TEST_CASE(daylimit)
 	// try to send tx over daylimit
 	Address destination = Address("0x5c6d6026d3fb35cd7175fd0054ae8df50d8f8b41");
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
-	sendEther(account(1), 10 * ether);
+	sendEther(account(1), 10 * trx);
 	m_sender = account(1);
 	BOOST_REQUIRE(
 		callContractFunction("execute(address,uint256,bytes)", h256(destination, h256::AlignRight), 150, 0x60, 0x00) !=
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(daylimit)
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	// try to send tx under daylimit by stranger
 	m_sender = account(0);
-	sendEther(account(4), 10 * ether);
+	sendEther(account(4), 10 * trx);
 	m_sender = account(4);
 	BOOST_REQUIRE(
 		callContractFunction("execute(address,uint256,bytes)", h256(destination, h256::AlignRight), 90, 0x60, 0x00) ==
@@ -677,7 +677,7 @@ BOOST_AUTO_TEST_CASE(daylimit)
 	BOOST_CHECK_EQUAL(balanceAt(destination), 0);
 	// now send below limit by owner
 	m_sender = account(0);
-	sendEther(account(1), 10 * ether);
+	sendEther(account(1), 10 * trx);
 	BOOST_REQUIRE(
 		callContractFunction("execute(address,uint256,bytes)", h256(destination, h256::AlignRight), 90, 0x60, 0x00) ==
 		encodeArgs(u256(0))

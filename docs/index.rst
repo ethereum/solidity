@@ -104,7 +104,7 @@ Discontinued:
 * `Mix IDE <https://github.com/ethereum/mix/>`_
     Qt based IDE for designing, debugging and testing solidity smart contracts.
 
-* `Ethereum Studio <https://live.ether.camp/>`_		
+* `Ethereum Studio <https://live.trx.camp/>`_
     Specialized web IDE that also provides shell access to a complete Ethereum environment.
 
 Solidity Tools

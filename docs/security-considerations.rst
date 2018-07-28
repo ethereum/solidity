@@ -59,7 +59,7 @@ complete contract):
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// Mapping of trx shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -82,7 +82,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// Mapping of trx shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -99,7 +99,7 @@ outlined further below:
     pragma solidity ^0.4.11;
 
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// Mapping of trx shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -196,7 +196,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
         }
     }
 
-Now someone tricks you into sending ether to the address of this attack wallet:
+Now someone tricks you into sending trx to the address of this attack wallet:
 
 ::
 

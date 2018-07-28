@@ -42,11 +42,8 @@ namespace test
 	using Address = h160;
 
 	// The various denominations; here for ease of use where needed within code.
-	static const u256 wei = 1;
-	static const u256 shannon = u256("1000000000");
-	static const u256 szabo = shannon * 1000;
-	static const u256 finney = szabo * 1000;
-	static const u256 ether = finney * 1000;
+	static const u256 drop = 1;
+	static const u256 trx = drop * 1000000;
 
 class ExecutionFramework
 {

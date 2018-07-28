@@ -126,7 +126,7 @@ IndexAccess = Expression '[' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
 NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
-NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
+NumberUnit = 'drop' | 'trx'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
 HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'

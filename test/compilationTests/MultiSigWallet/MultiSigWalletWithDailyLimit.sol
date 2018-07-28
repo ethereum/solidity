@@ -36,7 +36,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         DailyLimitChange(_dailyLimit);
     }
 
-    /// @dev Allows anyone to execute a confirmed transaction or ether withdraws until daily limit is reached.
+    /// @dev Allows anyone to execute a confirmed transaction or trx withdraws until daily limit is reached.
     /// @param transactionId Transaction ID.
     function executeTransaction(uint transactionId)
         public

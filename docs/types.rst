@@ -160,11 +160,11 @@ It is possible to adjust the supplied gas with the ``.gas()`` modifier::
 
 Similarly, the supplied Ether value can be controlled too::
 
-    nameReg.call.value(1 ether)("register", "MyName");
+    nameReg.call.value(1 trx)("register", "MyName");
 
 Lastly, these modifiers can be combined. Their order does not matter::
 
-    nameReg.call.gas(1000000).value(1 ether)("register", "MyName");
+    nameReg.call.gas(1000000).value(1 trx)("register", "MyName");
 
 .. note::
     It is not yet possible to use the gas or value modifiers on overloaded functions.

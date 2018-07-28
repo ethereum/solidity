@@ -126,7 +126,7 @@ void ContractCompiler::initializeContext(
 
 void ContractCompiler::appendCallValueCheck()
 {
-	// Throw if function is not payable but call contained ether.
+	// Throw if function is not payable but call contained trx.
 	m_context << Instruction::CALLVALUE;
 	// TODO: error message?
 	m_context.appendConditionalRevert();

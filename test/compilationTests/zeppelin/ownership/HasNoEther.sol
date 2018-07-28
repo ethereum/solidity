@@ -5,8 +5,8 @@ import "./Ownable.sol";
 /** 
  * @title Contracts that should not own Ether
  * @author Remco Bloemen <remco@2π.com>
- * @dev This tries to block incoming ether to prevent accidental loss of Ether. Should Ether end up
- * in the contract, it will allow the owner to reclaim this ether.
+ * @dev This tries to block incoming trx to prevent accidental loss of Ether. Should Ether end up
+ * in the contract, it will allow the owner to reclaim this trx.
  * @notice Ether can still be send to this contract by:
  * calling functions labeled `payable`
  * `selfdestruct(contract_address)`

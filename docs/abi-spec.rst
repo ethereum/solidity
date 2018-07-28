@@ -311,7 +311,7 @@ A function description is a JSON object with the fields:
   * ``components``: used for tuple types (more below).
 
 - ``outputs``: an array of objects similar to ``inputs``, can be omitted if function doesn't return anything;
-- ``payable``: ``true`` if function accepts ether, defaults to ``false``;
+- ``payable``: ``true`` if function accepts trx, defaults to ``false``;
 - ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` and ``payable`` (same as ``payable`` above).
 - ``constant``: ``true`` if function is either ``pure`` or ``view``
 
@@ -319,7 +319,7 @@ A function description is a JSON object with the fields:
 
 Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
 
-Sending non-zero ether to non-payable function will throw. Don't do it.
+Sending non-zero trx to non-payable function will throw. Don't do it.
 
 An event description is a JSON object with fairly similar fields:
 

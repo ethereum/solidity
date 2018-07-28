@@ -508,7 +508,7 @@ Bugfixes:
 
 This release deliberately breaks backwards compatibility mostly to
 enforce some safety features. The most important change is that you have
-to explicitly specify if functions can receive ether via the ``payable``
+to explicitly specify if functions can receive trx via the ``payable``
 modifier. Furthermore, more situations cause exceptions to be thrown.
 
 Minimal changes to be made for upgrade:

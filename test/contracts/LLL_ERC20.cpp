@@ -469,9 +469,9 @@ BOOST_AUTO_TEST_CASE(transfer_from)
 	BOOST_REQUIRE(callContractFunction("approve(address,uint256)", ACCOUNT(1), u256(allow)) == SUCCESS);
 	BOOST_REQUIRE(callContractFunction("allowance(address,address)", ACCOUNT(0), ACCOUNT(1)) == encodeArgs(allow));
 
-	// Send account(1) some ether for gas.
-	sendEther(account(1), 1000 * ether);
-	BOOST_REQUIRE(balanceAt(account(1)) >= 1000 * ether);
+	// Send account(1) some trx for gas.
+	sendEther(account(1), 1000 * trx);
+	BOOST_REQUIRE(balanceAt(account(1)) >= 1000 * trx);
 
 	// Transfer 300 tokens from account(0) to account(2); check that the allowance decreases.
 	int transfer = 300;
@@ -534,9 +534,9 @@ BOOST_AUTO_TEST_CASE(approval_and_transfer_events)
 	BOOST_CHECK(m_logs[0].topics[1] == ACCOUNT(0));
 	BOOST_CHECK(m_logs[0].topics[2] == ACCOUNT(1));
 
-	// Send account(1) some ether for gas.
-	sendEther(account(1), 1000 * ether);
-	BOOST_REQUIRE(balanceAt(account(1)) >= 1000 * ether);
+	// Send account(1) some trx for gas.
+	sendEther(account(1), 1000 * trx);
+	BOOST_REQUIRE(balanceAt(account(1)) >= 1000 * trx);
 
 	// Transfer 3000 tokens from account(0) to account(2); check that the allowance decreases.
 	int transfer = 3000;
@@ -590,10 +590,10 @@ BOOST_AUTO_TEST_CASE(invalid_transfer_from)
 	// TransferFrom without approval.
 	int transfer = 300;
 
-	// Send account(1) some ether for gas.
+	// Send account(1) some trx for gas.
 	m_sender = account(0);
-	sendEther(account(1), 1000 * ether);
-	BOOST_REQUIRE(balanceAt(account(1)) >= 1000 * ether);
+	sendEther(account(1), 1000 * trx);
+	BOOST_REQUIRE(balanceAt(account(1)) >= 1000 * trx);
 
 	// Try the transfer; ensure nothing changes.
 	m_sender = account(1);

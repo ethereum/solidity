@@ -288,7 +288,7 @@ contract ico is safeMath {
         /*
             Buying a token
             
-            If there is not at least 0.2 ether balance on the beneficiaryAddress then the amount of the ether which was intended for the purchase will be reduced by 0.2 and that will be sent to the address of the beneficiary.
+            If there is not at least 0.2 trx balance on the beneficiaryAddress then the amount of the trx which was intended for the purchase will be reduced by 0.2 and that will be sent to the address of the beneficiary.
             From the remaining amount calculate the reward with the help of the getIcoReward function.
             Only that affilate address is valid which has some token on it’s account.
             If there is a valid affilate address then calculate and credit the reward as well in the following way:
@@ -305,9 +305,9 @@ contract ico is safeMath {
             affilateAddress = 0x00;
         }
         uint256 _value = msg.value;
-        if ( beneficiaryAddress.balance < 0.2 ether ) {
-            require( beneficiaryAddress.send(0.2 ether) );
-            _value = safeSub(_value, 0.2 ether);
+        if ( beneficiaryAddress.balance < 0.2 trx ) {
+            require( beneficiaryAddress.send(0.2 trx) );
+            _value = safeSub(_value, 0.2 trx);
         }
         var _reward = getIcoReward(_value);
         require( _reward > 0 );
@@ -359,12 +359,12 @@ contract ico is safeMath {
         /*
             Expected token volume at token purchase
             
-            @value The amount of ether for the purchase
+            @value The amount of trx for the purchase
             @reward Amount of the token
                 x = (value * 1e6 * USD_ETC_exchange rate / 1e4 / 1e18) * bonus percentage
                 2.700000 token = (1e18 * 1e6 * 22500 / 1e4 / 1e18) * 1.20
         */
-        reward = (value * 1e6 * icoExchangeRate / icoExchangeRateM / 1 ether) * (ICObonus() + 100) / 100;
+        reward = (value * 1e6 * icoExchangeRate / icoExchangeRateM / 1 trx) * (ICObonus() + 100) / 100;
         if ( reward < 5e6) { return 0; }
     }
     

@@ -74,10 +74,8 @@ void CompilerState::populateStandard()
 	"(def 'ripemd160 (data datasize) (msg allgas 3 0 data datasize))"
 	"(def 'sha256 (val) { [0]:val (sha256 0 32) })"
 	"(def 'ripemd160 (val) { [0]:val (ripemd160 0 32) })"
-	"(def 'wei 1)"
-	"(def 'szabo 1000000000000)"
-	"(def 'finney 1000000000000000)"
-	"(def 'ether 1000000000000000000)"
+	"(def 'drop 1)"
+	"(def 'trx 1000000)"
 	// these could be replaced by native instructions once supported by EVM
 	"(def 'shl (val shift) (mul val (exp 2 shift)))"
 	"(def 'shr (val shift) (div val (exp 2 shift)))"
