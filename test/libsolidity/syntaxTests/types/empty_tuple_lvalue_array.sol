@@ -1,4 +1,3 @@
-pragma solidity ^0.4.3;
 contract C {
     function f() private pure {}
     function a() public {
@@ -8,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (146-149): Array component cannot be empty.
+// TypeError: (122-125): Array component cannot be empty.
