@@ -509,6 +509,8 @@ them can be quite expensive, we have to think about whether we want them to be
 stored in **memory** (which is not persisting) or **storage** (where the state
 variables are held).
 
+.. _data-location:
+
 Data location
 -------------
 

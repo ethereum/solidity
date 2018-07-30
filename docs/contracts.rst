@@ -1201,7 +1201,7 @@ contracts (``L.f()`` if ``L`` is the name of the library). Furthermore,
 ``internal`` functions of libraries are visible in all contracts, just as
 if the library were a base contract. Of course, calls to internal functions
 use the internal calling convention, which means that all internal types
-can be passed and memory types will be passed by reference and not copied.
+can be passed and types :ref:`stored in memory <data-location>` will be passed by reference and not copied.
 To realize this in the EVM, code of internal library functions
 and all functions called from therein will at compile time be pulled into the calling
 contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
@@ -1282,7 +1282,7 @@ actual external function call is performed.
 in this call, though (prior to Homestead, because of the use of ``CALLCODE``, ``msg.sender`` and
 ``msg.value`` changed, though).
 
-The following example shows how to use memory types and
+The following example shows how to use :ref:`types stored in memory <data-location>` and
 internal functions in libraries in order to implement
 custom types without the overhead of external function calls:
 
