@@ -192,11 +192,18 @@ The ``.gas()`` option is available on all three methods, while the ``.value()`` 
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
 
+.. index:: ! contract type, ! type; contract
+
+.. _contract_types:
+
 Contract Types
 --------------
 
 Every :ref:`contract<contracts>` defines its own type. Contracts can be implicitly converted
 to contracts they inherit from. They can be explicitly converted from and to ``address`` types.
+
+Contracts can also be instantiated (which here means they are newly created). You can find more details in
+the :ref:`'Contracts via new'<creating-contracts>` section.
 
 The data representation of a contract is identical to that of the ``address`` type and
 this type is also used in the :ref:`ABI<ABI>`.
