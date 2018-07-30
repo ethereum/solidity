@@ -30,7 +30,7 @@
 
 namespace dev
 {
-namespace eth
+namespace lll
 {
 
 using ReadCallback = std::function<std::string(std::string const&)>;

@@ -28,7 +28,7 @@
 #define ACCOUNT(n)    h256(account(n), h256::AlignRight)
 
 using namespace std;
-using namespace dev::eth;
+using namespace dev::lll;
 
 namespace dev
 {
