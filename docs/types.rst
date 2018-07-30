@@ -906,12 +906,9 @@ For variables that are more complex types (or :ref:`reference-types`) (that do n
 bytes), whether the variable is copied to or referenced in the target function follows the same
 rules as :ref:`data-location-assignment`, in summary:
 
-- Variables appended with ``storage`` in the output function and ``memory`` in the input function
-have their values **copied** between the functions.
-- Variables appended with ``storage`` in the output function and ``storage`` in the input function
-have their values **referenced** between the functions.
-- Already ``memory`` stored variables in the output function and already ``memory`` stored
-variables in the input function have their values **referenced** between the functions.
+- Variables appended with ``storage`` in the output function and ``memory`` in the input function have their values **copied** between the functions.
+- Variables appended with ``storage`` in the output function and ``storage`` in the input function have their values **referenced** between the functions.
+- Already ``memory`` stored variables in the output function and already ``memory`` stored variables in the input function have their values **referenced** between the functions.
 
 When a complex variable is copied from an output function to an input function the mapping of the
 target is ignored as there is no list of mapped keys and it's impossible to know which values to
