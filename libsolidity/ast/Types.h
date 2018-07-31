@@ -355,6 +355,19 @@ private:
 	Modifier m_modifier;
 };
 
+struct ElementaryTypes
+{
+	static IntegerType Address;
+	// static const ArrayType BytesMemory;
+	// static const ArrayType StringMemory;
+	// ElementaryTypes()
+	// {
+	// 	Address = IntegerType(160, IntegerType::Modifier::Address);
+	// };
+};
+IntegerType ElementaryTypes::Address = IntegerType(160, IntegerType::Modifier::Address);
+
+
 /**
  * A fixed point type number (signed, unsigned).
  */
