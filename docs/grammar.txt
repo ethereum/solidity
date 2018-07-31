@@ -79,7 +79,6 @@ Return = 'return' Expression?
 Throw = 'throw'
 EmitStatement = 'emit' FunctionCall
 VariableDefinition = (VariableDeclaration | '(' VariableDeclaration? (',' VariableDeclaration? )* ')' ) ( '=' Expression )?
-IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
 
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression
