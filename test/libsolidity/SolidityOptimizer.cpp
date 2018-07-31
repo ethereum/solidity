@@ -74,9 +74,9 @@ public:
 		unsigned const _optimizeRuns = 200
 	)
 	{
-		m_nonOptimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, false, _optimizeRuns);
+		m_nonOptimizedBytecode = compileAndRunWithOptimizer("pragma solidity >=0.0;\n" + _sourceCode, _value, _contractName, false, _optimizeRuns);
 		m_nonOptimizedContract = m_contractAddress;
-		m_optimizedBytecode = compileAndRunWithOptimizer(_sourceCode, _value, _contractName, true, _optimizeRuns);
+		m_optimizedBytecode = compileAndRunWithOptimizer("pragma solidity >=0.0;\n" + _sourceCode, _value, _contractName, true, _optimizeRuns);
 		size_t nonOptimizedSize = numInstructions(m_nonOptimizedBytecode);
 		size_t optimizedSize = numInstructions(m_optimizedBytecode);
 		BOOST_CHECK_MESSAGE(
@@ -441,8 +441,6 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 	// This tests that the constant optimizer does not try to find the best representation
 	// indefinitely but instead stops after some number of iterations.
 	char const* sourceCode = R"(
-	pragma solidity ^0.4.0;
-
 	contract HexEncoding {
 		function hexEncodeTest(address addr) public returns (bytes32 ret) {
 			uint x = uint(addr) / 2**32;

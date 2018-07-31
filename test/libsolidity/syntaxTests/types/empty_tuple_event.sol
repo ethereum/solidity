@@ -1,4 +1,3 @@
-pragma solidity ^0.4.3;
 contract C {
     event SomeEvent();
     function a() public {
@@ -6,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (95-99): Expected primary expression.
+// ParserError: (71-75): Expected primary expression.
