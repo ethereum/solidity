@@ -568,7 +568,17 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	// Similarly we assume bitwise shifting and create2 go together.
 	solAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
-	if ((
+	if (_instr == solidity::Instruction::EXTCODEHASH)
+		m_errorReporter.warning(
+			_location,
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name)
+			+ "\" instruction is not supported by the VM version \"" +
+			"" + m_evmVersion.name() +
+			"\" you are currently compiling for. " +
+			"It will be interpreted as an invalid instruction on this VM."
+		);
+	else if ((
 		_instr == solidity::Instruction::RETURNDATACOPY ||
 		_instr == solidity::Instruction::RETURNDATASIZE ||
 		_instr == solidity::Instruction::STATICCALL
