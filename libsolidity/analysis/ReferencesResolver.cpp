@@ -144,7 +144,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
 	{
-		declarationError(_typeName.location(), "Identifier not found or not unique.");
+		fatalDeclarationError(_typeName.location(), "Identifier not found or not unique.");
 		return;
 	}
 
