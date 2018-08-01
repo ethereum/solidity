@@ -3,12 +3,12 @@ pragma solidity ^0.4.11;
 import "./safeMath.sol";
 
 contract multiOwner is safeMath {
-    
+
     mapping(address => bool) public owners;
     uint256 public ownerCount;
 
     mapping(bytes32 => address[]) public doDB;
-    
+
     /*
         Constructor
     */

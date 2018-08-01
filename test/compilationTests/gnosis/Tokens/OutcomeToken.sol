@@ -36,7 +36,7 @@ contract OutcomeToken is StandardToken {
     {
         eventContract = msg.sender;
     }
-    
+
     /// @dev Events contract issues new tokens for address. Returns success
     /// @param _for Address of receiver
     /// @param outcomeTokenCount Number of tokens to issue

@@ -9,18 +9,18 @@ contract module {
     /*
         Module
     */
-    
+
     enum status {
         New,
         Connected,
         Disconnected,
         Disabled
     }
-    
+
     status public moduleStatus;
     uint256 public disabledUntil;
     address public moduleHandlerAddress;
-    
+
     function disableModule(bool forever) external onlyForModuleHandler returns (bool success) {
         _disableModule(forever);
         return true;
@@ -29,13 +29,13 @@ contract module {
         /*
             Disable the module for one week, if the forever true then for forever.
             This function calls the Publisher module.
-            
+
             @forever    For forever or not
         */
         if ( forever ) { moduleStatus = status.Disabled; }
         else { disabledUntil = block.number + 5760; }
     }
-    
+
     function replaceModuleHandler(address newModuleHandlerAddress) external onlyForModuleHandler returns (bool success) {
         _replaceModuleHandler(newModuleHandlerAddress);
         return true;
@@ -44,13 +44,13 @@ contract module {
         /*
             Replace the ModuleHandler address.
             This function calls the Publisher module.
-            
+
             @newModuleHandlerAddress    New module handler address
         */
         require( moduleStatus == status.Connected );
         moduleHandlerAddress = newModuleHandlerAddress;
     }
-    
+
     function connectModule() external onlyForModuleHandler returns (bool success) {
         _connectModule();
         return true;
@@ -63,7 +63,7 @@ contract module {
         require( moduleStatus == status.New );
         moduleStatus = status.Connected;
     }
-    
+
     function disconnectModule() external onlyForModuleHandler returns (bool success) {
         _disconnectModule();
         return true;
@@ -76,7 +76,7 @@ contract module {
         require( moduleStatus != status.New && moduleStatus != status.Disconnected );
         moduleStatus = status.Disconnected;
     }
-    
+
     function replaceModule(address newModuleAddress) external onlyForModuleHandler returns (bool success) {
         _replaceModule(newModuleAddress);
         return true;
@@ -86,7 +86,7 @@ contract module {
             Replace the module for an another new module.
             This function calls the Publisher module.
             We send every Token and ether to the new module.
-            
+
             @newModuleAddress   New module handler address
         */
         require( moduleStatus != status.New && moduleStatus != status.Disconnected);
@@ -100,14 +100,14 @@ contract module {
         }
         moduleStatus = status.Disconnected;
     }
-    
+
     function transferEvent(address from, address to, uint256 value) external onlyForModuleHandler returns (bool success) {
         return true;
     }
     function newSchellingRoundEvent(uint256 roundID, uint256 reward) external onlyForModuleHandler returns (bool success) {
         return true;
     }
-    
+
     function registerModuleHandler(address _moduleHandlerAddress) internal {
         /*
             Module constructor function for registering ModuleHandler address.
@@ -118,9 +118,9 @@ contract module {
         /*
             Test for ModuleHandler address.
             If the module is not connected then returns always false.
-            
+
             @addr   Address to check
-            
+
             @ret    This is the module handler address or not
         */
         if ( moduleHandlerAddress == address(0x00) ) { return true; }
@@ -130,7 +130,7 @@ contract module {
     function isActive() public view returns (bool success, bool active) {
         /*
             Check self for ready for functions or not.
-            
+
             @success    Function call was successful or not
             @active     Ready for functions or not
         */

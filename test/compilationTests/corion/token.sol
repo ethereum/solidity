@@ -23,7 +23,7 @@ contract token is safeMath, module, announcementTypes {
     }
     modifier isReady {
         (bool _success, bool _active) = super.isActive();
-        require( _success && _active ); 
+        require( _success && _active );
         _;
     }
     /**
@@ -35,7 +35,7 @@ contract token is safeMath, module, announcementTypes {
     string public name = "Corion";
     string public symbol = "COR";
     uint8 public decimals = 6;
-    
+
     tokenDB public db;
     address public icoAddr;
     uint256 public transactionFeeRate      = 20;
@@ -45,15 +45,15 @@ contract token is safeMath, module, announcementTypes {
     uint256 public transactionFeeBurn      = 80;
     address public exchangeAddress;
     bool    public isICO                   = true;
-    
+
     mapping(address => bool) public genesis;
 
     constructor(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] memory genesisAddr, uint256[] memory genesisValue) public payable {
         /*
             Installation function
-            
+
             When _icoAddr is defined, 0.2 ether has to be attached  as many times  as many genesis addresses are given
-            
+
             @forReplace                 This address will be replaced with the old one or not.
             @moduleHandler              Modulhandler's address
             @dbAddr                     Address of database
@@ -82,18 +82,18 @@ contract token is safeMath, module, announcementTypes {
             }
         }
     }
-    
+
     function closeIco() external returns (bool success) {
         /*
             ICO finished. It can be called only by ICO contract
-            
+
             @success    Was the Function successful?
         */
         require( msg.sender == icoAddr );
         isICO = false;
         return true;
     }
-    
+
     /**
      * @notice `msg.sender` approves `spender` to spend `amount` tokens on its behalf.
      * @param spender The address of the account able to transfer the tokens
@@ -104,17 +104,17 @@ contract token is safeMath, module, announcementTypes {
     function approve(address spender, uint256 amount, uint256 nonce) isReady external returns (bool success) {
         /*
             Authorise another address to use a certain quantity of the authorising owner’s balance
-         
+
             @spender            Address of authorised party
             @amount             Token quantity
             @nonce              Transaction count
-            
+
             @success            Was the Function successful?
         */
         _approve(spender, amount, nonce);
         return true;
     }
-    
+
     /**
      * @notice `msg.sender` approves `spender` to spend `amount` tokens on its behalf and notify the spender from your approve with your `extraData` data.
      * @param spender The address of the account able to transfer the tokens
@@ -127,24 +127,24 @@ contract token is safeMath, module, announcementTypes {
         /*
             Authorise another address to use a certain quantity of the authorising  owner’s balance
             Following the transaction the receiver address `approvedCorionToken` function is called by the given data
-            
+
             @spender            Authorized address
             @amount             Token quantity
             @extraData          Extra data to be received by the receiver
             @nonce              Transaction count
-            
+
             @success            Was the Function successful?
         */
         _approve(spender, amount, nonce);
         require( thirdPartyContractAbstract(spender).approvedCorionToken(msg.sender, amount, extraData) );
         return true;
     }
-    
+
     function _approve(address spender, uint256 amount, uint256 nonce) internal {
         /*
             Internal Function to authorise another address to use a certain quantity of the authorising owner’s balance.
             If the transaction count not match the authorise fails.
-            
+
             @spender           Address of authorised party
             @amount            Token quantity
             @nonce             Transaction count
@@ -158,10 +158,10 @@ contract token is safeMath, module, announcementTypes {
     function allowance(address owner, address spender) public view returns (uint256 remaining, uint256 nonce) {
         /*
             Get the quantity of tokens given to be used
-            
+
             @owner         Authorising address
             @spender       Authorised address
-            
+
             @remaining     Tokens to be spent
             @nonce         Transaction count
         */
@@ -169,7 +169,7 @@ contract token is safeMath, module, announcementTypes {
         require( _success );
         return (_remaining, _nonce);
     }
-    
+
     /**
      * @notice Send `amount` Corion tokens to `to` from `msg.sender`
      * @param to The address of the recipient
@@ -181,10 +181,10 @@ contract token is safeMath, module, announcementTypes {
             Start transaction, token is sent from caller’s address to receiver’s address
             Transaction fee is to be deducted.
             If receiver is not a natural address but a person, he will be called
-          
+
             @to         To who
             @amount     Quantity
-            
+
             @success    Was the Function successful?
         */
         bytes memory _data;
@@ -196,7 +196,7 @@ contract token is safeMath, module, announcementTypes {
         emit Transfer(msg.sender, to, amount, _data);
         return true;
     }
-    
+
     /**
      * @notice Send `amount` tokens to `to` from `from` on the condition it is approved by `from`
      * @param from The address holding the tokens being transferred
@@ -209,11 +209,11 @@ contract token is safeMath, module, announcementTypes {
             Start transaction to send a quantity from a given address to another address. (approve / allowance). This can be called only by the address approved in advance
             Transaction fee is to be deducted
             If receiver is not a natural address but a person, he will be called
-            
+
             @from       From who.
             @to         To who
             @amount     Quantity
-            
+
             @success    Was the Function successful?
         */
         if ( from != msg.sender ) {
@@ -233,7 +233,7 @@ contract token is safeMath, module, announcementTypes {
         emit Transfer(from, to, amount, _data);
         return true;
     }
-    
+
     /**
      * @notice Send `amount` tokens to `to` from `from` on the condition it is approved by `from`
      * @param from The address holding the tokens being transferred
@@ -245,12 +245,12 @@ contract token is safeMath, module, announcementTypes {
         /*
             Start transaction to send a quantity from a given address to another address
             Only ModuleHandler can call it
-           
+
             @from       From who
             @to         To who.
             @amount     Quantity
             @fee        Deduct transaction fee - yes or no?
-            
+
             @success    Was the Function successful?
         */
         bytes memory _data;
@@ -259,7 +259,7 @@ contract token is safeMath, module, announcementTypes {
         emit Transfer(from, to, amount, _data);
         return true;
     }
-    
+
     /**
      * @notice Send `amount` Corion tokens to `to` from `msg.sender` and notify the receiver from your transaction with your `extraData` data
      * @param to The contract address of the recipient
@@ -272,11 +272,11 @@ contract token is safeMath, module, announcementTypes {
             Start transaction to send a quantity from a given address to another address
             After transaction the function `receiveCorionToken`of the receiver is called  by the given data
             When sending an amount, it is possible the total amount cannot be processed, the remaining amount is sent back with no fee charged
-            
+
             @to             To who.
             @amount         Quantity
             @extraData      Extra data the receiver will get
-            
+
             @success        Was the Function successful?
         */
         if ( isContract(to) ) {
@@ -287,11 +287,11 @@ contract token is safeMath, module, announcementTypes {
         emit Transfer(msg.sender, to, amount, extraData);
         return true;
     }
-    
+
     function _transferToContract(address from, address to, uint256 amount, bytes memory extraData) internal {
         /*
             Internal function to start transactions to a contract
-            
+
             @from           From who
             @to             To who.
             @amount         Quantity
@@ -306,15 +306,15 @@ contract token is safeMath, module, announcementTypes {
         }
         _processTransactionFee(from, amount - _back);
     }
-    
+
     function _transfer(address from, address to, uint256 amount, bool fee) internal {
         /*
             Internal function to start transactions. When Tokens are sent, transaction fee is charged
             During ICO transactions are allowed only from genesis addresses.
-            After sending the tokens, the ModuleHandler is notified and it will broadcast the fact among members 
-            
+            After sending the tokens, the ModuleHandler is notified and it will broadcast the fact among members
+
             The 0xa636a97578d26a3b76b060bbc18226d954cf3757 address are blacklisted.
-            
+
             @from       From who
             @to         To who
             @amount     Quantity
@@ -336,7 +336,7 @@ contract token is safeMath, module, announcementTypes {
         }
         require( moduleHandler(moduleHandlerAddress).broadcastTransfer(from, to, amount) );
     }
-    
+
     /**
      * @notice Transaction fee will be deduced from `owner` for transacting `value`
      * @param owner The address where will the transaction fee deduced
@@ -345,23 +345,23 @@ contract token is safeMath, module, announcementTypes {
      */
     function processTransactionFee(address owner, uint256 value) isReady external returns (bool success) {
         /*
-            Charge transaction fee. It can be called only by moduleHandler  
-        
+            Charge transaction fee. It can be called only by moduleHandler
+
             @owner      From who.
             @value      Quantity to calculate the fee
-            
+
             @success    Was the Function successful?
         */
         require( super.isModuleHandler(msg.sender) );
         _processTransactionFee(owner, value);
         return true;
     }
-    
+
     function _processTransactionFee(address owner, uint256 value) internal {
         /*
             Internal function to charge the transaction fee. A certain quantity is burnt, the rest is sent to the Schelling game prize pool.
             No transaction fee during ICO.
-            
+
             @owner      From who
             @value      Quantity to calculate the fee
         */
@@ -385,13 +385,13 @@ contract token is safeMath, module, announcementTypes {
             _burn(owner, _fee);
         }
     }
-    
+
     function getTransactionFee(uint256 value) public view returns (bool success, uint256 fee) {
         /*
             Transaction fee query.
-            
+
             @value      Quantity to calculate the fee
-            
+
             @success    Was the Function successful?
             @fee        Amount of Transaction fee
         */
@@ -401,25 +401,25 @@ contract token is safeMath, module, announcementTypes {
         else if ( fee < transactionFeeMin ) { fee = transactionFeeMin; }
         return (true, fee);
     }
-    
+
     function mint(address owner, uint256 value) isReady external returns (bool success) {
         /*
             Generating tokens. It can be called only by ICO contract or the moduleHandler.
-            
+
             @owner      Address
             @value      Amount.
-            
+
             @success    Was the Function successful?
         */
         require( super.isModuleHandler(msg.sender) || msg.sender == icoAddr );
         _mint(owner, value);
         return true;
     }
-    
+
     function _mint(address owner, uint256 value) internal {
         /*
             Internal function to generate tokens
-            
+
             @owner     Token is credited to this address
             @value     Quantity
         */
@@ -430,25 +430,25 @@ contract token is safeMath, module, announcementTypes {
         }
         emit Mint(owner, value);
     }
-    
+
     function burn(address owner, uint256 value) isReady external returns (bool success) {
         /*
             Burning the token. Can call only modulehandler
-            
+
             @owner     Burn the token from this address
             @value     Quantity
-            
+
             @success    Was the Function successful?
         */
         require( super.isModuleHandler(msg.sender) );
         _burn(owner, value);
         return true;
     }
-    
+
     function _burn(address owner, uint256 value) internal {
         /*
             Internal function to burn the token
-     
+
             @owner     Burn the token from this address
             @value     Quantity
         */
@@ -456,13 +456,13 @@ contract token is safeMath, module, announcementTypes {
         require( moduleHandler(moduleHandlerAddress).broadcastTransfer(owner, address(0x00), value) );
         emit Burn(owner, value);
     }
-    
+
     function isContract(address addr) internal returns (bool success) {
         /*
             Internal function to check if the given address is natural, or a contract
-            
+
             @addr       Address to be checked
-            
+
             @success    Is the address crontact or not
         */
         uint256 _codeLength;
@@ -475,9 +475,9 @@ contract token is safeMath, module, announcementTypes {
     function balanceOf(address owner) public view returns (uint256 value) {
         /*
             Token balance query
-            
+
             @owner      Address
-            
+
             @value      Balance of address
         */
         return db.balanceOf(owner);
@@ -486,19 +486,19 @@ contract token is safeMath, module, announcementTypes {
     function totalSupply() public view returns (uint256 value) {
         /*
             Total token quantity query
-            
+
             @value      Total token quantity
         */
         return db.totalSupply();
     }
-    
+
     function configure(announcementType aType, uint256 value) isReady external returns(bool success) {
         /*
             Token settings configuration.It  can be call only by moduleHandler
-           
+
             @aType      Type of setting
             @value      Value
-            
+
             @success    Was the Function successful?
         */
         require( super.isModuleHandler(msg.sender) );
@@ -509,7 +509,7 @@ contract token is safeMath, module, announcementTypes {
         else { return false; }
         return true;
     }
-    
+
     event AllowanceUsed(address indexed spender, address indexed owner, uint256 indexed value);
     event Mint(address indexed addr, uint256 indexed value);
     event Burn(address indexed addr, uint256 indexed value);

@@ -1,6 +1,6 @@
 contract C {
     uint[] x;
-    function() external { 
+    function() external {
         uint[] storage y = x;
         assembly {
             pop(y)
@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (119-120): You have to use the _slot or _offset suffix to access storage reference variables.
+// TypeError: (118-119): You have to use the _slot or _offset suffix to access storage reference variables.

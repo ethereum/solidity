@@ -1,6 +1,6 @@
 contract C {
     uint[] x;
-    function() external { 
+    function() external {
         uint[] storage y = x;
         assembly {
             y_slot := 1
@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (115-121): Storage variables cannot be assigned to.
-// TypeError: (139-147): Storage variables cannot be assigned to.
+// TypeError: (114-120): Storage variables cannot be assigned to.
+// TypeError: (138-146): Storage variables cannot be assigned to.

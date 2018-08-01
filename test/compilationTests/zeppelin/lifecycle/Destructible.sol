@@ -13,7 +13,7 @@ contract Destructible is Ownable {
   constructor() public payable { }
 
   /**
-   * @dev Transfers the current balance to the owner and terminates the contract. 
+   * @dev Transfers the current balance to the owner and terminates the contract.
    */
   function destroy() public onlyOwner {
     selfdestruct(owner);

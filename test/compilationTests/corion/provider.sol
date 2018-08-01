@@ -20,7 +20,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Transaction completed. This function is only available for the modulehandler.
             It should be checked if the sender or the acceptor does not connect to the provider or it is not a provider itself if so than the change should be recorded.
-            
+
             @from       From whom?
             @to         For who?
             @value      amount
@@ -36,9 +36,9 @@ contract provider is module, safeMath, announcementTypes {
             New schelling round. This function is only available for the moduleHandler.
             We are recording the new schelling round and we are storing the whole current quantity of the tokens.
             We generate a reward quantity of tokens directed to the providers address. The collected interest will be transferred from this contract.
-            
+
             @roundID        Number of the schelling round.
-            @reward         token emission 
+            @reward         token emission
             @bool           Was the function successful?
         */
         require( super.isModuleHandler(msg.sender) );
@@ -50,7 +50,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     modifier isReady {
         (bool _success, bool _active) = super.isActive();
-        require( _success && _active ); 
+        require( _success && _active );
         _;
     }
     /*
@@ -98,13 +98,13 @@ contract provider is module, safeMath, announcementTypes {
         uint256 currentHeight;
     }
     mapping(address => _providers) private providers;
-    
+
     struct _globalFunds {
         uint256 reward;
         uint256 supply;
     }
     mapping(uint256 => _globalFunds) private globalFunds;
-    
+
     struct _client{
         address providerAddress;
         uint256 providerHeight;
@@ -115,13 +115,13 @@ contract provider is module, safeMath, announcementTypes {
         uint256 paidUpTo;
     }
     mapping(address => _client) private clients;
-    
+
     uint256 private currentSchellingRound = 1;
 
     constructor(address _moduleHandler) public {
         /*
             Install function.
-            
+
             @_moduleHandler     Address of the moduleHandler.
         */
         super.registerModuleHandler(_moduleHandler);
@@ -129,7 +129,7 @@ contract provider is module, safeMath, announcementTypes {
     function configure(announcementType a, uint256 b) external returns(bool) {
         /*
             Configuration of the provider. Can be invited just by the moduleHandler.
-            
+
             @a      Type of the setting
             @b      value
         */
@@ -150,7 +150,7 @@ contract provider is module, safeMath, announcementTypes {
     function getUserDetails(address addr, uint256 schellingRound) public view returns (address ProviderAddress, uint256 ProviderHeight, uint256 ConnectedOn, uint256 value) {
         /*
             Collecting the datas of the client.
-            
+
             @addr               Address of the client.
             @schellingRound     Number of the schelling round. If it is not defined then the current one.
             @ProviderAddress    Address of the provider the one where connected to
@@ -173,9 +173,9 @@ contract provider is module, safeMath, announcementTypes {
             the share from the token emission.
             In case is a private provider it has to be checked if it has enough connected capital to be able to accept share from the token emission.
             The provider’s account counts as a capital for the emission as well.
-            
+
             @value      amount of the connected capital
-            @priv       Is the provider private or not? 
+            @priv       Is the provider private or not?
             @bool       Gets the share from the token emission.
         */
         if ( priv ) {
@@ -187,8 +187,8 @@ contract provider is module, safeMath, announcementTypes {
         /*
             It checks if the provider has enough connected captital to be able to get from the token emission.
             In case the provider is not able to get the share from the token emission then the connected capital will not count to the value of the globalFunds, to the current schelling round.
-            
-            @oldValue       old  
+
+            @oldValue       old
             @newValue       new
             @priv           Is the provider private?
         */
@@ -205,12 +205,12 @@ contract provider is module, safeMath, announcementTypes {
     function checkCorrectRate(bool priv, uint8 rate) internal returns(bool) {
         /*
             Inner function which checks if the amount of interest what is given by the provider is fits to the criteria.
-            
+
             @priv       Is the provider private or not?
             @rate       Percentage/rate of the interest
             @bool       Correct or not?
         */
-        return ( ! priv && ( rate >= publicMinRate && rate <= publicMaxRate ) ) || 
+        return ( ! priv && ( rate >= publicMinRate && rate <= publicMaxRate ) ) ||
                 ( priv && ( rate >= privateMinRate && rate <= privateMaxRate ) );
     }
     function createProvider(bool priv, string name, string website, string country, string info, uint8 rate, bool isForRent, address admin) isReady external {
@@ -222,7 +222,7 @@ contract provider is module, safeMath, announcementTypes {
             For opening, has to have enough capital.
             All the functions of the provider except of the closing are going to be handled by the admin.
             The provider can be start as a rent as well, in this case the isForRent has to be true/correct. In case it runs as a rent the 20% of the profit will belong to the leser and the rest goes to the admin.
-            
+
             @priv           Privat szolgaltato e. Is private provider?
             @name           Provider’s name.
             @website        Provider’s website
@@ -241,7 +241,7 @@ contract provider is module, safeMath, announcementTypes {
             require( getTokenBalance(msg.sender) >= minFundsForPublic );
         }
         require( checkCorrectRate(priv, rate) );
-        
+
         providers[msg.sender].currentHeight++;
         uint256 currHeight = providers[msg.sender].currentHeight;
         providers[msg.sender].data[currHeight].valid           = true;
@@ -276,10 +276,10 @@ contract provider is module, safeMath, announcementTypes {
             This can only be invited by the provider’s admin.
             The emission rate is only valid for the next schelling round for this one it is not.
             The admin can only be changed by the address of the provider.
-            
+
             @addr               Address of the provider.
             @website            Website.
-            @admin              The new address of the admin. If we do not want to set it then we should enter 0X00. 
+            @admin              The new address of the admin. If we do not want to set it then we should enter 0X00.
             @country            Country
             @info               Short intro.
             @rate               Rate of the emission what will be given to the client.
@@ -303,7 +303,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             for the infos of the provider.
             In case the height is unknown then the system will use the last known height.
-            
+
             @addr           Addr of the provider
             @height         Height
             @name           Name of the provider.
@@ -348,7 +348,7 @@ contract provider is module, safeMath, announcementTypes {
     function getProviderCurrentSupply(address addr) internal view returns (uint256) {
         /*
             Inner function for polling the current height and the current quantity of the connected capital of the schelling round.
-            
+
             @addr           Provider’s address.
             @uint256        Amount of the connected capital
         */
@@ -363,7 +363,7 @@ contract provider is module, safeMath, announcementTypes {
         uint256 currHeight = providers[msg.sender].currentHeight;
         require( providers[msg.sender].data[currHeight].valid );
         require( providers[msg.sender].data[currHeight].paidUpTo == currentSchellingRound );
-        
+
         providers[msg.sender].data[currHeight].valid = false;
         providers[msg.sender].data[currHeight].close = currentSchellingRound;
         setRightForInterest(getProviderCurrentSupply(msg.sender), 0, providers[msg.sender].data[currHeight].priv);
@@ -373,8 +373,8 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Permition of the user to be able to connect to the provider.
             This can only be invited by the provider’s admin.
-            With this kind of call only 100 address can be permitted. 
-            
+            With this kind of call only 100 address can be permitted.
+
             @addr       Array of the addresses for whom the connection is allowed.
         */
         uint256 currHeight = providers[provider].currentHeight;
@@ -382,7 +382,7 @@ contract provider is module, safeMath, announcementTypes {
         require( providers[provider].data[currHeight].priv );
         require( providers[provider].data[currHeight].admin == msg.sender );
         require( addr.length <= 100 );
-        
+
         for ( uint256 a=0 ; a<addr.length ; a++ ) {
             providers[provider].data[currHeight].allowedUsers[addr[a]] = true;
         }
@@ -391,8 +391,8 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Disable of the user not to be able to connect to the provider.
             It is can called only for the admin of the provider.
-            With this kind of call only 100 address can be permitted. 
-            
+            With this kind of call only 100 address can be permitted.
+
             @addr      Array of the addresses for whom the connection is allowed.
         */
         uint256 currHeight = providers[provider].currentHeight;
@@ -400,7 +400,7 @@ contract provider is module, safeMath, announcementTypes {
         require( providers[provider].data[currHeight].priv );
         require( providers[provider].data[currHeight].admin == msg.sender );
         require( addr.length <= 100 );
-        
+
         for ( uint256 a=0 ; a<addr.length ; a++ ) {
             delete providers[provider].data[currHeight].allowedUsers[addr[a]];
         }
@@ -414,7 +414,7 @@ contract provider is module, safeMath, announcementTypes {
             If is an active provider then the client can only connect, if address is permitted at the provider (Whitelist).
             At private providers, the number of the client is restricted. If it reaches the limit no further clients are allowed to connect.
             This process has a transaction fee based on the senders whole token quantity.
-            
+
             @provider       Address of the provider.
         */
         uint256 currHeight = providers[provider].currentHeight;
@@ -427,7 +427,7 @@ contract provider is module, safeMath, announcementTypes {
         }
         uint256 bal = getTokenBalance(msg.sender);
         require( moduleHandler(moduleHandlerAddress).processTransactionFee(msg.sender, bal) );
-        
+
         checkFloatingSupply(provider, currHeight, false, bal);
         providers[provider].data[currHeight].clientsCount++;
         clients[msg.sender].providerAddress = provider;
@@ -455,7 +455,7 @@ contract provider is module, safeMath, announcementTypes {
         } else {
             require( clients[msg.sender].paidUpTo == currentSchellingRound );
         }
-        
+
         uint256 bal = getTokenBalance(msg.sender);
         if ( ! providerHasClosed ) {
             providers[provider].data[currHeight].clientsCount--;
@@ -472,7 +472,7 @@ contract provider is module, safeMath, announcementTypes {
     function checkReward(address addr) public returns (uint256 reward) {
         /*
             Polling the share from the token emission for clients and for providers.
-            
+
             @addr           The address want to check.
             @reward         Accumulated amount.
         */
@@ -494,7 +494,7 @@ contract provider is module, safeMath, announcementTypes {
             In case the client/provider was far behind then it is possible that this function should be called several times to check the total generated schelling rounds and to collect the share.
             If is neither a client nor a provider then the function is not available.
             The tokens will be sent to the beneficiary from the address of the provider without any transaction fees.
-            
+
             @beneficiary        Address of the beneficiary
             @limit              Quota of the check-rounds.
             @provider           Address of the provider
@@ -527,7 +527,7 @@ contract provider is module, safeMath, announcementTypes {
     function getClientReward(uint256 limit) internal returns (uint256 reward) {
         /*
             Inner function for the client in order to collect the share from the token emission
-            
+
             @limit          Quota of checking the schelling-rounds.
             @reward         Collected token amount from the checked rounds.
         */
@@ -574,7 +574,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     function getProviderReward(address addr, uint256 limit) internal returns (uint256 providerReward, uint256 adminReward) {
         /*
-            Inner function for the provider in order to collect the share from the token emission            
+            Inner function for the provider in order to collect the share from the token emission
             @addr               Address of the provider.
             @limit              Quota of the check-rounds.
             @providerReward     The reward of the provider’s address from the checked rounds.
@@ -594,7 +594,7 @@ contract provider is module, safeMath, announcementTypes {
                     rate = providers[addr].data[currHeight].rateHistory[a].value;
                 }
                 if ( rate > 0 ) {
-                    if ( ( a > LTSID && rightForInterest(providers[addr].data[currHeight].supply[LTSID], providers[addr].data[currHeight].priv) || 
+                    if ( ( a > LTSID && rightForInterest(providers[addr].data[currHeight].supply[LTSID], providers[addr].data[currHeight].priv) ||
                         rightForInterest(providers[addr].data[currHeight].supply[a], providers[addr].data[currHeight].priv) ) ) {
                         if ( limit > 0 && steps > limit ) {
                             a--;
@@ -636,7 +636,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Inner function for updating the database when some token change has happened.
             In this case we are checking if despite the changes the provider is still entitled to the token emission. In case the legitimacy changes then the global supply should be set as well.
-            
+
             @providerAddress        Provider address.
             @providerHeight         Provider height.
             @neg                    the change was negative or not
@@ -646,15 +646,15 @@ contract provider is module, safeMath, announcementTypes {
         if ( currentSchellingRound != LSID ) {
             if ( neg ) {
                 setRightForInterest(
-                    providers[providerAddress].data[providerHeight].supply[LSID], 
-                    providers[providerAddress].data[providerHeight].supply[LSID] - value, 
+                    providers[providerAddress].data[providerHeight].supply[LSID],
+                    providers[providerAddress].data[providerHeight].supply[LSID] - value,
                     providers[providerAddress].data[providerHeight].priv
                 );
                 providers[providerAddress].data[providerHeight].supply[currentSchellingRound] = providers[providerAddress].data[providerHeight].supply[LSID] - value;
             } else {
                 setRightForInterest(
-                    providers[providerAddress].data[providerHeight].supply[LSID], 
-                    providers[providerAddress].data[providerHeight].supply[LSID] + value, 
+                    providers[providerAddress].data[providerHeight].supply[LSID],
+                    providers[providerAddress].data[providerHeight].supply[LSID] + value,
                     providers[providerAddress].data[providerHeight].priv
                 );
                 providers[providerAddress].data[providerHeight].supply[currentSchellingRound] = providers[providerAddress].data[providerHeight].supply[LSID] + value;
@@ -663,15 +663,15 @@ contract provider is module, safeMath, announcementTypes {
         } else {
             if ( neg ) {
                 setRightForInterest(
-                    getProviderCurrentSupply(providerAddress), 
-                    getProviderCurrentSupply(providerAddress) - value, 
+                    getProviderCurrentSupply(providerAddress),
+                    getProviderCurrentSupply(providerAddress) - value,
                     providers[providerAddress].data[providerHeight].priv
                 );
                 providers[providerAddress].data[providerHeight].supply[currentSchellingRound] -= value;
             } else {
                 setRightForInterest(
-                    getProviderCurrentSupply(providerAddress), 
-                    getProviderCurrentSupply(providerAddress) + value, 
+                    getProviderCurrentSupply(providerAddress),
+                    getProviderCurrentSupply(providerAddress) + value,
                     providers[providerAddress].data[providerHeight].priv
                 );
                 providers[providerAddress].data[providerHeight].supply[currentSchellingRound] += value;
@@ -683,7 +683,7 @@ contract provider is module, safeMath, announcementTypes {
             Inner function for updating the database in case token change has happened.
             In this case we check if the provider despite the changes is still entitled to the token emission.
             We just call this only if the private provider and it’s own capital bears emission.
-            
+
             @providerAddress        Provider address.
             @providerHeight         Provider height.
             @neg                    Was the change negative?
@@ -693,15 +693,15 @@ contract provider is module, safeMath, announcementTypes {
         if ( currentSchellingRound != LSID ) {
             if ( neg ) {
                 setRightForInterest(
-                    providers[providerAddress].data[providerHeight].ownSupply[LSID], 
-                    providers[providerAddress].data[providerHeight].ownSupply[LSID] - value, 
+                    providers[providerAddress].data[providerHeight].ownSupply[LSID],
+                    providers[providerAddress].data[providerHeight].ownSupply[LSID] - value,
                     true
                 );
                 providers[providerAddress].data[providerHeight].ownSupply[currentSchellingRound] = providers[providerAddress].data[providerHeight].ownSupply[LSID] - value;
             } else {
                 setRightForInterest(
-                    providers[providerAddress].data[providerHeight].ownSupply[LSID], 
-                    providers[providerAddress].data[providerHeight].ownSupply[LSID] + value, 
+                    providers[providerAddress].data[providerHeight].ownSupply[LSID],
+                    providers[providerAddress].data[providerHeight].ownSupply[LSID] + value,
                     true
                 );
                 providers[providerAddress].data[providerHeight].ownSupply[currentSchellingRound] = providers[providerAddress].data[providerHeight].ownSupply[LSID] + value;
@@ -710,15 +710,15 @@ contract provider is module, safeMath, announcementTypes {
         } else {
             if ( neg ) {
                 setRightForInterest(
-                    getProviderCurrentSupply(providerAddress), 
-                    getProviderCurrentSupply(providerAddress) - value, 
+                    getProviderCurrentSupply(providerAddress),
+                    getProviderCurrentSupply(providerAddress) - value,
                     true
                 );
                 providers[providerAddress].data[providerHeight].ownSupply[currentSchellingRound] -= value;
             } else {
                 setRightForInterest(
-                    getProviderCurrentSupply(providerAddress), 
-                    getProviderCurrentSupply(providerAddress) + value, 
+                    getProviderCurrentSupply(providerAddress),
+                    getProviderCurrentSupply(providerAddress) + value,
                     true
                 );
                 providers[providerAddress].data[providerHeight].ownSupply[currentSchellingRound] += value;
@@ -728,7 +728,7 @@ contract provider is module, safeMath, announcementTypes {
     function TEMath(uint256 a, uint256 b, bool neg) internal returns (uint256) {
         /*
             Inner function for the changes of the numbers
-            
+
             @a      First number
             @b      2nd number
             @neg    Operation with numbers. If it is TRUE then subtraction, if it is FALSE then addition.
@@ -740,7 +740,7 @@ contract provider is module, safeMath, announcementTypes {
         /*
             Inner function for perceiving the changes of the balance and updating the database.
             If the address is a provider and the balance is decreasing than can not let it go under the minimum level.
-            
+
             @addr       The address where the change happened.
             @value      Rate of the change.
             @neg        ype of the change. If it is TRUE then the balance has been decreased if it is FALSE then it has been increased.
@@ -771,9 +771,9 @@ contract provider is module, safeMath, announcementTypes {
     function getTokenBalance(address addr) internal returns (uint256 balance) {
         /*
             Inner function in order to poll the token balance of the address.
-            
+
             @addr       Address
-            
+
             @balance    Balance of the address.
         */
         (bool _success, uint256 _balance) = moduleHandler(moduleHandlerAddress).balanceOf(addr);
@@ -783,7 +783,7 @@ contract provider is module, safeMath, announcementTypes {
     function checkICO() internal returns (bool isICO) {
         /*
             Inner function to check the ICO status.
-            
+
             @isICO      Is the ICO in process or not?
         */
         (bool _success, bool _isICO) = moduleHandler(moduleHandlerAddress).isICO();

@@ -4,11 +4,11 @@ import "./ERC20.sol";
 
 /**
  * @title LimitedTransferToken
- * @dev LimitedTransferToken defines the generic interface and the implementation to limit token 
- * transferability for different events. It is intended to be used as a base class for other token 
- * contracts. 
+ * @dev LimitedTransferToken defines the generic interface and the implementation to limit token
+ * transferability for different events. It is intended to be used as a base class for other token
+ * contracts.
  * LimitedTransferToken has been designed to allow for different limiting factors,
- * this can be achieved by recursively calling super.transferableTokens() until the base class is 
+ * this can be achieved by recursively calling super.transferableTokens() until the base class is
  * hit. For example:
  *     function transferableTokens(address holder, uint64 time) view public returns (uint256) {
  *       return min256(unlockedTokens, super.transferableTokens(holder, time));
@@ -48,7 +48,7 @@ contract LimitedTransferToken is ERC20 {
 
   /**
    * @dev Default transferable tokens function returns all tokens for a holder (no limit).
-   * @dev Overwriting transferableTokens(address holder, uint64 time) is the way to provide the 
+   * @dev Overwriting transferableTokens(address holder, uint64 time) is the way to provide the
    * specific logic for limiting token transferability for a holder over time.
    */
   function transferableTokens(address holder, uint64 time) view public returns (uint256) {

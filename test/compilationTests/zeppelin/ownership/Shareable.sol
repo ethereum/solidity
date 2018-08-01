@@ -3,7 +3,7 @@ pragma solidity ^0.4.11;
 
 /**
  * @title Shareable
- * @dev inheritable "property" contract that enables methods to be protected by requiring the 
+ * @dev inheritable "property" contract that enables methods to be protected by requiring the
  * acquiescence of either a single, or, crucially, each of a number of, designated owners.
  * @dev Usage: use modifiers onlyowner (just own owned) or onlymanyowners(hash), whereby the same hash must be provided by some number (specified in constructor) of the set of owners (specified in the constructor) before the interior is executed.
  */
@@ -41,9 +41,9 @@ contract Shareable {
     }
     _;
   }
-  
-  /** 
-   * @dev Modifier for multisig functions. 
+
+  /**
+   * @dev Modifier for multisig functions.
    * @param _operation The operation must have an intrinsic hash in order that later attempts can be
    * realised as the same underlying operation and thus count as confirmations.
    */
@@ -53,8 +53,8 @@ contract Shareable {
     }
   }
 
-  /** 
-   * @dev Constructor is given the number of sigs required to do protected "onlymanyowners" 
+  /**
+   * @dev Constructor is given the number of sigs required to do protected "onlymanyowners"
    * transactions as well as the selection of addresses capable of confirming them.
    * @param _owners A list of owners.
    * @param _required The amount required for a transaction to be approved.
