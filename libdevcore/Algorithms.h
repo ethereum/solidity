@@ -32,11 +32,13 @@ template <typename V>
 class CycleDetector
 {
 public:
+	using Visitor = std::function<void(V const&, CycleDetector&, size_t)>;
+
 	/// Initializes the cycle detector
 	/// @param _visit function that is given the current vertex
 	///               and is supposed to call @a run on all
 	///               adjacent vertices.
-	explicit CycleDetector(std::function<void(V const&, CycleDetector&)> _visit):
+	explicit CycleDetector(Visitor _visit):
 		m_visit(std::move(_visit))
 	{  }
 
@@ -55,7 +57,7 @@ public:
 		m_processing.insert(&_vertex);
 
 		m_depth++;
-		m_visit(_vertex, *this);
+		m_visit(_vertex, *this, m_depth);
 		m_depth--;
 		if (m_firstCycleVertex && m_depth == 1)
 			m_firstCycleVertex = &_vertex;
@@ -66,7 +68,7 @@ public:
 	}
 
 private:
-	std::function<void(V const&, CycleDetector&)> m_visit;
+	Visitor m_visit;
 	std::set<V const*> m_processing;
 	std::set<V const*> m_processed;
 	size_t m_depth = 0;

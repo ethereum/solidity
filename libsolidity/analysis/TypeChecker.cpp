@@ -595,8 +595,11 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 			m_errorReporter.typeError(member->location(), "Type cannot be used in struct.");
 
 	// Check recursion, fatal error if detected.
-	auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector)
+	auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t _depth)
 	{
+		if (_depth >= 256)
+			m_errorReporter.fatalDeclarationError(_struct.location(), "Struct definition exhausting cyclic dependency validator.");
+
 		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		{
 			Type const* memberType = type(*member).get();

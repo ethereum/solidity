@@ -2119,7 +2119,7 @@ bool StructType::recursive() const
 {
 	if (!m_recursive.is_initialized())
 	{
-		auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector)
+		auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t /*_depth*/)
 		{
 			for (ASTPointer<VariableDeclaration> const& variable: _struct.members())
 			{
