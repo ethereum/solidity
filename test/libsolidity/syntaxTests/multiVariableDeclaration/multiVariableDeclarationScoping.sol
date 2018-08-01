@@ -5,6 +5,6 @@ contract C {
     }
     a;
   }
-} 
+}
 // ----
 // DeclarationError: (99-100): Undeclared identifier.

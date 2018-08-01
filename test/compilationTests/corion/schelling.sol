@@ -141,9 +141,9 @@ contract schelling is module, announcementTypes, schellingVars {
     }
     function transferEvent(address from, address to, uint256 value) external returns (bool) {
         /*
-            Transaction completed. This function can be called only by the ModuleHandler. 
+            Transaction completed. This function can be called only by the ModuleHandler.
             If this contract is the receiver, the amount will be added to the prize pool of the current round.
-            
+
             @from      From who
             @to        To who
             @value     Amount
@@ -160,7 +160,7 @@ contract schelling is module, announcementTypes, schellingVars {
     }
     modifier isReady {
         (bool _success, bool _active) = super.isActive();
-        require( _success && _active ); 
+        require( _success && _active );
         _;
     }
     /*
@@ -175,7 +175,7 @@ contract schelling is module, announcementTypes, schellingVars {
         require( db.setFunds(addr, amount) );
     }
     function setVoter(address owner, _voter memory voter) internal {
-        require( db.setVoter(owner, 
+        require( db.setVoter(owner,
             voter.roundID,
             voter.hash,
             voter.status,
@@ -189,7 +189,7 @@ contract schelling is module, announcementTypes, schellingVars {
         return _voter(b, c, d, e, f);
     }
     function setRound(uint256 id, _rounds memory round) internal {
-        require( db.setRound(id, 
+        require( db.setRound(id,
             round.totalAboveWeight,
             round.totalBelowWeight,
             round.reward,
@@ -250,7 +250,7 @@ contract schelling is module, announcementTypes, schellingVars {
     constructor(address _moduleHandler, address _db, bool _forReplace) public {
         /*
             Installation function.
-            
+
             @_moduleHandler         Address of ModuleHandler.
             @_db                    Address of the database.
             @_forReplace            This address will be replaced with the old one or not.
@@ -265,7 +265,7 @@ contract schelling is module, announcementTypes, schellingVars {
     function configure(announcementType a, uint256 b) external returns(bool) {
         /*
             Can be called only by the ModuleHandler.
-            
+
             @a      Sort of configuration
             @b      Value
         */
@@ -280,22 +280,22 @@ contract schelling is module, announcementTypes, schellingVars {
     function prepareVote(bytes32 votehash, uint256 roundID) isReady noContract external {
         /*
             Initializing manual vote.
-            Only the hash of vote will be sent. (Envelope sending). 
-            The address must be in default state, that is there are no vote in progress. 
+            Only the hash of vote will be sent. (Envelope sending).
+            The address must be in default state, that is there are no vote in progress.
             Votes can be sent only on the actually Schelling round.
-            
+
             @votehash               Hash of the vote
             @roundID                Number of Schelling round
         */
         nextRound();
-        
+
         uint256 currentRound = getCurrentRound();
         schellingVars._rounds memory round = getRound(currentRound);
         _voter memory voter;
         uint256 funds;
-        
+
         require( roundID == currentRound );
-        
+
         voter = getVoter(msg.sender);
         funds = getFunds(msg.sender);
 
@@ -304,10 +304,10 @@ contract schelling is module, announcementTypes, schellingVars {
         voter.roundID = currentRound;
         voter.hash = votehash;
         voter.status = voterStatus.afterPrepareVote;
-        
+
         setVoter(msg.sender, voter);
         round.voted = true;
-        
+
         setRound(currentRound, round);
     }
     function sendVote(string vote) isReady noContract external {
@@ -318,21 +318,21 @@ contract schelling is module, announcementTypes, schellingVars {
             If the vote invalid, the deposit will be lost.
             If the “envelope” was opened later than 1,5 Schelling round, the vote is automatically invalid, and deposit can be lost.
             Lost deposits will be 100% burned.
-            
+
             @vote      Hash of the content of the vote.
         */
         nextRound();
-        
+
         uint256 currentRound = getCurrentRound();
         _rounds memory round;
         _voter memory voter;
         uint256 funds;
-        
+
         bool lostEverything;
         voter = getVoter(msg.sender);
         round = getRound(voter.roundID);
         funds = getFunds(msg.sender);
-        
+
         require( voter.status == voterStatus.afterPrepareVote );
         require( voter.roundID < currentRound );
         if ( keccak256(bytes(vote)) == voter.hash ) {
@@ -355,7 +355,7 @@ contract schelling is module, announcementTypes, schellingVars {
             delete funds;
             delete voter.status;
         }
-        
+
         setVoter(msg.sender, voter);
         setRound(voter.roundID, round);
         setFunds(msg.sender, funds);
@@ -368,17 +368,17 @@ contract schelling is module, announcementTypes, schellingVars {
             The right votes take share of deposits.
         */
         nextRound();
-        
+
         uint256 currentRound = getCurrentRound();
         _rounds memory round;
         _voter memory voter;
         uint256 funds;
-        
+
         voter = getVoter(msg.sender);
         round = getRound(voter.roundID);
         funds = getFunds(msg.sender);
-        
-        require( voter.status == voterStatus.afterSendVoteOk || 
+
+        require( voter.status == voterStatus.afterSendVoteOk ||
             voter.status == voterStatus.afterSendVoteBad );
         if ( round.blockHeight+roundBlockDelay/2 <= block.number ) {
             if ( isWinner(round, voter.voteResult) && voter.status == voterStatus.afterSendVoteOk ) {
@@ -390,7 +390,7 @@ contract schelling is module, announcementTypes, schellingVars {
             delete voter.status;
             delete voter.roundID;
         } else { revert(); }
-        
+
         setVoter(msg.sender, voter);
         setFunds(msg.sender, funds);
     }
@@ -400,12 +400,12 @@ contract schelling is module, announcementTypes, schellingVars {
             The prizes will be collected here, and with this function can be transferred to the account of the user.
             Optionally there can be an address of a beneficiary added, which address the prize will be sent to. Without beneficiary, the owner is the default address.
             Prize will be sent from the Schelling address without any transaction fee.
-            
+
             @beneficiary        Address of the beneficiary
         */
         schellingVars._voter memory voter = getVoter(msg.sender);
         uint256 funds = getFunds(msg.sender);
-        
+
         address _beneficiary = msg.sender;
         if (beneficiary != address(0x00)) { _beneficiary = beneficiary; }
         uint256 reward;
@@ -414,13 +414,13 @@ contract schelling is module, announcementTypes, schellingVars {
         reward = voter.rewards;
         delete voter.rewards;
         require( moduleHandler(moduleHandlerAddress).transfer(address(this), _beneficiary, reward, false) );
-            
+
         setVoter(msg.sender, voter);
     }
     function checkReward() public view returns (uint256 reward) {
         /*
             Withdraw of the amount of the prize (it’s only information).
-            
+
             @reward         Prize
         */
         schellingVars._voter memory voter = getVoter(msg.sender);
@@ -435,9 +435,9 @@ contract schelling is module, announcementTypes, schellingVars {
         _rounds memory newRound;
         _rounds memory prevRound;
         uint256 currentSchellingRound = getCurrentSchellingRound();
-        
+
         if ( round.blockHeight+roundBlockDelay > block.number) { return false; }
-        
+
         newRound.blockHeight = block.number;
         if ( ! round.voted ) {
             newRound.reward = round.reward;
@@ -452,9 +452,9 @@ contract schelling is module, announcementTypes, schellingVars {
         if ( above >= interestCheckAboves ) {
             expansion = getTotalSupply() * interestRate / interestRateM / 100;
         }
-        
+
         currentSchellingRound++;
-        
+
         pushRound(newRound);
         setSchellingExpansion(currentSchellingRound, expansion);
         require( moduleHandler(moduleHandlerAddress).broadcastSchellingRound(currentSchellingRound, expansion) );
@@ -466,19 +466,19 @@ contract schelling is module, announcementTypes, schellingVars {
             Every participant entry with his own deposit.
             In case of wrong vote only this amount of deposit will be burn.
             The deposit will be sent to the address of Schelling, charged with transaction fee.
-            
+
             @amount          Amount of deposit.
         */
         _voter memory voter = getVoter(msg.sender);
         uint256 funds = getFunds(msg.sender);
-        
+
         (bool a, bool b) = moduleHandler(moduleHandlerAddress).isICO();
         require( b && b );
         require( voter.status == voterStatus.base );
         require( amount > 0 );
         require( moduleHandler(moduleHandlerAddress).transfer(msg.sender, address(this), amount, true) );
         funds += amount;
-        
+
         setFunds(msg.sender, funds);
     }
     function getFunds() isReady noContract external {
@@ -489,17 +489,17 @@ contract schelling is module, announcementTypes, schellingVars {
         */
         _voter memory voter = getVoter(msg.sender);
         uint256 funds = getFunds(msg.sender);
-        
+
         require( funds > 0 );
         require( voter.status == voterStatus.base );
         setFunds(msg.sender, 0);
-        
+
         require( moduleHandler(moduleHandlerAddress).transfer(address(this), msg.sender, funds, true) );
     }
     function getCurrentSchellingRoundID() public view returns (uint256) {
         /*
             Number of actual Schelling round.
-            
+
             @uint256        Schelling round.
         */
         return getCurrentSchellingRound();
@@ -507,7 +507,7 @@ contract schelling is module, announcementTypes, schellingVars {
     function getSchellingRound(uint256 id) public view returns (uint256 expansion) {
         /*
             Amount of token emission of the Schelling round.
-            
+
             @id             Number of Schelling round
             @expansion      Amount of token emission
         */
@@ -516,7 +516,7 @@ contract schelling is module, announcementTypes, schellingVars {
     function getRoundWeight(uint256 aboveW, uint256 belowW) internal returns (uint256) {
         /*
             Inside function for calculating the weights of the votes.
-            
+
             @aboveW     Weight of votes: ABOVE
             @belowW     Weight of votes: BELOW
             @uint256    Calculatet weight
@@ -532,7 +532,7 @@ contract schelling is module, announcementTypes, schellingVars {
     function isWinner(_rounds memory round, bool aboveVote) internal returns (bool) {
         /*
             Inside function for calculating the result of the game.
-            
+
             @round      Structure of Schelling round.
             @aboveVote  Is the vote = ABOVE or not
             @bool       Result
@@ -543,31 +543,31 @@ contract schelling is module, announcementTypes, schellingVars {
         }
         return false;
     }
-    
+
     function getTotalSupply() internal returns (uint256 amount) {
         /*
             Inside function for querying the whole amount of the tokens.
-            
+
             @uint256        Whole token amount
         */
         (bool _success, uint256 _amount) = moduleHandler(moduleHandlerAddress).totalSupply();
         require( _success );
         return _amount;
     }
-    
+
     function getTokenBalance(address addr) internal returns (uint256 balance) {
         /*
             Inner function in order to poll the token balance of the address.
-            
+
             @addr       Address
-            
+
             @balance    Balance of the address.
         */
         (bool _success, uint256 _balance) = moduleHandler(moduleHandlerAddress).balanceOf(addr);
         require( _success );
         return _balance;
     }
-    
+
     modifier noContract {
         /*
             Contract can’t call this function, only a natural address.

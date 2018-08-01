@@ -226,7 +226,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
    * @dev Calculate the amount of non vested tokens at a specific time.
    * @param grant TokenGrant The grant to be checked.
    * @param time uint64 The time to be checked
-   * @return An uint256 representing the amount of non vested tokens of a specific grant on the 
+   * @return An uint256 representing the amount of non vested tokens of a specific grant on the
    * passed time frame.
    */
   function nonVestedTokens(TokenGrant memory grant, uint64 time) private view returns (uint256) {

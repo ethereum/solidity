@@ -6,7 +6,7 @@ import "./premium.sol";
 import "./moduleHandler.sol";
 
 contract ico is safeMath {
-    
+
     struct icoLevels_s {
         uint256 block;
         uint8 rate;
@@ -24,9 +24,9 @@ contract ico is safeMath {
         uint256 cor;
         uint256 corp;
     }
-    
+
     uint256 constant oneSegment = 40320;
-    
+
     address public owner;
     address public tokenAddr;
     address public premiumAddr;
@@ -53,7 +53,7 @@ contract ico is safeMath {
     constructor(address foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] memory genesisAddr, uint256[] memory genesisValue) public {
         /*
             Installation function.
-            
+
             @foundation     The ETC address of the foundation
             @priceSet       The address which will be able to make changes on the rate later on.
             @exchangeRate   The current ETC/USD rate multiplied by 1e4. For example: 2.5 USD/ETC = 25000
@@ -80,11 +80,11 @@ contract ico is safeMath {
             interestDB[genesisAddr[a]][0].amount = genesisValue[a];
         }
     }
-    
+
     function ICObonus() public view returns(uint256 bonus) {
         /*
             Query of current bonus
-            
+
             @bonus  Bonus %
         */
         for ( uint8 a=0 ; a<icoLevels.length ; a++ ) {
@@ -93,32 +93,32 @@ contract ico is safeMath {
             }
         }
     }
-    
+
     function setInterestDB(address addr, uint256 balance) external returns(bool success) {
         /*
             Setting interest database. It can be requested by Token contract only.
-            A database has to be built in order  that after ICO closed everybody can get their compound interest on their capital accumulated 
-            
+            A database has to be built in order  that after ICO closed everybody can get their compound interest on their capital accumulated
+
             @addr       Sender
             @balance    Quantity
-            
+
             @success    Was the process successful or not
         */
         require( msg.sender == tokenAddr );
         uint256 _num = (block.number - startBlock) / interestBlockDelay;
         interestDB[addr][_num].amount = balance;
-        if ( balance == 0 ) { 
+        if ( balance == 0 ) {
             interestDB[addr][_num].empty = true;
         }
         return true;
     }
-    
+
     function checkInterest(address addr) public view returns(uint256 amount) {
         /*
             Query of compound interest
-            
+
             @addr       Address
-            
+
             @amount     Amount of compound interest
         */
         uint256 _lastBal;
@@ -126,9 +126,9 @@ contract ico is safeMath {
         bool _empty;
         interest_s memory _idb;
         uint256 _to = (block.number - startBlock) / interestBlockDelay;
-        
+
         if ( _to == 0 || aborted ) { return 0; }
-        
+
         for ( uint256 r=0 ; r < _to ; r++ ) {
             if ( r*interestBlockDelay+startBlock >= icoDelay ) { break; }
             _idb = interestDB[addr][r];
@@ -148,11 +148,11 @@ contract ico is safeMath {
             amount += _tamount;
         }
     }
-    
+
     function getInterest(address beneficiary) external {
         /*
             Request of  compound interest. This is deleted  from the database after the ICO closed and following the query of the compound interest.
-            
+
             @beneficiary    Beneficiary who will receive the interest
         */
         uint256 _lastBal;
@@ -163,10 +163,10 @@ contract ico is safeMath {
         address _addr = beneficiary;
         uint256 _to = (block.number - startBlock) / interestBlockDelay;
         if ( _addr == address(0x00) ) { _addr = msg.sender; }
-        
+
         require( block.number > icoDelay );
         require( ! aborted );
-        
+
         for ( uint256 r=0 ; r < _to ; r++ ) {
             if ( r*interestBlockDelay+startBlock >= icoDelay ) { break; }
             _idb = interestDB[msg.sender][r];
@@ -186,17 +186,17 @@ contract ico is safeMath {
             _amount += _tamount;
             delete interestDB[msg.sender][r];
         }
-        
+
         require( _amount > 0 );
         token(tokenAddr).mint(_addr, _amount);
     }
-    
+
     function setICOEthPrice(uint256 value) external {
         /*
-            Setting of the ICO ETC USD rates which can only be calle by a pre-defined address. 
+            Setting of the ICO ETC USD rates which can only be calle by a pre-defined address.
             After this function is completed till the call of the next function (which is at least an exchangeRateDelay array) this rate counts.
             With this process avoiding the sudden rate changes.
-            
+
             @value  The ETC/USD rate multiplied by 1e4. For example: 2.5 USD/ETC = 25000
         */
         require( isICO() );
@@ -205,18 +205,18 @@ contract ico is safeMath {
         icoExchangeRateSetBlock = block.number + exchangeRateDelay;
         icoExchangeRate = value;
     }
-    
+
     function extendICO() external {
         /*
             Extend the period of the ICO with one segment.
-            
+
             It is only possible during the ICO and only callable by the owner.
         */
         require( isICO() );
         require( msg.sender == owner );
         icoDelay += oneSegment;
     }
-    
+
     function closeICO() external {
         /*
             Closing the ICO.
@@ -235,10 +235,10 @@ contract ico is safeMath {
         require( token(tokenAddr).closeIco() );
         require( premium(premiumAddr).closeIco() );
     }
-    
+
     function abortICO() external {
         /*
-            Withdrawal of the ICO.            
+            Withdrawal of the ICO.
             It is only possible during the ICO period.
             Only callable by the owner.
             After this process only the receiveFunds function will be available for the customers.
@@ -247,12 +247,12 @@ contract ico is safeMath {
         require( msg.sender == owner );
         aborted = true;
     }
-    
+
     function connectTokens(address tokenContractAddr, address premiumContractAddr) external {
         /*
             Installation function which joins the two token contracts with this contract.
             Only callable by the owner
-            
+
             @tokenContractAddr      Address of the corion token contract.
             @premiumContractAddr    Address of the corion premium token contract
         */
@@ -261,7 +261,7 @@ contract ico is safeMath {
         tokenAddr = tokenContractAddr;
         premiumAddr = premiumContractAddr;
     }
-    
+
     function receiveFunds() external {
         /*
             Refund the amount which was purchased during the ICO period.
@@ -274,7 +274,7 @@ contract ico is safeMath {
         delete brought[msg.sender];
         require( msg.sender.send(_val) );
     }
-    
+
     function () external payable {
         /*
             Callback function. Simply calls the buy function as a beneficiary and there is no affiliate address.
@@ -287,7 +287,7 @@ contract ico is safeMath {
     function buy(address beneficiaryAddress, address affilateAddress) public payable returns (bool success) {
         /*
             Buying a token
-            
+
             If there is not at least 0.2 ether balance on the beneficiaryAddress then the amount of the ether which was intended for the purchase will be reduced by 0.2 and that will be sent to the address of the beneficiary.
             From the remaining amount calculate the reward with the help of the getIcoReward function.
             Only that affiliate address is valid which has some token on it’s account.
@@ -327,7 +327,7 @@ contract ico is safeMath {
                 rate = 4;
             } else if (extra >= 1e10) {
                 rate = 3;
-            } else if (extra >= 1e9) { 
+            } else if (extra >= 1e9) {
                 rate = 2;
             } else {
                 rate = 1;
@@ -344,7 +344,7 @@ contract ico is safeMath {
     function checkPremium(address owner) internal {
         /*
             Crediting the premium token
-        
+
             @owner The corion token balance of this address will be set based on the calculation which shows that how many times can be the amount of the purchased tokens divided by 5000. So after each 5000 token we give 1 premium token.
         */
         uint256 _reward = (brought[owner].cor / 5e9) - brought[owner].corp;
@@ -354,11 +354,11 @@ contract ico is safeMath {
             totalPremiumMint = safeAdd(totalPremiumMint, _reward);
         }
     }
-    
+
     function getIcoReward(uint256 value) public view returns (uint256 reward) {
         /*
             Expected token volume at token purchase
-            
+
             @value The amount of ether for the purchase
             @reward Amount of the token
                 x = (value * 1e6 * USD_ETC_exchange rate / 1e4 / 1e18) * bonus percentage
@@ -367,10 +367,10 @@ contract ico is safeMath {
         reward = (value * 1e6 * icoExchangeRate / icoExchangeRateM / 1 ether) * (ICObonus() + 100) / 100;
         if ( reward < 5e6) { return 0; }
     }
-    
+
     function isICO() public view returns (bool success) {
         return startBlock <= block.number && block.number <= icoDelay && ( ! aborted ) && ( ! closed );
     }
-    
+
     event EICO(address indexed Address, uint256 indexed value, address Affiliate, uint256 AffilateValue);
 }

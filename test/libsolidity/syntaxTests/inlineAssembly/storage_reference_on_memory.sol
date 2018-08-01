@@ -1,6 +1,6 @@
 contract C {
     uint[] x;
-    function() external { 
+    function() external {
         uint[] memory y = x;
         assembly {
             pop(y_slot)
@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (118-124): The suffixes _offset and _slot can only be used on storage variables.
-// TypeError: (142-150): The suffixes _offset and _slot can only be used on storage variables.
+// TypeError: (117-123): The suffixes _offset and _slot can only be used on storage variables.
+// TypeError: (141-149): The suffixes _offset and _slot can only be used on storage variables.

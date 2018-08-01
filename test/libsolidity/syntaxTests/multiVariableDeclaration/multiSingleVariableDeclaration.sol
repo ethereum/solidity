@@ -3,4 +3,4 @@ contract C {
     (uint a) = f();
     a;
   }
-} 
+}
