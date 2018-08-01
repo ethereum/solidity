@@ -52,18 +52,23 @@ void CVC4Interface::pop()
 
 void CVC4Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
-	CVC4::Type fType = m_context.mkFunctionType(cvc4Sort(_domain), cvc4Sort(_codomain));
-	m_functions.insert({_name, m_context.mkVar(_name.c_str(), fType)});
+	if (!m_functions.count(_name))
+	{
+		CVC4::Type fType = m_context.mkFunctionType(cvc4Sort(_domain), cvc4Sort(_codomain));
+		m_functions.insert({_name, m_context.mkVar(_name.c_str(), fType)});
+	}
 }
 
 void CVC4Interface::declareInteger(string _name)
 {
-	m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.integerType())});
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.integerType())});
 }
 
 void CVC4Interface::declareBool(string _name)
 {
-	m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.booleanType())});
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.booleanType())});
 }
 
 void CVC4Interface::addAssertion(Expression const& _expr)
