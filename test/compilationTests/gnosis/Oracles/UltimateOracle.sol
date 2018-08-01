@@ -92,7 +92,7 @@ contract UltimateOracle is Oracle {
         // There was no challenge yet or the challenge period expired
         require(   !isChallenged()
                 && !isChallengePeriodOver()
-                && collateralToken.transferFrom(msg.sender, this, challengeAmount));
+                && collateralToken.transferFrom(msg.sender, address(this), challengeAmount));
         outcomeAmounts[msg.sender][_outcome] = challengeAmount;
         totalOutcomeAmounts[_outcome] = challengeAmount;
         totalAmount = challengeAmount;
@@ -113,7 +113,7 @@ contract UltimateOracle is Oracle {
         // Outcome is challenged and front runner period is not over yet and tokens can be transferred
         require(   isChallenged()
                 && !isFrontRunnerPeriodOver()
-                && collateralToken.transferFrom(msg.sender, this, amount));
+                && collateralToken.transferFrom(msg.sender, address(this), amount));
         outcomeAmounts[msg.sender][_outcome] = outcomeAmounts[msg.sender][_outcome].add(amount);
         totalOutcomeAmounts[_outcome] = totalOutcomeAmounts[_outcome].add(amount);
         totalAmount = totalAmount.add(amount);

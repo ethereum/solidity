@@ -259,7 +259,7 @@ contract schelling is module, announcementTypes, schellingVars {
         db = schellingDB(_db);
         super.registerModuleHandler(_moduleHandler);
         if ( ! _forReplace ) {
-            require( db.replaceOwner(this) );
+            require( db.replaceOwner(address(this)) );
         }
     }
     function configure(announcementType a, uint256 b) external returns(bool) {

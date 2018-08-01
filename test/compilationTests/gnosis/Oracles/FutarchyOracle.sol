@@ -95,14 +95,14 @@ contract FutarchyOracle is Oracle {
         isCreator
     {
         // Buy all outcomes
-        require(   categoricalEvent.collateralToken().transferFrom(creator, this, funding)
-                && categoricalEvent.collateralToken().approve(categoricalEvent, funding));
+        require(   categoricalEvent.collateralToken().transferFrom(creator, address(this), funding)
+                && categoricalEvent.collateralToken().approve(address(categoricalEvent), funding));
         categoricalEvent.buyAllOutcomes(funding);
         // Fund each market with outcome tokens from categorical event
         for (uint8 i = 0; i < markets.length; i++) {
             Market market = markets[i];
             // Approve funding for market
-            require(market.eventContract().collateralToken().approve(market, funding));
+            require(market.eventContract().collateralToken().approve(address(market), funding));
             market.fund(funding);
         }
         emit FutarchyFunding(funding);
@@ -122,7 +122,7 @@ contract FutarchyOracle is Oracle {
         market.withdrawFees();
         // Redeem collateral token for winning outcome tokens and transfer collateral tokens to creator
         categoricalEvent.redeemWinnings();
-        require(categoricalEvent.collateralToken().transfer(creator, categoricalEvent.collateralToken().balanceOf(this)));
+        require(categoricalEvent.collateralToken().transfer(creator, categoricalEvent.collateralToken().balanceOf(address(this))));
         emit FutarchyClosing();
     }
 
