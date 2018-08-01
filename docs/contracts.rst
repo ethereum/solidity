@@ -561,7 +561,10 @@ Ether (without data). Additionally, in order to receive Ether, the fallback func
 must be marked ``payable``. If no such function exists, the contract cannot receive
 Ether through regular transactions.
 
-In the worst case, the fallback function can only rely on 2300 gas being available (for example when send or transfer is used), leaving not much room to perform other operations except basic logging. The following operations will consume more gas than the 2300 gas stipend:
+In the worst case, the fallback function can only rely on 2300 gas being
+available (for example when `send` or `transfer` is used), leaving little
+room to perform other operations except basic logging. The following operations
+will consume more gas than the 2300 gas stipend:
 
 - Writing to storage
 - Creating a contract

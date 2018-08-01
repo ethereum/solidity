@@ -93,7 +93,7 @@ Notice that, in this example, an attacker could trap the
 contract into an unusable state by causing ``richest`` to be
 the address of a contract that has a fallback function
 which fails (e.g. by using ``revert()`` or by just
-consuming more than the 2300 gas stipend). That way,
+consuming more than the 2300 gas stipend transferred to them). That way,
 whenever ``transfer`` is called to deliver funds to the
 "poisoned" contract, it will fail and thus also ``becomeRichest``
 will fail, with the contract being stuck forever.
