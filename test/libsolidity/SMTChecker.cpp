@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(simple_assert)
 			function f(uint a) public pure { assert(a == 2); }
 		}
 	)";
-	CHECK_WARNING(text, "Assertion violation happens here for");
+	CHECK_WARNING(text, "Assertion violation happens here");
 }
 
 BOOST_AUTO_TEST_CASE(simple_assert_with_require)

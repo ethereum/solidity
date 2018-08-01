@@ -252,14 +252,14 @@ void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _
 		_value < SymbolicIntVariable::minValue(_type),
 		_location,
 		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
-		"value",
+		"<result>",
 		&_value
 	);
 	checkCondition(
 		_value > SymbolicIntVariable::maxValue(_type),
 		_location,
 		"Overflow (resulting value larger than " + formatNumber(_type.maxValue()) + ")",
-		"value",
+		"<result>",
 		&_value
 	);
 }
@@ -437,7 +437,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 
 		if (_op.getOperator() == Token::Div)
 		{
-			checkCondition(right == 0, _op.location(), "Division by zero", "value", &right);
+			checkCondition(right == 0, _op.location(), "Division by zero", "<result>", &right);
 			m_interface->addAssertion(right != 0);
 		}
 
@@ -601,15 +601,23 @@ void SMTChecker::checkCondition(
 		message << _description << " happens here";
 		if (m_currentFunction)
 		{
-			message << " for:\n";
+			std::ostringstream modelMessage;
+			modelMessage << "  for:\n";
 			solAssert(values.size() == expressionNames.size(), "");
+			map<string, string> sortedModel;
 			for (size_t i = 0; i < values.size(); ++i)
 				if (expressionsToEvaluate.at(i).name != values.at(i))
-					message << "  " << expressionNames.at(i) << " = " << values.at(i) << "\n";
+					sortedModel[expressionNames.at(i)] = values.at(i);
+
+			for (auto const& eval: sortedModel)
+				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
+			m_errorReporter.warning(_location, message.str() + loopComment, SecondarySourceLocation().append(modelMessage.str(), SourceLocation()));
 		}
 		else
+		{
 			message << ".";
-		m_errorReporter.warning(_location, message.str() + loopComment);
+			m_errorReporter.warning(_location, message.str() + loopComment);
+		}
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
