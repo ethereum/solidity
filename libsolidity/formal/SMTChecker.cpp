@@ -601,15 +601,23 @@ void SMTChecker::checkCondition(
 		message << _description << " happens here";
 		if (m_currentFunction)
 		{
-			message << " for:\n";
+			std::ostringstream modelMessage;
+			modelMessage << "  for:\n";
 			solAssert(values.size() == expressionNames.size(), "");
+			map<string, string> sortedModel;
 			for (size_t i = 0; i < values.size(); ++i)
 				if (expressionsToEvaluate.at(i).name != values.at(i))
-					message << "  " << expressionNames.at(i) << " = " << values.at(i) << "\n";
+					sortedModel[expressionNames.at(i)] = values.at(i);
+
+			for (auto const& eval: sortedModel)
+				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
+			m_errorReporter.warning(_location, message.str() + loopComment, SecondarySourceLocation().append(modelMessage.str(), SourceLocation()));
 		}
 		else
+		{
 			message << ".";
-		m_errorReporter.warning(_location, message.str() + loopComment);
+			m_errorReporter.warning(_location, message.str() + loopComment);
+		}
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
