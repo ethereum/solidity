@@ -49,16 +49,10 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 		dynamic_cast<MagicVariableDeclaration const*>(&_declaration)
 	)
 	{
-		// check that all other declarations with the same name are functions or a public state variable or events.
-		// And then check that the signatures are different.
+		// check that all other declarations are of the same kind (in which
+		// case the type checker will ensure that the signatures are different)
 		for (Declaration const* declaration: declarations)
 		{
-			if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(declaration))
-			{
-				if (variableDeclaration->isStateVariable() && !variableDeclaration->isConstant() && variableDeclaration->isPublic())
-					continue;
-				return declaration;
-			}
 			if (
 				dynamic_cast<FunctionDefinition const*>(&_declaration) &&
 				!dynamic_cast<FunctionDefinition const*>(declaration)

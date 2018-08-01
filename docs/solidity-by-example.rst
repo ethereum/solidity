@@ -232,7 +232,7 @@ activate themselves.
         // absolute unix timestamps (seconds since 1970-01-01)
         // or time periods in seconds.
         address public beneficiary;
-        uint public auctionEnd;
+        uint public auctionEndTime;
 
         // Current state of the auction.
         address public highestBidder;
@@ -261,7 +261,7 @@ activate themselves.
             address _beneficiary
         ) public {
             beneficiary = _beneficiary;
-            auctionEnd = now + _biddingTime;
+            auctionEndTime = now + _biddingTime;
         }
 
         /// Bid on the auction with the value sent
@@ -278,7 +278,7 @@ activate themselves.
             // Revert the call if the bidding
             // period is over.
             require(
-                now <= auctionEnd,
+                now <= auctionEndTime,
                 "Auction already ended."
             );
 
@@ -337,7 +337,7 @@ activate themselves.
             // external contracts.
 
             // 1. Conditions
-            require(now >= auctionEnd, "Auction not yet ended.");
+            require(now >= auctionEndTime, "Auction not yet ended.");
             require(!ended, "auctionEnd has already been called.");
 
             // 2. Effects

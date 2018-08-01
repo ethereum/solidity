@@ -8,4 +8,5 @@ contract C {
     }
 }
 // ----
+// DeclarationError: (150-179): Identifier already declared.
 // DeclarationError: (114-120): Identifier not found or not unique.
