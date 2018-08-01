@@ -22,6 +22,7 @@
 
 #include <libsolidity/analysis/TypeChecker.h>
 #include <memory>
+#include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -709,6 +710,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// TypeChecker at the VariableDeclarationStatement level.
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Failed to infer variable type.");
+
 	if (_variable.value())
 		expectType(*_variable.value(), *varType);
 	if (_variable.isConstant())
@@ -1079,10 +1081,25 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 	{
 		// No initial value is only permitted for single variables with specified type.
 		if (_statement.declarations().size() != 1 || !_statement.declarations().front())
-			m_errorReporter.fatalTypeError(_statement.location(), "Assignment necessary for type detection.");
+		{
+			if (boost::algorithm::all_of_equal(_statement.declarations(), nullptr))
+			{
+				// The syntax checker has already generated an error for this case (empty LHS tuple).
+				solAssert(m_errorReporter.hasErrors(), "");
+
+				// It is okay to return here, as there are no named components on the
+				// left-hand-side that could cause any damage later.
+				return false;
+			}
+			else
+				// Bailing out *fatal* here, as those (untyped) vars may be used later, and diagnostics wouldn't be helpful then.
+				m_errorReporter.fatalTypeError(_statement.location(), "Use of the \"var\" keyword is disallowed.");
+		}
+
 		VariableDeclaration const& varDecl = *_statement.declarations().front();
 		if (!varDecl.annotation().type)
-			m_errorReporter.fatalTypeError(_statement.location(), "Assignment necessary for type detection.");
+			m_errorReporter.fatalTypeError(_statement.location(), "Use of the \"var\" keyword is disallowed.");
+
 		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl).get()))
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
