@@ -1036,6 +1036,7 @@ BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 BOOST_AUTO_TEST_CASE(event_structs)
 {
 	char const* text = R"(
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint a; T[] sub; bytes b; }
 			struct T { uint[2] x; }
