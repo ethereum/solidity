@@ -252,14 +252,14 @@ void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _
 		_value < SymbolicIntVariable::minValue(_type),
 		_location,
 		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
-		"value",
+		"<result>",
 		&_value
 	);
 	checkCondition(
 		_value > SymbolicIntVariable::maxValue(_type),
 		_location,
 		"Overflow (resulting value larger than " + formatNumber(_type.maxValue()) + ")",
-		"value",
+		"<result>",
 		&_value
 	);
 }
@@ -437,7 +437,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 
 		if (_op.getOperator() == Token::Div)
 		{
-			checkCondition(right == 0, _op.location(), "Division by zero", "value", &right);
+			checkCondition(right == 0, _op.location(), "Division by zero", "<result>", &right);
 			m_interface->addAssertion(right != 0);
 		}
 
