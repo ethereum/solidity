@@ -6,9 +6,10 @@ Please also note that this project is released with a [Contributor Code of Condu
 
 ### Checklist
 - [ ] Code compiles correctly
-- [ ] All tests passing
-- [ ] Created tests which fail without the change (if possible)
-- [ ] Extended the README / documentation, if necessary
+- [ ] All tests are passing
+- [ ] New tests have been created which fail without the change (if possible)
+- [ ] README / documentation was extended, if necessary
+- [ ] Changelog entry (if change is visible to the user)
 - [ ] Used meaningful commit messages
 
 ### Description
