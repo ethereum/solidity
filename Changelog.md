@@ -34,6 +34,7 @@ Breaking Changes:
  * General: Disallow combining hex numbers with unit denominations (e.g. ``0x1e wei``). This was already the case in the experimental 0.5.0 mode.
  * Name Resolver: Do not exclude public state variables when looking for conflicting declarations.
  * Optimizer: Remove the no-op ``PUSH1 0 NOT AND`` sequence.
+ * Optimizer: Peephole optimization for redundant consecutive `ISZERO` opcodes.
  * Parser: Disallow trailing dots that are not followed by a number.
  * Parser: Remove ``constant`` as function state mutability modifer.
  * Type Checker: Disallow assignments between tuples with different numbers of components. This was already the case in the experimental 0.5.0 mode.

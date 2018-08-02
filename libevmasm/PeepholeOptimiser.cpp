@@ -109,6 +109,23 @@ struct PushPop: SimplePeepholeOptimizerMethod<PushPop, 2>
 	}
 };
 
+struct TripleIsZero: SimplePeepholeOptimizerMethod<TripleIsZero, 3>
+{
+	static bool applySimple(
+      AssemblyItem const& _isZero1, 
+      AssemblyItem const& _isZero2, 
+      AssemblyItem const& _isZero3, 
+      std::back_insert_iterator<AssemblyItems> _out
+  )
+	{
+    if(_isZero1 == Instruction::ISZERO && _isZero2 == Instruction::ISZERO && _isZero3 == Instruction::ISZERO) {
+      *_out = Instruction::ISZERO;
+      return true;
+    }
+    else return false;
+	}
+};
+
 struct OpPop: SimplePeepholeOptimizerMethod<OpPop, 2>
 {
 	static bool applySimple(
@@ -322,7 +339,7 @@ bool PeepholeOptimiser::optimise()
 {
 	OptimiserState state {m_items, 0, std::back_inserter(m_optimisedItems)};
 	while (state.i < m_items.size())
-		applyMethods(state, PushPop(), OpPop(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(), JumpToNext(), UnreachableCode(), TagConjunctions(), TruthyAnd(), Identity());
+		applyMethods(state, PushPop(), TripleIsZero(), OpPop(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(), JumpToNext(), UnreachableCode(), TagConjunctions(), TruthyAnd(), Identity());
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
 			eth::bytesRequired(m_optimisedItems, 3) < eth::bytesRequired(m_items, 3) ||
