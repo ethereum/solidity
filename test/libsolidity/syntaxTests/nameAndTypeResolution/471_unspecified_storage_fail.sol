@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (104-107): Storage location must be one of: "storage", "memory" for variable, but none was given.
+// TypeError: (104-107): Storage location must be one of "storage", "memory" for variable, but none was given.
