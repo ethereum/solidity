@@ -228,7 +228,8 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			if (type.numBytes() == 32)
 				templ("body", "cleaned := value");
 			else if (type.numBytes() == 0)
-				templ("body", "cleaned := 0");
+				// This is disallowed in the type system.
+				solAssert(false, "");
 			else
 			{
 				size_t numBits = type.numBytes() * 8;
