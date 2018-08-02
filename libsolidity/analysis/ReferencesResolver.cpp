@@ -305,20 +305,22 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
 		{
 			// If given location is not in allowed storage locations, throw error.
-			set<Location> allowedStorageLocations = _variable.getAllowedStorageLocations();
-			if (!(allowedStorageLocations.find(varLoc) != allowedStorageLocations.end()))
+			set<Location> allowedStorageLocations = _variable.allowedStorageLocations();
+			if (!allowedStorageLocations.count(varLoc))
 			{
-				string allowedStorageLocationsStr = "";
+				string allowedStorageLocationsStr;
+				string locStr;
 				for (auto const loc : allowedStorageLocations)
 				{
 					if (!allowedStorageLocationsStr.empty())
 						allowedStorageLocationsStr += ", ";
-					string locStr = _variable.locationToString(loc);
-					locStr = locStr == "none" ? "none" : "\"" + locStr + "\"";
+					if (loc == Location::Default)
+						locStr = "none";
+					else
+						locStr = "\"" + _variable.locationToString(loc) + "\"";
 					allowedStorageLocationsStr += locStr;
 				}
-				string multiple = allowedStorageLocations.size() > 1 ? " one of" : "";
-				string errorString = "Storage location must be" + multiple + ": " + allowedStorageLocationsStr;
+				string errorString = "Storage location must be one of " + allowedStorageLocationsStr;
 				if (_variable.isCallableParameter())
 				{
 					auto const &varScope = dynamic_cast<Declaration const &>(*_variable.scope());
@@ -327,9 +329,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 					errorString += varScope.visibilityToString(varScope.visibility()) + " function";
 				}
 				else
-				{
 					errorString += " for variable";
-				}
 				string varLocStr = _variable.locationToString(varLoc);
 				varLocStr = varLocStr == "none" ? "none" : "\"" + varLocStr + "\"";
 				errorString += ", but " + varLocStr + " was given.";

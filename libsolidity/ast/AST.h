@@ -659,7 +659,7 @@ public:
 
 	static std::string locationToString(VariableDeclaration::Location _location)
 	{
-		switch(_location)
+		switch (_location)
 		{
 			case Location::Memory:
 				return "memory";
@@ -715,16 +715,16 @@ public:
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
 	/// in the body of a function or modifier.
 	bool canHaveAutoType() const;
-	/// @returns true if this variable is a parameter from an event.
+	/// @returns true if this variable is a parameter of an event.
 	bool isEventParameter() const;
-	/// @returns true if the variable is a ReferenceType, i.e. array or struct.
+	/// @returns true if the type of the variable is a reference type, i.e. array or struct. Can only be called after reference resolution.
 	bool isReferenceType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.
-	std::set<Location> getAllowedStorageLocations() const;
+	std::set<Location> allowedStorageLocations() const;
 
 	virtual TypePointer type() const override;
 
