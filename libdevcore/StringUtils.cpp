@@ -85,17 +85,11 @@ size_t dev::stringDistance(string const& _str1, string const& _str2)
 
 string dev::quotedAlternativesList(vector<string> const& suggestions)
 {
-	if (suggestions.empty())
-		return "";
-	if (suggestions.size() == 1)
-		return "\"" + suggestions.front() + "\"";
+	vector<string> quotedSuggestions;
 
-	string choices = "\"" + suggestions.front() + "\"";
-	for (size_t i = 1; i + 1 < suggestions.size(); ++i)
-		choices += ", \"" + suggestions[i] + "\"";
+	for (auto& suggestion: suggestions)
+		quotedSuggestions.push_back("\"" + suggestion + "\"");
 
-	choices += " or \"" + suggestions.back() + "\"";
-
-	return choices;
+	return joinHumanReadable(quotedSuggestions, ", ", " or ");
 }
 

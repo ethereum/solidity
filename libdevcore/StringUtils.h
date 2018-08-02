@@ -36,4 +36,43 @@ size_t stringDistance(std::string const& _str1, std::string const& _str2);
 // Return a string having elements of suggestions as quoted, alternative suggestions. e.g. "a", "b" or "c"
 std::string quotedAlternativesList(std::vector<std::string> const& suggestions);
 
+/// Joins collection of strings into one string with separators between, last separator can be different.
+/// @param _list collection of strings to join
+/// @param _separator defaults to ", "
+/// @param _lastSeparator (optional) will be used to separate last two strings instead of _separator
+/// @example join(vector<string>{"a", "b", "c"}, "; ", " or ") == "a; b or c"
+template<class T>
+std::string joinHumanReadable
+(
+	T const& _list,
+	std::string const& _separator = ", ",
+	std::string const& _lastSeparator = ""
+)
+{
+	auto it = begin(_list);
+	auto itEnd = end(_list);
+
+	std::string result;
+
+	// append first string
+	if (it != itEnd)
+	{
+		result += *it;
+		++it;
+	}
+
+	for (;it != itEnd; ++it)
+	{
+		if ((next(it) == itEnd) && !_lastSeparator.empty())
+			result += _lastSeparator; // last iteration
+		else
+			result += _separator;
+
+		// append string
+		result += *it;
+	}
+
+	return result;
+}
+
 }
