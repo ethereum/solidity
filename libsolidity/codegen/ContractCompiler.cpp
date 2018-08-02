@@ -71,7 +71,11 @@ void ContractCompiler::compileContract(
 		appendDelegatecallCheck();
 
 	initializeContext(_contract, _contracts);
+	// This generates the dispatch function for externally visible functions
+	// and adds the function to the compilation queue. Additionally internal functions,
+	// which are referenced directly or indirectly will be added.
 	appendFunctionSelector(_contract);
+	// This processes the above populated queue until it is empty.
 	appendMissingFunctions();
 }
 
