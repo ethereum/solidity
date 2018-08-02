@@ -53,17 +53,20 @@ void Z3Interface::pop()
 
 void Z3Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
-	m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
+	if (!m_functions.count(_name))
+		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
 }
 
 void Z3Interface::declareInteger(string _name)
 {
-	m_constants.insert({_name, m_context.int_const(_name.c_str())});
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.int_const(_name.c_str())});
 }
 
 void Z3Interface::declareBool(string _name)
 {
-	m_constants.insert({_name, m_context.bool_const(_name.c_str())});
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.bool_const(_name.c_str())});
 }
 
 void Z3Interface::addAssertion(Expression const& _expr)

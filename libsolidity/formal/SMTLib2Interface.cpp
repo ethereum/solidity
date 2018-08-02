@@ -47,6 +47,8 @@ void SMTLib2Interface::reset()
 {
 	m_accumulatedOutput.clear();
 	m_accumulatedOutput.emplace_back();
+	m_constants.clear();
+	m_functions.clear();
 	write("(set-option :produce-models true)");
 	write("(set-logic QF_UFLIA)");
 }
@@ -64,25 +66,38 @@ void SMTLib2Interface::pop()
 
 void SMTLib2Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
-	write(
-		"(declare-fun |" +
-		_name +
-		"| (" +
-		(_domain == Sort::Int ? "Int" : "Bool") +
-		") " +
-		(_codomain == Sort::Int ? "Int" : "Bool") +
-		")"
-	);
+	// TODO Use domain and codomain as key as well
+	if (!m_functions.count(_name))
+	{
+		m_functions.insert(_name);
+		write(
+			"(declare-fun |" +
+			_name +
+			"| (" +
+			(_domain == Sort::Int ? "Int" : "Bool") +
+			") " +
+			(_codomain == Sort::Int ? "Int" : "Bool") +
+			")"
+		);
+	}
 }
 
 void SMTLib2Interface::declareInteger(string _name)
 {
-	write("(declare-const |" + _name + "| Int)");
+	if (!m_constants.count(_name))
+	{
+		m_constants.insert(_name);
+		write("(declare-const |" + _name + "| Int)");
+	}
 }
 
 void SMTLib2Interface::declareBool(string _name)
 {
-	write("(declare-const |" + _name + "| Bool)");
+	if (!m_constants.count(_name))
+	{
+		m_constants.insert(_name);
+		write("(declare-const |" + _name + "| Bool)");
+	}
 }
 
 void SMTLib2Interface::addAssertion(Expression const& _expr)

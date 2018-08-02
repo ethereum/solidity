@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include <set>
 
 namespace dev
 {
@@ -68,6 +69,8 @@ private:
 
 	ReadCallback::Callback m_queryCallback;
 	std::vector<std::string> m_accumulatedOutput;
+	std::set<std::string> m_constants;
+	std::set<std::string> m_functions;
 };
 
 }
