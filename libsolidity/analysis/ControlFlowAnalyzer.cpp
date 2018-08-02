@@ -144,12 +144,12 @@ void ControlFlowAnalyzer::checkUnassignedStorageReturnValues(
 						ssl.append("Problematic end of function:", _function.location());
 				}
 
-			m_errorReporter.warning(
+			m_errorReporter.typeError(
 				returnVal->location(),
-				"This variable is of storage pointer type and might be returned without assignment. "
-				"This can cause storage corruption. Assign the variable (potentially from itself) "
-				"to remove this warning.",
-				ssl
+				ssl,
+				"This variable is of storage pointer type and might be returned without assignment and "
+				"could be used uninitialized. Assign the variable (potentially from itself) "
+				"to fix this error."
 			);
 		}
 	}
