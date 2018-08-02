@@ -471,13 +471,8 @@ string ABIFunctions::abiEncodingFunction(
 	bool _fromStack
 )
 {
-	solUnimplementedAssert(
-		_to.mobileType() &&
-		_to.mobileType()->interfaceType(_encodeAsLibraryTypes) &&
-		_to.mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType(),
-		"Encoding type \"" + _to.toString() + "\" not yet implemented."
-	);
-	TypePointer toInterface = _to.mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
+	TypePointer toInterface = _to.fullEncodingType(_encodeAsLibraryTypes, true, false);
+	solUnimplementedAssert(toInterface, "Encoding type \"" + _to.toString() + "\" not yet implemented.");
 	Type const& to = *toInterface;
 
 	if (_from.category() == Type::Category::StringLiteral)
@@ -886,13 +881,8 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			solAssert(member.type, "");
 			if (!member.type->canLiveOutsideStorage())
 				continue;
-			solUnimplementedAssert(
-				member.type->mobileType() &&
-				member.type->mobileType()->interfaceType(_encodeAsLibraryTypes) &&
-				member.type->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType(),
-				"Encoding type \"" + member.type->toString() + "\" not yet implemented."
-			);
-			auto memberTypeTo = member.type->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
+			TypePointer memberTypeTo = member.type->fullEncodingType(_encodeAsLibraryTypes, true, false);
+			solUnimplementedAssert(memberTypeTo, "Encoding type \"" + member.type->toString() + "\" not yet implemented.");
 			auto memberTypeFrom = _from.memberType(member.name);
 			solAssert(memberTypeFrom, "");
 			bool dynamicMember = memberTypeTo->isDynamicallyEncoded();

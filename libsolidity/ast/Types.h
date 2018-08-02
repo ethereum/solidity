@@ -280,6 +280,11 @@ public:
 	/// This for example returns address for contract types.
 	/// If there is no such type, returns an empty shared pointer.
 	virtual TypePointer encodingType() const { return TypePointer(); }
+	/// @returns the encoding type used under the given circumstances for the type of an expression
+	/// when used for e.g. abi.encode(...) or the empty pointer if the object
+	/// cannot be encoded.
+	/// This is different from encodingType since it takes implicit conversions into account.
+	TypePointer fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _packed) const;
 	/// @returns a (simpler) type that is used when decoding this type in calldata.
 	virtual TypePointer decodingType() const { return encodingType(); }
 	/// @returns a type that will be used outside of Solidity for e.g. function signatures.

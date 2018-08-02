@@ -1742,22 +1742,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 						errored = true;
 					}
-				if (!errored)
-				{
-					TypePointer encodingType;
-					if (
-						argType->mobileType() &&
-						argType->mobileType()->interfaceType(false) &&
-						argType->mobileType()->interfaceType(false)->encodingType()
-					)
-						encodingType = argType->mobileType()->interfaceType(false)->encodingType();
-					// Structs are fine as long as ABIV2 is activated and we do not do packed encoding.
-					if (!encodingType || (
-						dynamic_cast<StructType const*>(encodingType.get()) &&
-						!(abiEncodeV2 && functionType->padArguments())
-					))
-						m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
-				}
+				if (!errored && !argType->fullEncodingType(false, abiEncodeV2, !functionType->padArguments()))
+					m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 			{
