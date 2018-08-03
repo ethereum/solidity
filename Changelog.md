@@ -79,6 +79,7 @@ Bugfixes:
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * References Resolver: Enforce ``storage`` as data location for mappings.
  * References Resolver: Report error instead of assertion fail when FunctionType has an undeclared type as parameter.
+ * Type Checker: Disallow assignments to mappings within tuple assignments as well.
  * Type Checker: Consider fixed size arrays when checking for recursive structs.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
 

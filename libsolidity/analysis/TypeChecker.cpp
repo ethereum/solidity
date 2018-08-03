@@ -1318,11 +1318,31 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	return false;
 }
 
+void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const& _expression)
+{
+	if (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(&_expression))
+	{
+		if (auto const* tupleType = dynamic_cast<TupleType const*>(&_type))
+		{
+			for (size_t i = 0; i < min(tupleExpression->components().size(), tupleType->components().size()); i++)
+				if (tupleType->components()[i] && tupleExpression->components()[i])
+					checkExpressionAssignment(*tupleType->components()[i], *tupleExpression->components()[i]);
+		}
+		else if (!tupleExpression->components().empty())
+			checkExpressionAssignment(_type, *tupleExpression->components().front());
+	}
+	else if (_type.category() == Type::Category::Mapping)
+		m_errorReporter.typeError(_expression.location(), "Mappings cannot be assigned to.");
+}
+
 bool TypeChecker::visit(Assignment const& _assignment)
 {
 	requireLValue(_assignment.leftHandSide());
 	TypePointer t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
+
+	checkExpressionAssignment(*t, _assignment.leftHandSide());
+
 	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t.get()))
 	{
 		if (_assignment.assignmentOperator() != Token::Assign)
@@ -1338,11 +1358,6 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		// expectType does not cause fatal errors, so we have to check again here.
 		if (dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
 			checkDoubleStorageAssignment(_assignment);
-	}
-	else if (t->category() == Type::Category::Mapping)
-	{
-		m_errorReporter.typeError(_assignment.location(), "Mappings cannot be assigned to.");
-		_assignment.rightHandSide().accept(*this);
 	}
 	else if (_assignment.assignmentOperator() == Token::Assign)
 		expectType(_assignment.rightHandSide(), *t);
