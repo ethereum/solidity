@@ -73,6 +73,7 @@ private:
 	virtual bool visit(VariableDeclarationStatement const& _statement) override;
 
 	virtual bool visit(StructDefinition const& _struct) override;
+	virtual bool visit(Literal const& _literal) override;
 
 	ErrorReporter& m_errorReporter;
 

@@ -46,3 +46,5 @@ browse.VC.db
 CMakeLists.txt.user
 /CMakeSettings.json
 /.vs
+/.cproject
+/.project
