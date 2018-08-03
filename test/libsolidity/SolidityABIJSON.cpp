@@ -756,7 +756,7 @@ BOOST_AUTO_TEST_CASE(library_function)
 	char const* sourceCode = R"(
 		library test {
 			struct StructType { uint a; }
-			function f(StructType storage b, uint[] storage c, test d) public returns (uint[] memory e, StructType storage f) {}
+			function f(StructType storage b, uint[] storage c, test d) public returns (uint[] memory e, StructType storage f) { f = f; }
 		}
 	)";
 
