@@ -96,7 +96,7 @@ bool ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _f
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		c.addSource(m_sources[i].first, m_sources[i].second);
-		sourceIndices[m_sources[i].first] = i;
+		sourceIndices[m_sources[i].first] = i + 1;
 	}
 
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
