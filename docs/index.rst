@@ -125,6 +125,9 @@ Solidity Tools
 * `evmdis <https://github.com/Arachnid/evmdis>`_
     EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
 
+* `ABI to solidity interface converter <https://gist.github.com/chriseth/8f533d133fa0c15b0d6eaf3ec502c82b>`_
+    A script for generating contract interfaces from the ABI of a smart contract.
+
 .. note::
   Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.
 
