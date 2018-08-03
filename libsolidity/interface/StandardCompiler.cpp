@@ -322,7 +322,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value const& auxInputs = _input["auxiliaryInput"];
 	if (!!auxInputs)
 	{
-		Json::Value const& smtlib2Responses = auxInputs["smtlib2"];
+		Json::Value const& smtlib2Responses = auxInputs["smtlib2responses"];
 		if (!!smtlib2Responses)
 			for (auto const& hashString: smtlib2Responses.getMemberNames())
 			{
@@ -541,7 +541,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	if (!m_compilerStack.unhandledSMTLib2Queries().empty())
 		for (string const& query: m_compilerStack.unhandledSMTLib2Queries())
-			output["auxiliaryInputRequested"]["smtlib2"]["0x" + keccak256(query).hex()] = query;
+			output["auxiliaryInputRequested"]["smtlib2queries"]["0x" + keccak256(query).hex()] = query;
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
