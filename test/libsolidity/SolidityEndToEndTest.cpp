@@ -8910,52 +8910,6 @@ BOOST_AUTO_TEST_CASE(inline_assembly_storage_access_via_pointer)
 	ABI_CHECK(callContractFunction("separator2()"), encodeArgs(u256(0)));
 }
 
-BOOST_AUTO_TEST_CASE(inline_assembly_jumps)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public {
-				assembly {
-					let n := calldataload(4)
-					let a := 1
-					let b := a
-				loop:
-					jumpi(loopend, eq(n, 0))
-					a add swap1
-					n := sub(n, 1)
-					jump(loop)
-				loopend:
-					mstore(0, a)
-					return(0, 0x20)
-				}
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()", u256(5)), encodeArgs(u256(13)));
-	ABI_CHECK(callContractFunction("f()", u256(7)), encodeArgs(u256(34)));
-}
-
-BOOST_AUTO_TEST_CASE(inline_assembly_function_access)
-{
-	char const* sourceCode = R"(
-		contract C {
-			uint public x;
-			function g(uint y) public { x = 2 * y; assembly { stop } }
-			function f(uint _x) public {
-				assembly {
-					_x
-					jump(g)
-					pop
-				}
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f(uint256)", u256(5)), encodeArgs());
-	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(10)));
-}
-
 BOOST_AUTO_TEST_CASE(inline_assembly_function_call)
 {
 	char const* sourceCode = R"(
@@ -11261,7 +11215,7 @@ BOOST_AUTO_TEST_CASE(invalid_instruction)
 		contract C {
 			function f() public {
 				assembly {
-					invalid
+					invalid()
 				}
 			}
 		}
@@ -11688,19 +11642,10 @@ BOOST_AUTO_TEST_CASE(keccak256_assembly)
 					ret := keccak256(0, 0)
 				}
 			}
-			function g() public pure returns (bytes32 ret) {
-				assembly {
-					0
-					0
-					keccak256
-					=: ret
-				}
-			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("f()"), fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
-	ABI_CHECK(callContractFunction("g()"), fromHex("0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
 }
 
 BOOST_AUTO_TEST_CASE(multi_modifiers)
@@ -12547,50 +12492,6 @@ BOOST_AUTO_TEST_CASE(staticcall_for_view_and_pure)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(swap_peephole_optimisation)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function lt(uint a, uint b) public returns (bool c) {
-				assembly {
-					a
-					b
-					swap1
-					lt
-					=: c
-				}
-			}
-			function add(uint a, uint b) public returns (uint c) {
-				assembly {
-					a
-					b
-					swap1
-					add
-					=: c
-				}
-			}
-			function div(uint a, uint b) public returns (uint c) {
-				assembly {
-					a
-					b
-					swap1
-					div
-					=: c
-				}
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("lt(uint256,uint256)", u256(1), u256(2)) == encodeArgs(u256(1)));
-	BOOST_CHECK(callContractFunction("lt(uint256,uint256)", u256(2), u256(1)) == encodeArgs(u256(0)));
-	BOOST_CHECK(callContractFunction("add(uint256,uint256)", u256(1), u256(2)) == encodeArgs(u256(3)));
-	BOOST_CHECK(callContractFunction("add(uint256,uint256)", u256(100), u256(200)) == encodeArgs(u256(300)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(2), u256(1)) == encodeArgs(u256(2)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(200), u256(10)) == encodeArgs(u256(20)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(1), u256(0)) == encodeArgs(u256(0)));
-	BOOST_CHECK(callContractFunction("div(uint256,uint256)", u256(0), u256(1)) == encodeArgs(u256(0)));
-}
-
 BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople)
 {
 	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
@@ -12599,26 +12500,17 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople)
 		contract C {
 			function shl(uint a, uint b) public returns (uint c) {
 				assembly {
-					a
-					b
-					shl
-					=: c
+					c := shl(b, a)
 				}
 			}
 			function shr(uint a, uint b) public returns (uint c) {
 				assembly {
-					a
-					b
-					shr
-					=: c
+					c := shr(b, a)
 				}
 			}
 			function sar(uint a, uint b) public returns (uint c) {
 				assembly {
-					a
-					b
-					sar
-					=: c
+					c := sar(b, a)
 				}
 			}
 		}
@@ -12646,10 +12538,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shl_1() public returns (bool) {
 				uint c;
 				assembly {
-					1
-					2
-					shl
-					=: c
+					c := shl(2, 1)
 				}
 				assert(c == 4);
 				return true;
@@ -12657,10 +12546,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shl_2() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					1
-					shl
-					=: c
+					c := shl(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe);
 				return true;
@@ -12668,10 +12554,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shl_3() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					256
-					shl
-					=: c
+					c := shl(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0);
 				return true;
@@ -12679,10 +12562,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shr_1() public returns (bool) {
 				uint c;
 				assembly {
-					3
-					1
-					shr
-					=: c
+					c := shr(1, 3)
 				}
 				assert(c == 1);
 				return true;
@@ -12690,10 +12570,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shr_2() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					1
-					shr
-					=: c
+					c := shr(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 				return true;
@@ -12701,10 +12578,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 			function shr_3() public returns (bool) {
 				uint c;
 				assembly {
-					0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-					256
-					shr
-					=: c
+					c := shr(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 				}
 				assert(c == 0);
 				return true;
