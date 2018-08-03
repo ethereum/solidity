@@ -313,14 +313,14 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				for (auto const loc : allowedStorageLocations)
 				{
 					if (!allowedStorageLocationsStr.empty())
-						allowedStorageLocationsStr += ", ";
+						allowedStorageLocationsStr += " or ";
 					if (loc == Location::Default)
 						locStr = "none";
 					else
 						locStr = "\"" + _variable.locationToString(loc) + "\"";
 					allowedStorageLocationsStr += locStr;
 				}
-				string errorString = "Storage location must be one of " + allowedStorageLocationsStr;
+				string errorString = "Storage location must be " + allowedStorageLocationsStr;
 				if (_variable.isCallableParameter())
 				{
 					auto const &varScope = dynamic_cast<Declaration const &>(*_variable.scope());
