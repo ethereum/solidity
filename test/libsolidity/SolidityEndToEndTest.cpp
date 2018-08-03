@@ -12840,7 +12840,7 @@ BOOST_AUTO_TEST_CASE(test_underscore_in_hex)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(bool cond) returns (uint) {
+			function f(bool cond) public pure returns (uint) {
 				uint32 x = 0x1234_ab;
 				uint y = 0x1234_abcd_1234;
 				return cond ? x : y;

@@ -773,21 +773,22 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 	rational value;
 	try
 	{
-		auto expPoint = find(_literal.value().begin(), _literal.value().end(), 'e');
-		if (expPoint == _literal.value().end())
-			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
+		ASTString valueString = _literal.value();
+		boost::erase_all(valueString, "_");// Remove underscore separators
 
-		if (boost::starts_with(_literal.value(), "0x"))
+		auto expPoint = find(valueString.begin(), valueString.end(), 'e');
+		if (expPoint == valueString.end())
+			expPoint = find(valueString.begin(), valueString.end(), 'E');
+
+		if (boost::starts_with(valueString, "0x"))
 		{
 			// process as hex
-			ASTString valueString = _literal.value();
-			boost::erase_all(valueString, "_");// Remove underscore separators
 			value = bigint(valueString);
 		}
-		else if (expPoint != _literal.value().end())
+		else if (expPoint != valueString.end())
 		{
 			// Parse mantissa and exponent. Checks numeric limit.
-			tuple<bool, rational> mantissa = parseRational(string(_literal.value().begin(), expPoint));
+			tuple<bool, rational> mantissa = parseRational(string(valueString.begin(), expPoint));
 
 			if (!get<0>(mantissa))
 				return make_tuple(false, rational(0));
@@ -797,7 +798,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 			if (value == 0)
 				return make_tuple(true, rational(0));
 
-			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
+			bigint exp = bigint(string(expPoint + 1, valueString.end()));
 
 			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
 				return make_tuple(false, rational(0));
@@ -826,7 +827,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		else
 		{
 			// parse as rational number
-			tuple<bool, rational> tmp = parseRational(_literal.value());
+			tuple<bool, rational> tmp = parseRational(valueString);
 			if (!get<0>(tmp))
 				return tmp;
 			value = get<1>(tmp);

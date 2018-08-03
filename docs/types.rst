@@ -285,7 +285,9 @@ Scientific notation is also supported, where the base can have fractions, while 
 Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
 
 Underscores can be used to separate the digits of a numeric literal to aid readability.
-For example, ``123_000``, ``0x2eff_abde``, ``1233_e348_9a`` are all valid. Underscores are only allowed between two digits. For hex literals, underscores are only allowed to separate groups of 4 hex digits.
+For example, decimal ``123_000``, hexadecimal ``0x2eff_abde``, scientific decimal notation ``1_2e345_678`` are all valid.
+Underscores are only allowed between two digits and only one consecutive underscore is allowed.
+There is no additional semantic meaning added to a number literal containing underscores.
 
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
 using them together with a non-literal expression).

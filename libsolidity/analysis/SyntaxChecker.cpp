@@ -188,39 +188,38 @@ bool SyntaxChecker::visit(Throw const& _throwStatement)
 
 bool SyntaxChecker::visit(Literal const& _literal)
 {
-	if (!_literal.isHexNumber())
+	if (_literal.token() != Token::Number)
 		return true;
-	// We have a hex literal. Do underscore validation
-	solAssert(_literal.value().substr(0, 2) == "0x", "");
-	ASTString value = _literal.value().substr(2); // Skip the 0x
-	vector<ASTString> parts;
-	boost::split(parts, value, boost::is_any_of("_"));
 
-	if (parts.size() == 1) // no underscores
-		return true;
-	// Everything except first and last part must be 4 chars in length
-	for (size_t i = 1; i + 1 < parts.size(); ++i)
+	ASTString const& value = _literal.value();
+	solAssert(!value.empty(), "");
+
+	// Generic checks no matter what base this number literal is of:
+	if (value.back() == '_')
 	{
-		if (parts[i].size() != 4)
-			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in hex literal. Found inner part with " + to_string(parts[i].size()) + " digits (has to be 4 digits).");
+		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No trailing underscores allowed.");
+		return true;
 	}
 
-	// Validate rightmost block
-	if (parts.back().size() == 4) // If ends with 4 digits, then no need to validate first block
+	if (value.find("__") != ASTString::npos)
+	{
+		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.");
 		return true;
-
-	// Validate leftmost block
-	// If first part is 4 digits then last part's length has to be even to avoid ambiguity over zero padding
-	if (parts.front().size() == 4)
-	{
-		if (parts.back().size() % 2 == 0)
-			return true;
-		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in hex literal. If the first part has 4 digits, it is assumed to be a byte sequence instead of a number and thus the last part should have an even number of digits.");
 	}
-	else
+
+	if (!_literal.isHexNumber()) // decimal literal
 	{
-		// Both first and last part is invalid
-		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in hex literal. First or last part must have 4 digits.");
+		if (value.find("._") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
+
+		if (value.find("_.") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
+
+		if (value.find("_e") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore at the end of the mantissa allowed.");
+
+		if (value.find("e_") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore in front of exponent allowed.");
 	}
 
 	return true;
