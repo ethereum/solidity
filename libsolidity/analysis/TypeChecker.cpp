@@ -1322,14 +1322,16 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 {
 	if (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(&_expression))
 	{
-		if (auto const* tupleType = dynamic_cast<TupleType const*>(&_type))
-		{
-			for (size_t i = 0; i < min(tupleExpression->components().size(), tupleType->components().size()); i++)
-				if (tupleType->components()[i] && tupleExpression->components()[i])
-					checkExpressionAssignment(*tupleType->components()[i], *tupleExpression->components()[i]);
-		}
-		else if (!tupleExpression->components().empty())
-			checkExpressionAssignment(_type, *tupleExpression->components().front());
+		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
+		auto const& types = tupleType ? tupleType->components() : vector<TypePointer> { _type.shared_from_this() };
+
+		solAssert(tupleExpression->components().size() == types.size(), "");
+		for (size_t i = 0; i < types.size(); i++)
+			if (types[i])
+			{
+				solAssert(!!tupleExpression->components()[i], "");
+				checkExpressionAssignment(*types[i], *tupleExpression->components()[i]);
+			}
 	}
 	else if (_type.category() == Type::Category::Mapping)
 	{
