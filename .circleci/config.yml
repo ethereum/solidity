@@ -179,6 +179,17 @@ jobs:
           name: Check spelling
           command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
 
+  test_buglist:
+      docker:
+        - image: circleci/node
+      environment:
+        TERM: xterm
+      steps:
+        - checkout
+        - run:
+            name: Test buglist
+            command: ./test/buglistTests.js
+
   test_x86_linux:
     docker:
       - image: buildpack-deps:artful
@@ -252,6 +263,7 @@ workflows:
   build_all:
     jobs:
       - test_check_spelling: *build_on_tags
+      - test_buglist: *build_on_tags
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
           <<: *build_on_tags
