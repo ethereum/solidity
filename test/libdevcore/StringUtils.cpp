@@ -81,6 +81,24 @@ BOOST_AUTO_TEST_CASE(test_alternatives_list)
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\", \"c\" or \"d\"");
 }
 
+BOOST_AUTO_TEST_CASE(test_human_readable_join)
+{
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({})), "");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a"})), "a");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b"})), "a, b");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b", "c"})), "a, b, c");
+
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({}), "; "), "");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a"}), "; "), "a");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b"}), "; "), "a; b");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b", "c"}), "; "), "a; b; c");
+
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({}), "; ", " or "), "");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a"}), "; ", " or "), "a");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b"}), "; ", " or "), "a or b");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b", "c"}), "; ", " or "), "a; b or c");
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
