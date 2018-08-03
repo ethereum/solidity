@@ -45,8 +45,10 @@ SMTPortfolio::SMTPortfolio(map<h256, string> const& _smtlib2Responses)
 #else
 	if (!_smtlib2Responses.empty())
 		m_errorReporter.warning(
-			"Query responses for smtlib2 were given in the auxiliary input, "
-			"but this Solidity binary uses an SMT solver directly."
+			"SMT-LIB2 query responses were given in the auxiliary input, "
+			"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
+			"These responses will be ignored."
+			"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
 		);
 #endif
 	(void)_smtlib2Responses;

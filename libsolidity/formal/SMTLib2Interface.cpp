@@ -39,8 +39,8 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTLib2Interface::SMTLib2Interface(map<h256, string> const& _smtlib2Responses):
-	m_smtlib2Responses(_smtlib2Responses)
+SMTLib2Interface::SMTLib2Interface(map<h256, string> const& _queryResponses):
+	m_queryResponses(_queryResponses)
 {
 	reset();
 }
@@ -215,8 +215,8 @@ vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, stri
 string SMTLib2Interface::querySolver(string const& _input)
 {
 	h256 inputHash = dev::keccak256(_input);
-	if (m_smtlib2Responses.count(inputHash))
-		return m_smtlib2Responses.at(inputHash);
+	if (m_queryResponses.count(inputHash))
+		return m_queryResponses.at(inputHash);
 	else
 	{
 		m_unhandledQueries.push_back(_input);
