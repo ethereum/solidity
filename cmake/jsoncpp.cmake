@@ -10,8 +10,16 @@ set(prefix "${CMAKE_BINARY_DIR}/deps")
 set(JSONCPP_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 
-if(NOT MSVC)
-    set(JSONCPP_EXTRA_FLAGS "-std=c++11")
+# TODO: Investigate why this breaks some emscripten builds and
+# check whether this can be removed after updating the emscripten
+# versions used in the CI runs.
+if(EMSCRIPTEN)
+    # Do not include all flags in CMAKE_CXX_FLAGS for emscripten,
+    # but only use -std=c++11. Using all flags causes build failures
+    # at the moment.
+    set(JSONCPP_CXX_FLAGS -std=c++11)
+else()
+    set(JSONCPP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()
 
 set(byproducts "")
@@ -34,7 +42,7 @@ ExternalProject_Add(jsoncpp-project
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
                -DJSONCPP_WITH_TESTS=OFF
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
-               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${JSONCPP_EXTRA_FLAGS}
+               -DCMAKE_CXX_FLAGS=${JSONCPP_CXX_FLAGS}
                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     ${byproducts}
 )
