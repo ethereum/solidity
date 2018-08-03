@@ -1478,6 +1478,28 @@ BOOST_AUTO_TEST_CASE(multi_level_mapping)
 	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(0));
 }
 
+BOOST_AUTO_TEST_CASE(mapping_local_assignment)
+{
+	char const* sourceCode = R"(
+		contract test {
+			mapping(uint8 => uint8) m1;
+			mapping(uint8 => uint8) m2;
+			function f() public returns (uint8, uint8, uint8, uint8) {
+				mapping(uint8 => uint8) storage m = m1;
+				m[1] = 42;
+
+				m = m2;
+				m[2] = 21;
+
+				return (m1[1], m1[2], m2[1], m2[2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(byte(42), byte(0), byte(0), byte(21)));
+}
+
 BOOST_AUTO_TEST_CASE(structs)
 {
 	char const* sourceCode = R"(

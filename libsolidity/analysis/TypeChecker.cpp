@@ -1332,7 +1332,15 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 			checkExpressionAssignment(_type, *tupleExpression->components().front());
 	}
 	else if (_type.category() == Type::Category::Mapping)
-		m_errorReporter.typeError(_expression.location(), "Mappings cannot be assigned to.");
+	{
+		bool isLocalOrReturn = false;
+		if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
+			if (auto const *variableDeclaration = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
+				if (variableDeclaration->isLocalOrReturn())
+					isLocalOrReturn = true;
+		if (!isLocalOrReturn)
+			m_errorReporter.typeError(_expression.location(), "Mappings cannot be assigned to.");
+	}
 }
 
 bool TypeChecker::visit(Assignment const& _assignment)

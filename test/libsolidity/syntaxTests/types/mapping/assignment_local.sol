@@ -9,7 +9,3 @@ contract test {
     }
 }
 // ----
-// TypeError: (176-177): Mappings cannot be assigned to.
-// TypeError: (192-193): Mappings cannot be assigned to.
-// TypeError: (209-210): Mappings cannot be assigned to.
-// TypeError: (212-213): Mappings cannot be assigned to.
