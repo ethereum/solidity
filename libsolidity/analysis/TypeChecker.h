@@ -87,6 +87,9 @@ private:
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
 	/// Should only be called if the left hand side is tuple-typed.
 	void checkDoubleStorageAssignment(Assignment const& _assignment);
+	// Checks whether the expression @arg _expression can be assigned from type @arg _type
+	// and reports an error, if not.
+	void checkExpressionAssignment(Type const& _type, Expression const& _expression);
 
 	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
 	virtual void endVisit(UsingForDirective const& _usingFor) override;

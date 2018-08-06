@@ -1330,11 +1330,41 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	return false;
 }
 
+void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const& _expression)
+{
+	if (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(&_expression))
+	{
+		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
+		auto const& types = tupleType ? tupleType->components() : vector<TypePointer> { _type.shared_from_this() };
+
+		solAssert(tupleExpression->components().size() == types.size(), "");
+		for (size_t i = 0; i < types.size(); i++)
+			if (types[i])
+			{
+				solAssert(!!tupleExpression->components()[i], "");
+				checkExpressionAssignment(*types[i], *tupleExpression->components()[i]);
+			}
+	}
+	else if (_type.category() == Type::Category::Mapping)
+	{
+		bool isLocalOrReturn = false;
+		if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
+			if (auto const *variableDeclaration = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
+				if (variableDeclaration->isLocalOrReturn())
+					isLocalOrReturn = true;
+		if (!isLocalOrReturn)
+			m_errorReporter.typeError(_expression.location(), "Mappings cannot be assigned to.");
+	}
+}
+
 bool TypeChecker::visit(Assignment const& _assignment)
 {
 	requireLValue(_assignment.leftHandSide());
 	TypePointer t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
+
+	checkExpressionAssignment(*t, _assignment.leftHandSide());
+
 	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t.get()))
 	{
 		if (_assignment.assignmentOperator() != Token::Assign)
@@ -1350,11 +1380,6 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		// expectType does not cause fatal errors, so we have to check again here.
 		if (dynamic_cast<TupleType const*>(type(_assignment.rightHandSide()).get()))
 			checkDoubleStorageAssignment(_assignment);
-	}
-	else if (t->category() == Type::Category::Mapping)
-	{
-		m_errorReporter.typeError(_assignment.location(), "Mappings cannot be assigned to.");
-		_assignment.rightHandSide().accept(*this);
 	}
 	else if (_assignment.assignmentOperator() == Token::Assign)
 		expectType(_assignment.rightHandSide(), *t);
