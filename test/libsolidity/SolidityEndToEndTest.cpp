@@ -12489,6 +12489,44 @@ BOOST_AUTO_TEST_CASE(abi_encode_with_signaturev2)
 	ABI_CHECK(callContractFunction("f4()"), expectation);
 }
 
+BOOST_AUTO_TEST_CASE(abi_encode_empty_string)
+{
+	char const* sourceCode = R"(
+		// Tests that this will not end up using a "bytes0" type
+		// (which would assert)
+		contract C {
+			function f() public pure returns (bytes memory, bytes memory) {
+				return (abi.encode(""), abi.encodePacked(""));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(
+		0x40, 0xc0,
+		0x60, 0x20, 0x00, 0x00,
+		0x00
+	));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_empty_string_v2)
+{
+	char const* sourceCode = R"(
+		// Tests that this will not end up using a "bytes0" type
+		// (which would assert)
+		pragma experimental ABIEncoderV2;
+		contract C {
+			function f() public pure returns (bytes memory, bytes memory) {
+				return (abi.encode(""), abi.encodePacked(""));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(
+		0x40, 0xa0,
+		0x40, 0x20, 0x00,
+		0x00
+	));
+}
 BOOST_AUTO_TEST_CASE(abi_encode_call)
 {
 	char const* sourceCode = R"T(
