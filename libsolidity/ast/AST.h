@@ -206,7 +206,6 @@ public:
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
 	bool isVisibleAsLibraryMember() const { return visibility() >= Visibility::Internal; }
 
-	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
@@ -405,6 +404,8 @@ public:
 	bool constructorIsPublic() const;
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
+
+	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual TypePointer type() const override;
 
@@ -619,7 +620,6 @@ public:
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
-	std::string fullyQualifiedName() const;
 	virtual bool isVisibleInContract() const override
 	{
 		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
