@@ -36,6 +36,7 @@
 #pragma GCC diagnostic pop
 
 #include <test/Options.h>
+#include <test/libsolidity/ASTJSONTest.h>
 #include <test/libsolidity/SyntaxTest.h>
 
 #include <boost/algorithm/string.hpp>
@@ -131,6 +132,12 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		"syntaxTests",
 		SyntaxTest::create
 	) > 0, "no syntax tests found");
+	solAssert(registerTests(
+		master,
+		dev::test::Options::get().testPath / "libsolidity",
+		"ASTJSON",
+		ASTJSONTest::create
+	) > 0, "no JSON AST tests found");
 	if (dev::test::Options::get().disableIPC)
 	{
 		for (auto suite: {

@@ -1,0 +1,177 @@
+{
+	"absolutePath" : "a",
+	"exportedSymbols" : 
+	{
+		"c" : 
+		[
+			11
+		]
+	},
+	"id" : 12,
+	"nodeType" : "SourceUnit",
+	"nodes" : 
+	[
+		{
+			"baseContracts" : [],
+			"contractDependencies" : [],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 11,
+			"linearizedBaseContracts" : 
+			[
+				11
+			],
+			"name" : "c",
+			"nodeType" : "ContractDefinition",
+			"nodes" : 
+			[
+				{
+					"body" : 
+					{
+						"id" : 9,
+						"nodeType" : "Block",
+						"src" : "33:19:1",
+						"statements" : 
+						[
+							{
+								"assignments" : 
+								[
+									4
+								],
+								"declarations" : 
+								[
+									{
+										"constant" : false,
+										"id" : 4,
+										"name" : "a",
+										"nodeType" : "VariableDeclaration",
+										"scope" : 9,
+										"src" : "35:6:1",
+										"stateVariable" : false,
+										"storageLocation" : "default",
+										"typeDescriptions" : 
+										{
+											"typeIdentifier" : "t_uint256",
+											"typeString" : "uint256"
+										},
+										"typeName" : 
+										{
+											"id" : 3,
+											"name" : "uint",
+											"nodeType" : "ElementaryTypeName",
+											"src" : "35:4:1",
+											"typeDescriptions" : 
+											{
+												"typeIdentifier" : "t_uint256",
+												"typeString" : "uint256"
+											}
+										},
+										"value" : null,
+										"visibility" : "internal"
+									}
+								],
+								"id" : 8,
+								"initialValue" : 
+								{
+									"argumentTypes" : null,
+									"commonType" : 
+									{
+										"typeIdentifier" : "t_rational_5_by_1",
+										"typeString" : "int_const 5"
+									},
+									"id" : 7,
+									"isConstant" : false,
+									"isLValue" : false,
+									"isPure" : true,
+									"lValueRequested" : false,
+									"leftExpression" : 
+									{
+										"argumentTypes" : null,
+										"hexValue" : "32",
+										"id" : 5,
+										"isConstant" : false,
+										"isLValue" : false,
+										"isPure" : true,
+										"kind" : "number",
+										"lValueRequested" : false,
+										"nodeType" : "Literal",
+										"src" : "44:1:1",
+										"subdenomination" : null,
+										"typeDescriptions" : 
+										{
+											"typeIdentifier" : "t_rational_2_by_1",
+											"typeString" : "int_const 2"
+										},
+										"value" : "2"
+									},
+									"nodeType" : "BinaryOperation",
+									"operator" : "+",
+									"rightExpression" : 
+									{
+										"argumentTypes" : null,
+										"hexValue" : "33",
+										"id" : 6,
+										"isConstant" : false,
+										"isLValue" : false,
+										"isPure" : true,
+										"kind" : "number",
+										"lValueRequested" : false,
+										"nodeType" : "Literal",
+										"src" : "48:1:1",
+										"subdenomination" : null,
+										"typeDescriptions" : 
+										{
+											"typeIdentifier" : "t_rational_3_by_1",
+											"typeString" : "int_const 3"
+										},
+										"value" : "3"
+									},
+									"src" : "44:5:1",
+									"typeDescriptions" : 
+									{
+										"typeIdentifier" : "t_rational_5_by_1",
+										"typeString" : "int_const 5"
+									}
+								},
+								"nodeType" : "VariableDeclarationStatement",
+								"src" : "35:14:1"
+							}
+						]
+					},
+					"documentation" : null,
+					"id" : 10,
+					"implemented" : true,
+					"isConstructor" : false,
+					"isDeclaredConst" : false,
+					"modifiers" : [],
+					"name" : "f",
+					"nodeType" : "FunctionDefinition",
+					"parameters" : 
+					{
+						"id" : 1,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "23:2:1"
+					},
+					"payable" : false,
+					"returnParameters" : 
+					{
+						"id" : 2,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "33:0:1"
+					},
+					"scope" : 11,
+					"src" : "13:39:1",
+					"stateMutability" : "nonpayable",
+					"superFunction" : null,
+					"visibility" : "public"
+				}
+			],
+			"scope" : 12,
+			"src" : "0:54:1"
+		}
+	],
+	"src" : "0:55:1"
+}

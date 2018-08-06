@@ -18,6 +18,7 @@
 #include <libdevcore/CommonIO.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
+#include <test/libsolidity/ASTJSONTest.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -336,22 +337,53 @@ Allowed options)",
 		}
 	}
 
+	TestStats global_stats { 0, 0 };
+
 	fs::path syntaxTestPath = testPath / "libsolidity" / "syntaxTests";
 
 	if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
 	{
 		auto stats = TestTool::processPath(SyntaxTest::create, testPath / "libsolidity", "syntaxTests", formatted);
 
-		cout << endl << "Summary: ";
+		cout << endl << "Syntax Test Summary: ";
 		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
 			stats.successCount << "/" << stats.runCount;
-		cout << " tests successful." << endl;
+		cout << " tests successful." << endl << endl;
 
-		return stats ? 0 : 1;
+		global_stats.runCount += stats.runCount;
+		global_stats.successCount += stats.successCount;
 	}
 	else
 	{
 		cerr << "Syntax tests not found. Use the --testpath argument." << endl;
 		return 1;
 	}
+
+	fs::path astJsonTestPath = testPath / "libsolidity" / "ASTJSON";
+
+	if (fs::exists(astJsonTestPath) && fs::is_directory(astJsonTestPath))
+	{
+		auto stats = TestTool::processPath(ASTJSONTest::create, testPath / "libsolidity", "ASTJSON", formatted);
+
+		cout << endl << "JSON AST Test Summary: ";
+		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
+			stats.successCount << "/" << stats.runCount;
+		cout << " tests successful." << endl << endl;
+
+		global_stats.runCount += stats.runCount;
+		global_stats.successCount += stats.successCount;
+	}
+	else
+	{
+		cerr << "JSON AST tests not found." << endl;
+		return 1;
+	}
+
+	cout << endl << "Summary: ";
+	FormattedScope(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
+		 global_stats.successCount << "/" << global_stats.runCount;
+	cout << " tests successful." << endl;
+
+
+	return global_stats ? 0 : 1;
 }

@@ -1,0 +1,110 @@
+{
+	"attributes" : 
+	{
+		"absolutePath" : "a",
+		"exportedSymbols" : 
+		{
+			"C" : 
+			[
+				5
+			],
+			"L" : 
+			[
+				1
+			]
+		}
+	},
+	"children" : 
+	[
+		{
+			"attributes" : 
+			{
+				"baseContracts" : 
+				[
+					null
+				],
+				"contractDependencies" : 
+				[
+					null
+				],
+				"contractKind" : "library",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					1
+				],
+				"name" : "L",
+				"nodes" : 
+				[
+					null
+				],
+				"scope" : 6
+			},
+			"id" : 1,
+			"name" : "ContractDefinition",
+			"src" : "0:12:1"
+		},
+		{
+			"attributes" : 
+			{
+				"baseContracts" : 
+				[
+					null
+				],
+				"contractDependencies" : 
+				[
+					null
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					5
+				],
+				"name" : "C",
+				"scope" : 6
+			},
+			"children" : 
+			[
+				{
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"contractScope" : null,
+								"name" : "L",
+								"referencedDeclaration" : 1,
+								"type" : "library L"
+							},
+							"id" : 2,
+							"name" : "UserDefinedTypeName",
+							"src" : "32:1:1"
+						},
+						{
+							"attributes" : 
+							{
+								"name" : "uint",
+								"type" : "uint256"
+							},
+							"id" : 3,
+							"name" : "ElementaryTypeName",
+							"src" : "38:4:1"
+						}
+					],
+					"id" : 4,
+					"name" : "UsingForDirective",
+					"src" : "26:17:1"
+				}
+			],
+			"id" : 5,
+			"name" : "ContractDefinition",
+			"src" : "13:32:1"
+		}
+	],
+	"id" : 6,
+	"name" : "SourceUnit",
+	"src" : "0:46:1"
+}
