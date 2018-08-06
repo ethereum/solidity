@@ -47,7 +47,6 @@ bool ReferencesResolver::visit(Block const& _block)
 {
 	if (!m_resolveInsideCode)
 		return false;
-	m_experimental050Mode = _block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	m_resolver.setScope(&_block);
 	return true;
 }
@@ -64,7 +63,6 @@ bool ReferencesResolver::visit(ForStatement const& _for)
 {
 	if (!m_resolveInsideCode)
 		return false;
-	m_experimental050Mode = _for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	m_resolver.setScope(&_for);
 	return true;
 }
