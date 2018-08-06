@@ -199,16 +199,13 @@ The ``.gas()`` option is available on all three methods, while the ``.value()`` 
 Contract Types
 --------------
 
-Every :ref:`contract<contracts>` defines its own type, defined by its smart
-contract that you can call from another contract. For example (where ``Token``
-is a contract) ::
-
-   Token token = new Token();
-
-Contracts can be implicitly converted to contracts they inherit from, and can be explicitly converted from and to the ``address`` type.
+Every :ref:`contract<contracts>` defines its own type.
+Contracts can be implicitly converted to contracts they inherit from,
+and can be explicitly converted from and to the ``address`` type.
 
 .. note::
-    Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to address.
+    Starting with version 0.5.0 contracts do not derive from the address type,
+    but can still be explicitly converted to address.
 
 
 Contracts can also be instantiated (which means they are newly created). You
