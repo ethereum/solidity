@@ -1,4 +1,3 @@
-pragma experimental "v0.5.0";
 contract test {
     uint a;
     function f() pure public {

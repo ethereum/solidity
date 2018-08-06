@@ -1,4 +1,3 @@
-pragma experimental "v0.5.0";
 contract test {
     uint[] r;
     function f() public {
@@ -9,4 +8,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: (172-180): Cannot access local Solidity variables from inside an inline assembly function.
+// DeclarationError: (142-150): Cannot access local Solidity variables from inside an inline assembly function.
