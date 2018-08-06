@@ -1034,7 +1034,10 @@ string createTupleDecl(vector<ASTPointer<VariableDeclaration>> const& _decls)
 	vector<string> components;
 	for (ASTPointer<VariableDeclaration> const& decl: _decls)
 		if (decl)
+		{
+			solAssert(decl->annotation().type, "");
 			components.emplace_back(decl->annotation().type->toString(false) + " " + decl->name());
+		}
 		else
 			components.emplace_back();
 
@@ -1051,6 +1054,9 @@ bool typeCanBeExpressed(vector<ASTPointer<VariableDeclaration>> const& decls)
 		// skip empty tuples (they can be expressed of course)
 		if (!decl)
 			continue;
+
+		if (!decl->annotation().type)
+			return false;
 
 		if (auto functionType = dynamic_cast<FunctionType const*>(decl->annotation().type.get()))
 			if (
