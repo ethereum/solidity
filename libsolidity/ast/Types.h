@@ -1035,7 +1035,7 @@ public:
 	/// expression the function is called on.
 	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
 	/// @returns true if the types of parameters are equal (doesn't check return parameter types)
-	bool hasEqualArgumentTypes(FunctionType const& _other) const;
+	bool hasEqualParameterTypes(FunctionType const& _other) const;
 
 	/// @returns true if the ABI is used for this call (only meaningful for external calls)
 	bool isBareCall() const;

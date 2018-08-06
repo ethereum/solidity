@@ -411,7 +411,7 @@ FunctionDefinition const& CompilerContext::resolveVirtualFunction(
 			if (
 				function->name() == name &&
 				!function->isConstructor() &&
-				FunctionType(*function).hasEqualArgumentTypes(functionType)
+				FunctionType(*function).hasEqualParameterTypes(functionType)
 			)
 				return *function;
 	solAssert(false, "Super function " + name + " not found.");

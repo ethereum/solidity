@@ -231,7 +231,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 				shared_ptr<FunctionType const> newFunctionType { d->functionType(false) };
 				if (!newFunctionType)
 					newFunctionType = d->functionType(true);
-				return newFunctionType && functionType->hasEqualArgumentTypes(*newFunctionType);
+				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
 			}
 		))
 			uniqueFunctions.push_back(declaration);

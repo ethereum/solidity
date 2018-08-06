@@ -1871,7 +1871,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 						continue;
 					auto memberType = dynamic_cast<FunctionType const*>(member.type.get());
 					solAssert(!!memberType, "Override changes type.");
-					if (!memberType->hasEqualArgumentTypes(*functionType))
+					if (!memberType->hasEqualParameterTypes(*functionType))
 						continue;
 					functionWithEqualArgumentsFound = true;
 					break;
@@ -2825,7 +2825,7 @@ bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePoin
 		);
 }
 
-bool FunctionType::hasEqualArgumentTypes(FunctionType const& _other) const
+bool FunctionType::hasEqualParameterTypes(FunctionType const& _other) const
 {
 	if (m_parameterTypes.size() != _other.m_parameterTypes.size())
 		return false;
