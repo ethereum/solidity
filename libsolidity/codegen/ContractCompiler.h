@@ -56,13 +56,6 @@ public:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 	);
-	/// Compiles a contract that uses DELEGATECALL to call into a pre-deployed version of the given
-	/// contract at runtime, but contains the full creation-time code.
-	/// @returns the identifier of the runtime sub-assembly.
-	size_t compileClone(
-		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
-	);
 
 private:
 	/// Registers the non-function objects inside the contract with the context and stores the basic
@@ -121,9 +114,6 @@ private:
 
 	void appendStackVariableInitialisation(VariableDeclaration const& _variable);
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
-
-	/// @returns the runtime assembly for clone contracts.
-	eth::AssemblyPointer cloneRuntime() const;
 
 	/// Frees the variables of a certain scope (to be used when leaving).
 	void popScopedVariables(ASTNode const* _node);

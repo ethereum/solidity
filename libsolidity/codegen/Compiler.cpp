@@ -46,19 +46,6 @@ void Compiler::compileContract(
 	m_context.optimise(m_optimize, m_optimizeRuns);
 }
 
-void Compiler::compileClone(
-	ContractDefinition const& _contract,
-	map<ContractDefinition const*, eth::Assembly const*> const& _contracts
-)
-{
-	solAssert(!_contract.isLibrary(), "");
-	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize);
-	ContractCompiler cloneCompiler(&runtimeCompiler, m_context, m_optimize);
-	m_runtimeSub = cloneCompiler.compileClone(_contract, _contracts);
-
-	m_context.optimise(m_optimize, m_optimizeRuns);
-}
-
 eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const
 {
 	return m_runtimeContext.functionEntryLabelIfExists(_function);
