@@ -1,4 +1,3 @@
-pragma experimental "v0.5.0";
 contract test {
     modifier m {
         uint a = 1;
@@ -11,4 +10,4 @@ contract test {
     }
 }
 // ----
-// Warning: (152-181): Function state mutability can be restricted to pure
+// Warning: (122-151): Function state mutability can be restricted to pure
