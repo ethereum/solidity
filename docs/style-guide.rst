@@ -229,7 +229,7 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
-    import "owned";
+    import "./Owned.sol";
 
 
     contract A {
@@ -237,7 +237,7 @@ Yes::
     }
 
 
-    contract B is owned {
+    contract B is Owned {
         ...
     }
 
@@ -248,10 +248,10 @@ No::
     }
 
 
-    import "owned";
+    import "./Owned.sol";
 
 
-    contract B is owned {
+    contract B is Owned {
         ...
     }
 
@@ -867,7 +867,65 @@ indistinguishable from the numerals one and zero.
 Contract and Library Names
 ==========================
 
-Contracts and libraries should be named using the CapWords style. Examples: ``SimpleToken``, ``SmartBank``, ``CertificateHashRepository``, ``Player``.
+* Contracts and libraries should be named using the CapWords style. Examples: ``SimpleToken``, ``SmartBank``, ``CertificateHashRepository``, ``Player``, ``Congress``, ``Owned``.
+* Contract and library names should also match their filenames.
+* If a contract file includes multiple contracts and/or libraries, then the filename should match the *core contract*. This is not recommended however if it can be avoided.
+
+As shown in the example below, if the contract name is `Congress` and the library name is `Owned`, then their associated filenames should be `Congress.sol` and `Owned.sol`.
+
+Yes::
+
+    // Owned.sol
+    contract Owned {
+         address public owner;
+
+         constructor() public {
+             owner = msg.sender;
+         }
+
+         modifier onlyOwner {
+             require(msg.sender == owner);
+             _;
+         }
+
+         function transferOwnership(address newOwner) public onlyOwner {
+             owner = newOwner;
+         }
+    }
+
+    // Congress.sol
+    import "./Owned.sol";
+
+    contract Congress is Owned, TokenRecipient {
+        ...
+    }
+
+No::
+
+    // owned.sol
+    contract owned {
+         address public owner;
+
+         constructor() public {
+             owner = msg.sender;
+         }
+
+         modifier onlyOwner {
+             require(msg.sender == owner);
+             _;
+         }
+
+         function transferOwnership(address newOwner) public onlyOwner {
+             owner = newOwner;
+         }
+    }
+
+    // Congress.sol
+    import "./owned.sol";
+
+    contract Congress is owned, tokenRecipient {
+        ...
+    }
 
 
 Struct Names
