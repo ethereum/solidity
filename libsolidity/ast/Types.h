@@ -423,12 +423,12 @@ public:
 
 	virtual Category category() const override { return Category::RationalNumber; }
 
-	/// @returns true if the literal is a valid integer.
-	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
+	static TypePointer forLiteral(Literal const& _literal);
 
-	explicit RationalNumberType(rational const& _value):
-		m_value(_value)
+	explicit RationalNumberType(rational const& _value, TypePointer const& _compatibleBytesType = TypePointer()):
+		m_value(_value), m_compatibleBytesType(_compatibleBytesType)
 	{}
+
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
@@ -461,6 +461,13 @@ public:
 
 private:
 	rational m_value;
+
+	/// Bytes type to which the rational can be explicitly converted.
+	/// Empty for all rationals that are not directly parsed from hex literals.
+	TypePointer m_compatibleBytesType;
+
+	/// @returns true if the literal is a valid integer.
+	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
 
 	/// @returns true if the literal is a valid rational number.
 	static std::tuple<bool, rational> parseRational(std::string const& _value);

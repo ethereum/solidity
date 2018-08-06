@@ -2348,22 +2348,6 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 				"."
 			);
 	}
-
-	if (
-		type(_expression)->category() == Type::Category::RationalNumber &&
-		_expectedType.category() == Type::Category::FixedBytes
-	)
-	{
-		auto literal = dynamic_cast<Literal const*>(&_expression);
-
-		if (literal && !literal->isHexNumber())
-			m_errorReporter.warning(
-				_expression.location(),
-				"Decimal literal assigned to bytesXX variable will be left-aligned. "
-				"Use an explicit conversion to silence this warning."
-			);
-	}
-
 }
 
 void TypeChecker::requireLValue(Expression const& _expression)
