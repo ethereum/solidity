@@ -992,6 +992,92 @@ BOOST_AUTO_TEST_CASE(peephole_truthy_and)
   );
 }
 
+BOOST_AUTO_TEST_CASE(peephole_triple_iszero)
+{
+  // 1 ISZERO should remain as 1 ISZERO.
+  AssemblyItems items_single{
+    Instruction::ISZERO
+  };
+  AssemblyItems expectation_single{
+    Instruction::ISZERO
+  };
+  PeepholeOptimiser peepOpt_single(items_single);
+  BOOST_REQUIRE(!peepOpt_single.optimise()); // Not expected to optimise.
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+    items_single.begin(), items_single.end(),
+    expectation_single.begin(), expectation_single.end()
+  );
+  
+  // 2 ISZEROes should remain as 2 ISZEROes.
+  AssemblyItems items_double{
+    Instruction::ISZERO,
+    Instruction::ISZERO
+  };
+  AssemblyItems expectation_double{
+    Instruction::ISZERO,
+    Instruction::ISZERO
+  };
+  PeepholeOptimiser peepOpt_double(items_double);
+  BOOST_REQUIRE(!peepOpt_double.optimise()); // Not expected to optimise.
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+    items_double.begin(), items_double.end(),
+    expectation_double.begin(), expectation_double.end()
+  );
+  
+  // 3 ISZEROes should become 1 ISZERO.
+  AssemblyItems items_triple{
+    Instruction::ISZERO,
+    Instruction::ISZERO,
+    Instruction::ISZERO
+  };
+  AssemblyItems expectation_triple{
+    Instruction::ISZERO
+  };
+  PeepholeOptimiser peepOpt_triple(items_triple);
+  BOOST_REQUIRE(peepOpt_triple.optimise());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+    items_triple.begin(), items_triple.end(),
+    expectation_triple.begin(), expectation_triple.end()
+  );
+  
+  // 4 ISZEROes should become 2 ISZEROes.
+  AssemblyItems items_quad{
+    Instruction::ISZERO,
+    Instruction::ISZERO,
+    Instruction::ISZERO,
+    Instruction::ISZERO
+  };
+  AssemblyItems expectation_quad{
+    Instruction::ISZERO,
+    Instruction::ISZERO
+  };
+  PeepholeOptimiser peepOpt_quad(items_quad);
+  BOOST_REQUIRE(peepOpt_quad.optimise());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+    items_quad.begin(), items_quad.end(),
+    expectation_quad.begin(), expectation_quad.end()
+  );
+  
+  // 5 ISZEROes should become 1 ISZERO.
+  AssemblyItems items_quint{
+    Instruction::ISZERO,
+    Instruction::ISZERO,
+    Instruction::ISZERO,
+    Instruction::ISZERO,
+    Instruction::ISZERO
+  };
+  AssemblyItems expectation_quint{
+    Instruction::ISZERO
+  };
+  PeepholeOptimiser peepOpt_quint(items_quint);
+  BOOST_REQUIRE(peepOpt_quint.optimise());
+  BOOST_REQUIRE(peepOpt_quint.optimise());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+    items_quint.begin(), items_quint.end(),
+    expectation_quint.begin(), expectation_quint.end()
+  );
+}
+
 BOOST_AUTO_TEST_CASE(jumpdest_removal)
 {
 	AssemblyItems items{
