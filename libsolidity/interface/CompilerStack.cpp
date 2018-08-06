@@ -353,6 +353,19 @@ vector<string> CompilerStack::contractNames() const
 	return contractNames;
 }
 
+string const CompilerStack::lastContractName() const
+{
+	if (m_contracts.empty())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+	// try to find some user-supplied contract
+	string contractName;
+	for (auto const& it: m_sources)
+		for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+				contractName = contract->fullyQualifiedName();
+	return contractName;
+}
+
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
 {
 	Contract const& currentContract = contract(_contractName);
@@ -758,19 +771,6 @@ void CompilerStack::compileContract(
 	}
 
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
-}
-
-string const CompilerStack::lastContractName() const
-{
-	if (m_contracts.empty())
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
-	// try to find some user-supplied contract
-	string contractName;
-	for (auto const& it: m_sources)
-		for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
-			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-				contractName = contract->fullyQualifiedName();
-	return contractName;
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
