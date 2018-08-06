@@ -102,12 +102,10 @@
 				{
 					"attributes" : 
 					{
-						"constant" : false,
 						"documentation" : null,
 						"implemented" : true,
 						"isConstructor" : false,
 						"name" : "F",
-						"payable" : false,
 						"scope" : 14,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,

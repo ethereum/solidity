@@ -38,7 +38,6 @@
 					"id" : 16,
 					"implemented" : true,
 					"isConstructor" : false,
-					"isDeclaredConst" : false,
 					"modifiers" : [],
 					"name" : "f",
 					"nodeType" : "FunctionDefinition",
@@ -65,7 +64,6 @@
 								"typeName" : 
 								{
 									"id" : 5,
-									"isDeclaredConst" : false,
 									"nodeType" : "FunctionTypeName",
 									"parameterTypes" : 
 									{
@@ -74,7 +72,6 @@
 										"parameters" : [],
 										"src" : "32:2:1"
 									},
-									"payable" : true,
 									"returnParameterTypes" : 
 									{
 										"id" : 4,
@@ -128,7 +125,6 @@
 						],
 						"src" : "23:46:1"
 					},
-					"payable" : false,
 					"returnParameters" : 
 					{
 						"id" : 14,
@@ -152,7 +148,6 @@
 								"typeName" : 
 								{
 									"id" : 12,
-									"isDeclaredConst" : true,
 									"nodeType" : "FunctionTypeName",
 									"parameterTypes" : 
 									{
@@ -161,7 +156,6 @@
 										"parameters" : [],
 										"src" : "87:2:1"
 									},
-									"payable" : false,
 									"returnParameterTypes" : 
 									{
 										"id" : 11,

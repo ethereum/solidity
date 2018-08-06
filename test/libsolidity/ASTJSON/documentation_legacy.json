@@ -105,7 +105,6 @@
 				{
 					"attributes" : 
 					{
-						"constant" : false,
 						"documentation" : "Some comment on fn.",
 						"implemented" : true,
 						"isConstructor" : false,
@@ -114,7 +113,6 @@
 							null
 						],
 						"name" : "fn",
-						"payable" : false,
 						"scope" : 15,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,

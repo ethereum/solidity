@@ -80,7 +80,6 @@
 				{
 					"attributes" : 
 					{
-						"constant" : false,
 						"documentation" : null,
 						"implemented" : true,
 						"isConstructor" : false,
@@ -89,7 +88,6 @@
 							null
 						],
 						"name" : "f",
-						"payable" : false,
 						"scope" : 14,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,
