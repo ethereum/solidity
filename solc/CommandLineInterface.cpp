@@ -1062,9 +1062,12 @@ bool CommandLineInterface::link()
 		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
 		// This leaves 36 characters for the library name, while too short library names are
 		// padded on the right with '_' and too long names are truncated.
+		// Truncate the beginning of fully qualified library path, so
+		// we keep the library name
 		string replacement = "__";
+		size_t from = name.size() > 36 ? name.size() - 36 : 0;
 		for (size_t i = 0; i < placeholderSize - 4; ++i)
-			replacement.push_back(i < name.size() ? name[i] : '_');
+			replacement.push_back(i < name.size() ? name[i + from] : '_');
 		replacement += "__";
 		librariesReplacements[replacement] = library.second;
 	}
