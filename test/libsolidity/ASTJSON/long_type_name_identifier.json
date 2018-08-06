@@ -149,7 +149,6 @@
 					"id" : 13,
 					"implemented" : true,
 					"isConstructor" : false,
-					"isDeclaredConst" : false,
 					"modifiers" : [],
 					"name" : "f",
 					"nodeType" : "FunctionDefinition",
@@ -160,7 +159,6 @@
 						"parameters" : [],
 						"src" : "33:2:1"
 					},
-					"payable" : false,
 					"returnParameters" : 
 					{
 						"id" : 5,

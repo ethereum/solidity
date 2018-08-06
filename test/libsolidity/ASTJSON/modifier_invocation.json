@@ -98,7 +98,6 @@
 					"id" : 13,
 					"implemented" : true,
 					"isConstructor" : false,
-					"isDeclaredConst" : false,
 					"modifiers" : 
 					[
 						{
@@ -153,7 +152,6 @@
 						"parameters" : [],
 						"src" : "49:2:1"
 					},
-					"payable" : false,
 					"returnParameters" : 
 					{
 						"id" : 11,

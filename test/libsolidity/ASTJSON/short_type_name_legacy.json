@@ -38,7 +38,6 @@
 				{
 					"attributes" : 
 					{
-						"constant" : false,
 						"documentation" : null,
 						"implemented" : true,
 						"isConstructor" : false,
@@ -47,7 +46,6 @@
 							null
 						],
 						"name" : "f",
-						"payable" : false,
 						"scope" : 10,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,

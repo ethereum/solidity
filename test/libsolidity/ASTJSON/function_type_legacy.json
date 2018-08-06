@@ -38,7 +38,6 @@
 				{
 					"attributes" : 
 					{
-						"constant" : false,
 						"documentation" : null,
 						"implemented" : true,
 						"isConstructor" : false,
@@ -47,7 +46,6 @@
 							null
 						],
 						"name" : "f",
-						"payable" : false,
 						"scope" : 17,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,
@@ -75,8 +73,6 @@
 										{
 											"attributes" : 
 											{
-												"constant" : false,
-												"payable" : true,
 												"stateMutability" : "payable",
 												"type" : "function () payable external returns (uint256)",
 												"visibility" : "external"
@@ -168,8 +164,6 @@
 										{
 											"attributes" : 
 											{
-												"constant" : true,
-												"payable" : false,
 												"stateMutability" : "view",
 												"type" : "function () view external returns (uint256)",
 												"visibility" : "external"
