@@ -389,6 +389,9 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 
 std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
 {
+	if (m_contracts.empty())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+
 	// Look up the contract (by its fully-qualified name)
 	Contract const& matchContract = m_contracts.at(_contractName);
 	// Check to see if it could collide on name
