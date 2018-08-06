@@ -292,134 +292,138 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	if (_variable.annotation().type)
 		return;
 
-	TypePointer type;
-	if (_variable.typeName())
+	if (!_variable.typeName())
 	{
-		type = _variable.typeName()->annotation().type;
-		using Location = VariableDeclaration::Location;
-		Location varLoc = _variable.referenceLocation();
-		DataLocation typeLoc = DataLocation::Memory;
-		// References are forced to calldata for external function parameters (not return)
-		// and memory for parameters (also return) of publicly visible functions.
-		// They default to memory for function parameters and storage for local variables.
-		// As an exception, "storage" is allowed for library functions.
-		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
+		// This can still happen in very unusual cases where a developer uses constructs, such as
+		// `var a;`, however, such code will have generated errors already.
+		// However, we cannot blindingly solAssert() for that here, as the TypeChecker (which is
+		// invoking ReferencesResolver) is generating it, so the error is most likely(!) generated
+		// after this step.
+		return;
+	}
+
+	TypePointer type;
+	type = _variable.typeName()->annotation().type;
+	using Location = VariableDeclaration::Location;
+	Location varLoc = _variable.referenceLocation();
+	DataLocation typeLoc = DataLocation::Memory;
+	// References are forced to calldata for external function parameters (not return)
+	// and memory for parameters (also return) of publicly visible functions.
+	// They default to memory for function parameters and storage for local variables.
+	// As an exception, "storage" is allowed for library functions.
+	if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
+	{
+		bool isPointer = true;
+		if (_variable.isExternalCallableParameter())
 		{
-			bool isPointer = true;
-			if (_variable.isExternalCallableParameter())
+			auto const& contract = dynamic_cast<ContractDefinition const&>(
+				*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
+			);
+			if (contract.isLibrary())
 			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(
-					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
-				);
-				if (contract.isLibrary())
-				{
-					if (varLoc == Location::Memory)
-						fatalTypeError(_variable.location(),
-							"Location has to be calldata or storage for external "
-							"library functions (remove the \"memory\" keyword)."
-						);
-				}
-				else
-				{
-					// force location of external function parameters (not return) to calldata
-					if (varLoc != Location::CallData && varLoc != Location::Default)
-						fatalTypeError(_variable.location(),
-							"Location has to be calldata for external functions "
-							"(remove the \"memory\" or \"storage\" keyword)."
-						);
-				}
-				if (varLoc == Location::Default)
-					typeLoc = DataLocation::CallData;
-				else
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
-			}
-			else if (_variable.isCallableParameter() && dynamic_cast<Declaration const&>(*_variable.scope()).isPublic())
-			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(
-					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
-				);
-				// force locations of public or external function (return) parameters to memory
-				if (varLoc != Location::Memory && varLoc != Location::Default && !contract.isLibrary())
+				if (varLoc == Location::Memory)
 					fatalTypeError(_variable.location(),
-						"Location has to be memory for publicly visible functions "
-						"(remove the \"storage\" or \"calldata\" keyword)."
+						"Location has to be calldata or storage for external "
+						"library functions (remove the \"memory\" keyword)."
 					);
-				if (varLoc == Location::Default || !contract.isLibrary())
+			}
+			else
+			{
+				// force location of external function parameters (not return) to calldata
+				if (varLoc != Location::CallData && varLoc != Location::Default)
+					fatalTypeError(_variable.location(),
+						"Location has to be calldata for external functions "
+						"(remove the \"memory\" or \"storage\" keyword)."
+					);
+			}
+			if (varLoc == Location::Default)
+				typeLoc = DataLocation::CallData;
+			else
+				typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+		}
+		else if (_variable.isCallableParameter() && dynamic_cast<Declaration const&>(*_variable.scope()).isPublic())
+		{
+			auto const& contract = dynamic_cast<ContractDefinition const&>(
+				*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
+			);
+			// force locations of public or external function (return) parameters to memory
+			if (varLoc != Location::Memory && varLoc != Location::Default && !contract.isLibrary())
+				fatalTypeError(_variable.location(),
+					"Location has to be memory for publicly visible functions "
+					"(remove the \"storage\" or \"calldata\" keyword)."
+				);
+			if (varLoc == Location::Default || !contract.isLibrary())
+				typeLoc = DataLocation::Memory;
+			else
+			{
+				if (varLoc == Location::CallData)
+					fatalTypeError(_variable.location(),
+						"Location cannot be calldata for non-external functions "
+						"(remove the \"calldata\" keyword)."
+					);
+				typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+			}
+		}
+		else
+		{
+			if (_variable.isConstant())
+			{
+				if (varLoc != Location::Default && varLoc != Location::Memory)
+					fatalTypeError(
+						_variable.location(),
+						"Data location has to be \"memory\" (or unspecified) for constants."
+					);
+				typeLoc = DataLocation::Memory;
+			}
+			else if (varLoc == Location::Default)
+			{
+				if (_variable.isCallableParameter())
 					typeLoc = DataLocation::Memory;
 				else
 				{
-					if (varLoc == Location::CallData)
-						fatalTypeError(_variable.location(),
-							"Location cannot be calldata for non-external functions "
-							"(remove the \"calldata\" keyword)."
+					typeLoc = DataLocation::Storage;
+					if (_variable.isLocalVariable())
+						typeError(
+							_variable.location(),
+							"Data location must be specified as either \"memory\" or \"storage\"."
 						);
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
 				}
 			}
 			else
 			{
-				if (_variable.isConstant())
+				switch (varLoc)
 				{
-					if (varLoc != Location::Default && varLoc != Location::Memory)
-						fatalTypeError(
-							_variable.location(),
-							"Data location has to be \"memory\" (or unspecified) for constants."
-						);
+				case Location::Memory:
 					typeLoc = DataLocation::Memory;
+					break;
+				case Location::Storage:
+					typeLoc = DataLocation::Storage;
+					break;
+				case Location::CallData:
+					fatalTypeError(_variable.location(),
+						"Variable cannot be declared as \"calldata\" (remove the \"calldata\" keyword)."
+					);
+					break;
+				default:
+					solAssert(false, "Unknown data location");
 				}
-				else if (varLoc == Location::Default)
-				{
-					if (_variable.isCallableParameter())
-						typeLoc = DataLocation::Memory;
-					else
-					{
-						typeLoc = DataLocation::Storage;
-						if (_variable.isLocalVariable())
-							typeError(
-								_variable.location(),
-								"Data location must be specified as either \"memory\" or \"storage\"."
-							);
-					}
-				}
-				else
-				{
-					switch (varLoc)
-					{
-					case Location::Memory:
-						typeLoc = DataLocation::Memory;
-						break;
-					case Location::Storage:
-						typeLoc = DataLocation::Storage;
-						break;
-					case Location::CallData:
-						fatalTypeError(_variable.location(),
-							"Variable cannot be declared as \"calldata\" (remove the \"calldata\" keyword)."
-						);
-						break;
-					default:
-						solAssert(false, "Unknown data location");
-					}
-				}
-				isPointer = !_variable.isStateVariable();
 			}
-			type = ref->copyForLocation(typeLoc, isPointer);
+			isPointer = !_variable.isStateVariable();
 		}
-		else if (dynamic_cast<MappingType const*>(type.get()))
-		{
-			if (_variable.isLocalVariable() && varLoc != Location::Storage)
-				typeError(
-					_variable.location(),
-					"Data location for mappings must be specified as \"storage\"."
-				);
-		}
-		else if (varLoc != Location::Default && !ref)
-			typeError(_variable.location(), "Data location can only be given for array or struct types.");
-
-		_variable.annotation().type = type;
+		type = ref->copyForLocation(typeLoc, isPointer);
 	}
-	else if (!_variable.canHaveAutoType())
-		typeError(_variable.location(), "Explicit type needed.");
-	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
+	else if (dynamic_cast<MappingType const*>(type.get()))
+	{
+		if (_variable.isLocalVariable() && varLoc != Location::Storage)
+			typeError(
+				_variable.location(),
+				"Data location for mappings must be specified as \"storage\"."
+			);
+	}
+	else if (varLoc != Location::Default && !ref)
+		typeError(_variable.location(), "Data location can only be given for array or struct types.");
+
+	_variable.annotation().type = type;
 }
 
 void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)
