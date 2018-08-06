@@ -260,6 +260,10 @@ blocks that are added on top, the less likely it is. So it might be that your tr
 are reverted and even removed from the blockchain, but the longer you wait, the less
 likely it will be.
 
+.. note::
+    Transactions are not guaranteed to happen on the next block or any future specific block, since it is up to the miners to include transactions and not the submitter of the transaction. This applies to function calls and contract creation transactions alike.
+
+    If you want to schedule future calls of your contract, you can use the `alarm clock <http://www.ethereum-alarm-clock.com/>`_ service.
 
 .. _the-ethereum-virtual-machine:
 
@@ -352,19 +356,21 @@ If the gas is used up at any point (i.e. it is negative),
 an out-of-gas exception is triggered, which reverts all modifications
 made to the state in the current call frame.
 
+Any unused gas is refunded at the end of the transaction.
+
 .. index:: ! storage, ! memory, ! stack
 
 Storage, Memory and the Stack
 =============================
 
-Each account has a persistent memory area which is called **storage**.
-Storage is a key-value store that maps 256-bit words to 256-bit words.
-It is not possible to enumerate storage from within a contract
-and it is comparatively costly to read and even more so, to modify
-storage. A contract can neither read nor write to any storage apart
-from its own.
+The Ethereum Virtual Machine has three areas where it can store data.
 
-The second memory area is called **memory**, of which a contract obtains
+Each account has a data area called **storage**, which is persistent between function calls.
+Storage is a key-value store that maps 256-bit words to 256-bit words.
+It is not possible to enumerate storage from within a contract and it is comparatively costly to read, and even more to modify storage.
+A contract can neither read nor write to any storage apart from its own.
+
+The second data area is called **memory**, of which a contract obtains
 a freshly cleared instance for each message call. Memory is linear and can be
 addressed at byte level, but reads are limited to a width of 256 bits, while writes
 can be either 8 bits or 256 bits wide. Memory is expanded by a word (256-bit), when
@@ -373,7 +379,7 @@ within a word). At the time of expansion, the cost in gas must be paid. Memory i
 costly the larger it grows (it scales quadratically).
 
 The EVM is not a register machine but a stack machine, so all
-computations are performed on an area called the **stack**. It has a maximum size of
+computations are performed on an data area called the **stack**. It has a maximum size of
 1024 elements and contains words of 256 bits. Access to the stack is
 limited to the top end in the following way:
 It is possible to copy one of
@@ -412,7 +418,7 @@ a top-level message call which in turn can create further message calls.
 A contract can decide how much of its remaining **gas** should be sent
 with the inner message call and how much it wants to retain.
 If an out-of-gas exception happens in the inner call (or any
-other exception), this will be signalled by an error value put onto the stack.
+other exception), this will be signaled by an error value put onto the stack.
 In this case, only the gas sent together with the call is used up.
 In Solidity, the calling contract causes a manual exception by default in
 such situations, so that exceptions "bubble up" the call stack.
@@ -470,21 +476,17 @@ these **create calls** and normal message calls is that the payload data is
 executed and the result stored as code and the caller / creator
 receives the address of the new contract on the stack.
 
-.. index:: selfdestruct
+.. index:: selfdestruct, self-destruct, deactivate
 
-Self-destruct
-=============
+Deactivate and Self-destruct
+============================
 
-The only possibility that code is removed from the blockchain is
-when a contract at that address performs the ``selfdestruct`` operation.
-The remaining Ether stored at that address is sent to a designated
-target and then the storage and code is removed from the state.
+The only way to remove code from the blockchain is when a contract at that address performs the ``selfdestruct`` operation. The remaining Ether stored at that address is sent to a designated target and then the storage and code is removed from the state. Removing the contract in theory sounds like a good idea, but it is potentially dangerous, as if someone sends Ether to removed contracts, the Ether is forever lost.
 
-.. warning:: Even if a contract's code does not contain a call to ``selfdestruct``,
-  it can still perform that operation using ``delegatecall`` or ``callcode``.
+.. note::
+    Even if a contract's code does not contain a call to ``selfdestruct``, it can still perform that operation using ``delegatecall`` or ``callcode``.
 
-.. note:: The pruning of old contracts may or may not be implemented by Ethereum
-  clients. Additionally, archive nodes could choose to keep the contract storage
-  and code indefinitely.
+If you want to deactivate your contracts, you should instead **disable** them by changing some internal state which causes all functions to revert. This makes it impossible to use the contract, as it returns Ether immediately.
 
-.. note:: Currently **external accounts** cannot be removed from the state.
+.. warning::
+    Even if a contract is removed by "selfdestruct", it is still part of the history of the blockchain and probably retained by most Ethereum nodes. So using "selfdestruct" is not the same as deleting data from a hard disk.
