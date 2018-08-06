@@ -2198,7 +2198,14 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
 				FunctionTypePointer functionType = declaration->functionType(true);
-				solAssert(!!functionType, "Requested type not present.");
+				if (!functionType)
+				{
+					solAssert(
+						dynamic_cast<VariableDeclaration const*>(declaration),
+						"Only variable declarations can turn out not be a funcion in the end (if they are accessed locally)."
+					);
+					continue;
+				}
 				if (functionType->canTakeArguments(*annotation.argumentTypes))
 					candidates.push_back(declaration);
 			}
