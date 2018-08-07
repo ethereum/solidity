@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (81-104): Data location for mappings must be specified as "storage".
+// TypeError: (81-104): Location has to be storage for mapping. Use an explicit data location keyword to fix this error.

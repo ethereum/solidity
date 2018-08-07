@@ -7756,7 +7756,7 @@ BOOST_AUTO_TEST_CASE(library_call)
 BOOST_AUTO_TEST_CASE(library_function_external)
 {
 	char const* sourceCode = R"(
-		library Lib { function m(bytes b) external pure returns (byte) { return b[2]; } }
+		library Lib { function m(bytes calldata b) external pure returns (byte) { return b[2]; } }
 		contract Test {
 			function f(bytes memory b) public pure returns (byte) {
 				return Lib.m(b);
