@@ -79,6 +79,7 @@ Compiler Features:
 Bugfixes:
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.
  * Code Generator: Fix allocation of byte arrays (zeroed out too much memory).
+ * Code Generator: Properly handle negative number literals in ABIEncoderV2.
  * Commandline Interface: Correctly handle paths with backslashes on windows.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * References Resolver: Do not crash on using ``_slot`` and ``_offset`` suffixes on their own.
