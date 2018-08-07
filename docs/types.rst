@@ -580,16 +580,18 @@ variables are held).
 Data location
 -------------
 
-Every complex type, i.e. *arrays* and *structs*, has an additional
-annotation, the "data location", about whether it is stored in memory or in storage. Depending on the
-context, there is always a default, but it can be overridden by appending
-either ``storage`` or ``memory`` to the type. The default for function parameters (including return parameters) is ``memory``, the default for local variables is ``storage`` and the location is forced
-to ``storage`` for state variables (obviously).
 
-There is also a third data location, ``calldata``, which is a non-modifiable,
-non-persistent area where function arguments are stored. Function parameters
-(not return parameters) of external functions are forced to ``calldata`` and
-behave mostly like ``memory``.
+Every complex type, i.e. *arrays* and *structs*, has an additional
+annotation, the "data location", about where it is stored. There are three data locations:
+``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
+functions and is required for this type of parameter. Calldata is a non-modifiable,
+non-persistent area where function arguments are stored, and behaves mostly like memory.
+
+
+.. note::
+    Prior to version 0.5.0 the data location could be omitted, and would default to different locations
+    depending on the kind of variable, function type, etc., but all complex types must now give an explicit
+    data location.
 
 Data locations are important because they change how assignments behave:
 assignments between storage and memory and also to a state variable (even from other state variables)
@@ -634,10 +636,6 @@ Summary
 Forced data location:
  - parameters (not return) of external functions: calldata
  - state variables: storage
-
-Default data location:
- - parameters (also return) of functions: memory
- - all other local variables: storage
 
 .. index:: ! array
 
