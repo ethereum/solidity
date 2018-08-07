@@ -169,15 +169,6 @@ pair<u256, unsigned> const* StorageOffsets::offset(size_t _index) const
 		return nullptr;
 }
 
-MemberList& MemberList::operator=(MemberList&& _other)
-{
-	solAssert(&_other != this, "");
-
-	m_memberTypes = move(_other.m_memberTypes);
-	m_storageOffsets = move(_other.m_storageOffsets);
-	return *this;
-}
-
 void MemberList::combine(MemberList const & _other)
 {
 	m_memberTypes += _other.m_memberTypes;

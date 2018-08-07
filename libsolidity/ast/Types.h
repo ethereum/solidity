@@ -95,9 +95,7 @@ public:
 
 	using MemberMap = std::vector<Member>;
 
-	MemberList() {}
 	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
-	MemberList& operator=(MemberList&& _other);
 	void combine(MemberList const& _other);
 	TypePointer memberType(std::string const& _name) const
 	{
@@ -131,6 +129,8 @@ private:
 	MemberMap m_memberTypes;
 	mutable std::unique_ptr<StorageOffsets> m_storageOffsets;
 };
+
+static_assert(std::is_nothrow_move_constructible<MemberList>::value, "MemberList should be noexcept move constructible");
 
 /**
  * Abstract base class that forms the root of the type hierarchy.
