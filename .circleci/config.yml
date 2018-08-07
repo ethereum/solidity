@@ -200,7 +200,7 @@ jobs:
           command: build/test/soltest -t 'syntaxTest*' -- --no-ipc --testpath test
       - run:
           name: Coverage of type checker
-          command: codecov --flags type_checker --gcov-root build
+          command: codecov --flags syntax --gcov-root build
       - run: *run_tests
       - run:
           name: Coverage of all
