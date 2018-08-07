@@ -36,7 +36,6 @@
 #include <json/json.h>
 
 #include <boost/noncopyable.hpp>
-#include <boost/filesystem.hpp>
 
 #include <ostream>
 #include <string>
@@ -266,12 +265,6 @@ private:
 	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
-
-	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
-	static std::string absolutePath(std::string const& _path, std::string const& _reference);
-
-	/// Helper function to return path converted strings.
-	static std::string sanitizePath(std::string const& _path) { return boost::filesystem::path(_path).generic_string(); }
 
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;

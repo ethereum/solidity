@@ -187,3 +187,23 @@ boost::filesystem::path dev::weaklyCanonicalFilesystemPath(boost::filesystem::pa
 		return head / tail;
 	}
 }
+
+string dev::absolutePath(string const& _path, string const& _reference)
+{
+	boost::filesystem::path p(_path);
+	// Anything that does not start with `.` is an absolute path.
+	if (p.begin() == p.end() || (*p.begin() != "." && *p.begin() != ".."))
+		return _path;
+	boost::filesystem::path result(_reference);
+	result.remove_filename();
+	for (boost::filesystem::path::iterator it = p.begin(); it != p.end(); ++it)
+		if (*it == "..")
+			result = result.parent_path();
+		else if (*it != ".")
+			result /= *it;
+	return result.generic_string();
+}
+
+string dev::sanitizePath(string const& _path) {
+	return boost::filesystem::path(_path).generic_string();
+}

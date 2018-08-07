@@ -577,7 +577,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 	for (auto const& node: _ast.nodes())
 		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 		{
-			string importPath = absolutePath(import->path(), _sourcePath);
+			string importPath = dev::absolutePath(import->path(), _sourcePath);
 			// The current value of `path` is the absolute path as seen from this source file.
 			// We first have to apply remappings before we can store the actual absolute path
 			// as seen globally.
@@ -620,8 +620,8 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 
 	for (auto const& redir: m_remappings)
 	{
-		string context = sanitizePath(redir.context);
-		string prefix = sanitizePath(redir.prefix);
+		string context = dev::sanitizePath(redir.context);
+		string prefix = dev::sanitizePath(redir.prefix);
 
 		// Skip if current context is closer
 		if (context.length() < longestContext)
@@ -638,7 +638,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 
 		longestContext = context.length();
 		longestPrefix = prefix.length();
-		bestMatchTarget = sanitizePath(redir.target);
+		bestMatchTarget = dev::sanitizePath(redir.target);
 	}
 	string path = bestMatchTarget;
 	path.append(_path.begin() + longestPrefix, _path.end());
@@ -673,23 +673,6 @@ void CompilerStack::resolveImports()
 			toposort(&sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
-}
-
-string CompilerStack::absolutePath(string const& _path, string const& _reference)
-{
-	using path = boost::filesystem::path;
-	path p(_path);
-	// Anything that does not start with `.` is an absolute path.
-	if (p.begin() == p.end() || (*p.begin() != "." && *p.begin() != ".."))
-		return _path;
-	path result(_reference);
-	result.remove_filename();
-	for (path::iterator it = p.begin(); it != p.end(); ++it)
-		if (*it == "..")
-			result = result.parent_path();
-		else if (*it != ".")
-			result /= *it;
-	return result.generic_string();
 }
 
 namespace
