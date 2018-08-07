@@ -86,7 +86,7 @@ of votes.
                 index = proposals.push(Proposal({
                     name: proposalNames[i],
                     voteCount: 0
-                })) -1 ;
+                })) - 1 ;
 
                 //Store the index of Proposal against 
                 //proposalName as the key.
