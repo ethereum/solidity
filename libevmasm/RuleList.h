@@ -46,7 +46,7 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 /// @returns a list of simplification rules given certain match placeholders.
 /// A, B and C should represent constants, X and Y arbitrary expressions.
-/// The simplifications should neven change the order of evaluation of
+/// The simplifications should never change the order of evaluation of
 /// arbitrary operations.
 template <class Pattern>
 std::vector<SimplificationRule<Pattern>> simplificationRuleList(
