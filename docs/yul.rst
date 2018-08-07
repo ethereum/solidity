@@ -108,7 +108,7 @@ Grammar::
         'break' | 'continue'
     FunctionCall =
         Identifier '(' ( Expression ( ',' Expression )* )? ')'
-    Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
+    Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
     IdentifierList = Identifier ( ',' Identifier)*
     TypeName = Identifier | BuiltinTypeName
     BuiltinTypeName = 'bool' | [us] ( '8' | '32' | '64' | '128' | '256' )
