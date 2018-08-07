@@ -466,11 +466,6 @@ bool VariableDeclaration::isExternalCallableParameter() const
 	return false;
 }
 
-bool VariableDeclaration::canHaveAutoType() const
-{
-	return isLocalVariable() && !isCallableParameter();
-}
-
 TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;

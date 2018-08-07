@@ -696,7 +696,6 @@ public:
 	bool isExternalCallableParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
 	/// in the body of a function or modifier.
-	bool canHaveAutoType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
