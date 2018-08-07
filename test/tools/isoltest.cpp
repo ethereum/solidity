@@ -88,7 +88,7 @@ private:
 	Request handleResponse(bool const _exception);
 
 	TestCase::TestCaseCreator m_testCaseCreator;
-	bool const m_formatted;
+	bool const m_formatted = false;
 	string const m_name;
 	fs::path const m_path;
 	unique_ptr<TestCase> m_test;
