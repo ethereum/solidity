@@ -199,7 +199,7 @@ contract multiowned {
 		// determine what index the present sender is:
 		uint ownerIndex = m_ownerIndex[uint(msg.sender)];
 		// make sure they're an owner
-		if (ownerIndex == 0) return;
+		if (ownerIndex == 0) return false;
 
 		PendingState storage pending = m_pending[_operation];
 		// if we're not yet working on this operation, switch over and reset the confirmation status.
@@ -228,6 +228,7 @@ contract multiowned {
 				// not enough: record that this owner in particular confirmed.
 				pending.yetNeeded--;
 				pending.ownersDone |= ownerIndexBit;
+				return false;
 			}
 		}
 	}
