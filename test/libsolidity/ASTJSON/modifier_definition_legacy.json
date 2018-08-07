@@ -104,6 +104,7 @@
 					{
 						"documentation" : null,
 						"implemented" : true,
+						"isConstructor" : false,
 						"kind" : "function",
 						"name" : "F",
 						"scope" : 14,
