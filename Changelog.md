@@ -69,6 +69,7 @@ Language Features:
  * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
  * General: Support ``pop()`` for storage arrays.
  * General: Scoping rules now follow the C99-style.
+ * General: Allow ``enum``s in interfaces.
 
 Compiler Features:
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
