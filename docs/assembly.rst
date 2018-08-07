@@ -612,7 +612,7 @@ at position ``0x40`` in memory. If you want to allocate memory, just use the mem
 from that point on and update the pointer accordingly.
 
 The first 64 bytes of memory can be used as "scratch space" for short-term
-allocation. The 32 bytes after the free memory pointer (i.e. starting at ``0x60``)
+allocation. The 32 bytes after the free memory pointer (i.e. starting at ``0x80``)
 is meant to be zero permanently and is used as the initial value for
 empty dynamic memory arrays.
 
@@ -698,7 +698,7 @@ We consider the runtime bytecode of the following Solidity program::
 The following assembly will be generated::
 
     {
-      mstore(0x40, 0x60) // store the "free memory pointer"
+      mstore(0x40, 0x80) // store the "free memory pointer"
       // function dispatcher
       switch div(calldataload(0), exp(2, 226))
       case 0xb3de648b {
