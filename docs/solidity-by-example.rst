@@ -801,7 +801,7 @@ The full contract
 
         constructor() public payable {}
 
-        function claimPayment(uint256 amount, uint256 nonce, bytes signature) public {
+        function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) public {
             require(!usedNonces[nonce]);
             usedNonces[nonce] = true;
 
@@ -820,7 +820,7 @@ The full contract
         }
 
         /// signature methods.
-        function splitSignature(bytes sig)
+        function splitSignature(bytes memory sig)
             internal
             pure
             returns (uint8 v, bytes32 r, bytes32 s)
@@ -839,7 +839,7 @@ The full contract
             return (v, r, s);
         }
 
-        function recoverSigner(bytes32 message, bytes sig)
+        function recoverSigner(bytes32 message, bytes memory sig)
             internal
             pure
             returns (address)
@@ -1003,7 +1003,7 @@ The full contract
             expiration = now + duration;
         }
 
-        function isValidSignature(uint256 amount, bytes signature)
+        function isValidSignature(uint256 amount, bytes memory signature)
             internal
             view
             returns (bool)
@@ -1017,7 +1017,7 @@ The full contract
         /// the recipient can close the channel at any time by presenting a
         /// signed amount from the sender. the recipient will be sent that amount,
         /// and the remainder will go back to the sender
-        function close(uint256 amount, bytes signature) public {
+        function close(uint256 amount, bytes memory signature) public {
             require(msg.sender == recipient);
             require(isValidSignature(amount, signature));
 
@@ -1043,7 +1043,7 @@ The full contract
         /// All functions below this are just taken from the chapter
         /// 'creating and verifying signatures' chapter.
 
-        function splitSignature(bytes sig)
+        function splitSignature(bytes memory sig)
             internal
             pure
             returns (uint8 v, bytes32 r, bytes32 s)
@@ -1062,7 +1062,7 @@ The full contract
             return (v, r, s);
         }
         
-        function recoverSigner(bytes32 message, bytes sig)
+        function recoverSigner(bytes32 message, bytes memory sig)
             internal
             pure
             returns (address)

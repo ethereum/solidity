@@ -9,5 +9,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (104-107): Data location must be specified as either "memory" or "storage".
-// TypeError: (123-131): Data location must be specified as either "memory" or "storage".
+// TypeError: (104-107): Storage location must be "storage" or "memory" for variable, but none was given.

@@ -304,92 +304,52 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		using Location = VariableDeclaration::Location;
 		Location varLoc = _variable.referenceLocation();
 		DataLocation typeLoc = DataLocation::Memory;
-		// References are forced to calldata for external function parameters (not return)
-		// and memory for parameters (also return) of publicly visible functions.
-		// They default to memory for function parameters and storage for local variables.
-		// As an exception, "storage" is allowed for library functions.
+
 		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
 		{
-			bool isPointer = true;
-			if (_variable.isExternalCallableParameter())
+			// If given location is not in allowed storage locations, throw error.
+			set<Location> allowedStorageLocations = _variable.allowedStorageLocations();
+			if (!allowedStorageLocations.count(varLoc))
 			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(
-					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
-				);
-				if (contract.isLibrary())
+				string allowedStorageLocationsStr;
+				string locStr;
+				for (auto const loc : allowedStorageLocations)
 				{
-					if (varLoc == Location::Memory)
-						fatalTypeError(_variable.location(),
-							"Location has to be calldata or storage for external "
-							"library functions (remove the \"memory\" keyword)."
-						);
+					if (!allowedStorageLocationsStr.empty())
+						allowedStorageLocationsStr += " or ";
+					if (loc == Location::Default)
+						locStr = "none";
+					else
+						locStr = "\"" + _variable.locationToString(loc) + "\"";
+					allowedStorageLocationsStr += locStr;
+				}
+				string errorString = "Storage location must be " + allowedStorageLocationsStr;
+				if (_variable.isCallableParameter())
+				{
+					auto const &varScope = dynamic_cast<Declaration const &>(*_variable.scope());
+					string constant = _variable.isConstant() ? " constant" : "";
+					errorString += " for" + constant + " parameter in ";
+					errorString += varScope.visibilityToString(varScope.visibility()) + " function";
 				}
 				else
-				{
-					// force location of external function parameters (not return) to calldata
-					if (varLoc != Location::CallData && varLoc != Location::Default)
-						fatalTypeError(_variable.location(),
-							"Location has to be calldata for external functions "
-							"(remove the \"memory\" or \"storage\" keyword)."
-						);
-				}
-				if (varLoc == Location::Default)
-					typeLoc = DataLocation::CallData;
-				else
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+					errorString += " for variable";
+				string varLocStr = _variable.locationToString(varLoc);
+				varLocStr = varLocStr == "none" ? "none" : "\"" + varLocStr + "\"";
+				errorString += ", but " + varLocStr + " was given.";
+				fatalTypeError(_variable.location(), errorString);
 			}
-			else if (_variable.isCallableParameter() && dynamic_cast<Declaration const&>(*_variable.scope()).isPublic())
-			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(
-					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
-				);
-				// force locations of public or external function (return) parameters to memory
-				if (varLoc != Location::Memory && varLoc != Location::Default && !contract.isLibrary())
-					fatalTypeError(_variable.location(),
-						"Location has to be memory for publicly visible functions "
-						"(remove the \"storage\" or \"calldata\" keyword)."
-					);
-				if (varLoc == Location::Default || !contract.isLibrary())
-					typeLoc = DataLocation::Memory;
-				else
-				{
-					if (varLoc == Location::CallData)
-						fatalTypeError(_variable.location(),
-							"Location cannot be calldata for non-external functions "
-							"(remove the \"calldata\" keyword)."
-						);
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
-				}
-			}
+
+			// Find correct data location.
+			if (_variable.isEventParameter() || _variable.isConstant())
+				typeLoc = DataLocation::Memory;
+			else if (_variable.isExternalCallableParameter() && varLoc == Location::Default)
+				typeLoc = DataLocation::CallData;
+			else if (varLoc == Location::Default)
+				typeLoc = DataLocation::Storage;
 			else
 			{
-				if (_variable.isConstant())
+				switch (varLoc)
 				{
-					if (varLoc != Location::Default && varLoc != Location::Memory)
-						fatalTypeError(
-							_variable.location(),
-							"Data location has to be \"memory\" (or unspecified) for constants."
-						);
-					typeLoc = DataLocation::Memory;
-				}
-				else if (varLoc == Location::Default)
-				{
-					if (_variable.isCallableParameter())
-						typeLoc = DataLocation::Memory;
-					else
-					{
-						typeLoc = DataLocation::Storage;
-						if (_variable.isLocalVariable())
-							typeError(
-								_variable.location(),
-								"Data location must be specified as either \"memory\" or \"storage\"."
-							);
-					}
-				}
-				else
-				{
-					switch (varLoc)
-					{
 					case Location::Memory:
 						typeLoc = DataLocation::Memory;
 						break;
@@ -397,16 +357,13 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 						typeLoc = DataLocation::Storage;
 						break;
 					case Location::CallData:
-						fatalTypeError(_variable.location(),
-							"Variable cannot be declared as \"calldata\" (remove the \"calldata\" keyword)."
-						);
+						typeLoc = DataLocation::CallData;
 						break;
 					default:
-						solAssert(false, "Unknown data location");
-					}
+						typeError(_variable.location(), "Unknown data location.");
 				}
-				isPointer = !_variable.isStateVariable();
 			}
+			bool isPointer = !_variable.isStateVariable();
 			type = ref->copyForLocation(typeLoc, isPointer);
 		}
 		else if (dynamic_cast<MappingType const*>(type.get()))
