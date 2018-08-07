@@ -609,12 +609,21 @@ first.
 
 Solidity manages memory in a very simple way: There is a "free memory pointer"
 at position ``0x40`` in memory. If you want to allocate memory, just use the memory
-from that point on and update the pointer accordingly.
+starting from where this pointer points at and update it accordingly.
+There is no built-in mechanism to release or free allocated memory.
+Here is an assembly snippet that can be used for allocating memory::
+
+    function allocate(length) -> pos {
+      pos := mload(0x40)
+      mstore(0x40, add(pos, length))
+    }
 
 The first 64 bytes of memory can be used as "scratch space" for short-term
 allocation. The 32 bytes after the free memory pointer (i.e. starting at ``0x60``)
 is meant to be zero permanently and is used as the initial value for
 empty dynamic memory arrays.
+This means that the allocatable memory starts at ``0x80``, which is the initial value
+of the free memory pointer.
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (yes, this is
 even true for ``byte[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
@@ -698,7 +707,7 @@ We consider the runtime bytecode of the following Solidity program::
 The following assembly will be generated::
 
     {
-      mstore(0x40, 0x60) // store the "free memory pointer"
+      mstore(0x40, 0x80) // store the "free memory pointer"
       // function dispatcher
       switch div(calldataload(0), exp(2, 226))
       case 0xb3de648b {
