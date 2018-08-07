@@ -418,6 +418,7 @@ bool VariableDeclaration::isLocalVariable() const
 {
 	auto s = scope();
 	return
+		dynamic_cast<FunctionTypeName const*>(s) ||
 		dynamic_cast<CallableDeclaration const*>(s) ||
 		dynamic_cast<Block const*>(s) ||
 		dynamic_cast<ForStatement const*>(s);
@@ -425,14 +426,18 @@ bool VariableDeclaration::isLocalVariable() const
 
 bool VariableDeclaration::isCallableParameter() const
 {
-	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
-	if (!callable)
-		return false;
-	for (auto const& variable: callable->parameters())
-		if (variable.get() == this)
-			return true;
-	if (callable->returnParameterList())
-		for (auto const& variable: callable->returnParameterList()->parameters())
+	if (isReturnParameter())
+		return true;
+
+	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
+
+	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
+		parameters = &funTypeName->parameterTypes();
+	else if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		parameters = &callable->parameters();
+
+	if (parameters)
+		for (auto const& variable: *parameters)
 			if (variable.get() == this)
 				return true;
 	return false;
@@ -445,11 +450,16 @@ bool VariableDeclaration::isLocalOrReturn() const
 
 bool VariableDeclaration::isReturnParameter() const
 {
-	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
-	if (!callable)
-		return false;
-	if (callable->returnParameterList())
-		for (auto const& variable: callable->returnParameterList()->parameters())
+	vector<ASTPointer<VariableDeclaration>> const* returnParameters = nullptr;
+
+	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
+		returnParameters = &funTypeName->returnParameterTypes();
+	else if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		if (callable->returnParameterList())
+			returnParameters = &callable->returnParameterList()->parameters();
+
+	if (returnParameters)
+		for (auto const& variable: *returnParameters)
 			if (variable.get() == this)
 				return true;
 	return false;
@@ -457,13 +467,86 @@ bool VariableDeclaration::isReturnParameter() const
 
 bool VariableDeclaration::isExternalCallableParameter() const
 {
-	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
-	if (!callable || callable->visibility() != Declaration::Visibility::External)
+	if (!isCallableParameter())
 		return false;
-	for (auto const& variable: callable->parameters())
-		if (variable.get() == this)
-			return true;
+
+	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		if (callable->visibility() == Declaration::Visibility::External)
+			return !isReturnParameter();
+
 	return false;
+}
+
+bool VariableDeclaration::isInternalCallableParameter() const
+{
+	if (!isCallableParameter())
+		return false;
+
+	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
+		return funTypeName->visibility() == Declaration::Visibility::Internal;
+	else if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		return callable->visibility() <= Declaration::Visibility::Internal;
+	return false;
+}
+
+bool VariableDeclaration::isLibraryFunctionParameter() const
+{
+	if (!isCallableParameter())
+		return false;
+	if (auto const* funDef = dynamic_cast<FunctionDefinition const*>(scope()))
+		return dynamic_cast<ContractDefinition const&>(*funDef->scope()).isLibrary();
+	else
+		return false;
+}
+
+bool VariableDeclaration::isEventParameter() const
+{
+	return dynamic_cast<EventDefinition const*>(scope()) != nullptr;
+}
+
+bool VariableDeclaration::hasReferenceOrMappingType() const
+{
+	solAssert(typeName(), "");
+	solAssert(typeName()->annotation().type, "Can only be called after reference resolution");
+	TypePointer const& type = typeName()->annotation().type;
+	return type->category() == Type::Category::Mapping || dynamic_cast<ReferenceType const*>(type.get());
+}
+
+set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() const
+{
+	using Location = VariableDeclaration::Location;
+
+	if (!hasReferenceOrMappingType() || isStateVariable() || isEventParameter())
+		return set<Location>{ Location::Default };
+	else if (isStateVariable() && isConstant())
+		return set<Location>{ Location::Memory };
+	else if (isExternalCallableParameter())
+	{
+		set<Location> locations{ Location::CallData };
+		if (isLibraryFunctionParameter())
+			locations.insert(Location::Storage);
+		return locations;
+	}
+	else if (isCallableParameter())
+	{
+		set<Location> locations{ Location::Memory };
+		if (isInternalCallableParameter() || isLibraryFunctionParameter())
+			locations.insert(Location::Storage);
+		return locations;
+	}
+	else if (isLocalVariable())
+	{
+		solAssert(typeName(), "");
+		solAssert(typeName()->annotation().type, "Can only be called after reference resolution");
+		if (typeName()->annotation().type->category() == Type::Category::Mapping)
+			return set<Location>{ Location::Storage };
+		else
+			//  TODO: add Location::Calldata once implemented for local variables.
+			return set<Location>{ Location::Memory, Location::Storage };
+	}
+	else
+		// Struct members etc.
+		return set<Location>{ Location::Default };
 }
 
 TypePointer VariableDeclaration::type() const
@@ -580,7 +663,7 @@ bool Literal::passesAddressChecksum() const
 	return dev::passesAddressChecksum(value(), true);
 }
 
-std::string Literal::getChecksummedAddress() const
+string Literal::getChecksummedAddress() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
 	/// Pad literal to be a proper hex address.
