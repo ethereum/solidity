@@ -402,11 +402,11 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				{
 					if (!ignoreMissing)
 					{
-						cerr << "\"" << infile << "\" is not found" << endl;
+						cerr << infile << " is not found." << endl;
 						return false;
 					}
 					else
-						cerr << "\"" << infile << "\" is not found. Skipping." << endl;
+						cerr << infile << " is not found. Skipping." << endl;
 
 					continue;
 				}
@@ -415,11 +415,11 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				{
 					if (!ignoreMissing)
 					{
-						cerr << "\"" << infile << "\" is not a valid file" << endl;
+						cerr << infile << " is not a valid file." << endl;
 						return false;
 					}
 					else
-						cerr << "\"" << infile << "\" is not a valid file. Skipping." << endl;
+						cerr << infile << " is not a valid file. Skipping." << endl;
 
 					continue;
 				}

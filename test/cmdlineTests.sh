@@ -94,6 +94,56 @@ printTask "Testing unknown options..."
     fi
 )
 
+# General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
+# An failure is expected.
+test_solc_file_input_failures() {
+    local filename="${1}"
+    local solc_args="${2}"
+    local stdout_expected="${3}"
+    local stderr_expected="${4}"
+    local stdout_path=`mktemp`
+    local stderr_path=`mktemp`
+
+    set +e
+    "$SOLC" "${filename}" ${solc_args} 1>$stdout_path 2>$stderr_path
+    exitCode=$?
+    set -e
+
+    if [[ $exitCode -eq 0 ]]; then
+        printError "Incorrect exit code. Expected failure (non-zero) but got success (0)."
+        rm -f $stdout_path $stderr_path
+        exit 1
+    fi
+
+    if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]; then
+        printError "Incorrect output on stderr received. Expected:"
+        echo -e "${stdout_expected}"
+
+        printError "But got:"
+        cat $stdout_path
+        rm -f $stdout_path $stderr_path
+        exit 1
+    fi
+
+    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]; then
+        printError "Incorrect output on stderr received. Expected:"
+        echo -e "${stderr_expected}"
+
+        printError "But got:"
+        cat $stderr_path
+        rm -f $stdout_path $stderr_path
+        exit 1
+    fi
+
+    rm -f $stdout_path $stderr_path
+}
+
+printTask "Testing passing files that are not found..."
+test_solc_file_input_failures "file_not_found.sol" "" "" "\"file_not_found.sol\" is not found."
+
+printTask "Testing passing files that are not files..."
+test_solc_file_input_failures "." "" "" "\".\" is not a valid file."
+
 printTask "Compiling various other contracts and libraries..."
 (
 cd "$REPO_ROOT"/test/compilationTests/
