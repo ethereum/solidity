@@ -295,10 +295,7 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		{
 			setScope(contract);
 			if (!resolveNamesAndTypes(*node, false))
-			{
 				success = false;
-				break;
-			}
 		}
 
 		if (!success)
