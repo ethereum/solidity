@@ -254,6 +254,17 @@ string Type::escapeIdentifier(string const& _identifier)
 	return ret;
 }
 
+string Type::identifier() const
+{
+	string ret = escapeIdentifier(richIdentifier());
+	solAssert(ret.find_first_of("0123456789") != 0, "Identifier cannot start with a number.");
+	solAssert(
+		ret.find_first_not_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMONPQRSTUVWXYZ_$") == string::npos,
+		"Identifier contains invalid characters."
+	);
+	return ret;
+}
+
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
 	solAssert(Token::isElementaryTypeName(_type.token()),

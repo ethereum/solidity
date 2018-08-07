@@ -172,7 +172,7 @@ public:
 	/// only if they have the same identifier.
 	/// The identifier should start with "t_".
 	/// Will not contain any character which would be invalid as an identifier.
-	std::string identifier() const { return escapeIdentifier(richIdentifier()); }
+	std::string identifier() const;
 
 	/// More complex identifier strings use "parentheses", where $_ is interpreted as as
 	/// "opening parenthesis", _$ as "closing parenthesis", _$_ as "comma" and any $ that
