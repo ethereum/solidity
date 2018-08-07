@@ -498,7 +498,12 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 	TupleType const& lhs = dynamic_cast<TupleType const&>(*type(_assignment.leftHandSide()));
 	TupleType const& rhs = dynamic_cast<TupleType const&>(*type(_assignment.rightHandSide()));
 
-	bool fillRight = !lhs.components().empty() && (!lhs.components().back() || lhs.components().front());
+	if (lhs.components().size() != rhs.components().size())
+	{
+		solAssert(m_errorReporter.hasErrors(), "");
+		return;
+	}
+
 	size_t storageToStorageCopies = 0;
 	size_t toStorageCopies = 0;
 	for (size_t i = 0; i < lhs.components().size(); ++i)
@@ -506,10 +511,8 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 		ReferenceType const* ref = dynamic_cast<ReferenceType const*>(lhs.components()[i].get());
 		if (!ref || !ref->dataStoredIn(DataLocation::Storage) || ref->isPointer())
 			continue;
-		size_t rhsPos = fillRight ? i : rhs.components().size() - (lhs.components().size() - i);
-		solAssert(rhsPos < rhs.components().size(), "");
 		toStorageCopies++;
-		if (rhs.components()[rhsPos]->dataStoredIn(DataLocation::Storage))
+		if (rhs.components()[i]->dataStoredIn(DataLocation::Storage))
 			storageToStorageCopies++;
 	}
 	if (storageToStorageCopies >= 1 && toStorageCopies >= 2)

@@ -947,20 +947,12 @@ void CompilerUtils::convertType(
 	{
 		TupleType const& sourceTuple = dynamic_cast<TupleType const&>(_typeOnStack);
 		TupleType const& targetTuple = dynamic_cast<TupleType const&>(_targetType);
-		// fillRight: remove excess values at right side, !fillRight: remove eccess values at left side
-		bool fillRight = !targetTuple.components().empty() && (
-			!targetTuple.components().back() ||
-			targetTuple.components().front()
-		);
+		solAssert(targetTuple.components().size() == sourceTuple.components().size(), "");
 		unsigned depth = sourceTuple.sizeOnStack();
 		for (size_t i = 0; i < sourceTuple.components().size(); ++i)
 		{
 			TypePointer sourceType = sourceTuple.components()[i];
-			TypePointer targetType;
-			if (fillRight && i < targetTuple.components().size())
-				targetType = targetTuple.components()[i];
-			else if (!fillRight && targetTuple.components().size() + i >= sourceTuple.components().size())
-				targetType = targetTuple.components()[targetTuple.components().size() - (sourceTuple.components().size() - i)];
+			TypePointer targetType = targetTuple.components()[i];
 			if (!sourceType)
 			{
 				solAssert(!targetType, "");
