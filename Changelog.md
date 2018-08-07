@@ -34,6 +34,7 @@ Breaking Changes:
  * General: C99-style scoping rules are enforced now. This was already the case in the experimental 0.5.0 mode.
  * General: Disallow combining hex numbers with unit denominations (e.g. ``0x1e wei``). This was already the case in the experimental 0.5.0 mode.
  * JSON AST: Remove ``constant`` and ``payable`` fields (the information is encoded in the ``stateMutability`` field).
+ * Interface: Remove "clone contract" feature. The ``--clone-bin`` and ``--combined-json clone-bin`` commandline options are not available anymore.
  * Name Resolver: Do not exclude public state variables when looking for conflicting declarations.
  * Optimizer: Remove the no-op ``PUSH1 0 NOT AND`` sequence.
  * Parser: Disallow trailing dots that are not followed by a number.

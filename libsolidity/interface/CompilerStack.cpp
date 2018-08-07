@@ -329,7 +329,6 @@ void CompilerStack::link()
 	{
 		contract.second.object.link(m_libraries);
 		contract.second.runtimeObject.link(m_libraries);
-		contract.second.cloneObject.link(m_libraries);
 	}
 }
 
@@ -406,11 +405,6 @@ eth::LinkerObject const& CompilerStack::object(string const& _contractName) cons
 eth::LinkerObject const& CompilerStack::runtimeObject(string const& _contractName) const
 {
 	return contract(_contractName).runtimeObject;
-}
-
-eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName) const
-{
-	return contract(_contractName).cloneObject;
 }
 
 /// FIXME: cache this string
@@ -767,23 +761,6 @@ void CompilerStack::compileContract(
 	}
 
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
-
-	try
-	{
-		if (!_contract.isLibrary())
-		{
-			Compiler cloneCompiler(m_evmVersion, m_optimize, m_optimizeRuns);
-			cloneCompiler.compileClone(_contract, _compiledContracts);
-			compiledContract.cloneObject = cloneCompiler.assembledObject();
-		}
-	}
-	catch (eth::AssemblyException const&)
-	{
-		// In some cases (if the constructor requests a runtime function), it is not
-		// possible to compile the clone.
-
-		// TODO: Report error / warning
-	}
 }
 
 string const CompilerStack::lastContractName() const

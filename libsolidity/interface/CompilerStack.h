@@ -190,12 +190,6 @@ public:
 	/// @returns the runtime object for the contract.
 	eth::LinkerObject const& runtimeObject(std::string const& _contractName) const;
 
-	/// @returns the bytecode of a contract that uses an already deployed contract via DELEGATECALL.
-	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
-	/// substituted by the actual address. Note that this sequence starts end ends in three X
-	/// characters but can contain anything in between.
-	eth::LinkerObject const& cloneObject(std::string const& _contractName) const;
-
 	/// @returns normal contract assembly items
 	eth::AssemblyItems const* assemblyItems(std::string const& _contractName) const;
 
@@ -258,7 +252,6 @@ private:
 		std::shared_ptr<Compiler> compiler;
 		eth::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		eth::LinkerObject runtimeObject; ///< Runtime object.
-		eth::LinkerObject cloneObject; ///< Clone object (deprecated).
 		std::string metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;

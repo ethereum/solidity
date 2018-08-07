@@ -80,7 +80,6 @@ static string const g_strAstJson = "ast-json";
 static string const g_strAstCompactJson = "ast-compact-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
-static string const g_strCloneBinary = "clone-bin";
 static string const g_strCombinedJson = "combined-json";
 static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
@@ -128,7 +127,6 @@ static string const g_argAstCompactJson = g_strAstCompactJson;
 static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
 static string const g_argBinaryRuntime = g_strBinaryRuntime;
-static string const g_argCloneBinary = g_strCloneBinary;
 static string const g_argCombinedJson = g_strCombinedJson;
 static string const g_argCompactJSON = g_strCompactJSON;
 static string const g_argGas = g_strGas;
@@ -161,7 +159,6 @@ static set<string> const g_combinedJsonArgs
 	g_strAst,
 	g_strBinary,
 	g_strBinaryRuntime,
-	g_strCloneBinary,
 	g_strCompactJSON,
 	g_strInterface,
 	g_strMetadata,
@@ -213,7 +210,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argAstJson,
 		g_argBinary,
 		g_argBinaryRuntime,
-		g_argCloneBinary,
 		g_argMetadata,
 		g_argNatspecUser,
 		g_argNatspecDev,
@@ -235,16 +231,6 @@ void CommandLineInterface::handleBinary(string const& _contract)
 		{
 			cout << "Binary: " << endl;
 			cout << m_compiler->object(_contract).toHex() << endl;
-		}
-	}
-	if (m_args.count(g_argCloneBinary))
-	{
-		if (m_args.count(g_argOutputDir))
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
-		else
-		{
-			cout << "Clone Binary: " << endl;
-			cout << m_compiler->cloneObject(_contract).toHex() << endl;
 		}
 	}
 	if (m_args.count(g_argBinaryRuntime))
@@ -275,7 +261,7 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 {
 	if (m_args.count(g_argOpcodes))
 		handleOpcode(_contract);
-	if (m_args.count(g_argBinary) || m_args.count(g_argCloneBinary) || m_args.count(g_argBinaryRuntime))
+	if (m_args.count(g_argBinary) || m_args.count(g_argBinaryRuntime))
 		handleBinary(_contract);
 }
 
@@ -631,7 +617,6 @@ Allowed options)",
 		(g_argOpcodes.c_str(), "Opcodes of the contracts.")
 		(g_argBinary.c_str(), "Binary of the contracts in hex.")
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
-		(g_argCloneBinary.c_str(), "Binary of the clone contracts in hex.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
@@ -910,8 +895,6 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
 		if (requests.count(g_strBinaryRuntime))
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
-		if (requests.count(g_strCloneBinary))
-			contractData[g_strCloneBinary] = m_compiler->cloneObject(contractName).toHex();
 		if (requests.count(g_strOpcodes))
 			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm))
