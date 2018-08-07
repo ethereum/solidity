@@ -62,8 +62,8 @@ of votes.
         // stores a `Voter` struct for each possible address.
         mapping(address => Voter) public voters;
 
-        //State variable that stores the index of the Proposal
-        //in the proposals array, against the proposalName as the key.
+        // State variable that stores the index of the Proposal
+        // in the proposals array, against the proposalName as the key.
         mapping(bytes32 => uint) public proposalNameIndex;
 
         // A dynamically-sized array of `Proposal` structs.
@@ -88,8 +88,8 @@ of votes.
                     voteCount: 0
                 })) - 1 ;
 
-                //Store the index of Proposal against 
-                //proposalName as the key.
+                // Store the index of Proposal against 
+                // proposalName as the key.
                 proposalNameIndex[proposalNames[i]] = index;
             }
         }
