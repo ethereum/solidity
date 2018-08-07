@@ -41,6 +41,7 @@ public:
 
 	void checkNatspec(
 		std::string const& _code,
+		std::string const& _contractName,
 		std::string const& _expectedDocumentationString,
 		bool _userDocumentation
 	)
@@ -52,9 +53,9 @@ public:
 
 		Json::Value generatedDocumentation;
 		if (_userDocumentation)
-			generatedDocumentation = m_compilerStack.natspecUser(m_compilerStack.lastContractName());
+			generatedDocumentation = m_compilerStack.natspecUser(_contractName);
 		else
-			generatedDocumentation = m_compilerStack.natspecDev(m_compilerStack.lastContractName());
+			generatedDocumentation = m_compilerStack.natspecDev(_contractName);
 		Json::Value expectedDocumentation;
 		jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
@@ -93,7 +94,7 @@ BOOST_AUTO_TEST_CASE(user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
@@ -119,8 +120,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, devNatspec, false);
-	checkNatspec(sourceCode, userNatspec, true);
+	checkNatspec(sourceCode, "test", devNatspec, false);
+	checkNatspec(sourceCode, "test", userNatspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiline_comment)
@@ -140,7 +141,7 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 	"    \"mul_and_add(uint256,uint256)\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiple_functions)
@@ -171,7 +172,7 @@ BOOST_AUTO_TEST_CASE(user_multiple_functions)
 	"    \"sub(int256)\":{ \"notice\": \"Subtracts 3 from `input`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(user_empty_contract)
@@ -182,7 +183,7 @@ BOOST_AUTO_TEST_CASE(user_empty_contract)
 
 	char const* natspec = "{\"methods\":{} }";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
@@ -201,8 +202,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	char const* devNatspec = "{\"methods\":{}}";
 	char const* userNatspec = "{\"methods\":{}}";
 
-	checkNatspec(sourceCode, devNatspec, false);
-	checkNatspec(sourceCode, userNatspec, true);
+	checkNatspec(sourceCode, "test", devNatspec, false);
+	checkNatspec(sourceCode, "test", userNatspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
@@ -228,7 +229,7 @@ BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params)
@@ -253,7 +254,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
@@ -276,7 +277,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
@@ -302,7 +303,7 @@ BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_functions)
@@ -353,7 +354,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_return)
@@ -381,7 +382,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 {
@@ -411,7 +412,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 
@@ -443,7 +444,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiline_comment)
@@ -476,7 +477,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
@@ -496,7 +497,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_doc)
@@ -520,7 +521,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_author_at_function)
@@ -546,7 +547,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
@@ -569,7 +570,7 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
@@ -592,7 +593,7 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(empty_comment)
@@ -608,7 +609,7 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
