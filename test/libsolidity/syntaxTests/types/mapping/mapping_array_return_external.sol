@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (53-84): Location has to be memory for publicly visible functions (remove the "storage" or "calldata" keyword).
+// TypeError: (53-84): Data location must be "memory" for return parameter in function, but "storage" was given.
