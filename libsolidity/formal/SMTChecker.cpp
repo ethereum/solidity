@@ -375,8 +375,14 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	}
 	else if (SSAVariable::isSupportedType(_identifier.annotation().type->category()))
 	{
-		VariableDeclaration const& decl = dynamic_cast<VariableDeclaration const&>(*(_identifier.annotation().referencedDeclaration));
-		defineExpr(_identifier, currentValue(decl));
+		if (VariableDeclaration const* decl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+			defineExpr(_identifier, currentValue(*decl));
+		else
+			// TODO: handle MagicVariableDeclaration here
+			m_errorReporter.warning(
+				_identifier.location(),
+				"Assertion checker does not yet support the type of this variable."
+			);
 	}
 	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
 	{
