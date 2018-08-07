@@ -4577,6 +4577,50 @@ BOOST_AUTO_TEST_CASE(constructing_enums_from_ints)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(1));
 }
 
+BOOST_AUTO_TEST_CASE(enum_referencing)
+{
+	char const* sourceCode = R"(
+		interface I {
+			enum Direction { A, B, Left, Right }
+		}
+		library L {
+			enum Direction { Left, Right }
+			function f() public pure returns (Direction) {
+				return Direction.Right;
+			}
+			function g() public pure returns (I.Direction) {
+				return I.Direction.Right;
+			}
+		}
+		contract C is I {
+			function f() public pure returns (Direction) {
+				return Direction.Right;
+			}
+			function g() public pure returns (I.Direction) {
+				return I.Direction.Right;
+			}
+			function h() public pure returns (L.Direction) {
+				return L.Direction.Right;
+			}
+			function x() public pure returns (L.Direction) {
+				return L.f();
+			}
+			function y() public pure returns (I.Direction) {
+				return L.g();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "L");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(3));
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(3));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(3));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(1));
+	ABI_CHECK(callContractFunction("x()"), encodeArgs(1));
+	ABI_CHECK(callContractFunction("y()"), encodeArgs(3));
+}
+
 BOOST_AUTO_TEST_CASE(inline_member_init)
 {
 	char const* sourceCode = R"(
