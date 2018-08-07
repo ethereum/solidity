@@ -81,6 +81,7 @@ Bugfixes:
  * Code Generator: Fix allocation of byte arrays (zeroed out too much memory).
  * Commandline Interface: Correctly handle paths with backslashes on windows.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
+ * References Resolver: Do not crash on using ``_slot`` and ``_offset`` suffixes on their own.
  * References Resolver: Enforce ``storage`` as data location for mappings.
  * References Resolver: Report error instead of assertion fail when FunctionType has an undeclared type as parameter.
  * Type Checker: Disallow assignments to mappings within tuple assignments as well.

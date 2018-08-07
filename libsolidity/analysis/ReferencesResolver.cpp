@@ -256,6 +256,11 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 				string("_slot").size() :
 				string("_offset").size()
 			));
+			if (realName.empty())
+			{
+				declarationError(_identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
+				return size_t(-1);
+			}
 			declarations = m_resolver.nameFromCurrentScope(realName);
 		}
 		if (declarations.size() != 1)
