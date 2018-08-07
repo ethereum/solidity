@@ -1146,7 +1146,14 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 
 string RationalNumberType::richIdentifier() const
 {
-	return "t_rational_" + m_value.numerator().str() + "_by_" + m_value.denominator().str();
+	// rational seemingly will put the sign always on the numerator,
+	// but let just make it deterministic here.
+	bigint numerator = abs(m_value.numerator());
+	bigint denominator = abs(m_value.denominator());
+	if (m_value < 0)
+		return "t_rational_minus_" + numerator.str() + "_by_" + denominator.str();
+	else
+		return "t_rational_" + numerator.str() + "_by_" + denominator.str();
 }
 
 bool RationalNumberType::operator==(Type const& _other) const
