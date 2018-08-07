@@ -867,6 +867,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			return size_t(-1);
 		Declaration const* declaration = ref->second.declaration;
 		solAssert(!!declaration, "");
+		bool requiresStorage = ref->second.isSlot || ref->second.isOffset;
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			if (var->isConstant())
@@ -874,7 +875,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				m_errorReporter.typeError(_identifier.location, "Constant variables not supported by inline assembly.");
 				return size_t(-1);
 			}
-			else if (ref->second.isSlot || ref->second.isOffset)
+			else if (requiresStorage)
 			{
 				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
 				{
@@ -905,6 +906,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(_identifier.location, "Only types that use one stack slot are supported.");
 				return size_t(-1);
 			}
+		}
+		else if (requiresStorage)
+		{
+			m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+			return size_t(-1);
 		}
 		else if (_context == julia::IdentifierContext::LValue)
 		{

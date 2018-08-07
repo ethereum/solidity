@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (84-90): Identifier not found.
+// TypeError: (84-90): The suffixes _offset and _slot can only be used on storage variables.

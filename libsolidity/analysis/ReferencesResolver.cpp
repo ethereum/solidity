@@ -262,8 +262,6 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 				return size_t(-1);
 			}
 			declarations = m_resolver.nameFromCurrentScope(realName);
-			if (!dynamic_cast<VariableDeclaration const*>(declarations.front()))
-				return size_t(-1);
 		}
 		if (declarations.size() != 1)
 			return size_t(-1);
