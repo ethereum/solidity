@@ -55,7 +55,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
    * @param _value The value to send
    * @param _data The data part of the transaction
    */
-  function execute(address _to, uint256 _value, bytes _data) external onlyOwner returns (bytes32 _r) {
+  function execute(address _to, uint256 _value, bytes calldata _data) external onlyOwner returns (bytes32 _r) {
     // first, take the opportunity to check that we're under the daily limit.
     if (underLimit(_value)) {
       emit SingleTransact(msg.sender, _value, _to, _data);
