@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(calldata)
 	string sourceCode = R"(
 		contract C {
 			event E(bytes);
-			function f(bytes a) external {
+			function f(bytes calldata a) external {
 				emit E(a);
 			}
 		}

@@ -132,7 +132,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		}
 	}
 
-	function reserve(string _name) external payable {
+	function reserve(string calldata _name) external payable {
 		if (bytes(_name).length == 0)
 			revert();
 		bool needAuction = requiresAuction(_name);
