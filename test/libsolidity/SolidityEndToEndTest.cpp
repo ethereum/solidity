@@ -12527,6 +12527,42 @@ BOOST_AUTO_TEST_CASE(abi_encode_empty_string_v2)
 		0x00
 	));
 }
+
+BOOST_AUTO_TEST_CASE(abi_encode_rational)
+{
+	char const* sourceCode = R"(
+		// Tests that rational numbers (even negative ones) are encoded properly.
+		contract C {
+			function f() public pure returns (bytes memory) {
+				return abi.encode(1, -2);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(
+		0x20,
+		0x40, u256(1), u256(-2)
+	));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encode_rational_v2)
+{
+	char const* sourceCode = R"(
+		// Tests that rational numbers (even negative ones) are encoded properly.
+		pragma experimental ABIEncoderV2;
+		contract C {
+			function f() public pure returns (bytes memory) {
+				return abi.encode(1, -2);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(
+		0x20,
+		0x40, u256(1), u256(-2)
+	));
+}
+
 BOOST_AUTO_TEST_CASE(abi_encode_call)
 {
 	char const* sourceCode = R"T(
