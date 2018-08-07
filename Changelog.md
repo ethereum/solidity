@@ -83,6 +83,7 @@ Bugfixes:
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * References Resolver: Do not crash on using ``_slot`` and ``_offset`` suffixes on their own.
  * References Resolver: Enforce ``storage`` as data location for mappings.
+ * References Resolver: Properly handle invalid references used together with ``_slot`` and ``_offset``.
  * References Resolver: Report error instead of assertion fail when FunctionType has an undeclared type as parameter.
  * Type Checker: Disallow assignments to mappings within tuple assignments as well.
  * Type Checker: Allow assignments to local variables of mapping types.
