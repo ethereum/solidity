@@ -1626,10 +1626,13 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		else
 		{
 			TypePointer const& argType = type(*arguments.front());
+			// Resulting data location is memory unless we are converting from a reference
+			// type with a different data location.
+			// (data location cannot yet be specified for type conversions)
+			DataLocation dataLoc = DataLocation::Memory;
 			if (auto argRefType = dynamic_cast<ReferenceType const*>(argType.get()))
-				// do not change the data location when converting
-				// (data location cannot yet be specified for type conversions)
-				resultType = ReferenceType::copyForLocationIfReference(argRefType->location(), resultType);
+				dataLoc = argRefType->location();
+			resultType = ReferenceType::copyForLocationIfReference(dataLoc, resultType);
 			if (!argType->isExplicitlyConvertibleTo(*resultType))
 				m_errorReporter.typeError(
 					_functionCall.location(),
