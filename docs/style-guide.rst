@@ -946,13 +946,19 @@ Function Names
 Functions other than constructors should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
 
 
+Internal Function Names
+=======================
+
+Internal functions which have the ``internal`` or ``private`` modifiers should use mixedCase with leading underscore. Examples: ``_processTransaction``, ``_addMember``, ``_modifyConfig``.
+
+
 Function Argument Names
 =======================
 
-Function arguments should use mixedCase. Examples: ``initialSupply``, ``account``, ``recipientAddress``, ``senderAddress``, ``newOwner``.
+Function arguments should use mixedCase with leading underscore. Examples: ``_initialSupply``, ``_account``, ``_recipientAddress``, ``_senderAddress``, ``_newOwner``.
 
 When writing library functions that operate on a custom struct, the struct
-should be the first argument and should always be named ``self``.
+should be the first argument and should always be named ``_self``.
 
 
 Local and State Variable Names
