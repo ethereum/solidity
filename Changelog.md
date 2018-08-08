@@ -73,6 +73,7 @@ Language Features:
 
 Compiler Features:
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
+ * Type Checker: Nicer error message when trying to reference overloaded identifiers in inline assembly.
  * Type Checker: Show named argument in case of error.
  * Tests: Determine transaction status during IPC calls.
  * Code Generator: Allocate and free local variables according to their scope.

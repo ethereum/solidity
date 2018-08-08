@@ -264,7 +264,10 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 			declarations = m_resolver.nameFromCurrentScope(realName);
 		}
 		if (declarations.size() != 1)
+		{
+			declarationError(_identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
 			return size_t(-1);
+		}
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 			if (var->isLocalVariable() && _crossesFunctionBoundary)
 			{
