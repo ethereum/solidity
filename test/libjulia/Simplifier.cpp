@@ -139,4 +139,14 @@ BOOST_AUTO_TEST_CASE(mod_and)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(not_applied)
+{
+	CHECK(
+		// The first argument of div is not constant.
+		// keccak256 is not movable.
+		"{ let a := div(keccak256(0, 0), 0) }",
+		"{ let a := div(keccak256(0, 0), 0) }"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
