@@ -94,10 +94,7 @@ private:
 	ASTPointer<EventDefinition> parseEventDefinition();
 
 	ASTPointer<UsingForDirective> parseUsingDirective();
-	ASTPointer<ModifierArea> parseModifierArea(
-		ASTString const* _contractName,
-		ModifierArea* const& _parent = nullptr
-	);
+	ASTPointer<ModifierArea> parseModifierArea(ModifierArea* const& _parent = nullptr);
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();

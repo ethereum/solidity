@@ -266,7 +266,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 		else if (currentTokenValue == Token::Using)
 			subNodes.push_back(parseUsingDirective());
 		else if (currentTokenValue == Token::Apply)
-			subNodes.push_back(parseModifierArea(name.get()));
+			subNodes.push_back(parseModifierArea());
 		else
 			fatalParserError(string("Function, variable, struct or modifier declaration expected."));
 	}
@@ -482,8 +482,14 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(
 
 		if (_modifierArea)
 		{
-			header.visibility = _modifierArea->visibility();
-			header.stateMutability = _modifierArea->stateMutability();
+			auto const modifierAreaVisibility = _modifierArea->visibility();
+			auto const modifierAreaStateMutability = _modifierArea->stateMutability();
+
+			if (modifierAreaVisibility != Declaration::Visibility::Default)
+				header.visibility = _modifierArea->visibility();
+
+			if (modifierAreaStateMutability != StateMutability::NonPayable)
+				header.stateMutability = _modifierArea->stateMutability();
 		}
 
 		return nodeFactory.createNode<FunctionDefinition>(
@@ -752,7 +758,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	return nodeFactory.createNode<UsingForDirective>(library, typeName);
 }
 
-ASTPointer<ModifierArea> Parser::parseModifierArea(ASTString const* _contractName, ModifierArea* const& _parent)
+ASTPointer<ModifierArea> Parser::parseModifierArea(ModifierArea* const& _parent)
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
@@ -820,7 +826,7 @@ ASTPointer<ModifierArea> Parser::parseModifierArea(ASTString const* _contractNam
 		}
 		else if (currentToken == Token::Apply)
 		{
-			subAreas->push_back(parseModifierArea(_contractName, modifierArea.get()));
+			subAreas->push_back(parseModifierArea(modifierArea.get()));
 		}
 		else
 			fatalParserError(string("Expected modifier area declaration, function definition, or right brace."));
