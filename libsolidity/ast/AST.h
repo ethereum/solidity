@@ -616,7 +616,6 @@ public:
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 	ModifierArea* modifierArea() { return m_modifierArea; }
 
-	std::string fullyQualifiedName() const;
 	virtual bool isVisibleInContract() const override
 	{
 		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
