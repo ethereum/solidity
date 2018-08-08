@@ -701,7 +701,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendRevert();
 			break;
 		}
-		case FunctionType::Kind::SHA3:
+		case FunctionType::Kind::KECCAK256:
 		{
 			solAssert(arguments.size() == 1, "");
 			solAssert(!function.padArguments(), "");
