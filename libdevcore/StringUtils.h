@@ -63,7 +63,7 @@ std::string joinHumanReadable
 
 	for (;it != itEnd; ++it)
 	{
-		if ((next(it) == itEnd) && !_lastSeparator.empty())
+		if ((std::next(it) == itEnd) && !_lastSeparator.empty())
 			result += _lastSeparator; // last iteration
 		else
 			result += _separator;

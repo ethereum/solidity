@@ -330,7 +330,7 @@ void dev::solidity::eachInstruction(
 		u256 data;
 
 		// fill the data with the additional data bytes from the instruction stream
-		while (additional > 0 && next(it) < _mem.end())
+		while (additional > 0 && std::next(it) < _mem.end())
 		{
 			data <<= 8;
 			data |= *++it;
