@@ -45,8 +45,8 @@ namespace fs = boost::filesystem;
 struct TestStats
 {
 	int successCount;
-	int runCount;
-	operator bool() const { return successCount == runCount; }
+	int testCount;
+	operator bool() const { return successCount == testCount; }
 };
 
 class TestTool
@@ -88,13 +88,15 @@ private:
 	Request handleResponse(bool const _exception);
 
 	TestCase::TestCaseCreator m_testCaseCreator;
-	bool const m_formatted;
+	bool const m_formatted = false;
 	string const m_name;
 	fs::path const m_path;
 	unique_ptr<TestCase> m_test;
+	static bool m_exitRequested;
 };
 
 string TestTool::editor;
+bool TestTool::m_exitRequested = false;
 
 TestTool::Result TestTool::process()
 {
@@ -195,7 +197,7 @@ TestStats TestTool::processPath(
 	std::queue<fs::path> paths;
 	paths.push(_path);
 	int successCount = 0;
-	int runCount = 0;
+	int testCount = 0;
 
 	while (!paths.empty())
 	{
@@ -212,10 +214,15 @@ TestStats TestTool::processPath(
 				if (fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
 					paths.push(currentPath / entry.path().filename());
 		}
+		else if (m_exitRequested)
+		{
+			++testCount;
+			paths.pop();
+		}
 		else
 		{
+			++testCount;
 			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _formatted);
-			++runCount;
 			auto result = testTool.process();
 
 			switch(result)
@@ -225,10 +232,12 @@ TestStats TestTool::processPath(
 				switch(testTool.handleResponse(result == Result::Exception))
 				{
 				case Request::Quit:
-					return { successCount, runCount };
+					paths.pop();
+					m_exitRequested = true;
+					break;
 				case Request::Rerun:
 					cout << "Re-running test case..." << endl;
-					--runCount;
+					--testCount;
 					break;
 				case Request::Skip:
 					paths.pop();
@@ -243,7 +252,7 @@ TestStats TestTool::processPath(
 		}
 	}
 
-	return { successCount, runCount };
+	return { successCount, testCount };
 
 }
 
@@ -347,10 +356,10 @@ Allowed options)",
 
 		cout << endl << "Syntax Test Summary: ";
 		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
-			stats.successCount << "/" << stats.runCount;
+			stats.successCount << "/" << stats.testCount;
 		cout << " tests successful." << endl << endl;
 
-		global_stats.runCount += stats.runCount;
+		global_stats.testCount += stats.testCount;
 		global_stats.successCount += stats.successCount;
 	}
 	else
@@ -367,10 +376,10 @@ Allowed options)",
 
 		cout << endl << "JSON AST Test Summary: ";
 		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
-			stats.successCount << "/" << stats.runCount;
+			stats.successCount << "/" << stats.testCount;
 		cout << " tests successful." << endl << endl;
 
-		global_stats.runCount += stats.runCount;
+		global_stats.testCount += stats.testCount;
 		global_stats.successCount += stats.successCount;
 	}
 	else
@@ -381,7 +390,7 @@ Allowed options)",
 
 	cout << endl << "Summary: ";
 	FormattedScope(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
-		 global_stats.successCount << "/" << global_stats.runCount;
+		 global_stats.successCount << "/" << global_stats.testCount;
 	cout << " tests successful." << endl;
 
 
