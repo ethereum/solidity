@@ -90,6 +90,7 @@ Bugfixes:
  * Type Checker: Disallow assignments to mappings within tuple assignments as well.
  * Type Checker: Allow assignments to local variables of mapping types.
  * Type Checker: Consider fixed size arrays when checking for recursive structs.
+ * Type Checker: Fix crashes in erroneous tuple assignments in which the type of the right hand side cannot be determined.
  * Type Checker: Report error when using structs in events without experimental ABIEncoderV2. This used to crash or log the wrong values.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
 

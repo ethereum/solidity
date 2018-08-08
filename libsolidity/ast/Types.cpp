@@ -2293,16 +2293,14 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 {
 	solAssert(!!_targetType, "");
 	TypePointers const& targetComponents = dynamic_cast<TupleType const&>(*_targetType).components();
-	bool fillRight = !targetComponents.empty() && (!targetComponents.back() || targetComponents.front());
+	solAssert(components().size() == targetComponents.size(), "");
 	TypePointers tempComponents(targetComponents.size());
-	for (size_t i = 0; i < min(targetComponents.size(), components().size()); ++i)
+	for (size_t i = 0; i < targetComponents.size(); ++i)
 	{
-		size_t si = fillRight ? i : components().size() - i - 1;
-		size_t ti = fillRight ? i : targetComponents.size() - i - 1;
-		if (components()[si] && targetComponents[ti])
+		if (components()[i] && targetComponents[i])
 		{
-			tempComponents[ti] = components()[si]->closestTemporaryType(targetComponents[ti]);
-			solAssert(tempComponents[ti], "");
+			tempComponents[i] = components()[i]->closestTemporaryType(targetComponents[i]);
+			solAssert(tempComponents[i], "");
 		}
 	}
 	return make_shared<TupleType>(tempComponents);
