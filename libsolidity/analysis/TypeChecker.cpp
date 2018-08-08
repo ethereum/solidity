@@ -982,9 +982,13 @@ bool TypeChecker::visit(ForStatement const& _forStatement)
 
 void TypeChecker::endVisit(Return const& _return)
 {
-	if (!_return.expression())
-		return;
 	ParameterList const* params = _return.annotation().functionReturnParameters;
+	if (!_return.expression())
+	{
+		if (params && !params->parameters().empty())
+			m_errorReporter.typeError(_return.location(), "Return arguments required.");
+		return;
+	}
 	if (!params)
 	{
 		m_errorReporter.typeError(_return.location(), "Return arguments not allowed.");

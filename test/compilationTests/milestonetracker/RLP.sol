@@ -46,7 +46,6 @@ library RLP {
      subItem = next(self);
      if(strict && !_validate(subItem))
          revert();
-     return;
  }
 
  function hasNext(Iterator memory self) internal view returns (bool) {
@@ -171,10 +170,11 @@ library RLP {
  /// @return The bytes.
  function toBytes(RLPItem memory self) internal returns (bytes memory bts) {
      uint len = self._unsafe_length;
-     if (len == 0)
-         return;
-     bts = new bytes(len);
-     _copyToBytes(self._unsafe_memPtr, bts, len);
+     if (len != 0)
+     {
+         bts = new bytes(len);
+         _copyToBytes(self._unsafe_memPtr, bts, len);
+     }
  }
 
  /// @dev Decode an RLPItem into bytes. This will not work if the
@@ -359,9 +359,8 @@ library RLP {
      if (b0 < DATA_SHORT_START) {
          memPtr = start;
          len = 1;
-         return;
      }
-     if (b0 < DATA_LONG_START) {
+     else if (b0 < DATA_LONG_START) {
          len = self._unsafe_length - 1;
          memPtr = start + 1;
      } else {
@@ -372,7 +371,6 @@ library RLP {
          len = self._unsafe_length - 1 - bLen;
          memPtr = start + bLen + 1;
      }
-     return;
  }
 
  // Assumes that enough memory has been allocated to store in target.

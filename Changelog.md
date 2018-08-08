@@ -46,6 +46,7 @@ Breaking Changes:
  * Type Checker: Disallow calling base constructors without parentheses. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow conversions between ``bytesX`` and ``uintY`` of different size.
  * Type Checker: Disallow conversions between unrelated contract types. Explicit conversion via ``address`` can still achieve it.
+ * Type Checker: Disallow empty return statements for functions with one or more return values.
  * Type Checker: Disallow empty tuple components. This was partly already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow multi-variable declarations with mismatching number of values. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow specifying base constructor arguments multiple times in the same inheritance hierarchy. This was already the case in the experimental 0.5.0 mode.
