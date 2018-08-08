@@ -136,6 +136,9 @@ public:
 	/// change with EVM versions)
 	static unsigned runGas(Instruction _instruction);
 
+	/// @returns the gas cost of the supplied data, depending whether it is in creation code, or not.
+	static u256 dataGas(bytes const& _data, bool _inCreation);
+
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
 	GasConsumption wordGas(u256 const& _multiplier, ExpressionClasses::Id _value);
