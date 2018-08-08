@@ -39,6 +39,6 @@ if (${Z3_FOUND})
 endif()
 
 if (${CVC4_FOUND} AND ${GMP_FOUND})
-  target_link_libraries(solidity PUBLIC ${CVC4_LIBRARY})
+  target_link_libraries(solidity PUBLIC ${CVC4_LIBRARIES})
   target_link_libraries(solidity PUBLIC ${GMP_LIBRARY})
 endif()

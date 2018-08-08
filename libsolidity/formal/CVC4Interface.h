@@ -21,7 +21,18 @@
 
 #include <boost/noncopyable.hpp>
 
+#if defined(__GLIBC__)
+// The CVC4 headers includes the deprecated system headers <ext/hash_map>
+// and <ext/hash_set>. These headers cause a warning that will break the
+// build, unless _GLIBCXX_PERMIT_BACKWARD_HASH is set.
+#define _GLIBCXX_PERMIT_BACKWARD_HASH
+#endif
+
 #include <cvc4/cvc4.h>
+
+#if defined(__GLIBC__)
+#undef _GLIBCXX_PERMIT_BACKWARD_HASH
+#endif
 
 namespace dev
 {
