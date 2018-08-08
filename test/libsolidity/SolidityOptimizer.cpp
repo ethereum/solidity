@@ -25,7 +25,6 @@
 #include <libevmasm/Instruction.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <chrono>
 #include <string>
@@ -82,8 +81,8 @@ public:
 		BOOST_CHECK_MESSAGE(
 			_optimizeRuns < 50 || optimizedSize < nonOptimizedSize,
 			string("Optimizer did not reduce bytecode size. Non-optimized size: ") +
-			std::to_string(nonOptimizedSize) + " - optimized size: " +
-			std::to_string(optimizedSize)
+			to_string(nonOptimizedSize) + " - optimized size: " +
+			to_string(optimizedSize)
 		);
 		m_optimizedContract = m_contractAddress;
 	}

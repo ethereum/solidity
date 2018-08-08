@@ -17,8 +17,6 @@
 
 #include <libdevcore/Exceptions.h>
 
-#include <boost/lexical_cast.hpp>
-
 using namespace std;
 using namespace dev;
 
@@ -43,7 +41,7 @@ string Exception::lineInfo() const
 		ret += *file;
 	ret += ':';
 	if (line)
-		ret += std::to_string(*line);
+		ret += to_string(*line);
 	return ret;
 }
 

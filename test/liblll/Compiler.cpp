@@ -130,17 +130,17 @@ BOOST_AUTO_TEST_CASE(switch_inconsistent_return_count)
 BOOST_AUTO_TEST_CASE(disallowed_asm_instructions)
 {
 	for (unsigned i = 1; i <= 32; i++)
-		BOOST_CHECK(!successCompile("(asm PUSH" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(asm PUSH" + to_string(i) + ")"));
 }
 
 BOOST_AUTO_TEST_CASE(disallowed_functional_asm_instructions)
 {
 	for (unsigned i = 1; i <= 32; i++)
-		BOOST_CHECK(!successCompile("(PUSH" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(PUSH" + to_string(i) + ")"));
 	for (unsigned i = 1; i <= 16; i++)
-		BOOST_CHECK(!successCompile("(DUP" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(DUP" + to_string(i) + ")"));
 	for (unsigned i = 1; i <= 16; i++)
-		BOOST_CHECK(!successCompile("(SWAP" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(SWAP" + to_string(i) + ")"));
 	BOOST_CHECK(!successCompile("(JUMPDEST)"));
 }
 
