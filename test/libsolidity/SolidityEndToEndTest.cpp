@@ -334,10 +334,9 @@ BOOST_AUTO_TEST_CASE(conditional_expression_functions)
 	ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs(u256(2)));
 }
 
-BOOST_AUTO_TEST_CASE(C99_scoping_activation)
+BOOST_AUTO_TEST_CASE(c99_scoping_activation)
 {
 	char const* sourceCode = R"(
-		pragma experimental "v0.5.0";
 		contract test {
 			function f() pure public returns (uint) {
 				uint x = 7;
