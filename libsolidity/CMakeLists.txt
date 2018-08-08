@@ -27,7 +27,8 @@ else()
 endif()
 
 if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
-  message("No SMT solver found. Optional SMT checking will not be available. Please install Z3 or CVC4 if it is desired.")
+  message("No SMT solver found (or it has been forcefully disabled). Optional SMT checking will not be available.\
+  \nPlease install Z3 or CVC4 or remove the option disabling them (USE_Z3, USE_CVC4).")
 endif()
 
 add_library(solidity ${sources} ${headers})

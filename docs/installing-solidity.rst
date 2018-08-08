@@ -300,6 +300,27 @@ CMake options
 
 If you are interested what CMake options are available run ``cmake .. -LH``.
 
+SMT Solvers
+-----------
+Solidity can be built against SMT solvers and will do so by default if 
+they are found in the system. Each solver can be disabled by a `cmake` option.
+
+*Note: In some cases, this can also be a potential workaround for build failures.*
+
+
+Inside the build folder you can disable them, since they are enabled by default:
+
+.. code:: bash
+
+    # disables only Z3 SMT Solver.
+    cmake .. -DUSE_Z3=OFF 
+
+    # disables only CVC4 SMT Solver.
+    cmake .. -DUSE_CVC4=OFF
+
+    # disables both Z3 and CVC4
+    cmake .. -DUSE_CVC4=OFF -DUSE_Z3=OFF
+
 The version string in detail
 ============================
 
