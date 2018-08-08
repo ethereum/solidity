@@ -446,7 +446,8 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> integerType() const;
-	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss.
+	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss,
+	/// unless the value was truncated, then a suitable type will be chosen to indicate such event.
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
