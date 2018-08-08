@@ -195,11 +195,11 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TupleType t({e.type(), s.type(), stringArray, nullptr});
 	BOOST_CHECK_EQUAL(t.identifier(), "t_tuple$_t_type$_t_enum$_Enum_$4_$_$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$_t_array$_t_string_storage_$20_storage_ptr_$__$");
 
-	TypePointer sha3fun = make_shared<FunctionType>(strings{}, strings{}, FunctionType::Kind::SHA3);
-	BOOST_CHECK_EQUAL(sha3fun->identifier(), "t_function_sha3_nonpayable$__$returns$__$");
+	TypePointer keccak256fun = make_shared<FunctionType>(strings{}, strings{}, FunctionType::Kind::KECCAK256);
+	BOOST_CHECK_EQUAL(keccak256fun->identifier(), "t_function_keccak256_nonpayable$__$returns$__$");
 
-	FunctionType metaFun(TypePointers{sha3fun}, TypePointers{s.type()});
-	BOOST_CHECK_EQUAL(metaFun.identifier(), "t_function_internal_nonpayable$_t_function_sha3_nonpayable$__$returns$__$_$returns$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$");
+	FunctionType metaFun(TypePointers{keccak256fun}, TypePointers{s.type()});
+	BOOST_CHECK_EQUAL(metaFun.identifier(), "t_function_internal_nonpayable$_t_function_keccak256_nonpayable$__$returns$__$_$returns$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$");
 
 	TypePointer m = make_shared<MappingType>(Type::fromElementaryTypeName("bytes32"), s.type());
 	MappingType m2(Type::fromElementaryTypeName("uint64"), m);

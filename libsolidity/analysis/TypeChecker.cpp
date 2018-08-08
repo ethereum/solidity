@@ -1685,7 +1685,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 	{
-		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::SHA3)
+		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::KECCAK256)
 			m_errorReporter.typeError(_functionCall.location(), "\"sha3\" has been deprecated in favour of \"keccak256\"");
 		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
 			m_errorReporter.typeError(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
@@ -1759,7 +1759,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
 		}
 		else if (
-			functionType->kind() == FunctionType::Kind::SHA3 ||
+			functionType->kind() == FunctionType::Kind::KECCAK256 ||
 			functionType->kind() == FunctionType::Kind::SHA256 ||
 			functionType->kind() == FunctionType::Kind::RIPEMD160
 		)
@@ -1804,7 +1804,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				)
 					msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
 				else if (
-					functionType->kind() == FunctionType::Kind::SHA3 ||
+					functionType->kind() == FunctionType::Kind::KECCAK256 ||
 					functionType->kind() == FunctionType::Kind::SHA256 ||
 					functionType->kind() == FunctionType::Kind::RIPEMD160
 				)

@@ -2509,7 +2509,7 @@ string FunctionType::richIdentifier() const
 	case Kind::Creation: id += "creation"; break;
 	case Kind::Send: id += "send"; break;
 	case Kind::Transfer: id += "transfer"; break;
-	case Kind::SHA3: id += "sha3"; break;
+	case Kind::KECCAK256: id += "keccak256"; break;
 	case Kind::Selfdestruct: id += "selfdestruct"; break;
 	case Kind::Revert: id += "revert"; break;
 	case Kind::ECRecover: id += "ecrecover"; break;
@@ -2894,7 +2894,7 @@ bool FunctionType::isPure() const
 	// FIXME: replace this with m_stateMutability == StateMutability::Pure once
 	//        the callgraph analyzer is in place
 	return
-		m_kind == Kind::SHA3 ||
+		m_kind == Kind::KECCAK256 ||
 		m_kind == Kind::ECRecover ||
 		m_kind == Kind::SHA256 ||
 		m_kind == Kind::RIPEMD160 ||
@@ -2999,7 +2999,7 @@ bool FunctionType::padArguments() const
 	case Kind::BareDelegateCall:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
-	case Kind::SHA3:
+	case Kind::KECCAK256:
 	case Kind::ABIEncodePacked:
 		return false;
 	default:

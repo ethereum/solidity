@@ -899,7 +899,7 @@ public:
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
 		Transfer, ///< CALL, but without data and throws on error
-		SHA3, ///< SHA3
+		KECCAK256, ///< KECCAK256
 		Selfdestruct, ///< SELFDESTRUCT
 		Revert, ///< REVERT
 		ECRecover, ///< CALL to special contract for ecrecover
@@ -1070,7 +1070,7 @@ public:
 	{
 		switch (m_kind)
 		{
-		case FunctionType::Kind::SHA3:
+		case FunctionType::Kind::KECCAK256:
 		case FunctionType::Kind::SHA256:
 		case FunctionType::Kind::RIPEMD160:
 		case FunctionType::Kind::BareCall:
