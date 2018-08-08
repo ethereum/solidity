@@ -23,6 +23,12 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
+#define SOLC_NOEXCEPT noexcept
+#else
+#define SOLC_NOEXCEPT
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -30,16 +36,16 @@ extern "C" {
 /// heap-allocated and are free'd by the caller.
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 
-char const* license();
-char const* version();
-char const* compileJSON(char const* _input, bool _optimize);
-char const* compileJSONMulti(char const* _input, bool _optimize);
-char const* compileJSONCallback(char const* _input, bool _optimize, CStyleReadFileCallback _readCallback);
-char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback);
+char const* license() SOLC_NOEXCEPT;
+char const* version() SOLC_NOEXCEPT;
+char const* compileJSON(char const* _input, bool _optimize) SOLC_NOEXCEPT;
+char const* compileJSONMulti(char const* _input, bool _optimize) SOLC_NOEXCEPT;
+char const* compileJSONCallback(char const* _input, bool _optimize, CStyleReadFileCallback _readCallback) SOLC_NOEXCEPT;
+char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback) SOLC_NOEXCEPT;
 
-char const* solidity_license();
-char const* solidity_version();
-char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback);
+char const* solidity_license() SOLC_NOEXCEPT;
+char const* solidity_version() SOLC_NOEXCEPT;
+char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) SOLC_NOEXCEPT;
 
 #ifdef __cplusplus
 }

@@ -270,46 +270,46 @@ static string s_outputBuffer;
 
 extern "C"
 {
-extern char const* license()
+extern char const* license() noexcept
 {
 	static string fullLicenseText = otherLicenses + licenseText;
 	return fullLicenseText.c_str();
 }
-extern char const* version()
+extern char const* version() noexcept
 {
 	return VersionString.c_str();
 }
-extern char const* compileJSON(char const* _input, bool _optimize)
+extern char const* compileJSON(char const* _input, bool _optimize) noexcept
 {
 	s_outputBuffer = compileSingle(_input, _optimize);
 	return s_outputBuffer.c_str();
 }
-extern char const* compileJSONMulti(char const* _input, bool _optimize)
+extern char const* compileJSONMulti(char const* _input, bool _optimize) noexcept
 {
 	s_outputBuffer = compileMulti(_input, _optimize);
 	return s_outputBuffer.c_str();
 }
-extern char const* compileJSONCallback(char const* _input, bool _optimize, CStyleReadFileCallback _readCallback)
+extern char const* compileJSONCallback(char const* _input, bool _optimize, CStyleReadFileCallback _readCallback) noexcept
 {
 	s_outputBuffer = compileMulti(_input, _optimize, _readCallback);
 	return s_outputBuffer.c_str();
 }
-extern char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback)
+extern char const* compileStandard(char const* _input, CStyleReadFileCallback _readCallback) noexcept
 {
 	s_outputBuffer = compileStandardInternal(_input, _readCallback);
 	return s_outputBuffer.c_str();
 }
-extern char const* solidity_license()
+extern char const* solidity_license() noexcept
 {
 	/// todo: make this the default or an alias
 	return license();
 }
-extern char const* solidity_version()
+extern char const* solidity_version() noexcept
 {
 	/// todo: make this the default or an alias
 	return version();
 }
-extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback)
+extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) noexcept
 {
 	/// todo: make this the default or an alias
 	return compileStandard(_input, _readCallback);

@@ -567,7 +567,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	return output;
 }
 
-Json::Value StandardCompiler::compile(Json::Value const& _input)
+Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 {
 	try
 	{
@@ -591,7 +591,7 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	}
 }
 
-string StandardCompiler::compile(string const& _input)
+string StandardCompiler::compile(string const& _input) noexcept
 {
 	Json::Value input;
 	string errors;
