@@ -1158,7 +1158,6 @@ Interfaces are similar to abstract contracts, but they cannot have any functions
 - Cannot define constructor.
 - Cannot define variables.
 - Cannot define structs.
-- Cannot define enums.
 
 Some of these restrictions might be lifted in the future.
 
