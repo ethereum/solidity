@@ -779,11 +779,9 @@ bool ContractCompiler::visit(Return const& _return)
 	return false;
 }
 
-bool ContractCompiler::visit(Throw const& _throw)
+bool ContractCompiler::visit(Throw const&)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, _throw);
-	// Do not send back an error detail.
-	m_context.appendRevert();
+	solAssert(false, "Throw statement is disallowed.");
 	return false;
 }
 
