@@ -117,7 +117,7 @@ public:
 		if (occurrences > 32)
 		{
 			infos.resize(32);
-			_message += " Truncated from " + boost::lexical_cast<std::string>(occurrences) + " to the first 32 occurrences.";
+			_message += " Truncated from " + std::to_string(occurrences) + " to the first 32 occurrences.";
 		}
 	}
 

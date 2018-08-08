@@ -43,7 +43,7 @@ string Exception::lineInfo() const
 		ret += *file;
 	ret += ':';
 	if (line)
-		ret += boost::lexical_cast<string>(*line);
+		ret += std::to_string(*line);
 	return ret;
 }
 
