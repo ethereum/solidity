@@ -261,6 +261,7 @@ namespace solidity
 	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
+	T(Illegal_Hex, "ILLEGAL_HEX", 0)								   \
 	\
 	/* Scanner-internal use only. */                                   \
 	T(Whitespace, NULL, 0)
