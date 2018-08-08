@@ -4,12 +4,22 @@ if (USE_CVC4)
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(CVC4 DEFAULT_MSG CVC4_LIBRARY CVC4_INCLUDE_DIR)
     if(CVC4_FOUND)
-        find_library(CLN_LIBRARY NAMES cln)
-        if(CLN_LIBRARY)
-            set(CVC4_LIBRARIES ${CVC4_LIBRARY} ${CLN_LIBRARY})
-        else()
-            set(CVC4_LIBRARIES ${CVC4_LIBRARY})
-        endif()
+        # CVC4 may depend on either CLN or GMP.
+        # We can assume that the one it requires is present on the system,
+        # so we quietly try to find both and link against them, if they are
+        # present.
+        find_package(CLN QUIET)
+        find_package(GMP QUIET)
+
+        set(CVC4_LIBRARIES ${CVC4_LIBRARY})
+
+        if (CLN_FOUND)
+            set(CVC4_LIBRARIES ${CVC4_LIBRARIES} ${CLN_LIBRARY})
+        endif ()
+
+        if (GMP_FOUND)
+            set(CVC4_LIBRARIES ${CVC4_LIBRARIES} ${GMP_LIBRARY})
+        endif ()
     endif()
 else()
     set(CVC4_FOUND FALSE)
