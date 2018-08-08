@@ -12925,7 +12925,7 @@ BOOST_AUTO_TEST_CASE(modifier_area_mutability)
 	char const* sourceCode = R"(
 		contract C {
 			apply payable {
-				function f() returns (uint256) {
+				function f() public returns (uint256) {
 					return msg.value;
 				}
 			}
@@ -12933,6 +12933,21 @@ BOOST_AUTO_TEST_CASE(modifier_area_mutability)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunctionWithValue("f()", 1337), encodeArgs(1337));
+}
+
+BOOST_AUTO_TEST_CASE(modifier_area_visibility)
+{
+	char const* sourceCode = R"(
+		contract C {
+			apply public {
+				function f() returns (uint256) {
+					return 87;
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(87));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
