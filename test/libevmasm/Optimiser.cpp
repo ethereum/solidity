@@ -30,7 +30,6 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <string>
 #include <tuple>

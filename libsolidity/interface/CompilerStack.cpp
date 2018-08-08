@@ -925,17 +925,17 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 		if (components-- > 0)
 		{
 			if (location.start != prevStart)
-				ret += std::to_string(location.start);
+				ret += to_string(location.start);
 			if (components-- > 0)
 			{
 				ret += ':';
 				if (length != prevLength)
-					ret += std::to_string(length);
+					ret += to_string(length);
 				if (components-- > 0)
 				{
 					ret += ':';
 					if (sourceIndex != prevSourceIndex)
-						ret += std::to_string(sourceIndex);
+						ret += to_string(sourceIndex);
 					if (components-- > 0)
 					{
 						ret += ':';

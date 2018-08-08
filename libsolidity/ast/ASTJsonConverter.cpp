@@ -126,7 +126,7 @@ string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location)
 	int length = -1;
 	if (_location.start >= 0 && _location.end >= 0)
 		length = _location.end - _location.start;
-	return std::to_string(_location.start) + ":" + std::to_string(length) + ":" + std::to_string(sourceIndex);
+	return to_string(_location.start) + ":" + to_string(length) + ":" + to_string(sourceIndex);
 }
 
 string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePath)

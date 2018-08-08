@@ -143,7 +143,7 @@ void dev::lll::parseTreeLLL(string const& _s, sp::utree& o_out)
 	catch (qi::expectation_failure<it> const& e)
 	{
 		std::string fragment(e.first, e.last);
-		std::string loc = std::to_string(std::distance(s.cbegin(), e.first) - 1);
+		std::string loc = to_string(std::distance(s.cbegin(), e.first) - 1);
 		std::string reason("Lexer failure at " + loc + ": '" + fragment + "'");
 		BOOST_THROW_EXCEPTION(ParserException() << errinfo_comment(reason));
 	}

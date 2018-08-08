@@ -31,7 +31,7 @@ string NameDispenser::newName(string const& _prefix)
 	while (name.empty() || m_usedNames.count(name))
 	{
 		suffix++;
-		name = _prefix + "_" + std::to_string(suffix);
+		name = _prefix + "_" + to_string(suffix);
 	}
 	m_usedNames.insert(name);
 	return name;

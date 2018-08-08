@@ -279,7 +279,7 @@ assembly::Expression Parser::parseExpression()
 				"Expected '(' (instruction \"" +
 				instructionNames().at(instr.instruction) +
 				"\" expects " +
-				boost::lexical_cast<string>(args) +
+				to_string(args) +
 				" arguments)"
 			));
 	}
@@ -502,7 +502,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 					"Expected expression (instruction \"" +
 					instructionNames().at(instr) +
 					"\" expects " +
-					boost::lexical_cast<string>(args) +
+					to_string(args) +
 					" arguments)"
 				));
 
@@ -514,7 +514,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 						"Expected ',' (instruction \"" +
 						instructionNames().at(instr) +
 						"\" expects " +
-						boost::lexical_cast<string>(args) +
+						to_string(args) +
 						" arguments)"
 					));
 				else
@@ -527,7 +527,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 				"Expected ')' (instruction \"" +
 				instructionNames().at(instr) +
 				"\" expects " +
-				boost::lexical_cast<string>(args) +
+				to_string(args) +
 				" arguments)"
 			));
 		expectToken(Token::RParen);

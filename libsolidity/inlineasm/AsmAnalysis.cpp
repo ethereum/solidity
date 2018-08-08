@@ -85,7 +85,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	{
 		m_errorReporter.typeError(
 			_literal.location,
-			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
+			"String literal too long (" + to_string(_literal.value.size()) + " > 32)"
 		);
 		return false;
 	}
@@ -185,7 +185,7 @@ bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
 		Error::Type errorType = m_flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
-			boost::lexical_cast<string>(m_stackHeight - initialStackHeight) +
+			to_string(m_stackHeight - initialStackHeight) +
 			" value" +
 			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
 			"). Use ``pop()`` or assign them.";
@@ -322,8 +322,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		{
 			m_errorReporter.typeError(
 				_funCall.functionName.location,
-				"Expected " + boost::lexical_cast<string>(arguments) + " arguments but got " +
-				boost::lexical_cast<string>(_funCall.arguments.size()) + "."
+				"Expected " + to_string(arguments) + " arguments but got " +
+				to_string(_funCall.arguments.size()) + "."
 			);
 			success = false;
 		}
@@ -477,7 +477,7 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 		m_errorReporter.typeError(
 			_location,
 			"Expected expression to return one item to the stack, but did return " +
-			boost::lexical_cast<string>(m_stackHeight - _oldHeight) +
+			to_string(m_stackHeight - _oldHeight) +
 			" items."
 		);
 		return false;

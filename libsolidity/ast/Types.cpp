@@ -478,7 +478,7 @@ string IntegerType::richIdentifier() const
 	if (isAddress())
 		return "t_address";
 	else
-		return "t_" + string(isSigned() ? "" : "u") + "int" + std::to_string(numBits());
+		return "t_" + string(isSigned() ? "" : "u") + "int" + to_string(numBits());
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -644,7 +644,7 @@ FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, 
 
 string FixedPointType::richIdentifier() const
 {
-	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(m_totalBits) + "x" + std::to_string(m_fractionalDigits);
+	return "t_" + string(isSigned() ? "" : "u") + "fixed" + to_string(m_totalBits) + "x" + to_string(m_fractionalDigits);
 }
 
 bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -1390,7 +1390,7 @@ MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) c
 
 string FixedBytesType::richIdentifier() const
 {
-	return "t_bytes" + std::to_string(m_bytes);
+	return "t_bytes" + to_string(m_bytes);
 }
 
 bool FixedBytesType::operator==(Type const& _other) const
@@ -1833,7 +1833,7 @@ TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) 
 
 string ContractType::richIdentifier() const
 {
-	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + std::to_string(m_contract.id());
+	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + to_string(m_contract.id());
 }
 
 bool ContractType::operator==(Type const& _other) const
@@ -1947,7 +1947,7 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 
 string StructType::richIdentifier() const
 {
-	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + std::to_string(m_struct.id()) + identifierLocationSuffix();
+	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + to_string(m_struct.id()) + identifierLocationSuffix();
 }
 
 bool StructType::operator==(Type const& _other) const
@@ -2173,7 +2173,7 @@ TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 
 string EnumType::richIdentifier() const
 {
-	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + std::to_string(m_enum.id());
+	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + to_string(m_enum.id());
 }
 
 bool EnumType::operator==(Type const& _other) const
@@ -3143,7 +3143,7 @@ string ModifierType::toString(bool _short) const
 
 string ModuleType::richIdentifier() const
 {
-	return "t_module_" + std::to_string(m_sourceUnit.id());
+	return "t_module_" + to_string(m_sourceUnit.id());
 }
 
 bool ModuleType::operator==(Type const& _other) const

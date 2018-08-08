@@ -529,7 +529,7 @@ int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const&
 	if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
 	{
 		solUnimplemented(
-			"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")"
+			"Variable inaccessible, too deep inside stack (" + to_string(heightDiff) + ")"
 		);
 		return 0;
 	}
