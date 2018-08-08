@@ -725,14 +725,11 @@ Members
 .. warning::
     It is not yet possible to use arrays of arrays in external functions.
 
-.. warning::
-    Due to limitations of the EVM, it is not possible to return
-    dynamic content from external function calls. The function ``f`` in
-    ``contract C { function f() returns (uint[]) { ... } }`` will return
-    something if called from web3.js, but not if called from Solidity.
-
-    The only workaround for now is to use large statically-sized arrays.
-
+.. note::
+    In EVM versions before Byzantium, it was not possible to access
+    dynamic arrays return from function calls. If you call functions
+    that return dynamic arrays, make sure to use an EVM that is set to
+    Byzantium mode.
 
 ::
 
