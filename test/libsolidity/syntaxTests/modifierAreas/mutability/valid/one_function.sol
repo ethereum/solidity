@@ -1,7 +1,5 @@
 contract C {
     apply pure {
-        function f() {}
+        function f() public {}
     }
 }
-// ----
-// Warning: (38-53): No visibility specified. Defaulting to "public". 
