@@ -24,6 +24,9 @@
 #include <libsolidity/interface/Version.h>
 #include <boost/algorithm/cxx11/all_of.hpp>
 
+#include <boost/algorithm/string.hpp>
+#include <string>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -179,6 +182,45 @@ bool SyntaxChecker::visit(Throw const& _throwStatement)
 		_throwStatement.location(),
 		"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
 	);
+
+	return true;
+}
+
+bool SyntaxChecker::visit(Literal const& _literal)
+{
+	if (_literal.token() != Token::Number)
+		return true;
+
+	ASTString const& value = _literal.value();
+	solAssert(!value.empty(), "");
+
+	// Generic checks no matter what base this number literal is of:
+	if (value.back() == '_')
+	{
+		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No trailing underscores allowed.");
+		return true;
+	}
+
+	if (value.find("__") != ASTString::npos)
+	{
+		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.");
+		return true;
+	}
+
+	if (!_literal.isHexNumber()) // decimal literal
+	{
+		if (value.find("._") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
+
+		if (value.find("_.") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
+
+		if (value.find("_e") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore at the end of the mantissa allowed.");
+
+		if (value.find("e_") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore in front of exponent allowed.");
+	}
 
 	return true;
 }

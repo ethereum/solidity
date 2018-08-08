@@ -155,6 +155,76 @@ BOOST_AUTO_TEST_CASE(trailing_dot)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
+BOOST_AUTO_TEST_CASE(leading_underscore_decimal_is_identifier)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("_1.2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_decimal_after_dot_illegal)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("1._2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+
+	scanner.reset(CharStream("1._"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_exp_are_identifier)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("_1e2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_exp_after_e_illegal)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("1e_2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "1e_2");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_hex_illegal)
+{
+	Scanner scanner(CharStream("0x_abc"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(fixed_number_invalid_underscore_front)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("12._1234_1234"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(number_literals_with_trailing_underscore_at_eos)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("0x123_"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+
+	scanner.reset(CharStream("123_"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+
+	scanner.reset(CharStream("12.34_"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
 BOOST_AUTO_TEST_CASE(negative_numbers)
 {
 	Scanner scanner(CharStream("var x = -.2 + -0x78 + -7.3 + 8.9 + 2e-2;"));

@@ -724,10 +724,18 @@ Token::Value Scanner::scanHexString()
 	return Token::StringLiteral;
 }
 
+// Parse for regex [:digit:]+(_[:digit:]+)*
 void Scanner::scanDecimalDigits()
 {
-	while (isDecimalDigit(m_char))
-		addLiteralCharAndAdvance();
+	// MUST begin with a decimal digit.
+	if (!isDecimalDigit(m_char))
+		return;
+
+	// May continue with decimal digit or underscore for grouping.
+	do addLiteralCharAndAdvance();
+	while (!m_source.isPastEndOfInput() && (isDecimalDigit(m_char) || m_char == '_'));
+
+	// Defer further validation of underscore to SyntaxChecker.
 }
 
 Token::Value Scanner::scanNumber(char _charSeen)
@@ -738,6 +746,8 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	{
 		// we have already seen a decimal point of the float
 		addLiteralChar('.');
+		if (m_char == '_')
+			return Token::Illegal;
 		scanDecimalDigits();  // we know we have at least one digit
 	}
 	else
@@ -755,7 +765,8 @@ Token::Value Scanner::scanNumber(char _charSeen)
 				addLiteralCharAndAdvance();
 				if (!isHexDigit(m_char))
 					return Token::Illegal; // we must have at least one hex digit after 'x'/'X'
-				while (isHexDigit(m_char))
+
+				while (isHexDigit(m_char) || m_char == '_') // We keep the underscores for later validation
 					addLiteralCharAndAdvance();
 			}
 			else if (isDecimalDigit(m_char))
@@ -768,9 +779,17 @@ Token::Value Scanner::scanNumber(char _charSeen)
 			scanDecimalDigits();  // optional
 			if (m_char == '.')
 			{
-				// A '.' has to be followed by a number.
+				if (!m_source.isPastEndOfInput(1) && m_source.get(1) == '_')
+				{
+					// Assume the input may be a floating point number with leading '_' in fraction part.
+					// Recover by consuming it all but returning `Illegal` right away.
+					addLiteralCharAndAdvance(); // '.'
+					addLiteralCharAndAdvance(); // '_'
+					scanDecimalDigits();
+				}
 				if (m_source.isPastEndOfInput() || !isDecimalDigit(m_source.get(1)))
 				{
+					// A '.' has to be followed by a number.
 					literal.complete();
 					return Token::Number;
 				}
@@ -785,8 +804,18 @@ Token::Value Scanner::scanNumber(char _charSeen)
 		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
 		if (kind != DECIMAL)
 			return Token::Illegal;
+		else if (!m_source.isPastEndOfInput(1) && m_source.get(1) == '_')
+		{
+			// Recover from wrongly placed underscore as delimiter in literal with scientific
+			// notation by consuming until the end.
+			addLiteralCharAndAdvance(); // 'e'
+			addLiteralCharAndAdvance(); // '_'
+			scanDecimalDigits();
+			literal.complete();
+			return Token::Number;
+		}
 		// scan exponent
-		addLiteralCharAndAdvance();
+		addLiteralCharAndAdvance(); // 'e' | 'E'
 		if (m_char == '+' || m_char == '-')
 			addLiteralCharAndAdvance();
 		if (!isDecimalDigit(m_char))
