@@ -110,11 +110,11 @@ This means that cyclic creation dependencies are impossible.
 
         function isTokenTransferOK(address currentOwner, address newOwner)
             public
-            view
+            pure
             returns (bool ok)
         {
             // Check some arbitrary condition.
-            return currentOwner != newOwner;
+            return keccak256(abi.encodePacked(currentOwner, newOwner))[0] == 0x7f;
         }
     }
 
@@ -187,8 +187,6 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
 
 ::
 
-    // This will not compile
-
     pragma solidity ^0.4.0;
 
     contract C {
@@ -200,6 +198,7 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
         function compute(uint a, uint b) internal pure returns (uint) { return a + b; }
     }
 
+    // This will not compile
     contract D {
         function readData() public {
             C c = new C();
@@ -227,8 +226,8 @@ The compiler automatically creates getter functions for
 all **public** state variables. For the contract given below, the compiler will
 generate a function called ``data`` that does not take any
 arguments and returns a ``uint``, the value of the state
-variable ``data``. The initialization of state variables can
-be done at declaration.
+variable ``data``. State variables can be initialized
+when they are declared.
 
 ::
 
@@ -240,8 +239,8 @@ be done at declaration.
 
     contract Caller {
         C c = new C();
-        function f() public {
-            uint local = c.data();
+        function f() public view returns (uint) {
+            return c.data();
         }
     }
 
@@ -256,9 +255,9 @@ it is evaluated as a state variable.  If it is accessed externally
 
     contract C {
         uint public data;
-        function x() public {
+        function x() public returns (uint) {
             data = 3; // internal access
-            uint val = this.data(); // external access
+            return this.data(); // external access
         }
     }
 
@@ -615,14 +614,13 @@ Like any function, the fallback function can execute complex operations as long 
     }
 
     contract Caller {
-        function callTest(Test test) public {
-            address(test).call(abi.encodeWithSignature("nonExistingFunction()"));
+        function callTest(Test test) public returns (bool) {
+            require(address(test).call(abi.encodeWithSignature("nonExistingFunction()")));
             // results in test.x becoming == 1.
 
             // If someone sends ether to that contract,
-            // the transaction will fail and reject the
-            // Ether.
-            address(test).send(2 ether);
+            // the transfer will fail, i.e. this returns false here.
+            return address(test).send(2 ether);
         }
     }
 
@@ -633,9 +631,11 @@ Like any function, the fallback function can execute complex operations as long 
 Function Overloading
 ====================
 
-A Contract can have multiple functions of the same name but with different arguments.
-This also applies to inherited functions. The following example shows overloading of the
-``f`` function in the scope of contract ``A``.
+A contract can have multiple functions of the same name but with different parameter
+types.
+This process is called "overloading" and also applies to inherited functions.
+The following example shows overloading of the function
+``f`` in the scope of contract ``A``.
 
 ::
 
@@ -643,11 +643,12 @@ This also applies to inherited functions. The following example shows overloadin
 
     contract A {
         function f(uint _in) public pure returns (uint out) {
-            out = 1;
+            out = _in;
         }
 
-        function f(uint _in, bytes32 _key) public pure returns (uint out) {
-            out = 2;
+        function f(uint _in, bool _really) public pure returns (uint out) {
+            if (_really)
+                out = _in;
         }
     }
 
@@ -656,9 +657,9 @@ externally visible functions differ by their Solidity types but not by their ext
 
 ::
 
-    // This will not compile
     pragma solidity ^0.4.16;
 
+    // This will not compile
     contract A {
         function f(B _in) public pure returns (B out) {
             out = _in;
@@ -1037,10 +1038,12 @@ derived contracts need to specify all of them. This can be done in two ways::
         constructor(uint _x) public { x = _x; }
     }
 
+    // Either directly specify in the inheritance list...
     contract Derived1 is Base(7) {
-        constructor(uint _y) public {}
+        constructor() public {}
     }
 
+    // or through a "modifier" of the derived constructor.
     contract Derived2 is Base {
         constructor(uint _y) Base(_y * _y) public {}
     }
@@ -1079,12 +1082,11 @@ error "Linearization of inheritance graph impossible".
 
 ::
 
-    // This will not compile
-
     pragma solidity ^0.4.0;
 
     contract X {}
     contract A is X {}
+    // This will not compile
     contract C is A, X {}
 
 The reason for this is that ``C`` requests ``X`` to override ``A``
@@ -1342,6 +1344,7 @@ custom types without the overhead of external function calls:
             BigInt.bigint memory x = BigInt.fromUint(7);
             BigInt.bigint memory y = BigInt.fromUint(uint(-1));
             BigInt.bigint memory z = x.add(y);
+            assert(z.limb(1) > 0);
         }
     }
 

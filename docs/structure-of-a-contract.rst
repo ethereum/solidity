@@ -75,7 +75,7 @@ Function modifiers can be used to amend the semantics of functions in a declarat
             _;
         }
 
-        function abort() public onlySeller { // Modifier usage
+        function abort() public view onlySeller { // Modifier usage
             // ...
         }
     }
