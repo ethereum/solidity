@@ -23,14 +23,15 @@ it is also possible to provide path redirects using ``prefix=path`` in the follo
 
 ::
 
-    solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ =/usr/local/lib/fallback file.sol
+    solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ file.sol
 
 This essentially instructs the compiler to search for anything starting with
-``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin`` and if it does not
-find the file there, it will look at ``/usr/local/lib/fallback`` (the empty prefix
-always matches). ``solc`` will not read files from the filesystem that lie outside of
+``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin``.
+``solc`` will not read files from the filesystem that lie outside of
 the remapping targets and outside of the directories where explicitly specified source
-files reside, so things like ``import "/etc/passwd";`` only work if you add ``=/`` as a remapping.
+files reside, so things like ``import "/etc/passwd";`` only work if you add ``/=/`` as a remapping.
+
+An empty remapping prefix is not allowed.
 
 If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 
