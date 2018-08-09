@@ -7,8 +7,8 @@ pre {
 }
 
 .wy-table-responsive table td, .wy-table-responsive table th {
-  white-space: pre-wrap;
+  white-space: normal;
 }
-.wy-table-responsive table td, .wy-table-responsive table th {
-  white-space: pre-wrap;
+.rst-content table.docutils td {
+  vertical-align: top;
 }
