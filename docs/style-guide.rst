@@ -52,31 +52,35 @@ Surround top level declarations in solidity source with two blank lines.
 
 Yes::
 
+    pragma solidity ^0.4.0;
+
     contract A {
-        ...
+        // ...
     }
 
 
     contract B {
-        ...
+        // ...
     }
 
 
     contract C {
-        ...
+        // ...
     }
 
 No::
 
+    pragma solidity ^0.4.0;
+
     contract A {
-        ...
+        // ...
     }
     contract B {
-        ...
+        // ...
     }
 
     contract C {
-        ...
+        // ...
     }
 
 Within a contract surround function declarations with a single blank line.
@@ -85,30 +89,34 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
+    pragma solidity ^0.4.0;
+
     contract A {
-        function spam() public;
-        function ham() public;
+        function spam() public pure;
+        function ham() public pure;
     }
 
 
     contract B is A {
-        function spam() public {
-            ...
+        function spam() public pure {
+            // ...
         }
 
-        function ham() public {
-            ...
+        function ham() public pure {
+            // ...
         }
     }
 
 No::
 
+    pragma solidity ^0.4.0;
+
     contract A {
-        function spam() public {
-            ...
+        function spam() public pure {
+            // ...
         }
-        function ham() public {
-            ...
+        function ham() public pure {
+            // ...
         }
     }
 
@@ -229,22 +237,24 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
+    pragma solidity ^0.4.0;
+
     import "./Owned.sol";
 
-
     contract A {
-        ...
+        // ...
     }
 
-
     contract B is Owned {
-        ...
+        // ...
     }
 
 No::
 
+    pragma solidity ^0.4.0;
+
     contract A {
-        ...
+        // ...
     }
 
 
@@ -252,7 +262,7 @@ No::
 
 
     contract B is Owned {
-        ...
+        // ...
     }
 
 Order of Functions
@@ -273,13 +283,15 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
+    pragma solidity ^0.4.0;
+
     contract A {
         constructor() public {
-            ...
+            // ...
         }
 
         function() external {
-            ...
+            // ...
         }
 
         // External functions
@@ -303,13 +315,15 @@ Yes::
 
 No::
 
+    pragma solidity ^0.4.0;
+
     contract A {
 
         // External functions
         // ...
 
         function() external {
-            ...
+            // ...
         }
 
         // Private functions
@@ -319,7 +333,7 @@ No::
         // ...
 
         constructor() public {
-            ...
+            // ...
         }
 
         // Internal functions
@@ -397,6 +411,8 @@ should:
 
 Yes::
 
+    pragma solidity ^0.4.0;
+
     contract Coin {
         struct Bank {
             address owner;
@@ -405,6 +421,8 @@ Yes::
     }
 
 No::
+
+    pragma solidity ^0.4.0;
 
     contract Coin
     {
@@ -705,7 +723,25 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
+    pragma solidity ^0.4.0;
+
+    // Base contracts just to make this compile
+    contract B {
+        constructor(uint) public {
+        }
+    }
+    contract C {
+        constructor(uint, uint) public {
+        }
+    }
+    contract D {
+        constructor(uint) public {
+        }
+    }
+
     contract A is B, C, D {
+        uint x;
+
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
             B(param1)
             C(param2, param3)
@@ -713,29 +749,50 @@ Yes::
             public
         {
             // do something with param5
+            x = param5;
         }
     }
 
 No::
 
+    pragma solidity ^0.4.0;
+
+    // Base contracts just to make this compile
+    contract B {
+        constructor(uint) public {
+        }
+    }
+    contract C {
+        constructor(uint, uint) public {
+        }
+    }
+    contract D {
+        constructor(uint) public {
+        }
+    }
+
     contract A is B, C, D {
+        uint x;
+
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
         B(param1)
         C(param2, param3)
         D(param4)
         public
         {
-            // do something with param5
+            x = param5;
         }
     }
 
-    contract A is B, C, D {
+    contract X is B, C, D {
+        uint x;
+
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
             B(param1)
             C(param2, param3)
             D(param4)
             public {
-            // do something with param5
+            x = param5;
         }
     }
 
@@ -875,6 +932,8 @@ As shown in the example below, if the contract name is `Congress` and the librar
 
 Yes::
 
+    pragma solidity ^0.4.0;
+
     // Owned.sol
     contract Owned {
          address public owner;
@@ -897,10 +956,12 @@ Yes::
     import "./Owned.sol";
 
     contract Congress is Owned, TokenRecipient {
-        ...
+        //...
     }
 
 No::
+
+    pragma solidity ^0.4.0;
 
     // owned.sol
     contract owned {
@@ -924,7 +985,7 @@ No::
     import "./owned.sol";
 
     contract Congress is owned, tokenRecipient {
-        ...
+        //...
     }
 
 

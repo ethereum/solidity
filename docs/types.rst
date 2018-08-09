@@ -662,7 +662,7 @@ Allocating Memory Arrays
 Creating arrays with variable length in memory can be done using the ``new`` keyword.
 As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g. by assigning to
 the ``.length`` member). You either have to calculate the required size in advance
-or crete a new memory array and copy every element.
+or create a new memory array and copy every element.
 
 ::
 

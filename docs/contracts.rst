@@ -137,16 +137,16 @@ Functions have to be specified as being ``external``,
 For state variables, ``external`` is not possible.
 
 ``external``:
-    External functions are part of the contract
-    interface, which means they can be called from other contracts and
+    External functions are part of the contract interface,
+    which means they can be called from other contracts and
     via transactions. An external function ``f`` cannot be called
     internally (i.e. ``f()`` does not work, but ``this.f()`` works).
     External functions are sometimes more efficient when
     they receive large arrays of data.
 
 ``public``:
-    Public functions are part of the contract
-    interface and can be either called internally or via
+    Public functions are part of the contract interface
+    and can be either called internally or via
     messages. For public state variables, an automatic getter
     function (see below) is generated.
 

@@ -159,8 +159,8 @@ throws an exception or goes out of gas.
 
 .. warning::
     Any interaction with another contract imposes a potential danger, especially
-    if the source code of the contract is not known in advance. The current
-    contract hands over control to the called contract and that may potentially
+    if the source code of the contract is not known in advance. The
+    current contract hands over control to the called contract and that may potentially
     do just about anything. Even if the called contract inherits from a known parent contract,
     the inheriting contract is only required to have a correct interface. The
     implementation of the contract, however, can be completely arbitrary and thus,
@@ -293,7 +293,7 @@ These can then either be assigned to newly declared variables or to pre-existing
 
         function g() public {
             // Variables declared with type and assigned from the returned tuple,
-            // not all elements have to be specified (but the amount must match).
+            // not all elements have to be specified (but the number must match).
             (uint x, , uint y) = f();
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
