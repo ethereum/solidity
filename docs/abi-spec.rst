@@ -453,7 +453,7 @@ For example,
 
 would result in the JSON:
 
-.. code:: json
+.. code-block:: json
 
   [{
   "type":"event",
@@ -500,7 +500,7 @@ As an example, the code
 
 would result in the JSON:
 
-.. code:: json
+.. code-block:: json
 
   [
     {
