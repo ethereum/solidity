@@ -344,7 +344,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 						"(remove the \"memory\" or \"storage\" keyword)."
 					);
 			}
-			if (varLoc == Location::Default)
+			if (varLoc == Location::Default || varLoc == Location::CallData)
 				typeLoc = DataLocation::CallData;
 			else
 				typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
