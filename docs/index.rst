@@ -66,8 +66,6 @@ Available Solidity Integrations
 * `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-intellij-solidity>`_
     Solidity plugin for IntelliJ IDEA (and all other JetBrains IDEs)
 
-* `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
-    Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
 
 * `Package for SublimeText — Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
     Solidity syntax highlighting for SublimeText editor.
@@ -107,10 +105,13 @@ Discontinued:
 * `Ethereum Studio <https://live.ether.camp/>`_
     Specialized web IDE that also provides shell access to a complete Ethereum environment.
 
+* `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
+    Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
+
 Solidity Tools
 --------------
 
-* `Dapp <https://dapp.readthedocs.io>`_
+* `Dapp <https://dapp.tools/dapp/>`_
     Build tool, package manager, and deployment assistant for Solidity.
 
 * `Solidity REPL <https://github.com/raineorshine/solidity-repl>`_
