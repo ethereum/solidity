@@ -41,9 +41,9 @@ namespace test
 
 namespace
 {
-	void checkCompilation(Assembly const& _asm)
+	void checkCompilation(::dev::eth::Assembly const& _assembly)
 	{
-		LinkerObject output = _asm.assemble();
+		LinkerObject output = _assembly.assemble();
 		BOOST_CHECK(output.bytecode.size() > 0);
 		BOOST_CHECK(output.toHex().length() > 0);
 	}
@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
-	Assembly _asm;
-	_asm.setSourceLocation(SourceLocation(1, 3, make_shared<string>("root.asm")));
+	Assembly _assembly;
+	_assembly.setSourceLocation(SourceLocation(1, 3, make_shared<string>("root.asm")));
 
 	Assembly _subAsm;
 	_subAsm.setSourceLocation(SourceLocation(6, 8, make_shared<string>("sub.asm")));
@@ -62,44 +62,45 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
 
 	// Tag
-	auto tag = _asm.newTag();
-	_asm.append(tag);
+	auto tag = _assembly.newTag();
+	_assembly.append(tag);
 	// Operation
-	_asm.append(u256(1));
-	_asm.append(u256(2));
+	_assembly.append(u256(1));
+	_assembly.append(u256(2));
 	// Push
-	_asm.append(Instruction::KECCAK256);
+	_assembly.append(Instruction::KECCAK256);
 	// PushProgramSize
-	_asm.appendProgramSize();
+	_assembly.appendProgramSize();
 	// PushLibraryAddress
-	_asm.appendLibraryAddress("someLibrary");
+	_assembly.appendLibraryAddress("someLibrary");
 	// PushTag + Operation
-	_asm.appendJump(tag);
+	_assembly.appendJump(tag);
 	// PushString
-	_asm.append("Unused feature for pushing string");
+	_assembly.append("Unused feature for pushing string");
 	// PushData
-	_asm.append(bytes{0x1, 0x2, 0x3, 0x4});
+	_assembly.append(bytes{0x1, 0x2, 0x3, 0x4});
 	// PushSubSize
-	auto sub = _asm.appendSubroutine(_subAsmPtr);
+	auto sub = _assembly.appendSubroutine(_subAsmPtr);
 	// PushSub
-	_asm.pushSubroutineOffset(size_t(sub.data()));
+	_assembly.pushSubroutineOffset(size_t(sub.data()));
 	// PushDeployTimeAddress
-	_asm.append(PushDeployTimeAddress);
+	_assembly.append(PushDeployTimeAddress);
 	// Operation
-	_asm.append(Instruction::STOP);
-	_asm.appendAuxiliaryDataToEnd(bytes{0x42, 0x66});
-	_asm.appendAuxiliaryDataToEnd(bytes{0xee, 0xaa});
+	_assembly.append(Instruction::STOP);
+	_assembly.appendAuxiliaryDataToEnd(bytes{0x42, 0x66});
+	_assembly.appendAuxiliaryDataToEnd(bytes{0xee, 0xaa});
 
-	checkCompilation(_asm);
+	checkCompilation(_assembly);
+
 	BOOST_CHECK_EQUAL(
-		_asm.assemble().toHex(),
+		_assembly.assemble().toHex(),
 		"5b6001600220606773__someLibrary___________________________"
 		"6000567f556e75736564206665617475726520666f722070757368696e"
 		"6720737472696e605f6001605e7300000000000000000000000000000000000000000000"
 		"fe010203044266eeaa"
 	);
 	BOOST_CHECK_EQUAL(
-		_asm.assemblyString(),
+		_assembly.assemblyString(),
 		"    /* \"root.asm\":1:3   */\n"
 		"tag_1:\n"
 		"  keccak256(0x2, 0x1)\n"
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"auxdata: 0x4266eeaa\n"
 	);
 	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(_asm.assemblyJSON()),
+		dev::jsonCompactPrint(_assembly.assemblyJSON()),
 		"{\".auxdata\":\"4266eeaa\",\".code\":[{\"begin\":1,\"end\":3,\"name\":\"tag\",\"value\":\"1\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"value\":\"1\"},"
