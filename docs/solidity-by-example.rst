@@ -83,6 +83,10 @@ of votes.
                 // `Proposal({...})` creates a temporary
                 // Proposal object and `proposals.push(...)`
                 // appends it to the end of `proposals`.
+                // `push` method returns array length after
+                // the element is added to the array.
+                // Hence, the `index` of the element is (length - 1)
+                // as array index begins at `0` based.
                 index = proposals.push(Proposal({
                     name: proposalNames[i],
                     voteCount: 0
