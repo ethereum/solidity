@@ -44,7 +44,7 @@ Note: The solc-js project is derived from the C++
 `solc` by using Emscripten. `solc-js` can be used in JavaScript projects directly (such as Remix).
 Please refer to the solc-js repository for instructions.
 
-.. code:: bash
+.. code-block:: bash
 
     npm install -g solc
 
@@ -62,7 +62,7 @@ We provide up to date docker builds for the compiler. The ``stable``
 repository contains released versions while the ``nightly``
 repository contains potentially unstable changes in the develop branch.
 
-.. code:: bash
+.. code-block:: bash
 
     docker run ethereum/solc:stable --version
 
@@ -78,7 +78,7 @@ Binary packages of Solidity are available at
 
 We also have PPAs for Ubuntu.  For the latest stable version.
 
-.. code:: bash
+.. code-block:: bash
 
     sudo add-apt-repository ppa:ethereum/ethereum
     sudo apt-get update
@@ -86,7 +86,7 @@ We also have PPAs for Ubuntu.  For the latest stable version.
 
 If you want to use the cutting edge developer version:
 
-.. code:: bash
+.. code-block:: bash
 
     sudo add-apt-repository ppa:ethereum/ethereum
     sudo add-apt-repository ppa:ethereum/ethereum-dev
@@ -95,19 +95,19 @@ If you want to use the cutting edge developer version:
     
 We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To install the latest stable version of solc:
 
-.. code:: bash
+.. code-block:: bash
 
     sudo snap install solc
 
 Or if you want to help testing the unstable solc with the most recent changes from the development branch:
 
-.. code:: bash
+.. code-block:: bash
 
     sudo snap install solc --edge
 
 Arch Linux also has packages, albeit limited to the latest development version:
 
-.. code:: bash
+.. code-block:: bash
 
     pacman -S solidity
 
@@ -116,7 +116,7 @@ following a Jenkins to TravisCI migration, but Homebrew
 should still work just fine as a means to build-from-source.
 We will re-add the pre-built bottles soon.
 
-.. code:: bash
+.. code-block:: bash
 
     brew update
     brew upgrade
@@ -134,7 +134,7 @@ specific commit of ``solidity.rb``.
 
 Install it using ``brew``:
 
-.. code:: bash
+.. code-block:: bash
 
     brew unlink solidity
     # Install 0.4.8
@@ -142,7 +142,7 @@ Install it using ``brew``:
 
 Gentoo Linux also provides a solidity package that can be installed using ``emerge``:
 
-.. code:: bash
+.. code-block:: bash
 
     emerge dev-lang/solidity
 
@@ -156,7 +156,7 @@ Clone the Repository
 
 To clone the source code, execute the following command:
 
-.. code:: bash
+.. code-block:: bash
 
     git clone --recursive https://github.com/ethereum/solidity.git
     cd solidity
@@ -164,14 +164,14 @@ To clone the source code, execute the following command:
 If you want to help developing Solidity,
 you should fork Solidity and add your personal fork as a second remote:
 
-.. code:: bash
+.. code-block:: bash
 
     cd solidity
     git remote add personal git@github.com:[username]/solidity.git
 
 Solidity has git submodules.  Ensure they are properly loaded:
 
-.. code:: bash
+.. code-block:: bash
 
    git submodule update --init --recursive
 
@@ -187,7 +187,7 @@ If you are installing Xcode for the first time, or have just installed a new
 version then you will need to agree to the license before you can do
 command-line builds:
 
-.. code:: bash
+.. code-block:: bash
 
     sudo xcodebuild -license accept
 
@@ -244,13 +244,13 @@ We now have a "one button" script which installs all required external dependenc
 on macOS, Windows and on numerous Linux distros.  This used to be a multi-step
 manual process, but is now a one-liner:
 
-.. code:: bash
+.. code-block:: bash
 
     ./scripts/install_deps.sh
 
 Or, on Windows:
 
-.. code:: bat
+.. code-block:: bat
 
     scripts\install_deps.bat
 
@@ -263,7 +263,7 @@ Command-Line Build
 Solidity project uses CMake to configure the build.
 Building Solidity is quite similar on Linux, macOS and other Unices:
 
-.. code:: bash
+.. code-block:: bash
 
     mkdir build
     cd build
@@ -271,14 +271,14 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
 
 or even easier:
 
-.. code:: bash
+.. code-block:: bash
     
     #note: this will install binaries solc and soltest at usr/local/bin
     ./scripts/build.sh
 
 And even for Windows:
 
-.. code:: bash
+.. code-block:: bash
 
     mkdir build
     cd build
@@ -291,7 +291,7 @@ should result in Visual Studio firing up.  We suggest building
 
 Alternatively, you can build for Windows on the command-line, like so:
 
-.. code:: bash
+.. code-block:: bash
 
     cmake --build . --config RelWithDebInfo
 
@@ -310,7 +310,7 @@ they are found in the system. Each solver can be disabled by a `cmake` option.
 
 Inside the build folder you can disable them, since they are enabled by default:
 
-.. code:: bash
+.. code-block:: bash
 
     # disables only Z3 SMT Solver.
     cmake .. -DUSE_Z3=OFF 
