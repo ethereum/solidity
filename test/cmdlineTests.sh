@@ -144,6 +144,10 @@ test_solc_file_input_failures "file_not_found.sol" "" "" "\"file_not_found.sol\"
 printTask "Testing passing files that are not files..."
 test_solc_file_input_failures "." "" "" "\".\" is not a valid file."
 
+printTask "Testing passing empty remappings..."
+test_solc_file_input_failures "${0}" "=/some/remapping/target" "" "Invalid remapping: \"=/some/remapping/target\"."
+test_solc_file_input_failures "${0}" "ctx:=/some/remapping/target" "" "Invalid remapping: \"ctx:=/some/remapping/target\"."
+
 printTask "Compiling various other contracts and libraries..."
 (
 cd "$REPO_ROOT"/test/compilationTests/
