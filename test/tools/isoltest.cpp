@@ -76,6 +76,8 @@ public:
 		bool const _formatted
 	);
 
+	void runEditor(const fs::path& filename);
+
 	static string editor;
 private:
 	enum class Request
@@ -97,6 +99,28 @@ private:
 
 string TestTool::editor;
 bool TestTool::m_exitRequested = false;
+
+void TestTool::runEditor(const fs::path& filename)
+{
+#if defined(_WIN32)
+	std::string path = filename.string();
+	SHELLEXECUTEINFO ShExecInfo = { 0 };
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = path.c_str();
+	ShExecInfo.lpParameters = "";
+	ShExecInfo.lpDirectory = NULL;
+	ShExecInfo.nShow = SW_SHOW;
+	ShExecInfo.hInstApp = NULL;
+	ShellExecuteEx(&ShExecInfo);
+	WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
+#else
+	if (system((TestTool::editor + " \"" + filename.string() + "\"").c_str()))
+		cerr << "Error running editor command." << endl << endl;
+#endif
+}
 
 TestTool::Result TestTool::process()
 {
@@ -175,8 +199,7 @@ TestTool::Request TestTool::handleResponse(bool const _exception)
 			}
 		case 'e':
 			cout << endl << endl;
-			if (system((TestTool::editor + " \"" + m_path.string() + "\"").c_str()))
-				cerr << "Error running editor command." << endl << endl;
+			runEditor(m_path);
 			return Request::Rerun;
 		case 'q':
 			cout << endl;
