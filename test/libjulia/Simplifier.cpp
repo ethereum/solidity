@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(mod_and)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(not_applied)
+BOOST_AUTO_TEST_CASE(not_applied_removes_non_constant_and_not_movable)
 {
 	CHECK(
 		// The first argument of div is not constant.
@@ -148,5 +148,31 @@ BOOST_AUTO_TEST_CASE(not_applied)
 		"{ let a := div(keccak256(0, 0), 0) }"
 	);
 }
+
+BOOST_AUTO_TEST_CASE(not_applied_function_call_different_names)
+{
+	CHECK(
+		"{ function f1() -> a { } function f2() -> b {} let c := sub(f1(), f2()) }",
+		"{ function f1() -> a { } function f2() -> b {} let c := sub(f1(), f2()) }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(not_applied_function_call_different_arguments)
+{
+	CHECK(
+		"{ function f(a) -> b { } let c := sub(f(0), f(1)) }",
+		"{ function f(a) -> b { } let c := sub(f(0), f(1)) }"
+	);
+}
+
+BOOST_AUTO_TEST_CASE(not_applied_function_call_equality_not_movable)
+{
+	CHECK(
+		// Even if the functions pass the equality check, they are not movable.
+		"{ function f() -> a { } let b := sub(f(), f()) }",
+		"{ function f() -> a { } let b := sub(f(), f()) }"
+	);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
