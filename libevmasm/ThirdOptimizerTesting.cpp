@@ -1,105 +1,124 @@
 #include <libevmasm/ThirdOptimizerTesting.h>
 #include "ThirdOptimizerTesting.h"
 #include <algorithm>
+#include <tuple>
 
-
-bool dev::solidity::Pattern::matches(std::vector<AssemblyItem> _items) const
-{
-	vector<Pattern> stack;
-	for (auto const& item : _items)
-	{
-		switch (item.type())
-		{
-			case AssemblyItemType::Push:
-				stack.emplace_back(item.data());
-				break;
-			case AssemblyItemType::Operation:
-			{
-				assertThrow(stack.size() >= unsigned(item.arguments()), OptimizerException, "invalid operation on Pattern::matches");
-				vector<Pattern> arguments(stack.rbegin(), stack.rbegin() + item.arguments());
-
-				{
-					int i = item.arguments();
-					while (i--) stack.pop_back();
-				}
-
-				if (item.returnValues() == 1 && !(isSwapInstruction(item.instruction()) || isDupInstruction(item.instruction())))
-					stack.emplace_back(item.instruction(), arguments);
-				else
-				{
-					int i = item.returnValues();
-					while (i--) stack.emplace_back(AssemblyItemType::UndefinedItem);
-				}
-				break;
-			}
-			default:
-			{
-				assertThrow(stack.size() >= unsigned(item.arguments()), OptimizerException, "invalid operation on Pattern::matches");
-				{
-					int i = item.arguments();
-					while (i--) stack.pop_back();
-				}
-				{
-					int i = item.returnValues();
-					while (i--) stack.emplace_back(AssemblyItemType::UndefinedItem);
-				}
-			}
-		}
-	}
-
-	assertThrow(stack.size() == 1, OptimizerException, "operand stream did not leave stack with one item");
-
-	auto otherPattern = stack[0];
-	return this->matches(otherPattern);
-}
-
-bool dev::solidity::Pattern::matches(Pattern _other) const
+bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> _items) const
 {
 	switch (kind())
 	{
 		case Kind::Constant:
 		{
-			if (_other.kind() != Kind::Constant) return false;
-			if (!m_hasConstant) return true;
-			if (!_other.m_hasConstant) return false;
+			if (_items.size() != 1) return false;
 
-			return constant() == _other.constant();
+			if (m_hasConstant)
+				return _items[0].data() == constant();
+			else
+				return _items[0].type() == AssemblyItemType::Push;
 		}
 		case Kind::Operation:
 		{
-			if (_other.kind() != Kind::Operation) return false;
-			if (!m_hasOperationValues) return true;
-			if (!_other.m_hasOperationValues) return false;
+			if (!m_hasOperationValues) return _items.back().type() == AssemblyItemType::Operation;
 
-			auto otherArguments = _other.operands();
-			if (otherArguments.size() != m_operands.size()) return false;
+			auto const instruction = this->instruction();
 
+			if (_items.back().type() != AssemblyItemType::Operation) return false;
+			if (_items.back().instruction() != instruction) return false;
+
+			auto const argumentCount = instructionInfo(instruction).args;
+			assertThrow(unsigned(argumentCount) == operands().size(), OptimizerException, "");
+
+			if (argumentCount == 0) return _items.size() == 1;
+
+			auto parsedArguments = parseArguments(_items);
+
+			if (parsedArguments.empty()) return false;
+
+			auto requiredArgumentPatterns = operands();
+
+			assertThrow(
+				requiredArgumentPatterns.size() == parsedArguments.size(),
+				OptimizerException,
+				"required argument count and parsed argument count did not match"
+			);
+
+			for (unsigned i = 0; i < parsedArguments.size(); i++)
 			{
-				unsigned n = 0;
-				for (auto const& operand : m_operands)
-				{
-					if (!operand.matches(otherArguments[n])) return false;
-					n++;
-				}
+				auto argument = parsedArguments[i];
+
+				std::reverse(argument.begin(), argument.end());
+
+				if (!requiredArgumentPatterns[i].matches(argument)) return false;
 			}
 
 			return true;
 		}
 		case Kind::Any:
-		{
-			if (m_hasAssemblyType)
-			{
-				if (!_other.m_hasAssemblyType) return false;
-				if (assemblyItemType() == AssemblyItemType::UndefinedItem) return true;
-				return assemblyItemType() == _other.assemblyItemType();
-			}
-			else
-			{
-				// We were given the type Any
-				return true;
-			}
-		}
+			return true;
+		case Kind::Unknown:
+			return false;
 		default:
 			assertThrow(false, OptimizerException, "invalid pattern kind");
 	}
+}
+
+vector<vector<AssemblyItem>> dev::solidity::NewOptimizerPattern::parseArguments(vector<AssemblyItem> const& _items)
+{
+	auto argumentsFound = 0;
+
+	signed int stackHeight = 0;
+
+	std::vector<vector<AssemblyItem>> arguments{};
+	std::vector<AssemblyItem> currentArgument{};
+
+	for (auto it = ++_items.rbegin(); it != _items.rend(); it++)
+	{
+		stackHeight -= it->arguments();
+		stackHeight += it->returnValues();
+
+		currentArgument.push_back(*it);
+
+		if (!currentArgument.empty() && stackHeight == argumentsFound + 1)
+		{
+			arguments.push_back(currentArgument);
+			currentArgument.clear();
+			argumentsFound++;
+		}
+	}
+
+	if (!currentArgument.empty()) return {}; // Did not parse all of the items
+
+	return arguments;
+}
+
+void dev::solidity::ThirdOptimizer::addDefaultRules()
+{
+	addRules(simplificationRuleList<NewOptimizerPattern>(
+		{NewOptimizerPattern::Kind::Constant},
+		{NewOptimizerPattern::Kind::Constant},
+		{NewOptimizerPattern::Kind::Constant},
+		{NewOptimizerPattern::Kind::Operation},
+		{NewOptimizerPattern::Kind::Operation}
+	));
+}
+
+void dev::solidity::ThirdOptimizer::addRules(vector<SimplificationRule<NewOptimizerPattern>> const& _rules)
+{
+	for (auto const& rule : _rules) addRule(rule);
+}
+
+void dev::solidity::ThirdOptimizer::addRule(SimplificationRule<NewOptimizerPattern> const& _rule)
+{
+	m_rules.push_back(_rule);
+}
+
+
+
+vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(vector<AssemblyItem> _items)
+{
+	if (m_rules.empty()) addDefaultRules();
+
+
+
+	return _items;
 }

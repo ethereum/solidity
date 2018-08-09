@@ -7,8 +7,6 @@
 #include <libevmasm/SimplificationRule.h>
 #include <tuple>
 
-#define optimizerAssert(condition) assertThrow(condition, OptimizerException, "internal optimizer exception")
-
 namespace dev
 {
 namespace solidity
@@ -18,27 +16,35 @@ using namespace solidity;
 using namespace eth;
 using namespace std;
 
-class Pattern
+class NewOptimizerPattern
 {
 public:
-	enum class Kind { Operation, Constant, Any };
+	enum class Kind { Operation, Constant, Any, Unknown };
 
 public:
-	Pattern(Instruction const& _instruction, vector<Pattern> const& _operands)
+	NewOptimizerPattern(Instruction const& _instruction, vector<NewOptimizerPattern> const& _operands)
 	: m_kind(Kind::Operation), m_hasOperationValues(true), m_instruction(_instruction), m_operands(_operands)
 	{
-		optimizerAssert(unsigned(instructionInfo(_instruction).args) == _operands.size());
+		assertThrow(
+			unsigned(instructionInfo(_instruction).args) == _operands.size(),
+			OptimizerException,
+			"number of operands passed does not match instruction"
+		);
 	}
 
-	Pattern(AssemblyItemType const& _type) : m_kind(Kind::Any), m_hasAssemblyType(true), m_assemblyType(_type)  {}
+	NewOptimizerPattern(Instruction const& _instruction) : NewOptimizerPattern(_instruction, {}) {}
 
-	Pattern(u256 const& _constant) : m_kind(Kind::Constant), m_hasConstant(true), m_constant(_constant) {}
+	NewOptimizerPattern(AssemblyItemType const& _type) : m_kind(Kind::Any), m_hasAssemblyType(true), m_assemblyType(_type)  {}
 
-	Pattern(Kind const& _kind) : m_kind(_kind) {}
+	NewOptimizerPattern(u256 const& _constant) : m_kind(Kind::Constant), m_hasConstant(true), m_constant(_constant) {}
+
+	NewOptimizerPattern(unsigned const& _constant) : NewOptimizerPattern(u256(_constant)) {}
+
+	NewOptimizerPattern(Kind const& _kind) : m_kind(_kind) {}
 
 	Kind kind() const { return m_kind; }
 
-	vector<Pattern> const& operands() const
+	vector<NewOptimizerPattern> const& operands() const
 	{
 		assertThrow(m_hasOperationValues, OptimizerException, "invalid request for operands");
 		return m_operands;
@@ -52,22 +58,26 @@ public:
 
 	u256 constant() const
 	{
-		assertThrow(m_hasOperationValues, OptimizerException, "invalid request for constant");
+		assertThrow(m_hasConstant, OptimizerException, "invalid request for constant");
 		return m_constant;
 	}
 
 	AssemblyItemType assemblyItemType() const
 	{
-		assertThrow(m_hasOperationValues, OptimizerException, "invalid request for assembly item type");
+		assertThrow(m_hasAssemblyType, OptimizerException, "invalid request for assembly item type");
 		return m_assemblyType;
 	}
 
-	typedef vector<AssemblyItem>::iterator AssemblyItemIterator;
-
 	bool matches(vector<AssemblyItem> _items) const;
 
+	u256 d() const
+	{
+		assertThrow(m_hasConstant, OptimizerException, "invalid request for assembly item type");
+		return m_constant;
+	}
+
 private:
-	bool matches(Pattern _other) const;
+	static vector<vector<AssemblyItem>> parseArguments(vector<AssemblyItem> const& _items);
 
 	Kind m_kind;
 
@@ -76,7 +86,7 @@ private:
 
 	bool m_hasOperationValues = false;
 	Instruction m_instruction;
-	vector<Pattern> m_operands;
+	vector<NewOptimizerPattern> m_operands;
 
 	bool m_hasAssemblyType = false;
 	AssemblyItemType m_assemblyType;
@@ -87,7 +97,10 @@ class ThirdOptimizer
 public:
 	vector<AssemblyItem> optimize(vector<AssemblyItem> _items);
 private:
-	vector<SimplificationRule<Pattern>> m_rules;
+	void addDefaultRules();
+	void addRules(vector<SimplificationRule<NewOptimizerPattern>> const& _rules);
+	void addRule(SimplificationRule<NewOptimizerPattern> const& _rule);
+	vector<SimplificationRule<NewOptimizerPattern>> m_rules;
 };
 }
 }
