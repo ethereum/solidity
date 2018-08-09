@@ -80,6 +80,7 @@ Compiler Features:
  * Removed ``pragma experimental "v0.5.0";``.
 
 Bugfixes:
+ * Build System: Support versions of CVC4 linked against CLN instead of GMP. In case of compilation issues due to the experimental SMT solver support, the solvers can be disabled when configuring the project with CMake using ``-DUSE_CVC4=OFF`` or ``-DUSE_Z3=OFF``.
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.
  * Code Generator: Fix allocation of byte arrays (zeroed out too much memory).
  * Code Generator: Properly handle negative number literals in ABIEncoderV2.
