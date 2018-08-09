@@ -181,9 +181,17 @@ TMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     for f in *.sol
     do
+        # The contributors guide uses syntax tests, but we cannot
+        # really handle them here.
+        if grep -E 'DeclarationError:|// ----' "$f" >/dev/null
+        then
+            continue
+        fi
         echo "$f"
         opts=''
-        if grep "This will not compile" "$f" >/dev/null
+        # We expect errors if explicitly stated, or if imports
+        # are used (in the style guide)
+        if grep -E "This will not compile|import \"" "$f" >/dev/null
         then
             opts="-e"
         fi
