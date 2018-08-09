@@ -56,20 +56,10 @@ def extract_docs_cases(path):
         else:
           tests[-1] += l + '\n'
       else:
-        m = re.search(r'^    // This will not compile', l)
+        m = re.search(r'^    pragma solidity .*[0-9]+\.[0-9]+\.[0-9]+;$', l)
         if m:
-          ignore = True
-
-        if ignore:
-          # Abort if indentation is missing
-          m = re.search(r'^[^ ]+', l)
-          if m:
-            ignore = False
-        else:
-          m = re.search(r'^    pragma solidity .*[0-9]+\.[0-9]+\.[0-9]+;$', l)
-          if m:
-            inside = True
-            tests += [l]
+          inside = True
+          tests += [l]
 
     return tests
 

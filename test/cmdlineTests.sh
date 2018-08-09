@@ -43,40 +43,48 @@ function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
 
 function compileFull()
 {
+    local expected_exit_code=0
+    local expect_output=0
+    if [[ $1 = '-e' ]]
+    then
+        expected_exit_code=1
+        expect_output=1
+        shift;
+    fi
+    if [[ $1 = '-w' ]]
+    then
+        expect_output=1
+        shift;
+    fi
+
     local files="$*"
-    local output failed
+    local output
+
+    local stderr_path=$(mktemp)
 
     set +e
-    output=$( ("$SOLC" $FULLARGS $files) 2>&1 )
-    failed=$?
+    "$SOLC" $FULLARGS $files >/dev/null 2>"$stderr_path"
+    local exit_code=$?
+    local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|\^-------------------------------\^' < "$stderr_path")
     set -e
+    rm "$stderr_path"
 
-    if [ $failed -ne 0 ]
+    if [[ \
+        "$exit_code" -ne "$expected_exit_code" || \
+            ( $expect_output -eq 0 && -n "$errors" ) || \
+            ( $expect_output -ne 0 && -z "$errors" ) \
+    ]]
     then
-        printError "Compilation failed on:"
-        echo "$output"
+        printError "Unexpected compilation result:"
+        printError "Expected failure: $expected_exit_code - Expected warning / error output: $expect_output"
+        printError "Was failure: $exit_code"
+        echo "$errors"
         printError "While calling:"
         echo "\"$SOLC\" $FULLARGS $files"
         printError "Inside directory:"
         pwd
         false
     fi
-}
-
-function compileWithoutWarning()
-{
-    local files="$*"
-    local output failed
-
-    set +e
-    output=$("$SOLC" $files 2>&1)
-    failed=$?
-    # Remove the pre-release warning from the compiler output
-    output=$(echo "$output" | grep -v 'pre-release')
-    echo "$output"
-    set -e
-
-    test -z "$output" -a "$failed" -eq 0
 }
 
 printTask "Testing unknown options..."
@@ -157,7 +165,7 @@ do
     then
         echo " - $dir"
         cd "$dir"
-        compileFull *.sol */*.sol
+        compileFull -w *.sol */*.sol
         cd ..
     fi
 done
@@ -174,7 +182,16 @@ TMPDIR=$(mktemp -d)
     for f in *.sol
     do
         echo "$f"
-        compileFull "$TMPDIR/$f"
+        opts=''
+        if grep "This will not compile" "$f" >/dev/null
+        then
+            opts="-e"
+        fi
+        if grep "This will report a warning" "$f" >/dev/null
+        then
+            opts="$opts -w"
+        fi
+        compileFull $opts "$TMPDIR/$f"
     done
 )
 rm -rf "$TMPDIR"
