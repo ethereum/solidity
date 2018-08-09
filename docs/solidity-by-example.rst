@@ -62,6 +62,10 @@ of votes.
         // stores a `Voter` struct for each possible address.
         mapping(address => Voter) public voters;
 
+        // State variable that stores the index of the Proposal
+        // in the proposals array, against the proposalName as the key.
+        mapping(bytes32 => uint) public proposalNameIndex;
+
         // A dynamically-sized array of `Proposal` structs.
         Proposal[] public proposals;
 
@@ -70,6 +74,8 @@ of votes.
             chairperson = msg.sender;
             voters[chairperson].weight = 1;
 
+            uint index = 0;
+
             // For each of the provided proposal names,
             // create a new proposal object and add it
             // to the end of the array.
@@ -77,10 +83,18 @@ of votes.
                 // `Proposal({...})` creates a temporary
                 // Proposal object and `proposals.push(...)`
                 // appends it to the end of `proposals`.
-                proposals.push(Proposal({
+                // `push` method returns array length after
+                // the element is added to the array.
+                // As array index begins at `0`, the `index` 
+                // of the element is `length - 1`.
+                index = proposals.push(Proposal({
                     name: proposalNames[i],
                     voteCount: 0
-                }));
+                })) - 1 ;
+
+                // Store the index of Proposal against 
+                // proposalName as the key.
+                proposalNameIndex[proposalNames[i]] = index;
             }
         }
 
@@ -149,8 +163,9 @@ of votes.
         }
 
         /// Give your vote (including votes delegated to you)
-        /// to proposal `proposals[proposal].name`.
-        function vote(uint proposal) public {
+        /// to proposal `proposalNameIndex[proposalName]`.
+        function vote(bytes32 proposalName) public {
+            uint proposal = proposalNameIndex[proposalName];
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "Already voted.");
             sender.voted = true;
