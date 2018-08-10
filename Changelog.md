@@ -98,6 +98,7 @@ Bugfixes:
  * References Resolver: Enforce ``storage`` as data location for mappings.
  * References Resolver: Properly handle invalid references used together with ``_slot`` and ``_offset``.
  * References Resolver: Report error instead of assertion fail when FunctionType has an undeclared type as parameter.
+ * References Resolver: Fix high CPU usage when using large variable names issue. Only suggest similar name if identifiers shorter than 80 characters.
  * Type Checker: Default data location for type conversions (e.g. from literals) is memory and not storage.
  * Type Checker: Disallow assignments to mappings within tuple assignments as well.
  * Type Checker: Disallow packed encoding of arrays of structs.
