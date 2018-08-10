@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (46-53): Cannot override parent modifier area's visibility of "public".
+// SyntaxError: (40-56): Cannot override parent modifier area's visibility.

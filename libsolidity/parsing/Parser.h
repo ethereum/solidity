@@ -74,11 +74,7 @@ private:
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
 	StateMutability parseStateMutability(Token::Value _token);
-	FunctionHeaderParserResult parseFunctionHeader(
-		bool _forceEmptyName,
-		bool _allowModifiers,
-		ModifierArea const* _modifierArea = nullptr
-	);
+	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);
 	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable(
 		ModifierArea* const& _modifierArea = nullptr
 	);

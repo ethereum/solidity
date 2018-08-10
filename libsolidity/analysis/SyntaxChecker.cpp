@@ -122,6 +122,22 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	return true;
 }
 
+bool SyntaxChecker::visit(ModifierArea const& _modifierArea)
+{
+	if (_modifierArea.parent())
+	{
+		auto parent = _modifierArea.parent();
+
+		if (parent->visibility() != Declaration::Visibility::Default && _modifierArea.visibility() != parent->visibility())
+			m_errorReporter.syntaxError(_modifierArea.location(), "Cannot override parent modifier area's visibility.");
+
+		if (parent->stateMutability() != StateMutability::NonPayable && _modifierArea.stateMutability() != parent->stateMutability())
+			m_errorReporter.syntaxError(_modifierArea.location(), "Cannot override parent modifier area's state mutability.");
+	}
+
+	return true;
+}
+
 bool SyntaxChecker::visit(ModifierDefinition const&)
 {
 	m_placeholderFound = false;
@@ -220,6 +236,17 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 			_function.location(),
 			"No visibility specified. Did you intend to add \"" + suggestedVisibility + "\"?"
 		);
+	}
+
+	if (_function.modifierArea())
+	{
+		auto modifierArea = _function.modifierArea();
+
+		if (modifierArea->visibility() != Declaration::Visibility::Default && _function.visibility() != modifierArea->visibility())
+			m_errorReporter.syntaxError(_function.location(), "Cannot override modifier area's visibility.");
+
+		if (modifierArea->stateMutability() != StateMutability::NonPayable && _function.stateMutability() != modifierArea->stateMutability())
+			m_errorReporter.syntaxError(_function.location(), "Cannot override modifier area's state mutability.");
 	}
 
 	if (!_function.isImplemented() && !_function.modifiers().empty())

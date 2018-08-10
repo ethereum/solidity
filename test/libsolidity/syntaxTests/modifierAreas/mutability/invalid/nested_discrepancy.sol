@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (44-51): Cannot override parent modifier area's state mutability of "pure".
+// SyntaxError: (38-54): Cannot override parent modifier area's state mutability.

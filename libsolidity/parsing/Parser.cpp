@@ -339,11 +339,7 @@ StateMutability Parser::parseStateMutability(Token::Value _token)
 	return stateMutability;
 }
 
-Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
-	bool _forceEmptyName,
-	bool _allowModifiers,
-	ModifierArea const* _modifierArea
-)
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
@@ -408,22 +404,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(
 				));
 				m_scanner->next();
 			}
-			else if (_modifierArea && _modifierArea->visibility() != Declaration::Visibility::Default)
-			{
-				parserError("Cannot override modifier area's visibility.");
-				m_scanner->next();
-			}
 			else
 				result.visibility = parseVisibilitySpecifier(token);
 		}
 		else if (Token::isStateMutabilitySpecifier(token))
 		{
-			if (_modifierArea && _modifierArea->stateMutability() != StateMutability::NonPayable)
-			{
-				parserError("Cannot override modifier area's state mutability.");
-				m_scanner->next();
-			}
-			else if (result.stateMutability != StateMutability::NonPayable)
+			if (result.stateMutability != StateMutability::NonPayable)
 			{
 				parserError(string(
 					"State mutability already specified as \"" +
@@ -459,7 +445,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(
 	if (m_scanner->currentCommentLiteral() != "")
 		docstring = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 
-	FunctionHeaderParserResult header = parseFunctionHeader(false, true, _modifierArea);
+	FunctionHeaderParserResult header = parseFunctionHeader(false, true);
 
 	if (
 		header.isConstructor ||
@@ -482,13 +468,10 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable(
 
 		if (_modifierArea)
 		{
-			auto const modifierAreaVisibility = _modifierArea->visibility();
-			auto const modifierAreaStateMutability = _modifierArea->stateMutability();
-
-			if (modifierAreaVisibility != Declaration::Visibility::Default)
+			if (header.visibility == Declaration::Visibility::Default)
 				header.visibility = _modifierArea->visibility();
 
-			if (modifierAreaStateMutability != StateMutability::NonPayable)
+			if (header.stateMutability == StateMutability::NonPayable)
 				header.stateMutability = _modifierArea->stateMutability();
 		}
 
@@ -767,8 +750,8 @@ ASTPointer<ModifierArea> Parser::parseModifierArea(ModifierArea* const& _parent)
 
 	expectToken(Token::Apply);
 
-	Declaration::Visibility visibility = _parent ? _parent->visibility() : Declaration::Visibility::Default;
-	StateMutability mutability = _parent ? _parent->stateMutability() : StateMutability::NonPayable;
+	Declaration::Visibility visibility = Declaration::Visibility::Default;
+	StateMutability stateMutability = StateMutability::NonPayable;
 
 	while (true)
 	{
@@ -779,17 +762,17 @@ ASTPointer<ModifierArea> Parser::parseModifierArea(ModifierArea* const& _parent)
 				visibility = parseVisibilitySpecifier(token);
 			else
 			{
-				parserError("Cannot override parent modifier area's visibility of \"" + Declaration::visibilityToString(visibility) +  "\".");
+				parserError("Visibility already specified as \"" + Declaration::visibilityToString(visibility) +  "\".");
 				m_scanner->next();
 			}
 		}
 		else if (Token::isStateMutabilitySpecifier(token))
 		{
-			if (mutability == StateMutability::NonPayable)
-				mutability = parseStateMutability(token);
+			if (stateMutability == StateMutability::NonPayable)
+				stateMutability = parseStateMutability(token);
 			else
 			{
-				parserError("Cannot override parent modifier area's state mutability of \"" + stateMutabilityToString(mutability) + "\".");
+				parserError("State mutability already specified as \"" + stateMutabilityToString(stateMutability) + "\".");
 				m_scanner->next();
 			}
 		}
@@ -806,10 +789,19 @@ ASTPointer<ModifierArea> Parser::parseModifierArea(ModifierArea* const& _parent)
 
 	expectToken(Token::LBrace);
 
+	if (_parent)
+	{
+		if (visibility == Declaration::Visibility::Default)
+			visibility = _parent->visibility();
+
+		if (stateMutability == StateMutability::NonPayable)
+			stateMutability = _parent->stateMutability();
+	}
+
 	ASTPointer<std::vector<ASTPointer<FunctionDefinition>>> functions = std::make_shared<std::vector<ASTPointer<FunctionDefinition>>>();
 	ASTPointer<std::vector<ASTPointer<ModifierArea>>> subAreas = std::make_shared<std::vector<ASTPointer<ModifierArea>>>();
 
-	ASTPointer<ModifierArea> modifierArea = nodeFactory.createNode<ModifierArea>(modifiers, visibility, mutability, functions, subAreas, _parent);
+	ASTPointer<ModifierArea> modifierArea = nodeFactory.createNode<ModifierArea>(modifiers, visibility, stateMutability, functions, subAreas, _parent);
 
 	while (true)
 	{

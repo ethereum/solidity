@@ -1,7 +1,7 @@
 contract C {
     apply pure {
-        function f() view {}
+        function f() public view {}
     }
 }
 // ----
-// ParserError: (51-55): Cannot override modifier area's state mutability.
+// SyntaxError: (38-65): Cannot override modifier area's state mutability.

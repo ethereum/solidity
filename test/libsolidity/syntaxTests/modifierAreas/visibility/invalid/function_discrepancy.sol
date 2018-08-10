@@ -3,5 +3,6 @@ contract C {
         function f() private {}
     }
 }
+
 // ----
-// ParserError: (53-60): Cannot override modifier area's visibility.
+// SyntaxError: (40-63): Cannot override modifier area's visibility.
