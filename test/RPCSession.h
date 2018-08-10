@@ -113,6 +113,7 @@ public:
 	std::string eth_sendTransaction(std::string const& _transaction);
 	std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
+	std::string eth_gasPrice();
 	std::string personal_newAccount(std::string const& _password);
 	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
 	void test_setChainParams(std::vector<std::string> const& _accounts);

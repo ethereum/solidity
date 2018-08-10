@@ -2988,6 +2988,86 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 	BOOST_REQUIRE(callContractFunction("checkState()") == encodeArgs(false, 20 - 5));
 }
 
+BOOST_AUTO_TEST_CASE(gasleft_decrease)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint v;
+			function f() public returns (bool) {
+				uint startGas = gasleft();
+				v++;
+				assert(startGas > gasleft());
+				return true;
+			}
+			function g() public returns (bool) {
+				uint startGas = gasleft();
+				assert(startGas > gasleft());
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(gaslimit)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public returns (uint) {
+				return block.gaslimit;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(gasLimit()));
+}
+
+BOOST_AUTO_TEST_CASE(gasprice)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public returns (uint) {
+				return tx.gasprice;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(gasPrice()));
+}
+
+BOOST_AUTO_TEST_CASE(blockhash)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint256 counter;
+			function g() public returns (bool) { counter++; return true; }
+			function f() public returns (bytes32[] memory r) {
+				r = new bytes32[](259);
+				for (uint i = 0; i < 259; i++)
+					r[i] = blockhash(block.number - 257 + i);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	// generate a sufficient amount of blocks
+	while (blockNumber() < u256(255))
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(true));
+
+	vector<u256> hashes;
+	hashes.reserve(259);
+	// ``blockhash()`` is only valid for the last 256 blocks, otherwise zero
+	hashes.emplace_back(0);
+	for (u256 i = blockNumber() - u256(255); i <= blockNumber(); i++)
+		hashes.emplace_back(blockHash(i));
+	// the current block hash is not yet known at execution time and therefore zero
+	hashes.emplace_back(0);
+	// future block hashes are zero
+	hashes.emplace_back(0);
+	ABI_CHECK(callContractFunction("f()"), encodeDyn(hashes));
+}
+
 BOOST_AUTO_TEST_CASE(value_complex)
 {
 	char const* sourceCode = R"(

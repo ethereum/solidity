@@ -207,6 +207,11 @@ string RPCSession::eth_getStorageRoot(string const& _address, string const& _blo
 	return rpcCall("eth_getStorageRoot", { quote(address), quote(_blockNumber) }).asString();
 }
 
+string RPCSession::eth_gasPrice()
+{
+	return rpcCall("eth_gasPrice").asString();
+}
+
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
 	BOOST_REQUIRE_MESSAGE(
