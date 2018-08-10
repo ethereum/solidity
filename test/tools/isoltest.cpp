@@ -76,7 +76,7 @@ public:
 		bool const _formatted
 	);
 
-	void runEditor(const fs::path& filename);
+	void runEditor(fs::path const& _filename);
 
 	static string editor;
 private:
@@ -100,10 +100,10 @@ private:
 string TestTool::editor;
 bool TestTool::m_exitRequested = false;
 
-void TestTool::runEditor(const fs::path& filename)
+void TestTool::runEditor(fs::path const& _filename)
 {
 #if defined(_WIN32)
-	std::string path = filename.string();
+	string path = _filename.string();
 	SHELLEXECUTEINFO ShExecInfo = { 0 };
 	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
 	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -117,7 +117,7 @@ void TestTool::runEditor(const fs::path& filename)
 	ShellExecuteEx(&ShExecInfo);
 	WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
 #else
-	if (system((TestTool::editor + " \"" + filename.string() + "\"").c_str()))
+	if (system((TestTool::editor + " \"" + _filename.string() + "\"").c_str()))
 		cerr << "Error running editor command." << endl << endl;
 #endif
 }
