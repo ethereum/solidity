@@ -149,6 +149,9 @@ private:
 	/// Flag indicating whether we are currently inside an EmitStatement.
 	bool m_insideEmitStatement = false;
 
+	/// Flag indicating whether we are currently inside a StructDefinition.
+	bool m_insideStruct = false;
+
 	ErrorReporter& m_errorReporter;
 };
 
