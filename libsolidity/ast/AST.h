@@ -614,7 +614,7 @@ public:
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
-	ModifierArea* modifierArea() { return m_modifierArea; }
+	ModifierArea* modifierArea() const { return m_modifierArea; }
 
 	virtual bool isVisibleInContract() const override
 	{
@@ -744,7 +744,7 @@ public:
 	StateMutability const& stateMutability() const { return m_mutability; }
 	std::vector<ASTPointer<FunctionDefinition>> const& definedFunctions() const { return *m_functions; }
 	std::vector<ASTPointer<ModifierArea>> const& subAreas() const { return *m_subAreas; }
-	ModifierArea const& parent() const { return *m_parent; }
+	ModifierArea const* parent() const { return m_parent; }
 
 private:
 	std::vector<ASTPointer<ModifierInvocation>> m_declaredModifiers;
