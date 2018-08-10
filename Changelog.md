@@ -71,7 +71,7 @@ Language Features:
  * General: Support ``pop()`` for storage arrays.
  * General: Scoping rules now follow the C99-style.
  * General: Allow ``enum``s in interfaces.
- * General: Allow ``mapping`` arguments and return values in internal library functions.
+ * General: Allow ``mapping`` storage pointers as arguments and return values in all internal functions.
 
 Compiler Features:
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.

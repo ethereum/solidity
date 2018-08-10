@@ -1543,6 +1543,62 @@ BOOST_AUTO_TEST_CASE(mapping_local_compound_assignment)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(byte(42), byte(0), byte(0), byte(21)));
 }
 
+BOOST_AUTO_TEST_CASE(mapping_internal_argument)
+{
+	char const* sourceCode = R"(
+		contract test {
+			mapping(uint8 => uint8) a;
+			mapping(uint8 => uint8) b;
+			function set_internal(mapping(uint8 => uint8) storage m, uint8 key, uint8 value) internal returns (uint8) {
+				uint8 oldValue = m[key];
+				m[key] = value;
+				return oldValue;
+			}
+			function set(uint8 key, uint8 value_a, uint8 value_b) public returns (uint8 old_a, uint8 old_b) {
+				old_a = set_internal(a, key, value_a);
+				old_b = set_internal(b, key, value_b);
+			}
+			function get(uint8 key) public returns (uint8, uint8) {
+				return (a[key], b[key]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", byte(1), byte(21), byte(42)), encodeArgs(byte(0), byte(0)));
+	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(21), byte(42)));
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", byte(1), byte(10), byte(11)), encodeArgs(byte(21), byte(42)));
+	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(10), byte(11)));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_internal_return)
+{
+	char const* sourceCode = R"(
+		contract test {
+			mapping(uint8 => uint8) a;
+			mapping(uint8 => uint8) b;
+			function f() internal returns (mapping(uint8 => uint8) storage r) {
+				r = a;
+				r[1] = 42;
+				r = b;
+				r[1] = 84;
+			}
+			function g() public returns (uint8, uint8, uint8, uint8, uint8, uint8) {
+				f()[2] = 21;
+				return (a[0], a[1], a[2], b[0], b[1], b[2]);
+			}
+			function h() public returns (uint8, uint8, uint8, uint8, uint8, uint8) {
+				mapping(uint8 => uint8) storage m = f();
+				m[2] = 17;
+				return (a[0], a[1], a[2], b[0], b[1], b[2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(byte(0), byte(42), byte(0), byte(0), byte(84), byte (21)));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(byte(0), byte(42), byte(0), byte(0), byte(84), byte (17)));
+}
 
 BOOST_AUTO_TEST_CASE(structs)
 {

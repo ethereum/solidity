@@ -632,7 +632,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (
 			!type(*var)->canLiveOutsideStorage() &&
 			!(
-				isLibraryFunction &&
 				(_function.visibility() <= FunctionDefinition::Visibility::Internal) &&
 				type(*var)->category() == Type::Category::Mapping
 			)
