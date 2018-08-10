@@ -139,6 +139,7 @@ namespace solidity
 	K(Delete, "delete", 0)                                             \
 	\
 	/* Keywords */                                                     \
+	K(Apply, "apply", 0)                                               \
 	K(Anonymous, "anonymous", 0)                                       \
 	K(As, "as", 0)                                                     \
 	K(Assembly, "assembly", 0)                                         \
@@ -182,7 +183,6 @@ namespace solidity
 	K(Var, "var", 0)                                                   \
 	K(View, "view", 0)                                                 \
 	K(While, "while", 0)                                               \
-	K(Apply, "apply", 0)                                               \
 	\
 	/* Ether subdenominations */                                       \
 	K(SubWei, "wei", 0)                                                \
