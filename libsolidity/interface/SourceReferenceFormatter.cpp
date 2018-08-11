@@ -55,7 +55,7 @@ void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _locati
 		}
 		if (line.length() > 150)
 		{
-			line = " ... " + line.substr(startColumn, locationLength) + " ... ";
+			line = " ... " + line.substr(0, 75) + " ... ";
 			startColumn = 5;
 			endColumn = startColumn + locationLength;
 		}
