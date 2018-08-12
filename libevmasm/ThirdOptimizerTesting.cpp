@@ -1,24 +1,155 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <libevmasm/ThirdOptimizerTesting.h>
 #include "ThirdOptimizerTesting.h"
 #include <algorithm>
 #include <tuple>
 
-bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> _items) const
+template<typename It>
+It backExpressionBegin(It _begin, It _end)
 {
+	AssemblyItem const& topLevelItem = *(_end - 1);
+	signed arguments = topLevelItem.arguments();
+	auto currentEnd = _end - 1 /* top-level operation */;
+	while (arguments > 0)
+	{
+		// TODO this code might break if anything returns more than 1 value, since we can't split things up
+		arguments -= static_cast<AssemblyItem const&>(*(currentEnd - 1)).returnValues();
+		currentEnd = backExpressionBegin(_begin, currentEnd);
+		assertThrow(currentEnd >= _begin, OptimizerException, "currentEnd is before begin");
+	}
+	return currentEnd;
+}
+
+vector<vector<AssemblyItem>> parseExpressions(vector<AssemblyItem> const& _items, signed _limit = -1)
+{
+	auto currentEnd = _items.end();
+	std::vector<vector<AssemblyItem>> expressions{};
+	while (currentEnd != _items.begin() && (_limit == -1 || signed(expressions.size()) < _limit))
+	{
+		auto oldEnd = currentEnd;
+		currentEnd = backExpressionBegin(_items.begin(), oldEnd);
+		expressions.emplace_back(currentEnd, oldEnd);
+		assertThrow(currentEnd >= _items.begin(), OptimizerException, "currentEnd is before begin");
+	}
+
+	return expressions;
+}
+
+vector<vector<AssemblyItem>> parseArguments(vector<AssemblyItem> const& _items)
+{
+	assertThrow(!_items.empty(), OptimizerException, "cannot get arguments from empty _items vector");
+
+	unsigned neededArguments = _items.back().arguments();
+
+	auto expressions = parseExpressions(vector<AssemblyItem>(_items.begin(), _items.end() - 1), neededArguments);
+	assertThrow(expressions.size() >= neededArguments, OptimizerException, "more arguments needed than provided");
+
+	expressions = vector<vector<AssemblyItem>>(expressions.rbegin(), expressions.rbegin() + neededArguments);
+
+	std::reverse(expressions.begin(), expressions.end());
+
+	return expressions;
+}
+
+vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
+{
+	switch (_pattern.kind())
+	{
+		case NewOptimizerPattern::Kind::Any:
+			assertThrow(_pattern.isBound(), OptimizerException, "cannot create items from non-bound pattern");
+			return _pattern.boundItems();
+		case NewOptimizerPattern::Kind::Constant:
+		{
+			if (_pattern.hasConstant())
+				return {_pattern.constant()};
+			else
+				return {_pattern.boundItems().back().data()};
+		}
+		case NewOptimizerPattern::Kind::Operation:
+			if (_pattern.hasOperationValues())
+			{
+				auto operands = _pattern.operands();
+
+				vector<AssemblyItem> instructions{};
+
+				for (auto it = operands.rbegin(); it != operands.rend(); it++)
+					for (auto const& item : createItems(*it))
+						instructions.push_back(item);
+
+				instructions.emplace_back(_pattern.instruction());
+
+				return instructions;
+			}
+			else
+				return _pattern.boundItems();
+		case NewOptimizerPattern::Kind::Unknown:
+			assertThrow(_pattern.isBound(), OptimizerException, "cannot create items from non-bound pattern");
+			return _pattern.boundItems();
+		default:
+			assertThrow(false, OptimizerException, "unreachable");
+	}
+}
+
+
+bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> const& _items, bool _unbind)
+{
+	if (_unbind) unbind();
+
+	if (isBound())
+		return boundItems() == _items;
+
 	switch (kind())
 	{
 		case Kind::Constant:
 		{
 			if (_items.size() != 1) return false;
 
-			if (m_hasConstant)
-				return _items[0].data() == constant();
+			if (_items.back().type() != AssemblyItemType::Push) return false;
+
+			if (hasConstant())
+			{
+				if (_items[0].data() == constant())
+				{
+					bind(_items);
+					return true;
+				}
+
+				return false;
+			}
 			else
-				return _items[0].type() == AssemblyItemType::Push;
+			{
+				bind(_items);
+				return true;
+			}
 		}
 		case Kind::Operation:
 		{
-			if (!m_hasOperationValues) return _items.back().type() == AssemblyItemType::Operation;
+			if (!hasOperationValues())
+			{
+				if (_items.back().type() == AssemblyItemType::Operation)
+				{
+					bind(_items);
+					return true;
+				}
+
+				return false;
+			}
 
 			auto const instruction = this->instruction();
 
@@ -32,9 +163,7 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> _item
 
 			auto parsedArguments = parseArguments(_items);
 
-			if (parsedArguments.empty()) return false;
-
-			auto requiredArgumentPatterns = operands();
+			auto& requiredArgumentPatterns = operands();
 
 			assertThrow(
 				requiredArgumentPatterns.size() == parsedArguments.size(),
@@ -44,16 +173,17 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> _item
 
 			for (unsigned i = 0; i < parsedArguments.size(); i++)
 			{
-				auto argument = parsedArguments[i];
+				auto& argumentItems = parsedArguments[i];
 
-				std::reverse(argument.begin(), argument.end());
-
-				if (!requiredArgumentPatterns[i].matches(argument)) return false;
+				if (!requiredArgumentPatterns[i].matches(argumentItems, false)) return false;
 			}
+
+			bind(_items);
 
 			return true;
 		}
 		case Kind::Any:
+			bind(_items);
 			return true;
 		case Kind::Unknown:
 			return false;
@@ -62,33 +192,24 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> _item
 	}
 }
 
-vector<vector<AssemblyItem>> dev::solidity::NewOptimizerPattern::parseArguments(vector<AssemblyItem> const& _items)
+void NewOptimizerPattern::bind(std::vector<AssemblyItem> const& _items)
 {
-	auto argumentsFound = 0;
-
-	signed int stackHeight = 0;
-
-	std::vector<vector<AssemblyItem>> arguments{};
-	std::vector<AssemblyItem> currentArgument{};
-
-	for (auto it = ++_items.rbegin(); it != _items.rend(); it++)
+	if (kind() == Kind::Constant)
 	{
-		stackHeight -= it->arguments();
-		stackHeight += it->returnValues();
-
-		currentArgument.push_back(*it);
-
-		if (!currentArgument.empty() && stackHeight == argumentsFound + 1)
-		{
-			arguments.push_back(currentArgument);
-			currentArgument.clear();
-			argumentsFound++;
-		}
+		assertThrow(_items.size() == 1 && _items.back().type() == AssemblyItemType::Push, OptimizerException, "invalid bind type");
+		if (hasConstant())
+			assertThrow(constant() == _items.back().data(), OptimizerException, "invalid bind constant");
 	}
 
-	if (!currentArgument.empty()) return {}; // Did not parse all of the items
+	if (kind() == Kind::Operation)
+	{
+		assertThrow(!_items.empty() && _items.back().type() == AssemblyItemType::Operation, OptimizerException, "invalid bind value");
+		if (hasOperationValues())
+			assertThrow(instruction() == _items.back().instruction(), OptimizerException, "invalid bind instruction");
+	}
 
-	return arguments;
+	m_ptr->m_isBound = true;
+	m_ptr->m_boundItems = _items;
 }
 
 void dev::solidity::ThirdOptimizer::addDefaultRules()
@@ -112,13 +233,33 @@ void dev::solidity::ThirdOptimizer::addRule(SimplificationRule<NewOptimizerPatte
 	m_rules.push_back(_rule);
 }
 
-
-
-vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(vector<AssemblyItem> _items)
+vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(vector<AssemblyItem> const& _items)
 {
 	if (m_rules.empty()) addDefaultRules();
 
+	if (_items.size() == 1) return _items;
 
+	auto expressions = parseExpressions(_items);
 
-	return _items;
+	for (auto& expression : expressions)
+	{
+		for (auto& rule : m_rules)
+			if (rule.pattern.matches(expression))
+				expression = createItems(rule.action());
+
+		std::vector<AssemblyItem> optimizedExpression{};
+		auto arguments = parseArguments(expression);
+
+		for (auto it = arguments.rbegin(); it != arguments.rend(); it++) optimizedExpression += optimize(*it);
+		optimizedExpression.push_back(expression.back());
+
+		expression = optimizedExpression;
+	}
+
+	vector<AssemblyItem> optimizedItems;
+	for (auto it = expressions.rbegin(); it != expressions.rend(); it++) optimizedItems += *it;
+
+	if (optimizedItems != _items) optimizedItems = optimize(optimizedItems);
+
+	return optimizedItems;
 }
