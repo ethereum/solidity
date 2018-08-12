@@ -243,9 +243,23 @@ vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(vector<AssemblyItem
 
 	for (auto& expression : expressions)
 	{
-		for (auto& rule : m_rules)
-			if (rule.pattern.matches(expression))
-				expression = createItems(rule.action());
+		bool canRun = std::all_of(
+			expression.begin(),
+			expression.end(),
+			[](AssemblyItem item) -> bool {
+				return
+					item.returnValues() <= 1 &&
+					(
+						item.type() == AssemblyItemType::Operation ?
+							!instructionInfo(item.instruction()).sideEffects :
+							true
+					);
+			});
+
+		if (canRun)
+			for (auto& rule : m_rules)
+				if (rule.pattern.matches(expression))
+					expression = createItems(rule.action());
 
 		std::vector<AssemblyItem> optimizedExpression{};
 		auto arguments = parseArguments(expression);
