@@ -165,9 +165,12 @@ class ThirdOptimizer
 public:
 	vector<AssemblyItem> optimize(vector<AssemblyItem> const& _items);
 private:
+	vector<AssemblyItem> breakAndOptimize(vector<AssemblyItem> const& _expression);
+
 	void addDefaultRules();
 	void addRules(vector<SimplificationRule<NewOptimizerPattern>> const& _rules);
 	void addRule(SimplificationRule<NewOptimizerPattern> const& _rule);
+
 	vector<SimplificationRule<NewOptimizerPattern>> m_rules;
 };
 }
