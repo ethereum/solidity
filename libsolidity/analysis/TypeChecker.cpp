@@ -631,10 +631,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	{
 		if (
 			!type(*var)->canLiveOutsideStorage() &&
-			!(
-				(_function.visibility() <= FunctionDefinition::Visibility::Internal) &&
-				type(*var)->category() == Type::Category::Mapping
-			)
+			!(_function.visibility() <= FunctionDefinition::Visibility::Internal)
 		)
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
