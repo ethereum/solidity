@@ -508,7 +508,7 @@ Reference Types
 ==================
 
 Complex types, i.e. types which do not always fit into 256 bits have to be handled
-more carefully than the value-types we have already seen. `Since copying them <ref-copy-types_>`_
+more carefully than the value-types we have already seen. Since `copying them <ref-copy-types_>`_
 can be expensive, we have to think about whether we want them to be
 stored in **memory** (which is not persisting) or **storage** (where the state
 variables are held).
@@ -848,81 +848,6 @@ members of the local variable actually write to the state.
 Of course, you can also directly access the members of the struct without
 assigning it to a local variable, as in
 ``campaigns[campaignID].amount = 0``.
-
-Types as input and output parameters
-====================================
-
-.. index:: !function parameters, functions, parameters
-
-Allowed function parameter types
---------------------------------
-
-.. which types are allowed as function parameters depending on the kind of the function
-
-.. The types allowed as input or output function parameters depends on the kind of function you declare.
-
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Type                                           | Input                                                   | Output                  |
-+================================================+=========================================================+=========================+
-| Booleans                                       | Allowed                                                 | Allowed                 |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Integers                                       | Allowed                                                 | Allowed                 |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Address                                        | Allowed                                                 | Allowed                 |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Fixed-size byte arrays                         | Allowed                                                 | Allowed                 |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Dynamically-sized byte array                   | Allowed                                                 | Allowed                 |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Enums                                          | Allowed                                                 | Allowed                 |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Fixed-size one dimensional array               | Allowed                                                 |                         |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Dynamically-size one dimensional array         | Allowed                                                 | Allowed                 |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Fixed-size multi-dimensional dimensional array | If you enable the experimental ``ABIEncoderV2`` feature |                         |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| Dynamically-size multi-dimensional array       | If you enable the experimental ``ABIEncoderV2`` feature |                         |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| ``mapping``                                    | Not allowed                                             | Not allowed             |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-| struct                                         |                                                         | Only internal functions |
-+------------------------------------------------+---------------------------------------------------------+-------------------------+
-
-.. index:: copying types, referencing types
-
-.. _ref-copy-types:
-
-Copying vs referencing
-----------------------
-
-When you use variables as an input or output parameter to functions, how the compiler treats the
-variable depends on its type.
-
-Any variable that is a :ref:`value-types` (fits into 256 bytes), has its value **copied** from the
-output function to the input function.
-
-For variables that are more complex types (or :ref:`reference-types`) (that do not always into 256
-bytes), whether the variable is copied to or referenced in the target function follows the same
-rules as :ref:`data-location-assignment`, in summary:
-
-- Variables appended with ``storage`` in the output function and ``memory`` in the input function have their values **copied** between the functions.
-- Variables appended with ``storage`` in the output function and ``storage`` in the input function have their values **referenced** between the functions.
-- Already ``memory`` stored variables in the output function and already ``memory`` stored variables in the input function have their values **referenced** between the functions.
-
-When a complex variable is copied from an output function to an input function the mapping of the
-target is ignored as there is no list of mapped keys and it's impossible to know which values to
-copy. For example::
-
-  struct User {
-      mapping(string => string) comments;
-  }
-
-  function somefunction public {
-     User user1;
-     user1.comments["Hello"] = "World";
-     User user2 = user1;
-  }
 
 .. index:: !mapping
 
