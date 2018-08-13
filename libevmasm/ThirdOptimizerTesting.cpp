@@ -60,9 +60,7 @@ vector<vector<AssemblyItem>> parseArguments(vector<AssemblyItem> const& _items)
 	auto expressions = parseExpressions(vector<AssemblyItem>(_items.begin(), _items.end() - 1), neededArguments);
 	assertThrow(expressions.size() >= neededArguments, OptimizerException, "more arguments needed than provided");
 
-	expressions = vector<vector<AssemblyItem>>(expressions.rbegin(), expressions.rbegin() + neededArguments);
-
-	std::reverse(expressions.begin(), expressions.end());
+	expressions = vector<vector<AssemblyItem>>(expressions.begin(), expressions.begin() + neededArguments);
 
 	return expressions;
 }
@@ -90,7 +88,7 @@ vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
 				vector<AssemblyItem> instructions{};
 
 				for (auto it = operands.rbegin(); it != operands.rend(); it++)
-						instructions += *it;
+						instructions += createItems(*it);
 
 				instructions.emplace_back(_pattern.instruction());
 
