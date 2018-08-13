@@ -208,7 +208,6 @@ void NewOptimizerPattern::bind(std::vector<AssemblyItem> const& _items)
 			assertThrow(instruction() == _items.back().instruction(), OptimizerException, "invalid bind instruction");
 	}
 
-	m_ptr->m_isBound = true;
 	m_ptr->m_boundItems = _items;
 }
 

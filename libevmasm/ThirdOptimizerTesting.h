@@ -23,7 +23,7 @@
 #include <libevmasm/RuleList.h>
 #include <libevmasm/SimplificationRule.h>
 #include <tuple>
-#include <stddef.h>
+#include <boost/optional.hpp>
 
 namespace dev
 {
@@ -59,14 +59,12 @@ public:
 	NewOptimizerPattern(AssemblyItemType const& _type) : m_ptr(std::make_shared<Underlying>())
 	{
 		m_ptr->m_kind = Kind::Any;
-		m_ptr->m_hasAssemblyType = true;
 		m_ptr->m_assemblyType = _type;
 	}
 
 	NewOptimizerPattern(u256 const& _constant) : m_ptr(std::make_shared<Underlying>())
 	{
 		m_ptr->m_kind = Kind::Constant;
-		m_ptr->m_hasConstant = true;
 		m_ptr->m_constant = _constant;
 	}
 
@@ -97,13 +95,13 @@ public:
 	u256 constant() const
 	{
 		assertThrow(hasConstant(), OptimizerException, "invalid request for constant");
-		return m_ptr->m_constant;
+		return m_ptr->m_constant.get();
 	}
 
 	AssemblyItemType assemblyItemType() const
 	{
 		assertThrow(hasAssemblyItemType(), OptimizerException, "invalid request for assembly item type");
-		return m_ptr->m_assemblyType;
+		return m_ptr->m_assemblyType.get();
 	}
 
 	bool matches(vector<AssemblyItem> const& _items, bool _unbind = true);
@@ -120,24 +118,23 @@ public:
 			return constant();
 	}
 
-	bool isBound() const { return m_ptr->m_isBound; }
+	bool isBound() const { return m_ptr->m_boundItems.is_initialized(); }
 
 	vector<AssemblyItem> const& boundItems() const
 	{
 		assertThrow(isBound(), OptimizerException, "invalid request for bound items");
-		return m_ptr->m_boundItems;
+		return m_ptr->m_boundItems.get();
 	}
 
 	bool hasOperationValues() const { return m_ptr->m_hasOperationValues; }
-	bool hasConstant() const { return m_ptr->m_hasConstant; }
-	bool hasAssemblyItemType() const { return m_ptr->m_hasAssemblyType; }
+	bool hasConstant() const { return m_ptr->m_constant.is_initialized(); }
+	bool hasAssemblyItemType() const { return m_ptr->m_assemblyType.is_initialized(); }
 
 private:
 	void bind(std::vector<AssemblyItem> const& _items);
 	void unbind()
 	{
-		m_ptr->m_isBound = false;
-		m_ptr->m_boundItems = {};
+		m_ptr->m_boundItems.reset();
 
 		if (hasOperationValues())
 		{
@@ -147,20 +144,17 @@ private:
 
 	struct Underlying
 	{
-		bool m_isBound = false;
-		std::vector<AssemblyItem> m_boundItems;
+		boost::optional<std::vector<AssemblyItem>> m_boundItems;
 
 		Kind m_kind;
 
-		bool m_hasConstant = false;
-		u256 m_constant;
+		boost::optional<u256> m_constant;
 
 		bool m_hasOperationValues = false;
 		Instruction m_instruction;
 		vector<NewOptimizerPattern> m_operands;
 
-		bool m_hasAssemblyType = false;
-		AssemblyItemType m_assemblyType;
+		boost::optional<AssemblyItemType> m_assemblyType;
 	};
 
 	std::shared_ptr<Underlying> m_ptr;
