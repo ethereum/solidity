@@ -17,6 +17,7 @@ Breaking Changes:
  * Commandline interface: Rename the ``--julia`` option to ``--yul``.
  * Commandline interface: Require ``-`` if standard input is used as source.
  * Compiler interface: Disallow remappings with empty prefix.
+ * Control Flow Analyzer: Consider mappings as well when checking for uninitialized return values.
  * Control Flow Analyzer: Turn warning about returning uninitialized storage pointers into an error.
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
  * General: Disallow declaring empty structs.
@@ -73,6 +74,7 @@ Language Features:
  * General: Support ``pop()`` for storage arrays.
  * General: Scoping rules now follow the C99-style.
  * General: Allow ``enum``s in interfaces.
+ * General: Allow ``mapping`` storage pointers as arguments and return values in all internal functions.
 
 Compiler Features:
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.

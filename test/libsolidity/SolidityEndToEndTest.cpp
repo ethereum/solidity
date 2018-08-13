@@ -1543,6 +1543,92 @@ BOOST_AUTO_TEST_CASE(mapping_local_compound_assignment)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(byte(42), byte(0), byte(0), byte(21)));
 }
 
+BOOST_AUTO_TEST_CASE(mapping_internal_argument)
+{
+	char const* sourceCode = R"(
+		contract test {
+			mapping(uint8 => uint8) a;
+			mapping(uint8 => uint8) b;
+			function set_internal(mapping(uint8 => uint8) storage m, uint8 key, uint8 value) internal returns (uint8) {
+				uint8 oldValue = m[key];
+				m[key] = value;
+				return oldValue;
+			}
+			function set(uint8 key, uint8 value_a, uint8 value_b) public returns (uint8 old_a, uint8 old_b) {
+				old_a = set_internal(a, key, value_a);
+				old_b = set_internal(b, key, value_b);
+			}
+			function get(uint8 key) public returns (uint8, uint8) {
+				return (a[key], b[key]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", byte(1), byte(21), byte(42)), encodeArgs(byte(0), byte(0)));
+	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(21), byte(42)));
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", byte(1), byte(10), byte(11)), encodeArgs(byte(21), byte(42)));
+	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(10), byte(11)));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_array_internal_argument)
+{
+	char const* sourceCode = R"(
+		contract test {
+			mapping(uint8 => uint8)[2] a;
+			mapping(uint8 => uint8)[2] b;
+			function set_internal(mapping(uint8 => uint8)[2] storage m, uint8 key, uint8 value1, uint8 value2) internal returns (uint8, uint8) {
+				uint8 oldValue1 = m[0][key];
+				uint8 oldValue2 = m[1][key];
+				m[0][key] = value1;
+				m[1][key] = value2;
+				return (oldValue1, oldValue2);
+			}
+			function set(uint8 key, uint8 value_a1, uint8 value_a2, uint8 value_b1, uint8 value_b2) public returns (uint8 old_a1, uint8 old_a2, uint8 old_b1, uint8 old_b2) {
+				(old_a1, old_a2) = set_internal(a, key, value_a1, value_a2);
+				(old_b1, old_b2) = set_internal(b, key, value_b1, value_b2);
+			}
+			function get(uint8 key) public returns (uint8, uint8, uint8, uint8) {
+				return (a[0][key], a[1][key], b[0][key], b[1][key]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8,uint8,uint8)", byte(1), byte(21), byte(22), byte(42), byte(43)), encodeArgs(byte(0), byte(0), byte(0), byte(0)));
+	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(21), byte(22), byte(42), byte(43)));
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8,uint8,uint8)", byte(1), byte(10), byte(30), byte(11), byte(31)), encodeArgs(byte(21), byte(22), byte(42), byte(43)));
+	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(10), byte(30), byte(11), byte(31)));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_internal_return)
+{
+	char const* sourceCode = R"(
+		contract test {
+			mapping(uint8 => uint8) a;
+			mapping(uint8 => uint8) b;
+			function f() internal returns (mapping(uint8 => uint8) storage r) {
+				r = a;
+				r[1] = 42;
+				r = b;
+				r[1] = 84;
+			}
+			function g() public returns (uint8, uint8, uint8, uint8, uint8, uint8) {
+				f()[2] = 21;
+				return (a[0], a[1], a[2], b[0], b[1], b[2]);
+			}
+			function h() public returns (uint8, uint8, uint8, uint8, uint8, uint8) {
+				mapping(uint8 => uint8) storage m = f();
+				m[2] = 17;
+				return (a[0], a[1], a[2], b[0], b[1], b[2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(byte(0), byte(42), byte(0), byte(0), byte(84), byte (21)));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(byte(0), byte(42), byte(0), byte(0), byte(84), byte (17)));
+}
 
 BOOST_AUTO_TEST_CASE(structs)
 {
@@ -7959,6 +8045,162 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 	compileAndRun(sourceCode, 0, "Lib");
 	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(4), u256(17)));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_arguments_in_library)
+{
+	char const* sourceCode = R"(
+		library Lib {
+			function set(mapping(uint => uint) storage m, uint key, uint value) internal
+			{
+				m[key] = value;
+			}
+			function get(mapping(uint => uint) storage m, uint key) internal view returns (uint)
+			{
+				return m[key];
+			}
+		}
+		contract Test {
+			mapping(uint => uint) m;
+			function set(uint256 key, uint256 value) public returns (uint)
+			{
+				uint oldValue = Lib.get(m, key);
+				Lib.set(m, key, value);
+				return oldValue;
+			}
+			function get(uint256 key) public view returns (uint) {
+				return Lib.get(m, key);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", u256(1), u256(42)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", u256(2), u256(84)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", u256(21), u256(7)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(1)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(2)), encodeArgs(u256(84)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(21)), encodeArgs(u256(7)));
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", u256(1), u256(21)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", u256(2), u256(42)), encodeArgs(u256(84)));
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", u256(21), u256(14)), encodeArgs(u256(7)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(1)), encodeArgs(u256(21)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(2)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("get(uint256)", u256(21)), encodeArgs(u256(14)));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_returns_in_library)
+{
+	char const* sourceCode = R"(
+		library Lib {
+			function choose_mapping(mapping(uint => uint) storage a, mapping(uint => uint) storage b, bool c) internal pure returns(mapping(uint=>uint) storage)
+			{
+				return c ? a : b;
+			}
+		}
+		contract Test {
+			mapping(uint => uint) a;
+			mapping(uint => uint) b;
+			function set(bool choice, uint256 key, uint256 value) public returns (uint)
+			{
+				mapping(uint => uint) storage m = Lib.choose_mapping(a, b, choice);
+				uint oldValue = m[key];
+				m[key] = value;
+				return oldValue;
+			}
+			function get(bool choice, uint256 key) public view returns (uint) {
+				return Lib.choose_mapping(a, b, choice)[key];
+			}
+			function get_a(uint256 key) public view returns (uint) {
+				return a[key];
+			}
+			function get_b(uint256 key) public view returns (uint) {
+				return b[key];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", true, u256(1), u256(42)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", true, u256(2), u256(84)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", true, u256(21), u256(7)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", false, u256(1), u256(10)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", false, u256(2), u256(11)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", false, u256(21), u256(12)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(1)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(2)), encodeArgs(u256(84)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(21)), encodeArgs(u256(7)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(1)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(2)), encodeArgs(u256(84)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(21)), encodeArgs(u256(7)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(1)), encodeArgs(u256(10)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(2)), encodeArgs(u256(11)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(21)), encodeArgs(u256(12)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(1)), encodeArgs(u256(10)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(2)), encodeArgs(u256(11)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(21)), encodeArgs(u256(12)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", true, u256(1), u256(21)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", true, u256(2), u256(42)), encodeArgs(u256(84)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", true, u256(21), u256(14)), encodeArgs(u256(7)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", false, u256(1), u256(30)), encodeArgs(u256(10)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", false, u256(2), u256(31)), encodeArgs(u256(11)));
+	ABI_CHECK(callContractFunction("set(bool,uint256,uint256)", false, u256(21), u256(32)), encodeArgs(u256(12)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(1)), encodeArgs(u256(21)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(2)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("get_a(uint256)", u256(21)), encodeArgs(u256(14)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(1)), encodeArgs(u256(21)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(2)), encodeArgs(u256(42)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", true, u256(21)), encodeArgs(u256(14)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(1)), encodeArgs(u256(30)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(2)), encodeArgs(u256(31)));
+	ABI_CHECK(callContractFunction("get_b(uint256)", u256(21)), encodeArgs(u256(32)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(0)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(1)), encodeArgs(u256(30)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(2)), encodeArgs(u256(31)));
+	ABI_CHECK(callContractFunction("get(bool,uint256)", false, u256(21)), encodeArgs(u256(32)));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_returns_in_library_named)
+{
+	char const* sourceCode = R"(
+		library Lib {
+			function f(mapping(uint => uint) storage a, mapping(uint => uint) storage b) internal returns(mapping(uint=>uint) storage r)
+			{
+				r = a;
+				r[1] = 42;
+				r = b;
+				r[1] = 21;
+			}
+		}
+		contract Test {
+			mapping(uint => uint) a;
+			mapping(uint => uint) b;
+			function f() public returns (uint, uint, uint, uint, uint, uint)
+			{
+				Lib.f(a, b)[2] = 84;
+				return (a[0], a[1], a[2], b[0], b[1], b[2]);
+			}
+			function g() public returns (uint, uint, uint, uint, uint, uint)
+			{
+				mapping(uint => uint) storage m = Lib.f(a, b);
+				m[2] = 17;
+				return (a[0], a[1], a[2], b[0], b[1], b[2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0), u256(42), u256(0), u256(0), u256(21), u256(84)));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(0), u256(42), u256(0), u256(0), u256(21), u256(17)));
 }
 
 BOOST_AUTO_TEST_CASE(using_library_structs)

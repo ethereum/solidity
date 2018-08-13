@@ -75,7 +75,10 @@ void ControlFlowAnalyzer::checkUnassignedStorageReturnValues(
 	{
 		auto& unassignedAtFunctionEntry = unassigned[_functionEntry];
 		for (auto const& returnParameter: _function.returnParameterList()->parameters())
-			if (returnParameter->type()->dataStoredIn(DataLocation::Storage))
+			if (
+				returnParameter->type()->dataStoredIn(DataLocation::Storage) ||
+				returnParameter->type()->category() == Type::Category::Mapping
+			)
 				unassignedAtFunctionEntry.insert(returnParameter.get());
 	}
 

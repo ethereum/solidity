@@ -629,7 +629,10 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	}
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
-		if (!type(*var)->canLiveOutsideStorage())
+		if (
+			!type(*var)->canLiveOutsideStorage() &&
+			!(_function.visibility() <= FunctionDefinition::Visibility::Internal)
+		)
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
 			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
