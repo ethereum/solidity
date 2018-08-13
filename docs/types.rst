@@ -200,25 +200,38 @@ The ``.gas()`` option is available on all three methods, while the ``.value()`` 
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
 
+.. index:: ! contract type, ! type; contract
+
+.. _contract_types:
+
 Contract Types
 --------------
 
-Every :ref:`contract<contracts>` defines its own type. Contracts can be implicitly converted
-to contracts they inherit from. They can be explicitly converted from and to ``address`` types.
+Every :ref:`contract<contracts>` defines its own type.
+You can implicitly convert contracts to contracts they inherit from,
+and explicitly convert them to and from the ``address`` type.
 
-The data representation of a contract is identical to that of the ``address`` type and
-this type is also used in the :ref:`ABI<ABI>`.
+.. note::
+    Starting with version 0.5.0 contracts do not derive from the address type,
+    but can still be explicitly converted to address.
+
+If you declare a local variable of contract type (`MyContract c`), you can call
+functions on that contract. Take care to assign it from somewhere that is the
+same contract type.
+
+You can also instantiate contracts (which means they are newly created). You
+can find more details in the :ref:`'Contracts via new'<creating-contracts>`
+section.
+
+The data representation of a contract is identical to that of the ``address``
+type and this type is also used in the :ref:`ABI<ABI>`.
 
 Contracts do not support any operators.
 
-The members of contract types are the external functions of the contract including
-public state variables.
-
-.. note::
-    Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to address.
+The members of contract types are the external functions of the contract
+including public state variables.
 
 .. index:: byte array, bytes32
-
 
 Fixed-size byte arrays
 ----------------------
