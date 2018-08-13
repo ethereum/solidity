@@ -69,17 +69,18 @@ vector<vector<AssemblyItem>> parseArguments(vector<AssemblyItem> const& _items)
 
 vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
 {
+	if (_pattern.isBound()) return _pattern.boundItems();
+
 	switch (_pattern.kind())
 	{
 		case NewOptimizerPattern::Kind::Any:
-			assertThrow(_pattern.isBound(), OptimizerException, "cannot create items from non-bound pattern");
-			return _pattern.boundItems();
+			assertThrow(false, OptimizerException, "cannot create items from non-bound pattern");
 		case NewOptimizerPattern::Kind::Constant:
 		{
 			if (_pattern.hasConstant())
 				return {_pattern.constant()};
 			else
-				return {_pattern.boundItems().back().data()};
+				assertThrow(false, OptimizerException, "cannot create items from non-bound constant pattern without constant value");
 		}
 		case NewOptimizerPattern::Kind::Operation:
 			if (_pattern.hasOperationValues())
@@ -97,10 +98,9 @@ vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
 				return instructions;
 			}
 			else
-				return _pattern.boundItems();
+				assertThrow(false, OptimizerException, "cannot create items from non-bound operation pattern without operation values");
 		case NewOptimizerPattern::Kind::Unknown:
-			assertThrow(_pattern.isBound(), OptimizerException, "cannot create items from non-bound pattern");
-			return _pattern.boundItems();
+			assertThrow(false, OptimizerException, "cannot create items from non-bound unknown pattern");
 		default:
 			assertThrow(false, OptimizerException, "unreachable");
 	}
