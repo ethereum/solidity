@@ -786,7 +786,7 @@ Members
             // but can be treated identical to "uint8[]"
             m_byteData = data;
             m_byteData.length += 7;
-            m_byteData[3] = byte(8);
+            m_byteData[3] = 0x08;
             delete m_byteData[2];
         }
 
