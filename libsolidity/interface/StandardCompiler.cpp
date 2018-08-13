@@ -326,9 +326,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		m_compilerStack.setEVMVersion(*version);
 	}
 
-	vector<string> remappings;
+	vector<CompilerStack::Remapping> remappings;
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
-		remappings.push_back(remapping.asString());
+	{
+		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
+			remappings.emplace_back(std::move(*r));
+		else
+			return formatFatalError("JSONError", "Invalid remapping: \"" + remapping.asString() + "\"");
+	}
 	m_compilerStack.setRemappings(remappings);
 
 	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
