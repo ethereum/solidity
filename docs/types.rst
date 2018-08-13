@@ -200,15 +200,18 @@ Contract Types
 --------------
 
 Every :ref:`contract<contracts>` defines its own type.
-Contracts can be implicitly converted to contracts they inherit from,
-and can be explicitly converted from and to the ``address`` type.
+You can implicitly convert contracts to contracts they inherit from,
+and explicitly convert them to and from the ``address`` type.
 
 .. note::
     Starting with version 0.5.0 contracts do not derive from the address type,
     but can still be explicitly converted to address.
 
+If you declare a local variable of contract type (`MyContract c`), you can call
+functions on that contract. Take care to assign it from somewhere that is the
+same contract type.
 
-Contracts can also be instantiated (which means they are newly created). You
+You can also instantiate contracts (which means they are newly created). You
 can find more details in the :ref:`'Contracts via new'<creating-contracts>`
 section.
 
