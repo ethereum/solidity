@@ -90,8 +90,7 @@ vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
 				vector<AssemblyItem> instructions{};
 
 				for (auto it = operands.rbegin(); it != operands.rend(); it++)
-					for (auto const& item : createItems(*it))
-						instructions.push_back(item);
+						instructions += *it;
 
 				instructions.emplace_back(_pattern.instruction());
 
