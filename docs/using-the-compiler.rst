@@ -45,6 +45,56 @@ If ``solc`` is called with the option ``--link``, all input files are interprete
 
 If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output.
 
+.. _evm-version:
+.. index:: ! EVM version, compile target
+
+Setting the EVM version to target
+*********************************
+
+When you compile your contract code you can specify the Ethereum virtual machine
+version to compile for to avoid particular features or behaviours.
+
+.. warning::
+
+   Compiling for the wrong EVM version can result in wrong, strange and failing
+   behaviour. Please ensure, especially if running a private chain, that you
+   use matching EVM versions.
+
+You use the ``--evm-version`` option on the command line:
+
+.. code-block:: shell
+
+  solc --evm-version <VERSION> contract.sol
+
+Or if using the :ref:`standard JSON interface <compiler-api>`, with the ``evmVersion`` key:
+
+.. code-block:: json
+
+  {
+    "evmVersion": "<VERSION>"
+  }
+
+Target options
+--------------
+
+Below is a list of target EVM versions and the compiler-relevant changes introduced
+at each version. Backward compatibility is not guaranteed between each version.
+
+- ``homestead``
+- ``tangerineWhistle``
+   - gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
+   - all gas sent by default for external calls, previously a certain amount had to be retained.
+- ``spuriousDragon``
+   - gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
+- ``byzantium`` (**default**)
+   - opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
+   - the ``staticcall`` opcode is used when calling view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
+   - it is possible to access dynamic data returned from function calls.
+   - ``revert`` opcode introduced, which means that ``revert()`` will not waste gas.
+- ``constantinople`` (still in progress)
+   - opcodes ``shl``, ``shr`` and ``sar`` are available in assembly.
+   - shifting operators use shifting opcodes and thus need less gas.
+
 .. _compiler-api:
 
 Compiler Input and Output JSON Description
