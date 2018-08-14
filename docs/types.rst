@@ -368,6 +368,10 @@ Enums are one way to create a user-defined type in Solidity. They are explicitly
 to and from all integer types but implicit conversion is not allowed.  The explicit conversions
 check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
 
+The data representation is the same as for enums in C: The options are represented by
+subsequent unsigned integer values starting from ``0``.
+
+
 ::
 
     pragma solidity ^0.4.16;
@@ -384,7 +388,7 @@ check the value ranges at runtime and a failure causes an exception.  Enums need
         // Since enum types are not part of the ABI, the signature of "getChoice"
         // will automatically be changed to "getChoice() returns (uint8)"
         // for all matters external to Solidity. The integer type used is just
-        // large enough to hold all enum values, i.e. if you have more values,
+        // large enough to hold all enum values, i.e. if you have more than 256 values,
         // `uint16` will be used and so on.
         function getChoice() public view returns (ActionChoices) {
             return choice;
