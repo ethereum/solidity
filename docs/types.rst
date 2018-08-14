@@ -447,7 +447,7 @@ which returns the :ref:`ABI function selector <abi_function_selector>`::
     pragma solidity ^0.4.16;
 
     contract Selector {
-      function f() public view returns (bytes4) {
+      function f() public pure returns (bytes4) {
         return this.f.selector;
       }
     }
@@ -510,15 +510,15 @@ Another example that uses external function types::
     contract Oracle {
       struct Request {
         bytes data;
-        function(bytes memory) external callback;
+        function(uint) external callback;
       }
       Request[] requests;
       event NewRequest(uint);
-      function query(bytes memory data, function(bytes memory) external callback) public {
+      function query(bytes memory data, function(uint) external callback) public {
         requests.push(Request(data, callback));
         emit NewRequest(requests.length - 1);
       }
-      function reply(uint requestID, bytes memory response) public {
+      function reply(uint requestID, uint response) public {
         // Here goes the check that the reply comes from a trusted source
         requests[requestID].callback(response);
       }
@@ -526,15 +526,16 @@ Another example that uses external function types::
 
     contract OracleUser {
       Oracle constant oracle = Oracle(0x1234567); // known contract
+      uint exchangeRate;
       function buySomething() public {
         oracle.query("USD", this.oracleResponse);
       }
-      function oracleResponse(bytes memory response) public {
+      function oracleResponse(uint response) public {
         require(
             msg.sender == address(oracle),
             "Only oracle can call this."
         );
-        // Use the data
+        exchangeRate = response;
       }
     }
 
@@ -601,8 +602,8 @@ memory-stored reference type do not create a copy.
             h(x); // calls h and creates an independent, temporary copy in memory
         }
 
-        function g(uint[] storage storageArray) internal {}
-        function h(uint[] memory memoryArray) public {}
+        function g(uint[] storage) internal pure {}
+        function h(uint[] memory) public pure {}
     }
 
 Summary
@@ -659,8 +660,9 @@ Allocating Memory Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Creating arrays with variable length in memory can be done using the ``new`` keyword.
-As opposed to storage arrays, it is **not** possible to resize memory arrays by assigning to
-the ``.length`` member.
+As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g. by assigning to
+the ``.length`` member). You either have to calculate the required size in advance
+or create a new memory array and copy every element.
 
 ::
 
@@ -670,7 +672,8 @@ the ``.length`` member.
         function f(uint len) public pure {
             uint[] memory a = new uint[](7);
             bytes memory b = new bytes(len);
-            // Here we have a.length == 7 and b.length == len
+            assert(a.length == 7);
+            assert(b.length == len);
             a[6] = 8;
         }
     }
@@ -691,7 +694,7 @@ assigned to a variable right away.
         function f() public pure {
             g([uint(1), 2, 3]);
         }
-        function g(uint[3] memory _data) public pure {
+        function g(uint[3] memory) public pure {
             // ...
         }
     }
@@ -706,10 +709,9 @@ possible:
 
 ::
 
-    // This will not compile.
-
     pragma solidity ^0.4.0;
 
+    // This will not compile.
     contract C {
         function f() public {
             // The next line creates a type error because uint[3] memory
@@ -752,9 +754,12 @@ Members
         uint[2**20] m_aLotOfIntegers;
         // Note that the following is not a pair of dynamic arrays but a
         // dynamic array of pairs (i.e. of fixed size arrays of length two).
+        // Because of that, T[] is always a dynamic array of T, even if T
+        // itself is an array.
         bool[2][] m_pairsOfFlags;
-        // newPairs is stored in memory - the default for function arguments
 
+        // newPairs is stored in memory - the only possibility
+        // for public function arguments
         function setAllFlagPairs(bool[2][] memory newPairs) public {
             // assignment to a storage array replaces the complete array
             m_pairsOfFlags = newPairs;
@@ -797,6 +802,11 @@ Members
         function createMemoryArray(uint size) public pure returns (bytes memory) {
             // Dynamic memory arrays are created using `new`:
             uint[2][] memory arrayOfPairs = new uint[2][](size);
+
+            // Inline arrays are always statically-sized and if you only
+            // use literals, you have to provide at least one type.
+            arrayOfPairs[0] = [uint(1), 2];
+
             // Create a dynamic byte array:
             bytes memory b = new bytes(200);
             for (uint i = 0; i < b.length; i++)
@@ -968,6 +978,7 @@ It is important to note that ``delete a`` really behaves like an assignment to `
             // y is affected which is an alias to the storage object
             // On the other hand: "delete y" is not valid, as assignments to local variables
             // referencing storage objects can only be made from existing storage objects.
+            assert(y.length == 0);
         }
     }
 

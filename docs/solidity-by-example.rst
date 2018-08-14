@@ -467,22 +467,22 @@ high or low invalid bids.
 
             uint refund;
             for (uint i = 0; i < length; i++) {
-                Bid storage bid = bids[msg.sender][i];
+                Bid storage bidToCheck = bids[msg.sender][i];
                 (uint value, bool fake, bytes32 secret) =
                         (_values[i], _fake[i], _secret[i]);
-                if (bid.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
+                if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
                     // Bid was not actually revealed.
                     // Do not refund deposit.
                     continue;
                 }
-                refund += bid.deposit;
-                if (!fake && bid.deposit >= value) {
+                refund += bidToCheck.deposit;
+                if (!fake && bidToCheck.deposit >= value) {
                     if (placeBid(msg.sender, value))
                         refund -= value;
                 }
                 // Make it impossible for the sender to re-claim
                 // the same deposit.
-                bid.blindedBid = bytes32(0);
+                bidToCheck.blindedBid = bytes32(0);
             }
             msg.sender.transfer(refund);
         }

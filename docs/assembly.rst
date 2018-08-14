@@ -82,7 +82,7 @@ you really know what you are doing.
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
         // remove the bounds checks in array access.
-        function sumSolidity(uint[] memory _data) public view returns (uint o_sum) {
+        function sumSolidity(uint[] memory _data) public pure returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i)
                 o_sum += _data[i];
         }
@@ -90,7 +90,7 @@ you really know what you are doing.
         // We know that we only access the array in bounds, so we can avoid the check.
         // 0x20 needs to be added to an array because the first slot contains the
         // array length.
-        function sumAsm(uint[] memory _data) public view returns (uint o_sum) {
+        function sumAsm(uint[] memory _data) public pure returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
                     o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
@@ -99,7 +99,7 @@ you really know what you are doing.
         }
 
         // Same as above, but accomplish the entire code within inline assembly.
-        function sumPureAsm(uint[] memory _data) public view returns (uint o_sum) {
+        function sumPureAsm(uint[] memory _data) public pure returns (uint o_sum) {
             assembly {
                // Load the length (first 32 bytes)
                let len := mload(_data)
@@ -378,23 +378,13 @@ used ``x_slot`` and to retrieve the byte-offset you used ``x_offset``.
 
 In assignments (see below), we can even use local Solidity variables to assign to.
 
-Functions external to inline assembly can also be accessed: The assembly will
-push their entry label (with virtual function resolution applied). The calling semantics
-in solidity are:
-
- - the caller pushes ``return label``, ``arg1``, ``arg2``, ..., ``argn``
- - the call returns with ``ret1``, ``ret2``, ..., ``retm``
-
-This feature is still a bit cumbersome to use, because the stack offset essentially
-changes during the call, and thus references to local variables will be wrong.
-
 .. code::
 
     pragma solidity ^0.4.11;
 
     contract C {
         uint b;
-        function f(uint x) public returns (uint r) {
+        function f(uint x) public view returns (uint r) {
             assembly {
                 r := mul(x, sload(b_slot)) // ignore the offset, we know it is zero
             }

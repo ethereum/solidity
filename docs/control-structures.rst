@@ -23,8 +23,9 @@ something like::
     pragma solidity ^0.4.16;
 
     contract Simple {
-        function taker(uint _a, uint _b) public pure {
-            // do something with _a and _b.
+        uint sum;
+        function taker(uint _a, uint _b) public {
+            sum = _a + _b;
         }
     }
 
@@ -102,7 +103,7 @@ this nonsensical example::
     pragma solidity ^0.4.16;
 
     contract C {
-        function g(uint a) public pure returns (uint ret) { return f(); }
+        function g(uint a) public pure returns (uint ret) { return a + f(); }
         function f() internal pure returns (uint ret) { return g(7) + f(); }
     }
 
@@ -158,8 +159,8 @@ throws an exception or goes out of gas.
 
 .. warning::
     Any interaction with another contract imposes a potential danger, especially
-    if the source code of the contract is not known in advance. The current
-    contract hands over control to the called contract and that may potentially
+    if the source code of the contract is not known in advance. The
+    current contract hands over control to the called contract and that may potentially
     do just about anything. Even if the called contract inherits from a known parent contract,
     the inheriting contract is only required to have a correct interface. The
     implementation of the contract, however, can be completely arbitrary and thus,
@@ -184,14 +185,16 @@ parameters from the function declaration, but can be in arbitrary order.
     pragma solidity ^0.4.0;
 
     contract C {
-        function f(uint key, uint value) public {
-            // ...
+        mapping(uint => uint) data;
+
+        function f() public {
+            set({value: 2, key: 3});
         }
 
-        function g() public {
-            // named arguments
-            f({value: 2, key: 3});
+        function set(uint key, uint value) public {
+            data[key] = value;
         }
+
     }
 
 Omitted Function Parameter Names
@@ -228,7 +231,7 @@ creation-dependencies are not possible.
     pragma solidity >0.4.24;
 
     contract D {
-        uint x;
+        uint public x;
         constructor(uint a) public payable {
             x = a;
         }
@@ -239,11 +242,13 @@ creation-dependencies are not possible.
 
         function createD(uint arg) public {
             D newD = new D(arg);
+            newD.x();
         }
 
         function createAndEndowD(uint arg, uint amount) public payable {
             // Send ether along with the creation
             D newD = (new D).value(amount)(arg);
+            newD.x();
         }
     }
 
@@ -287,12 +292,13 @@ These can then either be assigned to newly declared variables or to pre-existing
         }
 
         function g() public {
-            // Variables declared with type and assigned from the returned tuple.
-            (uint x, bool b, uint y) = f();
+            // Variables declared with type and assigned from the returned tuple,
+            // not all elements have to be specified (but the number must match).
+            (uint x, , uint y) = f();
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
             // Components can be left out (also for variable declarations).
-            (data.length,,) = f(); // Sets the length to 7
+            (data.length, , ) = f(); // Sets the length to 7
         }
     }
 
@@ -338,11 +344,13 @@ the two variables have the same name but disjoint scopes.
     contract C {
         function minimalScoping() pure public {
             {
-                uint same2 = 0;
+                uint same;
+                same = 1;
             }
 
             {
-                uint same2 = 0;
+                uint same;
+                same = 3;
             }
         }
     }
@@ -354,6 +362,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 ::
 
     pragma solidity >0.4.24;
+    // This will report a warning
     contract C {
         function f() pure public returns (uint) {
             uint x = 1;
@@ -372,9 +381,8 @@ In any case, you will get a warning about the outer variable being shadowed.
 
  ::
 
-    // This will not compile
-
     pragma solidity >0.4.24;
+    // This will not compile
     contract C {
         function f() pure public returns (uint) {
             x = 2;

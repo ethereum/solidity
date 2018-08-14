@@ -62,7 +62,8 @@ Example::
     contract C {
         function f() public pure returns (uint8[5] memory) {
             string[4] memory adaArr = ["This", "is", "an", "array"];
-            return ([1, 2, 3, 4, 5]);
+            adaArr[0] = "That";
+            return [1, 2, 3, 4, 5];
         }
     }
 
@@ -186,9 +187,10 @@ If you do not want to throw, you can return a pair::
         function checkCounter(uint index) public view {
             (uint counter, bool error) = getCounter(index);
             if (error) {
-                // ...
+                // Handle the error
             } else {
-                // ...
+                // Do something with counter.
+                require(counter > 7, "Invalid counter value");
             }
         }
     }
@@ -372,15 +374,14 @@ contract level) with ``arrayname.length = <some new length>;``. If you get the
 
 ::
 
-    // This will not compile
-
     pragma solidity ^0.4.18;
 
+    // This will not compile
     contract C {
         int8[] dynamicStorageArray;
         int8[5] fixedStorageArray;
 
-        function f() {
+        function f() public {
             int8[] memory memArr;        // Case 1
             memArr.length++;             // illegal
 
