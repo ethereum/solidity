@@ -446,6 +446,25 @@ does not fit inside this range, it is truncated. These truncations can have
 above is necessary to avoid certain attacks.
 
 
+Why are explicit conversions between fixed-size bytes types and integer types failing?
+======================================================================================
+
+Since version 0.5.0 explicit conversions between fixed-size byte arrays and integers are only allowed,
+if both types have the same size. This prevents unexpected behaviour when truncating or padding.
+Such conversions are still possible, but intermediate casts are required that make the desired
+truncation and padding convention explicit. See :ref:`types-conversion-elementary-types` for a full
+explanation and examples.
+
+
+Why can number literals not be converted to fixed-size bytes types?
+===================================================================
+
+Since version 0.5.0 only hexadecimal number literals can be converted to fixed-size bytes
+types and only if the number of hex digits matches the size of the type. See :ref:`types-conversion-literals`
+for a full explanation and examples.
+
+
+
 More Questions?
 ===============
 
