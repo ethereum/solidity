@@ -92,6 +92,7 @@ Bugfixes:
  * Code Generator: Properly handle negative number literals in ABIEncoderV2.
  * Commandline Interface: Correctly handle paths with backslashes on windows.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
+ * Optimizer: Correctly estimate gas costs of constants for special cases.
  * References Resolver: Do not crash on using ``_slot`` and ``_offset`` suffixes on their own.
  * References Resolver: Enforce ``storage`` as data location for mappings.
  * References Resolver: Properly handle invalid references used together with ``_slot`` and ``_offset``.
