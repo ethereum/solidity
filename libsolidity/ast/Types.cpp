@@ -1278,7 +1278,8 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.
 	bigint v = value.numerator() / value.denominator();
-	if (negative)
+
+	if (negative && v != 0)
 		// modify value to satisfy bit requirements for negative numbers:
 		// add one bit for sign and decrement because negative numbers can be larger
 		v = (v - 1) << 1;
