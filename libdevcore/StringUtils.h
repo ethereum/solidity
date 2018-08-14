@@ -49,27 +49,23 @@ std::string joinHumanReadable
 	std::string const& _lastSeparator = ""
 )
 {
-	auto it = begin(_list);
-	auto itEnd = end(_list);
+	auto const itEnd = end(_list);
 
 	std::string result;
 
-	// append first string
-	if (it != itEnd)
+	for (auto it = begin(_list); it != itEnd; )
 	{
-		result += *it;
+		std::string element = *it;
+		bool first = (it == begin(_list));
 		++it;
-	}
-
-	for (;it != itEnd; ++it)
-	{
-		if ((std::next(it) == itEnd) && !_lastSeparator.empty())
-			result += _lastSeparator; // last iteration
-		else
-			result += _separator;
-
-		// append string
-		result += *it;
+		if (!first)
+		{
+			if (it == itEnd && !_lastSeparator.empty())
+				result += _lastSeparator; // last iteration
+			else
+				result += _separator;
+		}
+		result += std::move(element);
 	}
 
 	return result;
