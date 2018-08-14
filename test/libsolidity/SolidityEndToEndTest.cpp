@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(array_multiple_local_vars)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint256[] seq) external pure returns (uint256) {
+			function f(uint256[] calldata seq) external pure returns (uint256) {
 				uint i = 0;
 				uint sum = 0;
 				while (i < seq.length)
@@ -4540,7 +4540,7 @@ BOOST_AUTO_TEST_CASE(struct_containing_bytes_copy_and_delete)
 			struct Struct { uint a; bytes data; uint b; }
 			Struct data1;
 			Struct data2;
-			function set(uint _a, bytes _data, uint _b) external returns (bool) {
+			function set(uint _a, bytes calldata _data, uint _b) external returns (bool) {
 				data1.a = _a;
 				data1.b = _b;
 				data1.data = _data;
@@ -4764,12 +4764,12 @@ BOOST_AUTO_TEST_CASE(struct_referencing)
 		}
 		library L {
 			struct S { uint b; uint a; }
-			function f() public pure returns (S) {
+			function f() public pure returns (S memory) {
 				S memory s;
 				s.a = 3;
 				return s;
 			}
-			function g() public pure returns (I.S) {
+			function g() public pure returns (I.S memory) {
 				I.S memory s;
 				s.a = 4;
 				return s;
@@ -4779,25 +4779,25 @@ BOOST_AUTO_TEST_CASE(struct_referencing)
 			function a(S memory) public pure returns (uint) { return 2; }
 		}
 		contract C is I {
-			function f() public pure returns (S) {
+			function f() public pure returns (S memory) {
 				S memory s;
 				s.a = 1;
 				return s;
 			}
-			function g() public pure returns (I.S) {
+			function g() public pure returns (I.S memory) {
 				I.S memory s;
 				s.a = 2;
 				return s;
 			}
-			function h() public pure returns (L.S) {
+			function h() public pure returns (L.S memory) {
 				L.S memory s;
 				s.a = 5;
 				return s;
 			}
-			function x() public pure returns (L.S) {
+			function x() public pure returns (L.S memory) {
 				return L.f();
 			}
-			function y() public pure returns (I.S) {
+			function y() public pure returns (I.S memory) {
 				return L.g();
 			}
 			function a1() public pure returns (uint) { S memory s; return L.a(s); }
@@ -4941,7 +4941,7 @@ BOOST_AUTO_TEST_CASE(bytes_in_arguments)
 			uint result;
 			function f(uint a, uint b) public { result += a + b; }
 			function g(uint a) public { result *= a; }
-			function test(uint a, bytes data1, bytes data2, uint b) external returns (uint r_a, uint r, uint r_b, uint l) {
+			function test(uint a, bytes calldata data1, bytes calldata data2, uint b) external returns (uint r_a, uint r, uint r_b, uint l) {
 				r_a = a;
 				address(this).call(data1);
 				address(this).call(data2);
@@ -5876,7 +5876,7 @@ BOOST_AUTO_TEST_CASE(external_array_args)
 {
 	char const* sourceCode = R"(
 		contract c {
-			function test(uint[8] a, uint[] b, uint[5] c, uint a_index, uint b_index, uint c_index)
+			function test(uint[8] calldata a, uint[] calldata b, uint[5] calldata c, uint a_index, uint b_index, uint c_index)
 					external returns (uint av, uint bv, uint cv) {
 				av = a[a_index];
 				bv = b[b_index];
@@ -5901,10 +5901,10 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 	char const* sourceCode = R"(
 		contract c {
 			bytes data;
-			function direct(bytes arg, uint index) external returns (uint) {
+			function direct(bytes calldata arg, uint index) external returns (uint) {
 				return uint(uint8(arg[index]));
 			}
-			function storageCopyRead(bytes arg, uint index) external returns (uint) {
+			function storageCopyRead(bytes calldata arg, uint index) external returns (uint) {
 				data = arg;
 				return uint(uint8(data[index]));
 			}
@@ -5959,7 +5959,7 @@ BOOST_AUTO_TEST_CASE(array_copy_calldata_storage)
 			uint[9] m_data;
 			uint[] m_data_dyn;
 			uint8[][] m_byte_data;
-			function store(uint[9] a, uint8[3][] b) external returns (uint8) {
+			function store(uint[9] calldata a, uint8[3][] calldata b) external returns (uint8) {
 				m_data = a;
 				m_data_dyn = a;
 				m_byte_data = b;
@@ -5998,7 +5998,7 @@ BOOST_AUTO_TEST_CASE(array_copy_nested_array)
 			uint[4][] a;
 			uint[10][] b;
 			uint[][] c;
-			function test(uint[2][] d) external returns (uint) {
+			function test(uint[2][] calldata d) external returns (uint) {
 				a = d;
 				b = a;
 				c = b;
@@ -6949,7 +6949,7 @@ BOOST_AUTO_TEST_CASE(return_string)
 	char const* sourceCode = R"(
 		contract Main {
 			string public s;
-			function set(string _s) external {
+			function set(string calldata _s) external {
 				s = _s;
 			}
 			function get1() public returns (string memory r) {
@@ -6975,7 +6975,7 @@ BOOST_AUTO_TEST_CASE(return_multiple_strings_of_various_sizes)
 		contract Main {
 			string public s1;
 			string public s2;
-			function set(string _s1, uint x, string _s2) external returns (uint) {
+			function set(string calldata _s1, uint x, string calldata _s2) external returns (uint) {
 				s1 = _s1;
 				s2 = _s2;
 				return x;
@@ -7024,7 +7024,7 @@ BOOST_AUTO_TEST_CASE(accessor_involving_strings)
 		contract Main {
 			struct stringData { string a; uint b; string c; }
 			mapping(uint => stringData[]) public data;
-			function set(uint x, uint y, string a, uint b, string c) external returns (bool) {
+			function set(uint x, uint y, string calldata a, uint b, string calldata c) external returns (bool) {
 				data[x].length = y + 1;
 				data[x][y].a = a;
 				data[x][y].b = b;
@@ -7061,7 +7061,7 @@ BOOST_AUTO_TEST_CASE(bytes_in_function_calls)
 			function setIndirectFromMemory(string memory _s1, uint x, string memory _s2) public returns (uint) {
 				return this.set(_s1, x, _s2);
 			}
-			function setIndirectFromCalldata(string _s1, uint x, string _s2) external returns (uint) {
+			function setIndirectFromCalldata(string calldata _s1, uint x, string calldata _s2) external returns (uint) {
 				return this.set(_s1, x, _s2);
 			}
 		}
@@ -7102,7 +7102,7 @@ BOOST_AUTO_TEST_CASE(return_bytes_internal)
 				s1 = _s1;
 				_r1 = s1;
 			}
-			function set(bytes _s1) external returns (uint _r, bytes memory _r1) {
+			function set(bytes calldata _s1) external returns (uint _r, bytes memory _r1) {
 				_r1 = doSet(_s1);
 				_r = _r1.length;
 			}
@@ -8040,7 +8040,7 @@ BOOST_AUTO_TEST_CASE(library_call)
 BOOST_AUTO_TEST_CASE(library_function_external)
 {
 	char const* sourceCode = R"(
-		library Lib { function m(bytes b) external pure returns (byte) { return b[2]; } }
+		library Lib { function m(bytes calldata b) external pure returns (byte) { return b[2]; } }
 		contract Test {
 			function f(bytes memory b) public pure returns (byte) {
 				return Lib.m(b);

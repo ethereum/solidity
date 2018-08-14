@@ -3,5 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (51-80): Type is required to live outside storage.
-// TypeError: (51-80): Internal or recursive type is not allowed for public or external functions.
+// TypeError: (51-80): Data location must be "memory" for return parameter in function, but "storage" was given.

@@ -140,7 +140,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         return (true, false, 0);
     }
-    function replaceModule(string name, address addr, bool callCallback) external returns (bool success) {
+    function replaceModule(string calldata name, address addr, bool callCallback) external returns (bool success) {
         /*
             Module replace, can be called only by the Publisher contract.
 
@@ -167,7 +167,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         return true;
     }
 
-    function callReplaceCallback(string moduleName, address newModule) external returns (bool success) {
+    function callReplaceCallback(string calldata moduleName, address newModule) external returns (bool success) {
         require( block.number < debugModeUntil );
         if ( ! insertAndCheckDo(calcDoHash("callReplaceCallback", keccak256(abi.encodePacked(moduleName, newModule)))) ) {
             return true;
@@ -178,7 +178,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         return true;
     }
 
-    function newModule(string name, address addr, bool schellingEvent, bool transferEvent) external returns (bool success) {
+    function newModule(string calldata name, address addr, bool schellingEvent, bool transferEvent) external returns (bool success) {
         /*
             Adding new module to the database. Can be called only by the Publisher contract.
 
@@ -199,7 +199,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         addModule( modules_s(addr, keccak256(bytes(name)), schellingEvent, transferEvent), true);
         return true;
     }
-    function dropModule(string name, bool callCallback) external returns (bool success) {
+    function dropModule(string calldata name, bool callCallback) external returns (bool success) {
         /*
             Deleting module from the database. Can be called only by the Publisher contract.
 
@@ -224,7 +224,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         return true;
     }
 
-    function callDisableCallback(string moduleName) external returns (bool success) {
+    function callDisableCallback(string calldata moduleName) external returns (bool success) {
         require( block.number < debugModeUntil );
         if ( ! insertAndCheckDo(calcDoHash("callDisableCallback", keccak256(bytes(moduleName)))) ) {
             return true;
@@ -406,7 +406,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( token(modules[_id].addr).burn(from, value) );
         return true;
     }
-    function configureModule(string moduleName, announcementType aType, uint256 value) external returns (bool success) {
+    function configureModule(string calldata moduleName, announcementType aType, uint256 value) external returns (bool success) {
         /*
             Changing configuration of a module. Can be called only by Publisher or while debug mode by owners.
 

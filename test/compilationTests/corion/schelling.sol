@@ -310,7 +310,7 @@ contract schelling is module, announcementTypes, schellingVars {
 
         setRound(currentRound, round);
     }
-    function sendVote(string vote) isReady noContract external {
+    function sendVote(string calldata vote) isReady noContract external {
         /*
             Check vote (Envelope opening)
             Only the sent “envelopes” can be opened.

@@ -7,7 +7,7 @@ contract test {
     }
 }
 // ----
-// TypeError: (48-63): Data location can only be given for array or struct types.
-// TypeError: (71-89): Data location can only be given for array or struct types.
-// TypeError: (97-111): Data location can only be given for array or struct types.
-// TypeError: (119-136): Data location can only be given for array or struct types.
+// TypeError: (48-63): Data location can only be specified for array, struct or mapping types, but "storage" was given.
+// TypeError: (71-89): Data location can only be specified for array, struct or mapping types, but "storage" was given.
+// TypeError: (97-111): Data location can only be specified for array, struct or mapping types, but "memory" was given.
+// TypeError: (119-136): Data location can only be specified for array, struct or mapping types, but "memory" was given.

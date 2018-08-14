@@ -100,7 +100,7 @@
 															{
 																"constant" : false,
 																"name" : "",
-																"scope" : 16,
+																"scope" : 5,
 																"stateVariable" : false,
 																"storageLocation" : "default",
 																"type" : "uint256",
@@ -191,7 +191,7 @@
 															{
 																"constant" : false,
 																"name" : "",
-																"scope" : 16,
+																"scope" : 12,
 																"stateVariable" : false,
 																"storageLocation" : "default",
 																"type" : "uint256",

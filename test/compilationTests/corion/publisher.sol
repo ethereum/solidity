@@ -116,7 +116,7 @@ contract publisher is announcementTypes, module, safeMath {
         return _amount * oppositeRate / 100 > weight;
     }
 
-    function newAnnouncement(announcementType Type, string Announcement, string Link, bool Oppositable, string _str, uint256 _uint, address _addr) onlyOwner external {
+    function newAnnouncement(announcementType Type, string calldata Announcement, string calldata Link, bool Oppositable, string calldata _str, uint256 _uint, address _addr) onlyOwner external {
         /*
             New announcement. Can be called  only by those in the admin list
 

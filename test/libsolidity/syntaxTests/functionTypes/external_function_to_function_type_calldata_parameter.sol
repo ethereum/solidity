@@ -3,7 +3,7 @@
 // when converting to a function type.
 contract C {
     function f(function(bytes memory) pure external /*g*/) pure public { }
-    function callback(bytes) pure external {}
+    function callback(bytes calldata) pure external {}
     function g() view public {
         f(this.callback);
     }

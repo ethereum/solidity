@@ -213,7 +213,7 @@ contract provider is module, safeMath, announcementTypes {
         return ( ! priv && ( rate >= publicMinRate && rate <= publicMaxRate ) ) ||
                 ( priv && ( rate >= privateMinRate && rate <= privateMaxRate ) );
     }
-    function createProvider(bool priv, string name, string website, string country, string info, uint8 rate, bool isForRent, address admin) isReady external {
+    function createProvider(bool priv, string calldata name, string calldata website, string calldata country, string calldata info, uint8 rate, bool isForRent, address admin) isReady external {
         /*
             Creating a provider.
             During the ICO its not allowed to create provider.
@@ -270,7 +270,7 @@ contract provider is module, safeMath, announcementTypes {
         }
         emit EProviderOpen(msg.sender, currHeight);
     }
-    function setProviderDetails(address addr, string website, string country, string info, uint8 rate, address admin) isReady external {
+    function setProviderDetails(address addr, string calldata website, string calldata country, string calldata info, uint8 rate, address admin) isReady external {
         /*
             Modifying the datas of the provider.
             This can only be invited by the provider’s admin.
@@ -369,7 +369,7 @@ contract provider is module, safeMath, announcementTypes {
         setRightForInterest(getProviderCurrentSupply(msg.sender), 0, providers[msg.sender].data[currHeight].priv);
         emit EProviderClose(msg.sender, currHeight);
     }
-    function allowUsers(address provider, address[] addr) isReady external {
+    function allowUsers(address provider, address[] calldata addr) isReady external {
         /*
             Permition of the user to be able to connect to the provider.
             This can only be invited by the provider’s admin.
@@ -387,7 +387,7 @@ contract provider is module, safeMath, announcementTypes {
             providers[provider].data[currHeight].allowedUsers[addr[a]] = true;
         }
     }
-    function disallowUsers(address provider, address[] addr) isReady external {
+    function disallowUsers(address provider, address[] calldata addr) isReady external {
         /*
             Disable of the user not to be able to connect to the provider.
             It is can called only for the admin of the provider.
