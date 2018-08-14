@@ -98,6 +98,7 @@ Bugfixes:
  * References Resolver: Report error instead of assertion fail when FunctionType has an undeclared type as parameter.
  * Type Checker: Default data location for type conversions (e.g. from literals) is memory and not storage.
  * Type Checker: Disallow assignments to mappings within tuple assignments as well.
+ * Type Checker: Disallow packed encoding of arrays of structs.
  * Type Checker: Allow assignments to local variables of mapping types.
  * Type Checker: Consider fixed size arrays when checking for recursive structs.
  * Type Checker: Fix crashes in erroneous tuple assignments in which the type of the right hand side cannot be determined.

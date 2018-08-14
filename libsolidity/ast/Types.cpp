@@ -394,17 +394,17 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _p
 		encodingType = encodingType->interfaceType(_inLibraryCall);
 	if (encodingType)
 		encodingType = encodingType->encodingType();
-	if (auto structType = dynamic_cast<StructType const*>(encodingType.get()))
-	{
-		// Structs are fine in the following circumstances:
-		// - ABIv2 without packed encoding or,
-		// - storage struct for a library
-		if (!(
-			(_encoderV2 && !_packed) ||
-			(structType->location() == DataLocation::Storage && _inLibraryCall)
-		))
+	// Structs are fine in the following circumstances:
+	// - ABIv2 without packed encoding or,
+	// - storage struct for a library
+	if (_inLibraryCall && encodingType->dataStoredIn(DataLocation::Storage))
+		return encodingType;
+	TypePointer baseType = encodingType;
+	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
+		baseType = arrayType->baseType();
+	if (dynamic_cast<StructType const*>(baseType.get()))
+		if (!_encoderV2 || _packed)
 			return TypePointer();
-	}
 	return encodingType;
 }
 
