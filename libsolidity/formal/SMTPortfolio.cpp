@@ -42,14 +42,6 @@ SMTPortfolio::SMTPortfolio(map<h256, string> const& _smtlib2Responses)
 #endif
 #if !defined (HAVE_Z3) && !defined (HAVE_CVC4)
 	m_solvers.emplace_back(make_shared<smt::SMTLib2Interface>(_smtlib2Responses));
-#else
-	if (!_smtlib2Responses.empty())
-		m_errorReporter.warning(
-			"SMT-LIB2 query responses were given in the auxiliary input, "
-			"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
-			"These responses will be ignored."
-			"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
-		);
 #endif
 	(void)_smtlib2Responses;
 }
