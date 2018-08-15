@@ -406,7 +406,8 @@ inheritable properties of contracts and may be overridden by derived contracts.
         /// The `return 7` statement assigns 7 to the return value but still
         /// executes the statement `locked = false` in the modifier.
         function f() public noReentrancy returns (uint) {
-            require(msg.sender.call(""));
+            (bool success,) = msg.sender.call("");
+            require(success);
             return 7;
         }
     }
@@ -645,7 +646,8 @@ Like any function, the fallback function can execute complex operations as long 
 
     contract Caller {
         function callTest(Test test) public returns (bool) {
-            require(address(test).call(abi.encodeWithSignature("nonExistingFunction()")));
+            (bool success,) = address(test).call(abi.encodeWithSignature("nonExistingFunction()"));
+            require(success);
             // results in test.x becoming == 1.
 
             // If someone sends ether to that contract,

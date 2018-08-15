@@ -86,7 +86,8 @@ as it uses ``call`` which forwards all remaining gas by default:
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            if (msg.sender.call.value(shares[msg.sender])(""))
+            (bool success,) = msg.sender.call.value(shares[msg.sender])("");
+            if (success)
                 shares[msg.sender] = 0;
         }
     }
