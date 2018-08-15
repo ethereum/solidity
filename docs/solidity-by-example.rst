@@ -907,7 +907,7 @@ Each message includes the following information:
     * The smart contract's address, used to prevent cross-contract replay attacks.
     * The total amount of Ether that is owed the recipient so far.
 
-A payment channel is closed just once, at the of a series of transfers.
+A payment channel is closed just once, at the end of a series of transfers.
 Because of this, only one of the messages sent will be redeemed. This is why
 each message specifies a cumulative total amount of Ether owed, rather than the
 amount of the individual micropayment. The recipient will naturally choose to
