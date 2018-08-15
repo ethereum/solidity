@@ -449,6 +449,21 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 		CHECK_ERROR(sourceCode, TypeError, "\"staticcall\" is not supported by the VM version.");
 }
 
+BOOST_AUTO_TEST_CASE(address_staticcall_value)
+{
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	{
+		char const* sourceCode = R"(
+			contract C {
+				function f() public view {
+					address(0x4242).staticcall.value;
+				}
+			}
+		)";
+		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
