@@ -3586,7 +3586,8 @@ BOOST_AUTO_TEST_CASE(default_fallback_throws)
 	char const* sourceCode = R"YY(
 		contract A {
 			function f() public returns (bool) {
-				return address(this).call("");
+				(bool success,) = address(this).call("");
+				return success;
 			}
 		}
 	)YY";
@@ -3598,7 +3599,9 @@ BOOST_AUTO_TEST_CASE(default_fallback_throws)
 		char const* sourceCode = R"YY(
 			contract A {
 				function f() public returns (bool) {
-					return address(this).staticcall("");
+					(bool success, bytes memory data) = address(this).staticcall("");
+					assert(data.length == 0);
+					return success;
 				}
 			}
 		)YY";
@@ -4408,7 +4411,8 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				function doSend(address rec) public payable
 				{
 					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
-					if (rec.delegatecall(abi.encodeWithSelector(signature, 23))) {}
+					(bool success,) = rec.delegatecall(abi.encodeWithSelector(signature, 23));
+					success;
 				}
 			}
 	)**";
@@ -4445,19 +4449,19 @@ BOOST_AUTO_TEST_CASE(generic_staticcall)
 					function assertFunction(uint256 p) public view returns (uint256) { assert(x == p); return x; }
 				}
 				contract C {
-					function f(address a) public view returns (bool)
+					function f(address a) public view returns (bool, bytes memory)
 					{
 						return a.staticcall(abi.encodeWithSignature("pureFunction(uint256)", 23));
 					}
-					function g(address a) public view returns (bool)
+					function g(address a) public view returns (bool, bytes memory)
 					{
 						return a.staticcall(abi.encodeWithSignature("viewFunction(uint256)", 23));
 					}
-					function h(address a) public view returns (bool)
+					function h(address a) public view returns (bool, bytes memory)
 					{
 						return a.staticcall(abi.encodeWithSignature("nonpayableFunction(uint256)", 23));
 					}
-					function i(address a, uint256 v) public view returns (bool)
+					function i(address a, uint256 v) public view returns (bool, bytes memory)
 					{
 						return a.staticcall(abi.encodeWithSignature("assertFunction(uint256)", v));
 					}
@@ -4466,11 +4470,11 @@ BOOST_AUTO_TEST_CASE(generic_staticcall)
 		compileAndRun(sourceCode, 0, "A");
 		u160 const c_addressA = m_contractAddress;
 		compileAndRun(sourceCode, 0, "C");
-		ABI_CHECK(callContractFunction("f(address)", c_addressA), encodeArgs(true));
-		ABI_CHECK(callContractFunction("g(address)", c_addressA), encodeArgs(true));
-		ABI_CHECK(callContractFunction("h(address)", c_addressA), encodeArgs(false));
-		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 42), encodeArgs(true));
-		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 23), encodeArgs(false));
+		ABI_CHECK(callContractFunction("f(address)", c_addressA), encodeArgs(true, 0x40, 0x20, 23));
+		ABI_CHECK(callContractFunction("g(address)", c_addressA), encodeArgs(true, 0x40, 0x20, 23 + 42));
+		ABI_CHECK(callContractFunction("h(address)", c_addressA), encodeArgs(false, 0x40, 0x00));
+		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 42), encodeArgs(true, 0x40, 0x20, 42));
+		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 23), encodeArgs(false, 0x40, 0x00));
 	}
 }
 
@@ -4570,7 +4574,7 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 		contract sender {
 			constructor() public { rec = new receiver(); }
 			function() external { savedData = msg.data; }
-			function forward() public returns (bool) { !address(rec).call(savedData); return true; }
+			function forward() public returns (bool) { address(rec).call(savedData); return true; }
 			function clear() public returns (bool) { delete savedData; return true; }
 			function val() public returns (uint) { return rec.received(); }
 			receiver rec;
@@ -4599,18 +4603,21 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
 			receiver rec;
 			constructor() public { rec = new receiver(); }
 			function viaCalldata() public returns (uint) {
-				require(address(rec).call(msg.data));
+				(bool success,) = address(rec).call(msg.data);
+				require(success);
 				return rec.calledLength();
 			}
 			function viaMemory() public returns (uint) {
 				bytes memory x = msg.data;
-				require(address(rec).call(x));
+				(bool success,) = address(rec).call(x);
+				require(success);
 				return rec.calledLength();
 			}
 			bytes s;
 			function viaStorage() public returns (uint) {
 				s = msg.data;
-				require(address(rec).call(s));
+				(bool success,) = address(rec).call(s);
+				require(success);
 				return rec.calledLength();
 			}
 		}
@@ -10336,7 +10343,8 @@ BOOST_AUTO_TEST_CASE(mutex)
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
 				if (amount > shares) revert();
-				if (!msg.sender.call.value(amount)("")) revert();
+				(bool success,) = msg.sender.call.value(amount)("");
+				require(success);
 				shares -= amount;
 				return shares;
 			}
@@ -10344,7 +10352,8 @@ BOOST_AUTO_TEST_CASE(mutex)
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
 				if (amount > shares) revert();
-				if (!msg.sender.call.value(amount)("")) revert();
+				(bool success,) = msg.sender.call.value(amount)("");
+				require(success);
 				shares -= amount;
 				return shares;
 			}
@@ -12465,10 +12474,12 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 		contract C {
 			/// Calling into non-existant account is successful (creates the account)
 			function f() external returns (bool) {
-				return address(0x4242).call("");
+				(bool success,) = address(0x4242).call("");
+				return success;
 			}
 			function h() external returns (bool) {
-				return address(0x4242).delegatecall("");
+				(bool success,) = address(0x4242).delegatecall("");
+				return success;
 			}
 		}
 	)YY";
@@ -12480,50 +12491,90 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 	{
 		char const* sourceCode = R"YY(
 			contract C {
-				function f() external returns (bool) {
+				function f() external returns (bool, bytes memory) {
 					return address(0x4242).staticcall("");
 				}
 			}
 		)YY";
 		compileAndRun(sourceCode, 0, "C");
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1)));
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), 0x40, 0x00));
 	}
 }
 
 BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 {
-	char const* sourceCode = R"DELIMITER(
-		contract C {
-			uint value;
-			function set(uint _value) external {
-				value = _value;
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		char const* sourceCode = R"DELIMITER(
+			contract C {
+				uint value;
+				function set(uint _value) external {
+					value = _value;
+				}
+				function get() external view returns (uint) {
+					return value;
+				}
+				function get_delegated() external returns (bool, bytes memory) {
+					return address(this).delegatecall(abi.encodeWithSignature("get()"));
+				}
+				function assert0() external view {
+					assert(value == 0);
+				}
+				function assert0_delegated() external returns (bool, bytes memory) {
+					return address(this).delegatecall(abi.encodeWithSignature("assert0()"));
+				}
 			}
-			function get() external view returns (uint) {
-				return value;
+		)DELIMITER";
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(1), 0x40, 0x00));
+		ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1), 0x40, 0x20, 0x00));
+		ABI_CHECK(callContractFunction("set(uint256)", u256(1)), encodeArgs());
+		ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(1)));
+		ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(0), 0x40, 0x00));
+		ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1), 0x40, 0x20, 1));
+		ABI_CHECK(callContractFunction("set(uint256)", u256(42)), encodeArgs());
+		ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(42)));
+		ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(0), 0x40, 0x00));
+		ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1), 0x40, 0x20, 42));
+	}
+	else
+	{
+		char const* sourceCode = R"DELIMITER(
+			contract C {
+				uint value;
+				function set(uint _value) external {
+					value = _value;
+				}
+				function get() external view returns (uint) {
+					return value;
+				}
+				function get_delegated() external returns (bool) {
+					(bool success,) = address(this).delegatecall(abi.encodeWithSignature("get()"));
+					return success;
+				}
+				function assert0() external view {
+					assert(value == 0);
+				}
+				function assert0_delegated() external returns (bool) {
+					(bool success,) = address(this).delegatecall(abi.encodeWithSignature("assert0()"));
+					return success;
+				}
 			}
-			function get_delegated() external returns (bool) {
-				return address(this).delegatecall(abi.encodeWithSignature("get()"));
-			}
-			function assert0() external view {
-				assert(value == 0);
-			}
-			function assert0_delegated() external returns (bool) {
-				return address(this).delegatecall(abi.encodeWithSignature("assert0()"));
-			}
-		}
-	)DELIMITER";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("set(uint256)", u256(1)), encodeArgs());
-	ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("set(uint256)", u256(42)), encodeArgs());
-	ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(42)));
-	ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1)));
+		)DELIMITER";
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(1)));
+		ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1)));
+		ABI_CHECK(callContractFunction("set(uint256)", u256(1)), encodeArgs());
+		ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(1)));
+		ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1)));
+		ABI_CHECK(callContractFunction("set(uint256)", u256(42)), encodeArgs());
+		ABI_CHECK(callContractFunction("get()"), encodeArgs(u256(42)));
+		ABI_CHECK(callContractFunction("assert0_delegated()"), encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("get_delegated()"), encodeArgs(u256(1)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(function_types_sig)
@@ -13292,7 +13343,8 @@ BOOST_AUTO_TEST_CASE(abi_encode_call)
 				uint[] memory b = new uint[](2);
 				b[0] = 6;
 				b[1] = 7;
-				require(address(this).call(abi.encodeWithSignature("c(uint256,uint256[])", a, b)));
+				(bool success,) = address(this).call(abi.encodeWithSignature("c(uint256,uint256[])", a, b));
+				require(success);
 				return x;
 			}
 		}

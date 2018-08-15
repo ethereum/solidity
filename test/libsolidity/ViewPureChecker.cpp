@@ -103,7 +103,8 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 	string text = R"(
 		contract C {
 			function i() view public returns (bool) {
-				return address(0x4242).staticcall("");
+				(bool success,) = address(0x4242).staticcall("");
+				return success;
 			}
 		}
 	)";

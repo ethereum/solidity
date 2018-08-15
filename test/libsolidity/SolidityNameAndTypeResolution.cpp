@@ -438,7 +438,8 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 	char const* sourceCode = R"(
 		contract C {
 			function f() public view returns(bool) {
-				return address(0x4242).staticcall("");
+				(bool success,) = address(0x4242).staticcall("");
+				return success;
 			}
 		}
 	)";
@@ -461,6 +462,58 @@ BOOST_AUTO_TEST_CASE(address_staticcall_value)
 			}
 		)";
 		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+	}
+}
+
+BOOST_AUTO_TEST_CASE(address_call_full_return_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public {
+				(bool success, bytes memory m) = address(0x4242).call("");
+				success; m;
+			}
+		}
+	)";
+
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
+	else
+		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+}
+
+BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public {
+				(bool success, bytes memory m) = address(0x4242).delegatecall("");
+				success; m;
+			}
+		}
+	)";
+
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
+	else
+		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+}
+
+
+BOOST_AUTO_TEST_CASE(address_staticcall_full_return_type)
+{
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	{
+		char const* sourceCode = R"(
+			contract C {
+				function f() public view {
+					(bool success, bytes memory m) = address(0x4242).staticcall("");
+					success; m;
+				}
+			}
+		)";
+
+		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	}
 }
 

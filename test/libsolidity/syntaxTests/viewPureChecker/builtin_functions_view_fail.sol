@@ -9,15 +9,17 @@ contract C {
         selfdestruct(address(this));
     }
     function i() view public {
-        require(address(this).delegatecall(""));
+        (bool success,) = address(this).delegatecall("");
+        require(success);
     }
     function j() view public {
-        require(address(this).call(""));
+        (bool success,) = address(this).call("");
+        require(success);
     }
 }
 // ----
 // TypeError: (52-77): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
 // TypeError: (132-153): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
 // TypeError: (201-228): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (283-313): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (369-391): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError: (293-323): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError: (414-436): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.

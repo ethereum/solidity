@@ -1827,33 +1827,34 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	auto funKind = _functionType.kind();
 
 	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
-
-	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
+	
+	bool returnSuccessConditionAndReturndata = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (_functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
 
 	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
 	unsigned retSize = 0;
-	TypePointers returnTypes;
-	if (returnSuccessCondition)
-		retSize = 0; // return value actually is success condition
-	else if (haveReturndatacopy)
-		returnTypes = _functionType.returnParameterTypes();
-	else
-		returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
-
 	bool dynamicReturnSize = false;
-	for (auto const& retType: returnTypes)
-		if (retType->isDynamicallyEncoded())
-		{
-			solAssert(haveReturndatacopy, "");
-			dynamicReturnSize = true;
-			retSize = 0;
-			break;
-		}
+	TypePointers returnTypes;
+	if (!returnSuccessConditionAndReturndata)
+	{
+		if (haveReturndatacopy)
+			returnTypes = _functionType.returnParameterTypes();
 		else
-			retSize += retType->calldataEncodedSize();
+			returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
+
+		for (auto const& retType: returnTypes)
+			if (retType->isDynamicallyEncoded())
+			{
+				solAssert(haveReturndatacopy, "");
+				dynamicReturnSize = true;
+				retSize = 0;
+				break;
+			}
+			else
+				retSize += retType->calldataEncodedSize();
+	}
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;
@@ -1997,7 +1998,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		(_functionType.gasSet() ? 1 : 0) +
 		(!_functionType.isBareCall() ? 1 : 0);
 
-	if (returnSuccessCondition)
+	if (returnSuccessConditionAndReturndata)
 		m_context << swapInstruction(remainsSize);
 	else
 	{
@@ -2008,9 +2009,31 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	utils().popStackSlots(remainsSize);
 
-	if (returnSuccessCondition)
+	if (returnSuccessConditionAndReturndata)
 	{
-		// already there
+		// success condition is already there
+		// The return parameter types can be empty, when this function is used as
+		// an internal helper function e.g. for ``send`` and ``transfer``. In that
+		// case we're only interested in the success condition, not the return data.
+		if (!_functionType.returnParameterTypes().empty())
+		{
+			if (haveReturndatacopy)
+			{
+				m_context << Instruction::RETURNDATASIZE;
+				m_context.appendInlineAssembly(R"({
+					switch v case 0 {
+						v := 0x60
+					} default {
+						v := mload(0x40)
+						mstore(0x40, add(v, and(add(returndatasize(), 0x3f), not(0x1f))))
+						mstore(v, returndatasize())
+						returndatacopy(add(v, 0x20), 0, returndatasize())
+					}
+			    })", {"v"});
+			}
+			else
+				utils().pushZeroPointer();
+		}
 	}
 	else if (funKind == FunctionType::Kind::RIPEMD160)
 	{
