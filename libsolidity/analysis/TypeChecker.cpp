@@ -869,7 +869,17 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	for (ASTPointer<VariableDeclaration> const& var: _eventDef.parameters())
 	{
 		if (var->isIndexed())
+		{
 			numIndexed++;
+			if (
+				_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2)
+				&& dynamic_cast<ReferenceType const*>(type(*var).get())
+			)
+				m_errorReporter.typeError(
+					var->location(),
+					"Reference types cannot be indexed."
+				);
+		}
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
