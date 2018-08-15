@@ -412,6 +412,7 @@
     }, 
     "0.4.17": {
         "bugs": [
+            "EventStructWrongData", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector"
         ], 
@@ -419,12 +420,14 @@
     }, 
     "0.4.18": {
         "bugs": [
+            "EventStructWrongData", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2017-10-18"
     }, 
     "0.4.19": {
         "bugs": [
+            "EventStructWrongData", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2017-11-30"
@@ -445,28 +448,35 @@
     }, 
     "0.4.20": {
         "bugs": [
+            "EventStructWrongData", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2018-02-14"
     }, 
     "0.4.21": {
         "bugs": [
+            "EventStructWrongData", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2018-03-07"
     }, 
     "0.4.22": {
         "bugs": [
+            "EventStructWrongData", 
             "OneOfTwoConstructorsSkipped"
         ], 
         "released": "2018-04-16"
     }, 
     "0.4.23": {
-        "bugs": [], 
+        "bugs": [
+            "EventStructWrongData"
+        ], 
         "released": "2018-04-19"
     }, 
     "0.4.24": {
-        "bugs": [], 
+        "bugs": [
+            "EventStructWrongData"
+        ], 
         "released": "2018-05-16"
     }, 
     "0.4.3": {
