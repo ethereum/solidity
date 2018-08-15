@@ -1632,7 +1632,7 @@ public:
 	enum class SubDenomination
 	{
 		None = Token::Illegal,
-		Drop = Token::SubDrop,
+		Sun = Token::SubSun,
 		Trx = Token::SubTrx,
 		Second = Token::SubSecond,
 		Minute = Token::SubMinute,

@@ -2,12 +2,12 @@
 Units and Globally Available Variables
 **************************************
 
-.. index:: drop, trx
+.. index:: sun, trx
 
 Ether Units
 ===========
 
-A literal number can take a suffix of ``drop`` or ``trx`` to convert between the subdenominations of Ether, where Ether currency numbers without a postfix are assumed to be Wei, e.g. ``2 trx == 2000000 drop`` evaluates to ``true``.
+A literal number can take a suffix of ``sun`` or ``trx`` to convert between the subdenominations of Ether, where Ether currency numbers without a postfix are assumed to be Wei, e.g. ``2 trx == 2000000 sun`` evaluates to ``true``.
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 

@@ -181,7 +181,7 @@ namespace solidity
 	K(While, "while", 0)                                               \
 	\
 	/* Ether subdenominations */                                       \
-	K(SubDrop, "drop", 0)                                              \
+	K(SubSun, "sun", 0)                                              \
 	K(SubTrx, "trx", 0)                                                \
 	K(SubSecond, "seconds", 0)                                         \
 	K(SubMinute, "minutes", 0)                                         \
@@ -289,7 +289,7 @@ public:
 	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Internal; }
 	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
 	static bool isStateMutabilitySpecifier(Value op) { return op == Pure || op == Constant || op == View || op == Payable; }
-	static bool isEtherSubdenomination(Value op) { return op == SubDrop || op == SubTrx; }
+	static bool isEtherSubdenomination(Value op) { return op == SubSun || op == SubTrx; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
 	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= TypeOf); }
 

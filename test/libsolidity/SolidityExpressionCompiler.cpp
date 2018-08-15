@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
 		contract test {
 			function test ()
 			{
-				 var x = 1 drop
+				 var x = 1 sun
 
 
 ;
