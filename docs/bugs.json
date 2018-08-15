@@ -1,4 +1,13 @@
 [
+	{
+		"name": "NestedArrayFunctionCallDecoder",
+		"summary": "Calling functions that return multi-dimensional fixed-size arrays can result in memory corruption.",
+		"description": "If Solidity code calls a function that returns a multi-dimensional fixed-size array, array elements are incorrectly interpreted as memory pointers and thus can cause memory corruption if the return values are accessed. Calling functions with multi-dimensional fixed-size arrays is unaffected as is returning fixed-size arrays from function calls. The regular expression only checks if such functions are present, not if they are called, which is required for the contract to be affected.",
+		"introduced": "0.1.4",
+		"fixed": "0.4.22",
+		"severity": "medium",
+		"check": {"regex-source": "returns[^;{]*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\]\\s*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\][^{;]*[;{]"}
+	},
     {
         "name": "OneOfTwoConstructorsSkipped",
         "summary": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored.",
