@@ -1359,7 +1359,8 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 			if (
 				kind == FunctionType::Kind::BareCall ||
 				kind == FunctionType::Kind::BareCallCode ||
-				kind == FunctionType::Kind::BareDelegateCall
+				kind == FunctionType::Kind::BareDelegateCall ||
+				kind == FunctionType::Kind::BareStaticCall
 			)
 				m_errorReporter.warning(_statement.location(), "Return value of low-level calls not used.");
 			else if (kind == FunctionType::Kind::Send)
@@ -1754,6 +1755,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		return false;
 	}
 
+	if (functionType->kind() == FunctionType::Kind::BareStaticCall && !m_evmVersion.hasStaticCall())
+		m_errorReporter.typeError(_functionCall.location(), "\"staticcall\" is not supported by the VM version.");
+
 	auto returnTypes =
 		allowDynamicTypes ?
 		functionType->returnParameterTypes() :
@@ -1834,7 +1838,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		else if (
 			functionType->kind() == FunctionType::Kind::BareCall ||
 			functionType->kind() == FunctionType::Kind::BareCallCode ||
-			functionType->kind() == FunctionType::Kind::BareDelegateCall
+			functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+			functionType->kind() == FunctionType::Kind::BareStaticCall
 		)
 		{
 			if (arguments.empty())
@@ -1882,7 +1887,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				if (
 					functionType->kind() == FunctionType::Kind::BareCall ||
 					functionType->kind() == FunctionType::Kind::BareCallCode ||
-					functionType->kind() == FunctionType::Kind::BareDelegateCall
+					functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+					functionType->kind() == FunctionType::Kind::BareStaticCall
 				)
 					msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
 				else if (
