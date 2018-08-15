@@ -872,12 +872,12 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 		{
 			numIndexed++;
 			if (
-				_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2)
-				&& dynamic_cast<ReferenceType const*>(type(*var).get())
+				_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+				dynamic_cast<ReferenceType const*>(type(*var).get())
 			)
 				m_errorReporter.typeError(
 					var->location(),
-					"Reference types cannot be indexed."
+					"Indexed reference types cannot yet be used with ABIEncoderV2."
 				);
 		}
 		if (!type(*var)->canLiveOutsideStorage())
