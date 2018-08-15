@@ -234,7 +234,7 @@ protected:
 	Address m_sender;
 	Address m_contractAddress;
 	u256 m_blockNumber;
-	u256 const m_gasPrice = 100 * szabo;
+	u256 const m_gasPrice = 10000 * sun;
 	u256 const m_gas = 100000000;
 	bytes m_output;
 	std::vector<LogEntry> m_logs;
