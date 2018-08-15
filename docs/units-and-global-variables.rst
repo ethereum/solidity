@@ -103,7 +103,7 @@ ABI Encoding and Decoding Functions
 - ``abi.encode(...) returns (bytes)``: ABI-encodes the given arguments
 - ``abi.encodePacked(...) returns (bytes)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
 
 .. note::
     These encoding functions can be used to craft data for function calls without actually
