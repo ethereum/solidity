@@ -842,13 +842,14 @@ Solidity supports multiple inheritance by copying code including polymorphism.
 All function calls are virtual, which means that the most derived function
 is called, except when the contract name is explicitly given.
 
-When a contract inherits from multiple contracts, only a single
+When a contract inherits from other contracts, only a single
 contract is created on the blockchain, and the code from all the base contracts
 is copied into the created contract.
 
 The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
-especially concerning multiple inheritance.
+especially concerning multiple inheritance, but there are also
+some :ref:`differences <multi-inheritance>`.
 
 Details are given in the following example.
 
@@ -1064,6 +1065,8 @@ contracts' constructors, it will be abstract.
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 
+.. _multi-inheritance:
+
 Multiple Inheritance and Linearization
 ======================================
 
@@ -1076,7 +1079,13 @@ disallows some inheritance graphs. Especially, the order in
 which the base classes are given in the ``is`` directive is
 important: You have to list the direct base contracts
 in the order from "most base-like" to "most derived".
-Note that this order is different from the one used in Python.
+Note that this order is the reverse of the one used in Python.
+
+Another simplifying way to explain this is that when a function is called that
+is defined multiple times in different contracts, the given bases
+are searched from right to left (left to right in Python) in a depth-first manner,
+stopping at the first match. If a base contract has already been searched, it is skipped.
+
 In the following code, Solidity will give the
 error "Linearization of inheritance graph impossible".
 
@@ -1093,6 +1102,8 @@ The reason for this is that ``C`` requests ``X`` to override ``A``
 (by specifying ``A, X`` in this order), but ``A`` itself
 requests to override ``X``, which is a contradiction that
 cannot be resolved.
+
+
 
 Inheriting Different Kinds of Members of the Same Name
 ======================================================
