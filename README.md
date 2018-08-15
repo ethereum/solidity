@@ -12,8 +12,20 @@ Solidity is still under development. So please do not hesitate and open an [issu
 
 ## Building
 See the [Solidity documentation](https://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source) for build instructions.
+```
+Build for javascript
+cd solidity
+docker run -it -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.35.4-64bit
+apt-get update
+apt-get install wget gcc
+./scripts/travis-emscripten/install_deps.sh
+./scripts/travis-emscripten/build_emscripten.sh
 
+bash tran.sh
+```
 ## How to Contribute
 Please see our [contribution guidelines](https://solidity.readthedocs.io/en/latest/contributing.html) in the Solidity documentation.
 
 Any contributions are welcome!
+
+
