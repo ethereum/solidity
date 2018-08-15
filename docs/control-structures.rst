@@ -412,11 +412,11 @@ The deprecated keyword ``throw`` can also be used as an alternative to ``revert(
     From version 0.4.13 the ``throw`` keyword is deprecated and will be phased out in the future.
 
 When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send``
-and the low-level functions ``call``, ``delegatecall`` and ``callcode`` -- those return ``false`` in case
+and the low-level functions ``call``, ``delegatecall``, ``callcode`` and ``staticcall`` -- those return ``false`` in case
 of an exception instead of "bubbling up".
 
 .. warning::
-    The low-level ``call``, ``delegatecall`` and ``callcode`` will return success if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
+    The low-level ``call``, ``delegatecall``, ``callcode`` and ``staticcall`` will return success if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
 
 Catching exceptions is not yet possible.
 
@@ -455,7 +455,7 @@ A ``require``-style exception is generated in the following situations:
 
 #. Calling ``throw``.
 #. Calling ``require`` with an argument that evaluates to ``false``.
-#. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall`` or ``callcode`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
+#. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
 #. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
 #. If you perform an external function call targeting a contract that contains no code.
 #. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).

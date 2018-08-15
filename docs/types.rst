@@ -91,7 +91,7 @@ Operators:
     defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
     where the decimal point is.
 
-.. index:: address, balance, send, call, callcode, delegatecall, transfer
+.. index:: address, balance, send, call, callcode, delegatecall, staticcall, transfer
 
 .. _address:
 
@@ -146,7 +146,7 @@ Send is the low-level counterpart of ``transfer``. If the execution fails, the c
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
     use a pattern where the recipient withdraws the money.
 
-* ``call``, ``callcode`` and ``delegatecall``
+* ``call``, ``callcode``, ``delegatecall`` and ``staticcall``
 
 Furthermore, to interface with contracts that do not adhere to the ABI,
 or to get more direct control over the encoding,
@@ -189,7 +189,9 @@ Lastly, these modifiers can be combined. Their order does not matter::
 
 In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
-All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
+Since byzantium ``staticcall`` can be used as well. This is basically the same as ``call``, but will revert, if the called function modifies the state in any way.
+
+All four functions ``call``, ``delegatecall``, ``callcode`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
 The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
 
