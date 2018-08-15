@@ -904,6 +904,7 @@ public:
 		BareCall, ///< CALL without function hash
 		BareCallCode, ///< CALLCODE without function hash
 		BareDelegateCall, ///< DELEGATECALL without function hash
+		BareStaticCall, ///< STATICCALL without function hash
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
 		Transfer, ///< CALL, but without data and throws on error
@@ -935,7 +936,7 @@ public:
 		ABIEncodeWithSelector,
 		ABIEncodeWithSignature,
 		ABIDecode,
-		GasLeft ///< gasleft()
+		GasLeft, ///< gasleft()
 	};
 
 	virtual Category category() const override { return Category::Function; }
@@ -1051,7 +1052,7 @@ public:
 	/// @returns true iff the function type is equal to the given type, ignoring state mutability differences.
 	bool equalExcludingStateMutability(FunctionType const& _other) const;
 
-	/// @returns true if the ABI is used for this call (only meaningful for external calls)
+	/// @returns true if the ABI is NOT used for this call (only meaningful for external calls)
 	bool isBareCall() const;
 	Kind const& kind() const { return m_kind; }
 	StateMutability stateMutability() const { return m_stateMutability; }
@@ -1090,6 +1091,7 @@ public:
 		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareCallCode:
 		case FunctionType::Kind::BareDelegateCall:
+		case FunctionType::Kind::BareStaticCall:
 			return true;
 		default:
 			return false;

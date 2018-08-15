@@ -3592,6 +3592,19 @@ BOOST_AUTO_TEST_CASE(default_fallback_throws)
 	)YY";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	{
+		char const* sourceCode = R"YY(
+			contract A {
+				function f() public returns (bool) {
+					return address(this).staticcall("");
+				}
+			}
+		)YY";
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(short_data_calls_fallback)
@@ -4416,6 +4429,49 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 	BOOST_CHECK(!storageEmpty(c_senderAddress));
 	BOOST_CHECK_EQUAL(balanceAt(c_receiverAddress), 0);
 	BOOST_CHECK_EQUAL(balanceAt(c_senderAddress), 50 + 11);
+}
+
+BOOST_AUTO_TEST_CASE(generic_staticcall)
+{
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	{
+		char const* sourceCode = R"**(
+				contract A {
+					uint public x;
+					constructor() public { x = 42; }
+					function pureFunction(uint256 p) public pure returns (uint256) { return p; }
+					function viewFunction(uint256 p) public view returns (uint256) { return p + x; }
+					function nonpayableFunction(uint256 p) public returns (uint256) { x = p; return x; }
+					function assertFunction(uint256 p) public view returns (uint256) { assert(x == p); return x; }
+				}
+				contract C {
+					function f(address a) public view returns (bool)
+					{
+						return a.staticcall(abi.encodeWithSignature("pureFunction(uint256)", 23));
+					}
+					function g(address a) public view returns (bool)
+					{
+						return a.staticcall(abi.encodeWithSignature("viewFunction(uint256)", 23));
+					}
+					function h(address a) public view returns (bool)
+					{
+						return a.staticcall(abi.encodeWithSignature("nonpayableFunction(uint256)", 23));
+					}
+					function i(address a, uint256 v) public view returns (bool)
+					{
+						return a.staticcall(abi.encodeWithSignature("assertFunction(uint256)", v));
+					}
+				}
+		)**";
+		compileAndRun(sourceCode, 0, "A");
+		u160 const c_addressA = m_contractAddress;
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("f(address)", c_addressA), encodeArgs(true));
+		ABI_CHECK(callContractFunction("g(address)", c_addressA), encodeArgs(true));
+		ABI_CHECK(callContractFunction("h(address)", c_addressA), encodeArgs(false));
+		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 42), encodeArgs(true));
+		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 23), encodeArgs(false));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(library_call_in_homestead)
@@ -12419,6 +12475,19 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1)));
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(u256(1)));
+
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	{
+		char const* sourceCode = R"YY(
+			contract C {
+				function f() external returns (bool) {
+					return address(0x4242).staticcall("");
+				}
+			}
+		)YY";
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(delegatecall_return_value)

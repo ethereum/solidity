@@ -171,7 +171,8 @@ before they interact with your contract.
 
 Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
-``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
+``.call()``, ``.callcode()``, ``.delegatecall()`` and ``.staticcall()`` behave
+in the same way.
 
 tx.origin
 =========

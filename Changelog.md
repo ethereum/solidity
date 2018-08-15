@@ -71,6 +71,7 @@ Breaking Changes:
  * View Pure Checker: Strictly enfore state mutability. This was already the case in the experimental 0.5.0 mode.
 
 Language Features:
+ * Genreal: Add ``staticcall`` to ``address``.
  * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
  * General: Support ``pop()`` for storage arrays.
  * General: Scoping rules now follow the C99-style.
