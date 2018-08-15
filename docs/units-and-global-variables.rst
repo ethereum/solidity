@@ -96,9 +96,10 @@ Block and Transaction Properties
 
 .. index:: abi, encoding, packed
 
-ABI Encoding Functions
-----------------------
+ABI Encoding and Decoding Functions
+-----------------------------------
 
+- ``abi.decode(bytes encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
 - ``abi.encode(...) returns (bytes)``: ABI-encodes the given arguments
 - ``abi.encodePacked(...) returns (bytes)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector

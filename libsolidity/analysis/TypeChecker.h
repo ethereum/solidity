@@ -91,6 +91,11 @@ private:
 	// and reports an error, if not.
 	void checkExpressionAssignment(Type const& _type, Expression const& _expression);
 
+	/// Performs type checks for ``abi.decode(bytes memory, (...))`` and returns the
+	/// return type (which is basically the second argument) if successful. It returns
+	/// the empty tuple type or error.
+	TypePointer typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2);
+
 	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
 	virtual void endVisit(UsingForDirective const& _usingFor) override;
 	virtual bool visit(StructDefinition const& _struct) override;
