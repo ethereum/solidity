@@ -397,7 +397,7 @@ SourceUnit const& Scopable::sourceUnit() const
 {
 	ASTNode const* s = scope();
 	solAssert(s, "");
-	// will not always be a declaratoion
+	// will not always be a declaration
 	while (dynamic_cast<Scopable const*>(s) && dynamic_cast<Scopable const*>(s)->scope())
 		s = dynamic_cast<Scopable const*>(s)->scope();
 	return dynamic_cast<SourceUnit const&>(*s);
