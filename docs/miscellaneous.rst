@@ -87,10 +87,14 @@ Solidity always places new objects at the free memory pointer and memory is neve
 Layout of Call Data
 *******************
 
-When a Solidity contract is deployed and when it is called from an
-account, the input data is assumed to be in the format in :ref:`the ABI
-specification <ABI>`. The ABI specification requires arguments to be padded to multiples of 32
-bytes.  The internal function calls use a different convention.
+The input data for a function call is assumed to be in the format defined by the :ref:`ABI
+specification <ABI>`. Among others, the ABI specification requires arguments to be padded to multiples of 32
+bytes. The internal function calls use a different convention.
+
+Arguments for the constructor of a contract are directly appended at the end of the
+contract's code, also in ABI encoding. The constructor will access them through a hard-coded offset, and
+not by using the ``codesize`` opcode, since this of course changes when appending
+data to the code.
 
 
 .. index: variable cleanup
