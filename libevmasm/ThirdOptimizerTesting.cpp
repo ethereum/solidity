@@ -20,10 +20,10 @@
 #include <algorithm>
 #include <tuple>
 
-template<typename It>
+template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
 It noReturnValueBegin(It _begin, It _end);
 
-template<typename It>
+template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
 It backExpressionBegin(It _begin, It _end, bool _allowNoReturn = false)
 {
 	AssemblyItem const& topLevelItem = *(_end - 1);
@@ -44,7 +44,7 @@ It backExpressionBegin(It _begin, It _end, bool _allowNoReturn = false)
 	return currentEnd;
 }
 
-template<typename It>
+template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
 It noReturnValueBegin(It _begin, It _end)
 {
 	assertThrow(_begin != _end, OptimizerException, "expression is empty");
@@ -53,38 +53,45 @@ It noReturnValueBegin(It _begin, It _end)
 	return backExpressionBegin(_begin, _end, true);
 }
 
-vector<vector<AssemblyItem>> parseExpressions(vector<AssemblyItem> const& _items, signed _limit = -1, bool _allowNoReturn = false)
+template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
+vector<It> parseExpressions(It _begin, It _end, signed _limit = -1, bool _allowNoReturn = false)
 {
-	auto currentEnd = _items.end();
-	std::vector<vector<AssemblyItem>> expressions{};
-	while (currentEnd != _items.begin() && (_limit == -1 || signed(expressions.size()) < _limit))
+	auto currentEnd = _end;
+	std::vector<It> expressions{};
+	while (currentEnd != _begin && (_limit == -1 || signed(expressions.size()) < _limit))
 	{
 		auto oldEnd = currentEnd;
-		currentEnd = backExpressionBegin(_items.begin(), oldEnd, _allowNoReturn);
-		expressions.emplace_back(currentEnd, oldEnd);
-		assertThrow(currentEnd >= _items.begin(), OptimizerException, "currentEnd is before begin");
+		currentEnd = backExpressionBegin(_begin, oldEnd, _allowNoReturn);
+		expressions.push_back(currentEnd);
+		assertThrow(currentEnd >= _begin, OptimizerException, "currentEnd is before begin");
 	}
 
 	return expressions;
 }
 
-vector<vector<AssemblyItem>> parseArguments(vector<AssemblyItem> const& _items)
+template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
+vector<It> parseArguments(It _begin, It _end)
 {
-	assertThrow(!_items.empty(), OptimizerException, "cannot get arguments from empty _items vector");
+	auto size = _end - _begin;
+	assertThrow(size > 0, OptimizerException, "cannot get arguments from empty _items vector");
 
-	unsigned neededArguments = _items.back().arguments();
+	unsigned neededArguments = (_end - 1)->arguments();
 
-	auto expressions = parseExpressions(vector<AssemblyItem>(_items.begin(), _items.end() - 1), neededArguments, false);
+	auto expressions = parseExpressions(_begin, _end - 1, neededArguments, false);
 	assertThrow(expressions.size() >= neededArguments, OptimizerException, "more arguments needed than provided");
 
-	expressions = vector<vector<AssemblyItem>>(expressions.begin(), expressions.begin() + neededArguments);
+	expressions = vector<It>(expressions.begin(), expressions.begin() + neededArguments);
 
 	return expressions;
 }
 
 vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
 {
-	if (_pattern.isBound()) return _pattern.boundItems();
+	if (_pattern.isBound())
+	{
+		auto bound = _pattern.boundItems();
+		return vector<AssemblyItem>(bound.begin, bound.end);
+	}
 
 	switch (_pattern.kind())
 	{
@@ -120,27 +127,43 @@ vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
 	}
 }
 
+template<typename It1, typename It2>
+bool iteratorEqual(It1 _begin1, It1 _end1, It2 _begin2, It2 _end2)
+{
+	return (_end1 - _begin1 == _end2 - _begin2) && std::equal(_begin1, _end1, _begin2);
+}
 
-bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> const& _items, bool _unbind)
+template<typename It, typename>
+bool dev::solidity::NewOptimizerPattern::matches(It _begin, It _end, bool _unbind)
 {
 	if (_unbind) unbind();
 
 	if (isBound())
-		return boundItems() == _items;
+	{
+		auto bound = boundItems();
+		return iteratorEqual(bound.begin, bound.end, _begin, _end);
+	}
+
+	auto size = _end - _begin;
+	assertThrow(size > 0, OptimizerException, "");
+
+	auto back = static_cast<AssemblyItem const&>(*(_end - 1));
+
+	auto bind = [&]{ this->bind(_begin, _end); };
 
 	switch (kind())
 	{
 		case Kind::Constant:
 		{
-			if (_items.size() != 1) return false;
+			if (size != 1) return false;
 
-			if (_items.back().type() != AssemblyItemType::Push) return false;
+			if (back.type() != AssemblyItemType::Push) return false;
 
 			if (hasConstant())
 			{
-				if (_items[0].data() == constant())
+				if (_begin->data() == constant())
 				{
-					bind(_items);
+					bind();
 					return true;
 				}
 
@@ -148,7 +171,7 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> const
 			}
 			else
 			{
-				bind(_items);
+				bind();
 				return true;
 			}
 		}
@@ -156,9 +179,9 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> const
 		{
 			if (!hasOperationValues())
 			{
-				if (_items.back().type() == AssemblyItemType::Operation)
+				if (back.type() == AssemblyItemType::Operation)
 				{
-					bind(_items);
+					bind();
 					return true;
 				}
 
@@ -167,15 +190,15 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> const
 
 			auto const instruction = this->instruction();
 
-			if (_items.back().type() != AssemblyItemType::Operation) return false;
-			if (_items.back().instruction() != instruction) return false;
+			if (back.type() != AssemblyItemType::Operation) return false;
+			if (back.instruction() != instruction) return false;
 
 			auto const argumentCount = instructionInfo(instruction).args;
 			assertThrow(unsigned(argumentCount) == operands().size(), OptimizerException, "");
 
-			if (argumentCount == 0) return _items.size() == 1;
+			if (argumentCount == 0) return size == 1;
 
-			auto parsedArguments = parseArguments(_items);
+			auto parsedArguments = parseArguments(_begin, _end);
 
 			auto& requiredArgumentPatterns = operands();
 
@@ -187,17 +210,18 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> const
 
 			for (unsigned i = 0; i < parsedArguments.size(); i++)
 			{
-				auto& argumentItems = parsedArguments[i];
+				auto argumentBegin = parsedArguments[i];
+				auto argumentEnd = i == 0 ? (_end - 1) : parsedArguments[i - 1];
 
-				if (!requiredArgumentPatterns[i].matches(argumentItems, false)) return false;
+				if (!requiredArgumentPatterns[i].matches(argumentBegin, argumentEnd, false)) return false;
 			}
 
-			bind(_items);
+			bind();
 
 			return true;
 		}
 		case Kind::Any:
-			bind(_items);
+			bind();
 			return true;
 		case Kind::Unknown:
 			return false;
@@ -206,23 +230,30 @@ bool dev::solidity::NewOptimizerPattern::matches(std::vector<AssemblyItem> const
 	}
 }
 
-void NewOptimizerPattern::bind(std::vector<AssemblyItem> const& _items)
+template<typename It, typename>
+void NewOptimizerPattern::bind(It _begin, It _end)
 {
+	auto size = _end - _begin;
+	assertThrow(size > 0, OptimizerException, "");
+
+	auto back = static_cast<AssemblyItem const&>(*(_end - 1));
+
 	if (kind() == Kind::Constant)
 	{
-		assertThrow(_items.size() == 1 && _items.back().type() == AssemblyItemType::Push, OptimizerException, "invalid bind type");
+		assertThrow(size == 1 && back.type() == AssemblyItemType::Push, OptimizerException, "invalid bind type");
 		if (hasConstant())
-			assertThrow(constant() == _items.back().data(), OptimizerException, "invalid bind constant");
+			assertThrow(constant() == back.data(), OptimizerException, "invalid bind constant");
 	}
 
 	if (kind() == Kind::Operation)
 	{
-		assertThrow(!_items.empty() && _items.back().type() == AssemblyItemType::Operation, OptimizerException, "invalid bind value");
+		assertThrow(size != 0 && back.type() == AssemblyItemType::Operation, OptimizerException, "invalid bind value");
 		if (hasOperationValues())
-			assertThrow(instruction() == _items.back().instruction(), OptimizerException, "invalid bind instruction");
+			assertThrow(instruction() == back.instruction(), OptimizerException, "invalid bind instruction");
 	}
 
-	m_ptr->m_boundItems = _items;
+	// Temp workaround
+	m_ptr->m_boundItems = iterator_pair<AssemblyItemIterator>{_begin, _end};
 }
 
 void dev::solidity::ThirdOptimizer::addDefaultRules()
@@ -248,20 +279,31 @@ void dev::solidity::ThirdOptimizer::addRule(SimplificationRule<NewOptimizerPatte
 
 vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(vector<AssemblyItem> const& _items)
 {
+	return optimize(_items.begin(), _items.end());
+}
+
+template<typename It, typename>
+vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(It _begin, It _end)
+{
 	if (m_rules.empty()) addDefaultRules();
 
-	if (_items.size() <= 1) return _items;
+	if ((_end - _begin) <= 1) return vector<AssemblyItem>(_begin, _end);
 
-	auto expressions = parseExpressions(_items, -1, true);
+	auto expressions = parseExpressions(_begin, _end, -1, true);
 
-	for (auto& expression : expressions)
+	vector<vector<AssemblyItem>> optimizedExpressions(expressions.size());
+
+	for (unsigned i = 0; i < expressions.size(); i++)
 	{
+		auto expressionBegin = expressions[i];
+		auto expressionEnd = i == 0 ? _end : expressions[i - 1];
+
 		bool canRun = true;
 		bool canDetermineArguments = true;
 
 		std::for_each(
-			expression.begin(),
-			expression.end(),
+			expressionBegin,
+			expressionEnd,
 			[&](AssemblyItem item) {
 				if (item.returnValues() > 1)
 				{
@@ -277,37 +319,50 @@ vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(vector<AssemblyItem
 
 		if (!canDetermineArguments) continue;
 
+		vector<AssemblyItem> optimizedExpression(expressionBegin, expressionEnd);
+
 		if (canRun)
 			for (auto& rule : m_rules)
-				if (rule.pattern.matches(expression))
-					expression = createItems(rule.action());
+				if (rule.pattern.matches(optimizedExpression.begin(), optimizedExpression.end()))
+					optimizedExpression = createItems(rule.action());
 
 
-		auto noReturnValueStart = noReturnValueBegin(expression.begin(), expression.end());
-		vector<AssemblyItem> noReturnValuePart(noReturnValueStart, expression.end());
-		vector<AssemblyItem> returnValuePart(expression.begin(), noReturnValueStart);
+		auto noReturnValueStart = noReturnValueBegin(optimizedExpression.begin(), optimizedExpression.end());
 
-		expression = breakAndOptimize(returnValuePart) + breakAndOptimize(noReturnValuePart);
+		vector<AssemblyItem> returnPart(optimizedExpression.begin(), noReturnValueStart);
+		vector<AssemblyItem> noReturnPart(noReturnValueStart, optimizedExpression.end());
+
+		optimizedExpression = breakAndOptimize(returnPart.begin(), returnPart.end()) + breakAndOptimize(noReturnPart.begin(), noReturnPart.end());
+
+		optimizedExpressions.push_back(optimizedExpression);
 	}
 
 	vector<AssemblyItem> optimizedItems;
-	for (auto it = expressions.rbegin(); it != expressions.rend(); it++) optimizedItems += *it;
+	for (auto it = optimizedExpressions.rbegin(); it != optimizedExpressions.rend(); it++) optimizedItems += *it;
 
-	if (optimizedItems != _items) optimizedItems = optimize(optimizedItems);
+	if (!iteratorEqual(optimizedItems.begin(), optimizedItems.end(), _begin, _end)) optimizedItems = optimize(optimizedItems);
 
 	return optimizedItems;
 }
 
-vector<AssemblyItem> dev::solidity::ThirdOptimizer::breakAndOptimize(vector<AssemblyItem> const& _expression)
+template<typename It, typename>
+vector<AssemblyItem> dev::solidity::ThirdOptimizer::breakAndOptimize(It _begin, It _end)
 {
-	if (_expression.empty()) return _expression;
+	if (_end == _begin) return {};
 
 	std::vector<AssemblyItem> optimizedExpression{};
 
-	auto arguments = parseArguments(_expression);
+	auto arguments = parseArguments(_begin, _end);
 
-	for (auto it = arguments.rbegin(); it != arguments.rend(); it++) optimizedExpression += optimize(*it);
-	optimizedExpression.push_back(_expression.back());
+	for (signed i = signed(arguments.size()) - 1; i >= 0; i--)
+	{
+		auto argumentBegin = arguments.at(i);
+		auto argumentEnd = i == 0 ? _end - 1 : arguments.at(i - 1);
+
+		optimizedExpression += optimize(argumentBegin, argumentEnd);
+	}
+
+	optimizedExpression.push_back(*(_end - 1));
 
 	return optimizedExpression;
 }

@@ -34,6 +34,17 @@ using namespace solidity;
 using namespace eth;
 using namespace std;
 
+template<typename T>
+struct is_assembly_item : std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, AssemblyItem> {};
+
+using AssemblyItemIterator = vector<AssemblyItem>::iterator;
+
+template <typename It>
+struct iterator_pair {
+	It begin;
+	It end;
+};
+
 class NewOptimizerPattern
 {
 public:
@@ -104,14 +115,15 @@ public:
 		return m_ptr->m_assemblyType.get();
 	}
 
-	bool matches(vector<AssemblyItem> const& _items, bool _unbind = true);
+	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
+	bool matches(It _begin, It _end, bool _unbind = true);
 
 	u256 d() const
 	{
 		if (isBound())
 		{
 			if (kind() == Kind::Constant)
-				return boundItems().back().data();
+				return (boundItems().end - 1)->data();
 			assertThrow(false, OptimizerException, "invalid request for constant");
 		}
 		else
@@ -120,7 +132,7 @@ public:
 
 	bool isBound() const { return m_ptr->m_boundItems.is_initialized(); }
 
-	vector<AssemblyItem> const& boundItems() const
+	iterator_pair<AssemblyItemIterator > const& boundItems() const
 	{
 		assertThrow(isBound(), OptimizerException, "invalid request for bound items");
 		return m_ptr->m_boundItems.get();
@@ -131,7 +143,9 @@ public:
 	bool hasAssemblyItemType() const { return m_ptr->m_assemblyType.is_initialized(); }
 
 private:
-	void bind(std::vector<AssemblyItem> const& _items);
+	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
+	void bind(It _begin, It _end);
+
 	void unbind()
 	{
 		m_ptr->m_boundItems.reset();
@@ -144,7 +158,7 @@ private:
 
 	struct Underlying
 	{
-		boost::optional<std::vector<AssemblyItem>> m_boundItems;
+		boost::optional<iterator_pair<AssemblyItemIterator >> m_boundItems;
 
 		Kind m_kind;
 
@@ -165,7 +179,11 @@ class ThirdOptimizer
 public:
 	vector<AssemblyItem> optimize(vector<AssemblyItem> const& _items);
 private:
-	vector<AssemblyItem> breakAndOptimize(vector<AssemblyItem> const& _expression);
+	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
+	vector<AssemblyItem> optimize(It _begin, It _end);
+
+	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
+	vector<AssemblyItem> breakAndOptimize(It _begin, It _end);
 
 	void addDefaultRules();
 	void addRules(vector<SimplificationRule<NewOptimizerPattern>> const& _rules);
