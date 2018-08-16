@@ -1165,19 +1165,19 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 						solAssert(false, "event not found");
 					// no-op, because the parent node will do the job
 					break;
+				case FunctionType::Kind::DelegateCall:
+					_memberAccess.expression().accept(*this);
+					m_context << funType->externalIdentifier();
+					break;
+				case FunctionType::Kind::CallCode:
 				case FunctionType::Kind::External:
 				case FunctionType::Kind::Creation:
-				case FunctionType::Kind::DelegateCall:
-				case FunctionType::Kind::CallCode:
 				case FunctionType::Kind::Send:
 				case FunctionType::Kind::BareCall:
 				case FunctionType::Kind::BareCallCode:
 				case FunctionType::Kind::BareDelegateCall:
 				case FunctionType::Kind::BareStaticCall:
 				case FunctionType::Kind::Transfer:
-					_memberAccess.expression().accept(*this);
-					m_context << funType->externalIdentifier();
-					break;
 				case FunctionType::Kind::Log0:
 				case FunctionType::Kind::Log1:
 				case FunctionType::Kind::Log2:

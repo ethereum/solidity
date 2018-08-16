@@ -2929,6 +2929,17 @@ string FunctionType::externalSignature() const
 {
 	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
 	solAssert(!m_declaration->name().empty(), "Fallback function has no signature.");
+	switch (kind())
+	{
+	case Kind::Internal:
+	case Kind::External:
+	case Kind::CallCode:
+	case Kind::DelegateCall:
+	case Kind::Event:
+		break;
+	default:
+		solAssert(false, "Invalid function type for requesting external signature.");
+	}
 
 	bool const inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 	FunctionTypePointer external = interfaceFunctionType();
