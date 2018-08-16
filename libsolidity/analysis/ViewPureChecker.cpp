@@ -262,16 +262,18 @@ void ViewPureChecker::reportMutability(
 		if (m_currentFunction->isPublic() && m_currentFunction->inContractKind() != ContractDefinition::ContractKind::Library)
 		{
 			if (_nestedLocation)
-				m_errorReporter.warning(
+				m_errorReporter.typeError(
 					_location,
-					"This modifier uses \"msg.value\" and thus the function should be payable.",
-					SecondarySourceLocation().append("\"msg.value\" appears here inside the modifier.", *_nestedLocation)
+					SecondarySourceLocation().append("\"msg.value\" appears here inside the modifier.", *_nestedLocation),
+					"This modifier uses \"msg.value\" and thus the function has to be payable or internal."
 				);
 			else
-				m_errorReporter.warning(
+				m_errorReporter.typeError(
 					_location,
-					"\"msg.value\" used in non-payable function. Do you want to add the \"payable\" modifier to this function?"
+					"\"msg.value\" can only be used in payable public functions. Make the function "
+					"\"payable\" or use an internal function to avoid this error."
 				);
+			m_errors = true;
 		}
 	}
 	else

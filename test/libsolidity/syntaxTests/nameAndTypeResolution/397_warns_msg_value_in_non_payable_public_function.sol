@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning: (52-61): "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+// TypeError: (52-61): "msg.value" can only be used in payable public functions. Make the function "payable" or use an internal function to avoid this error.
