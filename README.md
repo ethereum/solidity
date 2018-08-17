@@ -17,7 +17,7 @@ Build for javascript
 cd solidity
 docker run -it -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.35.4-64bit
 apt-get update
-apt-get install wget gcc
+apt-get install wget gcc boost
 apt-get install -y build-essential
 ./scripts/travis-emscripten/install_deps.sh
 ./scripts/travis-emscripten/build_emscripten.sh
