@@ -655,7 +655,7 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
-	enum Location { Default, Storage, Memory, CallData };
+	enum Location { Unspecified, Storage, Memory, CallData };
 
 	VariableDeclaration(
 		SourceLocation const& _sourceLocation,
@@ -666,7 +666,7 @@ public:
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		bool _isConstant = false,
-		Location _referenceLocation = Location::Default
+		Location _referenceLocation = Location::Unspecified
 	):
 		Declaration(_sourceLocation, _name, _visibility),
 		m_typeName(_type),

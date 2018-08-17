@@ -332,7 +332,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 			case Location::Memory: return "\"memory\"";
 			case Location::Storage: return "\"storage\"";
 			case Location::CallData: return "\"calldata\"";
-			case Location::Default: return "none";
+			case Location::Unspecified: return "none";
 			}
 			return {};
 		};
@@ -368,12 +368,12 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	// Find correct data location.
 	if (_variable.isEventParameter())
 	{
-		solAssert(varLoc == Location::Default, "");
+		solAssert(varLoc == Location::Unspecified, "");
 		typeLoc = DataLocation::Memory;
 	}
 	else if (_variable.isStateVariable())
 	{
-		solAssert(varLoc == Location::Default, "");
+		solAssert(varLoc == Location::Unspecified, "");
 		typeLoc = _variable.isConstant() ? DataLocation::Memory : DataLocation::Storage;
 	}
 	else if (
@@ -394,7 +394,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		case Location::CallData:
 			typeLoc = DataLocation::CallData;
 			break;
-		case Location::Default:
+		case Location::Unspecified:
 			solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
 		}
 

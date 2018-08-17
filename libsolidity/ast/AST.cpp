@@ -517,7 +517,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	using Location = VariableDeclaration::Location;
 
 	if (!hasReferenceOrMappingType() || isStateVariable() || isEventParameter())
-		return set<Location>{ Location::Default };
+		return set<Location>{ Location::Unspecified };
 	else if (isStateVariable() && isConstant())
 		return set<Location>{ Location::Memory };
 	else if (isExternalCallableParameter())
@@ -546,7 +546,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	}
 	else
 		// Struct members etc.
-		return set<Location>{ Location::Default };
+		return set<Location>{ Location::Unspecified };
 }
 
 TypePointer VariableDeclaration::type() const

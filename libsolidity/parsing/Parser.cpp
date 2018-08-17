@@ -564,7 +564,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	bool isIndexed = false;
 	bool isDeclaredConst = false;
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
-	VariableDeclaration::Location location = VariableDeclaration::Location::Default;
+	VariableDeclaration::Location location = VariableDeclaration::Location::Unspecified;
 	ASTPointer<ASTString> identifier;
 
 	while (true)
@@ -592,7 +592,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 				isDeclaredConst = true;
 			else if (_options.allowLocationSpecifier && Token::isLocationSpecifier(token))
 			{
-				if (location != VariableDeclaration::Location::Default)
+				if (location != VariableDeclaration::Location::Unspecified)
 					parserError(string("Location already specified."));
 				else if (!type)
 					parserError(string("Location specifier needs explicit type name."));
