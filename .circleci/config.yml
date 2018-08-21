@@ -189,15 +189,21 @@ jobs:
           command: ./scripts/detect_trailing_whitespace.sh
 
   test_buglist:
-      docker:
-        - image: circleci/node
-      environment:
-        TERM: xterm
-      steps:
-        - checkout
-        - run:
-            name: Test buglist
-            command: ./test/buglistTests.js
+    docker:
+      - image: circleci/node
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run:
+          name: JS deps
+          command: |
+            npm install download
+            npm install JSONPath
+            npm install mktemp
+      - run:
+          name: Test buglist
+          command: ./test/buglistTests.js
 
   test_x86_linux:
     docker:
