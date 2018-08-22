@@ -801,7 +801,7 @@ Arrays can have a compile-time fixed size or they can be dynamic.
 The are few restrictions for the element, it can also be
 another array, a mapping or a struct. The general restrictions for
 types apply, though, in that mappings can only be used in storage
-and publicly-visible functions need parameters that are ABI types.
+and publicly-visible functions need parameters that are :ref:`ABI types <ABI>`.
 
 An array of fixed size ``k`` and element type ``T`` is written as ``T[k]``,
 an array of dynamic size as ``T[]``. As an example, an array of 5 dynamic
