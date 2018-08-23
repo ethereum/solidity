@@ -75,8 +75,6 @@ public:
 	virtual AssemblyItems execute(Assembly& _assembly) const = 0;
 
 protected:
-	size_t dataSize() const { return std::max<size_t>(1, dev::bytesRequired(m_value)); }
-
 	/// @returns the run gas for the given items ignoring special gas costs
 	static bigint simpleRunGas(AssemblyItems const& _items);
 	/// @returns the gas needed to store the given data literally

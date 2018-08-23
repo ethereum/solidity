@@ -100,11 +100,10 @@ When the compiler is invoked, it is not only possible to specify how to
 discover the first element of a path, but it is possible to specify path prefix
 remappings so that e.g. ``github.com/ethereum/dapp-bin/library`` is remapped to
 ``/usr/local/dapp-bin/library`` and the compiler will read the files from there.
-If multiple remappings can be applied, the one with the longest key is tried first. This
-allows for a "fallback-remapping" with e.g. ``""`` maps to
-``"/usr/local/include/solidity"``. Furthermore, these remappings can
-depend on the context, which allows you to configure packages to
-import e.g. different versions of a library of the same name.
+If multiple remappings can be applied, the one with the longest key is tried first.
+An empty prefix is not allowed. Furthermore, these remappings can depend on the context,
+which allows you to configure packages to import e.g. different versions of a library
+of the same name.
 
 **solc**:
 
@@ -148,7 +147,7 @@ Note that solc only allows you to include files from certain directories:
 They have to be in the directory (or subdirectory) of one of the explicitly
 specified source files or in the directory (or subdirectory) of a remapping
 target. If you want to allow direct absolute includes, just add the
-remapping ``=/``.
+remapping ``/=/``.
 
 If there are multiple remappings that lead to a valid file, the remapping
 with the longest common prefix is chosen.
@@ -205,7 +204,7 @@ for the two input parameters and two returned values.
           * @return s The calculated surface.
           * @return p The calculated perimeter.
           */
-        function rectangle(uint w, uint h) public returns (uint s, uint p) {
+        function rectangle(uint w, uint h) public pure returns (uint s, uint p) {
             s = w * h;
             p = 2 * (w + h);
         }

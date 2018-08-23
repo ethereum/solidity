@@ -5,7 +5,7 @@ How to update your code:
  * Change every ``keccak256(a, b, c)`` to ``keccak256(abi.encodePacked(a, b, c))``.
  * Add ``public`` to every function and ``external`` to every fallback or interface function that does not specify its visibility already.
  * Make your fallback functions ``external``.
- * Explicitly state the storage location for local variables of struct and array types, e.g. change ``uint[] x = m_x`` to ``uint[] storage x = m_x``.
+ * Explicitly state the data location for all variables of struct, array or mapping types (including function parameters), e.g. change ``uint[] x = m_x`` to ``uint[] storage x = m_x``. Note that ``external`` functions require parameters with a data location of ``calldata``.
  * Explicitly convert values of contract type to addresses before using an ``address`` member. Example: if ``c`` is a contract, change ``c.transfer(...)`` to ``address(c).transfer(...)``.
 
 Breaking Changes:
@@ -16,6 +16,8 @@ Breaking Changes:
  * Commandline interface: Remove obsolete ``--formal`` option.
  * Commandline interface: Rename the ``--julia`` option to ``--yul``.
  * Commandline interface: Require ``-`` if standard input is used as source.
+ * Compiler interface: Disallow remappings with empty prefix.
+ * Control Flow Analyzer: Consider mappings as well when checking for uninitialized return values.
  * Control Flow Analyzer: Turn warning about returning uninitialized storage pointers into an error.
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
  * General: Disallow declaring empty structs.
@@ -52,11 +54,14 @@ Breaking Changes:
  * Type Checker: Disallow calling constructor with wrong argument count. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow uninitialized storage variables. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Detecting cyclic dependencies in variables and structs is limited in recursion to 256.
+ * Type Checker: Require explicit data location for all variables, including function parameters. This was partly already the case in the experimental 0.5.0 mode.
  * Type Checker: Only accept a single ``bytes`` type for ``.call()`` (and family), ``keccak256()``, ``sha256()`` and ``ripemd160()``.
  * Type Checker: Fallback function must be external. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Interface functions must be declared external. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Address members are not included in contract types anymore. An explicit conversion is now required before invoking an ``address`` member from a contract.
  * Type Checker: Disallow "loose assembly" syntax entirely. This means that jump labels, jumps and non-functional instructions cannot be used anymore.
+ * Type System: Disallow explicit and implicit conversions from decimal literals to ``bytesXX`` types.
+ * Type System: Disallow explicit and implicit conversions from hex literals to ``bytesXX`` types of different size.
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/solidity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.
  * References Resolver: Turn missing storage locations into an error. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Disallow functions without implementation to use modifiers. This was already the case in the experimental 0.5.0 mode.
@@ -66,10 +71,14 @@ Breaking Changes:
  * View Pure Checker: Strictly enfore state mutability. This was already the case in the experimental 0.5.0 mode.
 
 Language Features:
+ * Genreal: Add ``staticcall`` to ``address``.
  * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
  * General: Support ``pop()`` for storage arrays.
  * General: Scoping rules now follow the C99-style.
  * General: Allow ``enum``s in interfaces.
+ * General: Allow ``mapping`` storage pointers as arguments and return values in all internal functions.
+ * General: Allow ``struct``s in interfaces.
+ * General: Provide access to the ABI decoder through ``abi.decode(bytes memory data, (...))``.
 
 Compiler Features:
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
@@ -86,15 +95,22 @@ Bugfixes:
  * Code Generator: Properly handle negative number literals in ABIEncoderV2.
  * Commandline Interface: Correctly handle paths with backslashes on windows.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
+ * Optimizer: Correctly estimate gas costs of constants for special cases.
  * References Resolver: Do not crash on using ``_slot`` and ``_offset`` suffixes on their own.
  * References Resolver: Enforce ``storage`` as data location for mappings.
  * References Resolver: Properly handle invalid references used together with ``_slot`` and ``_offset``.
  * References Resolver: Report error instead of assertion fail when FunctionType has an undeclared type as parameter.
+ * References Resolver: Fix high CPU usage when using large variable names issue. Only suggest similar name if identifiers shorter than 80 characters.
+ * Type Checker: Default data location for type conversions (e.g. from literals) is memory and not storage.
  * Type Checker: Disallow assignments to mappings within tuple assignments as well.
+ * Type Checker: Disallow packed encoding of arrays of structs.
  * Type Checker: Allow assignments to local variables of mapping types.
  * Type Checker: Consider fixed size arrays when checking for recursive structs.
  * Type Checker: Fix crashes in erroneous tuple assignments in which the type of the right hand side cannot be determined.
+ * Type Checker: Fix freeze for negative fixed-point literals very close to ``0``, such as ``-1e-100``.
  * Type Checker: Report error when using structs in events without experimental ABIEncoderV2. This used to crash or log the wrong values.
+ * Type Checker: Report error when using indexed structs in events with experimental ABIEncoderV2. This used to log wrong values.
+ * Type Checker: Dynamic types as key for public mappings return error instead of assertion fail.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
 
 ### 0.4.24 (2018-05-16)

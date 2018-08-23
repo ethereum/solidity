@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(conversion)
 				int8 c;
 				int16 d;
 				assembly { a := sub(0, 1) c := 0x0101ff d := 0xff01 }
-				emit E(10, x, a, uint8(b), c, int8(d));
+				emit E(bytes4(uint32(10)), x, a, uint8(b), c, int8(d));
 			}
 		}
 	)";
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(calldata)
 	string sourceCode = R"(
 		contract C {
 			event E(bytes);
-			function f(bytes a) external {
+			function f(bytes calldata a) external {
 				emit E(a);
 			}
 		}

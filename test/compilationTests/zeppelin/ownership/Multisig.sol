@@ -23,6 +23,6 @@ contract Multisig {
 
   // TODO: document
   function changeOwner(address _from, address _to) external;
-  function execute(address _to, uint256 _value, bytes _data) external returns (bytes32);
+  function execute(address _to, uint256 _value, bytes calldata _data) external returns (bytes32);
   function confirm(bytes32 _h) public returns (bool);
 }

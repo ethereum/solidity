@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (81-113): Data location for mappings must be specified as "storage".
+// TypeError: (81-113): Data location must be "storage" for variable, but "calldata" was given.

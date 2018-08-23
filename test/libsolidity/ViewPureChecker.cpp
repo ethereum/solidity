@@ -53,8 +53,11 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"tx.origin",
 		"tx.gasprice",
 		"this",
-		"address(1).balance"
+		"address(1).balance",
 	};
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+		view.emplace_back("address(0x4242).staticcall(\"\")");
+
 	// ``block.blockhash`` and ``blockhash`` are tested separately below because their usage will
 	// produce warnings that can't be handled in a generic way.
 	vector<string> pure{
@@ -94,6 +97,22 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
 	);
 }
+
+BOOST_AUTO_TEST_CASE(address_staticcall)
+{
+	string text = R"(
+		contract C {
+			function i() view public returns (bool) {
+				return address(0x4242).staticcall("");
+			}
+		}
+	)";
+	if (!dev::test::Options::get().evmVersion().hasStaticCall())
+		CHECK_ERROR(text, TypeError, "\"staticcall\" is not supported by the VM version.");
+	else
+		CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
 
 BOOST_AUTO_TEST_CASE(assembly_staticcall)
 {

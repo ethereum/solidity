@@ -2,4 +2,4 @@ library test {
     function f(bytes calldata) internal pure {}
 }
 // ----
-// TypeError: (30-35): Variable cannot be declared as "calldata" (remove the "calldata" keyword).
+// TypeError: (30-35): Data location must be "storage" or "memory" for parameter in function, but "calldata" was given.

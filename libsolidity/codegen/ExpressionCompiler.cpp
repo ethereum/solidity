@@ -571,6 +571,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareCallCode:
 		case FunctionType::Kind::BareDelegateCall:
+		case FunctionType::Kind::BareStaticCall:
 			_functionCall.expression().accept(*this);
 			appendExternalFunctionCall(function, arguments);
 			break;
@@ -1070,6 +1071,27 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// stack now: <memory pointer>
 			break;
 		}
+		case FunctionType::Kind::ABIDecode:
+		{
+			arguments.front()->accept(*this);
+			TypePointer firstArgType = arguments.front()->annotation().type;
+			TypePointers const& targetTypes = dynamic_cast<TupleType const&>(*_functionCall.annotation().type).components();
+			if (
+				*firstArgType == ArrayType(DataLocation::CallData) ||
+				*firstArgType == ArrayType(DataLocation::CallData, true)
+			)
+				utils().abiDecode(targetTypes, false);
+			else
+			{
+				utils().convertType(*firstArgType, ArrayType(DataLocation::Memory));
+				m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
+				m_context << Instruction::SWAP1 << Instruction::MLOAD;
+				// stack now: <mem_pos> <length>
+
+				utils().abiDecode(targetTypes, true);
+			}
+			break;
+		}
 		case FunctionType::Kind::GasLeft:
 			m_context << Instruction::GAS;
 			break;
@@ -1143,18 +1165,19 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 						solAssert(false, "event not found");
 					// no-op, because the parent node will do the job
 					break;
+				case FunctionType::Kind::DelegateCall:
+					_memberAccess.expression().accept(*this);
+					m_context << funType->externalIdentifier();
+					break;
+				case FunctionType::Kind::CallCode:
 				case FunctionType::Kind::External:
 				case FunctionType::Kind::Creation:
-				case FunctionType::Kind::DelegateCall:
-				case FunctionType::Kind::CallCode:
 				case FunctionType::Kind::Send:
 				case FunctionType::Kind::BareCall:
 				case FunctionType::Kind::BareCallCode:
 				case FunctionType::Kind::BareDelegateCall:
+				case FunctionType::Kind::BareStaticCall:
 				case FunctionType::Kind::Transfer:
-					_memberAccess.expression().accept(*this);
-					m_context << funType->externalIdentifier();
-					break;
 				case FunctionType::Kind::Log0:
 				case FunctionType::Kind::Log1:
 				case FunctionType::Kind::Log2:
@@ -1252,7 +1275,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			m_context << Instruction::BALANCE;
 		}
-		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
+		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall", "staticcall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				IntegerType(160, IntegerType::Modifier::Address),
@@ -1804,10 +1827,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
 	auto funKind = _functionType.kind();
-	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
+
+	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
+	
+	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
-	bool useStaticCall = _functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall();
+	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (_functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
 
 	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
 	unsigned retSize = 0;

@@ -60,44 +60,55 @@ Useful links
 Available Solidity Integrations
 -------------------------------
 
-* `Remix <https://remix.ethereum.org/>`_
-    Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
+* Generic:
 
-* `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-intellij-solidity>`_
-    Solidity plugin for IntelliJ IDEA (and all other JetBrains IDEs)
+    * `Remix <https://remix.ethereum.org/>`_
+        Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
-* `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
-    Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
+    * `Solium <https://github.com/duaraghav8/Solium/>`_
+        Linter to identify and fix style and security issues in Solidity.
 
-* `Package for SublimeText — Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
-    Solidity syntax highlighting for SublimeText editor.
+    * `Solhint <https://github.com/protofire/solhint>`_
+        Solidity linter that provides security, style guide and best practice rules for smart contract validation.
 
-* `Etheratom <https://github.com/0mkara/etheratom>`_
-    Plugin for the Atom editor that features syntax highlighting, compilation and a runtime environment (Backend node & VM compatible).
+* Atom:
 
-* `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
-    Plugin for the Atom editor that provides Solidity linting.
+    * `Etheratom <https://github.com/0mkara/etheratom>`_
+        Plugin for the Atom editor that features syntax highlighting, compilation and a runtime environment (Backend node & VM compatible).
 
-* `Atom Solium Linter <https://atom.io/packages/linter-solium>`_
-    Configurable Solidty linter for Atom using Solium as a base.
+    * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
+        Plugin for the Atom editor that provides Solidity linting.
 
-* `Solium <https://github.com/duaraghav8/Solium/>`_
-    Linter to identify and fix style and security issues in Solidity.
+    * `Atom Solium Linter <https://atom.io/packages/linter-solium>`_
+        Configurable Solidty linter for Atom using Solium as a base.
 
-* `Solhint <https://github.com/protofire/solhint>`_
-    Solidity linter that provides security, style guide and best practice rules for smart contract validation.
+* Emacs:
 
-* `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
-    Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
+    * `Emacs Solidity <https://github.com/ethereum/emacs-solidity/>`_
+        Plugin for the Emacs editor providing syntax highlighting and compilation error reporting.
 
-* `Emacs Solidity <https://github.com/ethereum/emacs-solidity/>`_
-    Plugin for the Emacs editor providing syntax highlighting and compilation error reporting.
+* IntelliJ:
 
-* `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
-    Plugin for the Vim editor providing syntax highlighting.
+    * `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-intellij-solidity>`_
+        Solidity plugin for IntelliJ IDEA (and all other JetBrains IDEs)
 
-* `Vim Syntastic <https://github.com/scrooloose/syntastic>`_
-    Plugin for the Vim editor providing compile checking.
+* Sublime:
+
+    * `Package for SublimeText — Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
+        Solidity syntax highlighting for SublimeText editor.
+
+* Vim:
+
+    * `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
+        Plugin for the Vim editor providing syntax highlighting.
+
+    * `Vim Syntastic <https://github.com/scrooloose/syntastic>`_
+        Plugin for the Vim editor providing compile checking.
+
+* Visual Studio Code:
+
+    * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
+        Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
 
 Discontinued:
 
@@ -107,10 +118,13 @@ Discontinued:
 * `Ethereum Studio <https://live.ether.camp/>`_
     Specialized web IDE that also provides shell access to a complete Ethereum environment.
 
+* `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
+    Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
+
 Solidity Tools
 --------------
 
-* `Dapp <https://dapp.readthedocs.io>`_
+* `Dapp <https://dapp.tools/dapp/>`_
     Build tool, package manager, and deployment assistant for Solidity.
 
 * `Solidity REPL <https://github.com/raineorshine/solidity-repl>`_

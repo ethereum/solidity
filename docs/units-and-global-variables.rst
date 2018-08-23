@@ -96,13 +96,14 @@ Block and Transaction Properties
 
 .. index:: abi, encoding, packed
 
-ABI Encoding Functions
-----------------------
+ABI Encoding and Decoding Functions
+-----------------------------------
 
+- ``abi.decode(bytes encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
 - ``abi.encode(...) returns (bytes)``: ABI-encodes the given arguments
 - ``abi.encodePacked(...) returns (bytes)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
 
 .. note::
     These encoding functions can be used to craft data for function calls without actually
@@ -152,7 +153,7 @@ Mathematical and Cryptographic Functions
 
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
-.. index:: balance, send, transfer, call, callcode, delegatecall
+.. index:: balance, send, transfer, call, callcode, delegatecall, staticcall
 .. _address_related:
 
 Address Related
@@ -170,6 +171,8 @@ Address Related
     issue low-level ``CALLCODE`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
 ``<address>.delegatecall(bytes memory) returns (bool)``:
     issue low-level ``DELEGATECALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
+``<address>.staticcall(bytes memory) returns (bool)``:
+    issue low-level ``STATICCALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
 
 For more information, see the section on :ref:`address`.
 

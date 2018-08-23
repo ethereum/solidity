@@ -683,6 +683,131 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
 	expectNatspecError(sourceCode);
 }
 
+BOOST_AUTO_TEST_CASE(user_constructor)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @notice this is a really nice constructor
+			constructor(uint a, uint second) public { }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"constructor" : "this is a really nice constructor"
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_constructor_and_function)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @notice this is a really nice constructor
+			constructor(uint a, uint second) public { }
+			/// another multiplier
+			function mul(uint a, uint second) public returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"mul(uint256,uint256)" : {
+			"notice" : "another multiplier"
+		},
+		"constructor" : "this is a really nice constructor"
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_constructor)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @author Alex
+			/// @param a the parameter a is really nice and very useful
+			/// @param second the second parameter is not very useful, it just provides additional confusion
+			constructor(uint a, uint second) public { }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"constructor" : {
+			"author" : "Alex",
+			"params" : {
+				"a" : "the parameter a is really nice and very useful",
+				"second" : "the second parameter is not very useful, it just provides additional confusion"
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_constructor_return)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @author Alex
+			/// @param a the parameter a is really nice and very useful
+			/// @param second the second parameter is not very useful, it just provides additional confusion
+			/// @return return should not work within constructors
+			constructor(uint a, uint second) public { }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @author Alex
+			/// @param a the parameter a is really nice and very useful
+			/// @param second the second parameter is not very useful, it just provides additional confusion
+			constructor(uint a, uint second) public { }
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter starts here.
+			/// Since it's a really complicated parameter we need 2 lines
+			/// @param second Documentation for the second parameter
+			/// @return The result of the multiplication
+			/// and cookies with nutella
+			function mul(uint a, uint second) public returns(uint d) {
+				return a * 7 + second;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"mul(uint256,uint256)" : {
+			"details" : "Multiplies a number by 7 and adds second parameter",
+			"params" : {
+				"a" : "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
+				"second" : "Documentation for the second parameter"
+			},
+			"return" : "The result of the multiplication and cookies with nutella"
+		},
+		"constructor" : {
+			"author" : "Alex",
+			"params" : {
+				"a" : "the parameter a is really nice and very useful",
+				"second" : "the second parameter is not very useful, it just provides additional confusion"
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

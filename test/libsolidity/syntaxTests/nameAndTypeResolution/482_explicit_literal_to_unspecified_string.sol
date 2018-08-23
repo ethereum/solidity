@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (52-65): Explicit type conversion not allowed from "literal_string "abc"" to "string storage pointer".
+// Warning: (52-65): Statement has no effect.

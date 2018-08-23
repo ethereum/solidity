@@ -392,7 +392,18 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 		{
 			auto eq = find(path.begin(), path.end(), '=');
 			if (eq != path.end())
-				path = string(eq + 1, path.end());
+			{
+				if (auto r = CompilerStack::parseRemapping(path))
+				{
+					m_remappings.emplace_back(std::move(*r));
+					path = string(eq + 1, path.end());
+				}
+				else
+				{
+					cerr << "Invalid remapping: \"" << path << "\"." << endl;
+					return false;
+				}
+			}
 			else if (path == "-")
 				addStdin = true;
 			else
@@ -808,7 +819,7 @@ bool CommandLineInterface::processInput()
 		if (m_args.count(g_argMetadataLiteral) > 0)
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
-			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
+			m_compiler->setRemappings(m_remappings);
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		if (m_args.count(g_argLibraries))

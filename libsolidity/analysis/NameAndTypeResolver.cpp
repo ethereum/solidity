@@ -626,6 +626,17 @@ void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 	closeCurrentScope();
 }
 
+bool DeclarationRegistrationHelper::visit(FunctionTypeName& _funTypeName)
+{
+	enterNewSubScope(_funTypeName);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(FunctionTypeName&)
+{
+	closeCurrentScope();
+}
+
 bool DeclarationRegistrationHelper::visit(Block& _block)
 {
 	_block.setScope(m_currentScope);

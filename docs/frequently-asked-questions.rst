@@ -62,7 +62,8 @@ Example::
     contract C {
         function f() public pure returns (uint8[5] memory) {
             string[4] memory adaArr = ["This", "is", "an", "array"];
-            return ([1, 2, 3, 4, 5]);
+            adaArr[0] = "That";
+            return [1, 2, 3, 4, 5];
         }
     }
 
@@ -186,9 +187,10 @@ If you do not want to throw, you can return a pair::
         function checkCounter(uint index) public view {
             (uint counter, bool error) = getCounter(index);
             if (error) {
-                // ...
+                // Handle the error
             } else {
-                // ...
+                // Do something with counter.
+                require(counter > 7, "Invalid counter value");
             }
         }
     }
@@ -235,13 +237,6 @@ The key point is that the calling contract needs to know about the function it i
 
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_
 and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
-
-Get contract to do something when it is first mined
-===================================================
-
-Use the constructor. Anything inside it will be executed when the contract is first mined.
-
-See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
 
 How do you create 2-dimensional arrays?
 =======================================
@@ -372,15 +367,14 @@ contract level) with ``arrayname.length = <some new length>;``. If you get the
 
 ::
 
-    // This will not compile
-
     pragma solidity ^0.4.18;
 
+    // This will not compile
     contract C {
         int8[] dynamicStorageArray;
         int8[5] fixedStorageArray;
 
-        function f() {
+        function f() public {
             int8[] memory memArr;        // Case 1
             memArr.length++;             // illegal
 
@@ -409,28 +403,6 @@ Is it possible to return an array of strings (``string[]``) from a Solidity func
 
 Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic array itself).
 
-If you issue a call for an array, it is possible to retrieve the whole array? Or must you write a helper function for that?
-===========================================================================================================================
-
-The automatic :ref:`getter function<getter-functions>`  for a public state variable of array type only returns
-individual elements. If you want to return the complete array, you have to
-manually write a function to do that.
-
-
-What could have happened if an account has storage value(s) but no code?  Example: http://test.ether.camp/account/5f740b3a43fbb99724ce93a879805f4dc89178b5
-==========================================================================================================================================================
-
-The last thing a constructor does is returning the code of the contract.
-The gas costs for this depend on the length of the code and it might be
-that the supplied gas is not enough. This situation is the only one
-where an "out of gas" exception does not revert changes to the state,
-i.e. in this case the initialisation of the state variables.
-
-https://github.com/ethereum/wiki/wiki/Subtleties
-
-After a successful CREATE operation's sub-execution, if the operation returns x, 5 * len(x) gas is subtracted from the remaining gas before the contract is created. If the remaining gas is less than 5 * len(x), then no gas is subtracted, the code of the created contract becomes the empty string, but this is not treated as an exceptional condition - no reverts happen.
-
-
 What does the following strange check do in the Custom Token contract?
 ======================================================================
 
@@ -443,6 +415,25 @@ For ``uint256``, this is ``0`` up to ``2**256 - 1``. If the result of some opera
 does not fit inside this range, it is truncated. These truncations can have
 `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so code like the one
 above is necessary to avoid certain attacks.
+
+
+Why are explicit conversions between fixed-size bytes types and integer types failing?
+======================================================================================
+
+Since version 0.5.0 explicit conversions between fixed-size byte arrays and integers are only allowed,
+if both types have the same size. This prevents unexpected behaviour when truncating or padding.
+Such conversions are still possible, but intermediate casts are required that make the desired
+truncation and padding convention explicit. See :ref:`types-conversion-elementary-types` for a full
+explanation and examples.
+
+
+Why can number literals not be converted to fixed-size bytes types?
+===================================================================
+
+Since version 0.5.0 only hexadecimal number literals can be converted to fixed-size bytes
+types and only if the number of hex digits matches the size of the type. See :ref:`types-conversion-literals`
+for a full explanation and examples.
+
 
 
 More Questions?

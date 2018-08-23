@@ -355,13 +355,7 @@ TypePointer Type::forLiteral(Literal const& _literal)
 	case Token::FalseLiteral:
 		return make_shared<BoolType>();
 	case Token::Number:
-	{
-		tuple<bool, rational> validLiteral = RationalNumberType::isValidLiteral(_literal);
-		if (get<0>(validLiteral) == true)
-			return make_shared<RationalNumberType>(get<1>(validLiteral));
-		else
-			return TypePointer();
-	}
+		return RationalNumberType::forLiteral(_literal);
 	case Token::StringLiteral:
 		return make_shared<StringLiteralType>(_literal);
 	default:
@@ -400,17 +394,17 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _p
 		encodingType = encodingType->interfaceType(_inLibraryCall);
 	if (encodingType)
 		encodingType = encodingType->encodingType();
-	if (auto structType = dynamic_cast<StructType const*>(encodingType.get()))
-	{
-		// Structs are fine in the following circumstances:
-		// - ABIv2 without packed encoding or,
-		// - storage struct for a library
-		if (!(
-			(_encoderV2 && !_packed) ||
-			(structType->location() == DataLocation::Storage && _inLibraryCall)
-		))
+	// Structs are fine in the following circumstances:
+	// - ABIv2 without packed encoding or,
+	// - storage struct for a library
+	if (_inLibraryCall && encodingType->dataStoredIn(DataLocation::Storage))
+		return encodingType;
+	TypePointer baseType = encodingType;
+	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
+		baseType = arrayType->baseType();
+	if (dynamic_cast<StructType const*>(baseType.get()))
+		if (!_encoderV2 || _packed)
 			return TypePointer();
-	}
 	return encodingType;
 }
 
@@ -627,6 +621,7 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"callcode", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
 			{"delegatecall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool"}, FunctionType::Kind::BareDelegateCall, false)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
+			{"staticcall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)},
 			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
 		};
 	else
@@ -779,6 +774,30 @@ tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 	}
 }
 
+TypePointer RationalNumberType::forLiteral(Literal const& _literal)
+{
+	solAssert(_literal.token() == Token::Number, "");
+	tuple<bool, rational> validLiteral = isValidLiteral(_literal);
+	if (get<0>(validLiteral))
+	{
+		TypePointer compatibleBytesType;
+		if (_literal.isHexNumber())
+		{
+			size_t digitCount = count_if(
+				_literal.value().begin() + 2, // skip "0x"
+				_literal.value().end(),
+				[](unsigned char _c) -> bool { return isxdigit(_c); }
+			);
+			// require even number of digits
+			if (!(digitCount & 1))
+				compatibleBytesType = make_shared<FixedBytesType>(digitCount / 2);
+		}
+
+		return make_shared<RationalNumberType>(get<1>(validLiteral), compatibleBytesType);
+	}
+	return TypePointer();
+}
+
 tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
 {
 	rational value;
@@ -918,14 +937,7 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 	}
 	case Category::FixedBytes:
-	{
-		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		if (isFractional())
-			return false;
-		if (integerType())
-			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
-		return false;
-	}
+		return (m_value == rational(0)) || (m_compatibleBytesType && *m_compatibleBytesType == _convertTo);
 	default:
 		return false;
 	}
@@ -933,11 +945,15 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	TypePointer mobType = mobileType();
-	return
-		(mobType && mobType->isExplicitlyConvertibleTo(_convertTo)) ||
-		(!isFractional() && _convertTo.category() == Category::FixedBytes)
-	;
+	if (isImplicitlyConvertibleTo(_convertTo))
+		return true;
+	else if (_convertTo.category() != Category::FixedBytes)
+	{
+		TypePointer mobType = mobileType();
+		return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
+	}
+	else
+		return false;
 }
 
 TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) const
@@ -1263,7 +1279,8 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.
 	bigint v = value.numerator() / value.denominator();
-	if (negative)
+
+	if (negative && v != 0)
 		// modify value to satisfy bit requirements for negative numbers:
 		// add one bit for sign and decrement because negative numbers can be larger
 		v = (v - 1) << 1;
@@ -2502,6 +2519,7 @@ string FunctionType::richIdentifier() const
 	case Kind::BareCall: id += "barecall"; break;
 	case Kind::BareCallCode: id += "barecallcode"; break;
 	case Kind::BareDelegateCall: id += "baredelegatecall"; break;
+	case Kind::BareStaticCall: id += "barestaticcall"; break;
 	case Kind::Creation: id += "creation"; break;
 	case Kind::Send: id += "send"; break;
 	case Kind::Transfer: id += "transfer"; break;
@@ -2533,6 +2551,7 @@ string FunctionType::richIdentifier() const
 	case Kind::ABIEncodePacked: id += "abiencodepacked"; break;
 	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
+	case Kind::ABIDecode: id += "abidecode"; break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
@@ -2549,28 +2568,10 @@ bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
-
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
-	if (
-		m_kind != other.m_kind ||
-		m_stateMutability != other.stateMutability() ||
-		m_parameterTypes.size() != other.m_parameterTypes.size() ||
-		m_returnParameterTypes.size() != other.m_returnParameterTypes.size()
-	)
+	if (!equalExcludingStateMutability(other))
 		return false;
-
-	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
-	if (
-		!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(), other.m_parameterTypes.cbegin(), typeCompare) ||
-		!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(), other.m_returnParameterTypes.cbegin(), typeCompare)
-	)
-		return false;
-	//@todo this is ugly, but cannot be prevented right now
-	if (m_gasSet != other.m_gasSet || m_valueSet != other.m_valueSet)
-		return false;
-	if (bound() != other.bound())
-		return false;
-	if (bound() && *selfType() != *other.selfType())
+	if (m_stateMutability != other.stateMutability())
 		return false;
 	return true;
 }
@@ -2584,6 +2585,31 @@ bool FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 			return true;
 	}
 	return _convertTo.category() == category();
+}
+
+bool FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (_convertTo.category() != category())
+		return false;
+
+	FunctionType const& convertTo = dynamic_cast<FunctionType const&>(_convertTo);
+
+	if (!equalExcludingStateMutability(convertTo))
+		return false;
+
+	// non-payable should not be convertible to payable
+	if (m_stateMutability != StateMutability::Payable && convertTo.stateMutability() == StateMutability::Payable)
+		return false;
+
+	// payable should be convertible to non-payable, because you are free to pay 0 ether
+	if (m_stateMutability == StateMutability::Payable && convertTo.stateMutability() == StateMutability::NonPayable)
+		return true;
+
+	// e.g. pure should be convertible to view, but not the other way around.
+	if (m_stateMutability > convertTo.stateMutability())
+		return false;
+
+	return true;
 }
 
 TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
@@ -2676,6 +2702,7 @@ unsigned FunctionType::sizeOnStack() const
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
 	case Kind::Internal:
 	case Kind::ArrayPush:
 	case Kind::ArrayPop:
@@ -2743,6 +2770,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
 	{
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
@@ -2843,6 +2871,38 @@ bool FunctionType::hasEqualParameterTypes(FunctionType const& _other) const
 	);
 }
 
+bool FunctionType::hasEqualReturnTypes(FunctionType const& _other) const
+{
+	if (m_returnParameterTypes.size() != _other.m_returnParameterTypes.size())
+		return false;
+	return equal(
+		m_returnParameterTypes.cbegin(),
+		m_returnParameterTypes.cend(),
+		_other.m_returnParameterTypes.cbegin(),
+		[](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; }
+	);
+}
+
+bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) const
+{
+	if (m_kind != _other.m_kind)
+		return false;
+
+	if (!hasEqualParameterTypes(_other) || !hasEqualReturnTypes(_other))
+		return false;
+
+	//@todo this is ugly, but cannot be prevented right now
+	if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet)
+		return false;
+
+	if (bound() != _other.bound())
+		return false;
+
+	solAssert(!bound() || *selfType() == *_other.selfType(), "");
+
+	return true;
+}
+
 bool FunctionType::isBareCall() const
 {
 	switch (m_kind)
@@ -2850,6 +2910,7 @@ bool FunctionType::isBareCall() const
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
 	case Kind::ECRecover:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
@@ -2863,6 +2924,17 @@ string FunctionType::externalSignature() const
 {
 	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
 	solAssert(!m_declaration->name().empty(), "Fallback function has no signature.");
+	switch (kind())
+	{
+	case Kind::Internal:
+	case Kind::External:
+	case Kind::CallCode:
+	case Kind::DelegateCall:
+	case Kind::Event:
+		break;
+	default:
+		solAssert(false, "Invalid function type for requesting external signature.");
+	}
 
 	bool const inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 	FunctionTypePointer external = interfaceFunctionType();
@@ -2899,7 +2971,8 @@ bool FunctionType::isPure() const
 		m_kind == Kind::ABIEncode ||
 		m_kind == Kind::ABIEncodePacked ||
 		m_kind == Kind::ABIEncodeWithSelector ||
-		m_kind == Kind::ABIEncodeWithSignature;
+		m_kind == Kind::ABIEncodeWithSignature ||
+		m_kind == Kind::ABIDecode;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -2992,6 +3065,7 @@ bool FunctionType::padArguments() const
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
 	case Kind::KECCAK256:
@@ -3251,6 +3325,15 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 				strings{},
 				strings{},
 				FunctionType::Kind::ABIEncodeWithSignature,
+				true,
+				StateMutability::Pure
+			)},
+			{"decode", make_shared<FunctionType>(
+				TypePointers(),
+				TypePointers(),
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIDecode,
 				true,
 				StateMutability::Pure
 			)}

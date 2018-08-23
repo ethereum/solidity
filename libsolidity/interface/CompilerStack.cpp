@@ -58,22 +58,31 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-void CompilerStack::setRemappings(vector<string> const& _remappings)
+boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)
 {
-	vector<Remapping> remappings;
+	auto eq = find(_remapping.begin(), _remapping.end(), '=');
+	if (eq == _remapping.end())
+		return {};
+
+	auto colon = find(_remapping.begin(), eq, ':');
+
+	Remapping r;
+
+	r.context = colon == eq ? string() : string(_remapping.begin(), colon);
+	r.prefix = colon == eq ? string(_remapping.begin(), eq) : string(colon + 1, eq);
+	r.target = string(eq + 1, _remapping.end());
+
+	if (r.prefix.empty())
+		return {};
+
+	return r;
+}
+
+void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
+{
 	for (auto const& remapping: _remappings)
-	{
-		auto eq = find(remapping.begin(), remapping.end(), '=');
-		if (eq == remapping.end())
-			continue; // ignore
-		auto colon = find(remapping.begin(), eq, ':');
-		Remapping r;
-		r.context = colon == eq ? string() : string(remapping.begin(), colon);
-		r.prefix = colon == eq ? string(remapping.begin(), eq) : string(colon + 1, eq);
-		r.target = string(eq + 1, remapping.end());
-		remappings.push_back(r);
-	}
-	swap(m_remappings, remappings);
+		solAssert(!remapping.prefix.empty(), "");
+	m_remappings = _remappings;
 }
 
 void CompilerStack::setEVMVersion(EVMVersion _version)

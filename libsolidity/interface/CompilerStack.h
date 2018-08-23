@@ -84,6 +84,13 @@ public:
 		CompilationSuccessful
 	};
 
+	struct Remapping
+	{
+		std::string context;
+		std::string prefix;
+		std::string target;
+	};
+
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
@@ -103,8 +110,11 @@ public:
 	/// All settings, with the exception of remappings, are reset.
 	void reset(bool _keepSources = false);
 
-	/// Sets path remappings in the format "context:prefix=target"
-	void setRemappings(std::vector<std::string> const& _remappings);
+	// Parses a remapping of the format "context:prefix=target".
+	static boost::optional<Remapping> parseRemapping(std::string const& _remapping);
+
+	/// Sets path remappings.
+	void setRemappings(std::vector<Remapping> const& _remappings);
 
 	/// Sets library addresses. Addresses are cleared iff @a _libraries is missing.
 	/// Will not take effect before running compile.
@@ -318,13 +328,6 @@ private:
 		std::string const& _contractName,
 		FunctionDefinition const& _function
 	) const;
-
-	struct Remapping
-	{
-		std::string context;
-		std::string prefix;
-		std::string target;
-	};
 
 	ReadCallback::Callback m_readFile;
 	ReadCallback::Callback m_smtQuery;

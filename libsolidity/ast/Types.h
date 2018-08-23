@@ -423,12 +423,12 @@ public:
 
 	virtual Category category() const override { return Category::RationalNumber; }
 
-	/// @returns true if the literal is a valid integer.
-	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
+	static TypePointer forLiteral(Literal const& _literal);
 
-	explicit RationalNumberType(rational const& _value):
-		m_value(_value)
+	explicit RationalNumberType(rational const& _value, TypePointer const& _compatibleBytesType = TypePointer()):
+		m_value(_value), m_compatibleBytesType(_compatibleBytesType)
 	{}
+
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
@@ -446,7 +446,8 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> integerType() const;
-	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss.
+	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss,
+	/// unless the value was truncated, then a suitable type will be chosen to indicate such event.
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
@@ -461,6 +462,13 @@ public:
 
 private:
 	rational m_value;
+
+	/// Bytes type to which the rational can be explicitly converted.
+	/// Empty for all rationals that are not directly parsed from hex literals.
+	TypePointer m_compatibleBytesType;
+
+	/// @returns true if the literal is a valid integer.
+	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
 
 	/// @returns true if the literal is a valid rational number.
 	static std::tuple<bool, rational> parseRational(std::string const& _value);
@@ -896,6 +904,7 @@ public:
 		BareCall, ///< CALL without function hash
 		BareCallCode, ///< CALLCODE without function hash
 		BareDelegateCall, ///< DELEGATECALL without function hash
+		BareStaticCall, ///< STATICCALL without function hash
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
 		Transfer, ///< CALL, but without data and throws on error
@@ -926,7 +935,8 @@ public:
 		ABIEncodePacked,
 		ABIEncodeWithSelector,
 		ABIEncodeWithSignature,
-		GasLeft ///< gasleft()
+		ABIDecode,
+		GasLeft, ///< gasleft()
 	};
 
 	virtual Category category() const override { return Category::Function; }
@@ -1005,6 +1015,7 @@ public:
 
 	virtual std::string richIdentifier() const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override;
@@ -1034,10 +1045,14 @@ public:
 	/// @param _selfType if the function is bound, this has to be supplied and is the type of the
 	/// expression the function is called on.
 	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
-	/// @returns true if the types of parameters are equal (doesn't check return parameter types)
+	/// @returns true if the types of parameters are equal (does not check return parameter types)
 	bool hasEqualParameterTypes(FunctionType const& _other) const;
+	/// @returns true iff the return types are equal (does not check parameter types)
+	bool hasEqualReturnTypes(FunctionType const& _other) const;
+	/// @returns true iff the function type is equal to the given type, ignoring state mutability differences.
+	bool equalExcludingStateMutability(FunctionType const& _other) const;
 
-	/// @returns true if the ABI is used for this call (only meaningful for external calls)
+	/// @returns true if the ABI is NOT used for this call (only meaningful for external calls)
 	bool isBareCall() const;
 	Kind const& kind() const { return m_kind; }
 	StateMutability stateMutability() const { return m_stateMutability; }
@@ -1076,6 +1091,7 @@ public:
 		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareCallCode:
 		case FunctionType::Kind::BareDelegateCall:
+		case FunctionType::Kind::BareStaticCall:
 			return true;
 		default:
 			return false;

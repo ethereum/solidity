@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			uint a;
 		}
 		contract Test {
-			function boo(uint, bool, bytes8, bool[2], uint[], C, address[]) external returns (uint ret) {
+			function boo(uint, bool, bytes8, bool[2] calldata, uint[] calldata, C, address[] calldata) external returns (uint ret) {
 				ret = 5;
 			}
 		}
@@ -206,10 +206,10 @@ BOOST_AUTO_TEST_CASE(external_structs)
 			struct Simple { uint i; }
 			struct Nested { X[2][] a; uint y; }
 			struct X { bytes32 x; Test t; Simple[] s; }
-			function f(ActionChoices, uint, Simple) external {}
-			function g(Test, Nested) external {}
-			function h(function(Nested memory) external returns (uint)[]) external {}
-			function i(Nested[]) external {}
+			function f(ActionChoices, uint, Simple calldata) external {}
+			function g(Test, Nested calldata) external {}
+			function h(function(Nested memory) external returns (uint)[] calldata) external {}
+			function i(Nested[] calldata) external {}
 		}
 	)";
 	SourceUnit const* sourceUnit = parseAndAnalyse(text);
@@ -234,10 +234,10 @@ BOOST_AUTO_TEST_CASE(external_structs_in_libraries)
 			struct Simple { uint i; }
 			struct Nested { X[2][] a; uint y; }
 			struct X { bytes32 x; Test t; Simple[] s; }
-			function f(ActionChoices, uint, Simple) external {}
-			function g(Test, Nested) external {}
-			function h(function(Nested memory) external returns (uint)[]) external {}
-			function i(Nested[]) external {}
+			function f(ActionChoices, uint, Simple calldata) external {}
+			function g(Test, Nested calldata) external {}
+			function h(function(Nested memory) external returns (uint)[] calldata) external {}
+			function i(Nested[] calldata) external {}
 		}
 	)";
 	SourceUnit const* sourceUnit = parseAndAnalyse(text);
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(string)
 	char const* sourceCode = R"(
 		contract C {
 			string s;
-			function f(string x) external { s = x; }
+			function f(string calldata x) external { s = x; }
 		}
 	)";
 	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
@@ -430,6 +430,37 @@ BOOST_AUTO_TEST_CASE(getter_is_memory_type)
 	{
 		auto const& retType = f.second->returnParameterTypes().at(0);
 		BOOST_CHECK(retType->dataStoredIn(DataLocation::Memory));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(address_staticcall)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public view returns(bool) {
+				return address(0x4242).staticcall("");
+			}
+		}
+	)";
+
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
+	else
+		CHECK_ERROR(sourceCode, TypeError, "\"staticcall\" is not supported by the VM version.");
+}
+
+BOOST_AUTO_TEST_CASE(address_staticcall_value)
+{
+	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	{
+		char const* sourceCode = R"(
+			contract C {
+				function f() public view {
+					address(0x4242).staticcall.value;
+				}
+			}
+		)";
+		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
 	}
 }
 

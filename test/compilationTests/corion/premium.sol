@@ -5,8 +5,8 @@ import "./tokenDB.sol";
 import "./module.sol";
 
 contract thirdPartyPContractAbstract {
-    function receiveCorionPremiumToken(address, uint256, bytes) external returns (bool, uint256) {}
-    function approvedCorionPremiumToken(address, uint256, bytes) external returns (bool) {}
+    function receiveCorionPremiumToken(address, uint256, bytes calldata) external returns (bool, uint256) {}
+    function approvedCorionPremiumToken(address, uint256, bytes calldata) external returns (bool) {}
 }
 
 contract ptokenDB is tokenDB {}
@@ -108,7 +108,7 @@ contract premium is module, safeMath {
      * @param extraData Data to give forward to the receiver
      * @return True if the approval was successful
      */
-    function approveAndCall(address spender, uint256 amount, uint256 nonce, bytes extraData) isReady external returns (bool success) {
+    function approveAndCall(address spender, uint256 amount, uint256 nonce, bytes calldata extraData) isReady external returns (bool success) {
         /*
             Authorize another address to use an exact amount of the principal’s balance.
             After the transaction the approvedCorionPremiumToken function of the address will be called with the given data.
@@ -226,7 +226,7 @@ contract premium is module, safeMath {
      * @param extraData Data to give forward to the receiver
      * @return Whether the transfer was successful or not
      */
-    function transfer(address to, uint256 amount, bytes extraData) isReady external returns (bool success) {
+    function transfer(address to, uint256 amount, bytes calldata extraData) isReady external returns (bool success) {
         /*
             Launch a transaction where we transfer from a given address to another one.
             After thetransaction the approvedCorionPremiumToken function of the receiver’s address is going to be called with the given data.

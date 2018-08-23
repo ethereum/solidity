@@ -525,6 +525,75 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 		);
 }
 
+TypePointer TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2)
+{
+	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
+	if (arguments.size() != 2)
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"This function takes two arguments, but " +
+			toString(arguments.size()) +
+			" were provided."
+		);
+	if (arguments.size() >= 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+		m_errorReporter.typeError(
+			arguments.front()->location(),
+			"Invalid type for argument in function call. "
+			"Invalid implicit conversion from " +
+			type(*arguments.front())->toString() +
+			" to bytes memory requested."
+		);
+
+	TypePointer returnType = make_shared<TupleType>();
+
+	if (arguments.size() < 2)
+		return returnType;
+
+	// The following is a rather syntactic restriction, but we check it here anyway:
+	// The second argument has to be a tuple expression containing type names.
+	TupleExpression const* tupleExpression = dynamic_cast<TupleExpression const*>(arguments[1].get());
+	if (!tupleExpression)
+	{
+		m_errorReporter.typeError(
+			arguments[1]->location(),
+			"The second argument to \"abi.decode\" has to be a tuple of types."
+		);
+		return returnType;
+	}
+
+	vector<TypePointer> components;
+	for (auto const& typeArgument: tupleExpression->components())
+	{
+		solAssert(typeArgument, "");
+		if (TypeType const* argTypeType = dynamic_cast<TypeType const*>(type(*typeArgument).get()))
+		{
+			TypePointer actualType = argTypeType->actualType();
+			solAssert(actualType, "");
+			// We force memory because the parser currently cannot handle
+			// data locations. Furthermore, storage can be a little dangerous and
+			// calldata is not really implemented anyway.
+			actualType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, actualType);
+			solAssert(
+				!actualType->dataStoredIn(DataLocation::CallData) &&
+				!actualType->dataStoredIn(DataLocation::Storage),
+				""
+			);
+			if (!actualType->fullEncodingType(false, _abiEncoderV2, false))
+				m_errorReporter.typeError(
+					typeArgument->location(),
+					"Decoding type " + actualType->toString(false)  + " not supported."
+				);
+			components.push_back(actualType);
+		}
+		else
+		{
+			m_errorReporter.typeError(typeArgument->location(), "Argument has to be a type name.");
+			components.push_back(make_shared<TupleType>());
+		}
+	}
+	return make_shared<TupleType>(components);
+}
+
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 {
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
@@ -580,9 +649,6 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 
 bool TypeChecker::visit(StructDefinition const& _struct)
 {
-	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
-		m_errorReporter.typeError(_struct.location(), "Structs cannot be defined in interfaces.");
-
 	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		if (!type(*member)->canBeStored())
 			m_errorReporter.typeError(member->location(), "Type cannot be used in struct.");
@@ -610,7 +676,10 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 	if (CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
 		m_errorReporter.fatalTypeError(_struct.location(), "Recursive struct definition.");
 
+	bool insideStruct = true;
+	swap(insideStruct, m_insideStruct);
 	ASTNode::listAccept(_struct.members(), *this);
+	m_insideStruct = insideStruct;
 
 	return false;
 }
@@ -629,7 +698,15 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	}
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
-		if (!type(*var)->canLiveOutsideStorage())
+		if (
+			type(*var)->category() == Type::Category::Mapping &&
+			!type(*var)->dataStoredIn(DataLocation::Storage)
+		)
+			m_errorReporter.typeError(var->location(), "Mapping types can only have a data location of \"storage\".");
+		else if (
+			!type(*var)->canLiveOutsideStorage() &&
+			_function.visibility() > FunctionDefinition::Visibility::Internal
+		)
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
 			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
@@ -690,10 +767,12 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
 	// Forbid any variable declarations inside interfaces unless they are part of
-	// a function's input/output parameters.
+	// * a function's input/output parameters,
+	// * or inside of a struct definition.
 	if (
 		m_scope->contractKind() == ContractDefinition::ContractKind::Interface
 		&& !_variable.isCallableParameter()
+		&& !m_insideStruct
 	)
 		m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
 
@@ -711,8 +790,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		expectType(*_variable.value(), *varType);
 	if (_variable.isConstant())
 	{
-		if (!_variable.isStateVariable())
-			m_errorReporter.typeError(_variable.location(), "Illegal use of \"constant\" specifier.");
 		if (!_variable.type()->isValueType())
 		{
 			bool allowed = false;
@@ -742,7 +819,9 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	)
 		m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
 
-	if (varType->category() == Type::Category::Array)
+	switch (varType->category())
+	{
+	case Type::Category::Array:
 		if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
 			if (
 				((arrayType->location() == DataLocation::Memory) ||
@@ -750,6 +829,18 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				!arrayType->validForCalldata()
 			)
 				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
+		break;
+	case Type::Category::Mapping:
+		if (auto mappingType = dynamic_cast<MappingType const*>(varType.get()))
+			if (
+				mappingType->keyType()->isDynamicallySized() &&
+				_variable.visibility() == Declaration::Visibility::Public
+			)
+				m_errorReporter.typeError(_variable.location(), "Dynamically-sized keys for public mappings are not supported.");
+		break;
+	default:
+		break;
+	}
 
 	return false;
 }
@@ -818,7 +909,17 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	for (ASTPointer<VariableDeclaration> const& var: _eventDef.parameters())
 	{
 		if (var->isIndexed())
+		{
 			numIndexed++;
+			if (
+				_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+				dynamic_cast<ReferenceType const*>(type(*var).get())
+			)
+				m_errorReporter.typeError(
+					var->location(),
+					"Indexed reference types cannot yet be used with ABIEncoderV2."
+				);
+		}
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
@@ -1282,7 +1383,8 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 			if (
 				kind == FunctionType::Kind::BareCall ||
 				kind == FunctionType::Kind::BareCallCode ||
-				kind == FunctionType::Kind::BareDelegateCall
+				kind == FunctionType::Kind::BareDelegateCall ||
+				kind == FunctionType::Kind::BareStaticCall
 			)
 				m_errorReporter.warning(_statement.location(), "Return value of low-level calls not used.");
 			else if (kind == FunctionType::Kind::Send)
@@ -1626,10 +1728,13 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		else
 		{
 			TypePointer const& argType = type(*arguments.front());
+			// Resulting data location is memory unless we are converting from a reference
+			// type with a different data location.
+			// (data location cannot yet be specified for type conversions)
+			DataLocation dataLoc = DataLocation::Memory;
 			if (auto argRefType = dynamic_cast<ReferenceType const*>(argType.get()))
-				// do not change the data location when converting
-				// (data location cannot yet be specified for type conversions)
-				resultType = ReferenceType::copyForLocationIfReference(argRefType->location(), resultType);
+				dataLoc = argRefType->location();
+			resultType = ReferenceType::copyForLocationIfReference(dataLoc, resultType);
 			if (!argType->isExplicitlyConvertibleTo(*resultType))
 				m_errorReporter.typeError(
 					_functionCall.location(),
@@ -1674,6 +1779,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		return false;
 	}
 
+	if (functionType->kind() == FunctionType::Kind::BareStaticCall && !m_evmVersion.hasStaticCall())
+		m_errorReporter.typeError(_functionCall.location(), "\"staticcall\" is not supported by the VM version.");
+
 	auto returnTypes =
 		allowDynamicTypes ?
 		functionType->returnParameterTypes() :
@@ -1716,7 +1824,11 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 	}
 
-	if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
+	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
+
+	if (functionType->kind() == FunctionType::Kind::ABIDecode)
+		_functionCall.annotation().type = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
+	else if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
 	{
 		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
 		m_errorReporter.typeError(
@@ -1750,7 +1862,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		else if (
 			functionType->kind() == FunctionType::Kind::BareCall ||
 			functionType->kind() == FunctionType::Kind::BareCallCode ||
-			functionType->kind() == FunctionType::Kind::BareDelegateCall
+			functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+			functionType->kind() == FunctionType::Kind::BareStaticCall
 		)
 		{
 			if (arguments.empty())
@@ -1771,8 +1884,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else if (isPositionalCall)
 	{
-		bool const abiEncodeV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
-
 		for (size_t i = 0; i < arguments.size(); ++i)
 		{
 			auto const& argType = type(*arguments[i]);
@@ -1785,7 +1896,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 						errored = true;
 					}
-				if (!errored && !argType->fullEncodingType(false, abiEncodeV2, !functionType->padArguments()))
+				if (!errored && !argType->fullEncodingType(false, abiEncoderV2, !functionType->padArguments()))
 					m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
@@ -1800,7 +1911,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				if (
 					functionType->kind() == FunctionType::Kind::BareCall ||
 					functionType->kind() == FunctionType::Kind::BareCallCode ||
-					functionType->kind() == FunctionType::Kind::BareDelegateCall
+					functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+					functionType->kind() == FunctionType::Kind::BareStaticCall
 				)
 					msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
 				else if (
@@ -2348,22 +2460,6 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 				"."
 			);
 	}
-
-	if (
-		type(_expression)->category() == Type::Category::RationalNumber &&
-		_expectedType.category() == Type::Category::FixedBytes
-	)
-	{
-		auto literal = dynamic_cast<Literal const*>(&_expression);
-
-		if (literal && !literal->isHexNumber())
-			m_errorReporter.warning(
-				_expression.location(),
-				"Decimal literal assigned to bytesXX variable will be left-aligned. "
-				"Use an explicit conversion to silence this warning."
-			);
-	}
-
 }
 
 void TypeChecker::requireLValue(Expression const& _expression)

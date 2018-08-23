@@ -617,8 +617,8 @@ LinkerObject const& Assembly::assemble() const
 	}
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
-		// Append a STOP just to be sure.
-		ret.bytecode.push_back(0);
+		// Append an INVALID here to help tests find miscompilation.
+		ret.bytecode.push_back(byte(Instruction::INVALID));
 
 	for (size_t i = 0; i < m_subs.size(); ++i)
 	{

@@ -151,8 +151,8 @@ on the type of ``X`` being
 - ``bytes``, of length ``k`` (which is assumed to be of type ``uint256``):
 
   ``enc(X) = enc(k) pad_right(X)``, i.e. the number of bytes is encoded as a
-    ``uint256`` followed by the actual value of ``X`` as a byte sequence, followed by
-    the minimum number of zero-bytes such that ``len(enc(X))`` is a multiple of 32.
+  ``uint256`` followed by the actual value of ``X`` as a byte sequence, followed by
+  the minimum number of zero-bytes such that ``len(enc(X))`` is a multiple of 32.
 
 - ``string``:
 
@@ -205,7 +205,9 @@ Thus for our ``Foo`` example if we wanted to call ``baz`` with the parameters ``
 - ``0x0000000000000000000000000000000000000000000000000000000000000045``: the first parameter, a uint32 value ``69`` padded to 32 bytes
 - ``0x0000000000000000000000000000000000000000000000000000000000000001``: the second parameter - boolean ``true``, padded to 32 bytes
 
-In total::
+In total:
+
+.. code-block:: none
 
     0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001
 
@@ -217,7 +219,9 @@ If we wanted to call ``bar`` with the argument ``["abc", "def"]``, we would pass
 - ``0x6162630000000000000000000000000000000000000000000000000000000000``: the first part of the first parameter, a ``bytes3`` value ``"abc"`` (left-aligned).
 - ``0x6465660000000000000000000000000000000000000000000000000000000000``: the second part of the first parameter, a ``bytes3`` value ``"def"`` (left-aligned).
 
-In total::
+In total:
+
+.. code-block:: none
 
     0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
 
@@ -234,7 +238,9 @@ If we wanted to call ``sam`` with the arguments ``"dave"``, ``true`` and ``[1,2,
 - ``0x0000000000000000000000000000000000000000000000000000000000000002``: the second entry of the third parameter.
 - ``0x0000000000000000000000000000000000000000000000000000000000000003``: the third entry of the third parameter.
 
-In total::
+In total:
+
+.. code-block:: none
 
     0xa5643bf20000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000464617665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
 
@@ -264,7 +270,7 @@ Finally, we encode the data part of the second dynamic argument, ``"Hello, world
 
 All together, the encoding is (newline after function selector and each 32-bytes for clarity):
 
-::
+.. code-block:: none
 
     0x8be65246
       0000000000000000000000000000000000000000000000000000000000000123
@@ -292,15 +298,15 @@ Then we encode the length and data of the second embedded dynamic array ``[3]`` 
 
 Then we need to find the offsets ``a`` and ``b`` for their respective dynamic arrays  ``[1, 2]`` and ``[3]``. To calculate the offsets we can take a look at the encoded data of the first root array ``[[1, 2], [3]]`` enumerating each line in the encoding:
 
-::
+.. code-block:: none
 
- 0 - a                                                                - offset of [1, 2]
- 1 - b                                                                - offset of [3]
- 2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
- 3 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
- 4 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
- 5 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
- 6 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
+    0 - a                                                                - offset of [1, 2]
+    1 - b                                                                - offset of [3]
+    2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
+    3 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
+    4 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
+    5 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
+    6 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
 
 Offset ``a`` points to the start of the content of the array ``[1, 2]`` which is line 2 (64 bytes); thus ``a = 0x0000000000000000000000000000000000000000000000000000000000000040``.
 
@@ -318,17 +324,17 @@ Then we encode the embedded strings of the second root array:
 
 In parallel to the first root array, since strings are dynamic elements we need to find their offsets ``c``, ``d`` and ``e``:
 
-::
+.. code-block:: none
 
- 0 - c                                                                - offset for "one"
- 1 - d                                                                - offset for "two"
- 2 - e                                                                - offset for "three"
- 3 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
- 4 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
- 5 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
- 6 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
- 7 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
- 8 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+    0 - c                                                                - offset for "one"
+    1 - d                                                                - offset for "two"
+    2 - e                                                                - offset for "three"
+    3 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
+    4 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
+    5 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
+    6 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
+    7 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
+    8 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
 
 Offset ``c`` points to the start of the content of the string ``"one"`` which is line 3 (96 bytes); thus ``c = 0x0000000000000000000000000000000000000000000000000000000000000060``.
 
@@ -349,29 +355,29 @@ Then we encode the length of the second root array:
 
 Finally we find the offsets ``f`` and ``g`` for their respective root dynamic arrays ``[[1, 2], [3]]`` and ``["one", "two", "three"]``, and assemble parts in the correct order:
 
-::
+.. code-block:: none
 
- 0x2289b18c                                                            - function signature
-  0 - f                                                                - offset of [[1, 2], [3]]
-  1 - g                                                                - offset of ["one", "two", "three"]
-  2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [[1, 2], [3]]
-  3 - 0000000000000000000000000000000000000000000000000000000000000040 - offset of [1, 2]
-  4 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset of [3]
-  5 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
-  6 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
-  7 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
-  8 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
-  9 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
- 10 - 0000000000000000000000000000000000000000000000000000000000000003 - count for ["one", "two", "three"]
- 11 - 0000000000000000000000000000000000000000000000000000000000000060 - offset for "one"
- 12 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset for "two"
- 13 - 00000000000000000000000000000000000000000000000000000000000000e0 - offset for "three"
- 14 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
- 15 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
- 16 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
- 17 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
- 18 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
- 19 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+    0x2289b18c                                                            - function signature
+     0 - f                                                                - offset of [[1, 2], [3]]
+     1 - g                                                                - offset of ["one", "two", "three"]
+     2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [[1, 2], [3]]
+     3 - 0000000000000000000000000000000000000000000000000000000000000040 - offset of [1, 2]
+     4 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset of [3]
+     5 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
+     6 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
+     7 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
+     8 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
+     9 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
+    10 - 0000000000000000000000000000000000000000000000000000000000000003 - count for ["one", "two", "three"]
+    11 - 0000000000000000000000000000000000000000000000000000000000000060 - offset for "one"
+    12 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset for "two"
+    13 - 00000000000000000000000000000000000000000000000000000000000000e0 - offset for "three"
+    14 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
+    15 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
+    16 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
+    17 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
+    18 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
+    19 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
 
 Offset ``f`` points to the start of the content of the array ``[[1, 2], [3]]`` which is line 2 (64 bytes); thus ``f = 0x0000000000000000000000000000000000000000000000000000000000000040``.
 
@@ -444,7 +450,7 @@ For example,
     pragma solidity >0.4.24;
 
     contract Test {
-      constructor() public { b = 0x12345678901234567890123456789012; }
+      constructor() public { b = hex"12345678901234567890123456789012"; }
       event Event(uint indexed a, bytes32 b);
       event Event2(uint indexed a, bytes32 b);
       function foo(uint a) public { emit Event(a, b); }
@@ -494,8 +500,8 @@ As an example, the code
     contract Test {
       struct S { uint a; uint[] b; T[] c; }
       struct T { uint x; uint y; }
-      function f(S memory s, T memory t, uint a) public { }
-      function g() public returns (S memory s, T memory t, uint a) {}
+      function f(S memory s, T memory t, uint a) public;
+      function g() public returns (S memory s, T memory t, uint a);
     }
 
 would result in the JSON:
@@ -568,7 +574,9 @@ Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode whe
 - types shorter than 32 bytes are neither zero padded nor sign extended and
 - dynamic types are encoded in-place and without the length.
 
-As an example encoding ``int8, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in ::
+As an example encoding ``int8, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in:
+
+.. code-block:: none
 
     0xff42242448656c6c6f2c20776f726c6421
       ^^                                 int8(-1)
