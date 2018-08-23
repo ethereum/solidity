@@ -2496,7 +2496,7 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 {
 	TypePointers returnParameterTypes = m_returnParameterTypes;
 
-	if (m_kind == Kind::External || m_kind == Kind::CallCode || m_kind == Kind::DelegateCall)
+	if (m_kind == Kind::External || m_kind == Kind::DelegateCall)
 		for (auto& param: returnParameterTypes)
 			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
 				param = make_shared<InaccessibleDynamicType>();
@@ -2518,7 +2518,6 @@ string FunctionType::richIdentifier() const
 	{
 	case Kind::Internal: id += "internal"; break;
 	case Kind::External: id += "external"; break;
-	case Kind::CallCode: id += "callcode"; break;
 	case Kind::DelegateCall: id += "delegatecall"; break;
 	case Kind::BareCall: id += "barecall"; break;
 	case Kind::BareCallCode: id += "barecallcode"; break;
@@ -2700,7 +2699,6 @@ unsigned FunctionType::sizeOnStack() const
 	switch(kind)
 	{
 	case Kind::External:
-	case Kind::CallCode:
 	case Kind::DelegateCall:
 		size = 2;
 		break;
@@ -2933,7 +2931,6 @@ string FunctionType::externalSignature() const
 	{
 	case Kind::Internal:
 	case Kind::External:
-	case Kind::CallCode:
 	case Kind::DelegateCall:
 	case Kind::Event:
 		break;

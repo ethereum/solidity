@@ -566,7 +566,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 		case FunctionType::Kind::External:
-		case FunctionType::Kind::CallCode:
 		case FunctionType::Kind::DelegateCall:
 		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareCallCode:
@@ -1169,7 +1168,6 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					_memberAccess.expression().accept(*this);
 					m_context << funType->externalIdentifier();
 					break;
-				case FunctionType::Kind::CallCode:
 				case FunctionType::Kind::External:
 				case FunctionType::Kind::Creation:
 				case FunctionType::Kind::Send:
@@ -1831,7 +1829,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
 	
 	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
-	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
+	bool isCallCode = funKind == FunctionType::Kind::BareCallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (_functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
 
@@ -1959,7 +1957,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	bool existenceChecked = false;
 	// Check the the target contract exists (has code) for non-low-level calls.
-	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::CallCode || funKind == FunctionType::Kind::DelegateCall)
+	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
 		// TODO: error message?
