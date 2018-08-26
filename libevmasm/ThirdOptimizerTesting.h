@@ -37,13 +37,25 @@ using namespace std;
 template<typename T>
 struct is_assembly_item : std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, AssemblyItem> {};
 
-using AssemblyItemIterator = vector<AssemblyItem>::iterator;
+using AssemblyItemIterator = vector<AssemblyItem>::const_iterator;
 
 template <typename It>
 struct iterator_pair {
 	It begin;
 	It end;
 };
+
+template<typename T, typename It = typename T::const_iterator>
+iterator_pair<It> make_iterator_pair(T const& _arg)
+{
+	return iterator_pair<It>{begin(_arg), end(_arg)};
+}
+
+template<typename It>
+iterator_pair<It> make_iterator_pair(It _begin, It _end)
+{
+	return iterator_pair<It>{_begin, _end};
+}
 
 class NewOptimizerPattern
 {
@@ -116,7 +128,7 @@ public:
 	}
 
 	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
-	bool matches(It _begin, It _end, bool _unbind = true);
+	bool matches(iterator_pair<It>, bool _unbind = true);
 
 	u256 d() const
 	{
@@ -144,7 +156,7 @@ public:
 
 private:
 	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
-	void bind(It _begin, It _end);
+	void bind(iterator_pair<It> _bounds);
 
 	void unbind()
 	{
@@ -158,7 +170,7 @@ private:
 
 	struct Underlying
 	{
-		boost::optional<iterator_pair<AssemblyItemIterator >> m_boundItems;
+		boost::optional<iterator_pair<AssemblyItemIterator>> m_boundItems;
 
 		Kind m_kind;
 
@@ -180,10 +192,10 @@ public:
 	vector<AssemblyItem> optimize(vector<AssemblyItem> const& _items);
 private:
 	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
-	vector<AssemblyItem> optimize(It _begin, It _end);
+	vector<AssemblyItem> optimize(iterator_pair<It> _bounds);
 
 	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
-	vector<AssemblyItem> breakAndOptimize(It _begin, It _end);
+	vector<AssemblyItem> breakAndOptimize(iterator_pair<It> _bounds);
 
 	void addDefaultRules();
 	void addRules(vector<SimplificationRule<NewOptimizerPattern>> const& _rules);
