@@ -305,8 +305,6 @@ vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(iterator_pair<It> _
 	auto begin = _bounds.begin;
 	auto end = _bounds.end;
 
-	if (m_rules.empty()) addDefaultRules();
-
 	if ((end - begin) <= 1) return vector<AssemblyItem>(begin, end);
 
 	auto expressions = parseExpressions(_bounds, -1, true);

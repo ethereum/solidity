@@ -189,6 +189,11 @@ private:
 class ThirdOptimizer
 {
 public:
+	ThirdOptimizer()
+	{
+		addDefaultRules();
+	}
+
 	vector<AssemblyItem> optimize(vector<AssemblyItem> const& _items);
 private:
 	template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
