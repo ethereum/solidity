@@ -528,6 +528,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				bool shortcutTaken = false;
 				if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+				{
+					solAssert(!function.bound(), "");
 					if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
 					{
 						// Do not directly visit the identifier, because this way, we can avoid
@@ -536,6 +538,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef), false);
 						shortcutTaken = true;
 					}
+				}
 
 				if (!shortcutTaken)
 					_functionCall.expression().accept(*this);
@@ -544,9 +547,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
 			if (function.bound())
 			{
-				// stack: arg2, ..., argn, label, arg1
-				unsigned depth = parameterSize + 1;
+				// stack: arg2, ..., argn, arg1
+				// The stack needs to be adjusted to: arg1, arg2, ..., argn.
+				unsigned depth = parameterSize;
 				utils().moveIntoStack(depth, function.selfType()->sizeOnStack());
+
+				FunctionDefinition const& funDef = dynamic_cast<decltype(funDef)>(function.declaration());
+				utils().pushCombinedFunctionEntryLabel(funDef);
+
 				parameterSize += function.selfType()->sizeOnStack();
 			}
 
@@ -1116,27 +1124,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 		if (funType->bound())
 		{
+			// If the function is bound, this puts self on top of the stack.
+			// The code that adjusts the stack before the call is in visit(FunctionCall const&).
 			_memberAccess.expression().accept(*this);
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				*funType->selfType(),
 				true
 			);
-			if (funType->kind() == FunctionType::Kind::Internal)
-			{
-				FunctionDefinition const& funDef = dynamic_cast<decltype(funDef)>(funType->declaration());
-				utils().pushCombinedFunctionEntryLabel(funDef);
-				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 1);
-			}
-			else
-			{
-				solAssert(funType->kind() == FunctionType::Kind::DelegateCall, "");
-				auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
-				solAssert(contract && contract->isLibrary(), "");
-				m_context.appendLibraryAddress(contract->fullyQualifiedName());
-				m_context << funType->externalIdentifier();
-				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 2);
-			}
 			return false;
 		}
 
@@ -1813,18 +1808,32 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// value [if _functionType.valueSet()]
 	// gas [if _functionType.gasSet()]
 	// self object [if bound - moved to top right away]
-	// function identifier [unless bare]
 	// contract address
-
 	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
 	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
+
+	// move self object to top
+	// place function identifier after self, value and gas
+	if (_functionType.bound())
+	{
+		solAssert(_functionType.kind() == FunctionType::Kind::DelegateCall, "");
+		utils().moveToStackTop(gasValueSize, selfSize);
+		auto contract = dynamic_cast<ContractDefinition const*>(_functionType.declaration().scope());
+		solAssert(contract && contract->isLibrary(), "");
+		m_context.appendLibraryAddress(contract->fullyQualifiedName());
+		m_context << _functionType.externalIdentifier();
+		utils().moveIntoStack(gasValueSize + selfSize, 2);
+	}
+	// Stack:
+	// <stack top>
+	// self object
+	// value [if _functionType.valueSet()]
+	// gas [if _functionType.gasSet()]
+	// function identifier [unless bare]
+	// contract address
 	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
-
-	// move self object to top
-	if (_functionType.bound())
-		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
 	auto funKind = _functionType.kind();
 
