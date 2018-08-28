@@ -830,13 +830,12 @@ Members
 ^^^^^^^
 
 **length**:
-    Arrays have a ``length`` member to hold their number of elements.
-    Dynamic arrays can be resized in storage (not in memory) by changing the
-    ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
+    Arrays have a ``length`` member to read their number of elements.
+    Dynamically-sized arrays (only available for storage) have a read-write ``length`` member to resize the array. Increasing the length adds uninitialized elements to the array, this has *O(1)* complexity. Reducing the length performs :ref:``delete`` on each removed element and has *O(n)* complexity where *n* is the number of elements being deleted. Please note that calling ``length--`` on an empty array will set the length of the array to 2^256-1 due to ``uint256`` underflow wrapping.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that can be used to append an element at the end of the array. The function returns the new length.
 **pop**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that can be used to remove an element from the end of the array.
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that can be used to remove an element from the end of the array. This will also implicitly call :ref:``delete`` on the removed element.
 
 .. warning::
     It is not yet possible to use arrays of arrays in external functions.
