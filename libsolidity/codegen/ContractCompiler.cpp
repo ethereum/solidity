@@ -628,6 +628,8 @@ bool ContractCompiler::visit(IfStatement const& _ifStatement)
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _ifStatement);
+	storeStackHeight(&_ifStatement);
+
 	compileExpression(_ifStatement.condition());
 	m_context << Instruction::ISZERO;
 	eth::AssemblyItem falseTag = m_context.appendConditionalJump();
@@ -641,6 +643,7 @@ bool ContractCompiler::visit(IfStatement const& _ifStatement)
 	}
 	m_context << endTag;
 
+	popScopedVariables(&_ifStatement);
 	checker.check();
 	return false;
 }
@@ -649,6 +652,7 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _whileStatement);
+	storeStackHeight(&_whileStatement);
 
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
@@ -684,6 +688,7 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 	m_continueTags.pop_back();
 	m_breakTags.pop_back();
 
+	popScopedVariables(&_whileStatement);
 	checker.check();
 	return false;
 }

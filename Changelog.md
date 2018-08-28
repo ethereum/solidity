@@ -93,6 +93,7 @@ Bugfixes:
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.
  * Code Generator: Fix allocation of byte arrays (zeroed out too much memory).
  * Code Generator: Properly handle negative number literals in ABIEncoderV2.
+ * Code Generator: Fix variable allocation crash in single statement if/while/dowhile without curly brackets.
  * Commandline Interface: Correctly handle paths with backslashes on windows.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * Optimizer: Correctly estimate gas costs of constants for special cases.
