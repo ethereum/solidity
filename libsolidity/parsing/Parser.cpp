@@ -572,6 +572,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		Token::Value token = m_scanner->currentToken();
 		if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
 		{
+			nodeFactory.markEndPosition();
 			if (visibility != Declaration::Visibility::Default)
 			{
 				parserError(string(
@@ -616,21 +617,21 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			}
 			else
 				break;
+			nodeFactory.markEndPosition();
 			m_scanner->next();
 		}
 	}
-	nodeFactory.markEndPosition();
 
 	if (_options.allowEmptyName && m_scanner->currentToken() != Token::Identifier)
 	{
 		identifier = make_shared<ASTString>("");
 		solAssert(!_options.allowVar, ""); // allowEmptyName && allowVar makes no sense
-		if (type)
-			nodeFactory.setEndPositionFromNode(type);
-		// if type is null this has already caused an error
 	}
 	else
+	{
+		nodeFactory.markEndPosition();
 		identifier = expectIdentifierToken();
+	}
 	ASTPointer<Expression> value;
 	if (_options.allowInitialValue)
 	{
