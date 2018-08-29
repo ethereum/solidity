@@ -111,6 +111,7 @@ Bugfixes:
  * Type Checker: Report error when using structs in events without experimental ABIEncoderV2. This used to crash or log the wrong values.
  * Type Checker: Report error when using indexed structs in events with experimental ABIEncoderV2. This used to log wrong values.
  * Type Checker: Dynamic types as key for public mappings return error instead of assertion fail.
+ * Type Checker: Allow memory non-value types as parameters of public functions that override external interface functions.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
 
 ### 0.4.24 (2018-05-16)

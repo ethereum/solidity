@@ -2727,11 +2727,11 @@ unsigned FunctionType::sizeOnStack() const
 	return size;
 }
 
-FunctionTypePointer FunctionType::interfaceFunctionType() const
+FunctionTypePointer FunctionType::interfaceFunctionType(bool _isLib) const
 {
 	// Note that m_declaration might also be a state variable!
 	solAssert(m_declaration, "Declaration needed to determine interface function type.");
-	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary() || _isLib;
 
 	TypePointers paramTypes;
 	TypePointers retParamTypes;

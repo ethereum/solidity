@@ -1038,7 +1038,8 @@ public:
 	/// current function.
 	/// @returns an empty shared pointer if one of the input/return parameters does not have an
 	/// external type.
-	FunctionTypePointer interfaceFunctionType() const;
+	/// @param _isLib allows the caller to retrieve the type emulating a library in order to separate the types from their encoding type, while keeping the interface parts.
+	FunctionTypePointer interfaceFunctionType(bool _isLib = false) const;
 
 	/// @returns true if this function can take the given argument types (possibly
 	/// after implicit conversion).
