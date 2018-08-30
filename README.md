@@ -24,9 +24,14 @@ apt-get install -y build-essential
 
 bash tran.sh
 ```
-## How to Contribute
-Please see our [contribution guidelines](https://solidity.readthedocs.io/en/latest/contributing.html) in the Solidity documentation.
 
-Any contributions are welcome!
-
-
+## Windows
+https://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source
+安装vs2017
+安装cmake
+scripts\install_deps.bat
+部分文件在中文windows下警告被看作错误，改一下文件编码，删除不用的测试就行了
+mkdir build
+cd build
+cmake -G "Visual Studio 15 2017 Win64" ..
+cmake --build . --config RelWithDebInfo
