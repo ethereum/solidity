@@ -368,6 +368,7 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 	// into the types
 	map<string, vector<FunctionDefinition const*>> functions;
 	map<string, ModifierDefinition const*> modifiers;
+	map<string, vector<EventDefinition const*>> events;
 
 	// We search from derived to base, so the stored item causes the error.
 	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
@@ -379,6 +380,8 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 			string const& name = function->name();
 			if (modifiers.count(name))
 				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
+			if (!events[name].empty())
+				m_errorReporter.typeError(events[name].back()->location(), "Override changes function to event.");
 
 			for (FunctionDefinition const* overriding: functions[name])
 				checkFunctionOverride(*overriding, *function);
@@ -395,8 +398,44 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 				m_errorReporter.typeError(override->location(), "Override changes modifier signature.");
 			if (!functions[name].empty())
 				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
+			if (!events[name].empty())
+				m_errorReporter.typeError(events[name].back()->location(), "Override changes modifier to event.");
+		}
+		for (EventDefinition const* event: contract->events())
+		{
+			string const& name = event->name();
+			if (!functions[name].empty())
+				m_errorReporter.typeError(functions[name].back()->location(), "Override changes event to function.");
+			if (modifiers.count(name))
+				m_errorReporter.typeError(modifiers[name]->location(), "Override changes event to modifier.");
+	
+			for (EventDefinition const* overriding: events[name])
+				checkEventOverride(*overriding, *event);
+
+			events[name].push_back(event);
 		}
 	}
+}
+
+void TypeChecker::checkEventOverride(EventDefinition const& event, EventDefinition const& super)
+{
+	FunctionType eventType(event);
+	FunctionType superType(super);
+
+	auto eventParams = eventType.parameterTypes();
+	auto superParams = superType.parameterTypes();
+
+	// The only illegal thing we check for here is that if the number of
+	// arguments is the same, the types should be the same.
+	if (
+		eventParams.size() == superParams.size() &&
+		eventType.hasEqualParameterTypes(superType)
+	)
+		m_errorReporter.typeError(
+			event.location(),
+			SecondarySourceLocation().append("Overloaded event is here:", super.location()),
+			"Event overload must extend parameter list or have different types."
+		);
 }
 
 void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super)

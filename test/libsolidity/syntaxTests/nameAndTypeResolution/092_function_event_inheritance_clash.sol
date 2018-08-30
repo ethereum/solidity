@@ -10,3 +10,4 @@ contract C is B, A {
 }
 // ----
 // DeclarationError: (49-111): Identifier already declared.
+// TypeError: (49-111): Override changes event to function.

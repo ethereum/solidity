@@ -6,3 +6,4 @@ contract A {
 }
 // ----
 // DeclarationError: (34-96): Identifier already declared.
+// TypeError: (34-96): Override changes event to function.

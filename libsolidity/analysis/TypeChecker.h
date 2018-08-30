@@ -71,6 +71,8 @@ private:
 	/// Reports a type error with an appropriate message if overridden function signature differs.
 	/// Also stores the direct super function in the AST annotations.
 	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
+	/// Reports a type error with an appropriate message if overridden event is duplicate or overloading event does not extend parameter list.
+	void checkEventOverride(EventDefinition const& function, EventDefinition const& super);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
 	void checkContractAbstractFunctions(ContractDefinition const& _contract);
 	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
