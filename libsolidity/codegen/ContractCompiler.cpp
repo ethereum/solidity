@@ -839,7 +839,16 @@ bool ContractCompiler::visit(ExpressionStatement const& _expressionStatement)
 	CompilerContext::LocationSetter locationSetter(m_context, _expressionStatement);
 	Expression const& expression = _expressionStatement.expression();
 	compileExpression(expression);
-	CompilerUtils(m_context).popStackElement(*expression.annotation().type);
+	unsigned toPop = 0;
+	auto functionType = dynamic_cast<FunctionType const*>(expression.annotation().type.get());
+	if (functionType && functionType->bound())
+	{
+		solAssert(functionType->selfType(), "");
+		toPop = functionType->selfType()->sizeOnStack();
+	}
+	else
+		toPop = expression.annotation().type->sizeOnStack();
+	CompilerUtils(m_context).popStackSlots(toPop);
 	checker.check();
 	return false;
 }
