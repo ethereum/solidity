@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (28-51): Data location must be "calldata" for parameter in external function, but "storage" was given.
+// TypeError: (28-59): Data location must be "calldata" for parameter in external function, but "storage" was given.

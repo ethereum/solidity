@@ -7,4 +7,4 @@ library L
 // ----
 // TypeError: (27-58): Type is required to live outside storage.
 // TypeError: (60-91): Type is required to live outside storage.
-// TypeError: (121-142): Type is required to live outside storage.
+// TypeError: (121-150): Type is required to live outside storage.

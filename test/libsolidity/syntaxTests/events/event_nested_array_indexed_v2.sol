@@ -4,4 +4,4 @@ contract c {
 }
 // ----
 // Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
-// TypeError: (59-67): Indexed reference types cannot yet be used with ABIEncoderV2.
+// TypeError: (59-75): Indexed reference types cannot yet be used with ABIEncoderV2.
