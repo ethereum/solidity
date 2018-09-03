@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     if isfile(path):
         extract_and_write(path, path)
-    else: 
+    else:
         for root, subdirs, files in os.walk(path):
             if '_build' in subdirs:
                 subdirs.remove('_build')

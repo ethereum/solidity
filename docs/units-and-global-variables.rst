@@ -191,8 +191,8 @@ For more information, see the section on :ref:`address`.
    must align in order for the called contract to correctly access the storage variables of the calling contract by name.
    This is of course not the case if storage pointers are passed as function arguments as in the case for
    the high-level libraries.
-   
-    
+
+
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
 
