@@ -12,7 +12,6 @@ Breaking Changes:
  * ABI Encoder: Properly pad data from calldata (``msg.data`` and external function parameters). Use ``abi.encodePacked`` for unpadded encoding.
  * Code Generator: Signed right shift uses proper arithmetic shift, i.e. rounding towards negative infinity. Warning: this may silently change the semantics of existing code!
  * Code Generator: Revert at runtime if calldata is too short or points out of bounds. This is done inside the ``ABI decoder`` and therefore also applies to ``abi.decode()``.
- * Code Generator: Use ``STATICCALL`` for ``pure`` and ``view`` functions. This was already the case in the experimental 0.5.0 mode.
  * Commandline interface: Remove obsolete ``--formal`` option.
  * Commandline interface: Rename the ``--julia`` option to ``--yul``.
  * Commandline interface: Require ``-`` if standard input is used as source.
@@ -21,10 +20,7 @@ Breaking Changes:
  * Control Flow Analyzer: Turn warning about returning uninitialized storage pointers into an error.
  * General: ``continue`` in a ``do...while`` loop jumps to the condition (it used to jump to the loop body). Warning: this may silently change the semantics of existing code.
  * General: Disallow declaring empty structs.
- * General: Disallow raw ``callcode`` (was already deprecated in 0.4.12). It is still possible to use it via inline assembly.
- * General: Disallow ``var`` keyword.
  * General: Disallow ``sha3`` and ``suicide`` aliases.
- * General: Disallow the ``throw`` statement. This was already the case in the experimental 0.5.0 mode.
  * General: Disallow the ``years`` unit denomination (was already deprecated in 0.4.24)
  * General: Introduce ``emit`` as a keyword instead of parsing it as identifier.
  * General: New keywords: ``calldata`` and ``constructor``
@@ -67,8 +63,37 @@ Breaking Changes:
  * Syntax Checker: Disallow functions without implementation to use modifiers. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Named return values in function types are an error.
  * Syntax Checker: Strictly require visibility specifier for functions. This was already the case in the experimental 0.5.0 mode.
- * Syntax Checker: Disallow unary ``+``. This was already the case in the experimental 0.5.0 mode.
- * View Pure Checker: Strictly enfore state mutability. This was already the case in the experimental 0.5.0 mode.
+
+Breaking changes already present in earlier releases via the "experimental 0.5.0" mode, which are not optional anymore (sorted by importance):
+ * General: Disallow legacy constructor syntax (use ``constructor`` keyword).
+ * General: Require ``emit`` prefix when calling events.
+ * General: Scoping rules change from function-based (JavaScript) to block-based (C99/C++-style).
+ * Type Checker: Contract types do not include members from ``address`` anymore.
+ * Type Checker: Make ``keccak256``, ``sha256`` and ``ripemd160`` require a single bytes argument (use ``abi.encodePacked(...)``).
+ * Type Checker: Strictly enforce state mutability (e.g. enforce ``view`` and ``pure``).
+ * Code Generator: Use ``STATICCALL`` opcode for calling ``view`` and ``pure`` functions.
+ * Code Generator: Assert that ``k != 0`` for ``mulmod(a, b, k)`` and ``addmod(a, b, k)``.
+ * Inline Assembly: Enforce strict mode (no jumps, no direct stack manipulations).
+ * Type Checker: Interface functions have to be external.
+ * Type Checker: Local variables of reference type require ``storage`` or ``memory`` keyword.
+ * Type Checker: Fallback function has to be ``external``.
+ * Syntax Checker: Disallow the ``throw`` statement.
+ * Syntax Checker: Disallow ``var``.
+ * Syntax Checker: Require explicit visibility for functions.
+ * Syntax Checker: Remove unary ``+``.
+ * Type Checker: Disallow uninitialized storage pointers.
+ * Type Checker: Deprecate the ``years`` unit denomination.
+ * Type Checker: Make literals (without explicit type casting) an error for tight packing.
+ * Type Checker: Disallow wildcard tuple assignments.
+ * Type Checker: Disallow empty tuple components.
+ * Type Checker: Disallow empty parentheses for base constructor if it has parameters.
+ * Type Checker: Error when using no parentheses in modifier-style constructor calls.
+ * Synatx Checker: Disallow raw ``callcode`` (was already deprecated in 0.4.12). It is still possible to use it via inline assembly.
+ * Static Analyzer: Disallow duplicated super constructor calls.
+ * Syntax Checker: Disallow empty structs.
+ * Syntax Checker: Disallow modifiers on functions without implementation.
+ * Type Checker: Disallow combining hex numbers and unit denominations.
+ * Type Checker: Disallow non-pure constant state variables.
 
 Language Features:
  * Genreal: Add ``staticcall`` to ``address``.
