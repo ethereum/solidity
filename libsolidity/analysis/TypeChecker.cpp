@@ -1217,7 +1217,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			if (ref->dataStoredIn(DataLocation::Storage))
 			{
 				string errorText{"Uninitialized storage pointer."};
-				if (varDecl.referenceLocation() == VariableDeclaration::Location::Default)
+				if (varDecl.referenceLocation() == VariableDeclaration::Location::Unspecified)
 					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
 				solAssert(m_scope, "");
 				m_errorReporter.declarationError(varDecl.location(), errorText);
