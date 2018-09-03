@@ -52,6 +52,12 @@ private:
 	virtual bool visit(ModifierDefinition const& _modifier) override;
 	virtual void endVisit(ModifierDefinition const& _modifier) override;
 
+	// Reports an error if _statement is a VariableDeclarationStatement.
+	// Used by if/while/for to check for single statement variable declarations
+	// without a block.
+	void checkSingleStatementVariableDeclaration(ASTNode const* _statement);
+
+	virtual bool visit(IfStatement const& _ifStatement) override;
 	virtual bool visit(WhileStatement const& _whileStatement) override;
 	virtual void endVisit(WhileStatement const& _whileStatement) override;
 	virtual bool visit(ForStatement const& _forStatement) override;
