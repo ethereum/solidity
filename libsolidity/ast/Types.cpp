@@ -1501,8 +1501,6 @@ TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
 		return make_shared<TupleType>();
 	case DataLocation::Storage:
 		return m_isPointer ? TypePointer() : make_shared<TupleType>();
-	default:
-		solAssert(false, "");
 	}
 	return TypePointer();
 }
@@ -1548,8 +1546,6 @@ string ReferenceType::identifierLocationSuffix() const
 	case DataLocation::CallData:
 		id += "_calldata";
 		break;
-	default:
-		solAssert(false, "Unknown location returned by location()");
 	}
 	if (isPointer())
 		id += "_ptr";
@@ -2556,7 +2552,6 @@ string FunctionType::richIdentifier() const
 	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
 	case Kind::ABIDecode: id += "abidecode"; break;
-	default: solAssert(false, "Unknown function location."); break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
@@ -3257,8 +3252,6 @@ string MagicType::richIdentifier() const
 		return "t_magic_transaction";
 	case Kind::ABI:
 		return "t_magic_abi";
-	default:
-		solAssert(false, "Unknown kind of magic");
 	}
 	return "";
 }
