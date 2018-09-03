@@ -2103,7 +2103,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				"after argument-dependent lookup in " + exprType->toString() +
 				(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".");
 		if (exprType->category() == Type::Category::Contract)
-			for (auto const& addressMember: IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr))
+			for (auto const& addressMember: AddressType().nativeMembers(nullptr))
 				if (addressMember.name == memberName)
 				{
 					Identifier const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());
@@ -2353,7 +2353,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 	if (_literal.looksLikeAddress())
 	{
 		// Assign type here if it even looks like an address. This prevents double errors for invalid addresses
-		_literal.annotation().type = make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+		_literal.annotation().type = make_shared<AddressType>();
 
 		string msg;
 		if (_literal.value().length() != 42) // "0x" + 40 hex digits

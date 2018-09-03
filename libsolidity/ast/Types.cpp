@@ -299,7 +299,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
-		return make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+		return make_shared<AddressType>();
 	case Token::Bool:
 		return make_shared<BoolType>();
 	case Token::Bytes:
@@ -439,6 +439,59 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	return members;
 }
 
+string AddressType::richIdentifier() const
+{
+	return "t_address";
+}
+
+bool AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	return isImplicitlyConvertibleTo(_convertTo) ||
+		   _convertTo.category() == Category::Contract ||
+		   _convertTo.category() == Category::Integer ||
+		   (_convertTo.category() == Category::FixedBytes && 160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8);
+}
+
+string AddressType::toString(bool) const
+{
+	return "address";
+}
+
+u256 AddressType::literalValue(Literal const* _literal) const
+{
+	solAssert(_literal, "");
+	solAssert(_literal->value().substr(0, 2) == "0x", "");
+	return u256(_literal->value());
+}
+
+TypePointer AddressType::unaryOperatorResult(Token::Value _operator) const
+{
+	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
+}
+
+
+TypePointer AddressType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+{
+	// Addresses can only be compared.
+	if (!Token::isCompareOp(_operator))
+		return TypePointer();
+
+	return Type::commonType(shared_from_this(), _other);
+}
+
+MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) const
+{
+	return {
+		{"balance", make_shared<IntegerType>(256)},
+		{"call", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
+		{"callcode", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
+		{"delegatecall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false)},
+		{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
+		{"staticcall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)},
+		{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
+	};
+}
+
 namespace
 {
 
@@ -448,7 +501,7 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 	if (_operator == Token::SHR)
 		return false;
 	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
-		return !otherInt->isAddress();
+		return true;
 	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
 		return !otherRat->isFractional() && otherRat->integerType() && !otherRat->integerType()->isSigned();
 	else
@@ -460,8 +513,6 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 IntegerType::IntegerType(unsigned _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
-	if (isAddress())
-		solAssert(m_bits == 160, "");
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
 		"Invalid bit number for integer type: " + dev::toString(m_bits)
@@ -470,10 +521,7 @@ IntegerType::IntegerType(unsigned _bits, IntegerType::Modifier _modifier):
 
 string IntegerType::richIdentifier() const
 {
-	if (isAddress())
-		return "t_address";
-	else
-		return "t_" + string(isSigned() ? "" : "u") + "int" + to_string(numBits());
+	return "t_" + string(isSigned() ? "" : "u") + "int" + to_string(numBits());
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -483,8 +531,6 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
 		if (convertTo.m_bits < m_bits)
 			return false;
-		if (isAddress())
-			return convertTo.isAddress();
 		else if (isSigned())
 			return convertTo.isSigned();
 		else
@@ -493,11 +539,7 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
-
-		if (isAddress())
-			return false;
-		else
-			return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
+		return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
 	}
 	else
 		return false;
@@ -506,6 +548,7 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.category() == category() ||
+		_convertTo.category() == Category::Address ||
 		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == Category::Enum ||
 		(_convertTo.category() == Category::FixedBytes && numBits() == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8) ||
@@ -517,10 +560,7 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 	// "delete" is ok for all integer types
 	if (_operator == Token::Delete)
 		return make_shared<TupleType>();
-	// no further unary operators for addresses
-	else if (isAddress())
-		return TypePointer();
-	// for non-address integers, we allow +, -, ++ and --
+	// we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
 			_operator == Token::Inc || _operator == Token::Dec ||
 			_operator == Token::BitNot)
@@ -539,18 +579,8 @@ bool IntegerType::operator==(Type const& _other) const
 
 string IntegerType::toString(bool) const
 {
-	if (isAddress())
-		return "address";
 	string prefix = isSigned() ? "int" : "uint";
 	return prefix + dev::toString(m_bits);
-}
-
-u256 IntegerType::literalValue(Literal const* _literal) const
-{
-	solAssert(m_modifier == Modifier::Address, "");
-	solAssert(_literal, "");
-	solAssert(_literal->value().substr(0, 2) == "0x", "");
-	return u256(_literal->value());
 }
 
 bigint IntegerType::minValue() const
@@ -580,8 +610,6 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	if (Token::isShiftOp(_operator))
 	{
 		// Shifts are not symmetric with respect to the type
-		if (isAddress())
-			return TypePointer();
 		if (isValidShiftAndAmountType(_operator, *_other))
 			return shared_from_this();
 		else
@@ -599,9 +627,6 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		return TypePointer();
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
 	{
-		// Nothing else can be done with addresses
-		if (intType->isAddress())
-			return TypePointer();
 		// Signed EXP is not allowed
 		if (Token::Exp == _operator && intType->isSigned())
 			return TypePointer();
@@ -610,22 +635,6 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		if (Token::Exp == _operator)
 			return TypePointer();
 	return commonType;
-}
-
-MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) const
-{
-	if (isAddress())
-		return {
-			{"balance", make_shared<IntegerType>(256)},
-			{"call", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
-			{"callcode", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
-			{"delegatecall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false)},
-			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
-			{"staticcall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)},
-			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
-		};
-	else
-		return MemberList::MemberMap();
 }
 
 FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, FixedPointType::Modifier _modifier):
@@ -658,8 +667,7 @@ bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == category() ||
-		(_convertTo.category() == Category::Integer && !dynamic_cast<IntegerType const&>(_convertTo).isAddress());
+	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
 }
 
 TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
@@ -912,8 +920,6 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		if (isFractional())
 			return false;
 		IntegerType const& targetType = dynamic_cast<IntegerType const&>(_convertTo);
-		if (targetType.isAddress())
-			return false;
 		if (m_value == rational(0))
 			return true;
 		unsigned forSignBit = (targetType.isSigned() ? 1 : 0);
@@ -1368,6 +1374,7 @@ bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return (_convertTo.category() == Category::Integer && numBytes() * 8 == dynamic_cast<IntegerType const&>(_convertTo).numBits()) ||
+		(_convertTo.category() == Category::Address && numBytes() == 20) ||
 		_convertTo.category() == Category::FixedPoint ||
 		_convertTo.category() == category();
 }
@@ -1469,9 +1476,7 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return
-		isImplicitlyConvertibleTo(_convertTo) ||
-		_convertTo == IntegerType(160, IntegerType::Modifier::Address);
+	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.category() == Category::Address;
 }
 
 bool ContractType::isPayable() const
@@ -2584,12 +2589,8 @@ bool FunctionType::operator==(Type const& _other) const
 
 bool FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_kind == Kind::External && _convertTo.category() == Category::Integer)
-	{
-		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (convertTo.isAddress())
+	if (m_kind == Kind::External && _convertTo.category() == Category::Address)
 			return true;
-	}
 	return _convertTo.category() == category();
 }
 
@@ -3274,7 +3275,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"coinbase", make_shared<AddressType>()},
 			{"timestamp", make_shared<IntegerType>(256)},
 			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
@@ -3283,7 +3284,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"sender", make_shared<AddressType>()},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},
@@ -3291,7 +3292,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"origin", make_shared<AddressType>()},
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
 	case Kind::ABI:
