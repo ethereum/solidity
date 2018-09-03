@@ -172,12 +172,12 @@ done
 )
 
 printTask "Compiling all examples from the documentation..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
-    cd "$TMPDIR"
+    cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     for f in *.sol
     do
@@ -199,10 +199,10 @@ TMPDIR=$(mktemp -d)
         then
             opts="$opts -w"
         fi
-        compileFull $opts "$TMPDIR/$f"
+        compileFull $opts "$SOLTMPDIR/$f"
     done
 )
-rm -rf "$TMPDIR"
+rm -rf "$SOLTMPDIR"
 echo "Done."
 
 printTask "Testing library checksum..."
@@ -213,17 +213,17 @@ printTask "Testing long library names..."
 echo '' | "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname:0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
 
 printTask "Testing overwriting files..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set -e
     # First time it works
-    echo 'contract C {} ' | "$SOLC" - --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Second time it fails
-    ! echo 'contract C {} ' | "$SOLC" - --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    ! echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Unless we force
-    echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
 )
-rm -rf "$TMPDIR"
+rm -rf "$SOLTMPDIR"
 
 printTask "Testing assemble, yul, strict-assembly..."
 echo '{}' | "$SOLC" - --assemble &>/dev/null
@@ -231,7 +231,7 @@ echo '{}' | "$SOLC" - --yul &>/dev/null
 echo '{}' | "$SOLC" - --strict-assembly &>/dev/null
 
 printTask "Testing standard input..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set +e
     output=$("$SOLC" --bin  2>&1)
@@ -256,12 +256,12 @@ TMPDIR=$(mktemp -d)
 )
 
 printTask "Testing soljson via the fuzzer..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
-    cd "$TMPDIR"
+    cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     for f in *.sol
@@ -283,5 +283,5 @@ TMPDIR=$(mktemp -d)
         set -e
     done
 )
-rm -rf "$TMPDIR"
+rm -rf "$SOLTMPDIR"
 echo "Commandline tests successful."
