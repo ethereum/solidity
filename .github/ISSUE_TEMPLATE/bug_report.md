@@ -6,12 +6,12 @@ about: Bug reports about the Solidity Compiler.
 ## Prerequisites
 
 - First, many thanks for taking part in the community. We really appreciate that.
-- We realize there is a lot of data requested here. We ask only that you do your best to provide as much information as possible so we can better help you.
+- We realize there is a lot of information requested here. We ask only that you do your best to provide as much information as possible so we can better help you.
 - Support questions are better asked in one of the following locations:
 	- [Solidity chat](https://gitter.im/ethereum/solidity)
 	- [Stack Overflow](https://ethereum.stackexchange.com/)
 - Ensure the issue isn't already reported.
-- The issue should be reproducible with the latest solidity version , however, this isn't a hard requirement and being reproducible with an older version is sufficient.
+- The issue should be reproducible with the latest solidity version; however, this isn't a hard requirement and being reproducible with an older version is sufficient.
 
 *Delete the above section and the instructions in the sections below before submitting*
 
