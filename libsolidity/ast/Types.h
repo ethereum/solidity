@@ -899,7 +899,6 @@ public:
 	{
 		Internal, ///< stack-call using plain JUMP
 		External, ///< external call using CALL
-		CallCode, ///< external call using CALLCODE, i.e. not exchanging the storage
 		DelegateCall, ///< external call using DELEGATECALL, i.e. not exchanging the storage
 		BareCall, ///< CALL without function hash
 		BareCallCode, ///< CALLCODE without function hash
