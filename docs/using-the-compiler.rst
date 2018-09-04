@@ -83,6 +83,8 @@ Input Description
           [
             "bzzr://56ab...",
             "ipfs://Qma...",
+            // If files are used, their directories should be added to the command line via
+            // `--allow-paths <path>`.
             "file:///tmp/path/to/file.sol"
           ]
         },
