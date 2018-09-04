@@ -8,6 +8,13 @@
 		"severity": "very low"
 	},
     {
+        "name": "ExpCleanupZero",
+        "summary": "Using exponentiating with types shorter than 256 bits and zero as base can result in unexpected values.",
+        "description": "As defined by the EVM, 0 ** 0 is one. Solidity does not always remove dirty higher order bits of types that are smaller than 256 bits before applying an operation because it does not matter if the cleanup is performed before or after the operation. This is true for EXP except for the case where the base is zero, which was overlooked.",
+        "fixed": "0.4.25",
+        "severity": "high"
+    },
+    {
         "name": "OneOfTwoConstructorsSkipped",
         "summary": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored.",
         "description": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored. There will be a compiler warning about the old-style constructor, so contracts only using new-style constructors are fine.",
