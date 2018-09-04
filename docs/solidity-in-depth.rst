@@ -18,3 +18,4 @@ If something is missing here, please contact us on
    contracts.rst
    assembly.rst
    miscellaneous.rst
+   050-breaking-changes.rst
