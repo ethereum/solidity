@@ -35,7 +35,7 @@ npm / Node.js
 =============
 
 Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
-`solcjs` program has fewer features than all options further down this page. Our 
+`solcjs` program has fewer features than all options further down this page. Our
 :ref:`commandline-compiler` documentation assumes you are using
 the full-featured compiler, `solc`. So if you install `solcjs` from `npm` then you will
 stop reading the documentation here and then continue to `solc-js <https://github.com/ethereum/solc-js>`_.
@@ -92,7 +92,7 @@ If you want to use the cutting edge developer version:
     sudo add-apt-repository ppa:ethereum/ethereum-dev
     sudo apt-get update
     sudo apt-get install solc
-    
+
 We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To install the latest stable version of solc:
 
 .. code-block:: bash
@@ -123,13 +123,13 @@ We will re-add the pre-built bottles soon.
     brew tap ethereum/ethereum
     brew install solidity
 
-If you need a specific version of Solidity you can install a 
+If you need a specific version of Solidity you can install a
 Homebrew formula directly from Github.
 
-View 
+View
 `solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
 
-Follow the history links until you have a raw file link of a 
+Follow the history links until you have a raw file link of a
 specific commit of ``solidity.rb``.
 
 Install it using ``brew``:
@@ -272,7 +272,7 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
 or even easier:
 
 .. code-block:: bash
-    
+
     #note: this will install binaries solc and soltest at usr/local/bin
     ./scripts/build.sh
 
@@ -302,7 +302,7 @@ If you are interested what CMake options are available run ``cmake .. -LH``.
 
 SMT Solvers
 -----------
-Solidity can be built against SMT solvers and will do so by default if 
+Solidity can be built against SMT solvers and will do so by default if
 they are found in the system. Each solver can be disabled by a `cmake` option.
 
 *Note: In some cases, this can also be a potential workaround for build failures.*
@@ -313,7 +313,7 @@ Inside the build folder you can disable them, since they are enabled by default:
 .. code-block:: bash
 
     # disables only Z3 SMT Solver.
-    cmake .. -DUSE_Z3=OFF 
+    cmake .. -DUSE_Z3=OFF
 
     # disables only CVC4 SMT Solver.
     cmake .. -DUSE_CVC4=OFF

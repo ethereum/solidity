@@ -141,14 +141,14 @@ Solidity Tools
 
 * `ABI to solidity interface converter <https://gist.github.com/chriseth/8f533d133fa0c15b0d6eaf3ec502c82b>`_
     A script for generating contract interfaces from the ABI of a smart contract.
-    
-* `Securify <https://securify.ch/>`_ 
+
+* `Securify <https://securify.ch/>`_
     Fully automated online static analyzer for smart contracts, providing a security report based on vulnerability patterns.
-    
+
 * `Sūrya <https://github.com/ConsenSys/surya/>`_
     Utility tool for smart contract systems, offering a number of visual outputs and information about the contracts' structure. Also supports querying the function call graph.
-    
-* `EVM Lab <https://github.com/ethereum/evmlab/>`_ 
+
+* `EVM Lab <https://github.com/ethereum/evmlab/>`_
     Rich tool package to interact with the EVM. Includes a VM, Etherchain API, and a trace-viewer with gas cost display.
 
 .. note::

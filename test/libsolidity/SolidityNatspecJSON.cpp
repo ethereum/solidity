@@ -647,7 +647,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname)
 		contract test {
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
-			/// @param 
+			/// @param
 			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
 		contract test {
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
-			/// @param second 
+			/// @param second
 			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";

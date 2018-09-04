@@ -184,7 +184,7 @@ deploy:
     # Both the build and deploy steps for Emscripten are only run within the Ubuntu
     # configurations (not for macOS).  That is controlled by conditionals within the bash
     # scripts because TravisCI doesn't provide much in the way of conditional logic.
-   
+
     - provider: script
       script: test $SOLC_EMSCRIPTEN != On || (scripts/release_emscripten.sh)
       skip_cleanup: true

@@ -193,7 +193,7 @@ for (map<ComplexTypeOne, ComplexTypeTwo>::iterator i = l.begin(); i != l.end(); 
 2. Generally avoid shortening a standard form that already includes all important information:
    - e.g. stick to `shared_ptr<X>` rather than shortening to `ptr<X>`.
 3. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently:
-   - e.g. `using Guard = std::lock_guard<std::mutex>;` ///< Guard is used throughout the codebase since it is clear in meaning and used commonly. 
+   - e.g. `using Guard = std::lock_guard<std::mutex>;` ///< Guard is used throughout the codebase since it is clear in meaning and used commonly.
 4. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
 5. Avoid introducing aliases for types unless they are very complicated. Consider the number of items a brain can keep track of at the same time.
 
