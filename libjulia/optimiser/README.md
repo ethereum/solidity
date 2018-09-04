@@ -87,3 +87,12 @@ simple rules like ``x + 0 == x`` to simplify expressions.
 ## Ineffective Statement Remover
 
 This step removes statements that have no side-effects.
+
+## WebAssembly specific
+
+### Main Function
+
+Changes the topmost block to be a function with a specific name ("main") which has no
+inputs nor outputs.
+
+Depends on the Function Grouper.

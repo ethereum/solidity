@@ -146,6 +146,7 @@ private:
 class Scopable
 {
 public:
+	virtual ~Scopable() = default;
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	ASTNode const* scope() const { return m_scope; }
@@ -307,6 +308,7 @@ private:
 class VariableScope
 {
 public:
+	virtual ~VariableScope() = default;
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
 	std::vector<VariableDeclaration const*> const& localVariables() const { return m_localVariables; }
 
@@ -320,6 +322,7 @@ private:
 class Documented
 {
 public:
+	virtual ~Documented() = default;
 	explicit Documented(ASTPointer<ASTString> const& _documentation): m_documentation(_documentation) {}
 
 	/// @return A shared pointer of an ASTString.
@@ -336,6 +339,7 @@ protected:
 class ImplementationOptional
 {
 public:
+	virtual ~ImplementationOptional() = default;
 	explicit ImplementationOptional(bool _implemented): m_implemented(_implemented) {}
 
 	/// @return whether this node is fully implemented or not

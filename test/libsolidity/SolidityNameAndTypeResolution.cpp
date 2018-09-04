@@ -831,24 +831,6 @@ BOOST_AUTO_TEST_CASE(illegal_override_visibility)
 	CHECK_ERROR(text, TypeError, "Overriding function visibility differs");
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_remove_constness)
-{
-	char const* text = R"(
-		contract B { function f() constant {} }
-		contract C is B { function f() public {} }
-	)";
-	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"view\" to \"nonpayable\".");
-}
-
-BOOST_AUTO_TEST_CASE(illegal_override_add_constness)
-{
-	char const* text = R"(
-		contract B { function f() public {} }
-		contract C is B { function f() constant {} }
-	)";
-	CHECK_ERROR(text, TypeError, "Overriding function changes state mutability from \"nonpayable\" to \"view\".");
-}
-
 BOOST_AUTO_TEST_CASE(complex_inheritance)
 {
 	char const* text = R"(
@@ -993,19 +975,6 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
 }
 
-BOOST_AUTO_TEST_CASE(missing_state_variable)
-{
-	char const* text = R"(
-		contract Scope {
-			function getStateVar() constant public returns (uint stateVar) {
-				stateVar = Scope.stateVar; // should fail.
-			}
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Member \"stateVar\" not found or not visible after argument-dependent lookup in type(contract Scope)");
-}
-
-
 BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 {
 	// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
@@ -1117,17 +1086,6 @@ BOOST_AUTO_TEST_CASE(fallback_function_with_return_parameters)
 		}
 	)";
 	CHECK_ERROR(text, TypeError, "Fallback function cannot return values.");
-}
-
-BOOST_AUTO_TEST_CASE(fallback_function_with_constant_modifier)
-{
-	char const* text = R"(
-		contract C {
-			uint x;
-			function() constant { x = 2; }
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Fallback function must be payable or non-payable");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_twice)
@@ -2278,25 +2236,6 @@ BOOST_AUTO_TEST_CASE(explicit_conversion_from_decimal_to_bytesxx)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
-BOOST_AUTO_TEST_CASE(combining_hex_and_denomination)
-{
-	char const* text = R"(
-		contract Foo {
-			uint constant x = 0x01 wei;
-		}
-	)";
-	CHECK_WARNING(text, "Hexadecimal numbers with unit denominations are deprecated.");
-
-	char const* textV050 = R"(
-		pragma experimental "v0.5.0";
-
-		contract Foo {
-			uint constant x = 0x01 wei;
-		}
-	)";
-	CHECK_ERROR(textV050, TypeError, "Hexadecimal numbers cannot be used with unit denominations.");
-}
-
 BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 {
 	char const* text = R"(
@@ -2344,30 +2283,6 @@ BOOST_AUTO_TEST_CASE(constant_string_literal_disallows_assignment)
 	// Even if this is made possible in the future, we should not allow assignment
 	// to elements of constant arrays.
 	CHECK_ERROR(text, TypeError, "Index access for string is not possible.");
-}
-
-BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant_0_4_x)
-{
-	char const* text = R"(
-		contract C {
-			function () constant returns (uint) x;
-			uint constant y = x();
-		}
-	)";
-	CHECK_WARNING(text, "Initial value for constant variable has to be compile-time constant.");
-}
-
-BOOST_AUTO_TEST_CASE(assign_constant_function_value_to_constant)
-{
-	char const* text = R"(
-		pragma experimental "v0.5.0";
-
-		contract C {
-			function () constant returns (uint) x;
-			uint constant y = x();
-		}
-	)";
-	CHECK_ERROR(text, TypeError, "Initial value for constant variable has to be compile-time constant.");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_const_var_involving_conversion)
@@ -2913,7 +2828,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 		contract C {
 			function f(uint) public returns (string);
 			function g() public {
-				var (x,) = this.f(2);
+				var x = this.f(2);
 				// we can assign to x but it is not usable.
 				bytes(x).length;
 			}
@@ -5823,7 +5738,7 @@ BOOST_AUTO_TEST_CASE(bare_others)
 	CHECK_WARNING("contract C { function f() pure public { assert; } }", "Statement has no effect.");
 	// This is different because it does have overloads.
 	CHECK_ERROR("contract C { function f() pure public { require; } }", TypeError, "No matching declaration found after variable lookup.");
-	CHECK_WARNING("contract C { function f() pure public { suicide; } }", "Statement has no effect.");
+	CHECK_WARNING("contract C { function f() pure public { selfdestruct; } }", "Statement has no effect.");
 }
 
 BOOST_AUTO_TEST_CASE(pure_statement_in_for_loop)
@@ -5850,80 +5765,6 @@ BOOST_AUTO_TEST_CASE(pure_statement_check_for_regular_for_loop)
 		}
 	)";
 	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; uint b; }
-			S x; S y;
-			function f() public {
-				(x, y) = (y, x);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "This assignment performs two copies to storage.");
-}
-
-BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_right)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; uint b; }
-			S x; S y;
-			function f() public {
-				(x, y, ) = (y, x, 1, 2);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "This assignment performs two copies to storage.");
-}
-
-BOOST_AUTO_TEST_CASE(warn_multiple_storage_storage_copies_fill_left)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; uint b; }
-			S x; S y;
-			function f() public {
-				(,x, y) = (1, 2, y, x);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "This assignment performs two copies to storage.");
-}
-
-BOOST_AUTO_TEST_CASE(nowarn_swap_memory)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; uint b; }
-			function f() pure public {
-				S memory x;
-				S memory y;
-				(x, y) = (y, x);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
-BOOST_AUTO_TEST_CASE(nowarn_swap_storage_pointers)
-{
-	char const* text = R"(
-		contract C {
-			struct S { uint a; uint b; }
-			S x; S y;
-			function f() public {
-				S storage x_local = x;
-				S storage y_local = y;
-				S storage z_local = x;
-				(x, y_local, x_local, z_local) = (y, x_local, y_local, y);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
 BOOST_AUTO_TEST_CASE(warn_unused_local)
@@ -6956,31 +6797,6 @@ BOOST_AUTO_TEST_CASE(invalid_literal_in_tuple)
 		}
 	)";
 	CHECK_SUCCESS(text);
-}
-
-BOOST_AUTO_TEST_CASE(warn_about_sha3)
-{
-	char const* text = R"(
-		contract test {
-			function f() pure public {
-				bytes32 x = sha3(uint8(1));
-				x;
-			}
-		}
-	)";
-	CHECK_WARNING(text, "\"sha3\" has been deprecated in favour of \"keccak256\"");
-}
-
-BOOST_AUTO_TEST_CASE(warn_about_suicide)
-{
-	char const* text = R"(
-		contract test {
-			function f() public {
-				suicide(1);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
 }
 
 BOOST_AUTO_TEST_CASE(address_overload_resolution)

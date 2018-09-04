@@ -89,7 +89,6 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	abiEncode({_argumentType.shared_from_this()}, {make_shared<ArrayType>(DataLocation::Memory, true)});
 	toSizeAfterFreeMemoryPointer();
 	m_context << Instruction::REVERT;
-	m_context.adjustStackOffset(_argumentType.sizeOnStack());
 }
 
 unsigned CompilerUtils::loadFromMemory(
@@ -110,7 +109,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 	bool _padToWordBoundaries,
 	bool _keepUpdatedMemoryOffset
 )
-{		
+{
 	if (_keepUpdatedMemoryOffset)
 		m_context << Instruction::DUP1;
 
@@ -396,7 +395,7 @@ void CompilerUtils::encodeToMemory(
 			// leave end_of_mem as dyn head pointer
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			dynPointers++;
-			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using less variables.");
+			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using fewer variables.");
 		}
 		else
 		{
@@ -599,15 +598,15 @@ void CompilerUtils::splitExternalFunctionType(bool _leftAligned)
 	if (_leftAligned)
 	{
 		m_context << Instruction::DUP1;
-		rightShiftNumberOnStack(64 + 32, false);
+		rightShiftNumberOnStack(64 + 32);
 		// <input> <address>
 		m_context << Instruction::SWAP1;
-		rightShiftNumberOnStack(64, false);
+		rightShiftNumberOnStack(64);
 	}
 	else
 	{
 		m_context << Instruction::DUP1;
-		rightShiftNumberOnStack(32, false);
+		rightShiftNumberOnStack(32);
 		m_context << ((u256(1) << 160) - 1) << Instruction::AND << Instruction::SWAP1;
 	}
 	m_context << u256(0xffffffffUL) << Instruction::AND;
@@ -675,7 +674,7 @@ void CompilerUtils::convertType(
 			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			rightShiftNumberOnStack(256 - typeOnStack.numBytes() * 8, false);
+			rightShiftNumberOnStack(256 - typeOnStack.numBytes() * 8);
 			if (targetIntegerType.numBits() < typeOnStack.numBytes() * 8)
 				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
 		}
@@ -688,7 +687,7 @@ void CompilerUtils::convertType(
 				m_context << Instruction::POP << u256(0);
 			else if (targetType.numBytes() > typeOnStack.numBytes() || _cleanupNeeded)
 			{
-				int bytes = min(typeOnStack.numBytes(), targetType.numBytes());
+				unsigned bytes = min(typeOnStack.numBytes(), targetType.numBytes());
 				m_context << ((u256(1) << (256 - bytes * 8)) - 1);
 				m_context << Instruction::NOT << Instruction::AND;
 			}
@@ -741,7 +740,7 @@ void CompilerUtils::convertType(
 		else if (targetTypeCategory == Type::Category::FixedPoint)
 		{
 			solAssert(
-				stackTypeCategory == Type::Category::Integer || 
+				stackTypeCategory == Type::Category::Integer ||
 				stackTypeCategory == Type::Category::RationalNumber ||
 				stackTypeCategory == Type::Category::FixedPoint,
 				"Invalid conversion to FixedMxNType requested."
@@ -796,7 +795,7 @@ void CompilerUtils::convertType(
 		bytesConstRef data(value);
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
-			int const numBytes = dynamic_cast<FixedBytesType const&>(_targetType).numBytes();
+			unsigned const numBytes = dynamic_cast<FixedBytesType const&>(_targetType).numBytes();
 			solAssert(data.size() <= 32, "");
 			m_context << (h256::Arith(h256(data, h256::AlignLeft)) & (~(u256(-1) >> (8 * numBytes))));
 		}
@@ -1242,7 +1241,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 		bool leftAligned = _type.category() == Type::Category::FixedBytes;
 		// add leading or trailing zeros by dividing/multiplying depending on alignment
 		int shiftFactor = (32 - numBytes) * 8;
-		rightShiftNumberOnStack(shiftFactor, false);
+		rightShiftNumberOnStack(shiftFactor);
 		if (leftAligned)
 			leftShiftNumberOnStack(shiftFactor);
 	}
@@ -1265,13 +1264,20 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 void CompilerUtils::leftShiftNumberOnStack(unsigned _bits)
 {
 	solAssert(_bits < 256, "");
-	m_context << (u256(1) << _bits) << Instruction::MUL;
+	if (m_context.evmVersion().hasBitwiseShifting())
+		m_context << _bits << Instruction::SHL;
+	else
+		m_context << (u256(1) << _bits) << Instruction::MUL;
 }
 
-void CompilerUtils::rightShiftNumberOnStack(unsigned _bits, bool _isSigned)
+void CompilerUtils::rightShiftNumberOnStack(unsigned _bits)
 {
 	solAssert(_bits < 256, "");
-	m_context << (u256(1) << _bits) << Instruction::SWAP1 << (_isSigned ? Instruction::SDIV : Instruction::DIV);
+	// NOTE: If we add signed right shift, SAR rounds differently than SDIV
+	if (m_context.evmVersion().hasBitwiseShifting())
+		m_context << _bits << Instruction::SHR;
+	else
+		m_context << (u256(1) << _bits) << Instruction::SWAP1 << Instruction::DIV;
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)

@@ -54,6 +54,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
+	solAssert(!_label.name.empty(), "");
 	checkLooseFeature(
 		_label.location,
 		"The use of labels is deprecated. Please use \"if\", \"switch\", \"for\" or function calls instead."
@@ -107,6 +108,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 
 bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 {
+	solAssert(!_identifier.name.empty(), "");
 	size_t numErrorsBefore = m_errorReporter.errors().size();
 	bool success = true;
 	if (m_currentScope->lookup(_identifier.name, Scope::Visitor(
@@ -208,6 +210,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 
 bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
+	solAssert(_assignment.value, "");
 	int const expectedItems = _assignment.variableNames.size();
 	solAssert(expectedItems >= 1, "");
 	int const stackHeight = m_stackHeight;
@@ -259,6 +262,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 
 bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 {
+	solAssert(!_funDef.name.empty(), "");
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	solAssert(virtualBlock, "");
 	Scope& varScope = scope(virtualBlock);
@@ -280,6 +284,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 
 bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 {
+	solAssert(!_funCall.functionName.name.empty(), "");
 	bool success = true;
 	size_t arguments = 0;
 	size_t returns = 0;
@@ -349,6 +354,8 @@ bool AsmAnalyzer::operator()(If const& _if)
 
 bool AsmAnalyzer::operator()(Switch const& _switch)
 {
+	solAssert(_switch.expression, "");
+
 	bool success = true;
 
 	if (!expectExpression(*_switch.expression))
@@ -391,6 +398,8 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 
 bool AsmAnalyzer::operator()(assembly::ForLoop const& _for)
 {
+	solAssert(_for.condition, "");
+
 	Scope* originalScope = m_currentScope;
 
 	bool success = true;
@@ -478,6 +487,7 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 
 bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
 {
+	solAssert(!_variable.name.empty(), "");
 	bool success = true;
 	size_t numErrorsBefore = m_errorReporter.errors().size();
 	size_t variableSize(-1);

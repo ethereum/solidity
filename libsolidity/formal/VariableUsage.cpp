@@ -33,7 +33,6 @@ VariableUsage::VariableUsage(ASTNode const& _node)
 			solAssert(declaration, "");
 			if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 				if (
-					varDecl->isLocalVariable() &&
 					identifier->annotation().lValueRequested &&
 					varDecl->annotation().type->isValueType()
 				)

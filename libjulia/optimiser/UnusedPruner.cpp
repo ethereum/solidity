@@ -23,6 +23,7 @@
 #include <libjulia/optimiser/NameCollector.h>
 #include <libjulia/optimiser/Semantics.h>
 #include <libjulia/optimiser/Utilities.h>
+#include <libjulia/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -108,8 +109,8 @@ void UnusedPruner::subtractReferences(map<string, size_t> const& _subtrahend)
 {
 	for (auto const& ref: _subtrahend)
 	{
-		solAssert(m_references.count(ref.first), "");
-		solAssert(m_references.at(ref.first) >= ref.second, "");
+		assertThrow(m_references.count(ref.first), OptimizerException, "");
+		assertThrow(m_references.at(ref.first) >= ref.second, OptimizerException, "");
 		m_references[ref.first] -= ref.second;
 		m_shouldRunAgain = true;
 	}

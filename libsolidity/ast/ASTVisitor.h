@@ -43,6 +43,7 @@ namespace solidity
 class ASTVisitor
 {
 public:
+	virtual ~ASTVisitor() = default;
 	virtual bool visit(SourceUnit& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective& _node) { return visitNode(_node); }
@@ -147,6 +148,7 @@ protected:
 class ASTConstVisitor
 {
 public:
+	virtual ~ASTConstVisitor() = default;
 	virtual bool visit(SourceUnit const& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective const& _node) { return visitNode(_node); }

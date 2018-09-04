@@ -371,7 +371,7 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 			if (toCategory == Type::Category::Integer)
 				body =
 					Whiskers("converted := <convert>(<shift>(value))")
-					("shift", shiftRightFunction(256 - from.numBytes() * 8, false))
+					("shift", shiftRightFunction(256 - from.numBytes() * 8))
 					("convert", conversionFunction(IntegerType(from.numBytes() * 8), _to))
 					.render();
 			else
@@ -458,8 +458,8 @@ string ABIFunctions::splitExternalFunctionIdFunction()
 			}
 		)")
 		("functionName", functionName)
-		("shr32", shiftRightFunction(32, false))
-		("shr64", shiftRightFunction(64, false))
+		("shr32", shiftRightFunction(32))
+		("shr64", shiftRightFunction(64))
 		.render();
 	});
 }
@@ -831,7 +831,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("encodeToMemoryFun", encodeToMemoryFun);
 			std::vector<std::map<std::string, std::string>> items(itemsPerSlot);
 			for (size_t i = 0; i < itemsPerSlot; ++i)
-				items[i]["shiftRightFun"] = shiftRightFunction(i * storageBytes * 8, false);
+				items[i]["shiftRightFun"] = shiftRightFunction(i * storageBytes * 8);
 			templ("items", items);
 			return templ.render();
 		}
@@ -927,7 +927,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 					}
 					else
 						memberTempl("preprocess", "");
-					memberTempl("retrieveValue", shiftRightFunction(intraSlotOffset * 8, false) + "(slotValue)");
+					memberTempl("retrieveValue", shiftRightFunction(intraSlotOffset * 8) + "(slotValue)");
 				}
 				else
 				{
@@ -1401,37 +1401,75 @@ string ABIFunctions::copyToMemoryFunction(bool _fromCalldata)
 
 string ABIFunctions::shiftLeftFunction(size_t _numBits)
 {
+	solAssert(_numBits < 256, "");
+
 	string functionName = "shift_left_" + to_string(_numBits);
-	return createFunction(functionName, [&]() {
-		solAssert(_numBits < 256, "");
-		return
-			Whiskers(R"(
-			function <functionName>(value) -> newValue {
-				newValue := mul(value, <multiplier>)
-			}
-			)")
-			("functionName", functionName)
-			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-			.render();
-	});
+	if (m_evmVersion.hasBitwiseShifting())
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := shl(<numBits>, value)
+				}
+				)")
+				("functionName", functionName)
+				("numBits", to_string(_numBits))
+				.render();
+		});
+	}
+	else
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := mul(value, <multiplier>)
+				}
+				)")
+				("functionName", functionName)
+				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+				.render();
+		});
+	}
 }
 
-string ABIFunctions::shiftRightFunction(size_t _numBits, bool _signed)
+string ABIFunctions::shiftRightFunction(size_t _numBits)
 {
-	string functionName = "shift_right_" + to_string(_numBits) + (_signed ? "_signed" : "_unsigned");
-	return createFunction(functionName, [&]() {
-		solAssert(_numBits < 256, "");
-		return
-			Whiskers(R"(
-			function <functionName>(value) -> newValue {
-				newValue := <div>(value, <multiplier>)
-			}
-			)")
-			("functionName", functionName)
-			("div", _signed ? "sdiv" : "div")
-			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-			.render();
-	});
+	solAssert(_numBits < 256, "");
+
+	// Note that if this is extended with signed shifts,
+	// the opcodes SAR and SDIV behave differently with regards to rounding!
+
+	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned";
+	if (m_evmVersion.hasBitwiseShifting())
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := shr(<numBits>, value)
+				}
+				)")
+				("functionName", functionName)
+				("numBits", to_string(_numBits))
+				.render();
+		});
+	}
+	else
+	{
+		return createFunction(functionName, [&]() {
+			return
+				Whiskers(R"(
+				function <functionName>(value) -> newValue {
+					newValue := div(value, <multiplier>)
+				}
+				)")
+				("functionName", functionName)
+				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+				.render();
+		});
+	}
 }
 
 string ABIFunctions::roundUpFunction()

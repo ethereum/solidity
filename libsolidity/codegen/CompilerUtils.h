@@ -254,7 +254,7 @@ public:
 	/// Helper function to shift top value on the stack to the right.
 	/// Stack pre: <value> <shift_by_bits>
 	/// Stack post: <shifted_value>
-	void rightShiftNumberOnStack(unsigned _bits, bool _isSigned = false);
+	void rightShiftNumberOnStack(unsigned _bits);
 
 	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
