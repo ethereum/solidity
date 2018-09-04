@@ -360,8 +360,8 @@ contract MilestoneTracker {
         // Recheck again to not pay twice
         if (milestone.status == MilestoneStatus.AuthorizedForPayment) revert();
         milestone.status = MilestoneStatus.AuthorizedForPayment;
-        if (!milestone.paymentSource.call.value(0)(milestone.payData))
-            revert();
+        (bool success,) = milestone.paymentSource.call.value(0)(milestone.payData);
+        require(success);
         emit ProposalStatusChanged(_idMilestone, milestone.status);
     }
 }

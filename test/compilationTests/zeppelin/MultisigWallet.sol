@@ -60,9 +60,8 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
     if (underLimit(_value)) {
       emit SingleTransact(msg.sender, _value, _to, _data);
       // yes - just execute the call.
-      if (!_to.call.value(_value)(_data)) {
-        revert();
-      }
+      (bool success,) = _to.call.value(_value)(_data);
+      require(success);
       return 0;
     }
     // determine our operation hash.
@@ -82,9 +81,8 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
    */
   function confirm(bytes32 _h) onlymanyowners(_h) public returns (bool) {
     if (txs[_h].to != address(0)) {
-      if (!txs[_h].to.call.value(txs[_h].value)(txs[_h].data)) {
-        revert();
-      }
+      (bool success,) = txs[_h].to.call.value(txs[_h].value)(txs[_h].data);
+      require(success);
       emit MultiTransact(msg.sender, _h, txs[_h].value, txs[_h].to, txs[_h].data);
       delete txs[_h];
       return true;

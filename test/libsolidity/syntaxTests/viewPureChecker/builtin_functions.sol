@@ -3,8 +3,10 @@ contract C {
         address(this).transfer(1);
         require(address(this).send(2));
         selfdestruct(address(this));
-        require(address(this).delegatecall(""));
-        require(address(this).call(""));
+        (bool success,) = address(this).delegatecall("");
+        require(success);
+		(success,) = address(this).call("");
+        require(success);
     }
     function g() pure public {
         bytes32 x = keccak256("abc");
