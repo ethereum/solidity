@@ -22,7 +22,7 @@ Remix
 
 `Access Remix online <https://remix.ethereum.org/>`_, you don't need to install anything.
 If you want to use it without connection to the Internet, go to
-https://github.com/ethereum/browser-solidity/tree/gh-pages and download the .ZIP file as
+https://github.com/ethereum/remix-live/tree/gh-pages and download the ``.zip`` file as
 explained on that page.
 
 Further options on this page detail installing commandline Solidity compiler software
