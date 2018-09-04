@@ -432,6 +432,10 @@
         "bugs": [], 
         "released": "2018-04-19"
     }, 
+    "0.4.24": {
+        "bugs": [], 
+        "released": "2018-05-16"
+    }, 
     "0.4.3": {
         "bugs": [
             "ZeroFunctionSelector", 

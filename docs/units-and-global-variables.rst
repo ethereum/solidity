@@ -31,6 +31,9 @@ because of `leap seconds <https://en.wikipedia.org/wiki/Leap_second>`_.
 Due to the fact that leap seconds cannot be predicted, an exact calendar
 library has to be updated by an external oracle.
 
+.. note::
+    The suffix ``years`` has been deprecated due to the reasons above.
+
 These suffixes cannot be applied to variables. If you want to
 interpret some input variable in e.g. days, you can do it in the following way::
 
@@ -117,11 +120,11 @@ Error Handling
 --------------
 
 ``assert(bool condition)``:
-    throws if the condition is not met - to be used for internal errors.
+    invalidates the transaction if the condition is not met - to be used for internal errors.
 ``require(bool condition)``:
-    throws if the condition is not met - to be used for errors in inputs or external components.
+    reverts if the condition is not met - to be used for errors in inputs or external components.
 ``require(bool condition, string message)``:
-    throws if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
+    reverts if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
 ``revert()``:
     abort execution and revert state changes
 ``revert(string reason)``:

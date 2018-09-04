@@ -43,7 +43,7 @@ GasMeter::GasConsumption PathGasMeter::estimateMax(
 	auto path = unique_ptr<GasPath>(new GasPath());
 	path->index = _startIndex;
 	path->state = _state->copy();
-	m_queue.push_back(move(path));
+	queue(move(path));
 
 	GasMeter::GasConsumption gas;
 	while (!m_queue.empty() && !gas.isInfinite)
@@ -51,12 +51,23 @@ GasMeter::GasConsumption PathGasMeter::estimateMax(
 	return gas;
 }
 
+void PathGasMeter::queue(std::unique_ptr<GasPath>&& _newPath)
+{
+	if (
+		m_highestGasUsagePerJumpdest.count(_newPath->index) &&
+		_newPath->gas < m_highestGasUsagePerJumpdest.at(_newPath->index)
+	)
+		return;
+	m_highestGasUsagePerJumpdest[_newPath->index] = _newPath->gas;
+	m_queue[_newPath->index] = move(_newPath);
+}
+
 GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 {
 	assertThrow(!m_queue.empty(), OptimizerException, "");
 
-	unique_ptr<GasPath> path = move(m_queue.back());
-	m_queue.pop_back();
+	unique_ptr<GasPath> path = move(m_queue.rbegin()->second);
+	m_queue.erase(--m_queue.end());
 
 	shared_ptr<KnownState> state = path->state;
 	GasMeter meter(state, m_evmVersion, path->largestMemoryAccess);
@@ -117,7 +128,7 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 			newPath->largestMemoryAccess = meter.largestMemoryAccess();
 			newPath->state = state->copy();
 			newPath->visitedJumpdests = path->visitedJumpdests;
-			m_queue.push_back(move(newPath));
+			queue(move(newPath));
 		}
 
 		if (branchStops)

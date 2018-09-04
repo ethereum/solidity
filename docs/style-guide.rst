@@ -117,7 +117,7 @@ No::
 Maximum Line Length 
 ===================
 
-Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ of 79 (or 99) 
+Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ to a maximum of 79 (or 99) 
 characters helps readers easily parse the code.
 
 Wrapped lines should conform to the following guidelines.
@@ -269,7 +269,7 @@ Functions should be grouped according to their visibility and ordered:
 - internal
 - private
 
-Within a grouping, place the ``constant`` functions last.
+Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
@@ -285,7 +285,10 @@ Yes::
         // External functions
         // ...
 
-        // External functions that are constant
+        // External functions that are view
+        // ...
+
+        // External functions that are pure
         // ...
 
         // Public functions

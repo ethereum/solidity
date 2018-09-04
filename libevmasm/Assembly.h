@@ -47,8 +47,8 @@ class Assembly
 public:
 	Assembly() {}
 
-	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
-	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
+	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
+	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
 	AssemblyItem namedTag(std::string const& _name);
 	AssemblyItem newData(bytes const& _data) { h256 h(dev::keccak256(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }

@@ -27,7 +27,19 @@ REM Copyright (c) 2016 solidity contributors.
 REM ---------------------------------------------------------------------------
 
 set CONFIGURATION=%1
+set VERSION=%2
+
+IF "%VERSION%"=="2015" (
+    set "DLLS=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
+) ELSE (
+
+    IF EXIST "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x86\Microsoft.VC141.CRT\" (
+        set "DLLS=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x86\Microsoft.VC141.CRT\msvc*.dll"
+		) ELSE (
+        set "DLLS=C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Redist\MSVC\14.13.26020\x86\Microsoft.VC141.CRT\msvc*.dll"
+    )
+)
 
 7z a solidity-windows.zip ^
     .\build\solc\%CONFIGURATION%\solc.exe .\build\test\%CONFIGURATION%\soltest.exe ^
-    "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
+    "%DLLS%"

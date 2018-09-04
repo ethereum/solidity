@@ -62,7 +62,7 @@ The following elementary types exist:
 
 The following (fixed-size) array type exists:
 
-- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M > 0``, of the given type.
+- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M >= 0``, of the given type.
 
 The following non-fixed-size types exist:
 
@@ -77,7 +77,7 @@ of them inside parentheses, separated by commas:
 
 - ``(T1,T2,...,Tn)``: tuple consisting of the types ``T1``, ..., ``Tn``, ``n >= 0``
 
-It is possible to form tuples of tuples, arrays of tuples and so on.
+It is possible to form tuples of tuples, arrays of tuples and so on.  It is also possible to form zero-tuples (where ``n == 0``).
 
 .. note::
     Solidity supports all the types presented above with the same names with the exception of tuples. The ABI tuple type is utilised for encoding Solidity ``structs``.
@@ -101,8 +101,8 @@ We distinguish static and dynamic types. Static types are encoded in-place and d
 * ``bytes``
 * ``string``
 * ``T[]`` for any ``T``
-* ``T[k]`` for any dynamic ``T`` and any ``k > 0``
-* ``(T1,...,Tk)`` if any ``Ti`` is dynamic for ``1 <= i <= k``
+* ``T[k]`` for any dynamic ``T`` and any ``k >= 0``
+* ``(T1,...,Tk)`` if ``Ti`` is dynamic for some ``1 <= i <= k``
 
 All other types are called "static".
 
@@ -117,16 +117,16 @@ on the type of ``X`` being
 
 - ``(T1,...,Tk)`` for ``k >= 0`` and any types ``T1``, ..., ``Tk``
 
-  ``enc(X) = head(X(1)) ... head(X(k-1)) tail(X(0)) ... tail(X(k-1))``
+  ``enc(X) = head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(k))``
 
-  where ``X(i)`` is the ``ith`` component of the value, and
+  where ``X = (X(1), ..., X(k))`` and
   ``head`` and ``tail`` are defined for ``Ti`` being a static type as
 
     ``head(X(i)) = enc(X(i))`` and ``tail(X(i)) = ""`` (the empty string)
 
   and as
 
-    ``head(X(i)) = enc(len(head(X(0)) ... head(X(k-1)) tail(X(0)) ... tail(X(i-1))))``
+    ``head(X(i)) = enc(len(head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
     ``tail(X(i)) = enc(X(i))``
 
   otherwise, i.e. if ``Ti`` is a dynamic type.
@@ -144,7 +144,7 @@ on the type of ``X`` being
 
 - ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
 
-  ``enc(X) = enc(k) enc([X[1], ..., X[k]])``
+  ``enc(X) = enc(k) enc([X[0], ..., X[k-1]])``
 
   i.e. it is encoded as if it were an array of static size ``k``, prefixed with
   the number of elements.

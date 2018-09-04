@@ -49,21 +49,28 @@ cout << "some very long string that contains completely irrelevant text that tal
 ## 1. Namespaces
 
 1. No `using namespace` declarations in header files.
-2. All symbols should be declared in a namespace except for final applications.
-3. Use anonymous namespaces for helpers whose scope is a cpp file only.
-4. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
+2. Use `using namespace std;` in cpp files, but avoid importing namespaces from boost and others.
+3. All symbols should be declared in a namespace except for final applications.
+4. Use anonymous namespaces for helpers whose scope is a cpp file only.
+5. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
 
-Yes:
+Only in the header:
 ```cpp
 #include <cassert>
+namespace myNamespace
+{
 std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
+}
 ```
 
-No:
+Only in the cpp file:
 ```cpp
 #include <cassert>
 using namespace std;
-tuple<float, float> meanAndSigma(vector<float> const& _v);
+tuple<float, float> myNamespace::meanAndSigma(vector<float> const& _v)
+{
+  // ...
+}
 ```
 
 ## 2. Preprocessor
