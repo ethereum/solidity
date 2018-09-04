@@ -9,9 +9,7 @@ WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" | grep -v "test/libsolidity/AS
 if [[ "$WHITESPACE" != "" ]]
 then
 	echo "Error: Trailing whitespace found:" >&2
-	echo "\"$WHITESPACE\"" >&2
+	echo "$WHITESPACE" >&2
 	exit 1
-else
-	exit 0
 fi
 )
