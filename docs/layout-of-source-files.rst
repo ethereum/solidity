@@ -96,43 +96,44 @@ filesystem, it can also map to resources discovered via e.g. ipfs, http or git.
 Use in Actual Compilers
 -----------------------
 
-When the compiler is invoked, it is not only possible to specify how to
-discover the first element of a path, but it is possible to specify path prefix
-remappings so that e.g. ``github.com/ethereum/dapp-bin/library`` is remapped to
-``/usr/local/dapp-bin/library`` and the compiler will read the files from there.
-If multiple remappings can be applied, the one with the longest key is tried first.
-An empty prefix is not allowed. Furthermore, these remappings can depend on the context,
-which allows you to configure packages to import e.g. different versions of a library
-of the same name.
+When invoking the compiler, you can specify how to discover the first element
+of a path, and also path prefix remappings. For
+example you can setup a remapping so that everything imported from the virtual
+directory ``github.com/ethereum/dapp-bin/library`` would actually be read from
+your local directory ``/usr/local/dapp-bin/library``.
+If multiple remappings apply, the one with the longest key is tried first.
+An empty prefix is not allowed. The remappings can depend on a context,
+which allows you to configure packages to import e.g., different versions of a
+library of the same name.
 
 **solc**:
 
-For solc (the commandline compiler), these remappings are provided as
+For solc (the commandline compiler), you provide these path remappings as
 ``context:prefix=target`` arguments, where both the ``context:`` and the
-``=target`` parts are optional (where target defaults to prefix in that
+``=target`` parts are optional (``target`` defaults to ``prefix`` in this
 case). All remapping values that are regular files are compiled (including
-their dependencies). This mechanism is completely backwards-compatible (as long
-as no filename contains = or :) and thus not a breaking change. All imports
-in files in or below the directory ``context`` that import a file that
-starts with ``prefix`` are redirected by replacing ``prefix`` by ``target``.
+their dependencies).
 
-So as an example, if you clone
-``github.com/ethereum/dapp-bin/`` locally to ``/usr/local/dapp-bin``, you can use
-the following in your source file:
+This mechanism is backwards-compatible (as long
+as no filename contains ``=`` or ``:``) and thus not a breaking change. All
+files in or below the ``context`` directory that import a file that starts with
+``prefix`` are redirected by replacing ``prefix`` by ``target``.
+
+For example, if you clone ``github.com/ethereum/dapp-bin/`` locally to
+``/usr/local/dapp-bin``, you can use the following in your source file:
 
 ::
 
   import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;
 
-and then run the compiler as
+Then run the compiler:
 
 .. code-block:: bash
 
   solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
 
-As a more complex example, suppose you rely on some module that uses a
-very old version of dapp-bin. That old version of dapp-bin is checked
-out at ``/usr/local/dapp-bin_old``, then you can use
+As a more complex example, suppose you rely on a module that uses an old
+version of dapp-bin that you checked out to ``/usr/local/dapp-bin_old``, then you can run:
 
 .. code-block:: bash
 
@@ -140,28 +141,29 @@ out at ``/usr/local/dapp-bin_old``, then you can use
        module2:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin_old/ \
        source.sol
 
-so that all imports in ``module2`` point to the old version but imports
-in ``module1`` get the new version.
+This means that all imports in ``module2`` point to the old version but imports
+in ``module1`` point to the new version.
 
-Note that solc only allows you to include files from certain directories:
-They have to be in the directory (or subdirectory) of one of the explicitly
-specified source files or in the directory (or subdirectory) of a remapping
-target. If you want to allow direct absolute includes, just add the
-remapping ``/=/``.
+.. note::
+
+  ``solc`` only allows you to include files from certain directories. They have
+  to be in the directory (or subdirectory) of one of the explicitly specified
+  source files or in the directory (or subdirectory) of a remapping target. If
+  you want to allow direct absolute includes, add the remapping ``/=/``.
 
 If there are multiple remappings that lead to a valid file, the remapping
 with the longest common prefix is chosen.
 
 **Remix**:
 
-`Remix <https://remix.ethereum.org/>`_
-provides an automatic remapping for github and will also automatically retrieve
-the file over the network:
-You can import the iterable mapping by e.g.
-``import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;``.
+`Remix <https://remix.ethereum.org/>`_ provides an automatic remapping for
+GitHub and automatically retrieves the file over the network. You can import
+the iterable mapping as above,  e.g.
 
-Other source code providers may be added in the future.
+::
+  import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;
 
+Remix may add other source code providers in the future.
 
 .. index:: ! comment, natspec
 
