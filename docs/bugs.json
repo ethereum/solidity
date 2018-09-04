@@ -1,5 +1,12 @@
 [
     {
+        "name": "ExpCleanupZero",
+        "summary": "Using exponentiating with types shorter than 256 bits and zero as base can result in unexpected values.",
+        "description": "As defined by the EVM, 0 ** 0 is one. Solidity does not always remove dirty higher order bits of types that are smaller than 256 bits before applying an operation because it does not matter if the cleanup is performed before or after the operation. This is true for EXP except for the case where the base is zero, which was overlooked.",
+        "fixed": "0.5.0",
+        "severity": "high"
+    },
+    {
         "name": "EventStructWrongData",
         "summary": "Using structs in events logged wrong data.",
         "description": "If a struct is used in an event, the address of the struct is logged instead of the actual data.",
