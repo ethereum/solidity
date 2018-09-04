@@ -142,7 +142,7 @@ void SyntaxChecker::checkSingleStatementVariableDeclaration(ASTNode const* _stat
 {
 	auto varDecl = dynamic_cast<VariableDeclarationStatement const*>(_statement);
 	if (varDecl)
-		m_errorReporter.syntaxError(_statement->location(), "Invalid variable declaration. Please declare it inside a block.");
+		m_errorReporter.syntaxError(_statement->location(), "Variable declarations can only be used inside blocks.");
 }
 
 bool SyntaxChecker::visit(IfStatement const& _ifStatement)
