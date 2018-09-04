@@ -525,7 +525,7 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 		);
 }
 
-TypePointer TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2)
+TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2)
 {
 	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
 	if (arguments.size() != 2)
@@ -544,10 +544,8 @@ TypePointer TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall co
 			" to bytes memory requested."
 		);
 
-	TypePointer returnType = make_shared<TupleType>();
-
 	if (arguments.size() < 2)
-		return returnType;
+		return {};
 
 	// The following is a rather syntactic restriction, but we check it here anyway:
 	// The second argument has to be a tuple expression containing type names.
@@ -558,10 +556,10 @@ TypePointer TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall co
 			arguments[1]->location(),
 			"The second argument to \"abi.decode\" has to be a tuple of types."
 		);
-		return returnType;
+		return {};
 	}
 
-	vector<TypePointer> components;
+	TypePointers components;
 	for (auto const& typeArgument: tupleExpression->components())
 	{
 		solAssert(typeArgument, "");
@@ -591,7 +589,7 @@ TypePointer TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall co
 			components.push_back(make_shared<TupleType>());
 		}
 	}
-	return make_shared<TupleType>(components);
+	return components;
 }
 
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
@@ -1782,15 +1780,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	if (functionType->kind() == FunctionType::Kind::BareStaticCall && !m_evmVersion.hasStaticCall())
 		m_errorReporter.typeError(_functionCall.location(), "\"staticcall\" is not supported by the VM version.");
 
-	auto returnTypes =
-		allowDynamicTypes ?
-		functionType->returnParameterTypes() :
-		functionType->returnParameterTypesWithoutDynamicTypes();
-	if (returnTypes.size() == 1)
-		_functionCall.annotation().type = returnTypes.front();
-	else
-		_functionCall.annotation().type = make_shared<TupleType>(returnTypes);
-
 	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 	{
 		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::KECCAK256)
@@ -1826,8 +1815,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
 
+	// Will be assigned to .type at the end (turning multi-elements into a tuple).
+	TypePointers returnTypes =
+		allowDynamicTypes ?
+		functionType->returnParameterTypes() :
+		functionType->returnParameterTypesWithoutDynamicTypes();
+
 	if (functionType->kind() == FunctionType::Kind::ABIDecode)
-		_functionCall.annotation().type = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
+		returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
 	else if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
 	{
 		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
@@ -1984,6 +1979,11 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				}
 		}
 	}
+
+	if (returnTypes.size() == 1)
+		_functionCall.annotation().type = returnTypes.front();
+	else
+		_functionCall.annotation().type = make_shared<TupleType>(returnTypes);
 
 	return false;
 }

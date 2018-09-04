@@ -1074,7 +1074,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			arguments.front()->accept(*this);
 			TypePointer firstArgType = arguments.front()->annotation().type;
-			TypePointers const& targetTypes = dynamic_cast<TupleType const&>(*_functionCall.annotation().type).components();
+			TypePointers targetTypes;
+			if (TupleType const* targetTupleType = dynamic_cast<TupleType const*>(_functionCall.annotation().type.get()))
+				targetTypes = targetTupleType->components();
+			else
+				targetTypes = TypePointers{_functionCall.annotation().type};
 			if (
 				*firstArgType == ArrayType(DataLocation::CallData) ||
 				*firstArgType == ArrayType(DataLocation::CallData, true)
