@@ -68,7 +68,7 @@ Breaking Changes:
  * Syntax Checker: Named return values in function types are an error.
  * Syntax Checker: Strictly require visibility specifier for functions. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Disallow unary ``+``. This was already the case in the experimental 0.5.0 mode.
- * Syntax Checker: Disallow single statement variable declaration inside if/while/for without a block.
+ * Syntax Checker: Disallow single statement variable declaration inside if/while/for bodies that are not blocks.
  * View Pure Checker: Strictly enfore state mutability. This was already the case in the experimental 0.5.0 mode.
 
 Language Features:
