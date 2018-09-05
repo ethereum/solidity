@@ -15,11 +15,13 @@ operators. For a quick reference of the various operators, see :ref:`order`.
 
 .. index:: ! value type, ! type;value
 
+.. _value-types:
+
 Value Types
 ===========
 
 The following types are also called value types because variables of these
-types will always be passed by value, i.e. they are always copied when they
+types are passed by value, i.e. `they are always copied <ref-copy-types_>`_ when they
 are used as function arguments or in assignments.
 
 .. index:: ! bool, ! true, ! false
@@ -568,12 +570,14 @@ Another example that uses external function types::
 
 .. index:: ! type;reference, ! reference type, storage, memory, location, array, struct
 
+.. _reference-types:
+
 Reference Types
 ==================
 
 Complex types, i.e. types which do not always fit into 256 bits have to be handled
-more carefully than the value-types we have already seen. Since copying
-them can be quite expensive, we have to think about whether we want them to be
+more carefully than the value-types we have already seen. Since `copying them <ref-copy-types_>`_
+can be expensive, we have to think about whether we want them to be
 stored in **memory** (which is not persisting) or **storage** (where the state
 variables are held).
 
@@ -594,6 +598,11 @@ non-persistent area where function arguments are stored, and behaves mostly like
     Prior to version 0.5.0 the data location could be omitted, and would default to different locations
     depending on the kind of variable, function type, etc., but all complex types must now give an explicit
     data location.
+
+.. _data-location-assignment:
+
+Data location and assignment behaviour
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Data locations are important because they change how assignments behave:
 assignments between storage and memory and also to a state variable (even from other state variables)
