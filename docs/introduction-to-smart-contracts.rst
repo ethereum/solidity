@@ -183,23 +183,34 @@ the user interface.
 
 .. index:: coin
 
-The special function ``Coin`` is the
-constructor which is run during creation of the contract and
+The constructor is a special function which is run during creation of the contract and
 cannot be called afterwards. It permanently stores the address of the person creating the
-contract: ``msg`` (together with ``tx`` and ``block``) is a magic global variable that
+contract: ``msg`` (together with ``tx`` and ``block``) is a special global variable that
 contains some properties which allow access to the blockchain. ``msg.sender`` is
 always the address where the current (external) function call came from.
 
 Finally, the functions that will actually end up with the contract and can be called
 by users and contracts alike are ``mint`` and ``send``.
 If ``mint`` is called by anyone except the account that created the contract,
-nothing will happen. On the other hand, ``send`` can be used by anyone (who already
-has some of these coins) to send coins to anyone else. Note that if you use
-this contract to send coins to an address, you will not see anything when you
-look at that address on a blockchain explorer, because the fact that you sent
-coins and the changed balances are only stored in the data storage of this
-particular coin contract. By the use of events it is relatively easy to create
-a "blockchain explorer" that tracks transactions and balances of your new coin.
+nothing will happen. This is ensured by the special function ``require`` which
+causes all changes to be reverted if its argument evaluates to false.
+The second call to ``require`` ensures that there will not be too many coins,
+which could cause overflow errors later.
+
+On the other hand, ``send`` can be used by anyone (who already
+has some of these coins) to send coins to anyone else. If you do not have
+enough coins to send, the ``require`` call will fail and also provide the
+user with an appropriate error message string.
+
+.. note::
+    If you use
+    this contract to send coins to an address, you will not see anything when you
+    look at that address on a blockchain explorer, because the fact that you sent
+    coins and the changed balances are only stored in the data storage of this
+    particular coin contract. By the use of events it is relatively easy to create
+    a "blockchain explorer" that tracks transactions and balances of your new coin,
+    but you have to inspect the coin contract address and not the addresses of the
+    coin owners.
 
 .. _blockchain-basics:
 
