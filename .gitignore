@@ -38,7 +38,8 @@ docs/utils/*.pyc
 /deps/downloads/
 
 # vim stuff
-.*.sw?
+[._]*.sw[a-p]
+[._]sw[a-p]
 
 # IDE files
 .idea
