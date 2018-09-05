@@ -135,23 +135,15 @@ the gas can be specified with special options ``.value()`` and ``.gas()``, respe
 
     contract Consumer {
         InfoFeed feed;
-        function setFeed(address addr) public { feed = InfoFeed(addr); }
+        function setFeed(InfoFeed addr) public { feed = addr; }
         function callFeed() public { feed.info.value(10).gas(800)(); }
     }
 
-The modifier ``payable`` has to be used for ``info``, because otherwise, the `.value()`
-option would not be available.
+You need to use the modifier ``payable`` with the ``info`` function because
+otherwise, the ``.value()`` option would not be available.
 
-Note that the expression ``InfoFeed(addr)`` performs an explicit type conversion stating
-that "we know that the type of the contract at the given address is ``InfoFeed``" and
-this does not execute a constructor. Explicit type conversions have to be
-handled with extreme caution. Never call a function on a contract where you
-are not sure about its type.
-
-We could also have used ``function setFeed(InfoFeed _feed) { feed = _feed; }`` directly.
-Be careful about the fact that ``feed.info.value(10).gas(800)``
-only (locally) sets the value and amount of gas sent with the function call and only the
-parentheses at the end perform the actual call.
+.. warning::
+  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call.
 
 Function calls cause exceptions if the called contract does not exist (in the
 sense that the account does not contain code) or if the called contract itself
