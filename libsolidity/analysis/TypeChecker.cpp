@@ -684,9 +684,7 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
-	bool isLibraryFunction =
-		dynamic_cast<ContractDefinition const*>(_function.scope()) &&
-		dynamic_cast<ContractDefinition const*>(_function.scope())->isLibrary();
+	bool isLibraryFunction = _function.inContractKind() == ContractDefinition::ContractKind::Library;
 	if (_function.isPayable())
 	{
 		if (isLibraryFunction)

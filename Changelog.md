@@ -62,6 +62,7 @@ Breaking Changes:
  * Type Checker: Disallow "loose assembly" syntax entirely. This means that jump labels, jumps and non-functional instructions cannot be used anymore.
  * Type System: Disallow explicit and implicit conversions from decimal literals to ``bytesXX`` types.
  * Type System: Disallow explicit and implicit conversions from hex literals to ``bytesXX`` types of different size.
+ * View Pure Checker: Disallow ``msg.value`` in (or introducing it via a modifier to) a non-payable function.
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/solidity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.
  * References Resolver: Turn missing storage locations into an error. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Disallow functions without implementation to use modifiers. This was already the case in the experimental 0.5.0 mode.

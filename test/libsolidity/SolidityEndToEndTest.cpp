@@ -10537,11 +10537,18 @@ BOOST_AUTO_TEST_CASE(non_payable_throw)
 		contract C {
 			uint public a;
 			function f() public returns (uint) {
+				return msgvalue();
+			}
+			function msgvalue() internal returns (uint) {
 				return msg.value;
 			}
 			function() external {
+				update();
+			}
+			function update() internal {
 				a = msg.value + 1;
 			}
+
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
@@ -10564,6 +10571,9 @@ BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
 				if (false) _; // avoid the function, we should still not accept ether
 			}
 			function f() tryCircumvent public returns (uint) {
+				return msgvalue();
+			}
+			function msgvalue() internal returns (uint) {
 				return msg.value;
 			}
 		}

@@ -56,7 +56,6 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 	else
 		solAssert(!m_currentFunction, "");
 	solAssert(m_localVarUseCount.empty(), "");
-	m_nonPayablePublic = _function.isPublic() && !_function.isPayable();
 	m_constructor = _function.isConstructor();
 	return true;
 }
@@ -64,7 +63,6 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 void StaticAnalyzer::endVisit(FunctionDefinition const&)
 {
 	m_currentFunction = nullptr;
-	m_nonPayablePublic = false;
 	m_constructor = false;
 	for (auto const& var: m_localVarUseCount)
 		if (var.second == 0)
@@ -153,14 +151,6 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 				"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
 			);
 	}
-
-	if (m_nonPayablePublic && !m_library)
-		if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))
-			if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "value")
-				m_errorReporter.warning(
-					_memberAccess.location(),
-					"\"msg.value\" used in non-payable function. Do you want to add the \"payable\" modifier to this function?"
-				);
 
 	if (_memberAccess.memberName() == "callcode")
 		if (auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
