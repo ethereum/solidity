@@ -50,7 +50,7 @@ bool SSAVariable::isSupportedType(Type::Category _category)
 
 bool SSAVariable::isInteger(Type::Category _category)
 {
-	return _category == Type::Category::Integer;
+	return _category == Type::Category::Integer || _category == Type::Category::Address;
 }
 
 bool SSAVariable::isBool(Type::Category _category)

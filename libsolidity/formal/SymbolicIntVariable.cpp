@@ -29,7 +29,11 @@ SymbolicIntVariable::SymbolicIntVariable(
 ):
 	SymbolicVariable(_decl, _interface)
 {
-	solAssert(m_declaration.type()->category() == Type::Category::Integer, "");
+	solAssert(
+		m_declaration.type()->category() == Type::Category::Integer ||
+		m_declaration.type()->category() == Type::Category::Address,
+		""
+	);
 }
 
 smt::Expression SymbolicIntVariable::valueAtSequence(int _seq) const
@@ -44,9 +48,11 @@ void SymbolicIntVariable::setZeroValue(int _seq)
 
 void SymbolicIntVariable::setUnknownValue(int _seq)
 {
-	auto const& intType = dynamic_cast<IntegerType const&>(*m_declaration.type());
-	m_interface.addAssertion(valueAtSequence(_seq) >= minValue(intType));
-	m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(intType));
+	auto intType = dynamic_pointer_cast<IntegerType const>(m_declaration.type());
+	if (!intType)
+		intType = make_shared<IntegerType>(160);
+	m_interface.addAssertion(valueAtSequence(_seq) >= minValue(*intType));
+	m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(*intType));
 }
 
 smt::Expression SymbolicIntVariable::minValue(IntegerType const& _t)

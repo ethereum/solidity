@@ -141,7 +141,7 @@ public:
 	virtual ~Type() = default;
 	enum class Category
 	{
-		Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
+		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module,
 		InaccessibleDynamic
@@ -314,14 +314,45 @@ protected:
 };
 
 /**
- * Any kind of integer type (signed, unsigned, address).
+ * Type for addresses.
+ */
+class AddressType: public Type
+{
+public:
+	virtual Category category() const override { return Category::Address; }
+
+	explicit AddressType()
+	{
+	}
+
+	virtual std::string richIdentifier() const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
+
+	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : 160 / 8; }
+	virtual unsigned storageBytes() const override { return 160 / 8; }
+	virtual bool isValueType() const override { return true; }
+
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
+
+	virtual std::string toString(bool _short) const override;
+
+	virtual u256 literalValue(Literal const* _literal) const override;
+
+	virtual TypePointer encodingType() const override { return shared_from_this(); }
+	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
+};
+
+/**
+ * Any kind of integer type (signed, unsigned).
  */
 class IntegerType: public Type
 {
 public:
 	enum class Modifier
 	{
-		Unsigned, Signed, Address
+		Unsigned, Signed
 	};
 	virtual Category category() const override { return Category::Integer; }
 
@@ -339,17 +370,12 @@ public:
 	virtual unsigned storageBytes() const override { return m_bits / 8; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
-
 	virtual std::string toString(bool _short) const override;
-
-	virtual u256 literalValue(Literal const* _literal) const override;
 
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
 	unsigned numBits() const { return m_bits; }
-	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
 	bigint minValue() const;
@@ -729,7 +755,7 @@ public:
 	{
 		if (isSuper())
 			return TypePointer{};
-		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+		return std::make_shared<AddressType>();
 	}
 	virtual TypePointer interfaceType(bool _inLibrary) const override
 	{

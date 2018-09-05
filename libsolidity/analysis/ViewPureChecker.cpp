@@ -323,7 +323,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	ASTString const& member = _memberAccess.memberName();
 	switch (_memberAccess.expression().annotation().type->category())
 	{
-	case Type::Category::Integer:
+	case Type::Category::Address:
 		if (member == "balance")
 			mutability = StateMutability::View;
 		break;

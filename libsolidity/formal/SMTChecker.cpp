@@ -394,7 +394,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 void SMTChecker::endVisit(Literal const& _literal)
 {
 	Type const& type = *_literal.annotation().type;
-	if (type.category() == Type::Category::Integer || type.category() == Type::Category::RationalNumber)
+	if (type.category() == Type::Category::Integer || type.category() == Type::Category::Address || type.category() == Type::Category::RationalNumber)
 	{
 		if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&type))
 			solAssert(!rational->isFractional(), "");
@@ -540,6 +540,8 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 	TypePointer type = _variable.type();
 	if (auto const* intType = dynamic_cast<IntegerType const*>(type.get()))
 		checkUnderOverflow(_value, *intType, _location);
+	else if (dynamic_cast<AddressType const*>(type.get()))
+		checkUnderOverflow(_value, IntegerType(160), _location);
 	m_interface->addAssertion(newValue(_variable) == _value);
 }
 
@@ -862,6 +864,7 @@ void SMTChecker::createExpr(Expression const& _e)
 			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
 			break;
 		}
+		case Type::Category::Address:
 		case Type::Category::Integer:
 			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
 			break;

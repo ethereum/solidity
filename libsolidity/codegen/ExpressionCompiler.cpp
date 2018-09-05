@@ -1259,7 +1259,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				identifier = FunctionType(*function).externalIdentifier();
 			else
 				solAssert(false, "Contract member is neither variable nor function.");
-			utils().convertType(type, IntegerType(160, IntegerType::Modifier::Address), true);
+			utils().convertType(type, AddressType(), true);
 			m_context << identifier;
 		}
 		else
@@ -1268,11 +1268,16 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	}
 	case Type::Category::Integer:
 	{
+		solAssert(false, "Invalid member access to integer");
+		break;
+	}
+	case Type::Category::Address:
+	{
 		if (member == "balance")
 		{
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
-				IntegerType(160, IntegerType::Modifier::Address),
+				AddressType(),
 				true
 			);
 			m_context << Instruction::BALANCE;
@@ -1280,11 +1285,11 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall", "staticcall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
-				IntegerType(160, IntegerType::Modifier::Address),
+				AddressType(),
 				true
 			);
 		else
-			solAssert(false, "Invalid member access to integer");
+			solAssert(false, "Invalid member access to address");
 		break;
 	}
 	case Type::Category::Function:
@@ -1578,7 +1583,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	{
 	case Type::Category::RationalNumber:
 	case Type::Category::Bool:
-	case Type::Category::Integer:
+	case Type::Category::Address:
 		m_context << type->literalValue(&_literal);
 		break;
 	case Type::Category::StringLiteral:
