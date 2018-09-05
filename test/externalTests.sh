@@ -56,10 +56,10 @@ function test_truffle
       echo "Current commit hash: `git rev-parse HEAD`"
       npm install
       find . -name soljson.js -exec cp "$SOLJSON" {} \;
-      if [ "$name" == "Gnosis" ]; then
-        echo "Replaced fixed-version pragmas..."
-        # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
-        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
+      if [ "$name" == "Gnosis" -o "$name" == "dYdX" ]
+      then
+        # Remove fixed-version pragmas
+        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [^;]*;//'
       fi
       assertsol="node_modules/truffle/build/Assert.sol"
       if [ -f "$assertsol" ]
@@ -75,6 +75,8 @@ function test_truffle
 
 # Using our temporary fork here. Hopefully to be merged into upstream after the 0.5.0 release.
 test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity-050
+
+test_truffle dYdX https://github.com/dydxprotocol/protocol.git
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
