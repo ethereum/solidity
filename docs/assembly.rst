@@ -141,6 +141,8 @@ these curly braces, the following can be used (see the later sections for more d
  - assignments in functional style, e.g. ``x := add(y, 3)``
  - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
 
+.. _opcodes:
+
 Opcodes
 -------
 
