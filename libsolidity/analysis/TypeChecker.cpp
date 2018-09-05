@@ -2209,12 +2209,13 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		else
 		{
 			expectType(*index, IntegerType(256));
-			if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
-			{
-				if (!numberType->isFractional()) // error is reported above
+			if (!m_errorReporter.hasErrors())
+				if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
+				{
+					solAssert(!numberType->isFractional(), "");
 					if (!actualType.isDynamicallySized() && actualType.length() <= numberType->literalValue(nullptr))
 						m_errorReporter.typeError(_access.location(), "Out of bounds array access.");
-			}
+				}
 		}
 		resultType = actualType.baseType();
 		isLValue = actualType.location() != DataLocation::CallData;
