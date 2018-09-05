@@ -99,6 +99,15 @@ Address
 -------
 
 ``address``: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as a base for all contracts.
+``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
+
+Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable`` are
+not possible (the only way to perform such a conversion is by using an intermediate conversion to ``uint160``).
+Conversions of the form ``address payable(x)`` are not allowed. Instead the result of a conversion of the form ``address(x)``
+has the type ``address payable``, if ``x`` is of integer or fixed bytes type, a literal or a contract with a payable fallback function.
+If ``x`` is a contract without payable fallback function ``address(x)`` will be of type ``address``. The type of address literals
+is ``address payable``.
+In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
 
 Operators:
 
@@ -113,7 +122,8 @@ Operators:
     or you can use ``address(uint160(uint256(b)))``, which results in ``0x777788889999AaAAbBbbCcccddDdeeeEfFFfCcCc``.
 
 .. note::
-    Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to address.
+    Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to
+    ``address`` or to ``address payable``, if they have a payable fallback function.
 
 .. _members-of-addresses:
 
@@ -125,11 +135,11 @@ Members of Addresses
 For a quick reference, see :ref:`address_related`.
 
 It is possible to query the balance of an address using the property ``balance``
-and to send Ether (in units of wei) to an address using the ``transfer`` function:
+and to send Ether (in units of wei) to a payable address using the ``transfer`` function:
 
 ::
 
-    address x = 0x123;
+    address payable x = address(0x123);
     address myAddress = this;
     if (x.balance < 10 && myAddress.balance >= 10) x.transfer(10);
 
@@ -211,11 +221,14 @@ Contract Types
 
 Every :ref:`contract<contracts>` defines its own type.
 You can implicitly convert contracts to contracts they inherit from,
-and explicitly convert them to and from the ``address`` type.
+and explicitly convert them to and from the ``address`` type, if they have no
+payable fallback functions, or to and from the ``address payable`` type, if they do
+have payable fallback functions.
 
 .. note::
     Starting with version 0.5.0 contracts do not derive from the address type,
-    but can still be explicitly converted to address.
+    but can still be explicitly converted to ``address``, resp. to ``address payable``,
+    if they have a payable fallback function.
 
 If you declare a local variable of contract type (`MyContract c`), you can call
 functions on that contract. Take care to assign it from somewhere that is the
@@ -860,7 +873,7 @@ shown in the following example:
         }
 
         struct Campaign {
-            address beneficiary;
+            address payable beneficiary;
             uint fundingGoal;
             uint numFunders;
             uint amount;
@@ -870,7 +883,7 @@ shown in the following example:
         uint numCampaigns;
         mapping (uint => Campaign) campaigns;
 
-        function newCampaign(address beneficiary, uint goal) public returns (uint campaignID) {
+        function newCampaign(address payable beneficiary, uint goal) public returns (uint campaignID) {
             campaignID = numCampaigns++; // campaignID is return variable
             // Creates new struct and saves in storage. We leave out the mapping type.
             campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0);

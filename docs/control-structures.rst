@@ -421,7 +421,7 @@ a message string for ``require``, but not for ``assert``.
     pragma solidity >0.4.24;
 
     contract Sharer {
-        function sendHalf(address addr) public payable returns (uint balance) {
+        function sendHalf(address payable addr) public payable returns (uint balance) {
             require(msg.value % 2 == 0, "Even value required.");
             uint balanceBeforeTransfer = address(this).balance;
             addr.transfer(msg.value / 2);

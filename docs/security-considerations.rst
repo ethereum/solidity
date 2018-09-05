@@ -192,7 +192,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
             owner = msg.sender;
         }
 
-        function transferTo(address dest, uint amount) public {
+        function transferTo(address payable dest, uint amount) public {
             require(tx.origin == owner);
             dest.transfer(amount);
         }
@@ -205,11 +205,11 @@ Now someone tricks you into sending ether to the address of this attack wallet:
     pragma solidity >0.4.24;
 
     interface TxUserWallet {
-        function transferTo(address dest, uint amount) external;
+        function transferTo(address payable dest, uint amount) external;
     }
 
     contract TxAttackWallet {
-        address owner;
+        address payable owner;
 
         constructor() public {
             owner = msg.sender;

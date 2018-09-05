@@ -119,11 +119,19 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 		{
 			// for non-address types this was already caught by the parser
 			solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
-			if (!(
-				*_typeName.stateMutability() == StateMutability::Payable ||
-				*_typeName.stateMutability() == StateMutability::NonPayable
-			))
-				m_errorReporter.typeError(_typeName.location(), "Address types can only be payable or non-payable.");
+			switch(*_typeName.stateMutability())
+			{
+				case StateMutability::Payable:
+				case StateMutability::NonPayable:
+					_typeName.annotation().type = make_shared<AddressType>(*_typeName.stateMutability());
+					break;
+				default:
+					m_errorReporter.typeError(
+						_typeName.location(),
+						"Address types can only be payable or non-payable."
+					);
+					break;
+			}
 		}
 	}
 	return true;

@@ -231,7 +231,7 @@ activate themselves.
         // Parameters of the auction. Times are either
         // absolute unix timestamps (seconds since 1970-01-01)
         // or time periods in seconds.
-        address public beneficiary;
+        address payable public beneficiary;
         uint public auctionEndTime;
 
         // Current state of the auction.
@@ -258,7 +258,7 @@ activate themselves.
         /// beneficiary address `_beneficiary`.
         constructor(
             uint _biddingTime,
-            address _beneficiary
+            address payable _beneficiary
         ) public {
             beneficiary = _beneficiary;
             auctionEndTime = now + _biddingTime;
@@ -396,7 +396,7 @@ high or low invalid bids.
             uint deposit;
         }
 
-        address public beneficiary;
+        address payable public beneficiary;
         uint public biddingEnd;
         uint public revealEnd;
         bool public ended;
@@ -421,7 +421,7 @@ high or low invalid bids.
         constructor(
             uint _biddingTime,
             uint _revealTime,
-            address _beneficiary
+            address payable _beneficiary
         ) public {
             beneficiary = _beneficiary;
             biddingEnd = now + _biddingTime;
@@ -545,8 +545,8 @@ Safe Remote Purchase
 
     contract Purchase {
         uint public value;
-        address public seller;
-        address public buyer;
+        address payable public seller;
+        address payable public buyer;
         enum State { Created, Locked, Inactive }
         State public state;
 
@@ -990,11 +990,11 @@ The full contract
     pragma solidity ^0.4.24;
 
     contract SimplePaymentChannel {
-        address public sender;      // The account sending payments.
-        address public recipient;   // The account receiving the payments.
+        address payable public sender;      // The account sending payments.
+        address payable public recipient;   // The account receiving the payments.
         uint256 public expiration;  // Timeout in case the recipient never closes.
 
-        constructor (address _recipient, uint256 duration)
+        constructor (address payable _recipient, uint256 duration)
             public
             payable
         {
