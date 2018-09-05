@@ -435,11 +435,6 @@ void Scanner::scanToken()
 		m_nextToken.location.start = sourcePos();
 		switch (m_char)
 		{
-		case '\n':
-		case ' ':
-		case '\t':
-			token = selectToken(Token::Whitespace);
-			break;
 		case '"':
 		case '\'':
 			token = scanString();
