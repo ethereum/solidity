@@ -142,9 +142,6 @@ the gas can be specified with special options ``.value()`` and ``.gas()``, respe
 You need to use the modifier ``payable`` with the ``info`` function because
 otherwise, the ``.value()`` option would not be available.
 
-You can also use ``function setFeed(InfoFeed _feed) { feed = _feed; }``
-directly.
-
 .. warning::
   Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call.
 
