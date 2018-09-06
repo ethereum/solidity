@@ -1,10 +1,11 @@
 [
     {
-        "name": "ExpCleanupZero",
-        "summary": "Using exponentiating with types shorter than 256 bits and zero as base can result in unexpected values.",
-        "description": "As defined by the EVM, 0 ** 0 is one. Solidity does not always remove dirty higher order bits of types that are smaller than 256 bits before applying an operation because it does not matter if the cleanup is performed before or after the operation. This is true for EXP except for the case where the base is zero, which was overlooked.",
-        "fixed": "0.5.0",
-        "severity": "high"
+        "name": "ExpExponentCleanup",
+        "summary": "Using the ** operator with an exponent of type shorter than 256 bits can result in unexpected values.",
+        "description": "Higher order bits in the exponent are not properly cleaned before the EXP opcode is applied if the type of the exponent expression is smaller than 256 bits and not smaller than the type of the base. In that case, the result might be larger than expected if the exponent is assumed to lie within the value range of the type. Literal numbers as exponents are unaffected as are exponents or bases of type uint256.",
+        "fixed": "0.4.25",
+        "severity": "medium/high",
+        "check": {"regex-source": "[^/]\\*\\* *[^/0-9 ]"}
     },
     {
         "name": "EventStructWrongData",
