@@ -75,7 +75,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		vector<ASTPointer<ASTNode>> nodes;
 		while (m_scanner->currentToken() != Token::EOS)
 		{
-			switch (auto token = m_scanner->currentToken())
+			switch (m_scanner->currentToken())
 			{
 			case Token::Pragma:
 				nodes.push_back(parsePragmaDirective());
@@ -86,7 +86,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			case Token::Interface:
 			case Token::Contract:
 			case Token::Library:
-				nodes.push_back(parseContractDefinition(token));
+				nodes.push_back(parseContractDefinition());
 				break;
 			default:
 				fatalParserError(string("Expected pragma, import directive or contract/interface/library definition."));
@@ -198,31 +198,35 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
 }
 
-ContractDefinition::ContractKind Parser::tokenToContractKind(Token::Value _token)
+ContractDefinition::ContractKind Parser::parseContractKind()
 {
-	switch(_token)
+	ContractDefinition::ContractKind kind;
+	switch(m_scanner->currentToken())
 	{
 	case Token::Interface:
-		return ContractDefinition::ContractKind::Interface;
+		kind = ContractDefinition::ContractKind::Interface;
+		break;
 	case Token::Contract:
-		return ContractDefinition::ContractKind::Contract;
+		kind = ContractDefinition::ContractKind::Contract;
+		break;
 	case Token::Library:
-		return ContractDefinition::ContractKind::Library;
+		kind = ContractDefinition::ContractKind::Library;
+		break;
 	default:
-		fatalParserError("Unsupported contract type.");
+		solAssert(false, "Invalid contract kind.");
 	}
-	// FIXME: fatalParserError is not considered as throwing here
-	return ContractDefinition::ContractKind::Contract;
+	m_scanner->next();
+	return kind;
 }
 
-ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _expectedKind)
+ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docString;
 	if (m_scanner->currentCommentLiteral() != "")
 		docString = make_shared<ASTString>(m_scanner->currentCommentLiteral());
-	expectToken(_expectedKind);
+	ContractDefinition::ContractKind contractKind = parseContractKind();
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	if (m_scanner->currentToken() == Token::Is)
@@ -275,7 +279,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 		docString,
 		baseContracts,
 		subNodes,
-		tokenToContractKind(_expectedKind)
+		contractKind
 	);
 }
 
@@ -297,42 +301,56 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 	return nodeFactory.createNode<InheritanceSpecifier>(name, std::move(arguments));
 }
 
-Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
+Declaration::Visibility Parser::parseVisibilitySpecifier()
 {
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
-	if (_token == Token::Public)
-		visibility = Declaration::Visibility::Public;
-	else if (_token == Token::Internal)
-		visibility = Declaration::Visibility::Internal;
-	else if (_token == Token::Private)
-		visibility = Declaration::Visibility::Private;
-	else if (_token == Token::External)
-		visibility = Declaration::Visibility::External;
-	else
-		solAssert(false, "Invalid visibility specifier.");
+	Token::Value token = m_scanner->currentToken();
+	switch (token)
+	{
+		case Token::Public:
+			visibility = Declaration::Visibility::Public;
+			break;
+		case Token::Internal:
+			visibility = Declaration::Visibility::Internal;
+			break;
+		case Token::Private:
+			visibility = Declaration::Visibility::Private;
+			break;
+		case Token::External:
+			visibility = Declaration::Visibility::External;
+			break;
+		default:
+			solAssert(false, "Invalid visibility specifier.");
+	}
 	m_scanner->next();
 	return visibility;
 }
 
-StateMutability Parser::parseStateMutability(Token::Value _token)
+StateMutability Parser::parseStateMutability()
 {
 	StateMutability stateMutability(StateMutability::NonPayable);
-	if (_token == Token::Payable)
-		stateMutability = StateMutability::Payable;
-	else if (_token == Token::View)
-		stateMutability = StateMutability::View;
-	else if (_token == Token::Pure)
-		stateMutability = StateMutability::Pure;
-	else if (_token == Token::Constant)
+	Token::Value token = m_scanner->currentToken();
+	switch(token)
 	{
-		stateMutability = StateMutability::View;
-		parserError(
-			"The state mutability modifier \"constant\" was removed in version 0.5.0. "
-			"Use \"view\" or \"pure\" instead."
-		);
+		case Token::Payable:
+			stateMutability = StateMutability::Payable;
+			break;
+		case Token::View:
+			stateMutability = StateMutability::View;
+			break;
+		case Token::Pure:
+			stateMutability = StateMutability::Pure;
+			break;
+		case Token::Constant:
+			stateMutability = StateMutability::View;
+			parserError(
+				"The state mutability modifier \"constant\" was removed in version 0.5.0. "
+				"Use \"view\" or \"pure\" instead."
+			);
+			break;
+		default:
+			solAssert(false, "Invalid state mutability specifier.");
 	}
-	else
-		solAssert(false, "Invalid state mutability specifier.");
 	m_scanner->next();
 	return stateMutability;
 }
@@ -403,7 +421,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				m_scanner->next();
 			}
 			else
-				result.visibility = parseVisibilitySpecifier(token);
+				result.visibility = parseVisibilitySpecifier();
 		}
 		else if (Token::isStateMutabilitySpecifier(token))
 		{
@@ -417,7 +435,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				m_scanner->next();
 			}
 			else
-				result.stateMutability = parseStateMutability(token);
+				result.stateMutability = parseStateMutability();
 		}
 		else
 			break;
@@ -583,7 +601,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 				m_scanner->next();
 			}
 			else
-				visibility = parseVisibilitySpecifier(token);
+				visibility = parseVisibilitySpecifier();
 		}
 		else
 		{
