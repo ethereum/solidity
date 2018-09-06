@@ -112,7 +112,20 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 
 bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 {
-	_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
+	if (!_typeName.annotation().type)
+	{
+		_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
+		if (_typeName.stateMutability().is_initialized())
+		{
+			// for non-address types this was already caught by the parser
+			solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
+			if (!(
+				*_typeName.stateMutability() == StateMutability::Payable ||
+				*_typeName.stateMutability() == StateMutability::NonPayable
+			))
+				m_errorReporter.typeError(_typeName.location(), "Address types can only be payable or non-payable.");
+		}
+	}
 	return true;
 }
 

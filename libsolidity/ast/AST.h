@@ -876,23 +876,31 @@ public:
 };
 
 /**
- * Any pre-defined type name represented by a single keyword, i.e. it excludes mappings,
- * contracts, functions, etc.
+ * Any pre-defined type name represented by a single keyword (and possibly a state mutability for address types),
+ * i.e. it excludes mappings, contracts, functions, etc.
  */
 class ElementaryTypeName: public TypeName
 {
 public:
-	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken const& _elem):
-		TypeName(_location), m_type(_elem)
-	{}
+	ElementaryTypeName(
+		SourceLocation const& _location,
+		ElementaryTypeNameToken const& _elem,
+		boost::optional<StateMutability> _stateMutability = {}
+	): TypeName(_location), m_type(_elem), m_stateMutability(_stateMutability)
+	{
+		solAssert(!_stateMutability.is_initialized() || _elem.token() == Token::Address, "");
+	}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ElementaryTypeNameToken const& typeName() const { return m_type; }
 
+	boost::optional<StateMutability> const& stateMutability() const { return m_stateMutability; }
+
 private:
 	ElementaryTypeNameToken m_type;
+	boost::optional<StateMutability> m_stateMutability; ///< state mutability for address type
 };
 
 /**
