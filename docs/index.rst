@@ -34,7 +34,8 @@ crowdfunding, blind auctions, multi-signature wallets and more.
 Translations
 ------------
 
-This documentation is translated into several languages by community volunteers, but the English version stands as a reference.
+This documentation is translated into several languages by community volunteers
+with varying degrees of completeness and up-to-dateness. The English version stands as a reference.
 
 * `Simplified Chinese <http://solidity-cn.readthedocs.io>`_ (in progress)
 * `Spanish <https://solidity-es.readthedocs.io>`_
@@ -45,20 +46,23 @@ This documentation is translated into several languages by community volunteers,
 Useful links
 ------------
 
+General
+~~~~~~~
+
 * `Ethereum <https://ethereum.org>`_
 
 * `Changelog <https://github.com/ethereum/solidity/blob/develop/Changelog.md>`_
-
-* `Story Backlog <https://www.pivotaltracker.com/n/projects/1189488>`_
 
 * `Source Code <https://github.com/ethereum/solidity/>`_
 
 * `Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_
 
-* `Gitter Chat <https://gitter.im/ethereum/solidity/>`_
+* `Language Users Chat <https://gitter.im/ethereum/solidity/>`_
+
+* `Compiler Developers Chat <https://gitter.im/ethereum/solidity-dev/>`_
 
 Available Solidity Integrations
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Generic:
 
@@ -122,7 +126,7 @@ Discontinued:
     Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
 
 Solidity Tools
---------------
+~~~~~~~~~~~~~~
 
 * `Dapp <https://dapp.tools/dapp/>`_
     Build tool, package manager, and deployment assistant for Solidity.
@@ -155,7 +159,7 @@ Solidity Tools
   Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.
 
 Third-Party Solidity Parsers and Grammars
------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * `solidity-parser <https://github.com/ConsenSys/solidity-parser>`_
     Solidity parser for JavaScript
@@ -171,11 +175,11 @@ in Solidity followed by the basics about :ref:`blockchains <blockchain-basics>`
 and the :ref:`Ethereum Virtual Machine <the-ethereum-virtual-machine>`.
 
 The next section will explain several *features* of Solidity by giving
-useful :ref:`example contracts <voting>`
+useful :ref:`example contracts <voting>`.
 Remember that you can always try out the contracts
 `in your browser <https://remix.ethereum.org>`_!
 
-The last and most extensive section will cover all aspects of Solidity in depth.
+The fourth and most extensive section will cover all aspects of Solidity in depth.
 
 If you still have questions, you can try searching or asking on the
 `Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_
