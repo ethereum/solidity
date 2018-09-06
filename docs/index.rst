@@ -86,6 +86,11 @@ Available Solidity Integrations
     * `Atom Solium Linter <https://atom.io/packages/linter-solium>`_
         Configurable Solidty linter for Atom using Solium as a base.
 
+* Eclipse:
+
+   * `YAKINDU Solidity Tools <https://yakindu.github.io/solidity-ide/>`_
+        Eclipse based IDE. Features context sensitive code completion and help, code navigation, syntax coloring, built in compiler, quick fixes and templates.
+
 * Emacs:
 
     * `Emacs Solidity <https://github.com/ethereum/emacs-solidity/>`_
