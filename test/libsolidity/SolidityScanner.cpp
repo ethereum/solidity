@@ -393,6 +393,14 @@ BOOST_AUTO_TEST_CASE(invalid_hex_literal_nonhex_string)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 }
 
+BOOST_AUTO_TEST_CASE(invalid_multiline_comment_close)
+{
+	// This used to parse as "comment", "identifier"
+	Scanner scanner(CharStream("/** / x"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
