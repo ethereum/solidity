@@ -2,6 +2,9 @@
 
 Bugfixes:
  * Type Checker: Report error when using structs in events without experimental ABIEncoderV2. This used to crash or log the wrong values.
+ * Parser: Treat unicode line endings as terminating strings and single-line comments.
+ * Parser: Disallow unterminated multi-line comments at the end of input.
+ * Parser: Treat ``/** /`` as unterminated multi-line comment.
 
 ### 0.4.24 (2018-05-16)
 
