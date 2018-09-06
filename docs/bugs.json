@@ -4,7 +4,7 @@
 		"summary": "Using structs in events logged wrong data.",
 		"description": "If a struct is used in an event, the address of the struct is logged instead of the actual data.",
 		"introduced": "0.4.17",
-		"fixed": "0.5.0",
+		"fixed": "0.4.25",
 		"severity": "very low"
 	},
     {
