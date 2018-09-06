@@ -84,7 +84,7 @@ Available Solidity Integrations
 * Eclipse:
    
    * `YAKINDU Solidity Tools <https://yakindu.github.io/solidity-ide/>`_
-        Eclipse based IDE. Features context sensitive code completion and help, code navigation, syntax coloring, build in compiler, quick fixes and templates.
+        Eclipse based IDE. Features context sensitive code completion and help, code navigation, syntax coloring, built in compiler, quick fixes and templates.
         
 * Emacs:
 
