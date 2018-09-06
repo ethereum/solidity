@@ -36,6 +36,8 @@ docs/_build
 docs/utils/__pycache__
 docs/utils/*.pyc
 /deps/downloads/
+deps/install
+deps/cache
 
 # vim stuff
 [._]*.sw[a-p]
