@@ -40,28 +40,41 @@ function test_truffle
 {
     name="$1"
     repo="$2"
+    branch="$3"
     echo "Running $name tests..."
     DIR=$(mktemp -d)
     (
-      git clone --depth 1 "$repo" "$DIR"
+      if [ -n "$branch" ]
+      then
+        echo "Cloning $branch of $repo..."
+        git clone --depth 1 "$repo" -b "$branch" "$DIR"
+      else
+        echo "Cloning $repo..."
+        git clone --depth 1 "$repo" "$DIR"
+      fi
       cd "$DIR"
+      echo "Current commit hash: `git rev-parse HEAD`"
       npm install
       find . -name soljson.js -exec cp "$SOLJSON" {} \;
-      if [ "$name" == "Zeppelin" ]; then
-        # Fix some things that look like bugs (only seemed to fail on Node 6 and not Node 8)
-        # FIXME: report upstream or to web3.js?
-        sed -i -e 's/let token = await ERC827TokenMock.new();//;' test/token/ERC827/ERC827Token.js
-        sed -i -e 's/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0)/CappedCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address)/' test/crowdsale/CappedCrowdsale.test.js
-        sed -i -e 's/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, { from: owner })/RefundableCrowdsale.new(this.startTime, this.endTime, rate, wallet, 0, this.token.address, { from: owner })/' test/crowdsale/RefundableCrowdsale.test.js
-      fi
       if [ "$name" == "Gnosis" ]; then
+        echo "Replaced fixed-version pragmas..."
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
         find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
+      fi
+      assertsol="node_modules/truffle/build/Assert.sol"
+      if [ -f "$assertsol" ]
+      then
+        echo "Replace Truffle's Assert.sol with a known good version"
+        rm "$assertsol"
+        wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
       fi
       npm run test
     )
     rm -rf "$DIR"
 }
 
-test_truffle Gnosis https://github.com/gnosis/gnosis-contracts.git
-test_truffle Zeppelin https://github.com/OpenZeppelin/zeppelin-solidity.git
+# Using our temporary fork here. Hopefully to be merged into upstream after the 0.5.0 release.
+test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity-050
+
+# Disabled temporarily as it needs to be updated to latest Truffle first.
+#test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050

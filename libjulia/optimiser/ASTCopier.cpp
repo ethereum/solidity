@@ -20,9 +20,9 @@
 
 #include <libjulia/optimiser/ASTCopier.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libjulia/Exceptions.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/inlineasm/AsmData.h>
 
 #include <libdevcore/Common.h>
 
@@ -30,10 +30,9 @@ using namespace std;
 using namespace dev;
 using namespace dev::julia;
 
-
 Statement ASTCopier::operator()(Instruction const&)
 {
-	solAssert(false, "Invalid operation.");
+	assertThrow(false, OptimizerException, "Invalid operation.");
 	return {};
 }
 
@@ -62,13 +61,13 @@ Statement ASTCopier::operator()(Assignment const& _assignment)
 
 Statement ASTCopier::operator()(StackAssignment const&)
 {
-	solAssert(false, "Invalid operation.");
+	assertThrow(false, OptimizerException, "Invalid operation.");
 	return {};
 }
 
 Statement ASTCopier::operator()(Label const&)
 {
-	solAssert(false, "Invalid operation.");
+	assertThrow(false, OptimizerException, "Invalid operation.");
 	return {};
 }
 

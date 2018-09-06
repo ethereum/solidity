@@ -67,6 +67,7 @@ public:
 
 	explicit ConstantOptimisationMethod(Params const& _params, u256 const& _value):
 		m_params(_params), m_value(_value) {}
+	virtual ~ConstantOptimisationMethod() = default;
 	virtual bigint gasNeeded() const = 0;
 	/// Executes the method, potentially appending to the assembly and returns a vector of
 	/// assembly items the constant should be relpaced with in one sweep.
@@ -74,8 +75,6 @@ public:
 	virtual AssemblyItems execute(Assembly& _assembly) const = 0;
 
 protected:
-	size_t dataSize() const { return std::max<size_t>(1, dev::bytesRequired(m_value)); }
-
 	/// @returns the run gas for the given items ignoring special gas costs
 	static bigint simpleRunGas(AssemblyItems const& _items);
 	/// @returns the gas needed to store the given data literally

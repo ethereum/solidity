@@ -86,7 +86,8 @@ as it uses ``call`` which forwards all remaining gas by default:
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            if (msg.sender.call.value(shares[msg.sender])())
+            (bool success,) = msg.sender.call.value(shares[msg.sender])("");
+            if (success)
                 shares[msg.sender] = 0;
         }
     }
@@ -103,7 +104,7 @@ outlined further below:
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            var share = shares[msg.sender];
+            uint share = shares[msg.sender];
             shares[msg.sender] = 0;
             msg.sender.transfer(share);
         }
@@ -120,7 +121,7 @@ Gas Limit and Loops
 Loops that do not have a fixed number of iterations, for example, loops that depend on storage values, have to be used carefully:
 Due to the block gas limit, transactions can only consume a certain amount of gas. Either explicitly or just due to
 normal operation, the number of iterations in a loop can grow beyond the block gas limit which can cause the complete
-contract to be stalled at a certain point. This may not apply to ``constant`` functions that are only executed
+contract to be stalled at a certain point. This may not apply to ``view`` functions that are only executed
 to read data from the blockchain. Still, such functions may be called by other contracts as part of on-chain operations
 and stall those. Please be explicit about such cases in the documentation of your contracts.
 
@@ -135,12 +136,12 @@ Sending and Receiving Ether
 - If a contract receives Ether (without a function being called), the fallback function is executed.
   If it does not have a fallback function, the Ether will be rejected (by throwing an exception).
   During the execution of the fallback function, the contract can only rely
-  on the "gas stipend" (2300 gas) being available to it at that time. This stipend is not enough to access storage in any way.
+  on the "gas stipend" it is passed (2300 gas) being available to it at that time. This stipend is not enough to access storage in any way.
   To be sure that your contract can receive Ether in that way, check the gas requirements of the fallback function
   (for example in the "details" section in Remix).
 
 - There is a way to forward more gas to the receiving contract using
-  ``addr.call.value(x)()``. This is essentially the same as ``addr.transfer(x)``,
+  ``addr.call.value(x)("")``. This is essentially the same as ``addr.transfer(x)``,
   only that it forwards all remaining gas and opens up the ability for the
   recipient to perform more expensive actions (and it only returns a failure code
   and does not automatically propagate the error). This might include calling back
@@ -171,7 +172,8 @@ before they interact with your contract.
 
 Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
-``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
+``.call()``, ``.callcode()``, ``.delegatecall()`` and ``.staticcall()`` behave
+in the same way.
 
 tx.origin
 =========
@@ -180,13 +182,13 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >0.4.24;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
         address owner;
 
-        function TxUserWallet() public {
+        constructor() public {
             owner = msg.sender;
         }
 
@@ -200,20 +202,20 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >0.4.24;
 
     interface TxUserWallet {
-        function transferTo(address dest, uint amount) public;
+        function transferTo(address dest, uint amount) external;
     }
 
     contract TxAttackWallet {
         address owner;
 
-        function TxAttackWallet() public {
+        constructor() public {
             owner = msg.sender;
         }
 
-        function() public {
+        function() external {
             TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
         }
     }
@@ -224,10 +226,6 @@ If your wallet had checked ``msg.sender`` for authorization, it would get the ad
 Minor Details
 =============
 
-- In ``for (var i = 0; i < arrayName.length; i++) { ... }``, the type of ``i`` will be ``uint8``, because this is the smallest type that is required to hold the value ``0``. If the array has more than 255 elements, the loop will not terminate.
-- The ``constant`` keyword for functions is currently not enforced by the compiler.
-  Furthermore, it is not enforced by the EVM, so a contract function that "claims"
-  to be constant might still cause changes to the state.
 - Types that do not occupy the full 32 bytes might contain "dirty higher order bits".
   This is especially important if you access ``msg.data`` - it poses a malleability risk:
   You can craft transactions that call a function ``f(uint8 x)`` with a raw byte argument
@@ -238,6 +236,22 @@ Minor Details
 ***************
 Recommendations
 ***************
+
+Take Warnings Seriously
+=======================
+
+If the compiler warns you about something, you should better change it.
+Even if you do not think that this particular warning has security
+implications, there might be another issue buried beneath it.
+Any compiler warning we issue can be silenced by slight changes to the
+code.
+
+Also try to enable the "0.5.0" safety features as early as possible
+by adding ``pragma experimental "v0.5.0";``. Note that in this case,
+the word ``experimental`` does not mean that the safety features are in any
+way risky, it is just a way to enable some features that are
+not yet part of the latest version of Solidity due to backwards
+compatibility.
 
 Restrict the Amount of Ether
 ============================

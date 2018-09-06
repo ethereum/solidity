@@ -3,7 +3,7 @@ pragma solidity ^0.4.11;
 
 /**
  * @title Shareable
- * @dev inheritable "property" contract that enables methods to be protected by requiring the 
+ * @dev inheritable "property" contract that enables methods to be protected by requiring the
  * acquiescence of either a single, or, crucially, each of a number of, designated owners.
  * @dev Usage: use modifiers onlyowner (just own owned) or onlymanyowners(hash), whereby the same hash must be provided by some number (specified in constructor) of the set of owners (specified in the constructor) before the interior is executed.
  */
@@ -37,13 +37,13 @@ contract Shareable {
   // simple single-sig function modifier.
   modifier onlyOwner {
     if (!isOwner(msg.sender)) {
-      throw;
+      revert();
     }
     _;
   }
-  
-  /** 
-   * @dev Modifier for multisig functions. 
+
+  /**
+   * @dev Modifier for multisig functions.
    * @param _operation The operation must have an intrinsic hash in order that later attempts can be
    * realised as the same underlying operation and thus count as confirmations.
    */
@@ -53,13 +53,13 @@ contract Shareable {
     }
   }
 
-  /** 
-   * @dev Constructor is given the number of sigs required to do protected "onlymanyowners" 
+  /**
+   * @dev Constructor is given the number of sigs required to do protected "onlymanyowners"
    * transactions as well as the selection of addresses capable of confirming them.
    * @param _owners A list of owners.
    * @param _required The amount required for a transaction to be approved.
    */
-  function Shareable(address[] _owners, uint256 _required) {
+  constructor(address[] memory _owners, uint256 _required) public {
     owners[1] = msg.sender;
     ownerIndex[msg.sender] = 1;
     for (uint256 i = 0; i < _owners.length; ++i) {
@@ -68,7 +68,7 @@ contract Shareable {
     }
     required = _required;
     if (required > owners.length) {
-      throw;
+      revert();
     }
   }
 
@@ -83,11 +83,11 @@ contract Shareable {
       return;
     }
     uint256 ownerIndexBit = 2**index;
-    var pending = pendings[_operation];
+    PendingState memory pending = pendings[_operation];
     if (pending.ownersDone & ownerIndexBit > 0) {
       pending.yetNeeded++;
       pending.ownersDone -= ownerIndexBit;
-      Revoke(msg.sender, _operation);
+      emit Revoke(msg.sender, _operation);
     }
   }
 
@@ -96,7 +96,7 @@ contract Shareable {
    * @param ownerIndex uint256 The index of the owner
    * @return The address of the owner
    */
-  function getOwner(uint256 ownerIndex) external constant returns (address) {
+  function getOwner(uint256 ownerIndex) external view returns (address) {
     return address(owners[ownerIndex + 1]);
   }
 
@@ -105,7 +105,7 @@ contract Shareable {
    * @param _addr address The address which you want to check.
    * @return True if the address is an owner and fase otherwise.
    */
-  function isOwner(address _addr) constant returns (bool) {
+  function isOwner(address _addr) public view returns (bool) {
     return ownerIndex[_addr] > 0;
   }
 
@@ -115,8 +115,8 @@ contract Shareable {
    * @param _owner The owner address.
    * @return True if the owner has confirmed and false otherwise.
    */
-  function hasConfirmed(bytes32 _operation, address _owner) constant returns (bool) {
-    var pending = pendings[_operation];
+  function hasConfirmed(bytes32 _operation, address _owner) public view returns (bool) {
+    PendingState memory pending = pendings[_operation];
     uint256 index = ownerIndex[_owner];
 
     // make sure they're an owner
@@ -139,10 +139,10 @@ contract Shareable {
     uint256 index = ownerIndex[msg.sender];
     // make sure they're an owner
     if (index == 0) {
-      throw;
+      revert();
     }
 
-    var pending = pendings[_operation];
+    PendingState memory pending = pendings[_operation];
     // if we're not yet working on this operation, switch over and reset the confirmation status.
     if (pending.yetNeeded == 0) {
       // reset count of confirmations needed.
@@ -156,7 +156,7 @@ contract Shareable {
     uint256 ownerIndexBit = 2**index;
     // make sure we (the message sender) haven't confirmed this operation previously.
     if (pending.ownersDone & ownerIndexBit == 0) {
-      Confirmation(msg.sender, _operation);
+      emit Confirmation(msg.sender, _operation);
       // ok - check if count is enough to go ahead.
       if (pending.yetNeeded <= 1) {
         // enough confirmations: reset and run interior.

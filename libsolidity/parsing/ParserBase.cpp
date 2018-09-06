@@ -63,42 +63,32 @@ Token::Value ParserBase::advance()
 	return m_scanner->next();
 }
 
-void ParserBase::expectToken(Token::Value _value)
+void ParserBase::expectToken(Token::Value _value, bool _advance)
 {
 	Token::Value tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		if (Token::isReservedKeyword(tok))
+		auto tokenName = [this](Token::Value _token)
 		{
-			fatalParserError(
-				string("Expected token ") +
-				string(Token::name(_value)) +
-				string(" got reserved keyword '") +
-				string(Token::name(tok)) +
-				string("'")
-			);
-		}
-		else if (Token::isElementaryTypeName(tok)) //for the sake of accuracy in reporting
-		{
-			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-			fatalParserError(
-				string("Expected token ") +
-				string(Token::name(_value)) +
-				string(" got '") +
-				elemTypeName.toString() +
-				string("'")
-			);
-		}
-		else
-			fatalParserError(
-				string("Expected token ") +
-				string(Token::name(_value)) +
-				string(" got '") +
-				string(Token::name(m_scanner->currentToken())) +
-				string("'")
-			);
+			if (_token == Token::Identifier)
+				return string("identifier");
+			else if (_token == Token::EOS)
+				return string("end of source");
+			else if (Token::isReservedKeyword(_token))
+				return string("reserved keyword '") + Token::friendlyName(_token) + "'";
+			else if (Token::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
+			{
+				ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
+				return string("'") + elemTypeName.toString() + "'";
+			}
+			else
+				return string("'") + Token::friendlyName(_token) + "'";
+		};
+
+		fatalParserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok));
 	}
-	m_scanner->next();
+	if (_advance)
+		m_scanner->next();
 }
 
 void ParserBase::increaseRecursionDepth()
@@ -116,10 +106,10 @@ void ParserBase::decreaseRecursionDepth()
 
 void ParserBase::parserError(string const& _description)
 {
-	m_errorReporter.parserError(SourceLocation(position(), position(), sourceName()), _description);
+	m_errorReporter.parserError(SourceLocation(position(), endPosition(), sourceName()), _description);
 }
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	m_errorReporter.fatalParserError(SourceLocation(position(), position(), sourceName()), _description);
+	m_errorReporter.fatalParserError(SourceLocation(position(), endPosition(), sourceName()), _description);
 }

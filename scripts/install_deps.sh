@@ -133,19 +133,18 @@ case $(uname -s) in
 # Arch Linux
 #------------------------------------------------------------------------------
 
-            Arch)
+            Arch*|ManjaroLinux)
                 #Arch
                 echo "Installing solidity dependencies on Arch Linux."
 
                 # All our dependencies can be found in the Arch Linux official repositories.
                 # See https://wiki.archlinux.org/index.php/Official_repositories
-                # Also adding ethereum-git to allow for testing with the `eth` client
                 sudo pacman -Syu \
                     base-devel \
                     boost \
                     cmake \
                     git \
-                    ethereum-git \
+                    cvc4
                 ;;
 
 #------------------------------------------------------------------------------
@@ -160,7 +159,7 @@ case $(uname -s) in
                 # See https://pkgs.alpinelinux.org/
 
                 apk update
-                apk add boost-dev build-base cmake
+                apk add boost-dev build-base cmake git
 
                 ;;
 
@@ -268,41 +267,37 @@ case $(uname -s) in
                 install_z3=""
                 case $(lsb_release -cs) in
                     trusty|qiana|rebecca|rafaela|rosa)
-                        #trusty
                         echo "Installing solidity dependencies on Ubuntu Trusty Tahr (14.04)."
                         echo "Or, you may also be running Linux Mint Qiana / Rebecca / Rafaela / Rosa (base: Ubuntu Trusty Tahr (14.04).)"
                         ;;
                     utopic)
-                        #utopic
                         echo "Installing solidity dependencies on Ubuntu Utopic Unicorn (14.10)."
                         ;;
                     vivid)
-                        #vivid
                         echo "Installing solidity dependencies on Ubuntu Vivid Vervet (15.04)."
                         ;;
                     wily)
-                        #wily
                         echo "Installing solidity dependencies on Ubuntu Wily Werewolf (15.10)."
                         ;;
                     xenial|sarah|serena|sonya|sylvia)
-                        #xenial
                         echo "Installing solidity dependencies on Ubuntu Xenial Xerus (16.04)."
                         echo "Or, you may also be running Linux Mint Sarah / Serena / Sonya / Sylvia (base: Ubuntu Xenial Xerus (16.04).)"
                         install_z3="libz3-dev"
                         ;;
                     yakkety)
-                        #yakkety
                         echo "Installing solidity dependencies on Ubuntu Yakkety Yak (16.10)."
                         install_z3="libz3-dev"
                         ;;
                     zesty)
-                        #zesty
                         echo "Installing solidity dependencies on Ubuntu Zesty (17.04)."
                         install_z3="libz3-dev"
                         ;;
                     artful)
-                        #artful
                         echo "Installing solidity dependencies on Ubuntu Artful (17.10)."
+                        install_z3="libz3-dev"
+                        ;;
+                    bionic)
+                        echo "Installing solidity dependencies on Ubuntu Bionic (18.04)."
                         install_z3="libz3-dev"
                         ;;
                     betsy)
@@ -319,7 +314,7 @@ case $(uname -s) in
                         echo "ERROR - Unknown or unsupported Ubuntu version (" $(lsb_release -cs) ")"
                         echo "ERROR - This might not work, but we are trying anyway."
                         echo "Please drop us a message at https://gitter.im/ethereum/solidity-dev."
-                        echo "We only support Trusty, Utopic, Vivid, Wily, Xenial, Yakkety, Zesty and Artful."
+                        echo "We only support Trusty, Utopic, Vivid, Wily, Xenial, Yakkety, Zesty, Artful and Bionic."
                         install_z3="libz3-dev"
                         ;;
                 esac
@@ -333,7 +328,7 @@ case $(uname -s) in
                     "$install_z3"
                 if [ "$CI" = true ]; then
                     # install Z3 from PPA if the distribution does not provide it
-		            if ! dpkg -l libz3-dev > /dev/null 2>&1
+                    if ! dpkg -l libz3-dev > /dev/null 2>&1
                     then
                         sudo apt-add-repository -y ppa:hvr/z3
                         sudo apt-get -y update

@@ -28,7 +28,10 @@ using namespace dev::solidity::smt;
 Z3Interface::Z3Interface():
 	m_solver(m_context)
 {
+	// This needs to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
+	// This needs to be set in the context.
+	m_context.set("timeout", queryTimeout);
 }
 
 void Z3Interface::reset()
@@ -48,22 +51,22 @@ void Z3Interface::pop()
 	m_solver.pop();
 }
 
-Expression Z3Interface::newFunction(string _name, Sort _domain, Sort _codomain)
+void Z3Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
-	m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
-	return SolverInterface::newFunction(move(_name), _domain, _codomain);
+	if (!m_functions.count(_name))
+		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
 }
 
-Expression Z3Interface::newInteger(string _name)
+void Z3Interface::declareInteger(string _name)
 {
-	m_constants.insert({_name, m_context.int_const(_name.c_str())});
-	return SolverInterface::newInteger(move(_name));
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.int_const(_name.c_str())});
 }
 
-Expression Z3Interface::newBool(string _name)
+void Z3Interface::declareBool(string _name)
 {
-	m_constants.insert({_name, m_context.bool_const(_name.c_str())});
-	return SolverInterface::newBool(std::move(_name));
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.bool_const(_name.c_str())});
 }
 
 void Z3Interface::addAssertion(Expression const& _expr)
@@ -92,7 +95,7 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 			solAssert(false, "");
 		}
 
-		if (result != CheckResult::UNSATISFIABLE && !_expressionsToEvaluate.empty())
+		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		{
 			z3::model m = m_solver.get_model();
 			for (Expression const& e: _expressionsToEvaluate)
@@ -116,21 +119,6 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	for (auto const& arg: _expr.arguments)
 		arguments.push_back(toZ3Expr(arg));
 
-	static map<string, unsigned> arity{
-		{"ite", 3},
-		{"not", 1},
-		{"and", 2},
-		{"or", 2},
-		{"=", 2},
-		{"<", 2},
-		{"<=", 2},
-		{">", 2},
-		{">=", 2},
-		{"+", 2},
-		{"-", 2},
-		{"*", 2},
-		{"/", 2}
-	};
 	string const& n = _expr.name;
 	if (m_functions.count(n))
 		return m_functions.at(n)(arguments);
@@ -150,7 +138,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return m_context.int_val(n.c_str());
 	}
 
-	solAssert(arity.count(n) && arity.at(n) == arguments.size(), "");
+	solAssert(_expr.hasCorrectArity(), "");
 	if (n == "ite")
 		return z3::ite(arguments[0], arguments[1], arguments[2]);
 	else if (n == "not")

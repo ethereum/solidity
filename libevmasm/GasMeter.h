@@ -112,9 +112,10 @@ public:
 		static GasConsumption infinite() { return GasConsumption(0, true); }
 
 		GasConsumption& operator+=(GasConsumption const& _other);
-		bool operator<(GasConsumption const& _other) const { return this->tuple() < _other.tuple(); }
-
-		std::tuple<bool const&, u256 const&> tuple() const { return std::tie(isInfinite, value); }
+		bool operator<(GasConsumption const& _other) const
+		{
+			return std::make_pair(isInfinite, value) < std::make_pair(_other.isInfinite, _other.value);
+		}
 
 		u256 value;
 		bool isInfinite;

@@ -146,6 +146,7 @@ private:
 class Scopable
 {
 public:
+	virtual ~Scopable() = default;
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	ASTNode const* scope() const { return m_scope; }
@@ -203,8 +204,8 @@ public:
 	bool isPublic() const { return visibility() >= Visibility::Public; }
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
+	bool isVisibleAsLibraryMember() const { return visibility() >= Visibility::Internal; }
 
-	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
@@ -217,7 +218,7 @@ public:
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const { return {}; }
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const { return {}; }
 
 protected:
 	virtual Visibility defaultVisibility() const { return Visibility::Public; }
@@ -306,6 +307,7 @@ private:
 class VariableScope
 {
 public:
+	virtual ~VariableScope() = default;
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
 	std::vector<VariableDeclaration const*> const& localVariables() const { return m_localVariables; }
 
@@ -319,6 +321,7 @@ private:
 class Documented
 {
 public:
+	virtual ~Documented() = default;
 	explicit Documented(ASTPointer<ASTString> const& _documentation): m_documentation(_documentation) {}
 
 	/// @return A shared pointer of an ASTString.
@@ -335,6 +338,7 @@ protected:
 class ImplementationOptional
 {
 public:
+	virtual ~ImplementationOptional() = default;
 	explicit ImplementationOptional(bool _implemented): m_implemented(_implemented) {}
 
 	/// @return whether this node is fully implemented or not
@@ -401,6 +405,8 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 
+	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
+
 	virtual TypePointer type() const override;
 
 	virtual ContractDefinitionAnnotation& annotation() const override;
@@ -424,19 +430,22 @@ public:
 	InheritanceSpecifier(
 		SourceLocation const& _location,
 		ASTPointer<UserDefinedTypeName> const& _baseName,
-		std::vector<ASTPointer<Expression>> _arguments
+		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_baseName(_baseName), m_arguments(_arguments) {}
+		ASTNode(_location), m_baseName(_baseName), m_arguments(std::move(_arguments)) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	UserDefinedTypeName const& name() const { return *m_baseName; }
-	std::vector<ASTPointer<Expression>> const& arguments() const { return m_arguments; }
+	// Returns nullptr if no argument list was given (``C``).
+	// If an argument list is given (``C(...)``), the arguments are returned
+	// as a vector of expressions. Note that this vector can be empty (``C()``).
+	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
 	ASTPointer<UserDefinedTypeName> m_baseName;
-	std::vector<ASTPointer<Expression>> m_arguments;
+	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
 /**
@@ -606,12 +615,11 @@ public:
 
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isConstructor() const { return m_isConstructor; }
-	bool isFallback() const { return name().empty(); }
+	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
-	std::string fullyQualifiedName() const;
 	virtual bool isVisibleInContract() const override
 	{
 		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
@@ -623,11 +631,13 @@ public:
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
 	std::string externalSignature() const;
 
+	ContractDefinition::ContractKind inContractKind() const;
+
 	virtual TypePointer type() const override;
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const override;
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const override;
 
 	virtual FunctionDefinitionAnnotation& annotation() const override;
 
@@ -645,7 +655,7 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
-	enum Location { Default, Storage, Memory };
+	enum Location { Unspecified, Storage, Memory, CallData };
 
 	VariableDeclaration(
 		SourceLocation const& _sourceLocation,
@@ -656,7 +666,7 @@ public:
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		bool _isConstant = false,
-		Location _referenceLocation = Location::Default
+		Location _referenceLocation = Location::Unspecified
 	):
 		Declaration(_sourceLocation, _name, _visibility),
 		m_typeName(_type),
@@ -675,6 +685,8 @@ public:
 	virtual bool isLValue() const override;
 	virtual bool isPartOfExternalInterface() const override { return isPublic(); }
 
+	/// @returns true iff this variable is the parameter (or return parameter) of a function
+	/// (or function type name or event) or declared inside a function body.
 	bool isLocalVariable() const;
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
@@ -683,20 +695,33 @@ public:
 	/// @returns true if this variable is a local variable or return parameter.
 	bool isLocalOrReturn() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
+	/// This excludes parameters of external function type names.
 	bool isExternalCallableParameter() const;
+	/// @returns true if this variable is a parameter or return parameter of an internal function
+	/// or a function type of internal visibility.
+	bool isInternalCallableParameter() const;
+	/// @returns true iff this variable is a parameter(or return parameter of a library function
+	bool isLibraryFunctionParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
 	/// in the body of a function or modifier.
-	bool canHaveAutoType() const;
+	/// @returns true if this variable is a parameter of an event.
+	bool isEventParameter() const;
+	/// @returns true if the type of the variable is a reference or mapping type, i.e.
+	/// array, struct or mapping. These types can take a data location (and often require it).
+	/// Can only be called after reference resolution.
+	bool hasReferenceOrMappingType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
 	Location referenceLocation() const { return m_location; }
+	/// @returns a set of allowed storage locations for the variable.
+	std::set<Location> allowedDataLocations() const;
 
 	virtual TypePointer type() const override;
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const override;
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const override;
 
 	virtual VariableDeclarationAnnotation& annotation() const override;
 
@@ -755,19 +780,22 @@ public:
 	ModifierInvocation(
 		SourceLocation const& _location,
 		ASTPointer<Identifier> const& _name,
-		std::vector<ASTPointer<Expression>> _arguments
+		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_modifierName(_name), m_arguments(_arguments) {}
+		ASTNode(_location), m_modifierName(_name), m_arguments(std::move(_arguments)) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTPointer<Identifier> const& name() const { return m_modifierName; }
-	std::vector<ASTPointer<Expression>> const& arguments() const { return m_arguments; }
+	// Returns nullptr if no argument list was given (``mod``).
+	// If an argument list is given (``mod(...)``), the arguments are returned
+	// as a vector of expressions. Note that this vector can be empty (``mod()``).
+	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
 	ASTPointer<Identifier> m_modifierName;
-	std::vector<ASTPointer<Expression>> m_arguments;
+	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
 /**
@@ -795,7 +823,7 @@ public:
 	bool isAnonymous() const { return m_anonymous; }
 
 	virtual TypePointer type() const override;
-	virtual std::shared_ptr<FunctionType> functionType(bool /*_internal*/) const override;
+	virtual FunctionTypePointer functionType(bool /*_internal*/) const override;
 
 	virtual EventDefinitionAnnotation& annotation() const override;
 
@@ -821,6 +849,11 @@ public:
 		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 
+	virtual FunctionTypePointer functionType(bool) const override
+	{
+		solAssert(m_type->category() == Type::Category::Function, "");
+		return std::dynamic_pointer_cast<FunctionType const>(m_type);
+	}
 	virtual TypePointer type() const override { return m_type; }
 
 private:
@@ -1150,11 +1183,11 @@ public:
 	Statement const& body() const { return *m_body; }
 
 private:
-	/// For statement's initialization expresion. for(XXX; ; ). Can be empty
+	/// For statement's initialization expression. for(XXX; ; ). Can be empty
 	ASTPointer<Statement> m_initExpression;
-	/// For statement's condition expresion. for(; XXX ; ). Can be empty
+	/// For statement's condition expression. for(; XXX ; ). Can be empty
 	ASTPointer<Expression> m_condExpression;
-	/// For statement's loop expresion. for(;;XXX). Can be empty
+	/// For statement's loop expression. for(;;XXX). Can be empty
 	ASTPointer<ExpressionStatement> m_loopExpression;
 	/// The body of the loop
 	ASTPointer<Statement> m_body;
@@ -1231,13 +1264,12 @@ private:
 };
 
 /**
- * Definition of a variable as a statement inside a function. It requires a type name (which can
- * also be "var") but the actual assignment can be missing.
- * Examples: var a = 2; uint256 a;
- * As a second form, multiple variables can be declared, cannot have a type and must be assigned
- * right away. If the first or last component is unnamed, it can "consume" an arbitrary number
- * of components.
- * Examples: var (a, b) = f(); var (a,,,c) = g(); var (a,) = d();
+ * Definition of one or more variables as a statement inside a function.
+ * If multiple variables are declared, a value has to be assigned directly.
+ * If only a single variable is declared, the value can be missing.
+ * Examples:
+ * uint[] memory a; uint a = 2;
+ * (uint a, bytes32 b, ) = f(); (, uint a, , StructName storage x) = g();
  */
 class VariableDeclarationStatement: public Statement
 {
@@ -1252,13 +1284,14 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	VariableDeclarationStatementAnnotation& annotation() const override;
-
 	std::vector<ASTPointer<VariableDeclaration>> const& declarations() const { return m_variables; }
 	Expression const* initialValue() const { return m_initialValue.get(); }
 
 private:
 	/// List of variables, some of which can be empty pointers (unnamed components).
+	/// Note that the ``m_value`` member of these is unused. Instead, ``m_initialValue``
+	/// below is used, because the initial value can be a single expression assigned
+	/// to all variables.
 	std::vector<ASTPointer<VariableDeclaration>> m_variables;
 	/// The assigned expression / initial value.
 	ASTPointer<Expression> m_initialValue;

@@ -33,7 +33,6 @@ VariableUsage::VariableUsage(ASTNode const& _node)
 			solAssert(declaration, "");
 			if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 				if (
-					varDecl->isLocalVariable() &&
 					identifier->annotation().lValueRequested &&
 					varDecl->annotation().type->isValueType()
 				)
@@ -51,12 +50,12 @@ VariableUsage::VariableUsage(ASTNode const& _node)
 	_node.accept(reducer);
 }
 
-vector<Declaration const*> VariableUsage::touchedVariables(ASTNode const& _node) const
+vector<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node) const
 {
 	if (!m_children.count(&_node) && !m_touchedVariable.count(&_node))
 		return {};
 
-	set<Declaration const*> touched;
+	set<VariableDeclaration const*> touched;
 	vector<ASTNode const*> toVisit;
 	toVisit.push_back(&_node);
 

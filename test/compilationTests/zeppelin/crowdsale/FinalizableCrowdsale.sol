@@ -18,13 +18,13 @@ contract FinalizableCrowdsale is Crowdsale, Ownable {
 
   // should be called after crowdsale ends, to do
   // some extra finalization work
-  function finalize() onlyOwner {
+  function finalize() public onlyOwner {
     require(!isFinalized);
     require(hasEnded());
 
     finalization();
-    Finalized();
-    
+    emit Finalized();
+
     isFinalized = true;
   }
 

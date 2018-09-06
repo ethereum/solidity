@@ -24,13 +24,21 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicIntVariable::SymbolicIntVariable(
-	Declaration const* _decl,
+	Declaration const& _decl,
 	smt::SolverInterface& _interface
 ):
 	SymbolicVariable(_decl, _interface)
 {
-	solAssert(m_declaration->type()->category() == Type::Category::Integer, "");
-	m_expression = make_shared<smt::Expression>(m_interface.newFunction(uniqueSymbol(), smt::Sort::Int, smt::Sort::Int));
+	solAssert(
+		m_declaration.type()->category() == Type::Category::Integer ||
+		m_declaration.type()->category() == Type::Category::Address,
+		""
+	);
+}
+
+smt::Expression SymbolicIntVariable::valueAtSequence(int _seq) const
+{
+	return m_interface.newInteger(uniqueSymbol(_seq));
 }
 
 void SymbolicIntVariable::setZeroValue(int _seq)
@@ -40,9 +48,11 @@ void SymbolicIntVariable::setZeroValue(int _seq)
 
 void SymbolicIntVariable::setUnknownValue(int _seq)
 {
-	auto const& intType = dynamic_cast<IntegerType const&>(*m_declaration->type());
-	m_interface.addAssertion(valueAtSequence(_seq) >= minValue(intType));
-	m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(intType));
+	auto intType = dynamic_pointer_cast<IntegerType const>(m_declaration.type());
+	if (!intType)
+		intType = make_shared<IntegerType>(160);
+	m_interface.addAssertion(valueAtSequence(_seq) >= minValue(*intType));
+	m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(*intType));
 }
 
 smt::Expression SymbolicIntVariable::minValue(IntegerType const& _t)

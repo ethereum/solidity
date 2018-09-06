@@ -64,18 +64,22 @@ The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint25
 Layout in Memory
 ****************
 
-Solidity reserves three 256-bit slots:
+Solidity reserves four 32 byte slots:
 
--  0 - 64: scratch space for hashing methods
-- 64 - 96: currently allocated memory size (aka. free memory pointer)
+- ``0x00`` - ``0x3f``: scratch space for hashing methods
+- ``0x40`` - ``0x5f``: currently allocated memory size (aka. free memory pointer)
+- ``0x60`` - ``0x7f``: zero slot
 
-Scratch space can be used between statements (ie. within inline assembly).
+Scratch space can be used between statements (ie. within inline assembly). The zero slot
+is used as initial value for dynamic memory arrays and should never be written to
+(the free memory pointer points to ``0x80`` initially).
 
 Solidity always places new objects at the free memory pointer and memory is never freed (this might change in the future).
 
 .. warning::
   There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifecycle, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to be zeroed out.
 
+  While it may seem like a good idea to use ``msize`` to arrive at a definitely zeroed out memory area, using such a pointer non-temporarily without updating the free memory pointer can have adverse results.
 
 .. index: calldata layout
 
@@ -83,10 +87,14 @@ Solidity always places new objects at the free memory pointer and memory is neve
 Layout of Call Data
 *******************
 
-When a Solidity contract is deployed and when it is called from an
-account, the input data is assumed to be in the format in :ref:`the ABI
-specification <ABI>`. The ABI specification requires arguments to be padded to multiples of 32
-bytes.  The internal function calls use a different convention.
+The input data for a function call is assumed to be in the format defined by the :ref:`ABI
+specification <ABI>`. Among others, the ABI specification requires arguments to be padded to multiples of 32
+bytes. The internal function calls use a different convention.
+
+Arguments for the constructor of a contract are directly appended at the end of the
+contract's code, also in ABI encoding. The constructor will access them through a hard-coded offset, and
+not by using the ``codesize`` opcode, since this of course changes when appending
+data to the code.
 
 
 .. index: variable cleanup
@@ -153,7 +161,7 @@ These steps are applied to each basic block and the newly generated code is used
 
 ::
 
-    var x = 7;
+    uint x = 7;
     data[7] = 9;
     if (data[x] != x + 2)
       return 2;
@@ -187,7 +195,7 @@ important for static analysis tools that operate on bytecode level and
 for displaying the current position in the source code inside a debugger
 or for breakpoint handling.
 
-Both kinds of source mappings use integer indentifiers to refer to source files.
+Both kinds of source mappings use integer identifiers to refer to source files.
 These are regular array indices into a list of source files usually called
 ``"sourceList"``, which is part of the combined-json and the output of
 the json / npm compiler.
@@ -314,7 +322,13 @@ The following is the order of precedence for operators, listed in order of evalu
 Global Variables
 ================
 
-- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
+- ``abi.decode(bytes encodedData, (...)) returns (...)``: :ref:`ABI <ABI>`-decodes the provided data. The types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
+- ``abi.encode(...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+   starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
+- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
@@ -330,11 +344,14 @@ Global Variables
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
 - ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
+- ``require(bool condition, string message)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
 - ``revert()``: abort execution and revert state changes
-- ``keccak256(...) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
-- ``sha3(...) returns (bytes32)``: an alias to ``keccak256``
-- ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
-- ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the :ref:`(tightly packed) arguments <abi_packed_mode>`
+- ``revert(string message)``: abort execution and revert state changes providing an explanatory string
+- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
+- ``keccak256(bytes memory) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the input
+- ``sha3(bytes memory) returns (bytes32)``: an alias to ``keccak256``
+- ``sha256(bytes memory) returns (bytes32)``: compute the SHA-256 hash of the input
+- ``ripemd160(bytes memory) returns (bytes20)``: compute the RIPEMD-160 hash of the input
 - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
 - ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 - ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
@@ -345,6 +362,23 @@ Global Variables
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
 - ``<address>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
+
+.. note::
+    Do not rely on ``block.timestamp``, ``now`` and ``blockhash`` as a source of randomness,
+    unless you know what you are doing.
+
+    Both the timestamp and the block hash can be influenced by miners to some degree.
+    Bad actors in the mining community can for example run a casino payout function on a chosen hash
+    and just retry a different hash if they did not receive any money.
+
+    The current block timestamp must be strictly larger than the timestamp of the last block,
+    but the only guarantee is that it will be somewhere between the timestamps of two
+    consecutive blocks in the canonical chain.
+
+.. note::
+    The block hashes are not available for all blocks for scalability reasons.
+    You can only access the hashes of the most recent 256 blocks, all other
+    values will be zero.
 
 .. index:: visibility, public, private, external, internal
 
@@ -368,11 +402,10 @@ Function Visibility Specifiers
 Modifiers
 =========
 
-- ``pure`` for functions: Disallows modification or access of state - this is not enforced yet.
-- ``view`` for functions: Disallows modification of state - this is not enforced yet.
+- ``pure`` for functions: Disallows modification or access of state.
+- ``view`` for functions: Disallows modification of state.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
 - ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
-- ``constant`` for functions: Same as ``view``.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
 
@@ -381,8 +414,11 @@ Reserved Keywords
 
 These keywords are reserved in Solidity. They might become part of the syntax in the future:
 
-``abstract``, ``after``, ``case``, ``catch``, ``default``, ``final``, ``in``, ``inline``, ``let``, ``match``, ``null``,
-``of``, ``relocatable``, ``static``, ``switch``, ``try``, ``type``, ``typeof``.
+``abstract``, ``after``, ``alias``, ``apply``, ``auto``, ``case``, ``catch``, ``copyof``, ``default``,
+``define``, ``final``, ``immutable``, ``implements``, ``in``, ``inline``, ``let``, ``macro``, ``match``,
+``mutable``, ``null``, ``of``, ``override``, ``partial``, ``promise``, ``reference``, ``relocatable``,
+``sealed``, ``sizeof``, ``static``, ``supports``, ``switch``, ``try``, ``type``, ``typedef``, ``typeof``,
+``unchecked``.
 
 Language Grammar
 ================

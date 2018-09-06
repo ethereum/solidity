@@ -20,6 +20,8 @@
 
 #include <libjulia/optimiser/Semantics.h>
 
+#include <libjulia/Exceptions.h>
+
 #include <libsolidity/inlineasm/AsmData.h>
 
 #include <libevmasm/SemanticInformation.h>
@@ -56,5 +58,5 @@ void MovableChecker::operator()(FunctionCall const&)
 
 void MovableChecker::visit(Statement const&)
 {
-	solAssert(false, "Movability for statement requested.");
+	assertThrow(false, OptimizerException, "Movability for statement requested.");
 }

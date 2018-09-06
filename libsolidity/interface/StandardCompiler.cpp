@@ -117,7 +117,7 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 	{
 		return dev::h256(_hash) == dev::keccak256(_content);
 	}
-	catch (dev::BadHexCharacter)
+	catch (dev::BadHexCharacter const&)
 	{
 		return false;
 	}
@@ -326,9 +326,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		m_compilerStack.setEVMVersion(*version);
 	}
 
-	vector<string> remappings;
+	vector<CompilerStack::Remapping> remappings;
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
-		remappings.push_back(remapping.asString());
+	{
+		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
+			remappings.emplace_back(std::move(*r));
+		else
+			return formatFatalError("JSONError", "Invalid remapping: \"" + remapping.asString() + "\"");
+	}
 	m_compilerStack.setRemappings(remappings);
 
 	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
@@ -366,7 +371,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 				// @TODO use libraries only for the given source
 				libraries[library] = h160(address);
 			}
-			catch (dev::BadHexCharacter)
+			catch (dev::BadHexCharacter const&)
 			{
 				return formatFatalError(
 					"JSONError",
@@ -567,7 +572,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	return output;
 }
 
-Json::Value StandardCompiler::compile(Json::Value const& _input)
+Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 {
 	try
 	{
@@ -591,7 +596,7 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	}
 }
 
-string StandardCompiler::compile(string const& _input)
+string StandardCompiler::compile(string const& _input) noexcept
 {
 	Json::Value input;
 	string errors;
@@ -600,7 +605,7 @@ string StandardCompiler::compile(string const& _input)
 		if (!jsonParseStrict(_input, input, &errors))
 			return jsonCompactPrint(formatFatalError("JSONError", errors));
 	}
-	catch(...)
+	catch (...)
 	{
 		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
 	}
@@ -613,7 +618,7 @@ string StandardCompiler::compile(string const& _input)
 	{
 		return jsonCompactPrint(output);
 	}
-	catch(...)
+	catch (...)
 	{
 		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
 	}

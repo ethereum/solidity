@@ -17,10 +17,12 @@
 /**
  * @author Christian <chris@ethereum.org>
  * @date 2017
- * Routines that generate JULIA code related to ABI encoding, decoding and type conversions.
+ * Routines that generate Yul code related to ABI encoding, decoding and type conversions.
  */
 
 #pragma once
+
+#include <libsolidity/interface/EVMVersion.h>
 
 #include <libsolidity/ast/ASTForward.h>
 
@@ -48,6 +50,8 @@ using TypePointers = std::vector<TypePointer>;
 class ABIFunctions
 {
 public:
+	explicit ABIFunctions(EVMVersion _evmVersion = EVMVersion{}) : m_evmVersion(_evmVersion) {}
+
 	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes
 	/// into memory, converting the types to @a _targetTypes on the fly.
 	/// Parameters are: <headStart> <value_n> ... <value_1>, i.e.
@@ -191,7 +195,7 @@ private:
 	std::string copyToMemoryFunction(bool _fromCalldata);
 
 	std::string shiftLeftFunction(size_t _numBits);
-	std::string shiftRightFunction(size_t _numBits, bool _signed);
+	std::string shiftRightFunction(size_t _numBits);
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
 	std::string roundUpFunction();
@@ -199,7 +203,7 @@ private:
 	std::string arrayLengthFunction(ArrayType const& _type);
 	/// @returns the name of a function that computes the number of bytes required
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
-	/// The function reverts for too large lengthes.
+	/// The function reverts for too large lengths.
 	std::string arrayAllocationSizeFunction(ArrayType const& _type);
 	/// @returns the name of a function that converts a storage slot number
 	/// or a memory pointer to the slot number / memory pointer for the data position of an array
@@ -225,6 +229,8 @@ private:
 
 	/// Map from function name to code for a multi-use function.
 	std::map<std::string, std::string> m_requestedFunctions;
+
+	EVMVersion m_evmVersion;
 };
 
 }

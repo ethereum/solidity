@@ -30,7 +30,10 @@
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/interface/ErrorReporter.h>
 
+#include <libdevcore/StringUtils.h>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
 using namespace dev;
@@ -47,10 +50,7 @@ bool ReferencesResolver::visit(Block const& _block)
 {
 	if (!m_resolveInsideCode)
 		return false;
-	m_experimental050Mode = _block.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-	// C99-scoped variables
-	if (m_experimental050Mode)
-		m_resolver.setScope(&_block);
+	m_resolver.setScope(&_block);
 	return true;
 }
 
@@ -59,19 +59,14 @@ void ReferencesResolver::endVisit(Block const& _block)
 	if (!m_resolveInsideCode)
 		return;
 
-	// C99-scoped variables
-	if (m_experimental050Mode)
-		m_resolver.setScope(_block.scope());
+	m_resolver.setScope(_block.scope());
 }
 
 bool ReferencesResolver::visit(ForStatement const& _for)
 {
 	if (!m_resolveInsideCode)
 		return false;
-	m_experimental050Mode = _for.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-	// C99-scoped variables
-	if (m_experimental050Mode)
-		m_resolver.setScope(&_for);
+	m_resolver.setScope(&_for);
 	return true;
 }
 
@@ -79,18 +74,16 @@ void ReferencesResolver::endVisit(ForStatement const& _for)
 {
 	if (!m_resolveInsideCode)
 		return;
-	if (m_experimental050Mode)
-		m_resolver.setScope(_for.scope());
+	m_resolver.setScope(_for.scope());
 }
 
 void ReferencesResolver::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	if (!m_resolveInsideCode)
 		return;
-	if (m_experimental050Mode)
-		for (auto const& var: _varDeclStatement.declarations())
-			if (var)
-				m_resolver.activateVariable(var->name());
+	for (auto const& var: _varDeclStatement.declarations())
+		if (var)
+			m_resolver.activateVariable(var->name());
 }
 
 bool ReferencesResolver::visit(Identifier const& _identifier)
@@ -99,9 +92,14 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 	if (declarations.empty())
 	{
 		string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
-		string errorMessage =
-			"Undeclared identifier." +
-			(suggestions.empty()? "": " Did you mean " + std::move(suggestions) + "?");
+		string errorMessage = "Undeclared identifier.";
+		if (!suggestions.empty())
+		{
+			if ("\"" + _identifier.name() + "\"" == suggestions)
+				errorMessage += " " + std::move(suggestions) + " is not (or not yet) visible at this point.";
+			else
+				errorMessage += " Did you mean " + std::move(suggestions) + "?";
+		}
 		declarationError(_identifier.location(), errorMessage);
 	}
 	else if (declarations.size() == 1)
@@ -147,7 +145,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
 	{
-		declarationError(_typeName.location(), "Identifier not found or not unique.");
+		fatalDeclarationError(_typeName.location(), "Identifier not found or not unique.");
 		return;
 	}
 
@@ -160,7 +158,10 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 		_typeName.annotation().type = make_shared<ContractType>(*contract);
 	else
+	{
+		_typeName.annotation().type = make_shared<TupleType>();
 		typeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
+	}
 }
 
 void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
@@ -171,13 +172,13 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 	case VariableDeclaration::Visibility::External:
 		break;
 	default:
-		typeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+		fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
 		return;
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != VariableDeclaration::Visibility::External)
 	{
-		typeError(_typeName.location(), "Only external function types can be payable.");
+		fatalTypeError(_typeName.location(), "Only external function types can be payable.");
 		return;
 	}
 
@@ -187,7 +188,7 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 			solAssert(t->annotation().type, "Type not set for parameter.");
 			if (!t->annotation().type->canBeUsedExternally(false))
 			{
-				typeError(t->location(), "Internal type cannot be used for external function type.");
+				fatalTypeError(t->location(), "Internal type cannot be used for external function type.");
 				return;
 			}
 		}
@@ -261,10 +262,18 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 				string("_slot").size() :
 				string("_offset").size()
 			));
+			if (realName.empty())
+			{
+				declarationError(_identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
+				return size_t(-1);
+			}
 			declarations = m_resolver.nameFromCurrentScope(realName);
 		}
 		if (declarations.size() != 1)
+		{
+			declarationError(_identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
 			return size_t(-1);
+		}
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 			if (var->isLocalVariable() && _crossesFunctionBoundary)
 			{
@@ -280,7 +289,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// Will be re-generated later with correct information
 	// We use the latest EVM version because we will re-run it anyway.
 	assembly::AsmAnalysisInfo analysisInfo;
-	boost::optional<Error::Type> errorTypeForLoose = m_experimental050Mode ? Error::Type::SyntaxError : Error::Type::Warning;
+	boost::optional<Error::Type> errorTypeForLoose = Error::Type::SyntaxError;
 	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, EVMVersion(), errorTypeForLoose, assembly::AsmFlavour::Loose, resolver).analyze(_inlineAssembly.operations());
 	return false;
 }
@@ -297,112 +306,106 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	if (_variable.annotation().type)
 		return;
 
-	TypePointer type;
-	if (_variable.typeName())
+	if (_variable.isConstant() && !_variable.isStateVariable())
+		m_errorReporter.declarationError(_variable.location(), "The \"constant\" keyword can only be used for state variables.");
+
+	if (!_variable.typeName())
 	{
-		type = _variable.typeName()->annotation().type;
-		using Location = VariableDeclaration::Location;
-		Location varLoc = _variable.referenceLocation();
-		DataLocation typeLoc = DataLocation::Memory;
-		// References are forced to calldata for external function parameters (not return)
-		// and memory for parameters (also return) of publicly visible functions.
-		// They default to memory for function parameters and storage for local variables.
-		// As an exception, "storage" is allowed for library functions.
-		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
-		{
-			bool isPointer = true;
-			if (_variable.isExternalCallableParameter())
-			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(
-					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
-				);
-				if (contract.isLibrary())
-				{
-					if (varLoc == Location::Memory)
-						fatalTypeError(_variable.location(),
-							"Location has to be calldata or storage for external "
-							"library functions (remove the \"memory\" keyword)."
-						);
-				}
-				else
-				{
-					// force location of external function parameters (not return) to calldata
-					if (varLoc != Location::Default)
-						fatalTypeError(_variable.location(),
-							"Location has to be calldata for external functions "
-							"(remove the \"memory\" or \"storage\" keyword)."
-						);
-				}
-				if (varLoc == Location::Default)
-					typeLoc = DataLocation::CallData;
-				else
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
-			}
-			else if (_variable.isCallableParameter() && dynamic_cast<Declaration const&>(*_variable.scope()).isPublic())
-			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(
-					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
-				);
-				// force locations of public or external function (return) parameters to memory
-				if (varLoc == Location::Storage && !contract.isLibrary())
-					fatalTypeError(_variable.location(),
-						"Location has to be memory for publicly visible functions "
-						"(remove the \"storage\" keyword)."
-					);
-				if (varLoc == Location::Default || !contract.isLibrary())
-					typeLoc = DataLocation::Memory;
-				else
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
-			}
-			else
-			{
-				if (_variable.isConstant())
-				{
-					if (varLoc != Location::Default && varLoc != Location::Memory)
-						fatalTypeError(
-							_variable.location(),
-							"Storage location has to be \"memory\" (or unspecified) for constants."
-						);
-					typeLoc = DataLocation::Memory;
-				}
-				else if (varLoc == Location::Default)
-				{
-					if (_variable.isCallableParameter())
-						typeLoc = DataLocation::Memory;
-					else
-					{
-						typeLoc = DataLocation::Storage;
-						if (_variable.isLocalVariable())
-						{
-							if (_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-								typeError(
-									_variable.location(),
-									"Storage location must be specified as either \"memory\" or \"storage\"."
-								);
-							else
-								m_errorReporter.warning(
-									_variable.location(),
-									"Variable is declared as a storage pointer. "
-									"Use an explicit \"storage\" keyword to silence this warning."
-								);
-						}
-					}
-				}
-				else
-					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
-				isPointer = !_variable.isStateVariable();
-			}
-
-			type = ref->copyForLocation(typeLoc, isPointer);
-		}
-		else if (varLoc != Location::Default && !ref)
-			typeError(_variable.location(), "Storage location can only be given for array or struct types.");
-
-		_variable.annotation().type = type;
+		// This can still happen in very unusual cases where a developer uses constructs, such as
+		// `var a;`, however, such code will have generated errors already.
+		// However, we cannot blindingly solAssert() for that here, as the TypeChecker (which is
+		// invoking ReferencesResolver) is generating it, so the error is most likely(!) generated
+		// after this step.
+		return;
 	}
-	else if (!_variable.canHaveAutoType())
-		typeError(_variable.location(), "Explicit type needed.");
-	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
+	using Location = VariableDeclaration::Location;
+	Location varLoc = _variable.referenceLocation();
+	DataLocation typeLoc = DataLocation::Memory;
+
+	set<Location> allowedDataLocations = _variable.allowedDataLocations();
+	if (!allowedDataLocations.count(varLoc))
+	{
+		auto locationToString = [](VariableDeclaration::Location _location) -> string
+		{
+			switch (_location)
+			{
+			case Location::Memory: return "\"memory\"";
+			case Location::Storage: return "\"storage\"";
+			case Location::CallData: return "\"calldata\"";
+			case Location::Unspecified: return "none";
+			}
+			return {};
+		};
+
+		string errorString;
+		if (!_variable.hasReferenceOrMappingType())
+			errorString = "Data location can only be specified for array, struct or mapping types";
+		else
+		{
+			errorString = "Data location must be " +
+			joinHumanReadable(
+				allowedDataLocations | boost::adaptors::transformed(locationToString),
+				", ",
+				" or "
+			);
+			if (_variable.isCallableParameter())
+				errorString +=
+					" for " +
+					string(_variable.isReturnParameter() ? "return " : "") +
+					"parameter in" +
+					string(_variable.isExternalCallableParameter() ? " external" : "") +
+					" function";
+			else
+				errorString += " for variable";
+		}
+		errorString += ", but " + locationToString(varLoc) + " was given.";
+		typeError(_variable.location(), errorString);
+
+		solAssert(!allowedDataLocations.empty(), "");
+		varLoc = *allowedDataLocations.begin();
+	}
+
+	// Find correct data location.
+	if (_variable.isEventParameter())
+	{
+		solAssert(varLoc == Location::Unspecified, "");
+		typeLoc = DataLocation::Memory;
+	}
+	else if (_variable.isStateVariable())
+	{
+		solAssert(varLoc == Location::Unspecified, "");
+		typeLoc = _variable.isConstant() ? DataLocation::Memory : DataLocation::Storage;
+	}
+	else if (
+		dynamic_cast<StructDefinition const*>(_variable.scope()) ||
+		dynamic_cast<EnumDefinition const*>(_variable.scope())
+	)
+		// The actual location will later be changed depending on how the type is used.
+		typeLoc = DataLocation::Storage;
+	else
+		switch (varLoc)
+		{
+		case Location::Memory:
+			typeLoc = DataLocation::Memory;
+			break;
+		case Location::Storage:
+			typeLoc = DataLocation::Storage;
+			break;
+		case Location::CallData:
+			typeLoc = DataLocation::CallData;
+			break;
+		case Location::Unspecified:
+			solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
+		}
+
+	TypePointer type = _variable.typeName()->annotation().type;
+	if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
+	{
+		bool isPointer = !_variable.isStateVariable();
+		type = ref->copyForLocation(typeLoc, isPointer);
+	}
+
+	_variable.annotation().type = type;
 }
 
 void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)

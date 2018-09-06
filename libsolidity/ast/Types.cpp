@@ -28,20 +28,103 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/UTF8.h>
+#include <libdevcore/Algorithms.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <limits>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+
+namespace
+{
+
+unsigned int mostSignificantBit(bigint const& _number)
+{
+#if BOOST_VERSION < 105500
+	solAssert(_number > 0, "");
+	bigint number = _number;
+	unsigned int result = 0;
+	while (number != 0)
+	{
+		number >>= 1;
+		++result;
+	}
+	return --result;
+#else
+	return boost::multiprecision::msb(_number);
+#endif
+}
+
+/// Check whether (_base ** _exp) fits into 4096 bits.
+bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
+{
+	if (_base == 0)
+		return true;
+
+	solAssert(_base > 0, "");
+
+	size_t const bitsMax = 4096;
+
+	unsigned mostSignificantBaseBit = mostSignificantBit(_base);
+	if (mostSignificantBaseBit == 0) // _base == 1
+		return true;
+	if (mostSignificantBaseBit > bitsMax) // _base >= 2 ^ 4096
+		return false;
+
+	bigint bitsNeeded = _exp * (mostSignificantBaseBit + 1);
+
+	return bitsNeeded <= bitsMax;
+}
+
+/// Checks whether _mantissa * (X ** _exp) fits into 4096 bits,
+/// where X is given indirectly via _log2OfBase = log2(X).
+bool fitsPrecisionBaseX(
+	bigint const& _mantissa,
+	double _log2OfBase,
+	uint32_t _exp
+)
+{
+	if (_mantissa == 0)
+		return true;
+
+	solAssert(_mantissa > 0, "");
+
+	size_t const bitsMax = 4096;
+
+	unsigned mostSignificantMantissaBit = mostSignificantBit(_mantissa);
+	if (mostSignificantMantissaBit > bitsMax) // _mantissa >= 2 ^ 4096
+		return false;
+
+	bigint bitsNeeded = mostSignificantMantissaBit + bigint(floor(double(_exp) * _log2OfBase)) + 1;
+	return bitsNeeded <= bitsMax;
+}
+
+/// Checks whether _mantissa * (10 ** _expBase10) fits into 4096 bits.
+bool fitsPrecisionBase10(bigint const& _mantissa, uint32_t _expBase10)
+{
+	double const log2Of10AwayFromZero = 3.3219280948873624;
+	return fitsPrecisionBaseX(_mantissa, log2Of10AwayFromZero, _expBase10);
+}
+
+/// Checks whether _mantissa * (2 ** _expBase10) fits into 4096 bits.
+bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
+{
+	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2);
+}
+
+}
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
 {
@@ -85,15 +168,6 @@ pair<u256, unsigned> const* StorageOffsets::offset(size_t _index) const
 		return &m_offsets.at(_index);
 	else
 		return nullptr;
-}
-
-MemberList& MemberList::operator=(MemberList&& _other)
-{
-	solAssert(&_other != this, "");
-
-	m_memberTypes = move(_other.m_memberTypes);
-	m_storageOffsets = move(_other.m_storageOffsets);
-	return *this;
 }
 
 void MemberList::combine(MemberList const & _other)
@@ -181,6 +255,17 @@ string Type::escapeIdentifier(string const& _identifier)
 	return ret;
 }
 
+string Type::identifier() const
+{
+	string ret = escapeIdentifier(richIdentifier());
+	solAssert(ret.find_first_of("0123456789") != 0, "Identifier cannot start with a number.");
+	solAssert(
+		ret.find_first_not_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMONPQRSTUVWXYZ_$") == string::npos,
+		"Identifier contains invalid characters."
+	);
+	return ret;
+}
+
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
 	solAssert(Token::isElementaryTypeName(_type.token()),
@@ -208,13 +293,13 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::UInt:
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
 	case Token::Fixed:
-		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Signed);
+		return make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Signed);
 	case Token::UFixed:
-		return make_shared<FixedPointType>(128, 19, FixedPointType::Modifier::Unsigned);
+		return make_shared<FixedPointType>(128, 18, FixedPointType::Modifier::Unsigned);
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
-		return make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+		return make_shared<AddressType>();
 	case Token::Bool:
 		return make_shared<BoolType>();
 	case Token::Bytes:
@@ -232,11 +317,34 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
-	unsigned short firstNum;
-	unsigned short secondNum;
+	vector<string> nameParts;
+	boost::split(nameParts, _name, boost::is_any_of(" "));
+	solAssert(nameParts.size() == 1 || nameParts.size() == 2, "Cannot parse elementary type: " + _name);
 	Token::Value token;
-	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(_name);
- 	return fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
+	unsigned short firstNum, secondNum;
+	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(nameParts[0]);
+	auto t = fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
+	if (auto* ref = dynamic_cast<ReferenceType const*>(t.get()))
+	{
+		DataLocation location = DataLocation::Storage;
+		if (nameParts.size() == 2)
+		{
+			if (nameParts[1] == "storage")
+				location = DataLocation::Storage;
+			else if (nameParts[1] == "calldata")
+				location = DataLocation::CallData;
+			else if (nameParts[1] == "memory")
+				location = DataLocation::Memory;
+			else
+				solAssert(false, "Unknown data location: " + nameParts[1]);
+		}
+		return ref->copyForLocation(location, true);
+	}
+	else
+	{
+		solAssert(nameParts.size() == 1, "Storage location suffix only allowed for reference types");
+		return t;
+	}
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -247,13 +355,7 @@ TypePointer Type::forLiteral(Literal const& _literal)
 	case Token::FalseLiteral:
 		return make_shared<BoolType>();
 	case Token::Number:
-	{
-		tuple<bool, rational> validLiteral = RationalNumberType::isValidLiteral(_literal);
-		if (get<0>(validLiteral) == true)
-			return make_shared<RationalNumberType>(get<1>(validLiteral));
-		else
-			return TypePointer();
-	}
+		return RationalNumberType::forLiteral(_literal);
 	case Token::StringLiteral:
 		return make_shared<StringLiteralType>(_literal);
 	default:
@@ -285,6 +387,27 @@ MemberList const& Type::members(ContractDefinition const* _currentScope) const
 	return *m_members[_currentScope];
 }
 
+TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _packed) const
+{
+	TypePointer encodingType = mobileType();
+	if (encodingType)
+		encodingType = encodingType->interfaceType(_inLibraryCall);
+	if (encodingType)
+		encodingType = encodingType->encodingType();
+	// Structs are fine in the following circumstances:
+	// - ABIv2 without packed encoding or,
+	// - storage struct for a library
+	if (_inLibraryCall && encodingType->dataStoredIn(DataLocation::Storage))
+		return encodingType;
+	TypePointer baseType = encodingType;
+	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
+		baseType = arrayType->baseType();
+	if (dynamic_cast<StructType const*>(baseType.get()))
+		if (!_encoderV2 || _packed)
+			return TypePointer();
+	return encodingType;
+}
+
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
 {
 	// Normalise data location of type.
@@ -304,7 +427,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 			);
 			for (FunctionDefinition const* function: library.definedFunctions())
 			{
-				if (!function->isVisibleInDerivedContracts() || seenFunctions.count(function))
+				if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 					continue;
 				seenFunctions.insert(function);
 				FunctionType funType(*function, false);
@@ -316,6 +439,59 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	return members;
 }
 
+string AddressType::richIdentifier() const
+{
+	return "t_address";
+}
+
+bool AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	return isImplicitlyConvertibleTo(_convertTo) ||
+		   _convertTo.category() == Category::Contract ||
+		   _convertTo.category() == Category::Integer ||
+		   (_convertTo.category() == Category::FixedBytes && 160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8);
+}
+
+string AddressType::toString(bool) const
+{
+	return "address";
+}
+
+u256 AddressType::literalValue(Literal const* _literal) const
+{
+	solAssert(_literal, "");
+	solAssert(_literal->value().substr(0, 2) == "0x", "");
+	return u256(_literal->value());
+}
+
+TypePointer AddressType::unaryOperatorResult(Token::Value _operator) const
+{
+	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
+}
+
+
+TypePointer AddressType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+{
+	// Addresses can only be compared.
+	if (!Token::isCompareOp(_operator))
+		return TypePointer();
+
+	return Type::commonType(shared_from_this(), _other);
+}
+
+MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) const
+{
+	return {
+		{"balance", make_shared<IntegerType>(256)},
+		{"call", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
+		{"callcode", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
+		{"delegatecall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false)},
+		{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
+		{"staticcall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)},
+		{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
+	};
+}
+
 namespace
 {
 
@@ -325,32 +501,27 @@ bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountT
 	if (_operator == Token::SHR)
 		return false;
 	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
-		return !otherInt->isAddress();
+		return true;
 	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
-		return otherRat->integerType() && !otherRat->integerType()->isSigned();
+		return !otherRat->isFractional() && otherRat->integerType() && !otherRat->integerType()->isSigned();
 	else
 		return false;
 }
 
 }
 
-IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
+IntegerType::IntegerType(unsigned _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
-	if (isAddress())
-		solAssert(m_bits == 160, "");
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
-		"Invalid bit number for integer type: " + dev::toString(_bits)
+		"Invalid bit number for integer type: " + dev::toString(m_bits)
 	);
 }
 
 string IntegerType::richIdentifier() const
 {
-	if (isAddress())
-		return "t_address";
-	else
-		return "t_" + string(isSigned() ? "" : "u") + "int" + std::to_string(numBits());
+	return "t_" + string(isSigned() ? "" : "u") + "int" + to_string(numBits());
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -360,8 +531,6 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
 		if (convertTo.m_bits < m_bits)
 			return false;
-		if (isAddress())
-			return convertTo.isAddress();
 		else if (isSigned())
 			return convertTo.isSigned();
 		else
@@ -370,11 +539,7 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
-
-		if (isAddress())
-			return false;
-		else
-			return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
+		return maxValue() <= convertTo.maxIntegerValue() && minValue() >= convertTo.minIntegerValue();
 	}
 	else
 		return false;
@@ -383,9 +548,10 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.category() == category() ||
+		_convertTo.category() == Category::Address ||
 		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == Category::Enum ||
-		_convertTo.category() == Category::FixedBytes ||
+		(_convertTo.category() == Category::FixedBytes && numBits() == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8) ||
 		_convertTo.category() == Category::FixedPoint;
 }
 
@@ -394,10 +560,7 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 	// "delete" is ok for all integer types
 	if (_operator == Token::Delete)
 		return make_shared<TupleType>();
-	// no further unary operators for addresses
-	else if (isAddress())
-		return TypePointer();
-	// for non-address integers, we allow +, -, ++ and --
+	// we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
 			_operator == Token::Inc || _operator == Token::Dec ||
 			_operator == Token::BitNot)
@@ -416,18 +579,8 @@ bool IntegerType::operator==(Type const& _other) const
 
 string IntegerType::toString(bool) const
 {
-	if (isAddress())
-		return "address";
 	string prefix = isSigned() ? "int" : "uint";
 	return prefix + dev::toString(m_bits);
-}
-
-u256 IntegerType::literalValue(Literal const* _literal) const
-{
-	solAssert(m_modifier == Modifier::Address, "");
-	solAssert(_literal, "");
-	solAssert(_literal->value().substr(0, 2) == "0x", "");
-	return u256(_literal->value());
 }
 
 bigint IntegerType::minValue() const
@@ -457,8 +610,6 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	if (Token::isShiftOp(_operator))
 	{
 		// Shifts are not symmetric with respect to the type
-		if (isAddress())
-			return TypePointer();
 		if (isValidShiftAndAmountType(_operator, *_other))
 			return shared_from_this();
 		else
@@ -476,9 +627,6 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		return TypePointer();
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
 	{
-		// Nothing else can be done with addresses
-		if (intType->isAddress())
-			return TypePointer();
 		// Signed EXP is not allowed
 		if (Token::Exp == _operator && intType->isSigned())
 			return TypePointer();
@@ -489,35 +637,19 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	return commonType;
 }
 
-MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) const
-{
-	if (isAddress())
-		return {
-			{"balance", make_shared<IntegerType >(256)},
-			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCall, true, StateMutability::Payable)},
-			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
-			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
-			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
-			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
-		};
-	else
-		return MemberList::MemberMap();
-}
-
-FixedPointType::FixedPointType(int _totalBits, int _fractionalDigits, FixedPointType::Modifier _modifier):
+FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, FixedPointType::Modifier _modifier):
 	m_totalBits(_totalBits), m_fractionalDigits(_fractionalDigits), m_modifier(_modifier)
 {
 	solAssert(
-		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 &&
-		0 <= m_fractionalDigits && m_fractionalDigits <= 80, 
-		"Invalid bit number(s) for fixed type: " + 
+		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 && m_fractionalDigits <= 80,
+		"Invalid bit number(s) for fixed type: " +
 		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
 	);
 }
 
 string FixedPointType::richIdentifier() const
 {
-	return "t_" + string(isSigned() ? "" : "u") + "fixed" + std::to_string(m_totalBits) + "x" + std::to_string(m_fractionalDigits);
+	return "t_" + string(isSigned() ? "" : "u") + "fixed" + to_string(m_totalBits) + "x" + to_string(m_fractionalDigits);
 }
 
 bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -535,9 +667,7 @@ bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == category() ||
-		_convertTo.category() == Category::Integer ||
-		_convertTo.category() == Category::FixedBytes;
+	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
 }
 
 TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
@@ -575,7 +705,7 @@ string FixedPointType::toString(bool) const
 bigint FixedPointType::maxIntegerValue() const
 {
 	bigint maxValue = (bigint(1) << (m_totalBits - (isSigned() ? 1 : 0))) - 1;
-	return maxValue / pow(bigint(10), m_fractionalDigits);
+	return maxValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 }
 
 bigint FixedPointType::minIntegerValue() const
@@ -583,7 +713,7 @@ bigint FixedPointType::minIntegerValue() const
 	if (isSigned())
 	{
 		bigint minValue = -(bigint(1) << (m_totalBits - (isSigned() ? 1 : 0)));
-		return minValue / pow(bigint(10), m_fractionalDigits);
+		return minValue / boost::multiprecision::pow(bigint(10), m_fractionalDigits);
 	}
 	else
 		return bigint(0);
@@ -591,13 +721,7 @@ bigint FixedPointType::minIntegerValue() const
 
 TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (
-		_other->category() != Category::RationalNumber &&
-		_other->category() != category() &&
-		_other->category() != Category::Integer
-	)
-		return TypePointer();
-	auto commonType = Type::commonType(shared_from_this(), _other); //might be fixed point or integer
+	auto commonType = Type::commonType(shared_from_this(), _other);
 
 	if (!commonType)
 		return TypePointer();
@@ -605,17 +729,14 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 	// All fixed types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
-	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator))
+	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator) || _operator == Token::Exp)
 		return TypePointer();
-	if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
-	{
-		if (Token::Exp == _operator)
-			return TypePointer();
-	}
-	else if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
-		if (intType->isAddress())
-			return TypePointer();
 	return commonType;
+}
+
+std::shared_ptr<IntegerType> FixedPointType::asIntegerType() const
+{
+	return make_shared<IntegerType>(numBits(), isSigned() ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned);
 }
 
 tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
@@ -661,52 +782,90 @@ tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 	}
 }
 
+TypePointer RationalNumberType::forLiteral(Literal const& _literal)
+{
+	solAssert(_literal.token() == Token::Number, "");
+	tuple<bool, rational> validLiteral = isValidLiteral(_literal);
+	if (get<0>(validLiteral))
+	{
+		TypePointer compatibleBytesType;
+		if (_literal.isHexNumber())
+		{
+			size_t digitCount = count_if(
+				_literal.value().begin() + 2, // skip "0x"
+				_literal.value().end(),
+				[](unsigned char _c) -> bool { return isxdigit(_c); }
+			);
+			// require even number of digits
+			if (!(digitCount & 1))
+				compatibleBytesType = make_shared<FixedBytesType>(digitCount / 2);
+		}
+
+		return make_shared<RationalNumberType>(get<1>(validLiteral), compatibleBytesType);
+	}
+	return TypePointer();
+}
+
 tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal)
 {
 	rational value;
 	try
 	{
-		auto expPoint = find(_literal.value().begin(), _literal.value().end(), 'e');
-		if (expPoint == _literal.value().end())
-			expPoint = find(_literal.value().begin(), _literal.value().end(), 'E');
+		ASTString valueString = _literal.value();
+		boost::erase_all(valueString, "_");// Remove underscore separators
 
-		if (boost::starts_with(_literal.value(), "0x"))
+		auto expPoint = find(valueString.begin(), valueString.end(), 'e');
+		if (expPoint == valueString.end())
+			expPoint = find(valueString.begin(), valueString.end(), 'E');
+
+		if (boost::starts_with(valueString, "0x"))
 		{
 			// process as hex
-			value = bigint(_literal.value());
+			value = bigint(valueString);
 		}
-		else if (expPoint != _literal.value().end())
+		else if (expPoint != valueString.end())
 		{
-			// parse the exponent
-			bigint exp = bigint(string(expPoint + 1, _literal.value().end()));
+			// Parse mantissa and exponent. Checks numeric limit.
+			tuple<bool, rational> mantissa = parseRational(string(valueString.begin(), expPoint));
+
+			if (!get<0>(mantissa))
+				return make_tuple(false, rational(0));
+			value = get<1>(mantissa);
+
+			// 0E... is always zero.
+			if (value == 0)
+				return make_tuple(true, rational(0));
+
+			bigint exp = bigint(string(expPoint + 1, valueString.end()));
 
 			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
 				return make_tuple(false, rational(0));
 
-			// parse the base
-			tuple<bool, rational> base = parseRational(string(_literal.value().begin(), expPoint));
-			if (!get<0>(base))
-				return make_tuple(false, rational(0));
-			value = get<1>(base);
+			uint32_t expAbs = bigint(abs(exp)).convert_to<uint32_t>();
 
 			if (exp < 0)
 			{
-				exp *= -1;
+				if (!fitsPrecisionBase10(abs(value.denominator()), expAbs))
+					return make_tuple(false, rational(0));
 				value /= boost::multiprecision::pow(
 					bigint(10),
-					exp.convert_to<int32_t>()
+					expAbs
 				);
 			}
-			else
+			else if (exp > 0)
+			{
+				if (!fitsPrecisionBase10(abs(value.numerator()), expAbs))
+					return make_tuple(false, rational(0));
 				value *= boost::multiprecision::pow(
 					bigint(10),
-					exp.convert_to<int32_t>()
+					expAbs
 				);
+			}
 		}
 		else
 		{
 			// parse as rational number
-			tuple<bool, rational> tmp = parseRational(_literal.value());
+			tuple<bool, rational> tmp = parseRational(valueString);
 			if (!get<0>(tmp))
 				return tmp;
 			value = get<1>(tmp);
@@ -754,49 +913,53 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 
 bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.category() == Category::Integer)
+	switch (_convertTo.category())
 	{
-		if (m_value == rational(0))
-			return true;
+	case Category::Integer:
+	{
 		if (isFractional())
 			return false;
 		IntegerType const& targetType = dynamic_cast<IntegerType const&>(_convertTo);
-		int forSignBit = (targetType.isSigned() ? 1 : 0);
+		if (m_value == rational(0))
+			return true;
+		unsigned forSignBit = (targetType.isSigned() ? 1 : 0);
 		if (m_value > rational(0))
 		{
 			if (m_value.numerator() <= (u256(-1) >> (256 - targetType.numBits() + forSignBit)))
 				return true;
+			return false;
 		}
-		else if (targetType.isSigned() && -m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
-			return true;
+		if (targetType.isSigned())
+		{
+			if (-m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
+				return true;
+		}
 		return false;
 	}
-	else if (_convertTo.category() == Category::FixedPoint)
+	case Category::FixedPoint:
 	{
 		if (auto fixed = fixedPointType())
 			return fixed->isImplicitlyConvertibleTo(_convertTo);
-		else
-			return false;
+		return false;
 	}
-	else if (_convertTo.category() == Category::FixedBytes)
-	{
-		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		if (!isFractional())
-		{
-			if (integerType())
-				return fixedBytes.numBytes() * 8 >= integerType()->numBits();
-			return false;
-		}
-		else
-			return false;
+	case Category::FixedBytes:
+		return (m_value == rational(0)) || (m_compatibleBytesType && *m_compatibleBytesType == _convertTo);
+	default:
+		return false;
 	}
-	return false;
 }
 
 bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	TypePointer mobType = mobileType();
-	return mobType && mobType->isExplicitlyConvertibleTo(_convertTo);
+	if (isImplicitlyConvertibleTo(_convertTo))
+		return true;
+	else if (_convertTo.category() != Category::FixedBytes)
+	{
+		TypePointer mobType = mobileType();
+		return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
+	}
+	else
+		return false;
 }
 
 TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) const
@@ -827,10 +990,10 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		auto mobile = mobileType();
-		if (!mobile)
+		auto commonType = Type::commonType(shared_from_this(), _other);
+		if (!commonType)
 			return TypePointer();
-		return mobile->binaryOperatorResult(_operator, _other);
+		return commonType->binaryOperatorResult(_operator, _other);
 	}
 	else if (_other->category() != category())
 		return TypePointer();
@@ -838,7 +1001,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	RationalNumberType const& other = dynamic_cast<RationalNumberType const&>(*_other);
 	if (Token::isCompareOp(_operator))
 	{
-		// Since we do not have a "BoolConstantType", we have to do the acutal comparison
+		// Since we do not have a "BoolConstantType", we have to do the actual comparison
 		// at runtime and convert to mobile typse first. Such a comparison is not a very common
 		// use-case and will be optimized away.
 		TypePointer thisMobile = mobileType();
@@ -894,62 +1057,131 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
-			break;	
+			break;
 		case Token::Exp:
 		{
-			using boost::multiprecision::pow;
 			if (other.isFractional())
 				return TypePointer();
-			else if (abs(other.m_value) > numeric_limits<uint32_t>::max())
-				return TypePointer(); // This will need too much memory to represent.
-			uint32_t exponent = abs(other.m_value).numerator().convert_to<uint32_t>();
-			bigint numerator = pow(m_value.numerator(), exponent);
-			bigint denominator = pow(m_value.denominator(), exponent);
-			if (other.m_value >= 0)
-				value = rational(numerator, denominator);
+			solAssert(other.m_value.denominator() == 1, "");
+			bigint const& exp = other.m_value.numerator();
+
+			// x ** 0 = 1
+			// for 0, 1 and -1 the size of the exponent doesn't have to be restricted
+			if (exp == 0)
+				value = 1;
+			else if (m_value.numerator() == 0 || m_value == 1)
+				value = m_value;
+			else if (m_value == -1)
+			{
+				bigint isOdd = abs(exp) & bigint(1);
+				value = 1 - 2 * isOdd.convert_to<int>();
+			}
 			else
-				// invert
-				value = rational(denominator, numerator);
+			{
+				if (abs(exp) > numeric_limits<uint32_t>::max())
+					return TypePointer(); // This will need too much memory to represent.
+
+				uint32_t absExp = bigint(abs(exp)).convert_to<uint32_t>();
+
+				// Limit size to 4096 bits
+				if (!fitsPrecisionExp(abs(m_value.numerator()), absExp) || !fitsPrecisionExp(abs(m_value.denominator()), absExp))
+					return TypePointer();
+
+				static auto const optimizedPow = [](bigint const& _base, uint32_t _exponent) -> bigint {
+					if (_base == 1)
+						return 1;
+					else if (_base == -1)
+						return 1 - 2 * int(_exponent & 1);
+					else
+						return boost::multiprecision::pow(_base, _exponent);
+				};
+
+				bigint numerator = optimizedPow(m_value.numerator(), absExp);
+				bigint denominator = optimizedPow(m_value.denominator(), absExp);
+
+				if (exp >= 0)
+					value = rational(numerator, denominator);
+				else
+					// invert
+					value = rational(denominator, numerator);
+			}
 			break;
 		}
 		case Token::SHL:
 		{
-			using boost::multiprecision::pow;
 			if (fractional)
 				return TypePointer();
 			else if (other.m_value < 0)
 				return TypePointer();
 			else if (other.m_value > numeric_limits<uint32_t>::max())
 				return TypePointer();
-			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-			value = m_value.numerator() * pow(bigint(2), exponent);
+			if (m_value.numerator() == 0)
+				value = 0;
+			else
+			{
+				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+				if (!fitsPrecisionBase2(abs(m_value.numerator()), exponent))
+					return TypePointer();
+				value = m_value.numerator() * boost::multiprecision::pow(bigint(2), exponent);
+			}
 			break;
 		}
 		// NOTE: we're using >> (SAR) to denote right shifting. The type of the LValue
 		//       determines the resulting type and the type of shift (SAR or SHR).
 		case Token::SAR:
 		{
-			using boost::multiprecision::pow;
 			if (fractional)
 				return TypePointer();
 			else if (other.m_value < 0)
 				return TypePointer();
 			else if (other.m_value > numeric_limits<uint32_t>::max())
 				return TypePointer();
-			uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-			value = rational(m_value.numerator() / pow(bigint(2), exponent), 1);
+			if (m_value.numerator() == 0)
+				value = 0;
+			else
+			{
+				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
+				if (exponent > mostSignificantBit(boost::multiprecision::abs(m_value.numerator())))
+					value = m_value.numerator() < 0 ? -1 : 0;
+				else
+				{
+					if (m_value.numerator() < 0)
+						// Add 1 to the negative value before dividing to get a result that is strictly too large,
+						// then subtract 1 afterwards to round towards negative infinity.
+						// This is the same algorithm as used in ExpressionCompiler::appendShiftOperatorCode(...).
+						// To see this note that for negative x, xor(x,all_ones) = (-x-1) and
+						// therefore xor(div(xor(x,all_ones), exp(2, shift_amount)), all_ones) is
+						// -(-x - 1) / 2^shift_amount - 1, which is the same as
+						// (x + 1) / 2^shift_amount - 1.
+						value = rational((m_value.numerator() + 1) / boost::multiprecision::pow(bigint(2), exponent) - bigint(1), 1);
+					else
+						value = rational(m_value.numerator() / boost::multiprecision::pow(bigint(2), exponent), 1);
+				}
+			}
 			break;
 		}
 		default:
 			return TypePointer();
 		}
+
+		// verify that numerator and denominator fit into 4096 bit after every operation
+		if (value.numerator() != 0 && max(mostSignificantBit(abs(value.numerator())), mostSignificantBit(abs(value.denominator()))) > 4096)
+			return TypePointer();
+
 		return make_shared<RationalNumberType>(value);
 	}
 }
 
 string RationalNumberType::richIdentifier() const
 {
-	return "t_rational_" + m_value.numerator().str() + "_by_" + m_value.denominator().str();
+	// rational seemingly will put the sign always on the numerator,
+	// but let just make it deterministic here.
+	bigint numerator = abs(m_value.numerator());
+	bigint denominator = abs(m_value.denominator());
+	if (m_value < 0)
+		return "t_rational_minus_" + numerator.str() + "_by_" + denominator.str();
+	else
+		return "t_rational_" + numerator.str() + "_by_" + denominator.str();
 }
 
 bool RationalNumberType::operator==(Type const& _other) const
@@ -987,7 +1219,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	// its value.
 
 	u256 value;
-	bigint shiftedValue; 
+	bigint shiftedValue;
 
 	if (!isFractional())
 		shiftedValue = m_value.numerator();
@@ -996,7 +1228,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 		auto fixed = fixedPointType();
 		solAssert(fixed, "");
 		int fractionalDigits = fixed->fractionalDigits();
-		shiftedValue = (m_value.numerator() / m_value.denominator()) * pow(bigint(10), fractionalDigits);
+		shiftedValue = m_value.numerator() * boost::multiprecision::pow(bigint(10), fractionalDigits) / m_value.denominator();
 	}
 
 	// we ignore the literal and hope that the type was correctly determined
@@ -1039,7 +1271,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	bool negative = (m_value < 0);
 	unsigned fractionalDigits = 0;
 	rational value = abs(m_value); // We care about the sign later.
-	rational maxValue = negative ? 
+	rational maxValue = negative ?
 		rational(bigint(1) << 255, 1):
 		rational((bigint(1) << 256) - 1, 1);
 
@@ -1048,12 +1280,13 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		value *= 10;
 		fractionalDigits++;
 	}
-	
+
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
 	// This means we round towards zero for positive and negative values.
 	bigint v = value.numerator() / value.denominator();
-	if (negative)
+
+	if (negative && v != 0)
 		// modify value to satisfy bit requirements for negative numbers:
 		// add one bit for sign and decrement because negative numbers can be larger
 		v = (v - 1) << 1;
@@ -1122,17 +1355,12 @@ bool StringLiteralType::isValidUTF8() const
 	return dev::validateUTF8(m_value);
 }
 
-shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
+FixedBytesType::FixedBytesType(unsigned _bytes): m_bytes(_bytes)
 {
-	if (_literal.length() <= 32)
-		return make_shared<FixedBytesType>(_literal.length());
-	return shared_ptr<FixedBytesType>();
-}
-
-FixedBytesType::FixedBytesType(int _bytes): m_bytes(_bytes)
-{
-	solAssert(m_bytes >= 0 && m_bytes <= 32,
-			  "Invalid byte number for fixed bytes type: " + dev::toString(m_bytes));
+	solAssert(
+		m_bytes > 0 && m_bytes <= 32,
+		"Invalid byte number for fixed bytes type: " + dev::toString(m_bytes)
+	);
 }
 
 bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -1145,9 +1373,9 @@ bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == Category::Integer ||
+	return (_convertTo.category() == Category::Integer && numBytes() * 8 == dynamic_cast<IntegerType const&>(_convertTo).numBits()) ||
+		(_convertTo.category() == Category::Address && numBytes() == 20) ||
 		_convertTo.category() == Category::FixedPoint ||
-		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == category();
 }
 
@@ -1190,7 +1418,7 @@ MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) c
 
 string FixedBytesType::richIdentifier() const
 {
-	return "t_bytes" + std::to_string(m_bytes);
+	return "t_bytes" + to_string(m_bytes);
 }
 
 bool FixedBytesType::operator==(Type const& _other) const
@@ -1223,7 +1451,7 @@ TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer c
 {
 	if (category() != _other->category())
 		return TypePointer();
-	if (Token::isCompareOp(_operator) || _operator == Token::And || _operator == Token::Or)
+	if (_operator == Token::Equal || _operator == Token::NotEqual || _operator == Token::And || _operator == Token::Or)
 		return _other;
 	else
 		return TypePointer();
@@ -1233,25 +1461,22 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (*this == _convertTo)
 		return true;
-	if (_convertTo.category() == Category::Integer)
-		return dynamic_cast<IntegerType const&>(_convertTo).isAddress();
 	if (_convertTo.category() == Category::Contract)
 	{
 		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
 		if (m_super && bases.size() <= 1)
 			return false;
-		return find(m_super ? ++bases.begin() : bases.begin(), bases.end(),
-					&dynamic_cast<ContractType const&>(_convertTo).contractDefinition()) != bases.end();
+		return find(
+			m_super ? ++bases.begin() : bases.begin(), bases.end(),
+			&dynamic_cast<ContractType const&>(_convertTo).contractDefinition()
+		) != bases.end();
 	}
 	return false;
 }
 
 bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return
-		isImplicitlyConvertibleTo(_convertTo) ||
-		_convertTo.category() == Category::Integer ||
-		_convertTo.category() == Category::Contract;
+	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.category() == Category::Address;
 }
 
 bool ContractType::isPayable() const
@@ -1262,6 +1487,8 @@ bool ContractType::isPayable() const
 
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 {
+	if (isSuper())
+		return TypePointer{};
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
@@ -1279,8 +1506,6 @@ TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
 		return make_shared<TupleType>();
 	case DataLocation::Storage:
 		return m_isPointer ? TypePointer() : make_shared<TupleType>();
-	default:
-		solAssert(false, "");
 	}
 	return TypePointer();
 }
@@ -1315,12 +1540,18 @@ string ReferenceType::stringForReferencePart() const
 string ReferenceType::identifierLocationSuffix() const
 {
 	string id;
-	if (location() == DataLocation::Storage)
+	switch (location())
+	{
+	case DataLocation::Storage:
 		id += "_storage";
-	else if (location() == DataLocation::Memory)
+		break;
+	case DataLocation::Memory:
 		id += "_memory";
-	else
+		break;
+	case DataLocation::CallData:
 		id += "_calldata";
+		break;
+	}
 	if (isPointer())
 		id += "_ptr";
 	return id;
@@ -1535,6 +1766,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 	{
 		members.push_back({"length", make_shared<IntegerType>(256)});
 		if (isDynamicallySized() && location() == DataLocation::Storage)
+		{
 			members.push_back({"push", make_shared<FunctionType>(
 				TypePointers{baseType()},
 				TypePointers{make_shared<IntegerType>(256)},
@@ -1542,6 +1774,14 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 				strings{string()},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			)});
+			members.push_back({"pop", make_shared<FunctionType>(
+				TypePointers{},
+				TypePointers{},
+				strings{string()},
+				strings{string()},
+				FunctionType::Kind::ArrayPop
+			)});
+		}
 	}
 	return members;
 }
@@ -1615,7 +1855,7 @@ TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) 
 
 string ContractType::richIdentifier() const
 {
-	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + std::to_string(m_contract.id());
+	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + to_string(m_contract.id());
 }
 
 bool ContractType::operator==(Type const& _other) const
@@ -1662,7 +1902,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 						continue;
 					auto memberType = dynamic_cast<FunctionType const*>(member.type.get());
 					solAssert(!!memberType, "Override changes type.");
-					if (!memberType->hasEqualArgumentTypes(*functionType))
+					if (!memberType->hasEqualParameterTypes(*functionType))
 						continue;
 					functionWithEqualArgumentsFound = true;
 					break;
@@ -1684,45 +1924,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 				&it.second->declaration()
 			));
 	}
-	// In 0.5.0 address members are not populated into the contract.
-	if (!_contract->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::V050))
-		addNonConflictingAddressMembers(members);
 	return members;
-}
-
-void ContractType::addNonConflictingAddressMembers(MemberList::MemberMap& _members)
-{
-	MemberList::MemberMap addressMembers = IntegerType(160, IntegerType::Modifier::Address).nativeMembers(nullptr);
-	for (auto const& addressMember: addressMembers)
-	{
-		bool clash = false;
-		for (auto const& member: _members)
-		{
-			if (
-				member.name == addressMember.name &&
-				(
-					// Members with different types are not allowed
-					member.type->category() != addressMember.type->category() ||
-					// Members must overload functions without clash
-					(
-						member.type->category() == Type::Category::Function &&
-						dynamic_cast<FunctionType const&>(*member.type).hasEqualArgumentTypes(dynamic_cast<FunctionType const&>(*addressMember.type))
-					)
-				)
-			)
-			{
-				clash = true;
-				break;
-			}
-		}
-
-		if (!clash)
-			_members.push_back(MemberList::Member(
-				addressMember.name,
-				addressMember.type,
-				addressMember.declaration
-			));
-	}
 }
 
 shared_ptr<FunctionType const> const& ContractType::newExpressionType() const
@@ -1767,7 +1969,7 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 
 string StructType::richIdentifier() const
 {
-	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + std::to_string(m_struct.id()) + identifierLocationSuffix();
+	return "t_struct" + parenthesizeUserIdentifier(m_struct.name()) + to_string(m_struct.id()) + identifierLocationSuffix();
 }
 
 bool StructType::operator==(Type const& _other) const
@@ -1969,25 +2171,19 @@ bool StructType::recursive() const
 {
 	if (!m_recursive.is_initialized())
 	{
-		set<StructDefinition const*> structsSeen;
-		function<bool(StructType const*)> check = [&](StructType const* t) -> bool
+		auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t /*_depth*/)
 		{
-			StructDefinition const* str = &t->structDefinition();
-			if (structsSeen.count(str))
-				return true;
-			structsSeen.insert(str);
-			for (ASTPointer<VariableDeclaration> const& variable: str->members())
+			for (ASTPointer<VariableDeclaration> const& variable: _struct.members())
 			{
 				Type const* memberType = variable->annotation().type.get();
 				while (dynamic_cast<ArrayType const*>(memberType))
 					memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
 				if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-					if (check(innerStruct))
-						return true;
+					if (_cycleDetector.run(innerStruct->structDefinition()))
+						return;
 			}
-			return false;
 		};
-		m_recursive = check(this);
+		m_recursive = (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
 	}
 	return *m_recursive;
 }
@@ -1999,7 +2195,7 @@ TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 
 string EnumType::richIdentifier() const
 {
-	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + std::to_string(m_enum.id());
+	return "t_enum" + parenthesizeUserIdentifier(m_enum.name()) + to_string(m_enum.id());
 }
 
 bool EnumType::operator==(Type const& _other) const
@@ -2058,25 +2254,13 @@ bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
 		TypePointers const& targets = tupleType->components();
 		if (targets.empty())
 			return components().empty();
-		if (components().size() != targets.size() && !targets.front() && !targets.back())
-			return false; // (,a,) = (1,2,3,4) - unable to position `a` in the tuple.
-		size_t minNumValues = targets.size();
-		if (!targets.back() || !targets.front())
-			--minNumValues; // wildcards can also match 0 components
-		if (components().size() < minNumValues)
+		if (components().size() != targets.size())
 			return false;
-		if (components().size() > targets.size() && targets.front() && targets.back())
-			return false; // larger source and no wildcard
-		bool fillRight = !targets.back() || targets.front();
-		for (size_t i = 0; i < min(targets.size(), components().size()); ++i)
-		{
-			auto const& s = components()[fillRight ? i : components().size() - i - 1];
-			auto const& t = targets[fillRight ? i : targets.size() - i - 1];
-			if (!s && t)
+		for (size_t i = 0; i < targets.size(); ++i)
+			if (!components()[i] && targets[i])
 				return false;
-			else if (s && t && !s->isImplicitlyConvertibleTo(*t))
+			else if (components()[i] && targets[i] && !components()[i]->isImplicitlyConvertibleTo(*targets[i]))
 				return false;
-		}
 		return true;
 	}
 	else
@@ -2142,16 +2326,14 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 {
 	solAssert(!!_targetType, "");
 	TypePointers const& targetComponents = dynamic_cast<TupleType const&>(*_targetType).components();
-	bool fillRight = !targetComponents.empty() && (!targetComponents.back() || targetComponents.front());
+	solAssert(components().size() == targetComponents.size(), "");
 	TypePointers tempComponents(targetComponents.size());
-	for (size_t i = 0; i < min(targetComponents.size(), components().size()); ++i)
+	for (size_t i = 0; i < targetComponents.size(); ++i)
 	{
-		size_t si = fillRight ? i : components().size() - i - 1;
-		size_t ti = fillRight ? i : targetComponents.size() - i - 1;
-		if (components()[si] && targetComponents[ti])
+		if (components()[i] && targetComponents[i])
 		{
-			tempComponents[ti] = components()[si]->closestTemporaryType(targetComponents[ti]);
-			solAssert(tempComponents[ti], "");
+			tempComponents[i] = components()[i]->closestTemporaryType(targetComponents[i]);
+			solAssert(tempComponents[i], "");
 		}
 	}
 	return make_shared<TupleType>(tempComponents);
@@ -2311,6 +2493,25 @@ vector<string> FunctionType::parameterNames() const
 	return vector<string>(m_parameterNames.cbegin() + 1, m_parameterNames.cend());
 }
 
+TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
+{
+	TypePointers returnParameterTypes = m_returnParameterTypes;
+
+	if (
+		m_kind == Kind::External ||
+		m_kind == Kind::DelegateCall ||
+		m_kind == Kind::BareCall ||
+		m_kind == Kind::BareCallCode ||
+		m_kind == Kind::BareDelegateCall ||
+		m_kind == Kind::BareStaticCall
+	)
+		for (auto& param: returnParameterTypes)
+			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
+				param = make_shared<InaccessibleDynamicType>();
+
+	return returnParameterTypes;
+}
+
 TypePointers FunctionType::parameterTypes() const
 {
 	if (!bound())
@@ -2325,15 +2526,15 @@ string FunctionType::richIdentifier() const
 	{
 	case Kind::Internal: id += "internal"; break;
 	case Kind::External: id += "external"; break;
-	case Kind::CallCode: id += "callcode"; break;
 	case Kind::DelegateCall: id += "delegatecall"; break;
 	case Kind::BareCall: id += "barecall"; break;
 	case Kind::BareCallCode: id += "barecallcode"; break;
 	case Kind::BareDelegateCall: id += "baredelegatecall"; break;
+	case Kind::BareStaticCall: id += "barestaticcall"; break;
 	case Kind::Creation: id += "creation"; break;
 	case Kind::Send: id += "send"; break;
 	case Kind::Transfer: id += "transfer"; break;
-	case Kind::SHA3: id += "sha3"; break;
+	case Kind::KECCAK256: id += "keccak256"; break;
 	case Kind::Selfdestruct: id += "selfdestruct"; break;
 	case Kind::Revert: id += "revert"; break;
 	case Kind::ECRecover: id += "ecrecover"; break;
@@ -2352,11 +2553,16 @@ string FunctionType::richIdentifier() const
 	case Kind::AddMod: id += "addmod"; break;
 	case Kind::MulMod: id += "mulmod"; break;
 	case Kind::ArrayPush: id += "arraypush"; break;
+	case Kind::ArrayPop: id += "arraypop"; break;
 	case Kind::ByteArrayPush: id += "bytearraypush"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
 	case Kind::Assert: id += "assert"; break;
-	case Kind::Require: id += "require";break;
-	default: solAssert(false, "Unknown function location."); break;
+	case Kind::Require: id += "require"; break;
+	case Kind::ABIEncode: id += "abiencode"; break;
+	case Kind::ABIEncodePacked: id += "abiencodepacked"; break;
+	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
+	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
+	case Kind::ABIDecode: id += "abidecode"; break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
@@ -2373,41 +2579,44 @@ bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
-
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
-	if (
-		m_kind != other.m_kind ||
-		m_stateMutability != other.stateMutability() ||
-		m_parameterTypes.size() != other.m_parameterTypes.size() ||
-		m_returnParameterTypes.size() != other.m_returnParameterTypes.size()
-	)
+	if (!equalExcludingStateMutability(other))
 		return false;
-
-	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
-	if (
-		!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(), other.m_parameterTypes.cbegin(), typeCompare) ||
-		!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(), other.m_returnParameterTypes.cbegin(), typeCompare)
-	)
-		return false;
-	//@todo this is ugly, but cannot be prevented right now
-	if (m_gasSet != other.m_gasSet || m_valueSet != other.m_valueSet)
-		return false;
-	if (bound() != other.bound())
-		return false;
-	if (bound() && *selfType() != *other.selfType())
+	if (m_stateMutability != other.stateMutability())
 		return false;
 	return true;
 }
 
 bool FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_kind == Kind::External && _convertTo.category() == Category::Integer)
-	{
-		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (convertTo.isAddress())
+	if (m_kind == Kind::External && _convertTo.category() == Category::Address)
 			return true;
-	}
 	return _convertTo.category() == category();
+}
+
+bool FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (_convertTo.category() != category())
+		return false;
+
+	FunctionType const& convertTo = dynamic_cast<FunctionType const&>(_convertTo);
+
+	if (!equalExcludingStateMutability(convertTo))
+		return false;
+
+	// non-payable should not be convertible to payable
+	if (m_stateMutability != StateMutability::Payable && convertTo.stateMutability() == StateMutability::Payable)
+		return false;
+
+	// payable should be convertible to non-payable, because you are free to pay 0 ether
+	if (m_stateMutability == StateMutability::Payable && convertTo.stateMutability() == StateMutability::NonPayable)
+		return true;
+
+	// e.g. pure should be convertible to view, but not the other way around.
+	if (m_stateMutability > convertTo.stateMutability())
+		return false;
+
+	return true;
 }
 
 TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
@@ -2493,15 +2702,16 @@ unsigned FunctionType::sizeOnStack() const
 	switch(kind)
 	{
 	case Kind::External:
-	case Kind::CallCode:
 	case Kind::DelegateCall:
 		size = 2;
 		break;
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
 	case Kind::Internal:
 	case Kind::ArrayPush:
+	case Kind::ArrayPop:
 	case Kind::ByteArrayPush:
 		size = 1;
 		break;
@@ -2566,6 +2776,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
 	{
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
@@ -2654,7 +2865,7 @@ bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePoin
 		);
 }
 
-bool FunctionType::hasEqualArgumentTypes(FunctionType const& _other) const
+bool FunctionType::hasEqualParameterTypes(FunctionType const& _other) const
 {
 	if (m_parameterTypes.size() != _other.m_parameterTypes.size())
 		return false;
@@ -2666,6 +2877,38 @@ bool FunctionType::hasEqualArgumentTypes(FunctionType const& _other) const
 	);
 }
 
+bool FunctionType::hasEqualReturnTypes(FunctionType const& _other) const
+{
+	if (m_returnParameterTypes.size() != _other.m_returnParameterTypes.size())
+		return false;
+	return equal(
+		m_returnParameterTypes.cbegin(),
+		m_returnParameterTypes.cend(),
+		_other.m_returnParameterTypes.cbegin(),
+		[](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; }
+	);
+}
+
+bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) const
+{
+	if (m_kind != _other.m_kind)
+		return false;
+
+	if (!hasEqualParameterTypes(_other) || !hasEqualReturnTypes(_other))
+		return false;
+
+	//@todo this is ugly, but cannot be prevented right now
+	if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet)
+		return false;
+
+	if (bound() != _other.bound())
+		return false;
+
+	solAssert(!bound() || *selfType() == *_other.selfType(), "");
+
+	return true;
+}
+
 bool FunctionType::isBareCall() const
 {
 	switch (m_kind)
@@ -2673,6 +2916,7 @@ bool FunctionType::isBareCall() const
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
 	case Kind::ECRecover:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
@@ -2686,6 +2930,16 @@ string FunctionType::externalSignature() const
 {
 	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
 	solAssert(!m_declaration->name().empty(), "Fallback function has no signature.");
+	switch (kind())
+	{
+	case Kind::Internal:
+	case Kind::External:
+	case Kind::DelegateCall:
+	case Kind::Event:
+		break;
+	default:
+		solAssert(false, "Invalid function type for requesting external signature.");
+	}
 
 	bool const inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 	FunctionTypePointer external = interfaceFunctionType();
@@ -2712,13 +2966,18 @@ bool FunctionType::isPure() const
 	// FIXME: replace this with m_stateMutability == StateMutability::Pure once
 	//        the callgraph analyzer is in place
 	return
-		m_kind == Kind::SHA3 ||
+		m_kind == Kind::KECCAK256 ||
 		m_kind == Kind::ECRecover ||
 		m_kind == Kind::SHA256 ||
 		m_kind == Kind::RIPEMD160 ||
 		m_kind == Kind::AddMod ||
 		m_kind == Kind::MulMod ||
-		m_kind == Kind::ObjectCreation;
+		m_kind == Kind::ObjectCreation ||
+		m_kind == Kind::ABIEncode ||
+		m_kind == Kind::ABIEncodePacked ||
+		m_kind == Kind::ABIEncodeWithSelector ||
+		m_kind == Kind::ABIEncodeWithSignature ||
+		m_kind == Kind::ABIDecode;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -2772,18 +3031,9 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 			kind = Kind::DelegateCall;
 	}
 
-	TypePointers returnParameterTypes = m_returnParameterTypes;
-	if (kind != Kind::Internal)
-	{
-		// Alter dynamic types to be non-accessible.
-		for (auto& param: returnParameterTypes)
-			if (param->isDynamicallySized())
-				param = make_shared<InaccessibleDynamicType>();
-	}
-
 	return make_shared<FunctionType>(
 		parameterTypes,
-		returnParameterTypes,
+		m_returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
 		kind,
@@ -2810,6 +3060,26 @@ ASTPointer<ASTString> FunctionType::documentation() const
 		return function->documentation();
 
 	return ASTPointer<ASTString>();
+}
+
+bool FunctionType::padArguments() const
+{
+	// No padding only for hash functions, low-level calls and the packed encoding function.
+	switch (m_kind)
+	{
+	case Kind::BareCall:
+	case Kind::BareCallCode:
+	case Kind::BareDelegateCall:
+	case Kind::BareStaticCall:
+	case Kind::SHA256:
+	case Kind::RIPEMD160:
+	case Kind::KECCAK256:
+	case Kind::ABIEncodePacked:
+		return false;
+	default:
+		return true;
+	}
+	return true;
 }
 
 string MappingType::richIdentifier() const
@@ -2875,7 +3145,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 		}
 		if (contract.isLibrary())
 			for (FunctionDefinition const* function: contract.definedFunctions())
-				if (function->isVisibleInDerivedContracts())
+				if (function->isVisibleAsLibraryMember())
 					members.push_back(MemberList::Member(
 						function->name(),
 						FunctionType(*function).asMemberFunction(true),
@@ -2951,7 +3221,7 @@ string ModifierType::toString(bool _short) const
 
 string ModuleType::richIdentifier() const
 {
-	return "t_module_" + std::to_string(m_sourceUnit.id());
+	return "t_module_" + to_string(m_sourceUnit.id());
 }
 
 bool ModuleType::operator==(Type const& _other) const
@@ -2985,8 +3255,8 @@ string MagicType::richIdentifier() const
 		return "t_magic_message";
 	case Kind::Transaction:
 		return "t_magic_transaction";
-	default:
-		solAssert(false, "Unknown kind of magic");
+	case Kind::ABI:
+		return "t_magic_abi";
 	}
 	return "";
 }
@@ -3005,7 +3275,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"coinbase", make_shared<AddressType>()},
 			{"timestamp", make_shared<IntegerType>(256)},
 			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
@@ -3014,7 +3284,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"sender", make_shared<AddressType>()},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},
@@ -3022,8 +3292,56 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", make_shared<IntegerType>(160, IntegerType::Modifier::Address)},
+			{"origin", make_shared<AddressType>()},
 			{"gasprice", make_shared<IntegerType>(256)}
+		});
+	case Kind::ABI:
+		return MemberList::MemberMap({
+			{"encode", make_shared<FunctionType>(
+				TypePointers(),
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncode,
+				true,
+				StateMutability::Pure
+			)},
+			{"encodePacked", make_shared<FunctionType>(
+				TypePointers(),
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncodePacked,
+				true,
+				StateMutability::Pure
+			)},
+			{"encodeWithSelector", make_shared<FunctionType>(
+				TypePointers{make_shared<FixedBytesType>(4)},
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncodeWithSelector,
+				true,
+				StateMutability::Pure
+			)},
+			{"encodeWithSignature", make_shared<FunctionType>(
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory, true)},
+				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIEncodeWithSignature,
+				true,
+				StateMutability::Pure
+			)},
+			{"decode", make_shared<FunctionType>(
+				TypePointers(),
+				TypePointers(),
+				strings{},
+				strings{},
+				FunctionType::Kind::ABIDecode,
+				true,
+				StateMutability::Pure
+			)}
 		});
 	default:
 		solAssert(false, "Unknown kind of magic.");
@@ -3040,6 +3358,8 @@ string MagicType::toString(bool) const
 		return "msg";
 	case Kind::Transaction:
 		return "tx";
+	case Kind::ABI:
+		return "abi";
 	default:
 		solAssert(false, "Unknown kind of magic.");
 	}

@@ -16,10 +16,10 @@ ContractPart = StateVariableDeclaration | UsingForDeclaration
 
 InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
-StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )? Identifier ('=' Expression)? ';'
+StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )* Identifier ('=' Expression)? ';'
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
-                     ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+                     ( VariableDeclaration ';' (VariableDeclaration ';')* ) '}'
 
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
@@ -57,8 +57,8 @@ Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']'
 FunctionTypeName = 'function' FunctionTypeParameterList ( 'internal' | 'external' | StateMutability )*
                    ( 'returns' FunctionTypeParameterList )?
-StorageLocation = 'memory' | 'storage'
-StateMutability = 'pure' | 'constant' | 'view' | 'payable'
+StorageLocation = 'memory' | 'storage' | 'calldata'
+StateMutability = 'pure' | 'view' | 'payable'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
@@ -78,8 +78,7 @@ Break = 'break'
 Return = 'return' Expression?
 Throw = 'throw'
 EmitStatement = 'emit' FunctionCall
-VariableDefinition = ('var' IdentifierList | VariableDeclaration) ( '=' Expression )?
-IdentifierList = '(' ( Identifier? ',' )* Identifier? ')'
+VariableDefinition = (VariableDeclaration | '(' VariableDeclaration? (',' VariableDeclaration? )* ')' ) ( '=' Expression )?
 
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression
@@ -132,7 +131,7 @@ HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
 
-HexNumber = '0x' [0-9a-fA-F]+
+HexNumber = '0' [xX] [0-9a-fA-F]+
 DecimalNumber = [0-9]+ ( '.' [0-9]* )? ( [eE] [0-9]+ )?
 
 TupleExpression = '(' ( Expression? ( ',' Expression? )*  )? ')'
@@ -140,8 +139,7 @@ TupleExpression = '(' ( Expression? ( ',' Expression? )*  )? ')'
 
 ElementaryTypeNameExpression = ElementaryTypeName
 
-ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
-                   | Int | Uint | Byte | Fixed | Ufixed
+ElementaryTypeName = 'address' | 'bool' | 'string' | Int | Uint | Byte | Fixed | Ufixed
 
 Int = 'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' | 'int72' | 'int80' | 'int88' | 'int96' | 'int104' | 'int112' | 'int120' | 'int128' | 'int136' | 'int144' | 'int152' | 'int160' | 'int168' | 'int176' | 'int184' | 'int192' | 'int200' | 'int208' | 'int216' | 'int224' | 'int232' | 'int240' | 'int248' | 'int256'
 
@@ -155,8 +153,9 @@ Ufixed = 'ufixed' | ( 'ufixed' [0-9]+ 'x' [0-9]+ )
 
 InlineAssemblyBlock = '{' AssemblyItem* '}'
 
-AssemblyItem = Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyLocalBinding | AssemblyAssignment | AssemblyLabel | NumberLiteral | StringLiteral | HexLiteral
-AssemblyLocalBinding = 'let' Identifier ':=' FunctionalAssemblyExpression
-AssemblyAssignment = ( Identifier ':=' FunctionalAssemblyExpression ) | ( '=:' Identifier )
+AssemblyItem = Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyVariableDeclaration | AssemblyAssignment | AssemblyLabel | NumberLiteral | StringLiteral | HexLiteral
+AssemblyExpression = Identifier | FunctionalAssemblyExpression | NumberLiteral | StringLiteral | HexLiteral
+AssemblyVariableDeclaration = 'let' Identifier ':=' AssemblyExpression
+AssemblyAssignment = ( Identifier ':=' AssemblyExpression ) | ( '=:' Identifier )
 AssemblyLabel = Identifier ':'
 FunctionalAssemblyExpression = Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'

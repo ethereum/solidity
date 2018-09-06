@@ -48,7 +48,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(IuliaRematerialiser)
+BOOST_AUTO_TEST_SUITE(YulRematerialiser)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

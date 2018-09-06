@@ -92,6 +92,12 @@ public:
 
 	void clear();
 
+	/// @returns true iff there is any error (ignores warnings).
+	bool hasErrors() const
+	{
+		return m_errorCount > 0;
+	}
+
 private:
 	void error(Error::Type _type,
 		SourceLocation const& _location,
@@ -102,7 +108,16 @@ private:
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());
 
+	// @returns true if error shouldn't be stored
+	bool checkForExcessiveErrors(Error::Type _type);
+
 	ErrorList& m_errorList;
+
+	unsigned m_errorCount = 0;
+	unsigned m_warningCount = 0;
+
+	const unsigned c_maxWarningsAllowed = 256;
+	const unsigned c_maxErrorsAllowed = 256;
 };
 
 

@@ -90,6 +90,9 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 	/// List of contracts this contract creates, i.e. which need to be compiled first.
 	/// Also includes all contracts from @a linearizedBaseContracts.
 	std::set<ContractDefinition const*> contractDependencies;
+	/// Mapping containing the nodes that define the arguments for base constructors.
+	/// These can either be inheritance specifiers or modifier invocations.
+	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
 };
 
 struct FunctionDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
@@ -159,13 +162,6 @@ struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
 	/// Stores a reference to the current contract.
 	/// This is needed because types of base contracts change depending on the context.
 	ContractDefinition const* contractScope = nullptr;
-};
-
-struct VariableDeclarationStatementAnnotation: StatementAnnotation
-{
-	/// Information about which component of the value is assigned to which variable.
-	/// The pointer can be null to signify that the component is discarded.
-	std::vector<VariableDeclaration const*> assignments;
 };
 
 struct ExpressionAnnotation: ASTAnnotation

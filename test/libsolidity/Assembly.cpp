@@ -20,7 +20,7 @@
  * Unit tests for Assembly Items from evmasm/Assembly.h
  */
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Assembly.h>
@@ -152,19 +152,27 @@ BOOST_AUTO_TEST_CASE(location_test)
 {
 	char const* sourceCode = R"(
 	contract test {
-		function f() returns (uint256 a) {
+		function f() public returns (uint256 a) {
 			return 16;
 		}
 	}
 	)";
-	shared_ptr<string const> n = make_shared<string>("");
 	AssemblyItems items = compileContract(sourceCode);
+	bool hasShifts = dev::test::Options::get().evmVersion().hasBitwiseShifting();
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(24, SourceLocation(2, 75, n)) +
-		vector<SourceLocation>(32, SourceLocation(20, 72, n)) +
-		vector<SourceLocation>{SourceLocation(42, 51, n), SourceLocation(65, 67, n)} +
-		vector<SourceLocation>(2, SourceLocation(58, 67, n)) +
-		vector<SourceLocation>(2, SourceLocation(20, 72, n));
+		vector<SourceLocation>(hasShifts ? 23 : 24, SourceLocation(2, 82, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(20, 79, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(8, 17, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(3, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(30, 31, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(27, 28, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(20, 32, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(1, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
+		vector<SourceLocation>(24, SourceLocation(20, 79, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(49, 58, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(72, 74, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(65, 74, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(20, 79, make_shared<string>("")));
 	checkAssemblyLocations(items, locations);
 }
 

@@ -26,27 +26,35 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+static_assert(sizeof(size_t) <= 8, "size_t must be at most 64-bits wide");
+
 AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 {
 	assertThrow(data() < (u256(1) << 64), Exception, "Tag already has subassembly set.");
-
 	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	size_t tag = size_t(u256(data()) & 0xffffffffffffffffULL);
 	AssemblyItem r = *this;
 	r.m_type = PushTag;
-	r.setPushTagSubIdAndTag(_subId, size_t(data()));
+	r.setPushTagSubIdAndTag(_subId, tag);
 	return r;
 }
 
 pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 {
 	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
-	return make_pair(size_t((data()) / (u256(1) << 64)) - 1, size_t(data()));
+	u256 combined = u256(data());
+	size_t subId = size_t((combined >> 64) - 1);
+	size_t tag = size_t(combined & 0xffffffffffffffffULL);
+	return make_pair(subId, tag);
 }
 
 void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 {
 	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
-	setData(_tag + (u256(_subId + 1) << 64));
+	u256 data = _tag;
+	if (_subId != size_t(-1))
+		data |= (u256(_subId) + 1) << 64;
+	setData(data);
 }
 
 unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const

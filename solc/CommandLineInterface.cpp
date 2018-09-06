@@ -80,7 +80,6 @@ static string const g_strAstJson = "ast-json";
 static string const g_strAstCompactJson = "ast-compact-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
-static string const g_strCloneBinary = "clone-bin";
 static string const g_strCombinedJson = "combined-json";
 static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
@@ -88,12 +87,11 @@ static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_streWasm = "ewasm";
-static string const g_strFormal = "formal";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
-static string const g_strJulia = "julia";
+static string const g_strYul = "yul";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
@@ -116,6 +114,7 @@ static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
+static string const g_strIgnoreMissingFiles = "ignore-missing";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -128,14 +127,12 @@ static string const g_argAstCompactJson = g_strAstCompactJson;
 static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
 static string const g_argBinaryRuntime = g_strBinaryRuntime;
-static string const g_argCloneBinary = g_strCloneBinary;
 static string const g_argCombinedJson = g_strCombinedJson;
 static string const g_argCompactJSON = g_strCompactJSON;
-static string const g_argFormal = g_strFormal;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
-static string const g_argJulia = g_strJulia;
+static string const g_argYul = g_strYul;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -152,6 +149,7 @@ static string const g_argStandardJSON = g_strStandardJSON;
 static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
+static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -161,7 +159,6 @@ static set<string> const g_combinedJsonArgs
 	g_strAst,
 	g_strBinary,
 	g_strBinaryRuntime,
-	g_strCloneBinary,
 	g_strCompactJSON,
 	g_strInterface,
 	g_strMetadata,
@@ -213,8 +210,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argAstJson,
 		g_argBinary,
 		g_argBinaryRuntime,
-		g_argCloneBinary,
-		g_argFormal,
 		g_argMetadata,
 		g_argNatspecUser,
 		g_argNatspecDev,
@@ -236,16 +231,6 @@ void CommandLineInterface::handleBinary(string const& _contract)
 		{
 			cout << "Binary: " << endl;
 			cout << m_compiler->object(_contract).toHex() << endl;
-		}
-	}
-	if (m_args.count(g_argCloneBinary))
-	{
-		if (m_args.count(g_argOutputDir))
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
-		else
-		{
-			cout << "Clone Binary: " << endl;
-			cout << m_compiler->cloneObject(_contract).toHex() << endl;
 		}
 	}
 	if (m_args.count(g_argBinaryRuntime))
@@ -276,7 +261,7 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 {
 	if (m_args.count(g_argOpcodes))
 		handleOpcode(_contract);
-	if (m_args.count(g_argBinary) || m_args.count(g_argCloneBinary) || m_args.count(g_argBinaryRuntime))
+	if (m_args.count(g_argBinary) || m_args.count(g_argBinaryRuntime))
 		handleBinary(_contract);
 }
 
@@ -398,17 +383,27 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
-void CommandLineInterface::readInputFilesAndConfigureRemappings()
+bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
+	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
-	if (!m_args.count(g_argInputFile))
-		addStdin = true;
-	else
+	if (m_args.count(g_argInputFile))
 		for (string path: m_args[g_argInputFile].as<vector<string>>())
 		{
 			auto eq = find(path.begin(), path.end(), '=');
 			if (eq != path.end())
-				path = string(eq + 1, path.end());
+			{
+				if (auto r = CompilerStack::parseRemapping(path))
+				{
+					m_remappings.emplace_back(std::move(*r));
+					path = string(eq + 1, path.end());
+				}
+				else
+				{
+					cerr << "Invalid remapping: \"" << path << "\"." << endl;
+					return false;
+				}
+			}
 			else if (path == "-")
 				addStdin = true;
 			else
@@ -416,23 +411,44 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 				auto infile = boost::filesystem::path(path);
 				if (!boost::filesystem::exists(infile))
 				{
-					cerr << "Skipping non-existent input file \"" << infile << "\"" << endl;
+					if (!ignoreMissing)
+					{
+						cerr << infile << " is not found." << endl;
+						return false;
+					}
+					else
+						cerr << infile << " is not found. Skipping." << endl;
+
 					continue;
 				}
 
 				if (!boost::filesystem::is_regular_file(infile))
 				{
-					cerr << "\"" << infile << "\" is not a valid file. Skipping" << endl;
+					if (!ignoreMissing)
+					{
+						cerr << infile << " is not a valid file." << endl;
+						return false;
+					}
+					else
+						cerr << infile << " is not a valid file. Skipping." << endl;
+
 					continue;
 				}
 
-				m_sourceCodes[infile.string()] = dev::readFileAsString(infile.string());
+				m_sourceCodes[infile.generic_string()] = dev::readFileAsString(infile.string());
 				path = boost::filesystem::canonical(infile).string();
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
+	if (m_sourceCodes.size() == 0)
+	{
+		cerr << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		return false;
+	}
+
+	return true;
 }
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
@@ -545,7 +561,8 @@ Allowed options)",
 		(
 			g_argOptimizeRuns.c_str(),
 			po::value<unsigned>()->value_name("n")->default_value(200),
-			"Estimated number of contract runs for optimizer tuning."
+			"Set for how many contract runs to optimize."
+			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
@@ -577,8 +594,8 @@ Allowed options)",
 			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
 		)
 		(
-			g_argJulia.c_str(),
-			"Switch to JULIA mode, ignoring all options except --machine and assumes input is JULIA."
+			g_argYul.c_str(),
+			"Switch to Yul mode, ignoring all options except --machine and assumes input is Yul."
 		)
 		(
 			g_argStrictAssembly.c_str(),
@@ -587,7 +604,7 @@ Allowed options)",
 		(
 			g_argMachine.c_str(),
 			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
-			"Target machine in assembly or JULIA mode."
+			"Target machine in assembly or Yul mode."
 		)
 		(
 			g_argLink.c_str(),
@@ -599,7 +616,8 @@ Allowed options)",
 			g_argAllowPaths.c_str(),
 			po::value<string>()->value_name("path(s)"),
 			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
-		);
+		)
+		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -610,13 +628,11 @@ Allowed options)",
 		(g_argOpcodes.c_str(), "Opcodes of the contracts.")
 		(g_argBinary.c_str(), "Binary of the contracts in hex.")
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
-		(g_argCloneBinary.c_str(), "Binary of the clone contracts in hex.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
-		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argFormal.c_str(), "Translated source suitable for formal analysis.");
+		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.");
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
@@ -680,7 +696,7 @@ bool CommandLineInterface::processInput()
 		try
 		{
 			auto path = boost::filesystem::path(_path);
-			auto canonicalPath = boost::filesystem::canonical(path);
+			auto canonicalPath = weaklyCanonicalFilesystemPath(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
@@ -696,16 +712,16 @@ bool CommandLineInterface::processInput()
 			}
 			if (!isAllowed)
 				return ReadCallback::Result{false, "File outside of allowed directories."};
-			else if (!boost::filesystem::exists(path))
+
+			if (!boost::filesystem::exists(canonicalPath))
 				return ReadCallback::Result{false, "File not found."};
-			else if (!boost::filesystem::is_regular_file(canonicalPath))
+
+			if (!boost::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
-			else
-			{
-				auto contents = dev::readFileAsString(canonicalPath.string());
-				m_sourceCodes[path.string()] = contents;
-				return ReadCallback::Result{true, contents};
-			}
+
+			auto contents = dev::readFileAsString(canonicalPath.string());
+			m_sourceCodes[path.generic_string()] = contents;
+			return ReadCallback::Result{true, contents};
 		}
 		catch (Exception const& _exception)
 		{
@@ -741,7 +757,8 @@ bool CommandLineInterface::processInput()
 		return true;
 	}
 
-	readInputFilesAndConfigureRemappings();
+	if (!readInputFilesAndConfigureRemappings())
+		return false;
 
 	if (m_args.count(g_argLibraries))
 		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
@@ -760,13 +777,13 @@ bool CommandLineInterface::processInput()
 		m_evmVersion = *versionOption;
 	}
 
-	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argJulia))
+	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argYul))
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
 		using Input = AssemblyStack::Language;
 		using Machine = AssemblyStack::Machine;
-		Input inputLanguage = m_args.count(g_argJulia) ? Input::JULIA : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
+		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		if (m_args.count(g_argMachine))
 		{
@@ -802,7 +819,7 @@ bool CommandLineInterface::processInput()
 		if (m_args.count(g_argMetadataLiteral) > 0)
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
-			m_compiler->setRemappings(m_args[g_argInputFile].as<vector<string>>());
+			m_compiler->setRemappings(m_remappings);
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		if (m_args.count(g_argLibraries))
@@ -889,8 +906,6 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
 		if (requests.count(g_strBinaryRuntime))
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
-		if (requests.count(g_strCloneBinary))
-			contractData[g_strCloneBinary] = m_compiler->cloneObject(contractName).toHex();
 		if (requests.count(g_strOpcodes))
 			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm))
@@ -965,10 +980,15 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
 		// FIXME: shouldn't this be done for every contract?
 		if (m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()))
-			gasCosts = GasEstimator::breakToStatementLevel(
+		{
+			//NOTE: keep the local variable `ret` to prevent a Heisenbug that could happen on certain mac os platform.
+			//See: https://github.com/ethereum/solidity/issues/3718 for details.
+			auto ret = GasEstimator::breakToStatementLevel(
 				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
 				asts
 			);
+			gasCosts = ret;
+		}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))
@@ -1211,9 +1231,6 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(true, contract);
 		handleNatspec(false, contract);
 	} // end of contracts iteration
-
-	if (m_args.count(g_argFormal))
-		cerr << "Support for the Why3 output was removed." << endl;
 }
 
 }

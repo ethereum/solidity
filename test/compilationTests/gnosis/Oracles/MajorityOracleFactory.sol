@@ -17,11 +17,11 @@ contract MajorityOracleFactory {
     /// @dev Creates a new majority oracle contract
     /// @param oracles List of oracles taking part in the majority vote
     /// @return Oracle contract
-    function createMajorityOracle(Oracle[] oracles)
+    function createMajorityOracle(Oracle[] memory oracles)
         public
         returns (MajorityOracle majorityOracle)
     {
         majorityOracle = new MajorityOracle(oracles);
-        MajorityOracleCreation(msg.sender, majorityOracle, oracles);
+        emit MajorityOracleCreation(msg.sender, majorityOracle, oracles);
     }
 }

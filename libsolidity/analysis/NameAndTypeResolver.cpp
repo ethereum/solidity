@@ -47,16 +47,17 @@ NameAndTypeResolver::NameAndTypeResolver(
 	if (!m_scopes[nullptr])
 		m_scopes[nullptr].reset(new DeclarationContainer());
 	for (Declaration const* declaration: _globals)
-		m_scopes[nullptr]->registerDeclaration(*declaration);
+	{
+		solAssert(m_scopes[nullptr]->registerDeclaration(*declaration), "Unable to register global declaration.");
+	}
 }
 
 bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope)
 {
-	bool useC99Scoping = _sourceUnit.annotation().experimentalFeatures.count(ExperimentalFeature::V050);
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
-		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, useC99Scoping, m_errorReporter, _currentScope);
+		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errorReporter, _currentScope);
 	}
 	catch (FatalError const&)
 	{
@@ -155,7 +156,13 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 void NameAndTypeResolver::activateVariable(string const& _name)
 {
 	solAssert(m_currentScope, "");
-	m_currentScope->activateVariable(_name);
+	// Scoped local variables are invisible before activation.
+	// When a local variable is activated, its name is removed
+	// from a scope's invisible variables.
+	// This is used to avoid activation of variables of same name
+	// in the same scope (an error is returned).
+	if (m_currentScope->isInvisible(_name))
+		m_currentScope->activateVariable(_name);
 }
 
 vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, ASTNode const* _scope) const
@@ -202,8 +209,9 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 		solAssert(
 			dynamic_cast<FunctionDefinition const*>(declaration) ||
 			dynamic_cast<EventDefinition const*>(declaration) ||
-			dynamic_cast<VariableDeclaration const*>(declaration),
-			"Found overloading involving something not a function or a variable."
+			dynamic_cast<VariableDeclaration const*>(declaration) ||
+			dynamic_cast<MagicVariableDeclaration const*>(declaration),
+			"Found overloading involving something not a function, event or a (magic) variable."
 		);
 
 		FunctionTypePointer functionType { declaration->functionType(false) };
@@ -223,7 +231,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 				shared_ptr<FunctionType const> newFunctionType { d->functionType(false) };
 				if (!newFunctionType)
 					newFunctionType = d->functionType(true);
-				return newFunctionType && functionType->hasEqualArgumentTypes(*newFunctionType);
+				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
 			}
 		))
 			uniqueFunctions.push_back(declaration);
@@ -287,10 +295,7 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		{
 			setScope(contract);
 			if (!resolveNamesAndTypes(*node, false))
-			{
 				success = false;
-				break;
-			}
 		}
 
 		if (!success)
@@ -446,11 +451,9 @@ string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
-	bool _useC99Scoping,
 	ErrorReporter& _errorReporter,
 	ASTNode const* _currentScope
 ):
-	m_useC99Scoping(_useC99Scoping),
 	m_scopes(_scopes),
 	m_currentScope(_currentScope),
 	m_errorReporter(_errorReporter)
@@ -623,32 +626,39 @@ void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 	closeCurrentScope();
 }
 
+bool DeclarationRegistrationHelper::visit(FunctionTypeName& _funTypeName)
+{
+	enterNewSubScope(_funTypeName);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(FunctionTypeName&)
+{
+	closeCurrentScope();
+}
+
 bool DeclarationRegistrationHelper::visit(Block& _block)
 {
 	_block.setScope(m_currentScope);
-	if (m_useC99Scoping)
-		enterNewSubScope(_block);
+	enterNewSubScope(_block);
 	return true;
 }
 
 void DeclarationRegistrationHelper::endVisit(Block&)
 {
-	if (m_useC99Scoping)
-		closeCurrentScope();
+	closeCurrentScope();
 }
 
 bool DeclarationRegistrationHelper::visit(ForStatement& _for)
 {
 	_for.setScope(m_currentScope);
-	if (m_useC99Scoping)
-		enterNewSubScope(_for);
+	enterNewSubScope(_for);
 	return true;
 }
 
 void DeclarationRegistrationHelper::endVisit(ForStatement&)
 {
-	if (m_useC99Scoping)
-		closeCurrentScope();
+	closeCurrentScope();
 }
 
 void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _variableDeclarationStatement)
@@ -708,14 +718,9 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 		dynamic_cast<EventDefinition const*>(m_currentScope)
 	)
 		warnAboutShadowing = false;
-	// Do not warn about the constructor shadowing the contract.
-	if (auto fun = dynamic_cast<FunctionDefinition const*>(&_declaration))
-		if (fun->isConstructor())
-			warnAboutShadowing = false;
 
-	// Register declaration as inactive if we are in block scope and C99 mode.
+	// Register declaration as inactive if we are in block scope.
 	bool inactive =
-		m_useC99Scoping &&
 		(dynamic_cast<Block const*>(m_currentScope) || dynamic_cast<ForStatement const*>(m_currentScope));
 
 	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, inactive, m_errorReporter);

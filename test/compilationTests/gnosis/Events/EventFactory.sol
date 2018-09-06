@@ -35,9 +35,9 @@ contract EventFactory {
         public
         returns (CategoricalEvent eventContract)
     {
-        bytes32 eventHash = keccak256(collateralToken, oracle, outcomeCount);
+        bytes32 eventHash = keccak256(abi.encodePacked(collateralToken, oracle, outcomeCount));
         // Event should not exist yet
-        require(address(categoricalEvents[eventHash]) == 0);
+        require(address(categoricalEvents[eventHash]) == address(0));
         // Create event
         eventContract = new CategoricalEvent(
             collateralToken,
@@ -45,7 +45,7 @@ contract EventFactory {
             outcomeCount
         );
         categoricalEvents[eventHash] = eventContract;
-        CategoricalEventCreation(msg.sender, eventContract, collateralToken, oracle, outcomeCount);
+        emit CategoricalEventCreation(msg.sender, eventContract, collateralToken, oracle, outcomeCount);
     }
 
     /// @dev Creates a new scalar event and adds it to the event mapping
@@ -63,9 +63,9 @@ contract EventFactory {
         public
         returns (ScalarEvent eventContract)
     {
-        bytes32 eventHash = keccak256(collateralToken, oracle, lowerBound, upperBound);
+        bytes32 eventHash = keccak256(abi.encodePacked(collateralToken, oracle, lowerBound, upperBound));
         // Event should not exist yet
-        require(address(scalarEvents[eventHash]) == 0);
+        require(address(scalarEvents[eventHash]) == address(0));
         // Create event
         eventContract = new ScalarEvent(
             collateralToken,
@@ -74,6 +74,6 @@ contract EventFactory {
             upperBound
         );
         scalarEvents[eventHash] = eventContract;
-        ScalarEventCreation(msg.sender, eventContract, collateralToken, oracle, lowerBound, upperBound);
+        emit ScalarEventCreation(msg.sender, eventContract, collateralToken, oracle, lowerBound, upperBound);
     }
 }

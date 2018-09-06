@@ -14,21 +14,24 @@ Using the Commandline Compiler
 
 One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
 Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
-If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
+If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
+
+Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``. By default, the optimizer will optimize the contract for 200 runs. If you want to optimize for initial contract deployment and get the smallest output, set it to ``--runs=1``. If you expect many transactions and don't care for higher deployment cost and output size, set ``--runs`` to a high number.
 
 The commandline compiler will automatically read imported files from the filesystem, but
 it is also possible to provide path redirects using ``prefix=path`` in the following way:
 
 ::
 
-    solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ =/usr/local/lib/fallback file.sol
+    solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ file.sol
 
 This essentially instructs the compiler to search for anything starting with
-``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin`` and if it does not
-find the file there, it will look at ``/usr/local/lib/fallback`` (the empty prefix
-always matches). ``solc`` will not read files from the filesystem that lie outside of
+``github.com/ethereum/dapp-bin/`` under ``/usr/local/lib/dapp-bin``.
+``solc`` will not read files from the filesystem that lie outside of
 the remapping targets and outside of the directories where explicitly specified source
-files reside, so things like ``import "/etc/passwd";`` only work if you add ``=/`` as a remapping.
+files reside, so things like ``import "/etc/passwd";`` only work if you add ``/=/`` as a remapping.
+
+An empty remapping prefix is not allowed.
 
 If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 
@@ -80,6 +83,8 @@ Input Description
           [
             "bzzr://56ab...",
             "ipfs://Qma...",
+            // If files are used, their directories should be added to the command line via
+            // `--allow-paths <path>`.
             "file:///tmp/path/to/file.sol"
           ]
         },
@@ -96,10 +101,13 @@ Input Description
       {
         // Optional: Sorted list of remappings
         remappings: [ ":g/dir" ],
-        // Optional: Optimizer settings (enabled defaults to false)
+        // Optional: Optimizer settings
         optimizer: {
+          // disabled by default
           enabled: true,
-          runs: 500
+          // Optimize for how many times you intend to run the code.
+          // Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage.
+          runs: 200
         },
         evmVersion: "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium or constantinople
         // Metadata settings (optional)

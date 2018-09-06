@@ -64,6 +64,14 @@ BOOST_AUTO_TEST_CASE(string_escapes)
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa");
 }
 
+BOOST_AUTO_TEST_CASE(string_escapes_all)
+{
+	Scanner scanner(CharStream("  { \"a\\x61\\b\\f\\n\\r\\t\\v\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa\b\f\n\r\t\v");
+}
+
 BOOST_AUTO_TEST_CASE(string_escapes_with_zero)
 {
 	Scanner scanner(CharStream("  { \"a\\x61\\x00abc\""));
@@ -127,6 +135,96 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
+BOOST_AUTO_TEST_CASE(trailing_dot)
+{
+	Scanner scanner(CharStream("2.5"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("2.5e10"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream(".5"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream(".5e10"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("2."), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_decimal_is_identifier)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("_1.2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_decimal_after_dot_illegal)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("1._2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+
+	scanner.reset(CharStream("1._"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_exp_are_identifier)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("_1e2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_exp_after_e_illegal)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("1e_2"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "1e_2");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(leading_underscore_hex_illegal)
+{
+	Scanner scanner(CharStream("0x_abc"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(fixed_number_invalid_underscore_front)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("12._1234_1234"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(number_literals_with_trailing_underscore_at_eos)
+{
+	// Actual error is cought by SyntaxChecker.
+	Scanner scanner(CharStream("0x123_"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+
+	scanner.reset(CharStream("123_"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+
+	scanner.reset(CharStream("12.34_"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
 BOOST_AUTO_TEST_CASE(negative_numbers)
 {
 	Scanner scanner(CharStream("var x = -.2 + -0x78 + -7.3 + 8.9 + 2e-2;"));
@@ -179,7 +277,7 @@ BOOST_AUTO_TEST_CASE(locations)
 BOOST_AUTO_TEST_CASE(ambiguities)
 {
 	// test scanning of some operators which need look-ahead
-	Scanner scanner(CharStream("<=""<""+ +=a++ =>""<<"));
+	Scanner scanner(CharStream("<=" "<" "+ +=a++ =>" "<<" ">>" " >>=" ">>>" ">>>=" " >>>>>=><<="));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LessThanOrEqual);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LessThan);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Add);
@@ -188,6 +286,15 @@ BOOST_AUTO_TEST_CASE(ambiguities)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Inc);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Arrow);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SHL);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SAR);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignSar);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SHR);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignShr);
+	// the last "monster" token combination
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SHR);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignSar);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::GreaterThan);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignShl);
 }
 
 BOOST_AUTO_TEST_CASE(documentation_comments_parsed_begin)

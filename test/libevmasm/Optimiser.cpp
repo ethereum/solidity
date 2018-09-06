@@ -20,7 +20,7 @@
  * Tests for the Solidity optimizer.
  */
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>
@@ -30,7 +30,6 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <string>
 #include <tuple>
@@ -69,8 +68,9 @@ namespace
 	{
 		AssemblyItems input = addDummyLocations(_input);
 
+		bool usesMsize = (find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
 		eth::CommonSubexpressionEliminator cse(_state);
-		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
 
 		for (AssemblyItem const& item: output)
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,
 		Instruction::DIV, u256(0xff), Instruction::AND
 	};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), false) == input.end());
 	AssemblyItems output = cse.getOptimizedItems();
 	BOOST_CHECK(!output.empty());
 }
@@ -857,6 +857,140 @@ BOOST_AUTO_TEST_CASE(peephole_pop_calldatasize)
 	BOOST_CHECK(items.empty());
 }
 
+BOOST_AUTO_TEST_CASE(peephole_commutative_swap1)
+{
+	vector<Instruction> ops{
+		Instruction::ADD,
+		Instruction::MUL,
+		Instruction::EQ,
+		Instruction::AND,
+		Instruction::OR,
+		Instruction::XOR
+	};
+	for (Instruction const op: ops)
+	{
+		AssemblyItems items{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op,
+			u256(4),
+			u256(5)
+		};
+		AssemblyItems expectation{
+			u256(1),
+			u256(2),
+			op,
+			u256(4),
+			u256(5)
+		};
+		PeepholeOptimiser peepOpt(items);
+		BOOST_REQUIRE(peepOpt.optimise());
+		BOOST_CHECK_EQUAL_COLLECTIONS(
+			items.begin(), items.end(),
+			expectation.begin(), expectation.end()
+		);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
+{
+	// NOTE: not comprehensive
+	vector<Instruction> ops{
+		Instruction::SUB,
+		Instruction::DIV,
+		Instruction::SDIV,
+		Instruction::MOD,
+		Instruction::SMOD,
+		Instruction::EXP
+	};
+	for (Instruction const op: ops)
+	{
+		AssemblyItems items{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op,
+			u256(4),
+			u256(5)
+		};
+		AssemblyItems expectation{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op,
+			u256(4),
+			u256(5)
+		};
+		PeepholeOptimiser peepOpt(items);
+		BOOST_REQUIRE(!peepOpt.optimise());
+		BOOST_CHECK_EQUAL_COLLECTIONS(
+			items.begin(), items.end(),
+			expectation.begin(), expectation.end()
+		);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
+{
+	map<Instruction, Instruction> swappableOps{
+		{ Instruction::LT, Instruction::GT },
+		{ Instruction::GT, Instruction::LT },
+		{ Instruction::SLT, Instruction::SGT },
+		{ Instruction::SGT, Instruction::SLT }
+	};
+
+	for (auto const& op: swappableOps)
+	{
+		AssemblyItems items{
+			u256(1),
+			u256(2),
+			Instruction::SWAP1,
+			op.first,
+			u256(4),
+			u256(5)
+		};
+		AssemblyItems expectation{
+			u256(1),
+			u256(2),
+			op.second,
+			u256(4),
+			u256(5)
+		};
+		PeepholeOptimiser peepOpt(items);
+		BOOST_REQUIRE(peepOpt.optimise());
+		BOOST_CHECK_EQUAL_COLLECTIONS(
+			items.begin(), items.end(),
+			expectation.begin(), expectation.end()
+		);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(peephole_truthy_and)
+{
+  AssemblyItems items{
+    AssemblyItem(Tag, 1),
+    Instruction::BALANCE,
+    u256(0),
+    Instruction::NOT,
+    Instruction::AND,
+    AssemblyItem(PushTag, 1),
+    Instruction::JUMPI
+  };
+  AssemblyItems expectation{
+    AssemblyItem(Tag, 1),
+    Instruction::BALANCE,
+    AssemblyItem(PushTag, 1),
+    Instruction::JUMPI
+  };
+  PeepholeOptimiser peepOpt(items);
+  BOOST_REQUIRE(peepOpt.optimise());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+    items.begin(), items.end(),
+    expectation.begin(), expectation.end()
+  );
+}
+
 BOOST_AUTO_TEST_CASE(jumpdest_removal)
 {
 	AssemblyItems items{
@@ -962,6 +1096,75 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 	});
 }
 
+BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
+{
+	vector<Instruction> ops{
+		Instruction::ADDRESS,
+		Instruction::CALLER,
+		Instruction::ORIGIN,
+		Instruction::COINBASE
+	};
+	for (auto const& op: ops)
+	{
+		checkCSE({
+			u256("0xffffffffffffffffffffffffffffffffffffffff"),
+			op,
+			Instruction::AND
+		}, {
+			op
+		});
+
+		checkCSE({
+			op,
+			u256("0xffffffffffffffffffffffffffffffffffffffff"),
+			Instruction::AND
+		}, {
+			op
+		});
+
+		// do not remove mask for other masking
+		checkCSE({
+			u256(1234),
+			op,
+			Instruction::AND
+		}, {
+			op,
+			u256(1234),
+			Instruction::AND
+		});
+
+		checkCSE({
+			op,
+			u256(1234),
+			Instruction::AND
+		}, {
+			u256(1234),
+			op,
+			Instruction::AND
+		});
+	}
+
+	// leave other opcodes untouched
+	checkCSE({
+		u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		Instruction::CALLVALUE,
+		Instruction::AND
+	}, {
+		Instruction::CALLVALUE,
+		u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		Instruction::AND
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		Instruction::AND
+	}, {
+		u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		Instruction::CALLVALUE,
+		Instruction::AND
+	});
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

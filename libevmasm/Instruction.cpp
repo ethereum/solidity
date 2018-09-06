@@ -21,6 +21,7 @@
 
 #include "./Instruction.h"
 
+#include <algorithm>
 #include <functional>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
@@ -199,7 +200,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::ADDMOD,		{ "ADDMOD",			0, 3, 1, false, Tier::Mid } },
 	{ Instruction::MULMOD,		{ "MULMOD",			0, 3, 1, false, Tier::Mid } },
 	{ Instruction::SIGNEXTEND,	{ "SIGNEXTEND",		0, 2, 1, false, Tier::Low } },
-	{ Instruction::KECCAK256,	{ "KECCAK256",			0, 2, 1, false, Tier::Special } },
+	{ Instruction::KECCAK256,	{ "KECCAK256",			0, 2, 1, true, Tier::Special } },
 	{ Instruction::ADDRESS,		{ "ADDRESS",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::BALANCE,		{ "BALANCE",		0, 1, 1, false, Tier::Balance } },
 	{ Instruction::ORIGIN,		{ "ORIGIN",			0, 0, 1, false, Tier::Base } },
@@ -325,13 +326,20 @@ void dev::solidity::eachInstruction(
 		size_t additional = 0;
 		if (isValidInstruction(instr))
 			additional = instructionInfo(instr).additional;
+
 		u256 data;
-		for (size_t i = 0; i < additional; ++i)
+
+		// fill the data with the additional data bytes from the instruction stream
+		while (additional > 0 && std::next(it) < _mem.end())
 		{
 			data <<= 8;
-			if (++it < _mem.end())
-				data |= *it;
+			data |= *++it;
+			--additional;
 		}
+
+		// pad the remaining number of additional octets with zeros
+		data <<= 8 * additional;
+
 		_onInstruction(instr, data);
 	}
 }

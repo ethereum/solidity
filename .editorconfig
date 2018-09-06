@@ -8,6 +8,7 @@ trim_trailing_whitespace = true
 
 [*.{cpp,h}]
 indent_style = tab
+indent_size = 4
 
 [*.{py,rst,sh,yml}]
 indent_style = space

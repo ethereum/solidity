@@ -93,6 +93,7 @@ bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
 
 bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 {
+	assertThrow(_data.size() > 0, OptimizerException, "Empty bytecode generated.");
 	if (m_params.isCreation)
 	{
 		bigint gas;
@@ -101,7 +102,7 @@ bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 		return gas;
 	}
 	else
-		return GasCosts::createDataGas * dataSize();
+		return GasCosts::createDataGas * _data.size();
 }
 
 size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)

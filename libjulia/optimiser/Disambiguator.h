@@ -23,6 +23,7 @@
 #include <libjulia/ASTDataForward.h>
 
 #include <libjulia/optimiser/ASTCopier.h>
+#include <libjulia/optimiser/NameDispenser.h>
 
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
@@ -37,7 +38,7 @@ namespace julia
 {
 
 /**
- * Creates a copy of a iulia AST replacing all identifiers by unique names.
+ * Creates a copy of a Yul AST replacing all identifiers by unique names.
  */
 class Disambiguator: public ASTCopier
 {
@@ -60,7 +61,7 @@ protected:
 
 	std::vector<solidity::assembly::Scope*> m_scopes;
 	std::map<void const*, std::string> m_translations;
-	std::set<std::string> m_usedNames;
+	NameDispenser m_nameDispenser;
 };
 
 }

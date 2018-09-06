@@ -16,10 +16,10 @@
 */
 /**
  * @date 2017
- * Unit tests for parsing Julia.
+ * Unit tests for parsing Yul.
  */
 
-#include "../TestHelper.h"
+#include <test/Options.h>
 
 #include <test/libsolidity/ErrorCheck.h>
 
@@ -52,7 +52,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::IULIA).parse(scanner, false);
+		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Yul).parse(scanner, false);
 		if (parserResult)
 		{
 			assembly::AsmAnalysisInfo analysisInfo;
@@ -61,7 +61,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 				errorReporter,
 				dev::test::Options::get().evmVersion(),
 				boost::none,
-				assembly::AsmFlavour::IULIA
+				assembly::AsmFlavour::Yul
 			)).analyze(*parserResult);
 		}
 	}
@@ -119,7 +119,7 @@ do \
 	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
 
-BOOST_AUTO_TEST_SUITE(JuliaParser)
+BOOST_AUTO_TEST_SUITE(YulParser)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -212,10 +212,10 @@ BOOST_AUTO_TEST_CASE(tokens_as_identifers)
 
 BOOST_AUTO_TEST_CASE(lacking_types)
 {
-	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected token Identifier got 'Assign'");
-	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected token Colon got 'RBrace'");
-	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected token Colon got 'RParen'");
-	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected token Colon got 'LBrace'");
+	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected identifier but got '='");
+	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected ':' but got '}'");
+	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected ':' but got ')'");
+	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected ':' but got '{'");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_types)
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
 	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} 123:u256, x := f() }", ParserError, "Label name / variable name must precede \",\" (multiple assignment).");
-	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} x, 123:u256 := f() }", ParserError, "Variable name expected in multiple assignemnt.");
+	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} x, 123:u256 := f() }", ParserError, "Variable name expected in multiple assignment.");
 
 	/// NOTE: Travis hiccups if not having a variable
 	char const* text = R"(
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(if_statement)
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_ERROR("{ if let x:u256 {} }", ParserError, "Literal or identifier expected.");
-	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected token LBrace");
+	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected '{' but got reserved keyword 'let'");
 	// TODO change this to an error once we check types.
 	BOOST_CHECK(successParse("{ if 42:u256 { } }"));
 }

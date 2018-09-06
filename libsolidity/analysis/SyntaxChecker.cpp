@@ -22,6 +22,10 @@
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
+#include <boost/algorithm/cxx11/all_of.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <string>
 
 using namespace std;
 using namespace dev;
@@ -134,9 +138,25 @@ void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
 	m_placeholderFound = false;
 }
 
-bool SyntaxChecker::visit(WhileStatement const&)
+void SyntaxChecker::checkSingleStatementVariableDeclaration(ASTNode const& _statement)
+{
+	auto varDecl = dynamic_cast<VariableDeclarationStatement const*>(&_statement);
+	if (varDecl)
+		m_errorReporter.syntaxError(_statement.location(), "Variable declarations can only be used inside blocks.");
+}
+
+bool SyntaxChecker::visit(IfStatement const& _ifStatement)
+{
+	checkSingleStatementVariableDeclaration(_ifStatement.trueStatement());
+	if (Statement const* _statement = _ifStatement.falseStatement())
+		checkSingleStatementVariableDeclaration(*_statement);
+	return true;
+}
+
+bool SyntaxChecker::visit(WhileStatement const& _whileStatement)
 {
 	m_inLoopDepth++;
+	checkSingleStatementVariableDeclaration(_whileStatement.body());
 	return true;
 }
 
@@ -145,9 +165,10 @@ void SyntaxChecker::endVisit(WhileStatement const&)
 	m_inLoopDepth--;
 }
 
-bool SyntaxChecker::visit(ForStatement const&)
+bool SyntaxChecker::visit(ForStatement const& _forStatement)
 {
 	m_inLoopDepth++;
+	checkSingleStatementVariableDeclaration(_forStatement.body());
 	return true;
 }
 
@@ -174,33 +195,58 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 
 bool SyntaxChecker::visit(Throw const& _throwStatement)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+	m_errorReporter.syntaxError(
+		_throwStatement.location(),
+		"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
+	);
 
-	if (v050)
-		m_errorReporter.syntaxError(
-			_throwStatement.location(),
-			"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
-		);
-	else
-		m_errorReporter.warning(
-			_throwStatement.location(),
-			"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
-		);
+	return true;
+}
+
+bool SyntaxChecker::visit(Literal const& _literal)
+{
+	if (_literal.token() != Token::Number)
+		return true;
+
+	ASTString const& value = _literal.value();
+	solAssert(!value.empty(), "");
+
+	// Generic checks no matter what base this number literal is of:
+	if (value.back() == '_')
+	{
+		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No trailing underscores allowed.");
+		return true;
+	}
+
+	if (value.find("__") != ASTString::npos)
+	{
+		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.");
+		return true;
+	}
+
+	if (!_literal.isHexNumber()) // decimal literal
+	{
+		if (value.find("._") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
+
+		if (value.find("_.") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
+
+		if (value.find("_e") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore at the end of the mantissa allowed.");
+
+		if (value.find("e_") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore in front of exponent allowed.");
+	}
 
 	return true;
 }
 
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (_operation.getOperator() == Token::Add)
-	{
-		if (v050)
-			m_errorReporter.syntaxError(_operation.location(), "Use of unary + is deprecated.");
-		else
-			m_errorReporter.warning(_operation.location(), "Use of unary + is deprecated.");
-	}
+		m_errorReporter.syntaxError(_operation.location(), "Use of unary + is disallowed.");
+
 	return true;
 }
 
@@ -210,22 +256,34 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 	return true;
 }
 
+bool SyntaxChecker::visit(ContractDefinition const& _contract)
+{
+	m_isInterface = _contract.contractKind() == ContractDefinition::ContractKind::Interface;
+
+	ASTString const& contractName = _contract.name();
+	for (FunctionDefinition const* function: _contract.definedFunctions())
+		if (function->name() == contractName)
+			m_errorReporter.syntaxError(function->location(),
+				"Functions are not allowed to have the same name as the contract. "
+				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
+			);
+	return true;
+}
+
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-
 	if (_function.noVisibilitySpecified())
 	{
-		if (v050)
-			m_errorReporter.syntaxError(_function.location(), "No visibility specified.");
-		else
-			m_errorReporter.warning(
-				_function.location(),
-				"No visibility specified. Defaulting to \"" +
-				Declaration::visibilityToString(_function.visibility()) +
-				"\"."
-			);
+		string suggestedVisibility = _function.isFallback() || m_isInterface ? "external" : "public";
+		m_errorReporter.syntaxError(
+			_function.location(),
+			"No visibility specified. Did you intend to add \"" + suggestedVisibility + "\"?"
+		);
 	}
+
+	if (!_function.isImplemented() && !_function.modifiers().empty())
+		m_errorReporter.syntaxError(_function.location(), "Functions without implementation cannot have modifiers.");
+
 	return true;
 }
 
@@ -237,21 +295,27 @@ bool SyntaxChecker::visit(FunctionTypeName const& _node)
 
 	for (auto const& decl: _node.returnParameterTypeList()->parameters())
 		if (!decl->name().empty())
-			m_errorReporter.warning(decl->location(), "Naming function type return parameters is deprecated.");
+			m_errorReporter.syntaxError(decl->location(), "Return parameters in function types may not be named.");
 
 	return true;
 }
 
-bool SyntaxChecker::visit(VariableDeclaration const& _declaration)
+bool SyntaxChecker::visit(VariableDeclarationStatement const& _statement)
 {
-	bool const v050 = m_sourceUnit->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
+	// Report if none of the variable components in the tuple have a name (only possible via deprecated "var")
+	if (boost::algorithm::all_of_equal(_statement.declarations(), nullptr))
+		m_errorReporter.syntaxError(
+			_statement.location(),
+			"The use of the \"var\" keyword is disallowed. The declaration part of the statement can be removed, since it is empty."
+		);
 
-	if (!_declaration.typeName())
-	{
-		if (v050)
-			m_errorReporter.syntaxError(_declaration.location(), "Use of the \"var\" keyword is deprecated.");
-		else
-			m_errorReporter.warning(_declaration.location(), "Use of the \"var\" keyword is deprecated.");
-	}
+	return true;
+}
+
+bool SyntaxChecker::visit(StructDefinition const& _struct)
+{
+	if (_struct.members().empty())
+		m_errorReporter.syntaxError(_struct.location(), "Defining empty structs is disallowed.");
+
 	return true;
 }

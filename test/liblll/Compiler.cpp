@@ -20,7 +20,7 @@
  * Unit tests for the LLL compiler.
  */
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 
 #include <libdevcore/FixedHash.h>
 
@@ -46,7 +46,7 @@ namespace
 bool successCompile(string const& _sourceCode)
 {
 	vector<string> errors;
-	bytes bytecode = eth::compileLLL(_sourceCode, dev::test::Options::get().evmVersion(), false, &errors);
+	bytes bytecode = lll::compileLLL(_sourceCode, dev::test::Options::get().evmVersion(), false, &errors);
 	if (!errors.empty())
 		return false;
 	if (bytecode.empty())
@@ -130,17 +130,17 @@ BOOST_AUTO_TEST_CASE(switch_inconsistent_return_count)
 BOOST_AUTO_TEST_CASE(disallowed_asm_instructions)
 {
 	for (unsigned i = 1; i <= 32; i++)
-		BOOST_CHECK(!successCompile("(asm PUSH" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(asm PUSH" + to_string(i) + ")"));
 }
 
 BOOST_AUTO_TEST_CASE(disallowed_functional_asm_instructions)
 {
 	for (unsigned i = 1; i <= 32; i++)
-		BOOST_CHECK(!successCompile("(PUSH" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(PUSH" + to_string(i) + ")"));
 	for (unsigned i = 1; i <= 16; i++)
-		BOOST_CHECK(!successCompile("(DUP" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(DUP" + to_string(i) + ")"));
 	for (unsigned i = 1; i <= 16; i++)
-		BOOST_CHECK(!successCompile("(SWAP" + boost::lexical_cast<string>(i) + ")"));
+		BOOST_CHECK(!successCompile("(SWAP" + to_string(i) + ")"));
 	BOOST_CHECK(!successCompile("(JUMPDEST)"));
 }
 
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(valid_opcodes_functional)
 
 	for (size_t i = 0; i < opcodes_bytecode.size(); i++) {
 		vector<string> errors;
-		bytes code = eth::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
+		bytes code = lll::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
 
 		BOOST_REQUIRE_MESSAGE(errors.empty(), opcodes_lll[i]);
 
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(valid_opcodes_asm)
 
 	for (size_t i = 0; i < opcodes_bytecode.size(); i++) {
 		vector<string> errors;
-		bytes code = eth::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
+		bytes code = lll::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
 
 		BOOST_REQUIRE_MESSAGE(errors.empty(), opcodes_lll[i]);
 

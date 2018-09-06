@@ -223,7 +223,7 @@ private:
 	bool isSourcePastEndOfInput() const { return m_source.isPastEndOfInput(); }
 
 	TokenDesc m_skippedComment;  // desc for current skipped comment
-	TokenDesc m_nextSkippedComment; // desc for next skiped comment
+	TokenDesc m_nextSkippedComment; // desc for next skipped comment
 
 	TokenDesc m_currentToken;  // desc for current token (as returned by Next())
 	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)

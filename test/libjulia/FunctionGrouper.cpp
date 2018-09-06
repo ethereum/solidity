@@ -16,7 +16,7 @@
 */
 /**
  * @date 2017
- * Unit tests for the iulia function grouper.
+ * Unit tests for the Yul function grouper.
  */
 
 #include <test/libjulia/Common.h>
@@ -43,7 +43,7 @@ do\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(IuliaFunctionGrouper)
+BOOST_AUTO_TEST_SUITE(YulFunctionGrouper)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

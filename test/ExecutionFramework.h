@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <test/TestHelper.h>
+#include <test/Options.h>
 #include <test/RPCSession.h>
 
 #include <libsolidity/interface/EVMVersion.h>
@@ -53,6 +53,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
+	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -71,6 +72,7 @@ public:
 	)
 	{
 		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments, _libraryAddresses);
+		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
@@ -192,6 +194,13 @@ public:
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
 
+	u256 gasLimit() const;
+	u256 gasPrice() const;
+	u256 blockHash(u256 const& _blockNumber) const;
+	u256 const& blockNumber() const {
+		return m_blockNumber;
+	}
+
 private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
@@ -233,6 +242,7 @@ protected:
 	unsigned m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_showMessages = false;
+	bool m_transactionSuccessful = true;
 	Address m_sender;
 	Address m_contractAddress;
 	u256 m_blockNumber;

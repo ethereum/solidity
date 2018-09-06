@@ -40,9 +40,9 @@ public:
 	void push() override;
 	void pop() override;
 
-	Expression newFunction(std::string _name, Sort _domain, Sort _codomain) override;
-	Expression newInteger(std::string _name) override;
-	Expression newBool(std::string _name) override;
+	void declareFunction(std::string _name, Sort _domain, Sort _codomain) override;
+	void declareInteger(std::string _name) override;
+	void declareBool(std::string _name) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
@@ -50,9 +50,6 @@ public:
 private:
 	z3::expr toZ3Expr(Expression const& _expr);
 	z3::sort z3Sort(smt::Sort _sort);
-
-	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
-	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
 
 	z3::context m_context;
 	z3::solver m_solver;

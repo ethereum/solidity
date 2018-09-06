@@ -55,7 +55,8 @@ public:
 	explicit CompilerContext(EVMVersion _evmVersion = EVMVersion{}, CompilerContext* _runtimeContext = nullptr):
 		m_asm(std::make_shared<eth::Assembly>()),
 		m_evmVersion(_evmVersion),
-		m_runtimeContext(_runtimeContext)
+		m_runtimeContext(_runtimeContext),
+		m_abiFunctions(m_evmVersion)
 	{
 		if (m_runtimeContext)
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
@@ -70,7 +71,11 @@ public:
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
-	void removeVariable(VariableDeclaration const& _declaration);
+	void removeVariable(Declaration const& _declaration);
+	/// Removes all local variables currently allocated above _stackHeight.
+	void removeVariablesAboveStackHeight(unsigned _stackHeight);
+	/// Returns the number of currently allocated local variables.
+	unsigned numberOfLocalVariables() const;
 
 	void setCompiledContracts(std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts) { m_compiledContracts = _contracts; }
 	eth::Assembly const& compiledContract(ContractDefinition const& _contract) const;
@@ -130,7 +135,7 @@ public:
 	void appendMissingLowLevelFunctions();
 	ABIFunctions& abiFunctions() { return m_abiFunctions; }
 
-	ModifierDefinition const& functionModifier(std::string const& _name) const;
+	ModifierDefinition const& resolveVirtualFunctionModifier(ModifierDefinition const& _modifier) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref baseStackOffsetOfVariable(variable), returns
@@ -156,8 +161,11 @@ public:
 	CompilerContext& appendConditionalInvalid();
 	/// Appends a REVERT(0, 0) call
 	CompilerContext& appendRevert();
-	/// Appends a conditional REVERT(0, 0) call
-	CompilerContext& appendConditionalRevert();
+	/// Appends a conditional REVERT-call, either forwarding the RETURNDATA or providing the
+	/// empty string. Consumes the condition.
+	/// If the current EVM version does not support RETURNDATA, uses REVERT but does not forward
+	/// the data.
+	CompilerContext& appendConditionalRevert(bool _forwardReturnData = false);
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.

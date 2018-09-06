@@ -4,11 +4,11 @@ import '../token/MintableToken.sol';
 import '../math/SafeMath.sol';
 
 /**
- * @title Crowdsale 
+ * @title Crowdsale
  * @dev Crowdsale is a base contract for managing a token crowdsale.
  * Crowdsales have a start and end block, where investors can make
  * token purchases and the crowdsale will assign them tokens based
- * on a token per ETH rate. Funds collected are forwarded to a wallet 
+ * on a token per ETH rate. Funds collected are forwarded to a wallet
  * as they arrive.
  */
 contract Crowdsale {
@@ -36,15 +36,15 @@ contract Crowdsale {
    * @param beneficiary who got the tokens
    * @param value weis paid for purchase
    * @param amount amount of tokens purchased
-   */ 
+   */
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
 
-  function Crowdsale(uint256 _startBlock, uint256 _endBlock, uint256 _rate, address _wallet) {
+  constructor(uint256 _startBlock, uint256 _endBlock, uint256 _rate, address _wallet) public {
     require(_startBlock >= block.number);
     require(_endBlock >= _startBlock);
     require(_rate > 0);
-    require(_wallet != 0x0);
+    require(_wallet != address(0x0));
 
     token = createTokenContract();
     startBlock = _startBlock;
@@ -53,7 +53,7 @@ contract Crowdsale {
     wallet = _wallet;
   }
 
-  // creates the token to be sold. 
+  // creates the token to be sold.
   // override this method to have crowdsale of a specific mintable token.
   function createTokenContract() internal returns (MintableToken) {
     return new MintableToken();
@@ -61,13 +61,13 @@ contract Crowdsale {
 
 
   // fallback function can be used to buy tokens
-  function () payable {
+  function () external payable {
     buyTokens(msg.sender);
   }
 
   // low level token purchase function
-  function buyTokens(address beneficiary) payable {
-    require(beneficiary != 0x0);
+  function buyTokens(address beneficiary) public payable {
+    require(beneficiary != address(0x0));
     require(validPurchase());
 
     uint256 weiAmount = msg.value;
@@ -80,7 +80,7 @@ contract Crowdsale {
     weiRaised = updatedWeiRaised;
 
     token.mint(beneficiary, tokens);
-    TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+    emit TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
 
     forwardFunds();
   }
@@ -92,7 +92,7 @@ contract Crowdsale {
   }
 
   // @return true if the transaction can buy tokens
-  function validPurchase() internal constant returns (bool) {
+  function validPurchase() internal view returns (bool) {
     uint256 current = block.number;
     bool withinPeriod = current >= startBlock && current <= endBlock;
     bool nonZeroPurchase = msg.value != 0;
@@ -100,7 +100,7 @@ contract Crowdsale {
   }
 
   // @return true if crowdsale event has ended
-  function hasEnded() public constant returns (bool) {
+  function hasEnded() public view returns (bool) {
     return block.number > endBlock;
   }
 

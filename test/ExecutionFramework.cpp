@@ -85,6 +85,22 @@ std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
 	return make_pair(false, message);
 }
 
+u256 ExecutionFramework::gasLimit() const
+{
+	auto latestBlock = m_rpc.eth_getBlockByNumber("latest", false);
+	return u256(latestBlock["gasLimit"].asString());
+}
+
+u256 ExecutionFramework::gasPrice() const
+{
+	return u256(m_rpc.eth_gasPrice());
+}
+
+u256 ExecutionFramework::blockHash(u256 const& _blockNumber) const
+{
+	return u256(m_rpc.eth_getBlockByNumber(toHex(_blockNumber, HexPrefix::Add), false)["hash"].asString());
+}
+
 void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
 {
 	if (m_showMessages)
@@ -142,6 +158,11 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		entry.data = fromHex(log.data, WhenError::Throw);
 		m_logs.push_back(entry);
 	}
+
+	if (!receipt.status.empty())
+		m_transactionSuccessful = (receipt.status == "1");
+	else
+		m_transactionSuccessful = (m_gas != m_gasUsed);
 }
 
 void ExecutionFramework::sendEther(Address const& _to, u256 const& _value)

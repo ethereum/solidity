@@ -138,10 +138,26 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 		using Ids = vector<Id>;
 		Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(_signature)))));
 		Id calldata = classes.find(Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
-		classes.forceEqual(hashValue, Instruction::DIV, Ids{
-			calldata,
-			classes.find(u256(1) << (8 * 28))
-		});
+		if (!m_evmVersion.hasBitwiseShifting())
+			// div(calldataload(0), 1 << 224) equals to hashValue
+			classes.forceEqual(
+				hashValue,
+				Instruction::DIV,
+				Ids{calldata, classes.find(u256(1) << 224)}
+			);
+		else
+			// shr(0xe0, calldataload(0)) equals to hashValue
+			classes.forceEqual(
+				hashValue,
+				Instruction::SHR,
+				Ids{classes.find(u256(0xe0)), calldata}
+			);
+		// lt(calldatasize(), 4) equals to 0 (ignore the shortcut for fallback functions)
+		classes.forceEqual(
+			classes.find(u256(0)),
+			Instruction::LT,
+			Ids{classes.find(Instruction::CALLDATASIZE), classes.find(u256(4))}
+		);
 	}
 
 	PathGasMeter meter(_items, m_evmVersion);

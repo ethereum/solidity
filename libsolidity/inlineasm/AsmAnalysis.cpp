@@ -54,9 +54,10 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 bool AsmAnalyzer::operator()(Label const& _label)
 {
+	solAssert(!_label.name.empty(), "");
 	checkLooseFeature(
 		_label.location,
-		"The use of labels is deprecated. Please use \"if\", \"switch\", \"for\" or function calls instead."
+		"The use of labels is disallowed. Please use \"if\", \"switch\", \"for\" or function calls instead."
 	);
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
@@ -67,7 +68,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
 	checkLooseFeature(
 		_instruction.location,
-		"The use of non-functional instructions is deprecated. Please use functional notation instead."
+		"The use of non-functional instructions is disallowed. Please use functional notation instead."
 	);
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
@@ -84,7 +85,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	{
 		m_errorReporter.typeError(
 			_literal.location,
-			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
+			"String literal too long (" + to_string(_literal.value.size()) + " > 32)"
 		);
 		return false;
 	}
@@ -98,7 +99,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	}
 	else if (_literal.kind == assembly::LiteralKind::Boolean)
 	{
-		solAssert(m_flavour == AsmFlavour::IULIA, "");
+		solAssert(m_flavour == AsmFlavour::Yul, "");
 		solAssert(_literal.value == "true" || _literal.value == "false", "");
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
@@ -107,6 +108,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 
 bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 {
+	solAssert(!_identifier.name.empty(), "");
 	size_t numErrorsBefore = m_errorReporter.errors().size();
 	bool success = true;
 	if (m_currentScope->lookup(_identifier.name, Scope::Visitor(
@@ -160,7 +162,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(m_flavour != AsmFlavour::IULIA, "");
+	solAssert(m_flavour != AsmFlavour::Yul, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
@@ -183,7 +185,7 @@ bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
 		Error::Type errorType = m_flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
-			boost::lexical_cast<string>(m_stackHeight - initialStackHeight) +
+			to_string(m_stackHeight - initialStackHeight) +
 			" value" +
 			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
 			"). Use ``pop()`` or assign them.";
@@ -199,7 +201,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
 	checkLooseFeature(
 		_assignment.location,
-		"The use of stack assignment is deprecated. Please use assignment in functional notation instead."
+		"The use of stack assignment is disallowed. Please use assignment in functional notation instead."
 	);
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
@@ -208,6 +210,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 
 bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 {
+	solAssert(_assignment.value, "");
 	int const expectedItems = _assignment.variableNames.size();
 	solAssert(expectedItems >= 1, "");
 	int const stackHeight = m_stackHeight;
@@ -259,6 +262,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 
 bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 {
+	solAssert(!_funDef.name.empty(), "");
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	solAssert(virtualBlock, "");
 	Scope& varScope = scope(virtualBlock);
@@ -280,6 +284,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 
 bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 {
+	solAssert(!_funCall.functionName.name.empty(), "");
 	bool success = true;
 	size_t arguments = 0;
 	size_t returns = 0;
@@ -317,8 +322,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		{
 			m_errorReporter.typeError(
 				_funCall.functionName.location,
-				"Expected " + boost::lexical_cast<string>(arguments) + " arguments but got " +
-				boost::lexical_cast<string>(_funCall.arguments.size()) + "."
+				"Expected " + to_string(arguments) + " arguments but got " +
+				to_string(_funCall.arguments.size()) + "."
 			);
 			success = false;
 		}
@@ -349,6 +354,8 @@ bool AsmAnalyzer::operator()(If const& _if)
 
 bool AsmAnalyzer::operator()(Switch const& _switch)
 {
+	solAssert(_switch.expression, "");
+
 	bool success = true;
 
 	if (!expectExpression(*_switch.expression))
@@ -391,6 +398,8 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 
 bool AsmAnalyzer::operator()(assembly::ForLoop const& _for)
 {
+	solAssert(_for.condition, "");
+
 	Scope* originalScope = m_currentScope;
 
 	bool success = true;
@@ -468,7 +477,7 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 		m_errorReporter.typeError(
 			_location,
 			"Expected expression to return one item to the stack, but did return " +
-			boost::lexical_cast<string>(m_stackHeight - _oldHeight) +
+			to_string(m_stackHeight - _oldHeight) +
 			" items."
 		);
 		return false;
@@ -478,6 +487,7 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 
 bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
 {
+	solAssert(!_variable.name.empty(), "");
 	bool success = true;
 	size_t numErrorsBefore = m_errorReporter.errors().size();
 	size_t variableSize(-1);
@@ -540,7 +550,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (m_flavour != AsmFlavour::IULIA)
+	if (m_flavour != AsmFlavour::Yul)
 		return;
 
 	if (!builtinTypes.count(type))

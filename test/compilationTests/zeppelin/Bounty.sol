@@ -16,23 +16,23 @@ contract Bounty is PullPayment, Destructible {
   event TargetCreated(address createdAddress);
 
   /**
-   * @dev Fallback function allowing the contract to recieve funds, if they haven't already been claimed.
+   * @dev Fallback function allowing the contract to receive funds, if they haven't already been claimed.
    */
-  function() payable {
+  function() external payable {
     if (claimed) {
-      throw;
+      revert();
     }
   }
 
   /**
-   * @dev Create and deploy the target contract (extension of Target contract), and sets the 
+   * @dev Create and deploy the target contract (extension of Target contract), and sets the
    * msg.sender as a researcher
    * @return A target contract
    */
-  function createTarget() returns(Target) {
+  function createTarget() public returns(Target) {
     Target target = Target(deployContract());
-    researchers[target] = msg.sender;
-    TargetCreated(target);
+    researchers[address(target)] = msg.sender;
+    emit TargetCreated(address(target));
     return target;
   }
 
@@ -46,16 +46,16 @@ contract Bounty is PullPayment, Destructible {
    * @dev Sends the contract funds to the researcher that proved the contract is broken.
    * @param target contract
    */
-  function claim(Target target) {
-    address researcher = researchers[target];
-    if (researcher == 0) {
-      throw;
+  function claim(Target target) public {
+    address researcher = researchers[address(target)];
+    if (researcher == address(0)) {
+      revert();
     }
     // Check Target contract invariants
     if (target.checkInvariant()) {
-      throw;
+      revert();
     }
-    asyncSend(researcher, this.balance);
+    asyncSend(researcher, address(this).balance);
     claimed = true;
   }
 
@@ -69,10 +69,10 @@ contract Bounty is PullPayment, Destructible {
 contract Target {
 
    /**
-    * @dev Checks all values a contract assumes to be true all the time. If this function returns 
-    * false, the contract is broken in some way and is in an inconsistent state. 
-    * In order to win the bounty, security researchers will try to cause this broken state. 
-    * @return True if all invariant values are correct, false otherwise. 
+    * @dev Checks all values a contract assumes to be true all the time. If this function returns
+    * false, the contract is broken in some way and is in an inconsistent state.
+    * In order to win the bounty, security researchers will try to cause this broken state.
+    * @return True if all invariant values are correct, false otherwise.
     */
-  function checkInvariant() returns(bool);
+  function checkInvariant() public returns(bool);
 }

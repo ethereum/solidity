@@ -127,15 +127,38 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 								  unsigned _offsetToCurrent)
 {
 	solAssert(m_asm->deposit() >= 0 && unsigned(m_asm->deposit()) >= _offsetToCurrent, "");
+	unsigned sizeOnStack = _declaration.annotation().type->sizeOnStack();
+	// Variables should not have stack size other than [1, 2],
+	// but that might change when new types are introduced.
+	solAssert(sizeOnStack == 1 || sizeOnStack == 2, "");
 	m_localVariables[&_declaration].push_back(unsigned(m_asm->deposit()) - _offsetToCurrent);
 }
 
-void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
+void CompilerContext::removeVariable(Declaration const& _declaration)
 {
 	solAssert(m_localVariables.count(&_declaration) && !m_localVariables[&_declaration].empty(), "");
 	m_localVariables[&_declaration].pop_back();
 	if (m_localVariables[&_declaration].empty())
 		m_localVariables.erase(&_declaration);
+}
+
+void CompilerContext::removeVariablesAboveStackHeight(unsigned _stackHeight)
+{
+	vector<Declaration const*> toRemove;
+	for (auto _var: m_localVariables)
+	{
+		solAssert(!_var.second.empty(), "");
+		solAssert(_var.second.back() <= stackHeight(), "");
+		if (_var.second.back() >= _stackHeight)
+			toRemove.push_back(_var.first);
+	}
+	for (auto _var: toRemove)
+		removeVariable(*_var);
+}
+
+unsigned CompilerContext::numberOfLocalVariables() const
+{
+	return m_localVariables.size();
 }
 
 eth::Assembly const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
@@ -193,14 +216,22 @@ Declaration const* CompilerContext::nextFunctionToCompile() const
 	return m_functionCompilationQueue.nextFunctionToCompile();
 }
 
-ModifierDefinition const& CompilerContext::functionModifier(string const& _name) const
+ModifierDefinition const& CompilerContext::resolveVirtualFunctionModifier(
+	ModifierDefinition const& _modifier
+) const
 {
+	// Libraries do not allow inheritance and their functions can be inlined, so we should not
+	// search the inheritance hierarchy (which will be the wrong one in case the function
+	// is inlined).
+	if (auto scope = dynamic_cast<ContractDefinition const*>(_modifier.scope()))
+		if (scope->isLibrary())
+			return _modifier;
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
 	for (ContractDefinition const* contract: m_inheritanceHierarchy)
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
-			if (modifier->name() == _name)
+			if (modifier->name() == _modifier.name())
 				return *modifier;
-	solAssert(false, "Function modifier " + _name + " not found.");
+	solAssert(false, "Function modifier " + _modifier.name() + " not found in inheritance hierarchy.");
 }
 
 unsigned CompilerContext::baseStackOffsetOfVariable(Declaration const& _declaration) const
@@ -254,12 +285,20 @@ CompilerContext& CompilerContext::appendRevert()
 	return *this << u256(0) << u256(0) << Instruction::REVERT;
 }
 
-CompilerContext& CompilerContext::appendConditionalRevert()
+CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData)
 {
-	*this << Instruction::ISZERO;
-	eth::AssemblyItem afterTag = appendConditionalJump();
-	appendRevert();
-	*this << afterTag;
+	if (_forwardReturnData && m_evmVersion.supportsReturndata())
+		appendInlineAssembly(R"({
+			if condition {
+				returndatacopy(0, 0, returndatasize())
+				revert(0, returndatasize())
+			}
+		})", {"condition"});
+	else
+		appendInlineAssembly(R"({
+			if condition { revert(0, 0) }
+		})", {"condition"});
+	*this << Instruction::POP;
 	return *this;
 }
 
@@ -372,7 +411,7 @@ FunctionDefinition const& CompilerContext::resolveVirtualFunction(
 			if (
 				function->name() == name &&
 				!function->isConstructor() &&
-				FunctionType(*function).hasEqualArgumentTypes(functionType)
+				FunctionType(*function).hasEqualParameterTypes(functionType)
 			)
 				return *function;
 	solAssert(false, "Super function " + name + " not found.");

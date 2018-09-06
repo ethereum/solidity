@@ -264,7 +264,7 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 					createJsonValue("PUSH [ErrorTag]", i.location().start, i.location().end, ""));
 			else
 				collection.append(
-					createJsonValue("PUSH [tag]", i.location().start, i.location().end, string(i.data())));
+					createJsonValue("PUSH [tag]", i.location().start, i.location().end, dev::toString(i.data())));
 			break;
 		case PushSub:
 			collection.append(
@@ -290,7 +290,7 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 			break;
 		case Tag:
 			collection.append(
-				createJsonValue("tag", i.location().start, i.location().end, string(i.data())));
+				createJsonValue("tag", i.location().start, i.location().end, dev::toString(i.data())));
 			collection.append(
 				createJsonValue("JUMPDEST", i.location().start, i.location().end));
 			break;
@@ -438,13 +438,15 @@ map<u256, u256> Assembly::optimiseInternal(
 			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
 
+			bool usesMSize = (find(m_items.begin(), m_items.end(), AssemblyItem(Instruction::MSIZE)) != m_items.end());
+
 			auto iter = m_items.begin();
 			while (iter != m_items.end())
 			{
 				KnownState emptyState;
 				CommonSubexpressionEliminator eliminator(emptyState);
 				auto orig = iter;
-				iter = eliminator.feedItems(iter, m_items.end());
+				iter = eliminator.feedItems(iter, m_items.end(), usesMSize);
 				bool shouldReplace = false;
 				AssemblyItems optimisedChunk;
 				try
@@ -615,8 +617,8 @@ LinkerObject const& Assembly::assemble() const
 	}
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
-		// Append a STOP just to be sure.
-		ret.bytecode.push_back(0);
+		// Append an INVALID here to help tests find miscompilation.
+		ret.bytecode.push_back(byte(Instruction::INVALID));
 
 	for (size_t i = 0; i < m_subs.size(); ++i)
 	{

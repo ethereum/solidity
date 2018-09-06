@@ -2,14 +2,14 @@
 
 .. _ABI:
 
-******************************************
-Application Binary Interface Specification
-******************************************
+**************************
+Contract ABI Specification
+**************************
 
 Basic Design
 ============
 
-The Application Binary Interface is the standard way to interact with contracts in the Ethereum ecosystem, both
+The Contract Application Binary Interface (ABI) is the standard way to interact with contracts in the Ethereum ecosystem, both
 from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
 as described in this specification.  The encoding is not self describing and thus requires a schema in order to decode.
 
@@ -54,7 +54,7 @@ The following elementary types exist:
 
 - ``ufixed<M>x<N>``: unsigned variant of ``fixed<M>x<N>``.
 
-- ``fixed``, ``ufixed``: synonyms for ``fixed128x19``, ``ufixed128x19`` respectively. For computing the function selector, ``fixed128x19`` and ``ufixed128x19`` have to be used.
+- ``fixed``, ``ufixed``: synonyms for ``fixed128x18``, ``ufixed128x18`` respectively. For computing the function selector, ``fixed128x18`` and ``ufixed128x18`` have to be used.
 
 - ``bytes<M>``: binary type of ``M`` bytes, ``0 < M <= 32``.
 
@@ -62,7 +62,7 @@ The following elementary types exist:
 
 The following (fixed-size) array type exists:
 
-- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M > 0``, of the given type.
+- ``<type>[M]``: a fixed-length array of ``M`` elements, ``M >= 0``, of the given type.
 
 The following non-fixed-size types exist:
 
@@ -72,12 +72,11 @@ The following non-fixed-size types exist:
 
 - ``<type>[]``: a variable-length array of elements of the given type.
 
-Types can be combined to a tuple by enclosing a finite non-negative number
-of them inside parentheses, separated by commas:
+Types can be combined to a tuple by enclosing them inside parentheses, separated by commas:
 
 - ``(T1,T2,...,Tn)``: tuple consisting of the types ``T1``, ..., ``Tn``, ``n >= 0``
 
-It is possible to form tuples of tuples, arrays of tuples and so on.
+It is possible to form tuples of tuples, arrays of tuples and so on.  It is also possible to form zero-tuples (where ``n == 0``).
 
 .. note::
     Solidity supports all the types presented above with the same names with the exception of tuples. The ABI tuple type is utilised for encoding Solidity ``structs``.
@@ -101,8 +100,8 @@ We distinguish static and dynamic types. Static types are encoded in-place and d
 * ``bytes``
 * ``string``
 * ``T[]`` for any ``T``
-* ``T[k]`` for any dynamic ``T`` and any ``k > 0``
-* ``(T1,...,Tk)`` if any ``Ti`` is dynamic for ``1 <= i <= k``
+* ``T[k]`` for any dynamic ``T`` and any ``k >= 0``
+* ``(T1,...,Tk)`` if ``Ti`` is dynamic for some ``1 <= i <= k``
 
 All other types are called "static".
 
@@ -117,16 +116,16 @@ on the type of ``X`` being
 
 - ``(T1,...,Tk)`` for ``k >= 0`` and any types ``T1``, ..., ``Tk``
 
-  ``enc(X) = head(X(1)) ... head(X(k-1)) tail(X(0)) ... tail(X(k-1))``
+  ``enc(X) = head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(k))``
 
-  where ``X(i)`` is the ``ith`` component of the value, and
+  where ``X = (X(1), ..., X(k))`` and
   ``head`` and ``tail`` are defined for ``Ti`` being a static type as
 
     ``head(X(i)) = enc(X(i))`` and ``tail(X(i)) = ""`` (the empty string)
 
   and as
 
-    ``head(X(i)) = enc(len(head(X(0)) ... head(X(k-1)) tail(X(0)) ... tail(X(i-1))))``
+    ``head(X(i)) = enc(len(head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
     ``tail(X(i)) = enc(X(i))``
 
   otherwise, i.e. if ``Ti`` is a dynamic type.
@@ -144,7 +143,7 @@ on the type of ``X`` being
 
 - ``T[]`` where ``X`` has ``k`` elements (``k`` is assumed to be of type ``uint256``):
 
-  ``enc(X) = enc(k) enc([X[1], ..., X[k]])``
+  ``enc(X) = enc(k) enc([X[0], ..., X[k-1]])``
 
   i.e. it is encoded as if it were an array of static size ``k``, prefixed with
   the number of elements.
@@ -152,8 +151,8 @@ on the type of ``X`` being
 - ``bytes``, of length ``k`` (which is assumed to be of type ``uint256``):
 
   ``enc(X) = enc(k) pad_right(X)``, i.e. the number of bytes is encoded as a
-    ``uint256`` followed by the actual value of ``X`` as a byte sequence, followed by
-    the minimum number of zero-bytes such that ``len(enc(X))`` is a multiple of 32.
+  ``uint256`` followed by the actual value of ``X`` as a byte sequence, followed by
+  the minimum number of zero-bytes such that ``len(enc(X))`` is a multiple of 32.
 
 - ``string``:
 
@@ -164,9 +163,9 @@ on the type of ``X`` being
 - ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-order (left) side with ``0xff`` for negative ``X`` and with zero bytes for positive ``X`` such that the length is 32 bytes.
 - ``bool``: as in the ``uint8`` case, where ``1`` is used for ``true`` and ``0`` for ``false``
 - ``fixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``int256``.
-- ``fixed``: as in the ``fixed128x19`` case
+- ``fixed``: as in the ``fixed128x18`` case
 - ``ufixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``uint256``.
-- ``ufixed``: as in the ``ufixed128x19`` case
+- ``ufixed``: as in the ``ufixed128x18`` case
 - ``bytes<M>``: ``enc(X)`` is the sequence of bytes in ``X`` padded with trailing zero-bytes to a length of 32 bytes.
 
 Note that for any ``X``, ``len(enc(X))`` is a multiple of 32.
@@ -194,9 +193,9 @@ Given the contract:
     pragma solidity ^0.4.16;
 
     contract Foo {
-      function bar(bytes3[2]) public pure {}
+      function bar(bytes3[2] memory) public pure {}
       function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
-      function sam(bytes, bool, uint[]) public pure {}
+      function sam(bytes memory, bool, uint[] memory) public pure {}
     }
 
 
@@ -206,7 +205,9 @@ Thus for our ``Foo`` example if we wanted to call ``baz`` with the parameters ``
 - ``0x0000000000000000000000000000000000000000000000000000000000000045``: the first parameter, a uint32 value ``69`` padded to 32 bytes
 - ``0x0000000000000000000000000000000000000000000000000000000000000001``: the second parameter - boolean ``true``, padded to 32 bytes
 
-In total::
+In total:
+
+.. code-block:: none
 
     0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001
 
@@ -218,7 +219,9 @@ If we wanted to call ``bar`` with the argument ``["abc", "def"]``, we would pass
 - ``0x6162630000000000000000000000000000000000000000000000000000000000``: the first part of the first parameter, a ``bytes3`` value ``"abc"`` (left-aligned).
 - ``0x6465660000000000000000000000000000000000000000000000000000000000``: the second part of the first parameter, a ``bytes3`` value ``"def"`` (left-aligned).
 
-In total::
+In total:
+
+.. code-block:: none
 
     0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
 
@@ -235,7 +238,9 @@ If we wanted to call ``sam`` with the arguments ``"dave"``, ``true`` and ``[1,2,
 - ``0x0000000000000000000000000000000000000000000000000000000000000002``: the second entry of the third parameter.
 - ``0x0000000000000000000000000000000000000000000000000000000000000003``: the third entry of the third parameter.
 
-In total::
+In total:
+
+.. code-block:: none
 
     0xa5643bf20000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000464617665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
 
@@ -265,7 +270,7 @@ Finally, we encode the data part of the second dynamic argument, ``"Hello, world
 
 All together, the encoding is (newline after function selector and each 32-bytes for clarity):
 
-::
+.. code-block:: none
 
     0x8be65246
       0000000000000000000000000000000000000000000000000000000000000123
@@ -277,6 +282,106 @@ All together, the encoding is (newline after function selector and each 32-bytes
       0000000000000000000000000000000000000000000000000000000000000789
       000000000000000000000000000000000000000000000000000000000000000d
       48656c6c6f2c20776f726c642100000000000000000000000000000000000000
+
+Let us apply the same principle to encode the data for a function with a signature ``g(uint[][],string[])`` with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most atomic parts of the encoding:
+
+First we encode the length and data of the first embedded dynamic array ``[1, 2]`` of the first root array ``[[1, 2], [3]]``:
+
+ - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first array, 2; the elements themselves are ``1``  and ``2``)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (first element)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (second element)
+
+Then we encode the length and data of the second embedded dynamic array ``[3]`` of the first root array ``[[1, 2], [3]]``:
+
+ - ``0x0000000000000000000000000000000000000000000000000000000000000001`` (number of elements in the second array, 1; the element is ``3``)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (first element)
+
+Then we need to find the offsets ``a`` and ``b`` for their respective dynamic arrays  ``[1, 2]`` and ``[3]``. To calculate the offsets we can take a look at the encoded data of the first root array ``[[1, 2], [3]]`` enumerating each line in the encoding:
+
+.. code-block:: none
+
+    0 - a                                                                - offset of [1, 2]
+    1 - b                                                                - offset of [3]
+    2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
+    3 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
+    4 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
+    5 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
+    6 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
+
+Offset ``a`` points to the start of the content of the array ``[1, 2]`` which is line 2 (64 bytes); thus ``a = 0x0000000000000000000000000000000000000000000000000000000000000040``.
+
+Offset ``b`` points to the start of the content of the array ``[3]`` which is line 5 (160 bytes); thus ``b = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
+
+
+Then we encode the embedded strings of the second root array:
+
+ - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"one"``)
+ - ``0x6f6e650000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"one"``)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of characters in word ``"two"``)
+ - ``0x74776f0000000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"two"``)
+ - ``0x0000000000000000000000000000000000000000000000000000000000000005`` (number of characters in word ``"three"``)
+ - ``0x7468726565000000000000000000000000000000000000000000000000000000`` (utf8 representation of word ``"three"``)
+
+In parallel to the first root array, since strings are dynamic elements we need to find their offsets ``c``, ``d`` and ``e``:
+
+.. code-block:: none
+
+    0 - c                                                                - offset for "one"
+    1 - d                                                                - offset for "two"
+    2 - e                                                                - offset for "three"
+    3 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
+    4 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
+    5 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
+    6 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
+    7 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
+    8 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+
+Offset ``c`` points to the start of the content of the string ``"one"`` which is line 3 (96 bytes); thus ``c = 0x0000000000000000000000000000000000000000000000000000000000000060``.
+
+Offset ``d`` points to the start of the content of the string ``"two"`` which is line 5 (160 bytes); thus ``d = 0x00000000000000000000000000000000000000000000000000000000000000a0``.
+
+Offset ``e`` points to the start of the content of the string ``"three"`` which is line 7 (224 bytes); thus ``e = 0x00000000000000000000000000000000000000000000000000000000000000e0``.
+
+
+Note that the encodings of the embedded elements of the root arrays are not dependent on each other and have the same encodings for a function with a signature ``g(string[],uint[][])``.
+
+Then we encode the length of the first root array:
+
+ - ``0x0000000000000000000000000000000000000000000000000000000000000002`` (number of elements in the first root array, 2; the elements themselves are ``[1, 2]``  and ``[3]``)
+
+Then we encode the length of the second root array:
+
+ - ``0x0000000000000000000000000000000000000000000000000000000000000003`` (number of strings in the second root array, 3; the strings themselves are ``"one"``, ``"two"`` and ``"three"``)
+
+Finally we find the offsets ``f`` and ``g`` for their respective root dynamic arrays ``[[1, 2], [3]]`` and ``["one", "two", "three"]``, and assemble parts in the correct order:
+
+.. code-block:: none
+
+    0x2289b18c                                                            - function signature
+     0 - f                                                                - offset of [[1, 2], [3]]
+     1 - g                                                                - offset of ["one", "two", "three"]
+     2 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [[1, 2], [3]]
+     3 - 0000000000000000000000000000000000000000000000000000000000000040 - offset of [1, 2]
+     4 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset of [3]
+     5 - 0000000000000000000000000000000000000000000000000000000000000002 - count for [1, 2]
+     6 - 0000000000000000000000000000000000000000000000000000000000000001 - encoding of 1
+     7 - 0000000000000000000000000000000000000000000000000000000000000002 - encoding of 2
+     8 - 0000000000000000000000000000000000000000000000000000000000000001 - count for [3]
+     9 - 0000000000000000000000000000000000000000000000000000000000000003 - encoding of 3
+    10 - 0000000000000000000000000000000000000000000000000000000000000003 - count for ["one", "two", "three"]
+    11 - 0000000000000000000000000000000000000000000000000000000000000060 - offset for "one"
+    12 - 00000000000000000000000000000000000000000000000000000000000000a0 - offset for "two"
+    13 - 00000000000000000000000000000000000000000000000000000000000000e0 - offset for "three"
+    14 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "one"
+    15 - 6f6e650000000000000000000000000000000000000000000000000000000000 - encoding of "one"
+    16 - 0000000000000000000000000000000000000000000000000000000000000003 - count for "two"
+    17 - 74776f0000000000000000000000000000000000000000000000000000000000 - encoding of "two"
+    18 - 0000000000000000000000000000000000000000000000000000000000000005 - count for "three"
+    19 - 7468726565000000000000000000000000000000000000000000000000000000 - encoding of "three"
+
+Offset ``f`` points to the start of the content of the array ``[[1, 2], [3]]`` which is line 2 (64 bytes); thus ``f = 0x0000000000000000000000000000000000000000000000000000000000000040``.
+
+Offset ``g`` points to the start of the content of the array ``["one", "two", "three"]`` which is line 10 (320 bytes); thus ``g = 0x0000000000000000000000000000000000000000000000000000000000000140``.
 
 Events
 ======
@@ -292,7 +397,7 @@ In effect, a log entry using this ABI is described as:
 - ``topics[n]``: ``EVENT_INDEXED_ARGS[n - 1]`` (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are indexed);
 - ``data``: ``abi_serialise(EVENT_NON_INDEXED_ARGS)`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are not indexed, ``abi_serialise`` is the ABI serialisation function used for returning a series of typed values from a function, as described above).
 
-For all fixed-length Solidity types, the ``EVENT_INDEXED_ARGS`` array contains the 32-byte encoded value directly. However, for *types of dynamic length*, which include ``string``, ``bytes``, and arrays, ``EVENT_INDEXED_ARGS`` will contain the *Keccak hash* of the encoded value, rather than the encoded value directly. This allows applications to efficiently query for values of dynamic-length types (by setting the hash of the encoded value as the topic), but leaves applications unable to decode indexed values they have not queried for. For dynamic-length types, application developers face a trade-off between fast search for predetermined values (if the argument is indexed) and legibility of arbitrary values (which requires that the arguments not be indexed). Developers may overcome this tradeoff and achieve both efficient search and arbitrary legibility by defining events with two arguments — one indexed, one not — intended to hold the same value.
+For all fixed-length Solidity types, the ``EVENT_INDEXED_ARGS`` array contains the 32-byte encoded value directly. However, for *types of dynamic length*, which include ``string``, ``bytes``, and arrays, ``EVENT_INDEXED_ARGS`` will contain the *Keccak hash* of the packed encoded value (see :ref:`abi_packed_mode`), rather than the encoded value directly. This allows applications to efficiently query for values of dynamic-length types (by setting the hash of the encoded value as the topic), but leaves applications unable to decode indexed values they have not queried for. For dynamic-length types, application developers face a trade-off between fast search for predetermined values (if the argument is indexed) and legibility of arbitrary values (which requires that the arguments not be indexed). Developers may overcome this tradeoff and achieve both efficient search and arbitrary legibility by defining events with two arguments — one indexed, one not — intended to hold the same value.
 
 .. _abi_json:
 
@@ -311,15 +416,19 @@ A function description is a JSON object with the fields:
   * ``components``: used for tuple types (more below).
 
 - ``outputs``: an array of objects similar to ``inputs``, can be omitted if function doesn't return anything;
-- ``payable``: ``true`` if function accepts ether, defaults to ``false``;
-- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` and ``payable`` (same as ``payable`` above).
-- ``constant``: ``true`` if function is either ``pure`` or ``view``
+- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` (function does not accept ether) and ``payable`` (function accepts ether);
+- ``payable``: ``true`` if function accepts ether, ``false`` otherwise;
+- ``constant``: ``true`` if function is either ``pure`` or ``view``, ``false`` otherwise.
 
-``type`` can be omitted, defaulting to ``"function"``.
+``type`` can be omitted, defaulting to ``"function"``, likewise ``payable`` and ``constant`` can be omitted, both defaulting to ``false``.
 
 Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
 
-Sending non-zero ether to non-payable function will throw. Don't do it.
+.. warning::
+    The fields ``constant`` and ``payable`` are deprecated and will be removed in the future. Instead, the ``stateMutability`` field can be used to determine the same properties.
+
+.. note::
+    Sending non-zero ether to non-payable function will revert the transaction.
 
 An event description is a JSON object with fairly similar fields:
 
@@ -338,19 +447,19 @@ For example,
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >0.4.24;
 
     contract Test {
-      function Test() public { b = 0x12345678901234567890123456789012; }
+      constructor() public { b = hex"12345678901234567890123456789012"; }
       event Event(uint indexed a, bytes32 b);
       event Event2(uint indexed a, bytes32 b);
-      function foo(uint a) public { Event(a, b); }
+      function foo(uint a) public { emit Event(a, b); }
       bytes32 b;
     }
 
 would result in the JSON:
 
-.. code:: json
+.. code-block:: json
 
   [{
   "type":"event",
@@ -391,13 +500,13 @@ As an example, the code
     contract Test {
       struct S { uint a; uint[] b; T[] c; }
       struct T { uint x; uint y; }
-      function f(S s, T t, uint a) public { }
-      function g() public returns (S s, T t, uint a) {}
+      function f(S memory s, T memory t, uint a) public;
+      function g() public returns (S memory s, T memory t, uint a);
     }
 
 would result in the JSON:
 
-.. code:: json
+.. code-block:: json
 
   [
     {
@@ -460,16 +569,17 @@ would result in the JSON:
 Non-standard Packed Mode
 ========================
 
-Solidity supports a non-standard packed mode where:
+Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode where:
 
-- no :ref:`function selector <abi_function_selector>` is encoded,
 - types shorter than 32 bytes are neither zero padded nor sign extended and
 - dynamic types are encoded in-place and without the length.
 
-As an example encoding ``int1, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in ::
+As an example encoding ``int8, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in:
+
+.. code-block:: none
 
     0xff42242448656c6c6f2c20776f726c6421
-      ^^                                 int1(-1)
+      ^^                                 int8(-1)
         ^^                               bytes1(0x42)
           ^^^^                           uint16(0x2424)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
@@ -478,3 +588,8 @@ More specifically, each statically-sized type takes as many bytes as its range h
 and dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
 their length field. This means that the encoding is ambiguous as soon as there are two
 dynamically-sized elements.
+
+If padding is needed, explicit type conversions can be used: ``abi.encodePacked(uint16(0x12)) == hex"0012"``.
+
+Since packed encoding is not used when calling functions, there is no special support
+for prepending a function selector.

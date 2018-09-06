@@ -27,6 +27,7 @@
 #if defined(_WIN32)
 #include <windows.h>
 #else
+#include <unistd.h>
 #include <termios.h>
 #endif
 #include <boost/filesystem.hpp>
@@ -117,4 +118,92 @@ void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDe
 		{
 		}
 	}
+}
+
+#if defined(_WIN32)
+class DisableConsoleBuffering
+{
+public:
+	DisableConsoleBuffering()
+	{
+		m_stdin = GetStdHandle(STD_INPUT_HANDLE);
+		GetConsoleMode(m_stdin, &m_oldMode);
+		SetConsoleMode(m_stdin, m_oldMode & (~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
+	}
+	~DisableConsoleBuffering()
+	{
+		SetConsoleMode(m_stdin, m_oldMode);
+	}
+private:
+	HANDLE m_stdin;
+	DWORD m_oldMode;
+};
+#else
+class DisableConsoleBuffering
+{
+public:
+	DisableConsoleBuffering()
+	{
+		tcgetattr(0, &m_termios);
+		m_termios.c_lflag &= ~ICANON;
+		m_termios.c_lflag &= ~ECHO;
+		m_termios.c_cc[VMIN] = 1;
+		m_termios.c_cc[VTIME] = 0;
+		tcsetattr(0, TCSANOW, &m_termios);
+	}
+	~DisableConsoleBuffering()
+	{
+		m_termios.c_lflag |= ICANON;
+		m_termios.c_lflag |= ECHO;
+		tcsetattr(0, TCSADRAIN, &m_termios);
+	}
+private:
+	struct termios m_termios;
+};
+#endif
+
+int dev::readStandardInputChar()
+{
+	DisableConsoleBuffering disableConsoleBuffering;
+	return cin.get();
+}
+
+boost::filesystem::path dev::weaklyCanonicalFilesystemPath(boost::filesystem::path const &_path)
+{
+	if (boost::filesystem::exists(_path))
+		return boost::filesystem::canonical(_path);
+	else
+	{
+		boost::filesystem::path head(_path);
+		boost::filesystem::path tail;
+		for (auto it = --_path.end(); !head.empty(); --it)
+		{
+			if (boost::filesystem::exists(head))
+				break;
+			tail = (*it) / tail;
+			head.remove_filename();
+		}
+		head = boost::filesystem::canonical(head);
+		return head / tail;
+	}
+}
+
+string dev::absolutePath(string const& _path, string const& _reference)
+{
+	boost::filesystem::path p(_path);
+	// Anything that does not start with `.` is an absolute path.
+	if (p.begin() == p.end() || (*p.begin() != "." && *p.begin() != ".."))
+		return _path;
+	boost::filesystem::path result(_reference);
+	result.remove_filename();
+	for (boost::filesystem::path::iterator it = p.begin(); it != p.end(); ++it)
+		if (*it == "..")
+			result = result.parent_path();
+		else if (*it != ".")
+			result /= *it;
+	return result.generic_string();
+}
+
+string dev::sanitizePath(string const& _path) {
+	return boost::filesystem::path(_path).generic_string();
 }

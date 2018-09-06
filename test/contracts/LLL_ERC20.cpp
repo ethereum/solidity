@@ -33,7 +33,7 @@
 #define SUCCESS       encodeArgs(1)
 
 using namespace std;
-using namespace dev::eth;
+using namespace dev::lll;
 
 namespace dev
 {
@@ -400,6 +400,7 @@ protected:
 			BOOST_REQUIRE(errors.empty());
 		}
 		sendMessage(*s_compiledErc20, true);
+		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}
 
@@ -629,18 +630,22 @@ BOOST_AUTO_TEST_CASE(bad_data)
 
 	// Correct data: transfer(address _to, 1).
 	sendMessage((bytes)fromHex("a9059cbb") + (bytes)fromHex("000000000000000000000000123456789a123456789a123456789a123456789a") + encodeArgs(1), false, 0);
+	BOOST_CHECK(m_transactionSuccessful);
 	BOOST_CHECK(m_output == SUCCESS);
 
 	// Too little data (address is truncated by one byte).
 	sendMessage((bytes)fromHex("a9059cbb") + (bytes)fromHex("000000000000000000000000123456789a123456789a123456789a12345678") + encodeArgs(1), false, 0);
+	BOOST_CHECK(!m_transactionSuccessful);
 	BOOST_CHECK(m_output != SUCCESS);
 
 	// Too much data (address is extended with a zero byte).
 	sendMessage((bytes)fromHex("a9059cbb") + (bytes)fromHex("000000000000000000000000123456789a123456789a123456789a123456789a00") + encodeArgs(1), false, 0);
+	BOOST_CHECK(!m_transactionSuccessful);
 	BOOST_CHECK(m_output != SUCCESS);
 
 	// Invalid address (a bit above the 160th is set).
 	sendMessage((bytes)fromHex("a9059cbb") + (bytes)fromHex("000000000000000000000100123456789a123456789a123456789a123456789a") + encodeArgs(1), false, 0);
+	BOOST_CHECK(!m_transactionSuccessful);
 	BOOST_CHECK(m_output != SUCCESS);
 }
 

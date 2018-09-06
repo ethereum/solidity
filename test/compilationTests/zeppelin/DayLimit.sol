@@ -15,7 +15,7 @@ contract DayLimit {
    * @dev Constructor that sets the passed value as a dailyLimit.
    * @param _limit uint256 to represent the daily limit.
    */
-  function DayLimit(uint256 _limit) {
+  constructor(uint256 _limit) public {
     dailyLimit = _limit;
     lastDay = today();
   }
@@ -59,7 +59,7 @@ contract DayLimit {
    * @dev Private function to determine today's index
    * @return uint256 of today's index.
    */
-  function today() private constant returns (uint256) {
+  function today() private view returns (uint256) {
     return now / 1 days;
   }
 
@@ -68,7 +68,7 @@ contract DayLimit {
    */
   modifier limitedDaily(uint256 _value) {
     if (!underLimit(_value)) {
-      throw;
+      revert();
     }
     _;
   }

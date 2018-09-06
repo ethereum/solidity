@@ -39,14 +39,15 @@ namespace smt
 
 enum class CheckResult
 {
-	SATISFIABLE, UNSATISFIABLE, UNKNOWN, ERROR
+	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
 };
 
 enum class Sort
 {
 	Int,
 	Bool,
-	IntIntFun // Function of one Int returning a single Int
+	IntIntFun, // Function of one Int returning a single Int
+	IntBoolFun // Function of one Int returning a single Bool
 };
 
 /// C++ representation of an SMTLIB2 expression.
@@ -63,6 +64,26 @@ public:
 	Expression(Expression&&) = default;
 	Expression& operator=(Expression const&) = default;
 	Expression& operator=(Expression&&) = default;
+
+	bool hasCorrectArity() const
+	{
+		static std::map<std::string, unsigned> const operatorsArity{
+			{"ite", 3},
+			{"not", 1},
+			{"and", 2},
+			{"or", 2},
+			{"=", 2},
+			{"<", 2},
+			{"<=", 2},
+			{">", 2},
+			{">=", 2},
+			{"+", 2},
+			{"-", 2},
+			{"*", 2},
+			{"/", 2}
+		};
+		return operatorsArity.count(name) && operatorsArity.at(name) == arguments.size();
+	}
 
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
@@ -132,10 +153,22 @@ public:
 	Expression operator()(Expression _a) const
 	{
 		solAssert(
-			sort == Sort::IntIntFun && arguments.empty(),
+			arguments.empty(),
 			"Attempted function application to non-function."
 		);
-		return Expression(name, _a, Sort::Int);
+		switch (sort)
+		{
+		case Sort::IntIntFun:
+			return Expression(name, _a, Sort::Int);
+		case Sort::IntBoolFun:
+			return Expression(name, _a, Sort::Bool);
+		default:
+			solAssert(
+				false,
+				"Attempted function application to invalid type."
+			);
+			break;
+		}
 	}
 
 	std::string const name;
@@ -160,25 +193,41 @@ DEV_SIMPLE_EXCEPTION(SolverError);
 class SolverInterface
 {
 public:
+	virtual ~SolverInterface() = default;
 	virtual void reset() = 0;
 
 	virtual void push() = 0;
 	virtual void pop() = 0;
 
-	virtual Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
+	virtual void declareFunction(std::string _name, Sort _domain, Sort _codomain) = 0;
+	Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
 	{
-		solAssert(_domain == Sort::Int && _codomain == Sort::Int, "Function sort not supported.");
+		declareFunction(_name, _domain, _codomain);
+		solAssert(_domain == Sort::Int, "Function sort not supported.");
 		// Subclasses should do something here
-		return Expression(std::move(_name), {}, Sort::IntIntFun);
+		switch (_codomain)
+		{
+		case Sort::Int:
+			return Expression(std::move(_name), {}, Sort::IntIntFun);
+		case Sort::Bool:
+			return Expression(std::move(_name), {}, Sort::IntBoolFun);
+		default:
+			solAssert(false, "Function sort not supported.");
+			break;
+		}
 	}
-	virtual Expression newInteger(std::string _name)
+	virtual void declareInteger(std::string _name) = 0;
+	Expression newInteger(std::string _name)
 	{
 		// Subclasses should do something here
+		declareInteger(_name);
 		return Expression(std::move(_name), {}, Sort::Int);
 	}
-	virtual Expression newBool(std::string _name)
+	virtual void declareBool(std::string _name) = 0;
+	Expression newBool(std::string _name)
 	{
 		// Subclasses should do something here
+		declareBool(_name);
 		return Expression(std::move(_name), {}, Sort::Bool);
 	}
 
@@ -188,8 +237,11 @@ public:
 	/// is available. Throws SMTSolverError on error.
 	virtual std::pair<CheckResult, std::vector<std::string>>
 	check(std::vector<Expression> const& _expressionsToEvaluate) = 0;
-};
 
+protected:
+	// SMT query timeout in milliseconds.
+	static int const queryTimeout = 10000;
+};
 
 }
 }

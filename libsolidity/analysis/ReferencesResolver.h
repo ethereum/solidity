@@ -94,7 +94,6 @@ private:
 	std::vector<ParameterList const*> m_returnParameters;
 	bool const m_resolveInsideCode;
 	bool m_errorOccurred = false;
-	bool m_experimental050Mode = false;
 };
 
 }

@@ -7,10 +7,8 @@ Types
 *****
 
 Solidity is a statically typed language, which means that the type of each
-variable (state and local) needs to be specified (or at least known -
-see :ref:`type-deduction` below) at
-compile-time. Solidity provides several elementary types which can be combined
-to form complex types.
+variable (state and local) needs to be specified.
+Solidity provides several elementary types which can be combined to form complex types.
 
 In addition, types can interact with each other in expressions containing
 operators. For a quick reference of the various operators, see :ref:`order`.
@@ -60,15 +58,14 @@ operators are :ref:`literals<rational_literals>` (or literal expressions).
 Division by zero and modulus with zero throws a runtime exception.
 
 The result of a shift operation is the type of the left operand. The
-expression ``x << y`` is equivalent to ``x * 2**y``, and ``x >> y`` is
-equivalent to ``x / 2**y``. This means that shifting negative numbers
-sign extends. Shifting by a negative amount throws a runtime exception.
+expression ``x << y`` is equivalent to ``x * 2**y``, and, for positive integers,
+``x >> y`` is equivalent to ``x / 2**y``. For negative ``x``, ``x >> y``
+is equivalent to dividing by a power of ``2`` while rounding down (towards negative infinity).
+Shifting by a negative amount throws a runtime exception.
 
 .. warning::
-    The results produced by shift right of negative values of signed integer types is different from those produced
-    by other programming languages. In Solidity, shift right maps to division so the shifted negative values
-    are going to be rounded towards zero (truncated). In other programming languages the shift right of negative values
-    works like division with rounding down (towards negative infinity).
+    Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
+    i.e. right shifts used rounding towards zero instead of rounding towards negative infinity.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
@@ -81,7 +78,7 @@ Fixed Point Numbers
 
 ``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the number of bits taken by
 the type and ``N`` represents how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
-``ufixed`` and ``fixed`` are aliases for ``ufixed128x19`` and ``fixed128x19``, respectively.
+``ufixed`` and ``fixed`` are aliases for ``ufixed128x18`` and ``fixed128x18``, respectively.
 
 Operators:
 
@@ -94,7 +91,7 @@ Operators:
     defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
     where the decimal point is.
 
-.. index:: address, balance, send, call, callcode, delegatecall, transfer
+.. index:: address, balance, send, call, callcode, delegatecall, staticcall, transfer
 
 .. _address:
 
@@ -106,6 +103,14 @@ Address
 Operators:
 
 * ``<=``, ``<``, ``==``, ``!=``, ``>=`` and ``>``
+
+.. warning::
+    If you convert a type that uses a larger byte size to an ``address``, for example ``bytes32``, then the ``address`` is truncated.
+    To reduce conversion ambiguity version 0.4.24 and higher of the compiler force you make the truncation explicit in the conversion.
+    Take for example the address ``0x111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFFCCCC``.
+
+    You can use ``address(uint160(bytes20(b)))``, which results in ``0x111122223333444455556666777788889999aAaa``,
+    or you can use ``address(uint160(uint256(b)))``, which results in ``0x777788889999AaAAbBbbCcccddDdeeeEfFFfCcCc``.
 
 .. note::
     Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to address.
@@ -129,7 +134,7 @@ and to send Ether (in units of wei) to an address using the ``transfer`` functio
     if (x.balance < 10 && myAddress.balance >= 10) x.transfer(10);
 
 .. note::
-    If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``transfer`` call (this is a feature of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
+    If ``x`` is a contract address, its code (more specifically: its :ref:`fallback-function`, if present) will be executed together with the ``transfer`` call (this is a feature of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
 
 * ``send``
 
@@ -141,30 +146,40 @@ Send is the low-level counterpart of ``transfer``. If the execution fails, the c
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
     use a pattern where the recipient withdraws the money.
 
-* ``call``, ``callcode`` and ``delegatecall``
+* ``call``, ``callcode``, ``delegatecall`` and ``staticcall``
 
 Furthermore, to interface with contracts that do not adhere to the ABI,
-the function ``call`` is provided which takes an arbitrary number of arguments of any type. These arguments are padded to 32 bytes and concatenated. One exception is the case where the first argument is encoded to exactly four bytes. In this case, it is not padded to allow the use of function signatures here.
+or to get more direct control over the encoding,
+the function ``call`` is provided which takes a single byte array as input.
+The functions ``abi.encode``, ``abi.encodePacked``, ``abi.encodeWithSelector``
+and ``abi.encodeWithSignature`` can be used to encode structured data.
 
-::
+.. warning::
+    All these functions are low-level functions and should be used with care.
+    Specifically, any unknown contract might be malicious and if you call it, you
+    hand over control to that contract which could in turn call back into
+    your contract, so be prepared for changes to your state variables
+    when the call returns. The regular way to interact with other contracts
+    is to call a function on a contract object (``x.f()``).
 
-    address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
-    nameReg.call("register", "MyName");
-    nameReg.call(bytes4(keccak256("fun(uint256)")), a);
+:: note::
+    Previous versions of Solidity allowed these functions to receive
+    arbitrary arguments and would also handle a first argument of type
+    ``bytes4`` differently. These edge cases were removed in version 0.5.0.
 
-``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
+``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned with plain Solidity. However, using inline assembly it is possible to make a raw ``call`` and access the actual data returned with the ``returndatacopy`` instruction.
 
 It is possible to adjust the supplied gas with the ``.gas()`` modifier::
 
-    namReg.call.gas(1000000)("register", "MyName");
+    namReg.call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Similarly, the supplied Ether value can be controlled too::
 
-    nameReg.call.value(1 ether)("register", "MyName");
+    nameReg.call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Lastly, these modifiers can be combined. Their order does not matter::
 
-    nameReg.call.gas(1000000).value(1 ether)("register", "MyName");
+    nameReg.call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 .. note::
     It is not yet possible to use the gas or value modifiers on overloaded functions.
@@ -174,26 +189,51 @@ Lastly, these modifiers can be combined. Their order does not matter::
 
 In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
-All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
+Since byzantium ``staticcall`` can be used as well. This is basically the same as ``call``, but will revert, if the called function modifies the state in any way.
+
+All four functions ``call``, ``delegatecall``, ``callcode`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
 The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
 
 .. note::
-    All contracts inherit the members of address, so it is possible to query the balance of the
-    current contract using ``this.balance``.
+    All contracts can be converted to ``address`` type, so it is possible to query the balance of the
+    current contract using ``address(this).balance``.
 
 .. note::
     The use of ``callcode`` is discouraged and will be removed in the future.
 
-.. warning::
-    All these functions are low-level functions and should be used with care.
-    Specifically, any unknown contract might be malicious and if you call it, you
-    hand over control to that contract which could in turn call back into
-    your contract, so be prepared for changes to your state variables
-    when the call returns.
+.. index:: ! contract type, ! type; contract
+
+.. _contract_types:
+
+Contract Types
+--------------
+
+Every :ref:`contract<contracts>` defines its own type.
+You can implicitly convert contracts to contracts they inherit from,
+and explicitly convert them to and from the ``address`` type.
+
+.. note::
+    Starting with version 0.5.0 contracts do not derive from the address type,
+    but can still be explicitly converted to address.
+
+If you declare a local variable of contract type (`MyContract c`), you can call
+functions on that contract. Take care to assign it from somewhere that is the
+same contract type.
+
+You can also instantiate contracts (which means they are newly created). You
+can find more details in the :ref:`'Contracts via new'<creating-contracts>`
+section.
+
+The data representation of a contract is identical to that of the ``address``
+type and this type is also used in the :ref:`ABI<ABI>`.
+
+Contracts do not support any operators.
+
+The members of contract types are the external functions of the contract
+including public state variables.
 
 .. index:: byte array, bytes32
-
 
 Fixed-size byte arrays
 ----------------------
@@ -225,10 +265,6 @@ Dynamically-sized byte array
     Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
 ``string``:
     Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
-
-As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
-for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
-number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 .. index:: address, literal;address
 
@@ -262,6 +298,11 @@ one side.  Examples include ``1.``, ``.1`` and ``1.3``.
 
 Scientific notation is also supported, where the base can have fractions, while the exponent cannot.
 Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
+
+Underscores can be used to separate the digits of a numeric literal to aid readability.
+For example, decimal ``123_000``, hexadecimal ``0x2eff_abde``, scientific decimal notation ``1_2e345_678`` are all valid.
+Underscores are only allowed between two digits and only one consecutive underscore is allowed.
+There is no additional semantic meaning added to a number literal containing underscores.
 
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
 using them together with a non-literal expression).
@@ -329,6 +370,10 @@ Enums are one way to create a user-defined type in Solidity. They are explicitly
 to and from all integer types but implicit conversion is not allowed.  The explicit conversions
 check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
 
+The data representation is the same as for enums in C: The options are represented by
+subsequent unsigned integer values starting from ``0``.
+
+
 ::
 
     pragma solidity ^0.4.16;
@@ -345,7 +390,7 @@ check the value ranges at runtime and a failure causes an exception.  Enums need
         // Since enum types are not part of the ABI, the signature of "getChoice"
         // will automatically be changed to "getChoice() returns (uint8)"
         // for all matters external to Solidity. The integer type used is just
-        // large enough to hold all enum values, i.e. if you have more values,
+        // large enough to hold all enum values, i.e. if you have more than 256 values,
         // `uint16` will be used and so on.
         function getChoice() public view returns (ActionChoices) {
             return choice;
@@ -380,19 +425,33 @@ be passed via and returned from external function calls.
 
 Function types are notated as follows::
 
-    function (<parameter types>) {internal|external} [pure|constant|view|payable] [returns (<return types>)]
+    function (<parameter types>) {internal|external} [pure|view|payable] [returns (<return types>)]
 
 In contrast to the parameter types, the return types cannot be empty - if the
 function type should not return anything, the whole ``returns (<return types>)``
 part has to be omitted.
 
 By default, function types are internal, so the ``internal`` keyword can be
-omitted. In contrast, contract functions themselves are public by default,
-only when used as the name of a type, the default is internal.
+omitted. Note that this only applies to function types. Visibility has
+to be specified explicitly for functions defined in contracts, they
+do not have a default.
 
-There are two ways to access a function in the current contract: Either directly
-by its name, ``f``, or using ``this.f``. The former will result in an internal
-function, the latter in an external function.
+A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
+their parameter types are identical, their return types are identical,
+their internal/external property is identical and the state mutability of ``A``
+is not more restrictive than the state mutability of ``B``. In particular:
+
+ - ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
+ - ``view`` functions can be converted to ``non-payable`` functions
+ - ``payable`` functions can be converted to ``non-payable`` functions
+
+No other conversions are possible.
+
+The rule about ``payable`` and ``non-payable`` might be a little
+confusing, but in essence, if a function is ``payable``, this means that it
+also accepts a payment of zero Ether, so it also is ``non-payable``.
+On the other hand, a ``non-payable`` function will reject Ether sent to it,
+so ``non-payable`` functions cannot be converted to ``payable`` functions.
 
 If a function type variable is not initialized, calling it will result
 in an exception. The same happens if you call a function after using ``delete``
@@ -412,7 +471,7 @@ which returns the :ref:`ABI function selector <abi_function_selector>`::
     pragma solidity ^0.4.16;
 
     contract Selector {
-      function f() public view returns (bytes4) {
+      function f() public pure returns (bytes4) {
         return this.f.selector;
       }
     }
@@ -470,20 +529,20 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.21;
+    pragma solidity ^0.4.22;
 
     contract Oracle {
       struct Request {
         bytes data;
-        function(bytes memory) external callback;
+        function(uint) external callback;
       }
       Request[] requests;
       event NewRequest(uint);
-      function query(bytes data, function(bytes memory) external callback) public {
+      function query(bytes memory data, function(uint) external callback) public {
         requests.push(Request(data, callback));
         emit NewRequest(requests.length - 1);
       }
-      function reply(uint requestID, bytes response) public {
+      function reply(uint requestID, uint response) public {
         // Here goes the check that the reply comes from a trusted source
         requests[requestID].callback(response);
       }
@@ -491,12 +550,16 @@ Another example that uses external function types::
 
     contract OracleUser {
       Oracle constant oracle = Oracle(0x1234567); // known contract
-      function buySomething() {
+      uint exchangeRate;
+      function buySomething() public {
         oracle.query("USD", this.oracleResponse);
       }
-      function oracleResponse(bytes response) public {
-        require(msg.sender == address(oracle));
-        // Use the data
+      function oracleResponse(uint response) public {
+        require(
+            msg.sender == address(oracle),
+            "Only oracle can call this."
+        );
+        exchangeRate = response;
       }
     }
 
@@ -514,19 +577,23 @@ them can be quite expensive, we have to think about whether we want them to be
 stored in **memory** (which is not persisting) or **storage** (where the state
 variables are held).
 
+.. _data-location:
+
 Data location
 -------------
 
-Every complex type, i.e. *arrays* and *structs*, has an additional
-annotation, the "data location", about whether it is stored in memory or in storage. Depending on the
-context, there is always a default, but it can be overridden by appending
-either ``storage`` or ``memory`` to the type. The default for function parameters (including return parameters) is ``memory``, the default for local variables is ``storage`` and the location is forced
-to ``storage`` for state variables (obviously).
 
-There is also a third data location, ``calldata``, which is a non-modifiable,
-non-persistent area where function arguments are stored. Function parameters
-(not return parameters) of external functions are forced to ``calldata`` and
-behave mostly like ``memory``.
+Every complex type, i.e. *arrays* and *structs*, has an additional
+annotation, the "data location", about where it is stored. There are three data locations:
+``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
+functions and is required for this type of parameter. Calldata is a non-modifiable,
+non-persistent area where function arguments are stored, and behaves mostly like memory.
+
+
+.. note::
+    Prior to version 0.5.0 the data location could be omitted, and would default to different locations
+    depending on the kind of variable, function type, etc., but all complex types must now give an explicit
+    data location.
 
 Data locations are important because they change how assignments behave:
 assignments between storage and memory and also to a state variable (even from other state variables)
@@ -545,9 +612,9 @@ memory-stored reference type do not create a copy.
         uint[] x; // the data location of x is storage
 
         // the data location of memoryArray is memory
-        function f(uint[] memoryArray) public {
+        function f(uint[] memory memoryArray) public {
             x = memoryArray; // works, copies the whole array to storage
-            var y = x; // works, assigns a pointer, data location of y is storage
+            uint[] storage y = x; // works, assigns a pointer, data location of y is storage
             y[7]; // fine, returns the 8th element
             y.length = 2; // fine, modifies x through y
             delete x; // fine, clears the array, also modifies y
@@ -561,8 +628,8 @@ memory-stored reference type do not create a copy.
             h(x); // calls h and creates an independent, temporary copy in memory
         }
 
-        function g(uint[] storage storageArray) internal {}
-        function h(uint[] memoryArray) public {}
+        function g(uint[] storage) internal pure {}
+        function h(uint[] memory) public pure {}
     }
 
 Summary
@@ -571,10 +638,6 @@ Summary
 Forced data location:
  - parameters (not return) of external functions: calldata
  - state variables: storage
-
-Default data location:
- - parameters (also return) of functions: memory
- - all other local variables: storage
 
 .. index:: ! array
 
@@ -599,8 +662,10 @@ shaves off one level in the type from the right).
 Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
 but it is packed tightly in calldata. ``string`` is equal to ``bytes`` but does not allow
 length or index access (for now).
-
 So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
+As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
+for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
+number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 .. note::
     If you want to access the byte-representation of a string ``s``, use
@@ -617,8 +682,9 @@ Allocating Memory Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Creating arrays with variable length in memory can be done using the ``new`` keyword.
-As opposed to storage arrays, it is **not** possible to resize memory arrays by assigning to
-the ``.length`` member.
+As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g. by assigning to
+the ``.length`` member). You either have to calculate the required size in advance
+or create a new memory array and copy every element.
 
 ::
 
@@ -628,7 +694,8 @@ the ``.length`` member.
         function f(uint len) public pure {
             uint[] memory a = new uint[](7);
             bytes memory b = new bytes(len);
-            // Here we have a.length == 7 and b.length == len
+            assert(a.length == 7);
+            assert(b.length == len);
             a[6] = 8;
         }
     }
@@ -649,7 +716,7 @@ assigned to a variable right away.
         function f() public pure {
             g([uint(1), 2, 3]);
         }
-        function g(uint[3] _data) public pure {
+        function g(uint[3] memory) public pure {
             // ...
         }
     }
@@ -664,22 +731,21 @@ possible:
 
 ::
 
-    // This will not compile.
-
     pragma solidity ^0.4.0;
 
+    // This will not compile.
     contract C {
         function f() public {
             // The next line creates a type error because uint[3] memory
             // cannot be converted to uint[] memory.
-            uint[] x = [uint(1), 3, 4];
+            uint[] memory x = [uint(1), 3, 4];
         }
     }
 
 It is planned to remove this restriction in the future but currently creates
 some complications because of how arrays are passed in the ABI.
 
-.. index:: ! array;length, length, push, !array;push
+.. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
 Members
 ^^^^^^^
@@ -690,18 +756,17 @@ Members
     ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that can be used to append an element at the end of the array. The function returns the new length.
+**pop**:
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that can be used to remove an element from the end of the array.
 
 .. warning::
     It is not yet possible to use arrays of arrays in external functions.
 
-.. warning::
-    Due to limitations of the EVM, it is not possible to return
-    dynamic content from external function calls. The function ``f`` in
-    ``contract C { function f() returns (uint[]) { ... } }`` will return
-    something if called from web3.js, but not if called from Solidity.
-
-    The only workaround for now is to use large statically-sized arrays.
-
+.. note::
+    In EVM versions before Byzantium, it was not possible to access
+    dynamic arrays return from function calls. If you call functions
+    that return dynamic arrays, make sure to use an EVM that is set to
+    Byzantium mode.
 
 ::
 
@@ -711,10 +776,13 @@ Members
         uint[2**20] m_aLotOfIntegers;
         // Note that the following is not a pair of dynamic arrays but a
         // dynamic array of pairs (i.e. of fixed size arrays of length two).
+        // Because of that, T[] is always a dynamic array of T, even if T
+        // itself is an array.
         bool[2][] m_pairsOfFlags;
-        // newPairs is stored in memory - the default for function arguments
 
-        function setAllFlagPairs(bool[2][] newPairs) public {
+        // newPairs is stored in memory - the only possibility
+        // for public function arguments
+        function setAllFlagPairs(bool[2][] memory newPairs) public {
             // assignment to a storage array replaces the complete array
             m_pairsOfFlags = newPairs;
         }
@@ -740,26 +808,31 @@ Members
 
         bytes m_byteData;
 
-        function byteArrays(bytes data) public {
+        function byteArrays(bytes memory data) public {
             // byte arrays ("bytes") are different as they are stored without padding,
             // but can be treated identical to "uint8[]"
             m_byteData = data;
             m_byteData.length += 7;
-            m_byteData[3] = byte(8);
+            m_byteData[3] = 0x08;
             delete m_byteData[2];
         }
 
-        function addFlag(bool[2] flag) public returns (uint) {
+        function addFlag(bool[2] memory flag) public returns (uint) {
             return m_pairsOfFlags.push(flag);
         }
 
-        function createMemoryArray(uint size) public pure returns (bytes) {
+        function createMemoryArray(uint size) public pure returns (bytes memory) {
             // Dynamic memory arrays are created using `new`:
             uint[2][] memory arrayOfPairs = new uint[2][](size);
+
+            // Inline arrays are always statically-sized and if you only
+            // use literals, you have to provide at least one type.
+            arrayOfPairs[0] = [uint(1), 2];
+
             // Create a dynamic byte array:
             bytes memory b = new bytes(200);
             for (uint i = 0; i < b.length; i++)
-                b[i] = byte(i);
+                b[i] = byte(uint8(i));
             return b;
         }
     }
@@ -847,7 +920,7 @@ Mappings
 ========
 
 Mapping types are declared as ``mapping(_KeyType => _ValueType)``.
-Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, an enum and a struct.
+Here ``_KeyType`` can be almost any type except for a mapping, a dynamically sized array, a contract, a function, an enum and a struct.
 ``_ValueType`` can actually be any type, including mappings.
 
 Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are virtually initialized such that
@@ -883,7 +956,7 @@ for each ``_KeyType``, recursively.
         function f() public returns (uint) {
             MappingExample m = new MappingExample();
             m.update(100);
-            return m.balances(this);
+            return m.balances(address(this));
         }
     }
 
@@ -927,10 +1000,13 @@ It is important to note that ``delete a`` really behaves like an assignment to `
             // y is affected which is an alias to the storage object
             // On the other hand: "delete y" is not valid, as assignments to local variables
             // referencing storage objects can only be made from existing storage objects.
+            assert(y.length == 0);
         }
     }
 
 .. index:: ! type;conversion, ! cast
+
+.. _types-conversion-elementary-types:
 
 Conversions between Elementary Types
 ====================================
@@ -945,9 +1021,7 @@ is possible if it
 makes sense semantically and no information is lost: ``uint8`` is convertible to
 ``uint16`` and ``int128`` to ``int256``, but ``int8`` is not convertible to ``uint256``
 (because ``uint256`` cannot hold e.g. ``-1``).
-Furthermore, unsigned integers can be converted to bytes of the same or larger
-size, but not vice-versa. Any type that can be converted to ``uint160`` can also
-be converted to ``address``.
+Any integer type that can be converted to ``uint160`` can also be converted to ``address``.
 
 Explicit Conversions
 --------------------
@@ -966,32 +1040,90 @@ a negative ``int8`` to a ``uint``:
 At the end of this code snippet, ``x`` will have the value ``0xfffff..fd`` (64 hex
 characters), which is -3 in the two's complement representation of 256 bits.
 
-If a type is explicitly converted to a smaller type, higher-order bits are
+If an integer is explicitly converted to a smaller type, higher-order bits are
 cut off::
 
     uint32 a = 0x12345678;
     uint16 b = uint16(a); // b will be 0x5678 now
 
-.. index:: ! type;deduction, ! var
+If an integer is explicitly converted to a larger type, it is padded on the left (i.e. at the higher order end).
+The result of the conversion will compare equal to the original integer.
 
-.. _type-deduction:
+    uint16 a = 0x1234;
+    uint32 b = uint32(a); // b will be 0x00001234 now
+    assert(a == b);
 
-Type Deduction
-==============
+Fixed-size bytes types behave differently during conversions. They can be thought of as
+sequences of individual bytes and converting to a smaller type will cut off the
+sequence::
 
-For convenience, it is not always necessary to explicitly specify the type of a
-variable, the compiler automatically infers it from the type of the first
-expression that is assigned to the variable::
+    bytes2 a = 0x1234;
+    bytes1 b = bytes1(a); // b will be 0x12
 
-    uint24 x = 0x123;
-    var y = x;
+If a fixed-size bytes type is explicitly converted to a larger type, it is padded on
+the right. Accessing the byte at a fixed index will result in the same value before and
+after the conversion (if the index is still in range)::
 
-Here, the type of ``y`` will be ``uint24``. Using ``var`` is not possible for function
-parameters or return parameters.
+    bytes2 a = 0x1234;
+    bytes4 b = bytes4(a); // b will be 0x12340000
+    assert(a[0] == b[0]);
+    assert(a[1] == b[1]);
 
-.. warning::
-    The type is only deduced from the first assignment, so
-    the loop in the following snippet is infinite, as ``i`` will have the type
-    ``uint8`` and the highest value of this type is smaller than ``2000``.
-    ``for (var i = 0; i < 2000; i++) { ... }``
+Since integers and fixed-size byte arrays behave differently when truncating or
+padding, explicit conversions between integers and fixed-size byte arrays are only allowed,
+if both have the same size. If you want to convert between integers and fixed-size byte arrays of
+different size, you have to use intermediate conversions that make the desired truncation and padding
+rules explicit::
 
+    bytes2 a = 0x1234;
+    uint32 b = uint16(a); // b will be 0x00001234
+    uint32 c = uint32(bytes4(a)); // c will be 0x12340000
+    uint8 d = uint8(uint16(a)); // d will be 0x34
+    uint8 e = uint8(bytes1(a)); // d will be 0x12
+
+.. _types-conversion-literals:
+
+Conversions between Literals and Elementary Types
+=================================================
+
+Integer Types
+-------------
+
+Decimal and hexadecimal number literals can be implicitly converted to any integer type
+that is large enough to represent it without truncation::
+
+    uint8 a = 12; // fine
+    uint32 b = 1234; // fine
+    uint16 c = 0x123456; // fails, since it would have to truncate to 0x3456
+
+Fixed-Size Byte Arrays
+----------------------
+
+Decimal number literals cannot be implicitly converted to fixed-size byte arrays. Hexadecimal
+number literals can be, but only if the number of hex digits exactly fits the size of the bytes
+type. As an exception both decimal and hexadecimal literals which have a value of zero can be
+converted to any fixed-size bytes type::
+
+    bytes2 a = 54321; // not allowed
+    bytes2 b = 0x12; // not allowed
+    bytes2 c = 0x123; // not allowed
+    bytes2 d = 0x1234; // fine
+    bytes2 e = 0x0012; // fine
+    bytes4 f = 0; // fine
+    bytes4 g = 0x0; // fine
+
+String literals and hex string literals can be implicitly converted to fixed-size byte arrays,
+if their number of characters matches the size of the bytes type::
+
+    bytes2 a = hex"1234"; // fine
+    bytes2 b = "xy"; // fine
+    bytes2 c = hex"12"; // not allowed
+    bytes2 d = hex"123"; // not allowed
+    bytes2 e = "x"; // not allowed
+    bytes2 f = "xyz"; // not allowed
+
+Addresses
+---------
+
+As described in :ref:`address_literals`, hex literals of the correct size that pass the checksum
+test are of ``address`` type. No other literals can be implicitly converted to the ``address`` type.

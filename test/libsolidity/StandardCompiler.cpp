@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"settings": {
 			"outputSelection": {
 				"fileA": {
-					"A": [ "abi", "devdoc", "userdoc", "evm.bytecode", "evm.assembly", "evm.gasEstimates", "metadata" ],
+					"A": [ "abi", "devdoc", "userdoc", "evm.bytecode", "evm.assembly", "evm.gasEstimates", "evm.legacyAssembly", "metadata" ],
 					"": [ "legacyAST" ]
 				}
 			}
@@ -261,19 +261,52 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
-		"60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00"
+		"6080604052348015600f57600080fd5b50603580601d6000396000f3fe6080604052600080fdfe"
 	);
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
 	BOOST_CHECK(contract["evm"]["assembly"].asString().find(
-		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x60)\n  jumpi(tag_1, iszero(callvalue))\n"
-		"  0x0\n  dup1\n  revert\ntag_1:\n  dataSize(sub_0)\n  dup1\n  dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n"
-		"  return\nstop\n\nsub_0: assembly {\n        /* \"fileA\":0:14  contract A { } */\n"
-		"      mstore(0x40, 0x60)\n      0x0\n      dup1\n      revert\n\n"
-		"    auxdata: 0xa165627a7a7230582") == 0);
+		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x80)\n  "
+		"callvalue\n    /* \"--CODEGEN--\":8:17   */\n  dup1\n    "
+		"/* \"--CODEGEN--\":5:7   */\n  iszero\n  tag_1\n  jumpi\n    "
+		"/* \"--CODEGEN--\":30:31   */\n  0x0\n    /* \"--CODEGEN--\":27:28   */\n  "
+		"dup1\n    /* \"--CODEGEN--\":20:32   */\n  revert\n    /* \"--CODEGEN--\":5:7   */\n"
+		"tag_1:\n    /* \"fileA\":0:14  contract A { } */\n  pop\n  dataSize(sub_0)\n  dup1\n  "
+		"dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n  return\nstop\n\nsub_0: assembly {\n        "
+		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      0x0\n      "
+		"dup1\n      revert\n\n    auxdata: 0xa165627a7a72305820"
+	) == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(
 		dev::jsonCompactPrint(contract["evm"]["gasEstimates"]),
-		"{\"creation\":{\"codeDepositCost\":\"10600\",\"executionCost\":\"61\",\"totalCost\":\"10661\"}}"
+		"{\"creation\":{\"codeDepositCost\":\"10600\",\"executionCost\":\"66\",\"totalCost\":\"10666\"}}"
+	);
+	// Lets take the top level `.code` section (the "deployer code"), that should expose most of the features of
+	// the assembly JSON. What we want to check here is Operation, Push, PushTag, PushSub, PushSubSize and Tag.
+	BOOST_CHECK(contract["evm"]["legacyAssembly"].isObject());
+	BOOST_CHECK(contract["evm"]["legacyAssembly"][".code"].isArray());
+	BOOST_CHECK_EQUAL(
+		dev::jsonCompactPrint(contract["evm"]["legacyAssembly"][".code"]),
+		"[{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"value\":\"80\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"value\":\"40\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"MSTORE\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"CALLVALUE\"},"
+		"{\"begin\":8,\"end\":17,\"name\":\"DUP1\"},"
+		"{\"begin\":5,\"end\":7,\"name\":\"ISZERO\"},"
+		"{\"begin\":5,\"end\":7,\"name\":\"PUSH [tag]\",\"value\":\"1\"},"
+		"{\"begin\":5,\"end\":7,\"name\":\"JUMPI\"},"
+		"{\"begin\":30,\"end\":31,\"name\":\"PUSH\",\"value\":\"0\"},"
+		"{\"begin\":27,\"end\":28,\"name\":\"DUP1\"},"
+		"{\"begin\":20,\"end\":32,\"name\":\"REVERT\"},"
+		"{\"begin\":5,\"end\":7,\"name\":\"tag\",\"value\":\"1\"},"
+		"{\"begin\":5,\"end\":7,\"name\":\"JUMPDEST\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"POP\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH #[$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"DUP1\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH [$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"value\":\"0\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"CODECOPY\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"value\":\"0\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"RETURN\"}]"
 	);
 	BOOST_CHECK(contract["metadata"].isString());
 	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
@@ -321,9 +354,9 @@ BOOST_AUTO_TEST_CASE(compilation_error)
 		{
 			BOOST_CHECK_EQUAL(
 				dev::jsonCompactPrint(error),
-				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier, got 'RBrace'\\n"
-				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier, got 'RBrace'\","
-				"\"severity\":\"error\",\"sourceLocation\":{\"end\":22,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
+				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier but got '}'\\n"
+				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier but got '}'\","
+				"\"severity\":\"error\",\"sourceLocation\":{\"end\":23,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
 			);
 		}
 	}
@@ -461,7 +494,7 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract)
 		},
 		"sources": {
 			"fileA": {
-				"content": "contract B { } contract A { function f() { new B(); } }"
+				"content": "contract B { } contract A { function f() public { new B(); } }"
 			}
 		}
 	}
@@ -490,7 +523,7 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
 		},
 		"sources": {
 			"fileA": {
-				"content": "import \"fileB\"; contract A { function f() { new B(); } }"
+				"content": "import \"fileB\"; contract A { function f() public { new B(); } }"
 			},
 			"fileB": {
 				"content": "contract B { }"
@@ -551,10 +584,10 @@ BOOST_AUTO_TEST_CASE(library_filename_with_colon)
 		},
 		"sources": {
 			"fileA": {
-				"content": "import \"git:library.sol\"; contract A { function f() returns (uint) { return L.g(); } }"
+				"content": "import \"git:library.sol\"; contract A { function f() public returns (uint) { return L.g(); } }"
 			},
 			"git:library.sol": {
-				"content": "library L { function g() returns (uint) { return 1; } }"
+				"content": "library L { function g() public returns (uint) { return 1; } }"
 			}
 		}
 	}
@@ -701,13 +734,13 @@ BOOST_AUTO_TEST_CASE(library_linking)
 		},
 		"sources": {
 			"fileA": {
-				"content": "import \"library.sol\"; import \"library2.sol\"; contract A { function f() returns (uint) { L2.g(); return L.g(); } }"
+				"content": "import \"library.sol\"; import \"library2.sol\"; contract A { function f() public returns (uint) { L2.g(); return L.g(); } }"
 			},
 			"library.sol": {
-				"content": "library L { function g() returns (uint) { return 1; } }"
+				"content": "library L { function g() public returns (uint) { return 1; } }"
 			},
 			"library2.sol": {
-				"content": "library L2 { function g() { } }"
+				"content": "library L2 { function g() public { } }"
 			}
 		}
 	}
@@ -752,6 +785,8 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"spuriousDragon\"") != string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"byzantium\","));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"constantinople\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"constantinople\"") != string::npos);
 	// test default
 	result = compile(inputForVersion(""));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != string::npos);

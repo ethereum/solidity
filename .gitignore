@@ -35,11 +35,19 @@ build/
 docs/_build
 docs/utils/__pycache__
 docs/utils/*.pyc
+/deps/downloads/
+deps/install
+deps/cache
 
 # vim stuff
-*.swp
+[._]*.sw[a-p]
+[._]sw[a-p]
 
 # IDE files
 .idea
 browse.VC.db
 CMakeLists.txt.user
+/CMakeSettings.json
+/.vs
+/.cproject
+/.project

@@ -30,10 +30,46 @@ namespace dev
 {
 
 // Calculates the Damerau–Levenshtein distance between _str1 and _str2 and returns true if that distance is not greater than _maxDistance
-bool stringWithinDistance(std::string const& _str1, std::string const& _str2, size_t _maxDistance);
+// if _lenThreshold > 0 and the product of the strings length is greater than _lenThreshold, the function will return false
+bool stringWithinDistance(std::string const& _str1, std::string const& _str2, size_t _maxDistance, size_t _lenThreshold = 0);
 // Calculates the Damerau–Levenshtein distance between _str1 and _str2
 size_t stringDistance(std::string const& _str1, std::string const& _str2);
 // Return a string having elements of suggestions as quoted, alternative suggestions. e.g. "a", "b" or "c"
 std::string quotedAlternativesList(std::vector<std::string> const& suggestions);
+
+/// Joins collection of strings into one string with separators between, last separator can be different.
+/// @param _list collection of strings to join
+/// @param _separator defaults to ", "
+/// @param _lastSeparator (optional) will be used to separate last two strings instead of _separator
+/// @example join(vector<string>{"a", "b", "c"}, "; ", " or ") == "a; b or c"
+template<class T>
+std::string joinHumanReadable
+(
+	T const& _list,
+	std::string const& _separator = ", ",
+	std::string const& _lastSeparator = ""
+)
+{
+	auto const itEnd = end(_list);
+
+	std::string result;
+
+	for (auto it = begin(_list); it != itEnd; )
+	{
+		std::string element = *it;
+		bool first = (it == begin(_list));
+		++it;
+		if (!first)
+		{
+			if (it == itEnd && !_lastSeparator.empty())
+				result += _lastSeparator; // last iteration
+			else
+				result += _separator;
+		}
+		result += std::move(element);
+	}
+
+	return result;
+}
 
 }
