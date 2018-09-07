@@ -511,5 +511,11 @@
             "ConstantOptimizerSubtraction"
         ], 
         "released": "2017-01-31"
+    },
+    "v0.4.23-aoaio-v1.0": {
+        "bugs":[
+            "PayableMechanismNotWorkForAssetValue"
+        ],
+        "released": "2018-07-18"
     }
 }

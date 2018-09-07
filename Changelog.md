@@ -1,3 +1,12 @@
+### 0.4.24-aoaio-v1.1 (2018-09-07)
+
+Language Features:
+ * Merge ethereum solidity v0.4.24
+ * Change default EVMVersion to Constantinople.
+  
+Bugfixes:
+ * payable mechanism not work for asset value.
+
 ### 0.4.24 (2018-05-16)
 
 Language Features:

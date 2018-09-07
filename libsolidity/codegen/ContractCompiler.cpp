@@ -128,6 +128,8 @@ void ContractCompiler::appendCallValueCheck()
 {
 	// Throw if function is not payable but call contained ether.
 	m_context << Instruction::CALLVALUE;
+	m_context << Instruction::ASSETVALUE;
+	m_context << Instruction::OR;
 	// TODO: error message?
 	m_context.appendConditionalRevert();
 }
