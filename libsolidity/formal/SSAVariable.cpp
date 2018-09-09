@@ -19,6 +19,7 @@
 
 #include <libsolidity/formal/SymbolicBoolVariable.h>
 #include <libsolidity/formal/SymbolicIntVariable.h>
+#include <libsolidity/formal/SymbolicFallbackVariable.h>
 
 #include <libsolidity/ast/AST.h>
 
@@ -39,7 +40,10 @@ SSAVariable::SSAVariable(
 		m_symbolicVar = make_shared<SymbolicBoolVariable>(_decl, _interface);
 	else
 	{
-		solAssert(false, "");
+		// Use a fallback type. This allow the SMT checker to run on functions
+		// which use unsupported types. It may introduce false-positivies, but
+		// it will allows the checker to run on the known types.
+		m_symbolicVar = make_shared<SymbolicFallbackVariable>(_decl, _interface);
 	}
 }
 

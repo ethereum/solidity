@@ -779,20 +779,18 @@ void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _varia
 
 bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 {
-	if (SSAVariable::isSupportedType(_varDecl.type()->category()))
-	{
-		solAssert(m_variables.count(&_varDecl) == 0, "");
-		m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
-		return true;
-	}
-	else
-	{
+	// Unconditionally add the variable. If the type is not supported
+	// SSAVariable will use the fallback which is an 256bits integer.
+	solAssert(m_variables.count(&_varDecl) == 0, "");
+	m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
+
+	if (!SSAVariable::isSupportedType(_varDecl.type()->category()))
 		m_errorReporter.warning(
 			_varDecl.location(),
 			"Assertion checker does not yet support the type of this variable."
 		);
-		return false;
-	}
+
+	return true;
 }
 
 string SMTChecker::uniqueSymbol(Expression const& _expr)
