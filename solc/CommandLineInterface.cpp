@@ -760,11 +760,6 @@ bool CommandLineInterface::processInput()
 	if (!readInputFilesAndConfigureRemappings())
 		return false;
 
-	if (m_args.count(g_argLibraries))
-		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
-			if (!parseLibraryOption(library))
-				return false;
-
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
@@ -802,6 +797,12 @@ bool CommandLineInterface::processInput()
 		}
 		return assemble(inputLanguage, targetMachine);
 	}
+
+	if (m_args.count(g_argLibraries))
+		for (string const& library: m_args[g_argLibraries].as<vector<string>>())
+			if (!parseLibraryOption(library))
+				return false;
+
 	if (m_args.count(g_argLink))
 	{
 		// switch to linker mode
