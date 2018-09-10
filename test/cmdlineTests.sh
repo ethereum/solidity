@@ -117,6 +117,8 @@ test_solc_file_input_failures() {
     exitCode=$?
     set -e
 
+    stderr=`sed 's/.*This is a pre-release compiler version, please do not use it in production.*$//' $stderr_path`
+
     if [[ $exitCode -eq 0 ]]; then
         printError "Incorrect exit code. Expected failure (non-zero) but got success (0)."
         rm -f $stdout_path $stderr_path
@@ -133,12 +135,12 @@ test_solc_file_input_failures() {
         exit 1
     fi
 
-    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]; then
+    if [[ "$stderr" != "${stderr_expected}" ]]; then
         printError "Incorrect output on stderr received. Expected:"
         echo -e "${stderr_expected}"
 
         printError "But got:"
-        cat $stderr_path
+        echo $stderr
         rm -f $stdout_path $stderr_path
         exit 1
     fi
@@ -155,6 +157,16 @@ test_solc_file_input_failures "." "" "" "\".\" is not a valid file."
 printTask "Testing passing empty remappings..."
 test_solc_file_input_failures "${0}" "=/some/remapping/target" "" "Invalid remapping: \"=/some/remapping/target\"."
 test_solc_file_input_failures "${0}" "ctx:=/some/remapping/target" "" "Invalid remapping: \"ctx:=/some/remapping/target\"."
+
+printTask "Testing passing location printing..."
+(
+cd "$REPO_ROOT"/test/cmdlineErrorReports/
+for file in *.sol
+do
+    ret=`cat $file.ref`
+    test_solc_file_input_failures "$file" "" "" "$ret"
+done
+)
 
 printTask "Compiling various other contracts and libraries..."
 (
