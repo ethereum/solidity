@@ -1,5 +1,13 @@
 [
     {
+        "name": "ExpExponentCleanup",
+        "summary": "Using the ** operator with an exponent of type shorter than 256 bits can result in unexpected values.",
+        "description": "Higher order bits in the exponent are not properly cleaned before the EXP opcode is applied if the type of the exponent expression is smaller than 256 bits and not smaller than the type of the base. In that case, the result might be larger than expected if the exponent is assumed to lie within the value range of the type. Literal numbers as exponents are unaffected as are exponents or bases of type uint256.",
+        "fixed": "0.4.25",
+        "severity": "medium/high",
+        "check": {"regex-source": "[^/]\\*\\* *[^/0-9 ]"}
+    },
+    {
         "name": "EventStructWrongData",
         "summary": "Using structs in events logged wrong data.",
         "description": "If a struct is used in an event, the address of the struct is logged instead of the actual data.",

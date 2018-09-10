@@ -1,6 +1,7 @@
 {
     "0.1.0": {
         "bugs": [
+            "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
             "SkipEmptyStringLiteral",
@@ -18,6 +19,7 @@
     },
     "0.1.1": {
         "bugs": [
+            "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
             "SkipEmptyStringLiteral",
@@ -35,6 +37,7 @@
     },
     "0.1.2": {
         "bugs": [
+            "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
             "SkipEmptyStringLiteral",
@@ -52,6 +55,7 @@
     },
     "0.1.3": {
         "bugs": [
+            "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
             "SkipEmptyStringLiteral",
@@ -69,6 +73,7 @@
     },
     "0.1.4": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -87,6 +92,7 @@
     },
     "0.1.5": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -105,6 +111,7 @@
     },
     "0.1.6": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -124,6 +131,7 @@
     },
     "0.1.7": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -143,6 +151,7 @@
     },
     "0.2.0": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -162,6 +171,7 @@
     },
     "0.2.1": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -181,6 +191,7 @@
     },
     "0.2.2": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -200,6 +211,7 @@
     },
     "0.3.0": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -219,6 +231,7 @@
     },
     "0.3.1": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -237,6 +250,7 @@
     },
     "0.3.2": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -255,6 +269,7 @@
     },
     "0.3.3": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -272,6 +287,7 @@
     },
     "0.3.4": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -289,6 +305,7 @@
     },
     "0.3.5": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -306,6 +323,7 @@
     },
     "0.3.6": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -321,6 +339,7 @@
     },
     "0.4.0": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -336,6 +355,7 @@
     },
     "0.4.1": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -351,6 +371,7 @@
     },
     "0.4.10": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -362,6 +383,7 @@
     },
     "0.4.11": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -372,6 +394,7 @@
     },
     "0.4.12": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -381,6 +404,7 @@
     },
     "0.4.13": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -390,6 +414,7 @@
     },
     "0.4.14": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue"
@@ -398,6 +423,7 @@
     },
     "0.4.15": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector"
         ],
@@ -405,6 +431,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector"
         ],
@@ -412,6 +439,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector"
@@ -420,6 +448,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
         ],
@@ -427,6 +456,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
         ],
@@ -434,6 +464,7 @@
     },
     "0.4.2": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -448,6 +479,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
         ],
@@ -455,6 +487,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
         ],
@@ -462,6 +495,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData",
             "OneOfTwoConstructorsSkipped"
         ],
@@ -469,18 +503,21 @@
     },
     "0.4.23": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData"
         ],
         "released": "2018-04-19"
     },
     "0.4.24": {
         "bugs": [
+            "ExpExponentCleanup",
             "EventStructWrongData"
         ],
         "released": "2018-05-16"
     },
     "0.4.3": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -494,6 +531,7 @@
     },
     "0.4.4": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -506,6 +544,7 @@
     },
     "0.4.5": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -519,6 +558,7 @@
     },
     "0.4.6": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -531,6 +571,7 @@
     },
     "0.4.7": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -542,6 +583,7 @@
     },
     "0.4.8": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",
@@ -553,6 +595,7 @@
     },
     "0.4.9": {
         "bugs": [
+            "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
             "DelegateCallReturnValue",

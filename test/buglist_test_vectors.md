@@ -68,6 +68,40 @@ function f() m(uint[2][2]) { }
 
 function f() returns (uint, uint) { uint[2][2] memory x; }
 
+# ExpExponentCleanup
+
+## buggy
+
+x ** y
+
+--
+
+x ** uint8(y)
+
+--
+
+x**y
+
+## fine
+
+x ** 2
+
+--
+
+x**2
+
+--
+
+x**200
+
+--
+
+/** bla **/
+
+--
+
+/**/
+
 # EventStructWrongData
 
 ## buggy
