@@ -38,8 +38,9 @@ namespace solidity {
 class ContractCompiler: private ASTConstVisitor
 {
 public:
-	explicit ContractCompiler(ContractCompiler* _runtimeCompiler, CompilerContext& _context, bool _optimise):
+	explicit ContractCompiler(ContractCompiler* _runtimeCompiler, CompilerContext& _context, bool _optimise, size_t _optimise_runs = 200):
 		m_optimise(_optimise),
+		m_optimise_runs(_optimise_runs),
 		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
 	{
@@ -81,6 +82,14 @@ private:
 	/// This is done by inserting a specific push constant as the first instruction
 	/// whose data will be modified in memory at deploy time.
 	void appendDelegatecallCheck();
+	/// Appends the function selector. Is called recursively to create a binary search tree.
+	/// @a _runs the number of intended executions of the contract to tune the split point.
+	void appendInternalSelector(
+		std::map<FixedHash<4>, eth::AssemblyItem const> const& _entryPoints,
+		std::vector<FixedHash<4>> const& _ids,
+		eth::AssemblyItem const& _notFoundTag,
+		size_t _runs
+	);
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	void appendCallValueCheck();
 	void appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary);
@@ -122,6 +131,7 @@ private:
 	void storeStackHeight(ASTNode const* _node);
 
 	bool const m_optimise;
+	size_t const m_optimise_runs = 200;
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;

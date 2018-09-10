@@ -268,6 +268,70 @@ void ContractCompiler::appendDelegatecallCheck()
 	// "We have not been called via DELEGATECALL".
 }
 
+void ContractCompiler::appendInternalSelector(
+	map<FixedHash<4>, eth::AssemblyItem const> const& _entryPoints,
+	vector<FixedHash<4>> const& _ids,
+	eth::AssemblyItem const& _notFoundTag,
+	size_t _runs
+)
+{
+	// Code for selecting from n functions without split:
+	//   n times: dup1, push4 <id_i>, eq, push2/3 <tag_i>, jumpi
+	//   push2/3 <notfound> jump
+	// (called SELECT[n])
+	// Code for selecting from n functions with split:
+	//   dup1, push4 <pivot>, gt, push2/3<tag_less>, jumpi
+	//     SELECT[n/2]
+	//   tag_less:
+	//     SELECT[n/2]
+	//
+	// This means each split adds 16-18 bytes of additional code (note the additional jump out!)
+	// The average execution cost if we do not split at all are:
+	//   (3 + 3 + 3 + 3 + 10) * n/2 = 24 * n/2 = 12 * n
+	// If we split once:
+	//    (3 + 3 + 3 + 3 + 10) + 24 * n/4 = 24 * (n/4 + 1) = 6 * n + 24;
+	//
+	// We should split if
+	//     _runs * 12 * n > _runs * (6 * n + 24) + 17 * createDataGas
+	// <=> _runs * 6 * (n - 4) > 17 * createDataGas
+	//
+	// Which also means that the execution itself is not profitable
+	// unless we have at least 5 functions.
+
+	// Start with some comparisons to avoid overflow, then do the actual comparison.
+	bool split = false;
+	if (_ids.size() <= 4)
+		split = false;
+	else if (_runs > (17 * eth::GasCosts::createDataGas) / 6)
+		split = true;
+	else
+		split = (_runs * 6 * (_ids.size() - 4) > 17 * eth::GasCosts::createDataGas);
+
+	if (split)
+	{
+		size_t pivotIndex = _ids.size() / 2;
+		FixedHash<4> pivot{_ids.at(pivotIndex)};
+		m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(pivot)) << Instruction::GT;
+		eth::AssemblyItem lessTag{m_context.appendConditionalJump()};
+		// Here, we have funid >= pivot
+		vector<FixedHash<4>> larger{_ids.begin() + pivotIndex, _ids.end()};
+		appendInternalSelector(_entryPoints, larger, _notFoundTag, _runs);
+		m_context << lessTag;
+		// Here, we have funid < pivot
+		vector<FixedHash<4>> smaller{_ids.begin(), _ids.begin() + pivotIndex};
+		appendInternalSelector(_entryPoints, smaller, _notFoundTag, _runs);
+	}
+	else
+	{
+		for (auto const& id: _ids)
+		{
+			m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(id)) << Instruction::EQ;
+			m_context.appendConditionalJumpTo(_entryPoints.at(id));
+		}
+		m_context.appendJumpTo(_notFoundTag);
+	}
+}
+
 void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
 	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
@@ -290,13 +354,14 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
 
 	// stack now is: <can-call-non-view-functions>? <funhash>
+	vector<FixedHash<4>> sortedIDs;
 	for (auto const& it: interfaceFunctions)
 	{
 		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
-		m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(it.first)) << Instruction::EQ;
-		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.at(it.first));
+		sortedIDs.emplace_back(it.first);
 	}
-	m_context.appendJumpTo(notFound);
+	std::sort(sortedIDs.begin(), sortedIDs.end());
+	appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimise_runs);
 
 	m_context << notFound;
 	if (fallback)
