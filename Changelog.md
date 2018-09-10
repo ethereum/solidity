@@ -1,6 +1,7 @@
 ### 0.4.25 (unreleased)
 
-Bugfixes:
+Important Bugfixes:
+ * Code Generator: Properly perform cleanup for exponentiation and non-256 bit types.
  * Type Checker: Report error when using indexed structs in events with experimental ABIEncoderV2. This used to log wrong values.
  * Type Checker: Report error when using structs in events without experimental ABIEncoderV2. This used to crash or log the wrong values.
  * Parser: Treat unicode line endings as terminating strings and single-line comments.

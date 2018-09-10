@@ -10743,6 +10743,46 @@ BOOST_AUTO_TEST_CASE(shift_bytes_cleanup)
 	ABI_CHECK(callContractFunction("right(uint8)", 8 * 8), encodeArgs(string(8, 0) + "123456789012"));
 }
 
+BOOST_AUTO_TEST_CASE(exp_cleanup)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public pure returns (uint8 x) {
+				uint8 y = uint8(2) ** uint8(8);
+				return 0 ** y;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0x1)));
+}
+
+BOOST_AUTO_TEST_CASE(exp_cleanup_direct)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public pure returns (uint8 x) {
+				return uint8(0) ** uint8(uint8(2) ** uint8(8));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0x1)));
+}
+
+BOOST_AUTO_TEST_CASE(exp_cleanup_nonzero_base)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public pure returns (uint8 x) {
+				return uint8(0x166) ** uint8(uint8(2) ** uint8(8));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0x1)));
+}
+
 BOOST_AUTO_TEST_CASE(cleanup_in_compound_assign)
 {
 	char const* sourceCode = R"(
