@@ -197,8 +197,8 @@ private:
 
 	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();
-	/// Skips all whitespace except Line feeds and returns true if something was skipped
-	bool skipWhitespaceExceptLF();
+	/// Skips all whitespace that are neither '\r' nor '\n'.
+	void skipWhitespaceExceptUnicodeLinebreak();
 	Token::Value skipSingleLineComment();
 	Token::Value skipMultiLineComment();
 
@@ -217,6 +217,9 @@ private:
 	/// decoded character to the current literal. Returns true if a pattern
 	/// is scanned.
 	bool scanEscape();
+
+	/// @returns true iff we are currently positioned at a unicode line break.
+	bool isUnicodeLinebreak();
 
 	/// Return the current source position.
 	int sourcePos() const { return m_source.position(); }

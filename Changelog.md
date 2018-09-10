@@ -117,6 +117,9 @@ Bugfixes:
  * Type Checker: Fix internal error when array index value is too large.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
  * Parser: Fix incorrect source location for nameless parameters.
+ * Parser: Treat unicode line endings as terminating strings and single-line comments.
+ * Parser: Disallow unterminated multi-line comments at the end of input.
+ * Parser: Treat ``/** /`` as unterminated multi-line comment.
 
 ### 0.4.24 (2018-05-16)
 
