@@ -42,12 +42,26 @@
 
 #include <map>
 #include <libsolidity/parsing/Token.h>
+#include <libdevcore/Common.h>
 #include <boost/range/iterator_range.hpp>
 
 using namespace std;
 
 namespace dev
 {
+
+namespace
+{
+
+static inline bool isValidFixedPoint(unsigned _bits, unsigned _digits, bool _signed)
+{
+	unsigned bitsAvailable = _bits - (_signed ? 1 : 0);
+	return (8 <= _bits) && (_bits <= 256) && (_bits % 8 == 0) && (_digits <= 80)
+		&& (boost::multiprecision::pow(bigint(10), _digits) <= (bigint(1) << bitsAvailable));
+}
+
+} // end of anonymous namespace
+
 namespace solidity
 {
 
@@ -70,7 +84,7 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 	else if (_baseType == Token::UFixedMxN || _baseType == Token::FixedMxN)
 	{
 		solAssert(
-			_first >= 8 && _first <= 256 && _first % 8 == 0 && _second <= 80,
+			isValidFixedPoint(_first, _second, Token::FixedMxN == _baseType),
 			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "x" + to_string(_second) + "."
 		);
 	}
@@ -156,10 +170,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 				all_of(positionX + 1, _literal.end(), ::isdigit)
 			) {
 				int n = parseSize(positionX + 1, _literal.end());
-				if (
-					8 <= m && m <= 256 && m % 8 == 0 &&
-					0 <= n && n <= 80
-				) {
+				if (0 <= n && isValidFixedPoint(m, n, Token::Fixed == keyword)) {
 					if (keyword == Token::UFixed)
 						return make_tuple(Token::UFixedMxN, m, n);
 					else
