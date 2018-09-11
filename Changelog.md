@@ -81,6 +81,7 @@ Language Features:
  * General: Allow ``mapping`` storage pointers as arguments and return values in all internal functions.
  * General: Allow ``struct``s in interfaces.
  * General: Provide access to the ABI decoder through ``abi.decode(bytes memory data, (...))``.
+ * Parser: Accept the ``address payable`` type during parsing.
 
 Compiler Features:
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.

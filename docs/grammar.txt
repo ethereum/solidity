@@ -50,6 +50,7 @@ TypeName = ElementaryTypeName
          | Mapping
          | ArrayTypeName
          | FunctionTypeName
+         | ( 'address' 'payable' )
 
 UserDefinedTypeName = Identifier ( '.' Identifier )*
 

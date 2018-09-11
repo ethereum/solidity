@@ -57,7 +57,7 @@ public:
 		solAssert(m_location.sourceName, "");
 		if (m_location.end < 0)
 			markEndPosition();
-		return make_shared<NodeType>(m_location, forward<Args>(_args)...);
+		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
 	}
 
 private:
@@ -813,8 +813,24 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		unsigned secondSize;
 		tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
 		ElementaryTypeNameToken elemTypeName(token, firstSize, secondSize);
-		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
+		ASTNodeFactory nodeFactory(*this);
+		nodeFactory.markEndPosition();
 		m_scanner->next();
+		auto stateMutability = boost::make_optional(elemTypeName.token() == Token::Address, StateMutability::NonPayable);
+		if (Token::isStateMutabilitySpecifier(m_scanner->currentToken(), false))
+		{
+			if (elemTypeName.token() == Token::Address)
+			{
+				nodeFactory.markEndPosition();
+				stateMutability = parseStateMutability();
+			}
+			else
+			{
+				parserError("State mutability can only be specified for address types.");
+				m_scanner->next();
+			}
+		}
+		type = nodeFactory.createNode<ElementaryTypeName>(elemTypeName, stateMutability);
 	}
 	else if (token == Token::Var)
 	{
@@ -1615,8 +1631,8 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// Distinguish between variable declaration (and potentially assignment) and expression statement
 	// (which include assignments to other expressions and pre-declared variables).
 	// We have a variable declaration if we get a keyword that specifies a type name.
-	// If it is an identifier or an elementary type name followed by an identifier, we also have
-	// a variable declaration.
+	// If it is an identifier or an elementary type name followed by an identifier
+	// or a mutability specifier, we also have a variable declaration.
 	// If we get an identifier followed by a "[" or ".", it can be both ("lib.type[9] a;" or "variable.el[9] = 7;").
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
@@ -1627,6 +1643,12 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	if (mightBeTypeName)
 	{
 		Token::Value next = m_scanner->peekNextToken();
+		// So far we only allow ``address payable`` in variable declaration statements and in no other
+		// kind of statement. This means, for example, that we do not allow type expressions of the form
+		// ``address payable;``.
+		// If we want to change this in the future, we need to consider another scanner token here.
+		if (Token::isElementaryTypeName(token) && Token::isStateMutabilitySpecifier(next, false))
+			return LookAheadInfo::VariableDeclaration;
 		if (next == Token::Identifier || Token::isLocationSpecifier(next))
 			return LookAheadInfo::VariableDeclaration;
 		if (next == Token::LBrack || next == Token::Period)
