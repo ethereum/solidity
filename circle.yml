@@ -155,6 +155,23 @@ jobs:
       - store_artifacts: *solc_artifact
       - persist_to_workspace: *all_artifacts
 
+  test_buglist:
+    docker:
+      - image: circleci/node
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run:
+          name: JS deps
+          command: |
+            npm install download
+            npm install JSONPath
+            npm install mktemp
+      - run:
+          name: Test buglist
+          command: ./test/buglistTests.js
+
   test_x86_linux:
     docker:
       - image: buildpack-deps:artful
