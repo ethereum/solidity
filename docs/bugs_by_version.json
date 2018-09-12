@@ -384,6 +384,7 @@
     "0.4.11": {
         "bugs": [
             "ExpExponentCleanup", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
@@ -395,6 +396,7 @@
     "0.4.12": {
         "bugs": [
             "ExpExponentCleanup", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
@@ -405,6 +407,7 @@
     "0.4.13": {
         "bugs": [
             "ExpExponentCleanup", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue", 
@@ -415,6 +418,7 @@
     "0.4.14": {
         "bugs": [
             "ExpExponentCleanup", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector", 
             "DelegateCallReturnValue"
@@ -424,6 +428,7 @@
     "0.4.15": {
         "bugs": [
             "ExpExponentCleanup", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector"
         ], 
@@ -432,6 +437,7 @@
     "0.4.16": {
         "bugs": [
             "ExpExponentCleanup", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector"
         ], 
@@ -441,6 +447,7 @@
         "bugs": [
             "ExpExponentCleanup", 
             "EventStructWrongData", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder", 
             "ZeroFunctionSelector"
         ], 
@@ -450,6 +457,7 @@
         "bugs": [
             "ExpExponentCleanup", 
             "EventStructWrongData", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2017-10-18"
@@ -458,6 +466,7 @@
         "bugs": [
             "ExpExponentCleanup", 
             "EventStructWrongData", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2017-11-30"
@@ -481,6 +490,7 @@
         "bugs": [
             "ExpExponentCleanup", 
             "EventStructWrongData", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2018-02-14"
@@ -489,6 +499,7 @@
         "bugs": [
             "ExpExponentCleanup", 
             "EventStructWrongData", 
+            "PublicLibFunctionsDoNotReturnNestedArrays", 
             "NestedArrayFunctionCallDecoder"
         ], 
         "released": "2018-03-07"

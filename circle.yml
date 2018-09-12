@@ -234,6 +234,7 @@ workflows:
   version: 2
   build_all:
     jobs:
+      - test_buglist: *build_on_tags
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
           <<: *build_on_tags
