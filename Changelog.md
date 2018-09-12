@@ -1,4 +1,4 @@
-### 0.4.25 (unreleased)
+### 0.4.25 (2018-09-12)
 
 Important Bugfixes:
  * Code Generator: Properly perform cleanup for exponentiation and non-256 bit types.

@@ -526,6 +526,10 @@
         ], 
         "released": "2018-05-16"
     }, 
+    "0.4.25": {
+        "bugs": [], 
+        "released": "2018-09-12"
+    }, 
     "0.4.3": {
         "bugs": [
             "ExpExponentCleanup", 
