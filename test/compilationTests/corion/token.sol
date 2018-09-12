@@ -15,7 +15,7 @@ contract token is safeMath, module, announcementTypes {
     /*
         module callbacks
     */
-    function replaceModule(address addr) external returns (bool success) {
+    function replaceModule(address payable addr) external returns (bool success) {
         require( super.isModuleHandler(msg.sender) );
         require( db.replaceOwner(addr) );
         super._replaceModule(addr);
@@ -37,18 +37,18 @@ contract token is safeMath, module, announcementTypes {
     uint8 public decimals = 6;
 
     tokenDB public db;
-    address public icoAddr;
+    address payable public icoAddr;
     uint256 public transactionFeeRate      = 20;
     uint256 public transactionFeeRateM     = 1e3;
     uint256 public transactionFeeMin       =   20000;
     uint256 public transactionFeeMax       = 5000000;
     uint256 public transactionFeeBurn      = 80;
-    address public exchangeAddress;
+    address payable public exchangeAddress;
     bool    public isICO                   = true;
 
     mapping(address => bool) public genesis;
 
-    constructor(bool forReplace, address moduleHandler, address dbAddr, address icoContractAddr, address exchangeContractAddress, address[] memory genesisAddr, uint256[] memory genesisValue) public payable {
+    constructor(bool forReplace, address payable moduleHandler, address dbAddr, address payable icoContractAddr, address payable exchangeContractAddress, address payable[] memory genesisAddr, uint256[] memory genesisValue) public payable {
         /*
             Installation function
 

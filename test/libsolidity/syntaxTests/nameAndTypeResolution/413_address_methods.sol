@@ -1,6 +1,6 @@
 contract C {
     function f() public {
-        address addr;
+        address payable addr;
         uint balance = addr.balance;
         (bool callSuc,) = addr.call("");
         (bool delegatecallSuc,) = addr.delegatecall("");

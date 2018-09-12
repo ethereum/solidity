@@ -19,7 +19,7 @@ contract Destructible is Ownable {
     selfdestruct(owner);
   }
 
-  function destroyAndSend(address _recipient) public onlyOwner {
+  function destroyAndSend(address payable _recipient) public onlyOwner {
     selfdestruct(_recipient);
   }
 }

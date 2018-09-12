@@ -12,7 +12,7 @@ contract thirdPartyPContractAbstract {
 contract ptokenDB is tokenDB {}
 
 contract premium is module, safeMath {
-    function replaceModule(address addr) external returns (bool success) {
+    function replaceModule(address payable addr) external returns (bool success) {
         require( super.isModuleHandler(msg.sender) );
         require( db.replaceOwner(addr) );
         super._replaceModule(addr);
@@ -40,7 +40,7 @@ contract premium is module, safeMath {
 
     mapping(address => bool) public genesis;
 
-    constructor(bool forReplace, address moduleHandler, address dbAddress, address icoContractAddr, address[] memory genesisAddr, uint256[] memory genesisValue) public {
+    constructor(bool forReplace, address payable moduleHandler, address dbAddress, address icoContractAddr, address[] memory genesisAddr, uint256[] memory genesisValue) public {
         /*
             Setup function.
             If an ICOaddress is defined then the balance of the genesis addresses will be set as well.

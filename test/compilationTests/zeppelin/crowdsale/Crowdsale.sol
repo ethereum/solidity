@@ -22,7 +22,7 @@ contract Crowdsale {
   uint256 public endBlock;
 
   // address where funds are collected
-  address public wallet;
+  address payable public wallet;
 
   // how many token units a buyer gets per wei
   uint256 public rate;
@@ -40,7 +40,7 @@ contract Crowdsale {
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
 
-  constructor(uint256 _startBlock, uint256 _endBlock, uint256 _rate, address _wallet) public {
+  constructor(uint256 _startBlock, uint256 _endBlock, uint256 _rate, address payable _wallet) public {
     require(_startBlock >= block.number);
     require(_endBlock >= _startBlock);
     require(_rate > 0);

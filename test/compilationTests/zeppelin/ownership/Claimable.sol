@@ -10,7 +10,7 @@ import './Ownable.sol';
  * This allows the new owner to accept the transfer.
  */
 contract Claimable is Ownable {
-  address public pendingOwner;
+  address payable public pendingOwner;
 
   /**
    * @dev Modifier throws if called by any account other than the pendingOwner.
@@ -26,7 +26,7 @@ contract Claimable is Ownable {
    * @dev Allows the current owner to set the pendingOwner address.
    * @param newOwner The address to transfer ownership to.
    */
-  function transferOwnership(address newOwner) public onlyOwner {
+  function transferOwnership(address payable newOwner) public onlyOwner {
     pendingOwner = newOwner;
   }
 

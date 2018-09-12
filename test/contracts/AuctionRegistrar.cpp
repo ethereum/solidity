@@ -66,7 +66,7 @@ contract AuctionSystem {
 	/// Function that is called once an auction ends.
 	function onAuctionEnd(string memory _name) internal;
 
-	function bid(string memory _name, address _bidder, uint _value) internal {
+	function bid(string memory _name, address payable _bidder, uint _value) internal {
 		Auction storage auction = m_auctions[_name];
 		if (auction.endDate > 0 && now > auction.endDate)
 		{
@@ -91,7 +91,7 @@ contract AuctionSystem {
 	uint constant c_biddingTime = 7 days;
 
 	struct Auction {
-		address highestBidder;
+		address payable highestBidder;
 		uint highestBid;
 		uint secondHighestBid;
 		uint sumOfBids;
@@ -102,7 +102,7 @@ contract AuctionSystem {
 
 contract GlobalRegistrar is Registrar, AuctionSystem {
 	struct Record {
-		address owner;
+		address payable owner;
 		address primary;
 		address subRegistrar;
 		bytes32 content;
@@ -156,7 +156,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 
 	modifier onlyrecordowner(string memory _name) { if (m_toRecord[_name].owner == msg.sender) _; }
 
-	function transfer(string memory _name, address _newOwner) onlyrecordowner(_name) public {
+	function transfer(string memory _name, address payable _newOwner) onlyrecordowner(_name) public {
 		m_toRecord[_name].owner = _newOwner;
 		emit Changed(_name);
 	}
