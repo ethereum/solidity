@@ -1733,8 +1733,23 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			DataLocation dataLoc = DataLocation::Memory;
 			if (auto argRefType = dynamic_cast<ReferenceType const*>(argType.get()))
 				dataLoc = argRefType->location();
-			resultType = ReferenceType::copyForLocationIfReference(dataLoc, resultType);
-			if (!argType->isExplicitlyConvertibleTo(*resultType))
+			if (auto type = dynamic_cast<ReferenceType const*>(resultType.get()))
+				resultType = type->copyForLocation(dataLoc, type->isPointer());
+			if (argType->isExplicitlyConvertibleTo(*resultType))
+			{
+				if (auto argArrayType = dynamic_cast<ArrayType const*>(argType.get()))
+				{
+					auto resultArrayType = dynamic_cast<ArrayType const*>(resultType.get());
+					solAssert(!!resultArrayType, "");
+					solAssert(
+						argArrayType->location() != DataLocation::Storage ||
+						((resultArrayType->isPointer() || (argArrayType->isByteArray() && resultArrayType->isByteArray())) &&
+						 resultArrayType->location() == DataLocation::Storage),
+						"Invalid explicit conversion to storage type."
+					);
+				}
+			}
+			else
 			{
 				if (resultType->category() == Type::Category::Contract && argType->category() == Type::Category::Address)
 				{
