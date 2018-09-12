@@ -152,11 +152,20 @@ test_solc_file_input_failures "file_not_found.sol" "" "" "\"file_not_found.sol\"
 printTask "Testing passing files that are not files..."
 test_solc_file_input_failures "." "" "" "\".\" is not a valid file."
 
+printTask "Testing truncate referenced sources..."
+test_solc_file_input_failures "test.sol" "" "" "Warning: This is a pre-release compiler version, please do not use it in production.
+test.sol:1:1: Warning: Source file does not specify required compiler version!
+contract C {
+^ (Relevant source part starts here and spans across multiple lines).
+test.sol:2:30: Error: Identifier not found or not unique.
+
+     ^--------------^"
+
 printTask "Testing passing empty remappings..."
 test_solc_file_input_failures "${0}" "=/some/remapping/target" "" "Invalid remapping: \"=/some/remapping/target\"."
 test_solc_file_input_failures "${0}" "ctx:=/some/remapping/target" "" "Invalid remapping: \"ctx:=/some/remapping/target\"."
 
-printTask "Compiling various other contracts and libraries..."
+printTask "Compiling various other contrand libraries..."
 (
 cd "$REPO_ROOT"/test/compilationTests/
 for dir in *
