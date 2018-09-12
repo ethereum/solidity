@@ -24,9 +24,9 @@ a new identifier needs to be introduced, a new unique name is generated.
 
 ## Function Hoister
 
-The function hoister moves all function definitions to the topmost block. This is
+The function hoister moves all function definitions to the end of the topmost block. This is
 a semantically equivalent transformation as long as it is performed after the
-disambiguation stage. The reason is that moving a definition upwards cannot decrease
+disambiguation stage. The reason is that moving a definition to a higher-level block cannot decrease
 its visibility and it is impossible to reference variables defined in a different function.
 
 The benefit of this stage is that function definitions can be looked up more easily.

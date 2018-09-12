@@ -194,6 +194,13 @@ public:
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
 
+	u256 gasLimit() const;
+	u256 gasPrice() const;
+	u256 blockHash(u256 const& _blockNumber) const;
+	u256 const& blockNumber() const {
+		return m_blockNumber;
+	}
+
 private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)

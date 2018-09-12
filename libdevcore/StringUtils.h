@@ -30,7 +30,8 @@ namespace dev
 {
 
 // Calculates the Damerau–Levenshtein distance between _str1 and _str2 and returns true if that distance is not greater than _maxDistance
-bool stringWithinDistance(std::string const& _str1, std::string const& _str2, size_t _maxDistance);
+// if _lenThreshold > 0 and the product of the strings length is greater than _lenThreshold, the function will return false
+bool stringWithinDistance(std::string const& _str1, std::string const& _str2, size_t _maxDistance, size_t _lenThreshold = 0);
 // Calculates the Damerau–Levenshtein distance between _str1 and _str2
 size_t stringDistance(std::string const& _str1, std::string const& _str2);
 // Return a string having elements of suggestions as quoted, alternative suggestions. e.g. "a", "b" or "c"
@@ -49,27 +50,23 @@ std::string joinHumanReadable
 	std::string const& _lastSeparator = ""
 )
 {
-	auto it = begin(_list);
-	auto itEnd = end(_list);
+	auto const itEnd = end(_list);
 
 	std::string result;
 
-	// append first string
-	if (it != itEnd)
+	for (auto it = begin(_list); it != itEnd; )
 	{
-		result += *it;
+		std::string element = *it;
+		bool first = (it == begin(_list));
 		++it;
-	}
-
-	for (;it != itEnd; ++it)
-	{
-		if ((std::next(it) == itEnd) && !_lastSeparator.empty())
-			result += _lastSeparator; // last iteration
-		else
-			result += _separator;
-
-		// append string
-		result += *it;
+		if (!first)
+		{
+			if (it == itEnd && !_lastSeparator.empty())
+				result += _lastSeparator; // last iteration
+			else
+				result += _separator;
+		}
+		result += std::move(element);
 	}
 
 	return result;

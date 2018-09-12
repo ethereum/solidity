@@ -43,40 +43,48 @@ function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
 
 function compileFull()
 {
+    local expected_exit_code=0
+    local expect_output=0
+    if [[ $1 = '-e' ]]
+    then
+        expected_exit_code=1
+        expect_output=1
+        shift;
+    fi
+    if [[ $1 = '-w' ]]
+    then
+        expect_output=1
+        shift;
+    fi
+
     local files="$*"
-    local output failed
+    local output
+
+    local stderr_path=$(mktemp)
 
     set +e
-    output=$( ("$SOLC" $FULLARGS $files) 2>&1 )
-    failed=$?
+    "$SOLC" $FULLARGS $files >/dev/null 2>"$stderr_path"
+    local exit_code=$?
+    local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|\^-------------------------------\^' < "$stderr_path")
     set -e
+    rm "$stderr_path"
 
-    if [ $failed -ne 0 ]
+    if [[ \
+        "$exit_code" -ne "$expected_exit_code" || \
+            ( $expect_output -eq 0 && -n "$errors" ) || \
+            ( $expect_output -ne 0 && -z "$errors" ) \
+    ]]
     then
-        printError "Compilation failed on:"
-        echo "$output"
+        printError "Unexpected compilation result:"
+        printError "Expected failure: $expected_exit_code - Expected warning / error output: $expect_output"
+        printError "Was failure: $exit_code"
+        echo "$errors"
         printError "While calling:"
         echo "\"$SOLC\" $FULLARGS $files"
         printError "Inside directory:"
         pwd
         false
     fi
-}
-
-function compileWithoutWarning()
-{
-    local files="$*"
-    local output failed
-
-    set +e
-    output=$("$SOLC" $files 2>&1)
-    failed=$?
-    # Remove the pre-release warning from the compiler output
-    output=$(echo "$output" | grep -v 'pre-release')
-    echo "$output"
-    set -e
-
-    test -z "$output" -a "$failed" -eq 0
 }
 
 printTask "Testing unknown options..."
@@ -153,7 +161,11 @@ test.sol:2:30: Error: Identifier not found or not unique.
 
      ^--------------^"
 
-printTask "Compiling various other contracts and libraries..."
+printTask "Testing passing empty remappings..."
+test_solc_file_input_failures "${0}" "=/some/remapping/target" "" "Invalid remapping: \"=/some/remapping/target\"."
+test_solc_file_input_failures "${0}" "ctx:=/some/remapping/target" "" "Invalid remapping: \"ctx:=/some/remapping/target\"."
+
+printTask "Compiling various other contrand libraries..."
 (
 cd "$REPO_ROOT"/test/compilationTests/
 for dir in *
@@ -162,27 +174,44 @@ do
     then
         echo " - $dir"
         cd "$dir"
-        compileFull *.sol */*.sol
+        compileFull -w *.sol */*.sol
         cd ..
     fi
 done
 )
 
 printTask "Compiling all examples from the documentation..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
-    cd "$TMPDIR"
+    cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     for f in *.sol
     do
+        # The contributors guide uses syntax tests, but we cannot
+        # really handle them here.
+        if grep -E 'DeclarationError:|// ----' "$f" >/dev/null
+        then
+            continue
+        fi
         echo "$f"
-        compileFull "$TMPDIR/$f"
+        opts=''
+        # We expect errors if explicitly stated, or if imports
+        # are used (in the style guide)
+        if grep -E "This will not compile|import \"" "$f" >/dev/null
+        then
+            opts="-e"
+        fi
+        if grep "This will report a warning" "$f" >/dev/null
+        then
+            opts="$opts -w"
+        fi
+        compileFull $opts "$SOLTMPDIR/$f"
     done
 )
-rm -rf "$TMPDIR"
+rm -rf "$SOLTMPDIR"
 echo "Done."
 
 printTask "Testing library checksum..."
@@ -193,17 +222,17 @@ printTask "Testing long library names..."
 echo '' | "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname:0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
 
 printTask "Testing overwriting files..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set -e
     # First time it works
-    echo 'contract C {} ' | "$SOLC" - --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Second time it fails
-    ! echo 'contract C {} ' | "$SOLC" - --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    ! echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Unless we force
-    echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$TMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
 )
-rm -rf "$TMPDIR"
+rm -rf "$SOLTMPDIR"
 
 printTask "Testing assemble, yul, strict-assembly..."
 echo '{}' | "$SOLC" - --assemble &>/dev/null
@@ -211,7 +240,7 @@ echo '{}' | "$SOLC" - --yul &>/dev/null
 echo '{}' | "$SOLC" - --strict-assembly &>/dev/null
 
 printTask "Testing standard input..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set +e
     output=$("$SOLC" --bin  2>&1)
@@ -236,12 +265,12 @@ TMPDIR=$(mktemp -d)
 )
 
 printTask "Testing soljson via the fuzzer..."
-TMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$REPO_ROOT"
     REPO_ROOT=$(pwd) # make it absolute
-    cd "$TMPDIR"
+    cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     for f in *.sol
@@ -263,5 +292,5 @@ TMPDIR=$(mktemp -d)
         set -e
     done
 )
-rm -rf "$TMPDIR"
+rm -rf "$SOLTMPDIR"
 echo "Commandline tests successful."

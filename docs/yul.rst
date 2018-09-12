@@ -99,9 +99,11 @@ Grammar::
     If =
         'if' Expression Block
     Switch =
-        'switch' Expression Case* ( 'default' Block )?
+        'switch' Expression ( Case+ Default? | Default )
     Case =
         'case' Literal Block
+    Default =
+        'default' Block
     ForLoop =
         'for' Block Expression Block Block
     BreakContinue =

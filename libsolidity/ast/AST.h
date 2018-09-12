@@ -655,7 +655,7 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
-	enum Location { Default, Storage, Memory, CallData };
+	enum Location { Unspecified, Storage, Memory, CallData };
 
 	VariableDeclaration(
 		SourceLocation const& _sourceLocation,
@@ -666,7 +666,7 @@ public:
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		bool _isConstant = false,
-		Location _referenceLocation = Location::Default
+		Location _referenceLocation = Location::Unspecified
 	):
 		Declaration(_sourceLocation, _name, _visibility),
 		m_typeName(_type),
@@ -685,6 +685,8 @@ public:
 	virtual bool isLValue() const override;
 	virtual bool isPartOfExternalInterface() const override { return isPublic(); }
 
+	/// @returns true iff this variable is the parameter (or return parameter) of a function
+	/// (or function type name or event) or declared inside a function body.
 	bool isLocalVariable() const;
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
@@ -693,13 +695,27 @@ public:
 	/// @returns true if this variable is a local variable or return parameter.
 	bool isLocalOrReturn() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
+	/// This excludes parameters of external function type names.
 	bool isExternalCallableParameter() const;
+	/// @returns true if this variable is a parameter or return parameter of an internal function
+	/// or a function type of internal visibility.
+	bool isInternalCallableParameter() const;
+	/// @returns true iff this variable is a parameter(or return parameter of a library function
+	bool isLibraryFunctionParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
 	/// in the body of a function or modifier.
+	/// @returns true if this variable is a parameter of an event.
+	bool isEventParameter() const;
+	/// @returns true if the type of the variable is a reference or mapping type, i.e.
+	/// array, struct or mapping. These types can take a data location (and often require it).
+	/// Can only be called after reference resolution.
+	bool hasReferenceOrMappingType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
 	Location referenceLocation() const { return m_location; }
+	/// @returns a set of allowed storage locations for the variable.
+	std::set<Location> allowedDataLocations() const;
 
 	virtual TypePointer type() const override;
 
@@ -860,23 +876,31 @@ public:
 };
 
 /**
- * Any pre-defined type name represented by a single keyword, i.e. it excludes mappings,
- * contracts, functions, etc.
+ * Any pre-defined type name represented by a single keyword (and possibly a state mutability for address types),
+ * i.e. it excludes mappings, contracts, functions, etc.
  */
 class ElementaryTypeName: public TypeName
 {
 public:
-	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken const& _elem):
-		TypeName(_location), m_type(_elem)
-	{}
+	ElementaryTypeName(
+		SourceLocation const& _location,
+		ElementaryTypeNameToken const& _elem,
+		boost::optional<StateMutability> _stateMutability = {}
+	): TypeName(_location), m_type(_elem), m_stateMutability(_stateMutability)
+	{
+		solAssert(!_stateMutability.is_initialized() || _elem.token() == Token::Address, "");
+	}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ElementaryTypeNameToken const& typeName() const { return m_type; }
 
+	boost::optional<StateMutability> const& stateMutability() const { return m_stateMutability; }
+
 private:
 	ElementaryTypeNameToken m_type;
+	boost::optional<StateMutability> m_stateMutability; ///< state mutability for address type
 };
 
 /**

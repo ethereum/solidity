@@ -312,7 +312,12 @@ public:
 	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
 	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Internal; }
 	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage || op == CallData; }
-	static bool isStateMutabilitySpecifier(Value op) { return op == Pure || op == Constant || op == View || op == Payable; }
+	static bool isStateMutabilitySpecifier(Value op, bool _allowConstant = true)
+	{
+		if (op == Constant && _allowConstant)
+			return true;
+		return op == Pure || op == View || op == Payable;
+	}
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
 	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= Unchecked); }

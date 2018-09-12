@@ -63,7 +63,7 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 	{
 		solAssert(_second == 0, "There should not be a second size argument to type " + string(Token::toString(_baseType)) + ".");
 		solAssert(
-			_first <= 256 && _first % 8 == 0, 
+			_first <= 256 && _first % 8 == 0,
 			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "."
 		);
 	}
@@ -165,7 +165,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 					else
 						return make_tuple(Token::FixedMxN, m, n);
 				}
-			}	
+			}
 		}
 		return make_tuple(Token::Identifier, 0, 0);
 	}

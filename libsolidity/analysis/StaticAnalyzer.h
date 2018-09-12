@@ -75,9 +75,6 @@ private:
 	/// Flag that indicates whether the current contract definition is a library.
 	bool m_library = false;
 
-	/// Flag that indicates whether a public function does not contain the "payable" modifier.
-	bool m_nonPayablePublic = false;
-
 	/// Number of uses of each (named) local variable in a function, counter is initialized with zero.
 	/// Pairs of AST ids and pointers are used as keys to ensure a deterministic order
 	/// when traversing.

@@ -23,6 +23,8 @@
 #include <libsolidity/parsing/Scanner.h>
 #include <boost/test/unit_test.hpp>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
@@ -500,6 +502,110 @@ BOOST_AUTO_TEST_CASE(invalid_hex_literal_nonhex_string)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 }
 
+BOOST_AUTO_TEST_CASE(invalid_multiline_comment_close)
+{
+	// This used to parse as "comment", "identifier"
+	Scanner scanner(CharStream("/** / x"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(multiline_doc_comment_at_eos)
+{
+	// This used to parse as "whitespace"
+	Scanner scanner(CharStream("/**"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(multiline_comment_at_eos)
+{
+	Scanner scanner(CharStream("/*"));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(regular_line_break_in_single_line_comment)
+{
+	for (auto const& nl: {"\r", "\n"})
+	{
+		Scanner scanner(CharStream("// abc " + string(nl) + " def "));
+		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "");
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_single_line_comment)
+{
+	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})
+	{
+		Scanner scanner(CharStream("// abc " + string(nl) + " def "));
+		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "");
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+		for (size_t i = 0; i < string(nl).size() - 1; i++)
+			BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(regular_line_breaks_in_single_line_doc_comment)
+{
+	for (auto const& nl: {"\r", "\n"})
+	{
+		Scanner scanner(CharStream("/// abc " + string(nl) + " def "));
+		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "abc ");
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_single_line_doc_comment)
+{
+	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})
+	{
+		Scanner scanner(CharStream("/// abc " + string(nl) + " def "));
+		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "abc ");
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+		for (size_t i = 0; i < string(nl).size() - 1; i++)
+			BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(regular_line_breaks_in_strings)
+{
+	for (auto const& nl: {"\n", "\r"})
+	{
+		Scanner scanner(CharStream("\"abc " + string(nl) + " def\""));
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_strings)
+{
+	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})
+	{
+		Scanner scanner(CharStream("\"abc " + string(nl) + " def\""));
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+		for (size_t i = 0; i < string(nl).size(); i++)
+			BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -138,9 +138,25 @@ void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
 	m_placeholderFound = false;
 }
 
-bool SyntaxChecker::visit(WhileStatement const&)
+void SyntaxChecker::checkSingleStatementVariableDeclaration(ASTNode const& _statement)
+{
+	auto varDecl = dynamic_cast<VariableDeclarationStatement const*>(&_statement);
+	if (varDecl)
+		m_errorReporter.syntaxError(_statement.location(), "Variable declarations can only be used inside blocks.");
+}
+
+bool SyntaxChecker::visit(IfStatement const& _ifStatement)
+{
+	checkSingleStatementVariableDeclaration(_ifStatement.trueStatement());
+	if (Statement const* _statement = _ifStatement.falseStatement())
+		checkSingleStatementVariableDeclaration(*_statement);
+	return true;
+}
+
+bool SyntaxChecker::visit(WhileStatement const& _whileStatement)
 {
 	m_inLoopDepth++;
+	checkSingleStatementVariableDeclaration(_whileStatement.body());
 	return true;
 }
 
@@ -149,9 +165,10 @@ void SyntaxChecker::endVisit(WhileStatement const&)
 	m_inLoopDepth--;
 }
 
-bool SyntaxChecker::visit(ForStatement const&)
+bool SyntaxChecker::visit(ForStatement const& _forStatement)
 {
 	m_inLoopDepth++;
+	checkSingleStatementVariableDeclaration(_forStatement.body());
 	return true;
 }
 

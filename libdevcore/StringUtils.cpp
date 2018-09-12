@@ -29,13 +29,16 @@
 using namespace std;
 using namespace dev;
 
-bool dev::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance)
+bool dev::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance, size_t _lenThreshold)
 {
 	if (_str1 == _str2)
 		return true;
 
 	size_t n1 = _str1.size();
 	size_t n2 = _str2.size();
+	if (_lenThreshold > 0 && n1 * n2 > _lenThreshold)
+		return false;
+
 	size_t distance = stringDistance(_str1, _str2);
 
 	// if distance is not greater than _maxDistance, and distance is strictly less than length of both names, they can be considered similar

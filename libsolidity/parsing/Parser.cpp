@@ -57,7 +57,7 @@ public:
 		solAssert(m_location.sourceName, "");
 		if (m_location.end < 0)
 			markEndPosition();
-		return make_shared<NodeType>(m_location, forward<Args>(_args)...);
+		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
 	}
 
 private:
@@ -75,7 +75,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		vector<ASTPointer<ASTNode>> nodes;
 		while (m_scanner->currentToken() != Token::EOS)
 		{
-			switch (auto token = m_scanner->currentToken())
+			switch (m_scanner->currentToken())
 			{
 			case Token::Pragma:
 				nodes.push_back(parsePragmaDirective());
@@ -86,7 +86,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			case Token::Interface:
 			case Token::Contract:
 			case Token::Library:
-				nodes.push_back(parseContractDefinition(token));
+				nodes.push_back(parseContractDefinition());
 				break;
 			default:
 				fatalParserError(string("Expected pragma, import directive or contract/interface/library definition."));
@@ -198,31 +198,35 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
 }
 
-ContractDefinition::ContractKind Parser::tokenToContractKind(Token::Value _token)
+ContractDefinition::ContractKind Parser::parseContractKind()
 {
-	switch(_token)
+	ContractDefinition::ContractKind kind;
+	switch(m_scanner->currentToken())
 	{
 	case Token::Interface:
-		return ContractDefinition::ContractKind::Interface;
+		kind = ContractDefinition::ContractKind::Interface;
+		break;
 	case Token::Contract:
-		return ContractDefinition::ContractKind::Contract;
+		kind = ContractDefinition::ContractKind::Contract;
+		break;
 	case Token::Library:
-		return ContractDefinition::ContractKind::Library;
+		kind = ContractDefinition::ContractKind::Library;
+		break;
 	default:
-		fatalParserError("Unsupported contract type.");
+		solAssert(false, "Invalid contract kind.");
 	}
-	// FIXME: fatalParserError is not considered as throwing here
-	return ContractDefinition::ContractKind::Contract;
+	m_scanner->next();
+	return kind;
 }
 
-ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _expectedKind)
+ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docString;
 	if (m_scanner->currentCommentLiteral() != "")
 		docString = make_shared<ASTString>(m_scanner->currentCommentLiteral());
-	expectToken(_expectedKind);
+	ContractDefinition::ContractKind contractKind = parseContractKind();
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	if (m_scanner->currentToken() == Token::Is)
@@ -275,7 +279,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(Token::Value _exp
 		docString,
 		baseContracts,
 		subNodes,
-		tokenToContractKind(_expectedKind)
+		contractKind
 	);
 }
 
@@ -297,42 +301,56 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 	return nodeFactory.createNode<InheritanceSpecifier>(name, std::move(arguments));
 }
 
-Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
+Declaration::Visibility Parser::parseVisibilitySpecifier()
 {
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
-	if (_token == Token::Public)
-		visibility = Declaration::Visibility::Public;
-	else if (_token == Token::Internal)
-		visibility = Declaration::Visibility::Internal;
-	else if (_token == Token::Private)
-		visibility = Declaration::Visibility::Private;
-	else if (_token == Token::External)
-		visibility = Declaration::Visibility::External;
-	else
-		solAssert(false, "Invalid visibility specifier.");
+	Token::Value token = m_scanner->currentToken();
+	switch (token)
+	{
+		case Token::Public:
+			visibility = Declaration::Visibility::Public;
+			break;
+		case Token::Internal:
+			visibility = Declaration::Visibility::Internal;
+			break;
+		case Token::Private:
+			visibility = Declaration::Visibility::Private;
+			break;
+		case Token::External:
+			visibility = Declaration::Visibility::External;
+			break;
+		default:
+			solAssert(false, "Invalid visibility specifier.");
+	}
 	m_scanner->next();
 	return visibility;
 }
 
-StateMutability Parser::parseStateMutability(Token::Value _token)
+StateMutability Parser::parseStateMutability()
 {
 	StateMutability stateMutability(StateMutability::NonPayable);
-	if (_token == Token::Payable)
-		stateMutability = StateMutability::Payable;
-	else if (_token == Token::View)
-		stateMutability = StateMutability::View;
-	else if (_token == Token::Pure)
-		stateMutability = StateMutability::Pure;
-	else if (_token == Token::Constant)
+	Token::Value token = m_scanner->currentToken();
+	switch(token)
 	{
-		stateMutability = StateMutability::View;
-		parserError(
-			"The state mutability modifier \"constant\" was removed in version 0.5.0. "
-			"Use \"view\" or \"pure\" instead."
-		);
+		case Token::Payable:
+			stateMutability = StateMutability::Payable;
+			break;
+		case Token::View:
+			stateMutability = StateMutability::View;
+			break;
+		case Token::Pure:
+			stateMutability = StateMutability::Pure;
+			break;
+		case Token::Constant:
+			stateMutability = StateMutability::View;
+			parserError(
+				"The state mutability modifier \"constant\" was removed in version 0.5.0. "
+				"Use \"view\" or \"pure\" instead."
+			);
+			break;
+		default:
+			solAssert(false, "Invalid state mutability specifier.");
 	}
-	else
-		solAssert(false, "Invalid state mutability specifier.");
 	m_scanner->next();
 	return stateMutability;
 }
@@ -403,7 +421,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				m_scanner->next();
 			}
 			else
-				result.visibility = parseVisibilitySpecifier(token);
+				result.visibility = parseVisibilitySpecifier();
 		}
 		else if (Token::isStateMutabilitySpecifier(token))
 		{
@@ -417,7 +435,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				m_scanner->next();
 			}
 			else
-				result.stateMutability = parseStateMutability(token);
+				result.stateMutability = parseStateMutability();
 		}
 		else
 			break;
@@ -564,7 +582,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	bool isIndexed = false;
 	bool isDeclaredConst = false;
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
-	VariableDeclaration::Location location = VariableDeclaration::Location::Default;
+	VariableDeclaration::Location location = VariableDeclaration::Location::Unspecified;
 	ASTPointer<ASTString> identifier;
 
 	while (true)
@@ -572,6 +590,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		Token::Value token = m_scanner->currentToken();
 		if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
 		{
+			nodeFactory.markEndPosition();
 			if (visibility != Declaration::Visibility::Default)
 			{
 				parserError(string(
@@ -582,7 +601,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 				m_scanner->next();
 			}
 			else
-				visibility = parseVisibilitySpecifier(token);
+				visibility = parseVisibilitySpecifier();
 		}
 		else
 		{
@@ -592,7 +611,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 				isDeclaredConst = true;
 			else if (_options.allowLocationSpecifier && Token::isLocationSpecifier(token))
 			{
-				if (location != VariableDeclaration::Location::Default)
+				if (location != VariableDeclaration::Location::Unspecified)
 					parserError(string("Location already specified."));
 				else if (!type)
 					parserError(string("Location specifier needs explicit type name."));
@@ -616,21 +635,21 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			}
 			else
 				break;
+			nodeFactory.markEndPosition();
 			m_scanner->next();
 		}
 	}
-	nodeFactory.markEndPosition();
 
 	if (_options.allowEmptyName && m_scanner->currentToken() != Token::Identifier)
 	{
 		identifier = make_shared<ASTString>("");
 		solAssert(!_options.allowVar, ""); // allowEmptyName && allowVar makes no sense
-		if (type)
-			nodeFactory.setEndPositionFromNode(type);
-		// if type is null this has already caused an error
 	}
 	else
+	{
+		nodeFactory.markEndPosition();
 		identifier = expectIdentifierToken();
+	}
 	ASTPointer<Expression> value;
 	if (_options.allowInitialValue)
 	{
@@ -794,8 +813,24 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		unsigned secondSize;
 		tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
 		ElementaryTypeNameToken elemTypeName(token, firstSize, secondSize);
-		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
+		ASTNodeFactory nodeFactory(*this);
+		nodeFactory.markEndPosition();
 		m_scanner->next();
+		auto stateMutability = boost::make_optional(elemTypeName.token() == Token::Address, StateMutability::NonPayable);
+		if (Token::isStateMutabilitySpecifier(m_scanner->currentToken(), false))
+		{
+			if (elemTypeName.token() == Token::Address)
+			{
+				nodeFactory.markEndPosition();
+				stateMutability = parseStateMutability();
+			}
+			else
+			{
+				parserError("State mutability can only be specified for address types.");
+				m_scanner->next();
+			}
+		}
+		type = nodeFactory.createNode<ElementaryTypeName>(elemTypeName, stateMutability);
 	}
 	else if (token == Token::Var)
 	{
@@ -1596,8 +1631,8 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// Distinguish between variable declaration (and potentially assignment) and expression statement
 	// (which include assignments to other expressions and pre-declared variables).
 	// We have a variable declaration if we get a keyword that specifies a type name.
-	// If it is an identifier or an elementary type name followed by an identifier, we also have
-	// a variable declaration.
+	// If it is an identifier or an elementary type name followed by an identifier
+	// or a mutability specifier, we also have a variable declaration.
 	// If we get an identifier followed by a "[" or ".", it can be both ("lib.type[9] a;" or "variable.el[9] = 7;").
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
@@ -1608,6 +1643,12 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	if (mightBeTypeName)
 	{
 		Token::Value next = m_scanner->peekNextToken();
+		// So far we only allow ``address payable`` in variable declaration statements and in no other
+		// kind of statement. This means, for example, that we do not allow type expressions of the form
+		// ``address payable;``.
+		// If we want to change this in the future, we need to consider another scanner token here.
+		if (Token::isElementaryTypeName(token) && Token::isStateMutabilitySpecifier(next, false))
+			return LookAheadInfo::VariableDeclaration;
 		if (next == Token::Identifier || Token::isLocationSpecifier(next))
 			return LookAheadInfo::VariableDeclaration;
 		if (next == Token::LBrack || next == Token::Period)

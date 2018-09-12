@@ -25,7 +25,7 @@ char const* Exception::what() const noexcept
 	// Return the comment if available.
 	if (string const* cmt = comment())
 		return cmt->data();
-	
+
 	// Fallback to base what().
 	// Boost accepts nullptr, but the C++ standard doesn't
 	// and crashes on some platforms.

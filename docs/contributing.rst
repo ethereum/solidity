@@ -207,13 +207,13 @@ Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compile
 At this stage you should be able to see a message similar to the following:
 
 ::
-    
-    Scanning dependencies of target solfuzzer                            
-    [ 98%] Building CXX object test/tools/CMakeFiles/solfuzzer.dir/fuzzer.cpp.o         
-    afl-cc 2.52b by <lcamtuf@google.com>                                                       
-    afl-as 2.52b by <lcamtuf@google.com>                                                                   
+
+    Scanning dependencies of target solfuzzer
+    [ 98%] Building CXX object test/tools/CMakeFiles/solfuzzer.dir/fuzzer.cpp.o
+    afl-cc 2.52b by <lcamtuf@google.com>
+    afl-as 2.52b by <lcamtuf@google.com>
     [+] Instrumented 1949 locations (64-bit, non-hardened mode, ratio 100%).
-    [100%] Linking CXX executable solfuzzer       
+    [100%] Linking CXX executable solfuzzer
 
 If the instrumentation messages did not appear, try switching the cmake flags pointing to AFL's clang binaries:
 
@@ -228,7 +228,7 @@ Othwerise, upon execution the fuzzer will halt with an error saying binary is no
 
 ::
 
-    afl-fuzz 2.52b by <lcamtuf@google.com>                                                                                                          
+    afl-fuzz 2.52b by <lcamtuf@google.com>
     ... (truncated messages)
     [*] Validating target binary...
 

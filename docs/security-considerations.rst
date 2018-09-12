@@ -86,7 +86,8 @@ as it uses ``call`` which forwards all remaining gas by default:
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            if (msg.sender.call.value(shares[msg.sender])(""))
+            (bool success,) = msg.sender.call.value(shares[msg.sender])("");
+            if (success)
                 shares[msg.sender] = 0;
         }
     }
@@ -171,7 +172,8 @@ before they interact with your contract.
 
 Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
-``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
+``.call()``, ``.callcode()``, ``.delegatecall()`` and ``.staticcall()`` behave
+in the same way.
 
 tx.origin
 =========

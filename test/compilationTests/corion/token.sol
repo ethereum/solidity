@@ -7,8 +7,8 @@ import "./moduleHandler.sol";
 import "./tokenDB.sol";
 
 contract thirdPartyContractAbstract {
-    function receiveCorionToken(address, uint256, bytes) external returns (bool, uint256) {}
-    function approvedCorionToken(address, uint256, bytes) external returns (bool) {}
+    function receiveCorionToken(address, uint256, bytes calldata) external returns (bool, uint256) {}
+    function approvedCorionToken(address, uint256, bytes calldata) external returns (bool) {}
 }
 
 contract token is safeMath, module, announcementTypes {
@@ -123,7 +123,7 @@ contract token is safeMath, module, announcementTypes {
      * @param extraData Data to give forward to the receiver
      * @return True if the approval was successful
      */
-    function approveAndCall(address spender, uint256 amount, uint256 nonce, bytes extraData) isReady external returns (bool success) {
+    function approveAndCall(address spender, uint256 amount, uint256 nonce, bytes calldata extraData) isReady external returns (bool success) {
         /*
             Authorise another address to use a certain quantity of the authorising  owner’s balance
             Following the transaction the receiver address `approvedCorionToken` function is called by the given data
@@ -267,7 +267,7 @@ contract token is safeMath, module, announcementTypes {
      * @param extraData Data to give forward to the receiver
      * @return Whether the transfer was successful or not
      */
-    function transfer(address to, uint256 amount, bytes extraData) isReady external returns (bool success) {
+    function transfer(address to, uint256 amount, bytes calldata extraData) isReady external returns (bool success) {
         /*
             Start transaction to send a quantity from a given address to another address
             After transaction the function `receiveCorionToken`of the receiver is called  by the given data

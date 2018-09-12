@@ -53,7 +53,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
 
     uint256 count = grants[_to].push(
                 TokenGrant(
-                  _revokable ? msg.sender : 0, // avoid storing an extra 20 bytes when it is non-revokable
+                  _revokable ? msg.sender : 0x0000000000000000000000000000000000000000, // avoid storing an extra 20 bytes when it is non-revokable
                   _value,
                   _cliff,
                   _vesting,
@@ -84,7 +84,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
       revert();
     }
 
-    address receiver = grant.burnsOnRevoke ? 0xdead : msg.sender;
+    address receiver = grant.burnsOnRevoke ? 0x000000000000000000000000000000000000dEaD : msg.sender;
 
     uint256 nonVested = nonVestedTokens(grant, uint64(now));
 

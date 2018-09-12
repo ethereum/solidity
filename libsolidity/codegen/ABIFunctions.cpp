@@ -197,6 +197,9 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 		templ("functionName", functionName);
 		switch (_type.category())
 		{
+		case Type::Category::Address:
+			templ("body", "cleaned := " + cleanupFunction(IntegerType(160)) + "(value)");
+			break;
 		case Type::Category::Integer:
 		{
 			IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
@@ -239,7 +242,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			break;
 		}
 		case Type::Category::Contract:
-			templ("body", "cleaned := " + cleanupFunction(IntegerType(160, IntegerType::Modifier::Address)) + "(value)");
+			templ("body", "cleaned := " + cleanupFunction(AddressType()) + "(value)");
 			break;
 		case Type::Category::Enum:
 		{
@@ -284,6 +287,12 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 		auto fromCategory = _from.category();
 		switch (fromCategory)
 		{
+		case Type::Category::Address:
+			body =
+				Whiskers("converted := <convert>(value)")
+					("convert", conversionFunction(IntegerType(160), _to))
+					.render();
+			break;
 		case Type::Category::Integer:
 		case Type::Category::RationalNumber:
 		case Type::Category::Contract:
@@ -314,16 +323,19 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 					.render();
 			}
 			else if (toCategory == Type::Category::FixedPoint)
-			{
 				solUnimplemented("Not yet implemented - FixedPointType.");
-			}
+			else if (toCategory == Type::Category::Address)
+				body =
+					Whiskers("converted := <convert>(value)")
+						("convert", conversionFunction(_from, IntegerType(160)))
+						.render();
 			else
 			{
 				solAssert(
 					toCategory == Type::Category::Integer ||
 					toCategory == Type::Category::Contract,
 				"");
-				IntegerType const addressType(160, IntegerType::Modifier::Address);
+				IntegerType const addressType(160);
 				IntegerType const& to =
 					toCategory == Type::Category::Integer ?
 					dynamic_cast<IntegerType const&>(_to) :
@@ -375,6 +387,11 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 					("shift", shiftRightFunction(256 - from.numBytes() * 8))
 					("convert", conversionFunction(IntegerType(from.numBytes() * 8), _to))
 					.render();
+			else if (toCategory == Type::Category::Address)
+				body =
+					Whiskers("converted := <convert>(value)")
+						("convert", conversionFunction(_from, IntegerType(160)))
+						.render();
 			else
 			{
 				// clear for conversion to longer bytes
@@ -410,7 +427,7 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 			solAssert(false, "");
 		}
 
-		solAssert(!body.empty(), "");
+		solAssert(!body.empty(), _from.canonicalName() + " to " + _to.canonicalName());
 		templ("body", body);
 		return templ.render();
 	});

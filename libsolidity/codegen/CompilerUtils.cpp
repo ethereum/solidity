@@ -657,6 +657,11 @@ void CompilerUtils::convertType(
 			if (targetIntegerType.numBits() < typeOnStack.numBytes() * 8)
 				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
 		}
+		else if (targetTypeCategory == Type::Category::Address)
+		{
+			solAssert(typeOnStack.numBytes() * 8 == 160, "");
+			rightShiftNumberOnStack(256 - 160);
+		}
 		else
 		{
 			// clear for conversion to longer bytes
@@ -690,23 +695,33 @@ void CompilerUtils::convertType(
 		break;
 	case Type::Category::FixedPoint:
 		solUnimplemented("Not yet implemented - FixedPointType.");
+	case Type::Category::Address:
 	case Type::Category::Integer:
 	case Type::Category::Contract:
 	case Type::Category::RationalNumber:
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
-			solAssert(stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::RationalNumber,
-				"Invalid conversion to FixedBytesType requested.");
+			solAssert(
+				stackTypeCategory == Type::Category::Address ||
+				stackTypeCategory == Type::Category::Integer ||
+				stackTypeCategory == Type::Category::RationalNumber,
+				"Invalid conversion to FixedBytesType requested."
+			);
 			// conversion from bytes to string. no need to clean the high bit
 			// only to shift left because of opposite alignment
 			FixedBytesType const& targetBytesType = dynamic_cast<FixedBytesType const&>(_targetType);
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
+			{
 				if (targetBytesType.numBytes() * 8 > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
+			}
+			else if (stackTypeCategory == Type::Category::Address)
+				solAssert(targetBytesType.numBytes() * 8 == 160, "");
 			leftShiftNumberOnStack(256 - targetBytesType.numBytes() * 8);
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 		{
+			solAssert(stackTypeCategory != Type::Category::Address, "Invalid conversion to EnumType requested.");
 			solAssert(_typeOnStack.mobileType(), "");
 			// just clean
 			convertType(_typeOnStack, *_typeOnStack.mobileType(), true);
@@ -733,8 +748,8 @@ void CompilerUtils::convertType(
 		}
 		else
 		{
-			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract, "");
-			IntegerType addressType(160, IntegerType::Modifier::Address);
+			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract || targetTypeCategory == Type::Category::Address, "");
+			IntegerType addressType(160);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
 				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
 			if (stackTypeCategory == Type::Category::RationalNumber)
@@ -996,10 +1011,8 @@ void CompilerUtils::convertType(
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 		break;
 	default:
-		if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Integer)
+		if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Address)
 		{
-			IntegerType const& targetType = dynamic_cast<IntegerType const&>(_targetType);
-			solAssert(targetType.isAddress(), "Function type can only be converted to address.");
 			FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
 			solAssert(typeOnStack.kind() == FunctionType::Kind::External, "Only external function type can be converted.");
 

@@ -4,28 +4,28 @@ Contract Metadata
 
 .. index:: metadata, contract verification
 
-The Solidity compiler automatically generates a JSON file, the
-contract metadata, that contains information about the current contract.
-It can be used to query the compiler version, the sources used, the ABI
-and NatSpec documentation in order to more safely interact with the contract
-and to verify its source code.
+The Solidity compiler automatically generates a JSON file, the contract
+metadata, that contains information about the current contract. You can use
+this file to query the compiler version, the sources used, the ABI and NatSpec
+documentation to more safely interact with the contract and verify its source
+code.
 
 The compiler appends a Swarm hash of the metadata file to the end of the
 bytecode (for details, see below) of each contract, so that you can retrieve
 the file in an authenticated way without having to resort to a centralized
 data provider.
 
-Of course, you have to publish the metadata file to Swarm (or some other service)
-so that others can access it. The file can be output by using ``solc --metadata``
-and the file will be called ``ContractName_meta.json``.
-It will contain Swarm references to the source code, so you have to upload
-all source files and the metadata file.
+You have to publish the metadata file to Swarm (or another service) so that
+others can access it. You create the file by using the ``solc --metadata``
+command that generates a file called ``ContractName_meta.json``. It contains
+Swarm references to the source code, so you have to upload all source files and
+the metadata file.
 
 The metadata file has the following format. The example below is presented in a
 human-readable way. Properly formatted metadata should use quotes correctly,
 reduce whitespace to a minimum and sort the keys of all objects to arrive at a
-unique formatting.
-Comments are of course also not permitted and used here only for explanatory purposes.
+unique formatting. Comments are not permitted and used here only for
+explanatory purposes.
 
 .. code-block:: none
 
@@ -96,11 +96,11 @@ Comments are of course also not permitted and used here only for explanatory pur
 .. note::
     Note the ABI definition above has no fixed order. It can change with compiler versions.
 
-.. note::
-    Since the bytecode of the resulting contract contains the metadata hash, any change to
-    the metadata will result in a change of the bytecode. Furthermore, since the metadata
-    includes a hash of all the sources used, a single whitespace change in any of the source
-    codes will result in a different metadata, and subsequently a different bytecode.
+Since the bytecode of the resulting contract contains the metadata hash, any
+change to the metadata results in a change of the bytecode. This includes
+changes to a filename or path, and since the metadata includes a hash of all the
+sources used, a single whitespace change results in different metadata, and
+different bytecode.
 
 Encoding of the Metadata Hash in the Bytecode
 =============================================
@@ -131,7 +131,7 @@ user interface for the contract.
 Furthermore, Mist can use the userdoc to display a confirmation message to the user
 whenever they interact with the contract.
 
-Additional information about Ethereum Natural Specification (NatSpec) can be found `here <https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format>`_. 
+Additional information about Ethereum Natural Specification (NatSpec) can be found `here <https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format>`_.
 
 Usage for Source Code Verification
 ==================================

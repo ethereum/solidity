@@ -348,7 +348,7 @@ contract multisig {
 
 	// TODO: document
 	function changeOwner(address _from, address _to) external;
-	function execute(address _to, uint _value, bytes _data) external returns (bytes32);
+	function execute(address _to, uint _value, bytes calldata _data) external returns (bytes32);
 	function confirm(bytes32 _h) public returns (bool);
 }
 
@@ -390,7 +390,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	// If not, goes into multisig process. We provide a hash on return to allow the sender to provide
 	// shortcuts for the other confirmations (allowing them to avoid replicating the _to, _value
 	// and _data arguments). They still get the option of using them if they want, anyways.
-	function execute(address _to, uint _value, bytes _data) external onlyowner returns (bytes32 _r) {
+	function execute(address _to, uint _value, bytes calldata _data) external onlyowner returns (bytes32 _r) {
 		// first, take the opportunity to check that we're under the daily limit.
 		if (underLimit(_value)) {
 			emit SingleTransact(msg.sender, _value, _to, _data);

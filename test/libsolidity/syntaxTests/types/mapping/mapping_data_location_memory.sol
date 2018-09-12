@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (81-111): Data location for mappings must be specified as "storage".
+// TypeError: (81-111): Data location must be "storage" for variable, but "memory" was given.

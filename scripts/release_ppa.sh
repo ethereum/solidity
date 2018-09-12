@@ -22,7 +22,7 @@
 ##  method			= ftp
 ##  incoming		= ~ethereum/ethereum-dev
 ##  login			= anonymous
-## 
+##
 ##  [ethereum]
 ##  fqdn			= ppa.launchpad.net
 ##  method			= ftp
