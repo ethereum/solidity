@@ -3039,7 +3039,8 @@ BOOST_AUTO_TEST_CASE(gaslimit)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(gasLimit()));
+	auto result = callContractFunction("f()");
+	ABI_CHECK(result, encodeArgs(gasLimit()));
 }
 
 BOOST_AUTO_TEST_CASE(gasprice)
