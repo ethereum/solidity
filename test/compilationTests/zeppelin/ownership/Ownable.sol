@@ -7,7 +7,7 @@ pragma solidity ^0.4.11;
  * functions, this simplifies the implementation of "user permissions".
  */
 contract Ownable {
-  address public owner;
+  address payable public owner;
 
 
   /**
@@ -34,7 +34,7 @@ contract Ownable {
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param newOwner The address to transfer ownership to.
    */
-  function transferOwnership(address newOwner) public onlyOwner {
+  function transferOwnership(address payable newOwner) public onlyOwner {
     if (newOwner != address(0)) {
       owner = newOwner;
     }

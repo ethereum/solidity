@@ -9,7 +9,7 @@ contract publisher is announcementTypes, module, safeMath {
     /*
         module callbacks
     */
-    function transferEvent(address from, address to, uint256 value) external returns (bool success) {
+    function transferEvent(address payable from, address payable to, uint256 value) external returns (bool success) {
         /*
             Transaction completed. This function is available only for moduleHandler
             If a transaction is carried out from or to an address which participated in the objection of an announcement, its objection purport is automatically set
@@ -54,14 +54,14 @@ contract publisher is announcementTypes, module, safeMath {
 
         string _str;
         uint256 _uint;
-        address _addr;
+        address payable _addr;
     }
     mapping(uint256 => announcements_s) public announcements;
     uint256 announcementsLength = 1;
 
     mapping (address => uint256[]) public opponents;
 
-    constructor(address moduleHandler) public {
+    constructor(address payable moduleHandler) public {
         /*
             Installation function.  The installer will be registered in the admin list automatically
 
@@ -116,7 +116,7 @@ contract publisher is announcementTypes, module, safeMath {
         return _amount * oppositeRate / 100 > weight;
     }
 
-    function newAnnouncement(announcementType Type, string calldata Announcement, string calldata Link, bool Oppositable, string calldata _str, uint256 _uint, address _addr) onlyOwner external {
+    function newAnnouncement(announcementType Type, string calldata Announcement, string calldata Link, bool Oppositable, string calldata _str, uint256 _uint, address payable _addr) onlyOwner external {
         /*
             New announcement. Can be called  only by those in the admin list
 

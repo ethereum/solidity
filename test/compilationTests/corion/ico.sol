@@ -27,12 +27,12 @@ contract ico is safeMath {
 
     uint256 constant oneSegment = 40320;
 
-    address public owner;
-    address public tokenAddr;
-    address public premiumAddr;
+    address payable public owner;
+    address payable public tokenAddr;
+    address payable public premiumAddr;
     uint256 public startBlock;
     uint256 public icoDelay;
-    address public foundationAddress;
+    address payable public foundationAddress;
     address public icoEtcPriceAddr;
     uint256 public icoExchangeRate;
     uint256 public icoExchangeRateSetBlock;
@@ -50,7 +50,7 @@ contract ico is safeMath {
     uint256 public totalMint;
     uint256 public totalPremiumMint;
 
-    constructor(address foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] memory genesisAddr, uint256[] memory genesisValue) public {
+    constructor(address payable foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] memory genesisAddr, uint256[] memory genesisValue) public {
         /*
             Installation function.
 
@@ -248,7 +248,7 @@ contract ico is safeMath {
         aborted = true;
     }
 
-    function connectTokens(address tokenContractAddr, address premiumContractAddr) external {
+    function connectTokens(address payable tokenContractAddr, address payable premiumContractAddr) external {
         /*
             Installation function which joins the two token contracts with this contract.
             Only callable by the owner
@@ -284,7 +284,7 @@ contract ico is safeMath {
         require( buy(msg.sender, address(0x00)) );
     }
 
-    function buy(address beneficiaryAddress, address affilateAddress) public payable returns (bool success) {
+    function buy(address payable beneficiaryAddress, address affilateAddress) public payable returns (bool success) {
         /*
             Buying a token
 

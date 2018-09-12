@@ -16,6 +16,8 @@ contract C {
         (bool success,) = address(this).call("");
         require(success);
     }
+    function() payable external {
+    }
 }
 // ----
 // TypeError: (52-77): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.

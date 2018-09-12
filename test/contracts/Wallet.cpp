@@ -375,7 +375,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	}
 
 	// destroys the contract sending everything to `_to`.
-	function kill(address _to) onlymanyowners(keccak256(msg.data)) external {
+	function kill(address payable _to) onlymanyowners(keccak256(msg.data)) external {
 		selfdestruct(_to);
 	}
 

@@ -32,7 +32,7 @@ contract MultisigWallet is Multisig, Shareable, DayLimit {
   /**
    * @dev destroys the contract sending everything to `_to`.
    */
-  function destroy(address _to) onlymanyowners(keccak256(msg.data)) external {
+  function destroy(address payable _to) onlymanyowners(keccak256(msg.data)) external {
     selfdestruct(_to);
   }
 

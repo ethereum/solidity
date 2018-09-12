@@ -16,7 +16,7 @@ contract provider is module, safeMath, announcementTypes {
         require( _success );
         return true;
     }
-    function transferEvent(address from, address to, uint256 value) external returns (bool success) {
+    function transferEvent(address payable from, address payable to, uint256 value) external returns (bool success) {
         /*
             Transaction completed. This function is only available for the modulehandler.
             It should be checked if the sender or the acceptor does not connect to the provider or it is not a provider itself if so than the change should be recorded.
@@ -118,7 +118,7 @@ contract provider is module, safeMath, announcementTypes {
 
     uint256 private currentSchellingRound = 1;
 
-    constructor(address _moduleHandler) public {
+    constructor(address payable _moduleHandler) public {
         /*
             Install function.
 
@@ -147,7 +147,7 @@ contract provider is module, safeMath, announcementTypes {
         else { return false; }
         return true;
     }
-    function getUserDetails(address addr, uint256 schellingRound) public view returns (address ProviderAddress, uint256 ProviderHeight, uint256 ConnectedOn, uint256 value) {
+    function getUserDetails(address payable addr, uint256 schellingRound) public view returns (address ProviderAddress, uint256 ProviderHeight, uint256 ConnectedOn, uint256 value) {
         /*
             Collecting the datas of the client.
 
@@ -213,7 +213,7 @@ contract provider is module, safeMath, announcementTypes {
         return ( ! priv && ( rate >= publicMinRate && rate <= publicMaxRate ) ) ||
                 ( priv && ( rate >= privateMinRate && rate <= privateMaxRate ) );
     }
-    function createProvider(bool priv, string calldata name, string calldata website, string calldata country, string calldata info, uint8 rate, bool isForRent, address admin) isReady external {
+    function createProvider(bool priv, string calldata name, string calldata website, string calldata country, string calldata info, uint8 rate, bool isForRent, address payable admin) isReady external {
         /*
             Creating a provider.
             During the ICO its not allowed to create provider.
@@ -270,7 +270,7 @@ contract provider is module, safeMath, announcementTypes {
         }
         emit EProviderOpen(msg.sender, currHeight);
     }
-    function setProviderDetails(address addr, string calldata website, string calldata country, string calldata info, uint8 rate, address admin) isReady external {
+    function setProviderDetails(address payable addr, string calldata website, string calldata country, string calldata info, uint8 rate, address payable admin) isReady external {
         /*
             Modifying the datas of the provider.
             This can only be invited by the provider’s admin.
@@ -321,7 +321,7 @@ contract provider is module, safeMath, announcementTypes {
         info            = providers[addr].data[height].info;
         create          = providers[addr].data[height].create;
     }
-    function getProviderDetails(address addr, uint256 height) public view returns (uint8 rate, bool isForRent, uint256 clientsCount, bool priv, bool getInterest, bool valid) {
+    function getProviderDetails(address payable addr, uint256 height) public view returns (uint8 rate, bool isForRent, uint256 clientsCount, bool priv, bool getInterest, bool valid) {
         /*
             Asking for the datas of the provider.
             In case the height is unknown then the system will use the last known height.

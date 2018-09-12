@@ -2215,7 +2215,7 @@ BOOST_AUTO_TEST_CASE(send_ether)
 	char const* sourceCode = R"(
 		contract test {
 			constructor() payable public {}
-			function a(address addr, uint amount) public returns (uint ret) {
+			function a(address payable addr, uint amount) public returns (uint ret) {
 				addr.send(amount);
 				return address(this).balance;
 			}
@@ -2233,11 +2233,11 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 	char const* sourceCode = R"(
 		contract A {
 			constructor() public payable {}
-			function a(address addr, uint amount) public returns (uint) {
+			function a(address payable addr, uint amount) public returns (uint) {
 				addr.transfer(amount);
 				return address(this).balance;
 			}
-			function b(address addr, uint amount) public {
+			function b(address payable addr, uint amount) public {
 				addr.transfer(amount);
 			}
 		}
@@ -2406,7 +2406,7 @@ BOOST_AUTO_TEST_CASE(selfdestruct)
 	char const* sourceCode = R"(
 		contract test {
 			constructor() public payable {}
-			function a(address receiver) public returns (uint ret) {
+			function a(address payable receiver) public returns (uint ret) {
 				selfdestruct(receiver);
 				return 10;
 			}
@@ -7151,7 +7151,7 @@ BOOST_AUTO_TEST_CASE(failing_send)
 		}
 		contract Main {
 			constructor() public payable {}
-			function callHelper(address _a) public returns (bool r, uint bal) {
+			function callHelper(address payable _a) public returns (bool r, uint bal) {
 				r = !_a.send(5);
 				bal = address(this).balance;
 			}
@@ -8838,7 +8838,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 		library lib {}
 		contract c {
 			constructor() public payable {}
-			function f(address x) public returns (bool) {
+			function f(address payable x) public returns (bool) {
 				return x.send(1);
 			}
 			function () external payable {}
@@ -10093,6 +10093,54 @@ BOOST_AUTO_TEST_CASE(cleanup_bytes_types_shortening)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs("\xff\xff\xff\xff"));
+}
+
+BOOST_AUTO_TEST_CASE(cleanup_address_types)
+{
+	// Checks that address types are properly cleaned before they are compared.
+	char const* sourceCode = R"(
+		contract C {
+			function f(address a) public returns (uint) {
+				if (a != 0x1234567890123456789012345678901234567890) return 1;
+				return 0;
+			}
+			function g(address payable a) public returns (uint) {
+				if (a != 0x1234567890123456789012345678901234567890) return 1;
+				return 0;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// We input longer data on purpose.
+	ABI_CHECK(callContractFunction("f(address)", u256("0xFFFF1234567890123456789012345678901234567890")), encodeArgs(0));
+	ABI_CHECK(callContractFunction("g(address)", u256("0xFFFF1234567890123456789012345678901234567890")), encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(cleanup_address_types_shortening)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() public pure returns (address r) {
+				bytes21 x = 0x1122334455667788990011223344556677889900ff;
+				bytes20 y;
+				assembly { y := x }
+				address z = address(y);
+				assembly { r := z }
+				require(z == 0x1122334455667788990011223344556677889900);
+			}
+			function g() public pure returns (address payable r) {
+				bytes21 x = 0x1122334455667788990011223344556677889900ff;
+				bytes20 y;
+				assembly { y := x }
+				address payable z = address(y);
+				assembly { r := z }
+				require(z == 0x1122334455667788990011223344556677889900);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256("0x1122334455667788990011223344556677889900")));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256("0x1122334455667788990011223344556677889900")));
 }
 
 BOOST_AUTO_TEST_CASE(skip_dynamic_types)
@@ -12446,7 +12494,7 @@ BOOST_AUTO_TEST_CASE(interface_contract)
 		}
 
 		contract C {
-			function f(address _interfaceAddress) public returns (bool) {
+			function f(address payable _interfaceAddress) public returns (bool) {
 				I i = I(_interfaceAddress);
 				return i.f();
 			}

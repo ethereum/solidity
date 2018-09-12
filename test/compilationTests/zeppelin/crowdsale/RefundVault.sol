@@ -15,20 +15,20 @@ contract RefundVault is Ownable {
   enum State { Active, Refunding, Closed }
 
   mapping (address => uint256) public deposited;
-  address public wallet;
+  address payable public wallet;
   State public state;
 
   event Closed();
   event RefundsEnabled();
   event Refunded(address indexed beneficiary, uint256 weiAmount);
 
-  constructor(address _wallet) public {
+  constructor(address payable _wallet) public {
     require(_wallet != address(0x0));
     wallet = _wallet;
     state = State.Active;
   }
 
-  function deposit(address investor) public onlyOwner payable {
+  function deposit(address payable investor) public onlyOwner payable {
     require(state == State.Active);
     deposited[investor] = deposited[investor].add(msg.value);
   }
@@ -46,7 +46,7 @@ contract RefundVault is Ownable {
     emit RefundsEnabled();
   }
 
-  function refund(address investor) public {
+  function refund(address payable investor) public {
     require(state == State.Refunding);
     uint256 depositedValue = deposited[investor];
     deposited[investor] = 0;

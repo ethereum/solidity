@@ -25,7 +25,7 @@ contract abstractModule {
 contract moduleHandler is multiOwner, announcementTypes {
 
     struct modules_s {
-        address addr;
+        address payable addr;
         bytes32 name;
         bool schellingEvent;
         bool transferEvent;
@@ -37,7 +37,7 @@ contract moduleHandler is multiOwner, announcementTypes {
 
 
     constructor(address[] memory newOwners) multiOwner(newOwners) public {}
-    function load(address foundation, bool forReplace, address Token, address Premium, address Publisher, address Schelling, address Provider) public {
+    function load(address payable foundation, bool forReplace, address payable Token, address payable Premium, address payable Publisher, address payable Schelling, address payable Provider) public {
         /*
             Loading modulest to ModuleHandler.
 
@@ -140,7 +140,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         }
         return (true, false, 0);
     }
-    function replaceModule(string calldata name, address addr, bool callCallback) external returns (bool success) {
+    function replaceModule(string calldata name, address payable addr, bool callCallback) external returns (bool success) {
         /*
             Module replace, can be called only by the Publisher contract.
 
@@ -178,7 +178,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         return true;
     }
 
-    function newModule(string calldata name, address addr, bool schellingEvent, bool transferEvent) external returns (bool success) {
+    function newModule(string calldata name, address payable addr, bool schellingEvent, bool transferEvent) external returns (bool success) {
         /*
             Adding new module to the database. Can be called only by the Publisher contract.
 

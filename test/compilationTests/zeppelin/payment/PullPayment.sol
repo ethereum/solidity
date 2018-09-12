@@ -29,7 +29,7 @@ contract PullPayment {
   * @dev withdraw accumulated balance, called by payee.
   */
   function withdrawPayments() public {
-    address payee = msg.sender;
+    address payable payee = msg.sender;
     uint256 payment = payments[payee];
 
     if (payment == 0) {
