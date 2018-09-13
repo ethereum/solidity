@@ -710,9 +710,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			// Optimization: If type is bytes or string, then do not encode,
 			// but directly compute keccak256 on memory.
-			if (*argType == ArrayType(DataLocation::Memory) || *argType == ArrayType(DataLocation::Memory, true))
+			if (*argType == ArrayType::bytesMemory() || *argType == ArrayType::stringMemory())
 			{
-				ArrayUtils(m_context).retrieveLength(ArrayType(DataLocation::Memory));
+				ArrayUtils(m_context).retrieveLength(ArrayType::bytesMemory());
 				m_context << Instruction::SWAP1 << u256(0x20) << Instruction::ADD;
 			}
 			else
@@ -1086,7 +1086,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().abiDecode(targetTypes, false);
 			else
 			{
-				utils().convertType(*firstArgType, ArrayType(DataLocation::Memory));
+				utils().convertType(*firstArgType, ArrayType::bytesMemory());
 				m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 				m_context << Instruction::SWAP1 << Instruction::MLOAD;
 				// stack now: <mem_pos> <length>
@@ -1259,7 +1259,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				identifier = FunctionType(*function).externalIdentifier();
 			else
 				solAssert(false, "Contract member is neither variable nor function.");
-			utils().convertType(type, AddressType(type.isPayable() ? StateMutability::Payable : StateMutability::NonPayable), true);
+			utils().convertType(type, type.isPayable() ? AddressType::addressPayable() : AddressType::address(), true);
 			m_context << identifier;
 		}
 		else
@@ -1277,7 +1277,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
-				AddressType(StateMutability::NonPayable),
+				AddressType::address(),
 				true
 			);
 			m_context << Instruction::BALANCE;
@@ -1294,7 +1294,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if ((set<string>{"call", "callcode", "delegatecall", "staticcall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
-				AddressType(StateMutability::NonPayable),
+				AddressType::address(),
 				true
 			);
 		else
