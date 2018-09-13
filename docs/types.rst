@@ -50,14 +50,25 @@ Operators:
 
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
-* Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
+* Shift operators: ``<<`` (left shift), ``>>`` (right shift)
+* Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation)
 
-Division always truncates (it is just compiled to the ``DIV`` opcode of the EVM), but it does not truncate if both
-operators are :ref:`literals<rational_literals>` (or literal expressions).
 
-Division by zero and modulus with zero throws a runtime exception.
+Comparisons
+^^^^^^^^^^^
 
-The result of a shift operation is the type of the left operand. The
+The value of a comparison is the one obtained by comparing the integer value.
+
+Bit operations
+^^^^^^^^^^^^^^
+
+Bit operations are performed on the two's complement representation of the number.
+This means that, for example ``~int256(0) == int256(-1)``.
+
+Shifts
+^^^^^^
+
+The result of a shift operation has the type of the left operand. The
 expression ``x << y`` is equivalent to ``x * 2**y``, and, for positive integers,
 ``x >> y`` is equivalent to ``x / 2**y``. For negative ``x``, ``x >> y``
 is equivalent to dividing by a power of ``2`` while rounding down (towards negative infinity).
@@ -66,6 +77,34 @@ Shifting by a negative amount throws a runtime exception.
 .. warning::
     Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
     i.e. right shifts used rounding towards zero instead of rounding towards negative infinity.
+
+Addition, Subtraction and Multiplication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Addition, subtraction and multiplication have the usual semantics.
+They wrap in two's complement notation, meaning that
+for example ``uint256(0) - uint256(1) == 2**256 - 1``. You have to take these overflows
+into account when designing safe smart contracts.
+
+Division and Modulus
+^^^^^^^^^^^^^^^^^^^^
+
+Since the type of the result of an operation is always the type of one of
+the operands, division on integers always results in an integer.
+In Solidity, division rounds towards zero. This mean that ``int256(-5) / int256(2) == int256(-2)``.
+
+Note that in contrast, division on :ref:`literals<rational_literals>` results in fractional values
+of arbitrary precision.
+
+Division by zero and modulus with zero throws a runtime exception.
+
+Exponentiation
+^^^^^^^^^^^^^^
+
+Exponentiation is only available for unsigned types. Please take care that the types
+you are using are large enough to hold the result and prepare for potential wrapping behaviour.
+
+Note that ``0**0`` is defined by the EVM as ``1``.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
