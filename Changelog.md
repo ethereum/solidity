@@ -94,9 +94,6 @@ Compiler Features:
  * Code Generator: Allocate and free local variables according to their scope.
  * Removed ``pragma experimental "v0.5.0";``.
 
-Critical Bugfixes:
- * Code Generator: Properly perform cleanup for exponentiation and non-256 bit types.
-
 Bugfixes:
  * Build System: Support versions of CVC4 linked against CLN instead of GMP. In case of compilation issues due to the experimental SMT solver support, the solvers can be disabled when configuring the project with CMake using ``-DUSE_CVC4=OFF`` or ``-DUSE_Z3=OFF``.
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.
@@ -117,13 +114,19 @@ Bugfixes:
  * Type Checker: Consider fixed size arrays when checking for recursive structs.
  * Type Checker: Fix crashes in erroneous tuple assignments in which the type of the right hand side cannot be determined.
  * Type Checker: Fix freeze for negative fixed-point literals very close to ``0``, such as ``-1e-100``.
- * Type Checker: Report error when using structs in events without experimental ABIEncoderV2. This used to crash or log the wrong values.
- * Type Checker: Report error when using indexed structs in events with experimental ABIEncoderV2. This used to log wrong values.
  * Type Checker: Dynamic types as key for public mappings return error instead of assertion fail.
  * Type Checker: Fix internal error when array index value is too large.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
  * Parser: Fix incorrect source location for nameless parameters.
- * Parser: Treat unicode line endings as terminating strings and single-line comments.
+
+### 0.4.25 (2018-09-12)
+
+Important Bugfixes:
+ * Code Generator: Properly perform cleanup for exponentiation and non-256 bit types.
+ * Type Checker: Report error when using indexed structs in events with experimental ABIEncoderV2. This used to log wrong values.
+ * Type Checker: Report error when using structs in events without experimental ABIEncoderV2. This used to crash or log the wrong values.
+ * Parser: Consider all unicode line terminators (LF, VF, FF, CR, NEL, LS, PS) for single-line comments
+   and string literals. They are invalid in strings and will end comments.
  * Parser: Disallow unterminated multi-line comments at the end of input.
  * Parser: Treat ``/** /`` as unterminated multi-line comment.
 
