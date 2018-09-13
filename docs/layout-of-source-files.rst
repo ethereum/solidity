@@ -2,15 +2,23 @@
 Layout of a Solidity Source File
 ********************************
 
-Source files can contain an arbitrary number of contract definitions, include directives
-and pragma directives.
+Source files can contain an arbitrary number of
+:ref:`contract definitions<contract_structure>`, import_ directives
+and :ref:`pragma directives<pragma>`.
+
+.. index:: ! pragma
+
+.. _pragma:
+
+Pragmas
+=======
 
 .. index:: ! pragma, version
 
 .. _version_pragma:
 
 Version Pragma
-==============
+--------------
 
 Source files can (and should) be annotated with a so-called version pragma to reject
 being compiled with future compiler versions that might introduce incompatible
@@ -34,6 +42,44 @@ the exact version of the compiler, so that bugfix releases are still possible.
 
 It is possible to specify much more complex rules for the compiler version,
 the expression follows those used by `npm <https://docs.npmjs.com/misc/semver>`_.
+
+.. index:: ! pragma, experimental
+
+.. _experimental_pragma:
+
+Experimental Pragma
+-------------------
+
+The second pragma is the experimental pragma. It can be used to enable
+features of the compiler or language that are not yet enabled by default.
+The following experimental pragmas are currently supported:
+
+
+ABIEncoderV2
+~~~~~~~~~~~~
+
+The new ABI encoder is able to encode and decode arbitrarily nested
+arrays and structs. It produces less optimal code (the optimizer
+for this part of the code is still under development) and has not
+received as much testing as the old encoder. You can activate it
+using ``pragma experimental ABIEncoderV2;``.
+
+SMTChecker
+~~~~~~~~~~
+
+This component has to be enabled when the Solidity compiler is built
+and therefore it is not available in all Solidity binaries.
+The :ref:`build instructions<smt_solvers_build>` explain how to activate this option.
+It is activated for the Ubuntu PPA releases in most versions,
+but not for solc-js, the Docker images, Windows binaries or the
+statically-built Linux binaries.
+
+If you use
+``pragma experimental SMTChecker;``, then you get additional
+safety warnings which are obtained by querying an SMT solver.
+The component does not yet support all features of the Solidity language
+and likely outputs many warnings. In case it reports unsupported
+features, the analysis may not be fully sound.
 
 .. index:: source file, ! import
 
