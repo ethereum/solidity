@@ -3039,26 +3039,26 @@ BOOST_AUTO_TEST_CASE(gasprice)
 
 BOOST_AUTO_TEST_CASE(blockhash)
 {
-	char const* sourceCode = R"(
-		contract C {
-			uint256 counter;
-			function g() public returns (bool) { counter++; return true; }
-			function f() public returns (bytes32[] memory r) {
-				r = new bytes32[](259);
-				for (uint i = 0; i < 259; i++)
-					r[i] = blockhash(block.number - 257 + i);
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	// generate a sufficient amount of blocks
-	while (blockNumber() < u256(255))
-		ABI_CHECK(callContractFunction("g()"), encodeArgs(true));
-
-	vector<u256> hashes;
-	// currently the test only works for pre-constantinople
+	// depending on the aleth version, this test only works for pre-constantinople
 	if (Options::get().evmVersion() < EVMVersion::constantinople())
 	{
+		char const* sourceCode = R"(
+			contract C {
+				uint256 counter;
+				function g() public returns (bool) { counter++; return true; }
+				function f() public returns (bytes32[] memory r) {
+					r = new bytes32[](259);
+					for (uint i = 0; i < 259; i++)
+						r[i] = blockhash(block.number - 257 + i);
+				}
+			}
+		)";
+		compileAndRun(sourceCode);
+		// generate a sufficient amount of blocks
+		while (blockNumber() < u256(255))
+			ABI_CHECK(callContractFunction("g()"), encodeArgs(true));
+
+		vector<u256> hashes;
 		// ``blockhash()`` is only valid for the last 256 blocks, otherwise zero
 		hashes.emplace_back(0);
 		for (u256 i = blockNumber() - u256(255); i <= blockNumber(); i++)
@@ -3067,18 +3067,9 @@ BOOST_AUTO_TEST_CASE(blockhash)
 		hashes.emplace_back(0);
 		// future block hashes are zero
 		hashes.emplace_back(0);
-	}
-	else
-		// TODO: Starting from constantinople blockhash always seems to return zero.
-		// The blockhash contract introduced in EIP96 seems to break in our setup of
-		// aleth (setting the constantinople fork block to zero and resetting the chain
-		// to block zero before each test run). Pre-deploying the blockchain contract
-		// during genesis seems to help, but currently causes problems with other tests.
-		// Set the expectation to zero for now, so that this test tracks changes in this
-		// behavior.
-		hashes.assign(259, 0);
 
-	ABI_CHECK(callContractFunction("f()"), encodeDyn(hashes));
+		ABI_CHECK(callContractFunction("f()"), encodeDyn(hashes));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(value_complex)
