@@ -35,9 +35,10 @@ npm / Node.js
 =============
 
 Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
-`solcjs` program has fewer features than the other options further down this page. Our
+`solcjs` program has fewer features than the ways to access the compiler described
+further down this page. The
 :ref:`commandline-compiler` documentation assumes you are using
-the full-featured compiler, `solc`. The usage of `solcjs` is documented inside own
+the full-featured compiler, `solc`. The usage of `solcjs` is documented inside its own
 `repository <https://github.com/ethereum/solc-js>`_.
 
 Note: The solc-js project is derived from the C++
@@ -101,8 +102,8 @@ We are also releasing a `snap package <https://snapcraft.io/>`_, which is instal
 
     sudo snap install solc
 
-If you want to help testing the unstable solc with the most recent changes
-from the development branch, please use the following:
+If you want to help testing the latest development version of Solidity
+with the most recent changes, please use the following:
 
 .. code-block:: bash
 
@@ -241,7 +242,7 @@ in Visual Studio 2017 Build Tools or Visual Studio 2017:
 External Dependencies
 ---------------------
 
-We have a "one button" script which installs all required external dependencies
+We have a helper script which installs all required external dependencies
 on macOS, Windows and on numerous Linux distros.
 
 .. code-block:: bash
@@ -331,7 +332,7 @@ The Solidity version string contains four parts:
 - the version number
 - pre-release tag, usually set to ``develop.YYYY.MM.DD`` or ``nightly.YYYY.MM.DD``
 - commit in the format of ``commit.GITHASH``
-- platform, which has arbitrary number of items, containing details about the platform and compiler
+- platform, which has an arbitrary number of items, containing details about the platform and compiler
 
 If there are local modifications, the commit will be postfixed with ``.mod``.
 
