@@ -68,4 +68,7 @@ std::string absolutePath(std::string const& _path, std::string const& _reference
 /// Helper function to return path converted strings.
 std::string sanitizePath(std::string const& _path);
 
+std::string& glDebugOutput();
+
 }
+

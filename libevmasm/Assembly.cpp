@@ -460,18 +460,27 @@ map<u256, u256> Assembly::optimiseInternal(
 				}
 				catch (StackTooDeepException const&)
 				{
-					debugOutput += "Got stack too deep\n";
+					debugOutput += "Got stack too deep\\n\n";
 					// This might happen if the opcode reconstruction is not as efficient
 					// as the hand-crafted code.
 				}
 				catch (ItemNotAvailableException const&)
 				{
-					debugOutput += "Got item not avail\n";
+					debugOutput += "Got item not avail\\n\n";
 					// This might happen if e.g. associativity and commutativity rules
 					// reorganise the expression tree, but not all leaves are available.
 				}
+				debugOutput += glDebugOutput();
+				glDebugOutput() = "";
 
 				debugOutput += "Should replace: " + to_string(shouldReplace) + "\n";
+				debugOutput += "Original:\n";
+				for (auto i = orig; i != iter; ++i)
+					debugOutput += i->toAssemblyText() + " ";
+				debugOutput += "Replacement:\n";
+				for (auto const& i: optimisedChunk)
+					debugOutput += i.toAssemblyText() + " ";
+				debugOutput += "----\n";
 
 				if (shouldReplace)
 				{
@@ -481,13 +490,13 @@ map<u256, u256> Assembly::optimiseInternal(
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
-			debugOutput += "optimised Items size: " + to_string(optimisedItems.size()) + " - " + to_string(m_items.size()) + "\n";
+			debugOutput += "optimised Items size: " + to_string(optimisedItems.size()) + " - " + to_string(m_items.size()) + "\\n\n";
 			if (optimisedItems.size() < m_items.size())
 			{
 				m_items = move(optimisedItems);
 				count++;
 			}
-			debugOutput += "Outside iter\n";
+			debugOutput += "Outside iter\\n\n";
 		}
 	}
 

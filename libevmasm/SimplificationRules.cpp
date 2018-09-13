@@ -62,6 +62,7 @@ void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
 
 void Rules::addRule(SimplificationRule<Pattern> const& _rule)
 {
+	glDebugOutput() += "Adding rule: " + _rule.pattern.toString() + "\n";
 	m_rules[byte(_rule.pattern.instruction())].push_back(_rule);
 }
 

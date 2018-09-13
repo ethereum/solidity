@@ -207,3 +207,9 @@ string dev::absolutePath(string const& _path, string const& _reference)
 string dev::sanitizePath(string const& _path) {
 	return boost::filesystem::path(_path).generic_string();
 }
+
+string& dev::glDebugOutput()
+{
+	static std::string out;
+	return out;
+}
