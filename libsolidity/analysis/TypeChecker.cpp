@@ -864,15 +864,35 @@ void TypeChecker::visitManually(
 
 bool TypeChecker::visit(EventDefinition const& _eventDef)
 {
+	solAssert(_eventDef.visibility() > Declaration::Visibility::Internal, "");
 	unsigned numIndexed = 0;
 	for (ASTPointer<VariableDeclaration> const& var: _eventDef.parameters())
 	{
 		if (var->isIndexed())
+		{
 			numIndexed++;
+			if (
+				_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+				dynamic_cast<ReferenceType const*>(type(*var).get())
+			)
+				m_errorReporter.typeError(
+					var->location(),
+					"Indexed reference types cannot yet be used with ABIEncoderV2."
+				);
+		}
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
 			m_errorReporter.typeError(var->location(), "Internal or recursive type is not allowed as event parameter type.");
+		if (
+			!_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+			!typeSupportedByOldABIEncoder(*type(*var))
+		)
+			m_errorReporter.typeError(
+				var->location(),
+				"This type is only supported in the new experimental ABI encoder. "
+				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+			);
 	}
 	if (_eventDef.isAnonymous() && numIndexed > 4)
 		m_errorReporter.typeError(_eventDef.location(), "More than 4 indexed arguments for anonymous event.");
