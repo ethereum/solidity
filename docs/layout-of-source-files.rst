@@ -56,18 +56,27 @@ At a global level, you can use import statements of the following form:
 
 This statement imports all global symbols from "filename" (and symbols imported there) into the
 current global scope (different than in ES6 but backwards-compatible for Solidity).
+This simple form is not recommended for use, because it pollutes the namespace in an
+unpredictable way: If you add new top-level items inside "filename", they will automatically
+appear in all files that import like this from "filename". It is better to import specific
+symbols explicitly.
+
+The following example creates a new global symbol ``symbolName`` whose members are all
+the global symbols from ``"filename"``.
 
 ::
 
   import * as symbolName from "filename";
 
-...creates a new global symbol ``symbolName`` whose members are all the global symbols from ``"filename"``.
+If there is a naming collision, you can also rename symbols while importing.
+This code
+creates new global symbols ``alias`` and ``symbol2`` which reference ``symbol1`` and ``symbol2`` from inside ``"filename"``, respectively.
 
 ::
 
   import {symbol1 as alias, symbol2} from "filename";
 
-...creates new global symbols ``alias`` and ``symbol2`` which reference ``symbol1`` and ``symbol2`` from ``"filename"``, respectively.
+
 
 Another syntax is not part of ES6, but probably convenient:
 
@@ -92,6 +101,11 @@ If you use ``import "x" as x;`` instead, a different file could be referenced
 It depends on the compiler (see below) how to actually resolve the paths.
 In general, the directory hierarchy does not need to strictly map onto your local
 filesystem, it can also map to resources discovered via e.g. ipfs, http or git.
+
+.. note::
+    Always use relative imports like ``import "./filename.sol";`` and avoid
+    using ``..`` in path specifiers. In the latter case, it is probably better to use
+    global paths and set up remappings as explained below.
 
 Use in Actual Compilers
 -----------------------
@@ -181,6 +195,11 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
   multi-line comment.
   */
 
+.. note::
+  A single-line comment is terminated by any unicode line terminator
+  (LF, VF, FF, CR, NEL, LS or PS) in utf8 encoding. The terminator is still part of
+  the source code after the comment, so if it is not an ascii symbol
+  (these are NEL, LS and PS), it will lead to a parser error.
 
 Additionally, there is another type of comment called a natspec comment,
 for which the documentation is not yet written. They are written with a
