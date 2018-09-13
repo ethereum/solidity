@@ -383,6 +383,7 @@ map<u256, u256> Assembly::optimiseInternal(
 	std::set<size_t> const& _tagsReferencedFromOutside
 )
 {
+	debugOutput += "Entering debug\n";
 	// Run optimisation for sub-assemblies.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
@@ -395,6 +396,7 @@ map<u256, u256> Assembly::optimiseInternal(
 		);
 		// Apply the replacements (can be empty).
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
+		debugOutput += "Inner:\n" + m_subs[subId]->debugOutput + "-----\n";
 	}
 
 	map<u256, u256> tagReplacements;
@@ -437,12 +439,14 @@ map<u256, u256> Assembly::optimiseInternal(
 			// assumes we only jump to tags that are pushed. This is not the case anymore with
 			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
+			debugOutput += "Running CSE\n";
 
 			bool usesMSize = (find(m_items.begin(), m_items.end(), AssemblyItem(Instruction::MSIZE)) != m_items.end());
 
 			auto iter = m_items.begin();
 			while (iter != m_items.end())
 			{
+				debugOutput += "Iter\n";
 				KnownState emptyState;
 				CommonSubexpressionEliminator eliminator(emptyState);
 				auto orig = iter;
@@ -456,14 +460,18 @@ map<u256, u256> Assembly::optimiseInternal(
 				}
 				catch (StackTooDeepException const&)
 				{
+					debugOutput += "Got stack too deep\n";
 					// This might happen if the opcode reconstruction is not as efficient
 					// as the hand-crafted code.
 				}
 				catch (ItemNotAvailableException const&)
 				{
+					debugOutput += "Got item not avail\n";
 					// This might happen if e.g. associativity and commutativity rules
 					// reorganise the expression tree, but not all leaves are available.
 				}
+
+				debugOutput += "Should replace: " + to_string(shouldReplace) + "\n";
 
 				if (shouldReplace)
 				{
@@ -473,11 +481,13 @@ map<u256, u256> Assembly::optimiseInternal(
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
+			debugOutput += "optimised Items size: " + to_string(optimisedItems.size()) + " - " + to_string(m_items.size()) + "\n";
 			if (optimisedItems.size() < m_items.size())
 			{
 				m_items = move(optimisedItems);
 				count++;
 			}
+			debugOutput += "Outside iter\n";
 		}
 	}
 

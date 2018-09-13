@@ -140,6 +140,8 @@ public:
 		StringMap const& _sourceCodes = StringMap()
 	) const;
 
+	std::string debugOutput;
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
