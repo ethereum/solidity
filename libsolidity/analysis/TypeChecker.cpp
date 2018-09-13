@@ -535,7 +535,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 			toString(arguments.size()) +
 			" were provided."
 		);
-	if (arguments.size() >= 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType(DataLocation::Memory)))
+	if (arguments.size() >= 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType::bytesMemory()))
 		m_errorReporter.typeError(
 			arguments.front()->location(),
 			"Invalid type for argument in function call. "
@@ -2131,7 +2131,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				"after argument-dependent lookup in " + exprType->toString() +
 				(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".");
 		if (exprType->category() == Type::Category::Contract)
-			for (auto const& addressMember: AddressType(StateMutability::Payable).nativeMembers(nullptr))
+			for (auto const& addressMember: AddressType::addressPayable().nativeMembers(nullptr))
 				if (addressMember.name == memberName)
 				{
 					Identifier const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());

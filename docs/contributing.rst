@@ -92,7 +92,7 @@ To run a subset of tests, filters can be used:
 ``soltest -t TestSuite/TestName -- --ipcpath /tmp/testeth/geth.ipc --testpath ./test``,
 where ``TestName`` can be a wildcard ``*``.
 
-Alternatively, there is a testing script at ``scripts/test.sh`` which executes all tests and runs
+Alternatively, there is a testing script at ``scripts/tests.sh`` which executes all tests and runs
 ``cpp-ethereum`` automatically if it is in the path (but does not download it).
 
 Travis CI even runs some additional tests (including ``solc-js`` and testing third party Solidity frameworks) that require compiling the Emscripten target.

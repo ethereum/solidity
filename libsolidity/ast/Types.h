@@ -319,6 +319,9 @@ protected:
 class AddressType: public Type
 {
 public:
+    static AddressType& address() { static std::shared_ptr<AddressType> addr(std::make_shared<AddressType>(StateMutability::NonPayable)); return *addr; }
+    static AddressType& addressPayable() { static std::shared_ptr<AddressType> addr(std::make_shared<AddressType>(StateMutability::Payable)); return *addr; }
+
 	virtual Category category() const override { return Category::Address; }
 
 	explicit AddressType(StateMutability _stateMutability);
@@ -361,6 +364,7 @@ public:
 	{
 		Unsigned, Signed
 	};
+
 	virtual Category category() const override { return Category::Integer; }
 
 	explicit IntegerType(unsigned _bits, Modifier _modifier = Modifier::Unsigned);
@@ -661,6 +665,9 @@ protected:
 class ArrayType: public ReferenceType
 {
 public:
+	static ArrayType& bytesMemory() { static std::shared_ptr<ArrayType> addr(std::make_shared<ArrayType>(DataLocation::Memory)); return *addr; }
+	static ArrayType& stringMemory() { static std::shared_ptr<ArrayType> addr(std::make_shared<ArrayType>(DataLocation::Memory, true)); return *addr; }
+
 	virtual Category category() const override { return Category::Array; }
 
 	/// Constructor for a byte array ("bytes") and string.
