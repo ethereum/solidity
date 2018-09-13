@@ -57,7 +57,7 @@ Block and Transaction Properties
 --------------------------------
 
 - ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
-- ``block.coinbase`` (``address``): current block miner's address
+- ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
@@ -65,12 +65,12 @@ Block and Transaction Properties
 - ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes``): complete calldata
 - ``msg.gas`` (``uint``): remaining gas - deprecated in version 0.4.21 and to be replaced by ``gasleft()``
-- ``msg.sender`` (``address``): sender of the message (current call)
+- ``msg.sender`` (``address payable``): sender of the message (current call)
 - ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
 - ``msg.value`` (``uint``): number of wei sent with the message
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
 - ``tx.gasprice`` (``uint``): gas price of the transaction
-- ``tx.origin`` (``address``): sender of the transaction (full call chain)
+- ``tx.origin`` (``address payable``): sender of the transaction (full call chain)
 
 .. note::
     The values of all members of ``msg``, including ``msg.sender`` and
@@ -161,9 +161,9 @@ Address Related
 
 ``<address>.balance`` (``uint256``):
     balance of the :ref:`address` in Wei
-``<address>.transfer(uint256 amount)``:
+``<address payable>.transfer(uint256 amount)``:
     send given amount of Wei to :ref:`address`, throws on failure, forwards 2300 gas stipend, not adjustable
-``<address>.send(uint256 amount) returns (bool)``:
+``<address payable>.send(uint256 amount) returns (bool)``:
     send given amount of Wei to :ref:`address`, returns ``false`` on failure, forwards 2300 gas stipend, not adjustable
 ``<address>.call(bytes memory) returns (bool)``:
     issue low-level ``CALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
@@ -204,10 +204,10 @@ Contract Related
 ``this`` (current contract's type):
     the current contract, explicitly convertible to :ref:`address`
 
-``selfdestruct(address recipient)``:
+``selfdestruct(address payable recipient)``:
     destroy the current contract, sending its funds to the given :ref:`address`
 
-``suicide(address recipient)``:
+``suicide(address payable recipient)``:
     deprecated alias to ``selfdestruct``
 
 Furthermore, all functions of the current contract are callable directly including the current function.

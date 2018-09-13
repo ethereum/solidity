@@ -299,7 +299,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
 	case Token::Address:
-		return make_shared<AddressType>();
+		return make_shared<AddressType>(StateMutability::NonPayable);
 	case Token::Bool:
 		return make_shared<BoolType>();
 	case Token::Bytes:
@@ -339,6 +339,17 @@ TypePointer Type::fromElementaryTypeName(string const& _name)
 				solAssert(false, "Unknown data location: " + nameParts[1]);
 		}
 		return ref->copyForLocation(location, true);
+	}
+	else if (t->category() == Type::Category::Address)
+	{
+		if (nameParts.size() == 2)
+		{
+			if (nameParts[1] == "payable")
+				return make_shared<AddressType>(StateMutability::Payable);
+			else
+				solAssert(false, "Invalid state mutability for address type: " + nameParts[1]);
+		}
+		return make_shared<AddressType>(StateMutability::NonPayable);
 	}
 	else
 	{
@@ -439,20 +450,47 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	return members;
 }
 
+AddressType::AddressType(StateMutability _stateMutability):
+	m_stateMutability(_stateMutability)
+{
+	solAssert(m_stateMutability == StateMutability::Payable || m_stateMutability == StateMutability::NonPayable, "");
+}
+
 string AddressType::richIdentifier() const
 {
-	return "t_address";
+	if (m_stateMutability == StateMutability::Payable)
+		return "t_address_payable";
+	else
+		return "t_address";
+}
+
+bool AddressType::isImplicitlyConvertibleTo(Type const& _other) const
+{
+	if (_other.category() != category())
+		return false;
+	AddressType const& other = dynamic_cast<AddressType const&>(_other);
+
+	return other.m_stateMutability <= m_stateMutability;
 }
 
 bool AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
+	if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
+		return (m_stateMutability >= StateMutability::Payable) || !contractType->isPayable();
 	return isImplicitlyConvertibleTo(_convertTo) ||
-		   _convertTo.category() == Category::Contract ||
 		   _convertTo.category() == Category::Integer ||
 		   (_convertTo.category() == Category::FixedBytes && 160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8);
 }
 
 string AddressType::toString(bool) const
+{
+	if (m_stateMutability == StateMutability::Payable)
+		return "address payable";
+	else
+		return "address";
+}
+
+string AddressType::canonicalName() const
 {
 	return "address";
 }
@@ -479,17 +517,29 @@ TypePointer AddressType::binaryOperatorResult(Token::Value _operator, TypePointe
 	return Type::commonType(shared_from_this(), _other);
 }
 
+bool AddressType::operator==(Type const& _other) const
+{
+	if (_other.category() != category())
+		return false;
+	AddressType const& other = dynamic_cast<AddressType const&>(_other);
+	return other.m_stateMutability == m_stateMutability;
+}
+
 MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) const
 {
-	return {
+	MemberList::MemberMap members = {
 		{"balance", make_shared<IntegerType>(256)},
 		{"call", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
 		{"callcode", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
 		{"delegatecall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false)},
-		{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
-		{"staticcall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)},
-		{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
+		{"staticcall", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)}
 	};
+	if (m_stateMutability == StateMutability::Payable)
+	{
+		members.emplace_back(MemberList::Member{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)});
+		members.emplace_back(MemberList::Member{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)});
+	}
+	return members;
 }
 
 namespace
@@ -1476,7 +1526,9 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.category() == Category::Address;
+	if (auto const* addressType = dynamic_cast<AddressType const*>(&_convertTo))
+		return isPayable() || (addressType->stateMutability() < StateMutability::Payable);
+	return isImplicitlyConvertibleTo(_convertTo);
 }
 
 bool ContractType::isPayable() const
@@ -3275,7 +3327,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", make_shared<AddressType>()},
+			{"coinbase", make_shared<AddressType>(StateMutability::Payable)},
 			{"timestamp", make_shared<IntegerType>(256)},
 			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", make_shared<IntegerType>(256)},
@@ -3284,7 +3336,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", make_shared<AddressType>()},
+			{"sender", make_shared<AddressType>(StateMutability::Payable)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(DataLocation::CallData)},
@@ -3292,7 +3344,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", make_shared<AddressType>()},
+			{"origin", make_shared<AddressType>(StateMutability::Payable)},
 			{"gasprice", make_shared<IntegerType>(256)}
 		});
 	case Kind::ABI:

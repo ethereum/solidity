@@ -329,7 +329,7 @@ Global Variables
    starting from the second and prepends the given four-byte selector
 - ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
 - ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
-- ``block.coinbase`` (``address``): current block miner's address
+- ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
@@ -337,11 +337,11 @@ Global Variables
 - ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes``): complete calldata
 - ``msg.gas`` (``uint``): remaining gas - deprecated in version 0.4.21 and to be replaced by ``gasleft()``
-- ``msg.sender`` (``address``): sender of the message (current call)
+- ``msg.sender`` (``address payable``): sender of the message (current call)
 - ``msg.value`` (``uint``): number of wei sent with the message
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
 - ``tx.gasprice`` (``uint``): gas price of the transaction
-- ``tx.origin`` (``address``): sender of the transaction (full call chain)
+- ``tx.origin`` (``address payable``): sender of the transaction (full call chain)
 - ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
 - ``require(bool condition, string message)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
@@ -360,8 +360,8 @@ Global Variables
 - ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
 - ``suicide(address recipient)``: a deprecated alias to ``selfdestruct``
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
-- ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
-- ``<address>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
+- ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
+- ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
 
 .. note::
     Do not rely on ``block.timestamp``, ``now`` and ``blockhash`` as a source of randomness,

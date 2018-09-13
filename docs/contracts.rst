@@ -334,7 +334,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
     contract owned {
         constructor() public { owner = msg.sender; }
-        address owner;
+        address payable owner;
 
         // This contract only defines a modifier but does not use
         // it: it will be used in derived contracts.
@@ -650,9 +650,14 @@ Like any function, the fallback function can execute complex operations as long 
             require(success);
             // results in test.x becoming == 1.
 
+            // address(test) will not allow to call ``send`` directly, since ``test`` has no payable
+            // fallback function. It has to be converted to the ``address payable`` type via an
+            // intermediate conversion to ``uint160`` to even allow calling ``send`` on it.
+            address payable testPayable = address(uint160(address(test)));
+
             // If someone sends ether to that contract,
             // the transfer will fail, i.e. this returns false here.
-            return address(test).send(2 ether);
+            return testPayable.send(2 ether);
         }
     }
 
@@ -891,7 +896,7 @@ Details are given in the following example.
 
     contract owned {
         constructor() public { owner = msg.sender; }
-        address owner;
+        address payable owner;
     }
 
     // Use `is` to derive from another contract. Derived
@@ -963,7 +968,7 @@ seen in the following example::
 
     contract owned {
         constructor() public { owner = msg.sender; }
-        address owner;
+        address payable owner;
     }
 
     contract mortal is owned {
@@ -992,7 +997,7 @@ derived override, but this function will bypass
 
     contract owned {
         constructor() public { owner = msg.sender; }
-        address owner;
+        address payable owner;
     }
 
     contract mortal is owned {

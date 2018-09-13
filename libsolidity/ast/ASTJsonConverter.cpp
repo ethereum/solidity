@@ -394,10 +394,15 @@ bool ASTJsonConverter::visit(EventDefinition const& _node)
 
 bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 {
-	setJsonNode(_node, "ElementaryTypeName", {
+	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.typeName().toString()),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
-	});
+	};
+
+	if (_node.stateMutability())
+		attributes.emplace_back(make_pair("stateMutability", stateMutabilityToString(*_node.stateMutability())));
+
+	setJsonNode(_node, "ElementaryTypeName", std::move(attributes));
 	return false;
 }
 

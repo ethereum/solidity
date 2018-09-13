@@ -242,8 +242,14 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			break;
 		}
 		case Type::Category::Contract:
-			templ("body", "cleaned := " + cleanupFunction(AddressType()) + "(value)");
+		{
+			AddressType addressType(dynamic_cast<ContractType const&>(_type).isPayable() ?
+				StateMutability::Payable :
+				StateMutability::NonPayable
+			);
+			templ("body", "cleaned := " + cleanupFunction(addressType) + "(value)");
 			break;
+		}
 		case Type::Category::Enum:
 		{
 			size_t members = dynamic_cast<EnumType const&>(_type).numberOfMembers();

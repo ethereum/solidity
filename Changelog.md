@@ -7,6 +7,7 @@ How to update your code:
  * Make your fallback functions ``external``.
  * Explicitly state the data location for all variables of struct, array or mapping types (including function parameters), e.g. change ``uint[] x = m_x`` to ``uint[] storage x = m_x``. Note that ``external`` functions require parameters with a data location of ``calldata``.
  * Explicitly convert values of contract type to addresses before using an ``address`` member. Example: if ``c`` is a contract, change ``c.transfer(...)`` to ``address(c).transfer(...)``.
+ * Declare variables and especially function arguments as ``address payable``, if you want to call ``transfer`` on them.
 
 Breaking Changes:
  * ABI Encoder: Properly pad data from calldata (``msg.data`` and external function parameters). Use ``abi.encodePacked`` for unpadded encoding.
@@ -62,6 +63,7 @@ Breaking Changes:
  * Type Checker: Disallow "loose assembly" syntax entirely. This means that jump labels, jumps and non-functional instructions cannot be used anymore.
  * Type System: Disallow explicit and implicit conversions from decimal literals to ``bytesXX`` types.
  * Type System: Disallow explicit and implicit conversions from hex literals to ``bytesXX`` types of different size.
+ * Type System: Distinguish between payable and non-payable address types.
  * View Pure Checker: Disallow ``msg.value`` in (or introducing it via a modifier to) a non-payable function.
  * Remove obsolete ``std`` directory from the Solidity repository. This means accessing ``https://github.com/ethereum/solidity/blob/develop/std/*.sol`` (or ``https://github.com/ethereum/solidity/std/*.sol`` in Remix) will not be possible.
  * References Resolver: Turn missing storage locations into an error. This was already the case in the experimental 0.5.0 mode.
