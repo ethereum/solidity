@@ -122,9 +122,9 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	if (!_isCreation)
 	{
 		d.to = dev::toString(m_contractAddress);
-		BOOST_REQUIRE(m_rpc.eth_getCode(d.to, "latest").size() > 2);
+		BOOST_REQUIRE(m_rpc.eth_getCode(d.to, "pending").size() > 2);
 		// Use eth_call to get the output
-		m_output = fromHex(m_rpc.eth_call(d, "latest"), WhenError::Throw);
+		m_output = fromHex(m_rpc.eth_call(d, "pending"), WhenError::Throw);
 	}
 
 	string txHash = m_rpc.eth_sendTransaction(d);
