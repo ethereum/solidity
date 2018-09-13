@@ -35,13 +35,14 @@ npm / Node.js
 =============
 
 Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
-`solcjs` program has fewer features than all options further down this page. Our
+`solcjs` program has fewer features than the other options further down this page. Our
 :ref:`commandline-compiler` documentation assumes you are using
-the full-featured compiler, `solc`. So if you install `solcjs` from `npm` then you will
-stop reading the documentation here and then continue to `solc-js <https://github.com/ethereum/solc-js>`_.
+the full-featured compiler, `solc`. The usage of `solcjs` is documented inside own
+`repository <https://github.com/ethereum/solc-js>`_.
 
 Note: The solc-js project is derived from the C++
-`solc` by using Emscripten. `solc-js` can be used in JavaScript projects directly (such as Remix).
+`solc` by using Emscripten which means that both use the same compiler source code.
+`solc-js` can be used in JavaScript projects directly (such as Remix).
 Please refer to the solc-js repository for instructions.
 
 .. code-block:: bash
@@ -50,7 +51,7 @@ Please refer to the solc-js repository for instructions.
 
 .. note::
 
-    The commandline is named `solcjs`.
+    The commandline executable is named `solcjs`.
 
     The comandline options of `solcjs` are not compatible with `solc` and tools (such as `geth`)
     expecting the behaviour of `solc` will not work with `solcjs`.
@@ -76,7 +77,8 @@ Binary Packages
 Binary packages of Solidity are available at
 `solidity/releases <https://github.com/ethereum/solidity/releases>`_.
 
-We also have PPAs for Ubuntu.  For the latest stable version.
+We also have PPAs for Ubuntu, you can get the latest stable
+version using the following commands:
 
 .. code-block:: bash
 
@@ -84,7 +86,7 @@ We also have PPAs for Ubuntu.  For the latest stable version.
     sudo apt-get update
     sudo apt-get install solc
 
-If you want to use the cutting edge developer version:
+The nightly version can be installed using these commands:
 
 .. code-block:: bash
 
@@ -99,7 +101,8 @@ We are also releasing a `snap package <https://snapcraft.io/>`_, which is instal
 
     sudo snap install solc
 
-Or if you want to help testing the unstable solc with the most recent changes from the development branch:
+If you want to help testing the unstable solc with the most recent changes
+from the development branch, please use the following:
 
 .. code-block:: bash
 
@@ -111,10 +114,9 @@ Arch Linux also has packages, albeit limited to the latest development version:
 
     pacman -S solidity
 
-Homebrew is missing pre-built bottles at the time of writing,
-following a Jenkins to TravisCI migration, but Homebrew
-should still work just fine as a means to build-from-source.
-We will re-add the pre-built bottles soon.
+We distribute the Solidity compiler through Homebrow
+as a build-from-source version. Pre-built bottles are
+currently not supported.
 
 .. code-block:: bash
 
@@ -166,7 +168,6 @@ you should fork Solidity and add your personal fork as a second remote:
 
 .. code-block:: bash
 
-    cd solidity
     git remote add personal git@github.com:[username]/solidity.git
 
 Solidity has git submodules.  Ensure they are properly loaded:
@@ -240,9 +241,8 @@ in Visual Studio 2017 Build Tools or Visual Studio 2017:
 External Dependencies
 ---------------------
 
-We now have a "one button" script which installs all required external dependencies
-on macOS, Windows and on numerous Linux distros.  This used to be a multi-step
-manual process, but is now a one-liner:
+We have a "one button" script which installs all required external dependencies
+on macOS, Windows and on numerous Linux distros.
 
 .. code-block:: bash
 
@@ -261,6 +261,8 @@ Command-Line Build
 **Be sure to install External Dependencies (see above) before build.**
 
 Solidity project uses CMake to configure the build.
+You might want to install ccache to speed up repeated builds.
+CMake will pick it up automatically.
 Building Solidity is quite similar on Linux, macOS and other Unices:
 
 .. code-block:: bash
@@ -276,7 +278,7 @@ or even easier:
     #note: this will install binaries solc and soltest at usr/local/bin
     ./scripts/build.sh
 
-And even for Windows:
+And for Windows:
 
 .. code-block:: bash
 
@@ -329,7 +331,7 @@ The Solidity version string contains four parts:
 - the version number
 - pre-release tag, usually set to ``develop.YYYY.MM.DD`` or ``nightly.YYYY.MM.DD``
 - commit in the format of ``commit.GITHASH``
-- platform has arbitrary number of items, containing details about the platform and compiler
+- platform, which has arbitrary number of items, containing details about the platform and compiler
 
 If there are local modifications, the commit will be postfixed with ``.mod``.
 
