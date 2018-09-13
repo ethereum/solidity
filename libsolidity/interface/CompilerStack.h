@@ -199,6 +199,7 @@ public:
 	/// @returns the runtime object for the contract.
 	eth::LinkerObject const& runtimeObject(std::string const& _contractName) const;
 
+	std::string debugOutput(std::string const& _contractName) const;
 	/// @returns normal contract assembly items
 	eth::AssemblyItems const* assemblyItems(std::string const& _contractName) const;
 

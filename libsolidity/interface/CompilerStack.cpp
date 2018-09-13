@@ -416,6 +416,15 @@ eth::LinkerObject const& CompilerStack::runtimeObject(string const& _contractNam
 	return contract(_contractName).runtimeObject;
 }
 
+string CompilerStack::debugOutput(const string& _contractName) const
+{
+	Contract const& currentContract = contract(_contractName);
+	if (currentContract.compiler)
+		return currentContract.compiler->assembly().debugOutput;
+	else
+		return string();
+}
+
 /// FIXME: cache this string
 string CompilerStack::assemblyString(string const& _contractName, StringMap _sourceCodes) const
 {

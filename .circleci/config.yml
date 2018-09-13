@@ -277,26 +277,4 @@ workflows:
   version: 2
   build_all:
     jobs:
-      - test_check_spelling: *build_on_tags
-      - test_trailing_whitespace: *build_on_tags
-      - test_buglist: *build_on_tags
       - build_emscripten: *build_on_tags
-      - test_emscripten_solcjs:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - build_x86_linux: *build_on_tags
-      - build_x86_mac: *build_on_tags
-      - test_x86_linux:
-          <<: *build_on_tags
-          requires:
-            - build_x86_linux
-      - test_x86_mac:
-          <<: *build_on_tags
-          requires:
-            - build_x86_mac
-      - docs: *build_on_tags

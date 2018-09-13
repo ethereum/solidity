@@ -531,6 +531,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		// @TODO: add ir
 		if (isArtifactRequested(outputSelection, file, name, "evm.assembly"))
 			evmData["assembly"] = m_compilerStack.assemblyString(contractName, createSourceList(_input));
+		evmData["debug"] = m_compilerStack.debugOutput(contractName);
 		if (isArtifactRequested(outputSelection, file, name, "evm.legacyAssembly"))
 			evmData["legacyAssembly"] = m_compilerStack.assemblyJSON(contractName, createSourceList(_input));
 		if (isArtifactRequested(outputSelection, file, name, "evm.methodIdentifiers"))

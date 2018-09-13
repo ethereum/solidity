@@ -195,13 +195,15 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr)
 	if (auto match = rules.findFirstMatch(_expr, *this))
 	{
 		// Debug info
-		//cout << "Simplifying " << *_expr.item << "(";
-		//for (Id arg: _expr.arguments)
-		//	cout << fullDAGToString(arg) << ", ";
-		//cout << ")" << endl;
-		//cout << "with rule " << match->first.toString() << endl;
-		//ExpressionTemplate t(match->second());
-		//cout << "to " << match->second().toString() << endl;
+		std::stringstream str;
+
+		str << "Simplifying " << *_expr.item << "(";
+		for (Id arg: _expr.arguments)
+			str << fullDAGToString(arg) << ", ";
+		str << ")" << endl;
+		str << "with rule " << match->pattern.toString() << endl;
+		str << "to " << match->action().toString() << endl;
+		glDebugOutput() += str.str();
 		return rebuildExpression(ExpressionTemplate(match->action(), _expr.item->location()));
 	}
 
