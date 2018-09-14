@@ -132,6 +132,8 @@ Then run the compiler:
 
   solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
 
+.. index:: module
+
 As a more complex example, suppose you rely on a module that uses an old
 version of dapp-bin that you checked out to ``/usr/local/dapp-bin_old``, then you can run:
 

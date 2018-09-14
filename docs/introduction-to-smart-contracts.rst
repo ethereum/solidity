@@ -155,7 +155,7 @@ following::
 As you see, you can use this function to easily query the balance of a
 single account.
 
-.. index:: event
+.. index:: event, module
 
 The line ``event Sent(address from, address to, uint amount);`` declares
 a so-called "event" which is emitted in the last line of the function
