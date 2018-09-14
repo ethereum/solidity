@@ -9,9 +9,9 @@ contract C {
     bytes payable h;
     bytes32 payable i;
     fixed payable j;
-    fixed80x80 payable k;
+    fixed80x16 payable k;
     ufixed payable l;
-    ufixed80x80 payable m;
+    ufixed80x16 payable m;
 }
 // ----
 // ParserError: (22-29): State mutability can only be specified for address types.

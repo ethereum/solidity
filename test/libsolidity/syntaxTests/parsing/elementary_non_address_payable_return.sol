@@ -9,9 +9,9 @@ contract C {
     function h() public pure returns (bytes payable) {}
     function i() public pure returns (bytes32 payable) {}
     function j() public pure returns (fixed payable) {}
-    function k() public pure returns (fixed80x80 payable) {}
+    function k() public pure returns (fixed80x16 payable) {}
     function l() public pure returns (ufixed payable) {}
-    function m() public pure returns (ufixed80x80 payable) {}
+    function m() public pure returns (ufixed80x16 payable) {}
 }
 // ----
 // ParserError: (56-63): State mutability can only be specified for address types.
