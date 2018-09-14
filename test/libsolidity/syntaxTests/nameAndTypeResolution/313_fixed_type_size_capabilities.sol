@@ -10,4 +10,4 @@ contract test {
     }
 }
 // ----
-// Warning: (20-707): Function state mutability can be restricted to pure
+// DeclarationError: (260-272): Identifier not found or not unique.
