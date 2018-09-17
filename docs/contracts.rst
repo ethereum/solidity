@@ -1210,6 +1210,8 @@ Abstract contracts are useful in the same way that defining methods in an interf
 
 .. index:: ! contract;interface, ! interface contract
 
+.. _interfaces:
+
 **********
 Interfaces
 **********
