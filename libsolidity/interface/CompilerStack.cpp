@@ -128,7 +128,7 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 bool CompilerStack::parse()
 {
 	//reset
-	if(m_stackState != SourcesSet)
+	if (m_stackState != SourcesSet)
 		return false;
 	m_errorReporter.clear();
 	ASTNode::resetID();
