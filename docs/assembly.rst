@@ -4,22 +4,25 @@ Solidity Assembly
 
 .. index:: ! assembly, ! asm, ! evmasm
 
-Solidity defines an assembly language that can also be used without Solidity.
-This assembly language can also be used as "inline assembly" inside Solidity
-source code. We start with describing how to use inline assembly and how it
-differs from standalone assembly and then specify assembly itself.
+Solidity defines an assembly language that you can use without Solidity and also
+as "inline assembly" inside Solidity source code. This guide starts with describing
+how to use inline assembly, how it differs from standalone assembly, and
+specifies assembly itself.
 
 .. _inline-assembly:
 
 Inline Assembly
 ===============
 
-For more fine-grained control especially in order to enhance the language by writing libraries,
-it is possible to interleave Solidity statements with inline assembly in a language close
-to the one of the virtual machine. Due to the fact that the EVM is a stack machine, it is
-often hard to address the correct stack slot and provide arguments to opcodes at the correct
-point on the stack. Solidity's inline assembly tries to facilitate that and other issues
-arising when writing manual assembly by the following features:
+You can interleave Solidity statements with inline assembly in a language close
+to the one of the virtual machine. This gives you more fine-grained control,
+especially when you are enhancing the language by writing libraries.
+
+As the EVM is a stack machine, it is often hard to address the correct stack slot
+and provide arguments to opcodes at the correct point on the stack. Solidity's inline
+assembly helps you do this, and with other issues that arise when writing manual assembly.
+
+Inline assembly has the following features:
 
 * functional-style opcodes: ``mul(1, add(2, 3))``
 * assembly-local variables: ``let x := add(2, 3)  let y := mload(0x40)  x := add(x, y)``
@@ -29,24 +32,38 @@ arising when writing manual assembly by the following features:
 * switch statements: ``switch x case 0 { y := mul(x, 2) } default { y := 0 }``
 * function calls: ``function f(x) -> y { switch x case 0 { y := 1 } default { y := mul(x, f(sub(x, 1))) }   }``
 
-We now want to describe the inline assembly language in detail.
-
 .. warning::
     Inline assembly is a way to access the Ethereum Virtual Machine
-    at a low level. This discards several important safety
-    features of Solidity.
+    at a low level. This bypasses several important safety
+    features and checks of Solidity. You should only use it for
+    tasks that need it, and only if you are confident with using it.
 
-.. note::
-    TODO: Write about how scoping rules of inline assembly are a bit different
-    and the complications that arise when for example using internal functions
-    of libraries. Furthermore, write about the symbols defined by the compiler.
+Syntax
+------
+
+Assembly parses comments, literals and identifiers in the same way as Solidity, so you can use the
+usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { ... }`` and inside
+these curly braces, you can use the following (see the later sections for more details):
+
+ - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
+ - opcodes in functional style, e.g. ``add(1, mlod(0))``
+ - labels, e.g. ``name:``
+ - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
+ - identifiers (labels or assembly-local variables and externals if used as inline assembly), e.g. ``jump(name)``, ``3 x add``
+ - assignments (in "instruction style"), e.g. ``3 =: x``
+ - assignments in functional style, e.g. ``x := add(y, 3)``
+ - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
+
+At the end of the ``assembly { ... }`` block, the stack must be balanced,
+unless you require it otherwise. If it is not balanced, the compiler generates
+a warning.
 
 Example
 -------
 
 The following example provides library code to access the code of another contract and
-load it into a ``bytes`` variable. This is not possible at all with "plain Solidity" and the
-idea is that assembly libraries will be used to enhance the language in such ways.
+load it into a ``bytes`` variable. This is not possible with "plain Solidity" and the
+idea is that assembly libraries will be used to enhance the Solidity language.
 
 .. code::
 
@@ -70,10 +87,8 @@ idea is that assembly libraries will be used to enhance the language in such way
         }
     }
 
-Inline assembly could also be beneficial in cases where the optimizer fails to produce
-efficient code. Please be aware that assembly is much more difficult to write because
-the compiler does not perform checks, so you should use it for complex things only if
-you really know what you are doing.
+Inline assembly is also beneficial in cases where the optimizer fails to produce
+efficient code, for example:
 
 .. code::
 
@@ -124,22 +139,6 @@ you really know what you are doing.
         }
     }
 
-
-Syntax
-------
-
-Assembly parses comments, literals and identifiers exactly as Solidity, so you can use the
-usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { ... }`` and inside
-these curly braces, the following can be used (see the later sections for more details)
-
- - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
- - opcodes in functional style, e.g. ``add(1, mlod(0))``
- - labels, e.g. ``name:``
- - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
- - identifiers (labels or assembly-local variables and externals if used as inline assembly), e.g. ``jump(name)``, ``3 x add``
- - assignments (in "instruction style"), e.g. ``3 =: x``
- - assignments in functional style, e.g. ``x := add(y, 3)``
- - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
 
 .. _opcodes:
 
@@ -368,17 +367,17 @@ Note that the order of arguments is reversed in functional-style as opposed to t
 way. If you use functional-style, the first argument will end up on the stack top.
 
 
-Access to External Variables and Functions
-------------------------------------------
+Access to External Variables, Functions and Libraries
+-----------------------------------------------------
 
-Solidity variables and other identifiers can be accessed by simply using their name.
-For memory variables, this will push the address and not the value onto the
-stack. Storage variables are different: Values in storage might not occupy a
-full storage slot, so their "address" is composed of a slot and a byte-offset
+You can access Solidity variables and other identifiers by using their name.
+For variables stored in the memory data location, this pushes the address, and not the value
+onto the stack. Variables stored in the storage data location are different, as they might not
+occupy a full storage slot, so their "address" is composed of a slot and a byte-offset
 inside that slot. To retrieve the slot pointed to by the variable ``x``, you
-used ``x_slot`` and to retrieve the byte-offset you used ``x_offset``.
+use ``x_slot``, and to retrieve the byte-offset you use ``x_offset``.
 
-In assignments (see below), we can even use local Solidity variables to assign to.
+Local Solidity variables are available for assignments, for example:
 
 .. code::
 
