@@ -116,6 +116,9 @@ BOOST_AUTO_TEST_CASE(negative)
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := f() } }"), "");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := x } }"), "");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256, y:u256 { x := 2:u256 } }"), "");
+  BOOST_CHECK_EQUAL(inlinableFunctions(
+    "{ function g() -> x:u256, y:u256 {} function f(y:u256) -> x:u256 { x,y := g() } }"), "");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f(y:u256) -> x:u256 { y := 2:u256 } }"), "");
 }
 
 
