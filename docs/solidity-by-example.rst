@@ -220,7 +220,7 @@ bid. If the highest bid is raised, the previously
 highest bidder gets her money back.
 After the end of the bidding period, the
 contract has to be called manually for the
-beneficiary to receive his money - contracts cannot
+beneficiary to receive their money - contracts cannot
 activate themselves.
 
 ::
@@ -241,10 +241,11 @@ activate themselves.
         // Allowed withdrawals of previous bids
         mapping(address => uint) pendingReturns;
 
-        // Set to true at the end, disallows any change
+        // Set to true at the end, disallows any change.
+        // By defaul initialized to `false`.
         bool ended;
 
-        // Events that will be fired on changes.
+        // Events that will be emitted on changes.
         event HighestBidIncreased(address bidder, uint amount);
         event AuctionEnded(address winner, uint amount);
 
@@ -372,7 +373,7 @@ is the same as the one provided during the bidding period.
 Another challenge is how to make the auction
 **binding and blind** at the same time: The only way to
 prevent the bidder from just not sending the money
-after he won the auction is to make her send it
+after they won the auction is to make her send it
 together with the bid. Since value transfers cannot
 be blinded in Ethereum, anyone can see the value.
 
