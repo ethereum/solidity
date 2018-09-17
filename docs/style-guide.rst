@@ -874,6 +874,28 @@ No::
     x = y+z;
     x +=1;
 
+***************
+Order of Layout
+***************
+
+Layout contract elements in the following order:
+
+1. Import statements
+2. Interfaces
+3. Libraries
+4. Contracts
+
+Inside each contract, library or interface, use the following order:
+
+1. Type declarations
+2. State variables
+3. Events
+4. Functions
+
+.. note::
+
+    It might be clearer to declare types close to their use in events or state
+    variables.
 
 ******************
 Naming Conventions
