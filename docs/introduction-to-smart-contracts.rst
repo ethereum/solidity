@@ -8,8 +8,9 @@ Introduction to Smart Contracts
 A Simple Smart Contract
 ***********************
 
-Let us begin with the most basic example. It is fine if you do not understand everything
-right now, we will go into more detail later.
+Let us begin with a basic example that sets the value of a variable and exposes
+it for other contracts to access. It is fine if you do not understand
+everything right now, we will go into more detail later.
 
 Storage
 =======
@@ -34,7 +35,7 @@ The first line simply tells that the source code is written for
 Solidity version 0.4.0 or anything newer that does not break functionality
 (up to, but not including, version 0.5.0). This is to ensure that the
 contract is not compilable with a new (breaking) compiler version, where it could behave differently.
-So-called pragmas are common instrutions for compilers about how to treat the
+So-called pragmas are common instructions for compilers about how to treat the
 source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
 
 A contract in the sense of Solidity is a collection of code (its *functions*) and
