@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(bool_simple)
 	text = R"(
 		contract C {
 			function f(bool x) public pure {
-				if(x) {
+				if (x) {
 					assert(x);
 				} else {
 					assert(!x);
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(bool_int_mixed)
 		contract C {
 			function f(bool x) public pure {
 				uint a;
-				if(x)
+				if (x)
 					a = 1;
 				assert(!x || a > 0);
 			}
