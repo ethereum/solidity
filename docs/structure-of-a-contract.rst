@@ -21,7 +21,8 @@ which serves to provide a quick overview.
 State Variables
 ===============
 
-State variables are values which are permanently stored in contract storage.
+State variables are variables whose values are permanently stored in contract
+storage.
 
 ::
 
