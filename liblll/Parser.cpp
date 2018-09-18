@@ -148,7 +148,8 @@ void dev::lll::parseTreeLLL(string const& _s, sp::utree& o_out)
 		BOOST_THROW_EXCEPTION(ParserException() << errinfo_comment(reason));
 	}
 	for (auto i = ret; i != s.cend(); ++i)
-		if (!isspace(*i)) {
+		if (!isspace(*i))
+		{
 			BOOST_THROW_EXCEPTION(ParserException() << errinfo_comment("Non-whitespace left in parser"));
 		}
 }

@@ -742,7 +742,8 @@ bool CommandLineInterface::processInput()
 			// path will have it's last component set to '.'. This breaks
 			// path comparison in later parts of the code, so we need to strip
 			// it.
-			if (filesystem_path.filename() == ".") {
+			if (filesystem_path.filename() == ".")
+			{
 				filesystem_path.remove_filename();
 			}
 			m_allowedDirectories.push_back(filesystem_path);

@@ -90,7 +90,8 @@ std::string dev::lll::compileLLLToAsm(std::string const& _src, EVMVersion _evmVe
 	}
 	catch (std::exception const& _e)
 	{
-		if (_errors) {
+		if (_errors)
+		{
 			_errors->push_back("Parse exception.");
 			_errors->push_back(boost::diagnostic_information(_e));
 		}
