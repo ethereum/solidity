@@ -151,6 +151,11 @@ Mathematical and Cryptographic Functions
     recover the address associated with the public key from elliptic curve signature or return zero on error
     (`example usage <https://ethereum.stackexchange.com/q/1777/222>`_)
 
+.. note::
+   Function ``ecrecover`` returns an ``address``, and not an ``address
+   payable``. See :ref:`address payable<address>` for conversion, in case you need
+   to transfer funds to the recovered address.
+
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
 .. index:: balance, send, transfer, call, callcode, delegatecall, staticcall
