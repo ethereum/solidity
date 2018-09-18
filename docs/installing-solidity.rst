@@ -303,6 +303,8 @@ CMake options
 
 If you are interested what CMake options are available run ``cmake .. -LH``.
 
+.. _smt_solvers_build:
+
 SMT Solvers
 -----------
 Solidity can be built against SMT solvers and will do so by default if
