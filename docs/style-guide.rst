@@ -880,10 +880,11 @@ Order of Layout
 
 Layout contract elements in the following order:
 
-1. Import statements
-2. Interfaces
-3. Libraries
-4. Contracts
+1. Pragma statements
+2. Import statements
+3. Interfaces
+4. Libraries
+5. Contracts
 
 Inside each contract, library or interface, use the following order:
 
