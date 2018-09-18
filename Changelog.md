@@ -40,7 +40,7 @@ Breaking Changes:
  * Name Resolver: Do not exclude public state variables when looking for conflicting declarations.
  * Optimizer: Remove the no-op ``PUSH1 0 NOT AND`` sequence.
  * Parser: Disallow trailing dots that are not followed by a number.
- * Parser: Remove ``constant`` as function state mutability modifer.
+ * Parser: Remove ``constant`` as function state mutability modifier.
  * Type Checker: Disallow assignments between tuples with different numbers of components. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow values for constants that are not compile-time constants. This was already the case in the experimental 0.5.0 mode.
  * Type Checker: Disallow arithmetic operations for boolean variables.
@@ -72,10 +72,10 @@ Breaking Changes:
  * Syntax Checker: Strictly require visibility specifier for functions. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Disallow unary ``+``. This was already the case in the experimental 0.5.0 mode.
  * Syntax Checker: Disallow single statement variable declaration inside if/while/for bodies that are not blocks.
- * View Pure Checker: Strictly enfore state mutability. This was already the case in the experimental 0.5.0 mode.
+ * View Pure Checker: Strictly enforce state mutability. This was already the case in the experimental 0.5.0 mode.
 
 Language Features:
- * Genreal: Add ``staticcall`` to ``address``.
+ * General: Add ``staticcall`` to ``address``.
  * General: Allow appending ``calldata`` keyword to types, to explicitly specify data location for arguments of external functions.
  * General: Support ``pop()`` for storage arrays.
  * General: Scoping rules now follow the C99-style.
@@ -230,7 +230,7 @@ Bugfixes:
 Features:
  * Code Generator: Assert that ``k != 0`` for ``mulmod(a, b, k)`` and ``addmod(a, b, k)`` as experimental 0.5.0 feature.
  * Code Generator: Do not retain any gas in calls (except if EVM version is set to homestead).
- * Code Generator: Use ``STATICCALL`` opcode for calling ``view`` and ``pure`` functions as experimenal 0.5.0 feature.
+ * Code Generator: Use ``STATICCALL`` opcode for calling ``view`` and ``pure`` functions as experimental 0.5.0 feature.
  * General: C99/C++-style scoping rules (instead of JavaScript function scoping) take effect as experimental v0.5.0 feature.
  * General: Improved messaging when error spans multiple lines of a sourcefile
  * General: Support and recommend using ``emit EventName();`` to call events explicitly.
