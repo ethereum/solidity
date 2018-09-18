@@ -101,8 +101,8 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			break;
 		case Instruction::KECCAK256:
 			gas = GasCosts::keccak256Gas;
-			gas += wordGas(GasCosts::keccak256WordGas, m_state->relativeStackElement(-1));
 			gas += memoryGas(0, -1);
+			gas += wordGas(GasCosts::keccak256WordGas, m_state->relativeStackElement(-1));
 			break;
 		case Instruction::CALLDATACOPY:
 		case Instruction::CODECOPY:
@@ -214,7 +214,7 @@ GasMeter::GasConsumption GasMeter::memoryGas(ExpressionClasses::Id _position)
 	if (!value)
 		return GasConsumption::infinite();
 	if (*value < m_largestMemoryAccess)
-		return GasConsumption(u256(0));
+		return GasConsumption(0);
 	u256 previous = m_largestMemoryAccess;
 	m_largestMemoryAccess = *value;
 	auto memGas = [=](u256 const& pos) -> u256
