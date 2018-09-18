@@ -86,8 +86,8 @@ They wrap in two's complement notation, meaning that
 for example ``uint256(0) - uint256(1) == 2**256 - 1``. You have to take these overflows
 into account when designing safe smart contracts.
 
-Division and Modulus
-^^^^^^^^^^^^^^^^^^^^
+Division
+^^^^^^^^
 
 Since the type of the result of an operation is always the type of one of
 the operands, division on integers always results in an integer.
@@ -96,7 +96,23 @@ In Solidity, division rounds towards zero. This mean that ``int256(-5) / int256(
 Note that in contrast, division on :ref:`literals<rational_literals>` results in fractional values
 of arbitrary precision.
 
-Division by zero and modulus with zero throws a runtime exception.
+.. note::
+  Division by zero causes a failing assert.
+
+Modulo
+^^^^^^
+
+The modulo operation ``a % n`` yields the remainder ``r`` after the division of the operand ``a``
+by the operand ``n``, where ``q = int(a / n)`` and ``r = a - (n * q)``. This means that modulo
+results in the same sign as its left operand (or zero) and ``a % n == -(abs(a) % n)`` holds for negative ``a``:
+
+ * ``int256(5) % int256(2) == int256(1)``
+ * ``int256(5) % int256(-2) == int256(1)``
+ * ``int256(-5) % int256(2) == int256(-1)``
+ * ``int256(-5) % int256(-2) == int256(-1)``
+
+.. note::
+  Modulo with zero causes a failing assert.
 
 Exponentiation
 ^^^^^^^^^^^^^^
