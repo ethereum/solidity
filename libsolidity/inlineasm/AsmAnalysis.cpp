@@ -565,18 +565,10 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.
 	solAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
+	// Similarly we assume bitwise shifting and create2 go together.
+	solAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
-	if (_instr == solidity::Instruction::CREATE2)
-		m_errorReporter.warning(
-			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is not supported by the VM version \"" +
-			"" + m_evmVersion.name() +
-			"\" you are currently compiling for. " +
-			"It will be interpreted as an invalid instruction on this VM."
-		);
-	else if ((
+	if ((
 		_instr == solidity::Instruction::RETURNDATACOPY ||
 		_instr == solidity::Instruction::RETURNDATASIZE ||
 		_instr == solidity::Instruction::STATICCALL
@@ -593,7 +585,8 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	else if ((
 		_instr == solidity::Instruction::SHL ||
 		_instr == solidity::Instruction::SHR ||
-		_instr == solidity::Instruction::SAR
+		_instr == solidity::Instruction::SAR ||
+		_instr == solidity::Instruction::CREATE2
 	) && !m_evmVersion.hasBitwiseShifting())
 		m_errorReporter.warning(
 			_location,
