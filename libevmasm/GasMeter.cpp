@@ -125,8 +125,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::LOG3:
 		case Instruction::LOG4:
 		{
-			unsigned n = unsigned(_item.instruction()) - unsigned(Instruction::LOG0);
-			gas = GasCosts::logGas + GasCosts::logTopicGas * n;
+			gas = GasCosts::logGas + GasCosts::logTopicGas * getLogNumber(_item.instruction());
 			gas += memoryGas(0, -1);
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
 				gas += GasCosts::logDataGas * (*value);
