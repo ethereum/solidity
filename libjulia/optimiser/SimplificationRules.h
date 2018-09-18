@@ -51,6 +51,9 @@ public:
 	/// groups accordingly.
 	static SimplificationRule<Pattern> const* findFirstMatch(Expression const& _expr);
 
+	/// Checks whether the rulelist is non-empty. This is usually enforced
+	/// by the constructor, but we had some issues with static initialization.
+	bool isInitialized() const;
 private:
 	void addRules(std::vector<SimplificationRule<Pattern>> const& _rules);
 	void addRule(SimplificationRule<Pattern> const& _rule);
