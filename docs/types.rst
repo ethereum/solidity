@@ -137,15 +137,26 @@ Operators:
 Address
 -------
 
-``address``: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as a base for all contracts.
-``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
+The address type comes in two flavours, which are largely identical:
+
+ - ``address``: Holds a 20 byte value (size of an Ethereum address).
+ - ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
+
+The idea behind this distinction is that ``address payable`` is an address you can send Ether to,
+while a plain ``address`` cannot be sent Ether.
+
+Type conversions:
 
 Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable`` are
 not possible (the only way to perform such a conversion is by using an intermediate conversion to ``uint160``).
+
+:ref:`Address literals<address_literals>` can be implicitly converted to ``address payable``.
+
+Explicit conversions to and from ``address`` are allowed for integers, integer literals, ``bytes20`` and contract types with the following
+caveat:
 Conversions of the form ``address payable(x)`` are not allowed. Instead the result of a conversion of the form ``address(x)``
 has the type ``address payable``, if ``x`` is of integer or fixed bytes type, a literal or a contract with a payable fallback function.
-If ``x`` is a contract without payable fallback function ``address(x)`` will be of type ``address``. The type of address literals
-is ``address payable``.
+If ``x`` is a contract without payable fallback function, then ``address(x)`` will be of type ``address``.
 In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
 
 Operators:
@@ -161,7 +172,8 @@ Operators:
     or you can use ``address(uint160(uint256(b)))``, which results in ``0x777788889999AaAAbBbbCcccddDdeeeEfFFfCcCc``.
 
 .. note::
-    Starting with version 0.5.0 contracts do not derive from the address type, but can still be explicitly converted to
+    The distinction between ``address`` and ``address payable`` was introduced with version 0.5.0.
+    Also starting from that version, contracts do not derive from the address type, but can still be explicitly converted to
     ``address`` or to ``address payable``, if they have a payable fallback function.
 
 .. _members-of-addresses:
@@ -169,9 +181,9 @@ Operators:
 Members of Addresses
 ^^^^^^^^^^^^^^^^^^^^
 
-* ``balance`` and ``transfer``
+For a quick reference of all members of address, see :ref:`address_related`.
 
-For a quick reference, see :ref:`address_related`.
+* ``balance`` and ``transfer``
 
 It is possible to query the balance of an address using the property ``balance``
 and to send Ether (in units of wei) to a payable address using the ``transfer`` function:
@@ -179,8 +191,12 @@ and to send Ether (in units of wei) to a payable address using the ``transfer`` 
 ::
 
     address payable x = address(0x123);
-    address myAddress = this;
+    address myAddress = address(this);
     if (x.balance < 10 && myAddress.balance >= 10) x.transfer(10);
+
+The ``transfer`` function fails if the balance of the current contract is not large enough
+or if the Ether transfer is rejected by the receiving account. The ``transfer`` function
+reverts on failure.
 
 .. note::
     If ``x`` is a contract address, its code (more specifically: its :ref:`fallback-function`, if present) will be executed together with the ``transfer`` call (this is a feature of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
@@ -195,13 +211,22 @@ Send is the low-level counterpart of ``transfer``. If the execution fails, the c
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
     use a pattern where the recipient withdraws the money.
 
-* ``call``, ``callcode``, ``delegatecall`` and ``staticcall``
+* ``call``, ``delegatecall`` and ``staticcall``
 
-Furthermore, to interface with contracts that do not adhere to the ABI,
+In order to interface with contracts that do not adhere to the ABI,
 or to get more direct control over the encoding,
-the function ``call`` is provided which takes a single byte array as input.
+the functions ``call``, ``delegatecall`` and ``staticcall`` are provided.
+They all take a single ``bytes memory`` argument as input and
+return the success condition (as a ``bool``) and the returned data
+(``bytes memory``).
 The functions ``abi.encode``, ``abi.encodePacked``, ``abi.encodeWithSelector``
 and ``abi.encodeWithSignature`` can be used to encode structured data.
+
+Example::
+
+    bytes memory payload = abi.encodeWithSignature("register(string)", "MyName");
+    (bool success, bytes memory returnData) = address(nameReg).call(payload);
+    require(success);
 
 .. warning::
     All these functions are low-level functions and should be used with care.
@@ -216,8 +241,6 @@ and ``abi.encodeWithSignature`` can be used to encode structured data.
     arbitrary arguments and would also handle a first argument of type
     ``bytes4`` differently. These edge cases were removed in version 0.5.0.
 
-``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned with plain Solidity. However, using inline assembly it is possible to make a raw ``call`` and access the actual data returned with the ``returndatacopy`` instruction.
-
 It is possible to adjust the supplied gas with the ``.gas()`` modifier::
 
     namReg.call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
@@ -230,26 +253,20 @@ Lastly, these modifiers can be combined. Their order does not matter::
 
     nameReg.call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
+In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used.
+
 .. note::
-    It is not yet possible to use the gas or value modifiers on overloaded functions.
+    Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values. This function was removed in version 0.5.0.
 
-    A workaround is to introduce a special case for gas and value and just re-check
-    whether they are present at the point of overload resolution.
+Since byzantium ``staticcall`` can be used as well. This is basically the same as ``call``, but will revert if the called function modifies the state in any way.
 
-In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
-
-Since byzantium ``staticcall`` can be used as well. This is basically the same as ``call``, but will revert, if the called function modifies the state in any way.
-
-All four functions ``call``, ``delegatecall``, ``callcode`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
+All three functions ``call``, ``delegatecall`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
 The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
 
 .. note::
     All contracts can be converted to ``address`` type, so it is possible to query the balance of the
     current contract using ``address(this).balance``.
-
-.. note::
-    The use of ``callcode`` is discouraged and will be removed in the future.
 
 .. index:: ! contract type, ! type; contract
 
