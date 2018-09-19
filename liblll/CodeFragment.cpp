@@ -45,6 +45,10 @@ using namespace dev::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
 {
+	// NOTE: add this as a safeguard in case the user didn't issue an
+	// explicit stop at the end of the sequence
+	m_asm.append(Instruction::STOP);
+
 	if (_cs.usedAlloc && _cs.vars.size() && !m_finalised)
 	{
 		m_finalised = true;
