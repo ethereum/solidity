@@ -81,6 +81,24 @@ It is possible to form tuples of tuples, arrays of tuples and so on.  It is also
 .. note::
     Solidity supports all the types presented above with the same names with the exception of tuples. The ABI tuple type is utilised for encoding Solidity ``structs``.
 
+Mapping Solidity to ABI types
+-----------------------------
+The following table shows on the left column Solidity types that are not part of the ABI,
+and on the right column the ABI type that they map to.
+
++-------------------------------+-----------------------------------------------------------------------------+
+|      Solidity                 |                                           ABI                               |
++===============================+=============================================================================+
+|:ref:`address payable<address>`|``address``                                                                  |
++-------------------------------+-----------------------------------------------------------------------------+
+|:ref:`contract<contracts>`     |``address``                                                                  |
++-------------------------------+-----------------------------------------------------------------------------+
+|:ref:`enum<enums>`             |smallest ``uint`` type that is large enough to hold all values               |
+|                               |                                                                             |
+|                               |For example, an ``enum`` of 255 values or less is mapped to ``uint8`` and    |
+|                               |an ``enum`` of 256 values is mapped to ``uint16``.                           |
++-------------------------------+-----------------------------------------------------------------------------+
+
 Formal Specification of the Encoding
 ====================================
 
