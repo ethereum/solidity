@@ -46,7 +46,7 @@ hiding new and different behavior in existing code.
   Note that dirty higher order bits are still simply ignored.
 
 * Forward all available gas with external function calls starting from
-  tangerine whistle.
+  Tangerine Whistle.
 
 Semantic and Syntactic Changes
 ==============================
@@ -105,8 +105,8 @@ For most of the topics the compiler will provide suggestions.
   where only ``address payable`` provides the ``transfer`` function.  An
   ``address payable`` can be directly converted to an ``address``, but the
   other way around is not allowed. Converting ``address`` to ``address
-  payable`` is possible via conversion through ``uint160``. If ``c`` is
-  a contract, ``address(c)`` results in ``address payable`` if ``c`` has a
+  payable`` is possible via conversion through ``uint160``. If ``c`` is a
+  contract, ``address(c)`` results in ``address payable`` only if ``c`` has a
   payable fallback function.
 
 * Conversions between ``bytesX`` and ``uintY`` of different size are now
@@ -148,7 +148,7 @@ Command Line and JSON Interfaces
 
 * Remappings with empty prefix are disallowed.
 
-* The Json AST fields ``constant`` and ``payable`` were removed. The
+* The JSON AST fields ``constant`` and ``payable`` were removed. The
   information is now present in the ``stateMutability`` field.
 
 Constructors
