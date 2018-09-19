@@ -59,8 +59,10 @@ public:
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 
+	// These two are only used by liblll
 	void append(Assembly const& _a);
 	void append(Assembly const& _a, int _deposit);
+
 	AssemblyItem const& append(AssemblyItem const& _i);
 	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
