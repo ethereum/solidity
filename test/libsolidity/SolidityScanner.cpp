@@ -105,6 +105,11 @@ BOOST_AUTO_TEST_CASE(hex_numbers)
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0x765432536763762734623472346");
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Semicolon);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("0x1234"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0x1234");
+	scanner.reset(CharStream("0X1234"), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 }
 
 BOOST_AUTO_TEST_CASE(octal_numbers)

@@ -780,13 +780,13 @@ Token::Value Scanner::scanNumber(char _charSeen)
 		{
 			addLiteralCharAndAdvance();
 			// either 0, 0exxx, 0Exxx, 0.xxx or a hex number
-			if (m_char == 'x' || m_char == 'X')
+			if (m_char == 'x')
 			{
 				// hex number
 				kind = HEX;
 				addLiteralCharAndAdvance();
 				if (!isHexDigit(m_char))
-					return Token::Illegal; // we must have at least one hex digit after 'x'/'X'
+					return Token::Illegal; // we must have at least one hex digit after 'x'
 
 				while (isHexDigit(m_char) || m_char == '_') // We keep the underscores for later validation
 					addLiteralCharAndAdvance();
