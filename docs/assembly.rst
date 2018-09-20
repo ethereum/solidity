@@ -47,12 +47,19 @@ these curly braces, you can use the following (see the later sections for more d
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes in functional style, e.g. ``add(1, mlod(0))``
- - labels, e.g. ``name:``
  - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
- - identifiers (labels or assembly-local variables and externals if used as inline assembly), e.g. ``jump(name)``, ``3 x add``
- - assignments (in "instruction style"), e.g. ``3 =: x``
- - assignments in functional style, e.g. ``x := add(y, 3)``
+ - identifiers (assembly-local variables and externals if used as inline assembly), e.g. ``add(3, x)``, ``sstore(x_slot, 2)``
+ - assignments, e.g. ``x := add(y, 3)``
  - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
+
+The following features are only available for standalone assembly.
+Standalone assembly is supported for backwards compatibility but is not documented
+here anymore.
+
+ - direct stack contral via dup1, swap1, ...
+ - direct stack assignments (in "instruction style"), e.g. ``3 =: x``
+ - labels, e.g. ``name:``
+ - jump opcodes
 
 At the end of the ``assembly { ... }`` block, the stack must be balanced,
 unless you require it otherwise. If it is not balanced, the compiler generates
@@ -156,7 +163,7 @@ Opcodes marked with ``F``, ``H``, ``B`` or ``C`` are present since Frontier, Hom
 Constantinople is still in planning and all instructions marked as such will result in an invalid instruction exception.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
-(excluding) position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
+but not including position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
 
 The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 
@@ -338,38 +345,39 @@ Literals
 You can use integer constants by typing them in decimal or hexadecimal notation and an
 appropriate ``PUSHi`` instruction will automatically be generated. The following creates code
 to add 2 and 3 resulting in 5 and then computes the bitwise and with the string "abc".
+The final value is assigned to a local variable called ``x``.
 Strings are stored left-aligned and cannot be longer than 32 bytes.
 
 .. code::
 
-    assembly { 2 3 add "abc" and }
+    assembly { let x := and("abc", add(3, 2)) }
+
 
 Functional Style
 -----------------
 
-You can type opcode after opcode in the same way they will end up in bytecode. For example
-adding ``3`` to the contents in memory at position ``0x80`` would be
+For a sequence of opcodes, it is often hard to see what the actual
+arguments for certain opcodes are. In the following example,
+``3`` is added to the contents in memory at position ``0x80``.
 
 .. code::
 
     3 0x80 mload add 0x80 mstore
 
-As it is often hard to see what the actual arguments for certain opcodes are,
-Solidity inline assembly also provides a "functional style" notation where the same code
-would be written as follows
+Solidity inline assembly has a "functional style" notation where the same code
+would be written as follows:
 
 .. code::
 
     mstore(0x80, add(mload(0x80), 3))
 
-Functional style expressions cannot use instructional style internally, i.e.
-``1 2 mstore(0x80, add)`` is not valid assembly, it has to be written as
-``mstore(0x80, add(2, 1))``. For opcodes that do not take arguments, the
-parentheses can be omitted.
+If you read the code from right to left, you end up with exactly the same
+sequence of constants and opcodes, but it is much clearer where the
+values end up.
 
-Note that the order of arguments is reversed in functional-style as opposed to the instruction-style
-way. If you use functional-style, the first argument will end up on the stack top.
-
+If you care about the exact stack layout, just note that the
+syntactically first argument for a function or opcode will be put at the
+top of the stack.
 
 Access to External Variables, Functions and Libraries
 -----------------------------------------------------
@@ -396,7 +404,7 @@ Local Solidity variables are available for assignments, for example:
         }
     }
 
-.. note::
+.. warning::
     If you access variables of a type that spans less than 256 bits
     (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
     you cannot make any assumptions about bits not part of the
@@ -448,25 +456,18 @@ Assignments are possible to assembly-local variables and to function-local
 variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
-There are two kinds of assignments: functional-style and instruction-style.
-For functional-style assignments (``variable := value``), you need to provide a value in a
-functional-style expression that results in exactly one stack value
-and for instruction-style (``=: variable``), the value is just taken from the stack top.
-For both ways, the colon points to the name of the variable. The assignment
-is performed by replacing the variable's value on the stack by the new value.
+Variables can only be assigned expressions that result in exactly one value.
+If you want to assign the values returned from a function that has
+multiple return parameters, you have to provide multiple variables.
 
 .. code::
 
     {
-        let v := 0 // functional-style assignment as part of variable declaration
+        let v := 0
         let g := add(v, 2)
-        sload(10)
-        =: v // instruction style assignment, puts the result of sload(10) into v
+        function f() -> a, b { }
+        let c, d := f()
     }
-
-.. note::
-    Instruction-style assignment is deprecated.
-
 
 If
 --
@@ -584,12 +585,9 @@ Things to Avoid
 Inline assembly might have a quite high-level look, but it actually is extremely
 low-level. Function calls, loops, ifs and switches are converted by simple
 rewriting rules and after that, the only thing the assembler does for you is re-arranging
-functional-style opcodes, managing jump labels, counting stack height for
+functional-style opcodes, counting stack height for
 variable access and removing stack slots for assembly-local variables when the end
-of their block is reached. Especially for those two last cases, it is important
-to know that the assembler only counts stack height from top to bottom, not
-necessarily following control flow. Furthermore, operations like swap will only
-swap the contents of the stack but not the location of variables.
+of their block is reached.
 
 Conventions in Solidity
 -----------------------
@@ -605,6 +603,8 @@ first.
 Solidity manages memory in a very simple way: There is a "free memory pointer"
 at position ``0x40`` in memory. If you want to allocate memory, just use the memory
 starting from where this pointer points at and update it accordingly.
+There is no guarantee that the memory has not been used before and thus
+you cannot assume that its contents are zero bytes.
 There is no built-in mechanism to release or free allocated memory.
 Here is an assembly snippet that can be used for allocating memory::
 
@@ -623,10 +623,10 @@ of the free memory pointer.
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (yes, this is
 even true for ``byte[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
 arrays are pointers to memory arrays. The length of a dynamic array is stored at the
-first slot of the array and then only the array elements follow.
+first slot of the array and followed by the array elements.
 
 .. warning::
-    Statically-sized memory arrays do not have a length field, but it will be added soon
+    Statically-sized memory arrays do not have a length field, but it might be added later
     to allow better convertibility between statically- and dynamically-sized arrays, so
     please do not rely on that.
 
@@ -661,7 +661,7 @@ Scoping: An identifier that is declared (label, variable, function, assembly)
 is only visible in the block where it was declared (including nested blocks
 inside the current block). It is not legal to access local variables across
 function borders, even if they would be in scope. Shadowing is not allowed.
-Local variables cannot be accessed before they were declared, but labels,
+Local variables cannot be accessed before they were declared, but
 functions and assemblies can. Assemblies are special blocks that are used
 for e.g. returning runtime code or creating contracts. No identifier from an
 outer assembly is visible in a sub-assembly.
@@ -672,7 +672,7 @@ Whenever a local variable is referenced, the code generator needs
 to know its current relative position in the stack and thus it needs to
 keep track of the current so-called stack height. Since all local variables
 are removed at the end of a block, the stack height before and after the block
-should be the same. If this is not the case, a warning is issued.
+should be the same. If this is not the case, compilation fails.
 
 Using ``switch``, ``for`` and functions, it should be possible to write
 complex code without using ``jump`` or ``jumpi`` manually. This makes it much
