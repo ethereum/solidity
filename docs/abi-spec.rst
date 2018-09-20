@@ -78,13 +78,14 @@ Types can be combined to a tuple by enclosing them inside parentheses, separated
 
 It is possible to form tuples of tuples, arrays of tuples and so on.  It is also possible to form zero-tuples (where ``n == 0``).
 
-.. note::
-    Solidity supports all the types presented above with the same names with the exception of tuples. The ABI tuple type is utilised for encoding Solidity ``structs``.
-
 Mapping Solidity to ABI types
 -----------------------------
-The following table shows on the left column Solidity types that are not part of the ABI,
-and on the right column the ABI type that they map to.
+
+Solidity supports all the types presented above with the same names with the
+exception of tuples. On the other hand, some Solidity types are not supported
+by the ABI.  The following table shows on the left column Solidity types that
+are not part of the ABI, and on the right column the ABI types that represent
+them.
 
 +-------------------------------+-----------------------------------------------------------------------------+
 |      Solidity                 |                                           ABI                               |
@@ -97,6 +98,8 @@ and on the right column the ABI type that they map to.
 |                               |                                                                             |
 |                               |For example, an ``enum`` of 255 values or less is mapped to ``uint8`` and    |
 |                               |an ``enum`` of 256 values is mapped to ``uint16``.                           |
++-------------------------------+-----------------------------------------------------------------------------+
+|:ref:`struct<structs>`         |``tuple``                                                                    |
 +-------------------------------+-----------------------------------------------------------------------------+
 
 Formal Specification of the Encoding
