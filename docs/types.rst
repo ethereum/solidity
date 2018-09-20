@@ -276,15 +276,19 @@ Contract Types
 --------------
 
 Every :ref:`contract<contracts>` defines its own type.
-You can implicitly convert contracts to contracts they inherit from,
-and explicitly convert them to and from the ``address`` type, if they have no
-payable fallback functions, or to and from the ``address payable`` type, if they do
-have payable fallback functions.
+You can implicitly convert contracts to contracts they inherit from.
+Contracts can be explicitly converted to and from all other contract types
+and the ``address`` type.
+
+Explicit conversion to and from the ``address payable`` type
+is only possible if the contract type has a payable fallback function.
+The conversion is still performed using ``address(x)`` and not
+using ``address payable(x)``. You can find more information in the section about
+the :ref:`address type<address>`.
 
 .. note::
-    Starting with version 0.5.0 contracts do not derive from the address type,
-    but can still be explicitly converted to ``address``, resp. to ``address payable``,
-    if they have a payable fallback function.
+    Before version 0.5.0, contracts directly derived from the address type
+    and there was no distinction between ``address`` and ``address payable``.
 
 If you declare a local variable of contract type (`MyContract c`), you can call
 functions on that contract. Take care to assign it from somewhere that is the
@@ -307,25 +311,29 @@ including public state variables.
 Fixed-size byte arrays
 ----------------------
 
-``bytes1``, ``bytes2``, ``bytes3``, ..., ``bytes32``. ``byte`` is an alias for ``bytes1``.
+The value types ``bytes1``, ``bytes2``, ``bytes3``, ..., ``bytes32``
+hold a sequence of bytes from one to up to 32.
+``byte`` is an alias for ``bytes1``.
 
 Operators:
 
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
-* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation), ``<<`` (left shift), ``>>`` (right shift)
+* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
+* Shift operators: ``<<`` (left shift), ``>>`` (right shift)
 * Index access: If ``x`` is of type ``bytesI``, then ``x[k]`` for ``0 <= k < I`` returns the ``k`` th byte (read-only).
 
-The shifting operator works with any integer type as right operand (but will
-return the type of the left operand), which denotes the number of bits to shift by.
-Shifting by a negative amount will cause a runtime exception.
+The shifting operator works with any integer type as right operand (but
+returns the type of the left operand), which denotes the number of bits to shift by.
+Shifting by a negative amount causes a runtime exception.
 
 Members:
 
 * ``.length`` yields the fixed length of the byte array (read-only).
 
 .. note::
-    It is possible to use an array of bytes as ``byte[]``, but it is wasting a lot of space, 31 bytes every element,
-    to be exact, when passing in calls. It is better to use ``bytes``.
+    The type ``byte[]`` is an array of bytes, but due to padding rules, it wastes
+    31 bytes of space for each element (except in storage). It is better to use the ``bytes``
+    type instead.
 
 Dynamically-sized byte array
 ----------------------------
@@ -343,7 +351,7 @@ Address Literals
 ----------------
 
 Hexadecimal literals that pass the address checksum test, for example
-``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address`` type.
+``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address payable`` type.
 Hexadecimal literals that are between 39 and 41 digits
 long and do not pass the checksum test produce
 a warning and are treated as regular rational number literals.
@@ -371,10 +379,11 @@ Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
 Underscores can be used to separate the digits of a numeric literal to aid readability.
 For example, decimal ``123_000``, hexadecimal ``0x2eff_abde``, scientific decimal notation ``1_2e345_678`` are all valid.
 Underscores are only allowed between two digits and only one consecutive underscore is allowed.
-There is no additional semantic meaning added to a number literal containing underscores.
+There is no additional semantic meaning added to a number literal containing underscores,
+the underscores are ignored.
 
 Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
-using them together with a non-literal expression).
+using them together with a non-literal expression or by explicit conversion).
 This means that computations do not overflow and divisions do not truncate
 in number literal expressions.
 
@@ -396,14 +405,15 @@ a non-rational number).
     belong to the same number literal type for the rational number three.
 
 .. warning::
-    Division on integer literals used to truncate in earlier versions, but it will now convert into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
+    Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
     Number literal expressions are converted into a non-literal type as soon as they are used with non-literal
-    expressions. Even though we know that the value of the
-    expression assigned to ``b`` in the following example evaluates to
-    an integer, but the partial expression ``2.5 + a`` does not type check so the code
-    does not compile
+    expressions. Disregarding types, the value of the expression assigned to ``b``
+    below evaluates to an integer. Because ``a`` is of type ``uint128``, the
+    expression ``2.5 + a`` has to have a proper type, though. Since there is no common type
+    for the type of ``2.5`` and ``uint128``, the Solidity compiler does not accept
+    this code.
 
 ::
 
