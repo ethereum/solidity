@@ -2641,8 +2641,8 @@ bool FunctionType::operator==(Type const& _other) const
 
 bool FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_kind == Kind::External && _convertTo.category() == Category::Address)
-			return true;
+	if (m_kind == Kind::External && _convertTo == AddressType::address())
+		return true;
 	return _convertTo.category() == category();
 }
 
