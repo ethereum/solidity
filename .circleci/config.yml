@@ -179,14 +179,14 @@ jobs:
           name: Check spelling
           command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
 
-  test_trailing_whitespace:
+  test_check_style:
     docker:
       - image: buildpack-deps:artful
     steps:
       - checkout
       - run:
           name: Check for trailing whitespace
-          command: ./scripts/detect_trailing_whitespace.sh
+          command: ./scripts/check_style.sh
 
   test_buglist:
     docker:
@@ -278,7 +278,7 @@ workflows:
   build_all:
     jobs:
       - test_check_spelling: *build_on_tags
-      - test_trailing_whitespace: *build_on_tags
+      - test_check_style: *build_on_tags
       - test_buglist: *build_on_tags
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
