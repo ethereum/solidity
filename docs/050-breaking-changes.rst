@@ -198,6 +198,8 @@ Literals and Suffixes
 * Combining hex numbers with unit denominations (e.g. ``0x1e wei``) is now
   disallowed.
 
+* The prefix ``0X`` for hex numbers is disallowed, only ``0x`` is possible.
+
 Variables
 ---------
 
