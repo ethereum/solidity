@@ -7,15 +7,25 @@ Units and Globally Available Variables
 Ether Units
 ===========
 
-A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`` to convert between the subdenominations of Ether, where Ether currency numbers without a postfix are assumed to be Wei, e.g. ``2 ether == 2000 finney`` evaluates to ``true``.
+A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
+
+::
+
+    assert(1 wei == 1);
+    assert(1 szabo == 1e12);
+    assert(1 finney == 1e15);
+    assert(1 ether == 1e18);
+
+The only effect of the subdenomination suffix is a multiplication by a power of ten.
+
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 
 Time Units
 ==========
 
-Suffixes like ``seconds``, ``minutes``, ``hours``, ``days``, ``weeks`` and
-``years`` after literal numbers can be used to convert between units of time where seconds are the base
+Suffixes like ``seconds``, ``minutes``, ``hours``, ``days`` and ``weeks``
+after literal numbers can be used to specify units of time where seconds are the base
 unit and units are considered naively in the following way:
 
  * ``1 == 1 seconds``
@@ -23,7 +33,6 @@ unit and units are considered naively in the following way:
  * ``1 hours == 60 minutes``
  * ``1 days == 24 hours``
  * ``1 weeks == 7 days``
- * ``1 years == 365 days``
 
 Take care if you perform calendar calculations using these units, because
 not every year equals 365 days and not even every day has 24 hours
@@ -32,7 +41,7 @@ Due to the fact that leap seconds cannot be predicted, an exact calendar
 library has to be updated by an external oracle.
 
 .. note::
-    The suffix ``years`` has been deprecated due to the reasons above and cannot be used starting version 0.5.0.
+    The suffix ``years`` has been removed in version 0.5.0 due to the reasons above.
 
 These suffixes cannot be applied to variables. If you want to
 interpret some input variable in e.g. days, you can do it in the following way::
@@ -56,15 +65,14 @@ or are general-use utility functions.
 Block and Transaction Properties
 --------------------------------
 
-- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
+- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
 - ``block.timestamp`` (``uint``): current block timestamp as seconds since unix epoch
 - ``gasleft() returns (uint256)``: remaining gas
-- ``msg.data`` (``bytes``): complete calldata
-- ``msg.gas`` (``uint``): remaining gas - deprecated in version 0.4.21 and to be replaced by ``gasleft()``
+- ``msg.data`` (``bytes calldata``): complete calldata
 - ``msg.sender`` (``address payable``): sender of the message (current call)
 - ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
 - ``msg.value`` (``uint``): number of wei sent with the message
@@ -94,20 +102,28 @@ Block and Transaction Properties
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
 
+.. note::
+    The function ``blockhash`` was previously known as ``block.blockhash``. It was deprecated in
+    version 0.4.22 and removed in version 0.5.0.
+
+.. note::
+    The function ``gasleft`` was previously known as ``msg.gas``. It was deprecated in
+    version 0.4.21 and removed in version 0.5.0.
+
 .. index:: abi, encoding, packed
 
 ABI Encoding and Decoding Functions
 -----------------------------------
 
-- ``abi.decode(bytes encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
-- ``abi.encode(...) returns (bytes)``: ABI-encodes the given arguments
-- ``abi.encodePacked(...) returns (bytes)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
-- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
+- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
+- ``abi.encode(...) returns (bytes memory)``: ABI-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
+- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
 
 .. note::
-    These encoding functions can be used to craft data for function calls without actually
-    calling a function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a way
+    These encoding functions can be used to craft data for external function calls without actually
+    calling an external function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a way
     to compute the hash of structured data (although be aware that it is possible to
     craft a "hash collision" using different inputs types).
 
@@ -119,15 +135,18 @@ See the documentation about the :ref:`ABI <ABI>` and the
 Error Handling
 --------------
 
+See the dedicated section on :ref:`assert and require<assert-and-require>` for
+more details on error handling and when to use which function.
+
 ``assert(bool condition)``:
-    invalidates the transaction if the condition is not met - to be used for internal errors.
+    causes an invalid opcode and thus state change reversion if the condition is not met - to be used for internal errors.
 ``require(bool condition)``:
     reverts if the condition is not met - to be used for errors in inputs or external components.
-``require(bool condition, string message)``:
+``require(bool condition, string memory message)``:
     reverts if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
 ``revert()``:
     abort execution and revert state changes
-``revert(string reason)``:
+``revert(string memory reason)``:
     abort execution and revert state changes, providing an explanatory string
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
@@ -140,11 +159,9 @@ Mathematical and Cryptographic Functions
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 ``keccak256(bytes memory) returns (bytes32)``:
-    compute the Ethereum-SHA-3 (Keccak-256) hash of the input
+    compute the Keccak-256 hash of the input
 ``sha256(bytes memory) returns (bytes32)``:
     compute the SHA-256 hash of the input
-``sha3(bytes memory) returns (bytes32)``:
-    alias to ``keccak256``
 ``ripemd160(bytes memory) returns (bytes20)``:
     compute RIPEMD-160 hash of the input
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
@@ -158,26 +175,27 @@ Mathematical and Cryptographic Functions
 
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
+.. note::
+    There used to be an alias for ``keccak256`` called ``sha3``, which was removed in version 0.5.0.
+
 .. index:: balance, send, transfer, call, callcode, delegatecall, staticcall
 .. _address_related:
 
-Address Related
----------------
+Members of Address Types
+------------------------
 
 ``<address>.balance`` (``uint256``):
     balance of the :ref:`address` in Wei
 ``<address payable>.transfer(uint256 amount)``:
-    send given amount of Wei to :ref:`address`, throws on failure, forwards 2300 gas stipend, not adjustable
+    send given amount of Wei to :ref:`address`, reverts on failure, forwards 2300 gas stipend, not adjustable
 ``<address payable>.send(uint256 amount) returns (bool)``:
     send given amount of Wei to :ref:`address`, returns ``false`` on failure, forwards 2300 gas stipend, not adjustable
-``<address>.call(bytes memory) returns (bool)``:
-    issue low-level ``CALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
-``<address>.callcode(bytes memory) returns (bool)``:
-    issue low-level ``CALLCODE`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
-``<address>.delegatecall(bytes memory) returns (bool)``:
-    issue low-level ``DELEGATECALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
-``<address>.staticcall(bytes memory) returns (bool)``:
-    issue low-level ``STATICCALL`` with the given payload, returns ``false`` on failure, forwards all available gas, adjustable
+``<address>.call(bytes memory) returns (bool, bytes memory)``:
+    issue low-level ``CALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+``<address>.delegatecall(bytes memory) returns (bool, bytes memory)``:
+    issue low-level ``DELEGATECALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+``<address>.staticcall(bytes memory) returns (bool, bytes memory)``:
+    issue low-level ``STATICCALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
 
 For more information, see the section on :ref:`address`.
 
@@ -192,14 +210,19 @@ For more information, see the section on :ref:`address`.
    This is now forbidden and an explicit conversion to address must be done: ``address(this).balance``.
 
 .. note::
-   If storage variables are accessed via a low-level delegatecall, the storage layout of the two contracts
+   If state variables are accessed via a low-level delegatecall, the storage layout of the two contracts
    must align in order for the called contract to correctly access the storage variables of the calling contract by name.
    This is of course not the case if storage pointers are passed as function arguments as in the case for
    the high-level libraries.
 
+.. note::
+    Prior to version 0.5.0, ``.call``, ``.delegatecall`` and ``.staticcall`` only returned the
+    success condition and not the return data.
 
 .. note::
-    The use of ``callcode`` is discouraged and will be removed in the future.
+    Prior to version 0.5.0, there was a member called ``callcode`` with similar but slightly different
+    semantics than ``delegatecall``.
+
 
 .. index:: this, selfdestruct
 
@@ -212,8 +235,9 @@ Contract Related
 ``selfdestruct(address payable recipient)``:
     destroy the current contract, sending its funds to the given :ref:`address`
 
-``suicide(address payable recipient)``:
-    deprecated alias to ``selfdestruct``
-
 Furthermore, all functions of the current contract are callable directly including the current function.
+
+.. note::
+    Prior to version 0.5.0, there was a function called ``suicide`` with the same
+    semantics as ``selfdestruct``.
 
