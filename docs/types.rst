@@ -1050,11 +1050,13 @@ If ``a`` is an LValue (i.e. a variable or something that can be assigned to), th
 delete
 ------
 
-``delete a`` assigns the initial value for the type to ``a``. I.e. for integers it is equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset.
+``delete a`` assigns the initial value for the type to ``a``. I.e. for integers it is equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset. In other words, the value of ``a`` after ``delete a`` is the same as if ``a`` would be declared without assignment, with the following caveat:
 
-``delete`` has no effect on whole mappings (as the keys of mappings may be arbitrary and are generally unknown). So if you delete a struct, it will reset all members that are not mappings and also recurse into the members unless they are mappings. However, individual keys and what they map to can be deleted.
+``delete`` has no effect on mappings (as the keys of mappings may be arbitrary and are generally unknown). So if you delete a struct, it will reset all members that are not mappings and also recurse into the members unless they are mappings. However, individual keys and what they map to can be deleted: If ``a`` is a mapping, then ``delete a[x]`` will delete the value stored at ``x``.
 
 It is important to note that ``delete a`` really behaves like an assignment to ``a``, i.e. it stores a new object in ``a``.
+This distinction is visible when ``a`` is reference variable: It will only reset ``a`` itself, not the
+value it referred to previously.
 
 ::
 
@@ -1067,7 +1069,7 @@ It is important to note that ``delete a`` really behaves like an assignment to `
         function f() public {
             uint x = data;
             delete x; // sets x to 0, does not affect data
-            delete data; // sets data to 0, does not affect x which still holds a copy
+            delete data; // sets data to 0, does not affect x
             uint[] storage y = dataArray;
             delete dataArray; // this sets dataArray.length to zero, but as uint[] is a complex object, also
             // y is affected which is an alias to the storage object
@@ -1096,12 +1098,15 @@ makes sense semantically and no information is lost: ``uint8`` is convertible to
 (because ``uint256`` cannot hold e.g. ``-1``).
 Any integer type that can be converted to ``uint160`` can also be converted to ``address``.
 
+For more details, please consult the sections about the types themselves.
+
 Explicit Conversions
 --------------------
 
 If the compiler does not allow implicit conversion but you know what you are
 doing, an explicit type conversion is sometimes possible. Note that this may
-give you some unexpected behaviour so be sure to test to ensure that the
+give you some unexpected behaviour and allows you to bypass some security
+features of the compiler, so be sure to test that the
 result is what you want! Take the following example where you are converting
 a negative ``int8`` to a ``uint``:
 
@@ -1200,3 +1205,5 @@ Addresses
 
 As described in :ref:`address_literals`, hex literals of the correct size that pass the checksum
 test are of ``address`` type. No other literals can be implicitly converted to the ``address`` type.
+
+Explicit conversions from ``bytes20`` or any integer type to ``address`` results in ``address payable``.
