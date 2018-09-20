@@ -1230,7 +1230,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 						else
 							solAssert(false, "Contract member is neither variable nor function.");
 						m_context << identifier;
-						/// need to store store it as bytes4
+						/// need to store it as bytes4
 						utils().leftShiftNumberOnStack(224);
 						return false;
 					}
@@ -1305,7 +1305,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (member == "selector")
 		{
 			m_context << Instruction::SWAP1 << Instruction::POP;
-			/// need to store store it as bytes4
+			/// need to store it as bytes4
 			utils().leftShiftNumberOnStack(224);
 		}
 		else
@@ -1975,7 +1975,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	m_context << dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
 
 	bool existenceChecked = false;
-	// Check the the target contract exists (has code) for non-low-level calls.
+	// Check the target contract exists (has code) for non-low-level calls.
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;

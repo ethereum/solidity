@@ -41,7 +41,7 @@ struct Block;
 class CodeGenerator
 {
 public:
-	/// Performs code generation and appends generated to to _assembly.
+	/// Performs code generation and appends generated to _assembly.
 	static void assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,

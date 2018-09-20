@@ -174,7 +174,7 @@ public:
 	/// Will not contain any character which would be invalid as an identifier.
 	std::string identifier() const;
 
-	/// More complex identifier strings use "parentheses", where $_ is interpreted as as
+	/// More complex identifier strings use "parentheses", where $_ is interpreted as
 	/// "opening parenthesis", _$ as "closing parenthesis", _$_ as "comma" and any $ that
 	/// appears as part of a user-supplied identifier is escaped as _$$$_.
 	/// @returns an escaped identifier (will not contain any parenthesis or commas)
