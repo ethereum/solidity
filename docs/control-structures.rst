@@ -385,6 +385,8 @@ In any case, you will get a warning about the outer variable being shadowed.
 
 .. index:: ! exception, ! throw, ! assert, ! require, ! revert
 
+.. _assert-and-require:
+
 Error handling: Assert, Require, Revert and Exceptions
 ======================================================
 
