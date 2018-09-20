@@ -1778,9 +1778,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			}
 			if (resultType->category() == Type::Category::Address)
 			{
-				bool payable = true;
-				if (auto const* contractType = dynamic_cast<ContractType const*>(argType.get()))
-					payable = contractType->isPayable();
+				bool payable = argType->isExplicitlyConvertibleTo(AddressType::addressPayable());
 				resultType = make_shared<AddressType>(payable ? StateMutability::Payable : StateMutability::NonPayable);
 			}
 		}
