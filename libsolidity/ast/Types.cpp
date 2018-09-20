@@ -2429,7 +2429,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
 		{
 			if (arrayType->isByteArray())
-				// Return byte arrays as as whole.
+				// Return byte arrays as whole.
 				break;
 			returnType = arrayType->baseType();
 			m_parameterNames.push_back("");
