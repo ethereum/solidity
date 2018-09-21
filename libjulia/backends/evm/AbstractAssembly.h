@@ -103,7 +103,7 @@ enum class IdentifierContext { LValue, RValue };
 struct ExternalIdentifierAccess
 {
 	using Resolver = std::function<size_t(solidity::assembly::Identifier const&, IdentifierContext, bool /*_crossesFunctionBoundary*/)>;
-	/// Resolve a an external reference given by the identifier in the given context.
+	/// Resolve an external reference given by the identifier in the given context.
 	/// @returns the size of the value (number of stack slots) or size_t(-1) if not found.
 	Resolver resolve;
 	using CodeGenerator = std::function<void(solidity::assembly::Identifier const&, IdentifierContext, julia::AbstractAssembly&)>;
