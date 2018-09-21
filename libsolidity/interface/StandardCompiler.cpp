@@ -607,7 +607,7 @@ string StandardCompiler::compile(string const& _input) noexcept
 	}
 	catch (...)
 	{
-		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
+		return "{\"errors\":[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
 	}
 
 	// cout << "Input: " << input.toStyledString() << endl;
@@ -620,6 +620,6 @@ string StandardCompiler::compile(string const& _input) noexcept
 	}
 	catch (...)
 	{
-		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
+		return "{\"errors\":[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
 	}
 }
