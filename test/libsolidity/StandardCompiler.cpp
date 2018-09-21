@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_entry)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "library entry is not a JSON object."));
+	BOOST_CHECK(containsError(result, "JSONError", "Library entry is not a JSON object."));
 }
 
 BOOST_AUTO_TEST_CASE(libraries_invalid_hex)
