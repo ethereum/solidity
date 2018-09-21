@@ -83,6 +83,7 @@ Language Features:
  * General: Allow ``mapping`` storage pointers as arguments and return values in all internal functions.
  * General: Allow ``struct``s in interfaces.
  * General: Provide access to the ABI decoder through ``abi.decode(bytes memory data, (...))``.
+ * General: Disallow zero length for fixed-size arrays.
  * Parser: Accept the ``address payable`` type during parsing.
 
 Compiler Features:
@@ -100,6 +101,7 @@ Bugfixes:
  * Tests: Fix chain parameters to make ipc tests work with newer versions of cpp-ethereum.
  * Code Generator: Fix allocation of byte arrays (zeroed out too much memory).
  * Code Generator: Properly handle negative number literals in ABIEncoderV2.
+ * Code Generator: Do not crash on using a length of zero for multidimensional fixed-size arrays.
  * Commandline Interface: Correctly handle paths with backslashes on windows.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * Optimizer: Correctly estimate gas costs of constants for special cases.
