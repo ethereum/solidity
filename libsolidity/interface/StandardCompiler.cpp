@@ -280,6 +280,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 			for (auto const& url: sources[sourceName]["urls"])
 			{
+				if (!url.isString())
+					return formatFatalError("JSONError", "URL must be a string.");
 				ReadCallback::Result result = m_readFile(url.asString());
 				if (result.success)
 				{
@@ -320,7 +322,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	if (settings.isMember("evmVersion"))
 	{
-		boost::optional<EVMVersion> version = EVMVersion::fromString(settings.get("evmVersion", {}).asString());
+		if (!settings["evmVersion"].isString())
+			return formatFatalError("JSONError", "evmVersion must be a string.");
+		boost::optional<EVMVersion> version = EVMVersion::fromString(settings["evmVersion"].asString());
 		if (!version)
 			return formatFatalError("JSONError", "Invalid EVM version requested.");
 		m_compilerStack.setEVMVersion(*version);
@@ -329,6 +333,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	vector<CompilerStack::Remapping> remappings;
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
 	{
+		if (!remapping.isString())
+			return formatFatalError("JSONError", "Remapping entry must be a string.");
 		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
 			remappings.emplace_back(std::move(*r));
 		else
@@ -349,9 +355,11 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		auto const& jsonSourceName = jsonLibraries[sourceName];
 		if (!jsonSourceName.isObject())
-			return formatFatalError("JSONError", "library entry is not a JSON object.");
+			return formatFatalError("JSONError", "Library entry is not a JSON object.");
 		for (auto const& library: jsonSourceName.getMemberNames())
 		{
+			if (!jsonSourceName[library].isString())
+				return formatFatalError("JSONError", "Library address must be a string.");
 			string address = jsonSourceName[library].asString();
 
 			if (!boost::starts_with(address, "0x"))
