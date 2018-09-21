@@ -822,12 +822,17 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	{
 	case Type::Category::Array:
 		if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
+		{
 			if (
 				((arrayType->location() == DataLocation::Memory) ||
 				(arrayType->location() == DataLocation::CallData)) &&
 				!arrayType->validForCalldata()
 			)
 				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
+			if (auto baseType = dynamic_cast<ArrayType const*>(arrayType->baseType().get()))
+				if (!baseType->isDynamicallySized() && baseType->length() == 0)
+					m_errorReporter.typeError(_variable.location(), "Fixed-size multidimensional arrays are not allowed to have zero length.");
+		}
 		break;
 	case Type::Category::Mapping:
 		if (auto mappingType = dynamic_cast<MappingType const*>(varType.get()))
