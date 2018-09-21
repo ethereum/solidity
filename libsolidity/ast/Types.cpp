@@ -2126,8 +2126,11 @@ bool StructType::canBeUsedExternally(bool _inLibrary) const
 		// passed by value and thus the encoding does not differ, but it will disallow
 		// mappings.
 		for (auto const& var: m_struct.members())
+		{
+			solAssert(var->annotation().type, "");
 			if (!var->annotation().type->canBeUsedExternally(false))
 				return false;
+		}
 	}
 	return true;
 }
