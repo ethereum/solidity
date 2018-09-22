@@ -765,6 +765,15 @@ BOOST_AUTO_TEST_CASE(regression_test)
 		}
 	)";
 	CHECK_SUCCESS(text);
+	text = R"(
+		library Test {
+			function test() internal pure {
+				bytes32[] memory _proof;
+				bytes32 proofElement = _proof[0];
+			}
+		}
+	)";
+	CHECK_SUCCESS(text);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
