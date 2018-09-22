@@ -209,16 +209,17 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 			_assignment.location(),
 			"Assertion checker does not yet implement compound assignment."
 		);
-	else if (!SSAVariable::isSupportedType(_assignment.annotation().type->category()))
-		m_errorReporter.warning(
-			_assignment.location(),
-			"Assertion checker does not yet implement type " + _assignment.annotation().type->toString()
-		);
 	else if (Identifier const* identifier = dynamic_cast<Identifier const*>(&_assignment.leftHandSide()))
 	{
 		VariableDeclaration const& decl = dynamic_cast<VariableDeclaration const&>(*identifier->annotation().referencedDeclaration);
 		if (knownVariable(decl))
 		{
+			if (!SSAVariable::isSupportedType(_assignment.annotation().type->category()))
+				m_errorReporter.warning(
+					_assignment.location(),
+					"Assertion checker does not yet implement type " + _assignment.annotation().type->toString()
+				);
+
 			assignment(decl, _assignment.rightHandSide(), _assignment.location());
 			defineExpr(_assignment, expr(_assignment.rightHandSide()));
 		}
@@ -868,7 +869,8 @@ void SMTChecker::createExpr(Expression const& _e)
 			m_expressions.emplace(&_e, m_interface->newBool(uniqueSymbol(_e)));
 			break;
 		default:
-			solUnimplementedAssert(false, "Type not implemented.");
+			// Create an integer in the SMT solver, to match the fallback type
+			m_expressions.emplace(&_e, m_interface->newInteger(uniqueSymbol(_e)));
 		}
 	}
 }
