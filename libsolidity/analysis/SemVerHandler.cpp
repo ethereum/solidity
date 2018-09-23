@@ -106,19 +106,20 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 			}
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
 			cmp = -1;
-		if (prefix == Token::Assign)
+
+		switch (prefix) {
+		case Token::Assign :
 			return cmp == 0;
-		else if (prefix == Token::LessThan)
+		case Token::LessThan :
 			return cmp < 0;
-		else if (prefix == Token::LessThanOrEqual)
-			return cmp <= 0;
-		else if (prefix == Token::GreaterThan)
+		case Token::GreaterThan :
 			return cmp > 0;
-		else if (prefix == Token::GreaterThanOrEqual)
+		case Token::GreaterThanOrEqual :
 			return cmp >= 0;
-		else
+		default:
 			solAssert(false, "Invalid SemVer expression");
-		return false;
+			return false;
+		}
 	}
 }
 
