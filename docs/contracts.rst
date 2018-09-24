@@ -50,7 +50,7 @@ This means that cyclic creation dependencies are impossible.
     pragma solidity >=0.4.22 <0.6.0;
 
     contract OwnedToken {
-        // TokenCreator is a contract type that is defined below.
+        // `TokenCreator` is a contract type that is defined below.
         // It is fine to reference it as long as it is not used
         // to create a new contract.
         TokenCreator creator;
@@ -61,14 +61,18 @@ This means that cyclic creation dependencies are impossible.
         // creator and the assigned name.
         constructor(bytes32 _name) public {
             // State variables are accessed via their name
-            // and not via e.g. this.owner. This also applies
-            // to functions and especially in the constructors,
-            // you can only call them like that ("internally"),
-            // because the contract itself does not exist yet.
+            // and not via e.g. `this.owner`. Functions can
+            // be accessed directly or through `this.f`,
+            // but the latter provides an external view
+            // to the function. Especially in the constructor,
+            // you should not access functions externally,
+            // because the function does not exist yet.
+            // See the next section for details.
             owner = msg.sender;
+
             // We do an explicit type conversion from `address`
             // to `TokenCreator` and assume that the type of
-            // the calling contract is TokenCreator, there is
+            // the calling contract is `TokenCreator`, there is
             // no real way to check that.
             creator = TokenCreator(msg.sender);
             name = _name;
@@ -86,10 +90,11 @@ This means that cyclic creation dependencies are impossible.
             // Only the current owner can transfer the token.
             if (msg.sender != owner) return;
 
-            // We also want to ask the creator if the transfer
-            // is fine. Note that this calls a function of the
-            // contract defined below. If the call fails (e.g.
-            // due to out-of-gas), the execution also fails here.
+            // We ask the creator contract if the transfer
+            // should proceed by using a function of the
+            // `TokenCreator` contract defined below. If
+            // the call fails (e.g. due to out-of-gas),
+            // the execution also fails here.
             if (creator.isTokenTransferOK(owner, newOwner))
                 owner = newOwner;
         }
@@ -100,8 +105,8 @@ This means that cyclic creation dependencies are impossible.
            public
            returns (OwnedToken tokenAddress)
         {
-            // Create a new Token contract and return its address.
-            // From the JavaScript side, the return type is simply
+            // Create a new `Token` contract and return its address.
+            // From the JavaScript side, the return type is
             // `address`, as this is the closest type available in
             // the ABI.
             return new OwnedToken(name);
@@ -113,12 +118,14 @@ This means that cyclic creation dependencies are impossible.
             tokenAddress.changeName(name);
         }
 
+        // Perform checks to determine if transferring a token to the
+        // `OwnedToken` contract should proceed
         function isTokenTransferOK(address currentOwner, address newOwner)
             public
             pure
             returns (bool ok)
         {
-            // Check some arbitrary condition.
+            // Check an arbitrary condition to see if transfer should proceed
             return keccak256(abi.encodePacked(currentOwner, newOwner))[0] == 0x7f;
         }
     }
