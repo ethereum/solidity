@@ -32,6 +32,8 @@
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/interface/ErrorReporter.h>
 #include <libdevcore/Algorithms.h>
+#include "TypeChecker.h"
+
 
 using namespace std;
 using namespace dev;
@@ -1676,7 +1678,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 				);
 	}
 }
-
+//
 bool TypeChecker::visit(FunctionCall const& _functionCall)
 {
 	bool isPositionalCall = _functionCall.names().empty();
@@ -1704,19 +1706,15 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	_functionCall.expression().accept(*this);
 	TypePointer expressionType = type(_functionCall.expression());
 
-	if (auto const* typeType = dynamic_cast<TypeType const*>(expressionType.get()))
-	{
-		if (typeType->actualType()->category() == Type::Category::Struct)
-			_functionCall.annotation().kind = FunctionCallKind::StructConstructorCall;
-		else
-			_functionCall.annotation().kind = FunctionCallKind::TypeConversion;
 
-	}
-	else
-		_functionCall.annotation().kind = FunctionCallKind::FunctionCall;
-	solAssert(_functionCall.annotation().kind != FunctionCallKind::Unset, "");
+// TYPE/STRUCT/FUNCTION conversion check happens here, GITHUB #3
+	FunctionCallKind functionCallKind = functionCallKindChecker(_functionCall, expressionType);
 
-	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
+// TYPE/STRUCT/FUNCTION conversion check happens here, GITHUB #3
+
+
+
+	if (functionCallKind == FunctionCallKind::TypeConversion)
 	{
 		TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
 		TypePointer resultType = t.actualType();
@@ -1733,54 +1731,16 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			DataLocation dataLoc = DataLocation::Memory;
 			if (auto argRefType = dynamic_cast<ReferenceType const*>(argType.get()))
 				dataLoc = argRefType->location();
-			if (auto type = dynamic_cast<ReferenceType const*>(resultType.get()))
-				resultType = type->copyForLocation(dataLoc, type->isPointer());
-			if (argType->isExplicitlyConvertibleTo(*resultType))
-			{
-				if (auto argArrayType = dynamic_cast<ArrayType const*>(argType.get()))
-				{
-					auto resultArrayType = dynamic_cast<ArrayType const*>(resultType.get());
-					solAssert(!!resultArrayType, "");
-					solAssert(
-						argArrayType->location() != DataLocation::Storage ||
-						((resultArrayType->isPointer() || (argArrayType->isByteArray() && resultArrayType->isByteArray())) &&
-						 resultArrayType->location() == DataLocation::Storage),
-						"Invalid explicit conversion to storage type."
-					);
-				}
-			}
-			else
-			{
-				if (resultType->category() == Type::Category::Contract && argType->category() == Type::Category::Address)
-				{
-					solAssert(dynamic_cast<ContractType const*>(resultType.get())->isPayable(), "");
-					solAssert(dynamic_cast<AddressType const*>(argType.get())->stateMutability() < StateMutability::Payable, "");
-					SecondarySourceLocation ssl;
-					if (auto const* identifier = dynamic_cast<Identifier const*>(arguments.front().get()))
-						if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
-							ssl.append("Did you mean to declare this variable as \"address payable\"?", variableDeclaration->location());
-					m_errorReporter.typeError(
-						_functionCall.location(), ssl,
-						"Explicit type conversion not allowed from non-payable \"address\" to \"" +
-						resultType->toString() +
-						"\", which has a payable fallback function."
-					);
-				}
-				else
-					m_errorReporter.typeError(
+			resultType = ReferenceType::copyForLocationIfReference(dataLoc, resultType);
+			if (!argType->isExplicitlyConvertibleTo(*resultType))
+				m_errorReporter.typeError(
 						_functionCall.location(),
 						"Explicit type conversion not allowed from \"" +
 						argType->toString() +
 						"\" to \"" +
 						resultType->toString() +
 						"\"."
-					);
-			}
-			if (resultType->category() == Type::Category::Address)
-			{
-				bool payable = argType->isExplicitlyConvertibleTo(AddressType::addressPayable());
-				resultType = make_shared<AddressType>(payable ? StateMutability::Payable : StateMutability::NonPayable);
-			}
+				);
 		}
 		_functionCall.annotation().type = resultType;
 		_functionCall.annotation().isPure = isPure;
@@ -1788,13 +1748,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		return false;
 	}
 
-	// Actual function call or struct constructor call.
-
+// FUNCTION TYPE and check Github # 6
 	FunctionTypePointer functionType;
 
 	/// For error message: Struct members that were removed during conversion to memory.
 	set<string> membersRemovedForStructConstructor;
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
 		auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
@@ -1804,9 +1763,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 	else if ((functionType = dynamic_pointer_cast<FunctionType const>(expressionType)))
 		_functionCall.annotation().isPure =
-			isPure &&
-			_functionCall.expression().annotation().isPure &&
-			functionType->isPure();
+				isPure &&
+				_functionCall.expression().annotation().isPure &&
+				functionType->isPure();
 
 	bool allowDynamicTypes = m_evmVersion.supportsReturndata();
 	if (!functionType)
@@ -1829,8 +1788,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
 		m_errorReporter.typeError(_functionCall.location(), "Event invocations have to be prefixed by \"emit\".");
 
-	TypePointers parameterTypes = functionType->parameterTypes();
 
+// PADDING LITERAL CHECK Github #7
 	if (!functionType->padArguments())
 	{
 		for (size_t i = 0; i < arguments.size(); ++i)
@@ -1840,8 +1799,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			{
 				if (literal->mobileType())
 					m_errorReporter.typeError(
-						arguments[i]->location(),
-						"Cannot perform packed encoding for a literal. Please convert it to an explicit type first."
+							arguments[i]->location(),
+							"Cannot perform packed encoding for a literal. Please convert it to an explicit type first."
 					);
 				else
 				{
@@ -1852,53 +1811,63 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 	}
 
+// PADDING LITERAL CHECK Github #7 //
+// FUNCTION TYPE and check Github # 6 //
+
+
+
+
+// ARGUMENT CHECKER Github # 8
+
+	TypePointers parameterTypes = functionType->parameterTypes(); //this line was moved
 	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
 
 	// Will be assigned to .type at the end (turning multi-elements into a tuple).
 	TypePointers returnTypes =
-		allowDynamicTypes ?
-		functionType->returnParameterTypes() :
-		functionType->returnParameterTypesWithoutDynamicTypes();
+			allowDynamicTypes ?
+			functionType->returnParameterTypes() :
+			functionType->returnParameterTypesWithoutDynamicTypes();
 
 	if (functionType->kind() == FunctionType::Kind::ABIDecode)
 		returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
 	else if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
 	{
-		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
+		solAssert(functionCallKind == FunctionCallKind::FunctionCall, "");
+
 		m_errorReporter.typeError(
-			_functionCall.location(),
-			"Need at least " +
-			toString(parameterTypes.size()) +
-			" arguments for function call, but provided only " +
-			toString(arguments.size()) +
-			"."
+				_functionCall.location(),
+				"Need at least " +
+				toString(parameterTypes.size()) +
+				" arguments for function call, but provided only " +
+				toString(arguments.size()) +
+				"."
 		);
 	}
 	else if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
-		bool isStructConstructorCall = _functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
+		bool isStructConstructorCall = functionCallKind == FunctionCallKind::StructConstructorCall;
 
 		string msg =
-			"Wrong argument count for " +
-			string(isStructConstructorCall ? "struct constructor" : "function call") +
-			": " +
-			toString(arguments.size()) +
-			" arguments given but expected " +
-			toString(parameterTypes.size()) +
-			".";
+				"Wrong argument count for " +
+				string(isStructConstructorCall ? "struct constructor" : "function call") +
+				": " +
+				toString(arguments.size()) +
+				" arguments given but expected " +
+				toString(parameterTypes.size()) +
+				".";
 		// Extend error message in case we try to construct a struct with mapping member.
-		if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall && !membersRemovedForStructConstructor.empty())
+		if (functionCallKind == FunctionCallKind::StructConstructorCall && !membersRemovedForStructConstructor.empty())
 		{
 			msg += " Members that have to be skipped in memory:";
 			for (auto const& member: membersRemovedForStructConstructor)
 				msg += " " + member;
 		}
 		else if (
-			functionType->kind() == FunctionType::Kind::BareCall ||
-			functionType->kind() == FunctionType::Kind::BareCallCode ||
-			functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-			functionType->kind() == FunctionType::Kind::BareStaticCall
-		)
+				functionType->kind() == FunctionType::Kind::BareCall ||
+				functionType->kind() == FunctionType::Kind::BareCallCode ||
+				functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+				functionType->kind() == FunctionType::Kind::BareStaticCall
+				)
 		{
 			if (arguments.empty())
 				msg += " This function requires a single bytes argument. Use \"\" as argument to provide empty calldata.";
@@ -1906,14 +1875,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
 		}
 		else if (
-			functionType->kind() == FunctionType::Kind::KECCAK256 ||
-			functionType->kind() == FunctionType::Kind::SHA256 ||
-			functionType->kind() == FunctionType::Kind::RIPEMD160
-		)
+				functionType->kind() == FunctionType::Kind::KECCAK256 ||
+				functionType->kind() == FunctionType::Kind::SHA256 ||
+				functionType->kind() == FunctionType::Kind::RIPEMD160
+				)
 			msg +=
-				" This function requires a single bytes argument."
-				" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
-				" or abi.encode(...) to use ABI encoding.";
+					" This function requires a single bytes argument."
+					" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
+					" or abi.encode(...) to use ABI encoding.";
 		m_errorReporter.typeError(_functionCall.location(), msg);
 	}
 	else if (isPositionalCall)
@@ -1936,28 +1905,28 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 			{
 				string msg =
-					"Invalid type for argument in function call. "
-					"Invalid implicit conversion from " +
-					type(*arguments[i])->toString() +
-					" to " +
-					parameterTypes[i]->toString() +
-					" requested.";
+						"Invalid type for argument in function call. "
+						"Invalid implicit conversion from " +
+						type(*arguments[i])->toString() +
+						" to " +
+						parameterTypes[i]->toString() +
+						" requested.";
 				if (
-					functionType->kind() == FunctionType::Kind::BareCall ||
-					functionType->kind() == FunctionType::Kind::BareCallCode ||
-					functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-					functionType->kind() == FunctionType::Kind::BareStaticCall
-				)
+						functionType->kind() == FunctionType::Kind::BareCall ||
+						functionType->kind() == FunctionType::Kind::BareCallCode ||
+						functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+						functionType->kind() == FunctionType::Kind::BareStaticCall
+						)
 					msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
 				else if (
-					functionType->kind() == FunctionType::Kind::KECCAK256 ||
-					functionType->kind() == FunctionType::Kind::SHA256 ||
-					functionType->kind() == FunctionType::Kind::RIPEMD160
-				)
+						functionType->kind() == FunctionType::Kind::KECCAK256 ||
+						functionType->kind() == FunctionType::Kind::SHA256 ||
+						functionType->kind() == FunctionType::Kind::RIPEMD160
+						)
 					msg +=
-						" This function requires a single bytes argument."
-						" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
-						" or abi.encode(...) to use ABI encoding.";
+							" This function requires a single bytes argument."
+							" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
+							" or abi.encode(...) to use ABI encoding.";
 				m_errorReporter.typeError(arguments[i]->location(), msg);
 			}
 		}
@@ -1968,8 +1937,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		auto const& parameterNames = functionType->parameterNames();
 		if (functionType->takesArbitraryParameters())
 			m_errorReporter.typeError(
-				_functionCall.location(),
-				"Named arguments cannot be used for functions that take arbitrary parameters."
+					_functionCall.location(),
+					"Named arguments cannot be used for functions that take arbitrary parameters."
 			);
 		else if (parameterNames.size() > argumentNames.size())
 			m_errorReporter.typeError(_functionCall.location(), "Some argument names are missing.");
@@ -1999,26 +1968,28 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 							// check type convertible
 							if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[j]))
 								m_errorReporter.typeError(
-									arguments[i]->location(),
-									"Invalid type for argument in function call. "
-									"Invalid implicit conversion from " +
-									type(*arguments[i])->toString() +
-									" to " +
-									parameterTypes[i]->toString() +
-									" requested."
+										arguments[i]->location(),
+										"Invalid type for argument in function call. "
+										"Invalid implicit conversion from " +
+										type(*arguments[i])->toString() +
+										" to " +
+										parameterTypes[i]->toString() +
+										" requested."
 								);
 							break;
 						}
 
 					if (!found)
 						m_errorReporter.typeError(
-							_functionCall.location(),
-							"Named argument \"" + *argumentNames[i] +  "\" does not match function declaration."
+								_functionCall.location(),
+								"Named argument \"" + *argumentNames[i] +  "\" does not match function declaration."
 						);
 				}
 		}
 	}
 
+
+// ARGUMENT CHECKER Github # 8 //
 	if (returnTypes.size() == 1)
 		_functionCall.annotation().type = returnTypes.front();
 	else
@@ -2511,4 +2482,21 @@ void TypeChecker::requireLValue(Expression const& _expression)
 		m_errorReporter.typeError(_expression.location(), "Cannot assign to a constant variable.");
 	else if (!_expression.annotation().isLValue)
 		m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
+}
+
+
+FunctionCallKind TypeChecker::functionCallKindChecker(const FunctionCall &_functionCall, TypePointer expressionType) {
+	//If assignment is successful, then it is a Struct Construction or a Type Conversion
+	if (auto const *typeType = dynamic_cast<TypeType const *>(expressionType.get())) {
+		if (typeType->actualType()->category() == Type::Category::Struct)
+			_functionCall.annotation().kind = FunctionCallKind::StructConstructorCall;
+		else
+			_functionCall.annotation().kind = FunctionCallKind::TypeConversion;
+
+	} else
+		_functionCall.annotation().kind = FunctionCallKind::FunctionCall;
+	solAssert(_functionCall.annotation().kind != FunctionCallKind::Unset, "");
+
+
+	return _functionCall.annotation().kind;
 }
