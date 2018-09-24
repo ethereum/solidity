@@ -23,16 +23,19 @@
 template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
 It noReturnValueBegin(iterator_pair<It> _bounds);
 
+/// Returns an iterator pointing to the beginning of the expression with its end at the back of _bounds.
+/// If {@code _allowNoReturn} is false, the back of the expression may have a section that contains no return value.
+/// If {@code _allowNoReturn} is true, the expression may have no return value.
 template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
 It backExpressionBegin(iterator_pair<It> _bounds, bool _allowNoReturn = false)
 {
-	auto begin = _bounds.begin;
-	auto end = _bounds.end;
+	It begin = _bounds.begin;
+	It end = _bounds.end;
 
 	AssemblyItem const& topLevelItem = *(end - 1);
 
 	signed arguments = topLevelItem.arguments();
-	auto currentEnd = end - 1 /* top-level operation */;
+	It currentEnd = end - 1 /* top-level operation */;
 	while (arguments > 0)
 	{
 		// TODO this code might break if anything returns more than 1 value, since we can't split things up
@@ -47,11 +50,13 @@ It backExpressionBegin(iterator_pair<It> _bounds, bool _allowNoReturn = false)
 	return currentEnd;
 }
 
-template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
+/// Returns an iterator pointing to the beginning of the expression from _bounds that has no return value.
+/// If there is no section at the back of _bounds with no return value, this returns {@code _bounds.end}
+template<typename It, typename>
 It noReturnValueBegin(iterator_pair<It> _bounds)
 {
-	auto begin = _bounds.begin;
-	auto end = _bounds.end;
+	It begin = _bounds.begin;
+	It end = _bounds.end;
 
 	assertThrow(begin != end, OptimizerException, "expression is empty");
 	AssemblyItem const& topLevelItem = *(end - 1);
@@ -59,17 +64,22 @@ It noReturnValueBegin(iterator_pair<It> _bounds)
 	return backExpressionBegin(_bounds, true);
 }
 
+/// Returns a vector of iterators that point to the beginnings of expressions in the expression from {@code _bounds}.
+/// The end of the first expression is {@code _bounds.end}. The end of every other expression is the beginning of the next-backmost expression.
+/// If {@code _allowNoReturn} is false, all expressions will have one return value, but may contain an expression with no return value at their back.
+/// If {@code _allowNoReturn} is true, expressions may have 0 return values.
+/// The first element of the return value is the beginning of the back-most expression of the bounds, ending at {@code _bounds.end}.
 template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
 vector<It> parseExpressions(iterator_pair<It> _bounds, signed _limit = -1, bool _allowNoReturn = false)
 {
-	auto begin = _bounds.begin;
-	auto end = _bounds.end;
+	It begin = _bounds.begin;
+	It end = _bounds.end;
 
-	auto currentEnd = end;
+	It currentEnd = end;
 	std::vector<It> expressions{};
 	while (currentEnd != begin && (_limit == -1 || signed(expressions.size()) < _limit))
 	{
-		auto oldEnd = currentEnd;
+		It oldEnd = currentEnd;
 		currentEnd = backExpressionBegin(make_iterator_pair(begin, oldEnd), _allowNoReturn);
 		expressions.push_back(currentEnd);
 		assertThrow(currentEnd >= begin, OptimizerException, "currentEnd is before begin");
@@ -78,18 +88,22 @@ vector<It> parseExpressions(iterator_pair<It> _bounds, signed _limit = -1, bool 
 	return expressions;
 }
 
+/// Returns a vector of iterators pointing to the beginning of the arguments of the back {@code AssemblyItem}.
+/// If the back {@code AssemblyItem} has no arguments, the return value is empty.
+/// The iterators are returned in argument order (the back-most {@code AssemblyItems} are the first argument).
+/// The first element of the return value points to the beginning of the argument that ends at {@code _bounds.end - 1}.
 template<typename It, typename = typename std::enable_if<is_assembly_item<decltype(*std::declval<It>())>::value>::type>
 vector<It> parseArguments(iterator_pair<It> _bounds)
 {
-	auto begin = _bounds.begin;
-	auto end = _bounds.end;
+	It begin = _bounds.begin;
+	It end = _bounds.end;
 
-	auto size = end - begin;
+	auto size = std::distance(begin, end);
 	assertThrow(size > 0, OptimizerException, "cannot get arguments from empty _items vector");
 
 	unsigned neededArguments = (end - 1)->arguments();
 
-	auto expressions = parseExpressions(make_iterator_pair(begin, end - 1), neededArguments, false);
+	std::vector<It> expressions = parseExpressions(make_iterator_pair(begin, end - 1), neededArguments, false);
 	assertThrow(expressions.size() >= neededArguments, OptimizerException, "more arguments needed than provided");
 
 	expressions = vector<It>(expressions.begin(), expressions.begin() + neededArguments);
@@ -119,7 +133,7 @@ vector<AssemblyItem> createItems(NewOptimizerPattern const& _pattern)
 		case NewOptimizerPattern::Kind::Operation:
 			if (_pattern.hasOperationValues())
 			{
-				auto operands = _pattern.operands();
+				std::vector<NewOptimizerPattern> const& operands = _pattern.operands();
 
 				vector<AssemblyItem> instructions{};
 
@@ -148,8 +162,8 @@ bool iteratorEqual(iterator_pair<It1> _bounds1, iterator_pair<It2> _bounds2)
 template<typename It, typename>
 bool dev::solidity::NewOptimizerPattern::matches(iterator_pair<It> _bounds, bool _unbind)
 {
-	auto begin = _bounds.begin;
-	auto end = _bounds.end;
+	It begin = _bounds.begin;
+	It end = _bounds.end;
 
 	if (_unbind) unbind();
 
@@ -159,12 +173,12 @@ bool dev::solidity::NewOptimizerPattern::matches(iterator_pair<It> _bounds, bool
 		return iteratorEqual(bound, _bounds);
 	}
 
-	auto size = end - begin;
+	auto size = std::distance(begin, end);
 	assertThrow(size > 0, OptimizerException, "");
 
 	auto back = static_cast<AssemblyItem const&>(*(end - 1));
 
-	auto bind = [&]{ this->bind(_bounds); };
+	auto bindMatch = [&]{ this->bind(_bounds); };
 
 	switch (kind())
 	{
@@ -178,7 +192,7 @@ bool dev::solidity::NewOptimizerPattern::matches(iterator_pair<It> _bounds, bool
 			{
 				if (begin->data() == constant())
 				{
-					bind();
+					bindMatch();
 					return true;
 				}
 
@@ -186,36 +200,37 @@ bool dev::solidity::NewOptimizerPattern::matches(iterator_pair<It> _bounds, bool
 			}
 			else
 			{
-				bind();
+				bindMatch();
 				return true;
 			}
 		}
 		case Kind::Operation:
 		{
+			if (back.type() != AssemblyItemType::Operation) return false;
+
 			if (!hasOperationValues())
 			{
 				if (back.type() == AssemblyItemType::Operation)
 				{
-					bind();
+					bindMatch();
 					return true;
 				}
 
 				return false;
 			}
 
-			auto const instruction = this->instruction();
+			Instruction const instruction = this->instruction();
 
-			if (back.type() != AssemblyItemType::Operation) return false;
 			if (back.instruction() != instruction) return false;
 
-			auto const argumentCount = instructionInfo(instruction).args;
+			unsigned const argumentCount = instructionInfo(instruction).args;
 			assertThrow(unsigned(argumentCount) == operands().size(), OptimizerException, "");
 
 			if (argumentCount == 0) return size == 1;
 
-			auto parsedArguments = parseArguments(_bounds);
+			std::vector<It> parsedArguments = parseArguments(_bounds);
 
-			auto& requiredArgumentPatterns = operands();
+			std::vector<NewOptimizerPattern>& requiredArgumentPatterns = operands();
 
 			assertThrow(
 				requiredArgumentPatterns.size() == parsedArguments.size(),
@@ -231,12 +246,12 @@ bool dev::solidity::NewOptimizerPattern::matches(iterator_pair<It> _bounds, bool
 				if (!requiredArgumentPatterns[i].matches(make_iterator_pair(argumentBegin, argumentEnd), false)) return false;
 			}
 
-			bind();
+			bindMatch();
 
 			return true;
 		}
 		case Kind::Any:
-			bind();
+			bindMatch();
 			return true;
 		case Kind::Unknown:
 			return false;
@@ -248,10 +263,10 @@ bool dev::solidity::NewOptimizerPattern::matches(iterator_pair<It> _bounds, bool
 template<typename It, typename>
 void NewOptimizerPattern::bind(iterator_pair<It> _bounds)
 {
-	auto begin = _bounds.begin;
-	auto end = _bounds.end;
+	It begin = _bounds.begin;
+	It end = _bounds.end;
 
-	auto size = end - begin;
+	auto size = std::distance(begin, end);
 	assertThrow(size > 0, OptimizerException, "");
 
 	auto back = static_cast<AssemblyItem const&>(*(end - 1));
@@ -302,10 +317,10 @@ vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(vector<AssemblyItem
 template<typename It, typename>
 vector<AssemblyItem> dev::solidity::ThirdOptimizer::optimize(iterator_pair<It> _bounds)
 {
-	auto begin = _bounds.begin;
-	auto end = _bounds.end;
+	It begin = _bounds.begin;
+	It end = _bounds.end;
 
-	if ((end - begin) <= 1) return vector<AssemblyItem>(begin, end);
+	if (std::distance(begin, end) <= 1) return vector<AssemblyItem>(begin, end);
 
 	auto expressions = parseExpressions(_bounds, -1, true);
 
