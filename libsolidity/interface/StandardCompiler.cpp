@@ -342,10 +342,25 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	}
 	m_compilerStack.setRemappings(remappings);
 
-	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
-	bool const optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
-	unsigned const optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
-	m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
+	if (settings.isMember("optimizer"))
+	{
+		Json::Value optimizerSettings = settings["optimizer"];
+		if (optimizerSettings.isMember("enabled"))
+		{
+			if (!optimizerSettings["enabled"].isBool())
+				return formatFatalError("JSONError", "The \"enabled\" setting must be a boolean.");
+
+			bool const optimize = optimizerSettings["enabled"].asBool();
+			unsigned optimizeRuns = 200;
+			if (optimizerSettings.isMember("runs"))
+			{
+				if (!optimizerSettings["runs"].isUInt())
+					return formatFatalError("JSONError", "The \"runs\" setting must be an unsigned number.");
+				optimizeRuns = optimizerSettings["runs"].asUInt();
+			}
+			m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
+		}
+	}
 
 	map<string, h160> libraries;
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value(Json::objectValue));

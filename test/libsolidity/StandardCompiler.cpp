@@ -225,6 +225,71 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_CHECK(containsAtMostWarnings(result));
 }
 
+BOOST_AUTO_TEST_CASE(optimizer_enabled_not_boolean)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"optimizer": {
+				"enabled": "wrong"
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "The \"enabled\" setting must be a boolean."));
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_runs_not_a_number)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"optimizer": {
+				"enabled": true,
+				"runs": "not a number"
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_runs_not_an_unsigned_number)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"optimizer": {
+				"enabled": true,
+				"runs": -1
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+}
+
 BOOST_AUTO_TEST_CASE(basic_compilation)
 {
 	char const* input = R"(
