@@ -648,21 +648,27 @@ Another example that uses external function types::
 .. index:: ! type;reference, ! reference type, storage, memory, location, array, struct
 
 Reference Types
-==================
+===============
 
-Complex types, i.e. types which do not always fit into 256 bits have to be handled
-more carefully than the value-types we have already seen. Since copying
-them can be quite expensive, we have to think about whether we want them to be
-stored in **memory** (which is not persisting) or **storage** (where the state
-variables are held).
+Values of reference type can be modified through multiple different names.
+Contrast this with value types where you get an independent copy whenever
+a variable of value type is used. Because of that, reference types have to be handled
+more carefully than value types. Currently, reference types comprise structs,
+arrays and mappings. If you use a reference type, you always have to explicitly
+provide the data area where the type is stored: ``memory`` (whose lifetime is limited
+to a function call), ``storage`` (the location where the state variables are stored)
+or ``calldata`` (special data location that contains the function arguments,
+only available for external function call parameters).
+
+An assignment or type conversion that changes the data location will always incur an automatic copy operation,
+while assignments inside the same data location only copy in some cases for storage types.
 
 .. _data-location:
 
 Data location
 -------------
 
-
-Every complex type, i.e. *arrays* and *structs*, has an additional
+Every reference type, i.e. *arrays* and *structs*, has an additional
 annotation, the "data location", about where it is stored. There are three data locations:
 ``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
 functions and is required for this type of parameter. Calldata is a non-modifiable,
