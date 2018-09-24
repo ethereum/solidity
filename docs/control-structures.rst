@@ -413,17 +413,17 @@ If used properly, analysis tools can evaluate your contract to identify the cond
 There are two other ways to trigger exceptions: The ``revert`` function can be used to flag an error and
 revert the current call. It is possible to provide a string message containing details about the error
 that will be passed back to the caller.
-The deprecated keyword ``throw`` can also be used as an alternative to ``revert()`` (but only without error message).
 
 .. note::
-    From version 0.4.13 the ``throw`` keyword is deprecated and will be phased out in the future.
+    There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
+    whas deprecated in version 0.4.13 and removed in version 0.5.0.
 
 When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send``
-and the low-level functions ``call``, ``delegatecall``, ``callcode`` and ``staticcall`` -- those return ``false`` in case
+and the low-level functions ``call``, ``delegatecall`` and ``staticcall`` -- those return ``false`` as their first return value in case
 of an exception instead of "bubbling up".
 
 .. warning::
-    The low-level ``call``, ``delegatecall``, ``callcode`` and ``staticcall`` will return success if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
+    The low-level functions ``call``, ``delegatecall`` and ``staticcall`` return ``true`` as their first return value if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
 
 Catching exceptions is not yet possible.
 
@@ -460,7 +460,6 @@ An ``assert``-style exception is generated in the following situations:
 
 A ``require``-style exception is generated in the following situations:
 
-#. Calling ``throw``.
 #. Calling ``require`` with an argument that evaluates to ``false``.
 #. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
 #. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
