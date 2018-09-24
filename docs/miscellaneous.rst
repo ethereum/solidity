@@ -64,7 +64,7 @@ The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint25
 Layout in Memory
 ****************
 
-Solidity reserves four 32 byte slots:
+Solidity reserves four 32-byte slots, with specific byte ranges (inclusive of endpoints) being used as follows:
 
 - ``0x00`` - ``0x3f`` (64 bytes): scratch space for hashing methods
 - ``0x40`` - ``0x5f`` (32 bytes): currently allocated memory size (aka. free memory pointer)
