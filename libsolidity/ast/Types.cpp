@@ -666,7 +666,7 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 			return TypePointer();
 	}
 
-	auto commonType = Type::commonType(shared_from_this(), _other); //might be a integer or fixed point
+	auto commonType = Type::commonType(shared_from_this(), _other); //might be an integer or fixed point
 	if (!commonType)
 		return TypePointer();
 
