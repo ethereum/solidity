@@ -66,18 +66,18 @@ Layout in Memory
 
 Solidity reserves four 32 byte slots:
 
-- ``0x00`` - ``0x3f``: scratch space for hashing methods
-- ``0x40`` - ``0x5f``: currently allocated memory size (aka. free memory pointer)
-- ``0x60`` - ``0x7f``: zero slot
+- ``0x00`` - ``0x3f`` (64 bytes): scratch space for hashing methods
+- ``0x40`` - ``0x5f`` (32 bytes): currently allocated memory size (aka. free memory pointer)
+- ``0x60`` - ``0x7f`` (32 bytes): zero slot
 
-Scratch space can be used between statements (ie. within inline assembly). The zero slot
+Scratch space can be used between statements (i.e. within inline assembly). The zero slot
 is used as initial value for dynamic memory arrays and should never be written to
 (the free memory pointer points to ``0x80`` initially).
 
 Solidity always places new objects at the free memory pointer and memory is never freed (this might change in the future).
 
 .. warning::
-  There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifecycle, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to be zeroed out.
+  There are some operations in Solidity that need a temporary memory area larger than 64 bytes and therefore will not fit into the scratch space. They will be placed where the free memory points to, but given their short lifetime, the pointer is not updated. The memory may or may not be zeroed out. Because of this, one shouldn't expect the free memory to point to zeroed out memory.
 
   While it may seem like a good idea to use ``msize`` to arrive at a definitely zeroed out memory area, using such a pointer non-temporarily without updating the free memory pointer can have adverse results.
 
@@ -242,7 +242,6 @@ Tips and Tricks
 * Use shorter types for struct elements and sort them such that short types are grouped together. This can lower the gas costs as multiple ``SSTORE`` operations might be combined into a single (``SSTORE`` costs 5000 or 20000 gas, so this is what you want to optimise). Use the gas price estimator (with optimiser enabled) to check!
 * Make your state variables public - the compiler will create :ref:`getters <visibility-and-getters>` for you automatically.
 * If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
-* If your contract has a function called ``send`` but you want to use the built-in send-function, use ``address(contractVariable).send(amount)``.
 * Initialize storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
 
 .. note::
@@ -278,7 +277,7 @@ The following is the order of precedence for operators, listed in order of evalu
 +------------+-------------------------------------+--------------------------------------------+
 | *2*        | Prefix increment and decrement      | ``++``, ``--``                             |
 +            +-------------------------------------+--------------------------------------------+
-|            | Unary plus and minus                | ``+``, ``-``                               |
+|            | Unary minus                         | ``-``                                      |
 +            +-------------------------------------+--------------------------------------------+
 |            | Unary operations                    | ``delete``                                 |
 +            +-------------------------------------+--------------------------------------------+
@@ -322,13 +321,12 @@ The following is the order of precedence for operators, listed in order of evalu
 Global Variables
 ================
 
-- ``abi.decode(bytes encodedData, (...)) returns (...)``: :ref:`ABI <ABI>`-decodes the provided data. The types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
-- ``abi.encode(...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
-- ``abi.encodePacked(...) returns (bytes)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
-- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes)``: :ref:`ABI <ABI>`-encodes the given arguments
+- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: :ref:`ABI <ABI>`-decodes the provided data. The types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
+- ``abi.encode(...) returns (bytes memory)``: :ref:`ABI <ABI>`-encodes the given arguments
+- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: :ref:`ABI <ABI>`-encodes the given arguments
    starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string signature, ...) returns (bytes)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
-- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks - deprecated in version 0.4.22 and replaced by ``blockhash(uint blockNumber)``.
+- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
@@ -336,7 +334,6 @@ Global Variables
 - ``block.timestamp`` (``uint``): current block timestamp
 - ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes``): complete calldata
-- ``msg.gas`` (``uint``): remaining gas - deprecated in version 0.4.21 and to be replaced by ``gasleft()``
 - ``msg.sender`` (``address payable``): sender of the message (current call)
 - ``msg.value`` (``uint``): number of wei sent with the message
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
@@ -344,21 +341,19 @@ Global Variables
 - ``tx.origin`` (``address payable``): sender of the transaction (full call chain)
 - ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component)
-- ``require(bool condition, string message)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
+- ``require(bool condition, string memory message)``: abort execution and revert state changes if condition is ``false`` (use for malformed input or error in external component). Also provide error message.
 - ``revert()``: abort execution and revert state changes
-- ``revert(string message)``: abort execution and revert state changes providing an explanatory string
+- ``revert(string memory message)``: abort execution and revert state changes providing an explanatory string
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
-- ``keccak256(bytes memory) returns (bytes32)``: compute the Ethereum-SHA-3 (Keccak-256) hash of the input
-- ``sha3(bytes memory) returns (bytes32)``: an alias to ``keccak256``
+- ``keccak256(bytes memory) returns (bytes32)``: compute the Keccak-256 hash of the input
 - ``sha256(bytes memory) returns (bytes32)``: compute the SHA-256 hash of the input
 - ``ripemd160(bytes memory) returns (bytes20)``: compute the RIPEMD-160 hash of the input
 - ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature, return zero on error
 - ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 - ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
-- ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
+- ``this`` (current contract's type): the current contract, explicitly convertible to ``address`` or ``address payable``
 - ``super``: the contract one level higher in the inheritance hierarchy
-- ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
-- ``suicide(address recipient)``: a deprecated alias to ``selfdestruct``
+- ``selfdestruct(address payable recipient)``: destroy the current contract, sending its funds to the given address
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`, returns ``false`` on failure
 - ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
@@ -379,6 +374,11 @@ Global Variables
     The block hashes are not available for all blocks for scalability reasons.
     You can only access the hashes of the most recent 256 blocks, all other
     values will be zero.
+
+.. note::
+    In version 0.5.0, the following aliases were removed: ``suicide`` as alias for ``selfdestruct``,
+    ``msg.gas`` as alias for ``gasleft``, ``block.blockhash`` as alias for ``blockhash`` and
+    ``sha3`` as alias for ``keccak256``.
 
 .. index:: visibility, public, private, external, internal
 
