@@ -55,7 +55,7 @@ complete contract):
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -78,7 +78,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -97,7 +97,7 @@ outlined further below:
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >=0.4.11 <0.6.0;
 
     contract Fund {
         /// Mapping of ether shares of the contract.

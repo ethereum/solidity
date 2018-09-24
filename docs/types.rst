@@ -484,7 +484,7 @@ subsequent unsigned integer values starting from ``0``.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -583,7 +583,7 @@ Members:
 Public (or external) functions also have a special member called ``selector``,
 which returns the :ref:`ABI function selector <abi_function_selector>`::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract Selector {
       function f() public pure returns (bytes4) {
@@ -593,7 +593,7 @@ which returns the :ref:`ABI function selector <abi_function_selector>`::
 
 Example that shows how to use internal function types::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     library ArrayUtils {
       // internal functions can be used in internal library functions because
@@ -644,7 +644,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract Oracle {
       struct Request {
@@ -727,7 +727,7 @@ memory-stored reference type do not create a copy.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract C {
         uint[] x; // the data location of x is storage
@@ -809,7 +809,7 @@ or create a new memory array and copy every element.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         function f(uint len) public pure {
@@ -831,7 +831,7 @@ assigned to a variable right away.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         function f() public pure {
@@ -852,7 +852,7 @@ possible:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // This will not compile.
     contract C {
@@ -890,7 +890,7 @@ Members
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
@@ -970,7 +970,7 @@ shown in the following example:
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >=0.4.11 <0.6.0;
 
     contract CrowdFunding {
         // Defines a new type with two fields.
@@ -1066,7 +1066,7 @@ each ``_KeyType``, recursively. For example with a mapping:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract MappingExample {
         mapping(address => uint) public balances;
@@ -1111,7 +1111,7 @@ value it referred to previously.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract DeleteExample {
         uint data;

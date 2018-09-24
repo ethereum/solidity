@@ -52,7 +52,7 @@ Surround top level declarations in solidity source with two blank lines.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         // ...
@@ -70,7 +70,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         // ...
@@ -89,7 +89,7 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         function spam() public pure;
@@ -109,7 +109,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         function spam() public pure {
@@ -237,7 +237,7 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     import "./Owned.sol";
 
@@ -251,7 +251,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         // ...
@@ -283,7 +283,7 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         constructor() public {
@@ -315,7 +315,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
 
@@ -411,7 +411,7 @@ should:
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract Coin {
         struct Bank {
@@ -422,7 +422,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract Coin
     {
@@ -723,7 +723,7 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -755,7 +755,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -955,7 +955,7 @@ As shown in the example below, if the contract name is `Congress` and the librar
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // Owned.sol
     contract Owned {
@@ -984,7 +984,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // owned.sol
     contract owned {

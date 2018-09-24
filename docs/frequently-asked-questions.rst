@@ -57,7 +57,7 @@ array in the return statement. Pretty cool, huh?
 
 Example::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         function f() public pure returns (uint8[5] memory) {
@@ -87,7 +87,7 @@ should be noted that you must declare them as static memory arrays.
 
 Examples::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract C {
         struct S {
@@ -127,7 +127,7 @@ which will be extended in the future. In addition, Arachnid has written `solidit
 For now, if you want to modify a string (even when you only want to know its length),
 you should always convert it to a ``bytes`` first::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract C {
         string s;
@@ -330,7 +330,7 @@ Can a contract pass an array (static size) or string or ``bytes`` (dynamic size)
 Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         uint[20] x;
@@ -367,7 +367,7 @@ contract level) with ``arrayname.length = <some new length>;``. If you get the
 
 ::
 
-    pragma solidity ^0.4.18;
+    pragma solidity >=0.4.18 <0.6.0;
 
     // This will not compile
     contract C {
