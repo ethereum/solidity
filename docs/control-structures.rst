@@ -14,8 +14,8 @@ parameters as output.
 Input Parameters
 ----------------
 
-The input parameters are declared the same way as variables are. As an
-exception, unused parameters can omit the variable name.
+The input parameters are declared the same way as variables are.
+The name of unused parameters can be omitted.
 For example, suppose we want our contract to
 accept one kind of external calls with two integers, we would write
 something like::
@@ -28,6 +28,9 @@ something like::
             sum = _a + _b;
         }
     }
+
+Input parameters can be used just as any other local variable
+can be used, they can also be assigned to.
 
 Output Parameters
 -----------------
@@ -51,24 +54,20 @@ write::
     }
 
 The names of output parameters can be omitted.
-The output values can also be specified using ``return`` statements.
-The ``return`` statements are also capable of returning multiple
-values, see :ref:`multi-return`.
-Return parameters are initialized to zero; if they are not explicitly
-set, they stay to be zero.
-
-Input parameters and output parameters can be used as expressions in
-the function body.  There, they are also usable in the left-hand side
-of assignment.
+The output values can also be specified using ``return`` statements,
+which are also capable of :ref:`returning multiple values<multi-return>`.
+Return parameters can be used as any other local variable and they
+are zero-initialized; if they are not explicitly
+set, they stay zero.
 
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
 Control Structures
 ===================
 
-Most of the control structures from JavaScript are available in Solidity
-except for ``switch`` and ``goto``. So
-there is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
+Most of the control structures known from curly-braces languages are available in Solidity:
+
+There is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, with
 the usual semantics known from C or JavaScript.
 
 Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
@@ -112,6 +111,9 @@ the effect that the current memory is not cleared, i.e. passing memory reference
 to internally-called functions is very efficient. Only functions of the same
 contract can be called internally.
 
+You should still avoid excessive recursion, as every internal function call
+uses up at least one stack slot and there are at most 1024 slots available.
+
 External Function Calls
 -----------------------
 
@@ -143,7 +145,7 @@ You need to use the modifier ``payable`` with the ``info`` function because
 otherwise, the ``.value()`` option would not be available.
 
 .. warning::
-  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call.
+  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call. So in this case, the function is not called.
 
 Function calls cause exceptions if the called contract does not exist (in the
 sense that the account does not contain code) or if the called contract itself
@@ -167,7 +169,7 @@ throws an exception or goes out of gas.
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------
 
-Function call arguments can also be given by name, in any order,
+Function call arguments can be given by name, in any order,
 if they are enclosed in ``{ }`` as can be seen in the following
 example. The argument list has to coincide by name with the list of
 parameters from the function declaration, but can be in arbitrary order.
@@ -214,9 +216,9 @@ Those parameters will still be present on the stack, but they are inaccessible.
 Creating Contracts via ``new``
 ==============================
 
-A contract can create a new contract using the ``new`` keyword. The full
-code of the contract being created has to be known in advance, so recursive
-creation-dependencies are not possible.
+A contract can create other contracts using the ``new`` keyword. The full
+code of the contract being created has to be known when the creating contract
+is compiled so recursive creation-dependencies are not possible.
 
 ::
 
@@ -244,7 +246,7 @@ creation-dependencies are not possible.
         }
     }
 
-As seen in the example, it is possible to forward Ether while creating
+As seen in the example, it is possible to send Ether while creating
 an instance of ``D`` using the ``.value()`` option, but it is not possible
 to limit the amount of gas.
 If the creation fails (due to out-of-stack, not enough balance or other problems),
@@ -269,8 +271,11 @@ Assignment
 Destructuring Assignments and Returning Multiple Values
 -------------------------------------------------------
 
-Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time.
-These can then either be assigned to newly declared variables or to pre-existing variables (or LValues in general):
+Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose number is a constant at compile-time. Those tuples can be used to return multiple values at the same time.
+These can then either be assigned to newly declared variables or to pre-existing variables (or LValues in general).
+
+Tuples are not proper types in Solidity, they can only be used to form syntactic
+groupings of expressions.
 
 ::
 
@@ -294,15 +299,23 @@ These can then either be assigned to newly declared variables or to pre-existing
         }
     }
 
+It is not possible to mix variable declarations and non-declaration assignments,
+i.e. the following is not valid: ``(x, uint y) = (1, 2);``
+
 .. note::
     Prior to version 0.5.0 it was possible to assign to tuples of smaller size, either
     filling up on the left or on the right side (which ever was empty). This is
     now disallowed, so both sides have to have the same number of components.
 
+.. warning::
+    Be careful when assigning to multiple variables at the same time when
+    reference types are involved, because it could lead to unexpected
+    copying behaviour.
+
 Complications for Arrays and Structs
 ------------------------------------
 
-The semantics of assignment are a bit more complicated for non-value types like arrays and structs.
+The semantics of assignments are a bit more complicated for non-value types like arrays and structs.
 Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including ``bytes`` and ``string``) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
 
 .. index:: ! scoping, declarations, default value
@@ -320,11 +333,11 @@ and ``string``, the default value is an empty array or string.
 
 Scoping in Solidity follows the widespread scoping rules of C99
 (and many other languages): Variables are visible from the point right after their declaration
-until the end of a ``{ }``-block. As an exception to this rule, variables declared in the
+until the end of the smallest ``{ }``-block that contains the declaration. As an exception to this rule, variables declared in the
 initialization part of a for-loop are only visible until the end of the for-loop.
 
 Variables and other items declared outside of a code block, for example functions, contracts,
-user-defined types, etc., do not change their scoping behaviour. This means you can
+user-defined types, etc., are visible even before they were declared. This means you can
 use state variables before they are declared and call functions recursively.
 
 As a consequence, the following examples will compile without warnings, since
@@ -368,7 +381,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 
 .. warning::
     Before version 0.5.0 Solidity followed the same scoping rules as JavaScript, that is, a variable declared anywhere within a function would be in scope
-    for the entire function, regardless where it was declared. Note that this is a breaking change. The following example shows a code snippet that used
+    for the entire function, regardless where it was declared. The following example shows a code snippet that used
     to compile but leads to an error starting from version 0.5.0.
 
  ::
