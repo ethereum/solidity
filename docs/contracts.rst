@@ -23,12 +23,12 @@ Contracts can be created "from outside" via Ethereum transactions or from within
 IDEs, such as `Remix <https://remix.ethereum.org/>`_, make the creation process seamless using UI elements.
 
 Creating contracts programmatically on Ethereum is best done via using the JavaScript API `web3.js <https://github.com/ethereum/web3.js>`_.
-As of today it has a method called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
+It has a function called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
 When a contract is created, its constructor_  (a function declared with the ``constructor`` keyword) is executed once.
 
-A constructor is optional. Only one constructor is allowed, and this means
+A constructor is optional. Only one constructor is allowed, which means
 overloading is not supported.
 
 .. index:: constructor;arguments
@@ -72,7 +72,7 @@ This means that cyclic creation dependencies are impossible.
         function changeName(bytes32 newName) public {
             // Only the creator can alter the name --
             // the comparison is possible since contracts
-            // are implicitly convertible to addresses.
+            // are explicitly convertible to addresses.
             if (msg.sender == address(creator))
                 name = newName;
         }
@@ -80,11 +80,11 @@ This means that cyclic creation dependencies are impossible.
         function transfer(address newOwner) public {
             // Only the current owner can transfer the token.
             if (msg.sender != owner) return;
+
             // We also want to ask the creator if the transfer
             // is fine. Note that this calls a function of the
             // contract defined below. If the call fails (e.g.
-            // due to out-of-gas), the execution here stops
-            // immediately.
+            // due to out-of-gas), the execution also fails here.
             if (creator.isTokenTransferOK(owner, newOwner))
                 owner = newOwner;
         }
@@ -102,7 +102,7 @@ This means that cyclic creation dependencies are impossible.
             return new OwnedToken(name);
         }
 
-        function changeName(OwnedToken tokenAddress, bytes32 name)  public {
+        function changeName(OwnedToken tokenAddress, bytes32 name) public {
             // Again, the external type of `tokenAddress` is
             // simply `address`.
             tokenAddress.changeName(name);
@@ -162,7 +162,7 @@ For state variables, ``external`` is not possible.
 
 .. note::
     Everything that is inside a contract is visible to
-    all external observers. Making something ``private``
+    all observers external to the blockchain. Making something ``private``
     only prevents other contracts from accessing and modifying
     the information, but it will still be visible to the
     whole world outside of the blockchain.
@@ -246,8 +246,8 @@ when they are declared.
 
 The getter functions have external visibility. If the
 symbol is accessed internally (i.e. without ``this.``),
-it is evaluated as a state variable.  If it is accessed externally
-(i.e. with ``this.``), it is evaluated as a function.
+it evaluates to a state variable.  If it is accessed externally
+(i.e. with ``this.``), it evaluates to a function.
 
 ::
 
@@ -261,7 +261,7 @@ it is evaluated as a state variable.  If it is accessed externally
         }
     }
 
-If you have a `public` state variable of array type, then you can only retrieve
+If you have a ``public`` state variable of array type, then you can only retrieve
 single elements of the array via the generated getter function. This mechanism
 exists to avoid high gas costs when returning an entire array. You can use
 arguments to specify which individual element to return, for example
@@ -438,7 +438,7 @@ State variables can be declared as ``constant``. In this case, they have to be
 assigned from an expression which is a constant at compile time. Any expression
 that accesses storage, blockchain data (e.g. ``now``, ``address(this).balance`` or
 ``block.number``) or
-execution data (``msg.value`` or ``gasleft()``) or make calls to external contracts are disallowed. Expressions
+execution data (``msg.value`` or ``gasleft()``) or makes calls to external contracts is disallowed. Expressions
 that might have a side-effect on memory allocation are allowed, but those that
 might have a side-effect on other memory objects are not. The built-in functions
 ``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` and ``mulmod``
@@ -483,7 +483,8 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 
 .. note::
   If the compiler's EVM target is Byzantium or newer (default) the opcode
-  ``STATICCALL`` is used.
+  ``STATICCALL`` is used for ``view`` functions which enforces the state
+  to stay unmodified as part of the EVM execution.
 
 The following statements are considered modifying the state:
 
@@ -510,7 +511,7 @@ The following statements are considered modifying the state:
   ``constant`` on functions used to be an alias to ``view``, but this was dropped in version 0.5.0.
 
 .. note::
-  Getter methods are marked ``view``.
+  Getter methods are automatically marked ``view``.
 
 .. note::
   Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
@@ -530,7 +531,8 @@ Pure Functions
 Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
 
 .. note::
-  If the compiler's EVM target is Byzantium or newer (default) the opcode ``STATICCALL`` is used.
+  If the compiler's EVM target is Byzantium or newer (default) the opcode ``STATICCALL`` is used,
+  which does not guarantee that the state is not read, but at least that it is not modified.
 
 In addition to the list of state modifying statements explained above, the following are considered reading from the state:
 
@@ -562,7 +564,6 @@ In addition to the list of state modifying statements explained above, the follo
   It is not possible to prevent functions from reading the state at the level
   of the EVM, it is only possible to prevent them from writing to the state
   (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
-  It is a non-circumventable runtime checks done by the EVM.
 
 .. warning::
   Before version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
@@ -571,8 +572,8 @@ In addition to the list of state modifying statements explained above, the follo
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
 
-.. warning::
-  Before version 0.5.0 the compiler did not enforce that ``view`` is not writing the state.
+.. note::
+  Before version 0.5.0 the compiler did not enforce that ``pure`` is not reading the state.
 
 .. index:: ! fallback function, function;fallback
 
@@ -607,6 +608,12 @@ Like any function, the fallback function can execute complex operations as long 
 .. note::
     Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
     any payload supplied with the call.
+
+.. warning::
+    The fallback function is also executed if the caller meant to call
+    a function that is not available. If you want to implement the fallback
+    function only to receive ether, you should add a check
+    like ``require(msg.data.length == 0)`` to prevent invalid calls.
 
 .. warning::
     Contracts that receive Ether directly (without a function call, i.e. using ``send`` or ``transfer``)
@@ -765,9 +772,9 @@ Frontier and Homestead, but this might change with Serenity). Log and
 event data is not accessible from within contracts (not even from
 the contract that created them).
 
-SPV proofs for logs are possible, so if an external entity supplies
+"Simple payment verification" (SPV) proofs for logs are possible, so if an external entity supplies
 a contract with such a proof, it can check that the log actually
-exists inside the blockchain.  But be aware that block headers have to be supplied because
+exists inside the blockchain.  Be aware that block headers have to be supplied because
 the contract can only see the last 256 block hashes.
 
 Up to three parameters can
@@ -1043,10 +1050,8 @@ initialisation code.
 Before the constructor code is executed, state variables are initialised to
 their specified value if you initialise them inline, or zero if you do not.
 
-After the final code of the contract is returned. The final deployment of
-the code costs additional gas linear to the length of the code. If you did not
-supply enough gas to initiate the state variables declared in the constructor,
-then an "out of gas" exception is generated.
+After the constructor has run, the final code of the contract is returned. The deployment of
+the code costs additional gas linear to the length of the code.
 
 Constructor functions can be either ``public`` or ``internal``. If there is no
 constructor, the contract will assume the default constructor, which is
@@ -1071,7 +1076,8 @@ equivalent to ``constructor() public {}``. For example:
 A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
 
 .. warning ::
-    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract. This syntax was deprecated and is not allowed anymore in version 0.5.0.
+    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract.
+    This syntax was deprecated and is not allowed anymore in version 0.5.0.
 
 
 .. index:: ! base;constructor
@@ -1101,7 +1107,7 @@ derived contracts need to specify all of them. This can be done in two ways::
     }
 
 One way is directly in the inheritance list (``is Base(7)``).  The other is in
-the way a modifier would be invoked as part of the header of
+the way a modifier is invoked as part of
 the derived constructor (``Base(_y * _y)``). The first way to
 do it is more convenient if the constructor argument is a
 constant and defines the behaviour of the contract or
@@ -1111,7 +1117,7 @@ derived contract. Arguments have to be given either in the
 inheritance list or in modifier-style in the derived constructor.
 Specifying arguments in both places is an error.
 
-If a derived contract doesn't specify the arguments to all of its base
+If a derived contract does not specify the arguments to all of its base
 contracts' constructors, it will be abstract.
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
@@ -1124,7 +1130,7 @@ Multiple Inheritance and Linearization
 Languages that allow multiple inheritance have to deal with
 several problems.  One is the `Diamond Problem <https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem>`_.
 Solidity is similar to Python in that it uses "`C3 Linearization <https://en.wikipedia.org/wiki/C3_linearization>`_"
-to force a specific order in the DAG of base classes. This
+to force a specific order in the directed acyclic graph of base classes. This
 results in the desirable property of monotonicity but
 disallows some inheritance graphs. Especially, the order in
 which the base classes are given in the ``is`` directive is
@@ -1218,16 +1224,15 @@ Interfaces
 
 Interfaces are similar to abstract contracts, but they cannot have any functions implemented. There are further restrictions:
 
-- Cannot inherit other contracts or interfaces.
+- They cannot inherit other contracts or interfaces.
 - All declared functions must be external.
-- Cannot define constructor.
-- Cannot define variables.
-- Cannot define structs.
+- They cannot declare a constructor.
+- They cannot declare state variables.
 
 Some of these restrictions might be lifted in the future.
 
 Interfaces are basically limited to what the Contract ABI can represent, and the conversion between the ABI and
-an Interface should be possible without any information loss.
+an interface should be possible without any information loss.
 
 Interfaces are denoted by their own keyword:
 
@@ -1236,18 +1241,23 @@ Interfaces are denoted by their own keyword:
     pragma solidity ^0.4.11;
 
     interface Token {
+        enum TokenType { Fungible, NonFungible }
+        struct Coin { string obverse; string reverse; }
         function transfer(address recipient, uint amount) external;
     }
 
 Contracts can inherit interfaces as they would inherit other contracts.
 
+Types defined inside interfaces and other contract-like structures
+can be accessed from other contracts: ``Token.TokenType`` or ``Token.Coin``.
+
 .. index:: ! library, callcode, delegatecall
 
 .. _libraries:
 
-************
+*********
 Libraries
-************
+*********
 
 Libraries are similar to contracts, but their purpose is that they are deployed
 only once at a specific address and their code is reused using the ``DELEGATECALL``
@@ -1261,7 +1271,14 @@ would have no way to name them, otherwise). Library functions can only be
 called directly (i.e. without the use of ``DELEGATECALL``) if they do not modify
 the state (i.e. if they are ``view`` or ``pure`` functions),
 because libraries are assumed to be stateless. In particular, it is
-not possible to destroy a library unless Solidity's type system is circumvented.
+not possible to destroy a library.
+
+.. note::
+    Until version 0.4.20, it was possible to destroy libraries by
+    circumventing Solidity's type system. Starting from that version,
+    libraries contain a :ref:`mechanism<call-protection>` that
+    disallows state-modifying functions
+    to be called directly (i.e. without ``DELEGATECALL``).
 
 Libraries can be seen as implicit base contracts of the contracts that use them.
 They will not be explicitly visible in the inheritance hierarchy, but calls
@@ -1277,7 +1294,7 @@ contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``
 
 .. index:: using for, set
 
-The following example illustrates how to use libraries (but
+The following example illustrates how to use libraries (butmanual method
 be sure to check out :ref:`using for <using-for>` for a
 more advanced example to implement a set).
 
@@ -1345,7 +1362,7 @@ parameters and in any position.
 
 The calls to ``Set.contains``, ``Set.insert`` and ``Set.remove``
 are all compiled as calls (``DELEGATECALL``) to an external
-contract/library. If you use libraries, take care that an
+contract/library. If you use libraries, be aware that an
 actual external function call is performed.
 ``msg.sender``, ``msg.value`` and ``this`` will retain their values
 in this call, though (prior to Homestead, because of the use of ``CALLCODE``, ``msg.sender`` and
@@ -1423,6 +1440,14 @@ will contain placeholders of the form ``__Set______`` (where
 manually by replacing all those 40 symbols by the hex
 encoding of the address of the library contract.
 
+.. note::
+    Manually linking libraries on the generated bytecode is discouraged, because
+    it is restricted to 36 characters.
+    You should ask the compiler to link the libraries at the time
+    a contract is compiled by either using
+    the ``--libraries`` option of ``solc`` or the ``libraries`` key if you use
+    the standard-JSON interface to the compiler.
+
 Restrictions for libraries in comparison to contracts:
 
 - No state variables
@@ -1430,6 +1455,8 @@ Restrictions for libraries in comparison to contracts:
 - Cannot receive Ether
 
 (These might be lifted at a later point.)
+
+.. _call-protection:
 
 Call Protection For Libraries
 =============================
