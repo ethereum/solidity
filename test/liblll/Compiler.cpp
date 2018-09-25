@@ -356,7 +356,8 @@ BOOST_AUTO_TEST_CASE(valid_opcodes_functional)
 		"{ (SELFDESTRUCT 0) }"
 	};
 
-	for (size_t i = 0; i < opcodes_bytecode.size(); i++) {
+	for (size_t i = 0; i < opcodes_bytecode.size(); i++)
+	{
 		vector<string> errors;
 		bytes code = lll::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
 
@@ -644,7 +645,8 @@ BOOST_AUTO_TEST_CASE(valid_opcodes_asm)
 		"{ (asm SELFDESTRUCT) }"
 	};
 
-	for (size_t i = 0; i < opcodes_bytecode.size(); i++) {
+	for (size_t i = 0; i < opcodes_bytecode.size(); i++)
+	{
 		vector<string> errors;
 		bytes code = lll::compileLLL(opcodes_lll[i], dev::test::Options::get().evmVersion(), false, &errors);
 
