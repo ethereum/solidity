@@ -43,17 +43,11 @@ Can you return an array or a ``string`` from a solidity function call?
 
 Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
 
-What is problematic, though, is returning any variably-sized data (e.g. a
-variably-sized array like ``uint[]``) from a function **called from within Solidity**.
-This is a limitation of the EVM and will be solved with the next protocol update.
-
-Returning variably-sized data as part of an external transaction or call is fine.
-
 Is it possible to in-line initialize an array like so: ``string[] myarray = ["a", "b"];``
 =========================================================================================
 
 Yes. However it should be noted that this currently only works with statically sized memory arrays. You can even create an inline memory
-array in the return statement. Pretty cool, huh?
+array in the return statement.
 
 Example::
 
@@ -70,7 +64,7 @@ Example::
 Can a contract function return a ``struct``?
 ============================================
 
-Yes, but only in ``internal`` function calls.
+Yes, but only in ``internal`` function calls or if ``pragma experimental "ABIEncoderV2";`` is used.
 
 If I return an ``enum``, I only get integer values in web3.js. How to get the named values?
 ===========================================================================================
@@ -145,7 +139,17 @@ you should always convert it to a ``bytes`` first::
 Can I concatenate two strings?
 ==============================
 
-You have to do it manually for now.
+Yes, you can use ``abi.encodePacked``::
+
+    pragma solidity >=0.4.0 <0.6.0;
+
+    library ConcatHelper {
+        function concat(bytes memory a, bytes memory b)
+                internal pure returns (bytes memory) {
+            return abi.encodePacked(a, b);
+        }
+    }
+
 
 Why is the low-level function ``.call()`` less favorable than instantiating a contract with a variable (``ContractB b;``) and executing its functions (``b.doSomething();``)?
 =============================================================================================================================================================================
@@ -299,8 +303,8 @@ In this example::
 Can a contract function accept a two-dimensional array?
 =======================================================
 
-This is not yet implemented for external calls and dynamic arrays -
-you can only use one level of dynamic arrays.
+If you want to pass two-dimensional arrays across non-internal functions,
+you most likely need to use ``pragma experimental "ABIEncoderV2";``.
 
 What is the relationship between ``bytes32`` and ``string``? Why is it that ``bytes32 somevar = "stringliteral";`` works and what does the saved 32-byte hex value mean?
 ========================================================================================================================================================================
@@ -401,7 +405,7 @@ case in C or Java).
 Is it possible to return an array of strings (``string[]``) from a Solidity function?
 =====================================================================================
 
-Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic array itself).
+Only when ``pragma experimental "ABIEncoderV2";`` is used.
 
 What does the following strange check do in the Custom Token contract?
 ======================================================================
