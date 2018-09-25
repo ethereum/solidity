@@ -82,9 +82,22 @@ Addition, Subtraction and Multiplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Addition, subtraction and multiplication have the usual semantics.
-They wrap in two's complement notation, meaning that
+They wrap in two's complement representation, meaning that
 for example ``uint256(0) - uint256(1) == 2**256 - 1``. You have to take these overflows
 into account when designing safe smart contracts.
+
+The expression ``-x`` is equivalent to ``(T(0) - x)`` where
+``T`` is the type of ``x``. This means that ``-x`` will not be negative
+if the type of ``x`` is an unsigned integer type. Also, ``-x`` can be
+positive if ``x`` is negative. There is another caveat also resulting
+from two's complement representation::
+
+    int x = -2**255;
+    assert(-x == x);
+
+This means that even if a number is negative, you cannot assume that
+its negation will be positive.
+
 
 Division
 ^^^^^^^^
