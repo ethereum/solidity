@@ -261,7 +261,7 @@ for the two input parameters and two returned values.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     /** @title Shape calculator. */
     contract ShapeCalculator {

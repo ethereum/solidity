@@ -36,7 +36,7 @@ of votes.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     /// @title Voting with delegation.
     contract Ballot {
@@ -225,7 +225,7 @@ activate themselves.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -542,7 +542,7 @@ Safe Remote Purchase
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract Purchase {
         uint public value;
@@ -793,7 +793,7 @@ The full contract
 
 ::
 
-    pragma solidity ^0.4.24;
+    pragma solidity >=0.4.24 <0.6.0;
 
     contract ReceiverPays {
         address owner = msg.sender;
@@ -988,7 +988,7 @@ The full contract
 
 ::
 
-    pragma solidity ^0.4.24;
+    pragma solidity >=0.4.24 <0.6.0;
 
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.

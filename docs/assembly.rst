@@ -67,7 +67,7 @@ idea is that assembly libraries will be used to enhance the Solidity language.
 
 .. code::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     library GetCode {
         function at(address _addr) public view returns (bytes memory o_code) {
@@ -92,7 +92,7 @@ efficient code, for example:
 
 .. code::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
@@ -381,7 +381,7 @@ Local Solidity variables are available for assignments, for example:
 
 .. code::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >=0.4.11 <0.6.0;
 
     contract C {
         uint b;
@@ -420,7 +420,7 @@ be just ``0``, but it can also be a complex functional-style expression.
 
 .. code::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         function f(uint x) public view returns (uint b) {
@@ -685,7 +685,7 @@ Example:
 We will follow an example compilation from Solidity to assembly.
 We consider the runtime bytecode of the following Solidity program::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
       function f(uint x) public pure returns (uint y) {

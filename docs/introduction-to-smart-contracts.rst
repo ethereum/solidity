@@ -16,7 +16,7 @@ Storage
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract SimpleStorage {
         uint storedData;
@@ -80,7 +80,7 @@ registering with username and password — all you need is an Ethereum keypair.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract Coin {
         // The keyword "public" makes those variables

@@ -211,7 +211,7 @@ Given the contract:
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract Foo {
       function bar(bytes3[2] memory) public pure {}
@@ -468,7 +468,7 @@ For example,
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract Test {
       constructor() public { b = hex"12345678901234567890123456789012"; }
@@ -515,7 +515,7 @@ As an example, the code
 
 ::
 
-    pragma solidity ^0.4.19;
+    pragma solidity >=0.4.19 <0.6.0;
     pragma experimental ABIEncoderV2;
 
     contract Test {

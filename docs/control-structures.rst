@@ -20,7 +20,7 @@ For example, suppose we want our contract to
 accept one kind of external calls with two integers, we would write
 something like::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract Simple {
         uint sum;
@@ -40,7 +40,7 @@ The output parameters can be declared with the same syntax after the
 the sum and the product of the two given integers, then we would
 write::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -99,7 +99,7 @@ Internal Function Calls
 Functions of the current contract can be called directly ("internally"), also recursively, as seen in
 this nonsensical example::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         function g(uint a) public pure returns (uint ret) { return a + f(); }
@@ -129,7 +129,7 @@ all function arguments have to be copied to memory.
 When calling functions of other contracts, the amount of Wei sent with the call and
 the gas can be specified with special options ``.value()`` and ``.gas()``, respectively::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract InfoFeed {
         function info() public payable returns (uint ret) { return 42; }
@@ -176,7 +176,7 @@ parameters from the function declaration, but can be in arbitrary order.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract C {
         mapping(uint => uint) data;
@@ -199,7 +199,7 @@ Those parameters will still be present on the stack, but they are inaccessible.
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         // omitted name for parameter
@@ -222,7 +222,7 @@ is compiled so recursive creation-dependencies are not possible.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract D {
         uint public x;
@@ -345,7 +345,7 @@ the two variables have the same name but disjoint scopes.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
     contract C {
         function minimalScoping() pure public {
             {
@@ -366,7 +366,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
     // This will report a warning
     contract C {
         function f() pure public returns (uint) {
@@ -386,7 +386,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 
  ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
     // This will not compile
     contract C {
         function f() pure public returns (uint) {
@@ -433,7 +433,7 @@ a message string for ``require``, but not for ``assert``.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract Sharer {
         function sendHalf(address payable addr) public payable returns (uint balance) {
@@ -479,7 +479,7 @@ The following example shows how an error string can be used together with revert
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract VendingMachine {
         function buy(uint amount) public payable {
