@@ -28,7 +28,7 @@ become the new richest.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract WithdrawalContract {
         address public richest;
@@ -65,7 +65,7 @@ This is as opposed to the more intuitive sending pattern:
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract SendContract {
         address payable public richest;

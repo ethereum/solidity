@@ -182,7 +182,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
@@ -202,7 +202,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     interface TxUserWallet {
         function transferTo(address payable dest, uint amount) external;

@@ -222,7 +222,7 @@ is compiled so recursive creation-dependencies are not possible.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract D {
         uint public x;
@@ -345,7 +345,7 @@ the two variables have the same name but disjoint scopes.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
     contract C {
         function minimalScoping() pure public {
             {
@@ -366,7 +366,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
     // This will report a warning
     contract C {
         function f() pure public returns (uint) {
@@ -386,7 +386,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 
  ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
     // This will not compile
     contract C {
         function f() pure public returns (uint) {
@@ -433,7 +433,7 @@ a message string for ``require``, but not for ``assert``.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract Sharer {
         function sendHalf(address payable addr) public payable returns (uint balance) {
@@ -479,7 +479,7 @@ The following example shows how an error string can be used together with revert
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract VendingMachine {
         function buy(uint amount) public payable {
