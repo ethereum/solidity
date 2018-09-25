@@ -25,11 +25,14 @@
 
 #include <libdevcore/Common.h>
 
+#include <boost/optional.hpp>
+
 #include <vector>
 #include <type_traits>
 #include <cstring>
 #include <string>
 #include <set>
+#include <functional>
 
 namespace dev
 {
@@ -227,6 +230,36 @@ template <class T, class V>
 bool contains(T const& _t, V const& _v)
 {
 	return std::end(_t) != std::find(std::begin(_t), std::end(_t), _v);
+}
+
+
+/// Function that iterates over a vector, calling a function on each of its
+/// elements. If that function returns a vector, the element is replaced by
+/// the returned vector. During the iteration, the original vector is only valid
+/// on the current element and after that. The actual replacement takes
+/// place at the end, but already visited elements might be invalidated.
+/// If nothing is replaced, no copy is performed.
+template <class T>
+void iterateReplacing(std::vector<T>& _vector, std::function<boost::optional<std::vector<T>>(T&)> _f)
+{
+	bool useModified = false;
+	std::vector<T> modifiedVector;
+	for (size_t i = 0; i < _vector.size(); ++i)
+	{
+		if (boost::optional<std::vector<T>> r = _f(_vector[i]))
+		{
+			if (!useModified)
+			{
+				std::move(_vector.begin(), _vector.begin() + i, back_inserter(modifiedVector));
+				useModified = true;
+			}
+			modifiedVector += std::move(*r);
+		}
+		else if (useModified)
+			modifiedVector.emplace_back(std::move(_vector[i]));
+	}
+	if (useModified)
+		_vector = std::move(modifiedVector);
 }
 
 /// @returns true iff @a _str passess the hex address checksum test.
