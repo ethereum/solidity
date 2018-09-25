@@ -13,11 +13,11 @@ Withdrawal from Contracts
 The recommended method of sending funds after an effect
 is using the withdrawal pattern. Although the most intuitive
 method of sending Ether, as a result of an effect, is a
-direct ``send`` call, this is not recommended as it
+direct ``transfer`` call, this is not recommended as it
 introduces a potential security risk. You may read
 more about this on the :ref:`security_considerations` page.
 
-This is an example of the withdrawal pattern in practice in
+The following is an example of the withdrawal pattern in practice in
 a contract where the goal is to send the most money to the
 contract in order to become the "richest", inspired by
 `King of the Ether <https://www.kingoftheether.com/>`_.
