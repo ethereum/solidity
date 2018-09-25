@@ -13,9 +13,9 @@ The Contract Application Binary Interface (ABI) is the standard way to interact 
 from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
 as described in this specification.  The encoding is not self describing and thus requires a schema in order to decode.
 
-We assume the interface functions of a contract are strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
+We assume the interface functions of a contract are strongly typed, known at compilation time and static. We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
-This specification does not address contracts whose interface is dynamic or otherwise known only at run-time. Should these cases become important they can be adequately handled as facilities built within the Ethereum ecosystem.
+This specification does not address contracts whose interface is dynamic or otherwise known only at run-time.
 
 .. _abi_function_selector:
 
@@ -23,12 +23,12 @@ Function Selector
 =================
 
 The first four bytes of the call data for a function call specifies the function to be called. It is the
-first (left, high-order in big-endian) four bytes of the Keccak (SHA-3) hash of the signature of the function. The signature is defined as the canonical expression of the basic prototype, i.e.
+first (left, high-order in big-endian) four bytes of the Keccak-256 (SHA-3) hash of the signature of the function. The signature is defined as the canonical expression of the basic prototype without data location specifier, i.e.
 the function name with the parenthesised list of parameter types. Parameter types are split by a single comma - no spaces are used.
 
 .. note::
     The return type of a function is not part of this signature. In :ref:`Solidity's function overloading <overload-function>` return types are not considered. The reason is to keep function call resolution context-independent.
-    The JSON description of the ABI however contains both inputs and outputs. See (the :ref:`JSON ABI <abi_json>`)
+    The :ref:`JSON description of the ABI<abi_json>` however contains both inputs and outputs.
 
 Argument Encoding
 =================
@@ -112,7 +112,7 @@ Properties:
 
   1. The number of reads necessary to access a value is at most the depth of the value inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a previous version of the ABI, the number of reads scaled linearly with the total number of dynamic parameters in the worst case.
 
-  2. The data of a variable or array element is not interleaved with other data and it is relocatable, i.e. it only uses relative "addresses"
+  2. The data of a variable or array element is not interleaved with other data and it is relocatable, i.e. it only uses relative "addresses".
 
 We distinguish static and dynamic types. Static types are encoded in-place and dynamic types are encoded at a separately allocated location after the current block.
 
@@ -437,8 +437,8 @@ A function description is a JSON object with the fields:
   * ``components``: used for tuple types (more below).
 
 - ``outputs``: an array of objects similar to ``inputs``, can be omitted if function doesn't return anything;
-- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` (function does not accept ether) and ``payable`` (function accepts ether);
-- ``payable``: ``true`` if function accepts ether, ``false`` otherwise;
+- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` (function does not accept Ether) and ``payable`` (function accepts Ether);
+- ``payable``: ``true`` if function accepts Ether, ``false`` otherwise;
 - ``constant``: ``true`` if function is either ``pure`` or ``view``, ``false`` otherwise.
 
 ``type`` can be omitted, defaulting to ``"function"``, likewise ``payable`` and ``constant`` can be omitted, both defaulting to ``false``.
@@ -449,7 +449,7 @@ Constructor and fallback function never have ``name`` or ``outputs``. Fallback f
     The fields ``constant`` and ``payable`` are deprecated and will be removed in the future. Instead, the ``stateMutability`` field can be used to determine the same properties.
 
 .. note::
-    Sending non-zero ether to non-payable function will revert the transaction.
+    Sending non-zero Ether to non-payable function will revert the transaction.
 
 An event description is a JSON object with fairly similar fields:
 
