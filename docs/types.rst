@@ -425,9 +425,37 @@ a non-rational number).
 String Literals
 ---------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes, not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
 
-String literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
+String literals support the following escape characters:
+
+ - ``\<newline>`` (escapes an actual newline)
+ - ``\\`` (backslash)
+ - ``\'`` (single quote)
+ - ``\"`` (double quote)
+ - ``\b`` (backspace)
+ - ``\f`` (form feed)
+ - ``\n`` (newline)
+ - ``\r`` (carriage return)
+ - ``\t`` (tab)
+ - ``\v`` (vertical tab)
+ - ``\xNN`` (hex escape, see below)
+ - ``\uNNNN`` (unicode escape, see below)
+
+``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
+
+The string in the following example has a length of ten bytes.
+It starts with a newline byte, followed by a double quote, a single
+quote a backslash character and then (without separator) the
+character sequence ``abcdef``.
+
+::
+
+    "\n\"\'\\abc\
+    def"
+
+Any unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
+terminate the string literal. Newline only terminates the string literal if it is not preceded by a ``\``.
 
 .. index:: literal, bytes
 
@@ -446,8 +474,9 @@ Enums
 -----
 
 Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
-to and from all integer types but implicit conversion is not allowed.  The explicit conversions
-check the value ranges at runtime and a failure causes an exception.  Enums needs at least one member.
+to and from all integer types but implicit conversion is not allowed.  The explicit conversion
+from integer checks at runtime that the value lies inside the range of the enum and causes a failing assert otherwise.
+Enums needs at least one member.
 
 The data representation is the same as for enums in C: The options are represented by
 subsequent unsigned integer values starting from ``0``.
@@ -515,6 +544,11 @@ omitted. Note that this only applies to function types. Visibility has
 to be specified explicitly for functions defined in contracts, they
 do not have a default.
 
+Conversions:
+
+A value of external function type can be explicitly converted to ``address``
+resulting in the address of the contract of the function.
+
 A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
 their parameter types are identical, their return types are identical,
 their internal/external property is identical and the state mutability of ``A``
@@ -524,7 +558,7 @@ is not more restrictive than the state mutability of ``B``. In particular:
  - ``view`` functions can be converted to ``non-payable`` functions
  - ``payable`` functions can be converted to ``non-payable`` functions
 
-No other conversions are possible.
+No other conversions between function types are possible.
 
 The rule about ``payable`` and ``non-payable`` might be a little
 confusing, but in essence, if a function is ``payable``, this means that it
@@ -544,7 +578,9 @@ Note that public functions of the current contract can be used both as an
 internal and as an external function. To use ``f`` as an internal function,
 just use ``f``, if you want to use its external form, use ``this.f``.
 
-Additionally, public (or external) functions also have a special member called ``selector``,
+Members:
+
+Public (or external) functions also have a special member called ``selector``,
 which returns the :ref:`ABI function selector <abi_function_selector>`::
 
     pragma solidity ^0.4.16;
