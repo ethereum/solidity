@@ -13,6 +13,12 @@ and :ref:`pragma directives<pragma>`.
 Pragmas
 =======
 
+The ``pragma`` keyword can be used to enable certain compiler features
+or checks. A pragma directive is always local to a source file, so
+you have to add the pragma to all your files if you want enable it
+in all of your project. If you :ref:`import<import>` another file, the pragma
+from that file will not automatically apply to the importing file.
+
 .. index:: ! pragma, version
 
 .. _version_pragma:
@@ -42,6 +48,13 @@ the exact version of the compiler, so that bugfix releases are still possible.
 
 It is possible to specify much more complex rules for the compiler version,
 the expression follows those used by `npm <https://docs.npmjs.com/misc/semver>`_.
+
+.. note::
+  Using the version pragma will *not* change the version of the compiler.
+  It will also *not* enable or disable features of the compiler. It will just
+  instruct the compiler to check whether its version matches the one
+  required by the pragma. If it does not match, the compiler will issue
+  an error.
 
 .. index:: ! pragma, experimental
 
