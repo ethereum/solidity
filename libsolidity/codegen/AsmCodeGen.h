@@ -85,7 +85,8 @@ public:
 		yul::AsmAnalysisInfo& _analysisInfo,
 		dev::eth::Assembly& _assembly,
 		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
+		bool _useNamedLabelsForFunctions = false,
+		bool _optimize = false
 	);
 };
 

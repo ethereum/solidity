@@ -179,13 +179,16 @@ void CodeGenerator::assemble(
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
 	ExternalIdentifierAccess const& _identifierAccess,
-	bool _useNamedLabelsForFunctions
+	bool _useNamedLabelsForFunctions,
+	bool _optimize
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
 	CodeTransform(
 		assemblyAdapter,
 		_analysisInfo,
+		_parsedData,
+		_optimize,
 		false,
 		false,
 		_identifierAccess,
