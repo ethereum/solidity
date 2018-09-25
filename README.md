@@ -29,8 +29,10 @@ Instructions about how to build and install the Solidity compiler can be found i
 A "Hello World" program in Solidity is of even less use than in other languages, but still:
 
 ```
+pragma solidity ^0.4.16;
+
 contract HelloWorld {
-  function f() pure returns (string memory) {
+  function helloWorld() external pure returns (string memory) {
     return "Hello, World!";
   }
 }
