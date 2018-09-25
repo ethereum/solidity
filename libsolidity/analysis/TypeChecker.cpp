@@ -2039,7 +2039,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (!contract)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
 		if (contract->contractKind() == ContractDefinition::ContractKind::Interface)
-				m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
+			m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->annotation().unimplementedFunctions.empty())
 		{
 			SecondarySourceLocation ssl;
