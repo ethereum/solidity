@@ -121,11 +121,10 @@ private:
 	virtual void endVisit(BinaryOperation const& _operation) override;
 	virtual bool visit(UnaryOperation const& _operation) override;
 	virtual bool visit(FunctionCall const& _functionCall) override;
-	//FunctionCall helper functions
-	//finds functionCall kind
-	FunctionCallKind functionCallKindChecker(const FunctionCall &, TypePointer ptr);
+	/// FunctionCall helper functions
+	/// Finds functionCall kind
+	FunctionCallKind checkFunctionCallKind(const FunctionCall &, TypePointer ptr);
 
-	//FunctionCall helper functions
 	virtual void endVisit(NewExpression const& _newExpression) override;
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 	virtual bool visit(IndexAccess const& _indexAccess) override;
