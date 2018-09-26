@@ -69,6 +69,21 @@ void Assembly::append(Assembly const& _a, int _deposit)
 		append(Instruction::POP);
 }
 
+AssemblyItem const& Assembly::append(AssemblyItem const& _i)
+{
+	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
+	m_deposit += _i.deposit();
+	m_items.push_back(_i);
+	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
+		m_items.back().setLocation(m_currentSourceLocation);
+	return back();
+}
+
+void Assembly::injectStart(AssemblyItem const& _i)
+{
+	m_items.insert(m_items.begin(), _i);
+}
+
 unsigned Assembly::bytesRequired(unsigned subTagSize) const
 {
 	for (unsigned tagSize = subTagSize; true; ++tagSize)
@@ -323,16 +338,6 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 	return root;
 }
 
-AssemblyItem const& Assembly::append(AssemblyItem const& _i)
-{
-	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
-	m_deposit += _i.deposit();
-	m_items.push_back(_i);
-	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
-		m_items.back().setLocation(m_currentSourceLocation);
-	return back();
-}
-
 AssemblyItem Assembly::namedTag(string const& _name)
 {
 	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
@@ -346,11 +351,6 @@ AssemblyItem Assembly::newPushLibraryAddress(string const& _identifier)
 	h256 h(dev::keccak256(_identifier));
 	m_libraries[h] = _identifier;
 	return AssemblyItem(PushLibraryAddress, h);
-}
-
-void Assembly::injectStart(AssemblyItem const& _i)
-{
-	m_items.insert(m_items.begin(), _i);
 }
 
 Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreation, size_t _runs)
