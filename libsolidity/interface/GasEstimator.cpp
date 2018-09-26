@@ -160,8 +160,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 		);
 	}
 
-	PathGasMeter meter(_items, m_evmVersion);
-	return meter.estimateMax(0, state);
+	return PathGasMeter::estimateMax(_items, m_evmVersion, 0, state);
 }
 
 GasEstimator::GasConsumption GasEstimator::functionalEstimation(
@@ -183,7 +182,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	if (parametersSize > 0)
 		state->feedItem(swapInstruction(parametersSize));
 
-	return PathGasMeter(_items, m_evmVersion).estimateMax(_offset, state);
+	return PathGasMeter::estimateMax(_items, m_evmVersion, _offset, state);
 }
 
 set<ASTNode const*> GasEstimator::finestNodesAtLocation(
