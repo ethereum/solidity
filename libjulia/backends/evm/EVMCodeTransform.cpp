@@ -545,11 +545,13 @@ void CodeTransform::expectDeposit(int _deposit, int _oldHeight) const
 void CodeTransform::checkStackHeight(void const* _astElement) const
 {
 	solAssert(m_info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
+	int stackHeightInAnalysis = m_info.stackHeightInfo.at(_astElement);
+	int stackHeightInCodegen = m_assembly.stackHeight() - m_stackAdjustment;
 	solAssert(
-		m_info.stackHeightInfo.at(_astElement) == m_assembly.stackHeight() - m_stackAdjustment,
+		stackHeightInAnalysis == stackHeightInCodegen,
 		"Stack height mismatch between analysis and code generation phase: Analysis: " +
-		to_string(m_info.stackHeightInfo.at(_astElement)) +
+		to_string(stackHeightInAnalysis) +
 		" code gen: " +
-		to_string(m_assembly.stackHeight() - m_stackAdjustment)
+		to_string(stackHeightInCodegen)
 	);
 }
