@@ -1276,13 +1276,13 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	else
 	{
 		auto fixed = fixedPointType();
-		solAssert(fixed, "");
+		solAssert(fixed, "Rational number cannot be represented as fixed point type.");
 		int fractionalDigits = fixed->fractionalDigits();
 		shiftedValue = m_value.numerator() * boost::multiprecision::pow(bigint(10), fractionalDigits) / m_value.denominator();
 	}
 
 	// we ignore the literal and hope that the type was correctly determined
-	solAssert(shiftedValue <= u256(-1), "Integer constant too large.");
+	solAssert(shiftedValue <= u256(-1), "Number constant too large.");
 	solAssert(shiftedValue >= -(bigint(1) << 255), "Number constant too small.");
 
 	if (m_value >= rational(0))
