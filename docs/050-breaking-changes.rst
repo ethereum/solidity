@@ -222,6 +222,8 @@ Variables
 * Detecting cyclic dependencies in variables and structs is limited in
   recursion to 256.
 
+* Fixed-size arrays with a length of zero are now disallowed.
+
 Syntax
 ------
 
