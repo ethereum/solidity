@@ -93,14 +93,15 @@ explanatory purposes.
       }
     }
 
+.. warning::
+  Since the bytecode of the resulting contract contains the metadata hash, any
+  change to the metadata results in a change of the bytecode. This includes
+  changes to a filename or path, and since the metadata includes a hash of all the
+  sources used, a single whitespace change results in different metadata, and
+  different bytecode.
+
 .. note::
     Note the ABI definition above has no fixed order. It can change with compiler versions.
-
-Since the bytecode of the resulting contract contains the metadata hash, any
-change to the metadata results in a change of the bytecode. This includes
-changes to a filename or path, and since the metadata includes a hash of all the
-sources used, a single whitespace change results in different metadata, and
-different bytecode.
 
 Encoding of the Metadata Hash in the Bytecode
 =============================================
