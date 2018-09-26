@@ -120,7 +120,8 @@ Exponentiation
 Exponentiation is only available for unsigned types. Please take care that the types
 you are using are large enough to hold the result and prepare for potential wrapping behaviour.
 
-Note that ``0**0`` is defined by the EVM as ``1``.
+.. note::
+  Note that ``0**0`` is defined by the EVM as ``1``.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
