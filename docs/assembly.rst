@@ -271,12 +271,14 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | returndatacopy(t, f, s) | `-` | B | copy s bytes from returndata at position f to mem at position t |
 +-------------------------+-----+---+-----------------------------------------------------------------+
+| extcodehash(a)          |     | C | code hash of address a                                          |
++-------------------------+-----+---+-----------------------------------------------------------------+
 | create(v, p, s)         |     | F | create new contract with code mem[p...(p+s)) and send v wei     |
 |                         |     |   | and return the new address                                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create2(v, n, p, s)     |     | C | create new contract with code mem[p...(p+s)) at address         |
-|                         |     |   | keccak256(<address> . n . keccak256(mem[p...(p+s))) and send v  |
-|                         |     |   | wei and return the new address                                  |
+|                         |     |   | keccak256(0xff . <address> . n . keccak256(mem[p...(p+s)))      |
+|                         |     |   | and send v wei and return the new address                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | call(g, a, v, in,       |     | F | call contract at address a with input mem[in...(in+insize))     |
 | insize, out, outsize)   |     |   | providing g gas and v wei and output area                       |
