@@ -51,7 +51,7 @@ Operators:
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Shift operators: ``<<`` (left shift), ``>>`` (right shift)
-* Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation)
+* Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
 
 
 Comparisons
@@ -120,7 +120,8 @@ Exponentiation
 Exponentiation is only available for unsigned types. Please take care that the types
 you are using are large enough to hold the result and prepare for potential wrapping behaviour.
 
-Note that ``0**0`` is defined by the EVM as ``1``.
+.. note::
+  Note that ``0**0`` is defined by the EVM as ``1``.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
@@ -138,7 +139,7 @@ the type and ``N`` represents how many decimal points are available. ``M`` must 
 Operators:
 
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
-* Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder)
+* Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo)
 
 .. note::
     The main difference between floating point (``float`` and ``double`` in many languages, more precisely IEEE 754 numbers) and fixed point numbers is
