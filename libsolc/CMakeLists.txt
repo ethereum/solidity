@@ -1,5 +1,5 @@
 if (EMSCRIPTEN)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS='[\"_solidity_license\",\"_solidity_version\",\"_solidity_compile\",\"_license\",\"_version\",\"_compileJSON\",\"_compileJSONMulti\",\"_compileJSONCallback\",\"_compileStandard\"]' -s RESERVED_FUNCTION_POINTERS=20")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS='[\"_solidity_license\",\"_solidity_version\",\"_solidity_compile\"]' -s RESERVED_FUNCTION_POINTERS=20")
 	add_executable(soljson libsolc.cpp)
 	target_link_libraries(soljson PRIVATE solidity)
 else()

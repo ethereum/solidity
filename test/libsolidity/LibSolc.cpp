@@ -40,29 +40,9 @@ namespace test
 namespace
 {
 
-Json::Value compileSingle(string const& _input)
-{
-	string output(compileJSON(_input.c_str(), dev::test::Options::get().optimize));
-	Json::Value ret;
-	BOOST_REQUIRE(jsonParseStrict(output, ret));
-	return ret;
-}
-
-Json::Value compileMulti(string const& _input, bool _callback)
-{
-	string output(
-		_callback ?
-		compileJSONCallback(_input.c_str(), dev::test::Options::get().optimize, nullptr) :
-		compileJSONMulti(_input.c_str(), dev::test::Options::get().optimize)
-	);
-	Json::Value ret;
-	BOOST_REQUIRE(jsonParseStrict(output, ret));
-	return ret;
-}
-
 Json::Value compile(string const& _input)
 {
-	string output(compileStandard(_input.c_str(), nullptr));
+	string output(solidity_compile(_input.c_str(), nullptr));
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;
@@ -74,111 +54,14 @@ BOOST_AUTO_TEST_SUITE(LibSolc)
 
 BOOST_AUTO_TEST_CASE(read_version)
 {
-	string output(version());
+	string output(solidity_version());
 	BOOST_CHECK(output.find(VersionString) == 0);
 }
 
 BOOST_AUTO_TEST_CASE(read_license)
 {
-	string output(license());
+	string output(solidity_license());
 	BOOST_CHECK(output.find("GNU GENERAL PUBLIC LICENSE") != string::npos);
-}
-
-BOOST_AUTO_TEST_CASE(basic_compilation)
-{
-	char const* input = R"(
-	{
-		"sources": {
-			"fileA": "contract A { }"
-		}
-	}
-	)";
-	Json::Value result = compileMulti(input, false);
-	BOOST_CHECK(result.isObject());
-
-	// Compare with compileJSONCallback
-	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(result),
-		dev::jsonCompactPrint(compileMulti(input, true))
-	);
-
-	BOOST_CHECK(result["contracts"].isObject());
-	BOOST_CHECK(result["contracts"]["fileA:A"].isObject());
-	Json::Value contract = result["contracts"]["fileA:A"];
-	BOOST_CHECK(contract.isObject());
-	BOOST_CHECK(contract["interface"].isString());
-	BOOST_CHECK_EQUAL(contract["interface"].asString(), "[]");
-	BOOST_CHECK(contract["bytecode"].isString());
-	BOOST_CHECK_EQUAL(
-		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),
-		"6080604052348015600f57600080fd5b50603580601d6000396000f3fe6080604052600080fdfe"
-	);
-	BOOST_CHECK(contract["runtimeBytecode"].isString());
-	BOOST_CHECK_EQUAL(
-		dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()),
-		"6080604052600080fdfe"
-	);
-	BOOST_CHECK(contract["functionHashes"].isObject());
-	BOOST_CHECK(contract["gasEstimates"].isObject());
-	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(contract["gasEstimates"]),
-		"{\"creation\":[66,10600],\"external\":{},\"internal\":{}}"
-	);
-	BOOST_CHECK(contract["metadata"].isString());
-	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
-	BOOST_CHECK(result["sources"].isObject());
-	BOOST_CHECK(result["sources"]["fileA"].isObject());
-	BOOST_CHECK(result["sources"]["fileA"]["AST"].isObject());
-	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(result["sources"]["fileA"]["AST"]),
-		"{\"attributes\":{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]}},"
-		"\"children\":[{\"attributes\":{\"baseContracts\":[null],\"contractDependencies\":[null],"
-		"\"contractKind\":\"contract\",\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],"
-		"\"name\":\"A\",\"nodes\":[null],\"scope\":2},\"id\":1,\"name\":\"ContractDefinition\","
-		"\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
-	);
-}
-
-BOOST_AUTO_TEST_CASE(single_compilation)
-{
-	Json::Value result = compileSingle("contract A { }");
-	BOOST_CHECK(result.isObject());
-
-	BOOST_CHECK(result["contracts"].isObject());
-	BOOST_CHECK(result["contracts"][":A"].isObject());
-	Json::Value contract = result["contracts"][":A"];
-	BOOST_CHECK(contract.isObject());
-	BOOST_CHECK(contract["interface"].isString());
-	BOOST_CHECK_EQUAL(contract["interface"].asString(), "[]");
-	BOOST_CHECK(contract["bytecode"].isString());
-	BOOST_CHECK_EQUAL(
-		dev::test::bytecodeSansMetadata(contract["bytecode"].asString()),
-		"6080604052348015600f57600080fd5b50603580601d6000396000f3fe6080604052600080fdfe"
-	);
-	BOOST_CHECK(contract["runtimeBytecode"].isString());
-	BOOST_CHECK_EQUAL(
-		dev::test::bytecodeSansMetadata(contract["runtimeBytecode"].asString()),
-		"6080604052600080fdfe"
-	);
-	BOOST_CHECK(contract["functionHashes"].isObject());
-	BOOST_CHECK(contract["gasEstimates"].isObject());
-	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(contract["gasEstimates"]),
-		"{\"creation\":[66,10600],\"external\":{},\"internal\":{}}"
-	);
-	BOOST_CHECK(contract["metadata"].isString());
-	BOOST_CHECK(dev::test::isValidMetadata(contract["metadata"].asString()));
-	BOOST_CHECK(result["sources"].isObject());
-	BOOST_CHECK(result["sources"][""].isObject());
-	BOOST_CHECK(result["sources"][""]["AST"].isObject());
-	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(result["sources"][""]["AST"]),
-		"{\"attributes\":{\"absolutePath\":\"\",\"exportedSymbols\":{\"A\":[1]}},"
-		"\"children\":[{\"attributes\":{\"baseContracts\":[null],\"contractDependencies\":[null],"
-		"\"contractKind\":\"contract\",\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],"
-		"\"name\":\"A\",\"nodes\":[null],\"scope\":2},\"id\":1,\"name\":\"ContractDefinition\","
-		"\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
-	);
 }
 
 BOOST_AUTO_TEST_CASE(standard_compilation)
@@ -199,26 +82,6 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 	// Only tests some assumptions. The StandardCompiler is tested properly in another suite.
 	BOOST_CHECK(result.isMember("sources"));
 	BOOST_CHECK(result.isMember("contracts"));
-}
-
-BOOST_AUTO_TEST_CASE(new_api)
-{
-	char const* input = R"(
-	{
-		"language": "Solidity",
-		"sources": {
-			"fileA": {
-				"content": "contract A { }"
-			}
-		}
-	}
-	)";
-	BOOST_CHECK_EQUAL(string(version()), string(solidity_version()));
-	BOOST_CHECK_EQUAL(string(license()), string(solidity_license()));
-	BOOST_CHECK_EQUAL(
-		string(compileStandard(input, nullptr)),
-		string(solidity_compile(input, nullptr))
-	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
