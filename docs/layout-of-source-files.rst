@@ -77,6 +77,8 @@ for this part of the code is still under development) and has not
 received as much testing as the old encoder. You can activate it
 using ``pragma experimental ABIEncoderV2;``.
 
+.. _smt_checker:
+
 SMTChecker
 ~~~~~~~~~~
 
