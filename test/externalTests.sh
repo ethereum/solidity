@@ -85,8 +85,8 @@ function test_truffle
     rm -rf "$DIR"
 }
 
-# Using our temporary fork here. Hopefully to be merged into upstream after the 0.5.0 release.
-test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity-050
+# Since Zeppelin 2.1.1 it supports Solidity 0.5.0.
+test_truffle Zeppelin https://github.com/OpenZeppelin/openzeppelin-solidity.git master
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
