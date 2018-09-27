@@ -41,10 +41,19 @@ void Assembly::append(Assembly const& _a)
 	auto newDeposit = m_deposit + _a.deposit();
 	for (AssemblyItem i: _a.m_items)
 	{
-		if (i.type() == Tag || i.type() == PushTag)
+		switch (i.type())
+		{
+		case Tag:
+		case PushTag:
 			i.setData(i.data() + m_usedTags);
-		else if (i.type() == PushSub || i.type() == PushSubSize)
+			break;
+		case PushSub:
+		case PushSubSize:
 			i.setData(i.data() + m_subs.size());
+			break;
+		default:
+			break;
+		}
 		append(i);
 	}
 	m_deposit = newDeposit;
