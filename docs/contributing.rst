@@ -70,29 +70,32 @@ Thank you for your help!
 Running the compiler tests
 ==========================
 
+There is a script at ``scripts/tests.sh`` which executes most of the tests and
+runs ``aleth`` automatically if it is in the path, but does not download it,
+so it most likely will not work right away. Please read on for the details.
+
 Solidity includes different types of tests. Most of them are bundled in the application
 called ``soltest``. Some of them require the ``aleth`` client in testing mode,
 some others require ``libz3`` to be installed.
 
-``soltest`` reads test contracts that are annotated with expected results
-stored in ``./test/libsolidity/syntaxTests``. In order for soltest to find these
-tests the root test directory has to be specified using the ``--testpath`` command
-line option, e.g. ``./build/test/soltest -- --testpath ./test``.
+To run a basic set of tests that neither require ``aleth`` nor ``libz3``, run
+``./scripts/soltest.sh --no-ipc --no-smt``. This script will run ``build/test/soltest``
+internally.
 
-To disable the z3 tests, use ``./build/test/soltest -- --no-smt --testpath ./test`` and
-to run a subset of the tests that do not require ``aleth``, use
-``./build/test/soltest -- --no-ipc --testpath ./test``.
+The option ``--no-smt`` disables the tests that require ``libz3`` and
+``--no-ipc`` disables those that requir ``aleth``.
 
-For all other tests, you need to install `aleth <https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth>`_ and run it in testing mode: ``aleth --test -d /tmp/testeth``.
+If you want to run the ipc tests (those test the semantics of the generated code),
+you need to install `aleth <https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth>`_ and run it in testing mode: ``aleth --test -d /tmp/testeth``.
 
-Then you run the actual tests: ``./build/test/soltest -- --ipcpath /tmp/testeth/geth.ipc --testpath ./test``.
+Then you run the actual tests: ``./scripts/soltest.sh --ipcpath /tmp/testeth/geth.ipc``.
 
 To run a subset of tests, filters can be used:
-``soltest -t TestSuite/TestName -- --ipcpath /tmp/testeth/geth.ipc --testpath ./test``,
+``./scripts/soltest.sh -t TestSuite/TestName --ipcpath /tmp/testeth/geth.ipc``,
 where ``TestName`` can be a wildcard ``*``.
 
-Alternatively, there is a testing script at ``scripts/tests.sh`` which executes all tests and runs
-``aleth`` automatically if it is in the path (but does not download it).
+The script ``scripts/tests.sh`` also runs commandline tests and compilation tests
+in addition to those found in ``soltest``.
 
 The CI even runs some additional tests (including ``solc-js`` and testing third party Solidity frameworks) that require compiling the Emscripten target.
 
@@ -104,7 +107,9 @@ The CI even runs some additional tests (including ``solc-js`` and testing third 
 Writing and running syntax tests
 --------------------------------
 
-As mentioned above, syntax tests are stored in individual files. These files must contain annotations, stating the expected result(s) of the respective test.
+Syntax tests check that the compiler generates the correct error messages for invalid code
+and properly accepts valid code.
+They are stored in individual files. These files must contain annotations, stating the expected result(s) of the respective test.
 The test suite will compile and check them against the given expectations.
 
 Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
@@ -119,7 +124,8 @@ Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
     // DeclarationError: (36-52): Identifier already declared.
 
 A syntax test must contain at least the contract under test itself, followed by the separator ``// ----``. The following comments are used to describe the
-expected compiler errors or warnings. This section can be empty in case the contract should compile without any errors or warnings.
+expected compiler errors or warnings. The number range denotes the location in the source where the error occurred.
+The section after the separator can be empty in case the contract should compile without any errors or warnings.
 
 In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifier was already declared.
 
@@ -153,7 +159,7 @@ Running ``./test/isoltest`` again will result in a test failure:
 ``isoltest`` prints the expected result next to the obtained result, but also provides a way to change edit / update / skip the current contract or to even quit.
 It offers several options for failing tests:
 
-- edit: ``isoltest`` will try to open the editor that was specified before using ``isoltest --editor /path/to/editor``. If no path was set, this will result in a runtime error. In case an editor was specified, this will open it such that the contract can be adjusted.
+- edit: ``isoltest`` will try to open the contract in an editor so you can adjust it. It will either use the editor given on the command line (as ``isoltest --editor /path/to/editor``), in the environment variable ``EDITOR`` or just ``/usr/bin/editor`` (in this order).
 - update: Updates the contract under test. This will either remove the annotation which contains the exception not met or will add missing expectations. The test will then be run again.
 - skip: Skips the execution of this particular test.
 - quit: Quits ``isoltest``.
@@ -177,7 +183,7 @@ and re-run the test. It will now pass again:
 
 .. note::
 
-    Please choose a name for the contract file, that is self-explainatory in the sense of what is been tested, e.g. ``double_variable_declaration.sol``.
+    Please choose a name for the contract file that explains what it tests, e.g. ``double_variable_declaration.sol``.
     Do not put more than one contract into a single file, unless you are testing inheritance or cross-contract calls.
     Each file should test one aspect of your new feature.
 
