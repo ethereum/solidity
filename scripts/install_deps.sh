@@ -87,9 +87,12 @@ case $(uname -s) in
             10.13)
                 echo "Installing solidity dependencies on macOS 10.13 High Sierra."
                 ;;
+            10.14)
+                echo "Installing solidity dependencies on macOS 10.14 Mojave."
+                ;;
             *)
                 echo "Unsupported macOS version."
-                echo "We only support Mavericks, Yosemite, El Capitan, Sierra and High Sierra."
+                echo "We only support Mavericks, Yosemite, El Capitan, Sierra, High Sierra and Mojave."
                 exit 1
                 ;;
         esac
