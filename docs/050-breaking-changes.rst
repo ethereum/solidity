@@ -107,7 +107,10 @@ For most of the topics the compiler will provide suggestions.
   other way around is not allowed. Converting ``address`` to ``address
   payable`` is possible via conversion through ``uint160``. If ``c`` is a
   contract, ``address(c)`` results in ``address payable`` only if ``c`` has a
-  payable fallback function.
+  payable fallback function. If you use the :ref:`withdraw pattern<withdrawal_pattern>`,
+  you most likely do not have to change your code because ``transfer``
+  is only used on ``msg.sender`` instead of stored addresses and ``msg.sender``
+  is an ``address payable``.
 
 * Conversions between ``bytesX`` and ``uintY`` of different size are now
   disallowed due to ``bytesX`` padding on the right and ``uintY`` padding on
