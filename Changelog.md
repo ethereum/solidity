@@ -91,6 +91,7 @@ Compiler Features:
  * Build System: Support for Mojave version of macOS added.
  * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
  * Code Generator: ``CREATE2`` instruction has been updated to match EIP1014 (aka "Skinny CREATE2"). It also is accepted as part of Constantinople.
+ * Code Generator: ``EXTCODEHASH`` instruction has been added based on EIP1052.
  * Type Checker: Nicer error message when trying to reference overloaded identifiers in inline assembly.
  * Type Checker: Show named argument in case of error.
  * Type System: IntegerType is split into IntegerType and AddressType internally.

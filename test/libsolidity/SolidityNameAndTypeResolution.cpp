@@ -415,6 +415,19 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
+BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
+{
+	char const* text = R"(
+		contract c { function f() public view { uint extcodehash; extcodehash; assembly { pop(extcodehash(0)) } }}
+	)";
+	// This needs special treatment, because the message mentions the EVM version,
+	// so cannot be run via isoltest.
+	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
+		{Error::Type::Warning, "The \"extcodehash\" instruction is not supported by the VM version"},
+	}));
+}
+
 BOOST_AUTO_TEST_CASE(getter_is_memory_type)
 {
 	char const* text = R"(

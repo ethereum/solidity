@@ -82,6 +82,7 @@ enum class Instruction: uint8_t
 	EXTCODECOPY,		///< copy external code (from another contract)
 	RETURNDATASIZE = 0x3d,	///< get size of return data buffer
 	RETURNDATACOPY = 0x3e,	///< copy return data in current environment to memory
+	EXTCODEHASH = 0x3f,	///< get external code hash (from another contract)
 
 	BLOCKHASH = 0x40,	///< get hash of most recent complete block
 	COINBASE,			///< get the block's coinbase address
