@@ -189,6 +189,13 @@ has the type ``address payable``, if ``x`` is of integer or fixed bytes type, a 
 If ``x`` is a contract without payable fallback function, then ``address(x)`` will be of type ``address``.
 In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
 
+.. note::
+    It might very well be that you do not need to care about the distinction between ``address``
+    and ``address payable`` and just use ``address`` everywhere. For example,
+    if you are using the :ref:`withdrawal pattern<withdrawal_pattern>`, you can (and should) store the
+    address itself as ``address``, because you invoke the ``transfer`` function on
+    ``msg.sender``, which is an ``address payable``.
+
 Operators:
 
 * ``<=``, ``<``, ``==``, ``!=``, ``>=`` and ``>``
