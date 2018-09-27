@@ -136,15 +136,16 @@ Sending and Receiving Ether
 - If a contract receives Ether (without a function being called), the fallback function is executed.
   If it does not have a fallback function, the Ether will be rejected (by throwing an exception).
   During the execution of the fallback function, the contract can only rely
-  on the "gas stipend" it is passed (2300 gas) being available to it at that time. This stipend is not enough to access storage in any way.
+  on the "gas stipend" it is passed (2300 gas) being available to it at that time. This stipend is not enough to modify storage
+  (do not take this for granted though, the stipend might change with future hard forks).
   To be sure that your contract can receive Ether in that way, check the gas requirements of the fallback function
   (for example in the "details" section in Remix).
 
 - There is a way to forward more gas to the receiving contract using
   ``addr.call.value(x)("")``. This is essentially the same as ``addr.transfer(x)``,
   only that it forwards all remaining gas and opens up the ability for the
-  recipient to perform more expensive actions (and it only returns a failure code
-  and does not automatically propagate the error). This might include calling back
+  recipient to perform more expensive actions (and it returns a failure code
+  instead of automatically propagating the error). This might include calling back
   into the sending contract or other state changes you might not have thought of.
   So it allows for great flexibility for honest users but also for malicious actors.
 
@@ -266,12 +267,8 @@ implications, there might be another issue buried beneath it.
 Any compiler warning we issue can be silenced by slight changes to the
 code.
 
-Also try to enable the "0.5.0" safety features as early as possible
-by adding ``pragma experimental "v0.5.0";``. Note that in this case,
-the word ``experimental`` does not mean that the safety features are in any
-way risky, it is just a way to enable some features that are
-not yet part of the latest version of Solidity due to backwards
-compatibility.
+Always use the latest version of the compiler to be notified about all recently
+introduced warnings.
 
 Restrict the Amount of Ether
 ============================
@@ -325,6 +322,12 @@ of "failsafe" mode, which, for example, disables most of the features, hands ove
 control to a fixed and trusted third party or just converts the contract into
 a simple "give me back my money" contract.
 
+Ask for Peer Review
+===================
+
+The more people examine a piece of code, the more issues are found.
+Asking people to review your code also helps as a cross-check to find out whether your code
+is easy to understand - a very important criterion for good smart contracts.
 
 *******************
 Formal Verification
