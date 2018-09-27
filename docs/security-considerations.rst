@@ -223,6 +223,26 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet, instead of the owner address. But by checking ``tx.origin``, it gets the original address that kicked off the transaction, which is still the owner address. The attack wallet instantly drains all your funds.
 
 
+
+Two's Complement / Underflows / Overflows
+=========================================
+
+As in many programming languages, Solidity's integer types are not actually integers.
+They resemble integers when the values are small, but behave differently if the numbers are larger.
+For example, the following is true: ``uint8(255) + uint8(1) == 0``. This situation is called
+an *overflow*. It occurs when an operation is performed that requires a fixed size variable
+to store a number (or piece of data) that is outside the range of the variable's data type.
+An *underflow* is the converse situation: ``uint8(0) - uint8(1) == 255``.
+
+In general, read about the limits of two's complement representation, which even has some
+more special edge cases for signed numbers.
+
+Try to use ``require`` to limit the size of inputs to a reasonable range and use the
+:ref:`SMT checker<smt_checker>` to find potential overflows, or
+use a library like
+`SafeMath<https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol>`
+if you want all overflows to cause a revert.
+
 Minor Details
 =============
 
