@@ -417,6 +417,12 @@ The following functions must be available:
 | create(v:u256, p:u256, s:u256)              | create new contract with code mem[p..(p+s)) and send v wei      |
 |                                             | and return the new address                                      |
 +---------------------------------------------+-----------------------------------------------------------------+
+| create2(v:u256, n:u256, p:u256, s:u256)     | create new contract with code mem[p...(p+s)) at address         |
+|                                             | keccak256(0xff . self . n . keccak256(mem[p...(p+s)))           |
+|                                             | and send v wei and return the new address, where ``0xff`` is a  |
+|                                             | 8 byte value, ``self`` is the current contract's address        |
+|                                             | as a 20 byte value and ``n`` is a big-endian 256-bit value      |
++---------------------------------------------+-----------------------------------------------------------------+
 | call(g:u256, a:u256, v:u256, in:u256,       | call contract at address a with input mem[in..(in+insize))      |
 | insize:u256, out:u256,                      | providing g gas and v wei and output area                       |
 | outsize:u256)                               | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
@@ -491,6 +497,8 @@ The following functions must be available:
 | extcodesize(a:u256) -> size:u256            | size of the code at address a                                   |
 +---------------------------------------------+-----------------------------------------------------------------+
 | extcodecopy(a:u256, t:u256, f:u256, s:u256) | like codecopy(t, f, s) but take code at address a               |
++---------------------------------------------+-----------------------------------------------------------------+
+| extcodehash(a:u256)                         | code hash of address a                                          |
 +---------------------------------------------+-----------------------------------------------------------------+
 | *Others*                                                                                                      |
 +---------------------------------------------+-----------------------------------------------------------------+
