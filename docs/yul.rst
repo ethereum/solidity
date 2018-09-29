@@ -83,6 +83,7 @@ Grammar::
         FunctionDefinition |
         VariableDeclaration |
         Assignment |
+        If |
         Expression |
         Switch |
         ForLoop |
