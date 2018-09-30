@@ -895,15 +895,6 @@ void CompilerUtils::convertType(
 					typeOnStack.location() == DataLocation::CallData,
 				"Invalid conversion to calldata type.");
 			break;
-		default:
-			solAssert(
-				false,
-				"Invalid type conversion " +
-				_typeOnStack.toString(false) +
-				" to " +
-				_targetType.toString(false) +
-				" requested."
-			);
 		}
 		break;
 	}

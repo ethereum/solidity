@@ -1108,8 +1108,6 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 		m_context << endTag;
 		break;
 	}
-	default:
-		solAssert(false, "");
 	}
 }
 

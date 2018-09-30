@@ -639,8 +639,6 @@ void SMTChecker::checkCondition(
 	case smt::CheckResult::ERROR:
 		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
 		break;
-	default:
-		solAssert(false, "");
 	}
 	m_interface->pop();
 }

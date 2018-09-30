@@ -91,8 +91,6 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 		case z3::check_result::unknown:
 			result = CheckResult::UNKNOWN;
 			break;
-		default:
-			solAssert(false, "");
 		}
 
 		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
