@@ -51,7 +51,7 @@ Operators:
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation), ``<<`` (left shift), ``>>`` (right shift)
 
-The bit size of an unsigned integer determines its range, for example, for ``uint256``, this is 0 up to 2 :sup:`256` -1. If the result of an operation doesn't fit inside this range, it is truncated. Not taking these truncations into account can have `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so use code like the below to avoid attacks and check a value is what you expect it to be.
+The bit size of an unsigned integer determines its range, for example, for ``uint256``, this is 0 up to 2 :sup:`256` -1. If the result of an operation doesn't fit inside this range, it is truncated. Not taking these truncations into account can have `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_. For example, the code below checks to see if the balance plus a value is actually greater than or equal to the original value.
 
 ::
 
