@@ -4,46 +4,46 @@ Contributing
 
 Help is always appreciated!
 
-To get started, you can try :ref:`building-from-source` in order to familiarize
+To get started, you can try :ref:`building-from-source` to familiarise
 yourself with the components of Solidity and the build process. Also, it may be
 useful to become well-versed at writing smart-contracts in Solidity.
 
 In particular, we need help in the following areas:
 
-* Improving the documentation
+* Improving the documentation.
 * Responding to questions from other users on `StackExchange
   <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter
-  <https://gitter.im/ethereum/solidity>`_
+  <https://gitter.im/ethereum/solidity>`_ channel.
 * Fixing and responding to `Solidity's GitHub issues
   <https://github.com/ethereum/solidity/issues>`_, especially those tagged as
   `good first issue <https://github.com/ethereum/solidity/labels/good%20first%20issue>`_ which are
   meant as introductory issues for external contributors.
 
-Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project - in the issues, pull requests, or Gitter channels - you agree to abide by its terms.
+This project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project - in the issues, pull requests, or Gitter channels - you agree to abide by its terms.
 
 How to Report Issues
 ====================
 
-To report an issue, please use the
+To report an issue, use the
 `GitHub issues tracker <https://github.com/ethereum/solidity/issues>`_. When
 reporting issues, please mention the following details:
 
 * Which version of Solidity you are using
 * What was the source code (if applicable)
-* Which platform are you running on
+* Which platform are you running your smart contracts on
 * How to reproduce the issue
 * What was the result of the issue
-* What the expected behaviour is
+* The expected behaviour
 
 Reducing the source code that caused the issue to a bare minimum is always
-very helpful and sometimes even clarifies a misunderstanding.
+helpful and sometimes clarifies misunderstandings.
 
 Workflow for Pull Requests
 ==========================
 
-In order to contribute, please fork off of the ``develop`` branch and make your
+To contribute, create a fork from the ``develop`` branch and make your
 changes there. Your commit messages should detail *why* you made your change
-in addition to *what* you did (unless it is a tiny change).
+in addition to *what* you did (unless it is a small change).
 
 If you need to pull in any changes from ``develop`` after making your fork (for
 example, to resolve potential merge conflicts), please avoid using ``git merge``
@@ -53,20 +53,21 @@ more easily.
 Additionally, if you are writing a new feature, please ensure you add appropriate
 test cases under ``test/`` (see below).
 
-However, if you are making a larger change, please consult with the `Solidity Development Gitter channel
-<https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above, this one is
-focused on compiler and language development instead of language use) first.
+If you are making a larger change, consult with the `Solidity Development Gitter channel
+<https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above, this channel
+focuses on compiler and language development instead of language use) first.
 
-New features and bugfixes should be added to the ``Changelog.md`` file: please
+You should add new features and bugfixes to the ``Changelog.md`` file,
 follow the style of previous entries, when applicable.
 
-Finally, please make sure you respect the `coding style
+Finally, make sure you respect the `coding style
 <https://raw.githubusercontent.com/ethereum/solidity/develop/CODING_STYLE.md>`_
-for this project. Also, even though we do CI testing, please test your code and
+for this project. Also, even though we use CI testing, test your code and
 ensure that it builds locally before submitting a pull request.
 
 Thank you for your help!
 
+.. _running-tests:
 Running the compiler tests
 ==========================
 
@@ -113,7 +114,6 @@ For example, you could run the following command in your ``build`` folder:
    make
 
 This will create symbols such that when you debug a test using the ``--debug`` flag, you will have acecess to functions and varialbes in which you can break or print with.
-
 
 The script ``./scripts/tests.sh`` also runs commandline tests and compilation tests
 in addition to those found in ``soltest``.
