@@ -1131,7 +1131,7 @@ Multiple Inheritance and Linearization
 Languages that allow multiple inheritance have to deal with
 several problems.  One is the `Diamond Problem <https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem>`_.
 Solidity is similar to Python in that it uses "`C3 Linearization <https://en.wikipedia.org/wiki/C3_linearization>`_"
-to force a specific order in the directed acyclic graph of base classes. This
+to force a specific order in the directed acyclic graph (DAG) of base classes. This
 results in the desirable property of monotonicity but
 disallows some inheritance graphs. Especially, the order in
 which the base classes are given in the ``is`` directive is
@@ -1295,7 +1295,7 @@ contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``
 
 .. index:: using for, set
 
-The following example illustrates how to use libraries (butmanual method
+The following example illustrates how to use libraries (but manual method
 be sure to check out :ref:`using for <using-for>` for a
 more advanced example to implement a set).
 
