@@ -1554,6 +1554,9 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<TupleExpression>(components, isArray);
 		break;
 	}
+	case Token::IllegalHex:
+		fatalParserError("Expected even number of hex-nibbles within double-quotes.");
+		break;		
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
