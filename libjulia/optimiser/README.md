@@ -56,6 +56,47 @@ depend on any side-effects.
 
 As an example, neither ``mload`` nor ``mstore`` would be allowed.
 
+## Expression Splitter
+
+The expression splitter turns expressions like ``add(mload(x), mul(mload(y), 0x20))``
+into a sequence of declarations of unique variables that are assigned sub-expressions
+of that expression so that each function call has only variables or literals
+as arguments.
+
+The above would be transformed into
+
+    {
+        let _1 := mload(y)
+        let _2 := mul(_1, 0x20)
+        let _3 := mload(x)
+        let z := add(_3, _2)
+    }
+
+Note that this transformation does not change the order of opcodes or function calls.
+
+It is not applied to loop conditions, because the loop control flow does not allow
+this "outlining" of the inner expressions in all cases.
+
+The final program should be in a form such that with the exception of loop conditions,
+function calls can only appear in the right-hand side of a variable declaration,
+assignments or expression statements and all arguments have to be constants or variables.
+
+The benefits of this form are that it is much easier to re-order the sequence of opcodes
+and it is also easier to perform function call inlining. The drawback is that
+such code is much harder to read for humans.
+
+## Expression Joiner
+
+This is the opposite operation of the expression splitter. It turns a sequence of
+variable declarations that have exactly one reference into a complex expression.
+This stage again fully preserves the order of function calls and opcode executions.
+It does not make use of any information concerning the commutability of opcodes;
+if moving the value of a variable to its place of use would change the order
+of any function call or opcode execution, the transformation is not performed.
+
+Note that the component will not move the assigned value of a variable assignment
+or a variable that is referenced more than once.
+
 ## Full Function Inliner
 
 ## Rematerialisation
