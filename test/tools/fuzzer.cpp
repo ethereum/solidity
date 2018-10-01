@@ -84,12 +84,8 @@ void testConstantOptimizer()
 	}
 }
 
-void testStandardCompiler()
+void runCompiler(string input)
 {
-	if (!quiet)
-		cout << "Testing compiler via JSON interface." << endl;
-	string input = readStandardInput();
-
 	string outputString(compileStandard(input.c_str(), NULL));
 	Json::Value output;
 	if (!jsonParseStrict(outputString, output))
@@ -112,52 +108,37 @@ void testStandardCompiler()
 		}
 }
 
+void testStandardCompiler()
+{
+	if (!quiet)
+		cout << "Testing compiler via JSON interface." << endl;
+	string input = readStandardInput();
+
+	runCompiler(input);
+}
+
 void testCompiler(bool optimize)
 {
 	if (!quiet)
 		cout << "Testing compiler " << (optimize ? "with" : "without") << " optimizer." << endl;
 	string input = readStandardInput();
 
-	string outputString(compileJSON(input.c_str(), optimize));
-	Json::Value outputJson;
-	if (!jsonParseStrict(outputString, outputJson))
-	{
-		cout << "Compiler produced invalid JSON output." << endl;
-		abort();
-	}
-	if (outputJson.isMember("errors"))
-	{
-		if (!outputJson["errors"].isArray())
-		{
-			cout << "Output JSON has \"errors\" but it is not an array." << endl;
-			abort();
-		}
-		for (Json::Value const& error: outputJson["errors"])
-		{
-			string invalid = contains(error.asString(), vector<string>{
-				// StandardJSON error types
-				"Exception",
-				"InternalCompilerError",
-				// Old-school error messages
-				"Internal compiler error",
-				"Exception during compilation",
-				"Unknown exception during compilation",
-				"Unknown exception while generating contract data output",
-				"Unknown exception while generating source name output",
-				"Unknown error while generating JSON"
-			});
-			if (!invalid.empty())
-			{
-				cout << "Invalid error: \"" << error.asString() << "\"" << endl;
-				abort();
-			}
-		}
-	}
-	else if (!outputJson.isMember("contracts"))
-	{
-		cout << "Output JSON has neither \"errors\" nor \"contracts\"." << endl;
-		abort();
-	}
+	Json::Value config = Json::objectValue;
+	config["language"] = "Solidity";
+	config["sources"] = Json::objectValue;
+	config["sources"][""] = Json::objectValue;
+	config["sources"][""]["content"] = input;
+	config["settings"] = Json::objectValue;
+	config["settings"]["optimizer"] = Json::objectValue;
+	config["settings"]["optimizer"]["enabled"] = optimize;
+	config["settings"]["optimizer"]["runs"] = 200;
+
+	// Enable all SourceUnit-level outputs.
+	config["settings"]["outputSelection"]["*"][""][0] = "*";
+	// Enable all Contract-level outputs.
+	config["settings"]["outputSelection"]["*"]["*"][0] = "*";
+
+	runCompiler(jsonCompactPrint(config));
 }
 
 }
