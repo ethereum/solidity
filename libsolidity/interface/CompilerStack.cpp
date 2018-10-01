@@ -988,8 +988,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 	if (eth::AssemblyItems const* items = assemblyItems(_contractName))
 	{
 		Gas executionGas = gasEstimator.functionalEstimation(*items);
-		u256 bytecodeSize(runtimeObject(_contractName).bytecode.size());
-		Gas codeDepositGas = bytecodeSize * eth::GasCosts::createDataGas;
+		Gas codeDepositGas{eth::GasMeter::dataGas(runtimeObject(_contractName).bytecode, false)};
 
 		Json::Value creation(Json::objectValue);
 		creation["codeDepositCost"] = gasToJson(codeDepositGas);
