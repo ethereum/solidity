@@ -83,10 +83,10 @@ To run a basic set of tests that neither require ``aleth`` nor ``libz3``, run
 internally.
 
 The option ``--no-smt`` disables the tests that require ``libz3`` and
-``--no-ipc`` disables those that requir ``aleth``.
+``--no-ipc`` disables those that require ``aleth``.
 
 If you want to run the ipc tests (those test the semantics of the generated code),
-you need to install `aleth <https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/eth>`_ and run it in testing mode: ``aleth --test -d /tmp/testeth``.
+you need to install `aleth <https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/aleth_2018-06-20_artful>`_ and run it in testing mode: ``aleth --test -d /tmp/testeth`` (make sure to rename it).
 
 Then you run the actual tests: ``./scripts/soltest.sh --ipcpath /tmp/testeth/geth.ipc``.
 
@@ -109,7 +109,8 @@ Writing and running syntax tests
 
 Syntax tests check that the compiler generates the correct error messages for invalid code
 and properly accepts valid code.
-They are stored in individual files. These files must contain annotations, stating the expected result(s) of the respective test.
+They are stored in individual files inside ``tests/libsolidity/syntaxTests``.
+These files must contain annotations, stating the expected result(s) of the respective test.
 The test suite will compile and check them against the given expectations.
 
 Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
