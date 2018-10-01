@@ -126,7 +126,8 @@ Example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
 
 A syntax test must contain at least the contract under test itself, followed by the separator ``// ----``. The following comments are used to describe the
 expected compiler errors or warnings. The number range denotes the location in the source where the error occurred.
-The section after the separator can be empty in case the contract should compile without any errors or warnings.
+In case the contract should compile without any errors or warning, the section after the separator has to be empty
+and the separator can be left out completely.
 
 In the above example, the state variable ``variable`` was declared twice, which is not allowed. This will result in a ``DeclarationError`` stating that the identifier was already declared.
 
@@ -160,8 +161,8 @@ Running ``./test/isoltest`` again will result in a test failure:
 ``isoltest`` prints the expected result next to the obtained result, but also provides a way to change edit / update / skip the current contract or to even quit.
 It offers several options for failing tests:
 
-- edit: ``isoltest`` will try to open the contract in an editor so you can adjust it. It will either use the editor given on the command line (as ``isoltest --editor /path/to/editor``), in the environment variable ``EDITOR`` or just ``/usr/bin/editor`` (in this order).
-- update: Updates the contract under test. This will either remove the annotation which contains the exception not met or will add missing expectations. The test will then be run again.
+- edit: ``isoltest`` tries to open the contract in an editor so you can adjust it. It either uses the editor given on the command line (as ``isoltest --editor /path/to/editor``), in the environment variable ``EDITOR`` or just ``/usr/bin/editor`` (in this order).
+- update: Updates the contract under test. This either removes the annotation which contains the exception not met or adds missing expectations. The test will then be run again.
 - skip: Skips the execution of this particular test.
 - quit: Quits ``isoltest``.
 
