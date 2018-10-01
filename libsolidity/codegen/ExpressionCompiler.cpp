@@ -430,6 +430,8 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			leftExpression.accept(*this);
 			utils().convertType(*leftExpression.annotation().type, *leftTargetType, cleanupNeeded);
 		}
+		if (c_op == Token::Add)
+			m_context << swapInstruction(1) << dupInstruction(2);
 		if (Token::isShiftOp(c_op))
 			// shift only cares about the signedness of both sides
 			appendShiftOperatorCode(c_op, *leftTargetType, *rightTargetType);
@@ -437,6 +439,14 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			appendCompareOperatorCode(c_op, *commonType);
 		else
 			appendOrdinaryBinaryOperatorCode(c_op, *commonType);
+
+		if (c_op == Token::Add)
+		{
+			m_context << swapInstruction(1) << dupInstruction(2);
+			m_context << Instruction::LT;
+			m_context.appendConditionalInvalid();
+		}
+
 	}
 
 	// do not visit the child nodes, we already did that explicitly
