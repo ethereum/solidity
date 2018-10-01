@@ -752,9 +752,9 @@ string ASTJsonConverter::location(VariableDeclaration::Location _location)
 		return "memory";
 	case VariableDeclaration::Location::CallData:
 		return "calldata";
-	default:
-		solAssert(false, "Unknown declaration location.");
 	}
+	// To make the compiler happy
+	return {};
 }
 
 string ASTJsonConverter::contractKind(ContractDefinition::ContractKind _kind)
@@ -767,9 +767,10 @@ string ASTJsonConverter::contractKind(ContractDefinition::ContractKind _kind)
 		return "contract";
 	case ContractDefinition::ContractKind::Library:
 		return "library";
-	default:
-		solAssert(false, "Unknown kind of contract.");
 	}
+
+	// To make the compiler happy
+	return {};
 }
 
 string ASTJsonConverter::functionCallKind(FunctionCallKind _kind)

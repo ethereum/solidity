@@ -1098,8 +1098,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::GasLeft:
 			m_context << Instruction::GAS;
 			break;
-		default:
-			solAssert(false, "Invalid function type.");
 		}
 	}
 	return false;
