@@ -499,7 +499,7 @@ u256 AddressType::literalValue(Literal const* _literal) const
 {
 	solAssert(_literal, "");
 	solAssert(_literal->value().substr(0, 2) == "0x", "");
-	return u256(_literal->value());
+	return u256(_literal->valueWithoutUnderscores());
 }
 
 TypePointer AddressType::unaryOperatorResult(Token::Value _operator) const

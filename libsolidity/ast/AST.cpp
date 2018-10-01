@@ -633,6 +633,11 @@ IdentifierAnnotation& Identifier::annotation() const
 	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
 }
 
+ASTString Literal::valueWithoutUnderscores() const
+{
+	return boost::erase_all_copy(value(), "_");
+}
+
 bool Literal::isHexNumber() const
 {
 	if (token() != Token::Number)
@@ -648,20 +653,20 @@ bool Literal::looksLikeAddress() const
 	if (!isHexNumber())
 		return false;
 
-	return abs(int(value().length()) - 42) <= 1;
+	return abs(int(valueWithoutUnderscores().length()) - 42) <= 1;
 }
 
 bool Literal::passesAddressChecksum() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
-	return dev::passesAddressChecksum(value(), true);
+	return dev::passesAddressChecksum(valueWithoutUnderscores(), true);
 }
 
 string Literal::getChecksummedAddress() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
 	/// Pad literal to be a proper hex address.
-	string address = value().substr(2);
+	string address = valueWithoutUnderscores().substr(2);
 	if (address.length() > 40)
 		return string();
 	address.insert(address.begin(), 40 - address.size(), '0');
