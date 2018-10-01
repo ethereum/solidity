@@ -342,5 +342,40 @@ BOOST_AUTO_TEST_CASE(pop_result)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(inside_condition)
+{
+	// This tests that breaking the expression inside the condition works properly.
+	BOOST_CHECK_EQUAL(
+		fullInline("{"
+			"if gt(f(mload(1)), mload(0)) {"
+				"sstore(0, 2)"
+			"}"
+			"function f(a) -> r {"
+				"a := mload(a)"
+				"r := add(a, calldatasize())"
+			"}"
+		"}", false),
+		format("{"
+			"{"
+				"let _1 := mload(0)"
+				"let f_a := mload(1)"
+				"let f_r"
+				"{"
+					"f_a := mload(f_a)"
+					"f_r := add(f_a, calldatasize())"
+				"}"
+				"if gt(f_r, _1)"
+				"{"
+					"sstore(0, 2)"
+				"}"
+			"}"
+			"function f(a) -> r"
+			"{"
+				"a := mload(a)"
+				"r := add(a, calldatasize())"
+			"}"
+		"}", false)
+	);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

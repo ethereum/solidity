@@ -89,6 +89,9 @@ void InlineModifier::operator()(ForLoop& _loop)
 
 void InlineModifier::operator()(Block& _block)
 {
+	vector<Statement> saved;
+	saved.swap(m_statementsToPrefix);
+
 	// This is only used if needed to minimize the number of move operations.
 	vector<Statement> modifiedStatements;
 	for (size_t i = 0; i < _block.statements.size(); ++i)
@@ -110,6 +113,8 @@ void InlineModifier::operator()(Block& _block)
 	}
 	if (!modifiedStatements.empty())
 		_block.statements = std::move(modifiedStatements);
+
+	saved.swap(m_statementsToPrefix);
 }
 
 void InlineModifier::visit(Expression& _expression)
