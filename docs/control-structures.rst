@@ -126,6 +126,10 @@ actual contract has not been created yet.
 Functions of other contracts have to be called externally. For an external call,
 all function arguments have to be copied to memory.
 
+.. note::
+    A function call from one contract to another does not create its own transaction,
+    it is a message call as part of the overall transaction.
+
 When calling functions of other contracts, the amount of Wei sent with the call and
 the gas can be specified with special options ``.value()`` and ``.gas()``, respectively::
 
