@@ -30,6 +30,16 @@ with two integers, you would use something like::
 
 Function parameters can be used as any other local variable and they can also be assigned to.
 
+.. note::
+
+  An :ref:`external function<external-function-calls>` cannot accept a
+  multi-dimensional array as an input
+  parameter. This functionality is possible if you enable the new
+  experimental ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
+
+  An :ref:`internal function<external-function-calls>` can accept a
+  multi-dimensional array without enabling the feature.
+
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
 
 Return Variables
@@ -56,7 +66,7 @@ two integers passed as function parameters, then you use something like::
 
 The names of return variables can be omitted.
 Return variables can be used as any other local variable and they
-are zero-initialized. If they are not explicitly
+are initialized with their :ref:`default value <default-value>` and have that value unless explicitly set.
 set, they stay zero value.
 
 You can either explicitly assign to return variables and
@@ -122,6 +132,8 @@ the same as the number of return types.
 Function Calls
 ==============
 
+.. _internal-function-calls:
+
 Internal Function Calls
 -----------------------
 
@@ -142,6 +154,8 @@ contract can be called internally.
 
 You should still avoid excessive recursion, as every internal function call
 uses up at least one stack slot and there are at most 1024 slots available.
+
+.. _external-function-calls:
 
 External Function Calls
 -----------------------
