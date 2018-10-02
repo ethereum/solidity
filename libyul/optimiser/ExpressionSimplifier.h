@@ -31,6 +31,10 @@ namespace yul
 
 /**
  * Applies simplification rules to all expressions.
+ * The component will work best if the code is in SSA form, but
+ * this is not required for correctness.
+ *
+ * Prerequisite: Disambiguator.
  */
 class ExpressionSimplifier: public ASTModifier
 {
@@ -38,7 +42,13 @@ public:
 	using ASTModifier::operator();
 	virtual void visit(Expression& _expression);
 
+	static void run(Block& _ast);
 private:
+	explicit ExpressionSimplifier(std::map<std::string, Expression const*> _ssaValues):
+		m_ssaValues(std::move(_ssaValues))
+	{}
+
+	std::map<std::string, Expression const*> m_ssaValues;
 };
 
 }

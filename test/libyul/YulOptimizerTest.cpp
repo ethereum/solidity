@@ -146,7 +146,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else if (m_optimizerStep == "expressionSimplifier")
 	{
 		disambiguate();
-		(ExpressionSimplifier{})(*m_ast);
+		ExpressionSimplifier::run(*m_ast);
 	}
 	else if (m_optimizerStep == "unusedPruner")
 	{
