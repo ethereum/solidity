@@ -130,7 +130,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		disambiguate();
 		(FunctionHoister{})(*m_ast);
 		(FunctionGrouper{})(*m_ast);
+		NameDispenser nameDispenser;
+		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
+		ExpressionSplitter{nameDispenser}(*m_ast);
 		FullInliner(*m_ast).run();
+		ExpressionJoiner::run(*m_ast);
 	}
 	else if (m_optimizerStep == "mainFunction")
 	{

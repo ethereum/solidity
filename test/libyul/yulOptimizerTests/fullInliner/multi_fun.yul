@@ -7,21 +7,17 @@
 // fullInliner
 // {
 //     {
-//         let g_c := 7
-//         let f_a_1 := 3
-//         let f_x_1
-//         {
-//             f_x_1 := add(f_a_1, f_a_1)
-//         }
+//         let _1 := 7
+//         let f_a := 3
+//         let f_x
+//         f_x := add(f_a, f_a)
+//         let g_b := f_x
+//         let g_c := _1
 //         let g_y
-//         {
-//             let g_f_a := f_x_1
-//             let g_f_x
-//             {
-//                 g_f_x := add(g_f_a, g_f_a)
-//             }
-//             g_y := mul(mload(g_c), g_f_x)
-//         }
+//         let g_f_a_1 := g_b
+//         let g_f_x_1
+//         g_f_x_1 := add(g_f_a_1, g_f_a_1)
+//         g_y := mul(mload(g_c), g_f_x_1)
 //         let y_1 := g_y
 //     }
 //     function f(a) -> x
@@ -30,11 +26,9 @@
 //     }
 //     function g(b, c) -> y
 //     {
-//         let f_a := b
-//         let f_x
-//         {
-//             f_x := add(f_a, f_a)
-//         }
-//         y := mul(mload(c), f_x)
+//         let f_a_1 := b
+//         let f_x_1
+//         f_x_1 := add(f_a_1, f_a_1)
+//         y := mul(mload(c), f_x_1)
 //     }
 // }
