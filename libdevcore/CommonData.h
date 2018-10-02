@@ -163,6 +163,52 @@ inline std::string formatNumber(u256 const& _value)
 		return _value.str();
 }
 
+/// @a T will typically by unsigned, u160, u256 or bigint.
+template <class T> 
+inline std::string formatNumberReadable(T _value)
+{
+	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
+	
+	// smaller numbers return as decimal
+	if (_value <= 0x1000000) 
+		return _value.str();
+
+	// when multiple trailing zero bytes, format as N * 2^x
+	int i;  
+	T v;
+	for (i=0, v=_value; (v & (T)0xff) == 0; ++i, v >>= 8) {}
+
+	if (i > 2) {
+		return toHex(toCompactBigEndian(v), 2, HexPrefix::Add)
+			+ " * 2^" + std::to_string(i * 8);
+	}
+
+	// when multiple trailing zero bytes, format as N * 2^x
+	for (i=0, v=_value; (v & (T)0xff) == 0xff; ++i, v >>= 8) {}
+
+	if (i > 2) {
+		return toHex(toCompactBigEndian(v + (T)1), 2, HexPrefix::Add)
+			+ " * 2^" + std::to_string(i * 8) + " - 1";
+	}
+
+	// otherwise, return as hex.
+	return formatNumber(_value);
+}
+
+inline std::string formatNumberReadableChris(std::string hex) 
+{
+    for (int i = hex.size() - 1; i >= 2; i--) 
+    {   
+        if (std::strncmp(&hex[i], "0", 1) > 0) {
+            if ((hex.size() - 1) % 2 != 0) i++;
+            int superscript = ((hex.size() - i) / 2) * 8;
+            return hex.substr(0, i + 1) + " * 2^" + std::to_string(superscript);
+        }
+    }
+
+    return hex;
+}
+
 inline std::string toCompactHexWithPrefix(u256 val)
 {
 	std::ostringstream ret;
