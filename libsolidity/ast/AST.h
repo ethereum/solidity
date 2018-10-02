@@ -1679,6 +1679,8 @@ public:
 	/// @returns the non-parsed value of the literal
 	ASTString const& value() const { return *m_value; }
 
+	ASTString valueWithoutUnderscores() const;
+
 	SubDenomination subDenomination() const { return m_subDenomination; }
 
 	/// @returns true if this is a number with a hex prefix.
