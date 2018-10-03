@@ -53,7 +53,7 @@ Semantic and Syntactic Changes
 
 This section highlights changes that affect syntax and semantics.
 
-* The functions ``.call()``, ``.delegatecall()`, ``staticcall()``,
+* The functions ``.call()``, ``.delegatecall()``, ``staticcall()``,
   ``keccak256()``, ``sha256()`` and ``ripemd160()`` now accept only a single
   ``bytes`` argument. Moreover, the argument is not padded. This was changed to
   make more explicit and clear how the arguments are concatenated. Change every
