@@ -52,14 +52,16 @@ these curly braces, you can use the following (see the later sections for more d
  - assignments, e.g. ``x := add(y, 3)``
  - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
 
-The following features are only available for standalone assembly.
-Standalone assembly is supported for backwards compatibility but is not documented
-here anymore.
+The following features are only available for standalone assembly:
 
- - direct stack contral via dup1, swap1, ...
+ - direct stack control via ``dup1``, ``swap1``, ...
  - direct stack assignments (in "instruction style"), e.g. ``3 =: x``
  - labels, e.g. ``name:``
  - jump opcodes
+
+.. note::
+  Standalone assembly is supported for backwards compatibility but is not documented
+  here anymore.
 
 At the end of the ``assembly { ... }`` block, the stack must be balanced,
 unless you require it otherwise. If it is not balanced, the compiler generates
