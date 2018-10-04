@@ -102,17 +102,18 @@ them.
 |:ref:`struct<structs>`         |``tuple``                                                                    |
 +-------------------------------+-----------------------------------------------------------------------------+
 
-Formal Specification of the Encoding
-====================================
+Design Criteria for the Encoding
+================================
 
-We will now formally specify the encoding, such that it will have the following
-properties, which are especially useful if some arguments are nested arrays:
-
-Properties:
+The encoding is designed to have the following properties, which are especially useful if some arguments are nested arrays:
 
   1. The number of reads necessary to access a value is at most the depth of the value inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a previous version of the ABI, the number of reads scaled linearly with the total number of dynamic parameters in the worst case.
 
   2. The data of a variable or array element is not interleaved with other data and it is relocatable, i.e. it only uses relative "addresses".
+
+
+Formal Specification of the Encoding
+====================================
 
 We distinguish static and dynamic types. Static types are encoded in-place and dynamic types are encoded at a separately allocated location after the current block.
 
