@@ -242,7 +242,7 @@ activate themselves.
         mapping(address => uint) pendingReturns;
 
         // Set to true at the end, disallows any change.
-        // By defaul initialized to `false`.
+        // By default initialized to `false`.
         bool ended;
 
         // Events that will be emitted on changes.

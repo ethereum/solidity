@@ -234,7 +234,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
   }
 
   /**
-   * @dev Calculate the date when the holder can trasfer all its tokens
+   * @dev Calculate the date when the holder can transfer all its tokens
    * @param holder address The address of the holder
    * @return An uint256 representing the date of the last transferable tokens.
    */

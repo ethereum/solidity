@@ -601,7 +601,7 @@ void Scanner::scanToken()
 			{
 				tie(token, m, n) = scanIdentifierOrKeyword();
 
-				// Special case for hexademical literals
+				// Special case for hexadecimal literals
 				if (token == Token::Hex)
 				{
 					// reset
