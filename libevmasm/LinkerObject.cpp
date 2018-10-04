@@ -21,6 +21,7 @@
 
 #include <libevmasm/LinkerObject.h>
 #include <libdevcore/CommonData.h>
+#include <libdevcore/SHA3.h>
 
 using namespace dev;
 using namespace dev::eth;
@@ -50,12 +51,17 @@ string LinkerObject::toHex() const
 	for (auto const& ref: linkReferences)
 	{
 		size_t pos = ref.first * 2;
-		string const& name = ref.second;
+		string hash = libraryPlaceholder(ref.second);
 		hex[pos] = hex[pos + 1] = hex[pos + 38] = hex[pos + 39] = '_';
 		for (size_t i = 0; i < 36; ++i)
-			hex[pos + 2 + i] = i < name.size() ? name[i] : '_';
+			hex[pos + 2 + i] = hash.at(i);
 	}
 	return hex;
+}
+
+string LinkerObject::libraryPlaceholder(string const& _libraryName)
+{
+	return keccak256(_libraryName).hex().substr(0, 36);
 }
 
 h160 const*

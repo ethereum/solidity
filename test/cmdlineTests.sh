@@ -233,6 +233,24 @@ echo '' | "$SOLC" - --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd
 printTask "Testing long library names..."
 echo '' | "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname:0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
 
+printTask "Testing linking itself..."
+SOLTMPDIR=$(mktemp -d)
+(
+    cd "$SOLTMPDIR"
+    set -e
+    echo 'library L { function f() public pure {} } contract C { function f() public pure { L.f(); } }' > x.sol
+    "$SOLC" --bin -o . x.sol 2>/dev/null
+    # Explanation and placeholder should be there
+    grep -q '//' C.bin && grep -q '__' C.bin
+    # But not in library file.
+    grep -q -v '[/_]' L.bin
+    # Now link
+    "$SOLC" --link --libraries x.sol:L:0x90f20564390eAe531E810af625A22f51385Cd222 C.bin
+    # Now the placeholder and explanation should be gone.
+    grep -q -v '[/_]' C.bin
+)
+rm -rf "$SOLTMPDIR"
+
 printTask "Testing overwriting files..."
 SOLTMPDIR=$(mktemp -d)
 (

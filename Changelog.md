@@ -17,6 +17,7 @@ Breaking Changes:
  * Commandline interface: Remove obsolete ``--formal`` option.
  * Commandline interface: Rename the ``--julia`` option to ``--yul``.
  * Commandline interface: Require ``-`` if standard input is used as source.
+ * Commandline interface: Use hash of library name for link placeholder instead of name itself.
  * Compiler interface: Disallow remappings with empty prefix.
  * Control Flow Analyzer: Consider mappings as well when checking for uninitialized return values.
  * Control Flow Analyzer: Turn warning about returning uninitialized storage pointers into an error.
