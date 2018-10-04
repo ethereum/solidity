@@ -499,9 +499,9 @@ terminate the string literal. Newline only terminates the string literal if it i
 Hexadecimal Literals
 --------------------
 
-Hexademical Literals are prefixed with the keyword ``hex`` and are enclosed in double or single-quotes (``hex"001122FF"``). Their content must be a hexadecimal string and their value will be the binary representation of those values.
+Hexadecimal literals are prefixed with the keyword ``hex`` and are enclosed in double or single-quotes (``hex"001122FF"``). Their content must be a hexadecimal string and their value will be the binary representation of those values.
 
-Hexademical Literals behave like String Literals and have the same convertibility restrictions.
+Hexadecimal literals behave like string literals and have the same convertibility restrictions.
 
 .. index:: enum
 

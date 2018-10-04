@@ -260,7 +260,7 @@ public:
 	/// Stack post: <shifted_value>
 	void rightShiftNumberOnStack(unsigned _bits);
 
-	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
+	/// Appends code that computes the Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
 	/// Bytes we need to the start of call data.
