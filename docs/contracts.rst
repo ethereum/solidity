@@ -573,9 +573,6 @@ In addition to the list of state modifying statements explained above, the follo
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
 
-.. note::
-  Before version 0.5.0 the compiler did not enforce that ``pure`` is not reading the state.
-
 .. index:: ! fallback function, function;fallback
 
 .. _fallback-function:
