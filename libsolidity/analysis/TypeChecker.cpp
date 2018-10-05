@@ -1444,8 +1444,12 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
 		auto const& types = tupleType ? tupleType->components() : vector<TypePointer> { _type.shared_from_this() };
 
-		solAssert(tupleExpression->components().size() == types.size(), "");
-		for (size_t i = 0; i < types.size(); i++)
+		solAssert(
+			tupleExpression->components().size() == types.size() || m_errorReporter.hasErrors(),
+			"Array sizes don't match or no errors generated."
+		);
+
+		for (size_t i = 0; i < min(tupleExpression->components().size(), types.size()); i++)
 			if (types[i])
 			{
 				solAssert(!!tupleExpression->components()[i], "");
