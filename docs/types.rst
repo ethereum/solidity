@@ -458,6 +458,7 @@ a non-rational number).
     uint128 b = 2.5 + a + 0.5;
 
 .. index:: literal, literal;string, string
+.. _string_literals:
 
 String Literals
 ---------------
@@ -501,7 +502,7 @@ Hexadecimal Literals
 
 Hexadecimal literals are prefixed with the keyword ``hex`` and are enclosed in double or single-quotes (``hex"001122FF"``). Their content must be a hexadecimal string and their value will be the binary representation of those values.
 
-Hexadecimal literals behave like string literals and have the same convertibility restrictions.
+Hexadecimal literals behave like :ref:`string literals <string_literals>` and have the same convertibility restrictions.
 
 .. index:: enum
 
