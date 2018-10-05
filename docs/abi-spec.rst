@@ -405,6 +405,8 @@ Offset ``f`` points to the start of the content of the array ``[[1, 2], [3]]`` w
 
 Offset ``g`` points to the start of the content of the array ``["one", "two", "three"]`` which is line 10 (320 bytes); thus ``g = 0x0000000000000000000000000000000000000000000000000000000000000140``.
 
+.. _abi_events:
+
 Events
 ======
 
