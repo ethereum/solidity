@@ -785,7 +785,7 @@ Topics allow you to search for events, for example when filtering a sequence of
 blocks for certain events. You can also filter events by the address of the
 contract that emitted the event.
 
-For example, the code below uses the web3.js ``subscribe(“logs”)``
+For example, the code below uses the web3.js ``subscribe("logs")``
 `method <https://web3js.readthedocs.io/en/1.0/web3-eth-subscribe.html#subscribe-logs>`_ to filter
 logs that match a topic with a certain address value:
 
