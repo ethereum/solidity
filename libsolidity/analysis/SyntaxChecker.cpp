@@ -53,7 +53,7 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 		SemVerVersion recommendedVersion{string(VersionString)};
 		if (!recommendedVersion.isPrerelease())
 			errorString +=
-				"Consider adding \"pragma solidity ^" +
+				" Consider adding \"pragma solidity ^" +
 				to_string(recommendedVersion.major()) +
 				string(".") +
 				to_string(recommendedVersion.minor()) +
