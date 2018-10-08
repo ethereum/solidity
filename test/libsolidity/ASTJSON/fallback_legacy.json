@@ -1,0 +1,110 @@
+{
+	"attributes" : 
+	{
+		"absolutePath" : "a",
+		"exportedSymbols" : 
+		{
+			"C" : 
+			[
+				5
+			]
+		}
+	},
+	"children" : 
+	[
+		{
+			"attributes" : 
+			{
+				"baseContracts" : 
+				[
+					null
+				],
+				"contractDependencies" : 
+				[
+					null
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					5
+				],
+				"name" : "C",
+				"scope" : 6
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"documentation" : null,
+						"implemented" : true,
+						"isConstructor" : false,
+						"kind" : "fallback",
+						"modifiers" : 
+						[
+							null
+						],
+						"name" : "",
+						"scope" : 5,
+						"stateMutability" : "payable",
+						"superFunction" : null,
+						"visibility" : "external"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 1,
+							"name" : "ParameterList",
+							"src" : "23:2:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 2,
+							"name" : "ParameterList",
+							"src" : "43:0:1"
+						},
+						{
+							"attributes" : 
+							{
+								"statements" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 3,
+							"name" : "Block",
+							"src" : "43:5:1"
+						}
+					],
+					"id" : 4,
+					"name" : "FunctionDefinition",
+					"src" : "15:33:1"
+				}
+			],
+			"id" : 5,
+			"name" : "ContractDefinition",
+			"src" : "0:50:1"
+		}
+	],
+	"id" : 6,
+	"name" : "SourceUnit",
+	"src" : "0:51:1"
+}

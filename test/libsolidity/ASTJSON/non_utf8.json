@@ -89,7 +89,7 @@
 					"documentation" : null,
 					"id" : 7,
 					"implemented" : true,
-					"isConstructor" : false,
+					"kind" : "function",
 					"modifiers" : [],
 					"name" : "f",
 					"nodeType" : "FunctionDefinition",

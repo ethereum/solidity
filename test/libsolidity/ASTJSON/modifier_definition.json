@@ -97,7 +97,7 @@
 					"documentation" : null,
 					"id" : 13,
 					"implemented" : true,
-					"isConstructor" : false,
+					"kind" : "function",
 					"modifiers" : 
 					[
 						{
