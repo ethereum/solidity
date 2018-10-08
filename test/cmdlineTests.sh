@@ -123,7 +123,8 @@ test_solc_file_input_failures() {
     exitCode=$?
     set -e
 
-    stderr=`sed 's/.*This is a pre-release compiler version, please do not use it in production.*$//' $stderr_path`
+    sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+    sed -i -e 's/ \?Consider adding "pragma .*$//' "$stderr_path"
 
     if [[ $exitCode -eq 0 ]]; then
         printError "Incorrect exit code. Expected failure (non-zero) but got success (0)."
@@ -141,12 +142,12 @@ test_solc_file_input_failures() {
         exit 1
     fi
 
-    if [[ "$stderr" != "${stderr_expected}" ]]; then
+    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]; then
         printError "Incorrect output on stderr received. Expected:"
         echo -e "${stderr_expected}"
 
         printError "But got:"
-        echo $stderr
+        cat $stderr_path
         rm -f $stdout_path $stderr_path
         exit 1
     fi
