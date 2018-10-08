@@ -61,7 +61,7 @@ string LinkerObject::toHex() const
 
 string LinkerObject::libraryPlaceholder(string const& _libraryName)
 {
-	return keccak256(_libraryName).hex().substr(0, 36);
+	return "0x" + keccak256(_libraryName).hex().substr(0, 34);
 }
 
 h160 const*
