@@ -160,8 +160,10 @@ Command Line and JSON Interfaces
 
 * In unlinked binary hex files, library address placeholders are now
   the first 36 hex characters of the keccak256 hash of the fully qualified
-  library name, instead of just the fully qualified library name.
-  Binary files now also contain a list of mappings from these hex placeholders
+  library name, surrounded by ``$...$``. Previously,
+  just the fully qualified library name was used.
+  This recudes the chances of collisions, especially when long paths are used.
+  Binary files now also contain a list of mappings from these placeholders
   to the fully qualified names.
 
 Constructors
