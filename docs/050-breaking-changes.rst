@@ -158,6 +158,12 @@ Command Line and JSON Interfaces
   node was replaced by a field called ``kind`` which can have the
   value ``"constructor"``, ``"fallback"`` or ``"function"``.
 
+* In unlinked binary hex files, library address placeholders are now
+  the first 36 hex characters of the keccak256 hash of the fully qualified
+  library name, instead of just the fully qualified library name.
+  Binary files now also contain a list of mappings from these hex placeholders
+  to the fully qualified names.
+
 Constructors
 ------------
 
