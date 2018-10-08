@@ -25,9 +25,11 @@
 #include <libsolidity/interface/Exceptions.h>
 
 #include <boost/test/framework.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace dev::test;
+namespace fs = boost::filesystem;
 
 Options const& Options::get()
 {
@@ -70,6 +72,27 @@ Options::Options()
 	if (testPath.empty())
 		if (auto path = getenv("ETH_TEST_PATH"))
 			testPath = path;
+
+	if (testPath.empty())
+	{
+		auto const searchPath =
+		{
+			fs::current_path() / ".." / ".." / ".." / "test",
+			fs::current_path() / ".." / ".." / "test",
+			fs::current_path() / ".." / "test",
+			fs::current_path() / "test",
+			fs::current_path()
+		};
+		for (auto const& basePath : searchPath)
+		{
+			fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
+			if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
+			{
+				testPath = basePath;
+				break;
+			}
+		}
+	}
 }
 
 void Options::validate() const
