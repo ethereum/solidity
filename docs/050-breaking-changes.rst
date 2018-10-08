@@ -154,6 +154,10 @@ Command Line and JSON Interfaces
 * The JSON AST fields ``constant`` and ``payable`` were removed. The
   information is now present in the ``stateMutability`` field.
 
+* The JSON AST field ``isConstructor`` of the ``FunctionDefinition``
+  node was replaced by a field called ``kind`` which can have the
+  value ``"constructor"``, ``"fallback"`` or ``"function"``.
+
 Constructors
 ------------
 
