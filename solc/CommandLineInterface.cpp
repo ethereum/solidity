@@ -697,8 +697,8 @@ bool CommandLineInterface::processInput()
 		{
 			auto path = boost::filesystem::path(_path);
 			auto canonicalPath = weaklyCanonicalFilesystemPath(path);
+			cout << "Trying to load " << _path << " (boost: " << path << " canonical: " << canonicalPath << " )" << endl;
 			bool isAllowed = false;
-			cout << "Checking whether import is fine to use." << endl;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
 				cout << "Allowed directory: " << allowedDir << endl;
