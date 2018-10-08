@@ -482,9 +482,23 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			string addrString(lib.begin() + colon + 1, lib.end());
 			boost::trim(libName);
 			boost::trim(addrString);
+			if (addrString.substr(0, 2) == "0x")
+				addrString = addrString.substr(2);
+			if (addrString.empty())
+			{
+				cerr << "Empty address provided for library \"" << libName << "\": " << endl;
+				cerr << "Note that there should not be any whitespace after the colon." << endl;
+				return false;
+			}
+			else if (addrString.length() != 40)
+			{
+				cerr << "Invalid length for address for library \"" << libName << "\": " << addrString.length() << " instead of 40 characters." << endl;
+				return false;
+			}
 			if (!passesAddressChecksum(addrString, false))
 			{
-				cerr << "Invalid checksum on library address \"" << libName << "\": " << addrString << endl;
+				cerr << "Invalid checksum on address for library \"" << libName << "\": " << addrString << endl;
+				cerr << "The correct checksum is " << dev::getChecksummedAddress(addrString) << endl;
 				return false;
 			}
 			bytes binAddr = fromHex(addrString);
@@ -569,7 +583,7 @@ Allowed options)",
 			g_argLibraries.c_str(),
 			po::value<vector<string>>()->value_name("libs"),
 			"Direct string or file containing library addresses. Syntax: "
-			"<libraryName>: <address> [, or whitespace] ...\n"
+			"<libraryName>:<address> [, or whitespace] ...\n"
 			"Address is interpreted as a hex string optionally prefixed by 0x."
 		)
 		(
