@@ -117,12 +117,11 @@ jobs:
           command: |
             . /usr/local/nvm/nvm.sh
             test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
-  build_x86_linux:
+  build_x86_linux: &build_x86_linux
     docker:
       - image: buildpack-deps:artful
     environment:
       TERM: xterm
-      CMAKE_OPTIONS: -DCOVERAGE=ON
     steps:
       - checkout
       - run:
@@ -138,6 +137,11 @@ jobs:
           root: build
           paths:
             - "*"
+
+  coverage_build:
+    <<: *build_x86_linux
+    environment:
+      CMAKE_OPTIONS: -DCOVERAGE=ON
 
   build_x86_mac:
     macos:
@@ -206,6 +210,25 @@ jobs:
           command: ./test/buglistTests.js
 
   test_x86_linux:
+    docker:
+      - image: buildpack-deps:artful
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install libz3-dev libleveldb1v5
+      - run: mkdir -p test_results
+      - run: *run_tests
+      - store_test_results:
+          path: test_results/
+
+  coverage_test:
     docker:
       - image: buildpack-deps:artful
     environment:
@@ -300,3 +323,14 @@ workflows:
           requires:
             - build_x86_mac
       - docs: *build_on_tags
+      - coverage_test:
+        # filters:
+        #   branches:
+        #     only: coverage
+      - coverage_build:
+        requires:
+          - coverage_test
+        # filters:
+        #   branches:
+        #     only: coverage
+
