@@ -256,6 +256,9 @@ TestStats TestTool::processPath(
 
 }
 
+namespace
+{
+
 void setupTerminal()
 {
 #if defined(_WIN32) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
@@ -274,6 +277,27 @@ void setupTerminal()
 	if (!SetConsoleMode(hOut, dwMode))
 		return;
 #endif
+}
+
+fs::path discoverTestPath()
+{
+	auto const searchPath =
+	{
+		fs::current_path() / ".." / ".." / ".." / "test",
+		fs::current_path() / ".." / ".." / "test",
+		fs::current_path() / ".." / "test",
+		fs::current_path() / "test",
+		fs::current_path()
+	};
+	for (auto const& basePath: searchPath)
+	{
+		fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
+		if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
+			return basePath;
+	}
+	return {};
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -326,25 +350,7 @@ Allowed options)",
 	}
 
 	if (testPath.empty())
-	{
-		auto const searchPath =
-		{
-			fs::current_path() / ".." / ".." / ".." / "test",
-			fs::current_path() / ".." / ".." / "test",
-			fs::current_path() / ".." / "test",
-			fs::current_path() / "test",
-			fs::current_path()
-		};
-		for (auto const& basePath : searchPath)
-		{
-			fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
-			if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
-			{
-				testPath = basePath;
-				break;
-			}
-		}
-	}
+		testPath = discoverTestPath();
 
 	TestStats global_stats { 0, 0 };
 
