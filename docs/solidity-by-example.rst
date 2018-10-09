@@ -389,7 +389,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity >0.4.23 <0.5.0;
+    pragma solidity >0.4.23 <0.6.0;
 
     contract BlindAuction {
         struct Bid {
