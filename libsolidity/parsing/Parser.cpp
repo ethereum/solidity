@@ -20,7 +20,7 @@
  * Solidity parser.
  */
 
-#include <ctype.h>
+#include <cctype>
 #include <vector>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>

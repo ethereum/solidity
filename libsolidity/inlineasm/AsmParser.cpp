@@ -26,7 +26,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <ctype.h>
+#include <cctype>
 #include <algorithm>
 
 using namespace std;
