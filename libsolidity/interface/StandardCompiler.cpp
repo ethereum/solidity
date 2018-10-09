@@ -509,7 +509,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	bool const compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
 	/// Inconsistent state - stop here to receive error reports from users
-	if (!compilationSuccess && (errors.size() == 0))
+	if (!compilationSuccess && errors.empty())
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	Json::Value output = Json::objectValue;

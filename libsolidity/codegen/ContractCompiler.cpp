@@ -965,7 +965,7 @@ void ContractCompiler::popScopedVariables(ASTNode const* _node)
 	unsigned stackDiff = m_context.stackHeight() - blockHeight;
 	CompilerUtils(m_context).popStackSlots(stackDiff);
 	m_scopeStackHeight[m_modifierDepth].erase(_node);
-	if (m_scopeStackHeight[m_modifierDepth].size() == 0)
+	if (m_scopeStackHeight[m_modifierDepth].empty())
 		m_scopeStackHeight.erase(m_modifierDepth);
 }
 

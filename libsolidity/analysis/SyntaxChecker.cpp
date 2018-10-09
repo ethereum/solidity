@@ -76,7 +76,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	{
 		solAssert(m_sourceUnit, "");
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
-		if (literals.size() == 0)
+		if (literals.empty())
 			m_errorReporter.syntaxError(
 				_pragma.location(),
 				"Experimental feature name is missing."

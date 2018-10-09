@@ -894,7 +894,7 @@ void SMTChecker::pushPathCondition(smt::Expression const& _e)
 
 smt::Expression SMTChecker::currentPathConditions()
 {
-	if (m_pathConditions.size() == 0)
+	if (m_pathConditions.empty())
 		return smt::Expression(true);
 	return m_pathConditions.back();
 }

@@ -554,7 +554,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 		if (m_scanner->currentToken() != Token::Identifier)
 			fatalParserError(string("Expected identifier after ','"));
 	}
-	if (members.size() == 0)
+	if (members.empty())
 		parserError({"enum with no members is not allowed."});
 
 	nodeFactory.markEndPosition();

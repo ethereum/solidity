@@ -2123,7 +2123,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	auto& annotation = _memberAccess.annotation();
 
-	if (possibleMembers.size() == 0)
+	if (possibleMembers.empty())
 	{
 		if (initialMemberCount == 0)
 		{
