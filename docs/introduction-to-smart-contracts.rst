@@ -332,14 +332,15 @@ Transactions
 ============
 
 A transaction is a message that is sent from one account to another
-account (which might be the same or the special zero-account, see below).
+account (which might be the same or empty, see below).
 It can include binary data (which is called "payload") and Ether.
 
 If the target account contains code, that code is executed and
 the payload is provided as input data.
 
-If the target account is the zero-account (the account with the
-address ``0``), the transaction creates a **new contract**.
+If the target account is not set (the transaction does not have
+a recipient or the recipient is set to ``null``), the transaction
+creates a **new contract**.
 As already mentioned, the address of that contract is not
 the zero address but an address derived from the sender and
 its number of transactions sent (the "nonce"). The payload
