@@ -86,7 +86,7 @@ void testConstantOptimizer()
 
 void runCompiler(string input)
 {
-	string outputString(compileStandard(input.c_str(), NULL));
+	string outputString(compileStandard(input.c_str(), nullptr));
 	Json::Value output;
 	if (!jsonParseStrict(outputString, output))
 	{
