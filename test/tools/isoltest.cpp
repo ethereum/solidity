@@ -21,6 +21,7 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
+#include <test/libjulia/YulOptimizerTest.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -371,12 +372,25 @@ Allowed options)",
 
 	TestStats global_stats{0, 0};
 
+	// Actually run the tests.
+	// If you add new tests here, you also have to add them in boostTest.cpp
 	if (auto stats = runTestSuite("Syntax", testPath / "libsolidity", "syntaxTests", SyntaxTest::create, formatted))
 		global_stats += *stats;
 	else
 		return 1;
 
 	if (auto stats = runTestSuite("JSON AST", testPath / "libsolidity", "ASTJSON", ASTJSONTest::create, formatted))
+		global_stats += *stats;
+	else
+		return 1;
+
+	if (auto stats = runTestSuite(
+		"Yul Optimizer",
+		testPath / "libjulia",
+		"yulOptimizerTests",
+		julia::test::YulOptimizerTest::create,
+		formatted
+	))
 		global_stats += *stats;
 	else
 		return 1;
