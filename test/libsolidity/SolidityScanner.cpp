@@ -471,6 +471,8 @@ BOOST_AUTO_TEST_CASE(invalid_short_unicode_string_escape)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 }
 
+//  HEX STRING LITERAL
+
 BOOST_AUTO_TEST_CASE(valid_hex_literal)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF\""));
@@ -483,29 +485,31 @@ BOOST_AUTO_TEST_CASE(invalid_short_hex_literal)
 {
 	Scanner scanner(CharStream("{ hex\"00112233F\""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_with_space)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF \""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_with_wrong_quotes)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF'"));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_nonhex_string)
 {
 	Scanner scanner(CharStream("{ hex\"hello\""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
 }
+
+//  COMMENTS
 
 BOOST_AUTO_TEST_CASE(invalid_multiline_comment_close)
 {

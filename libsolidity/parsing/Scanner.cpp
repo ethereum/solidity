@@ -612,7 +612,7 @@ void Scanner::scanToken()
 					if (m_char == '"' || m_char == '\'')
 						token = scanHexString();
 					else
-						token = Token::Illegal;
+						token = Token::IllegalHex;
 				}
 			}
 			else if (isDecimalDigit(m_char))
@@ -736,11 +736,11 @@ Token::Value Scanner::scanHexString()
 	{
 		char c = m_char;
 		if (!scanHexByte(c))
-			return Token::Illegal;
+			return Token::IllegalHex;
 		addLiteralChar(c);
 	}
 	if (m_char != quote)
-		return Token::Illegal;
+		return Token::IllegalHex;
 	literal.complete();
 	advance();  // consume quote
 	return Token::StringLiteral;
