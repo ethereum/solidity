@@ -137,16 +137,17 @@ BOOST_AUTO_TEST_CASE(function_call_does_not_clear_local_vars)
 {
 	string text = R"(
 		contract C {
-			function f() public {
+			function g() public pure {}
+			function f() public view {
 				uint a = 3;
-				this.f();
+				this.g();
 				assert(a == 3);
-				f();
+				g();
 				assert(a == 3);
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Assertion checker does not yet implement this type of function call");
 }
 
 BOOST_AUTO_TEST_CASE(branches_merge_variables)
@@ -569,7 +570,10 @@ BOOST_AUTO_TEST_CASE(constant_condition)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Condition is always true");
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Condition is always true",
+		"Assertion checker does not yet implement this type of function call"
+	}));
 	text = R"(
 		contract C {
 			function f(uint x) public pure {
@@ -577,7 +581,10 @@ BOOST_AUTO_TEST_CASE(constant_condition)
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Condition is always false");
+	CHECK_WARNING_ALLOW_MULTI(text, (vector<string>{
+		"Condition is always false",
+		"Assertion checker does not yet implement this type of function call"
+	}));
 	// a plain literal constant is fine
 	text = R"(
 		contract C {
@@ -586,7 +593,7 @@ BOOST_AUTO_TEST_CASE(constant_condition)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_WARNING(text, "Assertion checker does not yet implement this type of function call");
 }
 
 
