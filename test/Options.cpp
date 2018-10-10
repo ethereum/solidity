@@ -21,6 +21,8 @@
 
 #include <test/Options.h>
 
+#include <test/Common.h>
+
 #include <libsolidity/interface/EVMVersion.h>
 #include <libsolidity/interface/Exceptions.h>
 
@@ -74,25 +76,7 @@ Options::Options()
 			testPath = path;
 
 	if (testPath.empty())
-	{
-		auto const searchPath =
-		{
-			fs::current_path() / ".." / ".." / ".." / "test",
-			fs::current_path() / ".." / ".." / "test",
-			fs::current_path() / ".." / "test",
-			fs::current_path() / "test",
-			fs::current_path()
-		};
-		for (auto const& basePath : searchPath)
-		{
-			fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
-			if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
-			{
-				testPath = basePath;
-				break;
-			}
-		}
-	}
+		testPath = discoverTestPath();
 }
 
 void Options::validate() const

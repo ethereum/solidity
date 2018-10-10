@@ -16,6 +16,8 @@
 */
 
 #include <libdevcore/CommonIO.h>
+
+#include <test/Common.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
@@ -47,7 +49,7 @@ struct TestStats
 	int successCount;
 	int testCount;
 	operator bool() const { return successCount == testCount; }
-	TestStats& operator+=(TestStats const& _other)
+	TestStats& operator+=(TestStats const& _other) noexcept
 	{
 		successCount += _other.successCount;
 		testCount += _other.testCount;
@@ -285,25 +287,6 @@ void setupTerminal()
 #endif
 }
 
-fs::path discoverTestPath()
-{
-	auto const searchPath =
-	{
-		fs::current_path() / ".." / ".." / ".." / "test",
-		fs::current_path() / ".." / ".." / "test",
-		fs::current_path() / ".." / "test",
-		fs::current_path() / "test",
-		fs::current_path()
-	};
-	for (auto const& basePath: searchPath)
-	{
-		fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
-		if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
-			return basePath;
-	}
-	return {};
-}
-
 boost::optional<TestStats> runTestSuite(
 	string const& _name,
 	fs::path const& _basePath,
@@ -384,7 +367,7 @@ Allowed options)",
 	}
 
 	if (testPath.empty())
-		testPath = discoverTestPath();
+		testPath = dev::test::discoverTestPath();
 
 	TestStats global_stats{0, 0};
 
