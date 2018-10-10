@@ -31,6 +31,11 @@ When a contract is created, its constructor_  (a function declared with the ``co
 A constructor is optional. Only one constructor is allowed, which means
 overloading is not supported.
 
+After the constructor has executed, the final code of the contract is deployed to the
+blockchain. This code includes all public and external functions and all functions
+that are reachable from there through function calls. The deployed code does not
+include the constructor code or internal functions only called from the constructor.
+
 .. index:: constructor;arguments
 
 Internally, constructor arguments are passed :ref:`ABI encoded <ABI>` after the code of
@@ -1089,8 +1094,13 @@ initialisation code.
 Before the constructor code is executed, state variables are initialised to
 their specified value if you initialise them inline, or zero if you do not.
 
-After the constructor has run, the final code of the contract is returned. The deployment of
+After the constructor has run, the final code of the contract is deployed
+to the blockchain. The deployment of
 the code costs additional gas linear to the length of the code.
+This code includes all functions that are part of the public interface
+and all functions that are reachable from there through function calls.
+It does not include the constructor code or internal functions that are
+only called from the constructor.
 
 Constructor functions can be either ``public`` or ``internal``. If there is no
 constructor, the contract will assume the default constructor, which is
