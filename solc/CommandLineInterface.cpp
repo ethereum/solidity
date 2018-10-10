@@ -697,9 +697,11 @@ bool CommandLineInterface::processInput()
 		{
 			auto path = boost::filesystem::path(_path);
 			auto canonicalPath = weaklyCanonicalFilesystemPath(path);
+			cout << "Trying to load " << _path << " (boost: " << path << " canonical: " << canonicalPath << " )" << endl;
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
+				cout << "Allowed directory: " << allowedDir << endl;
 				// If dir is a prefix of boostPath, we are fine.
 				if (
 					std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
@@ -710,6 +712,7 @@ bool CommandLineInterface::processInput()
 					break;
 				}
 			}
+			cout << "Is allowed: " << isAllowed << endl;
 			if (!isAllowed)
 				return ReadCallback::Result{false, "File outside of allowed directories."};
 
