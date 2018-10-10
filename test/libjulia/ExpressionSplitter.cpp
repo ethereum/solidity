@@ -20,7 +20,7 @@
 
 #include <test/libjulia/Common.h>
 
-#include <libjulia/optimiser/ExpressionBreaker.h>
+#include <libjulia/optimiser/ExpressionSplitter.h>
 #include <libjulia/optimiser/NameCollector.h>
 
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -43,12 +43,12 @@ do\
 	auto result = parse(_original, false);\
 	NameDispenser nameDispenser;\
 	nameDispenser.m_usedNames = NameCollector(*result.first).names();\
-	ExpressionBreaker{nameDispenser}(*result.first);\
+	ExpressionSplitter{nameDispenser}(*result.first);\
 	BOOST_CHECK_EQUAL(assembly::AsmPrinter{}(*result.first), format(_expectation, false));\
 }\
 while(false)
 
-BOOST_AUTO_TEST_SUITE(YulExpressionBreaker)
+BOOST_AUTO_TEST_SUITE(YulExpressionSplitter)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
