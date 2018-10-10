@@ -2472,7 +2472,7 @@ Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName
 	return *_typeName.annotation().referencedDeclaration;
 }
 
-void TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
+bool TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
 {
 	_expression.accept(*this);
 	if (!type(_expression)->isImplicitlyConvertibleTo(_expectedType))
@@ -2501,7 +2501,9 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 				_expectedType.toString() +
 				"."
 			);
+		return false;
 	}
+	return true;
 }
 
 void TypeChecker::requireLValue(Expression const& _expression)
