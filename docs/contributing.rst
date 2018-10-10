@@ -82,6 +82,11 @@ To run a basic set of tests that neither require ``aleth`` nor ``libz3``, run
 ``./scripts/soltest.sh --no-ipc --no-smt``. This script will run ``build/test/soltest``
 internally.
 
+.. note ::
+
+    Those working in a Windows environment wanting to run the above basic sets without aleth or libz3 in Git Bash, you would have to do: ``./build/test/RelWithDebInfo/soltest.exe -- --no-ipc --no-smt``. 
+    If you're running this in plain Command Prompt, use ``.\build\test\RelWithDebInfo\soltest.exe -- --no-ipc --no-smt``. 
+
 The option ``--no-smt`` disables the tests that require ``libz3`` and
 ``--no-ipc`` disables those that require ``aleth``.
 
