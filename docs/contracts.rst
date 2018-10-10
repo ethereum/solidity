@@ -485,7 +485,11 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 .. note::
   If the compiler's EVM target is Byzantium or newer (default) the opcode
   ``STATICCALL`` is used for ``view`` functions which enforces the state
-  to stay unmodified as part of the EVM execution.
+  to stay unmodified as part of the EVM execution. For library ``view`` functions
+  ``DELEGATECALL`` is used, because there is no combined ``DELEGATECALL`` and ``STATICCALL``.
+  This means library ``view`` functions do not have run-time checks that prevent state
+  modifications. This should not impact security negatively because library code is
+  usually known at compile-time and the static checker performs compile-time checks.
 
 The following statements are considered modifying the state:
 
