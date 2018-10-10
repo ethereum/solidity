@@ -22,6 +22,8 @@
 
 #include <libsolidity/interface/Exceptions.h>
 
+#include <libdevcore/Visitor.h>
+
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
@@ -34,31 +36,6 @@ namespace solidity
 {
 namespace assembly
 {
-
-template <class...>
-struct GenericVisitor{};
-
-template <class Visitable, class... Others>
-struct GenericVisitor<Visitable, Others...>: public GenericVisitor<Others...>
-{
-	using GenericVisitor<Others...>::operator ();
-	explicit GenericVisitor(
-		std::function<void(Visitable&)> _visitor,
-		std::function<void(Others&)>... _otherVisitors
-	):
-		GenericVisitor<Others...>(_otherVisitors...),
-		m_visitor(_visitor)
-	{}
-
-	void operator()(Visitable& _v) const { m_visitor(_v); }
-
-	std::function<void(Visitable&)> m_visitor;
-};
-template <>
-struct GenericVisitor<>: public boost::static_visitor<> {
-	void operator()() const {}
-};
-
 
 struct Scope
 {
