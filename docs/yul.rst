@@ -44,7 +44,7 @@ and ``mod`` are available either natively or as functions and computes exponenti
             switch exponent
             case 0:u256 { result := 1:u256 }
             case 1:u256 { result := base }
-            default:
+            default
             {
                 result := power(mul(base, base), div(exponent, 2:u256))
                 switch mod(exponent, 2:u256)
