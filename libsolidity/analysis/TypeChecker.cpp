@@ -2299,7 +2299,8 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			m_errorReporter.typeError(_access.location(), "Index expression cannot be omitted.");
 		else
 		{
-			expectType(*index, IntegerType(256));
+			if (!expectType(*index, IntegerType(256)))
+				m_errorReporter.fatalTypeError(_access.location(), "Index expression cannot be represented as an unsigned integer.");
 			if (auto integerType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				if (bytesType.numBytes() <= integerType->literalValue(nullptr))
 					m_errorReporter.typeError(_access.location(), "Out of bounds array access.");
@@ -2470,7 +2471,7 @@ Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName
 	return *_typeName.annotation().referencedDeclaration;
 }
 
-void TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
+bool TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
 {
 	_expression.accept(*this);
 	if (!type(_expression)->isImplicitlyConvertibleTo(_expectedType))
@@ -2499,7 +2500,9 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 				_expectedType.toString() +
 				"."
 			);
+		return false;
 	}
+	return true;
 }
 
 void TypeChecker::requireLValue(Expression const& _expression)

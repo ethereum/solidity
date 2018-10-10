@@ -125,6 +125,7 @@ Bugfixes:
  * Type Checker: Dynamic types as key for public mappings return error instead of assertion fail.
  * Type Checker: Fix internal error when array index value is too large.
  * Type Checker: Fix internal error for array type conversions.
+ * Type Checker: Fix internal error when array index is not an unsigned.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
  * Parser: Fix incorrect source location for nameless parameters.
 
