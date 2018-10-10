@@ -52,7 +52,7 @@ Json::Value compileMulti(string const& _input, bool _callback)
 {
 	string output(
 		_callback ?
-		compileJSONCallback(_input.c_str(), dev::test::Options::get().optimize, NULL) :
+		compileJSONCallback(_input.c_str(), dev::test::Options::get().optimize, nullptr) :
 		compileJSONMulti(_input.c_str(), dev::test::Options::get().optimize)
 	);
 	Json::Value ret;
@@ -62,7 +62,7 @@ Json::Value compileMulti(string const& _input, bool _callback)
 
 Json::Value compile(string const& _input)
 {
-	string output(compileStandard(_input.c_str(), NULL));
+	string output(compileStandard(_input.c_str(), nullptr));
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;
