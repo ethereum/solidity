@@ -4519,6 +4519,31 @@ BOOST_AUTO_TEST_CASE(library_call_protection)
 	ABI_CHECK(callContractFunction("pu()"), encodeArgs(2));
 }
 
+
+BOOST_AUTO_TEST_CASE(library_staticcall_delegatecall)
+{
+	char const* sourceCode = R"(
+		 library Lib {
+			 function x() public view returns (uint) {
+				 return 1;
+			 }
+		 }
+		 contract Test {
+			 uint t;
+			 function f() public returns (uint) {
+				 t = 2;
+				 return this.g();
+			 }
+			 function g() public view returns (uint) {
+				 return Lib.x();
+			 }
+		 }
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
+}
+
 BOOST_AUTO_TEST_CASE(store_bytes)
 {
 	// this test just checks that the copy loop does not mess up the stack
