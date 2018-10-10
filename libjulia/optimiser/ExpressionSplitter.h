@@ -56,10 +56,10 @@ class NameCollector;
  * function calls can only appear in the right-hand side of a variable declaration,
  * assignments or expression statements and all arguments have to be constants or variables.
  */
-class ExpressionBreaker: public ASTModifier
+class ExpressionSplitter: public ASTModifier
 {
 public:
-	explicit ExpressionBreaker(NameDispenser& _nameDispenser):
+	explicit ExpressionSplitter(NameDispenser& _nameDispenser):
 		m_nameDispenser(_nameDispenser)
 	{ }
 

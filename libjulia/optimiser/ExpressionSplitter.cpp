@@ -19,7 +19,7 @@
  * declarations.
  */
 
-#include <libjulia/optimiser/ExpressionBreaker.h>
+#include <libjulia/optimiser/ExpressionSplitter.h>
 
 #include <libjulia/optimiser/ASTWalker.h>
 
@@ -34,25 +34,25 @@ using namespace dev;
 using namespace dev::julia;
 using namespace dev::solidity;
 
-void ExpressionBreaker::operator()(FunctionalInstruction& _instruction)
+void ExpressionSplitter::operator()(FunctionalInstruction& _instruction)
 {
 	for (auto& arg: _instruction.arguments | boost::adaptors::reversed)
 		outlineExpression(arg);
 }
 
-void ExpressionBreaker::operator()(FunctionCall& _funCall)
+void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
 	for (auto& arg: _funCall.arguments | boost::adaptors::reversed)
 		outlineExpression(arg);
 }
 
-void ExpressionBreaker::operator()(If& _if)
+void ExpressionSplitter::operator()(If& _if)
 {
 	outlineExpression(*_if.condition);
 	(*this)(_if.body);
 }
 
-void ExpressionBreaker::operator()(Switch& _switch)
+void ExpressionSplitter::operator()(Switch& _switch)
 {
 	outlineExpression(*_switch.expression);
 	for (auto& _case: _switch.cases)
@@ -60,7 +60,7 @@ void ExpressionBreaker::operator()(Switch& _switch)
 		(*this)(_case.body);
 }
 
-void ExpressionBreaker::operator()(ForLoop& _loop)
+void ExpressionSplitter::operator()(ForLoop& _loop)
 {
 	(*this)(_loop.pre);
 	// Do not visit the condition because we cannot break expressions there.
@@ -68,7 +68,7 @@ void ExpressionBreaker::operator()(ForLoop& _loop)
 	(*this)(_loop.body);
 }
 
-void ExpressionBreaker::operator()(Block& _block)
+void ExpressionSplitter::operator()(Block& _block)
 {
 	vector<Statement> saved;
 	swap(saved, m_statementsToPrefix);
@@ -87,7 +87,7 @@ void ExpressionBreaker::operator()(Block& _block)
 	swap(saved, m_statementsToPrefix);
 }
 
-void ExpressionBreaker::outlineExpression(Expression& _expr)
+void ExpressionSplitter::outlineExpression(Expression& _expr)
 {
 	if (_expr.type() != typeid(FunctionalInstruction) && _expr.type() != typeid(FunctionCall))
 		return;
