@@ -4,8 +4,11 @@
 // ----
 // expressionSplitter
 // {
-//     let _1 := mload(3)
-//     let _2 := calldataload(2)
-//     let _3 := add(_2, _1)
-//     mstore(_3, 8)
+//     let _1 := 8
+//     let _2 := 3
+//     let _3 := mload(_2)
+//     let _4 := 2
+//     let _5 := calldataload(_4)
+//     let _6 := add(_5, _3)
+//     mstore(_6, _1)
 // }

@@ -89,7 +89,7 @@ void ExpressionSplitter::operator()(Block& _block)
 
 void ExpressionSplitter::outlineExpression(Expression& _expr)
 {
-	if (_expr.type() != typeid(FunctionalInstruction) && _expr.type() != typeid(FunctionCall))
+	if (_expr.type() == typeid(Identifier))
 		return;
 
 	visit(_expr);
