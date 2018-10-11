@@ -23,6 +23,8 @@
 
 #include <libjulia/optimiser/Disambiguator.h>
 #include <libjulia/optimiser/CommonSubexpressionEliminator.h>
+#include <libjulia/optimiser/NameCollector.h>
+#include <libjulia/optimiser/ExpressionSplitter.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -86,6 +88,12 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		(CommonSubexpressionEliminator{})(*m_ast);
+	}
+	else if (m_optimizerStep == "expressionSplitter")
+	{
+		NameDispenser nameDispenser;
+		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
+		ExpressionSplitter{nameDispenser}(*m_ast);
 	}
 	else
 	{
