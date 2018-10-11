@@ -38,6 +38,7 @@
 #include <test/Options.h>
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/libsolidity/SyntaxTest.h>
+#include <test/libjulia/YulOptimizerTest.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -138,6 +139,12 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		"ASTJSON",
 		ASTJSONTest::create
 	) > 0, "no JSON AST tests found");
+	solAssert(registerTests(
+		master,
+		dev::test::Options::get().testPath / "libjulia",
+		"yulOptimizerTests",
+		dev::julia::test::YulOptimizerTest::create
+	) > 0, "no Yul Optimizer tests found");
 	if (dev::test::Options::get().disableIPC)
 	{
 		for (auto suite: {

@@ -29,7 +29,8 @@ using namespace std;
 
 bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 {
-	return _filename.extension().string() == ".sol" &&
+	string extension = _filename.extension().string();
+	return (extension == ".sol" || extension == ".yul") &&
 		   !boost::starts_with(_filename.string(), "~") &&
 		   !boost::starts_with(_filename.string(), ".");
 }

@@ -1,0 +1,6 @@
+// yul
+{ }
+// ----
+// disambiguator
+// {
+// }

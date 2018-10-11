@@ -233,6 +233,9 @@ jobs:
           command: codecov --flags all --gcov-root build
       - store_test_results:
           path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
 
   test_x86_mac:
     macos:
@@ -254,6 +257,9 @@ jobs:
       - run: *run_tests
       - store_test_results:
           path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
 
   docs:
     docker:
