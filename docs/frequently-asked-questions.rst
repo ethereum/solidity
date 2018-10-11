@@ -1,22 +1,22 @@
-###########################
-Frequently Asked Questions
-###########################
+##########################
+FAQ - Questions Fréquentes
+##########################
 
-This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
-
-
-***************
-Basic Questions
-***************
-
-What is the transaction "payload"?
-==================================
-
-This is just the bytecode "data" sent along with the request.
+Cette liste a été compilée par `fivedogit <mailto:fivedogit@gmail.com>`_.
 
 
-Create a contract that can be killed and return funds
-=====================================================
+******************
+Questions Basiques
+******************
+
+Qu'est-ce que le "payload" d'une transaction ?
+==============================================
+
+C'est la charge utile (binaire) envoyée avec la requête.
+
+
+Créer un contrat qui peut être "tué" et retourner ses fonds
+===========================================================
 
 First, a word of warning: Killing contracts sounds like a good idea, because "cleaning up"
 is always good, but as seen above, it does not really clean up. Furthermore,
@@ -38,13 +38,13 @@ has it (which includes `Remix <https://remix.ethereum.org/>`_), then
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
 examples.
 
-Can you return an array or a ``string`` from a solidity function call?
-======================================================================
+Peut-on retourner une array ou ``string`` dans un appel de fonctions en Solidity ?
+==================================================================================
 
 Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
 
-Is it possible to in-line initialize an array like so: ``string[] myarray = ["a", "b"];``
-=========================================================================================
+Est-il possible d'initialiser une array à la déclaration tel que: ``string[] myarray = ["a", "b"];`` ?
+======================================================================================================
 
 Yes. However it should be noted that this currently only works with statically sized memory arrays. You can even create an inline memory
 array in the return statement.
@@ -61,20 +61,20 @@ Example::
         }
     }
 
-Can a contract function return a ``struct``?
-============================================
+Un contrat peut-il retourner une ``struct`` ?
+=============================================
 
 Yes, but only in ``internal`` function calls or if ``pragma experimental "ABIEncoderV2";`` is used.
 
-If I return an ``enum``, I only get integer values in web3.js. How to get the named values?
-===========================================================================================
+Si je retourne un ``enum``, je ne reçois que les integers avec web3.js. Comment avoir les noms associés ?
+=========================================================================================================
 
 Enums are not supported by the ABI, they are just supported by Solidity.
 You have to do the mapping yourself for now, we might provide some help
 later.
 
-Can state variables be initialized in-line?
-===========================================
+Les variables d'état peuvent-elles être initialisées à la déclaration ?
+=======================================================================
 
 Yes, this is possible for all types (even for structs). However, for arrays it
 should be noted that you must declare them as static memory arrays.
@@ -98,13 +98,13 @@ Examples::
         C c = new C();
     }
 
-How do structs work?
-====================
+Comment marchent les ``struct`` ?
+=================================
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
-How do for loops work?
-======================
+Comment marche la boucle for ?
+==============================
 
 Very similar to JavaScript. Such as the following example:
 
@@ -112,8 +112,8 @@ Very similar to JavaScript. Such as the following example:
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
-What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
-==================================================================================================
+Quelles sont les exemples de fonctions de manipulation de ``string`` (``substring``, ``indexOf``, ``charAt``, etc) ?
+====================================================================================================================
 
 There are some string utility functions at `stringUtils.sol <https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol>`_
 which will be extended in the future. In addition, Arachnid has written `solidity-stringutils <https://github.com/Arachnid/solidity-stringutils>`_.
@@ -136,7 +136,7 @@ you should always convert it to a ``bytes`` first::
     }
 
 
-Can I concatenate two strings?
+Puis-je concaténer 2 strings ?
 ==============================
 
 Yes, you can use ``abi.encodePacked``::
@@ -151,8 +151,8 @@ Yes, you can use ``abi.encodePacked``::
     }
 
 
-Why is the low-level function ``.call()`` less favorable than instantiating a contract with a variable (``ContractB b;``) and executing its functions (``b.doSomething();``)?
-=============================================================================================================================================================================
+Pourquoi la foncttion bas-niveau ``.call()`` est moins recommendable que d'instancier un contrat dans une variable (``ContractB b;``) puis d'exécuter ses fonctions (``b.doSomething();``)?
+==============================================================================================================================================================================================
 
 If you use actual functions, the compiler will tell you if the types
 or your arguments do not match, if the function does not exist
@@ -162,8 +162,8 @@ arguments for you.
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_ and
 `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or "null"-like value?
-============================================================================================================
+En retournant disons un ``uint``, est-il possible de retourner ``undefined`` , "null" ou une valeur similaire ?
+===============================================================================================================
 
 This is not possible, because all types use up the full value range.
 
@@ -200,21 +200,21 @@ If you do not want to throw, you can return a pair::
     }
 
 
-Are comments included with deployed contracts and do they increase deployment gas?
-==================================================================================
+Les commentaires sont-ils déployés avec le contrat et/ou augmentent t'ils le coût du déploiement (gas) ?
+========================================================================================================
 
 No, everything that is not needed for execution is removed during compilation.
 This includes, among others, comments, variable names and type names.
 
-What happens if you send ether along with a function call to a contract?
-========================================================================
+Que se passe t'il si j'envoie des Ether lors de l'appel de fonction à un contrat ?
+==================================================================================
 
 It gets added to the total balance of the contract, just like when you send ether when creating a contract.
 You can only send ether along to a function that has the ``payable`` modifier,
 otherwise an exception is thrown.
 
-Is it possible to get a tx receipt for a transaction executed contract-to-contract?
-===================================================================================
+Est-il possible d'avoir un reçu de transaction pour une transaction contrat à contrat ?
+=======================================================================================
 
 No, a function call from one contract to another does not create its own transaction,
 you have to look in the overall transaction. This is also the reason why several
@@ -222,11 +222,11 @@ block explorer do not show Ether sent between contracts correctly.
 
 
 ******************
-Advanced Questions
+Questions Avancées
 ******************
 
-How do you get a random number in a contract? (Implement a self-returning gambling contract.)
-=============================================================================================
+Comment obtenir un nombre aléatoire dans un contrat ? (implémenter un contrat de jeu de hasard automatisé)
+==========================================================================================================
 
 Getting randomness right is often the crucial part in a crypto project and
 most failures result from bad random number generators.
@@ -234,16 +234,16 @@ most failures result from bad random number generators.
 If you do not want it to be safe, you build something similar to the `coin flipper <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/35_coin_flipper.sol>`_
 but otherwise, rather use a contract that supplies randomness, like the `RANDAO <https://github.com/randao/randao>`_.
 
-Get return value from non-constant function from another contract
-=================================================================
+Obtenir la valeur de retour d'une fonction non constante d'un autre contrat
+===========================================================================
 
 The key point is that the calling contract needs to know about the function it intends to call.
 
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_
 and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-How do you create 2-dimensional arrays?
-=======================================
+Comment créer des tableaux à 2 dimensions ?
+===========================================
 
 See `2D_array.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/55_2D_array.sol>`_.
 
@@ -259,8 +259,8 @@ Note2: Optimizing storage access can pull the gas costs down considerably, becau
 currently do not work across loops and also have a problem with bounds checking.
 You might get much better results in the future, though.
 
-What happens to a ``struct``'s mapping when copying over a ``struct``?
-======================================================================
+Qu'arrive t'il à un mapping de ``struct``s quand il est copié dans une ``struct``?
+==================================================================================
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
@@ -277,7 +277,7 @@ This is a very interesting question. Suppose that we have a contract field set u
 In this case, the mapping of the struct being copied over into ``user2`` is ignored as there is no "list of mapped keys".
 Therefore it is not possible to find out which values should be copied over.
 
-How do I initialize a contract with only a specific amount of wei?
+Comment initialiser un contrat avec un montent spécifique de wei ?
 ==================================================================
 
 Currently the approach is a little ugly, but there is little that can be done to improve it.
@@ -300,8 +300,8 @@ In this example::
         }
     }
 
-Can a contract function accept a two-dimensional array?
-=======================================================
+Une fonction de contrat peut-elle prendre en entrée un tableau à 2 dimensions ?
+===============================================================================
 
 If you want to pass two-dimensional arrays across non-internal functions,
 you most likely need to use ``pragma experimental "ABIEncoderV2";``.

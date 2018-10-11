@@ -1,6 +1,8 @@
 Solidity
 ========
 
+Traduit de l'anglais par `Kevin Azoulay <mailto:kevazoul@student.le-101.fr>`_.
+
 .. image:: logo.svg
     :width: 120px
     :alt: Solidity logo
