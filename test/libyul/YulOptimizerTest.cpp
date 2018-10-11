@@ -148,6 +148,18 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		disambiguate();
 		ExpressionSimplifier::run(*m_ast);
 	}
+	else if (m_optimizerStep == "fullSimplify")
+	{
+		disambiguate();
+		NameDispenser nameDispenser;
+		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
+		ExpressionSplitter{nameDispenser}(*m_ast);
+		CommonSubexpressionEliminator{}(*m_ast);
+		ExpressionSimplifier::run(*m_ast);
+		UnusedPruner::runUntilStabilised(*m_ast);
+		ExpressionJoiner::run(*m_ast);
+		ExpressionJoiner::run(*m_ast);
+	}
 	else if (m_optimizerStep == "unusedPruner")
 	{
 		disambiguate();
