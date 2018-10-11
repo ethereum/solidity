@@ -30,6 +30,7 @@
 #include <libjulia/optimiser/ExpressionInliner.h>
 #include <libjulia/optimiser/FullInliner.h>
 #include <libjulia/optimiser/MainFunction.h>
+#include <libjulia/optimiser/Rematerialiser.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -127,6 +128,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		disambiguate();
 		(FunctionGrouper{})(*m_ast);
 		(MainFunction{})(*m_ast);
+	}
+	else if (m_optimizerStep == "rematerialiser")
+	{
+		disambiguate();
+		(Rematerialiser{})(*m_ast);
 	}
 	else
 	{
