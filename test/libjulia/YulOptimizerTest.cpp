@@ -22,6 +22,8 @@
 #include <test/Options.h>
 
 #include <libjulia/optimiser/Disambiguator.h>
+#include <libjulia/optimiser/CommonSubexpressionEliminator.h>
+
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmParser.h>
@@ -80,6 +82,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
+	else if (m_optimizerStep == "commonSubexpressionEliminator")
+	{
+		disambiguate();
+		(CommonSubexpressionEliminator{})(*m_ast);
+	}
 	else
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
