@@ -1,0 +1,7 @@
+{
+    let x, y
+}
+// ----
+// unusedPruner
+// {
+// }

@@ -32,6 +32,7 @@
 #include <libjulia/optimiser/MainFunction.h>
 #include <libjulia/optimiser/Rematerialiser.h>
 #include <libjulia/optimiser/ExpressionSimplifier.h>
+#include <libjulia/optimiser/UnusedPruner.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -139,6 +140,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		(ExpressionSimplifier{})(*m_ast);
+	}
+	else if (m_optimizerStep == "unusedPruner")
+	{
+		disambiguate();
+		UnusedPruner::runUntilStabilised(*m_ast);
 	}
 	else
 	{
