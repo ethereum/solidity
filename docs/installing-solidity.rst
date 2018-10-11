@@ -2,49 +2,40 @@
 
 .. _installing-solidity:
 
-################################
-Installing the Solidity Compiler
-################################
+#################################
+Installer le Compilateur Solidity
+#################################
 
-Versioning
-==========
+Versionnage
+===========
 
-Solidity versions follow `semantic versioning <https://semver.org>`_ and in addition to
-releases, **nightly development builds** are also made available.  The nightly builds
-are not guaranteed to be working and despite best efforts they might contain undocumented
-and/or broken changes. We recommend using the latest release. Package installers below
-will use the latest release.
+Les versions de Solidity suivent un `versionnage sémantique <https://semver.org>`_ et en plus des versions stables, des versions de développement **nightly** sont également disponibles.  Les versions nightly ne sont pas garanties de fonctionner et malgré tous les efforts, elles peuvent contenir des changements non documentés et/ou cassés. Nous vous recommandons d'utiliser la dernière version. Les installateurs de paquets ci-dessous
+utilisent la dernière version.
 
 Remix
 =====
 
-*We recommend Remix for small contracts and for quickly learning Solidity.*
+Nous recommandons Remix pour les petits contrats et pour l'apprentissage rapide de Solidity.
 
-`Access Remix online <https://remix.ethereum.org/>`_, you don't need to install anything.
-If you want to use it without connection to the Internet, go to
-https://github.com/ethereum/remix-live/tree/gh-pages and download the ``.zip`` file as
-explained on that page.
+`Accédez à Remix en ligne <https://remix.ethereum.org/>`_, vous n'avez rien à installer.
+Si vous voulez l'utiliser sans connexion à Internet, allez à
+https://github.com/ethereum/remix-live/tree/gh-pages et téléchargez le fichier ``.zip`` tel qu'expliqué sur cette page.
 
-Further options on this page detail installing commandline Solidity compiler software
-on your computer. Choose a commandline compiler if you are working on a larger contract
-or if you require more compilation options.
+D'autres options sur cette page détaillent l'installation du compilateur Solidity en ligne de commande
+sur votre ordinateur. Choisissez un compilateur de ligne de commande si vous travaillez sur un contrat plus important
+ou si vous avez besoin de plus d'options de compilation.
 
 .. _solcjs:
 
 npm / Node.js
 =============
 
-Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
-`solcjs` program has fewer features than the ways to access the compiler described
-further down this page. The
-:ref:`commandline-compiler` documentation assumes you are using
-the full-featured compiler, `solc`. The usage of `solcjs` is documented inside its own
-`repository <https://github.com/ethereum/solc-js>`_.
+Utilisez `npm' pour un moyen pratique et portable d'installer `solcjs', un compilateur Solidity. Le programme `solcjs` a moins de fonctionnalités que le  compilateur décrit plus bas sur cette page. La documentation du :ref:`commandline-compiler` suppose que vous utilisez le compilateur complet, `solc`. L'utilisation de `solcjs` est documentée dans son propre
+`dépot <https://github.com/ethereum/solc-js>`_.
 
-Note: The solc-js project is derived from the C++
-`solc` by using Emscripten which means that both use the same compiler source code.
-`solc-js` can be used in JavaScript projects directly (such as Remix).
-Please refer to the solc-js repository for instructions.
+Note : Le projet solc-js est dérivé du projet C++ `solc` en utilisant Emscripten, ce qui signifie que les deux utilisent le même code source du compilateur.
+`solc-js' peut être utilisé directement dans les projets JavaScript (comme Remix).
+Veuillez vous référer au dépôt solc-js pour les instructions.
 
 .. code-block:: bash
 
@@ -52,34 +43,31 @@ Please refer to the solc-js repository for instructions.
 
 .. note::
 
-    The commandline executable is named `solcjs`.
+    L'exécutable en ligne de commande est nommé `solcjs'.
 
-    The comandline options of `solcjs` are not compatible with `solc` and tools (such as `geth`)
-    expecting the behaviour of `solc` will not work with `solcjs`.
+    Les options de la ligne de commande de `solcjs' ne sont pas compatibles avec `solc' et les outils (tels que `geth') attendant le comportement de `solc' ne fonctionneront pas avec `solcjs'.
 
 Docker
 ======
 
-We provide up to date docker builds for the compiler. The ``stable``
-repository contains released versions while the ``nightly``
-repository contains potentially unstable changes in the develop branch.
+Nous fournissons des images dockers à jour pour le compilateur. Le dépot ``stable``
+contient les versions publiées tandis que le dépôt ``nightly`` contient des changements potentiellement instables dans la branche develop.
 
 .. code-block:: bash
 
     docker run ethereum/solc:stable --version
 
-Currently, the docker image only contains the compiler executable,
-so you have to do some additional work to link in the source and
-output directories.
+Actuellement, l'image du docker ne contient que l'exécutable du compilateur,
+donc vous devez faire un peu plus de travail pour lier le code source et
+répertoires de sortie.
 
-Binary Packages
-===============
+Paquets binaires
+================
 
-Binary packages of Solidity are available at
+Les binaires de Solidity sont disponibles à
 `solidity/releases <https://github.com/ethereum/solidity/releases>`_.
 
-We also have PPAs for Ubuntu, you can get the latest stable
-version using the following commands:
+Nous avons également des PPAs for Ubuntu, vous pouvez obtenir la dernière version via la commande:
 
 .. code-block:: bash
 
@@ -87,7 +75,7 @@ version using the following commands:
     sudo apt-get update
     sudo apt-get install solc
 
-The nightly version can be installed using these commands:
+La version nigthly peut s'installer avec la commande:
 
 .. code-block:: bash
 
@@ -96,28 +84,25 @@ The nightly version can be installed using these commands:
     sudo apt-get update
     sudo apt-get install solc
 
-We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To install the latest stable version of solc:
+Nous publions également un `package snap <https://snapcraft.io/>`_, installable dans toutes les `distributionss linux supportées <https://snapcraft.io/docs/core/install>`_. Pour installer la dernière evrsion stable de solc:
 
 .. code-block:: bash
 
     sudo snap install solc
 
-If you want to help testing the latest development version of Solidity
-with the most recent changes, please use the following:
+Si vous voulez aider aux tests en utilisant la dernière version de développement, avec les changements l;es plus récents, merci d'utiliser:
 
 .. code-block:: bash
 
     sudo snap install solc --edge
 
-Arch Linux also has packages, albeit limited to the latest development version:
+Arch Linux a aussi des packets, bien que limités à la dernière version de développement:
 
 .. code-block:: bash
 
     pacman -S solidity
 
-We distribute the Solidity compiler through Homebrow
-as a build-from-source version. Pre-built bottles are
-currently not supported.
+Nous distribuons également le compilateur Solidity via homebrew dans une version compilée à partir des sources. Les "bottles" pré-compilées ne sont pas encore supportées pour l'instant.
 
 .. code-block:: bash
 
@@ -126,16 +111,15 @@ currently not supported.
     brew tap ethereum/ethereum
     brew install solidity
 
-If you need a specific version of Solidity you can install a
-Homebrew formula directly from Github.
+Si vous avec besoin d'une version spécifique, vous pouvez exécuter la formule homebrew correspondante disponible sur GitHub.
 
-View
-`solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
+Regarder
+`commits de solidity.rb sur Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
 
-Follow the history links until you have a raw file link of a
-specific commit of ``solidity.rb``.
+Suivez l'historique des liens jusqu'à avoir un lien de ficher brut ("raw")
+d'un commit spécifique de ``solidity.rb``.
 
-Install it using ``brew``:
+Installez-le via ``brew``:
 
 .. code-block:: bash
 
@@ -143,7 +127,7 @@ Install it using ``brew``:
     # Install 0.4.8
     brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
 
-Gentoo Linux also provides a solidity package that can be installed using ``emerge``:
+Gentoo Linux dispose aussi d' un paquet Solidity installable via ``emerge``:
 
 .. code-block:: bash
 
@@ -151,24 +135,24 @@ Gentoo Linux also provides a solidity package that can be installed using ``emer
 
 .. _building-from-source:
 
-Building from Source
-====================
+Compilation à partir des sources
+================================
 
-Prerequisites - Linux
----------------------
+Prérequis - Linux
+-----------------
 
-You need to install the following dependencies for Linux builds of Solidity:
+Vous aurez besoin des dépendances suivantes pour les compilations de Solidity sous Linux:
 
-+-----------------------------------+-------------------------------------------------------+
-| Software                          | Notes                                                 |
-+===================================+=======================================================+
-| `Git for Linux`_                  | Command-line tool for retrieving source from Github.  |
-+-----------------------------------+-------------------------------------------------------+
++-----------------------------------+-----------------------------------------------------------------------+
+| Software                          | Notes                                                                 |
++===================================+=======================================================================+
+| `Git pour Linux`_                  | Outils en ligne de commande pour r'ecup'erer des fichiers sur github  |
++-----------------------------------+-----------------------------------------------------------------------+
 
-.. _Git for Linux: https://git-scm.com/download/linux
+.. _Git pour Linux: https://git-scm.com/download/linux
 
-Prerequisites - macOS
----------------------
+Prérequis - macOS
+-----------------
 
 For macOS, ensure that you have the latest version of
 `Xcode installed <https://developer.apple.com/xcode/download/>`_.
