@@ -22,7 +22,7 @@ et portefeuilles multi-signature.
     `Remix <https://remix.ethereum.org/>`_https://remix.ethereum.org/
     (le chargement peut prendre un certain temps, merci d'être patient). Remix est un IDE basé sur un navigateur Web qui vous permet d'écrire des contrats intelligents Solidity, puis de déployer et exécuter les contrats intelligents.
 
-..warning::
+.. warning::
     Puisque le logiciel est écrit par des humains, il peut contenir des bugs. Ainsi, des contrats intelligents devraient également être créés selon les meilleures pratiques bien connues en matière de développement de logiciels. Cela comprend l'examen du code, les essais, les vérifications et les preuves d'exactitude.
     Notez également que les utilisateurs ont parfois plus confiance dans le code que ses auteurs.
     Enfin, les blockchains ont leurs propres choses à surveiller, alors jetez un coup d'oeil à la section :ref:`security_considerations`.
@@ -157,7 +157,7 @@ Outils Solidity
 * `EVM Lab <https://github.com/ethereum/evmlab/>`_
     Riche ensemble d'outils pour interagir avec l'EVM. Comprend une VM, une API Etherchain et un traceur avec affichage du coût du gaz.
 
-... note::
+.. note::
   Des informations telles que les noms de variables, les commentaires et le formatage du code source sont perdus dans le processus de compilation et il n'est pas possible de récupérer complètement le code source original. Décompiler les contrats intelligents pour afficher le code source original pourrait ne pas être possible, ou le résultat final pourrait être utile.
 
 Parsers et grammaires de Solidity de tierce parties
