@@ -283,104 +283,76 @@ mais il n'est pas possible d'accéder à des éléments arbitraires plus profond
 Jeu d'Instructions
 ==================
 
-The instruction set of the EVM is kept minimal in order to avoid
-incorrect or inconsistent implementations which could cause consensus problems.
-All instructions operate on the basic data type, 256-bit words or on slices of memory
-(or other byte arrays).
-The usual arithmetic, bit, logical and comparison operations are present.
-Conditional and unconditional jumps are possible. Furthermore,
-contracts can access relevant properties of the current block
-like its number and timestamp.
+Le jeu d'instructions de l'EVM est maintenu au minimum afin d'éviter
+des impl'ementations incorrectes ou incohérentes qui pourraient causer des problèmes de consensus.
+Toutes les instructions fonctionnent sur le type de données de base, les mots de 256 bits ou sur des tranches de mémoire
+(ou d'autres tableaux d'octets).
+Les opérations arithmétiques, binaires, logiques et de comparaison habituelles sont présentes.
+Des sauts conditionnels et inconditionnels sont possibles. En outre,
+les contrats peuvent accéder aux propriétés pertinentes du bloc actuel
+comme son numéro et son horodatage.
 
-For a complete list, please see the :ref:`list of opcodes <opcodes>` as part of the inline
-assembly documentation.
+Pour une liste complète, veuillez consulter la liste :ref:` liste des opcodes <opcodes>` dans la documentation de l'insertion de langage assembleur.
 
 .. index:: ! message call, function;call
 
-Message Calls
-=============
+Les Message Calls
+=================
 
-Contracts can call other contracts or send Ether to non-contract
-accounts by the means of message calls. Message calls are similar
-to transactions, in that they have a source, a target, data payload,
-Ether, gas and return data. In fact, every transaction consists of
-a top-level message call which in turn can create further message calls.
+Les contrats peuvent appeler d'autres contrats ou envoyer des Ether sur des comptes non contractuels par le biais d'appels de messages ("message calls"). Les Message Calls sont similaires aux transactions, en ce sens qu'ils ont une source, une cible, une charge utile de données, d'éventuels Ether, le gas et le retour. En fait, chaque transaction consiste en un message call de niveau supérieur qui, à son tour, peut créer d'autres message calls.
 
-A contract can decide how much of its remaining **gas** should be sent
-with the inner message call and how much it wants to retain.
-If an out-of-gas exception happens in the inner call (or any
-other exception), this will be signaled by an error value put onto the stack.
-In this case, only the gas sent together with the call is used up.
-In Solidity, the calling contract causes a manual exception by default in
-such situations, so that exceptions "bubble up" the call stack.
+Un contrat peut décider de la quantité de **gas** qu'il doit envoyer avec l'appel de message interne et de la quantité qu'il souhaite conserver.
+Si une exception fin de gas se produit dans l'appel interne (ou toute autre exception), elle sera signalée par une valeur d'erreur placée sur la stack.
+Dans ce cas, seul le gas envoyé avec l'appel est épuisé.
+Dans Solidity, le contrat appelant provoque une exception manuelle par défaut dans de telles situations, de sorte que les exceptions "remontent en surface" de la pile d'appels.
 
-As already said, the called contract (which can be the same as the caller)
-will receive a freshly cleared instance of memory and has access to the
-call payload - which will be provided in a separate area called the **calldata**.
-After it has finished execution, it can return data which will be stored at
-a location in the caller's memory preallocated by the caller.
-All such calls are fully synchronous.
+Comme déjà dit, le contrat appelé (qui peut être le même que celui de l'appelant) recevra une instance de mémoire fraîchement effacée et aura accès à la charge utile de l'appel - qui sera fournie dans une zone séparée appelée **calldata**.
+Une fois l'exécution terminée, il peut renvoyer des données qui seront stockées à un emplacement de la mémoire de l'appelant pré-alloué par ce dernier.
+Tous ces appels sont entièrement synchrones.
 
-Calls are **limited** to a depth of 1024, which means that for more complex
-operations, loops should be preferred over recursive calls. Furthermore,
-only 63/64th of the gas can be forwarded in a message call, which causes a
-depth limit of a little less than 1000 in practice.
+Les appels sont **limités** à une profondeur de 1024, ce qui signifie que pour les opérations plus complexes, les boucles doivent être préférées aux appels récursifs. De plus, seul 63/64ème du gaz peut être transféré lors d'un appel de message, ce qui entraîne une limite de profondeur d'un peu moins de 1000 en pratique.
 
 .. index:: delegatecall, callcode, library
 
-Delegatecall / Callcode and Libraries
+Delegatecall / Callcode et Libraries
 =====================================
 
-There exists a special variant of a message call, named **delegatecall**
-which is identical to a message call apart from the fact that
-the code at the target address is executed in the context of the calling
-contract and ``msg.sender`` and ``msg.value`` do not change their values.
+Il existe une variante spéciale d'un message call, appelée **delegatecall**, qui est identique à un appel de message sauf que le code à l'adresse cible est exécuté dans le cadre du contrat d'appel et que ``msg.sender`` et ``msg.value`` ne changent pas leurs valeurs.
 
-This means that a contract can dynamically load code from a different
-address at runtime. Storage, current address and balance still
-refer to the calling contract, only the code is taken from the called address.
+Cela signifie qu'un contrat peut charger dynamiquement du code à partir d'une adresse différente lors de l'exécution. Le stockage, l'adresse actuelle et le solde se réfèrent toujours au contrat d'appel, seul le code est repris de l'adresse appelée.
 
-This makes it possible to implement the "library" feature in Solidity:
-Reusable library code that can be applied to a contract's storage, e.g. in
-order to implement a complex data structure.
+Cela permet d'implémenter la fonctionnalité "bibliothèque" dans Solidity :
+Code de bibliothèque réutilisable qui peut être appliqué au stockage d'un contrat, par exemple pour implémenter une structure de données complexe.
 
 .. index:: log
 
-Logs
-====
+Logs / Journalisation
+=====================
 
-It is possible to store data in a specially indexed data structure
-that maps all the way up to the block level. This feature called **logs**
-is used by Solidity in order to implement :ref:`events <events>`.
-Contracts cannot access log data after it has been created, but they
-can be efficiently accessed from outside the blockchain.
-Since some part of the log data is stored in `bloom filters <https://en.wikipedia.org/wiki/Bloom_filter>`_, it is
-possible to search for this data in an efficient and cryptographically
-secure way, so network peers that do not download the whole blockchain
-(so-called "light clients") can still find these logs.
+Il est possible de stocker les données dans une structure de données spécialement indexée qui s'étend jusqu'au niveau du bloc. Cette fonction appelée **logs** (journalisation) est utilisé par Solidity pour implémenter les :ref:`events <events>`.
+Les contrats ne peuvent pas accéder aux données du journal une fois qu'elles ont été créées, mais ils peut être accédé efficacement de l'extérieur de la chaîne de blocs.
+Puisqu'une partie des données du journal est stockée dans des `bloom filters <https://en.wikipedia.org/wiki/Bloom_filter>`_, il est possible de rechercher ces données de manière efficace et cryptographique de manière sécurisée, afin que les pairs du réseau qui ne téléchargent pas la totalité de la blockchain (appelés "clients légers") peuvent encore trouver ces logs.
 
 .. index:: contract creation
 
-Create
-======
+Création
+========
 
-Contracts can even create other contracts using a special opcode (i.e.
-they do not simply call the zero address as a transaction would). The only difference between
-these **create calls** and normal message calls is that the payload data is
-executed and the result stored as code and the caller / creator
-receives the address of the new contract on the stack.
+Les contrats peuvent même créer d'autres contrats à l'aide d'un opcode spécial (càd qu'ils n'appellent pas simplement l'adresse zéro comme le ferait une transaction). La seule différence entre ces **appels de création** et des appels de message normaux est que les données de charge utile sont
+exécutées, le résultat stocké sous forme de code et l'appelant / créateur
+reçoit l'adresse du nouveau contrat sur la stack.
 
 .. index:: selfdestruct, self-destruct, deactivate
 
-Deactivate and Self-destruct
-============================
+Désactivation et Auto-Destruction
+=================================
 
-The only way to remove code from the blockchain is when a contract at that address performs the ``selfdestruct`` operation. The remaining Ether stored at that address is sent to a designated target and then the storage and code is removed from the state. Removing the contract in theory sounds like a good idea, but it is potentially dangerous, as if someone sends Ether to removed contracts, the Ether is forever lost.
+La seule façon de supprimer du code de la blockchain est lorsqu'un contrat à cette adresse exécute l'opération d'autodestruction ``selfdestruct``. L'Ether restant stocké à cette adresse est envoyé à une cible désignée, puis le stockage et le code sont retirés de l'état. Supprimer le contrat en théorie semble être une bonne idée, mais c'est potentiellement dangereux, comme en cas d'envoi d'éther à des contrats supprimés, où l'éther est perdu à jamais.
 
 .. note::
-    Even if a contract's code does not contain a call to ``selfdestruct``, it can still perform that operation using ``delegatecall`` or ``callcode``.
+    Même si le code d'un contrat ne contient pas d'appel à ``selfdestruct``, il peut toujours effectuer cette opération en utilisant le ``delegate code`` ou le ``callcode``.
 
-If you want to deactivate your contracts, you should instead **disable** them by changing some internal state which causes all functions to revert. This makes it impossible to use the contract, as it returns Ether immediately.
+Si vous souhaitez désactiver vos contrats, vous devez plutôt les désactiver en changeant un état interne qui provoque un échec (``revert``) de toutes les fonctions. Il est donc impossible d'utiliser le contrat, car il retourne immédiatement l'éther.
 
 .. warning::
-    Even if a contract is removed by "selfdestruct", it is still part of the history of the blockchain and probably retained by most Ethereum nodes. So using "selfdestruct" is not the same as deleting data from a hard disk.
+    Même si un contrat est supprimé par ``selfdestruct``, il fait toujours partie de l'historique de la blockchain et probablement conservé par la plupart des nœuds Ethereum. L'utilisation de l'autodestruction n'est donc pas la même chose que la suppression de données d'un disque dur.
