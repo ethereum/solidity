@@ -25,6 +25,7 @@
 #include <libjulia/optimiser/CommonSubexpressionEliminator.h>
 #include <libjulia/optimiser/NameCollector.h>
 #include <libjulia/optimiser/ExpressionSplitter.h>
+#include <libjulia/optimiser/FunctionGrouper.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -94,6 +95,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		NameDispenser nameDispenser;
 		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
 		ExpressionSplitter{nameDispenser}(*m_ast);
+	}
+	else if (m_optimizerStep == "functionGrouper")
+	{
+		disambiguate();
+		(FunctionGrouper{})(*m_ast);
 	}
 	else
 	{
