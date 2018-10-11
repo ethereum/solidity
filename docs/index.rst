@@ -18,8 +18,7 @@ Avec Solidity, vous pouvez créer des contrats pour des usages tels que le vote,
 et portefeuilles multi-signature.
 
 .. note::
-    La meilleure façon d'essayer Solidity à ce jour est d'utiliser
-    `Remix <https://remix.ethereum.org/>`_https://remix.ethereum.org/
+    La meilleure façon d'essayer Solidity à ce jour est d'utiliser `Remix <https://remix.ethereum.org/>`_ https://remix.ethereum.org/
     (le chargement peut prendre un certain temps, merci d'être patient). Remix est un IDE basé sur un navigateur Web qui vous permet d'écrire des contrats intelligents Solidity, puis de déployer et exécuter les contrats intelligents.
 
 .. warning::
