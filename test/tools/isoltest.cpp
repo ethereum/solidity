@@ -16,6 +16,8 @@
 */
 
 #include <libdevcore/CommonIO.h>
+
+#include <test/Common.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
@@ -47,6 +49,12 @@ struct TestStats
 	int successCount;
 	int testCount;
 	operator bool() const { return successCount == testCount; }
+	TestStats& operator+=(TestStats const& _other) noexcept
+	{
+		successCount += _other.successCount;
+		testCount += _other.testCount;
+		return *this;
+	}
 };
 
 class TestTool
@@ -256,6 +264,9 @@ TestStats TestTool::processPath(
 
 }
 
+namespace
+{
+
 void setupTerminal()
 {
 #if defined(_WIN32) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
@@ -274,6 +285,36 @@ void setupTerminal()
 	if (!SetConsoleMode(hOut, dwMode))
 		return;
 #endif
+}
+
+boost::optional<TestStats> runTestSuite(
+	string const& _name,
+	fs::path const& _basePath,
+	fs::path const& _subdirectory,
+	TestCase::TestCaseCreator _testCaseCreator,
+	bool _formatted
+)
+{
+	fs::path testPath = _basePath / _subdirectory;
+
+	if (!fs::exists(testPath) || !fs::is_directory(testPath))
+	{
+		cerr << _name << " tests not found. Use the --testpath argument." << endl;
+		return {};
+	}
+
+	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _formatted);
+
+	cout << endl << _name << " Test Summary: ";
+	FormattedScope(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
+		stats.successCount <<
+		"/" <<
+		stats.testCount;
+	cout << " tests successful." << endl << endl;
+
+	return stats;
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -326,73 +367,24 @@ Allowed options)",
 	}
 
 	if (testPath.empty())
-	{
-		auto const searchPath =
-		{
-			fs::current_path() / ".." / ".." / ".." / "test",
-			fs::current_path() / ".." / ".." / "test",
-			fs::current_path() / ".." / "test",
-			fs::current_path() / "test",
-			fs::current_path()
-		};
-		for (auto const& basePath : searchPath)
-		{
-			fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
-			if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
-			{
-				testPath = basePath;
-				break;
-			}
-		}
-	}
+		testPath = dev::test::discoverTestPath();
 
-	TestStats global_stats { 0, 0 };
+	TestStats global_stats{0, 0};
 
-	fs::path syntaxTestPath = testPath / "libsolidity" / "syntaxTests";
-
-	if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
-	{
-		auto stats = TestTool::processPath(SyntaxTest::create, testPath / "libsolidity", "syntaxTests", formatted);
-
-		cout << endl << "Syntax Test Summary: ";
-		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
-			stats.successCount << "/" << stats.testCount;
-		cout << " tests successful." << endl << endl;
-
-		global_stats.testCount += stats.testCount;
-		global_stats.successCount += stats.successCount;
-	}
+	if (auto stats = runTestSuite("Syntax", testPath / "libsolidity", "syntaxTests", SyntaxTest::create, formatted))
+		global_stats += *stats;
 	else
-	{
-		cerr << "Syntax tests not found. Use the --testpath argument." << endl;
 		return 1;
-	}
 
-	fs::path astJsonTestPath = testPath / "libsolidity" / "ASTJSON";
-
-	if (fs::exists(astJsonTestPath) && fs::is_directory(astJsonTestPath))
-	{
-		auto stats = TestTool::processPath(ASTJSONTest::create, testPath / "libsolidity", "ASTJSON", formatted);
-
-		cout << endl << "JSON AST Test Summary: ";
-		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
-			stats.successCount << "/" << stats.testCount;
-		cout << " tests successful." << endl << endl;
-
-		global_stats.testCount += stats.testCount;
-		global_stats.successCount += stats.successCount;
-	}
+	if (auto stats = runTestSuite("JSON AST", testPath / "libsolidity", "ASTJSON", ASTJSONTest::create, formatted))
+		global_stats += *stats;
 	else
-	{
-		cerr << "JSON AST tests not found." << endl;
 		return 1;
-	}
 
 	cout << endl << "Summary: ";
 	FormattedScope(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
 		 global_stats.successCount << "/" << global_stats.testCount;
 	cout << " tests successful." << endl;
-
 
 	return global_stats ? 0 : 1;
 }
