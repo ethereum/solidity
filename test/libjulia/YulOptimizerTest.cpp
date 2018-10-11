@@ -29,6 +29,7 @@
 #include <libjulia/optimiser/FunctionHoister.h>
 #include <libjulia/optimiser/ExpressionInliner.h>
 #include <libjulia/optimiser/FullInliner.h>
+#include <libjulia/optimiser/MainFunction.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -120,6 +121,12 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		(FunctionHoister{})(*m_ast);
 		(FunctionGrouper{})(*m_ast);
 		FullInliner(*m_ast).run();
+	}
+	else if (m_optimizerStep == "mainFunction")
+	{
+		disambiguate();
+		(FunctionGrouper{})(*m_ast);
+		(MainFunction{})(*m_ast);
 	}
 	else
 	{
