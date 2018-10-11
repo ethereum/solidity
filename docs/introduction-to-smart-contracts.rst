@@ -1,16 +1,14 @@
 ###############################
-Introduction to Smart Contracts
+Introduction aux Smart Contracts
 ###############################
 
 .. _simple-smart-contract:
 
-***********************
-A Simple Smart Contract
-***********************
+************************
+Un Smart Contract simple
+************************
 
-Let us begin with a basic example that sets the value of a variable and exposes
-it for other contracts to access. It is fine if you do not understand
-everything right now, we will go into more detail later.
+Commençons par un exemple de base qui fixe la valeur d'une variable et l'expose pour l'accès par d'autres contrats. C'est très bien si vous ne comprenez pas tout maintenant, nous entrerons plus en détail plus tard.
 
 Storage
 =======
@@ -31,52 +29,32 @@ Storage
         }
     }
 
-The first line simply tells that the source code is written for
-Solidity version 0.4.0 or anything newer that does not break functionality
-(up to, but not including, version 0.6.0). This is to ensure that the
-contract is not compilable with a new (breaking) compiler version, where it could behave differently.
-So-called pragmas are common instructions for compilers about how to treat the
-source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
+La première ligne indique simplement que le code source est écrit pour Solidity version 0.4.0 ou tout ce qui est plus récent qui ne casse pas la fonctionnalité (jusqu'à la version 0.6.0, mais non comprise). Il s'agit de s'assurer que le contrat n'est pas compilable avec une nouvelle version du compilateur (de rupture), où il pourrait se comporter différemment.
+Les pré-cités pragmas sont des instructions courantes pour les compilateurs sur la façon de traiter le code source (par exemple `pragma once <https://fr.wikipedia.org/wiki/Pragma_once>`_).
 
-A contract in the sense of Solidity is a collection of code (its *functions*) and
-data (its *state*) that resides at a specific address on the Ethereum
-blockchain. The line ``uint storedData;`` declares a state variable called ``storedData`` of
-type ``uint`` (*u*nsigned *int*eger of *256* bits). You can think of it as a single slot
-in a database that can be queried and altered by calling functions of the
-code that manages the database. In the case of Ethereum, this is always the owning
-contract. And in this case, the functions ``set`` and ``get`` can be used to modify
-or retrieve the value of the variable.
+Un contrat au sens de Solidity est un ensemble de code (ses *fonctions*) et les données (son *état*) qui résident à une adresse spécifique sur la blockchain Ethereum. La ligne ``uint storedData;`` déclare une variable d'état appelée ``storedData``` de type ``uint`` (*u*nsigned *int*eger de *256* bits). Vous pouvez le considérer comme une case mémoire dans une base de données qui peut être interrogée et modifiée en appelant les fonctions du code qui gèrent la base de données. Dans le cas d'Ethereum, c'est toujours le contrat propriétaire. Et dans ce cas, les fonctions ``set`` et ``get`` peuvent être utilisées pour modifier
+ou récupérer la valeur de la variable.
 
-To access a state variable, you do not need the prefix ``this.`` as is common in
-other languages.
+Pour accéder à une variable d'état, vous n'avez pas besoin du préfixe ``this.`` d'autres langues.
 
-This contract does not do much yet apart from (due to the infrastructure
-built by Ethereum) allowing anyone to store a single number that is accessible by
-anyone in the world without a (feasible) way to prevent you from publishing
-this number. Of course, anyone could just call ``set`` again with a different value
-and overwrite your number, but the number will still be stored in the history
-of the blockchain. Later, we will see how you can impose access restrictions
-so that only you can alter the number.
+Ce contrat ne fait pas encore grand-chose en dehors de (en raison de l'infrastructure construite par Ethereum) permettre à n'importe qui de stocker un numéro unique qui est accessible par n'importe qui dans le monde sans un moyen (faisable) pour vous empêcher de publier ce numéro. Bien sûr, n'importe qui peut simplement appeler ``set`` à nouveau avec une valeur différente.
+et écraser votre numéro, mais le numéro sera toujours stocké dans l'historique de la blockchain. Plus tard, nous verrons comment vous pouvez imposer des restrictions d'accès pour que vous seul puissiez modifier le numéro.
 
-.. note::
-    All identifiers (contract names, function names and variable names) are restricted to
-    the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
+... note::
+    Tous les identifiants (noms de contrat, noms de fonctions et noms de variables) sont limités au jeu de caractères ASCII. Il est possible de stocker des données encodées en UTF-8 dans des variables de type string.
 
-.. warning::
-    Be careful with using Unicode text, as similar looking (or even identical) characters can
-    have different code points and as such will be encoded as a different byte array.
+..warning::
+    Soyez prudent lorsque vous utilisez du texte Unicode, car des caractères d'apparence similaire (ou même identique) peuvent avoir des codages unicode différents et seront donc codés sous la forme d'un tableau d'octets différent.
 
 .. index:: ! subcurrency
 
-Subcurrency Example
-===================
+Exemple de sous-monnaie
+=======================
 
-The following contract will implement the simplest form of a
-cryptocurrency. It is possible to generate coins out of thin air, but
-only the person that created the contract will be able to do that (it is easy
-to implement a different issuance scheme).
-Furthermore, anyone can send coins to each other without a need for
-registering with username and password — all you need is an Ethereum keypair.
+Le contrat suivant mettra en œuvre la forme la plus simple d'un contrat de
+cryptomonnaie. Il est possible de générer des pièces à partir de rien, mais
+seule la personne qui a créé le contrat sera en mesure de le faire (il est facile de mettre en œuvre un schéma d'émission différent).
+De plus, n'importe qui peut s'envoyer des pièces sans avoir besoin de s'enregistrer avec un nom d'utilisateur et un mot de passe - tout ce dont vous avez besoin est une paire de clés Ethereum.
 
 
 ::
@@ -84,17 +62,17 @@ registering with username and password — all you need is an Ethereum keypair.
     pragma solidity >0.4.99 <0.6.0;
 
     contract Coin {
-        // The keyword "public" makes those variables
-        // easily readable from outside.
+        // Le mot-clé "public" rend ces variables
+        // facilement accessible de l'exterieur.
         address public minter;
         mapping (address => uint) public balances;
 
-        // Events allow light clients to react to
-        // changes efficiently.
+        // Les Events authowisent les clients légers à réagir
+        // aux changements efficacement.
         event Sent(address from, address to, uint amount);
 
-        // This is the constructor whose code is
-        // run only when the contract is created.
+        // C'est le constructor, code qui n'est exécuté
+        // qu'à la création du contrat.
         constructor() public {
             minter = msg.sender;
         }
@@ -113,60 +91,37 @@ registering with username and password — all you need is an Ethereum keypair.
         }
     }
 
-This contract introduces some new concepts, let us go through them one by one.
-
-The line ``address public minter;`` declares a state variable of type address
-that is publicly accessible. The ``address`` type is a 160-bit value
-that does not allow any arithmetic operations. It is suitable for
-storing addresses of contracts or of keypairs belonging to external
-persons. The keyword ``public`` automatically generates a function that
-allows you to access the current value of the state variable
-from outside of the contract.
-Without this keyword, other contracts have no way to access the variable.
-The code of the function generated by the compiler is roughly equivalent
-to the following (ignore ``external`` and ``view`` for now)::
+Ce contrat introduit quelques nouveaux concepts, passons-les en revue un à un.
+La ligne ``address public minter;`` déclare une variable d'état de type adress qui est accessible au public. Le type ``adress`` est une valeur de 160 bits qui ne permet aucune opération arithmétique. Il convient pour le stockage des adresses de contrats ou de paires de clés appartenant à des tiers. Le mot-clé "public" génère automatiquement une fonction qui permet d'accéder à la valeur courante de la variable d'état de l'extérieur du contrat.
+Sans ce mot-clé, les autres contrats n'ont aucun moyen d'accéder à la variable.
+Le code de la fonction générée par le compilateur est à peu près équivalent à ce qui suit (ignorez ``external'' et ``view`` pour l'instant)::
 
     function minter() external view returns (address) { return minter; }
 
-Of course, adding a function exactly like that will not work
-because we would have a
-function and a state variable with the same name, but hopefully, you
-get the idea - the compiler figures that out for you.
+Bien sûr, l'ajout d'une fonction exactement comme celle-là ne fonctionnera pas parce que nous aurions une fonction et une variable d'état avec le même nom, mais vous avez l'idée - le compilateur réalisera cela pour vous.
 
 .. index:: mapping
 
-The next line, ``mapping (address => uint) public balances;`` also
-creates a public state variable, but it is a more complex datatype.
-The type maps addresses to unsigned integers.
-Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are
-virtually initialized such that every possible key exists from the start and is mapped to a
-value whose byte-representation is all zeros. This analogy does not go
-too far, though, as it is neither possible to obtain a list of all keys of
-a mapping, nor a list of all values. So either keep in mind (or
-better, keep a list or use a more advanced data type) what you
-added to the mapping or use it in a context where this is not needed.
-The :ref:`getter function<getter-functions>` created by the ``public`` keyword
-is a bit more complex in this case. It roughly looks like the
-following::
+La ligne suivante, ``mapping (" adress => uint ") public balances;`` 
+crée également une variable d'état publique, mais c'est un type de données plus complexe.
+Le type fait correspondre les adresses aux entiers non signés.
+Les mappings peuvent être vus comme des `tables de hachage <https://en.wikipedia.org/wiki/Hash_table>`_ qui sont
+virtuellement initialisées de sorte que toutes les clés possibles existent dès le début et sont mappées à un fichier
+dont la représentation octale n'est que de zéros. Cette analogie ne va pas
+trop loin, car il n'est pas non plus possible d'obtenir une liste de toutes les clés d'un mapping, ni une liste de toutes les valeurs. Il faut donc garder à l'esprit (ou bien
+mieux, gardez une liste ou utilisez un type de données plus avancé) ce que vous avez ajouté à la cartographie ou l'utiliser dans un contexte où cela n'est pas nécessaire.
+La :ref:`fonction getter<fonctiongetter-fonctions>` créé par le mot-clé ``public`` est un peu plus complexe dans ce cas. Ça ressemble grossièrement à ça::
 
     function balances(address _account) external view returns (uint) {
         return balances[_account];
     }
 
-As you see, you can use this function to easily query the balance of a
-single account.
+Comme vous pouvez le voir, vous pouvez utiliser cette fonction pour interroger facilement le solde d'un seul compte.
 
 .. index:: event
 
-The line ``event Sent(address from, address to, uint amount);`` declares
-a so-called "event" which is emitted in the last line of the function
-``send``. User interfaces (as well as server applications of course) can
-listen for those events being emitted on the blockchain without much
-cost. As soon as it is emitted, the listener will also receive the
-arguments ``from``, ``to`` and ``amount``, which makes it easy to track
-transactions. In order to listen for this event, you would use the following
-JavaScript code (which assumes that ``Coin`` is a contract object created via
-web3.js or a similar module)::
+La ligne ``event Sent(address from, address to, uint amount);`` déclare un bien-nommé "event" qui est émis dans la dernière ligne de la fonction ``send``. Les interfaces utilisateur (ainsi que les applications serveur bien sûr) peuvent écouter les événements qui sont émis sur la blockchain sans trop de frais. Dès qu'elle est émise, l'auditeur reçoit également le message
+des arguments "from", "to" et "amount", ce qui facilite le suivi des transactions. Pour écouter cet événement, vous devriez utiliser le code JavaScript suivant (qui suppose que ``Coin` est un objet de contrat créé via web3.js ou un module similaire)::
 
     Coin.Sent().watch({}, '', function(error, result) {
         if (!error) {
@@ -179,39 +134,20 @@ web3.js or a similar module)::
         }
     })
 
-Note how the automatically generated function ``balances`` is called from
-the user interface.
+Notez comment la fonction ``balances`` générée automatiquement est appelée depuis l'interface utilisateur.
 
 .. index:: coin
 
-The constructor is a special function which is run during creation of the contract and
-cannot be called afterwards. It permanently stores the address of the person creating the
-contract: ``msg`` (together with ``tx`` and ``block``) is a special global variable that
-contains some properties which allow access to the blockchain. ``msg.sender`` is
-always the address where the current (external) function call came from.
+Le constructor est une fonction spéciale qui est exécutée pendant la création du contrat et ne peut pas être appelée ultérieurement. Il stocke de façon permanente l'adresse de la personne qui crée le contrat : ``msg`` (avec ``tx`` et ``block``) est une variable globale spéciale qui contient certaines propriétés qui permettent d'accéder à la blockchain. ``msg.sender`` est toujours l'adresse d'où vient l'appel de la fonction courante (externe).
 
-Finally, the functions that will actually end up with the contract and can be called
-by users and contracts alike are ``mint`` and ``send``.
-If ``mint`` is called by anyone except the account that created the contract,
-nothing will happen. This is ensured by the special function ``require`` which
-causes all changes to be reverted if its argument evaluates to false.
-The second call to ``require`` ensures that there will not be too many coins,
-which could cause overflow errors later.
+Enfin, les fonctions qui finiront avec le contrat et qui peuvent être appelées par les utilisateurs et les contrats sont "mint" et "send".
+Si "mint" est appelé par quelqu'un d'autre que le compte qui a créé le contrat, rien ne se passera. Ceci est assuré par la fonction spéciale ``require`` qui fait que tous les changements sont annulés si son argument est évalué à faux.
+Le deuxième appel à ``require`` permet de s'assurer qu'il n'y aura pas trop de pièces, ce qui pourrait causer des erreurs de débordement de buffer plus tard.
 
-On the other hand, ``send`` can be used by anyone (who already
-has some of these coins) to send coins to anyone else. If you do not have
-enough coins to send, the ``require`` call will fail and also provide the
-user with an appropriate error message string.
+D'un autre côté, ``send`` peut être utilisé par n'importe qui (qui a déjà certaines de ces pièces) pour envoyer des pièces à n'importe qui d'autre. Si vous n'avez pas assez de pièces à envoyer, l'appel ``require`` échouera et fournira également à l'utilisateur un message d'erreur approprié.
 
 .. note::
-    If you use
-    this contract to send coins to an address, you will not see anything when you
-    look at that address on a blockchain explorer, because the fact that you sent
-    coins and the changed balances are only stored in the data storage of this
-    particular coin contract. By the use of events it is relatively easy to create
-    a "blockchain explorer" that tracks transactions and balances of your new coin,
-    but you have to inspect the coin contract address and not the addresses of the
-    coin owners.
+    Si vous utilisez ce contrat pour envoyer des pièces à une adresse, vous ne verrez rien lorsque vous regarderez cette adresse sur un explorateur de chaîne de blocs, parce que le fait que vous avez envoyé des pièces et les soldes modifiés sont seulement stockés dans le stockage de données de ce contrat de pièces particulier. Par l'utilisation d'événements, il est relativement facile de créer un "explorateur de chaîne" qui suit les transactions et les soldes de votre nouvelle pièce, mais vous devez inspecter l'adresse du contrat de pièces et non les adresses des propriétaires des pièces.
 
 .. _blockchain-basics:
 
