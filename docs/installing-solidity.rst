@@ -96,7 +96,7 @@ Si vous voulez aider aux tests en utilisant la dernière version de développeme
 
     sudo snap install solc --edge
 
-Arch Linux a aussi des packets, bien que limités à la dernière version de développement:
+Arch Linux a aussi des paquets, bien que limités à la dernière version de développement:
 
 .. code-block:: bash
 
@@ -146,7 +146,7 @@ Vous aurez besoin des dépendances suivantes pour les compilations de Solidity s
 +-----------------------------------+-----------------------------------------------------------------------+
 | Software                          | Notes                                                                 |
 +===================================+=======================================================================+
-| `Git pour Linux`_                  | Outils en ligne de commande pour r'ecup'erer des fichiers sur github  |
+| `Git pour Linux`_                 | Outils en ligne de commande pour r'ecup'erer des fichiers sur github  |
 +-----------------------------------+-----------------------------------------------------------------------+
 
 .. _Git pour Linux: https://git-scm.com/download/linux
@@ -154,113 +154,109 @@ Vous aurez besoin des dépendances suivantes pour les compilations de Solidity s
 Prérequis - macOS
 -----------------
 
-For macOS, ensure that you have the latest version of
-`Xcode installed <https://developer.apple.com/xcode/download/>`_.
-This contains the `Clang C++ compiler <https://en.wikipedia.org/wiki/Clang>`_, the
-`Xcode IDE <https://en.wikipedia.org/wiki/Xcode>`_ and other Apple development
-tools which are required for building C++ applications on OS X.
-If you are installing Xcode for the first time, or have just installed a new
-version then you will need to agree to the license before you can do
-command-line builds:
+Pour macOS, assurez-vous d'avoir installer la dernière version de
+`Xcode <https://developer.apple.com/xcode/download/>`_.
+Ceci contient le compilateur C++ `Clang <https://en.wikipedia.org/wiki/Clang>`_, l'IDE
+`Xcode <https://en.wikipedia.org/wiki/Xcode>`_ et d'autres outils de développement Apple qui sont nécessaires pour construire des applications C++ sous OS X.
+Si vous installez Xcode pour la première fois, ou si vous venez d'installer une nouvelle version, vous devrez accepter la licence avant de pouvoir compiler en ligne de commande:
 
 .. code-block:: bash
 
     sudo xcodebuild -license accept
 
-Our OS X builds require you to `install the Homebrew <http://brew.sh>`_
-package manager for installing external dependencies.
-Here's how to `uninstall Homebrew
+Nos versions pour OS X exigent que vous installiez `Homebrew <http://brew.sh>`_http://brew.sh
+pour l'installation des dépendances externes.
+Voici comment `désinstaller Homebrew
 <https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/FAQ.md#how-do-i-uninstall-homebrew>`_,
-if you ever want to start again from scratch.
+si vous voulez recommencer à zéro.
 
 
-Prerequisites - Windows
------------------------
+Prérequis - Windows
+-------------------
 
-You need to install the following dependencies for Windows builds of Solidity:
+Vous aurez besoin des dépendances suivants pour la compilation de solidity sous Windows:
 
-+-----------------------------------+-------------------------------------------------------+
-| Software                          | Notes                                                 |
-+===================================+=======================================================+
-| `Git for Windows`_                | Command-line tool for retrieving source from Github.  |
-+-----------------------------------+-------------------------------------------------------+
-| `CMake`_                          | Cross-platform build file generator.                  |
-+-----------------------------------+-------------------------------------------------------+
-| `Visual Studio 2017 Build Tools`_ | C++ compiler                                          |
-+-----------------------------------+-------------------------------------------------------+
-| `Visual Studio 2017`_  (Optional) | C++ compiler and dev environment.                     |
-+-----------------------------------+-------------------------------------------------------+
++-----------------------------------+----------------------------------------------------------------------+
+| Software                          | Notes                                                                |
++===================================+======================================================================+
+| `Git pour Linux`_                 | Outils en ligne de commande pour r'ecup'erer des fichiers sur github |
++-----------------------------------+----------------------------------------------------------------------+
+| `CMake`_                          | Générateur de fichiers d'installation multi-plateformes              |
++-----------------------------------+----------------------------------------------------------------------+
+| `Visual Studio 2017 Build Tools`_ | Compilateur C++                                                      |
++-----------------------------------+----------------------------------------------------------------------+
+| `Visual Studio 2017`_  (Optional) | Environment de développement et compilateur C++.                     |
++-----------------------------------+----------------------------------------------------------------------+
 
-If you've already had one IDE and only need compiler and libraries,
-you could install Visual Studio 2017 Build Tools.
+Si vous avez déjà eu un IDE et que vous n'avez besoin que du compilateur et des bibliothèques,
+vous pouvez installer Visual Studio 2017 Build Tools.
 
-Visual Studio 2017 provides both IDE and necessary compiler and libraries.
-So if you have not got an IDE and prefer to develop solidity, Visual Studio 2017
-may be an choice for you to get everything setup easily.
+Visual Studio 2017 fournit à la fois l'IDE et le compilateur et les bibliothèques nécessaires.
+Donc si vous n'avez pas d'IDE et que vous préférez développer en Solidity, Visual Studio 2017
+peut être un choix pour tout installer facilement.
 
-Here is the list of components that should be installed
-in Visual Studio 2017 Build Tools or Visual Studio 2017:
+Voici la liste des composants à installer
+dans Visual Studio 2017 Build Tools ou Visual Studio 2017 :
 
-* Visual Studio C++ core features
-* VC++ 2017 v141 toolset (x86,x64)
+* Visual Studio C+++ fonctionnalités de base
+* VC+++ 2017 v141 toolset (x86,x64)
 * Windows Universal CRT SDK
 * Windows 8.1 SDK
-* C++/CLI support
+* Support C+++/CLI
 
-.. _Git for Windows: https://git-scm.com/download/win
+.. _Git pour Windows: https://git-scm.com/download/win
 .. _CMake: https://cmake.org/download/
 .. _Visual Studio 2017: https://www.visualstudio.com/vs/
 .. _Visual Studio 2017 Build Tools: https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017
 
-Clone the Repository
---------------------
+Clonez le dépot
+---------------
 
-To clone the source code, execute the following command:
+Pour cloner le code source, exécutez la commande suivante:
 
 .. code-block:: bash
 
     git clone --recursive https://github.com/ethereum/solidity.git
     cd solidity
 
-If you want to help developing Solidity,
-you should fork Solidity and add your personal fork as a second remote:
+Si vous voulez aider à développer Solidity,
+vous devriez forker Solidity et ajouter votre fork comme un second remote (dépot distant):
 
 .. code-block:: bash
 
     git remote add personal git@github.com:[username]/solidity.git
 
-Solidity has git submodules.  Ensure they are properly loaded:
+Solidity a des submodules Git.  Vérifiez qu'ils sont proprement chargés:
 
 .. code-block:: bash
 
    git submodule update --init --recursive
 
-External Dependencies
----------------------
+Dépendances externes
+--------------------
 
-We have a helper script which installs all required external dependencies
-on macOS, Windows and on numerous Linux distros.
+Nous avons un script d'aide qui installe toutes les dépendances externes requises sur macOS, Windows et de nombreuses distributions Linux.
 
 .. code-block:: bash
 
     ./scripts/install_deps.sh
 
-Or, on Windows:
+Ou, sous Windows:
 
 .. code-block:: bat
 
     scripts\install_deps.bat
 
 
-Command-Line Build
-------------------
+Compilation en ligne de commande
+--------------------------------
 
-**Be sure to install External Dependencies (see above) before build.**
+**Soyez sûrs d'installer les dépendances externes avant de compiler.**
 
-Solidity project uses CMake to configure the build.
-You might want to install ccache to speed up repeated builds.
-CMake will pick it up automatically.
-Building Solidity is quite similar on Linux, macOS and other Unices:
+Le projet Solidity utilise CMake pour la configuration de compilation.
+Vous voulez peut-être installer ccache pour accélérer des compilations successives.
+CMake l'utilisera automatiquement.
+Compiler Solidity est similaire sur Linux, macOS et autres systèmes Unix:
 
 .. code-block:: bash
 
@@ -268,14 +264,14 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
     cd build
     cmake .. && make
 
-or even easier:
+ou encore plus simplement:
 
 .. code-block:: bash
 
-    #note: this will install binaries solc and soltest at usr/local/bin
+    #note: les binaires de solc et les tests seront installés dans usr/local/bin
     ./scripts/build.sh
 
-And for Windows:
+Et pour Windows:
 
 .. code-block:: bash
 
@@ -283,78 +279,71 @@ And for Windows:
     cd build
     cmake -G "Visual Studio 15 2017 Win64" ..
 
-This latter set of instructions should result in the creation of
-**solidity.sln** in that build directory.  Double-clicking on that file
-should result in Visual Studio firing up.  We suggest building
-**RelWithDebugInfo** configuration, but all others work.
+Ce dernier ensemble d'instructions devrait aboutir à la création de **solidity.sln** dans ce répertoire de compilation.  Double-cliquer sur ce fichier devrait faire démarrer Visual Studio.  Nous suggérons de construire la configuration **RelWithDebugInfo**, mais toutes les autres fonctionnent.
 
-Alternatively, you can build for Windows on the command-line, like so:
+Alternativement, vous pouvez compiler pour Windows en ligne de commande, comme ça :
 
 .. code-block:: bash
 
     cmake --build . --config RelWithDebInfo
 
-CMake options
-=============
+Options de CMake
+================
 
-If you are interested what CMake options are available run ``cmake .. -LH``.
+La liste des options de Cmake est disponible via la commande: ``cmake .. -LH``.
 
 .. _smt_solvers_build:
 
-SMT Solvers
------------
-Solidity can be built against SMT solvers and will do so by default if
-they are found in the system. Each solver can be disabled by a `cmake` option.
+Solveurs SMT
+------------
+Solidity peut être compilé avec les solveurs SMT et le fera par défaut s'ils sont trouvés dans le système. Chaque solveur peut être désactivé par une option `cmake`.
 
-*Note: In some cases, this can also be a potential workaround for build failures.*
+Remarque : Dans certains cas, cela peut également être une solution de contournement potentielle en cas d'échec de compilation.
 
 
-Inside the build folder you can disable them, since they are enabled by default:
+Dans le dossier de compilation, vous pouvez les désactiver, car ils sont activés par défaut :
 
 .. code-block:: bash
 
-    # disables only Z3 SMT Solver.
+    # désactive seulement Z3 SMT Solver.
     cmake .. -DUSE_Z3=OFF
 
-    # disables only CVC4 SMT Solver.
+    # désactive seulement CVC4 SMT Solver.
     cmake .. -DUSE_CVC4=OFF
 
-    # disables both Z3 and CVC4
+    # désactive Z3 et CVC4
     cmake .. -DUSE_CVC4=OFF -DUSE_Z3=OFF
 
-The version string in detail
-============================
+La string de version en détail
+==============================
 
-The Solidity version string contains four parts:
+La string de version de Solidity contient 4 parties:
 
-- the version number
-- pre-release tag, usually set to ``develop.YYYY.MM.DD`` or ``nightly.YYYY.MM.DD``
-- commit in the format of ``commit.GITHASH``
-- platform, which has an arbitrary number of items, containing details about the platform and compiler
+- le numéro de version
+- la balise de pre-version, généralement définie sur ``develop.YYYY.MM.DD`` ou ``nightly.YYYY.MM.DD``.
+- commit au format ``commit.GITHASH``.
+- plate-forme, qui a un nombre arbitraire d'éléments, contenant des détails sur la plate-forme et le compilateur
 
-If there are local modifications, the commit will be postfixed with ``.mod``.
+S'il y a des modifications locales, le commit sera suffixé avec ``.mod``.
 
-These parts are combined as required by Semver, where the Solidity pre-release tag equals to the Semver pre-release
-and the Solidity commit and platform combined make up the Semver build metadata.
+Ces parties sont combinées comme l'exige Semver, où la balise de pré-version Solidity est identique à la pré-version de Semver.
+et le commit Solidity et la plate-forme Solidity combinés constituent les métadonnées de la construction Semver.
 
-A release example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
+Un exemple de version : ```0.4.8+commit.60cc1668.Emscripten.clang``.
 
-A pre-release example: ``0.4.9-nightly.2017.1.17+commit.6ecb4aa3.Emscripten.clang``
+Un exemple de pré-version : ``0.4.9-nightly.2017.1.17+commit.6ecb4aaa3.Emscripten.clang``
 
-Important information about versioning
-======================================
+Informations importantes concernant le versionnage
+==================================================
 
-After a release is made, the patch version level is bumped, because we assume that only
-patch level changes follow. When changes are merged, the version should be bumped according
-to semver and the severity of the change. Finally, a release is always made with the version
-of the current nightly build, but without the ``prerelease`` specifier.
+Après la sortie d'une version, le niveau de version du correctif est incrémenté, parce que nous supposons que seulement les changements de niveau patch suivent. Lorsque les modifications sont fusionnées, la version doit être supprimée en fonction des éléments suivants et la gravité du changement. Enfin, une version est toujours basée sur la nigthly actuelle, mais sans le spécificateur ``prerelease``.
 
-Example:
+Exemple :
 
-0. the 0.4.0 release is made
-1. nightly build has a version of 0.4.1 from now on
-2. non-breaking changes are introduced - no change in version
-3. a breaking change is introduced - version is bumped to 0.5.0
-4. the 0.5.0 release is made
+0. la version 0.4.0 est faite
+1. nightly build a une version de 0.4.1 à partir de maintenant
+2. des modifications incessantes sont introduites - pas de changement de version
+3. un changement de rupture est introduit - la version est augmentée à 0.5.0
+4. la version 0.5.0 est faite
 
-This behaviour works well with the  :ref:`version pragma <version_pragma>`.
+Ce comportement fonctionne bien avec le :ref:`version pragma <version_pragma>`.
