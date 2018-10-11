@@ -55,12 +55,6 @@ string inlinableFunctions(string const& _source)
 	);
 }
 
-string inlineFunctions(string const& _source, bool _yul = true)
-{
-	auto ast = disambiguate(_source, _yul);
-	ExpressionInliner(ast).run();
-	return assembly::AsmPrinter(_yul)(ast);
-}
 string fullInline(string const& _source, bool _yul = true)
 {
 	Block ast = disambiguate(_source, _yul);
@@ -121,95 +115,6 @@ BOOST_AUTO_TEST_CASE(negative)
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f(y:u256) -> x:u256 { y := 2:u256 } }"), "");
 }
 
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(YulFunctionInliner)
-
-BOOST_AUTO_TEST_CASE(simple)
-{
-	BOOST_CHECK_EQUAL(
-		inlineFunctions("{ function f() -> x:u256 { x := 2:u256 } let y:u256 := f() }"),
-		format("{ function f() -> x:u256 { x := 2:u256 } let y:u256 := 2:u256 }")
-	);
-}
-
-BOOST_AUTO_TEST_CASE(with_args)
-{
-	BOOST_CHECK_EQUAL(
-		inlineFunctions("{ function f(a:u256) -> x:u256 { x := a } let y:u256 := f(7:u256) }"),
-		format("{ function f(a:u256) -> x:u256 { x := a } let y:u256 := 7:u256 }")
-	);
-}
-
-BOOST_AUTO_TEST_CASE(no_inline_with_mload)
-{
-	// Does not inline because mload could be moved out of sequence
-	BOOST_CHECK_EQUAL(
-		inlineFunctions("{ function f(a) -> x { x := a } let y := f(mload(2)) }", false),
-		format("{ function f(a) -> x { x := a } let y := f(mload(2)) }", false)
-	);
-}
-
-BOOST_AUTO_TEST_CASE(no_move_with_side_effects)
-{
-	// The calls to g and h cannot be moved because g and h are not movable. Therefore, the call
-	// to f is not inlined.
-	BOOST_CHECK_EQUAL(
-		inlineFunctions("{"
-			"function f(a, b) -> x { x := add(b, a) }"
-			"function g() -> y { y := mload(0) mstore(0, 4) }"
-			"function h() -> z { mstore(0, 4) z := mload(0) }"
-			"let r := f(g(), h())"
-		"}", false),
-		format("{"
-			"function f(a, b) -> x { x := add(b, a) }"
-			"function g() -> y { y := mload(0) mstore(0, 4) }"
-			"function h() -> z { mstore(0, 4) z := mload(0) }"
-			"let r := f(g(), h())"
-		"}", false)
-	);
-}
-
-BOOST_AUTO_TEST_CASE(complex_with_evm)
-{
-	BOOST_CHECK_EQUAL(
-		inlineFunctions("{ function f(a) -> x { x := add(a, a) } let y := f(calldatasize()) }", false),
-		format("{ function f(a) -> x { x := add(a, a) } let y := add(calldatasize(), calldatasize()) }", false)
-	);
-}
-
-BOOST_AUTO_TEST_CASE(double_calls)
-{
-	BOOST_CHECK_EQUAL(
-		inlineFunctions("{"
-			"function f(a) -> x { x := add(a, a) }"
-			"function g(b, c) -> y { y := mul(mload(c), f(b)) }"
-			"let y := g(calldatasize(), 7)"
-		"}", false),
-		format("{"
-			"function f(a) -> x { x := add(a, a) }"
-			"function g(b, c) -> y { y := mul(mload(c), add(b, b)) }"
-			"let y_1 := mul(mload(7), add(calldatasize(), calldatasize()))"
-		"}", false)
-	);
-}
-
-BOOST_AUTO_TEST_CASE(double_recursive_calls)
-{
-	BOOST_CHECK_EQUAL(
-		inlineFunctions("{"
-			"function f(a, r) -> x { x := g(a, g(r, r)) }"
-			"function g(b, s) -> y { y := f(b, f(s, s)) }"
-			"let y := g(calldatasize(), 7)"
-		"}", false),
-		format("{"
-			"function f(a, r) -> x { x := g(a, f(r, f(r, r))) }"
-			"function g(b, s) -> y { y := f(b, g(s, f(s, f(s, s))))}"
-			"let y_1 := f(calldatasize(), g(7, f(7, f(7, 7))))"
-		"}", false)
-	);
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 
