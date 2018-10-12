@@ -9,17 +9,25 @@
 // expressionSplitter
 // {
 //     let x := 8
-//     let _1 := calldataload(0)
-//     let _2 := add(2, _1)
-//     switch _2
+//     let _1 := 0
+//     let _2 := calldataload(_1)
+//     let _3 := 2
+//     let _4 := add(_3, _2)
+//     switch _4
 //     case 0 {
-//         let _3 := mload(2)
-//         sstore(0, _3)
+//         let _5 := 2
+//         let _6 := mload(_5)
+//         let _7 := 0
+//         sstore(_7, _6)
 //     }
 //     default {
-//         let _4 := mload(3)
-//         mstore(0, _4)
+//         let _8 := 3
+//         let _9 := mload(_8)
+//         let _10 := 0
+//         mstore(_10, _9)
 //     }
-//     let _5 := mload(3)
-//     x := add(_5, 4)
+//     let _11 := 4
+//     let _12 := 3
+//     let _13 := mload(_12)
+//     x := add(_13, _11)
 // }
