@@ -33,6 +33,7 @@
 #include <libjulia/optimiser/Rematerialiser.h>
 #include <libjulia/optimiser/ExpressionSimplifier.h>
 #include <libjulia/optimiser/UnusedPruner.h>
+#include <libjulia/optimiser/ExpressionJoiner.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -145,6 +146,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		UnusedPruner::runUntilStabilised(*m_ast);
+	}
+	else if (m_optimizerStep == "expressionJoiner")
+	{
+		disambiguate();
+		ExpressionJoiner::run(*m_ast);\
 	}
 	else
 	{
