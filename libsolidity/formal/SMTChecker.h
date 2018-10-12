@@ -21,6 +21,7 @@
 #include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/formal/SSAVariable.h>
+#include <libsolidity/formal/SpecialVariables.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -67,6 +68,9 @@ private:
 	virtual void endVisit(FunctionCall const& _node) override;
 	virtual void endVisit(Identifier const& _node) override;
 	virtual void endVisit(Literal const& _node) override;
+	virtual bool visit(MemberAccess const& _node) override;
+
+	void visitMagic(MemberAccess const& _memberAccess);
 
 	void arithmeticOperation(BinaryOperation const& _op);
 	void compareOperation(BinaryOperation const& _op);
@@ -173,6 +177,8 @@ private:
 	ErrorReporter& m_errorReporter;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
+	/// Symbolic version of special variables.
+	SpecialVariables m_specialVariables;
 };
 
 }

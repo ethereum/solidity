@@ -34,7 +34,8 @@ using namespace dev::solidity;
 
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readFileCallback):
 	m_interface(make_shared<smt::SMTPortfolio>(_readFileCallback)),
-	m_errorReporter(_errorReporter)
+	m_errorReporter(_errorReporter),
+	m_specialVariables(*m_interface)
 {
 }
 
@@ -74,6 +75,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 	m_currentFunction = &_function;
 	m_interface->reset();
 	m_pathConditions.clear();
+	m_specialVariables.reset();
 	m_loopExecutionHappened = false;
 	resetStateVariables();
 	initializeLocalVariables(_function);
@@ -410,6 +412,27 @@ void SMTChecker::endVisit(Literal const& _literal)
 			_literal.annotation().type->toString() +
 			")."
 		);
+}
+
+bool SMTChecker::visit(MemberAccess const& _memberAccess)
+{
+	switch (_memberAccess.expression().annotation().type->category())
+	{
+	case Type::Category::Magic:
+		visitMagic(_memberAccess);
+		break;
+	default:
+		m_errorReporter.warning(
+			_memberAccess.location(),
+			"Assertion checker does not yet implement this expression."
+		);
+	}
+	return false;
+}
+
+void SMTChecker::visitMagic(MemberAccess const& _memberAccess)
+{
+	defineExpr(_memberAccess, m_specialVariables[_memberAccess]);
 }
 
 void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
