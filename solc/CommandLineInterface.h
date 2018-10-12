@@ -54,6 +54,10 @@ public:
 private:
 	bool link();
 	void writeLinkedFiles();
+	/// @returns the ``// <identifier> -> name`` hint for library placeholders.
+	static std::string libraryPlaceholderHint(std::string const& _libraryName);
+	/// @returns the full object with library placeholder hints in hex.
+	static std::string objectWithLinkRefsHex(eth::LinkerObject const& _obj);
 
 	bool assemble(AssemblyStack::Language _language, AssemblyStack::Machine _targetMachine);
 
