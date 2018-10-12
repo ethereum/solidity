@@ -40,7 +40,11 @@ void SpecialVariables::resetMember(MemberAccess const& _memberAccess)
 {
 	ASTString member = _memberAccess.memberName();
 	if (m_ssaVariables.count(member))
-		m_ssaVariables.erase(member);
-	m_ssaVariables.emplace(member, SSAVariable(*_memberAccess.annotation().type, member, m_interface));
-	m_ssaVariables.at(member).setUnknownValue();
+		++m_ssaVariables.at(member);
+	else
+	{
+		auto result = m_ssaVariables.emplace(member, SSAVariable(*_memberAccess.annotation().type, member, m_interface));
+		solAssert(result.second, "");
+		result.first->second.setUnknownValue();
+	}
 }
