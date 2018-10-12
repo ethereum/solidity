@@ -26,18 +26,17 @@ namespace dev
 namespace solidity
 {
 
-class Declaration;
-
 /**
  * This class represents the SSA representation of a program variable.
  */
 class SSAVariable
 {
 public:
-	/// @param _decl Used to determine the type and forwarded to the symbolic var.
+	/// @param _type Forwarded to the symbolic var.
 	/// @param _interface Forwarded to the symbolic var such that it can give constraints to the solver.
 	SSAVariable(
-		Declaration const& _decl,
+		Type const& _type,
+		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
 

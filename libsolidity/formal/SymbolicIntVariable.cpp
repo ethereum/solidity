@@ -17,21 +17,20 @@
 
 #include <libsolidity/formal/SymbolicIntVariable.h>
 
-#include <libsolidity/ast/AST.h>
-
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
 SymbolicIntVariable::SymbolicIntVariable(
-	Declaration const& _decl,
+	Type const& _type,
+	string const& _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	SymbolicVariable(_decl, _interface)
+	SymbolicVariable(_type, _uniqueName, _interface)
 {
 	solAssert(
-		m_declaration.type()->category() == Type::Category::Integer ||
-		m_declaration.type()->category() == Type::Category::Address,
+		_type.category() == Type::Category::Integer ||
+		_type.category() == Type::Category::Address,
 		""
 	);
 }
@@ -48,11 +47,20 @@ void SymbolicIntVariable::setZeroValue(int _seq)
 
 void SymbolicIntVariable::setUnknownValue(int _seq)
 {
-	auto intType = dynamic_pointer_cast<IntegerType const>(m_declaration.type());
-	if (!intType)
-		intType = make_shared<IntegerType>(160);
-	m_interface.addAssertion(valueAtSequence(_seq) >= minValue(*intType));
-	m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(*intType));
+	if (m_type.category() == Type::Category::Integer)
+	{
+		auto intType = dynamic_cast<IntegerType const*>(&m_type);
+		solAssert(intType, "");
+		m_interface.addAssertion(valueAtSequence(_seq) >= minValue(*intType));
+		m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(*intType));
+	}
+	else
+	{
+		solAssert(m_type.category() == Type::Category::Address, "");
+		IntegerType addrType{160};
+		m_interface.addAssertion(valueAtSequence(_seq) >= minValue(addrType));
+		m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(addrType));
+	}
 }
 
 smt::Expression SymbolicIntVariable::minValue(IntegerType const& _t)

@@ -27,16 +27,17 @@ using namespace dev;
 using namespace dev::solidity;
 
 SSAVariable::SSAVariable(
-	Declaration const& _decl,
+	Type const& _type,
+	string const& _uniqueName,
 	smt::SolverInterface& _interface
 )
 {
 	resetIndex();
 
-	if (isInteger(_decl.type()->category()))
-		m_symbolicVar = make_shared<SymbolicIntVariable>(_decl, _interface);
-	else if (isBool(_decl.type()->category()))
-		m_symbolicVar = make_shared<SymbolicBoolVariable>(_decl, _interface);
+	if (isInteger(_type.category()))
+		m_symbolicVar = make_shared<SymbolicIntVariable>(_type, _uniqueName, _interface);
+	else if (isBool(_type.category()))
+		m_symbolicVar = make_shared<SymbolicBoolVariable>(_type, _uniqueName, _interface);
 	else
 	{
 		solAssert(false, "");

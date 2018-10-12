@@ -24,17 +24,19 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicVariable::SymbolicVariable(
-	Declaration const& _decl,
+	Type const& _type,
+	string const& _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	m_declaration(_decl),
+	m_type(_type),
+	m_uniqueName(_uniqueName),
 	m_interface(_interface)
 {
 }
 
 string SymbolicVariable::uniqueSymbol(int _seq) const
 {
-	return m_declaration.name() + "_" + to_string(m_declaration.id()) + "_" + to_string(_seq);
+	return m_uniqueName + "_" + to_string(_seq);
 }
 
 

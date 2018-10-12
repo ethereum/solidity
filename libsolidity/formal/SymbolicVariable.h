@@ -19,7 +19,7 @@
 
 #include <libsolidity/formal/SolverInterface.h>
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
 
 #include <memory>
 
@@ -28,7 +28,7 @@ namespace dev
 namespace solidity
 {
 
-class Declaration;
+class Type;
 
 /**
  * This class represents the symbolic version of a program variable.
@@ -37,7 +37,8 @@ class SymbolicVariable
 {
 public:
 	SymbolicVariable(
-		Declaration const& _decl,
+		Type const& _type,
+		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
 	virtual ~SymbolicVariable() = default;
@@ -58,7 +59,8 @@ public:
 protected:
 	virtual smt::Expression valueAtSequence(int _seq) const = 0;
 
-	Declaration const& m_declaration;
+	Type const& m_type;
+	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
 };
 
