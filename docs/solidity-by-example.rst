@@ -473,9 +473,9 @@ Le contrat suivant résout ce problème en acceptant toute valeur supérieure à
 
 .. index:: purchase, remote purchase, escrow
 
-********************
-Safe Remote Purchase
-********************
+**********************
+Achat distant sécurisé
+**********************
 
 ::
 
@@ -488,9 +488,9 @@ Safe Remote Purchase
         enum State { Created, Locked, Inactive }
         State public state;
 
-        // Ensure that `msg.value` is an even number.
-        // Division will truncate if it is an odd number.
-        // Check via multiplication that it wasn't an odd number.
+        // Vérifie que `msg.value` est un nombre pair.
+        // La division tronquerait un nombre impair.
+        // On multiplie pour vérifier que ce n'était pas un impair.
         constructor() public payable {
             seller = msg.sender;
             value = msg.value / 2;
@@ -530,9 +530,9 @@ Safe Remote Purchase
         event PurchaseConfirmed();
         event ItemReceived();
 
-        /// Abort the purchase and reclaim the ether.
-        /// Can only be called by the seller before
-        /// the contract is locked.
+        /// Annule l'achat et rembourse l'ether du dépot.
+        /// Peut seulement être appelé par le vendeur
+        /// avant le verrouillage du contrat
         function abort()
             public
             onlySeller
@@ -543,10 +543,10 @@ Safe Remote Purchase
             seller.transfer(address(this).balance);
         }
 
-        /// Confirm the purchase as buyer.
-        /// Transaction has to include `2 * value` ether.
-        /// The ether will be locked until confirmReceived
-        /// is called.
+        /// Confirme l'achat en tant qu'acheteur.
+        /// La transaction doit inclure `2 * value` ether.
+        /// L'Ether sera bloqué jusqu'à ce que confirmReceived
+        /// soit appelé.
         function confirmPurchase()
             public
             inState(State.Created)
@@ -558,131 +558,118 @@ Safe Remote Purchase
             state = State.Locked;
         }
 
-        /// Confirm that you (the buyer) received the item.
-        /// This will release the locked ether.
+        /// Confirmer que vous (l'acheteur) avez reçu l'objet,
+        /// ce qui débloquera l'Ether bloqué.
         function confirmReceived()
             public
             onlyBuyer
             inState(State.Locked)
         {
             emit ItemReceived();
-            // It is important to change the state first because
-            // otherwise, the contracts called using `send` below
-            // can call in again here.
+            // Il est important de changer l'état d'abord car sinon
+            // les contrats appelés avec `send` ci-dessous
+            // pourraient rappeler la fonction.
             state = State.Inactive;
 
-            // NOTE: This actually allows both the buyer and the seller to
-            // block the refund - the withdraw pattern should be used.
+            // NOTE: Ce schéma autorise les deux acteurs à bloquer
+            // la transaction par une exception "our of gas" ( pas
+            // assez de gas). Un fonction de retrait distincte devrait
+            // être utilisée.
 
             buyer.transfer(value);
             seller.transfer(address(this).balance);
         }
     }
 
-********************
-Micropayment Channel
-********************
+************************
+Canaux de micro-paiement
+************************
 
-In this section we will learn how to build a simple implementation
-of a payment channel. It use cryptographics signatures to make
-repeated transfers of Ether between the same parties secure, instantaneous, and
-without transaction fees. To do it we need to understand how to
-sign and verify signatures, and setup the payment channel.
+Dans cette section, nous allons apprendre comment construire une implémentation simple d'un canal de paiement. Il utilise des signatures cryptographiques pour effectuer des transferts répétés d'Ether entre les mêmes parties en toute sécurité, instantanément et sans frais de transaction. Pour ce faire, nous devons comprendre comment signer et vérifier les signatures, et configurer le canal de paiement.
 
-Creating and verifying signatures
-=================================
+Création et vérification des signatures
+=======================================
 
-Imagine Alice wants to send a quantity of Ether to Bob, i.e.
-Alice is the sender and the Bob is the recipient.
-Alice only needs to send cryptographically signed messages off-chain
-(e.g. via email) to Bob and it will be very similar to writing checks.
+Imaginez qu'Alice veuille envoyer une quantité d'Ether à Bob, c'est-à-dire qu'Alice est l'expéditeur et Bob est le destinataire. Alice n'a qu'à envoyer des messages cryptographiquement signés hors chaîne (par exemple par e-mail) à Bob et cela sera très similaire à la rédaction de chèques.
 
-Signatures are used to authorize transactions,
-and they are a general tool that is available to
-smart contracts. Alice will build a simple
-smart contract that lets her transmit Ether, but
-in a unusual way, instead of calling a function herself
-to initiate a payment, she will let Bob
-do that, and therefore pay the transaction fee.
-The contract will work as follows:
+Les signatures sont utilisées pour autoriser les transactions et sont un outil généraliste à la disposition des contrats intelligents. Alice construira un simple contrat intelligent qui lui permettra de transmettre des Ether, mais d'une manière inhabituelle, au lieu d'appeler une fonction elle-même pour initier un paiement, elle laissera Bob le faire, et donc payer les frais de transaction. Le contrat fonctionnera comme suit :
 
-    1. Alice deploys the ``ReceiverPays`` contract, attaching enough Ether to cover the payments that will be made.
-    2. Alice authorizes a payment by signing a message with their private key.
-    3. Alice sends the cryptographically signed message to Bob. The message does not need to be kept secret
-       (you will understand it later), and the mechanism for sending it does not matter.
-    4. Bob claims their payment by presenting the signed message to the smart contract, it verifies the
-       authenticity of the message and then releases the funds.
+    1. Alice déploie le contrat ``ReceiverPays`` en y attachant suffisamment d'éther pour couvrir les paiements qui seront effectués.
+    2. Alice autorise un paiement en signant un message avec sa clé privée.
+    3. Alice envoie le message signé cryptographiquement à Bob. Le message n'a pas besoin d'être gardé secret
+       (vous le comprendrez plus tard), et le mécanisme pour l'envoyer n'a pas d'importance.
+    4. Bob réclame leur paiement en présentant le message signé au contrat intelligent, il vérifie l'authenticité du message et libère ensuite les fonds.
 
-Creating the signature
-----------------------
+Création de la signature
+------------------------
 
-Alice does not need to interact with Ethereum network to
-sign the transaction, the process is completely offline.
-In this tutorial, we will sign messages in the browser
-using ``web3.js`` and ``MetaMask``.
-In particular, we will use the standard way described in `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
-as it provides a number of other security benefits.
+Alice n'a pas besoin d'interagir avec le réseau Ethereum pour
+signer la transaction, le processus est complètement hors ligne.
+Dans ce tutoriel, nous allons signer les messages dans le navigateur
+en utilisant ``web3.js`` et ``MetaMask``.
+En particulier, nous utiliserons la méthode standard décrite dans `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
+car elle offre un certain nombre d'autres avantages en matière de sécurité.
 
 ::
 
-    /// Hashing first makes a few things easier
+    /// Hasher d'abord simplifie un peu les choses
     var hash = web3.sha3("message to sign");
     web3.personal.sign(hash, web3.eth.defaultAccount, function () {...});
 
 
-Note that the ``web3.personal.sign`` prepends the length of the message to the signed data.
-Since we hash first, the message will always be exactly 32 bytes long,
-and thus this length prefix is always the same, making everything easier.
+Notez que ``web3.personal.sign`` préfixe les données signées de la longueur du message.
+Mais comme nous avons hashé en premier, le message sera toujours exactement 32 octets de long,
+et donc ce préfixe de longueur est toujours le même, ce qui facilite tout.
 
-What to Sign
-------------
+Que signer
+----------
 
-For a contract that fulfills payments, the signed message must include:
+Dans le cas d'un contrat qui effectue des paiements, le message signé doit inclure :
 
-    1. The recipient's address
-    2. The amount to be transferred
-    3. Protection against replay attacks
+     1. Adresse du destinataire
+     2. le montant à transférer
+     3. Protection contre les attaques de rediffusion
 
-A replay attack is when a signed message is reused to claim authorization for
-a second action.
-To avoid replay attacks we will use the same as in Ethereum transactions
-themselves, a so-called nonce, which is the number of transactions sent by an
-account.
-The smart contract will check if a nonce is used multiple times.
+Une attaque de rediffusion se produit lorsqu'un message signé est réutilisé pour revendiquer l'autorisation pour
+une deuxième action.
+Pour éviter les attaques par rediffusion, nous utiliserons la même méthode que pour les transactions Ethereum
+elles-mêmes, ce qu'on appelle un nonce, qui est le nombre de transactions envoyées par un
+compte.
+Le contrat intelligent vérifiera si un nonce est utilisé plusieurs fois.
 
-There is another type of replay attacks, it occurs when the
-owner deploys a ``ReceiverPays`` smart contract, performs some payments,
-and then destroy the contract. Later, she decides to deploy the
-``RecipientPays`` smart contract again, but the new contract does not
-know the nonces used in the previous deployment, so the attacker
-can use the old messages again.
+Il existe un autre type d'attaques de redifussion, il se produit lorsque
+le propriétaire déploie un smart contract ``ReceiverPays``, effectue certains paiements,
+et ensuite détruit le contrat. Plus tard, il décide de déployer
+``ReceiverPays`` encore une fois, mais le nouveau contrat ne peut pas
+connaître les nonces utilisés dans le déploiement précédent, donc l'attaquant
+peut réutiliser les anciens messages.
 
-Alice can protect against it including
-the contract's address in the message, and only
-messages containing contract's address itself will be accepted.
-This functionality can be found in the first two lines of the ``claimPayment()`` function in the full contract
-at the end of this chapter.
+Alice peut s'en protéger, notamment en incluant
+l'adresse du contrat dans le message, et seulement
+les messages contenant l'adresse du contrat lui-même seront acceptés.
+Cette fonctionnalité se trouve dans les deux premières lignes de la fonction ``claimPayment()`` du contrat complet
+à la fin de ce chapitre.
 
-Packing arguments
------------------
+Encoder les arguments
+---------------------
 
-Now that we have identified what information to include in the
-signed message, we are ready to put the message together, hash it,
-and sign it. For simplicity, we just concatenate the data.
-The
-`ethereumjs-abi <https://github.com/ethereumjs/ethereumjs-abi>`_ library provides
-a function called ``soliditySHA3`` that mimics the behavior
-of Solidity's ``keccak256`` function applied to arguments encoded
-using ``abi.encodePacked``.
-Putting it all together, here is a JavaScript function that
-creates the proper signature for the ``ReceiverPays`` example:
+Maintenant que nous avons déterminé quelles informations inclure dans le message signé,
+nous sommes prêts à assembler le message, à le hacher,
+et le signer. Par souci de simplicité, nous ne faisons que concaténer les données.
+La bibliothèque
+`ethereumjs-abi <https://github.com/ethereumjs/ethereumjs-abi>`_ fournit
+une fonction appelée ``soliditySHA3`` qui imite le comportement
+de la fonction ``keccak256`` de Solidity appliquée aux arguments codés
+en utilisant ``abi.encododePacked``.
+En résumé, voici une fonction JavaScript qui
+crée la signature appropriée pour l'exemple ``ReceiverPays`` :
 
 ::
 
-    // recipient is the address that should be paid.
-    // amount, in wei, specifies how much ether should be sent.
-    // nonce can be any unique number to prevent replay attacks
-    // contractAddress is used to prevent cross-contract replay attacks
+    // recipient est l'addresse à payer.
+    // amount, en wei, spécifie combien d'Ether doivent être envoyés.
+    // nonce peut être n'importe quel nombre unique pour prévenir les attques par redifusion
+    // contractAddress est utilisé pour éviter les attaque par redifusion de messages inter-contrats
     function signPayment(recipient, amount, nonce, contractAddress, callback) {
         var hash = "0x" + ethereumjs.ABI.soliditySHA3(
             ["address", "uint256", "uint256", "address"],
@@ -692,41 +679,50 @@ creates the proper signature for the ``ReceiverPays`` example:
         web3.personal.sign(hash, web3.eth.defaultAccount, callback);
     }
 
-Recovering the Message Signer in Solidity
------------------------------------------
+Récupérer le signataire du message en Solidity
+----------------------------------------------
 
-In general, ECDSA signatures consist of two parameters, ``r`` and ``s``.
-Signatures in Ethereum include a third parameter called ``v``, that can be used
-to recover which account's private key was used to sign in the message,
-the transaction's sender. Solidity provides a built-in function
-`ecrecover <mathematical-and-cryptographic-functions>`_
-that accepts a message along with the ``r``, ``s`` and ``v`` parameters and
-returns the address that was used to sign the message.
+En général, les signatures ECDSA se composent de deux paramètres, ``r`` et ``s``.
+Les signatures dans Ethereum incluent un troisième paramètre appelé ``v``, qui peut être utilisé
+pour récupérer la clé privée du compte qui a été utilisée pour signer le message,
+l'expéditeur de la transaction. Solidity fournit une fonction intégrée
+`ecrecover <mathematical-and-cryptographic-functions>`_qui accepte un message avec les paramètres ``r```, ``s`` et ``v`` et renvoie l'adresse qui a été utilisée pour signer le message.
 
-Extracting the Signature Parameters
------------------------------------
+Récupérer le signataire du message dans la solidité
+---------------------------------------------------
 
-Signatures produced by web3.js are the concatenation of ``r``, ``s`` and ``v``,
-so the first step is splitting those parameters back out. It can be done on the client,
-but doing it inside the smart contract means only one signature parameter
-needs to be sent rather than three.
-Splitting apart a byte array into component parts is a little messy.
-We will use `inline assembly <assembly>`_ to do the job
-in the ``splitSignature`` function (the third function in the full contract
-at the end of this chapter).
+En général, les signatures ECDSA se composent de deux paramètres, ``r`` et ``s``.
+Les signatures dans Ethereum incluent un troisième paramètre appelé "v", qui peut être utilisé
+pour récupérer la clé privée du compte qui a été utilisée pour signer le message,
+l'expéditeur de la transaction. La solidité offre une fonction intégrée
+Récupérer <fonctions-mathématiques et cryptographiques>`_
+qui accepte un message avec les paramètres ``r``, ``s`` et ``v`` et
+renvoie l'adresse qui a été utilisée pour signer le message.
 
-Computing the Message Hash
---------------------------
+Extraire les paramètres de signature
+------------------------------------
 
-The smart contract needs to know exactly what parameters were signed,
-and so it must recreate the message from the parameters and use that
-for signature verification. The functions ``prefixed`` and
-``recoverSigner`` do this and their use can be found in the
-``claimPayment`` function.
+Les signatures produites par web3.js sont la concaténation de ``r``, ``s`` et ``v``,
+donc la première étape est de re-séparer ces paramètres. Cela peut être fait sur le client,
+mais le faire à l'intérieur du smart contract signifie qu'un seul paramètre de signature
+peut être envoyé au lieu de trois.
+Diviser un tableau d'octets en plusieurs parties est un peu compliqué.
+Nous utiliserons l'`assembleur en ligne <assembly>`_ pour faire le travail
+dans la fonction ``splitSignature`` (la troisième fonction dans le contrat complet
+à la fin du présent chapitre).
+
+Calcul du hachage des messages
+------------------------------
+
+Le smart contract doit savoir exactement quels paramètres ont été signés,
+et doit donc recréer le message à partir des paramètres et utiliser cette fonction
+pour la vérification des signatures. Les fonctions ``prefixed`` et
+``recoverSigner`` s'occupent de cela et leur utilisation peut se trouver
+dans la fonction ``claimPayment``.
 
 
-The full contract
------------------
+Le contrat complet
+------------------
 
 ::
 
@@ -751,13 +747,13 @@ The full contract
             msg.sender.transfer(amount);
         }
 
-        /// destroy the contract and reclaim the leftover funds.
+        /// détruit le contrat et réclame son solde.
         function kill() public {
             require(msg.sender == owner);
             selfdestruct(msg.sender);
         }
 
-        /// signature methods.
+        /// methodes de signature.
         function splitSignature(bytes memory sig)
             internal
             pure
@@ -787,7 +783,7 @@ The full contract
             return ecrecover(message, v, r, s);
         }
 
-        /// builds a prefixed hash to mimic the behavior of eth_sign.
+        /// construit un hash préfixé pour mimer le comportement de eth_sign.
         function prefixed(bytes32 hash) internal pure returns (bytes32) {
             return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
         }
