@@ -10,58 +10,58 @@ Solidity par l'Exemple
 Vote
 ****
 
-The following contract is quite complex, but showcases a lot of Solidity's features. It implements a voting contract. Of course, the main problems of electronic voting is how to assign voting rights to the correct persons and how to prevent manipulation. We will not solve all problems here, but at least we will show how delegated voting can be done so that vote counting is **automatic and completely transparent** at the same time.
+Le contrat suivant est assez complexe, mais il présente de nombreuses caractéristiques de Solidity. Il implémente un contrat de vote. Bien entendu, le principal problème du vote électronique est de savoir comment attribuer les droits de vote aux bonnes personnes et éviter les manipulations. Nous ne résoudrons pas tous les problèmes ici, mais nous montrerons au moins comment le vote délégué peut être effectué de manière à ce que le dépouillement soit à la fois **automatique et totalement transparent**.
 
-The idea is to create one contract per ballot, providing a short name for each option.
-Then the creator of the contract who serves as chairperson will give the right to vote to each address individually.
+L'idée est de créer un contrat par bulletin de vote, en donnant un nom court à chaque option.
+Ensuite, le créateur du contrat qui agit à titre de président donnera le droit de vote à chaque adresse individuellement.
 
-The persons behind the addresses can then choose to either vote themselves or to delegate their vote to a person they trust.
+Les personnes derrière les adresses peuvent alors choisir de voter elles-mêmes ou de déléguer leur vote à une personne en qui elles ont confiance.
 
-At the end of the voting time, ``winningProposal()`` will return the proposal with the largest number of votes.
+A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retournera la proposition avec le plus grand nombre de votes.
 
 ::
 
     pragma solidity >=0.4.22 <0.6.0;
 
-    /// @title Voting with delegation.
+    /// @title Vote par délegation.
     contract Ballot {
-        // This declares a new complex type which will
-        // be used for variables later.
-        // It will represent a single voter.
+        // Ceci déclare un type complexe, représentant
+        // un votant, qui sera utilisé
+        // pour les variables plus tard.
         struct Voter {
-            uint weight; // weight is accumulated by delegation
-            bool voted;  // if true, that person already voted
-            address delegate; // person delegated to
-            uint vote;   // index of the voted proposal
+            uint weight; // weight (poids), qui s'accumule avec les délégations
+            bool voted;  // si true, cette personne a déjà voté
+            address delegate; // Cette personne a délégué son vote à
+            uint vote;   // index la la proposition choisie
         }
 
-        // This is a type for a single proposal.
+        // Type pour une proposition.
         struct Proposal {
-            bytes32 name;   // short name (up to 32 bytes)
-            uint voteCount; // number of accumulated votes
+            bytes32 name;   // nom court (jusqu'à 32 octets)
+            uint voteCount; // nombre de votes cumulés
         }
 
         address public chairperson;
 
-        // This declares a state variable that
-        // stores a `Voter` struct for each possible address.
+        // Ceci déclare une variable d'état qui stocke
+        // un élément de structure 'Voters' pour  chaque votant.
         mapping(address => Voter) public voters;
 
-        // A dynamically-sized array of `Proposal` structs.
+        // Un tableau dynamique de structs `Proposal`.
         Proposal[] public proposals;
 
-        /// Create a new ballot to choose one of `proposalNames`.
+        /// Créé un nouveau bulletin pour choisir l'un des `proposalNames`.
         constructor(bytes32[] memory proposalNames) public {
             chairperson = msg.sender;
             voters[chairperson].weight = 1;
 
-            // For each of the provided proposal names,
-            // create a new proposal object and add it
-            // to the end of the array.
+            // Pour chacun des noms proposés,
+            // crée un nouvel objet proposal
+            // à la fin du tableau.
             for (uint i = 0; i < proposalNames.length; i++) {
-                // `Proposal({...})` creates a temporary
-                // Proposal object and `proposals.push(...)`
-                // appends it to the end of `proposals`.
+                // `Proposal({...})` créé un objet temporaire
+                // Proposal et `proposals.push(...)`
+                // l'ajoute à la fin du tableau `proposals`.
                 proposals.push(Proposal({
                     name: proposalNames[i],
                     voteCount: 0
@@ -69,19 +69,19 @@ At the end of the voting time, ``winningProposal()`` will return the proposal wi
             }
         }
 
-        // Give `voter` the right to vote on this ballot.
-        // May only be called by `chairperson`.
+        // Donne à un `voter` un droit de vote pour ce scrutin.
+        // Peut seulement être appelé par `chairperson`.
         function giveRightToVote(address voter) public {
-            // If the first argument of `require` evaluates
-            // to `false`, execution terminates and all
-            // changes to the state and to Ether balances
-            // are reverted.
-            // This used to consume all gas in old EVM versions, but
-            // not anymore.
-            // It is often a good idea to use `require` to check if
-            // functions are called correctly.
-            // As a second argument, you can also provide an
-            // explanation about what went wrong.
+            // Si le premier argument passé à `require` s'évalue
+            // à `false`, l'exécution s'arrete et tous les changements
+            // à l'état et aux soldes sont annulés.
+            // Cette opération consommait tout le gas dans
+            // d'anciennes versions de l'EVM, plus maintenant.
+            // Il est souvent une bonne idée d'appeler `require` 
+            // pour vérifier si les appels de fonctions
+            // s'effectuent correctement.
+            // Comme second argument, vous pouvez fournir une
+            // phrase explicative de ce qui est allé de travers.
             require(
                 msg.sender == chairperson,
                 "Only chairperson can give right to vote."
@@ -94,61 +94,61 @@ At the end of the voting time, ``winningProposal()`` will return the proposal wi
             voters[voter].weight = 1;
         }
 
-        /// Delegate your vote to the voter `to`.
+        /// Delegue son vote au votant `to`.
         function delegate(address to) public {
-            // assigns reference
+            // assigne les références
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "You already voted.");
 
             require(to != msg.sender, "Self-delegation is disallowed.");
 
-            // Forward the delegation as long as
-            // `to` also delegated.
-            // In general, such loops are very dangerous,
-            // because if they run too long, they might
-            // need more gas than is available in a block.
-            // In this case, the delegation will not be executed,
-            // but in other situations, such loops might
-            // cause a contract to get "stuck" completely.
+            // Relaie la délégation tant que `to`
+            // est également en délégation de vote.
+            // En général, ce type de boucles est très dangereux,
+            // puisque s'il tourne trop longtemps, l'opération
+            // pourrait demander plus de gas qu'il n'est possible
+            // d'en avoir dans un bloc.
+            // Dans ce cas, la délégation ne se ferait pas,
+            // mais dans d'autres circonstances, ces boucles
+            // peuvent complètement paraliser un contrat.
             while (voters[to].delegate != address(0)) {
                 to = voters[to].delegate;
 
-                // We found a loop in the delegation, not allowed.
+                // On a trouvé une boucle dans la chaine
+                // de délégations => interdit.
                 require(to != msg.sender, "Found loop in delegation.");
             }
 
-            // Since `sender` is a reference, this
-            // modifies `voters[msg.sender].voted`
+            // Comme `sender` est une référence, ceci
+            // modifie `voters[msg.sender].voted`
             sender.voted = true;
             sender.delegate = to;
             Voter storage delegate_ = voters[to];
             if (delegate_.voted) {
-                // If the delegate already voted,
-                // directly add to the number of votes
+                // Si le délégué a déjà voté,
+                // on ajoute directement le vote aux autres
                 proposals[delegate_.vote].voteCount += sender.weight;
             } else {
-                // If the delegate did not vote yet,
-                // add to her weight.
+                // Sinon, on l'ajoute au poids de son vote.
                 delegate_.weight += sender.weight;
             }
         }
 
-        /// Give your vote (including votes delegated to you)
-        /// to proposal `proposals[proposal].name`.
+        /// Voter (incluant les procurations par délégation)
+        /// pour la proposition `proposals[proposal].name`.
         function vote(uint proposal) public {
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "Already voted.");
             sender.voted = true;
             sender.vote = proposal;
 
-            // If `proposal` is out of the range of the array,
-            // this will throw automatically and revert all
-            // changes.
+            // Si `proposal` n'est pas un index valide,
+            // une erreur sera levée et l'exécution annulée
             proposals[proposal].voteCount += sender.weight;
         }
 
-        /// @dev Computes the winning proposal taking all
-        /// previous votes into account.
+        /// @dev Calcule la proposition gagnante
+        /// en prenant tous les votes précédents en compte.
         function winningProposal() public view
                 returns (uint winningProposal_)
         {
@@ -161,9 +161,9 @@ At the end of the voting time, ``winningProposal()`` will return the proposal wi
             }
         }
 
-        // Calls winningProposal() function to get the index
-        // of the winner contained in the proposals array and then
-        // returns the name of the winner
+        // Appelle la fonction winningProposal() pour avoir
+        // l'index du gagnant dans le tableau de propositions
+        // et retourne le nom de la proposition gagnante.
         function winnerName() public view
                 returns (bytes32 winnerName_)
         {
@@ -172,76 +172,59 @@ At the end of the voting time, ``winningProposal()`` will return the proposal wi
     }
 
 
-Possible Improvements
-=====================
+Améliorations possibles
+=======================
 
-Currently, many transactions are needed to assign the rights
-to vote to all participants. Can you think of a better way?
-
+À l'heure actuelle, de nombreuses opérations sont nécessaires pour attribuer les droits de vote à tous les participants. Pouvez-vous trouver un meilleur moyen ?
 .. index:: auction;blind, auction;open, blind auction, open auction
 
-*************
-Blind Auction
-*************
+********************
+Enchères à l'aveugle
+********************
 
-In this section, we will show how easy it is to create a
-completely blind auction contract on Ethereum.
-We will start with an open auction where everyone
-can see the bids that are made and then extend this
-contract into a blind auction where it is not
-possible to see the actual bid until the bidding
-period ends.
+Dans cette section, nous allons montrer à quel point il est facile de créer un contrat d'enchères à l'aveugle sur Ethereum. Nous commencerons par une enchère ouverte où tout le monde pourra voir les offres qui sont faites, puis nous prolongerons ce contrat dans une enchère aveugle où il n'est pas possible de voir l'offre réelle avant la fin de la période de soumission.
 
 .. _simple_auction:
 
-Simple Open Auction
-===================
+Enchère ouverte simple
+======================
 
-The general idea of the following simple auction contract
-is that everyone can send their bids during
-a bidding period. The bids already include sending
-money / ether in order to bind the bidders to their
-bid. If the highest bid is raised, the previously
-highest bidder gets her money back.
-After the end of the bidding period, the
-contract has to be called manually for the
-beneficiary to receive their money - contracts cannot
-activate themselves.
+L'idée générale du contrat d'enchère simple suivant est que chacun peut envoyer ses offres pendant une période d'enchère. Les ordres incluent l'envoi d'argent / éther afin de lier les soumissionnaires à leur offre. Si l'enchère est la plus haute, l'enchérisseur qui avait fait l'offre la plus élevée auparavant récupère son argent. Après la fin de la période de soumission, le contrat doit être appelé manuellement pour que le bénéficiaire reçoive son argent - les contrats ne peuvent pas s'activer eux-mêmes.
 
 ::
 
     pragma solidity >=0.4.22 <0.6.0;
 
     contract SimpleAuction {
-        // Parameters of the auction. Times are either
-        // absolute unix timestamps (seconds since 1970-01-01)
-        // or time periods in seconds.
+        // Paramètres de l'enchère
+        // temps unix absolus (secondes depuis 01-01-1970)
+        // ou des durées en secondes.
         address payable public beneficiary;
         uint public auctionEndTime;
 
-        // Current state of the auction.
+        // État actuel de l'enchère.
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // Remboursements autorisés d'enchères précédentes
         mapping(address => uint) pendingReturns;
 
-        // Set to true at the end, disallows any change.
-        // By default initialized to `false`.
+        // Mis à true à la fin, interdit tout changement.
+        // Par defaut à `false`, comme un grand.
         bool ended;
 
-        // Events that will be emitted on changes.
+        // Évènements déclenchés aux changements.
         event HighestBidIncreased(address bidder, uint amount);
         event AuctionEnded(address winner, uint amount);
 
-        // The following is a so-called natspec comment,
-        // recognizable by the three slashes.
-        // It will be shown when the user is asked to
-        // confirm a transaction.
+        // Ce ui suit est appelé commentaire natspec,
+        // reconaissable à ses 3 slashes.
+        // Ce message sera affiché quand l'utilisateur
+        // devra confirmer une transaction.
 
-        /// Create a simple auction with `_biddingTime`
-        /// seconds bidding time on behalf of the
-        /// beneficiary address `_beneficiary`.
+        /// Créée une enchère simple de `_biddingTime`
+        /// secondes au profit de l'addresse
+        /// beneficaire address `_beneficiary`.
         constructor(
             uint _biddingTime,
             address payable _beneficiary
@@ -250,37 +233,35 @@ activate themselves.
             auctionEndTime = now + _biddingTime;
         }
 
-        /// Bid on the auction with the value sent
-        /// together with this transaction.
-        /// The value will only be refunded if the
-        /// auction is not won.
+        /// Faire une offre avec la valeur envoyée
+        /// avec cette transaction.
+        /// La valeur ne sera remboursée que si 
+        // l'enchère est perdue.
         function bid() public payable {
-            // No arguments are necessary, all
-            // information is already part of
-            // the transaction. The keyword payable
-            // is required for the function to
-            // be able to receive Ether.
+            // Aucun argument n'est nécessaire, toute
+            // l'information fait déjà partie
+            // de la transaction. Le mot-clé payable
+            // est requis pour autoriser la fonction
+            // à recevoir de l'Ether.
 
-            // Revert the call if the bidding
-            // period is over.
+            // Annule l'appel si l'enchère est termminée
             require(
                 now <= auctionEndTime,
                 "Auction already ended."
             );
 
-            // If the bid is not higher, send the
-            // money back.
+            // Rembourse si l'enchère est trop basse
             require(
                 msg.value > highestBid,
                 "There already is a higher bid."
             );
 
             if (highestBid != 0) {
-                // Sending back the money by simply using
-                // highestBidder.send(highestBid) is a security risk
-                // because it could execute an untrusted contract.
-                // It is always safer to let the recipients
-                // withdraw their money themselves.
+                // Renvoyer l'argent avec un simple
+                // highestBidder.send(highestBid) est un risque de sécurité
+                // car ça pourrait déclencher un appel à un contrat.
+                // Il est toujours plus sûr de laisser les utilisateurs
+                // retirer leur argent eux-mêmes.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
@@ -288,17 +269,16 @@ activate themselves.
             emit HighestBidIncreased(msg.sender, msg.value);
         }
 
-        /// Withdraw a bid that was overbid.
+        /// Retirer l'argent d'une enchère dépassée
         function withdraw() public returns (bool) {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `send` returns.
+                // Il est important de mettre cette valeur à zéro car l'utilisateur
+                // pourrait rappeler cette fonction avant le retour de `send`.
                 pendingReturns[msg.sender] = 0;
 
                 if (!msg.sender.send(amount)) {
-                    // No need to call throw here, just reset the amount owing
+                    // Pas besoin d'avorter avec un throw ici, juste restaurer le montant
                     pendingReturns[msg.sender] = amount;
                     return false;
                 }
@@ -306,27 +286,27 @@ activate themselves.
             return true;
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// Met fin à l'enchère et envoie
+        /// le montant de l'enchère la plus haute au bénéficiaire.
         function auctionEnd() public {
-            // It is a good guideline to structure functions that interact
-            // with other contracts (i.e. they call functions or send Ether)
-            // into three phases:
-            // 1. checking conditions
-            // 2. performing actions (potentially changing conditions)
-            // 3. interacting with other contracts
-            // If these phases are mixed up, the other contract could call
-            // back into the current contract and modify the state or cause
-            // effects (ether payout) to be performed multiple times.
-            // If functions called internally include interaction with external
-            // contracts, they also have to be considered interaction with
-            // external contracts.
+            // C'est une bonne pratique de structurer les fonctions qui
+            // intéragissent avec d'autres contrats (appellent des
+            // fonctions ou envoient de l'Ether) en trois phases:
+            // 1. Vérifier les conditions
+            // 2. éffectuer les actions (potentiellement changeant les conditions)
+            // 3. interagir avec les autres contrats
+            // Si ces phases sont mélangées, l'autre contrat pourrait rappeler
+            // le contrat courant et modifier l'état ou causer des effets
+            // (paiements en Ether par ex) qui se produiraient plusieurs fois.
+            // Si des fonctions appelées en interne effectuent des appels 
+            // à des contrats externes, elles doivent aussi êtres considérées
+            // comme concernées par cette norme.
 
             // 1. Conditions
             require(now >= auctionEndTime, "Auction not yet ended.");
             require(!ended, "auctionEnd has already been called.");
 
-            // 2. Effects
+            // 2. Éffets
             ended = true;
             emit AuctionEnded(highestBidder, highestBid);
 
@@ -335,41 +315,16 @@ activate themselves.
         }
     }
 
-Blind Auction
-=============
+Enchère aveugle
+===============
 
-The previous open auction is extended to a blind auction
-in the following. The advantage of a blind auction is
-that there is no time pressure towards the end of
-the bidding period. Creating a blind auction on a
-transparent computing platform might sound like a
-contradiction, but cryptography comes to the rescue.
+L'enchère ouverte précédente est étendue en une enchère aveugle dans ce qui suit. L'avantage d'une enchère aveugle est qu'il n'y a pas de pression temporelle vers la fin de la période de soumission. La création d'une enchère aveugle sur une plate-forme informatique transparente peut sembler une contradiction, mais la cryptographie vient à la rescousse.
 
-During the **bidding period**, a bidder does not
-actually send her bid, but only a hashed version of it.
-Since it is currently considered practically impossible
-to find two (sufficiently long) values whose hash
-values are equal, the bidder commits to the bid by that.
-After the end of the bidding period, the bidders have
-to reveal their bids: They send their values
-unencrypted and the contract checks that the hash value
-is the same as the one provided during the bidding period.
+Pendant la **période de soumission**, un soumissionnaire n'envoie pas son offre, mais seulement une version hachée de celle-ci. Puisqu'il est actuellement considéré comme pratiquement impossible de trouver deux valeurs (suffisamment longues) dont les valeurs de hachage sont égales, le soumissionnaire s'engage à l'offre par cela. Après la fin de la période de soumission, les soumissionnaires doivent révéler leurs offres : Ils envoient leurs valeurs en clair et le contrat vérifie que la valeur de hachage est la même que celle fournie pendant la période de soumission.
 
-Another challenge is how to make the auction
-**binding and blind** at the same time: The only way to
-prevent the bidder from just not sending the money
-after they won the auction is to make her send it
-together with the bid. Since value transfers cannot
-be blinded in Ethereum, anyone can see the value.
+Un autre défi est de savoir comment rendre l'enchère contraignante et aveugle en même temps : La seule façon d'éviter que l'enchérisseur n'envoie pas l'argent après avoir gagné l'enchère est de le lui faire envoyer avec l'enchère. Puisque les transferts de valeur ne peuvent pas être aveuglés dans Ethereum, tout le monde peut voir la valeur.
 
-The following contract solves this problem by
-accepting any value that is larger than the highest
-bid. Since this can of course only be checked during
-the reveal phase, some bids might be **invalid**, and
-this is on purpose (it even provides an explicit
-flag to place invalid bids with high value transfers):
-Bidders can confuse competition by placing several
-high or low invalid bids.
+Le contrat suivant résout ce problème en acceptant toute valeur supérieure à l'offre la plus élevée. Comme cela ne peut bien sûr être vérifié que pendant la phase de révélation, certaines offres peuvent être invalides, et c'est fait exprès (il fournit même un marqueur explicite pour placer des offres invalides avec des transferts de grande valeur) : Les soumissionnaires peuvent brouiller la concurrence en plaçant plusieurs offres invalides hautes ou basses.
 
 
 ::
@@ -392,15 +347,15 @@ high or low invalid bids.
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // Remboursements autorisés d'enchères précédentes
         mapping(address => uint) pendingReturns;
 
         event AuctionEnded(address winner, uint highestBid);
 
-        /// Modifiers are a convenient way to validate inputs to
-        /// functions. `onlyBefore` is applied to `bid` below:
-        /// The new function body is the modifier's body where
-        /// `_` is replaced by the old function body.
+        /// Les Modifiers sont une façon pratique de valider des entrées.
+        /// `onlyBefore` est appliqué à `bid` ci-dessous:
+        /// Le corps de la fonction sera placé dans le modifier
+        /// où `_` est placé.
         modifier onlyBefore(uint _time) { require(now < _time); _; }
         modifier onlyAfter(uint _time) { require(now > _time); _; }
 
@@ -414,15 +369,15 @@ high or low invalid bids.
             revealEnd = biddingEnd + _revealTime;
         }
 
-        /// Place a blinded bid with `_blindedBid` =
+        /// Placer une enchère à l'aveugle avec `_blindedBid` =
         /// keccak256(abi.encodePacked(value, fake, secret)).
-        /// The sent ether is only refunded if the bid is correctly
-        /// revealed in the revealing phase. The bid is valid if the
-        /// ether sent together with the bid is at least "value" and
-        /// "fake" is not true. Setting "fake" to true and sending
-        /// not the exact amount are ways to hide the real bid but
-        /// still make the required deposit. The same address can
-        /// place multiple bids.
+        ///  L'éther envoyé n'est remboursé que si l'enchère est correctement
+        /// révélée dans la phase de révélation. L'offre est valide si
+        /// l'éther envoyé avec l'offre est d'au moins "valeur" et
+        /// "fake" n'est pas true. Régler "fake" à true et envoyer
+        /// envoyer un montant erroné sont des façons de masquer l'enchère
+        /// mais font toujours le dépot requis. La même addresse peut placer
+        /// plusieurs ordres
         function bid(bytes32 _blindedBid)
             public
             payable
@@ -434,9 +389,9 @@ high or low invalid bids.
             }));
         }
 
-        /// Reveal your blinded bids. You will get a refund for all
-        /// correctly blinded invalid bids and for all bids except for
-        /// the totally highest.
+        /// Révèle vos ench1eres aveugles. Vous serez remboursé pour toutes
+        /// les enchères invalides et toutes les autres exceptée la plus haute
+        /// le cas échéant.
         function reveal(
             uint[] memory _values,
             bool[] memory _fake,
@@ -457,8 +412,8 @@ high or low invalid bids.
                 (uint value, bool fake, bytes32 secret) =
                         (_values[i], _fake[i], _secret[i]);
                 if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
-                    // Bid was not actually revealed.
-                    // Do not refund deposit.
+                    // L'enchère n'a pas été révélée.
+                    // Ne pas rembourser.
                     continue;
                 }
                 refund += bidToCheck.deposit;
@@ -466,16 +421,14 @@ high or low invalid bids.
                     if (placeBid(msg.sender, value))
                         refund -= value;
                 }
-                // Make it impossible for the sender to re-claim
-                // the same deposit.
+                // Rendre impossible un double remboursement
                 bidToCheck.blindedBid = bytes32(0);
             }
             msg.sender.transfer(refund);
         }
 
-        // This is an "internal" function which means that it
-        // can only be called from the contract itself (or from
-        // derived contracts).
+        // Cette fonction interne ("internal") ne peut être appelée que
+        // que depuis l'intérieur du contrat (ou ses contrats dérivés).
         function placeBid(address bidder, uint value) internal
                 returns (bool success)
         {
@@ -483,7 +436,7 @@ high or low invalid bids.
                 return false;
             }
             if (highestBidder != address(0)) {
-                // Refund the previously highest bidder.
+                // Rembourse la précédent leader.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBid = value;
@@ -491,22 +444,21 @@ high or low invalid bids.
             return true;
         }
 
-        /// Withdraw a bid that was overbid.
+        /// Se faire rembourser une enchère battue.
         function withdraw() public {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `transfer` returns (see the remark above about
-                // conditions -> effects -> interaction).
+                // Il est important de mettre cette valeur à zéro car l'utilisateur
+                // pourrait rappeler cette fonction avant le retour de `send`.
+                // (voir remarque sur conditions -> effets -> interaction).
                 pendingReturns[msg.sender] = 0;
 
                 msg.sender.transfer(amount);
             }
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// Met fin à l'enchère et envoie
+        /// le montant de l'enchère la plus haute au bénéficiaire.
         function auctionEnd()
             public
             onlyAfter(revealEnd)
