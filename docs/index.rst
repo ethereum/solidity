@@ -1,7 +1,7 @@
 Solidity
 ========
 
-Traduit de l'anglais par `Kevin Azoulay <mailto:kevazoul@student.le-101.fr>`_.
+Traduit de l'anglais par `Kevin Azoulay <https://www.linkedin.com/in/kevin-azoulay/>`_.
 
 .. image:: logo.svg
     :width: 120px

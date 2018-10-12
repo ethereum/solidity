@@ -686,7 +686,7 @@ En général, les signatures ECDSA se composent de deux paramètres, ``r`` et ``
 Les signatures dans Ethereum incluent un troisième paramètre appelé ``v``, qui peut être utilisé
 pour récupérer la clé privée du compte qui a été utilisée pour signer le message,
 l'expéditeur de la transaction. Solidity fournit une fonction intégrée
-`ecrecover <mathematical-and-cryptographic-functions>`_qui accepte un message avec les paramètres ``r```, ``s`` et ``v`` et renvoie l'adresse qui a été utilisée pour signer le message.
+`ecrecover <mathematical-and-cryptographic-functions>`_ qui accepte un message avec les paramètres ``r``, ``s`` et ``v`` et renvoie l'adresse qui a été utilisée pour signer le message.
 
 Récupérer le signataire du message dans la solidité
 ---------------------------------------------------
