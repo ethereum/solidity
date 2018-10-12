@@ -36,7 +36,7 @@ public:
 	/// @param _interface Forwarded to the symbolic var such that it can give constraints to the solver.
 	SSAVariable(
 		Type const& _type,
-		std::string _uniqueName,
+		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
 

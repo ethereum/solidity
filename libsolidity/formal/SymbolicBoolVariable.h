@@ -32,7 +32,7 @@ class SymbolicBoolVariable: public SymbolicVariable
 public:
 	SymbolicBoolVariable(
 		Type const& _type,
-		std::string _uniqueName,
+		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
 

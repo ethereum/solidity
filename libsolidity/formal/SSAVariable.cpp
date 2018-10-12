@@ -28,7 +28,7 @@ using namespace dev::solidity;
 
 SSAVariable::SSAVariable(
 	Type const& _type,
-	string _uniqueName,
+	string const& _uniqueName,
 	smt::SolverInterface& _interface
 )
 {

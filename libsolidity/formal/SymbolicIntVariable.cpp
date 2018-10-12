@@ -23,7 +23,7 @@ using namespace dev::solidity;
 
 SymbolicIntVariable::SymbolicIntVariable(
 	Type const& _type,
-	string _uniqueName,
+	string const& _uniqueName,
 	smt::SolverInterface& _interface
 ):
 	SymbolicVariable(_type, _uniqueName, _interface)
