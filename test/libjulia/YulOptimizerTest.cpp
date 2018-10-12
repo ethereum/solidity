@@ -22,6 +22,18 @@
 #include <test/Options.h>
 
 #include <libjulia/optimiser/Disambiguator.h>
+#include <libjulia/optimiser/CommonSubexpressionEliminator.h>
+#include <libjulia/optimiser/NameCollector.h>
+#include <libjulia/optimiser/ExpressionSplitter.h>
+#include <libjulia/optimiser/FunctionGrouper.h>
+#include <libjulia/optimiser/FunctionHoister.h>
+#include <libjulia/optimiser/ExpressionInliner.h>
+#include <libjulia/optimiser/FullInliner.h>
+#include <libjulia/optimiser/MainFunction.h>
+#include <libjulia/optimiser/Rematerialiser.h>
+#include <libjulia/optimiser/ExpressionSimplifier.h>
+#include <libjulia/optimiser/UnusedPruner.h>
+
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmParser.h>
@@ -80,6 +92,60 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
+	else if (m_optimizerStep == "commonSubexpressionEliminator")
+	{
+		disambiguate();
+		(CommonSubexpressionEliminator{})(*m_ast);
+	}
+	else if (m_optimizerStep == "expressionSplitter")
+	{
+		NameDispenser nameDispenser;
+		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
+		ExpressionSplitter{nameDispenser}(*m_ast);
+	}
+	else if (m_optimizerStep == "functionGrouper")
+	{
+		disambiguate();
+		(FunctionGrouper{})(*m_ast);
+	}
+	else if (m_optimizerStep == "functionHoister")
+	{
+		disambiguate();
+		(FunctionHoister{})(*m_ast);
+	}
+	else if (m_optimizerStep == "expressionInliner")
+	{
+		disambiguate();
+		ExpressionInliner(*m_ast).run();
+	}
+	else if (m_optimizerStep == "fullInliner")
+	{
+		disambiguate();
+		(FunctionHoister{})(*m_ast);
+		(FunctionGrouper{})(*m_ast);
+		FullInliner(*m_ast).run();
+	}
+	else if (m_optimizerStep == "mainFunction")
+	{
+		disambiguate();
+		(FunctionGrouper{})(*m_ast);
+		(MainFunction{})(*m_ast);
+	}
+	else if (m_optimizerStep == "rematerialiser")
+	{
+		disambiguate();
+		(Rematerialiser{})(*m_ast);
+	}
+	else if (m_optimizerStep == "expressionSimplifier")
+	{
+		disambiguate();
+		(ExpressionSimplifier{})(*m_ast);
+	}
+	else if (m_optimizerStep == "unusedPruner")
+	{
+		disambiguate();
+		UnusedPruner::runUntilStabilised(*m_ast);
+	}
 	else
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
