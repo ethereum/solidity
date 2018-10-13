@@ -67,12 +67,6 @@ Le composant ne prend pas encore en charge toutes les fonctionnalités du langag
 
 .. _import:
 
-Importing other Source Files
-============================
-
-Syntax and Semantics
---------------------
-
 Importation d'autres fichiers sources
 =====================================
 
@@ -126,7 +120,7 @@ Il repose sur le compilateur (voir ci-dessous) de résoudre les chemins.
 En général, la hiérarchie des répertoires n'a pas besoin de pointer strictement sur votre système de fichiers local, elle peut aussi pointer vers les ressources en ipfs, http ou git par exemple.
 
 .. note::
-     Utilisez toujours des importations relatives comme ``import "./filename.sol";``et évitez d'utiliser ``..`` dans les spécificateurs de chemins. Dans ce dernier cas, il est probablement préférable d'utiliser des chemins globaux et de configurer les remappages comme expliqué ci-dessous.
+     Utilisez toujours des importations relatives comme ``import "./filename.sol";`` et évitez d'utiliser ``..`` dans les spécificateurs de chemins. Dans ce dernier cas, il est probablement préférable d'utiliser des chemins globaux et de configurer les remappages comme expliqué ci-dessous.
 
 Utilisation dans les compilateurs
 ---------------------------------
@@ -166,7 +160,7 @@ Cela signifie que toutes les importations du ``module2`` pointent vers l'ancienn
 
 .. note::
 
-  ``solc``vous permet seulement d'inclure des fichiers de certains répertoires. Ils doivent être dans le répertoire (ou sous-répertoire) d'un des fichiers sources explicitement spécifiés ou dans le répertoire (ou sous-répertoire) d'une cible de remappage. Si vous voulez autoriser les includes absolus directs, ajoutez le remapping ``/=//``.
+  ``solc`` vous permet seulement d'inclure des fichiers de certains répertoires. Ils doivent être dans le répertoire (ou sous-répertoire) d'un des fichiers sources explicitement spécifiés ou dans le répertoire (ou sous-répertoire) d'une cible de remappage. Si vous voulez autoriser les includes absolus directs, ajoutez le remapping ``/=//``.
 
 S'il y a plusieurs remappages qui mènent à un fichier valide, le remappage avec le préfixe commun le plus long est choisi.
 
