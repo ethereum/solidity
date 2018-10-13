@@ -18,38 +18,36 @@ C'est la charge utile (binaire) envoyée avec la requête.
 Créer un contrat qui peut être "tué" et retourner ses fonds
 ===========================================================
 
-First, a word of warning: Killing contracts sounds like a good idea, because "cleaning up"
-is always good, but as seen above, it does not really clean up. Furthermore,
-if Ether is sent to removed contracts, the Ether will be forever lost.
+D'abord, un avertissement : Tuer les contrats semble être une bonne idée, parce que "nettoyer"
+est toujours bon, mais comme on l'a vu plus haut, il ne nettoie pas vraiment. En outre,
+si l'Ether est envoyé à des contrats tués, l'Ether sera perdu à jamais.
 
-If you want to deactivate your contracts, it is preferable to **disable** them by changing some
-internal state which causes all functions to throw. This will make it impossible
-to use the contract and ether sent to the contract will be returned automatically.
+Si vous souhaitez désactiver vos contrats, il est préférable de les **désactiver** en changeant un état interne qui empêche le lancement de ses fonctions. Cela rendra impossible
+l'utilisation du contrat et l'éther envoyé au contrat sera remboursé automatiquement.
 
-Now to answering the question: Inside a constructor, ``msg.sender`` is the
-creator. Save it. Then ``selfdestruct(creator);`` to kill and return funds.
+Répondons maintenant à la question : Dans un constructeur, ``msg.sender`` est le nom de l'expéditeur
+créateur. Stocker-le. Puis ``selfdestruct(createur);`` pour tuer et rendre les fonds.
 
 `example <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_
 
-Note that if you ``import "mortal"`` at the top of your contracts and declare
-``contract SomeContract is mortal { ...`` and compile with a compiler that already
-has it (which includes `Remix <https://remix.ethereum.org/>`_), then
-``kill()`` is taken care of for you. Once a contract is "mortal", then you can
-``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
-examples.
+Notez que si vous faites un ``import "mortal"`` en haut e vos contrats et déclarez
+``contract SomeContract is mortal { ...`` et compilez par un compilateur qui l'inclus
+(comme `Remix <https://remix.ethereum.org/>`_), alors
+la fonction ``kill()`` est gérée pour vous. Une fois qu'un contrat est "mortal", vous pouvez
+``contractname.kill.sendTransaction({from:eth.coinbase})``, pile poil comme dans l'exemple.
 
 Peut-on retourner une array ou ``string`` dans un appel de fonctions en Solidity ?
 ==================================================================================
 
-Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
+Oui, voir `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
 
 Est-il possible d'initialiser une array à la déclaration tel que: ``string[] myarray = ["a", "b"];`` ?
 ======================================================================================================
 
-Yes. However it should be noted that this currently only works with statically sized memory arrays. You can even create an inline memory
-array in the return statement.
+Oui. Cependant il devrait être noté que ça ne marche actuellement qu'avec les tableaux  de taille
+statique. Vous pouvez même générer un tableau à la volée dans la ligne de retour.
 
-Example::
+Exemple::
 
     pragma solidity >=0.4.16 <0.6.0;
 
@@ -64,20 +62,18 @@ Example::
 Un contrat peut-il retourner une ``struct`` ?
 =============================================
 
-Yes, but only in ``internal`` function calls or if ``pragma experimental "ABIEncoderV2";`` is used.
+Oui, mais seulement dans un appel de fonction ``internal`` ou si ``pragma experimental "ABIEncoderV2";`` est utilisé.
 
 Si je retourne un ``enum``, je ne reçois que les integers avec web3.js. Comment avoir les noms associés ?
 =========================================================================================================
 
-Enums are not supported by the ABI, they are just supported by Solidity.
-You have to do the mapping yourself for now, we might provide some help
-later.
+Les Enums ne sont pas encore supportés par l'ABI, juste par Solidity.
+Vous devrez faire la correspondance vous même, mais nous fournirons probablement des outils plus tard.
 
 Les variables d'état peuvent-elles être initialisées à la déclaration ?
 =======================================================================
 
-Yes, this is possible for all types (even for structs). However, for arrays it
-should be noted that you must declare them as static memory arrays.
+Oui, possible pour tous les types (même les structs). Cependant, là encore, un tableau devra être de taille statique pour ce faire.
 
 Examples::
 
@@ -101,16 +97,16 @@ Examples::
 Comment marchent les ``struct`` ?
 =================================
 
-See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
+Regardez `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
 Comment marche la boucle for ?
 ==============================
 
-Very similar to JavaScript. Such as the following example:
+Très similaire au JS, comme dans l'exemple ci-dessous:
 
 ``for (uint i = 0; i < a.length; i ++) { a[i] = i; }``
 
-See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
+Regardez `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
 Quelles sont les exemples de fonctions de manipulation de ``string`` (``substring``, ``indexOf``, ``charAt``, etc) ?
 ====================================================================================================================
