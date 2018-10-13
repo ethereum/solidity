@@ -18,17 +18,16 @@ C'est la charge utile (binaire) envoyée avec la requête.
 Créer un contrat qui peut être "tué" et retourner ses fonds
 ===========================================================
 
-D'abord, un avertissement : Tuer les contrats semble être une bonne idée, parce que "nettoyer"
-est toujours bon, mais comme on l'a vu plus haut, il ne nettoie pas vraiment. En outre,
-si l'Ether est envoyé à des contrats tués, l'Ether sera perdu à jamais.
+.. warning::
+    Tuer les contrats semble être une bonne idée, parce que "nettoyer" est toujours bon, mais comme on l'a vu plus haut, il ne nettoie pas vraiment. En outre, si l'Ether est envoyé à des contrats tués, l'Ether sera perdu à jamais.
 
-Si vous souhaitez désactiver vos contrats, il est préférable de les **désactiver** en changeant un état interne qui empêche le lancement de ses fonctions. Cela rendra impossible
+Si vous souhaitez tuer vos contrats, l'idéal est de les **désactiver** en changeant un état interne qui empêche le lancement de ses fonctions. Cela rendra impossible
 l'utilisation du contrat et l'éther envoyé au contrat sera remboursé automatiquement.
 
 Répondons maintenant à la question : Dans un constructeur, ``msg.sender`` est le nom de l'expéditeur
 créateur. Stocker-le. Puis ``selfdestruct(createur);`` pour tuer et rendre les fonds.
 
-`example <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_
+Voir cet `exemple <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_.
 
 Notez que si vous faites un ``import "mortal"`` en haut e vos contrats et déclarez
 ``contract SomeContract is mortal { ...`` et compilez par un compilateur qui l'inclus
