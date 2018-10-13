@@ -36,13 +36,13 @@ Notez que si vous faites un ``import "mortal"`` en haut e vos contrats et décla
 la fonction ``kill()`` est gérée pour vous. Une fois qu'un contrat est "mortal", vous pouvez
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, pile poil comme dans l'exemple.
 
-Peut-on retourner une array ou ``string`` dans un appel de fonctions en Solidity ?
-==================================================================================
+Peut-on retourner une ``array`` ou ``string`` dans un appel de fonctions en Solidity ?
+======================================================================================
 
 Oui, voir `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
 
-Est-il possible d'initialiser une array à la déclaration tel que: ``string[] myarray = ["a", "b"];`` ?
-======================================================================================================
+Est-il possible d'initialiser un tableau à la déclaration tel que: ``string[] myarray = ["a", "b"];`` ?
+=======================================================================================================
 
 Oui. Cependant il devrait être noté que ça ne marche actuellement qu'avec les tableaux  de taille
 statique. Vous pouvez même générer un tableau à la volée dans la ligne de retour.
