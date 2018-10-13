@@ -64,7 +64,7 @@ Un contrat peut-il retourner une ``struct`` ?
 
 Oui, mais seulement dans un appel de fonction ``internal`` ou si ``pragma experimental "ABIEncoderV2";`` est utilisé.
 
-Si je retourne un ``enum``, je ne reçois que les integers avec web3.js. Comment avoir les noms associés ?
+Si je retourne un ``enum``, je ne reçois que les ``integer`` avec web3.js. Comment avoir les noms associés ?
 =========================================================================================================
 
 Les Enums ne sont pas encore supportés par l'ABI, juste par Solidity.
@@ -374,25 +374,25 @@ Uniquement lorsque ``pragma experimental "ABIEncoderV2";`` est utilisé.
 Que fait l'étrange vérification suivante dans le contrat Custom Token ?
 =======================================================================
 
-: :
+::
 
     require((balanceOf[_to] + _valeur) >= balanceOf[_to]) ;
 
 Les entiers dans Solidity (et la plupart des autres langages de programmation bas-niveau) sont limités à une certaine plage.
-Pour ``uint256``, il s'agit de ``0`` jusqu'à ``2**256 - 1``. Si le résultat d'une opération quelconque sur ces nombres ne correspond pas à cette plage, il est tronqué. Ces troncatures peuvent avoir de graves conséquences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, donc un code comme celui ci est nécessaire pour éviter certaines attaques.
+Pour ``uint256``, il s'agit de ``0`` jusqu'à ``2**256 - 1``. Si le résultat d'une opération quelconque sur ces nombres ne correspond pas à cette plage, il est tronqué. Ces troncatures peuvent avoir de `graves conséquences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, donc un code comme celui ci est nécessaire pour éviter certaines attaques.
 
 
 Pourquoi les conversions explicites entre les ``bytes`` de taille fixe et les types ``int`` échouent-elles ?
 ============================================================================================================
 
 Depuis la version 0.5.0, les conversions explicites entre les tableaux d'octets de taille fixe et les entiers ne sont autorisées que si les deux types ont la même taille. Cela permet d'éviter les comportements inattendus lors de la troncation ou du bourrage.
-De telles conversions sont encore possibles, mais des conversions intermédiaires explicites sont nécessaires pour rendre visible la convention de troncature et de bourrage souhaitée. Voir :ref:`types-conversion-elementary-types' pour une explication complète et des exemples.
+De telles conversions sont encore possibles, mais des conversions intermédiaires explicites sont nécessaires pour rendre visible la convention de troncature et de bourrage souhaitée. Voir :ref:`types-conversion-elementary-types` pour une explication complète et des exemples.
 
 
 Pourquoi les nombres littéraux (dans une ``string``) ne peuvent-ils pas être convertis en types ``bytes`` de taille fixe ?
 ==========================================================================================================================
 
-Depuis la version 0.5.0, seuls les nombres hexadécimaux peuvent être convertis en bytes de taille fixe et uniquement si le nombre de chiffres hexadécimaux correspond à la taille du type. Voir :ref:`types-conversion-littéraux' pour une explication complète et des exemples.
+Depuis la version 0.5.0, seuls les nombres hexadécimaux peuvent être convertis en bytes de taille fixe et uniquement si le nombre de chiffres hexadécimaux correspond à la taille du type. Voir :ref:`types-conversion-litterals` pour une explication complète et des exemples.
 
 
 
