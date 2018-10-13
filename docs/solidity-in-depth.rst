@@ -1,11 +1,9 @@
-#################
-Solidity in Depth
-#################
+######################
+Solidity en profondeur
+######################
 
 This section should provide you with all you need to know about Solidity.
-If something is missing here, please contact us on
-`Gitter <https://gitter.im/ethereum/solidity>`_ or create a pull request on
-`Github <https://github.com/ethereum/solidity/pulls>`_.
+Si quelque chose manque ici, merci de nous contacter, en anglais, sur `gitter <https://gitter.im/ethereum/solidity>`_ ou à nous faire parvenir un `problème <https://github.com/ethereum/solidity/issues>`_ sur github, ou en français sur le `git de cette traduction <https://github.com/karocyt/solidity-fr/issues>`_
 
 .. toctree::
    :maxdepth: 2

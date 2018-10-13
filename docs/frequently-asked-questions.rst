@@ -19,7 +19,7 @@ Créer un contrat qui peut être "tué" et retourner ses fonds
 ===========================================================
 
 .. warning::
-    Tuer les contrats semble être une bonne idée, parce que "nettoyer" est toujours bon, mais comme on l'a vu plus haut, il ne nettoie pas vraiment. En outre, si l'Ether est envoyé à des contrats tués, l'Ether sera perdu à jamais.
+    Tuer les contrats semble être une bonne idée, parce que "nettoyer" est toujours bon, mais comme on l'a vu précédement, il ne nettoie pas vraiment. En outre, si l'Ether est envoyé à des contrats tués, l'Ether sera perdu à jamais.
 
 Si vous souhaitez tuer vos contrats, l'idéal est de les **désactiver** en changeant un état interne qui empêche le lancement de ses fonctions. Cela rendra impossible
 l'utilisation du contrat et l'éther envoyé au contrat sera remboursé automatiquement.
@@ -98,8 +98,8 @@ Comment marchent les ``struct`` ?
 
 Regardez `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
-Comment marche la boucle for ?
-==============================
+Comment marche la boucle ``for`` ?
+==================================
 
 Très similaire au JS, comme dans l'exemple ci-dessous:
 
