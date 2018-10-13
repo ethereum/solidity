@@ -1,10 +1,8 @@
-********************************
-Layout of a Solidity Source File
-********************************
+**************************************
+Structure d'un fichier source Solidity
+**************************************
 
-Source files can contain an arbitrary number of
-:ref:`contract definitions<contract_structure>`, import_ directives
-and :ref:`pragma directives<pragma>`.
+Les fichiers sources peuvent contenir un nombre arbitraire de :ref:`définitions de contrats<contract_structure>`, directives d'import_ et :ref:`directives pragma<pragma>`.
 
 .. index:: ! pragma
 
@@ -13,11 +11,7 @@ and :ref:`pragma directives<pragma>`.
 Pragmas
 =======
 
-The ``pragma`` keyword can be used to enable certain compiler features
-or checks. A pragma directive is always local to a source file, so
-you have to add the pragma to all your files if you want enable it
-in all of your project. If you :ref:`import<import>` another file, the pragma
-from that file will not automatically apply to the importing file.
+Le mot-clé ``pragma``` peut être utilisé pour activer certaines fonctions ou vérifications du compilateur. Une directive pragma est toujours locale à un fichier source, vous devez donc ajouter pragma à tous vos fichiers si vous voulez l'activer dans tout votre projet. Si vous :ref:`importez<import>` un autre fichier, le pragma de ce fichier ne s'appliquera pas automatiquement au fichier à importer.
 
 .. index:: ! pragma, version
 
@@ -26,75 +20,48 @@ from that file will not automatically apply to the importing file.
 Version Pragma
 --------------
 
-Source files can (and should) be annotated with a so-called version pragma to reject
-being compiled with future compiler versions that might introduce incompatible
-changes. We try to keep such changes to an absolute minimum and especially
-introduce changes in a way that changes in semantics will also require changes
-in the syntax, but this is of course not always possible. Because of that, it is always
-a good idea to read through the changelog at least for releases that contain
-breaking changes, those releases will always have versions of the form
-``0.x.0`` or ``x.0.0``.
+Les fichiers sources peuvent (et devraient) être annotés avec un ``version pragma`` pour refuser d'être compilés avec de futures versions de compilateurs qui pourraient introduire des changements incompatibles. Nous essayons de limiter ces changements au strict minimum, et en particulier
+introduire des changements d'une manière telle que les changements de sémantique nécessiteront également des changements de syntaxe, mais ce n'est bien sûr pas toujours possible. Pour cette raison, c'est toujours une bonne idée de lire le fichier des modifications ("changelog") au moins pour les versions qui contiennent des changements de rupture, ces versions auront toujours des versions de la forme ``0.x.0`` ou ``x.0.0``.
 
-The version pragma is used as follows::
+Le ``version pragma`` est utilisée comme suit::
 
   pragma solidity ^0.4.0;
 
-Such a source file will not compile with a compiler earlier than version 0.4.0
-and it will also not work on a compiler starting from version 0.5.0 (this
-second condition is added by using ``^``). The idea behind this is that
-there will be no breaking changes until version ``0.5.0``, so we can always
-be sure that our code will compile the way we intended it to. We do not fix
-the exact version of the compiler, so that bugfix releases are still possible.
+Un tel fichier source ne compilera pas avec un compilateur antérieur à la version 0.4.0 et ne fonctionnera pas non plus sur un compilateur à partir de la version 0.5.0 (cette deuxième condition est ajoutée en utilisant ``^``). L'idée derrière cela est la supposition qu'il n'y aura pas de changements de rupture jusqu'à la version ``0.5.0``, donc nous pouvons toujours être sûrs que notre code compilera la façon dont nous l'avons prévu. Nous ne précisons pas la version exacte de correctif du compilateur, de sorte que les versions corrigées sont toujours possibles.
 
-It is possible to specify much more complex rules for the compiler version,
-the expression follows those used by `npm <https://docs.npmjs.com/misc/semver>`_.
+Il est possible de spécifier des règles beaucoup plus complexes pour la version du compilateur, la syntaxe suit celle utilisée par `npm <https://docs.npmjs.com/misc/semver>`_.
 
 .. note::
-  Using the version pragma will *not* change the version of the compiler.
-  It will also *not* enable or disable features of the compiler. It will just
-  instruct the compiler to check whether its version matches the one
-  required by the pragma. If it does not match, the compiler will issue
-  an error.
+ L'utilisation de ``version pragma`` ne changera pas la version du compilateur.
+ Il n'activera ou désactivera pas non plus les fonctions du compilateur. Il demandera simplement au compilateur de vérifier si sa version correspond à celle requise par le pragma. S'il ne correspond pas, le compilateur affichera une erreur.
 
 .. index:: ! pragma, experimental
 
 .. _experimental_pragma:
 
-Experimental Pragma
+Pragma Expérimental
 -------------------
 
-The second pragma is the experimental pragma. It can be used to enable
-features of the compiler or language that are not yet enabled by default.
-The following experimental pragmas are currently supported:
+Le deuxième pragma est le ``experimental pragma``. Il peut être utilisé pour activer des fonctions du compilateur ou de la langue qui ne sont pas encore activées par défaut.
+Les pragmas expérimentaux suivants sont actuellement pris en charge :
 
 
 ABIEncoderV2
 ~~~~~~~~~~~~
 
-The new ABI encoder is able to encode and decode arbitrarily nested
-arrays and structs. It produces less optimal code (the optimizer
-for this part of the code is still under development) and has not
-received as much testing as the old encoder. You can activate it
-using ``pragma experimental ABIEncoderV2;``.
+Le nouvel encodeur ABI est capable d'encoder et de décoder arbitrairement des tableaux et des structures imbriqués. Il produit un code moins optimal (l'optimiseur pour cette partie du code est encore en développement) et n'a pas reçu autant de tests que l'ancien codeur. Vous pouvez l'activer en utilisant ``pragma experimental ABIEncoderV2;``.
 
 .. _smt_checker:
 
 SMTChecker
 ~~~~~~~~~~
 
-This component has to be enabled when the Solidity compiler is built
-and therefore it is not available in all Solidity binaries.
-The :ref:`build instructions<smt_solvers_build>` explain how to activate this option.
-It is activated for the Ubuntu PPA releases in most versions,
-but not for solc-js, the Docker images, Windows binaries or the
-statically-built Linux binaries.
+Ce composant doit être activé lors de la compilation du compilateur et n'est par conséquent pas forcément présent dans tous les binaires Solidity.
+Les :ref:`instructions de compilation<smt_solvers_build>` expliquent comment activer cette option.
+Elle est activée pour les versions PPA d'Ubuntu dans la plupart des versions, mais pas pour solc-js, les images Docker, les binaires Windows ni les binaires Linux pré-compilés.
 
-If you use
-``pragma experimental SMTChecker;``, then you get additional
-safety warnings which are obtained by querying an SMT solver.
-The component does not yet support all features of the Solidity language
-and likely outputs many warnings. In case it reports unsupported
-features, the analysis may not be fully sound.
+Si vous utilisez ``pragma experimental SMTChecker;``, vous aurez des avertissements de sécurité supplémentaires qui sont obtenus en interrogeant un solveur SMT.
+Le composant ne prend pas encore en charge toutes les fonctionnalités du langage Solidity et émet probablement de nombreux avertissements. Dans le cas où il signale des caractéristiques non prises en charge, l'analyse peut ne pas être cohérente.
 
 .. index:: source file, ! import
 
@@ -106,32 +73,31 @@ Importing other Source Files
 Syntax and Semantics
 --------------------
 
-Solidity supports import statements that are very similar to those available in JavaScript
-(from ES6 on), although Solidity does not know the concept of a "default export".
+Importation d'autres fichiers sources
+=====================================
 
-At a global level, you can use import statements of the following form:
+Syntaxe et sémantique
+---------------------
+
+Solidity supporte les instructions d'importation qui sont très similaires à celles disponibles en JavaScript (à partir de ES6), bien que Solidity ne connaisse pas le concept de "default export".
+
+Au niveau global, vous pouvez utiliser les instructions d'importation sous la forme suivante :
 
 ::
 
   import "filename";
 
-This statement imports all global symbols from "filename" (and symbols imported there) into the
-current global scope (different than in ES6 but backwards-compatible for Solidity).
-This simple form is not recommended for use, because it pollutes the namespace in an
-unpredictable way: If you add new top-level items inside "filename", they will automatically
-appear in all files that import like this from "filename". It is better to import specific
-symbols explicitly.
+Cette instruction importe tous les symboles globaux de "nom de fichier" (et les symboles qui y sont importés) dans le champ d'application global actuel (différent de celui de ES6 mais rétrocompatible pour Solidity).
+Cette syntaxe simple n'est pas recommandée car elle pollue l'espace de nommage d'une manière imprévisible: Si vous ajoutez de nouveaux éléments de niveau supérieur dans "nom de fichier", ils apparaîtront automatiquement dans tous les fichiers qui importent ainsi à partir de "nom de fichier". Il est préférable d'importer explicitement des symboles spécifiques.
 
-The following example creates a new global symbol ``symbolName`` whose members are all
-the global symbols from ``"filename"``.
+L'exemple suivant crée un nouveau symbole global ``symbolName`` dont les membres sont tous les symboles globaux de ``"filename"``.
 
 ::
 
   import * as symbolName from "filename";
 
-If there is a naming collision, you can also rename symbols while importing.
-This code
-creates new global symbols ``alias`` and ``symbol2`` which reference ``symbol1`` and ``symbol2`` from inside ``"filename"``, respectively.
+En cas de collision de noms, vous pouvez également renommer les symboles lors de l'importation.
+Ce code crée de nouveaux symboles globaux ``alias`` et ``symbole2`` qui font référence à ``symbole1`` et ``symbole2`` de ``"nom de fichier"``, respectivement.
 
 ::
 
@@ -139,76 +105,56 @@ creates new global symbols ``alias`` and ``symbol2`` which reference ``symbol1``
 
 
 
-Another syntax is not part of ES6, but probably convenient:
+Une autre syntaxe ne fait pas partie de ES6, mais probablement pratique :
 
 ::
 
   import "filename" as symbolName;
 
-which is equivalent to ``import * as symbolName from "filename";``.
+qui équivaut à ``import * as symbolName from "filename";``.
 
-Paths
------
+Chemins
+-------
 
-In the above, ``filename`` is always treated as a path with ``/`` as directory separator,
-``.`` as the current and ``..`` as the parent directory.  When ``.`` or ``..`` is followed by a character except ``/``,
-it is not considered as the current or the parent directory.
-All path names are treated as absolute paths unless they start with the current ``.`` or the parent directory ``..``.
+Ci-dessus, ``nom-de-fichier`` est toujours traité comme un chemin avec ``/`` comme séparateur de répertoire, ``.`` comme le répertoire courant et ``..`` comme le répertoire parent. Lorsque ``.``ou ``..`` est suivi d'un caractère autre que ``/``, il n'est pas considéré comme le répertoire courant ou parent.
+Tous les noms de chemins sont traités comme des chemins absolus à moins qu'ils ne commencent par le répertoire courant ``.`` ou le répertoire parent ``..``.
 
-To import a file ``x`` from the same directory as the current file, use ``import "./x" as x;``.
-If you use ``import "x" as x;`` instead, a different file could be referenced
-(in a global "include directory").
+Pour importer un fichier ``x`` du même répertoire que le fichier courant, utilisez ``import "./x" as x;``.
+Si vous utilisez ``import "x" as x;`` à la place, un fichier différent pourrait être référencé (d'un plus global "include directory").
 
-It depends on the compiler (see below) how to actually resolve the paths.
-In general, the directory hierarchy does not need to strictly map onto your local
-filesystem, it can also map to resources discovered via e.g. ipfs, http or git.
+Il repose sur le compilateur (voir ci-dessous) de résoudre les chemins.
+En général, la hiérarchie des répertoires n'a pas besoin de pointer strictement sur votre système de fichiers local, elle peut aussi pointer vers les ressources en ipfs, http ou git par exemple.
 
 .. note::
-    Always use relative imports like ``import "./filename.sol";`` and avoid
-    using ``..`` in path specifiers. In the latter case, it is probably better to use
-    global paths and set up remappings as explained below.
+     Utilisez toujours des importations relatives comme ``import "./filename.sol";``et évitez d'utiliser ``..`` dans les spécificateurs de chemins. Dans ce dernier cas, il est probablement préférable d'utiliser des chemins globaux et de configurer les remappages comme expliqué ci-dessous.
 
-Use in Actual Compilers
------------------------
+Utilisation dans les compilateurs
+---------------------------------
 
-When invoking the compiler, you can specify how to discover the first element
-of a path, and also path prefix remappings. For
-example you can setup a remapping so that everything imported from the virtual
-directory ``github.com/ethereum/dapp-bin/library`` would actually be read from
-your local directory ``/usr/local/dapp-bin/library``.
-If multiple remappings apply, the one with the longest key is tried first.
-An empty prefix is not allowed. The remappings can depend on a context,
-which allows you to configure packages to import e.g., different versions of a
-library of the same name.
+Lorsque vous invoquez le compilateur, vous pouvez spécifier comment découvrir le premier élément d'un chemin, ainsi que les remappages de préfixes de chemins. Par exemple, vous pouvez configurer un remappage de sorte que tout ce qui est importé du répertoire virtuel ``github.com/ethereum/dapp-bin/library`` soit réellement lu depuis votre répertoire local ``/usr/local/dapp-bin/library``.
+Si plusieurs remappages s'appliquent, celui avec la clé la plus longue est essayé en premier.
+Un préfixe vide n'est pas autorisé. Les remappages peuvent dépendre d'un contexte, ce qui vous permet de configurer des paquets à importer, par exemple différentes versions d'une bibliothèque du même nom.
 
-**solc**:
+**solc** :
 
-For solc (the commandline compiler), you provide these path remappings as
-``context:prefix=target`` arguments, where both the ``context:`` and the
-``=target`` parts are optional (``target`` defaults to ``prefix`` in this
-case). All remapping values that are regular files are compiled (including
-their dependencies).
+Pour solc (le compilateur de ligne de commande), vous fournissez ces chemins d'accès sous la forme d'arguments ``context:prefix=target``, où les parties ``context:``et ``=target`` sont optionnelles (``prefix`` est la valeur par défaut de ``target`` dans ce cas
+). Toutes les valeurs de remappage qui sont des fichiers réguliers sont compilées (y compris leurs dépendances).
 
-This mechanism is backwards-compatible (as long
-as no filename contains ``=`` or ``:``) and thus not a breaking change. All
-files in or below the ``context`` directory that import a file that starts with
-``prefix`` are redirected by replacing ``prefix`` by ``target``.
+Ce mécanisme est rétrocompatible (tant qu'aucun nom de fichier ne contient ``=`` ou ``:```) et ne constitue donc pas un changement de rupture. Tous les fichiers dans ou sous le répertoire ``context`` qui importent un fichier commençant par ``prefix`` sont redirigés en remplaçant ``prefix`` par ``target``.
 
-For example, if you clone ``github.com/ethereum/dapp-bin/`` locally to
-``/usr/local/dapp-bin``, you can use the following in your source file:
+Par exemple, si vous clonez ``github.com/ethereum/dapp-bin/`` localement vers ``/usr/local/dapp-bin``, vous pouvez utiliser ce qui suit dans votre fichier source :
 
 ::
 
   import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;
 
-Then run the compiler:
+Puis lancer le compilateur:
 
 .. code-block:: bash
 
   solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
 
-As a more complex example, suppose you rely on a module that uses an old
-version of dapp-bin that you checked out to ``/usr/local/dapp-bin_old``, then you can run:
+Comme exemple plus complexe, supposons que vous utilisiez un module qui utilise une ancienne version de dapp-bin que vous avez extraite vers ``/usr/local/dapp-bin_old``, alors vous pouvez exécuter :
 
 .. code-block:: bash
 
@@ -216,24 +162,17 @@ version of dapp-bin that you checked out to ``/usr/local/dapp-bin_old``, then yo
        module2:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin_old/ \
        source.sol
 
-This means that all imports in ``module2`` point to the old version but imports
-in ``module1`` point to the new version.
+Cela signifie que toutes les importations du ``module2`` pointent vers l'ancienne version mais les importations du ``module1`` pointent vers la nouvelle version.
 
 .. note::
 
-  ``solc`` only allows you to include files from certain directories. They have
-  to be in the directory (or subdirectory) of one of the explicitly specified
-  source files or in the directory (or subdirectory) of a remapping target. If
-  you want to allow direct absolute includes, add the remapping ``/=/``.
+  ``solc``vous permet seulement d'inclure des fichiers de certains répertoires. Ils doivent être dans le répertoire (ou sous-répertoire) d'un des fichiers sources explicitement spécifiés ou dans le répertoire (ou sous-répertoire) d'une cible de remappage. Si vous voulez autoriser les includes absolus directs, ajoutez le remapping ``/=//``.
 
-If there are multiple remappings that lead to a valid file, the remapping
-with the longest common prefix is chosen.
+S'il y a plusieurs remappages qui mènent à un fichier valide, le remappage avec le préfixe commun le plus long est choisi.
 
 **Remix**:
 
-`Remix <https://remix.ethereum.org/>`_ provides an automatic remapping for
-GitHub and automatically retrieves the file over the network. You can import
-the iterable mapping as above,  e.g.
+`Remix <https://remix.ethereum.org/>`_ fournit un remappage automatique pour GitHub et récupère automatiquement le fichier en ligne. Vous pouvez importer le mappage itérable comme ci-dessus, par exemple:
 
 ::
   import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;
@@ -242,37 +181,27 @@ Remix may add other source code providers in the future.
 
 .. index:: ! comment, natspec
 
-Comments
-========
+Commentaires
+============
 
-Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible.
+Les commentaires sur une seule ligne (``//``) et les commentaires sur plusieurs lignes (``/*...*/``) sont possibles.
 
 ::
 
-  // This is a single-line comment.
+  // Ceci est un commentaire sur une ligne.
 
   /*
-  This is a
-  multi-line comment.
+  Ceci est un commentaire
+  multi-lignes.
   */
 
 .. note::
-  A single-line comment is terminated by any unicode line terminator
-  (LF, VF, FF, CR, NEL, LS or PS) in utf8 encoding. The terminator is still part of
-  the source code after the comment, so if it is not an ascii symbol
-  (these are NEL, LS and PS), it will lead to a parser error.
+ Un commentaire d'une seule ligne est terminé par tout terminateur de ligne unicode (LF, VF, FF, CR, NEL, LS ou PS) en codage utf8. Le terminateur fait toujours partie du code source après le commentaire, donc si ce n'est pas un symbole ascii (que sont NEL, LS et PS), il conduira à une erreur d'analyse.
 
-Additionally, there is another type of comment called a natspec comment,
-for which the documentation is not yet written. They are written with a
-triple slash (``///``) or a double asterisk block(``/** ... */``) and
-they should be used directly above function declarations or statements.
-You can use `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_-style tags inside these comments to document
-functions, annotate conditions for formal verification, and provide a
-**confirmation text** which is shown to users when they attempt to invoke a
-function.
+De plus, il existe un autre type de commentaire appelé commentaire natspec, pour lequel la documentation n'est pas encore écrite. Ils sont écrits avec une triple barre oblique (``///``) ou un double bloc d'astérisque (``/**... */``) et ils doivent être utilisés directement au-dessus des déclarations ou instructions de fonction.
+Vous pouvez utiliser les balises de style `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_ à l'intérieur de ces commentaires pour documenter les fonctions, annoter les conditions de vérification, et fournir un **texte de confirmation** qui est montré aux utilisateurs lorsqu'ils tentent d'appeler une fonction.
 
-In the following example we document the title of the contract, the explanation
-for the two input parameters and two returned values.
+Dans l'exemple suivant, nous documentons le titre du contrat, l'explication des deux paramètres d'entrée et les deux valeurs retournées.
 
 ::
 
