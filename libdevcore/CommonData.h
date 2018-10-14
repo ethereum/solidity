@@ -163,6 +163,22 @@ inline std::string formatNumber(u256 const& _value)
 		return _value.str();
 }
 
+template <class T>
+std::string toHexMixed(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd)
+{
+	std::ostringstream ret;
+	unsigned ii = 0;
+	ret << std::hex << std::setfill('0') << std::setw(ii++ ? 2 : _w);
+
+	int n = 0;
+	for (auto i: _data) {
+		// switch hex case every two bytes (4 chars)
+		ret << std::hex << ((( n++ & 2) == 0 ) ? std::uppercase : std::nouppercase)
+			<< std::setfill('0') << std::setw(2) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
+	}
+	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
+}
+
 /// @a T will typically by unsigned, u160, u256 or bigint.
 template <class T> 
 inline std::string formatNumberReadable(T _value)
@@ -183,7 +199,7 @@ inline std::string formatNumberReadable(T _value)
 			+ " * 2^" + std::to_string(i * 8);
 	}
 
-	// when multiple trailing zero bytes, format as N * 2^x
+	// when multiple trailing FF bytes, format as N * 2^x - 1
 	for (i=0, v=_value; (v & (T)0xff) == 0xff; ++i, v >>= 8) {}
 
 	if (i > 2) {
@@ -191,22 +207,8 @@ inline std::string formatNumberReadable(T _value)
 			+ " * 2^" + std::to_string(i * 8) + " - 1";
 	}
 
-	// otherwise, return as hex.
-	return formatNumber(_value);
-}
-
-inline std::string formatNumberReadableChris(std::string hex) 
-{
-    for (int i = hex.size() - 1; i >= 2; i--) 
-    {   
-        if (std::strncmp(&hex[i], "0", 1) > 0) {
-            if ((hex.size() - 1) % 2 != 0) i++;
-            int superscript = ((hex.size() - i) / 2) * 8;
-            return hex.substr(0, i + 1) + " * 2^" + std::to_string(superscript);
-        }
-    }
-
-    return hex;
+	// otherwise, return as truncated hex.
+	return toHexMixed(toCompactBigEndian(_value), 2, HexPrefix::Add).substr(0,10) + "...";
 }
 
 inline std::string toCompactHexWithPrefix(u256 val)
