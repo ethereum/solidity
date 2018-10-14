@@ -245,12 +245,6 @@ you should fork Solidity and add your personal fork as a second remote:
 
     git remote add personal git@github.com:[username]/solidity.git
 
-Solidity has git submodules.  Ensure they are properly loaded:
-
-.. code-block:: bash
-
-   git submodule update --init --recursive
-
 External Dependencies
 ---------------------
 

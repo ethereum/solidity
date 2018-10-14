@@ -55,7 +55,6 @@ install:
         $fileContent += "`n-----END RSA PRIVATE KEY-----`n";
         Set-Content c:\users\appveyor\.ssh\id_rsa $fileContent
         }
-    - git submodule update --init --recursive
     - ps: $prerelease = "nightly."
     - ps: $prerelease += Get-Date -format "yyyy.M.d"
     - ps: if($env:appveyor_repo_branch -eq 'release') { Set-Content prerelease.txt $null } else { Set-Content prerelease.txt $prerelease }
