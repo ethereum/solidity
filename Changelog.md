@@ -17,6 +17,7 @@ Breaking Changes:
  * Commandline interface: Remove obsolete ``--formal`` option.
  * Commandline interface: Rename the ``--julia`` option to ``--yul``.
  * Commandline interface: Require ``-`` if standard input is used as source.
+ * Commandline interface: Use hash of library name for link placeholder instead of name itself.
  * Compiler interface: Disallow remappings with empty prefix.
  * Control Flow Analyzer: Consider mappings as well when checking for uninitialized return values.
  * Control Flow Analyzer: Turn warning about returning uninitialized storage pointers into an error.
@@ -36,6 +37,7 @@ Breaking Changes:
  * General: C99-style scoping rules are enforced now. This was already the case in the experimental 0.5.0 mode.
  * General: Disallow combining hex numbers with unit denominations (e.g. ``0x1e wei``). This was already the case in the experimental 0.5.0 mode.
  * JSON AST: Remove ``constant`` and ``payable`` fields (the information is encoded in the ``stateMutability`` field).
+ * JSON AST: Replace the ``isConstructor`` field by a new ``kind`` field, which can be ``constructor``, ``fallback`` or ``function``.
  * Interface: Remove "clone contract" feature. The ``--clone-bin`` and ``--combined-json clone-bin`` commandline options are not available anymore.
  * Name Resolver: Do not exclude public state variables when looking for conflicting declarations.
  * Optimizer: Remove the no-op ``PUSH1 0 NOT AND`` sequence.
@@ -98,6 +100,7 @@ Compiler Features:
  * Tests: Determine transaction status during IPC calls.
  * Code Generator: Allocate and free local variables according to their scope.
  * Removed ``pragma experimental "v0.5.0";``.
+ * Syntax Checker: Improved error message for lookup in function types.
 
 Bugfixes:
  * Build System: Support versions of CVC4 linked against CLN instead of GMP. In case of compilation issues due to the experimental SMT solver support, the solvers can be disabled when configuring the project with CMake using ``-DUSE_CVC4=OFF`` or ``-DUSE_Z3=OFF``.
@@ -124,6 +127,7 @@ Bugfixes:
  * Type Checker: Dynamic types as key for public mappings return error instead of assertion fail.
  * Type Checker: Fix internal error when array index value is too large.
  * Type Checker: Fix internal error for array type conversions.
+ * Type Checker: Fix internal error when array index is not an unsigned.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
  * Parser: Fix incorrect source location for nameless parameters.
 

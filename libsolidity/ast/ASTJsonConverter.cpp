@@ -325,17 +325,19 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
 		make_pair("documentation", _node.documentation() ? Json::Value(*_node.documentation()) : Json::nullValue),
+		make_pair("kind", _node.isConstructor() ? "constructor" : (_node.isFallback() ? "fallback" : "function")),
 		make_pair("stateMutability", stateMutabilityToString(_node.stateMutability())),
 		make_pair("superFunction", idOrNull(_node.annotation().superFunction)),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("parameters", toJson(_node.parameterList())),
-		make_pair("isConstructor", _node.isConstructor()),
 		make_pair("returnParameters", toJson(*_node.returnParameterList())),
 		make_pair("modifiers", toJson(_node.modifiers())),
 		make_pair("body", _node.isImplemented() ? toJson(_node.body()) : Json::nullValue),
 		make_pair("implemented", _node.isImplemented()),
 		make_pair("scope", idOrNull(_node.scope()))
 	};
+	if (m_legacy)
+		attributes.emplace_back("isConstructor", _node.isConstructor());
 	setJsonNode(_node, "FunctionDefinition", std::move(attributes));
 	return false;
 }

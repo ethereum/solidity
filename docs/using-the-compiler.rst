@@ -41,13 +41,25 @@ If there are multiple matches due to remappings, the one with the longest common
 
 For security reasons the compiler has restrictions what directories it can access. Paths (and their subdirectories) of source files specified on the commandline and paths defined by remappings are allowed for import statements, but everything else is rejected. Additional paths (and their subdirectories) can be allowed via the ``--allow-paths /sample/path,/another/sample/path`` switch.
 
-If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__LibraryName______``. You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
+If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__``. These are placeholders for the actual library addresses.
+The placeholder is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library name.
+The bytecode file will also contain lines of the form ``// <placeholder> -> <fq library name>`` at the end to help
+identify which libraries the placeholders represent. Note that the fully qualified library name
+is the path of its source file and the library name separated by ``:``.
+You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
 
-Either add ``--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"`` to your command to provide an address for each library or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
+Either add ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD567890123456789012345678901234567890"`` to your command to provide an address for each library or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
 
-If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__LibraryName____``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
+If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__$53aea86b7d70b31448b230b20ae141a537$__``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
 If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses.
+
+.. note::
+    The library placeholder used to be the fully qualified name of the library itself
+    instead of the hash of it. This format is still supported by ``solc --link`` but
+    the compiler will no longer output it. This change was made to reduce
+    the likelihood of a collision between libraries, since only the first 36 characters
+    of the fully qualified library name could be used.
 
 .. _evm-version:
 .. index:: ! EVM version, compile target

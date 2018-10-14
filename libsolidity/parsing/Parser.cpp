@@ -20,7 +20,7 @@
  * Solidity parser.
  */
 
-#include <ctype.h>
+#include <cctype>
 #include <vector>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
@@ -554,7 +554,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 		if (m_scanner->currentToken() != Token::Identifier)
 			fatalParserError(string("Expected identifier after ','"));
 	}
-	if (members.size() == 0)
+	if (members.empty())
 		parserError({"enum with no members is not allowed."});
 
 	nodeFactory.markEndPosition();
@@ -1554,6 +1554,9 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<TupleExpression>(components, isArray);
 		break;
 	}
+	case Token::IllegalHex:
+		fatalParserError("Expected even number of hex-nibbles within double-quotes.");
+		break;		
 	default:
 		if (Token::isElementaryTypeName(token))
 		{

@@ -45,6 +45,7 @@ deps/cache
 
 # IDE files
 .idea
+.vscode
 browse.VC.db
 CMakeLists.txt.user
 /CMakeSettings.json

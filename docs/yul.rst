@@ -44,7 +44,7 @@ and ``mod`` are available either natively or as functions and computes exponenti
             switch exponent
             case 0:u256 { result := 1:u256 }
             case 1:u256 { result := base }
-            default:
+            default
             {
                 result := power(mul(base, base), div(exponent, 2:u256))
                 switch mod(exponent, 2:u256)
@@ -415,14 +415,14 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | *Execution control*                                                                                           |
 +---------------------------------------------+-----------------------------------------------------------------+
-| create(v:u256, p:u256, s:u256)              | create new contract with code mem[p..(p+s)) and send v wei      |
+| create(v:u256, p:u256, n:u256)              | create new contract with code mem[p..(p+n)) and send v wei      |
 |                                             | and return the new address                                      |
 +---------------------------------------------+-----------------------------------------------------------------+
-| create2(v:u256, n:u256, p:u256, s:u256)     | create new contract with code mem[p...(p+s)) at address         |
-|                                             | keccak256(0xff . self . n . keccak256(mem[p...(p+s)))           |
+| create2(v:u256, p:u256, n:u256, s:u256)     | create new contract with code mem[p...(p+n)) at address         |
+|                                             | keccak256(0xff . this . s . keccak256(mem[p...(p+n)))           |
 |                                             | and send v wei and return the new address, where ``0xff`` is a  |
-|                                             | 8 byte value, ``self`` is the current contract's address        |
-|                                             | as a 20 byte value and ``n`` is a big-endian 256-bit value      |
+|                                             | 8 byte value, ``this`` is the current contract's address        |
+|                                             | as a 20 byte value and ``s`` is a big-endian 256-bit value      |
 +---------------------------------------------+-----------------------------------------------------------------+
 | call(g:u256, a:u256, v:u256, in:u256,       | call contract at address a with input mem[in..(in+insize))      |
 | insize:u256, out:u256,                      | providing g gas and v wei and output area                       |

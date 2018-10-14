@@ -53,7 +53,7 @@ Semantic and Syntactic Changes
 
 This section highlights changes that affect syntax and semantics.
 
-* The functions ``.call()``, ``.delegatecall()`, ``staticcall()``,
+* The functions ``.call()``, ``.delegatecall()``, ``staticcall()``,
   ``keccak256()``, ``sha256()`` and ``ripemd160()`` now accept only a single
   ``bytes`` argument. Moreover, the argument is not padded. This was changed to
   make more explicit and clear how the arguments are concatenated. Change every
@@ -153,6 +153,18 @@ Command Line and JSON Interfaces
 
 * The JSON AST fields ``constant`` and ``payable`` were removed. The
   information is now present in the ``stateMutability`` field.
+
+* The JSON AST field ``isConstructor`` of the ``FunctionDefinition``
+  node was replaced by a field called ``kind`` which can have the
+  value ``"constructor"``, ``"fallback"`` or ``"function"``.
+
+* In unlinked binary hex files, library address placeholders are now
+  the first 36 hex characters of the keccak256 hash of the fully qualified
+  library name, surrounded by ``$...$``. Previously,
+  just the fully qualified library name was used.
+  This recudes the chances of collisions, especially when long paths are used.
+  Binary files now also contain a list of mappings from these placeholders
+  to the fully qualified names.
 
 Constructors
 ------------

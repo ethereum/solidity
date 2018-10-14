@@ -242,7 +242,7 @@ activate themselves.
         mapping(address => uint) pendingReturns;
 
         // Set to true at the end, disallows any change.
-        // By defaul initialized to `false`.
+        // By default initialized to `false`.
         bool ended;
 
         // Events that will be emitted on changes.
@@ -389,7 +389,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity >0.4.23 <0.5.0;
+    pragma solidity >0.4.23 <0.6.0;
 
     contract BlindAuction {
         struct Bid {

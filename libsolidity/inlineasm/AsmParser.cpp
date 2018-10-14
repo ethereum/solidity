@@ -26,7 +26,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <ctype.h>
+#include <cctype>
 #include <algorithm>
 
 using namespace std;
@@ -97,7 +97,7 @@ assembly::Statement Parser::parseStatement()
 			fatalParserError("Only one default case allowed.");
 		else if (m_scanner->currentToken() == Token::Case)
 			fatalParserError("Case not allowed after default case.");
-		if (_switch.cases.size() == 0)
+		if (_switch.cases.empty())
 			fatalParserError("Switch statement without any cases.");
 		_switch.location.end = _switch.cases.back().body.location.end;
 		return _switch;

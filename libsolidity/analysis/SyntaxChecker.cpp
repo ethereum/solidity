@@ -53,7 +53,7 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 		SemVerVersion recommendedVersion{string(VersionString)};
 		if (!recommendedVersion.isPrerelease())
 			errorString +=
-				"Consider adding \"pragma solidity ^" +
+				" Consider adding \"pragma solidity ^" +
 				to_string(recommendedVersion.major()) +
 				string(".") +
 				to_string(recommendedVersion.minor()) +
@@ -76,7 +76,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	{
 		solAssert(m_sourceUnit, "");
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
-		if (literals.size() == 0)
+		if (literals.empty())
 			m_errorReporter.syntaxError(
 				_pragma.location(),
 				"Experimental feature name is missing."

@@ -76,18 +76,18 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 
 bool dev::passesAddressChecksum(string const& _str, bool _strict)
 {
-	string s = _str.substr(0, 2) == "0x" ? _str.substr(2) : _str;
+	string s = _str.substr(0, 2) == "0x" ? _str : "0x" + _str;
 
-	if (s.length() != 40)
+	if (s.length() != 42)
 		return false;
 
 	if (!_strict && (
-		_str.find_first_of("abcdef") == string::npos ||
-		_str.find_first_of("ABCDEF") == string::npos
+		s.find_first_of("abcdef") == string::npos ||
+		s.find_first_of("ABCDEF") == string::npos
 	))
 		return true;
 
-	return _str == dev::getChecksummedAddress(_str);
+	return s == dev::getChecksummedAddress(s);
 }
 
 string dev::getChecksummedAddress(string const& _addr)

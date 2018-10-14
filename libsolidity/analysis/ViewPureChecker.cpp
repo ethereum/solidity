@@ -292,11 +292,11 @@ void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 	if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return;
 
-	StateMutability mut = dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability();
+	StateMutability mutability = dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability();
 	// We only require "nonpayable" to call a payble function.
-	if (mut == StateMutability::Payable)
-		mut = StateMutability::NonPayable;
-	reportMutability(mut, _functionCall.location());
+	if (mutability == StateMutability::Payable)
+		mutability = StateMutability::NonPayable;
+	reportMutability(mutability, _functionCall.location());
 }
 
 bool ViewPureChecker::visit(MemberAccess const& _memberAccess)

@@ -780,7 +780,7 @@ CompilerStack::Contract const& CompilerStack::contract(string const& _contractNa
 	// To provide a measure of backward-compatibility, if a contract is not located by its
 	// fully-qualified name, a lookup will be attempted purely on the contract's name to see
 	// if anything will satisfy.
-	if (_contractName.find(":") == string::npos)
+	if (_contractName.find(':') == string::npos)
 	{
 		for (auto const& contractEntry: m_contracts)
 		{

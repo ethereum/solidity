@@ -23,7 +23,6 @@
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
-#include <stdio.h>
 #if defined(_WIN32)
 #include <windows.h>
 #else
@@ -95,7 +94,7 @@ void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDe
 	{
 		// create directory if not existent
 		fs::path p(_file);
-		if (!fs::exists(p.parent_path()))
+		if (!p.parent_path().empty() && !fs::exists(p.parent_path()))
 		{
 			fs::create_directories(p.parent_path());
 			try

@@ -154,28 +154,18 @@ Gentoo Linux also provides a solidity package that can be installed using ``emer
 Building from Source
 ====================
 
-Clone the Repository
---------------------
+Prerequisites - Linux
+---------------------
 
-To clone the source code, execute the following command:
+You need to install the following dependencies for Linux builds of Solidity:
 
-.. code-block:: bash
++-----------------------------------+-------------------------------------------------------+
+| Software                          | Notes                                                 |
++===================================+=======================================================+
+| `Git for Linux`_                  | Command-line tool for retrieving source from Github.  |
++-----------------------------------+-------------------------------------------------------+
 
-    git clone --recursive https://github.com/ethereum/solidity.git
-    cd solidity
-
-If you want to help developing Solidity,
-you should fork Solidity and add your personal fork as a second remote:
-
-.. code-block:: bash
-
-    git remote add personal git@github.com:[username]/solidity.git
-
-Solidity has git submodules.  Ensure they are properly loaded:
-
-.. code-block:: bash
-
-   git submodule update --init --recursive
+.. _Git for Linux: https://git-scm.com/download/linux
 
 Prerequisites - macOS
 ---------------------
@@ -203,7 +193,7 @@ if you ever want to start again from scratch.
 Prerequisites - Windows
 -----------------------
 
-You will need to install the following dependencies for Windows builds of Solidity:
+You need to install the following dependencies for Windows builds of Solidity:
 
 +-----------------------------------+-------------------------------------------------------+
 | Software                          | Notes                                                 |
@@ -238,6 +228,28 @@ in Visual Studio 2017 Build Tools or Visual Studio 2017:
 .. _Visual Studio 2017: https://www.visualstudio.com/vs/
 .. _Visual Studio 2017 Build Tools: https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017
 
+Clone the Repository
+--------------------
+
+To clone the source code, execute the following command:
+
+.. code-block:: bash
+
+    git clone --recursive https://github.com/ethereum/solidity.git
+    cd solidity
+
+If you want to help developing Solidity,
+you should fork Solidity and add your personal fork as a second remote:
+
+.. code-block:: bash
+
+    git remote add personal git@github.com:[username]/solidity.git
+
+Solidity has git submodules.  Ensure they are properly loaded:
+
+.. code-block:: bash
+
+   git submodule update --init --recursive
 
 External Dependencies
 ---------------------

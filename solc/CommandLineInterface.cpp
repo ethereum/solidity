@@ -226,21 +226,21 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", m_compiler->object(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", objectWithLinkRefsHex(m_compiler->object(_contract)));
 		else
 		{
 			cout << "Binary: " << endl;
-			cout << m_compiler->object(_contract).toHex() << endl;
+			cout << objectWithLinkRefsHex(m_compiler->object(_contract)) << endl;
 		}
 	}
 	if (m_args.count(g_argBinaryRuntime))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
+			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)));
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
-			cout << m_compiler->runtimeObject(_contract).toHex() << endl;
+			cout << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << endl;
 		}
 	}
 }
@@ -482,9 +482,23 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			string addrString(lib.begin() + colon + 1, lib.end());
 			boost::trim(libName);
 			boost::trim(addrString);
+			if (addrString.substr(0, 2) == "0x")
+				addrString = addrString.substr(2);
+			if (addrString.empty())
+			{
+				cerr << "Empty address provided for library \"" << libName << "\": " << endl;
+				cerr << "Note that there should not be any whitespace after the colon." << endl;
+				return false;
+			}
+			else if (addrString.length() != 40)
+			{
+				cerr << "Invalid length for address for library \"" << libName << "\": " << addrString.length() << " instead of 40 characters." << endl;
+				return false;
+			}
 			if (!passesAddressChecksum(addrString, false))
 			{
-				cerr << "Invalid checksum on library address \"" << libName << "\": " << addrString << endl;
+				cerr << "Invalid checksum on address for library \"" << libName << "\": " << addrString << endl;
+				cerr << "The correct checksum is " << dev::getChecksummedAddress(addrString) << endl;
 				return false;
 			}
 			bytes binAddr = fromHex(addrString);
@@ -569,7 +583,7 @@ Allowed options)",
 			g_argLibraries.c_str(),
 			po::value<vector<string>>()->value_name("libs"),
 			"Direct string or file containing library addresses. Syntax: "
-			"<libraryName>: <address> [, or whitespace] ...\n"
+			"<libraryName>:<address> [, or whitespace] ...\n"
 			"Address is interpreted as a hex string optionally prefixed by 0x."
 		)
 		(
@@ -1056,8 +1070,12 @@ bool CommandLineInterface::link()
 	{
 		string const& name = library.first;
 		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
-		// This leaves 36 characters for the library name, while too short library names are
-		// padded on the right with '_' and too long names are truncated.
+		// This leaves 36 characters for the library identifier. The identifier used to
+		// be just the cropped or '_'-padded library name, but this changed to
+		// the cropped hex representation of the hash of the library name.
+		// We support both ways of linking here.
+		librariesReplacements["__" + eth::LinkerObject::libraryPlaceholder(name) + "__"] = library.second;
+
 		string replacement = "__";
 		for (size_t i = 0; i < placeholderSize - 4; ++i)
 			replacement.push_back(i < name.size() ? name[i] : '_');
@@ -1087,6 +1105,11 @@ bool CommandLineInterface::link()
 				cerr << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
 			it += placeholderSize;
 		}
+		// Remove hints for resolved libraries.
+		for (auto const& library: m_libraries)
+			boost::algorithm::erase_all(src.second, "\n" + libraryPlaceholderHint(library.first));
+		while (!src.second.empty() && *prev(src.second.end()) == '\n')
+			   src.second.resize(src.second.size() - 1);
 	}
 	return true;
 }
@@ -1098,6 +1121,23 @@ void CommandLineInterface::writeLinkedFiles()
 			cout << src.second << endl;
 		else
 			writeFile(src.first, src.second);
+}
+
+string CommandLineInterface::libraryPlaceholderHint(string const& _libraryName)
+{
+	return "// " + eth::LinkerObject::libraryPlaceholder(_libraryName) + " -> " + _libraryName;
+}
+
+string CommandLineInterface::objectWithLinkRefsHex(eth::LinkerObject const& _obj)
+{
+	string out = _obj.toHex();
+	if (!_obj.linkReferences.empty())
+	{
+		out += "\n";
+		for (auto const& linkRef: _obj.linkReferences)
+			out += "\n" + libraryPlaceholderHint(linkRef.second);
+	}
+	return out;
 }
 
 bool CommandLineInterface::assemble(

@@ -20,7 +20,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/throw_exception.hpp>
-#include <cctype>
 #include <fstream>
 #include <memory>
 #include <stdexcept>

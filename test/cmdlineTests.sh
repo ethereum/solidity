@@ -123,7 +123,8 @@ test_solc_file_input_failures() {
     exitCode=$?
     set -e
 
-    stderr=`sed 's/.*This is a pre-release compiler version, please do not use it in production.*$//' $stderr_path`
+    sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+    sed -i -e 's/ \?Consider adding "pragma .*$//' "$stderr_path"
 
     if [[ $exitCode -eq 0 ]]; then
         printError "Incorrect exit code. Expected failure (non-zero) but got success (0)."
@@ -141,12 +142,12 @@ test_solc_file_input_failures() {
         exit 1
     fi
 
-    if [[ "$stderr" != "${stderr_expected}" ]]; then
+    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]; then
         printError "Incorrect output on stderr received. Expected:"
         echo -e "${stderr_expected}"
 
         printError "But got:"
-        echo $stderr
+        cat $stderr_path
         rm -f $stdout_path $stderr_path
         exit 1
     fi
@@ -231,6 +232,24 @@ echo '' | "$SOLC" - --link --libraries a:0x90f20564390eAe531E810af625A22f51385Cd
 
 printTask "Testing long library names..."
 echo '' | "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname:0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
+
+printTask "Testing linking itself..."
+SOLTMPDIR=$(mktemp -d)
+(
+    cd "$SOLTMPDIR"
+    set -e
+    echo 'library L { function f() public pure {} } contract C { function f() public pure { L.f(); } }' > x.sol
+    "$SOLC" --bin -o . x.sol 2>/dev/null
+    # Explanation and placeholder should be there
+    grep -q '//' C.bin && grep -q '__' C.bin
+    # But not in library file.
+    grep -q -v '[/_]' L.bin
+    # Now link
+    "$SOLC" --link --libraries x.sol:L:0x90f20564390eAe531E810af625A22f51385Cd222 C.bin
+    # Now the placeholder and explanation should be gone.
+    grep -q -v '[/_]' C.bin
+)
+rm -rf "$SOLTMPDIR"
 
 printTask "Testing overwriting files..."
 SOLTMPDIR=$(mktemp -d)

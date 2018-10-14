@@ -841,13 +841,8 @@ TypePointer RationalNumberType::forLiteral(Literal const& _literal)
 		TypePointer compatibleBytesType;
 		if (_literal.isHexNumber())
 		{
-			size_t digitCount = count_if(
-				_literal.value().begin() + 2, // skip "0x"
-				_literal.value().end(),
-				[](unsigned char _c) -> bool { return isxdigit(_c); }
-			);
-			// require even number of digits
-			if (!(digitCount & 1))
+			size_t const digitCount = _literal.valueWithoutUnderscores().length() - 2;
+			if (digitCount % 2 == 0 && (digitCount / 2) <= 32)
 				compatibleBytesType = make_shared<FixedBytesType>(digitCount / 2);
 		}
 
@@ -861,8 +856,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 	rational value;
 	try
 	{
-		ASTString valueString = _literal.value();
-		boost::erase_all(valueString, "_");// Remove underscore separators
+		ASTString valueString = _literal.valueWithoutUnderscores();
 
 		auto expPoint = find(valueString.begin(), valueString.end(), 'e');
 		if (expPoint == valueString.end())

@@ -31,6 +31,11 @@ When a contract is created, its constructor_  (a function declared with the ``co
 A constructor is optional. Only one constructor is allowed, which means
 overloading is not supported.
 
+After the constructor has executed, the final code of the contract is deployed to the
+blockchain. This code includes all public and external functions and all functions
+that are reachable from there through function calls. The deployed code does not
+include the constructor code or internal functions only called from the constructor.
+
 .. index:: constructor;arguments
 
 Internally, constructor arguments are passed :ref:`ABI encoded <ABI>` after the code of
@@ -485,7 +490,11 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 .. note::
   If the compiler's EVM target is Byzantium or newer (default) the opcode
   ``STATICCALL`` is used for ``view`` functions which enforces the state
-  to stay unmodified as part of the EVM execution.
+  to stay unmodified as part of the EVM execution. For library ``view`` functions
+  ``DELEGATECALL`` is used, because there is no combined ``DELEGATECALL`` and ``STATICCALL``.
+  This means library ``view`` functions do not have run-time checks that prevent state
+  modifications. This should not impact security negatively because library code is
+  usually known at compile-time and the static checker performs compile-time checks.
 
 The following statements are considered modifying the state:
 
@@ -572,9 +581,6 @@ In addition to the list of state modifying statements explained above, the follo
   between contract types, because the compiler can verify that the type of the contract does
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
-
-.. note::
-  Before version 0.5.0 the compiler did not enforce that ``pure`` is not reading the state.
 
 .. index:: ! fallback function, function;fallback
 
@@ -759,39 +765,60 @@ converted to ``uint8``.
 Events
 ******
 
-Events allow the convenient usage of the EVM logging facilities,
-which in turn can be used to "call" JavaScript callbacks in the user interface
-of a dapp, which listen for these events.
+Solidity events give an abstraction on top of the EVM's logging functionality.
+Applications can subscribe and listen to these events through the RPC interface of an Ethereum client.
 
-Events are
-inheritable members of contracts. When they are called, they cause the
+Events are inheritable members of contracts. When you call them, they cause the
 arguments to be stored in the transaction's log - a special data structure
-in the blockchain. These logs are associated with the address of
-the contract and will be incorporated into the blockchain
-and stay there as long as a block is accessible (forever as of
-Frontier and Homestead, but this might change with Serenity). Log and
-event data is not accessible from within contracts (not even from
-the contract that created them).
+in the blockchain. These logs are associated with the address of the contract,
+are incorporated into the blockchain, and stay there as long as a block is
+accessible (forever as of the Frontier and Homestead releases, but this might
+change with Serenity). The Log and its event data is not accessible from within
+contracts (not even from the contract that created them).
 
-"Simple payment verification" (SPV) proofs for logs are possible, so if an external entity supplies
-a contract with such a proof, it can check that the log actually
-exists inside the blockchain.  Be aware that block headers have to be supplied because
-the contract can only see the last 256 block hashes.
+It is possible to request a simple payment verification (SPV) for logs, so if
+an external entity supplies a contract with such a verification, it can check
+that the log actually exists inside the blockchain. You have to supply block headers
+because the contract can only see the last 256 block hashes.
 
-Up to three parameters can
-receive the attribute ``indexed`` which will cause the respective arguments
-to be stored in a special data structure as so-called "topics", which allows them to be searched for,
-for example when filtering a sequence of blocks for certain events. Events can always
-be filtered by the address of the contract that emitted the event. Also,
-the hash of the signature of the event is one of the topics except if you
-declared the event with ``anonymous`` specifier. This means that it is
+You can add the attribute ``indexed`` to up to three parameters which adds them
+to a special data structure known as :ref:`"topics" <abi_events>` instead of
+the data part of the log. If you use arrays (including ``string`` and ``bytes``)
+as indexed arguments, its Keccak-256 hash is stored as a topic instead, this is
+because a topic can only hold a single word (32 bytes).
+
+All parameters without the ``indexed`` attribute are :ref:`ABI-encoded <ABI>`
+into the data part of the log.
+
+Topics allow you to search for events, for example when filtering a sequence of
+blocks for certain events. You can also filter events by the address of the
+contract that emitted the event.
+
+For example, the code below uses the web3.js ``subscribe("logs")``
+`method <https://web3js.readthedocs.io/en/1.0/web3-eth-subscribe.html#subscribe-logs>`_ to filter
+logs that match a topic with a certain address value:
+
+.. code-block:: javascript
+
+    var options = {
+        fromBlock: 0,
+        address: web3.eth.defaultAccount,
+        topics: ["0x0000000000000000000000000000000000000000000000000000000000000000", null, null]
+    };
+    web3.eth.subscribe('logs', options, function (error, result) {
+        if (!error)
+            console.log(result);
+    })
+        .on("data", function (log) {
+            console.log(log);
+        })
+        .on("changed", function (log) {
+    });
+
+
+The hash of the signature of the event is one of the topics, except if you
+declared the event with the ``anonymous`` specifier. This means that it is
 not possible to filter for specific anonymous events by name.
-
-If arrays (including ``string`` and ``bytes``) are used as indexed arguments, the
-Keccak-256 hash of it is stored as topic instead. This is because a topic
-can only hold a single word (32 bytes).
-
-All non-indexed arguments will be :ref:`ABI-encoded <ABI>` into the data part of the log.
 
 ::
 
@@ -814,7 +841,7 @@ All non-indexed arguments will be :ref:`ABI-encoded <ABI>` into the data part of
         }
     }
 
-The use in the JavaScript API would be as follows:
+The use in the JavaScript API is as follows:
 
 ::
 
@@ -826,18 +853,34 @@ The use in the JavaScript API would be as follows:
 
     // watch for changes
     event.watch(function(error, result){
-        // result will contain various information
-        // including the arguments given to the `Deposit`
-        // call.
+        // result contains non-indexed arguments and topics
+        // given to the `Deposit` call.
         if (!error)
             console.log(result);
     });
+
 
     // Or pass a callback to start watching immediately
     var event = clientReceipt.Deposit(function(error, result) {
         if (!error)
             console.log(result);
     });
+
+The output of the above looks like the following (trimmed):
+
+.. code-block:: json
+
+  {
+     "returnValues": {
+         "_from": "0x1111…FFFFCCCC",
+         "_id": "0x50…sd5adb20",
+         "_value": "0x420042"
+     },
+     "raw": {
+         "data": "0x7f…91385",
+         "topics": ["0xfd4…b4ead7", "0x7f…1a91385"]
+     }
+  }
 
 .. index:: ! log
 
@@ -1051,8 +1094,13 @@ initialisation code.
 Before the constructor code is executed, state variables are initialised to
 their specified value if you initialise them inline, or zero if you do not.
 
-After the constructor has run, the final code of the contract is returned. The deployment of
+After the constructor has run, the final code of the contract is deployed
+to the blockchain. The deployment of
 the code costs additional gas linear to the length of the code.
+This code includes all functions that are part of the public interface
+and all functions that are reachable from there through function calls.
+It does not include the constructor code or internal functions that are
+only called from the constructor.
 
 Constructor functions can be either ``public`` or ``internal``. If there is no
 constructor, the contract will assume the default constructor, which is
