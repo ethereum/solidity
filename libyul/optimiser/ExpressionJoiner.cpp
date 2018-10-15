@@ -56,7 +56,7 @@ void ExpressionJoiner::operator()(Switch& _switch)
 {
 	visit(*_switch.expression);
 	for (auto& _case: _switch.cases)
-		// Do not visit the case expression, nothing to unbreak there.
+		// Do not visit the case expression, nothing to join there.
 		(*this)(_case.body);
 }
 
