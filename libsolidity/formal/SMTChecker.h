@@ -59,7 +59,6 @@ private:
 	virtual bool visit(WhileStatement const& _node) override;
 	virtual bool visit(ForStatement const& _node) override;
 	virtual void endVisit(VariableDeclarationStatement const& _node) override;
-	virtual void endVisit(ExpressionStatement const& _node) override;
 	virtual void endVisit(Assignment const& _node) override;
 	virtual void endVisit(TupleExpression const& _node) override;
 	virtual void endVisit(UnaryOperation const& _node) override;
@@ -67,10 +66,17 @@ private:
 	virtual void endVisit(FunctionCall const& _node) override;
 	virtual void endVisit(Identifier const& _node) override;
 	virtual void endVisit(Literal const& _node) override;
+	virtual void endVisit(Return const& _node) override;
 
 	void arithmeticOperation(BinaryOperation const& _op);
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
+
+	void visitAssert(FunctionCall const&);
+	void visitRequire(FunctionCall const&);
+	/// Visits the FunctionDefinition of the called function
+	/// if available and inlines the return value.
+	void inlineFunctionCall(FunctionCall const&);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -113,6 +119,7 @@ private:
 	smt::CheckResult checkSatisfiable();
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
+	void initializeFunctionCallParameters(FunctionDefinition const& _function, std::vector<smt::Expression> const& _callArgs);
 	void resetStateVariables();
 	void resetVariables(std::vector<VariableDeclaration const*> _variables);
 	/// Given two different branches and the touched variables,
@@ -147,6 +154,8 @@ private:
 	smt::Expression expr(Expression const& _e);
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
+	/// Checks if expression was created
+	bool hasExpr(Expression const& _e) const;
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smt::Expression _value);
 
@@ -161,18 +170,29 @@ private:
 	/// Add to the solver: the given expression implied by the current path conditions
 	void addPathImpliedExpression(smt::Expression const& _e);
 
-	/// Removes the local variables of a function.
+	/// Removes local variables from the context.
 	void removeLocalVariables();
+
+	/// Checks if VariableDeclaration was seen.
+	bool hasVariable(VariableDeclaration const& _e) const;
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_loopExecutionHappened = false;
-	std::map<Expression const*, smt::Expression> m_expressions;
+	/// An Expression may have multiple smt::Expression due to
+	/// repeated calls to the same function.
+	std::multimap<Expression const*, smt::Expression> m_expressions;
 	std::map<VariableDeclaration const*, SSAVariable> m_variables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 
-	FunctionDefinition const* m_currentFunction = nullptr;
+	/// Stores the current path of function calls.
+	std::vector<FunctionDefinition const*> m_functionPath;
+	/// Returns true if the current function was not visited by
+	/// a function call.
+	bool isRootFunction();
+	/// Returns true if _funDef was already visited.
+	bool visitedFunction(FunctionDefinition const* _funDef);
 };
 
 }

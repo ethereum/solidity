@@ -328,6 +328,7 @@ int main(int argc, char *argv[])
 		TestTool::editor = "/usr/bin/editor";
 
 	fs::path testPath;
+	bool disableSMT = false;
 	bool formatted = true;
 	po::options_description options(
 		R"(isoltest, tool for interactively managing test contracts.
@@ -340,6 +341,7 @@ Allowed options)",
 	options.add_options()
 		("help", "Show this help screen.")
 		("testpath", po::value<fs::path>(&testPath), "path to test files")
+		("no-smt", "disable SMT checker")
 		("no-color", "don't use colors")
 		("editor", po::value<string>(&TestTool::editor), "editor for opening contracts");
 
@@ -360,6 +362,9 @@ Allowed options)",
 			formatted = false;
 
 		po::notify(arguments);
+
+		if (arguments.count("no-smt"))
+			disableSMT = true;
 	}
 	catch (std::exception const& _exception)
 	{
@@ -394,6 +399,20 @@ Allowed options)",
 		global_stats += *stats;
 	else
 		return 1;
+
+	if (!disableSMT)
+	{
+		if (auto stats = runTestSuite(
+			"SMT Checker",
+			testPath / "libsolidity",
+			"smtCheckerTests",
+			SyntaxTest::create,
+			formatted
+		))
+			global_stats += *stats;
+		else
+			return 1;
+	}
 
 	cout << endl << "Summary: ";
 	FormattedScope(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
