@@ -23,7 +23,6 @@ REPO_ROOT="$(dirname "$0")"/..
     mkdir "$SOLDIR"
     # Store the current source
     git checkout-index -a --prefix="$SOLDIR"
-    git submodule foreach 'git checkout-index -a --prefix="'"$SOLDIR"'/$path/"'
     # Store the commit hash
     echo "$commithash" > "$SOLDIR/commit_hash.txt"
     if [ -e prerelease.txt -a ! -s prerelease.txt ]
