@@ -924,7 +924,7 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 	else if (SSAVariable::isSupportedType(_varDecl.type()->category()))
 	{
 		solAssert(m_variables.count(&_varDecl) == 0, "");
-		m_variables.emplace(&_varDecl, SSAVariable(_varDecl, *m_interface));
+		m_variables.emplace(&_varDecl, SSAVariable(*_varDecl.type(), _varDecl.name() + "_" + to_string(_varDecl.id()), *m_interface));
 		return true;
 	}
 	else

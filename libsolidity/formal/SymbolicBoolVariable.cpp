@@ -24,12 +24,13 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicBoolVariable::SymbolicBoolVariable(
-	Declaration const& _decl,
+	Type const& _type,
+	string const& _uniqueName,
 	smt::SolverInterface&_interface
 ):
-	SymbolicVariable(_decl, _interface)
+	SymbolicVariable(_type, _uniqueName, _interface)
 {
-	solAssert(m_declaration.type()->category() == Type::Category::Bool, "");
+	solAssert(_type.category() == Type::Category::Bool, "");
 }
 
 smt::Expression SymbolicBoolVariable::valueAtSequence(int _seq) const

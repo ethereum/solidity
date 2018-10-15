@@ -19,8 +19,6 @@
 
 #include <libsolidity/formal/SymbolicVariable.h>
 
-#include <libsolidity/ast/Types.h>
-
 namespace dev
 {
 namespace solidity
@@ -33,7 +31,8 @@ class SymbolicBoolVariable: public SymbolicVariable
 {
 public:
 	SymbolicBoolVariable(
-		Declaration const& _decl,
+		Type const& _type,
+		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
 
