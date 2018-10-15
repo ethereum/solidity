@@ -292,6 +292,14 @@ SOLTMPDIR=$(mktemp -d)
     if [[ "$result" != 0 ]] ; then
         exit 1
     fi
+
+    # This should not fail
+    set +e
+    output=$(echo '' | "$SOLC" --ast - 2>/dev/null)
+    set -e
+    if [[ $? != 0 ]] ; then
+        exit 1
+    fi
 )
 
 printTask "Testing soljson via the fuzzer..."
