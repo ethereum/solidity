@@ -1,4 +1,4 @@
-// This tests that breaking the expression inside the condition works properly.
+// This tests that splitting the expression inside the condition works properly.
 {
 	if gt(f(mload(1)), mload(0)) {
 		sstore(0, 2)

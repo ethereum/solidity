@@ -56,14 +56,14 @@ void ExpressionSplitter::operator()(Switch& _switch)
 {
 	outlineExpression(*_switch.expression);
 	for (auto& _case: _switch.cases)
-		// Do not visit the case expression, nothing to break there.
+		// Do not visit the case expression, nothing to split there.
 		(*this)(_case.body);
 }
 
 void ExpressionSplitter::operator()(ForLoop& _loop)
 {
 	(*this)(_loop.pre);
-	// Do not visit the condition because we cannot break expressions there.
+	// Do not visit the condition because we cannot split expressions there.
 	(*this)(_loop.post);
 	(*this)(_loop.body);
 }
