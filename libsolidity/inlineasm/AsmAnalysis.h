@@ -25,7 +25,7 @@
 
 #include <libsolidity/inlineasm/AsmScope.h>
 
-#include <libjulia/backends/evm/AbstractAssembly.h>
+#include <libyul/backends/evm/AbstractAssembly.h>
 
 #include <libsolidity/inlineasm/AsmDataForward.h>
 

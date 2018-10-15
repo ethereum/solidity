@@ -32,8 +32,8 @@
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 
-#include <libjulia/backends/evm/AbstractAssembly.h>
-#include <libjulia/backends/evm/EVMCodeTransform.h>
+#include <libyul/backends/evm/AbstractAssembly.h>
+#include <libyul/backends/evm/EVMCodeTransform.h>
 
 #include <libdevcore/CommonIO.h>
 

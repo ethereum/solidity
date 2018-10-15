@@ -31,8 +31,8 @@
 
 #include <libevmasm/Assembly.h>
 
-#include <libjulia/backends/evm/EVMCodeTransform.h>
-#include <libjulia/backends/evm/EVMAssembly.h>
+#include <libyul/backends/evm/EVMCodeTransform.h>
+#include <libyul/backends/evm/EVMAssembly.h>
 
 using namespace std;
 using namespace dev;
