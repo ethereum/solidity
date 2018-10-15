@@ -33,9 +33,31 @@ using namespace dev::julia;
 
 void CommonSubexpressionEliminator::visit(Expression& _e)
 {
-	// Single exception for substitution: We do not substitute one variable for another.
-	if (_e.type() != typeid(Identifier))
-		// TODO this search rather inefficient.
+	// We visit the inner expression first to first simplify inner expressions,
+	// which hopefully allows more matches.
+	// Note that the DataFlowAnalyzer itself only has code for visiting Statements,
+	// so this basically invokes the AST walker directly and thus post-visiting
+	// is also fine with regards to data flow analysis.
+	DataFlowAnalyzer::visit(_e);
+
+	if (_e.type() == typeid(Identifier))
+	{
+		Identifier& identifier = boost::get<Identifier>(_e);
+		string const& name = identifier.name;
+		if (m_value.count(name))
+		{
+			assertThrow(m_value.at(name), OptimizerException, "");
+			if (m_value.at(name)->type() == typeid(Identifier))
+			{
+				string const& value = boost::get<Identifier>(*m_value.at(name)).name;
+				if (inScope(value))
+					_e = Identifier{locationOf(_e), value};
+			}
+		}
+	}
+	else
+	{
+		// TODO this search is rather inefficient.
 		for (auto const& var: m_value)
 		{
 			assertThrow(var.second, OptimizerException, "");
@@ -45,5 +67,5 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 				break;
 			}
 		}
-	DataFlowAnalyzer::visit(_e);
+	}
 }

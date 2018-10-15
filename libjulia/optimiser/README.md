@@ -97,6 +97,20 @@ of any function call or opcode execution, the transformation is not performed.
 Note that the component will not move the assigned value of a variable assignment
 or a variable that is referenced more than once.
 
+## Common Subexpression Eliminator
+
+This step replaces a subexpression by the value of a pre-existing variable
+that currently has the same value (only if the value is movable), based
+on a syntactic comparison.
+
+This can be used to compute a local value numbering, especially if the
+expression splitter is used before.
+
+The expression simplifier will be able to perform better replacements
+if the common subexpression eliminator was run right before it.
+
+Prerequisites: Disambiguator
+
 ## Full Function Inliner
 
 ## Rematerialisation
