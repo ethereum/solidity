@@ -28,7 +28,7 @@
 
 namespace dev
 {
-namespace julia
+namespace yul
 {
 
 class EVMAssembly: public AbstractAssembly

@@ -39,7 +39,7 @@ namespace assembly
 struct AsmAnalysisInfo;
 }
 }
-namespace julia
+namespace yul
 {
 namespace test
 {

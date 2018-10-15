@@ -34,7 +34,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
 {

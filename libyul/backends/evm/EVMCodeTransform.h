@@ -37,7 +37,7 @@ namespace assembly
 struct AsmAnalysisInfo;
 }
 }
-namespace julia
+namespace yul
 {
 class EVMAssembly;
 
@@ -47,7 +47,7 @@ public:
 	/// Create the code transformer.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	CodeTransform(
-		julia::AbstractAssembly& _assembly,
+		yul::AbstractAssembly& _assembly,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _yul = false,
 		bool _evm15 = false,
@@ -76,7 +76,7 @@ protected:
 	};
 
 	CodeTransform(
-		julia::AbstractAssembly& _assembly,
+		yul::AbstractAssembly& _assembly,
 		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
 		bool _yul,
 		bool _evm15,
@@ -139,7 +139,7 @@ private:
 
 	void checkStackHeight(void const* _astElement) const;
 
-	julia::AbstractAssembly& m_assembly;
+	yul::AbstractAssembly& m_assembly;
 	solidity::assembly::AsmAnalysisInfo& m_info;
 	solidity::assembly::Scope* m_scope = nullptr;
 	bool m_yul = false;

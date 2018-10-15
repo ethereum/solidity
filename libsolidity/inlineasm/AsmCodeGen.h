@@ -46,7 +46,7 @@ public:
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		eth::Assembly& _assembly,
-		julia::ExternalIdentifierAccess const& _identifierAccess = julia::ExternalIdentifierAccess(),
+		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	);
 };

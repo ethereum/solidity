@@ -36,8 +36,8 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
-using namespace dev::julia::test;
+using namespace dev::yul;
+using namespace dev::yul::test;
 using namespace dev::solidity;
 
 namespace

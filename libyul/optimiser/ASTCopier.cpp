@@ -28,7 +28,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 Statement ASTCopier::operator()(Instruction const&)
 {

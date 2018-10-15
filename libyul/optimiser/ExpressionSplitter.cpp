@@ -31,7 +31,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 using namespace dev::solidity;
 
 void ExpressionSplitter::operator()(FunctionalInstruction& _instruction)

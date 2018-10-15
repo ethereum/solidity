@@ -24,7 +24,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 void NameCollector::operator()(VariableDeclaration const& _varDecl)
 {

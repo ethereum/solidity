@@ -31,7 +31,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 
 SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(Expression const& _expr)

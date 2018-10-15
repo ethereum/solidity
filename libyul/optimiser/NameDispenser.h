@@ -24,7 +24,7 @@
 
 namespace dev
 {
-namespace julia
+namespace yul
 {
 
 struct NameDispenser

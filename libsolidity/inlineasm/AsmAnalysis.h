@@ -59,7 +59,7 @@ public:
 		EVMVersion _evmVersion,
 		boost::optional<Error::Type> _errorTypeForLoose,
 		AsmFlavour _flavour = AsmFlavour::Loose,
-		julia::ExternalIdentifierAccess::Resolver const& _resolver = julia::ExternalIdentifierAccess::Resolver()
+		yul::ExternalIdentifierAccess::Resolver const& _resolver = yul::ExternalIdentifierAccess::Resolver()
 	):
 		m_resolver(_resolver),
 		m_info(_analysisInfo),
@@ -106,7 +106,7 @@ private:
 	void checkLooseFeature(SourceLocation const& _location, std::string const& _description);
 
 	int m_stackHeight = 0;
-	julia::ExternalIdentifierAccess::Resolver m_resolver;
+	yul::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
 	/// Variables that are active at the current point in assembly (as opposed to
 	/// "part of the scope but not yet declared")

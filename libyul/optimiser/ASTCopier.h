@@ -31,7 +31,7 @@
 
 namespace dev
 {
-namespace julia
+namespace yul
 {
 
 class ExpressionCopier: public boost::static_visitor<Expression>

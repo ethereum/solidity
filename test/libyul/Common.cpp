@@ -37,10 +37,10 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace dev::julia;
+using namespace dev::yul;
 using namespace dev::solidity;
 
-void dev::julia::test::printErrors(ErrorList const& _errors, Scanner const& _scanner)
+void dev::yul::test::printErrors(ErrorList const& _errors, Scanner const& _scanner)
 {
 	SourceReferenceFormatter formatter(cout, [&](std::string const&) -> Scanner const& { return _scanner; });
 
@@ -52,7 +52,7 @@ void dev::julia::test::printErrors(ErrorList const& _errors, Scanner const& _sca
 }
 
 
-pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test::parse(string const& _source, bool _yul)
+pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::yul::test::parse(string const& _source, bool _yul)
 {
 	auto flavour = _yul ? assembly::AsmFlavour::Yul : assembly::AsmFlavour::Strict;
 	ErrorList errors;
@@ -83,13 +83,13 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::julia::test:
 	return {};
 }
 
-assembly::Block dev::julia::test::disambiguate(string const& _source, bool _yul)
+assembly::Block dev::yul::test::disambiguate(string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
 	return boost::get<Block>(Disambiguator(*result.second)(*result.first));
 }
 
-string dev::julia::test::format(string const& _source, bool _yul)
+string dev::yul::test::format(string const& _source, bool _yul)
 {
 	return assembly::AsmPrinter(_yul)(*parse(_source, _yul).first);
 }

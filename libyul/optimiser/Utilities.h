@@ -24,7 +24,7 @@
 
 namespace dev
 {
-namespace julia
+namespace yul
 {
 
 /// Removes statements that are just empty blocks (non-recursive).

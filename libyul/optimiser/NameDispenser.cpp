@@ -22,7 +22,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 string NameDispenser::newName(string const& _prefix)
 {

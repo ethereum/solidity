@@ -24,7 +24,7 @@
 
 namespace dev
 {
-namespace julia
+namespace yul
 {
 
 class CodeSize: public ASTWalker

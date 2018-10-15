@@ -27,7 +27,7 @@
 
 namespace dev
 {
-namespace julia
+namespace yul
 {
 
 /**

@@ -25,7 +25,7 @@
 
 namespace dev
 {
-namespace julia
+namespace yul
 {
 
 struct YulException: virtual Exception {};

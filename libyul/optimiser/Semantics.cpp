@@ -30,7 +30,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 MovableChecker::MovableChecker(Expression const& _expression)
 {

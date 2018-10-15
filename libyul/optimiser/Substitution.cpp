@@ -24,7 +24,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 Expression Substitution::translate(Expression const& _expression)
 {

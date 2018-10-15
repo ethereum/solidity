@@ -29,7 +29,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 using namespace dev::solidity;
 
 void FunctionHoister::operator()(Block& _block)

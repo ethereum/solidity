@@ -23,7 +23,7 @@
 #include <libsolidity/inlineasm/AsmData.h>
 
 using namespace dev;
-using namespace dev::julia;
+using namespace dev::yul;
 
 size_t CodeSize::codeSize(Statement const& _statement)
 {

@@ -33,7 +33,7 @@ struct AsmAnalysisInfo;
 struct Block;
 }
 }
-namespace julia
+namespace yul
 {
 namespace test
 {

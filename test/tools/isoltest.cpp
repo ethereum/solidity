@@ -388,7 +388,7 @@ Allowed options)",
 		"Yul Optimizer",
 		testPath / "libyul",
 		"yulOptimizerTests",
-		julia::test::YulOptimizerTest::create,
+		yul::test::YulOptimizerTest::create,
 		formatted
 	))
 		global_stats += *stats;
