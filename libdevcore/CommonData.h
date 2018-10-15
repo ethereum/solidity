@@ -239,9 +239,10 @@ bool contains(T const& _t, V const& _v)
 /// on the current element and after that. The actual replacement takes
 /// place at the end, but already visited elements might be invalidated.
 /// If nothing is replaced, no copy is performed.
-template <class T>
-void iterateReplacing(std::vector<T>& _vector, std::function<boost::optional<std::vector<T>>(T&)> _f)
+template <typename T, typename F>
+void iterateReplacing(std::vector<T>& _vector, const F& _f)
 {
+	// Concept: _f must be Callable, must accept param T&, must return optional<vector<T>>
 	bool useModified = false;
 	std::vector<T> modifiedVector;
 	for (size_t i = 0; i < _vector.size(); ++i)
