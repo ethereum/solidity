@@ -1,4 +1,4 @@
-/*
+/*(
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify
@@ -15,42 +15,38 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
- */
+* Module providing metrics for the optimizer.
+*/
 
-#pragma once
+#include <libyul/optimiser/Metrics.h>
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmData.h>
 
-#include <functional>
+using namespace dev;
+using namespace dev::yul;
 
-namespace dev
+size_t CodeSize::codeSize(Statement const& _statement)
 {
-namespace eth
-{
-class Assembly;
+	CodeSize cs;
+	cs.visit(_statement);
+	return cs.m_size;
 }
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
 
-class CodeGenerator
+size_t CodeSize::codeSize(Expression const& _expression)
 {
-public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
-};
+	CodeSize cs;
+	cs.visit(_expression);
+	return cs.m_size;
+}
 
+void CodeSize::visit(Statement const& _statement)
+{
+	++m_size;
+	ASTWalker::visit(_statement);
 }
-}
+
+void CodeSize::visit(Expression const& _expression)
+{
+	++m_size;
+	ASTWalker::visit(_expression);
 }

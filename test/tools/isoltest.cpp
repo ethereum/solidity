@@ -21,7 +21,7 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
-#include <test/libjulia/YulOptimizerTest.h>
+#include <test/libyul/YulOptimizerTest.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -386,9 +386,9 @@ Allowed options)",
 
 	if (auto stats = runTestSuite(
 		"Yul Optimizer",
-		testPath / "libjulia",
+		testPath / "libyul",
 		"yulOptimizerTests",
-		julia::test::YulOptimizerTest::create,
+		yul::test::YulOptimizerTest::create,
 		formatted
 	))
 		global_stats += *stats;

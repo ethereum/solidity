@@ -15,42 +15,32 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Optimiser component that changes the code of a black so that all non-function definition
+ * instructions are moved to a block of their own followed by all function definitions.
  */
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-
-#include <functional>
+#include <libyul/ASTDataForward.h>
 
 namespace dev
 {
-namespace eth
+namespace yul
 {
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
 
-class CodeGenerator
+/**
+ * Moves all instructions in a block into a new block at the start of the block, followed by
+ * all function definitions.
+ *
+ * After this step, a block is of the form
+ * { { I...} F... }
+ * Where I are (non-function-definition) instructions and F are function definitions.
+ */
+class FunctionGrouper
 {
 public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
+	void operator()(Block& _block);
 };
 
-}
 }
 }

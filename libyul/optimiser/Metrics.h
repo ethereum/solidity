@@ -15,42 +15,35 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Module providing metrics for the optimizer.
  */
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-
-#include <functional>
+#include <libyul/optimiser/ASTWalker.h>
 
 namespace dev
 {
-namespace eth
+namespace yul
 {
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
 
-class CodeGenerator
+class CodeSize: public ASTWalker
 {
 public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
+	/// Returns a metric for the code size of an AST element.
+	/// More specifically, it returns the number of AST nodes.
+	static size_t codeSize(Statement const& _statement);
+	/// Returns a metric for the code size of an AST element.
+	/// More specifically, it returns the number of AST nodes.
+	static size_t codeSize(Expression const& _expression);
+
+private:
+	virtual void visit(Statement const& _statement) override;
+	virtual void visit(Expression const& _expression) override;
+
+private:
+	size_t m_size = 0;
 };
 
-}
 }
 }

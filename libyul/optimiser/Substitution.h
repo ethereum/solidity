@@ -15,42 +15,36 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Specific AST copier that replaces certain identifiers with expressions.
  */
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/optimiser/ASTCopier.h>
 
-#include <functional>
+#include <string>
+#include <map>
+#include <set>
 
 namespace dev
 {
-namespace eth
+namespace yul
 {
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
 
-class CodeGenerator
+/**
+ * Specific AST copier that replaces certain identifiers with expressions.
+ */
+class Substitution: public ASTCopier
 {
 public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
+	Substitution(std::map<std::string, Expression const*> const& _substitutions):
+		m_substitutions(_substitutions)
+	{}
+	virtual Expression translate(Expression const& _expression) override;
+
+private:
+	std::map<std::string, Expression const*> const& m_substitutions;
 };
 
-}
 }
 }

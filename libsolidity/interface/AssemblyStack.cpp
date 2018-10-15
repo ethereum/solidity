@@ -31,8 +31,8 @@
 
 #include <libevmasm/Assembly.h>
 
-#include <libjulia/backends/evm/EVMCodeTransform.h>
-#include <libjulia/backends/evm/EVMAssembly.h>
+#include <libyul/backends/evm/EVMCodeTransform.h>
+#include <libyul/backends/evm/EVMAssembly.h>
 
 using namespace std;
 using namespace dev;
@@ -116,8 +116,8 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	case Machine::EVM15:
 	{
 		MachineAssemblyObject object;
-		julia::EVMAssembly assembly(true);
-		julia::CodeTransform(assembly, *m_analysisInfo, m_language == Language::Yul, true)(*m_parserResult);
+		yul::EVMAssembly assembly(true);
+		yul::CodeTransform(assembly, *m_analysisInfo, m_language == Language::Yul, true)(*m_parserResult);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;

@@ -145,7 +145,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		if (m_resolver)
 		{
 			bool insideFunction = m_currentScope->insideFunction();
-			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue, insideFunction);
+			stackSize = m_resolver(_identifier, yul::IdentifierContext::RValue, insideFunction);
 		}
 		if (stackSize == size_t(-1))
 		{
@@ -512,7 +512,7 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 	else if (m_resolver)
 	{
 		bool insideFunction = m_currentScope->insideFunction();
-		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue, insideFunction);
+		variableSize = m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction);
 	}
 	if (variableSize == size_t(-1))
 	{

@@ -15,42 +15,25 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Specific AST copier that replaces certain identifiers with expressions.
  */
 
-#pragma once
+#include <libyul/optimiser/Substitution.h>
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmData.h>
 
-#include <functional>
+using namespace std;
+using namespace dev;
+using namespace dev::yul;
 
-namespace dev
+Expression Substitution::translate(Expression const& _expression)
 {
-namespace eth
-{
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
-
-class CodeGenerator
-{
-public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
-};
-
-}
-}
+	if (_expression.type() == typeid(Identifier))
+	{
+		string const& name = boost::get<Identifier>(_expression).name;
+		if (m_substitutions.count(name))
+			// No recursive substitution
+			return ASTCopier().translate(*m_substitutions.at(name));
+	}
+	return ASTCopier::translate(_expression);
 }

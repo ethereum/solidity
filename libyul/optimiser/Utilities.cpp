@@ -1,4 +1,4 @@
-/*
+/*(
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify
@@ -15,42 +15,25 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Some useful snippets for the optimiser.
  */
 
-#pragma once
+#include <libyul/optimiser/Utilities.h>
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libsolidity/inlineasm/AsmData.h>
 
-#include <functional>
+#include <libdevcore/CommonData.h>
 
-namespace dev
-{
-namespace eth
-{
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
+#include <boost/range/algorithm_ext/erase.hpp>
 
-class CodeGenerator
-{
-public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
-};
+using namespace std;
+using namespace dev;
+using namespace dev::yul;
 
-}
-}
+void dev::yul::removeEmptyBlocks(Block& _block)
+{
+	auto isEmptyBlock = [](Statement const& _st) -> bool {
+		return _st.type() == typeid(Block) && boost::get<Block>(_st).statements.empty();
+	};
+	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
 }

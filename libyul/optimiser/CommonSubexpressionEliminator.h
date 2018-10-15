@@ -15,42 +15,31 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Optimisation stage that replaces expressions known to be the current value of a variable
+ * in scope by a reference to that variable.
  */
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-
-#include <functional>
+#include <libyul/optimiser/DataFlowAnalyzer.h>
 
 namespace dev
 {
-namespace eth
+namespace yul
 {
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
 
-class CodeGenerator
+/**
+ * Optimisation stage that replaces expressions known to be the current value of a variable
+ * in scope by a reference to that variable.
+ *
+ * Prerequisite: Disambiguator
+ */
+class CommonSubexpressionEliminator: public DataFlowAnalyzer
 {
-public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
+protected:
+	using ASTModifier::visit;
+	virtual void visit(Expression& _e) override;
 };
 
-}
 }
 }

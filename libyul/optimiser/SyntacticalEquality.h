@@ -15,42 +15,36 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Component that can compare ASTs for equality on a syntactic basis.
  */
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/ASTDataForward.h>
 
-#include <functional>
+#include <vector>
 
 namespace dev
 {
-namespace eth
+namespace yul
 {
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
 
-class CodeGenerator
+/**
+ * Component that can compare ASTs for equality on a syntactic basis.
+ * Ignores source locations but requires exact matches otherwise.
+ *
+ * TODO: Only implemented for Expressions for now.
+ * A future version might also recognize renamed variables and thus could be used to
+ * remove duplicate functions.
+ */
+class SyntacticalEqualityChecker
 {
 public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
+	static bool equal(Expression const& _e1, Expression const& _e2);
+
+protected:
+	static bool equalVector(std::vector<Expression> const& _e1, std::vector<Expression> const& _e2);
 };
 
-}
 }
 }

@@ -269,8 +269,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// external references.
 	ErrorList errors;
 	ErrorReporter errorsIgnored(errors);
-	julia::ExternalIdentifierAccess::Resolver resolver =
-	[&](assembly::Identifier const& _identifier, julia::IdentifierContext, bool _crossesFunctionBoundary) {
+	yul::ExternalIdentifierAccess::Resolver resolver =
+	[&](assembly::Identifier const& _identifier, yul::IdentifierContext, bool _crossesFunctionBoundary) {
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
 		bool isSlot = boost::algorithm::ends_with(_identifier.name, "_slot");
 		bool isOffset = boost::algorithm::ends_with(_identifier.name, "_offset");

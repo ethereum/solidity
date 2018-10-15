@@ -15,42 +15,23 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Optimiser component that can create new unique names.
  */
-
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-
-#include <functional>
+#include <set>
+#include <string>
 
 namespace dev
 {
-namespace eth
+namespace yul
 {
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
 
-class CodeGenerator
+struct NameDispenser
 {
-public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
+	std::string newName(std::string const& _prefix);
+	std::set<std::string> m_usedNames;
 };
 
-}
 }
 }

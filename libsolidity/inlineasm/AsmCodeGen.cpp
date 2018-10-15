@@ -32,8 +32,8 @@
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 
-#include <libjulia/backends/evm/AbstractAssembly.h>
-#include <libjulia/backends/evm/EVMCodeTransform.h>
+#include <libyul/backends/evm/AbstractAssembly.h>
+#include <libyul/backends/evm/EVMCodeTransform.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -49,7 +49,7 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 
-class EthAssemblyAdapter: public julia::AbstractAssembly
+class EthAssemblyAdapter: public yul::AbstractAssembly
 {
 public:
 	explicit EthAssemblyAdapter(eth::Assembly& _assembly):
@@ -145,12 +145,12 @@ void assembly::CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
-	julia::ExternalIdentifierAccess const& _identifierAccess,
+	yul::ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	julia::CodeTransform(
+	yul::CodeTransform(
 		assemblyAdapter,
 		_analysisInfo,
 		false,

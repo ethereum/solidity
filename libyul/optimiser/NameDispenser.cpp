@@ -15,42 +15,24 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Optimiser component that can create new unique names.
  */
 
-#pragma once
+#include <libyul/optimiser/NameDispenser.h>
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+using namespace std;
+using namespace dev;
+using namespace dev::yul;
 
-#include <functional>
-
-namespace dev
+string NameDispenser::newName(string const& _prefix)
 {
-namespace eth
-{
-class Assembly;
-}
-namespace solidity
-{
-namespace assembly
-{
-struct Block;
-
-class CodeGenerator
-{
-public:
-	/// Performs code generation and appends generated to _assembly.
-	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
-		bool _useNamedLabelsForFunctions = false
-	);
-};
-
-}
-}
+	string name = _prefix;
+	size_t suffix = 0;
+	while (name.empty() || m_usedNames.count(name))
+	{
+		suffix++;
+		name = _prefix + "_" + to_string(suffix);
+	}
+	m_usedNames.insert(name);
+	return name;
 }

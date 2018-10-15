@@ -1,6 +1,6 @@
-# Until we have a clear separation, libjulia has to be included here
-file(GLOB_RECURSE sources "*.cpp" "../libjulia/*.cpp")
-file(GLOB_RECURSE headers "*.h" "../libjulia/*.h")
+# Until we have a clear separation, libyul has to be included here
+file(GLOB_RECURSE sources "*.cpp" "../libyul/*.cpp")
+file(GLOB_RECURSE headers "*.h" "../libyul/*.h")
 
 find_package(Z3 QUIET)
 if (${Z3_FOUND})
