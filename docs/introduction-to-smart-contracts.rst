@@ -380,7 +380,7 @@ made to the state in the current call frame.
 Storage, Memory and the Stack
 =============================
 
-The Ethereum Virtual Machine has three areas where it can store data,
+The Ethereum Virtual Machine has three areas where it can store data-
 storage, memory and the stack, which are explained in the following
 paragraphs.
 
