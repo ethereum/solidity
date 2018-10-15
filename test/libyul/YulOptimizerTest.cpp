@@ -21,6 +21,7 @@
 
 #include <test/Options.h>
 
+#include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -93,6 +94,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
+	else if (m_optimizerStep == "blockFlattener")
+	{
+		disambiguate();
+		BlockFlattener{}(*m_ast);
+	}
 	else if (m_optimizerStep == "commonSubexpressionEliminator")
 	{
 		disambiguate();
