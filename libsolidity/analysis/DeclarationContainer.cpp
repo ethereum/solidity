@@ -137,23 +137,23 @@ vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _n
 
 vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) const
 {
-	static size_t const MAXIMUM_EDIT_DISTANCE = 2;
+
 	// because the function below has quadratic runtime - it will not magically improve once a better algorithm is discovered ;)
 	// since 80 is the suggested line length limit, we use 80^2 as length threshold
 	static size_t const MAXIMUM_LENGTH_THRESHOLD = 80 * 80;
 
 	vector<ASTString> similar;
-
+	size_t maximumEditDistance = _name.size() > 3 ? 2 : _name.size() / 2;
 	for (auto const& declaration: m_declarations)
 	{
 		string const& declarationName = declaration.first;
-		if (stringWithinDistance(_name, declarationName, MAXIMUM_EDIT_DISTANCE, MAXIMUM_LENGTH_THRESHOLD))
+		if (stringWithinDistance(_name, declarationName, maximumEditDistance, MAXIMUM_LENGTH_THRESHOLD))
 			similar.push_back(declarationName);
 	}
 	for (auto const& declaration: m_invisibleDeclarations)
 	{
 		string const& declarationName = declaration.first;
-		if (stringWithinDistance(_name, declarationName, MAXIMUM_EDIT_DISTANCE, MAXIMUM_LENGTH_THRESHOLD))
+		if (stringWithinDistance(_name, declarationName, maximumEditDistance, MAXIMUM_LENGTH_THRESHOLD))
 			similar.push_back(declarationName);
 	}
 
