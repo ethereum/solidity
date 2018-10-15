@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include <libsolidity/formal/SymbolicVariable.h>
-
 #include <memory>
 
 namespace dev
@@ -32,53 +30,19 @@ namespace solidity
 class SSAVariable
 {
 public:
-	/// @param _type Forwarded to the symbolic var.
-	/// @param _interface Forwarded to the symbolic var such that it can give constraints to the solver.
-	SSAVariable(
-		Type const& _type,
-		std::string const& _uniqueName,
-		smt::SolverInterface& _interface
-	);
-
+	SSAVariable();
 	void resetIndex();
 
 	/// This function returns the current index of this SSA variable.
-	int index() const;
-	/// This function returns the next free index of this SSA variable.
-	int next() const;
+	int index() const { return m_currentSequenceCounter; }
+	int& index() { return m_currentSequenceCounter; }
 
 	int operator++()
 	{
 		return m_currentSequenceCounter = (*m_nextFreeSequenceCounter)++;
 	}
 
-	smt::Expression operator()() const
-	{
-		return valueAtSequence(index());
-	}
-
-	smt::Expression operator()(int _seq) const
-	{
-		return valueAtSequence(_seq);
-	}
-
-	/// These two functions forward the call to the symbolic var
-	/// which generates the constraints according to the type.
-	void setZeroValue();
-	void setUnknownValue();
-
-	/// So far Int and Bool are supported.
-	static bool isSupportedType(Type::Category _category);
-	static bool isInteger(Type::Category _category);
-	static bool isBool(Type::Category _category);
-
 private:
-	smt::Expression valueAtSequence(int _seq) const
-	{
-		return (*m_symbolicVar)(_seq);
-	}
-
-	std::shared_ptr<SymbolicVariable> m_symbolicVar = nullptr;
 	int m_currentSequenceCounter;
 	/// The next free sequence counter is a shared pointer because we want
 	/// the copy and the copied to share it.

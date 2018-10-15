@@ -37,9 +37,9 @@ public:
 	);
 
 	/// Sets the var to 0.
-	void setZeroValue(int _seq);
+	void setZeroValue();
 	/// Sets the variable to the full valid value range.
-	void setUnknownValue(int _seq);
+	void setUnknownValue();
 
 	static smt::Expression minValue(IntegerType const& _t);
 	static smt::Expression maxValue(IntegerType const& _t);

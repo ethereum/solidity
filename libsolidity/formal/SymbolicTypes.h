@@ -15,29 +15,31 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
+#include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicVariable.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
 
-using namespace std;
-using namespace dev;
-using namespace dev::solidity;
-
-SymbolicVariable::SymbolicVariable(
-	Type const& _type,
-	string const& _uniqueName,
-	smt::SolverInterface& _interface
-):
-	m_type(_type),
-	m_uniqueName(_uniqueName),
-	m_interface(_interface),
-	m_ssa(make_shared<SSAVariable>())
+namespace dev
 {
-}
-
-string SymbolicVariable::uniqueSymbol(int _seq) const
+namespace solidity
 {
-	return m_uniqueName + "_" + to_string(_seq);
+
+/// So far int, bool and address are supported.
+/// Returns true if type is supported.
+bool isSupportedType(Type::Category _category);
+bool isSupportedType(Type const& _type);
+
+bool isInteger(Type::Category _category);
+bool isInteger(Type const& _type);
+
+bool isBool(Type::Category _category);
+bool isBool(Type const& _type);
+
+std::shared_ptr<SymbolicVariable> newSymbolicVariable(Type const& _type, std::string const& _uniqueName, smt::SolverInterface& _solver);
+
 }
-
-
+}

@@ -19,14 +19,14 @@
 
 
 #include <libsolidity/formal/SolverInterface.h>
-
-#include <libsolidity/formal/SSAVariable.h>
+#include <libsolidity/formal/SymbolicVariable.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <libsolidity/interface/ReadFile.h>
 
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -86,7 +86,7 @@ private:
 	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
 	/// Maps a variable to an SSA index.
-	using VariableSequenceCounters = std::map<VariableDeclaration const*, SSAVariable>;
+	using VariableSequenceCounters = std::unordered_map<VariableDeclaration const*, int>;
 
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
@@ -176,13 +176,18 @@ private:
 	/// Checks if VariableDeclaration was seen.
 	bool hasVariable(VariableDeclaration const& _e) const;
 
+	/// Copy the SSA indices of m_variables.
+	VariableSequenceCounters copyVariableSequenceCounters();
+	/// Resets the variable counters.
+	void resetVariableCounters(VariableSequenceCounters const& _counters); 
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
 	std::multimap<Expression const*, smt::Expression> m_expressions;
-	std::map<VariableDeclaration const*, SSAVariable> m_variables;
+	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 

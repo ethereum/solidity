@@ -17,46 +17,12 @@
 
 #include <libsolidity/formal/SSAVariable.h>
 
-#include <libsolidity/formal/SymbolicBoolVariable.h>
-#include <libsolidity/formal/SymbolicIntVariable.h>
-
-#include <libsolidity/ast/AST.h>
-
 using namespace std;
-using namespace dev;
 using namespace dev::solidity;
 
-SSAVariable::SSAVariable(
-	Type const& _type,
-	string const& _uniqueName,
-	smt::SolverInterface& _interface
-)
+SSAVariable::SSAVariable()
 {
 	resetIndex();
-
-	if (isInteger(_type.category()))
-		m_symbolicVar = make_shared<SymbolicIntVariable>(_type, _uniqueName, _interface);
-	else if (isBool(_type.category()))
-		m_symbolicVar = make_shared<SymbolicBoolVariable>(_type, _uniqueName, _interface);
-	else
-	{
-		solAssert(false, "");
-	}
-}
-
-bool SSAVariable::isSupportedType(Type::Category _category)
-{
-	return isInteger(_category) || isBool(_category);
-}
-
-bool SSAVariable::isInteger(Type::Category _category)
-{
-	return _category == Type::Category::Integer || _category == Type::Category::Address;
-}
-
-bool SSAVariable::isBool(Type::Category _category)
-{
-	return _category == Type::Category::Bool;
 }
 
 void SSAVariable::resetIndex()
@@ -64,24 +30,4 @@ void SSAVariable::resetIndex()
 	m_currentSequenceCounter = 0;
 	m_nextFreeSequenceCounter.reset (new int);
 	*m_nextFreeSequenceCounter = 1;
-}
-
-int SSAVariable::index() const
-{
-	return m_currentSequenceCounter;
-}
-
-int SSAVariable::next() const
-{
-	return *m_nextFreeSequenceCounter;
-}
-
-void SSAVariable::setZeroValue()
-{
-	m_symbolicVar->setZeroValue(index());
-}
-
-void SSAVariable::setUnknownValue()
-{
-	m_symbolicVar->setUnknownValue(index());
 }

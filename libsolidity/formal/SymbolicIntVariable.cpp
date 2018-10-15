@@ -40,26 +40,26 @@ smt::Expression SymbolicIntVariable::valueAtSequence(int _seq) const
 	return m_interface.newInteger(uniqueSymbol(_seq));
 }
 
-void SymbolicIntVariable::setZeroValue(int _seq)
+void SymbolicIntVariable::setZeroValue()
 {
-	m_interface.addAssertion(valueAtSequence(_seq) == 0);
+	m_interface.addAssertion(current() == 0);
 }
 
-void SymbolicIntVariable::setUnknownValue(int _seq)
+void SymbolicIntVariable::setUnknownValue()
 {
 	if (m_type.category() == Type::Category::Integer)
 	{
 		auto intType = dynamic_cast<IntegerType const*>(&m_type);
 		solAssert(intType, "");
-		m_interface.addAssertion(valueAtSequence(_seq) >= minValue(*intType));
-		m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(*intType));
+		m_interface.addAssertion(current() >= minValue(*intType));
+		m_interface.addAssertion(current() <= maxValue(*intType));
 	}
 	else
 	{
 		solAssert(m_type.category() == Type::Category::Address, "");
 		IntegerType addrType{160};
-		m_interface.addAssertion(valueAtSequence(_seq) >= minValue(addrType));
-		m_interface.addAssertion(valueAtSequence(_seq) <= maxValue(addrType));
+		m_interface.addAssertion(current() >= minValue(addrType));
+		m_interface.addAssertion(current() <= maxValue(addrType));
 	}
 }
 

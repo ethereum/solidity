@@ -37,9 +37,9 @@ public:
 	);
 
 	/// Sets the var to false.
-	void setZeroValue(int _seq);
-	/// Does nothing since the SMT solver already knows the valid values.
-	void setUnknownValue(int _seq);
+	void setZeroValue();
+	/// Does nothing since the SMT solver already knows the valid values for Bool.
+	void setUnknownValue();
 
 protected:
 	smt::Expression valueAtSequence(int _seq) const;
