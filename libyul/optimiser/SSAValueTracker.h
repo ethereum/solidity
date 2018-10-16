@@ -15,14 +15,17 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Optimiser component that uses the simplification rules to simplify expressions.
+ * Component that collects variables that are never assigned to and their
+ * initial values.
  */
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
-
 #include <libyul/optimiser/ASTWalker.h>
+
+#include <string>
+#include <map>
+#include <set>
 
 namespace dev
 {
@@ -30,25 +33,25 @@ namespace yul
 {
 
 /**
- * Applies simplification rules to all expressions.
- * The component will work best if the code is in SSA form, but
- * this is not required for correctness.
+ * Class that walks the AST and stores the initial value of each variable
+ * that is never assigned to.
  *
- * Prerequisite: Disambiguator.
+ * Prerequisite: Disambiguator
  */
-class ExpressionSimplifier: public ASTModifier
+class SSAValueTracker: public ASTWalker
 {
 public:
-	using ASTModifier::operator();
-	virtual void visit(Expression& _expression);
+	using ASTWalker::operator();
+	virtual void operator()(VariableDeclaration const& _varDecl) override;
+	virtual void operator()(Assignment const& _assignment) override;
 
-	static void run(Block& _ast);
+	std::map<std::string, Expression const*> const& values() const { return m_values; }
+	Expression const* value(std::string const& _name) const { return m_values.at(_name); }
+
 private:
-	explicit ExpressionSimplifier(std::map<std::string, Expression const*> _ssaValues):
-		m_ssaValues(std::move(_ssaValues))
-	{}
+	void setValue(std::string const& _name, Expression const* _value);
 
-	std::map<std::string, Expression const*> m_ssaValues;
+	std::map<std::string, Expression const*> m_values;
 };
 
 }

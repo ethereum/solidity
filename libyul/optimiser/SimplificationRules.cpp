@@ -34,7 +34,10 @@ using namespace dev;
 using namespace dev::yul;
 
 
-SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(Expression const& _expr)
+SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(
+	Expression const& _expr,
+	map<string, Expression const*> const& _ssaValues
+)
 {
 	if (_expr.type() != typeid(FunctionalInstruction))
 		return nullptr;
@@ -46,7 +49,7 @@ SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(Expressio
 	for (auto const& rule: rules.m_rules[byte(instruction.instruction)])
 	{
 		rules.resetMatchGroups();
-		if (rule.pattern.matches(_expr))
+		if (rule.pattern.matches(_expr, _ssaValues))
 			return &rule;
 	}
 	return nullptr;
@@ -101,13 +104,25 @@ void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _
 	m_matchGroups = &_matchGroups;
 }
 
-bool Pattern::matches(Expression const& _expr) const
+bool Pattern::matches(Expression const& _expr, map<string, Expression const*> const& _ssaValues) const
 {
+	Expression const* expr = &_expr;
+
+	// Resolve the variable if possible.
+	// Do not do it for "Any" because we can check identity better for variables.
+	if (m_kind != PatternKind::Any && _expr.type() == typeid(Identifier))
+	{
+		string const& varName = boost::get<Identifier>(_expr).name;
+		if (_ssaValues.count(varName))
+			expr = _ssaValues.at(varName);
+	}
+	assertThrow(expr, OptimizerException, "");
+
 	if (m_kind == PatternKind::Constant)
 	{
-		if (_expr.type() != typeid(Literal))
+		if (expr->type() != typeid(Literal))
 			return false;
-		Literal const& literal = boost::get<Literal>(_expr);
+		Literal const& literal = boost::get<Literal>(*expr);
 		if (literal.kind != assembly::LiteralKind::Number)
 			return false;
 		if (m_data && *m_data != u256(literal.value))
@@ -116,34 +131,51 @@ bool Pattern::matches(Expression const& _expr) const
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
-		if (_expr.type() != typeid(FunctionalInstruction))
+		if (expr->type() != typeid(FunctionalInstruction))
 			return false;
-		FunctionalInstruction const& instr = boost::get<FunctionalInstruction>(_expr);
+		FunctionalInstruction const& instr = boost::get<FunctionalInstruction>(*expr);
 		if (m_instruction != instr.instruction)
 			return false;
 		assertThrow(m_arguments.size() == instr.arguments.size(), OptimizerException, "");
 		for (size_t i = 0; i < m_arguments.size(); ++i)
-			if (!m_arguments[i].matches(instr.arguments.at(i)))
+			if (!m_arguments[i].matches(instr.arguments.at(i), _ssaValues))
 				return false;
 	}
 	else
 	{
-		assertThrow(m_arguments.empty(), OptimizerException, "");
+		assertThrow(m_arguments.empty(), OptimizerException, "\"Any\" should not have arguments.");
 	}
-	// We support matching multiple expressions that require the same value
-	// based on identical ASTs, which have to be movable.
+
 	if (m_matchGroup)
 	{
+		// We support matching multiple expressions that require the same value
+		// based on identical ASTs, which have to be movable.
+
+		// TODO: add tests:
+		// - { let x := mload(0) let y := and(x, x) }
+		// - { let x := 4 let y := and(x, y) }
+
+		// This code uses `_expr` again for "Any", because we want the comparison to be done
+		// on the variables and not their values.
+		// The assumption is that CSE or local value numbering has been done prior to this step.
+
 		if (m_matchGroups->count(m_matchGroup))
 		{
+			assertThrow(m_kind == PatternKind::Any, OptimizerException, "Match group repetition for non-any.");
 			Expression const* firstMatch = (*m_matchGroups)[m_matchGroup];
 			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
 			return
 				SyntacticalEqualityChecker::equal(*firstMatch, _expr) &&
 				MovableChecker(_expr).movable();
 		}
-		else
+		else if (m_kind == PatternKind::Any)
 			(*m_matchGroups)[m_matchGroup] = &_expr;
+		else
+		{
+			assertThrow(m_kind == PatternKind::Constant, OptimizerException, "Match group set for operation.");
+			// We do not use _expr here, because we want the actual number.
+			(*m_matchGroups)[m_matchGroup] = expr;
+		}
 	}
 	return true;
 }
