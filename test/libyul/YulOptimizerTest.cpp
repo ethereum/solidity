@@ -106,8 +106,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	}
 	else if (m_optimizerStep == "expressionSplitter")
 	{
-		NameDispenser nameDispenser;
-		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
+		NameDispenser nameDispenser(*m_ast);
 		ExpressionSplitter{nameDispenser}(*m_ast);
 	}
 	else if (m_optimizerStep == "functionGrouper")
@@ -130,8 +129,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		disambiguate();
 		(FunctionHoister{})(*m_ast);
 		(FunctionGrouper{})(*m_ast);
-		NameDispenser nameDispenser;
-		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
+		NameDispenser nameDispenser(*m_ast);
 		ExpressionSplitter{nameDispenser}(*m_ast);
 		FullInliner(*m_ast).run();
 		ExpressionJoiner::run(*m_ast);
@@ -155,8 +153,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else if (m_optimizerStep == "fullSimplify")
 	{
 		disambiguate();
-		NameDispenser nameDispenser;
-		nameDispenser.m_usedNames = NameCollector(*m_ast).names();
+		NameDispenser nameDispenser(*m_ast);
 		ExpressionSplitter{nameDispenser}(*m_ast);
 		CommonSubexpressionEliminator{}(*m_ast);
 		ExpressionSimplifier::run(*m_ast);

@@ -47,9 +47,8 @@ public:
 		solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
 		std::set<std::string> const& _externallyUsedIdentifiers = {}
 	):
-		m_info(_analysisInfo), m_externallyUsedIdentifiers(_externallyUsedIdentifiers)
+		m_info(_analysisInfo), m_externallyUsedIdentifiers(_externallyUsedIdentifiers), m_nameDispenser(m_externallyUsedIdentifiers)
 	{
-		m_nameDispenser.m_usedNames = m_externallyUsedIdentifiers;
 	}
 
 protected:

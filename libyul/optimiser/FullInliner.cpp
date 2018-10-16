@@ -39,11 +39,10 @@ using namespace dev::yul;
 using namespace dev::solidity;
 
 FullInliner::FullInliner(Block& _ast):
-	m_ast(_ast)
+	m_ast(_ast), m_nameDispenser(_ast)
 {
 	assertThrow(m_ast.statements.size() >= 1, OptimizerException, "");
 	assertThrow(m_ast.statements.front().type() == typeid(Block), OptimizerException, "");
-	m_nameDispenser.m_usedNames = NameCollector(m_ast).names();
 
 	for (size_t i = 1; i < m_ast.statements.size(); ++i)
 	{
@@ -112,7 +111,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
-		string newName = m_nameDispenser.newName(function.name + "_" + _existingVariable.name);
+		string newName = m_nameDispenser.newName(_existingVariable.name, function.name);
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
 		if (_value)
@@ -125,7 +124,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	for (auto const& var: function.returnVariables)
 		newVariable(var, nullptr);
 
-	Statement newBody = BodyCopier(m_nameDispenser, function.name + "_", variableReplacements)(function.body);
+	Statement newBody = BodyCopier(m_nameDispenser, function.name, variableReplacements)(function.body);
 	newStatements += std::move(boost::get<Block>(newBody).statements);
 
 	boost::apply_visitor(GenericFallbackVisitor<Assignment, VariableDeclaration>{
@@ -158,15 +157,10 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	return newStatements;
 }
 
-string InlineModifier::newName(string const& _prefix)
-{
-	return m_nameDispenser.newName(_prefix);
-}
-
 Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)
 {
 	for (auto const& var: _varDecl.variables)
-		m_variableReplacements[var.name] = m_nameDispenser.newName(m_varNamePrefix + var.name);
+		m_variableReplacements[var.name] = m_nameDispenser.newName(var.name, m_varNamePrefix);
 	return ASTCopier::operator()(_varDecl);
 }
 
