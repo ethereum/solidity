@@ -994,16 +994,14 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
-		// FIXME: shouldn't this be done for every contract?
-		if (m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()))
+		for (auto const& contract : m_compiler->contractNames())
 		{
-			//NOTE: keep the local variable `ret` to prevent a Heisenbug that could happen on certain mac os platform.
-			//See: https://github.com/ethereum/solidity/issues/3718 for details.
 			auto ret = GasEstimator::breakToStatementLevel(
-				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(m_compiler->lastContractName()), asts),
+				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(contract), asts),
 				asts
 			);
-			gasCosts = ret;
+			for (auto const& it: ret)
+				gasCosts[it.first] += it.second;
 		}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);

@@ -132,6 +132,7 @@ Bugfixes:
  * Type Checker: Fix internal error when array index is not an unsigned.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
  * Parser: Fix incorrect source location for nameless parameters.
+ * Command Line Interface: Fix internal error when compiling stdin with no content and --ast option.
 
 ### 0.4.25 (2018-09-12)
 
