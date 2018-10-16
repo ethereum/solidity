@@ -131,7 +131,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		(FunctionGrouper{})(*m_ast);
 		NameDispenser nameDispenser(*m_ast);
 		ExpressionSplitter{nameDispenser}(*m_ast);
-		FullInliner(*m_ast).run();
+		FullInliner(*m_ast, nameDispenser).run();
 		ExpressionJoiner::run(*m_ast);
 	}
 	else if (m_optimizerStep == "mainFunction")

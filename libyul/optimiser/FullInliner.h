@@ -71,7 +71,7 @@ class NameCollector;
 class FullInliner: public ASTModifier
 {
 public:
-	explicit FullInliner(Block& _ast);
+	explicit FullInliner(Block& _ast, NameDispenser& _dispenser);
 
 	void run();
 
@@ -94,7 +94,7 @@ private:
 	/// Variables that are constants (used for inlining heuristic)
 	std::set<std::string> m_constants;
 	std::map<std::string, size_t> m_functionSizes;
-	NameDispenser m_nameDispenser;
+	NameDispenser& m_nameDispenser;
 };
 
 /**
