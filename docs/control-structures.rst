@@ -416,7 +416,7 @@ that will be passed back to the caller.
 
 .. note::
     There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
-    whas deprecated in version 0.4.13 and removed in version 0.5.0.
+    was deprecated in version 0.4.13 and removed in version 0.5.0.
 
 When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send``
 and the low-level functions ``call``, ``delegatecall`` and ``staticcall`` -- those return ``false`` as their first return value in case
