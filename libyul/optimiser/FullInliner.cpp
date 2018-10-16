@@ -50,7 +50,6 @@ FullInliner::FullInliner(Block& _ast):
 		assertThrow(m_ast.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
 		FunctionDefinition& fun = boost::get<FunctionDefinition>(m_ast.statements.at(i));
 		m_functions[fun.name] = &fun;
-		m_functionsToVisit.insert(&fun);
 	}
 }
 
@@ -59,17 +58,8 @@ void FullInliner::run()
 	assertThrow(m_ast.statements[0].type() == typeid(Block), OptimizerException, "");
 
 	handleBlock("", boost::get<Block>(m_ast.statements[0]));
-	while (!m_functionsToVisit.empty())
-		handleFunction(**m_functionsToVisit.begin());
-}
-
-void FullInliner::handleFunction(FunctionDefinition& _fun)
-{
-	if (!m_functionsToVisit.count(&_fun))
-		return;
-	m_functionsToVisit.erase(&_fun);
-
-	handleBlock(_fun.name, _fun.body);
+	for (auto const& fun: m_functions)
+		handleBlock(fun.second->name, fun.second->body);
 }
 
 void FullInliner::handleBlock(string const& _currentFunctionName, Block& _block)
@@ -102,28 +92,27 @@ boost::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement&
 		), *e);
 		if (funCall)
 		{
-			FunctionDefinition& fun = m_driver.function(funCall->functionName.name);
-			m_driver.handleFunction(fun);
-
 			// TODO: Insert good heuristic here. Perhaps implement that inside the driver.
 			bool doInline = funCall->functionName.name != m_currentFunction;
 
 			if (doInline)
-				return performInline(_statement, *funCall, fun);
+				return performInline(_statement, *funCall);
 		}
 	}
 	return {};
 }
 
-vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionCall& _funCall, FunctionDefinition& _function)
+vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionCall& _funCall)
 {
 	vector<Statement> newStatements;
 	map<string, string> variableReplacements;
 
+	FunctionDefinition& function = m_driver.function(_funCall.functionName.name);
+
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
-		string newName = m_nameDispenser.newName(_function.name + "_" + _existingVariable.name);
+		string newName = m_nameDispenser.newName(function.name + "_" + _existingVariable.name);
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
 		if (_value)
@@ -132,11 +121,11 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	};
 
 	for (size_t i = 0; i < _funCall.arguments.size(); ++i)
-		newVariable(_function.parameters[i], &_funCall.arguments[i]);
-	for (auto const& var: _function.returnVariables)
+		newVariable(function.parameters[i], &_funCall.arguments[i]);
+	for (auto const& var: function.returnVariables)
 		newVariable(var, nullptr);
 
-	Statement newBody = BodyCopier(m_nameDispenser, _function.name + "_", variableReplacements)(_function.body);
+	Statement newBody = BodyCopier(m_nameDispenser, function.name + "_", variableReplacements)(function.body);
 	newStatements += std::move(boost::get<Block>(newBody).statements);
 
 	boost::apply_visitor(GenericFallbackVisitor<Assignment, VariableDeclaration>{
@@ -148,7 +137,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 					{_assignment.variableNames[i]},
 					make_shared<Expression>(Identifier{
 						_assignment.location,
-						variableReplacements.at(_function.returnVariables[i].name)
+						variableReplacements.at(function.returnVariables[i].name)
 					})
 				});
 		},
@@ -160,7 +149,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 					{std::move(_varDecl.variables[i])},
 					make_shared<Expression>(Identifier{
 						_varDecl.location,
-						variableReplacements.at(_function.returnVariables[i].name)
+						variableReplacements.at(function.returnVariables[i].name)
 					})
 				});
 		}

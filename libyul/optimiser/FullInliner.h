@@ -75,9 +75,6 @@ public:
 
 	void run();
 
-	/// Perform inlining operations inside the given function.
-	void handleFunction(FunctionDefinition& _function);
-
 	FunctionDefinition& function(std::string _name) { return *m_functions.at(_name); }
 
 private:
@@ -87,7 +84,6 @@ private:
 	/// we store pointers to functions.
 	Block& m_ast;
 	std::map<std::string, FunctionDefinition*> m_functions;
-	std::set<FunctionDefinition*> m_functionsToVisit;
 	NameDispenser m_nameDispenser;
 };
 
@@ -108,7 +104,7 @@ public:
 
 private:
 	boost::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
-	std::vector<Statement> performInline(Statement& _statement, FunctionCall& _funCall, FunctionDefinition& _function);
+	std::vector<Statement> performInline(Statement& _statement, FunctionCall& _funCall);
 
 	std::string newName(std::string const& _prefix);
 

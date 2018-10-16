@@ -14,10 +14,7 @@
 //         let g_b := f_x
 //         let g_c := _1
 //         let g_y
-//         let g_f_a_1 := g_b
-//         let g_f_x_1
-//         g_f_x_1 := add(g_f_a_1, g_f_a_1)
-//         g_y := mul(mload(g_c), g_f_x_1)
+//         g_y := mul(mload(g_c), f(g_b))
 //         let y_1 := g_y
 //     }
 //     function f(a) -> x
