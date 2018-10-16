@@ -209,6 +209,7 @@ u256 Pattern::d() const
 {
 	Literal const& literal = boost::get<Literal>(matchGroupValue());
 	assertThrow(literal.kind == assembly::LiteralKind::Number, OptimizerException, "");
+	assertThrow(isValidDecimal(literal.value) || isValidHex(literal.value), OptimizerException, "");
 	return u256(literal.value);
 }
 

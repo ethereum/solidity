@@ -110,3 +110,26 @@ string dev::getChecksummedAddress(string const& _addr)
 	}
 	return ret;
 }
+
+bool dev::isValidHex(string const& _string)
+{
+	if (_string.substr(0, 2) != "0x")
+		return false;
+	if (_string.find_first_not_of("0123456789abcdefABCDEF", 2) != string::npos)
+		return false;
+	return true;
+}
+
+bool dev::isValidDecimal(string const& _string)
+{
+	if (_string.empty())
+		return false;
+	if (_string == "0")
+		return true;
+	// No leading zeros
+	if (_string.front() == '0')
+		return false;
+	if (_string.find_first_not_of("0123456789") != string::npos)
+		return false;
+	return true;
+}
