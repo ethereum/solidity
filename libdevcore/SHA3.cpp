@@ -31,7 +31,7 @@ using namespace dev;
 namespace dev
 {
 
-namespace keccak
+namespace
 {
 
 /** libkeccak-tiny
@@ -42,26 +42,6 @@ namespace keccak
  * License: CC0, attribution kindly requested. Blame taken too,
  * but not liability.
  */
-
-#define decshake(bits) \
-  int shake##bits(uint8_t*, size_t, const uint8_t*, size_t);
-
-#define decsha3(bits) \
-  int sha3_##bits(uint8_t*, size_t, const uint8_t*, size_t);
-
-#define deckeccak(bits) \
-  int keccak##bits(uint8_t*, size_t, const uint8_t*, size_t);
-
-decshake(128)
-decshake(256)
-decsha3(224)
-decsha3(256)
-decsha3(384)
-decsha3(512)
-deckeccak(224)
-deckeccak(256)
-deckeccak(384)
-deckeccak(512)
 
 /******** The Keccak-f[1600] permutation ********/
 
@@ -164,13 +144,15 @@ mkapply_sd(setout, dst[i] = src[i])  // setout
   }
 
 /** The sponge-based hash construction. **/
-static inline int hash(uint8_t* out, size_t outlen,
-					   const uint8_t* in, size_t inlen,
-					   size_t rate, uint8_t delim) {
-	if ((out == NULL) || ((in == NULL) && inlen != 0) || (rate >= Plen))
-	{
-		return -1;
-	}
+inline void hash(
+	uint8_t* out,
+	size_t outlen,
+	const uint8_t* in,
+	size_t inlen,
+	size_t rate,
+	uint8_t delim
+)
+{
 	uint8_t a[Plen] = {0};
 	// Absorb input.
 	foldP(in, inlen, xorin);
@@ -185,58 +167,19 @@ static inline int hash(uint8_t* out, size_t outlen,
 	foldP(out, outlen, setout);
 	setout(a, out, outlen);
 	memset(a, 0, 200);
-	return 0;
 }
-
-/*** Helper macros to define SHA3 and SHAKE instances. ***/
-#define defshake(bits)                                            \
-  int shake##bits(uint8_t* out, size_t outlen,                    \
-				  const uint8_t* in, size_t inlen) {              \
-	return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x1f);  \
-  }
-#define defsha3(bits)                                             \
-  int sha3_##bits(uint8_t* out, size_t outlen,                    \
-				  const uint8_t* in, size_t inlen) {              \
-	if (outlen > (bits/8)) {                                      \
-	  return -1;                                                  \
-	}                                                             \
-	return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x06);  \
-  }
-#define defkeccak(bits)                                             \
-  int keccak##bits(uint8_t* out, size_t outlen,                    \
-				  const uint8_t* in, size_t inlen) {              \
-	if (outlen > (bits/8)) {                                      \
-	  return -1;                                                  \
-	}                                                             \
-	return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x01);  \
-  }
-
-/*** FIPS202 SHAKE VOFs ***/
-defshake(128)
-defshake(256)
-
-/*** FIPS202 SHA3 FOFs ***/
-defsha3(224)
-defsha3(256)
-defsha3(384)
-defsha3(512)
-
-/*** KECCAK FOFs ***/
-defkeccak(224)
-defkeccak(256)
-defkeccak(384)
-defkeccak(512)
 
 }
 
-bool keccak256(bytesConstRef _input, bytesRef o_output)
+h256 keccak256(bytesConstRef _input)
 {
-	// FIXME: What with unaligned memory?
-	if (o_output.size() != 32)
-		return false;
-	keccak::keccak256(o_output.data(), 32, _input.data(), _input.size());
-//	keccak::keccak(ret.data(), 32, (uint64_t const*)_input.data(), _input.size());
-	return true;
+	h256 output;
+	// Parameters used:
+	// The 0x01 is the specific padding for keccak (sha3 uses 0x06) and
+	// the way the round size (or window or whatever it was) is calculated.
+	// 200 - (256 / 4) is the "rate"
+	hash(output.data(), output.size, _input.data(), _input.size(), 200 - (256 / 4), 0x01);
+	return output;
 }
 
 }
