@@ -1,8 +1,6 @@
 Solidity
 ========
 
-Traduit de l'anglais par `Kevin Azoulay <https://www.linkedin.com/in/kevin-azoulay/>`_.
-
 .. image:: logo.svg
     :width: 120px
     :alt: Solidity logo
@@ -183,6 +181,8 @@ La quatrième et plus vaste section couvrira en profondeur tous les aspects de S
 Si vous avez encore des questions, vous pouvez essayer de chercher ou de poser des questions sur le site Web de
 `Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_ ou venez sur notre `gitter channel <https://gitter.im/ethereum/solidity/>`_.
 Les idées pour améliorer Solidity ou cette documentation sont toujours les bienvenues !
+
+Traduit de l'anglais par `Kevin Azoulay <https://www.linkedin.com/in/kevin-azoulay/>`_.
 
 Sommaire
 ========
