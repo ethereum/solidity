@@ -34,18 +34,16 @@ bool isSupportedType(Type::Category _category);
 bool isSupportedType(Type const& _type);
 
 bool isInteger(Type::Category _category);
-bool isInteger(Type const& _type);
-
+bool isRational(Type::Category _category);
 bool isAddress(Type::Category _category);
-bool isAddress(Type const& _type);
-
 bool isNumber(Type::Category _category);
-bool isNumber(Type const& _type);
-
 bool isBool(Type::Category _category);
-bool isBool(Type const& _type);
+bool isFunction(Type::Category _category);
 
-std::shared_ptr<SymbolicVariable> newSymbolicVariable(Type const& _type, std::string const& _uniqueName, smt::SolverInterface& _solver);
+/// Returns a new symbolic variable, according to _type.
+/// Also returns whether the type is abstract or not,
+/// which is true for unsupported types.
+std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(Type const& _type, std::string const& _uniqueName, smt::SolverInterface& _solver);
 
 smt::Expression minValue(IntegerType const& _type);
 smt::Expression maxValue(IntegerType const& _type);

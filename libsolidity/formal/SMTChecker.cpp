@@ -458,6 +458,12 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
+	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
+	{
+		if (fun->kind() == FunctionType::Kind::Assert || fun->kind() == FunctionType::Kind::Require)
+			return;
+		createExpr(_identifier);
+	}
 	else if (isSupportedType(_identifier.annotation().type->category()))
 	{
 		if (VariableDeclaration const* decl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
@@ -469,25 +475,15 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 				"Assertion checker does not yet support the type of this variable."
 			);
 	}
-	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
-	{
-		if (fun->kind() == FunctionType::Kind::Assert || fun->kind() == FunctionType::Kind::Require)
-			return;
-		createExpr(_identifier);
-	}
 }
 
 void SMTChecker::endVisit(Literal const& _literal)
 {
 	Type const& type = *_literal.annotation().type;
-	if (type.category() == Type::Category::Integer || type.category() == Type::Category::Address || type.category() == Type::Category::RationalNumber)
-	{
-		if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&type))
-			solAssert(!rational->isFractional(), "");
+	if (isNumber(type.category()))
 
 		defineExpr(_literal, smt::Expression(type.literalValue(&_literal)));
-	}
-	else if (type.category() == Type::Category::Bool)
+	else if (isBool(type.category()))
 		defineExpr(_literal, smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else
 		m_errorReporter.warning(
@@ -917,13 +913,10 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 	if (hasVariable(_varDecl))
 		return true;
 	auto const& type = _varDecl.type();
-	if (isSupportedType(type->category()))
-	{
-		solAssert(m_variables.count(&_varDecl) == 0, "");
-		m_variables.emplace(&_varDecl, newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *m_interface));
-		return true;
-	}
-	else
+	solAssert(m_variables.count(&_varDecl) == 0, "");
+	auto result = newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *m_interface);
+	m_variables.emplace(&_varDecl, result.second);
+	if (result.first)
 	{
 		m_errorReporter.warning(
 			_varDecl.location(),
@@ -931,6 +924,7 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 		);
 		return false;
 	}
+	return true;
 }
 
 string SMTChecker::uniqueSymbol(Expression const& _expr)
@@ -980,7 +974,7 @@ smt::Expression SMTChecker::expr(Expression const& _e)
 		m_errorReporter.warning(_e.location(), "Internal error: Expression undefined for SMT solver." );
 		createExpr(_e);
 	}
-	return prev(m_expressions.upper_bound(&_e))->second;
+	return m_expressions.at(&_e)->currentValue();
 }
 
 bool SMTChecker::hasExpr(Expression const& _e) const
@@ -996,33 +990,17 @@ bool SMTChecker::hasVariable(VariableDeclaration const& _var) const
 void SMTChecker::createExpr(Expression const& _e)
 {
 	solAssert(_e.annotation().type, "");
-	string exprSymbol = uniqueSymbol(_e) + "_" + to_string(m_expressions.count(&_e));
-	switch (_e.annotation().type->category())
+	if (hasExpr(_e))
+		m_expressions.at(&_e)->increaseIndex();
+	else
 	{
-	case Type::Category::RationalNumber:
-	{
-		if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(_e.annotation().type.get()))
-			solAssert(!rational->isFractional(), "");
-		m_expressions.emplace(&_e, m_interface->newInteger(exprSymbol));
-		break;
-	}
-	case Type::Category::Address:
-	case Type::Category::Integer:
-		m_expressions.emplace(&_e, m_interface->newInteger(exprSymbol));
-		break;
-	case Type::Category::Bool:
-		m_expressions.emplace(&_e, m_interface->newBool(exprSymbol));
-		break;
-	case Type::Category::Function:
-		// This should be replaced by a `non-deterministic` type in the future.
-		m_expressions.emplace(&_e, m_interface->newInteger(exprSymbol));
-		break;
-	default:
-		m_expressions.emplace(&_e, m_interface->newInteger(exprSymbol));
-		m_errorReporter.warning(
-			_e.location(),
-			"Assertion checker does not yet implement this type."
-		);
+		auto result = newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *m_interface);
+		m_expressions.emplace(&_e, result.second);
+		if (result.first)
+			m_errorReporter.warning(
+				_e.location(),
+				"Assertion checker does not yet implement this type."
+			);
 	}
 }
 

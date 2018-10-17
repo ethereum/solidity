@@ -30,27 +30,44 @@ using namespace dev::solidity;
 
 bool dev::solidity::isSupportedType(Type::Category _category)
 {
-	return isInteger(_category) ||
-		isAddress(_category) ||
-		isBool(_category);
+	return isNumber(_category) ||
+		isBool(_category) ||
+		isFunction(_category);
 }
 
-shared_ptr<SymbolicVariable> dev::solidity::newSymbolicVariable(
+pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 	Type const& _type,
 	std::string const& _uniqueName,
 	smt::SolverInterface& _solver
 )
 {
+	bool abstract = false;
+	shared_ptr<SymbolicVariable> var;
 	if (!isSupportedType(_type))
-		return nullptr;
-	if (isBool(_type.category()))
-		return make_shared<SymbolicBoolVariable>(_type, _uniqueName, _solver);
+	{
+		abstract = true;
+		var = make_shared<SymbolicIntVariable>(IntegerType{256}, _uniqueName, _solver);
+	}
+	else if (isBool(_type.category()))
+		var = make_shared<SymbolicBoolVariable>(_type, _uniqueName, _solver);
+	else if (isFunction(_type.category()))
+		var = make_shared<SymbolicIntVariable>(IntegerType{256}, _uniqueName, _solver);
 	else if (isInteger(_type.category()))
-		return make_shared<SymbolicIntVariable>(_type, _uniqueName, _solver);
+		var = make_shared<SymbolicIntVariable>(_type, _uniqueName, _solver);
 	else if (isAddress(_type.category()))
-		return make_shared<SymbolicAddressVariable>(_type, _uniqueName, _solver);
+		var = make_shared<SymbolicAddressVariable>(_type, _uniqueName, _solver);
+	else if (isRational(_type.category()))
+	{
+		auto rational = dynamic_cast<RationalNumberType const*>(&_type);
+		solAssert(rational, "");
+		if (rational->isFractional())
+			var = make_shared<SymbolicIntVariable>(IntegerType{256}, _uniqueName, _solver);
+		else
+			var = make_shared<SymbolicIntVariable>(_type, _uniqueName, _solver);
+	}
 	else
 		solAssert(false, "");
+	return make_pair(abstract, var);
 }
 
 bool dev::solidity::isSupportedType(Type const& _type)
@@ -63,9 +80,9 @@ bool dev::solidity::isInteger(Type::Category _category)
 	return _category == Type::Category::Integer;
 }
 
-bool dev::solidity::isInteger(Type const& _type)
+bool dev::solidity::isRational(Type::Category _category)
 {
-	return isInteger(_type.category());
+	return _category == Type::Category::RationalNumber;
 }
 
 bool dev::solidity::isAddress(Type::Category _category)
@@ -73,20 +90,11 @@ bool dev::solidity::isAddress(Type::Category _category)
 	return _category == Type::Category::Address;
 }
 
-bool dev::solidity::isAddress(Type const& _type)
-{
-	return isAddress(_type.category());
-}
-
 bool dev::solidity::isNumber(Type::Category _category)
 {
 	return isInteger(_category) ||
+		isRational(_category) ||
 		isAddress(_category);
-}
-
-bool dev::solidity::isNumber(Type const& _type)
-{
-	return isNumber(_type.category());
 }
 
 bool dev::solidity::isBool(Type::Category _category)
@@ -94,9 +102,9 @@ bool dev::solidity::isBool(Type::Category _category)
 	return _category == Type::Category::Bool;
 }
 
-bool dev::solidity::isBool(Type const& _type)
+bool dev::solidity::isFunction(Type::Category _category)
 {
-	return isBool(_type.category());
+	return _category == Type::Category::Function;
 }
 
 smt::Expression dev::solidity::minValue(IntegerType const& _type)
