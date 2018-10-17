@@ -992,13 +992,16 @@ void SMTChecker::createExpr(Expression const& _e)
 	solAssert(_e.annotation().type, "");
 	if (hasExpr(_e))
 		m_expressions.at(&_e)->increaseIndex();
-	auto result = newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *m_interface);
-	m_expressions.emplace(&_e, result.second);
-	if (result.first)
-		m_errorReporter.warning(
-			_e.location(),
-			"Assertion checker does not yet implement this type."
-		);
+	else
+	{
+		auto result = newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *m_interface);
+		m_expressions.emplace(&_e, result.second);
+		if (result.first)
+			m_errorReporter.warning(
+				_e.location(),
+				"Assertion checker does not yet implement this type."
+			);
+	}
 }
 
 void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)
