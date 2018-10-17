@@ -116,8 +116,6 @@ private:
 	boost::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
 	std::vector<Statement> performInline(Statement& _statement, FunctionCall& _funCall);
 
-	std::string newName(std::string const& _prefix);
-
 	std::string m_currentFunction;
 	FullInliner& m_driver;
 	NameDispenser& m_nameDispenser;

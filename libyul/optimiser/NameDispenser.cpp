@@ -20,18 +20,43 @@
 
 #include <libyul/optimiser/NameDispenser.h>
 
+#include <libyul/optimiser/NameCollector.h>
+
+#include <libsolidity/inlineasm/AsmData.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::yul;
 
-string NameDispenser::newName(string const& _prefix)
+NameDispenser::NameDispenser(Block const& _ast):
+	NameDispenser(NameCollector(_ast).names())
 {
-	string name = _prefix;
+}
+
+NameDispenser::NameDispenser(set<string> _usedNames):
+	m_usedNames(std::move(_usedNames))
+{
+}
+
+string NameDispenser::newName(string const& _nameHint, string const& _context)
+{
+	// Shortening rules: Use a suffix of _prefix and a prefix of _context.
+	string prefix = _nameHint;
+
+	if (!_context.empty())
+		prefix = _context.substr(0, 10) + "_" + prefix;
+
+	return newNameInternal(prefix);
+}
+
+string NameDispenser::newNameInternal(string const& _nameHint)
+{
 	size_t suffix = 0;
+	string name = _nameHint;
 	while (name.empty() || m_usedNames.count(name))
 	{
 		suffix++;
-		name = _prefix + "_" + to_string(suffix);
+		name = _nameHint + "_" + to_string(suffix);
 	}
 	m_usedNames.insert(name);
 	return name;
