@@ -25,7 +25,6 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
-#include <map>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -186,7 +185,7 @@ private:
 	bool m_loopExecutionHappened = false;
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
-	std::multimap<Expression const*, smt::Expression> m_expressions;
+	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
