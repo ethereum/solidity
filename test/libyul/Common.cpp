@@ -86,7 +86,7 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::yul::test::p
 assembly::Block dev::yul::test::disambiguate(string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
-	return boost::get<Block>(Disambiguator(*result.second)(*result.first));
+	return boost::get<Block>(Disambiguator(*result.second, {})(*result.first));
 }
 
 string dev::yul::test::format(string const& _source, bool _yul)

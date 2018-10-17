@@ -33,12 +33,14 @@ using namespace std;
 using namespace dev;
 using namespace dev::yul;
 
-UnusedPruner::UnusedPruner(Block& _ast)
+UnusedPruner::UnusedPruner(Block& _ast, set<string> const& _externallyUsedFunctions)
 {
 	ReferencesCounter counter;
 	counter(_ast);
 
 	m_references = counter.references();
+	for (auto const& f: _externallyUsedFunctions)
+		++m_references[f];
 }
 
 void UnusedPruner::operator()(Block& _block)
@@ -89,11 +91,11 @@ void UnusedPruner::operator()(Block& _block)
 	ASTModifier::operator()(_block);
 }
 
-void UnusedPruner::runUntilStabilised(Block& _ast)
+void UnusedPruner::runUntilStabilised(Block& _ast, set<string> const& _externallyUsedFunctions)
 {
 	while (true)
 	{
-		UnusedPruner pruner(_ast);
+		UnusedPruner pruner(_ast, _externallyUsedFunctions);
 		pruner(_ast);
 		if (!pruner.shouldRunAgain())
 			return;

@@ -874,9 +874,9 @@ void ContractCompiler::appendMissingFunctions()
 		solAssert(m_context.nextFunctionToCompile() != function, "Compiled the wrong function?");
 	}
 	m_context.appendMissingLowLevelFunctions();
-	string abiFunctions = m_context.abiFunctions().requestedFunctions();
-	if (!abiFunctions.empty())
-		m_context.appendInlineAssembly("{" + move(abiFunctions) + "}", {}, true);
+	auto abiFunctions = m_context.abiFunctions().requestedFunctions();
+	if (!abiFunctions.first.empty())
+		m_context.appendInlineAssembly("{" + move(abiFunctions.first) + "}", {}, abiFunctions.second, true);
 }
 
 void ContractCompiler::appendModifierOrFunctionCode()
