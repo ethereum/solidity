@@ -590,6 +590,17 @@ would result in the JSON:
 
 .. _abi_packed_mode:
 
+Strict Encoding Mode
+====================
+
+Strict encoding mode is the mode that leads to exactly the same encoding as defined in the formal specification above.
+This means offsets have to be as small as possible while still not creating overlaps in the data areas and thus no gaps are
+allowed.
+
+Usually, ABI decoders are written in a straigthforward way just following offset pointers, but some decoders
+might enforce strict mode. The Solidity ABI decoder currently does not enforce strict mode, but the encoder
+always creates data in strict mode.
+
 Non-standard Packed Mode
 ========================
 
