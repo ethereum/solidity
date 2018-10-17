@@ -75,15 +75,25 @@ public:
 
 	void run();
 
+	/// Inlining heuristic.
+	/// @param _callSite the name of the function in which the function call is located.
+	bool shallInline(FunctionCall const& _funCall, std::string const& _callSite);
+
 	FunctionDefinition& function(std::string _name) { return *m_functions.at(_name); }
 
 private:
+	void updateCodeSize(FunctionDefinition& fun);
 	void handleBlock(std::string const& _currentFunctionName, Block& _block);
 
 	/// The AST to be modified. The root block itself will not be modified, because
 	/// we store pointers to functions.
 	Block& m_ast;
 	std::map<std::string, FunctionDefinition*> m_functions;
+	/// Names of functions to always inline.
+	std::set<std::string> m_alwaysInline;
+	/// Variables that are constants (used for inlining heuristic)
+	std::set<std::string> m_constants;
+	std::map<std::string, size_t> m_functionSizes;
 	NameDispenser m_nameDispenser;
 };
 
