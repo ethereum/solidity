@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <libsolidity/formal/SSAVariable.h>
+
 #include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/ast/Types.h>
@@ -43,25 +45,36 @@ public:
 	);
 	virtual ~SymbolicVariable() = default;
 
-	smt::Expression operator()(int _seq) const
+	smt::Expression currentValue() const
 	{
-		return valueAtSequence(_seq);
+		return valueAtIndex(m_ssa->index());
 	}
 
-	std::string uniqueSymbol(int _seq) const;
+	virtual smt::Expression valueAtIndex(int _index) const = 0;
+
+	smt::Expression increaseIndex()
+	{
+		++(*m_ssa);
+		return currentValue();
+	}
+
+	int index() const { return m_ssa->index(); }
+	int& index() { return m_ssa->index(); }
 
 	/// Sets the var to the default value of its type.
-	virtual void setZeroValue(int _seq) = 0;
-	/// The unknown value is the full range of valid values,
-	/// and that's sub-type dependent.
-	virtual void setUnknownValue(int _seq) = 0;
+	/// Inherited types must implement.
+	virtual void setZeroValue() = 0;
+	/// The unknown value is the full range of valid values.
+	/// It is sub-type dependent, but not mandatory.
+	virtual void setUnknownValue() {}
 
 protected:
-	virtual smt::Expression valueAtSequence(int _seq) const = 0;
+	std::string uniqueSymbol(int _index) const;
 
 	Type const& m_type;
 	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
+	std::shared_ptr<SSAVariable> m_ssa = nullptr;
 };
 
 }

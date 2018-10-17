@@ -17,8 +17,6 @@
 
 #include <libsolidity/formal/SymbolicBoolVariable.h>
 
-#include <libsolidity/ast/AST.h>
-
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -33,16 +31,16 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 	solAssert(_type.category() == Type::Category::Bool, "");
 }
 
-smt::Expression SymbolicBoolVariable::valueAtSequence(int _seq) const
+smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
 {
-	return m_interface.newBool(uniqueSymbol(_seq));
+	return m_interface.newBool(uniqueSymbol(_index));
 }
 
-void SymbolicBoolVariable::setZeroValue(int _seq)
+void SymbolicBoolVariable::setZeroValue()
 {
-	m_interface.addAssertion(valueAtSequence(_seq) == smt::Expression(false));
+	m_interface.addAssertion(currentValue() == smt::Expression(false));
 }
 
-void SymbolicBoolVariable::setUnknownValue(int)
+void SymbolicBoolVariable::setUnknownValue()
 {
 }

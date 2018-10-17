@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libsolidity/formal/SymbolicVariable.h>
+#include <libsolidity/formal/SymbolicIntVariable.h>
 
 namespace dev
 {
@@ -25,24 +25,19 @@ namespace solidity
 {
 
 /**
- * Specialization of SymbolicVariable for Integers
+ * Specialization of SymbolicVariable for Address
  */
-class SymbolicIntVariable: public SymbolicVariable
+class SymbolicAddressVariable: public SymbolicIntVariable
 {
 public:
-	SymbolicIntVariable(
+	SymbolicAddressVariable(
 		Type const& _type,
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
 
-	/// Sets the var to 0.
-	void setZeroValue();
 	/// Sets the variable to the full valid value range.
-	virtual void setUnknownValue();
-
-protected:
-	smt::Expression valueAtIndex(int _index) const;
+	void setUnknownValue();
 };
 
 }

@@ -30,13 +30,14 @@ SymbolicVariable::SymbolicVariable(
 ):
 	m_type(_type),
 	m_uniqueName(_uniqueName),
-	m_interface(_interface)
+	m_interface(_interface),
+	m_ssa(make_shared<SSAVariable>())
 {
 }
 
-string SymbolicVariable::uniqueSymbol(int _seq) const
+string SymbolicVariable::uniqueSymbol(int _index) const
 {
-	return m_uniqueName + "_" + to_string(_seq);
+	return m_uniqueName + "_" + to_string(_index);
 }
 
 
