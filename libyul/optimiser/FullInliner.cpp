@@ -23,12 +23,13 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/Utilities.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolidity/inlineasm/AsmData.h>
 
 #include <libdevcore/CommonData.h>
+#include <libdevcore/Visitor.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -49,197 +50,117 @@ FullInliner::FullInliner(Block& _ast):
 		assertThrow(m_ast.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
 		FunctionDefinition& fun = boost::get<FunctionDefinition>(m_ast.statements.at(i));
 		m_functions[fun.name] = &fun;
-		m_functionsToVisit.insert(&fun);
 	}
 }
 
 void FullInliner::run()
 {
 	assertThrow(m_ast.statements[0].type() == typeid(Block), OptimizerException, "");
-	InlineModifier(*this, m_nameDispenser, "").visit(m_ast.statements[0]);
-	while (!m_functionsToVisit.empty())
-		handleFunction(**m_functionsToVisit.begin());
+
+	handleBlock("", boost::get<Block>(m_ast.statements[0]));
+	for (auto const& fun: m_functions)
+		handleBlock(fun.second->name, fun.second->body);
 }
 
-void FullInliner::handleFunction(FunctionDefinition& _fun)
+void FullInliner::handleBlock(string const& _currentFunctionName, Block& _block)
 {
-	if (!m_functionsToVisit.count(&_fun))
-		return;
-	m_functionsToVisit.erase(&_fun);
-	(InlineModifier(*this, m_nameDispenser, _fun.name))(_fun.body);
-}
-
-void InlineModifier::operator()(FunctionalInstruction& _instruction)
-{
-	visitArguments(_instruction.arguments);
-}
-
-void InlineModifier::operator()(FunctionCall&)
-{
-	assertThrow(false, OptimizerException, "Should be handled in visit() instead.");
-}
-
-void InlineModifier::operator()(ForLoop& _loop)
-{
-	(*this)(_loop.pre);
-	// Do not visit the condition because we cannot inline there.
-	(*this)(_loop.post);
-	(*this)(_loop.body);
+	InlineModifier{*this, m_nameDispenser, _currentFunctionName}(_block);
 }
 
 void InlineModifier::operator()(Block& _block)
 {
-	vector<Statement> saved;
-	saved.swap(m_statementsToPrefix);
-
-	// This is only used if needed to minimize the number of move operations.
-	vector<Statement> modifiedStatements;
-	for (size_t i = 0; i < _block.statements.size(); ++i)
-	{
-		visit(_block.statements.at(i));
-		if (!m_statementsToPrefix.empty())
-		{
-			if (modifiedStatements.empty())
-				std::move(
-					_block.statements.begin(),
-					_block.statements.begin() + i,
-					back_inserter(modifiedStatements)
-				);
-			modifiedStatements += std::move(m_statementsToPrefix);
-			m_statementsToPrefix.clear();
-		}
-		if (!modifiedStatements.empty())
-			modifiedStatements.emplace_back(std::move(_block.statements[i]));
-	}
-	if (!modifiedStatements.empty())
-		_block.statements = std::move(modifiedStatements);
-
-	saved.swap(m_statementsToPrefix);
+	function<boost::optional<vector<Statement>>(Statement&)> f = [&](Statement& _statement) -> boost::optional<vector<Statement>> {
+		visit(_statement);
+		return tryInlineStatement(_statement);
+	};
+	iterateReplacing(_block.statements, f);
 }
 
-void InlineModifier::visit(Expression& _expression)
+boost::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement& _statement)
 {
-	if (_expression.type() != typeid(FunctionCall))
-		return ASTModifier::visit(_expression);
-
-	FunctionCall& funCall = boost::get<FunctionCall>(_expression);
-	FunctionDefinition& fun = m_driver.function(funCall.functionName.name);
-
-	m_driver.handleFunction(fun);
-
-	// TODO: Insert good heuristic here. Perhaps implement that inside the driver.
-	bool doInline = funCall.functionName.name != m_currentFunction;
-
-	if (fun.returnVariables.size() > 1)
-		doInline = false;
-
+	// Only inline for expression statements, assignments and variable declarations.
+	Expression* e = boost::apply_visitor(GenericFallbackReturnsVisitor<Expression*, ExpressionStatement, Assignment, VariableDeclaration>(
+		[](ExpressionStatement& _s) { return &_s.expression; },
+		[](Assignment& _s) { return _s.value.get(); },
+		[](VariableDeclaration& _s) { return _s.value.get(); }
+	), _statement);
+	if (e)
 	{
-		vector<string> argNames;
-		vector<string> argTypes;
-		for (auto const& arg: fun.parameters)
+		// Only inline direct function calls.
+		FunctionCall* funCall = boost::apply_visitor(GenericFallbackReturnsVisitor<FunctionCall*, FunctionCall&>(
+			[](FunctionCall& _e) { return &_e; }
+		), *e);
+		if (funCall)
 		{
-			argNames.push_back(fun.name + "_" + arg.name);
-			argTypes.push_back(arg.type);
+			// TODO: Insert good heuristic here. Perhaps implement that inside the driver.
+			bool doInline = funCall->functionName.name != m_currentFunction;
+
+			if (doInline)
+				return performInline(_statement, *funCall);
 		}
-		visitArguments(funCall.arguments, argNames, argTypes, doInline);
 	}
+	return {};
+}
 
-	if (!doInline)
-		return;
-
+vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionCall& _funCall)
+{
+	vector<Statement> newStatements;
 	map<string, string> variableReplacements;
-	for (size_t i = 0; i < funCall.arguments.size(); ++i)
-		variableReplacements[fun.parameters[i].name] = boost::get<Identifier>(funCall.arguments[i]).name;
-	if (fun.returnVariables.empty())
-		_expression = noop(funCall.location);
-	else
-	{
-		string returnVariable = fun.returnVariables[0].name;
-		variableReplacements[returnVariable] = newName(fun.name + "_" + returnVariable);
 
-		m_statementsToPrefix.emplace_back(VariableDeclaration{
-			funCall.location,
-			{{funCall.location, variableReplacements[returnVariable], fun.returnVariables[0].type}},
-			{}
-		});
-		_expression = Identifier{funCall.location, variableReplacements[returnVariable]};
-	}
-	m_statementsToPrefix.emplace_back(BodyCopier(m_nameDispenser, fun.name + "_", variableReplacements)(fun.body));
-}
+	FunctionDefinition& function = m_driver.function(_funCall.functionName.name);
 
-void InlineModifier::visit(Statement& _statement)
-{
-	ASTModifier::visit(_statement);
-	// Replace pop(0) expression statemets (and others) by empty blocks.
-	if (_statement.type() == typeid(ExpressionStatement))
-	{
-		ExpressionStatement& expSt = boost::get<ExpressionStatement>(_statement);
-		if (expSt.expression.type() == typeid(FunctionalInstruction))
+	// helper function to create a new variable that is supposed to model
+	// an existing variable.
+	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
+		string newName = m_nameDispenser.newName(function.name + "_" + _existingVariable.name);
+		variableReplacements[_existingVariable.name] = newName;
+		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
+		if (_value)
+			varDecl.value = make_shared<Expression>(std::move(*_value));
+		newStatements.emplace_back(std::move(varDecl));
+	};
+
+	for (size_t i = 0; i < _funCall.arguments.size(); ++i)
+		newVariable(function.parameters[i], &_funCall.arguments[i]);
+	for (auto const& var: function.returnVariables)
+		newVariable(var, nullptr);
+
+	Statement newBody = BodyCopier(m_nameDispenser, function.name + "_", variableReplacements)(function.body);
+	newStatements += std::move(boost::get<Block>(newBody).statements);
+
+	boost::apply_visitor(GenericFallbackVisitor<Assignment, VariableDeclaration>{
+		[&](Assignment& _assignment)
 		{
-			FunctionalInstruction& funInstr = boost::get<FunctionalInstruction>(expSt.expression);
-			if (funInstr.instruction == solidity::Instruction::POP)
-				if (MovableChecker(funInstr.arguments.at(0)).movable())
-					_statement = Block{expSt.location, {}};
-		}
-	}
-}
-
-void InlineModifier::visitArguments(
-	vector<Expression>& _arguments,
-	vector<string> const& _nameHints,
-	vector<string> const& _types,
-	bool _moveToFront
-)
-{
-	// If one of the elements moves parts to the front, all other elements right of it
-	// also have to be moved to the front to keep the order of evaluation.
-	vector<Statement> prefix;
-	for (size_t i = 0; i < _arguments.size(); ++i)
-	{
-		auto& arg = _arguments[i];
-		// TODO optimize vector operations, check that it actually moves
-		auto internalPrefix = visitRecursively(arg);
-		if (!internalPrefix.empty())
+			for (size_t i = 0; i < _assignment.variableNames.size(); ++i)
+				newStatements.emplace_back(Assignment{
+					_assignment.location,
+					{_assignment.variableNames[i]},
+					make_shared<Expression>(Identifier{
+						_assignment.location,
+						variableReplacements.at(function.returnVariables[i].name)
+					})
+				});
+		},
+		[&](VariableDeclaration& _varDecl)
 		{
-			_moveToFront = true;
-			// We go through the arguments left to right, so we have to invert
-			// the prefixes.
-			prefix = std::move(internalPrefix) + std::move(prefix);
+			for (size_t i = 0; i < _varDecl.variables.size(); ++i)
+				newStatements.emplace_back(VariableDeclaration{
+					_varDecl.location,
+					{std::move(_varDecl.variables[i])},
+					make_shared<Expression>(Identifier{
+						_varDecl.location,
+						variableReplacements.at(function.returnVariables[i].name)
+					})
+				});
 		}
-		else if (_moveToFront)
-		{
-			auto location = locationOf(arg);
-			string var = newName(i < _nameHints.size() ? _nameHints[i] : "");
-			prefix.emplace(prefix.begin(), VariableDeclaration{
-				location,
-				{{TypedName{location, var, i < _types.size() ? _types[i] : ""}}},
-				make_shared<Expression>(std::move(arg))
-			});
-			arg = Identifier{location, var};
-		}
-	}
-	m_statementsToPrefix += std::move(prefix);
-}
-
-vector<Statement> InlineModifier::visitRecursively(Expression& _expression)
-{
-	vector<Statement> saved;
-	saved.swap(m_statementsToPrefix);
-	visit(_expression);
-	saved.swap(m_statementsToPrefix);
-	return saved;
+		// nothing to be done for expression statement
+	}, _statement);
+	return newStatements;
 }
 
 string InlineModifier::newName(string const& _prefix)
 {
 	return m_nameDispenser.newName(_prefix);
-}
-
-Expression InlineModifier::noop(SourceLocation const& _location)
-{
-	return FunctionalInstruction{_location, solidity::Instruction::POP, {
-		Literal{_location, assembly::LiteralKind::Number, "0", ""}
-	}};
 }
 
 Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)

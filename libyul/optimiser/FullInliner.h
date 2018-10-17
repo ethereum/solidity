@@ -42,29 +42,31 @@ class NameCollector;
 
 
 /**
- * Optimiser component that modifies an AST in place, inlining arbitrary functions.
+ * Optimiser component that modifies an AST in place, inlining functions.
+ * Expressions are expected to be split, i.e. the component will only inline
+ * function calls that are at the root of the expression and that only contains
+ * variables as arguments. More specifically, it will inline
+ *  - let x1, ..., xn := f(a1, ..., am)
+ *  - x1, ..., xn := f(a1, ..., am)
+ * f(a1, ..., am)
  *
- * Code of the form
+ * The transform changes code of the form
  *
  * function f(a, b) -> c { ... }
- * h(g(x(...), f(arg1(...), arg2(...)), y(...)), z(...))
+ * let z := f(x, y)
  *
- * is transformed into
+ * into
  *
  * function f(a, b) -> c { ... }
  *
- * let z1 := z(...) let y1 := y(...) let a2 := arg2(...) let a1 := arg1(...)
- * let c1 := 0
- * { code of f, with replacements: a -> a1, b -> a2, c -> c1, d -> d1 }
- * h(g(x(...), c1, y1), z1)
+ * let f_a := x
+ * let f_b := y
+ * let f_c
+ * code of f, with replacements: a -> f_a, b -> f_b, c -> f_c
+ * let z := f_c
  *
- * No temporary variable is created for expressions that are "movable"
- * (i.e. they are "pure", have no side-effects and also do not depend on other code
- * that might have side-effects).
- *
- * This component can only be used on sources with unique names and with hoisted functions,
- * i.e. the root node has to be a block that itself contains a single block followed by all
- * function definitions.
+ * Prerequisites: Disambiguator, Function Hoister
+ * More efficient if run after: Expression Splitter
  */
 class FullInliner: public ASTModifier
 {
@@ -73,17 +75,15 @@ public:
 
 	void run();
 
-	/// Perform inlining operations inside the given function.
-	void handleFunction(FunctionDefinition& _function);
-
 	FunctionDefinition& function(std::string _name) { return *m_functions.at(_name); }
 
 private:
+	void handleBlock(std::string const& _currentFunctionName, Block& _block);
+
 	/// The AST to be modified. The root block itself will not be modified, because
 	/// we store pointers to functions.
 	Block& m_ast;
 	std::map<std::string, FunctionDefinition*> m_functions;
-	std::set<FunctionDefinition*> m_functionsToVisit;
 	NameDispenser m_nameDispenser;
 };
 
@@ -99,46 +99,15 @@ public:
 		m_driver(_driver),
 		m_nameDispenser(_nameDispenser)
 	{ }
-	~InlineModifier()
-	{
-		assertThrow(m_statementsToPrefix.empty(), OptimizerException, "");
-	}
 
-	virtual void operator()(FunctionalInstruction&) override;
-	virtual void operator()(FunctionCall&) override;
-	virtual void operator()(ForLoop&) override;
 	virtual void operator()(Block& _block) override;
 
-	using ASTModifier::visit;
-	virtual void visit(Expression& _expression) override;
-	virtual void visit(Statement& _st) override;
-
 private:
-
-	/// Visits a list of expressions (usually an argument list to a function call) and tries
-	/// to inline them. If one of them is inlined, all right of it have to be moved to the front
-	/// (to keep the order of evaluation). If @a _moveToFront is true, all elements are moved
-	/// to the front. @a _nameHints and @_types are used for the newly created variables, but
-	/// both can be empty.
-	void visitArguments(
-		std::vector<Expression>& _arguments,
-		std::vector<std::string> const& _nameHints = {},
-		std::vector<std::string> const& _types = {},
-		bool _moveToFront = false
-	);
-
-	/// Visits an expression, but saves and restores the current statements to prefix and returns
-	/// the statements that should be prefixed for @a _expression.
-	std::vector<Statement> visitRecursively(Expression& _expression);
+	boost::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
+	std::vector<Statement> performInline(Statement& _statement, FunctionCall& _funCall);
 
 	std::string newName(std::string const& _prefix);
 
-	/// @returns an expression returning nothing.
-	Expression noop(SourceLocation const& _location);
-
-	/// List of statements that should go in front of the currently visited AST element,
-	/// at the statement level.
-	std::vector<Statement> m_statementsToPrefix;
 	std::string m_currentFunction;
 	FullInliner& m_driver;
 	NameDispenser& m_nameDispenser;

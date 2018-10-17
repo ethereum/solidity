@@ -9,11 +9,7 @@
 // {
 //     {
 //         let f_a := mload(0)
-//         {
-//             sstore(f_a, f_a)
-//         }
-//         {
-//         }
+//         sstore(f_a, f_a)
 //     }
 //     function f(a)
 //     {
