@@ -62,10 +62,11 @@ public:
 	int& index() { return m_ssa->index(); }
 
 	/// Sets the var to the default value of its type.
+	/// Inherited types must implement.
 	virtual void setZeroValue() = 0;
-	/// The unknown value is the full range of valid values,
-	/// and that's sub-type dependent.
-	virtual void setUnknownValue() = 0;
+	/// The unknown value is the full range of valid values.
+	/// It is sub-type dependent, but not mandatory.
+	virtual void setUnknownValue() {}
 
 protected:
 	std::string uniqueSymbol(int _index) const;

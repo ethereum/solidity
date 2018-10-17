@@ -17,6 +17,8 @@
 
 #include <libsolidity/formal/SymbolicIntVariable.h>
 
+#include <libsolidity/formal/SymbolicTypes.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -28,11 +30,7 @@ SymbolicIntVariable::SymbolicIntVariable(
 ):
 	SymbolicVariable(_type, _uniqueName, _interface)
 {
-	solAssert(
-		_type.category() == Type::Category::Integer ||
-		_type.category() == Type::Category::Address,
-		""
-	);
+	solAssert(isNumber(_type.category()), "");
 }
 
 smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
@@ -47,28 +45,8 @@ void SymbolicIntVariable::setZeroValue()
 
 void SymbolicIntVariable::setUnknownValue()
 {
-	if (m_type.category() == Type::Category::Integer)
-	{
-		auto intType = dynamic_cast<IntegerType const*>(&m_type);
-		solAssert(intType, "");
-		m_interface.addAssertion(currentValue() >= minValue(*intType));
-		m_interface.addAssertion(currentValue() <= maxValue(*intType));
-	}
-	else
-	{
-		solAssert(m_type.category() == Type::Category::Address, "");
-		IntegerType addrType{160};
-		m_interface.addAssertion(currentValue() >= minValue(addrType));
-		m_interface.addAssertion(currentValue() <= maxValue(addrType));
-	}
-}
-
-smt::Expression SymbolicIntVariable::minValue(IntegerType const& _t)
-{
-	return smt::Expression(_t.minValue());
-}
-
-smt::Expression SymbolicIntVariable::maxValue(IntegerType const& _t)
-{
-	return smt::Expression(_t.maxValue());
+	auto intType = dynamic_cast<IntegerType const*>(&m_type);
+	solAssert(intType, "");
+	m_interface.addAssertion(currentValue() >= minValue(*intType));
+	m_interface.addAssertion(currentValue() <= maxValue(*intType));
 }

@@ -36,10 +36,19 @@ bool isSupportedType(Type const& _type);
 bool isInteger(Type::Category _category);
 bool isInteger(Type const& _type);
 
+bool isAddress(Type::Category _category);
+bool isAddress(Type const& _type);
+
+bool isNumber(Type::Category _category);
+bool isNumber(Type const& _type);
+
 bool isBool(Type::Category _category);
 bool isBool(Type const& _type);
 
 std::shared_ptr<SymbolicVariable> newSymbolicVariable(Type const& _type, std::string const& _uniqueName, smt::SolverInterface& _solver);
+
+smt::Expression minValue(IntegerType const& _type);
+smt::Expression maxValue(IntegerType const& _type);
 
 }
 }

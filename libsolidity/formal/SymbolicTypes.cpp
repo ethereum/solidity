@@ -19,6 +19,7 @@
 
 #include <libsolidity/formal/SymbolicBoolVariable.h>
 #include <libsolidity/formal/SymbolicIntVariable.h>
+#include <libsolidity/formal/SymbolicAddressVariable.h>
 
 #include <libsolidity/ast/Types.h>
 
@@ -29,7 +30,27 @@ using namespace dev::solidity;
 
 bool dev::solidity::isSupportedType(Type::Category _category)
 {
-	return isInteger(_category) || isBool(_category);
+	return isInteger(_category) ||
+		isAddress(_category) ||
+		isBool(_category);
+}
+
+shared_ptr<SymbolicVariable> dev::solidity::newSymbolicVariable(
+	Type const& _type,
+	std::string const& _uniqueName,
+	smt::SolverInterface& _solver
+)
+{
+	if (!isSupportedType(_type))
+		return nullptr;
+	if (isBool(_type.category()))
+		return make_shared<SymbolicBoolVariable>(_type, _uniqueName, _solver);
+	else if (isInteger(_type.category()))
+		return make_shared<SymbolicIntVariable>(_type, _uniqueName, _solver);
+	else if (isAddress(_type.category()))
+		return make_shared<SymbolicAddressVariable>(_type, _uniqueName, _solver);
+	else
+		solAssert(false, "");
 }
 
 bool dev::solidity::isSupportedType(Type const& _type)
@@ -39,12 +60,33 @@ bool dev::solidity::isSupportedType(Type const& _type)
 
 bool dev::solidity::isInteger(Type::Category _category)
 {
-	return _category == Type::Category::Integer || _category == Type::Category::Address;
+	return _category == Type::Category::Integer;
 }
 
 bool dev::solidity::isInteger(Type const& _type)
 {
 	return isInteger(_type.category());
+}
+
+bool dev::solidity::isAddress(Type::Category _category)
+{
+	return _category == Type::Category::Address;
+}
+
+bool dev::solidity::isAddress(Type const& _type)
+{
+	return isAddress(_type.category());
+}
+
+bool dev::solidity::isNumber(Type::Category _category)
+{
+	return isInteger(_category) ||
+		isAddress(_category);
+}
+
+bool dev::solidity::isNumber(Type const& _type)
+{
+	return isNumber(_type.category());
 }
 
 bool dev::solidity::isBool(Type::Category _category)
@@ -57,16 +99,12 @@ bool dev::solidity::isBool(Type const& _type)
 	return isBool(_type.category());
 }
 
-shared_ptr<SymbolicVariable> dev::solidity::newSymbolicVariable(Type const& _type, std::string const& _uniqueName, smt::SolverInterface& _solver)
+smt::Expression dev::solidity::minValue(IntegerType const& _type)
 {
-	if (!isSupportedType(_type))
-		return nullptr;
-	if (isBool(_type.category()))
-		return make_shared<SymbolicBoolVariable>(_type, _uniqueName, _solver);
-	else if (isInteger(_type.category()))
-		return make_shared<SymbolicIntVariable>(_type, _uniqueName, _solver);
-	else
-		solAssert(false, "");
+	return smt::Expression(_type.minValue());
 }
 
-
+smt::Expression dev::solidity::maxValue(IntegerType const& _type)
+{
+	return smt::Expression(_type.maxValue());
+}

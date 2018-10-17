@@ -15,35 +15,27 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <libsolidity/formal/SymbolicAddressVariable.h>
 
-#include <libsolidity/formal/SymbolicVariable.h>
+#include <libsolidity/formal/SymbolicTypes.h>
 
-namespace dev
+using namespace std;
+using namespace dev;
+using namespace dev::solidity;
+
+SymbolicAddressVariable::SymbolicAddressVariable(
+	Type const& _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicIntVariable(_type, _uniqueName, _interface)
 {
-namespace solidity
-{
-
-/**
- * Specialization of SymbolicVariable for Integers
- */
-class SymbolicIntVariable: public SymbolicVariable
-{
-public:
-	SymbolicIntVariable(
-		Type const& _type,
-		std::string const& _uniqueName,
-		smt::SolverInterface& _interface
-	);
-
-	/// Sets the var to 0.
-	void setZeroValue();
-	/// Sets the variable to the full valid value range.
-	virtual void setUnknownValue();
-
-protected:
-	smt::Expression valueAtIndex(int _index) const;
-};
-
+	solAssert(isAddress(_type.category()), "");
 }
+
+void SymbolicAddressVariable::setUnknownValue()
+{
+	IntegerType intType{160};
+	m_interface.addAssertion(currentValue() >= minValue(intType));
+	m_interface.addAssertion(currentValue() <= maxValue(intType));
 }

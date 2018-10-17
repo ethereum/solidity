@@ -257,14 +257,14 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _type, SourceLocation const& _location)
 {
 	checkCondition(
-		_value < SymbolicIntVariable::minValue(_type),
+		_value < minValue(_type),
 		_location,
 		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
 		"<result>",
 		&_value
 	);
 	checkCondition(
-		_value > SymbolicIntVariable::maxValue(_type),
+		_value > maxValue(_type),
 		_location,
 		"Overflow (resulting value larger than " + formatNumber(_type.maxValue()) + ")",
 		"<result>",
@@ -570,7 +570,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 		smt::Expression right(expr(_op.rightExpression()));
 		Token::Value op = _op.getOperator();
 		shared_ptr<smt::Expression> value;
-		if (isInteger(_op.annotation().commonType->category()))
+		if (isNumber(_op.annotation().commonType->category()))
 		{
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
