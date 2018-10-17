@@ -62,6 +62,8 @@ public:
 
 	Expression(Expression const&) = default;
 	Expression(Expression&&) = default;
+	Expression& operator=(Expression const&) = default;
+	Expression& operator=(Expression&&) = default;
 
 	bool hasCorrectArity() const
 	{
@@ -169,8 +171,8 @@ public:
 		}
 	}
 
-	std::string const name;
-	std::vector<Expression> const arguments;
+	std::string name;
+	std::vector<Expression> arguments;
 	Sort sort;
 
 private:
