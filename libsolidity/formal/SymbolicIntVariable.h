@@ -45,7 +45,7 @@ public:
 	static smt::Expression maxValue(IntegerType const& _t);
 
 protected:
-	smt::Expression valueAtSequence(int _seq) const;
+	smt::Expression valueAtIndex(int _index) const;
 };
 
 }

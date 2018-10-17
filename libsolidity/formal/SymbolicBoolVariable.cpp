@@ -31,14 +31,14 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 	solAssert(_type.category() == Type::Category::Bool, "");
 }
 
-smt::Expression SymbolicBoolVariable::valueAtSequence(int _seq) const
+smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
 {
-	return m_interface.newBool(uniqueSymbol(_seq));
+	return m_interface.newBool(uniqueSymbol(_index));
 }
 
 void SymbolicBoolVariable::setZeroValue()
 {
-	m_interface.addAssertion(current() == smt::Expression(false));
+	m_interface.addAssertion(currentValue() == smt::Expression(false));
 }
 
 void SymbolicBoolVariable::setUnknownValue()

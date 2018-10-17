@@ -108,18 +108,18 @@ bool SMTChecker::visit(IfStatement const& _node)
 	if (isRootFunction())
 		checkBooleanNotConstant(_node.condition(), "Condition is always $VALUE.");
 
-	auto countersEndTrue = visitBranch(_node.trueStatement(), expr(_node.condition()));
+	auto indicesEndTrue = visitBranch(_node.trueStatement(), expr(_node.condition()));
 	vector<VariableDeclaration const*> touchedVariables = m_variableUsage->touchedVariables(_node.trueStatement());
-	decltype(countersEndTrue) countersEndFalse;
+	decltype(indicesEndTrue) indicesEndFalse;
 	if (_node.falseStatement())
 	{
-		countersEndFalse = visitBranch(*_node.falseStatement(), !expr(_node.condition()));
+		indicesEndFalse = visitBranch(*_node.falseStatement(), !expr(_node.condition()));
 		touchedVariables += m_variableUsage->touchedVariables(*_node.falseStatement());
 	}
 	else
-		countersEndFalse = copyVariableSequenceCounters();
+		indicesEndFalse = copyVariableIndices();
 
-	mergeVariables(touchedVariables, expr(_node.condition()), countersEndTrue, countersEndFalse);
+	mergeVariables(touchedVariables, expr(_node.condition()), indicesEndTrue, indicesEndFalse);
 
 	return false;
 }
@@ -646,22 +646,22 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 	m_interface->addAssertion(newValue(_variable) == _value);
 }
 
-SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _statement, smt::Expression _condition)
+SMTChecker::VariableIndices SMTChecker::visitBranch(Statement const& _statement, smt::Expression _condition)
 {
 	return visitBranch(_statement, &_condition);
 }
 
-SMTChecker::VariableSequenceCounters SMTChecker::visitBranch(Statement const& _statement, smt::Expression const* _condition)
+SMTChecker::VariableIndices SMTChecker::visitBranch(Statement const& _statement, smt::Expression const* _condition)
 {
-	auto countersBeforeBranch = copyVariableSequenceCounters();
+	auto indicesBeforeBranch = copyVariableIndices();
 	if (_condition)
 		pushPathCondition(*_condition);
 	_statement.accept(*this);
 	if (_condition)
 		popPathCondition();
-	auto countersAfterBranch = copyVariableSequenceCounters();
-	resetVariableCounters(countersBeforeBranch);
-	return countersAfterBranch;
+	auto indicesAfterBranch = copyVariableIndices();
+	resetVariableIndices(indicesBeforeBranch);
+	return indicesAfterBranch;
 }
 
 void SMTChecker::checkCondition(
@@ -894,19 +894,19 @@ void SMTChecker::resetVariables(vector<VariableDeclaration const*> _variables)
 	}
 }
 
-void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse)
+void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
 {
 	set<VariableDeclaration const*> uniqueVars(_variables.begin(), _variables.end());
 	for (auto const* decl: uniqueVars)
 	{
-		solAssert(_countersEndTrue.count(decl) && _countersEndFalse.count(decl), "");
-		int trueCounter = _countersEndTrue.at(decl);
-		int falseCounter = _countersEndFalse.at(decl);
-		solAssert(trueCounter != falseCounter, "");
+		solAssert(_indicesEndTrue.count(decl) && _indicesEndFalse.count(decl), "");
+		int trueIndex = _indicesEndTrue.at(decl);
+		int falseIndex = _indicesEndFalse.at(decl);
+		solAssert(trueIndex != falseIndex, "");
 		m_interface->addAssertion(newValue(*decl) == smt::Expression::ite(
 			_condition,
-			valueAtSequence(*decl, trueCounter),
-			valueAtSequence(*decl, falseCounter))
+			valueAtIndex(*decl, trueIndex),
+			valueAtIndex(*decl, falseIndex))
 		);
 	}
 }
@@ -946,19 +946,19 @@ bool SMTChecker::knownVariable(VariableDeclaration const& _decl)
 smt::Expression SMTChecker::currentValue(VariableDeclaration const& _decl)
 {
 	solAssert(knownVariable(_decl), "");
-	return m_variables.at(&_decl)->current();
+	return m_variables.at(&_decl)->currentValue();
 }
 
-smt::Expression SMTChecker::valueAtSequence(VariableDeclaration const& _decl, int _sequence)
+smt::Expression SMTChecker::valueAtIndex(VariableDeclaration const& _decl, int _index)
 {
 	solAssert(knownVariable(_decl), "");
-	return m_variables.at(&_decl)->valueAtSequence(_sequence);
+	return m_variables.at(&_decl)->valueAtIndex(_index);
 }
 
 smt::Expression SMTChecker::newValue(VariableDeclaration const& _decl)
 {
 	solAssert(knownVariable(_decl), "");
-	return m_variables.at(&_decl)->increase();
+	return m_variables.at(&_decl)->increaseIndex();
 }
 
 void SMTChecker::setZeroValue(VariableDeclaration const& _decl)
@@ -1070,16 +1070,16 @@ bool SMTChecker::visitedFunction(FunctionDefinition const* _funDef)
 	return contains(m_functionPath, _funDef);
 }
 
-SMTChecker::VariableSequenceCounters SMTChecker::copyVariableSequenceCounters()
+SMTChecker::VariableIndices SMTChecker::copyVariableIndices()
 {
-	VariableSequenceCounters counters;
-	for (auto var: m_variables)
-		counters.emplace(var.first, var.second->index());
-	return counters;
+	VariableIndices indices;
+	for (auto const& var: m_variables)
+		indices.emplace(var.first, var.second->index());
+	return indices;
 }
 
-void SMTChecker::resetVariableCounters(VariableSequenceCounters const& _counters)
+void SMTChecker::resetVariableIndices(VariableIndices const& _indices)
 {
-	for (auto var: _counters)
+	for (auto const& var: _indices)
 		m_variables.at(var.first)->index() = var.second;
 }

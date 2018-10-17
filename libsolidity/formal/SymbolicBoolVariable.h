@@ -42,7 +42,7 @@ public:
 	void setUnknownValue();
 
 protected:
-	smt::Expression valueAtSequence(int _seq) const;
+	smt::Expression valueAtIndex(int _index) const;
 };
 
 }

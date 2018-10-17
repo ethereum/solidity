@@ -86,13 +86,13 @@ private:
 	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
 	/// Maps a variable to an SSA index.
-	using VariableSequenceCounters = std::unordered_map<VariableDeclaration const*, int>;
+	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
 
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
-	/// @returns the variable sequence counter after visiting the branch.
-	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
-	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression _condition);
+	/// @returns the variable indices after visiting the branch.
+	VariableIndices visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
+	VariableIndices visitBranch(Statement const& _statement, smt::Expression _condition);
 
 	/// Check that a condition can be satisfied.
 	void checkCondition(
@@ -125,7 +125,7 @@ private:
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
-	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse);
+	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
@@ -133,16 +133,16 @@ private:
 	static std::string uniqueSymbol(Expression const& _expr);
 
 	/// @returns true if _delc is a variable that is known at the current point, i.e.
-	/// has a valid sequence number
+	/// has a valid index
 	bool knownVariable(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
 	smt::Expression currentValue(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
-	/// at the given sequence point. Does not ensure that this sequence point exists.
-	smt::Expression valueAtSequence(VariableDeclaration const& _decl, int _sequence);
-	/// Allocates a new sequence number for the declaration, updates the current
-	/// sequence number to this value and returns the expression.
+	/// at the given index. Does not ensure that this index exists.
+	smt::Expression valueAtIndex(VariableDeclaration const& _decl, int _index);
+	/// Allocates a new index for the declaration, updates the current
+	/// index to this value and returns the expression.
 	smt::Expression newValue(VariableDeclaration const& _decl);
 
 	/// Sets the value of the declaration to zero.
@@ -177,9 +177,9 @@ private:
 	bool hasVariable(VariableDeclaration const& _e) const;
 
 	/// Copy the SSA indices of m_variables.
-	VariableSequenceCounters copyVariableSequenceCounters();
-	/// Resets the variable counters.
-	void resetVariableCounters(VariableSequenceCounters const& _counters); 
+	VariableIndices copyVariableIndices();
+	/// Resets the variable indices.
+	void resetVariableIndices(VariableIndices const& _indices);
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;

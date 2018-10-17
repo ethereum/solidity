@@ -27,7 +27,7 @@ SSAVariable::SSAVariable()
 
 void SSAVariable::resetIndex()
 {
-	m_currentSequenceCounter = 0;
-	m_nextFreeSequenceCounter.reset (new int);
-	*m_nextFreeSequenceCounter = 1;
+	m_currentIndex = 0;
+	m_nextFreeIndex.reset (new int);
+	*m_nextFreeIndex = 1;
 }

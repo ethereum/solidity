@@ -45,17 +45,17 @@ public:
 	);
 	virtual ~SymbolicVariable() = default;
 
-	smt::Expression current() const
+	smt::Expression currentValue() const
 	{
-		return valueAtSequence(m_ssa->index());
+		return valueAtIndex(m_ssa->index());
 	}
 
-	virtual smt::Expression valueAtSequence(int _seq) const = 0;
+	virtual smt::Expression valueAtIndex(int _index) const = 0;
 
-	smt::Expression increase()
+	smt::Expression increaseIndex()
 	{
 		++(*m_ssa);
-		return current();
+		return currentValue();
 	}
 
 	int index() const { return m_ssa->index(); }
@@ -68,7 +68,7 @@ public:
 	virtual void setUnknownValue() = 0;
 
 protected:
-	std::string uniqueSymbol(int _seq) const;
+	std::string uniqueSymbol(int _index) const;
 
 	Type const& m_type;
 	std::string m_uniqueName;

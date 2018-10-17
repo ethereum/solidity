@@ -35,9 +35,9 @@ SymbolicVariable::SymbolicVariable(
 {
 }
 
-string SymbolicVariable::uniqueSymbol(int _seq) const
+string SymbolicVariable::uniqueSymbol(int _index) const
 {
-	return m_uniqueName + "_" + to_string(_seq);
+	return m_uniqueName + "_" + to_string(_index);
 }
 
 
