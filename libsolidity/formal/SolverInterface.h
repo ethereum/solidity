@@ -171,8 +171,8 @@ public:
 		}
 	}
 
-	std::string const name;
-	std::vector<Expression> const arguments;
+	std::string name;
+	std::vector<Expression> arguments;
 	Sort sort;
 
 private:
