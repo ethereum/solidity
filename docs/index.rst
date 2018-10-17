@@ -69,6 +69,9 @@ Available Solidity Integrations
 
 * Generic:
 
+    * `EthFiddle <https://ethfiddle.com/>`_
+        Solidity IDE in the Browser. Write and share your solidity code. Uses server-side components.
+
     * `Remix <https://remix.ethereum.org/>`_
         Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
