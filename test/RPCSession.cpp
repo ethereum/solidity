@@ -146,20 +146,28 @@ RPCSession& RPCSession::instance(const string& _path)
 
 string RPCSession::eth_getCode(string const& _address, string const& _blockNumber)
 {
-	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();
+	Json::Value params(Json::arrayValue);
+	params.append(_address);
+	params.append(_blockNumber);
+	return rpcCall("eth_getCode", params).asString();
 }
 
 Json::Value RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
 {
-	// NOTE: to_string() converts bool to 0 or 1
-	return rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
+	Json::Value params(Json::arrayValue);
+	params.append(_blockNumber);
+	params.append(_fullObjects);
+	return rpcCall("eth_getBlockByNumber", params);
 }
 
 RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
-	TransactionReceipt receipt;
-	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
+	Json::Value params(Json::arrayValue);
+	params.append(_transactionHash);
+	Json::Value const result = rpcCall("eth_getTransactionReceipt", params);
 	BOOST_REQUIRE(!result.isNull());
+
+	TransactionReceipt receipt;
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
 	receipt.blockNumber = result["blockNumber"].asString();
@@ -182,29 +190,40 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 
 string RPCSession::eth_sendTransaction(TransactionData const& _td)
 {
-	return rpcCall("eth_sendTransaction", { _td.toJson() }).asString();
+	Json::Value params(Json::arrayValue);
+	params.append(_td.toJson());
+	return rpcCall("eth_sendTransaction", params).asString();
 }
 
 string RPCSession::eth_call(TransactionData const& _td, string const& _blockNumber)
 {
-	return rpcCall("eth_call", { _td.toJson(), quote(_blockNumber) }).asString();
+	Json::Value params(Json::arrayValue);
+	params.append(_td.toJson());
+	params.append(_blockNumber);
+	return rpcCall("eth_call", params).asString();
 }
 
 string RPCSession::eth_sendTransaction(string const& _transaction)
 {
-	return rpcCall("eth_sendTransaction", { _transaction }).asString();
+	Json::Value params(Json::arrayValue);
+	params.append(_transaction);
+	return rpcCall("eth_sendTransaction", params).asString();
 }
 
 string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)
 {
-	string address = (_address.length() == 20) ? "0x" + _address : _address;
-	return rpcCall("eth_getBalance", { quote(address), quote(_blockNumber) }).asString();
+	Json::Value params(Json::arrayValue);
+	params.append((_address.length() == 20) ? "0x" + _address : _address);
+	params.append(_blockNumber);
+	return rpcCall("eth_getBalance", params).asString();
 }
 
 string RPCSession::eth_getStorageRoot(string const& _address, string const& _blockNumber)
 {
-	string address = (_address.length() == 20) ? "0x" + _address : _address;
-	return rpcCall("eth_getStorageRoot", { quote(address), quote(_blockNumber) }).asString();
+	Json::Value params(Json::arrayValue);
+	params.append((_address.length() == 20) ? "0x" + _address : _address);
+	params.append(_blockNumber);
+	return rpcCall("eth_getStorageRoot", params).asString();
 }
 
 string RPCSession::eth_gasPrice()
@@ -214,15 +233,21 @@ string RPCSession::eth_gasPrice()
 
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
+	Json::Value params(Json::arrayValue);
+	params.append(_address);
+	params.append(_password);
+	params.append(to_string(_duration));
 	BOOST_REQUIRE_MESSAGE(
-		rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) }),
+		rpcCall("personal_unlockAccount", params) == true,
 		"Error unlocking account " + _address
 	);
 }
 
 string RPCSession::personal_newAccount(string const& _password)
 {
-	string addr = rpcCall("personal_newAccount", { quote(_password) }).asString();
+	Json::Value params(Json::arrayValue);
+	params.append(_password);
+	string addr = rpcCall("personal_newAccount", params).asString();
 	BOOST_TEST_MESSAGE("Created account " + addr);
 	return addr;
 }
@@ -284,18 +309,25 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 
 void RPCSession::test_setChainParams(string const& _config)
 {
-	BOOST_REQUIRE(rpcCall("test_setChainParams", { _config }) == true);
+	Json::Value params(Json::arrayValue);
+	params.append(_config);
+	BOOST_REQUIRE(rpcCall("test_setChainParams", params) == true);
 }
 
 void RPCSession::test_rewindToBlock(size_t _blockNr)
 {
-	BOOST_REQUIRE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true);
+	Json::Value params(Json::arrayValue);
+	params.append(to_string(_blockNr));
+	BOOST_REQUIRE(rpcCall("test_rewindToBlock", params) == true);
 }
 
 void RPCSession::test_mineBlocks(int _number)
 {
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-	BOOST_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
+
+	Json::Value params(Json::arrayValue);
+	params.append(to_string(_number));
+	BOOST_REQUIRE(rpcCall("test_mineBlocks", params, true) == true);
 
 	// We auto-calibrate the time it takes to mine the transaction.
 	// It would be better to go without polling, but that would probably need a change to the test client
@@ -334,24 +366,24 @@ void RPCSession::test_mineBlocks(int _number)
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
 {
-	BOOST_REQUIRE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true);
+	Json::Value params(Json::arrayValue);
+	params.append(to_string(_timestamp));
+	BOOST_REQUIRE(rpcCall("test_modifyTimestamp", params) == true);
 }
 
-Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
+Json::Value RPCSession::rpcCall(string const& _methodName, Json::Value const& _args, bool _canFail)
 {
-	string request = "{\"jsonrpc\":\"2.0\",\"method\":\"" + _methodName + "\",\"params\":[";
-	for (size_t i = 0; i < _args.size(); ++i)
-	{
-		request += _args[i];
-		if (i + 1 != _args.size())
-			request += ", ";
-	}
+	Json::Value request;
 
-	request += "],\"id\":" + to_string(m_rpcSequence) + "}";
-	++m_rpcSequence;
+	request["jsonrpc"] = "2.0";
+	request["id"] = to_string(m_rpcSequence);
+	m_rpcSequence++;
+	request["method"] = _methodName;
+	BOOST_REQUIRE(_args.isArray());
+	request["params"] = _args;
 
-	BOOST_TEST_MESSAGE("Request: " + request);
-	string reply = m_ipcSocket.sendRequest(request);
+	BOOST_TEST_MESSAGE("Request: " + dev::jsonCompactPrint(request));
+	string reply = m_ipcSocket.sendRequest(dev::jsonCompactPrint(request));
 	BOOST_TEST_MESSAGE("Reply: " + reply);
 
 	Json::Value result;
@@ -391,14 +423,14 @@ RPCSession::RPCSession(const string& _path):
 	test_setChainParams(m_accounts);
 }
 
-string RPCSession::TransactionData::toJson() const
+Json::Value RPCSession::TransactionData::toJson() const
 {
-	Json::Value json;
+	Json::Value json(Json::objectValue);
 	json["from"] = (from.length() == 20) ? "0x" + from : from;
 	json["to"] = (to.length() == 20 || to == "") ? "0x" + to :  to;
 	json["gas"] = gas;
 	json["gasprice"] = gasPrice;
 	json["value"] = value;
 	json["data"] = data;
-	return jsonCompactPrint(json);
+	return json;
 }

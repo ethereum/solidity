@@ -84,7 +84,7 @@ public:
 		std::string value;
 		std::string data;
 
-		std::string toJson() const;
+		Json::Value toJson() const;
 	};
 
 	struct LogEntry {
@@ -121,7 +121,7 @@ public:
 	void test_rewindToBlock(size_t _blockNr);
 	void test_modifyTimestamp(size_t _timestamp);
 	void test_mineBlocks(int _number);
-	Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
+	Json::Value rpcCall(std::string const& _methodName, Json::Value const& _args = Json::Value(Json::arrayValue), bool _canFail = false);
 
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
 	std::string const& accountCreate();
@@ -130,7 +130,6 @@ public:
 private:
 	explicit RPCSession(std::string const& _path);
 
-	inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
 	/// Parse std::string replacing keywords to values
 	void parseString(std::string& _string, std::map<std::string, std::string> const& _varMap);
 
