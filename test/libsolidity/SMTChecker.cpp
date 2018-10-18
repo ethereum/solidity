@@ -133,23 +133,6 @@ BOOST_AUTO_TEST_CASE(assignment_in_declaration)
 	CHECK_SUCCESS_NO_WARNINGS(text);
 }
 
-BOOST_AUTO_TEST_CASE(function_call_does_not_clear_local_vars)
-{
-	string text = R"(
-		contract C {
-			function g() public pure {}
-			function f() public view {
-				uint a = 3;
-				this.g();
-				assert(a == 3);
-				g();
-				assert(a == 3);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "Assertion checker does not yet implement this type of function call");
-}
-
 BOOST_AUTO_TEST_CASE(branches_merge_variables)
 {
 	// Branch does not touch variable a

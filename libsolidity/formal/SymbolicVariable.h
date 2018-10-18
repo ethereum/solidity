@@ -39,10 +39,11 @@ class SymbolicVariable
 {
 public:
 	SymbolicVariable(
-		Type const& _type,
+		TypePointer _type,
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
+
 	virtual ~SymbolicVariable() = default;
 
 	smt::Expression currentValue() const
@@ -71,7 +72,7 @@ public:
 protected:
 	std::string uniqueSymbol(int _index) const;
 
-	Type const& m_type;
+	TypePointer m_type = nullptr;
 	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
 	std::shared_ptr<SSAVariable> m_ssa = nullptr;

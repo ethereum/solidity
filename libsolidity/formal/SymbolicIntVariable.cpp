@@ -24,13 +24,13 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicIntVariable::SymbolicIntVariable(
-	Type const& _type,
+	TypePointer _type,
 	string const& _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	SymbolicVariable(_type, _uniqueName, _interface)
+	SymbolicVariable(move(_type), _uniqueName, _interface)
 {
-	solAssert(isNumber(_type.category()), "");
+	solAssert(isNumber(m_type->category()), "");
 }
 
 smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
@@ -45,7 +45,7 @@ void SymbolicIntVariable::setZeroValue()
 
 void SymbolicIntVariable::setUnknownValue()
 {
-	auto intType = dynamic_cast<IntegerType const*>(&m_type);
+	auto intType = dynamic_cast<IntegerType const*>(m_type.get());
 	solAssert(intType, "");
 	m_interface.addAssertion(currentValue() >= minValue(*intType));
 	m_interface.addAssertion(currentValue() <= maxValue(*intType));

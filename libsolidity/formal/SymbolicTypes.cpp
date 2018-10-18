@@ -43,27 +43,28 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 {
 	bool abstract = false;
 	shared_ptr<SymbolicVariable> var;
+	TypePointer type = _type.shared_from_this();
 	if (!isSupportedType(_type))
 	{
 		abstract = true;
-		var = make_shared<SymbolicIntVariable>(IntegerType{256}, _uniqueName, _solver);
+		var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
 	}
 	else if (isBool(_type.category()))
-		var = make_shared<SymbolicBoolVariable>(_type, _uniqueName, _solver);
+		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _solver);
 	else if (isFunction(_type.category()))
-		var = make_shared<SymbolicIntVariable>(IntegerType{256}, _uniqueName, _solver);
+		var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
 	else if (isInteger(_type.category()))
-		var = make_shared<SymbolicIntVariable>(_type, _uniqueName, _solver);
+		var = make_shared<SymbolicIntVariable>(type, _uniqueName, _solver);
 	else if (isAddress(_type.category()))
-		var = make_shared<SymbolicAddressVariable>(_type, _uniqueName, _solver);
+		var = make_shared<SymbolicAddressVariable>(_uniqueName, _solver);
 	else if (isRational(_type.category()))
 	{
 		auto rational = dynamic_cast<RationalNumberType const*>(&_type);
 		solAssert(rational, "");
 		if (rational->isFractional())
-			var = make_shared<SymbolicIntVariable>(IntegerType{256}, _uniqueName, _solver);
+			var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
 		else
-			var = make_shared<SymbolicIntVariable>(_type, _uniqueName, _solver);
+			var = make_shared<SymbolicIntVariable>(type, _uniqueName, _solver);
 	}
 	else
 		solAssert(false, "");

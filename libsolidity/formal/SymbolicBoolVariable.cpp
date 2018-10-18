@@ -22,13 +22,13 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicBoolVariable::SymbolicBoolVariable(
-	Type const& _type,
+	TypePointer _type,
 	string const& _uniqueName,
 	smt::SolverInterface&_interface
 ):
-	SymbolicVariable(_type, _uniqueName, _interface)
+	SymbolicVariable(move(_type), _uniqueName, _interface)
 {
-	solAssert(_type.category() == Type::Category::Bool, "");
+	solAssert(m_type->category() == Type::Category::Bool, "");
 }
 
 smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const

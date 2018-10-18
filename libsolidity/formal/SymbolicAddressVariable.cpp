@@ -24,18 +24,17 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicAddressVariable::SymbolicAddressVariable(
-	Type const& _type,
 	string const& _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	SymbolicIntVariable(_type, _uniqueName, _interface)
+	SymbolicIntVariable(make_shared<IntegerType>(160), _uniqueName, _interface)
 {
-	solAssert(isAddress(_type.category()), "");
 }
 
 void SymbolicAddressVariable::setUnknownValue()
 {
-	IntegerType intType{160};
-	m_interface.addAssertion(currentValue() >= minValue(intType));
-	m_interface.addAssertion(currentValue() <= maxValue(intType));
+	auto intType = dynamic_cast<IntegerType const*>(m_type.get());
+	solAssert(intType, "");
+	m_interface.addAssertion(currentValue() >= minValue(*intType));
+	m_interface.addAssertion(currentValue() <= maxValue(*intType));
 }
