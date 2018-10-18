@@ -22,7 +22,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
 

@@ -24,7 +24,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
 

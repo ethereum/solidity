@@ -21,7 +21,7 @@
 
 #include <libevmasm/LinkerObject.h>
 #include <libdevcore/CommonData.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 using namespace dev;
 using namespace dev::eth;

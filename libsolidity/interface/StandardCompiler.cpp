@@ -25,7 +25,7 @@
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
 

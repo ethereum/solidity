@@ -19,7 +19,8 @@
  * @date 2014
  */
 
-#include "SHA3.h"
+#include <libdevcore/Keccak256.h>
+
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>

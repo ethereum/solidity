@@ -27,7 +27,7 @@
 
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <json/json.h>
 

@@ -23,7 +23,7 @@
 
 #include "KnownState.h"
 #include <functional>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 #include <libevmasm/AssemblyItem.h>
 
 using namespace std;
