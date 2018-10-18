@@ -1118,7 +1118,15 @@ void CommandLineInterface::writeLinkedFiles()
 		if (src.first == g_stdinFileName)
 			cout << src.second << endl;
 		else
-			writeFile(src.first, src.second);
+		{
+			ofstream outFile(src.first);
+			outFile << src.second;
+			if (!outFile)
+			{
+				cerr << "Could not write to file " << src.first << ". Aborting." << endl;
+				return;
+			}
+		}
 }
 
 string CommandLineInterface::libraryPlaceholderHint(string const& _libraryName)
