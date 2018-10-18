@@ -38,16 +38,11 @@ void Rematerialiser::visit(Expression& _e)
 		if (m_value.count(identifier.name))
 		{
 			string name = identifier.name;
-			bool expressionValid = true;
 			for (auto const& ref: m_references[name])
-				if (!inScope(ref))
-				{
-					expressionValid = false;
-					break;
-				}
+				assertThrow(inScope(ref), OptimizerException, "");
 			assertThrow(m_value.at(name), OptimizerException, "");
 			auto const& value = *m_value.at(name);
-			if (expressionValid && CodeSize::codeSize(value) <= 7)
+			if (CodeSize::codeSize(value) <= 7)
 				_e = (ASTCopier{}).translate(value);
 		}
 	}

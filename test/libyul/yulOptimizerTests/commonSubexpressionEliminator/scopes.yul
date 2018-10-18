@@ -20,6 +20,6 @@
 //         let d := calldataload(1)
 //         x := d
 //     }
-//     mstore(0, b)
+//     mstore(0, calldataload(0))
 //     mstore(0, x)
 // }
