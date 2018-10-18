@@ -40,12 +40,9 @@ using namespace dev;
 using namespace dev::yul;
 using namespace dev::solidity;
 
-FullInliner::FullInliner(Block& _ast):
-	m_ast(_ast), m_nameDispenser(_ast)
+FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
+	m_ast(_ast), m_nameDispenser(_dispenser)
 {
-	assertThrow(m_ast.statements.size() >= 1, OptimizerException, "");
-	assertThrow(m_ast.statements.front().type() == typeid(Block), OptimizerException, "");
-
 	// Determine constants
 	SSAValueTracker tracker;
 	tracker(m_ast);
@@ -54,10 +51,11 @@ FullInliner::FullInliner(Block& _ast):
 			m_constants.insert(ssaValue.first);
 
 	map<string, size_t> references = ReferencesCounter::countReferences(m_ast);
-	for (size_t i = 1; i < m_ast.statements.size(); ++i)
+	for (auto& statement: m_ast.statements)
 	{
-		assertThrow(m_ast.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
-		FunctionDefinition& fun = boost::get<FunctionDefinition>(m_ast.statements.at(i));
+		if (statement.type() != typeid(FunctionDefinition))
+			continue;
+		FunctionDefinition& fun = boost::get<FunctionDefinition>(statement);
 		m_functions[fun.name] = &fun;
 		// Always inline functions that are only called once.
 		if (references[fun.name] == 1)
@@ -68,9 +66,10 @@ FullInliner::FullInliner(Block& _ast):
 
 void FullInliner::run()
 {
-	assertThrow(m_ast.statements[0].type() == typeid(Block), OptimizerException, "");
+	for (auto& statement: m_ast.statements)
+		if (statement.type() == typeid(Block))
+			handleBlock("", boost::get<Block>(statement));
 
-	handleBlock("", boost::get<Block>(m_ast.statements[0]));
 	// TODO it might be good to determine a visiting order:
 	// first handle functions that are called from many places.
 	for (auto const& fun: m_functions)
