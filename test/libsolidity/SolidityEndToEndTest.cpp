@@ -14010,6 +14010,21 @@ BOOST_AUTO_TEST_CASE(test_underscore_in_hex)
 	ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs(u256(0x1234abcd1234)));
 }
 
+BOOST_AUTO_TEST_CASE(flipping_sign_tests)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() public returns (bool){
+				int x = -2**255;
+				assert(-x == x);
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
