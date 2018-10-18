@@ -56,9 +56,15 @@ protected:
 	/// Registers the assignment.
 	void handleAssignment(std::set<std::string> const& _names, Expression* _value);
 
+	/// Creates a new inner scope.
+	void pushScope(bool _functionScope);
+
+	/// Removes the innermost scope and clears all variables in it.
+	void popScope();
+
 	/// Clears information about the values assigned to the given variables,
 	/// for example at points where control flow is merged.
-	void clearValues(std::set<std::string> const& _names);
+	void clearValues(std::set<std::string> _names);
 
 	/// Returns true iff the variable is in scope.
 	bool inScope(std::string const& _variableName) const;

@@ -84,19 +84,19 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 
 void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 {
-	m_variableScopes.emplace_back(true);
+	pushScope(true);
 	for (auto const& parameter: _fun.parameters)
 		m_variableScopes.back().variables.insert(parameter.name);
 	for (auto const& var: _fun.returnVariables)
 		m_variableScopes.back().variables.insert(var.name);
 	ASTModifier::operator()(_fun);
-	m_variableScopes.pop_back();
+	popScope();
 }
 
 void DataFlowAnalyzer::operator()(ForLoop& _for)
 {
 	// Special scope handling of the pre block.
-	m_variableScopes.emplace_back(false);
+	pushScope(false);
 	for (auto& statement: _for.pre.statements)
 		visit(statement);
 
@@ -110,16 +110,15 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	(*this)(_for.post);
 
 	clearValues(assignments.names());
-
-	m_variableScopes.pop_back();
+	popScope();
 }
 
 void DataFlowAnalyzer::operator()(Block& _block)
 {
 	size_t numScopes = m_variableScopes.size();
-	m_variableScopes.emplace_back(false);
+	pushScope(false);
 	ASTModifier::operator()(_block);
-	m_variableScopes.pop_back();
+	popScope();
 	assertThrow(numScopes == m_variableScopes.size(), OptimizerException, "");
 }
 
@@ -148,7 +147,18 @@ void DataFlowAnalyzer::handleAssignment(set<string> const& _variables, Expressio
 	}
 }
 
-void DataFlowAnalyzer::clearValues(set<string> const& _variables)
+void DataFlowAnalyzer::pushScope(bool _functionScope)
+{
+	m_variableScopes.emplace_back(_functionScope);
+}
+
+void DataFlowAnalyzer::popScope()
+{
+	clearValues(std::move(m_variableScopes.back().variables));
+	m_variableScopes.pop_back();
+}
+
+void DataFlowAnalyzer::clearValues(set<string> _variables)
 {
 	// All variables that reference variables to be cleared also have to be
 	// cleared, but not recursively, since only the value of the original
@@ -163,16 +173,15 @@ void DataFlowAnalyzer::clearValues(set<string> const& _variables)
 	// This cannot be easily tested since the substitutions will be done
 	// one by one on the fly, and the last line will just be add(1, 1)
 
-	set<string> variables = _variables;
 	// Clear variables that reference variables to be cleared.
-	for (auto const& name: variables)
+	for (auto const& name: _variables)
 		for (auto const& ref: m_referencedBy[name])
-			variables.insert(ref);
+			_variables.insert(ref);
 
 	// Clear the value and update the reference relation.
-	for (auto const& name: variables)
+	for (auto const& name: _variables)
 		m_value.erase(name);
-	for (auto const& name: variables)
+	for (auto const& name: _variables)
 	{
 		for (auto const& ref: m_references[name])
 			m_referencedBy[ref].erase(name);

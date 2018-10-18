@@ -50,8 +50,8 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 			if (m_value.at(name)->type() == typeid(Identifier))
 			{
 				string const& value = boost::get<Identifier>(*m_value.at(name)).name;
-				if (inScope(value))
-					_e = Identifier{locationOf(_e), value};
+				assertThrow(inScope(value), OptimizerException, "");
+				_e = Identifier{locationOf(_e), value};
 			}
 		}
 	}
@@ -61,6 +61,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		for (auto const& var: m_value)
 		{
 			assertThrow(var.second, OptimizerException, "");
+			assertThrow(inScope(var.first), OptimizerException, "");
 			if (SyntacticalEqualityChecker::equal(_e, *var.second))
 			{
 				_e = Identifier{locationOf(_e), var.first};
