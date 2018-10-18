@@ -94,7 +94,33 @@ private:
 	/// Performs type checks for ``abi.decode(bytes memory, (...))`` and returns the
 	/// vector of return types (which is basically the second argument) if successful. It returns
 	/// the empty vector on error.
-	TypePointers typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2);
+	TypePointers typeCheckABIDecodeAndRetrieveReturnType(
+		FunctionCall const& _functionCall,
+		bool _abiEncoderV2
+	);
+
+	/// Performs type checks and determines result types for type conversion FunctionCall nodes.
+	TypePointer typeCheckTypeConversionAndRetrieveReturnType(
+		FunctionCall const& _functionCall
+	);
+
+	/// Performs type checks on function call and struct ctor FunctionCall nodes (except for kind ABIDecode).
+	void typeCheckFunctionCall(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
+
+	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node parameters.
+	void typeCheckFunctionGeneralChecks(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
+
+	/// Performs general checks and checks specific to ABI encode functions
+	void typeCheckABIEncodeFunctions(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
 
 	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
 	virtual void endVisit(UsingForDirective const& _usingFor) override;
