@@ -1,5 +1,7 @@
+if (DEFINED ENV{OSSFUZZ})
 add_executable(solc_target solc_target.cpp)
 target_link_libraries(solc_target PRIVATE libsolc evmasm FuzzingEngine.a)
+endif()
 
 add_executable(solfuzzer fuzzer.cpp)
 target_link_libraries(solfuzzer PRIVATE libsolc evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_SYSTEM_LIBRARIES})
