@@ -568,12 +568,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::External:
 		case FunctionType::Kind::DelegateCall:
 		case FunctionType::Kind::BareCall:
-		case FunctionType::Kind::BareCallCode:
 		case FunctionType::Kind::BareDelegateCall:
 		case FunctionType::Kind::BareStaticCall:
 			_functionCall.expression().accept(*this);
 			appendExternalFunctionCall(function, arguments);
 			break;
+		case FunctionType::Kind::BareCallCode:
+			solAssert(false, "Callcode has been removed.");
 		case FunctionType::Kind::Creation:
 		{
 			_functionCall.expression().accept(*this);
@@ -1328,8 +1329,6 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context << Instruction::CALLVALUE;
 		else if (member == "origin")
 			m_context << Instruction::ORIGIN;
-		else if (member == "gas")
-			m_context << Instruction::GAS;
 		else if (member == "gasprice")
 			m_context << Instruction::GASPRICE;
 		else if (member == "data")
@@ -1337,9 +1336,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "sig")
 			m_context << u256(0) << Instruction::CALLDATALOAD
 				<< (u256(0xffffffff) << (256 - 32)) << Instruction::AND;
+		else if (member == "gas")
+			solAssert(false, "Gas has been removed.");
 		else if (member == "blockhash")
-		{
-		}
+			solAssert(false, "Blockhash has been removed.");
 		else
 			solAssert(false, "Unknown magic member.");
 		break;
@@ -1844,8 +1844,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
 
-	bool returnSuccessConditionAndReturndata = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
-	bool isCallCode = funKind == FunctionType::Kind::BareCallCode;
+	solAssert(funKind != FunctionType::Kind::BareCallCode, "Callcode has been removed.");
+
+	bool returnSuccessConditionAndReturndata = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (_functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
 
@@ -1930,7 +1931,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		parameterTypes,
 		_functionType.padArguments(),
 		_functionType.takesArbitraryParameters() || _functionType.isBareCall(),
-		isCallCode || isDelegateCall
+		isDelegateCall
 	);
 
 	// Stack now:
@@ -2001,8 +2002,6 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isDelegateCall)
 		m_context << Instruction::DELEGATECALL;
-	else if (isCallCode)
-		m_context << Instruction::CALLCODE;
 	else if (useStaticCall)
 		m_context << Instruction::STATICCALL;
 	else
