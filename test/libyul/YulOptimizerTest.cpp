@@ -35,6 +35,7 @@
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
+#include <libyul/optimiser/SSATransform.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -170,6 +171,12 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		ExpressionJoiner::run(*m_ast);\
+	}
+	else if (m_optimizerStep == "ssaTransform")
+	{
+		disambiguate();
+		NameDispenser nameDispenser(*m_ast);
+		SSATransform::run(*m_ast, nameDispenser);
 	}
 	else
 	{
