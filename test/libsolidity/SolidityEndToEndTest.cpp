@@ -1787,6 +1787,24 @@ BOOST_AUTO_TEST_CASE(deleteLocals)
 	ABI_CHECK(callContractFunction("delLocal()"), encodeArgs(6, 7));
 }
 
+BOOST_AUTO_TEST_CASE(deleteLength)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint[] x;
+			function f() public returns (uint){
+				x.length = 1;
+				x[0] = 1;
+				delete x.length;
+				return x.length;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+}
+
 BOOST_AUTO_TEST_CASE(constructor)
 {
 	char const* sourceCode = R"(
