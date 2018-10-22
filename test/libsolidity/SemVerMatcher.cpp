@@ -42,13 +42,13 @@ SemVerMatchExpression parseExpression(string const& _input)
 {
 	Scanner scanner{CharStream(_input)};
 	vector<string> literals;
-	vector<Token::Value> tokens;
+	vector<Token> tokens;
 	while (scanner.currentToken() != Token::EOS)
 	{
 		auto token = scanner.currentToken();
 		string literal = scanner.currentLiteral();
-		if (literal.empty() && Token::toString(token))
-			literal = Token::toString(token);
+		if (literal.empty() && TokenTraits::toString(token))
+			literal = TokenTraits::toString(token);
 		literals.push_back(literal);
 		tokens.push_back(token);
 		scanner.next();

@@ -1499,14 +1499,14 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		// compound assignment
 		_assignment.rightHandSide().accept(*this);
 		TypePointer resultType = t->binaryOperatorResult(
-			Token::AssignmentToBinaryOp(_assignment.assignmentOperator()),
+			TokenTraits::AssignmentToBinaryOp(_assignment.assignmentOperator()),
 			type(_assignment.rightHandSide())
 		);
 		if (!resultType || *resultType != *t)
 			m_errorReporter.typeError(
 				_assignment.location(),
 				"Operator " +
-				string(Token::toString(_assignment.assignmentOperator())) +
+				string(TokenTraits::toString(_assignment.assignmentOperator())) +
 				" not compatible with types " +
 				t->toString() +
 				" and " +
@@ -1607,8 +1607,8 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 bool TypeChecker::visit(UnaryOperation const& _operation)
 {
 	// Inc, Dec, Add, Sub, Not, BitNot, Delete
-	Token::Value op = _operation.getOperator();
-	bool const modifying = (op == Token::Value::Inc || op == Token::Value::Dec || op == Token::Value::Delete);
+	Token op = _operation.getOperator();
+	bool const modifying = (op == Token::Inc || op == Token::Dec || op == Token::Delete);
 	if (modifying)
 		requireLValue(_operation.subExpression());
 	else
@@ -1620,7 +1620,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		m_errorReporter.typeError(
 			_operation.location(),
 			"Unary operator " +
-			string(Token::toString(op)) +
+			string(TokenTraits::toString(op)) +
 			" cannot be applied to type " +
 			subExprType->toString()
 		);
@@ -1641,7 +1641,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		m_errorReporter.typeError(
 			_operation.location(),
 			"Operator " +
-			string(Token::toString(_operation.getOperator())) +
+			string(TokenTraits::toString(_operation.getOperator())) +
 			" not compatible with types " +
 			leftType->toString() +
 			" and " +
@@ -1651,7 +1651,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	}
 	_operation.annotation().commonType = commonType;
 	_operation.annotation().type =
-		Token::isCompareOp(_operation.getOperator()) ?
+		TokenTraits::isCompareOp(_operation.getOperator()) ?
 		make_shared<BoolType>() :
 		commonType;
 	_operation.annotation().isPure =

@@ -86,12 +86,12 @@ private:
 	///@{
 	///@name Append code for various operator types
 	void appendAndOrOperatorCode(BinaryOperation const& _binaryOperation);
-	void appendCompareOperatorCode(Token::Value _operator, Type const& _type);
-	void appendOrdinaryBinaryOperatorCode(Token::Value _operator, Type const& _type);
+	void appendCompareOperatorCode(Token _operator, Type const& _type);
+	void appendOrdinaryBinaryOperatorCode(Token _operator, Type const& _type);
 
-	void appendArithmeticOperatorCode(Token::Value _operator, Type const& _type);
-	void appendBitOperatorCode(Token::Value _operator);
-	void appendShiftOperatorCode(Token::Value _operator, Type const& _valueType, Type const& _shiftAmountType);
+	void appendArithmeticOperatorCode(Token _operator, Type const& _type);
+	void appendBitOperatorCode(Token _operator);
+	void appendShiftOperatorCode(Token _operator, Type const& _valueType, Type const& _shiftAmountType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
@@ -119,7 +119,7 @@ private:
 
 	/// @returns true if the operator applied to the given type requires a cleanup prior to the
 	/// operation.
-	static bool cleanupNeededForOp(Type::Category _type, Token::Value _op);
+	static bool cleanupNeededForOp(Type::Category _type, Token _op);
 
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();

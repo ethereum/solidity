@@ -46,7 +46,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 			m_errorReporter.fatalTypeError(
 				_operation.location(),
 				"Operator " +
-				string(Token::toString(_operation.getOperator())) +
+				string(TokenTraits::toString(_operation.getOperator())) +
 				" not compatible with types " +
 				left->toString() +
 				" and " +
@@ -54,7 +54,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 			);
 		setType(
 			_operation,
-			Token::isCompareOp(_operation.getOperator()) ?
+			TokenTraits::isCompareOp(_operation.getOperator()) ?
 			make_shared<BoolType>() :
 			commonType
 		);

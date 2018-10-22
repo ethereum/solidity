@@ -237,7 +237,7 @@ class PragmaDirective: public ASTNode
 public:
 	PragmaDirective(
 		SourceLocation const& _location,
-		std::vector<Token::Value> const& _tokens,
+		std::vector<Token> const& _tokens,
 		std::vector<ASTString> const& _literals
 	): ASTNode(_location), m_tokens(_tokens), m_literals(_literals)
 	{}
@@ -245,13 +245,13 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	std::vector<Token::Value> const& tokens() const { return m_tokens; }
+	std::vector<Token> const& tokens() const { return m_tokens; }
 	std::vector<ASTString> const& literals() const { return m_literals; }
 
 private:
 
 	/// Sequence of tokens following the "pragma" keyword.
-	std::vector<Token::Value> m_tokens;
+	std::vector<Token> m_tokens;
 	/// Sequence of literals following the "pragma" keyword.
 	std::vector<ASTString> m_literals;
 };
@@ -1379,7 +1379,7 @@ public:
 	Assignment(
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _leftHandSide,
-		Token::Value _assignmentOperator,
+		Token _assignmentOperator,
 		ASTPointer<Expression> const& _rightHandSide
 	):
 		Expression(_location),
@@ -1387,18 +1387,18 @@ public:
 		m_assigmentOperator(_assignmentOperator),
 		m_rightHandSide(_rightHandSide)
 	{
-		solAssert(Token::isAssignmentOp(_assignmentOperator), "");
+		solAssert(TokenTraits::isAssignmentOp(_assignmentOperator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& leftHandSide() const { return *m_leftHandSide; }
-	Token::Value assignmentOperator() const { return m_assigmentOperator; }
+	Token assignmentOperator() const { return m_assigmentOperator; }
 	Expression const& rightHandSide() const { return *m_rightHandSide; }
 
 private:
 	ASTPointer<Expression> m_leftHandSide;
-	Token::Value m_assigmentOperator;
+	Token m_assigmentOperator;
 	ASTPointer<Expression> m_rightHandSide;
 };
 
@@ -1441,7 +1441,7 @@ class UnaryOperation: public Expression
 public:
 	UnaryOperation(
 		SourceLocation const& _location,
-		Token::Value _operator,
+		Token _operator,
 		ASTPointer<Expression> const& _subExpression,
 		bool _isPrefix
 	):
@@ -1450,17 +1450,17 @@ public:
 		m_subExpression(_subExpression),
 		m_isPrefix(_isPrefix)
 	{
-		solAssert(Token::isUnaryOp(_operator), "");
+		solAssert(TokenTraits::isUnaryOp(_operator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value getOperator() const { return m_operator; }
+	Token getOperator() const { return m_operator; }
 	bool isPrefixOperation() const { return m_isPrefix; }
 	Expression const& subExpression() const { return *m_subExpression; }
 
 private:
-	Token::Value m_operator;
+	Token m_operator;
 	ASTPointer<Expression> m_subExpression;
 	bool m_isPrefix;
 };
@@ -1475,25 +1475,25 @@ public:
 	BinaryOperation(
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _left,
-		Token::Value _operator,
+		Token _operator,
 		ASTPointer<Expression> const& _right
 	):
 		Expression(_location), m_left(_left), m_operator(_operator), m_right(_right)
 	{
-		solAssert(Token::isBinaryOp(_operator) || Token::isCompareOp(_operator), "");
+		solAssert(TokenTraits::isBinaryOp(_operator) || TokenTraits::isCompareOp(_operator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& leftExpression() const { return *m_left; }
 	Expression const& rightExpression() const { return *m_right; }
-	Token::Value getOperator() const { return m_operator; }
+	Token getOperator() const { return m_operator; }
 
 	BinaryOperationAnnotation& annotation() const override;
 
 private:
 	ASTPointer<Expression> m_left;
-	Token::Value m_operator;
+	Token m_operator;
 	ASTPointer<Expression> m_right;
 };
 
@@ -1653,21 +1653,21 @@ class Literal: public PrimaryExpression
 public:
 	enum class SubDenomination
 	{
-		None = Token::Illegal,
-		Wei = Token::SubWei,
-		Szabo = Token::SubSzabo,
-		Finney = Token::SubFinney,
-		Ether = Token::SubEther,
-		Second = Token::SubSecond,
-		Minute = Token::SubMinute,
-		Hour = Token::SubHour,
-		Day = Token::SubDay,
-		Week = Token::SubWeek,
-		Year = Token::SubYear
+		None = static_cast<int>(Token::Illegal),
+		Wei = static_cast<int>(Token::SubWei),
+		Szabo = static_cast<int>(Token::SubSzabo),
+		Finney = static_cast<int>(Token::SubFinney),
+		Ether = static_cast<int>(Token::SubEther),
+		Second = static_cast<int>(Token::SubSecond),
+		Minute = static_cast<int>(Token::SubMinute),
+		Hour = static_cast<int>(Token::SubHour),
+		Day = static_cast<int>(Token::SubDay),
+		Week = static_cast<int>(Token::SubWeek),
+		Year = static_cast<int>(Token::SubYear)
 	};
 	Literal(
 		SourceLocation const& _location,
-		Token::Value _token,
+		Token _token,
 		ASTPointer<ASTString> const& _value,
 		SubDenomination _sub = SubDenomination::None
 	):
@@ -1675,7 +1675,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value token() const { return m_token; }
+	Token token() const { return m_token; }
 	/// @returns the non-parsed value of the literal
 	ASTString const& value() const { return *m_value; }
 
@@ -1694,7 +1694,7 @@ public:
 	std::string getChecksummedAddress() const;
 
 private:
-	Token::Value m_token;
+	Token m_token;
 	ASTPointer<ASTString> m_value;
 	SubDenomination m_subDenomination;
 };

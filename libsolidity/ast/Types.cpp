@@ -268,11 +268,11 @@ string Type::identifier() const
 
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
-	solAssert(Token::isElementaryTypeName(_type.token()),
+	solAssert(TokenTraits::isElementaryTypeName(_type.token()),
 		"Expected an elementary type name but got " + _type.toString()
 	);
 
-	Token::Value token = _type.token();
+	Token token = _type.token();
 	unsigned m = _type.firstNumber();
 	unsigned n = _type.secondNumber();
 
@@ -320,9 +320,9 @@ TypePointer Type::fromElementaryTypeName(string const& _name)
 	vector<string> nameParts;
 	boost::split(nameParts, _name, boost::is_any_of(" "));
 	solAssert(nameParts.size() == 1 || nameParts.size() == 2, "Cannot parse elementary type: " + _name);
-	Token::Value token;
+	Token token;
 	unsigned short firstNum, secondNum;
-	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(nameParts[0]);
+	tie(token, firstNum, secondNum) = TokenTraits::fromIdentifierOrKeyword(nameParts[0]);
 	auto t = fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
 	if (auto* ref = dynamic_cast<ReferenceType const*>(t.get()))
 	{
@@ -502,16 +502,16 @@ u256 AddressType::literalValue(Literal const* _literal) const
 	return u256(_literal->valueWithoutUnderscores());
 }
 
-TypePointer AddressType::unaryOperatorResult(Token::Value _operator) const
+TypePointer AddressType::unaryOperatorResult(Token _operator) const
 {
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
 
-TypePointer AddressType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer AddressType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
 	// Addresses can only be compared.
-	if (!Token::isCompareOp(_operator))
+	if (!TokenTraits::isCompareOp(_operator))
 		return TypePointer();
 
 	return Type::commonType(shared_from_this(), _other);
@@ -545,7 +545,7 @@ MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) cons
 namespace
 {
 
-bool isValidShiftAndAmountType(Token::Value _operator, Type const& _shiftAmountType)
+bool isValidShiftAndAmountType(Token _operator, Type const& _shiftAmountType)
 {
 	// Disable >>> here.
 	if (_operator == Token::SHR)
@@ -605,7 +605,7 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		_convertTo.category() == Category::FixedPoint;
 }
 
-TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
+TypePointer IntegerType::unaryOperatorResult(Token _operator) const
 {
 	// "delete" is ok for all integer types
 	if (_operator == Token::Delete)
@@ -649,7 +649,7 @@ bigint IntegerType::maxValue() const
 		return (bigint(1) << m_bits) - 1;
 }
 
-TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer IntegerType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
 	if (
 		_other->category() != Category::RationalNumber &&
@@ -657,7 +657,7 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		_other->category() != category()
 	)
 		return TypePointer();
-	if (Token::isShiftOp(_operator))
+	if (TokenTraits::isShiftOp(_operator))
 	{
 		// Shifts are not symmetric with respect to the type
 		if (isValidShiftAndAmountType(_operator, *_other))
@@ -671,9 +671,9 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		return TypePointer();
 
 	// All integer types can be compared
-	if (Token::isCompareOp(_operator))
+	if (TokenTraits::isCompareOp(_operator))
 		return commonType;
-	if (Token::isBooleanOp(_operator))
+	if (TokenTraits::isBooleanOp(_operator))
 		return TypePointer();
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
 	{
@@ -720,7 +720,7 @@ bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
 }
 
-TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
+TypePointer FixedPointType::unaryOperatorResult(Token _operator) const
 {
 	switch(_operator)
 	{
@@ -769,7 +769,7 @@ bigint FixedPointType::minIntegerValue() const
 		return bigint(0);
 }
 
-TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer FixedPointType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
 	auto commonType = Type::commonType(shared_from_this(), _other);
 
@@ -777,9 +777,9 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 		return TypePointer();
 
 	// All fixed types can be compared
-	if (Token::isCompareOp(_operator))
+	if (TokenTraits::isCompareOp(_operator))
 		return commonType;
-	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator) || _operator == Token::Exp)
+	if (TokenTraits::isBitOp(_operator) || TokenTraits::isBooleanOp(_operator) || _operator == Token::Exp)
 		return TypePointer();
 	return commonType;
 }
@@ -1006,7 +1006,7 @@ bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 }
 
-TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) const
+TypePointer RationalNumberType::unaryOperatorResult(Token _operator) const
 {
 	rational value;
 	switch (_operator)
@@ -1030,7 +1030,7 @@ TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) cons
 	return make_shared<RationalNumberType>(value);
 }
 
-TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer RationalNumberType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
@@ -1043,7 +1043,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		return TypePointer();
 
 	RationalNumberType const& other = dynamic_cast<RationalNumberType const&>(*_other);
-	if (Token::isCompareOp(_operator))
+	if (TokenTraits::isCompareOp(_operator))
 	{
 		// Since we do not have a "BoolConstantType", we have to do the actual comparison
 		// at runtime and convert to mobile typse first. Such a comparison is not a very common
@@ -1423,7 +1423,7 @@ bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		_convertTo.category() == category();
 }
 
-TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
+TypePointer FixedBytesType::unaryOperatorResult(Token _operator) const
 {
 	// "delete" and "~" is okay for FixedBytesType
 	if (_operator == Token::Delete)
@@ -1434,9 +1434,9 @@ TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
 	return TypePointer();
 }
 
-TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer FixedBytesType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
-	if (Token::isShiftOp(_operator))
+	if (TokenTraits::isShiftOp(_operator))
 	{
 		if (isValidShiftAndAmountType(_operator, *_other))
 			return shared_from_this();
@@ -1449,7 +1449,7 @@ TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePoi
 		return TypePointer();
 
 	// FixedBytes can be compared and have bitwise operators applied to them
-	if (Token::isCompareOp(_operator) || Token::isBitOp(_operator))
+	if (TokenTraits::isCompareOp(_operator) || TokenTraits::isBitOp(_operator))
 		return commonType;
 
 	return TypePointer();
@@ -1484,14 +1484,14 @@ u256 BoolType::literalValue(Literal const* _literal) const
 		solAssert(false, "Bool type constructed from non-boolean literal.");
 }
 
-TypePointer BoolType::unaryOperatorResult(Token::Value _operator) const
+TypePointer BoolType::unaryOperatorResult(Token _operator) const
 {
 	if (_operator == Token::Delete)
 		return make_shared<TupleType>();
 	return (_operator == Token::Not) ? shared_from_this() : TypePointer();
 }
 
-TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer BoolType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
 	if (category() != _other->category())
 		return TypePointer();
@@ -1531,14 +1531,14 @@ bool ContractType::isPayable() const
 	return fallbackFunction && fallbackFunction->isPayable();
 }
 
-TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
+TypePointer ContractType::unaryOperatorResult(Token _operator) const
 {
 	if (isSuper())
 		return TypePointer{};
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
-TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
+TypePointer ReferenceType::unaryOperatorResult(Token _operator) const
 {
 	if (_operator != Token::Delete)
 		return TypePointer();
@@ -2237,7 +2237,7 @@ bool StructType::recursive() const
 	return *m_recursive;
 }
 
-TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
+TypePointer EnumType::unaryOperatorResult(Token _operator) const
 {
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
@@ -2668,14 +2668,14 @@ bool FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	return true;
 }
 
-TypePointer FunctionType::unaryOperatorResult(Token::Value _operator) const
+TypePointer FunctionType::unaryOperatorResult(Token _operator) const
 {
-	if (_operator == Token::Value::Delete)
+	if (_operator == Token::Delete)
 		return make_shared<TupleType>();
 	return TypePointer();
 }
 
-TypePointer FunctionType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer FunctionType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
 	if (_other->category() != category() || !(_operator == Token::Equal || _operator == Token::NotEqual))
 		return TypePointer();
