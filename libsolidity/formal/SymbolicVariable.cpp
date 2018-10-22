@@ -35,7 +35,7 @@ SymbolicVariable::SymbolicVariable(
 {
 }
 
-string SymbolicVariable::uniqueSymbol(int _index) const
+string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
 }

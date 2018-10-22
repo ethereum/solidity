@@ -399,16 +399,21 @@ void SMTChecker::visitRequire(FunctionCall const& _funCall)
 
 void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 {
-	string gasLeft = "gasleft";
+	string gasLeft = "gasleft()";
 	// We increase the variable index since gasleft changes
 	// inside a tx.
 	defineSpecialVariable(gasLeft, _funCall, true);
-	m_specialVariables.at(gasLeft)->setUnknownValue();
+	auto const& symbolicVar = m_specialVariables.at(gasLeft);
+	unsigned index = symbolicVar->index();
+	// We set the current value to unknown anyway to add type constraints.
+	symbolicVar->setUnknownValue();
+	if (index > 0)
+		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
 }
 
 void SMTChecker::visitBlockHash(FunctionCall const& _funCall)
 {
-	string blockHash = "blockhash";
+	string blockHash = "blockhash()";
 	// TODO Define blockhash as an uninterpreted function
 	defineSpecialVariable(blockHash, _funCall);
 }
@@ -480,11 +485,12 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	}
 	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
 	{
-		if (fun->kind() == FunctionType::Kind::Assert ||
+		if (
+			fun->kind() == FunctionType::Kind::Assert ||
 			fun->kind() == FunctionType::Kind::Require ||
 			fun->kind() == FunctionType::Kind::GasLeft ||
 			fun->kind() == FunctionType::Kind::BlockHash
-			)
+		)
 			return;
 		createExpr(_identifier);
 	}
@@ -541,7 +547,16 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 	solAssert(exprType, "");
 	if (exprType->category() == Type::Category::Magic)
 	{
-		defineSpecialVariable(_memberAccess.memberName(), _memberAccess);
+		auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
+		string accessedName;
+		if (identifier)
+			accessedName = identifier->name();
+		else
+			m_errorReporter.warning(
+				_memberAccess.location(),
+				"Assertion checker does not yet support this expression."
+			);
+		defineSpecialVariable(accessedName + "." + _memberAccess.memberName(), _memberAccess);
 		return false;
 	}
 	else
