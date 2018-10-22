@@ -212,7 +212,7 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 
 void SMTChecker::endVisit(Assignment const& _assignment)
 {
-	if (_assignment.assignmentOperator() != Token::Value::Assign)
+	if (_assignment.assignmentOperator() != Token::Assign)
 		m_errorReporter.warning(
 			_assignment.location(),
 			"Assertion checker does not yet implement compound assignment."
@@ -331,11 +331,11 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 
 void SMTChecker::endVisit(BinaryOperation const& _op)
 {
-	if (Token::isArithmeticOp(_op.getOperator()))
+	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
-	else if (Token::isCompareOp(_op.getOperator()))
+	else if (TokenTraits::isCompareOp(_op.getOperator()))
 		compareOperation(_op);
-	else if (Token::isBooleanOp(_op.getOperator()))
+	else if (TokenTraits::isBooleanOp(_op.getOperator()))
 		booleanOperation(_op);
 	else
 		m_errorReporter.warning(
@@ -530,7 +530,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 		auto const& intType = dynamic_cast<IntegerType const&>(*_op.annotation().commonType);
 		smt::Expression left(expr(_op.leftExpression()));
 		smt::Expression right(expr(_op.rightExpression()));
-		Token::Value op = _op.getOperator();
+		Token op = _op.getOperator();
 		smt::Expression value(
 			op == Token::Add ? left + right :
 			op == Token::Sub ? left - right :
@@ -564,7 +564,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 	{
 		smt::Expression left(expr(_op.leftExpression()));
 		smt::Expression right(expr(_op.rightExpression()));
-		Token::Value op = _op.getOperator();
+		Token op = _op.getOperator();
 		shared_ptr<smt::Expression> value;
 		if (isNumber(_op.annotation().commonType->category()))
 		{

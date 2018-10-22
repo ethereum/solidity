@@ -61,7 +61,7 @@ struct SemVerMatchExpression
 	struct MatchComponent
 	{
 		/// Prefix from < > <= >= ~ ^
-		Token::Value prefix = Token::Illegal;
+		Token prefix = Token::Illegal;
 		/// Version, where unsigned(-1) in major, minor or patch denotes '*', 'x' or 'X'
 		SemVerVersion version;
 		/// Whether we have 1, 1.2 or 1.2.4
@@ -81,7 +81,7 @@ struct SemVerMatchExpression
 class SemVerMatchExpressionParser
 {
 public:
-	SemVerMatchExpressionParser(std::vector<Token::Value> const& _tokens, std::vector<std::string> const& _literals):
+	SemVerMatchExpressionParser(std::vector<Token> const& _tokens, std::vector<std::string> const& _literals):
 		m_tokens(_tokens), m_literals(_literals)
 	{}
 	SemVerMatchExpression parse();
@@ -95,10 +95,10 @@ private:
 
 	char currentChar() const;
 	char nextChar();
-	Token::Value currentToken() const;
+	Token currentToken() const;
 	void nextToken();
 
-	std::vector<Token::Value> m_tokens;
+	std::vector<Token> m_tokens;
 	std::vector<std::string> m_literals;
 
 	unsigned m_pos = 0;

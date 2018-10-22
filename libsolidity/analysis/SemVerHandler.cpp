@@ -199,7 +199,7 @@ void SemVerMatchExpressionParser::parseMatchExpression()
 SemVerMatchExpression::MatchComponent SemVerMatchExpressionParser::parseMatchComponent()
 {
 	SemVerMatchExpression::MatchComponent component;
-	Token::Value token = currentToken();
+	Token token = currentToken();
 
 	switch (token)
 	{
@@ -280,7 +280,7 @@ char SemVerMatchExpressionParser::nextChar()
 	return currentChar();
 }
 
-Token::Value SemVerMatchExpressionParser::currentToken() const
+Token SemVerMatchExpressionParser::currentToken() const
 {
 	if (m_pos < m_tokens.size())
 		return m_tokens[m_pos];

@@ -214,9 +214,9 @@ void Scanner::addUnicodeAsUTF8(unsigned codepoint)
 }
 
 // Ensure that tokens can be stored in a byte.
-BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
+BOOST_STATIC_ASSERT(TokenTraits::count() <= 0x100);
 
-Token::Value Scanner::next()
+Token Scanner::next()
 {
 	m_currentToken = m_nextToken;
 	m_skippedComment = m_nextSkippedComment;
@@ -225,7 +225,7 @@ Token::Value Scanner::next()
 	return m_currentToken.token;
 }
 
-Token::Value Scanner::selectToken(char _next, Token::Value _then, Token::Value _else)
+Token Scanner::selectToken(char _next, Token _then, Token _else)
 {
 	advance();
 	if (m_char == _next)
@@ -249,7 +249,7 @@ void Scanner::skipWhitespaceExceptUnicodeLinebreak()
 		advance();
 }
 
-Token::Value Scanner::skipSingleLineComment()
+Token Scanner::skipSingleLineComment()
 {
 	// Line terminator is not part of the comment. If it is a
 	// non-ascii line terminator, it will result in a parser error.
@@ -259,7 +259,7 @@ Token::Value Scanner::skipSingleLineComment()
 	return Token::Whitespace;
 }
 
-Token::Value Scanner::scanSingleLineDocComment()
+Token Scanner::scanSingleLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	advance(); //consume the last '/' at ///
@@ -295,7 +295,7 @@ Token::Value Scanner::scanSingleLineDocComment()
 	return Token::CommentLiteral;
 }
 
-Token::Value Scanner::skipMultiLineComment()
+Token Scanner::skipMultiLineComment()
 {
 	advance();
 	while (!isSourcePastEndOfInput())
@@ -316,7 +316,7 @@ Token::Value Scanner::skipMultiLineComment()
 	return Token::Illegal;
 }
 
-Token::Value Scanner::scanMultiLineDocComment()
+Token Scanner::scanMultiLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	bool endFound = false;
@@ -369,7 +369,7 @@ Token::Value Scanner::scanMultiLineDocComment()
 		return Token::CommentLiteral;
 }
 
-Token::Value Scanner::scanSlash()
+Token Scanner::scanSlash()
 {
 	int firstSlashPosition = sourcePos();
 	advance();
@@ -380,7 +380,7 @@ Token::Value Scanner::scanSlash()
 		else if (m_char == '/')
 		{
 			// doxygen style /// comment
-			Token::Value comment;
+			Token comment;
 			m_nextSkippedComment.location.start = firstSlashPosition;
 			comment = scanSingleLineDocComment();
 			m_nextSkippedComment.location.end = sourcePos();
@@ -406,7 +406,7 @@ Token::Value Scanner::scanSlash()
 				return Token::Whitespace;
 			}
 			// we actually have a multiline documentation comment
-			Token::Value comment;
+			Token comment;
 			m_nextSkippedComment.location.start = firstSlashPosition;
 			comment = scanMultiLineDocComment();
 			m_nextSkippedComment.location.end = sourcePos();
@@ -432,7 +432,7 @@ void Scanner::scanToken()
 	m_nextSkippedComment.literal.clear();
 	m_nextSkippedComment.extendedTokenInfo = make_tuple(0, 0);
 
-	Token::Value token;
+	Token token;
 	// M and N are for the purposes of grabbing different type sizes
 	unsigned m;
 	unsigned n;
@@ -703,7 +703,7 @@ bool Scanner::isUnicodeLinebreak()
 		return false;
 }
 
-Token::Value Scanner::scanString()
+Token Scanner::scanString()
 {
 	char const quote = m_char;
 	advance();  // consume quote
@@ -727,7 +727,7 @@ Token::Value Scanner::scanString()
 	return Token::StringLiteral;
 }
 
-Token::Value Scanner::scanHexString()
+Token Scanner::scanHexString()
 {
 	char const quote = m_char;
 	advance();  // consume quote
@@ -760,7 +760,7 @@ void Scanner::scanDecimalDigits()
 	// Defer further validation of underscore to SyntaxChecker.
 }
 
-Token::Value Scanner::scanNumber(char _charSeen)
+Token Scanner::scanNumber(char _charSeen)
 {
 	enum { DECIMAL, HEX, BINARY } kind = DECIMAL;
 	LiteralScope literal(this, LITERAL_TYPE_NUMBER);
@@ -854,7 +854,7 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	return Token::Number;
 }
 
-tuple<Token::Value, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
+tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 {
 	solAssert(isIdentifierStart(m_char), "");
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
@@ -863,7 +863,7 @@ tuple<Token::Value, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	while (isIdentifierPart(m_char)) //get full literal
 		addLiteralCharAndAdvance();
 	literal.complete();
-	return Token::fromIdentifierOrKeyword(m_nextToken.literal);
+	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);
 }
 
 char CharStream::advanceAndGet(size_t _chars)

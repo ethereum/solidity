@@ -134,7 +134,7 @@ private:
 	static std::string location(VariableDeclaration::Location _location);
 	static std::string contractKind(ContractDefinition::ContractKind _kind);
 	static std::string functionCallKind(FunctionCallKind _kind);
-	static std::string literalTokenKind(Token::Value _token);
+	static std::string literalTokenKind(Token _token);
 	static std::string type(Expression const& _expression);
 	static std::string type(VariableDeclaration const& _varDecl);
 	static int nodeId(ASTNode const& _node)

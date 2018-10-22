@@ -589,7 +589,7 @@ bool ASTJsonConverter::visit(Conditional const& _node)
 bool ASTJsonConverter::visit(Assignment const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
-		make_pair("operator", Token::toString(_node.assignmentOperator())),
+		make_pair("operator", TokenTraits::toString(_node.assignmentOperator())),
 		make_pair("leftHandSide", toJson(_node.leftHandSide())),
 		make_pair("rightHandSide", toJson(_node.rightHandSide()))
 	};
@@ -613,7 +613,7 @@ bool ASTJsonConverter::visit(UnaryOperation const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("prefix", _node.isPrefixOperation()),
-		make_pair("operator", Token::toString(_node.getOperator())),
+		make_pair("operator", TokenTraits::toString(_node.getOperator())),
 		make_pair("subExpression", toJson(_node.subExpression()))
 	};
 	appendExpressionAttributes(attributes, _node.annotation());
@@ -624,7 +624,7 @@ bool ASTJsonConverter::visit(UnaryOperation const& _node)
 bool ASTJsonConverter::visit(BinaryOperation const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
-		make_pair("operator", Token::toString(_node.getOperator())),
+		make_pair("operator", TokenTraits::toString(_node.getOperator())),
 		make_pair("leftExpression", toJson(_node.leftExpression())),
 		make_pair("rightExpression", toJson(_node.rightExpression())),
 		make_pair("commonType", typePointerToJson(_node.annotation().commonType)),
@@ -719,7 +719,7 @@ bool ASTJsonConverter::visit(Literal const& _node)
 	Json::Value value{_node.value()};
 	if (!dev::validateUTF8(_node.value()))
 		value = Json::nullValue;
-	Token::Value subdenomination = Token::Value(_node.subDenomination());
+	Token subdenomination = Token(_node.subDenomination());
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair(m_legacy ? "token" : "kind", literalTokenKind(_node.token())),
 		make_pair("value", value),
@@ -728,7 +728,7 @@ bool ASTJsonConverter::visit(Literal const& _node)
 			"subdenomination",
 			subdenomination == Token::Illegal ?
 			Json::nullValue :
-			Json::Value{Token::toString(subdenomination)}
+			Json::Value{TokenTraits::toString(subdenomination)}
 		)
 	};
 	appendExpressionAttributes(attributes, _node.annotation());
@@ -790,7 +790,7 @@ string ASTJsonConverter::functionCallKind(FunctionCallKind _kind)
 	}
 }
 
-string ASTJsonConverter::literalTokenKind(Token::Value _token)
+string ASTJsonConverter::literalTokenKind(Token _token)
 {
 	switch (_token)
 	{

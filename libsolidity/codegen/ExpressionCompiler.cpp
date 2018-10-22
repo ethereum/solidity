@@ -206,8 +206,8 @@ bool ExpressionCompiler::visit(Conditional const& _condition)
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
-	Token::Value op = _assignment.assignmentOperator();
-	Token::Value binOp = op == Token::Assign ? op : Token::AssignmentToBinaryOp(op);
+	Token op = _assignment.assignmentOperator();
+	Token binOp = op == Token::Assign ? op : TokenTraits::AssignmentToBinaryOp(op);
 	Type const& leftType = *_assignment.leftHandSide().annotation().type;
 	if (leftType.category() == Type::Category::Tuple)
 	{
@@ -223,7 +223,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	// Perform some conversion already. This will convert storage types to memory and literals
 	// to their actual type, but will not convert e.g. memory to storage.
 	TypePointer rightIntermediateType;
-	if (op != Token::Assign && Token::isShiftOp(binOp))
+	if (op != Token::Assign && TokenTraits::isShiftOp(binOp))
 		rightIntermediateType = _assignment.rightHandSide().annotation().type->mobileType();
 	else
 		rightIntermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
@@ -251,7 +251,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		m_currentLValue->retrieveValue(_assignment.location(), true);
 		utils().convertType(leftType, leftType, cleanupNeeded);
 
-		if (Token::isShiftOp(binOp))
+		if (TokenTraits::isShiftOp(binOp))
 			appendShiftOperatorCode(binOp, leftType, *rightIntermediateType);
 		else
 		{
@@ -384,7 +384,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		m_context << u256(0) << Instruction::SUB;
 		break;
 	default:
-		solAssert(false, "Invalid unary operator: " + string(Token::toString(_unaryOperation.getOperator())));
+		solAssert(false, "Invalid unary operator: " + string(TokenTraits::toString(_unaryOperation.getOperator())));
 	}
 	return false;
 }
@@ -396,7 +396,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	Expression const& rightExpression = _binaryOperation.rightExpression();
 	solAssert(!!_binaryOperation.annotation().commonType, "");
 	TypePointer const& commonType = _binaryOperation.annotation().commonType;
-	Token::Value const c_op = _binaryOperation.getOperator();
+	Token const c_op = _binaryOperation.getOperator();
 
 	if (c_op == Token::And || c_op == Token::Or) // special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
@@ -407,7 +407,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		bool cleanupNeeded = cleanupNeededForOp(commonType->category(), c_op);
 
 		TypePointer leftTargetType = commonType;
-		TypePointer rightTargetType = Token::isShiftOp(c_op) ? rightExpression.annotation().type->mobileType() : commonType;
+		TypePointer rightTargetType = TokenTraits::isShiftOp(c_op) ? rightExpression.annotation().type->mobileType() : commonType;
 		solAssert(rightTargetType, "");
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
@@ -415,7 +415,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		{
 			return dynamic_cast<Literal const*>(&_e) || _e.annotation().type->category() == Type::Category::RationalNumber;
 		};
-		bool swap = m_optimize && Token::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
+		bool swap = m_optimize && TokenTraits::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
 		{
 			leftExpression.accept(*this);
@@ -430,10 +430,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			leftExpression.accept(*this);
 			utils().convertType(*leftExpression.annotation().type, *leftTargetType, cleanupNeeded);
 		}
-		if (Token::isShiftOp(c_op))
+		if (TokenTraits::isShiftOp(c_op))
 			// shift only cares about the signedness of both sides
 			appendShiftOperatorCode(c_op, *leftTargetType, *rightTargetType);
-		else if (Token::isCompareOp(c_op))
+		else if (TokenTraits::isCompareOp(c_op))
 			appendCompareOperatorCode(c_op, *commonType);
 		else
 			appendOrdinaryBinaryOperatorCode(c_op, *commonType);
@@ -1602,7 +1602,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 
 void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryOperation)
 {
-	Token::Value const c_op = _binaryOperation.getOperator();
+	Token const c_op = _binaryOperation.getOperator();
 	solAssert(c_op == Token::Or || c_op == Token::And, "");
 
 	_binaryOperation.leftExpression().accept(*this);
@@ -1615,7 +1615,7 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 	m_context << endLabel;
 }
 
-void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type const& _type)
+void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& _type)
 {
 	solAssert(_type.sizeOnStack() == 1, "Comparison of multi-slot types.");
 	if (_operator == Token::Equal || _operator == Token::NotEqual)
@@ -1665,17 +1665,17 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	}
 }
 
-void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator, Type const& _type)
+void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token _operator, Type const& _type)
 {
-	if (Token::isArithmeticOp(_operator))
+	if (TokenTraits::isArithmeticOp(_operator))
 		appendArithmeticOperatorCode(_operator, _type);
-	else if (Token::isBitOp(_operator))
+	else if (TokenTraits::isBitOp(_operator))
 		appendBitOperatorCode(_operator);
 	else
 		solAssert(false, "Unknown binary operator.");
 }
 
-void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
+void ExpressionCompiler::appendArithmeticOperatorCode(Token _operator, Type const& _type)
 {
 	if (_type.category() == Type::Category::FixedPoint)
 		solUnimplemented("Not yet implemented - FixedPointType.");
@@ -1715,7 +1715,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	}
 }
 
-void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
+void ExpressionCompiler::appendBitOperatorCode(Token _operator)
 {
 	switch (_operator)
 	{
@@ -1733,7 +1733,7 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 	}
 }
 
-void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type const& _valueType, Type const& _shiftAmountType)
+void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _valueType, Type const& _shiftAmountType)
 {
 	// stack: shift_amount value_to_shift
 
@@ -2140,9 +2140,9 @@ void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 	setLValue<StorageItem>(_expression, *_expression.annotation().type);
 }
 
-bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token::Value _op)
+bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token _op)
 {
-	if (Token::isCompareOp(_op) || Token::isShiftOp(_op))
+	if (TokenTraits::isCompareOp(_op) || TokenTraits::isShiftOp(_op))
 		return true;
 	else if (_type == Type::Category::Integer && (_op == Token::Div || _op == Token::Mod || _op == Token::Exp))
 		// We need cleanup for EXP because 0**0 == 1, but 0**0x100 == 0

@@ -63,11 +63,11 @@ protected:
 	///@{
 	///@name Helper functions
 	/// If current token value is not _value, throw exception otherwise advance token.
-	void expectToken(Token::Value _value, bool _advance = true);
-	Token::Value currentToken() const;
-	Token::Value peekNextToken() const;
+	void expectToken(Token _value, bool _advance = true);
+	Token currentToken() const;
+	Token peekNextToken() const;
 	std::string currentLiteral() const;
-	Token::Value advance();
+	Token advance();
 	///@}
 
 	/// Increases the recursion depth and throws an exception if it is too deep.
