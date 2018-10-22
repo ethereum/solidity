@@ -15,13 +15,56 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/SymbolicIntVariable.h>
+#include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/formal/SymbolicTypes.h>
+
+#include <libsolidity/ast/AST.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+
+SymbolicVariable::SymbolicVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	m_type(move(_type)),
+	m_uniqueName(_uniqueName),
+	m_interface(_interface),
+	m_ssa(make_shared<SSAVariable>())
+{
+}
+
+string SymbolicVariable::uniqueSymbol(unsigned _index) const
+{
+	return m_uniqueName + "_" + to_string(_index);
+}
+
+SymbolicBoolVariable::SymbolicBoolVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface&_interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface)
+{
+	solAssert(m_type->category() == Type::Category::Bool, "");
+}
+
+smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
+{
+	return m_interface.newBool(uniqueSymbol(_index));
+}
+
+void SymbolicBoolVariable::setZeroValue()
+{
+	m_interface.addAssertion(currentValue() == smt::Expression(false));
+}
+
+void SymbolicBoolVariable::setUnknownValue()
+{
+}
 
 SymbolicIntVariable::SymbolicIntVariable(
 	TypePointer _type,
@@ -49,4 +92,21 @@ void SymbolicIntVariable::setUnknownValue()
 	solAssert(intType, "");
 	m_interface.addAssertion(currentValue() >= minValue(*intType));
 	m_interface.addAssertion(currentValue() <= maxValue(*intType));
+}
+
+SymbolicAddressVariable::SymbolicAddressVariable(
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicIntVariable(make_shared<IntegerType>(160), _uniqueName, _interface)
+{
+}
+
+SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
+	unsigned _numBytes,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicIntVariable(make_shared<IntegerType>(_numBytes * 8), _uniqueName, _interface)
+{
 }

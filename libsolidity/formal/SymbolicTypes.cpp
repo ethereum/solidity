@@ -17,10 +17,6 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
-#include <libsolidity/formal/SymbolicBoolVariable.h>
-#include <libsolidity/formal/SymbolicIntVariable.h>
-#include <libsolidity/formal/SymbolicAddressVariable.h>
-
 #include <libsolidity/ast/Types.h>
 
 #include <memory>
@@ -55,6 +51,12 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 		var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
 	else if (isInteger(_type.category()))
 		var = make_shared<SymbolicIntVariable>(type, _uniqueName, _solver);
+	else if (isFixedBytes(_type.category()))
+	{
+		auto fixedBytesType = dynamic_cast<FixedBytesType const*>(type.get());
+		solAssert(fixedBytesType, "");
+		var = make_shared<SymbolicFixedBytesVariable>(fixedBytesType->numBytes(), _uniqueName, _solver);
+	}
 	else if (isAddress(_type.category()))
 		var = make_shared<SymbolicAddressVariable>(_uniqueName, _solver);
 	else if (isRational(_type.category()))
@@ -86,6 +88,11 @@ bool dev::solidity::isRational(Type::Category _category)
 	return _category == Type::Category::RationalNumber;
 }
 
+bool dev::solidity::isFixedBytes(Type::Category _category)
+{
+	return _category == Type::Category::FixedBytes;
+}
+
 bool dev::solidity::isAddress(Type::Category _category)
 {
 	return _category == Type::Category::Address;
@@ -95,6 +102,7 @@ bool dev::solidity::isNumber(Type::Category _category)
 {
 	return isInteger(_category) ||
 		isRational(_category) ||
+		isFixedBytes(_category) ||
 		isAddress(_category);
 }
 

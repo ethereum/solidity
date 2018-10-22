@@ -18,7 +18,7 @@
 #pragma once
 
 #include <libsolidity/formal/SolverInterface.h>
-#include <libsolidity/formal/SymbolicVariable.h>
+#include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
@@ -35,6 +35,7 @@ bool isSupportedType(Type const& _type);
 
 bool isInteger(Type::Category _category);
 bool isRational(Type::Category _category);
+bool isFixedBytes(Type::Category _category);
 bool isAddress(Type::Category _category);
 bool isNumber(Type::Category _category);
 bool isBool(Type::Category _category);

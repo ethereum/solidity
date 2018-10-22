@@ -33,7 +33,7 @@ namespace solidity
 class Type;
 
 /**
- * This class represents the symbolic version of a program variable.
+ * This abstract class represents the symbolic version of a program variable.
  */
 class SymbolicVariable
 {
@@ -76,6 +76,73 @@ protected:
 	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
 	std::shared_ptr<SSAVariable> m_ssa = nullptr;
+};
+
+/**
+ * Specialization of SymbolicVariable for Bool
+ */
+class SymbolicBoolVariable: public SymbolicVariable
+{
+public:
+	SymbolicBoolVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+
+	/// Sets the var to false.
+	void setZeroValue();
+	/// Does nothing since the SMT solver already knows the valid values for Bool.
+	void setUnknownValue();
+
+protected:
+	smt::Expression valueAtIndex(int _index) const;
+};
+
+/**
+ * Specialization of SymbolicVariable for Integers
+ */
+class SymbolicIntVariable: public SymbolicVariable
+{
+public:
+	SymbolicIntVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+
+	/// Sets the var to 0.
+	void setZeroValue();
+	/// Sets the variable to the full valid value range.
+	void setUnknownValue();
+
+protected:
+	smt::Expression valueAtIndex(int _index) const;
+};
+
+/**
+ * Specialization of SymbolicVariable for Address
+ */
+class SymbolicAddressVariable: public SymbolicIntVariable
+{
+public:
+	SymbolicAddressVariable(
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+};
+
+/**
+ * Specialization of SymbolicVariable for FixedBytes
+ */
+class SymbolicFixedBytesVariable: public SymbolicIntVariable
+{
+public:
+	SymbolicFixedBytesVariable(
+		unsigned _numBytes,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
 };
 
 }

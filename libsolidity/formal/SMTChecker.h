@@ -19,7 +19,7 @@
 
 
 #include <libsolidity/formal/SolverInterface.h>
-#include <libsolidity/formal/SymbolicVariable.h>
+#include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
 
