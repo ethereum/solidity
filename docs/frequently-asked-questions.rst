@@ -213,14 +213,6 @@ It gets added to the total balance of the contract, just like when you send ethe
 You can only send ether along to a function that has the ``payable`` modifier,
 otherwise an exception is thrown.
 
-Is it possible to get a tx receipt for a transaction executed contract-to-contract?
-===================================================================================
-
-No, a function call from one contract to another does not create its own transaction,
-you have to look in the overall transaction. This is also the reason why several
-block explorer do not show Ether sent between contracts correctly.
-
-
 ******************
 Advanced Questions
 ******************
