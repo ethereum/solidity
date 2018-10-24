@@ -43,6 +43,8 @@
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
+#include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/SSATransform.h>
 
 #include <libdevcore/JSON.h>
 
@@ -118,7 +120,8 @@ public:
 				m_nameDispenser = make_shared<NameDispenser>(*m_ast);
 				disambiguated = true;
 			}
-			cout << "(q)quit/(f)flatten/(c)se/(x)plit/(j)oin/(g)rouper/(h)oister/(e)xpr inline/(i)nline/(s)implify/(u)nusedprune? ";
+			cout << "(q)quit/(f)flatten/(c)se/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
+			cout << "  (e)xpr inline/(i)nline/(s)implify/(u)nusedprune/ss(a) transform/(r)edundant assign elim.? ";
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -155,6 +158,12 @@ public:
 				break;
 			case 'u':
 				UnusedPruner::runUntilStabilised(*m_ast);
+				break;
+			case 'a':
+				SSATransform::run(*m_ast, *m_nameDispenser);
+				break;
+			case 'r':
+				RedundantAssignEliminator::run(*m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;
