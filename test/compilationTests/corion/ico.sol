@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 
 import "./safeMath.sol";
 import "./token.sol";

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 
 contract abstractModuleHandler {
     function transfer(address payable from, address payable to, uint256 value, bool fee) external returns (bool success) {}
