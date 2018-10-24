@@ -363,6 +363,10 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		visitAssert(_funCall);
 	else if (funType.kind() == FunctionType::Kind::Require)
 		visitRequire(_funCall);
+	else if (funType.kind() == FunctionType::Kind::GasLeft)
+		visitGasLeft(_funCall);
+	else if (funType.kind() == FunctionType::Kind::BlockHash)
+		visitBlockHash(_funCall);
 	else if (funType.kind() == FunctionType::Kind::Internal)
 		inlineFunctionCall(_funCall);
 	else
@@ -391,6 +395,27 @@ void SMTChecker::visitRequire(FunctionCall const& _funCall)
 	if (isRootFunction())
 		checkBooleanNotConstant(*args[0], "Condition is always $VALUE.");
 	addPathImpliedExpression(expr(*args[0]));
+}
+
+void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
+{
+	string gasLeft = "gasleft()";
+	// We increase the variable index since gasleft changes
+	// inside a tx.
+	defineSpecialVariable(gasLeft, _funCall, true);
+	auto const& symbolicVar = m_specialVariables.at(gasLeft);
+	unsigned index = symbolicVar->index();
+	// We set the current value to unknown anyway to add type constraints.
+	symbolicVar->setUnknownValue();
+	if (index > 0)
+		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
+}
+
+void SMTChecker::visitBlockHash(FunctionCall const& _funCall)
+{
+	string blockHash = "blockhash()";
+	// TODO Define blockhash as an uninterpreted function
+	defineSpecialVariable(blockHash, _funCall);
 }
 
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
@@ -460,7 +485,12 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	}
 	else if (FunctionType const* fun = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
 	{
-		if (fun->kind() == FunctionType::Kind::Assert || fun->kind() == FunctionType::Kind::Require)
+		if (
+			fun->kind() == FunctionType::Kind::Assert ||
+			fun->kind() == FunctionType::Kind::Require ||
+			fun->kind() == FunctionType::Kind::GasLeft ||
+			fun->kind() == FunctionType::Kind::BlockHash
+		)
 			return;
 		createExpr(_identifier);
 	}
@@ -468,6 +498,8 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	{
 		if (VariableDeclaration const* decl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 			defineExpr(_identifier, currentValue(*decl));
+		else if (_identifier.name() == "now")
+			defineSpecialVariable(_identifier.name(), _identifier);
 		else
 			// TODO: handle MagicVariableDeclaration here
 			m_errorReporter.warning(
@@ -496,7 +528,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 
 void SMTChecker::endVisit(Return const& _return)
 {
-	if (hasExpr(*_return.expression()))
+	if (knownExpr(*_return.expression()))
 	{
 		auto returnParams = m_functionPath.back()->returnParameters();
 		if (returnParams.size() > 1)
@@ -508,6 +540,54 @@ void SMTChecker::endVisit(Return const& _return)
 			m_interface->addAssertion(expr(*_return.expression()) == newValue(*returnParams[0]));
 	}
 }
+
+bool SMTChecker::visit(MemberAccess const& _memberAccess)
+{
+	auto const& exprType = _memberAccess.expression().annotation().type;
+	solAssert(exprType, "");
+	if (exprType->category() == Type::Category::Magic)
+	{
+		auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
+		string accessedName;
+		if (identifier)
+			accessedName = identifier->name();
+		else
+			m_errorReporter.warning(
+				_memberAccess.location(),
+				"Assertion checker does not yet support this expression."
+			);
+		defineSpecialVariable(accessedName + "." + _memberAccess.memberName(), _memberAccess);
+		return false;
+	}
+	else
+		m_errorReporter.warning(
+			_memberAccess.location(),
+			"Assertion checker does not yet support this expression."
+		);
+
+	return true;
+}
+
+void SMTChecker::defineSpecialVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
+{
+	if (!knownSpecialVariable(_name))
+	{
+		auto result = newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
+		m_specialVariables.emplace(_name, result.second);
+		result.second->setUnknownValue();
+		if (result.first)
+			m_errorReporter.warning(
+				_expr.location(),
+				"Assertion checker does not yet support this special variable."
+			);
+	}
+	else if (_increaseIndex)
+		m_specialVariables.at(_name)->increaseIndex();
+	// The default behavior is not to increase the index since
+	// most of the special values stay the same throughout a tx.
+	defineExpr(_expr, m_specialVariables.at(_name)->currentValue());
+}
+
 
 void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 {
@@ -681,11 +761,15 @@ void SMTChecker::checkCondition(
 			expressionNames.push_back(_additionalValueName);
 		}
 		for (auto const& var: m_variables)
-			if (knownVariable(*var.first))
-			{
-				expressionsToEvaluate.emplace_back(currentValue(*var.first));
-				expressionNames.push_back(var.first->name());
-			}
+		{
+			expressionsToEvaluate.emplace_back(currentValue(*var.first));
+			expressionNames.push_back(var.first->name());
+		}
+		for (auto const& var: m_specialVariables)
+		{
+			expressionsToEvaluate.emplace_back(var.second->currentValue());
+			expressionNames.push_back(var.first);
+		}
 	}
 	smt::CheckResult result;
 	vector<string> values;
@@ -910,7 +994,7 @@ void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _varia
 bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 {
 	// This might be the case for multiple calls to the same function.
-	if (hasVariable(_varDecl))
+	if (knownVariable(_varDecl))
 		return true;
 	auto const& type = _varDecl.type();
 	solAssert(m_variables.count(&_varDecl) == 0, "");
@@ -925,11 +1009,6 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 		return false;
 	}
 	return true;
-}
-
-string SMTChecker::uniqueSymbol(Expression const& _expr)
-{
-	return "expr_" + to_string(_expr.id());
 }
 
 bool SMTChecker::knownVariable(VariableDeclaration const& _decl)
@@ -969,7 +1048,7 @@ void SMTChecker::setUnknownValue(VariableDeclaration const& _decl)
 
 smt::Expression SMTChecker::expr(Expression const& _e)
 {
-	if (!hasExpr(_e))
+	if (!knownExpr(_e))
 	{
 		m_errorReporter.warning(_e.location(), "Internal error: Expression undefined for SMT solver." );
 		createExpr(_e);
@@ -977,20 +1056,20 @@ smt::Expression SMTChecker::expr(Expression const& _e)
 	return m_expressions.at(&_e)->currentValue();
 }
 
-bool SMTChecker::hasExpr(Expression const& _e) const
+bool SMTChecker::knownExpr(Expression const& _e) const
 {
 	return m_expressions.count(&_e);
 }
 
-bool SMTChecker::hasVariable(VariableDeclaration const& _var) const
+bool SMTChecker::knownSpecialVariable(string const& _var) const
 {
-	return m_variables.count(&_var);
+	return m_specialVariables.count(_var);
 }
 
 void SMTChecker::createExpr(Expression const& _e)
 {
 	solAssert(_e.annotation().type, "");
-	if (hasExpr(_e))
+	if (knownExpr(_e))
 		m_expressions.at(&_e)->increaseIndex();
 	else
 	{

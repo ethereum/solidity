@@ -31,7 +31,6 @@ class SymbolicAddressVariable: public SymbolicIntVariable
 {
 public:
 	SymbolicAddressVariable(
-		Type const& _type,
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);

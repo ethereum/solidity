@@ -39,10 +39,11 @@ class SymbolicVariable
 {
 public:
 	SymbolicVariable(
-		Type const& _type,
+		TypePointer _type,
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
+
 	virtual ~SymbolicVariable() = default;
 
 	smt::Expression currentValue() const
@@ -58,8 +59,8 @@ public:
 		return currentValue();
 	}
 
-	int index() const { return m_ssa->index(); }
-	int& index() { return m_ssa->index(); }
+	unsigned index() const { return m_ssa->index(); }
+	unsigned& index() { return m_ssa->index(); }
 
 	/// Sets the var to the default value of its type.
 	/// Inherited types must implement.
@@ -69,9 +70,9 @@ public:
 	virtual void setUnknownValue() {}
 
 protected:
-	std::string uniqueSymbol(int _index) const;
+	std::string uniqueSymbol(unsigned _index) const;
 
-	Type const& m_type;
+	TypePointer m_type = nullptr;
 	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
 	std::shared_ptr<SSAVariable> m_ssa = nullptr;

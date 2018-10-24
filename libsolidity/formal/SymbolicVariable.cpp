@@ -24,18 +24,18 @@ using namespace dev;
 using namespace dev::solidity;
 
 SymbolicVariable::SymbolicVariable(
-	Type const& _type,
+	TypePointer _type,
 	string const& _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	m_type(_type),
+	m_type(move(_type)),
 	m_uniqueName(_uniqueName),
 	m_interface(_interface),
 	m_ssa(make_shared<SSAVariable>())
 {
 }
 
-string SymbolicVariable::uniqueSymbol(int _index) const
+string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
 }

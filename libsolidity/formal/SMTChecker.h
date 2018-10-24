@@ -66,6 +66,7 @@ private:
 	virtual void endVisit(Identifier const& _node) override;
 	virtual void endVisit(Literal const& _node) override;
 	virtual void endVisit(Return const& _node) override;
+	virtual bool visit(MemberAccess const& _node) override;
 
 	void arithmeticOperation(BinaryOperation const& _op);
 	void compareOperation(BinaryOperation const& _op);
@@ -73,9 +74,13 @@ private:
 
 	void visitAssert(FunctionCall const&);
 	void visitRequire(FunctionCall const&);
+	void visitGasLeft(FunctionCall const&);
+	void visitBlockHash(FunctionCall const&);
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const&);
+
+	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -129,8 +134,6 @@ private:
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
 
-	static std::string uniqueSymbol(Expression const& _expr);
-
 	/// @returns true if _delc is a variable that is known at the current point, i.e.
 	/// has a valid index
 	bool knownVariable(VariableDeclaration const& _decl);
@@ -154,9 +157,12 @@ private:
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
 	/// Checks if expression was created
-	bool hasExpr(Expression const& _e) const;
+	bool knownExpr(Expression const& _e) const;
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smt::Expression _value);
+
+	/// Checks if special variable was seen.
+	bool knownSpecialVariable(std::string const& _var) const;
 
 	/// Adds a new path condition
 	void pushPathCondition(smt::Expression const& _e);
@@ -172,9 +178,6 @@ private:
 	/// Removes local variables from the context.
 	void removeLocalVariables();
 
-	/// Checks if VariableDeclaration was seen.
-	bool hasVariable(VariableDeclaration const& _e) const;
-
 	/// Copy the SSA indices of m_variables.
 	VariableIndices copyVariableIndices();
 	/// Resets the variable indices.
@@ -187,6 +190,7 @@ private:
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
+	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 

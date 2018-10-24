@@ -34,19 +34,19 @@ public:
 	void resetIndex();
 
 	/// This function returns the current index of this SSA variable.
-	int index() const { return m_currentIndex; }
-	int& index() { return m_currentIndex; }
+	unsigned index() const { return m_currentIndex; }
+	unsigned& index() { return m_currentIndex; }
 
-	int operator++()
+	unsigned operator++()
 	{
 		return m_currentIndex = (*m_nextFreeIndex)++;
 	}
 
 private:
-	int m_currentIndex;
+	unsigned m_currentIndex;
 	/// The next free index is a shared pointer because we want
 	/// the copy and the copied to share it.
-	std::shared_ptr<int> m_nextFreeIndex;
+	std::shared_ptr<unsigned> m_nextFreeIndex;
 };
 
 }
