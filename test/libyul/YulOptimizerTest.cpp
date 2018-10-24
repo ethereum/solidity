@@ -36,6 +36,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/RedundantAssignEliminator.h>
 
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
@@ -177,6 +178,18 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		disambiguate();
 		NameDispenser nameDispenser(*m_ast);
 		SSATransform::run(*m_ast, nameDispenser);
+	}
+	else if (m_optimizerStep == "redundantAssignEliminator")
+	{
+		disambiguate();
+		RedundantAssignEliminator::run(*m_ast);
+	}
+	else if (m_optimizerStep == "ssaPlusCleanup")
+	{
+		disambiguate();
+		NameDispenser nameDispenser(*m_ast);
+		SSATransform::run(*m_ast, nameDispenser);
+		RedundantAssignEliminator::run(*m_ast);
 	}
 	else
 	{
