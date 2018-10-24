@@ -253,7 +253,7 @@ Send is the low-level counterpart of ``transfer``. If the execution fails, the c
 In order to interface with contracts that do not adhere to the ABI,
 or to get more direct control over the encoding,
 the functions ``call``, ``delegatecall`` and ``staticcall`` are provided.
-They all take a single ``bytes memory`` argument as input and
+They all take a single ``bytes memory`` parameter and
 return the success condition (as a ``bool``) and the returned data
 (``bytes memory``).
 The functions ``abi.encode``, ``abi.encodePacked``, ``abi.encodeWithSelector``

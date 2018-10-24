@@ -43,8 +43,8 @@ library has to be updated by an external oracle.
 .. note::
     The suffix ``years`` has been removed in version 0.5.0 due to the reasons above.
 
-These suffixes cannot be applied to variables. If you want to
-interpret some input variable in e.g. days, you can do it in the following way::
+These suffixes cannot be applied to variables. For example, if you want to
+interpret a function parameter in days, you can in the following way::
 
     function f(uint start, uint daysAfter) public {
         if (now >= start + daysAfter * 1 days) {
@@ -125,7 +125,7 @@ ABI Encoding and Decoding Functions
     These encoding functions can be used to craft data for external function calls without actually
     calling an external function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a way
     to compute the hash of structured data (although be aware that it is possible to
-    craft a "hash collision" using different inputs types).
+    craft a "hash collision" using different function parameter types).
 
 See the documentation about the :ref:`ABI <ABI>` and the
 :ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
@@ -240,4 +240,3 @@ Furthermore, all functions of the current contract are callable directly includi
 .. note::
     Prior to version 0.5.0, there was a function called ``suicide`` with the same
     semantics as ``selfdestruct``.
-
