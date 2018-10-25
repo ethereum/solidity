@@ -55,6 +55,7 @@ public:
 	std::string operator()(assembly::Block const& _block);
 
 private:
+	std::string formatTypedName(TypedName _variable) const;
 	std::string appendTypeName(std::string const& _type) const;
 
 	bool m_yul = false;

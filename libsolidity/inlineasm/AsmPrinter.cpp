@@ -24,6 +24,8 @@
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/interface/Exceptions.h>
 
+#include <libdevcore/CommonData.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -41,6 +43,7 @@ using namespace dev::solidity::assembly;
 string AsmPrinter::operator()(assembly::Instruction const& _instruction)
 {
 	solAssert(!m_yul, "");
+	solAssert(isValidInstruction(_instruction.instruction), "Invalid instruction");
 	return boost::to_lower_copy(instructionInfo(_instruction.instruction).name);
 }
 
@@ -49,8 +52,10 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
+		solAssert(isValidDecimal(_literal.value) || isValidHex(_literal.value), "Invalid number literal");
 		return _literal.value + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
+		solAssert(_literal.value == "true" || _literal.value == "false", "Invalid bool literal.");
 		return ((_literal.value == "true") ? "true" : "false") + appendTypeName(_literal.type);
 	case LiteralKind::String:
 		break;
@@ -87,18 +92,20 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 
 string AsmPrinter::operator()(assembly::Identifier const& _identifier)
 {
+	solAssert(!_identifier.name.empty(), "Invalid identifier.");
 	return _identifier.name;
 }
 
 string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functionalInstruction)
 {
 	solAssert(!m_yul, "");
+	solAssert(isValidInstruction(_functionalInstruction.instruction), "Invalid instruction");
 	return
 		boost::to_lower_copy(instructionInfo(_functionalInstruction.instruction).name) +
 		"(" +
 		boost::algorithm::join(
 			_functionalInstruction.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
-			", " ) +
+			", ") +
 		")";
 }
 
@@ -110,12 +117,14 @@ string AsmPrinter::operator()(ExpressionStatement const& _statement)
 string AsmPrinter::operator()(assembly::Label const& _label)
 {
 	solAssert(!m_yul, "");
+	solAssert(!_label.name.empty(), "Invalid label.");
 	return _label.name + ":";
 }
 
 string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
 {
 	solAssert(!m_yul, "");
+	solAssert(!_assignment.variableName.name.empty(), "Invalid variable name.");
 	return "=: " + (*this)(_assignment.variableName);
 }
 
@@ -133,7 +142,7 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 	string out = "let ";
 	out += boost::algorithm::join(
 		_variableDeclaration.variables | boost::adaptors::transformed(
-			[this](TypedName variable) { return variable.name + appendTypeName(variable.type); }
+			[this](TypedName argument) { return formatTypedName(argument); }
 		),
 		", "
 	);
@@ -147,10 +156,11 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 
 string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefinition)
 {
+	solAssert(!_functionDefinition.name.empty(), "Invalid function name.");
 	string out = "function " + _functionDefinition.name + "(";
 	out += boost::algorithm::join(
 		_functionDefinition.parameters | boost::adaptors::transformed(
-			[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
+			[this](TypedName argument) { return formatTypedName(argument); }
 		),
 		", "
 	);
@@ -160,7 +170,7 @@ string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefin
 		out += " -> ";
 		out += boost::algorithm::join(
 			_functionDefinition.returnVariables | boost::adaptors::transformed(
-				[this](TypedName argument) { return argument.name + appendTypeName(argument.type); }
+				[this](TypedName argument) { return formatTypedName(argument); }
 			),
 			", "
 		);
@@ -181,11 +191,13 @@ string AsmPrinter::operator()(assembly::FunctionCall const& _functionCall)
 
 string AsmPrinter::operator()(If const& _if)
 {
+	solAssert(_if.condition, "Invalid if condition.");
 	return "if " + boost::apply_visitor(*this, *_if.condition) + "\n" + (*this)(_if.body);
 }
 
 string AsmPrinter::operator()(Switch const& _switch)
 {
+	solAssert(_switch.expression, "Invalid expression pointer.");
 	string out = "switch " + boost::apply_visitor(*this, *_switch.expression);
 	for (auto const& _case: _switch.cases)
 	{
@@ -200,6 +212,7 @@ string AsmPrinter::operator()(Switch const& _switch)
 
 string AsmPrinter::operator()(assembly::ForLoop const& _forLoop)
 {
+	solAssert(_forLoop.condition, "Invalid for loop condition.");
 	string out = "for ";
 	out += (*this)(_forLoop.pre);
 	out += "\n";
@@ -221,6 +234,12 @@ string AsmPrinter::operator()(Block const& _block)
 	);
 	boost::replace_all(body, "\n", "\n    ");
 	return "{\n    " + body + "\n}";
+}
+
+string AsmPrinter::formatTypedName(TypedName _variable) const
+{
+	solAssert(!_variable.name.empty(), "Invalid variable name.");
+	return _variable.name + appendTypeName(_variable.type);
 }
 
 string AsmPrinter::appendTypeName(std::string const& _type) const
