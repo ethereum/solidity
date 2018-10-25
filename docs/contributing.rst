@@ -199,14 +199,13 @@ Running the Fuzzer via AFL
 ==========================
 
 Fuzzing is a technique that runs programs on more or less random inputs to find exceptional execution
-states (segmentation faults, exceptions, etc). Modern fuzzers are clever and do a directed search
+states (segmentation faults, exceptions, etc). Modern fuzzers are clever and run a directed search
 inside the input. We have a specialized binary called ``solfuzzer`` which takes source code as input
 and fails whenever it encounters an internal compiler error, segmentation fault or similar, but
-does not fail if e.g. the code contains an error. This way, internal problems in the compiler
-can be found by fuzzing tools.
+does not fail if e.g., the code contains an error. This way, fuzzing tools can find internal problems in the compiler.
 
 We mainly use `AFL <http://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to download and
-install AFL packages from your repos (afl, afl-clang) or build them manually.
+install the AFL packages from your repositories (afl, afl-clang) or build them manually.
 Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
 
 ::
@@ -237,7 +236,7 @@ If the instrumentation messages did not appear, try switching the cmake flags po
     cmake .. -DCMAKE_C_COMPILER=path/to/afl-clang -DCMAKE_CXX_COMPILER=path/to/afl-clang++
     make solfuzzer
 
-Othwerise, upon execution the fuzzer will halt with an error saying binary is not instrumented:
+Otherwise, upon execution the fuzzer halts with an error saying binary is not instrumented:
 
 ::
 
@@ -259,7 +258,7 @@ Othwerise, upon execution the fuzzer will halt with an error saying binary is no
              Location : check_binary(), afl-fuzz.c:6920
 
 
-Next, you need some example source files. This will make it much easier for the fuzzer
+Next, you need some example source files. This makes it much easier for the fuzzer
 to find errors. You can either copy some files from the syntax tests or extract test files
 from the documentation or the other tests:
 
@@ -274,8 +273,8 @@ from the documentation or the other tests:
 
 The AFL documentation states that the corpus (the initial input files) should not be
 too large. The files themselves should not be larger than 1 kB and there should be
-at most one input file per functionality, so better start with a small number of
-input files. There is also a tool called ``afl-cmin`` that can trim input files
+at most one input file per functionality, so better start with a small number of.
+There is also a tool called ``afl-cmin`` that can trim input files
 that result in similar behaviour of the binary.
 
 Now run the fuzzer (the ``-m`` extends the size of memory to 60 MB):
@@ -284,7 +283,7 @@ Now run the fuzzer (the ``-m`` extends the size of memory to 60 MB):
 
     afl-fuzz -m 60 -i /tmp/test_cases -o /tmp/fuzzer_reports -- /path/to/solfuzzer
 
-The fuzzer will create source files that lead to failures in ``/tmp/fuzzer_reports``.
+The fuzzer creates source files that lead to failures in ``/tmp/fuzzer_reports``.
 Often it finds many similar source files that produce the same error. You can
 use the tool ``scripts/uniqueErrors.sh`` to filter out the unique errors.
 
@@ -294,10 +293,10 @@ Whiskers
 *Whiskers* is a string templating system similar to `Mustache <https://mustache.github.io>`_. It is used by the
 compiler in various places to aid readability, and thus maintainability and verifiability, of the code.
 
-The syntax comes with a substantial difference to Mustache: the template markers ``{{`` and ``}}`` are
+The syntax comes with a substantial difference to Mustache. The template markers ``{{`` and ``}}`` are
 replaced by ``<`` and ``>`` in order to aid parsing and avoid conflicts with :ref:`inline-assembly`
 (The symbols ``<`` and ``>`` are invalid in inline assembly, while ``{`` and ``}`` are used to delimit blocks).
-Another limitation is that lists are only resolved one depth and they will not recurse. This may change in the future.
+Another limitation is that lists are only resolved one depth and they do not recurse. This may change in the future.
 
 A rough specification is the following:
 
