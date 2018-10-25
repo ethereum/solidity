@@ -1,4 +1,4 @@
-pragma solidity ^0.4.6;
+pragma solidity >=0.0;
 
 /**
 * @title RLPReader

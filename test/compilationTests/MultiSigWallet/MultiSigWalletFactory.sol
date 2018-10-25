@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity >=0.0;
 import "Factory.sol";
 import "MultiSigWallet.sol";
 
