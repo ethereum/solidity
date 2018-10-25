@@ -19,8 +19,6 @@
 
 #include <libsolidity/formal/SMTPortfolio.h>
 
-#include <libsolidity/formal/SSAVariable.h>
-#include <libsolidity/formal/SymbolicIntVariable.h>
 #include <libsolidity/formal/VariableUsage.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
