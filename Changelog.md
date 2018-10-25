@@ -8,6 +8,7 @@ Compiler Features:
  * Code generator: Do not perform redundant double cleanup on unsigned integers when loading from calldata.
  * SMTChecker: Support ``msg``, ``tx`` and ``block`` member variables.
  * SMTChecker: Support ``gasleft()`` and ``blockhash()`` functions.
+ * SMTChecker: Support internal bound function calls.
 
 
 Bugfixes:
