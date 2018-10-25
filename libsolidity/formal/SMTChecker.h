@@ -81,6 +81,7 @@ private:
 	void inlineFunctionCall(FunctionCall const&);
 
 	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
+	void defineUninterpretedFunction(std::string const& _name, std::vector<smt::Sort> const& _domain, smt::Sort _codomain);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -191,6 +192,11 @@ private:
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
+	/// Stores the declaration of an Uninterpreted Function.
+	std::unordered_map<std::string, smt::Expression> m_uFunctions;
+	/// Stores the instances of an UF applied to arguments.
+	/// Used to retrieve models.
+	std::vector<smt::Expression> m_uTerms;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 

@@ -23,6 +23,7 @@
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsolidity/interface/ErrorReporter.h>
+#include <libdevcore/CommonData.h>
 
 #include <boost/range/adaptor/map.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -77,6 +78,9 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		m_interface->reset();
 		m_pathConditions.clear();
 		m_expressions.clear();
+		m_specialVariables.clear();
+		m_uFunctions.clear();
+		m_uTerms.clear();
 		resetStateVariables();
 		initializeLocalVariables(_function);
 	}
@@ -411,9 +415,12 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 
 void SMTChecker::visitBlockHash(FunctionCall const& _funCall)
 {
-	string blockHash = "blockhash()";
-	// TODO Define blockhash as an uninterpreted function
-	defineSpecialVariable(blockHash, _funCall);
+	string blockHash = "blockhash";
+	defineUninterpretedFunction(blockHash, {smt::Sort::Int}, smt::Sort::Int);
+	auto const& arguments = _funCall.arguments();
+	solAssert(arguments.size() == 1, "");
+	m_uTerms.emplace_back(m_uFunctions.at(blockHash)(expr(*arguments[0])));
+	defineExpr(_funCall, m_uTerms.back());
 }
 
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
@@ -586,6 +593,11 @@ void SMTChecker::defineSpecialVariable(string const& _name, Expression const& _e
 	defineExpr(_expr, m_specialVariables.at(_name)->currentValue());
 }
 
+void SMTChecker::defineUninterpretedFunction(string const& _name, vector<smt::Sort> const& _domain, smt::Sort _codomain)
+{
+	if (!m_uFunctions.count(_name))
+		m_uFunctions.emplace(_name, m_interface->newFunction(_name, _domain, _codomain));
+}
 
 void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 {
@@ -751,6 +763,7 @@ void SMTChecker::checkCondition(
 
 	vector<smt::Expression> expressionsToEvaluate;
 	vector<string> expressionNames;
+	map<string, unsigned> expressionIndices;
 	if (m_functionPath.size())
 	{
 		if (_additionalValue)
@@ -767,6 +780,17 @@ void SMTChecker::checkCondition(
 		{
 			expressionsToEvaluate.emplace_back(var.second->currentValue());
 			expressionNames.push_back(var.first);
+		}
+		// Names for UFs are created later.
+		for (auto const& uf: m_uTerms)
+			expressionsToEvaluate.emplace_back(uf);
+		// We need to get models for the internal expressions as well to show
+		// the arguments of uninterpreted functions properly.
+		unsigned exprIndex = expressionsToEvaluate.size();
+		for (auto const& expr: m_expressions)
+		{
+			expressionIndices[expr.second->currentName()] = exprIndex++;
+			expressionsToEvaluate.emplace_back(expr.second->currentValue());
 		}
 	}
 	smt::CheckResult result;
@@ -788,11 +812,33 @@ void SMTChecker::checkCondition(
 		{
 			std::ostringstream modelMessage;
 			modelMessage << "  for:\n";
-			solAssert(values.size() == expressionNames.size(), "");
+			solAssert(values.size() == (expressionNames.size() + m_expressions.size() + m_uTerms.size()), "");
 			map<string, string> sortedModel;
-			for (size_t i = 0; i < values.size(); ++i)
+			// Handle program variables first.
+			for (size_t i = 0; i < expressionNames.size(); ++i)
 				if (expressionsToEvaluate.at(i).name != values.at(i))
 					sortedModel[expressionNames.at(i)] = values.at(i);
+			// Handle uninterpreted functions.
+			for (size_t i = expressionNames.size(); i < values.size() - m_expressions.size(); ++i)
+			{
+				auto const& uf = expressionsToEvaluate.at(i);
+				solAssert(uf.arguments.size() > 0, "");
+				string ufName = uf.name + '(';
+				bool first = true;
+				for (auto const& arg: uf.arguments)
+				{
+					// Every uninterpreted function argument is an internal expression expr_*.
+					solAssert(expressionIndices.count(arg.name), "");
+					if (!first)
+						ufName += ", ";
+					ufName += values.at(expressionIndices.at(arg.name));
+					first = false;
+				}
+				ufName += ')';
+				sortedModel[ufName] = values.at(i);
+			}
+			// Models for internal expressions expr_* are used for
+			// UF arguments and are not shown directly to the user.
 
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
@@ -887,7 +933,8 @@ SMTChecker::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _exp
 		try
 		{
 			// Parse and re-format nicely
-			value = formatNumber(bigint(value));
+			if (isValidDecimal(value) || isValidHex(value))
+				value = formatNumber(bigint(value));
 		}
 		catch (...) { }
 	}
