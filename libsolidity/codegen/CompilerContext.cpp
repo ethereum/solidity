@@ -32,6 +32,7 @@
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/optimiser/Suite.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -313,7 +314,7 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 void CompilerContext::appendInlineAssembly(
 	string const& _assembly,
 	vector<string> const& _localVariables,
-	set<string> const&,
+	set<string> const& _externallyUsedFunctions,
 	bool _system
 )
 {
@@ -390,6 +391,45 @@ void CompilerContext::appendInlineAssembly(
 		message += "-------------------------------------------\n";
 
 		solAssert(false, message);
+	}
+
+	if (m_optimise)
+	{
+		set<string> protectedIdentifiers = _externallyUsedFunctions;
+		for (auto const& var: _localVariables)
+			protectedIdentifiers.insert(var);
+		yul::OptimiserSuite::run(*parserResult, analysisInfo, protectedIdentifiers);
+
+		analysisInfo = assembly::AsmAnalysisInfo{};
+		analyzerResult = assembly::AsmAnalyzer(
+			analysisInfo,
+			errorReporter,
+			m_evmVersion,
+			boost::none,
+			assembly::AsmFlavour::Strict,
+			identifierAccess.resolve
+		).analyze(*parserResult);
+		if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
+		{
+			string message =
+				"Error parsing/analyzing inline assembly block:\n"
+				"------------------ Input: -----------------\n" +
+				_assembly + "\n"
+				"------------------ Errors: ----------------\n";
+			for (auto const& error: errorReporter.errors())
+				message += SourceReferenceFormatter::formatExceptionInformation(
+					*error,
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+					[&](string const&) -> Scanner const& { return *scanner; }
+				);
+			message += "-------------------------------------------\n";
+
+			solAssert(false, message);
+		}
+#ifdef SOL_OUTPUT_ASM
+		cout << "Optimized: " << endl;
+		cout << assembly::AsmPrinter()(*parserResult) << endl;
+#endif
 	}
 
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");

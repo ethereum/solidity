@@ -52,11 +52,16 @@ namespace solidity {
 class CompilerContext
 {
 public:
-	explicit CompilerContext(EVMVersion _evmVersion = EVMVersion{}, CompilerContext* _runtimeContext = nullptr):
+	explicit CompilerContext(
+		EVMVersion _evmVersion = EVMVersion{},
+		CompilerContext* _runtimeContext = nullptr,
+		bool _optimise = false
+	):
 		m_asm(std::make_shared<eth::Assembly>()),
 		m_evmVersion(_evmVersion),
 		m_runtimeContext(_runtimeContext),
-		m_abiFunctions(m_evmVersion)
+		m_abiFunctions(m_evmVersion),
+		m_optimise(_optimise)
 	{
 		if (m_runtimeContext)
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
@@ -329,6 +334,7 @@ private:
 	ABIFunctions m_abiFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
+	bool m_optimise = false;
 };
 
 }

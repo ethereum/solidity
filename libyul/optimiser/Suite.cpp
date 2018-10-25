@@ -28,6 +28,7 @@
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
 #include <libyul/optimiser/Rematerialiser.h>
+#include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -63,6 +64,7 @@ void OptimiserSuite::run(
 	for (size_t i = 0; i < 4; i++)
 	{
 		ExpressionSplitter{dispenser}(ast);
+		BlockFlattener{}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);
 		RedundantAssignEliminator::run(ast);
@@ -81,15 +83,20 @@ void OptimiserSuite::run(
 
 		ExpressionJoiner::run(ast);
 		ExpressionJoiner::run(ast);
+		(FunctionGrouper{})(ast);
 		ExpressionInliner(ast).run();
-		UnusedPruner::runUntilStabilised(ast);
+		BlockFlattener{}(ast);
+		Rematerialiser{}(ast);
+		UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
 
 		ExpressionSplitter{dispenser}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);
 		RedundantAssignEliminator::run(ast);
 		CommonSubexpressionEliminator{}(ast);
+		(FunctionGrouper{})(ast);
 		FullInliner{ast, dispenser}.run();
+		BlockFlattener{}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);
 		RedundantAssignEliminator::run(ast);
@@ -99,15 +106,24 @@ void OptimiserSuite::run(
 		RedundantAssignEliminator::run(ast);
 		RedundantAssignEliminator::run(ast);
 		UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
+		Rematerialiser{}(ast);
 	}
+	BlockFlattener{}(ast);
+	Rematerialiser{}(ast);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(ast);
+	UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
+	Rematerialiser{}(ast);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(ast);
+	UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
+	RedundantAssignEliminator::run(ast);
+	Rematerialiser{}(ast);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(ast);
+	UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(ast);
+	RedundantAssignEliminator::run(ast);
+	UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
+	BlockFlattener{}(ast);
+	Rematerialiser{}(ast);
 
 	_ast = std::move(ast);
 }

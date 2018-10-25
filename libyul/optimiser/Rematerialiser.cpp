@@ -42,7 +42,7 @@ void Rematerialiser::visit(Expression& _e)
 				assertThrow(inScope(ref), OptimizerException, "");
 			assertThrow(m_value.at(name), OptimizerException, "");
 			auto const& value = *m_value.at(name);
-			if (CodeSize::codeSize(value) <= 7)
+			if (CodeSize::codeSize(value) <= 1)
 				_e = (ASTCopier{}).translate(value);
 		}
 	}
