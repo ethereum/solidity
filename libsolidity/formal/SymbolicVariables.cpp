@@ -37,6 +37,11 @@ SymbolicVariable::SymbolicVariable(
 {
 }
 
+string SymbolicVariable::currentName() const
+{
+	return uniqueSymbol(m_ssa->index());
+}
+
 string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
