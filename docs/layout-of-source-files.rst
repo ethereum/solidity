@@ -147,6 +147,10 @@ Another syntax is not part of ES6, but probably convenient:
 
 which is equivalent to ``import * as symbolName from "filename";``.
 
+.. note::
+  If you use `import "filename.sol" as moduleName;`, you access a contract called `C`
+  from inside `"filename.sol"` as `moduleName.C` and not by using `C` directly.
+
 Paths
 -----
 
