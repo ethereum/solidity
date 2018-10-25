@@ -28,6 +28,9 @@ namespace dev
 namespace solidity
 {
 
+/// Returns the SMT sort that models the Solidity type _type.
+smt::Sort smtSort(Type::Category _type);
+
 /// So far int, bool and address are supported.
 /// Returns true if type is supported.
 bool isSupportedType(Type::Category _category);
