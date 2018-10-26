@@ -46,20 +46,6 @@ void ExpressionJoiner::operator()(FunctionCall& _funCall)
 	handleArguments(_funCall.arguments);
 }
 
-void ExpressionJoiner::operator()(If& _if)
-{
-	visit(*_if.condition);
-	(*this)(_if.body);
-}
-
-void ExpressionJoiner::operator()(Switch& _switch)
-{
-	visit(*_switch.expression);
-	for (auto& _case: _switch.cases)
-		// Do not visit the case expression, nothing to join there.
-		(*this)(_case.body);
-}
-
 void ExpressionJoiner::operator()(Block& _block)
 {
 	resetLatestStatementPointer();
@@ -79,13 +65,11 @@ void ExpressionJoiner::visit(Expression& _e)
 	if (_e.type() == typeid(Identifier))
 	{
 		Identifier const& identifier = boost::get<Identifier>(_e);
-		if (isLatestStatementVarDeclOf(identifier) && m_references[identifier.name] == 1)
+		if (isLatestStatementVarDeclJoinable(identifier))
 		{
 			VariableDeclaration& varDecl = boost::get<VariableDeclaration>(*latestStatement());
-			assertThrow(varDecl.variables.size() == 1, OptimizerException, "");
-			assertThrow(varDecl.value, OptimizerException, "");
-
 			_e = std::move(*varDecl.value);
+
 			// Delete the variable declaration (also get the moved-from structure back into a sane state)
 			*latestStatement() = Block();
 
@@ -103,9 +87,7 @@ void ExpressionJoiner::run(Block& _ast)
 
 ExpressionJoiner::ExpressionJoiner(Block& _ast)
 {
-	ReferencesCounter counter;
-	counter(_ast);
-	m_references = counter.references();
+	m_references = ReferencesCounter::countReferences(_ast);
 }
 
 void ExpressionJoiner::handleArguments(vector<Expression>& _arguments)
@@ -154,7 +136,7 @@ Statement* ExpressionJoiner::latestStatement()
 		return &m_currentBlock->statements.at(m_latestStatementInBlock);
 }
 
-bool ExpressionJoiner::isLatestStatementVarDeclOf(Identifier const& _identifier)
+bool ExpressionJoiner::isLatestStatementVarDeclJoinable(Identifier const& _identifier)
 {
 	Statement const* statement = latestStatement();
 	if (!statement || statement->type() != typeid(VariableDeclaration))
@@ -162,5 +144,7 @@ bool ExpressionJoiner::isLatestStatementVarDeclOf(Identifier const& _identifier)
 	VariableDeclaration const& varDecl = boost::get<VariableDeclaration>(*statement);
 	if (varDecl.variables.size() != 1 || !varDecl.value)
 		return false;
-	return varDecl.variables.at(0).name == _identifier.name;
+	assertThrow(varDecl.variables.size() == 1, OptimizerException, "");
+	assertThrow(varDecl.value, OptimizerException, "");
+	return varDecl.variables.at(0).name == _identifier.name && m_references[_identifier.name] == 1;
 }
