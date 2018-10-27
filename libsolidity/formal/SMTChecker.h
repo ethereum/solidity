@@ -81,9 +81,9 @@ private:
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const&);
-
+	
 	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
-	void defineUninterpretedFunction(std::string const& _name, std::vector<smt::Sort> const& _domain, smt::Sort _codomain);
+	void defineUninterpretedFunction(std::string const& _name, std::vector<smt::SortPointer> const& _domain, smt::SortPointer _codomain);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -192,7 +192,9 @@ private:
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
+	/// Stores the declaration of symbolic variables of all types.
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
+	/// Stores the symbolic representation of special variables.
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
 	/// Stores the declaration of an Uninterpreted Function.
 	std::unordered_map<std::string, smt::Expression> m_uninterpretedFunctions;

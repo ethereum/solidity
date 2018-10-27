@@ -81,6 +81,27 @@ protected:
 };
 
 /**
+ * Specialization of SymbolicVariable for Mapping
+ */
+class SymbolicMappingVariable: public SymbolicVariable
+{
+public:
+	SymbolicMappingVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+
+	/// Sets all the elements to 0.
+	void setZeroValue();
+	/// Sets the valid range for all elements.
+	void setUnknownValue();
+
+protected:
+	smt::Expression valueAtIndex(int _index) const;
+};
+
+/**
  * Specialization of SymbolicVariable for Bool
  */
 class SymbolicBoolVariable: public SymbolicVariable

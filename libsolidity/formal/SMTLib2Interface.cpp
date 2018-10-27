@@ -64,7 +64,16 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-void SMTLib2Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
+void SMTLib2Interface::declareVariable(string const& _name, Sort const& _sort)
+{
+	if (!m_constants.count(_name))
+	{
+		m_constants.insert(_name);
+		write("(declare-fun |" + _name + "| () " + toSSort(_sort) + ')');
+	}
+}
+
+void SMTLib2Interface::declareFunction(string const& _name, vector<SortPointer> const& _domain, Sort const& _codomain)
 {
 	// TODO Use domain and codomain as key as well
 	string domain("");
@@ -79,27 +88,9 @@ void SMTLib2Interface::declareFunction(string _name, vector<Sort> const& _domain
 			"| (" +
 			domain +
 			") " +
-			(_codomain == Sort::Int ? "Int" : "Bool") +
+			(_codomain == Kind::Int ? "Int" : "Bool") +
 			")"
 		);
-	}
-}
-
-void SMTLib2Interface::declareInteger(string _name)
-{
-	if (!m_constants.count(_name))
-	{
-		m_constants.insert(_name);
-		write("(declare-const |" + _name + "| Int)");
-	}
-}
-
-void SMTLib2Interface::declareBool(string _name)
-{
-	if (!m_constants.count(_name))
-	{
-		m_constants.insert(_name);
-		write("(declare-const |" + _name + "| Bool)");
 	}
 }
 
@@ -145,12 +136,17 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 
 string SMTLib2Interface::toSmtLibSort(Sort _sort)
 {
-	switch (_sort)
+	switch (_sort.kind)
 	{
-	case Sort::Int:
+	case Kind::Int:
 		return "Int";
-	case Sort::Bool:
+	case Kind::Bool:
 		return "Bool";
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return "(Array " + toSSort(*arraySort.domain) + ' ' + toSSort(*arraySort.range) + ')';
+	}
 	default:
 		solAssert(false, "Invalid SMT sort");
 	}
@@ -173,8 +169,8 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			solAssert(e.sort == Sort::Int || e.sort == Sort::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + ")\n";
+			solAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";

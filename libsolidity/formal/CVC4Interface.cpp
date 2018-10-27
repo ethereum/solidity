@@ -50,25 +50,19 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-void CVC4Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
+void CVC4Interface::declareVariable(string const& _name, Sort const& _sort)
+{
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.mkVar(_name.c_str(), cvc4Sort(_sort))});
+}
+
+void CVC4Interface::declareFunction(string const& _name, vector<SortPointer> const& _domain, Sort const& _codomain)
 {
 	if (!m_functions.count(_name))
 	{
 		CVC4::Type fType = m_context.mkFunctionType(cvc4Sort(_domain), cvc4Sort(_codomain));
 		m_functions.insert({_name, m_context.mkVar(_name.c_str(), fType)});
 	}
-}
-
-void CVC4Interface::declareInteger(string _name)
-{
-	if (!m_constants.count(_name))
-		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.integerType())});
-}
-
-void CVC4Interface::declareBool(string _name)
-{
-	if (!m_constants.count(_name))
-		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.booleanType())});
 }
 
 void CVC4Interface::addAssertion(Expression const& _expr)
@@ -181,19 +175,28 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		return m_context.mkExpr(CVC4::kind::MULT, arguments[0], arguments[1]);
 	else if (n == "/")
 		return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
+	else if (n == "select")
+		return m_context.mkExpr(CVC4::kind::SELECT, arguments[0], arguments[1]);
+	else if (n == "store")
+		return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
 	// Cannot reach here.
 	solAssert(false, "");
 	return arguments[0];
 }
 
-CVC4::Type CVC4Interface::cvc4Sort(Sort _sort)
+CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 {
-	switch (_sort)
+	switch (_sort.kind)
 	{
-	case Sort::Bool:
+	case Kind::Bool:
 		return m_context.booleanType();
-	case Sort::Int:
+	case Kind::Int:
 		return m_context.integerType();
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return m_context.mkArrayType(cvc4Sort(*arraySort.domain), cvc4Sort(*arraySort.range));
+	}
 	default:
 		break;
 	}
@@ -202,10 +205,10 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort _sort)
 	return m_context.integerType();
 }
 
-vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<Sort> const& _sorts)
+vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<SortPointer> const& _sorts)
 {
 	vector<CVC4::Type> cvc4Sorts;
 	for (auto const& _sort: _sorts)
-		cvc4Sorts.push_back(cvc4Sort(_sort));
+		cvc4Sorts.push_back(cvc4Sort(*_sort));
 	return cvc4Sorts;
 }
