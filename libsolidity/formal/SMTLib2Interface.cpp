@@ -64,12 +64,21 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-void SMTLib2Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
+void SMTLib2Interface::declareArray(string const& _name, ArraySort const& _arraySort)
+{
+	if (!m_constants.count(_name))
+	{
+		m_constants.insert(_name);
+		write("(declare-fun |" + _name + "| () " + toSSort(_arraySort) + ')');
+	}
+}
+
+void SMTLib2Interface::declareFunction(string const& _name, vector<SortPointer> const& _domain, Sort const& _codomain)
 {
 	// TODO Use domain and codomain as key as well
 	string domain("");
 	for (auto const& _sort: _domain)
-		domain += toSSort(_sort) + ' ';
+		domain += toSSort(*_sort) + ' ';
 	if (!m_functions.count(_name))
 	{
 		m_functions.insert(_name);
@@ -79,13 +88,13 @@ void SMTLib2Interface::declareFunction(string _name, vector<Sort> const& _domain
 			"| (" +
 			domain +
 			") " +
-			(_codomain == Sort::Int ? "Int" : "Bool") +
+			(_codomain == Kind::Int ? "Int" : "Bool") +
 			")"
 		);
 	}
 }
 
-void SMTLib2Interface::declareInteger(string _name)
+void SMTLib2Interface::declareInteger(string const& _name)
 {
 	if (!m_constants.count(_name))
 	{
@@ -94,7 +103,7 @@ void SMTLib2Interface::declareInteger(string _name)
 	}
 }
 
-void SMTLib2Interface::declareBool(string _name)
+void SMTLib2Interface::declareBool(string const& _name)
 {
 	if (!m_constants.count(_name))
 	{
@@ -143,14 +152,19 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	return sexpr;
 }
 
-string SMTLib2Interface::toSSort(Sort _sort)
+string SMTLib2Interface::toSSort(Sort const& _sort)
 {
-	switch (_sort)
+	switch (_sort.kind)
 	{
-	case Sort::Int:
+	case Kind::Int:
 		return "Int";
-	case Sort::Bool:
+	case Kind::Bool:
 		return "Bool";
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return "(Array " + toSSort(*arraySort.domain) + ' ' + toSSort(*arraySort.range) + ')';
+	}
 	default:
 		solAssert(false, "Invalid SMT sort");
 	}
@@ -173,8 +187,8 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			solAssert(e.sort == Sort::Int || e.sort == Sort::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + ")\n";
+			solAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";

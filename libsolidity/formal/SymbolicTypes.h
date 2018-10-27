@@ -28,8 +28,12 @@ namespace dev
 namespace solidity
 {
 
-/// Returns the SMT sort that models the Solidity type _type.
-smt::Sort smtSort(Type::Category _type);
+/// Returns the SMT sort that models the Solidity type _type,
+/// including sub sorts (for Array, for example).
+std::shared_ptr<smt::Sort> smtSort(Type const& _type);
+/// Returns the SMT kind that models the Solidity type type category _category.
+smt::Kind smtKind(Type::Category _category);
+
 
 /// So far int, bool and address are supported.
 /// Returns true if type is supported.
@@ -43,6 +47,8 @@ bool isAddress(Type::Category _category);
 bool isNumber(Type::Category _category);
 bool isBool(Type::Category _category);
 bool isFunction(Type::Category _category);
+bool isMapping(Type::Category _category);
+bool isArray(Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,

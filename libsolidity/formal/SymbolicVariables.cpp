@@ -47,6 +47,35 @@ string SymbolicVariable::uniqueSymbol(unsigned _index) const
 	return m_uniqueName + "_" + to_string(_index);
 }
 
+SymbolicMappingVariable::SymbolicMappingVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface)
+{
+	solAssert(isMapping(m_type->category()), "");
+}
+
+smt::Expression SymbolicMappingVariable::valueAtIndex(int _index) const
+{
+	auto mapType = dynamic_cast<MappingType const*>(m_type.get());
+	solAssert(mapType, "");
+	auto domain = smtSort(*mapType->keyType());
+	auto range = smtSort(*mapType->valueType());
+	return m_interface.newArray(uniqueSymbol(_index), make_shared<smt::ArraySort>(domain, range));
+}
+
+void SymbolicMappingVariable::setZeroValue()
+{
+}
+
+void SymbolicMappingVariable::setUnknownValue()
+{
+	// TODO
+	// \forall d \in D . (select m d) == UNKNOWN (apply type restrictions)
+}
+
 SymbolicBoolVariable::SymbolicBoolVariable(
 	TypePointer _type,
 	string const& _uniqueName,

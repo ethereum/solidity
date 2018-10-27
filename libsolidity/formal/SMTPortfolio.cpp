@@ -64,19 +64,25 @@ void SMTPortfolio::pop()
 		s->pop();
 }
 
-void SMTPortfolio::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
+void SMTPortfolio::declareArray(string const& _name, ArraySort const& _arraySort)
+{
+	for (auto s : m_solvers)
+		s->declareArray(_name, _arraySort);
+}
+
+void SMTPortfolio::declareFunction(string const& _name, vector<SortPointer> const& _domain, Sort const& _codomain)
 {
 	for (auto s : m_solvers)
 		s->declareFunction(_name, _domain, _codomain);
 }
 
-void SMTPortfolio::declareInteger(string _name)
+void SMTPortfolio::declareInteger(string const& _name)
 {
 	for (auto s : m_solvers)
 		s->declareInteger(_name);
 }
 
-void SMTPortfolio::declareBool(string _name)
+void SMTPortfolio::declareBool(string const& _name)
 {
 	for (auto s : m_solvers)
 		s->declareBool(_name);

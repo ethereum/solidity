@@ -24,18 +24,37 @@
 using namespace std;
 using namespace dev::solidity;
 
-smt::Sort smtSort(Type::Category _category)
+shared_ptr<smt::Sort> dev::solidity::smtSort(Type const& _type)
+{
+	auto const& category = _type.category();
+	if (isNumber(category))
+		return make_shared<smt::Sort>(smt::Kind::Int);
+	else if (isBool(category))
+		return make_shared<smt::Sort>(smt::Kind::Bool);
+	else if (isMapping(category))
+	{
+		auto mapType = dynamic_cast<MappingType const*>(&_type);
+		solAssert(mapType, "");
+		return make_shared<smt::ArraySort>(smtSort(*mapType->keyType()), smtSort(*mapType->valueType()));
+	}
+	solAssert(false, "Invalid type");
+}
+
+smt::Kind dev::solidity::smtKind(Type::Category _category)
 {
 	if (isNumber(_category))
-		return smt::Sort::Int;
+		return smt::Kind::Int;
 	else if (isBool(_category))
-		return smt::Sort::Bool;
+		return smt::Kind::Bool;
+	else if (isMapping(_category))
+		return smt::Kind::Array;
 	solAssert(false, "Invalid type");
 }
 
 bool dev::solidity::isSupportedType(Type::Category _category)
 {
 	return isNumber(_category) ||
+		isArray(_category) ||
 		isBool(_category) ||
 		isFunction(_category);
 }
@@ -54,6 +73,8 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 		abstract = true;
 		var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
 	}
+	else if (isMapping(_type.category()))
+		var = make_shared<SymbolicMappingVariable>(type, _uniqueName, _solver);
 	else if (isBool(_type.category()))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _solver);
 	else if (isFunction(_type.category()))
@@ -123,6 +144,17 @@ bool dev::solidity::isBool(Type::Category _category)
 bool dev::solidity::isFunction(Type::Category _category)
 {
 	return _category == Type::Category::Function;
+}
+
+bool dev::solidity::isMapping(Type::Category _category)
+{
+	return _category == Type::Category::Mapping;
+}
+
+bool dev::solidity::isArray(Type::Category _category)
+{
+	// In the future will also support arrays.
+	return isMapping(_category);
 }
 
 smt::Expression dev::solidity::minValue(IntegerType const& _type)

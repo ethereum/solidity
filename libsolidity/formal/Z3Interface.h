@@ -40,17 +40,18 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareFunction(std::string _name, std::vector<Sort> const& _domain, Sort _codomain) override;
-	void declareInteger(std::string _name) override;
-	void declareBool(std::string _name) override;
+	void declareArray(std::string const&, ArraySort const&) override;
+	void declareFunction(std::string const& _name, std::vector<SortPointer> const& _domain, Sort const& _codomain) override;
+	void declareInteger(std::string const& _name) override;
+	void declareBool(std::string const& _name) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 private:
 	z3::expr toZ3Expr(Expression const& _expr);
-	z3::sort z3Sort(smt::Sort _sort);
-	z3::sort_vector z3Sort(std::vector<smt::Sort> const& _sort);
+	z3::sort z3Sort(smt::Sort const& _sort);
+	z3::sort_vector z3Sort(std::vector<SortPointer> const& _sort);
 
 	z3::context m_context;
 	z3::solver m_solver;
