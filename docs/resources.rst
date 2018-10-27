@@ -21,9 +21,8 @@ Solidity Integrations
 
 * Generic:
 
-
     * `EthFiddle <https://ethfiddle.com/>`_
-        Solidity IDE in the Browser. Write and share your solidity code. Uses server-side components.
+        Solidity IDE in the Browser. Write and share your Solidity code. Uses server-side components.
 
     * `Remix <https://remix.ethereum.org/>`_
         Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
@@ -33,6 +32,9 @@ Solidity Integrations
 
     * `Solhint <https://github.com/protofire/solhint>`_
         Solidity linter that provides security, style guide and best practice rules for smart contract validation.
+
+    * `Superblocks Lab <https://lab.superblocks.com/>`_
+        Browser-based IDE. Built-in browser-based VM and Metamask integration (one click deployment to Testnet/Mainnet).
 
 * Atom:
 
