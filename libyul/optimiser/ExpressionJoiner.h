@@ -73,29 +73,29 @@ class NameCollector;
 class ExpressionJoiner: public ASTModifier
 {
 public:
-	virtual void operator()(FunctionalInstruction&) override;
-	virtual void operator()(FunctionCall&) override;
-	virtual void operator()(If&) override;
-	virtual void operator()(Switch&) override;
-	virtual void operator()(Block& _block) override;
-
-	using ASTModifier::visit;
-	virtual void visit(Expression& _e) override;
-
 	static void run(Block& _ast);
+
 private:
 	explicit ExpressionJoiner(Block& _ast);
+
+	void operator()(Block& _block) override;
+	void operator()(FunctionalInstruction&) override;
+	void operator()(FunctionCall&) override;
+
+	using ASTModifier::visit;
+	void visit(Expression& _e) override;
 
 	void handleArguments(std::vector<Expression>& _arguments);
 
 	void decrementLatestStatementPointer();
 	void resetLatestStatementPointer();
 	Statement* latestStatement();
-	bool isLatestStatementVarDeclOf(Identifier const& _identifier);
+	bool isLatestStatementVarDeclJoinable(Identifier const& _identifier);
 
-	Block* m_currentBlock = nullptr;
-	size_t m_latestStatementInBlock = 0;
-	std::map<std::string, size_t> m_references;
+private:
+	Block* m_currentBlock = nullptr;            ///< Pointer to currently block holding the visiting statement.
+	size_t m_latestStatementInBlock = 0;        ///< Offset to m_currentBlock's statements of the last visited statement.
+	std::map<std::string, size_t> m_references; ///< Holds reference counts to all variable declarations in current block.
 };
 
 }
