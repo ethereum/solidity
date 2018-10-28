@@ -146,7 +146,7 @@ for (auto i = x->begin(); i != x->end(); ++i) {}
 ```
 
 No:
-```cp
+```cpp
 const double d = 0;
 int i, j;
 char *s;
