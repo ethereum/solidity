@@ -32,10 +32,8 @@ namespace yul
 {
 
 /**
- * Optimisation stage that removes unused variables and functions.
- *
- * TODO: Also remove intermediate variable assignments from movable expressions
- * which are not referenced until after the next assignment to the same variable.
+ * Optimisation stage that removes unused variables and functions and also
+ * removes movable expression statements.
  *
  * Note that this does not remove circular references.
  *

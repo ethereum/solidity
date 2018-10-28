@@ -135,6 +135,8 @@ If there are two assignments to a variable where the first one is a movable expr
 and the variable is not used between the two assignments (and the second is not inside
 a loop or conditional, the first one is not inside), the first assignment is removed.
 
+This step also removes movable expression statements.
+
 
 ## Function Unifier
 
