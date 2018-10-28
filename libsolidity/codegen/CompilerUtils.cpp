@@ -142,9 +142,13 @@ void CompilerUtils::storeInMemory(unsigned _offset)
 
 void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
 {
+	// process special types (Reference, StringLiteral, Function)
 	if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
 	{
-		solUnimplementedAssert(ref->location() == DataLocation::Memory, "Only in-memory reference type can be stored.");
+		solUnimplementedAssert(
+			ref->location() == DataLocation::Memory,
+			"Only in-memory reference type can be stored."
+		);
 		storeInMemoryDynamic(IntegerType(256), _padToWordBoundaries);
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
@@ -166,18 +170,18 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		m_context << Instruction::DUP2 << Instruction::MSTORE;
 		m_context << u256(_padToWordBoundaries ? 32 : 24) << Instruction::ADD;
 	}
-	else
+	else if (_type.isValueType())
 	{
 		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
-		if (numBytes > 0)
-		{
-			solUnimplementedAssert(
-				_type.sizeOnStack() == 1,
-				"Memory store of types with stack size != 1 not implemented."
-			);
-			m_context << Instruction::DUP2 << Instruction::MSTORE;
-			m_context << u256(numBytes) << Instruction::ADD;
-		}
+		m_context << Instruction::DUP2 << Instruction::MSTORE;
+		m_context << u256(numBytes) << Instruction::ADD;
+	}
+	else // Should never happen
+	{
+		solAssert(
+			false,
+			"Memory store of type " + _type.toString(true) + " not allowed."
+		);
 	}
 }
 
@@ -1266,18 +1270,30 @@ void CompilerUtils::rightShiftNumberOnStack(unsigned _bits)
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 {
+	solAssert(
+		_type.sizeOnStack() == 1,
+		"Memory store of types with stack size != 1 not allowed (Type: " + _type.toString(true) + ")."
+	);
+
 	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
+
+	solAssert(
+		numBytes > 0,
+		"Memory store of 0 bytes requested (Type: " + _type.toString(true) + ")."
+	);
+
+	solAssert(
+		numBytes <= 32,
+		"Memory store of more than 32 bytes requested (Type: " + _type.toString(true) + ")."
+	);
+
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
-	if (numBytes == 0)
-		m_context << Instruction::POP;
-	else
-	{
-		solAssert(numBytes <= 32, "Memory store of more than 32 bytes requested.");
-		convertType(_type, _type, true);
-		if (numBytes != 32 && !leftAligned && !_padToWords)
-			// shift the value accordingly before storing
-			leftShiftNumberOnStack((32 - numBytes) * 8);
-	}
+
+	convertType(_type, _type, true);
+	if (numBytes != 32 && !leftAligned && !_padToWords)
+		// shift the value accordingly before storing
+		leftShiftNumberOnStack((32 - numBytes) * 8);
+
 	return numBytes;
 }
 
