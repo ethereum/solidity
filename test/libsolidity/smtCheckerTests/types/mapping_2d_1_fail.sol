@@ -9,3 +9,5 @@ contract C
 		assert(x != map[13][14]);
 	}
 }
+// ----
+// Warning: (169-193): Assertion violation happens here

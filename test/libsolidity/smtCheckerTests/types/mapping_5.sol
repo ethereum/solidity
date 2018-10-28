@@ -7,3 +7,5 @@ contract C
 		assert(x != map[a]);
 	}
 }
+// ----
+// Warning: (125-144): Assertion violation happens here

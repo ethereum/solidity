@@ -598,30 +598,32 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	if (_indexAccess.annotation().lValueRequested)
 		return;
 
+	bool error = false;
 	if (Identifier const* id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
 	{
 		VariableDeclaration const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
 		if (knownVariable(varDecl))
-		{
-			m_arrayTerms.emplace_back(make_pair(&varDecl, smt::Expression::select(currentValue(varDecl), expr(*_indexAccess.indexExpression()))));
-			defineExpr(_indexAccess, m_arrayTerms.back().second);
-		}
+			m_arrayTerms.emplace_back(make_pair(&_indexAccess, smt::Expression::select(currentValue(varDecl), expr(*_indexAccess.indexExpression()))));
 		else
-			m_errorReporter.warning(
-				_indexAccess.location(),
-				"Assertion checker does not yet implement this expression."
-			);
+			error = true;
 	}
 	else if (IndexAccess const* innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
 		if (knownExpr(*innerAccess))
-			defineExpr(_indexAccess, smt::Expression::select(expr(*innerAccess), expr(*_indexAccess.indexExpression())));
+			m_arrayTerms.emplace_back(make_pair(&_indexAccess, smt::Expression::select(expr(*innerAccess), expr(*_indexAccess.indexExpression()))));
+		else
+			error = true;
 	}
 	else
+		error = true;
+
+	if (error)
 		m_errorReporter.warning(
 			_indexAccess.location(),
 			"Assertion checker does not yet implement this expression."
 		);
+	else
+		defineExpr(_indexAccess, m_arrayTerms.back().second);
 }
 
 bool SMTChecker::visit(MemberAccess const& _memberAccess)
@@ -929,11 +931,27 @@ void SMTChecker::checkCondition(
 			for (size_t i = expressionNames.size() + m_uTerms.size(), arr = 0; i < values.size() - m_expressions.size(); ++i, ++arr)
 			{
 				auto const& arrayAccess = expressionsToEvaluate.at(i);
-				auto const& arguments = arrayAccess.arguments;
-				solAssert(arguments.size() == 2, "");
-				solAssert(expressionIndices.count(arguments[1].name), "");
-				string access = m_arrayTerms[arr].first->name() + '[' + values.at(expressionIndices.at(arguments[1].name)) + ']';
-				sortedModel[access] = values.at(i);
+				if (arrayAccess.sort->kind == smt::Kind::Array)
+					continue;
+				string indexName("");
+				IndexAccess const* access = m_arrayTerms[arr].first;
+				while (true)
+				{
+					smt::Expression const& indexExpr = expr(*access->indexExpression());
+					indexName = '[' + values.at(expressionIndices.at(indexExpr.name)) + ']' + indexName;
+					if (IndexAccess const* innerAccess = dynamic_cast<IndexAccess const*>(&access->baseExpression()))
+						access = innerAccess;
+					else if (Identifier const* id = dynamic_cast<Identifier const*>(&access->baseExpression()))
+					{
+						indexName = id->name() + indexName;
+						break;
+					}
+					else
+						break;
+				}
+				// Do not show model if var name was not found.
+				if (indexName.at(0) != '[')
+					sortedModel[indexName] = values.at(i);
 			}
 			// Models for internal expressions expr_* are used for
 			// UF arguments and are not shown directly to the user.

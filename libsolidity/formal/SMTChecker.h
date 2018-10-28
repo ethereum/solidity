@@ -205,7 +205,7 @@ private:
 	std::vector<smt::Expression> m_uTerms;
 	/// Stores the instances of array access.
 	/// Used to retrieve models.
-	std::vector<std::pair<VariableDeclaration const*, smt::Expression>> m_arrayTerms;
+	std::vector<std::pair<IndexAccess const*, smt::Expression>> m_arrayTerms;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
 
