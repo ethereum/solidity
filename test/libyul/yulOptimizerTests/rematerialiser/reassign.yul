@@ -17,5 +17,5 @@
 //     pop(2)
 //     pop(b)
 //     pop(c)
-//     pop(add(b, c))
+//     pop(d)
 // }
