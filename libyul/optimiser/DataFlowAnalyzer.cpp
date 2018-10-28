@@ -84,13 +84,26 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 
 void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 {
+	// Save all information. We might rather reinstantiate this class,
+	// but this could be difficult if it is subclassed.
+	map<string, Expression const*> value;
+	map<string, set<string>> references;
+	map<string, set<string>> referencedBy;
+	m_value.swap(value);
+	m_references.swap(references);
+	m_referencedBy.swap(referencedBy);
 	pushScope(true);
+
 	for (auto const& parameter: _fun.parameters)
 		m_variableScopes.back().variables.insert(parameter.name);
 	for (auto const& var: _fun.returnVariables)
 		m_variableScopes.back().variables.insert(var.name);
 	ASTModifier::operator()(_fun);
+
 	popScope();
+	m_value.swap(value);
+	m_references.swap(references);
+	m_referencedBy.swap(referencedBy);
 }
 
 void DataFlowAnalyzer::operator()(ForLoop& _for)
