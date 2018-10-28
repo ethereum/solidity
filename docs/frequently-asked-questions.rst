@@ -215,7 +215,7 @@ otherwise an exception is thrown.
 
 Where can I learn more Solidity?
 ================================
-You may have completed the tutorial and wondered what you should do next to continue to learning how to build decentralized applications using Solidity. There are many tutorials around the web, and you can find a ranked list of Solidity courses on gitconnected:
+You may have completed the docs and wondered what you should do next to continue to learning and how to build decentralized applications using Solidity. There are many tutorials around the web, and you can find a ranked list of Solidity courses on gitconnected:
 
 `Learn Solidity from the top tutorials ranked by Solidity developers <https://gitconnected.com/learn/solidity>`_
 
