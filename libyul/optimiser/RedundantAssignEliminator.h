@@ -127,10 +127,10 @@ private:
 		State(Value _value = Undecided): m_value(_value) {}
 		inline bool operator==(State _other) const { return m_value == _other.m_value; }
 		inline bool operator!=(State _other) const { return !operator==(_other); }
-		inline void join(State const& _other)
+		static inline void join(State& _a, State const& _b)
 		{
 			// Using "max" works here because of the order of the values in the enum.
-			m_value = Value(std::max(int(_other.m_value), int(m_value)));
+			_a.m_value =  Value(std::max(int(_a.m_value), int(_b.m_value)));
 		}
 	private:
 		Value m_value = Undecided;

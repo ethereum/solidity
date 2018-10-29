@@ -163,17 +163,42 @@ void RedundantAssignEliminator::run(Block& _ast)
 	remover(_ast);
 }
 
+template <class K, class V, class F>
+void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
+{
+	// TODO Perhaps it is better to just create a sorted list
+	// and then use insert(begin, end)
+
+	auto ita = _a.begin();
+	auto aend = _a.end();
+	auto itb = _b.begin();
+	auto bend = _b.end();
+
+	for (; itb != bend; ++ita)
+	{
+		if (ita == aend)
+			ita = _a.insert(ita, std::move(*itb++));
+		else if (ita->first < itb->first)
+			continue;
+		else if (itb->first < ita->first)
+			ita = _a.insert(ita, std::move(*itb++));
+		else
+		{
+			_conflictSolver(ita->second, std::move(itb->second));
+			++itb;
+		}
+	}
+}
+
 void RedundantAssignEliminator::join(RedundantAssignEliminator& _other)
 {
-	for (auto& var: _other.m_assignments)
-		if (m_assignments.count(var.first))
-		{
-			map<Assignment const*, State>& assignmentsHere = m_assignments[var.first];
-			for (auto& assignment: var.second)
-				assignmentsHere[assignment.first].join(assignment.second);
-		}
-		else
-			m_assignments[var.first] = std::move(var.second);
+	joinMap(m_assignments, std::move(_other.m_assignments), [](
+		map<Assignment const*, State>& _assignmentHere,
+		map<Assignment const*, State>&& _assignmentThere
+	)
+	{
+		return joinMap(_assignmentHere, std::move(_assignmentThere), State::join);
+	});
 }
 
 void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, RedundantAssignEliminator::State _newState)
