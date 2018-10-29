@@ -95,10 +95,10 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	visit(_expr);
 
 	SourceLocation location = locationOf(_expr);
-	string var = m_nameDispenser.newName("");
+	YulString var = m_nameDispenser.newName({});
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		location,
-		{{TypedName{location, var, ""}}},
+		{{TypedName{location, var, {}}}},
 		make_shared<Expression>(std::move(_expr))
 	});
 	_expr = Identifier{location, var};

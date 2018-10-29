@@ -37,7 +37,7 @@ void Rematerialiser::visit(Expression& _e)
 		Identifier& identifier = boost::get<Identifier>(_e);
 		if (m_value.count(identifier.name))
 		{
-			string name = identifier.name;
+			YulString name = identifier.name;
 			for (auto const& ref: m_references[name])
 				assertThrow(inScope(ref), OptimizerException, "");
 			assertThrow(m_value.at(name), OptimizerException, "");

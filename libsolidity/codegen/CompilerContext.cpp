@@ -32,6 +32,7 @@
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/YulString.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -326,7 +327,7 @@ void CompilerContext::appendInlineAssembly(
 		bool
 	)
 	{
-		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
+		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
 		return it == _localVariables.end() ? size_t(-1) : 1;
 	};
 	identifierAccess.generateCode = [&](
@@ -335,7 +336,7 @@ void CompilerContext::appendInlineAssembly(
 		yul::AbstractAssembly& _assembly
 	)
 	{
-		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name);
+		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
 		solAssert(it != _localVariables.end(), "");
 		int stackDepth = _localVariables.end() - it;
 		int stackDiff = _assembly.stackHeight() - startStackHeight + stackDepth;

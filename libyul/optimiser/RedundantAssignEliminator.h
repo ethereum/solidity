@@ -125,9 +125,9 @@ private:
 	public:
 		enum Value { Unused, Undecided, Used };
 		State(Value _value = Undecided): m_value(_value) {}
-		bool operator==(State _other) const { return m_value == _other.m_value; }
-		bool operator!=(State _other) const { return !operator==(_other); }
-		void join(State _other)
+		inline bool operator==(State _other) const { return m_value == _other.m_value; }
+		inline bool operator!=(State _other) const { return !operator==(_other); }
+		inline void join(State const& _other)
 		{
 			// Using "max" works here because of the order of the values in the enum.
 			m_value = Value(std::max(int(_other.m_value), int(m_value)));
@@ -156,17 +156,18 @@ private:
 
 	private:
 		RedundantAssignEliminator& m_rae;
-		std::set<std::string> m_outerDeclaredVariables;
+		std::set<YulString> m_outerDeclaredVariables;
 	};
 
 	/// Joins the assignment mapping with @a _other according to the rules laid out
 	/// above.
 	/// Will destroy @a _other.
 	void join(RedundantAssignEliminator& _other);
-	void changeUndecidedTo(std::string const& _variable, State _newState);
+	void changeUndecidedTo(YulString _variable, State _newState);
 
-	std::set<std::string> m_declaredVariables;
-	std::map<std::string, std::map<Assignment const*, State>> m_assignments;
+	std::set<YulString> m_declaredVariables;
+	// TODO check that this does not cause nondeterminism!
+	std::map<YulString, std::map<Assignment const*, State>> m_assignments;
 };
 
 class AssignmentRemover: public ASTModifier

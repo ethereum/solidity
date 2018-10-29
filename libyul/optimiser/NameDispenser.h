@@ -21,8 +21,9 @@
 
 #include <libyul/ASTDataForward.h>
 
+#include <libyul/YulString.h>
+
 #include <set>
-#include <string>
 
 namespace dev
 {
@@ -41,18 +42,18 @@ public:
 	/// Initialize the name dispenser with all the names used in the given AST.
 	explicit NameDispenser(Block const& _ast);
 	/// Initialize the name dispenser with the given used names.
-	explicit NameDispenser(std::set<std::string> _usedNames);
+	explicit NameDispenser(std::set<YulString> _usedNames);
 
 	/// @returns a currently unused name that should be similar to _nameHint
 	/// and prefixed by _context if present.
 	/// If the resulting name would be too long, trims the context at the end
 	/// and the name hint at the start.
-	std::string newName(std::string const& _nameHint, std::string const& _context = {});
+	YulString newName(YulString _nameHint, YulString _context = {});
 
 private:
-	std::string newNameInternal(std::string const& _nameHint);
+	YulString newNameInternal(YulString _nameHint);
 
-	std::set<std::string> m_usedNames;
+	std::set<YulString> m_usedNames;
 };
 
 }

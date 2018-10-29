@@ -459,7 +459,7 @@ bool ASTJsonConverter::visit(InlineAssembly const& _node)
 		if (it.first)
 		{
 			Json::Value tuple(Json::objectValue);
-			tuple[it.first->name] = inlineAssemblyIdentifierToJson(it);
+			tuple[it.first->name.str()] = inlineAssemblyIdentifierToJson(it);
 			externalReferences.append(tuple);
 		}
 	}

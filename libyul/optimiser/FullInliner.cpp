@@ -48,9 +48,9 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 	tracker(m_ast);
 	for (auto const& ssaValue: tracker.values())
 		if (ssaValue.second && ssaValue.second->type() == typeid(Literal))
-			m_constants.insert(ssaValue.first);
+			m_constants.emplace(ssaValue.first);
 
-	map<string, size_t> references = ReferencesCounter::countReferences(m_ast);
+	map<YulString, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (auto& statement: m_ast.statements)
 	{
 		if (statement.type() != typeid(FunctionDefinition))
@@ -59,7 +59,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 		m_functions[fun.name] = &fun;
 		// Always inline functions that are only called once.
 		if (references[fun.name] == 1)
-			m_alwaysInline.insert(fun.name);
+			m_alwaysInline.emplace(fun.name);
 		updateCodeSize(fun);
 	}
 }
@@ -68,7 +68,7 @@ void FullInliner::run()
 {
 	for (auto& statement: m_ast.statements)
 		if (statement.type() == typeid(Block))
-			handleBlock("", boost::get<Block>(statement));
+			handleBlock({}, boost::get<Block>(statement));
 
 	// TODO it might be good to determine a visiting order:
 	// first handle functions that are called from many places.
@@ -84,12 +84,12 @@ void FullInliner::updateCodeSize(FunctionDefinition& fun)
 	m_functionSizes[fun.name] = CodeSize::codeSize(fun.body);
 }
 
-void FullInliner::handleBlock(string const& _currentFunctionName, Block& _block)
+void FullInliner::handleBlock(YulString _currentFunctionName, Block& _block)
 {
 	InlineModifier{*this, m_nameDispenser, _currentFunctionName}(_block);
 }
 
-bool FullInliner::shallInline(FunctionCall const& _funCall, string const& _callSite)
+bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 {
 	// No recursive inlining
 	if (_funCall.functionName.name == _callSite)
@@ -148,14 +148,14 @@ boost::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement&
 vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionCall& _funCall)
 {
 	vector<Statement> newStatements;
-	map<string, string> variableReplacements;
+	map<YulString, YulString> variableReplacements;
 
 	FunctionDefinition& function = m_driver.function(_funCall.functionName.name);
 
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
-		string newName = m_nameDispenser.newName(_existingVariable.name, function.name);
+		YulString newName = m_nameDispenser.newName(_existingVariable.name, function.name);
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
 		if (_value)
@@ -214,7 +214,7 @@ Statement BodyCopier::operator()(FunctionDefinition const& _funDef)
 	return _funDef;
 }
 
-string BodyCopier::translateIdentifier(string const& _name)
+YulString BodyCopier::translateIdentifier(YulString _name)
 {
 	if (m_variableReplacements.count(_name))
 		return m_variableReplacements.at(_name);

@@ -31,8 +31,8 @@ using dev::solidity::assembly::TypedNameList;
 
 void VarDeclPropagator::operator()(Block& _block)
 {
-	map<string, TypedName> outerEmptyVarDecls;
-	map<string, TypedName> outerLazyInitializedVarDecls;
+	map<YulString, TypedName> outerEmptyVarDecls;
+	map<YulString, TypedName> outerLazyInitializedVarDecls;
 	swap(m_emptyVarDecls, outerEmptyVarDecls);
 	swap(m_lazyInitializedVarDecls, outerLazyInitializedVarDecls);
 

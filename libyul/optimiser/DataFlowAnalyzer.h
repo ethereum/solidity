@@ -24,7 +24,8 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <string>
+#include <libyul/YulString.h>
+
 #include <map>
 #include <set>
 
@@ -54,7 +55,7 @@ public:
 
 protected:
 	/// Registers the assignment.
-	void handleAssignment(std::set<std::string> const& _names, Expression* _value);
+	void handleAssignment(std::set<YulString> const& _names, Expression* _value);
 
 	/// Creates a new inner scope.
 	void pushScope(bool _functionScope);
@@ -64,22 +65,22 @@ protected:
 
 	/// Clears information about the values assigned to the given variables,
 	/// for example at points where control flow is merged.
-	void clearValues(std::set<std::string> _names);
+	void clearValues(std::set<YulString> _names);
 
 	/// Returns true iff the variable is in scope.
-	bool inScope(std::string const& _variableName) const;
+	bool inScope(YulString _variableName) const;
 
 	/// Current values of variables, always movable.
-	std::map<std::string, Expression const*> m_value;
+	std::map<YulString, Expression const*> m_value;
 	/// m_references[a].contains(b) <=> the current expression assigned to a references b
-	std::map<std::string, std::set<std::string>> m_references;
+	std::map<YulString, std::set<YulString>> m_references;
 	/// m_referencedBy[b].contains(a) <=> the current expression assigned to a references b
-	std::map<std::string, std::set<std::string>> m_referencedBy;
+	std::map<YulString, std::set<YulString>> m_referencedBy;
 
 	struct Scope
 	{
 		explicit Scope(bool _isFunction): isFunction(_isFunction) {}
-		std::set<std::string> variables;
+		std::set<YulString> variables;
 		bool isFunction;
 	};
 	/// List of scopes.

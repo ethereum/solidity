@@ -42,7 +42,7 @@ void SSAValueTracker::operator()(VariableDeclaration const& _varDecl)
 			setValue(var.name, nullptr);
 }
 
-void SSAValueTracker::setValue(string const& _name, Expression const* _value)
+void SSAValueTracker::setValue(YulString _name, Expression const* _value)
 {
 	assertThrow(
 		m_values.count(_name) == 0,

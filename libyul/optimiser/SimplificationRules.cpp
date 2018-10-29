@@ -36,7 +36,7 @@ using namespace dev::yul;
 
 SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
-	map<string, Expression const*> const& _ssaValues
+	map<YulString, Expression const*> const& _ssaValues
 )
 {
 	if (_expr.type() != typeid(FunctionalInstruction))
@@ -104,7 +104,7 @@ void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _
 	m_matchGroups = &_matchGroups;
 }
 
-bool Pattern::matches(Expression const& _expr, map<string, Expression const*> const& _ssaValues) const
+bool Pattern::matches(Expression const& _expr, map<YulString, Expression const*> const& _ssaValues) const
 {
 	Expression const* expr = &_expr;
 
@@ -112,7 +112,7 @@ bool Pattern::matches(Expression const& _expr, map<string, Expression const*> co
 	// Do not do it for "Any" because we can check identity better for variables.
 	if (m_kind != PatternKind::Any && _expr.type() == typeid(Identifier))
 	{
-		string const& varName = boost::get<Identifier>(_expr).name;
+		YulString varName = boost::get<Identifier>(_expr).name;
 		if (_ssaValues.count(varName))
 			expr = _ssaValues.at(varName);
 	}
@@ -125,7 +125,7 @@ bool Pattern::matches(Expression const& _expr, map<string, Expression const*> co
 		Literal const& literal = boost::get<Literal>(*expr);
 		if (literal.kind != assembly::LiteralKind::Number)
 			return false;
-		if (m_data && *m_data != u256(literal.value))
+		if (m_data && *m_data != u256(literal.value.str()))
 			return false;
 		assertThrow(m_arguments.empty(), OptimizerException, "");
 	}
@@ -193,7 +193,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, assembly::LiteralKind::Number, formatNumber(*m_data), ""};
+		return Literal{_location, assembly::LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
@@ -209,8 +209,8 @@ u256 Pattern::d() const
 {
 	Literal const& literal = boost::get<Literal>(matchGroupValue());
 	assertThrow(literal.kind == assembly::LiteralKind::Number, OptimizerException, "");
-	assertThrow(isValidDecimal(literal.value) || isValidHex(literal.value), OptimizerException, "");
-	return u256(literal.value);
+	assertThrow(isValidDecimal(literal.value.str()) || isValidHex(literal.value.str()), OptimizerException, "");
+	return u256(literal.value.str());
 }
 
 Expression const& Pattern::matchGroupValue() const

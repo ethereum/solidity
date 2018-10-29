@@ -44,11 +44,11 @@ public:
 
 	static void run(Block& _ast);
 private:
-	explicit ExpressionSimplifier(std::map<std::string, Expression const*> _ssaValues):
+	explicit ExpressionSimplifier(std::map<YulString, Expression const*> _ssaValues):
 		m_ssaValues(std::move(_ssaValues))
 	{}
 
-	std::map<std::string, Expression const*> m_ssaValues;
+	std::map<YulString, Expression const*> m_ssaValues;
 };
 
 }

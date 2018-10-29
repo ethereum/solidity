@@ -22,6 +22,8 @@
 
 #include <libyul/ASTDataForward.h>
 
+#include <libyul/YulString.h>
+
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
@@ -107,7 +109,7 @@ protected:
 	virtual void leaveScope(Block const&) { }
 	virtual void enterFunction(FunctionDefinition const&) { }
 	virtual void leaveFunction(FunctionDefinition const&) { }
-	virtual std::string translateIdentifier(std::string const& _name) { return _name; }
+	virtual YulString translateIdentifier(YulString _name) { return _name; }
 };
 
 template <typename T>

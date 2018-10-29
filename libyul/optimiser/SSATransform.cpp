@@ -62,15 +62,15 @@ void SSATransform::operator()(ForLoop& _for)
 
 void SSATransform::operator()(Block& _block)
 {
-	set<string> variablesToClearAtEnd;
+	set<YulString> variablesToClearAtEnd;
 
 	// Creates a new variable (and returns its declaration) with value _value
 	// and replaces _value by a reference to that new variable.
-	auto replaceByNew = [&](SourceLocation _loc, string _varName, string _type, shared_ptr<Expression>& _value) -> VariableDeclaration
+	auto replaceByNew = [&](SourceLocation _loc, YulString _varName, YulString _type, shared_ptr<Expression>& _value) -> VariableDeclaration
 	{
-		string newName = m_nameDispenser.newName(_varName);
+		YulString newName = m_nameDispenser.newName(_varName);
 		m_currentVariableValues[_varName] = newName;
-		variablesToClearAtEnd.insert(_varName);
+		variablesToClearAtEnd.emplace(_varName);
 		shared_ptr<Expression> v = make_shared<Expression>(Identifier{_loc, newName});
 		_value.swap(v);
 		return VariableDeclaration{_loc, {TypedName{_loc, std::move(newName), std::move(_type)}}, std::move(v)};

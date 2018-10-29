@@ -49,10 +49,10 @@ string inlinableFunctions(string const& _source)
 	InlinableExpressionFunctionFinder funFinder;
 	funFinder(ast);
 
-	return boost::algorithm::join(
-		funFinder.inlinableFunctions() | boost::adaptors::map_keys,
-		","
-	);
+	vector<string> functionNames;
+	for (auto const& f: funFinder.inlinableFunctions())
+		functionNames.emplace_back(f.first.str());
+	return boost::algorithm::join(functionNames, ",");
 }
 
 }

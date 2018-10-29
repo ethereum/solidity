@@ -85,13 +85,13 @@ public:
 	static void run(Block& _ast, NameDispenser& _nameDispenser);
 
 private:
-	explicit SSATransform(NameDispenser& _nameDispenser, std::set<std::string> const& _variablesToReplace):
+	explicit SSATransform(NameDispenser& _nameDispenser, std::set<YulString> const& _variablesToReplace):
 		m_nameDispenser(_nameDispenser), m_variablesToReplace(_variablesToReplace)
 	{ }
 
 	NameDispenser& m_nameDispenser;
-	std::set<std::string> const& m_variablesToReplace;
-	std::map<std::string, std::string> m_currentVariableValues;
+	std::set<YulString> const& m_variablesToReplace;
+	std::map<YulString, YulString> m_currentVariableValues;
 };
 
 }

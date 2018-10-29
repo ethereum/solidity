@@ -62,7 +62,7 @@ void ExpressionInliner::visit(Expression& _expression)
 		if (m_inlinableFunctions.count(funCall.functionName.name) && movable)
 		{
 			FunctionDefinition const& fun = *m_inlinableFunctions.at(funCall.functionName.name);
-			map<string, Expression const*> substitutions;
+			map<YulString, Expression const*> substitutions;
 			for (size_t i = 0; i < fun.parameters.size(); ++i)
 				substitutions[fun.parameters[i].name] = &funCall.arguments[i];
 			_expression = Substitution(substitutions).translate(*boost::get<Assignment>(fun.body.statements.front()).value);

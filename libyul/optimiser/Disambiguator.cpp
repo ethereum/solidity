@@ -32,7 +32,7 @@ using namespace dev::solidity;
 
 using Scope = dev::solidity::assembly::Scope;
 
-string Disambiguator::translateIdentifier(string const& _originalName)
+YulString Disambiguator::translateIdentifier(YulString _originalName)
 {
 	if ((m_externallyUsedIdentifiers.count(_originalName)))
 		return _originalName;
