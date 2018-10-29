@@ -249,21 +249,47 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 
 void SMTChecker::arrayAssignment(Assignment const& _assignment)
 {
-	auto const& left = dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide());
+	auto left = dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide());
 	solAssert(left, "");
-	if (Identifier const* id = dynamic_cast<Identifier const*>(&left->baseExpression()))
+
+	vector<smt::Expression> stores;
+	stores.emplace_back(expr(_assignment.rightHandSide()));
+	bool error = false;
+	while (!error && !dynamic_cast<Identifier const*>(&left->baseExpression()))
 	{
+		if (auto base = dynamic_cast<IndexAccess const*>(&left->baseExpression()))
+		{
+			stores.emplace_back(
+				smt::Expression::store(
+					expr(left->baseExpression()),
+					expr(*left->indexExpression()),
+					stores.back()
+				));
+			left = base;
+		}
+		else
+			error = true;
+	}
+	if (error)
+		m_errorReporter.warning(
+			_assignment.location(),
+			"Assertion checker does not yet implement such assignments."
+		);
+	else
+	{
+		Identifier const* id = dynamic_cast<Identifier const*>(&left->baseExpression());
+		solAssert(id, "");
 		VariableDeclaration const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
 		if (knownVariable(varDecl))
 		{
-			auto const& currentArray = currentValue(varDecl);
 			m_interface->addAssertion(
 				newValue(varDecl) == smt::Expression::store(
-					currentArray,
+					expr(*id),
 					expr(*left->indexExpression()),
-					expr(_assignment.rightHandSide())
+					stores.back()
 				)
 			);
+			defineExpr(_assignment, expr(_assignment.rightHandSide()));
 		}
 		else
 			m_errorReporter.warning(
@@ -271,11 +297,6 @@ void SMTChecker::arrayAssignment(Assignment const& _assignment)
 				"Assertion checker does not yet implement such assignments."
 			);
 	}
-	else
-		m_errorReporter.warning(
-			_assignment.location(),
-			"Assertion checker does not yet implement such assignments."
-		);
 }
 
 void SMTChecker::endVisit(TupleExpression const& _tuple)
@@ -543,12 +564,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	else if (isSupportedType(_identifier.annotation().type->category()))
 	{
 		if (VariableDeclaration const* decl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
-		{
-			// Non-value variables have member/index access
-			// instead of a value for the variable itself.
-			if (decl->type()->isValueType())
-				defineExpr(_identifier, currentValue(*decl));
-		}
+			defineExpr(_identifier, currentValue(*decl));
 		else if (_identifier.name() == "now")
 			defineSpecialVariable(_identifier.name(), _identifier);
 		else
@@ -594,10 +610,6 @@ void SMTChecker::endVisit(Return const& _return)
 
 void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 {
-	// Writes are handled in arrayAssignment.
-	if (_indexAccess.annotation().lValueRequested)
-		return;
-
 	bool error = false;
 	if (Identifier const* id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
 	{
