@@ -128,6 +128,7 @@ Bugfixes:
  * Type Checker: Fix freeze for negative fixed-point literals very close to ``0``, such as ``-1e-100``.
  * Type Checker: Dynamic types as key for public mappings return error instead of assertion fail.
  * Type Checker: Fix internal error when array index value is too large.
+ * Type Checker: Fix internal error when fixed-size array is too large to be encoded.
  * Type Checker: Fix internal error for array type conversions.
  * Type Checker: Fix internal error when array index is not an unsigned.
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.

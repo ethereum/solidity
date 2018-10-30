@@ -1698,6 +1698,9 @@ bool ArrayType::operator==(Type const& _other) const
 
 bool ArrayType::validForCalldata() const
 {
+	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType().get()))
+        if (!arrayBaseType->validForCalldata())
+            return false;
 	return unlimitedCalldataEncodedSize(true) <= numeric_limits<unsigned>::max();
 }
 
