@@ -54,7 +54,7 @@ keyid=70D110489D66E2F6
 email=builds@ethereum.org
 packagename=solc
 
-for distribution in trusty xenial artful bionic
+for distribution in trusty xenial bionic cosmic
 do
 cd /tmp/
 rm -rf $distribution
