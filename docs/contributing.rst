@@ -16,7 +16,7 @@ In particular, we need help in the following areas:
   <https://gitter.im/ethereum/solidity>`_
 * Fixing and responding to `Solidity's GitHub issues
   <https://github.com/ethereum/solidity/issues>`_, especially those tagged as
-  `up-for-grabs <https://github.com/ethereum/solidity/issues?q=is%3Aopen+is%3Aissue+label%3Aup-for-grabs>`_ which are
+  `good first issue <https://github.com/ethereum/solidity/labels/good%20first%20issue>`_ which are
   meant as introductory issues for external contributors.
 
 Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project - in the issues, pull requests, or Gitter channels - you agree to abide by its terms.
