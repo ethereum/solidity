@@ -40,8 +40,9 @@ TMPDIR=$(mktemp -d)
 
     if [[ "$SOLC_EMSCRIPTEN" = "On" ]]
     then
+        # npm install solc
+        git clone --depth 1 https://github.com/ethereum/solc-js.git solc
         cp "$REPO_ROOT/build/libsolc/soljson.js" .
-        npm install solc
         cat > solc <<EOF
 #!/usr/bin/env node
 var process = require('process')

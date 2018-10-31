@@ -55,7 +55,16 @@ function test_truffle
       cd "$DIR"
       echo "Current commit hash: `git rev-parse HEAD`"
       npm install
-      find . -name soljson.js -exec cp "$SOLJSON" {} \;
+      # Replace solc package by master
+      for d in node_modules node_modules/truffle/node_modules
+      do
+      (
+        cd $d
+        rm -rf solc
+        git clone --depth 1 https://github.com/ethereum/solc-js.git solc
+        cp "$SOLJSON" solc/
+      )
+      done
       if [ "$name" == "Zeppelin" -o "$name" == "Gnosis" ]; then
         echo "Replaced fixed-version pragmas..."
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
@@ -68,6 +77,8 @@ function test_truffle
         rm "$assertsol"
         wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
       fi
+      # Change "compileStandard" to "compile"
+      sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
       npm run test
     )
     rm -rf "$DIR"
