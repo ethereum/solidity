@@ -130,3 +130,7 @@ Third-Party Solidity Parsers and Grammars
 
 * `Solidity Grammar for ANTLR 4 <https://github.com/federicobond/solidity-antlr4>`_
     Solidity grammar for the ANTLR 4 parser generator
+
+Learn Solidity / Solidity Tutorials
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* `Learn Solidity from the top tutorials ranked by Solidity developers <https://gitconnected.com/learn/solidity>`_
