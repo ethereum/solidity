@@ -2727,7 +2727,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					"value",
 					make_shared<FunctionType>(
 						parseElementaryTypeVector({"uint"}),
-						TypePointers{copyAndSetGasOrValue(false, true)},
+						TypePointers{copyAndSetGasOrValue(false, true, false)},
 						strings(),
 						strings(),
 						Kind::SetValue,
@@ -2736,7 +2736,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						nullptr,
 						m_gasSet,
 						m_valueSet,
-						m_tokenName
+						m_tokenSet
 					)
 				));
 		}
@@ -2745,7 +2745,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 				"gas",
 				make_shared<FunctionType>(
 					parseElementaryTypeVector({"uint"}),
-					TypePointers{copyAndSetGasOrValue(true, false)},
+					TypePointers{copyAndSetGasOrValue(true, false, false)},
 					strings(),
 					strings(),
 					Kind::SetGas,
@@ -2754,7 +2754,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					nullptr,
 					m_gasSet,
 					m_valueSet,
-					m_tokenName
+					m_tokenSet
 				)
 			));
 		return members;
@@ -2883,7 +2883,7 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 	return pointers;
 }
 
-TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) const
+TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue, bool _setToken) const
 {
 	return make_shared<FunctionType>(
 		m_parameterTypes,
@@ -2896,7 +2896,7 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_declaration,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
-		m_tokenName,
+		m_tokenSet || _setToken,
 		m_bound
 	);
 }
@@ -2937,7 +2937,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		m_declaration,
 		m_gasSet,
 		m_valueSet,
-		m_tokenName,
+		m_tokenSet,
 		_bound
 	);
 }

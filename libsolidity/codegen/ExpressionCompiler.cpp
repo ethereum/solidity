@@ -669,7 +669,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 								nullptr,
 								true,
 								true,
-								strings()
+								true
 						),
 						{}
 				);
@@ -1778,11 +1778,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
 	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
-	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
-	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
-	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
-	unsigned tokenStackPos = m_context.currentToBaseStackOffset(2);
-	tokenStackPos ++;
+	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1)
+			+ (_functionType.tokenSet() ? 1 : 0));
+	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize + (_functionType.tokenSet() ? 1 : 0));
+	unsigned valueStackPos = m_context.currentToBaseStackOffset(1 + (_functionType.tokenSet() ? 1 : 0));
+	unsigned tokenStackPos = m_context.currentToBaseStackOffset(_functionType.tokenSet() ? 1 : 0);
 
 
 	// move self object to top
@@ -1848,6 +1848,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			m_context << swapInstruction(gasValueSize - i);
 		gasStackPos++;
 		valueStackPos++;
+		tokenStackPos++;//TODO:??
 	}
 	if (_functionType.bound())
 	{
@@ -1941,6 +1942,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		solAssert(!_functionType.valueSet(), "Value set for staticcall");
 	else if (_functionType.valueSet())
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
+	else if (_functionType.tokenSet())
+		m_context << dupInstruction(m_context.baseToCurrentStackOffset(tokenStackPos));
 	else
 		m_context << u256(0);
 	m_context << dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
