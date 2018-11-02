@@ -895,6 +895,7 @@ public:
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
 		Transfer, ///< CALL, but without data and throws on error
+		TransferToken, ///< CALL, but without data and throws an error
 		SHA3, ///< SHA3
 		Selfdestruct, ///< SELFDESTRUCT
 		Revert, ///< REVERT
@@ -968,6 +969,7 @@ public:
 		Declaration const* _declaration = nullptr,
 		bool _gasSet = false,
 		bool _valueSet = false,
+		strings _tokenName = strings(),
 		bool _bound = false
 	):
 		m_parameterTypes(_parameterTypes),
@@ -979,6 +981,7 @@ public:
 		m_arbitraryParameters(_arbitraryParameters),
 		m_gasSet(_gasSet),
 		m_valueSet(_valueSet),
+		m_tokenName(_tokenName),
 		m_bound(_bound),
 		m_declaration(_declaration)
 	{
@@ -1104,6 +1107,7 @@ private:
 	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
+	std::vector<std::string>  m_tokenName;
 	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)
 	Declaration const* m_declaration = nullptr;
 };

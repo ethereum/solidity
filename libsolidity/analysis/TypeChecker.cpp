@@ -2107,8 +2107,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			solAssert(!!contractType, "Should be contract type.");
 
 			if (
-				(kind == FunctionType::Kind::Send || kind == FunctionType::Kind::Transfer) &&
-				!contractType->isPayable()
+				(kind == FunctionType::Kind::Send || kind == FunctionType::Kind::Transfer ||
+				 kind == FunctionType::Kind::TransferToken) && !contractType->isPayable()
 			)
 				m_errorReporter.typeError(
 					_memberAccess.location(),

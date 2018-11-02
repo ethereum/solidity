@@ -643,6 +643,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Send:
 		case FunctionType::Kind::Transfer:
+		case FunctionType::Kind::TransferToken:
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero trx.
 			// Will be zeroed if we send more than zero trx.
@@ -670,7 +671,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				),
 				{}
 			);
-			if (function.kind() == FunctionType::Kind::Transfer)
+			if (function.kind() == FunctionType::Kind::Transfer ||
+					function.kind() == FunctionType::Kind::TransferToken)
 			{
 				// Check if zero (out of stack or not enough balance).
 				// TODO: bubble up here, but might also be different error.
@@ -1127,6 +1129,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case FunctionType::Kind::BareCallCode:
 				case FunctionType::Kind::BareDelegateCall:
 				case FunctionType::Kind::Transfer:
+				case FunctionType::Kind::TransferToken:
 					_memberAccess.expression().accept(*this);
 					m_context << funType->externalIdentifier();
 					break;
@@ -1237,7 +1240,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				);
 				m_context << Instruction::BALANCE;
 			}
-			else if ((set<string>{"send", "transfer", "call", "callcode", "delegatecall"}).count(member))
+			else if ((set<string>{"send", "transfer", "transferToken", "call", "callcode", "delegatecall"}).count(member))
 				utils().convertType(
 					*_memberAccess.expression().annotation().type,
 					IntegerType(160, IntegerType::Modifier::Address),
@@ -1757,6 +1760,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
+	unsigned tokenStackPos = m_context.currentToBaseStackOffset(2);
+	tokenStackPos ++;
+
 
 	// move self object to top
 	if (_functionType.bound())

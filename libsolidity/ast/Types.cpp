@@ -589,7 +589,8 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareCallCode, true, StateMutability::Payable)},
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
-			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)}
+			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)},
+			{"transferToken", make_shared<FunctionType>(strings{"uint","bytes32"}, strings(), FunctionType::Kind::TransferToken)}
 		};
 	else
 		return MemberList::MemberMap();
@@ -2470,6 +2471,7 @@ string FunctionType::richIdentifier() const
 	case Kind::Creation: id += "creation"; break;
 	case Kind::Send: id += "send"; break;
 	case Kind::Transfer: id += "transfer"; break;
+	case Kind::TransferToken: id += "transfer"; break;
 	case Kind::SHA3: id += "sha3"; break;
 	case Kind::Selfdestruct: id += "selfdestruct"; break;
 	case Kind::Revert: id += "revert"; break;
@@ -2505,6 +2507,8 @@ string FunctionType::richIdentifier() const
 		id += "gas";
 	if (m_valueSet)
 		id += "value";
+//	if (m_tokenName)
+//		id += "tokenName";
 	if (bound())
 		id += "bound_to" + identifierList(selfType());
 	return id;
@@ -2654,6 +2658,8 @@ unsigned FunctionType::sizeOnStack() const
 		size++;
 	if (m_valueSet)
 		size++;
+//	if (m_tokenName)
+//		size++;
 	if (bound())
 		size += m_parameterTypes.front()->sizeOnStack();
 	return size;
@@ -2729,7 +2735,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						StateMutability::NonPayable,
 						nullptr,
 						m_gasSet,
-						m_valueSet
+						m_valueSet,
+						m_tokenName
 					)
 				));
 		}
@@ -2746,7 +2753,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					StateMutability::NonPayable,
 					nullptr,
 					m_gasSet,
-					m_valueSet
+					m_valueSet,
+					m_tokenName
 				)
 			));
 		return members;
@@ -2888,6 +2896,7 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_declaration,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
+		m_tokenName,
 		m_bound
 	);
 }
@@ -2928,6 +2937,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		m_declaration,
 		m_gasSet,
 		m_valueSet,
+		m_tokenName,
 		_bound
 	);
 }
