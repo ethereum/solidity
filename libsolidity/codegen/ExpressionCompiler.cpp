@@ -656,21 +656,42 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// gas <- gas * !value
 			m_context << Instruction::SWAP1 << Instruction::DUP2;
 			m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
-			appendExternalFunctionCall(
-				FunctionType(
-					TypePointers{},
-					TypePointers{},
-					strings(),
-					strings(),
-					FunctionType::Kind::BareCall,
-					false,
-					StateMutability::NonPayable,
-					nullptr,
-					true,
-					true
-				),
-				{}
-			);
+			if (function.kind() == FunctionType::Kind::TransferToken) {
+				appendExternalFunctionCall(
+						FunctionType(
+								TypePointers{},
+								TypePointers{},
+								strings(),
+								strings(),
+								FunctionType::Kind::BareCall,
+								false,
+								StateMutability::NonPayable,
+								nullptr,
+								true,
+								true,
+								strings()
+						),
+						{}
+				);
+			}
+			else {
+				appendExternalFunctionCall(
+						FunctionType(
+								TypePointers{},
+								TypePointers{},
+								strings(),
+								strings(),
+								FunctionType::Kind::BareCall,
+								false,
+								StateMutability::NonPayable,
+								nullptr,
+								true,
+								true
+						),
+						{}
+				);
+			}
+
 			if (function.kind() == FunctionType::Kind::Transfer ||
 					function.kind() == FunctionType::Kind::TransferToken)
 			{
