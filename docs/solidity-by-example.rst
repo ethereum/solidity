@@ -877,7 +877,7 @@ two parties (Alice and Bob). Using it involves three steps:
     2. Alice signs messages that specify how much of that Ether is owed to the recipient. This step is repeated for each payment.
     3. Bob "closes" the payment channel, withdrawing their portion of the Ether and sending the remainder back to the sender.
 
-Not ethat only steps 1 and 3 require Ethereum transactions, step 2 means that
+Note that only steps 1 and 3 require Ethereum transactions, step 2 means that
 the sender transmits a cryptographically signed message to the recipient via off chain ways (e.g. email).
 This means only two transactions are required to support any number of transfers.
 
