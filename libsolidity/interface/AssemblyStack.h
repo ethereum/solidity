@@ -69,6 +69,9 @@ public:
 	/// Multiple calls overwrite the previous state.
 	bool parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
 
+	/// Run the optimizer suite. Can only be used with Yul or strict assembly.
+	void optimize();
+
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
 

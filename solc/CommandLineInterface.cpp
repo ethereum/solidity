@@ -626,15 +626,15 @@ Allowed options)",
 		)
 		(
 			g_argAssemble.c_str(),
-			"Switch to assembly mode, ignoring all options except --machine and assumes input is assembly."
+			"Switch to assembly mode, ignoring all options except --machine and --optimize and assumes input is assembly."
 		)
 		(
 			g_argYul.c_str(),
-			"Switch to Yul mode, ignoring all options except --machine and assumes input is Yul."
+			"Switch to Yul mode, ignoring all options except --machine and --optimize and assumes input is Yul."
 		)
 		(
 			g_argStrictAssembly.c_str(),
-			"Switch to strict assembly mode, ignoring all options except --machine and assumes input is strict assembly."
+			"Switch to strict assembly mode, ignoring all options except --machine and --optimize and assumes input is strict assembly."
 		)
 		(
 			g_argMachine.c_str(),
@@ -820,6 +820,7 @@ bool CommandLineInterface::processInput()
 		using Machine = AssemblyStack::Machine;
 		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
+		bool optimize = m_args.count(g_argOptimize);
 		if (m_args.count(g_argMachine))
 		{
 			string machine = m_args[g_argMachine].as<string>();
@@ -835,7 +836,18 @@ bool CommandLineInterface::processInput()
 				return false;
 			}
 		}
-		return assemble(inputLanguage, targetMachine);
+		if (optimize && inputLanguage == Input::Assembly)
+		{
+			serr() <<
+				"Optimizer cannot be used for loose assembly. Use --" <<
+				g_strStrictAssembly <<
+				" or --" <<
+				g_strYul <<
+				"." <<
+				endl;
+			return false;
+		}
+		return assemble(inputLanguage, targetMachine, optimize);
 	}
 	if (m_args.count(g_argLink))
 	{
@@ -1179,7 +1191,8 @@ string CommandLineInterface::objectWithLinkRefsHex(eth::LinkerObject const& _obj
 
 bool CommandLineInterface::assemble(
 	AssemblyStack::Language _language,
-	AssemblyStack::Machine _targetMachine
+	AssemblyStack::Machine _targetMachine,
+	bool _optimize
 )
 {
 	bool successful = true;
@@ -1191,6 +1204,8 @@ bool CommandLineInterface::assemble(
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
 				successful = false;
+			else if (_optimize)
+				stack.optimize();
 		}
 		catch (Exception const& _exception)
 		{
