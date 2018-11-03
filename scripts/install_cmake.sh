@@ -26,7 +26,11 @@ else
     FILE=cmake-$VERSION-$OS-x86_64.tar.gz
     URL=https://cmake.org/files/v3.7/$FILE
     ERROR=0
-    TMPFILE=$(mktemp --tmpdir cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
+    if [ $OS == "Darwin" ];then
+        TMPFILE=$(mktemp -t cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
+    else
+        TMPFILE=$(mktemp --tmpdir cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
+    fi
     echo "Downloading CMake ($URL)..."
     wget "$URL" -O "$TMPFILE" -nv
     if ! (shasum -a256 "$TMPFILE" | grep -q "$SHA256"); then

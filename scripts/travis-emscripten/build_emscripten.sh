@@ -34,6 +34,8 @@
 
 set -ev
 
+OS=`uname -s`
+
 if ! type git &>/dev/null; then
     # We need git for extracting the commit hash
     apt-get update
@@ -58,27 +60,36 @@ fi
 
 
 # Boost
-echo -en 'travis_fold:start:compiling_boost\\r'
+echo -en 'travis_fold:start:compiling_boost\r\n'
 cd "$WORKSPACE"/boost_1_57_0
 # if b2 exists, it is a fresh checkout, otherwise it comes from the cache
 # and is already compiled
 test -e b2 && (
-sed -i 's|using gcc ;|using gcc : : em++ ;|g' ./project-config.jam
-sed -i 's|$(archiver\[1\])|emar|g' ./tools/build/src/tools/gcc.jam
-sed -i 's|$(ranlib\[1\])|emranlib|g' ./tools/build/src/tools/gcc.jam
+
+if [ $OS == "Darwin" ];then
+    # MacOS
+    sed -i '' 's|using gcc ;|using gcc : : em++ ;|g' ./project-config.jam
+    sed -i '' 's|$(archiver\[1\])|emar|g' ./tools/build/src/tools/gcc.jam
+    sed -i '' 's|$(ranlib\[1\])|emranlib|g' ./tools/build/src/tools/gcc.jam
+else
+    # Linux and Other OS
+    sed -i 's|using gcc ;|using gcc : : em++ ;|g' ./project-config.jam
+    sed -i 's|$(archiver\[1\])|emar|g' ./tools/build/src/tools/gcc.jam
+    sed -i 's|$(ranlib\[1\])|emranlib|g' ./tools/build/src/tools/gcc.jam
+fi
 ./b2 link=static variant=release threading=single runtime-link=static \
        system regex filesystem unit_test_framework program_options
 find . -name 'libboost*.a' -exec cp {} . \;
 rm -rf b2 libs doc tools more bin.v2 status
 )
-echo -en 'travis_fold:end:compiling_boost\\r'
+echo -en 'travis_fold:end:compiling_boost\r\n'
 
-echo -en 'travis_fold:start:install_cmake.sh\\r'
+echo -en 'travis_fold:start:install_cmake.sh\r\n'
 source $WORKSPACE/scripts/install_cmake.sh
-echo -en 'travis_fold:end:install_cmake.sh\\r'
+echo -en 'travis_fold:end:install_cmake.sh\r\n'
 
 # Build dependent components and solidity itself
-echo -en 'travis_fold:start:compiling_solidity\\r'
+echo -en 'travis_fold:start:compiling_solidity\r\n'
 cd $WORKSPACE
 mkdir -p build
 cd build
@@ -113,4 +124,4 @@ OUTPUT_SIZE=`ls -la soljson.js`
 
 echo "Emscripten output size: $OUTPUT_SIZE"
 
-echo -en 'travis_fold:end:compiling_solidity\\r'
+echo -en 'travis_fold:end:compiling_solidity\r\n'
