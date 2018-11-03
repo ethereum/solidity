@@ -149,8 +149,12 @@ private:
 		}
 		~BlockScope()
 		{
+			// This should actually store all declared variables
+			// into a different mapping
 			for (auto const& var: m_rae.m_declaredVariables)
 				m_rae.changeUndecidedTo(var, State::Unused);
+			for (auto const& var: m_rae.m_declaredVariables)
+				m_rae.finalize(var);
 			swap(m_rae.m_declaredVariables, m_outerDeclaredVariables);
 		}
 
@@ -164,10 +168,13 @@ private:
 	/// Will destroy @a _other.
 	void join(RedundantAssignEliminator& _other);
 	void changeUndecidedTo(YulString _variable, State _newState);
+	void finalize(YulString _variable);
 
 	std::set<YulString> m_declaredVariables;
 	// TODO check that this does not cause nondeterminism!
+	// This could also be a pseudo-map from state to assignment.
 	std::map<YulString, std::map<Assignment const*, State>> m_assignments;
+	std::set<Assignment const*> m_assignmentsToRemove;
 };
 
 class AssignmentRemover: public ASTModifier

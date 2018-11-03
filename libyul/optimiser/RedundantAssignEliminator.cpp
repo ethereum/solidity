@@ -96,9 +96,15 @@ void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDe
 	(*this)(_functionDefinition.body);
 
 	for (auto const& param: _functionDefinition.parameters)
+	{
 		changeUndecidedTo(param.name, State::Unused);
+		finalize(param.name);
+	}
 	for (auto const& retParam: _functionDefinition.returnVariables)
+	{
 		changeUndecidedTo(retParam.name, State::Used);
+		finalize(retParam.name);
+	}
 }
 
 void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
@@ -150,16 +156,7 @@ void RedundantAssignEliminator::run(Block& _ast)
 	RedundantAssignEliminator rae;
 	rae(_ast);
 
-	std::set<Assignment const*> assignmentsToRemove;
-	for (auto const& variables: rae.m_assignments)
-		for (auto const& assignment: variables.second)
-		{
-			assertThrow(assignment.second != State::Undecided, OptimizerException, "");
-			if (assignment.second == State::Unused && MovableChecker{*assignment.first->value}.movable())
-				assignmentsToRemove.emplace(assignment.first);
-		}
-
-	AssignmentRemover remover{assignmentsToRemove};
+	AssignmentRemover remover{rae.m_assignmentsToRemove};
 	remover(_ast);
 }
 
@@ -192,6 +189,8 @@ void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
 
 void RedundantAssignEliminator::join(RedundantAssignEliminator& _other)
 {
+	m_assignmentsToRemove.insert(begin(_other.m_assignmentsToRemove), end(_other.m_assignmentsToRemove));
+
 	joinMap(m_assignments, std::move(_other.m_assignments), [](
 		map<Assignment const*, State>& _assignmentHere,
 		map<Assignment const*, State>&& _assignmentThere
@@ -206,6 +205,19 @@ void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, Redundant
 	for (auto& assignment: m_assignments[_variable])
 		if (assignment.second == State{State::Undecided})
 			assignment.second = _newState;
+}
+
+void RedundantAssignEliminator::finalize(YulString _variable)
+{
+	for (auto& assignment: m_assignments[_variable])
+	{
+		assertThrow(assignment.second != State::Undecided, OptimizerException, "");
+		if (assignment.second == State{State::Unused} && MovableChecker{*assignment.first->value}.movable())
+			// TODO the only point where we actually need this
+			// to be a set is for the for loop
+			m_assignmentsToRemove.insert(assignment.first);
+	}
+	m_assignments.erase(_variable);
 }
 
 void AssignmentRemover::operator()(Block& _block)
