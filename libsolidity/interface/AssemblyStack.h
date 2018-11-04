@@ -24,6 +24,9 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 
+#include <libyul/YulObject.h>
+#include <libyul/YulObjectParser.h>
+
 #include <libevmasm/LinkerObject.h>
 
 #include <string>
@@ -72,10 +75,6 @@ public:
 	/// Multiple calls overwrite the previous state.
 	bool parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
 
-	/// Runs analysis step on the supplied block, returns false if input cannot be assembled.
-	/// Multiple calls overwrite the previous state.
-	bool analyze(yul::Block const& _block, langutil::Scanner const* _scanner = nullptr);
-
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
 
@@ -94,8 +93,7 @@ private:
 	std::shared_ptr<langutil::Scanner> m_scanner;
 
 	bool m_analysisSuccessful = false;
-	std::shared_ptr<yul::Block> m_parserResult;
-	std::shared_ptr<yul::AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<yul::YulObject> m_parserResult;
 	langutil::ErrorList m_errors;
 	langutil::ErrorReporter m_errorReporter;
 };

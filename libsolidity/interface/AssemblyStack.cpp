@@ -30,6 +30,7 @@
 #include <libyul/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMAssembly.h>
+#include <libyul/YulObjectParser.h>
 
 #include <libevmasm/Assembly.h>
 
@@ -69,21 +70,10 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
-	m_parserResult = yul::Parser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
+	m_parserResult = yul::YulObjectParser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
-
-	return analyzeParsed();
-}
-
-bool AssemblyStack::analyze(yul::Block const& _block, Scanner const* _scanner)
-{
-	m_errors.clear();
-	m_analysisSuccessful = false;
-	if (_scanner)
-		m_scanner = make_shared<Scanner>(*_scanner);
-	m_parserResult = make_shared<yul::Block>(_block);
 
 	return analyzeParsed();
 }
