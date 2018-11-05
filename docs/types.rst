@@ -1225,7 +1225,6 @@ is possible if it
 makes sense semantically and no information is lost: ``uint8`` is convertible to
 ``uint16`` and ``int128`` to ``int256``, but ``int8`` is not convertible to ``uint256``
 (because ``uint256`` cannot hold e.g. ``-1``).
-Any integer type that can be converted to ``uint160`` can also be converted to ``address``.
 
 For more details, please consult the sections about the types themselves.
 
@@ -1335,4 +1334,4 @@ Addresses
 As described in :ref:`address_literals`, hex literals of the correct size that pass the checksum
 test are of ``address`` type. No other literals can be implicitly converted to the ``address`` type.
 
-Explicit conversions from ``bytes20`` or any integer type to ``address`` results in ``address payable``.
+Explicit conversions from ``bytes20`` or any integer type to ``address`` result in ``address payable``.
