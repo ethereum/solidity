@@ -1144,10 +1144,10 @@ TypePointer RationalNumberType::binaryOperatorResult(Token _operator, TypePointe
 				bigint denominator = optimizedPow(m_value.denominator(), absExp);
 
 				if (exp >= 0)
-					value = rational(numerator, denominator);
+					value = makeRational(numerator, denominator);
 				else
 					// invert
-					value = rational(denominator, numerator);
+					value = makeRational(denominator, numerator);
 			}
 			break;
 		}

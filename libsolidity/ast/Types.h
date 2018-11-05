@@ -51,6 +51,15 @@ using FunctionTypePointer = std::shared_ptr<FunctionType const>;
 using TypePointers = std::vector<TypePointer>;
 using rational = boost::rational<dev::bigint>;
 
+inline rational makeRational(bigint const& _numerator, bigint const& _denominator)
+{
+	solAssert(_denominator != 0, "division by zero");
+	// due to a bug in certain versions of boost the denominator has to be positive
+	if (_denominator < 0)
+		return rational(-_numerator, -_denominator);
+	else
+		return rational(_numerator, _denominator);
+}
 
 enum class DataLocation { Storage, CallData, Memory };
 
