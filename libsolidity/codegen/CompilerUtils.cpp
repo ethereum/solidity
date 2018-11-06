@@ -1014,6 +1014,8 @@ void CompilerUtils::convertType(
 			// stack: <address> <function_id>
 			m_context << Instruction::POP;
 		}
+		else if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Function)
+			solAssert(_typeOnStack.isImplicitlyConvertibleTo(_targetType), "Invalid function type conversion requested.");
 		else
 		{
 			// All other types should not be convertible to non-equal types.
