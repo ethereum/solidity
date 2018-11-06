@@ -138,6 +138,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::CALLCODE:
 		case Instruction::DELEGATECALL:
 		case Instruction::STATICCALL:
+		case Instruction::TOKENCALL:
 		{
 			if (_includeExternalCosts)
 				// We assume that we do not know the target contract and thus, the consumption is infinite.
@@ -149,7 +150,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 					gas += (*value);
 				else
 					gas = GasConsumption::infinite();
-				if (_item.instruction() == Instruction::CALL)
+				if (_item.instruction() == Instruction::CALL || _item.instruction() == Instruction::TOKENCALL)
 					gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
 				int valueSize = 1;
 				if (_item.instruction() == Instruction::DELEGATECALL || _item.instruction() == Instruction::STATICCALL)

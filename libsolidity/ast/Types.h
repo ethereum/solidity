@@ -504,9 +504,13 @@ private:
 class FixedBytesType: public Type
 {
 public:
+	enum class Modifier
+	{
+		Normal, TrcToken
+	};
 	virtual Category category() const override { return Category::FixedBytes; }
 
-	explicit FixedBytesType(unsigned _bytes);
+	explicit FixedBytesType(unsigned _bytes, Modifier _modifier = Modifier::Normal);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -525,9 +529,10 @@ public:
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
 	unsigned numBytes() const { return m_bytes; }
-
+	bool isTrcToken() const { return m_modifier == Modifier::TrcToken; }
 private:
 	unsigned m_bytes;
+	Modifier m_modifier;
 };
 
 /**

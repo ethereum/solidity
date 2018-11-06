@@ -47,4 +47,5 @@ CMakeLists.txt.user
 boost_1_57_0/
 cmake-build-debug/
 deps/
-
+output/
+contracts/

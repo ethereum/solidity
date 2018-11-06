@@ -1768,28 +1768,35 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		_arguments.size() == _functionType.parameterTypes().size(), ""
 	);
 
+	solAssert(
+			_functionType.tokenSet() ||
+			_functionType.kind() != FunctionType::Kind::TransferToken, ""
+	);
+
 	// Assumed stack content here:
 	// <stack top>
 	// value [if _functionType.valueSet()]
 	// gas [if _functionType.gasSet()]
+	// trcToken [if _functionType.tokenSet()]
 	// self object [if bound - moved to top right away]
 	// function identifier [unless bare]
 	// contract address
 
 	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
 	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
-	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1)
-			+ (_functionType.tokenSet() ? 1 : 0));
-	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize + (_functionType.tokenSet() ? 1 : 0));
-	unsigned valueStackPos = m_context.currentToBaseStackOffset(1 + (_functionType.tokenSet() ? 1 : 0));
-	unsigned tokenStackPos = m_context.currentToBaseStackOffset(_functionType.tokenSet() ? 1 : 0);
+	unsigned gasValueTokenSize = gasValueSize + (_functionType.tokenSet() ? 1: 0);
+	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueTokenSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
+	unsigned tokenStackPos = m_context.currentToBaseStackOffset(gasValueTokenSize);
+	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
+	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
 
 
 	// move self object to top
 	if (_functionType.bound())
-		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
+		utils().moveToStackTop(gasValueTokenSize, _functionType.selfType()->sizeOnStack());
 
 	auto funKind = _functionType.kind();
+	bool isTokenCall = (funKind == FunctionType::Kind::TransferToken);
 	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
@@ -1846,9 +1853,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		);
 		for (unsigned i = 0; i < gasValueSize; ++i)
 			m_context << swapInstruction(gasValueSize - i);
+		tokenStackPos++;//TODO:TEST THIS
 		gasStackPos++;
 		valueStackPos++;
-		tokenStackPos++;//TODO:??
 	}
 	if (_functionType.bound())
 	{
@@ -1912,6 +1919,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// input_memory_end
 	// value [if _functionType.valueSet()]
 	// gas [if _functionType.gasSet()]
+	// trcToken [if _functionType.tokenSet()]
 	// function identifier [unless bare]
 	// contract address
 
@@ -1935,7 +1943,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	}
 
 	// CALL arguments: outSize, outOff, inSize, inOff (already present up to here)
-	// [value,] addr, gas (stack top)
+	// [value,] addr, gas, trcToken (stack top)
 	if (isDelegateCall)
 		solAssert(!_functionType.valueSet(), "Value set for delegatecall");
 	else if (useStaticCall)
@@ -1975,7 +1983,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
 	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
-	if (isDelegateCall)
+	if (isTokenCall)
+        m_context << Instruction::TOKENCALL;
+    else if (isDelegateCall)
 		m_context << Instruction::DELEGATECALL;
 	else if (isCallCode)
 		m_context << Instruction::CALLCODE;
@@ -1988,6 +1998,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		2 + // contract address, input_memory_end
 		_functionType.valueSet() +
 		_functionType.gasSet() +
+		_functionType.tokenSet() +
 		(!_functionType.isBareCall() || manualFunctionId);
 
 	if (returnSuccessCondition)
