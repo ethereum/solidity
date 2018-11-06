@@ -1014,12 +1014,24 @@ void CompilerUtils::convertType(
 			// stack: <address> <function_id>
 			m_context << Instruction::POP;
 		}
-		else if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Function)
-			solAssert(_typeOnStack.isImplicitlyConvertibleTo(_targetType), "Invalid function type conversion requested.");
 		else
 		{
-			// All other types should not be convertible to non-equal types.
-			solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+			if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Function)
+			{
+				FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
+				FunctionType const& targetType = dynamic_cast<FunctionType const&>(_targetType);
+				solAssert(
+					typeOnStack.isImplicitlyConvertibleTo(targetType) &&
+					typeOnStack.sizeOnStack() == targetType.sizeOnStack() &&
+					(typeOnStack.kind() == FunctionType::Kind::Internal || typeOnStack.kind() == FunctionType::Kind::External) &&
+					typeOnStack.kind() == targetType.kind(),
+					"Invalid function type conversion requested."
+				);
+			}
+			else
+				// All other types should not be convertible to non-equal types.
+				solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+
 			if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
 				m_context
 					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
