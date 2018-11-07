@@ -1336,12 +1336,12 @@ TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePoi
 
 MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) const
 {
-	if (isTrcToken())
-		return {
-				{"length", make_shared<IntegerType>(8)},
-//				{"name", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
-		};
-	else
+//	if (isTrcToken())
+//		return {
+//				{"length", make_shared<IntegerType>(8)},
+////				{"name", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
+//		};
+//	else
 		return MemberList::MemberMap{MemberList::Member{"length", make_shared<IntegerType>(8)}};
 }
 
@@ -2854,7 +2854,6 @@ bool FunctionType::isBareCall() const
 	case Kind::ECRecover:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
-	case Kind::TransferToken:
 		return true;
 	default:
 		return false;

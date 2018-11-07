@@ -702,7 +702,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 								TypePointers{},
 								strings(),
 								strings(),
-								FunctionType::Kind::TransferToken,
+								FunctionType::Kind::BareCall,
 								false,
 								StateMutability::NonPayable,
 								nullptr,
@@ -1783,11 +1783,6 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		_arguments.size() == _functionType.parameterTypes().size(), ""
 	);
 
-	solAssert(
-			_functionType.tokenSet() ||
-			_functionType.kind() != FunctionType::Kind::TransferToken, ""
-	);
-
 	// Assumed stack content here:
 	// <stack top>
 	// trcToken [if _functionType.tokenSet()]
@@ -1812,8 +1807,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
 	auto funKind = _functionType.kind();
-	bool isTokenCall = (funKind == FunctionType::Kind::TransferToken);
-	bool returnSuccessCondition = funKind == FunctionType::Kind::TransferToken || funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
+	bool isTokenCall = _functionType.tokenSet();
+	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 	bool useStaticCall =
@@ -1848,7 +1843,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	TypePointers parameterTypes = _functionType.parameterTypes();
 	bool manualFunctionId = false;
 	if (
-		(funKind == FunctionType::Kind::TransferToken || funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
+		(funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
 		!_arguments.empty()
 	)
 	{
@@ -1869,9 +1864,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		);
 		for (unsigned i = 0; i < gasValueSize; ++i)
 			m_context << swapInstruction(gasValueSize - i);
-		tokenStackPos++;//TODO:TEST THIS
 		gasStackPos++;
 		valueStackPos++;
+		tokenStackPos++;//TODO:??
 	}
 	if (_functionType.bound())
 	{
@@ -1933,9 +1928,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// Stack now:
 	// <stack top>
 	// input_memory_end
+	// trcToken [if _functionType.tokenSet()]
 	// value [if _functionType.valueSet()]
 	// gas [if _functionType.gasSet()]
-	// trcToken [if _functionType.tokenSet()]
 	// function identifier [unless bare]
 	// contract address
 
@@ -2001,7 +1996,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isTokenCall)
-        m_context << Instruction::TOKENCALL;
+        m_context << Instruction::CALLTOKEN;
     else if (isDelegateCall)
 		m_context << Instruction::DELEGATECALL;
 	else if (isCallCode)
@@ -2013,9 +2008,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	unsigned remainsSize =
 		2 + // contract address, input_memory_end
+        _functionType.tokenSet() +
 		_functionType.valueSet() +
 		_functionType.gasSet() +
-		_functionType.tokenSet() +
 		(!_functionType.isBareCall() || manualFunctionId);
 
 	if (returnSuccessCondition)

@@ -140,7 +140,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 
 	switch (_item.instruction())
 	{
-	case Instruction::TOKENCALL:
+	case Instruction::CALLTOKEN:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
@@ -195,8 +195,8 @@ bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 	case Instruction::RETURNDATACOPY:
 	case Instruction::MSTORE:
 	case Instruction::MSTORE8:
-	case Instruction::TOKENCALL:
 	case Instruction::CALL:
+	case Instruction::CALLTOKEN:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
@@ -210,7 +210,7 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::TOKENCALL:
+	case Instruction::CALLTOKEN:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
@@ -263,8 +263,8 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::LOG2:
 	case Instruction::LOG3:
 	case Instruction::LOG4:
+	case Instruction::CALLTOKEN:
 	case Instruction::CREATE:
-	case Instruction::TOKENCALL:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
