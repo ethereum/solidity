@@ -22,8 +22,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <string>
-#include <map>
 #include <set>
 
 namespace dev
@@ -49,11 +47,11 @@ public:
 	using ASTWalker::visit;
 
 	bool movable() const { return m_movable; }
-	std::set<std::string> const& referencedVariables() const { return m_variableReferences; }
+	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
 
 private:
 	/// Which variables the current expression references.
-	std::set<std::string> m_variableReferences;
+	std::set<YulString> m_variableReferences;
 	/// Is the current expression movable or not.
 	bool m_movable = true;
 };

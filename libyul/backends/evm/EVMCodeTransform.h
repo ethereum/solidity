@@ -117,7 +117,7 @@ private:
 	/// @returns the label ID corresponding to the given label, allocating a new one if
 	/// necessary.
 	AbstractAssembly::LabelID labelID(solidity::assembly::Scope::Label const& _label);
-	AbstractAssembly::LabelID functionEntryID(std::string const& _name, solidity::assembly::Scope::Function const& _function);
+	AbstractAssembly::LabelID functionEntryID(YulString _name, solidity::assembly::Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(Expression const& _expression);
 

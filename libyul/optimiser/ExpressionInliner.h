@@ -59,10 +59,10 @@ public:
 	virtual void visit(Expression& _expression) override;
 
 private:
-	std::map<std::string, FunctionDefinition const*> m_inlinableFunctions;
-	std::map<std::string, std::string> m_varReplacements;
+	std::map<YulString, FunctionDefinition const*> m_inlinableFunctions;
+	std::map<YulString, YulString> m_varReplacements;
 	/// Set of functions we are currently visiting inside.
-	std::set<std::string> m_currentFunctions;
+	std::set<YulString> m_currentFunctions;
 
 	Block& m_block;
 };

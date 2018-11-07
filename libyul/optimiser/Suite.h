@@ -21,9 +21,8 @@
 #pragma once
 
 #include <libyul/ASTDataForward.h>
+#include <libyul/YulString.h>
 
-#include <string>
-#include <map>
 #include <set>
 
 namespace dev
@@ -47,7 +46,8 @@ public:
 	static void run(
 		Block& _ast,
 		solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
-		std::set<std::string> const& _externallyUsedIdentifiers = std::set<std::string>()
+
+		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
 };
 

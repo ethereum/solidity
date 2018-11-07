@@ -271,16 +271,16 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	ErrorReporter errorsIgnored(errors);
 	yul::ExternalIdentifierAccess::Resolver resolver =
 	[&](assembly::Identifier const& _identifier, yul::IdentifierContext, bool _crossesFunctionBoundary) {
-		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
-		bool isSlot = boost::algorithm::ends_with(_identifier.name, "_slot");
-		bool isOffset = boost::algorithm::ends_with(_identifier.name, "_offset");
+		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
+		bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
+		bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
 		if (isSlot || isOffset)
 		{
 			// special mode to access storage variables
 			if (!declarations.empty())
 				// the special identifier exists itself, we should not allow that.
 				return size_t(-1);
-			string realName = _identifier.name.substr(0, _identifier.name.size() - (
+			string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
 				isSlot ?
 				string("_slot").size() :
 				string("_offset").size()

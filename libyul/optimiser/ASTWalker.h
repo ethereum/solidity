@@ -23,6 +23,7 @@
 #include <libyul/ASTDataForward.h>
 
 #include <libyul/Exceptions.h>
+#include <libyul/YulString.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>

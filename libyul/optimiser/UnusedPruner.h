@@ -21,8 +21,8 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/YulString.h>
 
-#include <string>
 #include <map>
 #include <set>
 
@@ -44,7 +44,7 @@ namespace yul
 class UnusedPruner: public ASTModifier
 {
 public:
-	explicit UnusedPruner(Block& _ast, std::set<std::string> const& _externallyUsedFunctions = std::set<std::string>());
+	explicit UnusedPruner(Block& _ast, std::set<YulString> const& _externallyUsedFunctions = {});
 
 	using ASTModifier::operator();
 	virtual void operator()(Block& _block) override;
@@ -53,14 +53,14 @@ public:
 	bool shouldRunAgain() const { return m_shouldRunAgain; }
 
 	// Run the pruner until the code does not change anymore.
-	static void runUntilStabilised(Block& _ast, std::set<std::string> const& _externallyUsedFunctions = std::set<std::string>());
+	static void runUntilStabilised(Block& _ast, std::set<YulString> const& _externallyUsedFunctions = {});
 
 private:
-	bool used(std::string const& _name) const;
-	void subtractReferences(std::map<std::string, size_t> const& _subtrahend);
+	bool used(YulString _name) const;
+	void subtractReferences(std::map<YulString, size_t> const& _subtrahend);
 
 	bool m_shouldRunAgain = false;
-	std::map<std::string, size_t> m_references;
+	std::map<YulString, size_t> m_references;
 };
 
 }

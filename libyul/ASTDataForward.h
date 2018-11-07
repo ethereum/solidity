@@ -46,6 +46,7 @@ using ExpressionStatement = solidity::assembly::ExpressionStatement;
 using Block = solidity::assembly::Block;
 
 using TypedName = solidity::assembly::TypedName;
+class YulString;
 
 using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
 using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;

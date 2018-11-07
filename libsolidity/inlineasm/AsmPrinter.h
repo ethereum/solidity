@@ -24,6 +24,8 @@
 
 #include <libsolidity/inlineasm/AsmDataForward.h>
 
+#include <libyul/YulString.h>
+
 #include <boost/variant.hpp>
 
 namespace dev
@@ -56,7 +58,7 @@ public:
 
 private:
 	std::string formatTypedName(TypedName _variable) const;
-	std::string appendTypeName(std::string const& _type) const;
+	std::string appendTypeName(yul::YulString _type) const;
 
 	bool m_yul = false;
 };

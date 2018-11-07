@@ -44,7 +44,7 @@ void RedundantAssignEliminator::operator()(VariableDeclaration const& _variableD
 	ASTWalker::operator()(_variableDeclaration);
 
 	for (auto const& var: _variableDeclaration.variables)
-		m_declaredVariables.insert(var.name);
+		m_declaredVariables.emplace(var.name);
 }
 
 void RedundantAssignEliminator::operator()(Assignment const& _assignment)
@@ -156,7 +156,7 @@ void RedundantAssignEliminator::run(Block& _ast)
 		{
 			assertThrow(assignment.second != State::Undecided, OptimizerException, "");
 			if (assignment.second == State::Unused && MovableChecker{*assignment.first->value}.movable())
-				assignmentsToRemove.insert(assignment.first);
+				assignmentsToRemove.emplace(assignment.first);
 		}
 
 	AssignmentRemover remover{assignmentsToRemove};
@@ -176,7 +176,7 @@ void RedundantAssignEliminator::join(RedundantAssignEliminator& _other)
 			m_assignments[var.first] = std::move(var.second);
 }
 
-void RedundantAssignEliminator::changeUndecidedTo(string const& _variable, RedundantAssignEliminator::State _newState)
+void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, RedundantAssignEliminator::State _newState)
 {
 	for (auto& assignment: m_assignments[_variable])
 		if (assignment.second == State{State::Undecided})

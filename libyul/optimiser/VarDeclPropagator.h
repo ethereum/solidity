@@ -53,10 +53,10 @@ private:
 
 private:
 	/// Holds a list of variables from current Block that have no value assigned yet.
-	std::map<std::string, TypedName> m_emptyVarDecls;
+	std::map<YulString, TypedName> m_emptyVarDecls;
 
 	/// Holds a list variables (and their TypedName) within the current block.
-	std::map<std::string, TypedName> m_lazyInitializedVarDecls;
+	std::map<YulString, TypedName> m_lazyInitializedVarDecls;
 };
 
 }

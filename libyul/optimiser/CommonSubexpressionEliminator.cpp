@@ -43,13 +43,13 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	if (_e.type() == typeid(Identifier))
 	{
 		Identifier& identifier = boost::get<Identifier>(_e);
-		string const& name = identifier.name;
+		YulString name = identifier.name;
 		if (m_value.count(name))
 		{
 			assertThrow(m_value.at(name), OptimizerException, "");
 			if (m_value.at(name)->type() == typeid(Identifier))
 			{
-				string const& value = boost::get<Identifier>(*m_value.at(name)).name;
+				YulString value = boost::get<Identifier>(*m_value.at(name)).name;
 				assertThrow(inScope(value), OptimizerException, "");
 				_e = Identifier{locationOf(_e), value};
 			}

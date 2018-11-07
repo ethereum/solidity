@@ -29,16 +29,16 @@ using namespace dev::yul;
 void NameCollector::operator()(VariableDeclaration const& _varDecl)
 {
 	for (auto const& var: _varDecl.variables)
-		m_names.insert(var.name);
+		m_names.emplace(var.name);
 }
 
 void NameCollector::operator ()(FunctionDefinition const& _funDef)
 {
-	m_names.insert(_funDef.name);
+	m_names.emplace(_funDef.name);
 	for (auto const arg: _funDef.parameters)
-		m_names.insert(arg.name);
+		m_names.emplace(arg.name);
 	for (auto const ret: _funDef.returnVariables)
-		m_names.insert(ret.name);
+		m_names.emplace(ret.name);
 	ASTWalker::operator ()(_funDef);
 }
 
@@ -53,14 +53,14 @@ void ReferencesCounter::operator()(FunctionCall const& _funCall)
 	ASTWalker::operator()(_funCall);
 }
 
-map<string, size_t> ReferencesCounter::countReferences(Block const& _block)
+map<YulString, size_t> ReferencesCounter::countReferences(Block const& _block)
 {
 	ReferencesCounter counter;
 	counter(_block);
 	return counter.references();
 }
 
-map<string, size_t> ReferencesCounter::countReferences(Expression const& _expression)
+map<YulString, size_t> ReferencesCounter::countReferences(Expression const& _expression)
 {
 	ReferencesCounter counter;
 	counter.visit(_expression);
@@ -70,5 +70,5 @@ map<string, size_t> ReferencesCounter::countReferences(Expression const& _expres
 void Assignments::operator()(Assignment const& _assignment)
 {
 	for (auto const& var: _assignment.variableNames)
-		m_names.insert(var.name);
+		m_names.emplace(var.name);
 }

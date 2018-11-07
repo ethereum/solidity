@@ -52,17 +52,17 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
-		solAssert(isValidDecimal(_literal.value) || isValidHex(_literal.value), "Invalid number literal");
-		return _literal.value + appendTypeName(_literal.type);
+		solAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
+		return _literal.value.str() + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
-		solAssert(_literal.value == "true" || _literal.value == "false", "Invalid bool literal.");
-		return ((_literal.value == "true") ? "true" : "false") + appendTypeName(_literal.type);
+		solAssert(_literal.value.str() == "true" || _literal.value.str() == "false", "Invalid bool literal.");
+		return ((_literal.value.str() == "true") ? "true" : "false") + appendTypeName(_literal.type);
 	case LiteralKind::String:
 		break;
 	}
 
 	string out;
-	for (char c: _literal.value)
+	for (char c: _literal.value.str())
 		if (c == '\\')
 			out += "\\\\";
 		else if (c == '"')
@@ -93,7 +93,7 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 string AsmPrinter::operator()(assembly::Identifier const& _identifier)
 {
 	solAssert(!_identifier.name.empty(), "Invalid identifier.");
-	return _identifier.name;
+	return _identifier.name.str();
 }
 
 string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functionalInstruction)
@@ -118,7 +118,7 @@ string AsmPrinter::operator()(assembly::Label const& _label)
 {
 	solAssert(!m_yul, "");
 	solAssert(!_label.name.empty(), "Invalid label.");
-	return _label.name + ":";
+	return _label.name.str() + ":";
 }
 
 string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
@@ -157,7 +157,7 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefinition)
 {
 	solAssert(!_functionDefinition.name.empty(), "Invalid function name.");
-	string out = "function " + _functionDefinition.name + "(";
+	string out = "function " + _functionDefinition.name.str() + "(";
 	out += boost::algorithm::join(
 		_functionDefinition.parameters | boost::adaptors::transformed(
 			[this](TypedName argument) { return formatTypedName(argument); }
@@ -239,12 +239,12 @@ string AsmPrinter::operator()(Block const& _block)
 string AsmPrinter::formatTypedName(TypedName _variable) const
 {
 	solAssert(!_variable.name.empty(), "Invalid variable name.");
-	return _variable.name + appendTypeName(_variable.type);
+	return _variable.name.str() + appendTypeName(_variable.type);
 }
 
-string AsmPrinter::appendTypeName(std::string const& _type) const
+string AsmPrinter::appendTypeName(YulString _type) const
 {
 	if (m_yul)
-		return ":" + _type;
+		return ":" + _type.str();
 	return "";
 }

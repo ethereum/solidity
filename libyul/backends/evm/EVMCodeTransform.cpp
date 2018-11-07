@@ -201,18 +201,18 @@ void CodeTransform::operator()(assembly::Literal const& _literal)
 {
 	m_assembly.setSourceLocation(_literal.location);
 	if (_literal.kind == assembly::LiteralKind::Number)
-		m_assembly.appendConstant(u256(_literal.value));
+		m_assembly.appendConstant(u256(_literal.value.str()));
 	else if (_literal.kind == assembly::LiteralKind::Boolean)
 	{
-		if (_literal.value == "true")
+		if (_literal.value.str() == "true")
 			m_assembly.appendConstant(u256(1));
 		else
 			m_assembly.appendConstant(u256(0));
 	}
 	else
 	{
-		solAssert(_literal.value.size() <= 32, "");
-		m_assembly.appendConstant(u256(h256(_literal.value, h256::FromBinary, h256::AlignLeft)));
+		solAssert(_literal.value.str().size() <= 32, "");
+		m_assembly.appendConstant(u256(h256(_literal.value.str(), h256::FromBinary, h256::AlignLeft)));
 	}
 	checkStackHeight(&_literal);
 }
@@ -454,13 +454,13 @@ AbstractAssembly::LabelID CodeTransform::labelID(Scope::Label const& _label)
 	return m_context->labelIDs[&_label];
 }
 
-AbstractAssembly::LabelID CodeTransform::functionEntryID(string const& _name, Scope::Function const& _function)
+AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope::Function const& _function)
 {
 	if (!m_context->functionEntryIDs.count(&_function))
 	{
 		AbstractAssembly::LabelID id =
 			m_useNamedLabelsForFunctions ?
-			m_assembly.namedLabel(_name) :
+			m_assembly.namedLabel(_name.str()) :
 			m_assembly.newLabelId();
 		m_context->functionEntryIDs[&_function] = id;
 	}

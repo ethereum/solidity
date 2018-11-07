@@ -23,7 +23,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <string>
 #include <map>
 #include <set>
 
@@ -45,13 +44,13 @@ public:
 	virtual void operator()(VariableDeclaration const& _varDecl) override;
 	virtual void operator()(Assignment const& _assignment) override;
 
-	std::map<std::string, Expression const*> const& values() const { return m_values; }
-	Expression const* value(std::string const& _name) const { return m_values.at(_name); }
+	std::map<YulString, Expression const*> const& values() const { return m_values; }
+	Expression const* value(YulString _name) const { return m_values.at(_name); }
 
 private:
-	void setValue(std::string const& _name, Expression const* _value);
+	void setValue(YulString _name, Expression const* _value);
 
-	std::map<std::string, Expression const*> m_values;
+	std::map<YulString, Expression const*> m_values;
 };
 
 }

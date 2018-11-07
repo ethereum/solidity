@@ -111,14 +111,14 @@ Statement ASTCopier::operator()(Switch const& _switch)
 
 Statement ASTCopier::operator()(FunctionDefinition const& _function)
 {
-	string translatedName = translateIdentifier(_function.name);
+	YulString translatedName = translateIdentifier(_function.name);
 
 	enterFunction(_function);
 	ScopeGuard g([&]() { this->leaveFunction(_function); });
 
 	return FunctionDefinition{
 		_function.location,
-		move(translatedName),
+		translatedName,
 		translateVector(_function.parameters),
 		translateVector(_function.returnVariables),
 		translate(_function.body)

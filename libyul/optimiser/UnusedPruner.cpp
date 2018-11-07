@@ -33,7 +33,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::yul;
 
-UnusedPruner::UnusedPruner(Block& _ast, set<string> const& _externallyUsedFunctions)
+UnusedPruner::UnusedPruner(Block& _ast, set<YulString> const& _externallyUsedFunctions)
 {
 	ReferencesCounter counter;
 	counter(_ast);
@@ -91,7 +91,7 @@ void UnusedPruner::operator()(Block& _block)
 	ASTModifier::operator()(_block);
 }
 
-void UnusedPruner::runUntilStabilised(Block& _ast, set<string> const& _externallyUsedFunctions)
+void UnusedPruner::runUntilStabilised(Block& _ast, set<YulString> const& _externallyUsedFunctions)
 {
 	while (true)
 	{
@@ -102,12 +102,12 @@ void UnusedPruner::runUntilStabilised(Block& _ast, set<string> const& _externall
 	}
 }
 
-bool UnusedPruner::used(string const& _name) const
+bool UnusedPruner::used(YulString _name) const
 {
 	return m_references.count(_name) && m_references.at(_name) > 0;
 }
 
-void UnusedPruner::subtractReferences(map<string, size_t> const& _subtrahend)
+void UnusedPruner::subtractReferences(map<YulString, size_t> const& _subtrahend)
 {
 	for (auto const& ref: _subtrahend)
 	{

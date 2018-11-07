@@ -33,31 +33,31 @@ NameDispenser::NameDispenser(Block const& _ast):
 {
 }
 
-NameDispenser::NameDispenser(set<string> _usedNames):
+NameDispenser::NameDispenser(set<YulString> _usedNames):
 	m_usedNames(std::move(_usedNames))
 {
 }
 
-string NameDispenser::newName(string const& _nameHint, string const& _context)
+YulString NameDispenser::newName(YulString _nameHint, YulString _context)
 {
 	// Shortening rules: Use a suffix of _prefix and a prefix of _context.
-	string prefix = _nameHint;
+	YulString prefix = _nameHint;
 
 	if (!_context.empty())
-		prefix = _context.substr(0, 10) + "_" + prefix;
+		prefix = YulString{_context.str().substr(0, 10) + "_" + prefix.str()};
 
 	return newNameInternal(prefix);
 }
 
-string NameDispenser::newNameInternal(string const& _nameHint)
+YulString NameDispenser::newNameInternal(YulString _nameHint)
 {
+	YulString name = _nameHint;
 	size_t suffix = 0;
-	string name = _nameHint;
 	while (name.empty() || m_usedNames.count(name))
 	{
 		suffix++;
-		name = _nameHint + "_" + to_string(suffix);
+		name = YulString(_nameHint.str() + "_" + to_string(suffix));
 	}
-	m_usedNames.insert(name);
+	m_usedNames.emplace(name);
 	return name;
 }

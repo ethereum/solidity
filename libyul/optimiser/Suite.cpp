@@ -48,10 +48,10 @@ using namespace dev::yul;
 void OptimiserSuite::run(
 	Block& _ast,
 	solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
-	set<string> const& _externallyUsedIdentifiers
+	set<YulString> const& _externallyUsedIdentifiers
 )
 {
-	set<string> reservedIdentifiers = _externallyUsedIdentifiers;
+	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 
 	Block ast = boost::get<Block>(Disambiguator(_analysisInfo, reservedIdentifiers)(_ast));
 

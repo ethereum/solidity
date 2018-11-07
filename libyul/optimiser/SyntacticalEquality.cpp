@@ -34,6 +34,7 @@ bool SyntacticalEqualityChecker::equal(Expression const& _e1, Expression const& 
 {
 	if (_e1.type() != _e2.type())
 		return false;
+	// TODO This somehow calls strcmp - WHERE?
 
 	// TODO This should be replaced by some kind of AST walker as soon as it gets
 	// more complex.

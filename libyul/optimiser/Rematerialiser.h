@@ -22,10 +22,6 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
-#include <string>
-#include <map>
-#include <set>
-
 namespace dev
 {
 namespace yul

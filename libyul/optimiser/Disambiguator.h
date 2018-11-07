@@ -45,7 +45,7 @@ class Disambiguator: public ASTCopier
 public:
 	explicit Disambiguator(
 		solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
-		std::set<std::string> const& _externallyUsedIdentifiers = {}
+		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	):
 		m_info(_analysisInfo), m_externallyUsedIdentifiers(_externallyUsedIdentifiers), m_nameDispenser(m_externallyUsedIdentifiers)
 	{
@@ -56,16 +56,16 @@ protected:
 	virtual void leaveScope(Block const& _block) override;
 	virtual void enterFunction(FunctionDefinition const& _function) override;
 	virtual void leaveFunction(FunctionDefinition const& _function) override;
-	virtual std::string translateIdentifier(std::string const& _name) override;
+	virtual YulString translateIdentifier(YulString _name) override;
 
 	void enterScopeInternal(solidity::assembly::Scope& _scope);
 	void leaveScopeInternal(solidity::assembly::Scope& _scope);
 
 	solidity::assembly::AsmAnalysisInfo const& m_info;
-	std::set<std::string> const& m_externallyUsedIdentifiers;
+	std::set<YulString> const& m_externallyUsedIdentifiers;
 
 	std::vector<solidity::assembly::Scope*> m_scopes;
-	std::map<void const*, std::string> m_translations;
+	std::map<void const*, YulString> m_translations;
 	NameDispenser m_nameDispenser;
 };
 

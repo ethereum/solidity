@@ -40,7 +40,7 @@ MovableChecker::MovableChecker(Expression const& _expression)
 void MovableChecker::operator()(Identifier const& _identifier)
 {
 	ASTWalker::operator()(_identifier);
-	m_variableReferences.insert(_identifier.name);
+	m_variableReferences.emplace(_identifier.name);
 }
 
 void MovableChecker::operator()(FunctionalInstruction const& _instr)
