@@ -17,7 +17,7 @@ if(EMSCRIPTEN)
     # Do not include all flags in CMAKE_CXX_FLAGS for emscripten,
     # but only use -std=c++11. Using all flags causes build failures
     # at the moment.
-    set(JSONCPP_CXX_FLAGS -std=c++11)
+    set(JSONCPP_CXX_FLAGS -std=c++17)
 else()
     set(JSONCPP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()
