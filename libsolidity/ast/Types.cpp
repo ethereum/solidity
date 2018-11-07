@@ -592,7 +592,7 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Kind::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send)},
 			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)},
-			{"transferToken", make_shared<FunctionType>(strings{"uint","string memory"}, strings(), FunctionType::Kind::TransferToken)}
+			{"transferToken", make_shared<FunctionType>(strings{"uint","trcToken"}, strings(), FunctionType::Kind::TransferToken)}
 		};
 	else
 		return MemberList::MemberMap();
@@ -2854,6 +2854,7 @@ bool FunctionType::isBareCall() const
 	case Kind::ECRecover:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
+	case Kind::TransferToken:
 		return true;
 	default:
 		return false;

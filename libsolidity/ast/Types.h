@@ -523,7 +523,7 @@ public:
 	virtual unsigned storageBytes() const override { return m_bytes; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
+	virtual std::string toString(bool) const override { if (m_modifier == Modifier::TrcToken) return "trcToken"; return "bytes" + dev::toString(m_bytes); }
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 	virtual TypePointer encodingType() const override { return shared_from_this(); }
 	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }

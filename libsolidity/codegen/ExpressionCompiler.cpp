@@ -643,7 +643,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Send:
 		case FunctionType::Kind::Transfer:
-		case FunctionType::Kind::TransferToken:
 			_functionCall.expression().accept(*this);
 			// Provide the gas stipend manually at first because we may send zero trx.
 			// Will be zeroed if we send more than zero trx.
@@ -656,44 +655,22 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// gas <- gas * !value
 			m_context << Instruction::SWAP1 << Instruction::DUP2;
 			m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
-			if (function.kind() == FunctionType::Kind::TransferToken) {
-				appendExternalFunctionCall(
-						FunctionType(
-								TypePointers{},
-								TypePointers{},
-								strings(),
-								strings(),
-								FunctionType::Kind::BareCall,
-								false,
-								StateMutability::NonPayable,
-								nullptr,
-								true,
-								true,
-								true
-						),
-						{}
-				);
-			}
-			else {
-				appendExternalFunctionCall(
-						FunctionType(
-								TypePointers{},
-								TypePointers{},
-								strings(),
-								strings(),
-								FunctionType::Kind::BareCall,
-								false,
-								StateMutability::NonPayable,
-								nullptr,
-								true,
-								true
-						),
-						{}
-				);
-			}
-
-			if (function.kind() == FunctionType::Kind::Transfer ||
-					function.kind() == FunctionType::Kind::TransferToken)
+			appendExternalFunctionCall(
+					FunctionType(
+							TypePointers{},
+							TypePointers{},
+							strings(),
+							strings(),
+							FunctionType::Kind::BareCall,
+							false,
+							StateMutability::NonPayable,
+							nullptr,
+							true,
+							true
+					),
+					{}
+			);
+			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
 				// TODO: bubble up here, but might also be different error.
@@ -701,6 +678,44 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendConditionalRevert(true);
 			}
 			break;
+		case FunctionType::Kind::TransferToken:
+				_functionCall.expression().accept(*this);
+				// Provide the gas stipend manually at first because we may send zero trx.
+				// Will be zeroed if we send more than zero trx.
+				m_context << u256(eth::GasCosts::callStipend);
+				arguments.front()->accept(*this);
+				utils().convertType(
+						*arguments.front()->annotation().type,
+						*function.parameterTypes().front(), true
+				);
+				// gas <- gas * !value
+				m_context << Instruction::SWAP1 << Instruction::DUP2;
+				m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
+				arguments[1]->accept(*this);
+				// now on Stack:
+				//   trcToken
+				//   value
+				//   !value * gas
+				appendExternalFunctionCall(
+						FunctionType(
+								TypePointers{},
+								TypePointers{},
+								strings(),
+								strings(),
+								FunctionType::Kind::TransferToken,
+								false,
+								StateMutability::NonPayable,
+								nullptr,
+								true,
+								true,
+								true
+						),
+						{}
+				);
+
+                m_context << Instruction::ISZERO;
+                m_context.appendConditionalRevert(true);
+				break;
 		case FunctionType::Kind::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
@@ -1775,29 +1790,30 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	// Assumed stack content here:
 	// <stack top>
+	// trcToken [if _functionType.tokenSet()]
 	// value [if _functionType.valueSet()]
 	// gas [if _functionType.gasSet()]
-	// trcToken [if _functionType.tokenSet()]
 	// self object [if bound - moved to top right away]
 	// function identifier [unless bare]
 	// contract address
 
 	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
-	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
-	unsigned gasValueTokenSize = gasValueSize + (_functionType.tokenSet() ? 1: 0);
-	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueTokenSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
-	unsigned tokenStackPos = m_context.currentToBaseStackOffset(gasValueTokenSize);
+	unsigned tokenSize = _functionType.tokenSet() ? 1: 0;
+	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0) + tokenSize;
+
+	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
-	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
+	unsigned valueStackPos = m_context.currentToBaseStackOffset(1 + tokenSize);
+	unsigned tokenStackPos = m_context.currentToBaseStackOffset(1);
 
 
 	// move self object to top
 	if (_functionType.bound())
-		utils().moveToStackTop(gasValueTokenSize, _functionType.selfType()->sizeOnStack());
+		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
 	auto funKind = _functionType.kind();
 	bool isTokenCall = (funKind == FunctionType::Kind::TransferToken);
-	bool returnSuccessCondition = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
+	bool returnSuccessCondition = funKind == FunctionType::Kind::TransferToken || funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall;
 	bool isCallCode = funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::CallCode;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 	bool useStaticCall =
@@ -1832,7 +1848,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	TypePointers parameterTypes = _functionType.parameterTypes();
 	bool manualFunctionId = false;
 	if (
-		(funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
+		(funKind == FunctionType::Kind::TransferToken || funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareCallCode || funKind == FunctionType::Kind::BareDelegateCall) &&
 		!_arguments.empty()
 	)
 	{
@@ -1948,10 +1964,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		solAssert(!_functionType.valueSet(), "Value set for delegatecall");
 	else if (useStaticCall)
 		solAssert(!_functionType.valueSet(), "Value set for staticcall");
-	else if (_functionType.valueSet())
+	else if (_functionType.valueSet()){
+		if (_functionType.tokenSet())
+			m_context << dupInstruction(m_context.baseToCurrentStackOffset(tokenStackPos));
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
-	else if (_functionType.tokenSet())
-		m_context << dupInstruction(m_context.baseToCurrentStackOffset(tokenStackPos));
+	}
 	else
 		m_context << u256(0);
 	m_context << dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
