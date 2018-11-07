@@ -1236,6 +1236,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	}
 	solAssert(numBytes <= 32, "Static memory load of more than 32 bytes requested.");
 	m_context << (_fromCalldata ? Instruction::CALLDATALOAD : Instruction::MLOAD);
+	bool cleanupNeeded = true;
 	if (isExternalFunctionType)
 		splitExternalFunctionType(true);
 	else if (numBytes != 32)
@@ -1245,10 +1246,16 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 		int shiftFactor = (32 - numBytes) * 8;
 		rightShiftNumberOnStack(shiftFactor);
 		if (leftAligned)
+		{
 			leftShiftNumberOnStack(shiftFactor);
+			cleanupNeeded = false;
+		}
+		else if (IntegerType const* intType = dynamic_cast<IntegerType const*>(&_type))
+			if (!intType->isSigned())
+				cleanupNeeded = false;
 	}
 	if (_fromCalldata)
-		convertType(_type, _type, true, false, true);
+		convertType(_type, _type, cleanupNeeded, false, true);
 
 	return numBytes;
 }
