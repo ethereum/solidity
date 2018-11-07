@@ -369,10 +369,10 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | gtu256(x:u256, y:u256) -> z:bool            | true if x > y, false otherwise                                  |
 +---------------------------------------------+-----------------------------------------------------------------+
-| sltu256(x:s256, y:s256) -> z:bool           | true if x < y, false otherwise                                  |
+| lts256(x:s256, y:s256) -> z:bool            | true if x < y, false otherwise                                  |
 |                                             | (for signed numbers in two's complement)                        |
 +---------------------------------------------+-----------------------------------------------------------------+
-| sgtu256(x:s256, y:s256) -> z:bool           | true if x > y, false otherwise                                  |
+| gts256(x:s256, y:s256) -> z:bool            | true if x > y, false otherwise                                  |
 |                                             | (for signed numbers in two's complement)                        |
 +---------------------------------------------+-----------------------------------------------------------------+
 | equ256(x:u256, y:u256) -> z:bool            | true if x == y, false otherwise                                 |
@@ -391,7 +391,7 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | shru256(x:u256, y:u256) -> z:u256           | logical right shift of x by y                                   |
 +---------------------------------------------+-----------------------------------------------------------------+
-| saru256(x:u256, y:u256) -> z:u256           | arithmetic right shift of x by y                                |
+| sars256(x:s256, y:u256) -> z:u256           | arithmetic right shift of x by y                                |
 +---------------------------------------------+-----------------------------------------------------------------+
 | byte(n:u256, x:u256) -> v:u256              | nth byte of x, where the most significant byte is the 0th byte  |
 |                                             | Cannot this be just replaced by and256(shr256(n, x), 0xff) and  |
