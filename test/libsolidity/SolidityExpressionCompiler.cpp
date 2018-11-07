@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(literal_true)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH1), 0x1});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x1});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(literal_false)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH1), 0x0});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x0});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(int_literal)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH10), 0x12, 0x34, 0x56, 0x78, 0x90,
+	bytes expectation({uint8_t(Instruction::PUSH10), 0x12, 0x34, 0x56, 0x78, 0x90,
 													   0x12, 0x34, 0x56, 0x78, 0x90});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(int_with_wei_ether_subdenomination)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH1), 0x1});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x1});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(int_with_szabo_ether_subdenomination)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH5), 0xe8, 0xd4, 0xa5, 0x10, 0x00});
+	bytes expectation({uint8_t(Instruction::PUSH5), 0xe8, 0xd4, 0xa5, 0x10, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH7), 0x3, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00});
+	bytes expectation({uint8_t(Instruction::PUSH7), 0x3, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(int_with_ether_ether_subdenomination)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH8), 0xd, 0xe0, 0xb6, 0xb3, 0xa7, 0x64, 0x00, 0x00});
+	bytes expectation({uint8_t(Instruction::PUSH8), 0xd, 0xe0, 0xb6, 0xb3, 0xa7, 0x64, 0x00, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -281,12 +281,12 @@ BOOST_AUTO_TEST_CASE(comparison)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH1), 0x1, byte(Instruction::ISZERO), byte(Instruction::ISZERO),
-					   byte(Instruction::PUSH2), 0x11, 0xaa,
-					   byte(Instruction::PUSH2), 0x10, 0xaa,
-					   byte(Instruction::LT), byte(Instruction::ISZERO), byte(Instruction::ISZERO),
-					   byte(Instruction::EQ),
-					   byte(Instruction::ISZERO)});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x1, uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::PUSH2), 0x11, 0xaa,
+					   uint8_t(Instruction::PUSH2), 0x10, 0xaa,
+					   uint8_t(Instruction::LT), uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::EQ),
+					   uint8_t(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -299,23 +299,23 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH1), 0x12, // 8 + 10
-					   byte(Instruction::PUSH1), 0x4,
-					   byte(Instruction::GT),
-					   byte(Instruction::ISZERO), // after this we have 4 <= 8 + 10
-					   byte(Instruction::DUP1),
-					   byte(Instruction::PUSH1), 0x11,
-					   byte(Instruction::JUMPI), // short-circuit if it is true
-					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::PUSH1), 0x9,
-					   byte(Instruction::EQ),
-					   byte(Instruction::ISZERO), // after this we have 9 != 2
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::ISZERO), byte(Instruction::ISZERO),
-					   byte(Instruction::PUSH1), 0x1, byte(Instruction::ISZERO), byte(Instruction::ISZERO),
-					   byte(Instruction::EQ),
-					   byte(Instruction::ISZERO)});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x12, // 8 + 10
+					   uint8_t(Instruction::PUSH1), 0x4,
+					   uint8_t(Instruction::GT),
+					   uint8_t(Instruction::ISZERO), // after this we have 4 <= 8 + 10
+					   uint8_t(Instruction::DUP1),
+					   uint8_t(Instruction::PUSH1), 0x11,
+					   uint8_t(Instruction::JUMPI), // short-circuit if it is true
+					   uint8_t(Instruction::POP),
+					   uint8_t(Instruction::PUSH1), 0x2,
+					   uint8_t(Instruction::PUSH1), 0x9,
+					   uint8_t(Instruction::EQ),
+					   uint8_t(Instruction::ISZERO), // after this we have 9 != 2
+					   uint8_t(Instruction::JUMPDEST),
+					   uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::PUSH1), 0x1, uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::EQ),
+					   uint8_t(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -327,37 +327,37 @@ BOOST_AUTO_TEST_CASE(arithmetic)
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
-	bytes expectation({byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::PUSH1), 0x3,
-					   byte(Instruction::PUSH1), 0x4,
-					   byte(Instruction::PUSH1), 0x5,
-					   byte(Instruction::PUSH1), 0x6,
-					   byte(Instruction::PUSH1), 0x7,
-					   byte(Instruction::PUSH1), 0x8,
-					   byte(Instruction::DUP9),
-					   byte(Instruction::XOR),
-					   byte(Instruction::AND),
-					   byte(Instruction::OR),
-					   byte(Instruction::SUB),
-					   byte(Instruction::ADD),
-					   byte(Instruction::DUP2),
-					   byte(Instruction::ISZERO),
-					   byte(Instruction::ISZERO),
-					   byte(Instruction::PUSH1), 0x1d,
-					   byte(Instruction::JUMPI),
-					   byte(Instruction::INVALID),
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::MOD),
-					   byte(Instruction::DUP2),
-					   byte(Instruction::ISZERO),
-					   byte(Instruction::ISZERO),
-					   byte(Instruction::PUSH1), 0x26,
-					   byte(Instruction::JUMPI),
-					   byte(Instruction::INVALID),
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::DIV),
-					   byte(Instruction::MUL)});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x1,
+					   uint8_t(Instruction::PUSH1), 0x2,
+					   uint8_t(Instruction::PUSH1), 0x3,
+					   uint8_t(Instruction::PUSH1), 0x4,
+					   uint8_t(Instruction::PUSH1), 0x5,
+					   uint8_t(Instruction::PUSH1), 0x6,
+					   uint8_t(Instruction::PUSH1), 0x7,
+					   uint8_t(Instruction::PUSH1), 0x8,
+					   uint8_t(Instruction::DUP9),
+					   uint8_t(Instruction::XOR),
+					   uint8_t(Instruction::AND),
+					   uint8_t(Instruction::OR),
+					   uint8_t(Instruction::SUB),
+					   uint8_t(Instruction::ADD),
+					   uint8_t(Instruction::DUP2),
+					   uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::PUSH1), 0x1d,
+					   uint8_t(Instruction::JUMPI),
+					   uint8_t(Instruction::INVALID),
+					   uint8_t(Instruction::JUMPDEST),
+					   uint8_t(Instruction::MOD),
+					   uint8_t(Instruction::DUP2),
+					   uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::ISZERO),
+					   uint8_t(Instruction::PUSH1), 0x26,
+					   uint8_t(Instruction::JUMPI),
+					   uint8_t(Instruction::INVALID),
+					   uint8_t(Instruction::JUMPDEST),
+					   uint8_t(Instruction::DIV),
+					   uint8_t(Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -370,13 +370,13 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
 
-	bytes expectation({byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::DUP2),
-					   byte(Instruction::PUSH1), 0x0,
-					   byte(Instruction::SUB),
-					   byte(Instruction::NOT),
-					   byte(Instruction::EQ),
-					   byte(Instruction::ISZERO)});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x2,
+					   uint8_t(Instruction::DUP2),
+					   uint8_t(Instruction::PUSH1), 0x0,
+					   uint8_t(Instruction::SUB),
+					   uint8_t(Instruction::NOT),
+					   uint8_t(Instruction::EQ),
+					   uint8_t(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -390,47 +390,47 @@ BOOST_AUTO_TEST_CASE(unary_inc_dec)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "x"}});
 
 	// Stack: a, x
-	bytes expectation({byte(Instruction::DUP2),
-					   byte(Instruction::DUP1),
-					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::ADD),
+	bytes expectation({uint8_t(Instruction::DUP2),
+					   uint8_t(Instruction::DUP1),
+					   uint8_t(Instruction::PUSH1), 0x1,
+					   uint8_t(Instruction::ADD),
 					   // Stack here: a x a (a+1)
-					   byte(Instruction::SWAP3),
-					   byte(Instruction::POP), // first ++
+					   uint8_t(Instruction::SWAP3),
+					   uint8_t(Instruction::POP), // first ++
 					   // Stack here: (a+1) x a
-					   byte(Instruction::DUP3),
-					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::ADD),
+					   uint8_t(Instruction::DUP3),
+					   uint8_t(Instruction::PUSH1), 0x1,
+					   uint8_t(Instruction::ADD),
 					   // Stack here: (a+1) x a (a+2)
-					   byte(Instruction::SWAP3),
-					   byte(Instruction::POP),
+					   uint8_t(Instruction::SWAP3),
+					   uint8_t(Instruction::POP),
 					   // Stack here: (a+2) x a
-					   byte(Instruction::DUP3), // second ++
-					   byte(Instruction::XOR),
+					   uint8_t(Instruction::DUP3), // second ++
+					   uint8_t(Instruction::XOR),
 					   // Stack here: (a+2) x a^(a+2)
-					   byte(Instruction::DUP3),
-					   byte(Instruction::DUP1),
-					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::SWAP1),
-					   byte(Instruction::SUB),
+					   uint8_t(Instruction::DUP3),
+					   uint8_t(Instruction::DUP1),
+					   uint8_t(Instruction::PUSH1), 0x1,
+					   uint8_t(Instruction::SWAP1),
+					   uint8_t(Instruction::SUB),
 					   // Stack here: (a+2) x a^(a+2) (a+2) (a+1)
-					   byte(Instruction::SWAP4),
-					   byte(Instruction::POP), // first --
-					   byte(Instruction::XOR),
+					   uint8_t(Instruction::SWAP4),
+					   uint8_t(Instruction::POP), // first --
+					   uint8_t(Instruction::XOR),
 					   // Stack here: (a+1) x a^(a+2)^(a+2)
-					   byte(Instruction::DUP3),
-					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::SWAP1),
-					   byte(Instruction::SUB),
+					   uint8_t(Instruction::DUP3),
+					   uint8_t(Instruction::PUSH1), 0x1,
+					   uint8_t(Instruction::SWAP1),
+					   uint8_t(Instruction::SUB),
 					   // Stack here: (a+1) x a^(a+2)^(a+2) a
-					   byte(Instruction::SWAP3),
-					   byte(Instruction::POP), // second ++
+					   uint8_t(Instruction::SWAP3),
+					   uint8_t(Instruction::POP), // second ++
 					   // Stack here: a x a^(a+2)^(a+2)
-					   byte(Instruction::DUP3), // will change
-					   byte(Instruction::XOR),
-					   byte(Instruction::SWAP1),
-					   byte(Instruction::POP),
-					   byte(Instruction::DUP1)});
+					   uint8_t(Instruction::DUP3), // will change
+					   uint8_t(Instruction::XOR),
+					   uint8_t(Instruction::SWAP1),
+					   uint8_t(Instruction::POP),
+					   uint8_t(Instruction::DUP1)});
 					   // Stack here: a x a^(a+2)^(a+2)^a
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
@@ -445,16 +445,16 @@ BOOST_AUTO_TEST_CASE(assignment)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "b"}});
 
 	// Stack: a, b
-	bytes expectation({byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::DUP2),
-					   byte(Instruction::DUP4),
-					   byte(Instruction::ADD),
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x2,
+					   uint8_t(Instruction::DUP2),
+					   uint8_t(Instruction::DUP4),
+					   uint8_t(Instruction::ADD),
 					   // Stack here: a b 2 a+b
-					   byte(Instruction::SWAP3),
-					   byte(Instruction::POP),
-					   byte(Instruction::DUP3),
+					   uint8_t(Instruction::SWAP3),
+					   uint8_t(Instruction::POP),
+					   uint8_t(Instruction::DUP3),
 					   // Stack here: a+b b 2 a+b
-					   byte(Instruction::MUL)});
+					   uint8_t(Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(negative_literals_8bits)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x80));
+	bytes expectation(bytes({uint8_t(Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x80));
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(negative_literals_16bits)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(Instruction::PUSH32)}) + bytes(30, 0xff) + bytes{0xf5, 0x43});
+	bytes expectation(bytes({uint8_t(Instruction::PUSH32)}) + bytes(30, 0xff) + bytes{0xf5, 0x43});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(intermediately_overflowing_literals)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(Instruction::PUSH1), 0xbf}));
+	bytes expectation(bytes({uint8_t(Instruction::PUSH1), 0xbf}));
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -514,8 +514,8 @@ BOOST_AUTO_TEST_CASE(blockhash)
 
 	bytes code = compileFirstExpression(sourceCode, {}, {}, {make_shared<MagicVariableDeclaration>("blockhash", blockhashFun)});
 
-	bytes expectation({byte(Instruction::PUSH1), 0x03,
-					   byte(Instruction::BLOCKHASH)});
+	bytes expectation({uint8_t(Instruction::PUSH1), 0x03,
+					   uint8_t(Instruction::BLOCKHASH)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(gas_left)
 		{make_shared<MagicVariableDeclaration>("gasleft", make_shared<FunctionType>(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
 	);
 
-	bytes expectation = bytes({byte(Instruction::GAS)});
+	bytes expectation = bytes({uint8_t(Instruction::GAS)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 

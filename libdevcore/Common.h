@@ -64,15 +64,13 @@
 #include <functional>
 #include <string>
 
-using byte = uint8_t;
-
 namespace dev
 {
 
 // Binary data types.
-using bytes = std::vector<byte>;
-using bytesRef = vector_ref<byte>;
-using bytesConstRef = vector_ref<byte const>;
+using bytes = std::vector<uint8_t>;
+using bytesRef = vector_ref<uint8_t>;
+using bytesConstRef = vector_ref<uint8_t const>;
 
 // Numeric types.
 using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;

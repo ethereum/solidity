@@ -525,14 +525,14 @@ LinkerObject const& Assembly::assemble() const
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = dev::bytesRequired(bytesRequiredForCode);
-	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
+	uint8_t tagPush = (uint8_t)Instruction::PUSH1 - 1 + bytesPerTag;
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + m_auxiliaryData.size();
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += sub->assemble().bytecode.size();
 
 	unsigned bytesPerDataRef = dev::bytesRequired(bytesRequiredIncludingData);
-	byte dataRefPush = (byte)Instruction::PUSH1 - 1 + bytesPerDataRef;
+	uint8_t dataRefPush = (uint8_t)Instruction::PUSH1 - 1 + bytesPerDataRef;
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
 	for (AssemblyItem const& i: m_items)
@@ -544,25 +544,25 @@ LinkerObject const& Assembly::assemble() const
 		switch (i.type())
 		{
 		case Operation:
-			ret.bytecode.push_back((byte)i.instruction());
+			ret.bytecode.push_back((uint8_t)i.instruction());
 			break;
 		case PushString:
 		{
-			ret.bytecode.push_back((byte)Instruction::PUSH32);
+			ret.bytecode.push_back((uint8_t)Instruction::PUSH32);
 			unsigned ii = 0;
 			for (auto j: m_strings.at((h256)i.data()))
 				if (++ii > 32)
 					break;
 				else
-					ret.bytecode.push_back((byte)j);
+					ret.bytecode.push_back((uint8_t)j);
 			while (ii++ < 32)
 				ret.bytecode.push_back(0);
 			break;
 		}
 		case Push:
 		{
-			byte b = max<unsigned>(1, dev::bytesRequired(i.data()));
-			ret.bytecode.push_back((byte)Instruction::PUSH1 - 1 + b);
+			uint8_t b = max<unsigned>(1, dev::bytesRequired(i.data()));
+			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(i.data(), byr);
@@ -589,8 +589,8 @@ LinkerObject const& Assembly::assemble() const
 		{
 			auto s = m_subs.at(size_t(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
-			byte b = max<unsigned>(1, dev::bytesRequired(s));
-			ret.bytecode.push_back((byte)Instruction::PUSH1 - 1 + b);
+			uint8_t b = max<unsigned>(1, dev::bytesRequired(s));
+			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(s, byr);
@@ -604,12 +604,12 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		}
 		case PushLibraryAddress:
-			ret.bytecode.push_back(byte(Instruction::PUSH20));
+			ret.bytecode.push_back(uint8_t(Instruction::PUSH20));
 			ret.linkReferences[ret.bytecode.size()] = m_libraries.at(i.data());
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case PushDeployTimeAddress:
-			ret.bytecode.push_back(byte(Instruction::PUSH20));
+			ret.bytecode.push_back(uint8_t(Instruction::PUSH20));
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case Tag:
@@ -618,7 +618,7 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
 			assertThrow(m_tagPositionsInBytecode[size_t(i.data())] == size_t(-1), AssemblyException, "Duplicate tag position.");
 			m_tagPositionsInBytecode[size_t(i.data())] = ret.bytecode.size();
-			ret.bytecode.push_back((byte)Instruction::JUMPDEST);
+			ret.bytecode.push_back((uint8_t)Instruction::JUMPDEST);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -627,7 +627,7 @@ LinkerObject const& Assembly::assemble() const
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
 		// Append an INVALID here to help tests find miscompilation.
-		ret.bytecode.push_back(byte(Instruction::INVALID));
+		ret.bytecode.push_back(uint8_t(Instruction::INVALID));
 
 	for (size_t i = 0; i < m_subs.size(); ++i)
 	{

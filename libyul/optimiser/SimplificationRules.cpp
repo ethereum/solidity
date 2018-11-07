@@ -46,7 +46,7 @@ SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(
 	assertThrow(rules.isInitialized(), OptimizerException, "Rule list not properly initialized.");
 
 	FunctionalInstruction const& instruction = boost::get<FunctionalInstruction>(_expr);
-	for (auto const& rule: rules.m_rules[byte(instruction.instruction)])
+	for (auto const& rule: rules.m_rules[uint8_t(instruction.instruction)])
 	{
 		rules.resetMatchGroups();
 		if (rule.pattern.matches(_expr, _ssaValues))
@@ -57,7 +57,7 @@ SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(
 
 bool SimplificationRules::isInitialized() const
 {
-	return !m_rules[byte(solidity::Instruction::ADD)].empty();
+	return !m_rules[uint8_t(solidity::Instruction::ADD)].empty();
 }
 
 void SimplificationRules::addRules(vector<SimplificationRule<Pattern>> const& _rules)
@@ -68,7 +68,7 @@ void SimplificationRules::addRules(vector<SimplificationRule<Pattern>> const& _r
 
 void SimplificationRules::addRule(SimplificationRule<Pattern> const& _rule)
 {
-	m_rules[byte(_rule.pattern.instruction())].push_back(_rule);
+	m_rules[uint8_t(_rule.pattern.instruction())].push_back(_rule);
 }
 
 SimplificationRules::SimplificationRules()

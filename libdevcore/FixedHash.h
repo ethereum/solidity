@@ -79,7 +79,7 @@ public:
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
 
 	/// @returns true iff this is the empty hash.
-	explicit operator bool() const { return std::any_of(m_data.begin(), m_data.end(), [](byte _b) { return _b != 0; }); }
+	explicit operator bool() const { return std::any_of(m_data.begin(), m_data.end(), [](uint8_t _b) { return _b != 0; }); }
 
 	// The obvious comparison operators.
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
@@ -90,9 +90,9 @@ public:
 	FixedHash operator~() const { FixedHash ret; for (unsigned i = 0; i < N; ++i) ret[i] = ~m_data[i]; return ret; }
 
 	/// @returns a particular byte from the hash.
-	byte& operator[](unsigned _i) { return m_data[_i]; }
+	uint8_t& operator[](unsigned _i) { return m_data[_i]; }
 	/// @returns a particular byte from the hash.
-	byte operator[](unsigned _i) const { return m_data[_i]; }
+	uint8_t operator[](unsigned _i) const { return m_data[_i]; }
 
 	/// @returns the hash as a user-readable hex string.
 	std::string hex() const { return toHex(ref()); }
@@ -104,19 +104,19 @@ public:
 	bytesConstRef ref() const { return bytesConstRef(m_data.data(), N); }
 
 	/// @returns a mutable byte pointer to the object's data.
-	byte* data() { return m_data.data(); }
+	uint8_t* data() { return m_data.data(); }
 
 	/// @returns a constant byte pointer to the object's data.
-	byte const* data() const { return m_data.data(); }
+	uint8_t const* data() const { return m_data.data(); }
 
 	/// @returns a copy of the object's data as a byte vector.
 	bytes asBytes() const { return bytes(data(), data() + N); }
 
 	/// @returns a mutable reference to the object's data as an STL array.
-	std::array<byte, N>& asArray() { return m_data; }
+	std::array<uint8_t, N>& asArray() { return m_data; }
 
 	/// @returns a constant reference to the object's data as an STL array.
-	std::array<byte, N> const& asArray() const { return m_data; }
+	std::array<uint8_t, N> const& asArray() const { return m_data; }
 
 	/// Returns the index of the first bit set to one, or size() * 8 if no bits are set.
 	inline unsigned firstBitSet() const
@@ -137,7 +137,7 @@ public:
 	void clear() { m_data.fill(0); }
 
 private:
-	std::array<byte, N> m_data;		///< The binary data.
+	std::array<uint8_t, N> m_data;		///< The binary data.
 };
 
 /// Stream I/O for the FixedHash class.

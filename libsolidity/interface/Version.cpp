@@ -55,13 +55,13 @@ bytes dev::solidity::binaryVersion()
 			ret = ret * 10 + (VersionString[i] - '0');
 		return ret;
 	};
-	ret.push_back(byte(parseDecimal()));
+	ret.push_back(uint8_t(parseDecimal()));
 	solAssert(i < VersionString.size() && VersionString[i] == '.', "");
 	++i;
-	ret.push_back(byte(parseDecimal()));
+	ret.push_back(uint8_t(parseDecimal()));
 	solAssert(i < VersionString.size() && VersionString[i] == '.', "");
 	++i;
-	ret.push_back(byte(parseDecimal()));
+	ret.push_back(uint8_t(parseDecimal()));
 	solAssert(i < VersionString.size() && (VersionString[i] == '-' || VersionString[i] == '+'), "");
 	++i;
 	size_t commitpos = VersionString.find("commit.");

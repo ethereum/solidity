@@ -1259,14 +1259,14 @@ BOOST_AUTO_TEST_CASE(state_smoke_test)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x00)), encodeArgs(0));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x01)), encodeArgs(0));
-	ABI_CHECK(callContractFunction("set(uint8,uint256)", byte(0x00), 0x1234), encodeArgs());
-	ABI_CHECK(callContractFunction("set(uint8,uint256)", byte(0x01), 0x8765), encodeArgs());
-	ABI_CHECK(callContractFunction("get(uint8)", byte( 0x00)), encodeArgs(0x1234));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x01)), encodeArgs(0x8765));
-	ABI_CHECK(callContractFunction("set(uint8,uint256)", byte(0x00), 0x3), encodeArgs());
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x00)), encodeArgs(0x3));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(0));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(0));
+	ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x00), 0x1234), encodeArgs());
+	ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x01), 0x8765), encodeArgs());
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t( 0x00)), encodeArgs(0x1234));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(0x8765));
+	ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x00), 0x3), encodeArgs());
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(0x3));
 }
 
 BOOST_AUTO_TEST_CASE(compound_assign)
@@ -1321,21 +1321,21 @@ BOOST_AUTO_TEST_CASE(simple_mapping)
 	)";
 	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0)), encodeArgs(byte(0x00)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x01)), encodeArgs(byte(0x00)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0xa7)), encodeArgs(byte(0x00)));
-	callContractFunction("set(uint8,uint8)", byte(0x01), byte(0xa1));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x00)), encodeArgs(byte(0x00)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x01)), encodeArgs(byte(0xa1)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0xa7)), encodeArgs(byte(0x00)));
-	callContractFunction("set(uint8,uint8)", byte(0x00), byte(0xef));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x00)), encodeArgs(byte(0xef)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x01)), encodeArgs(byte(0xa1)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0xa7)), encodeArgs(byte(0x00)));
-	callContractFunction("set(uint8,uint8)", byte(0x01), byte(0x05));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x00)), encodeArgs(byte(0xef)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0x01)), encodeArgs(byte(0x05)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(0xa7)), encodeArgs(byte(0x00)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0)), encodeArgs(uint8_t(0x00)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x00)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+	callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0xa1));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0x00)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+	callContractFunction("set(uint8,uint8)", uint8_t(0x00), uint8_t(0xef));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+	callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0x05));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x05)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_state)
@@ -1496,7 +1496,7 @@ BOOST_AUTO_TEST_CASE(mapping_local_assignment)
 	)";
 	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(byte(42), byte(0), byte(0), byte(21)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(uint8_t(42), uint8_t(0), uint8_t(0), uint8_t(21)));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_local_tuple_assignment)
@@ -1519,7 +1519,7 @@ BOOST_AUTO_TEST_CASE(mapping_local_tuple_assignment)
 	)";
 	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(byte(42), byte(0), byte(0), byte(21)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(uint8_t(42), uint8_t(0), uint8_t(0), uint8_t(21)));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_local_compound_assignment)
@@ -1540,7 +1540,7 @@ BOOST_AUTO_TEST_CASE(mapping_local_compound_assignment)
 	)";
 	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(byte(42), byte(0), byte(0), byte(21)));
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(uint8_t(42), uint8_t(0), uint8_t(0), uint8_t(21)));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_internal_argument)
@@ -1565,10 +1565,10 @@ BOOST_AUTO_TEST_CASE(mapping_internal_argument)
 	)";
 	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", byte(1), byte(21), byte(42)), encodeArgs(byte(0), byte(0)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(21), byte(42)));
-	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", byte(1), byte(10), byte(11)), encodeArgs(byte(21), byte(42)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(10), byte(11)));
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", uint8_t(1), uint8_t(21), uint8_t(42)), encodeArgs(uint8_t(0), uint8_t(0)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(1)), encodeArgs(uint8_t(21), uint8_t(42)));
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8)", uint8_t(1), uint8_t(10), uint8_t(11)), encodeArgs(uint8_t(21), uint8_t(42)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(1)), encodeArgs(uint8_t(10), uint8_t(11)));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_array_internal_argument)
@@ -1595,10 +1595,10 @@ BOOST_AUTO_TEST_CASE(mapping_array_internal_argument)
 	)";
 	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8,uint8,uint8)", byte(1), byte(21), byte(22), byte(42), byte(43)), encodeArgs(byte(0), byte(0), byte(0), byte(0)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(21), byte(22), byte(42), byte(43)));
-	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8,uint8,uint8)", byte(1), byte(10), byte(30), byte(11), byte(31)), encodeArgs(byte(21), byte(22), byte(42), byte(43)));
-	ABI_CHECK(callContractFunction("get(uint8)", byte(1)), encodeArgs(byte(10), byte(30), byte(11), byte(31)));
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8,uint8,uint8)", uint8_t(1), uint8_t(21), uint8_t(22), uint8_t(42), uint8_t(43)), encodeArgs(uint8_t(0), uint8_t(0), uint8_t(0), uint8_t(0)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(1)), encodeArgs(uint8_t(21), uint8_t(22), uint8_t(42), uint8_t(43)));
+	ABI_CHECK(callContractFunction("set(uint8,uint8,uint8,uint8,uint8)", uint8_t(1), uint8_t(10), uint8_t(30), uint8_t(11), uint8_t(31)), encodeArgs(uint8_t(21), uint8_t(22), uint8_t(42), uint8_t(43)));
+	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(1)), encodeArgs(uint8_t(10), uint8_t(30), uint8_t(11), uint8_t(31)));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_internal_return)
@@ -1626,8 +1626,8 @@ BOOST_AUTO_TEST_CASE(mapping_internal_return)
 	)";
 	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(byte(0), byte(42), byte(0), byte(0), byte(84), byte (21)));
-	ABI_CHECK(callContractFunction("h()"), encodeArgs(byte(0), byte(42), byte(0), byte(0), byte(84), byte (17)));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(uint8_t(0), uint8_t(42), uint8_t(0), uint8_t(0), uint8_t(84), uint8_t (21)));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(uint8_t(0), uint8_t(42), uint8_t(0), uint8_t(0), uint8_t(84), uint8_t (17)));
 }
 
 BOOST_AUTO_TEST_CASE(structs)
@@ -1819,7 +1819,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 		}
 	)";
 	compileAndRun(sourceCode);
-	map<u256, byte> data;
+	map<u256, uint8_t> data;
 	data[7] = 8;
 	auto get = [&](u256 const& _x) -> u256
 	{
@@ -2624,7 +2624,7 @@ BOOST_AUTO_TEST_CASE(ecrecover)
 	)";
 	compileAndRun(sourceCode);
 	u256 h("0x18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c");
-	byte v = 28;
+	uint8_t v = 28;
 	u256 r("0x73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75f");
 	u256 s("0xeeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549");
 	u160 addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
