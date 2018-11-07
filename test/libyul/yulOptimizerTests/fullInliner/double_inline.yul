@@ -14,13 +14,13 @@
 //         f_b := sload(mload(f_a))
 //         f_c := 3
 //         let b3 := f_b
-//         let f_a_1 := f_c
-//         let f_b_1
-//         let f_c_1
-//         f_b_1 := sload(mload(f_a_1))
-//         f_c_1 := 3
-//         let b4 := f_b_1
-//         let c4 := f_c_1
+//         let f_a_2 := f_c
+//         let f_b_3
+//         let f_c_4
+//         f_b_3 := sload(mload(f_a_2))
+//         f_c_4 := 3
+//         let b4 := f_b_3
+//         let c4 := f_c_4
 //     }
 //     function f(a) -> b, c
 //     {

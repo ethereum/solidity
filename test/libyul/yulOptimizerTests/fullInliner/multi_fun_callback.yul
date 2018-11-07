@@ -46,14 +46,14 @@
 //     }
 //     function g(x_1)
 //     {
-//         let f_x_1 := 1
-//         mstore(0, f_x_1)
+//         let f_x_8 := 1
+//         mstore(0, f_x_8)
 //         let f_h_t
 //         f_h_t := 2
 //         mstore(7, f_h_t)
 //         let f_g_x_1 := 10
 //         f(1)
-//         mstore(1, f_x_1)
+//         mstore(1, f_x_8)
 //     }
 //     function h() -> t
 //     {

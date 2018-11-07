@@ -21,8 +21,8 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 
 using namespace std;
+using namespace dev;
 using namespace dev::solidity::assembly;
-
 
 bool Scope::registerLabel(yul::YulString _name)
 {

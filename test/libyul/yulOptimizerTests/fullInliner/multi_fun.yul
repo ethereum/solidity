@@ -23,9 +23,9 @@
 //     }
 //     function g(b, c) -> y
 //     {
-//         let f_a_1 := b
-//         let f_x_1
-//         f_x_1 := add(f_a_1, f_a_1)
-//         y := mul(mload(c), f_x_1)
+//         let f_a_6 := b
+//         let f_x_7
+//         f_x_7 := add(f_a_6, f_a_6)
+//         y := mul(mload(c), f_x_7)
 //     }
 // }

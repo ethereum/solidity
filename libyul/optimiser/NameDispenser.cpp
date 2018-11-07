@@ -52,11 +52,10 @@ YulString NameDispenser::newName(YulString _nameHint, YulString _context)
 YulString NameDispenser::newNameInternal(YulString _nameHint)
 {
 	YulString name = _nameHint;
-	size_t suffix = 0;
 	while (name.empty() || m_usedNames.count(name))
 	{
-		suffix++;
-		name = YulString(_nameHint.str() + "_" + to_string(suffix));
+		m_counter++;
+		name = YulString(_nameHint.str() + "_" + to_string(m_counter));
 	}
 	m_usedNames.emplace(name);
 	return name;
