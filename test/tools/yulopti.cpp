@@ -38,6 +38,7 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
@@ -123,7 +124,7 @@ public:
 			}
 			cout << "(q)quit/(f)flatten/(c)se/propagate var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
 			cout << "  (e)xpr inline/(i)nline/(s)implify/(u)nusedprune/ss(a) transform/" << endl;
-			cout << "  (r)edundant assign elim./re(m)aterializer? ";
+			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter? ";
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -133,6 +134,9 @@ public:
 				return;
 			case 'f':
 				BlockFlattener{}(*m_ast);
+				break;
+			case 'o':
+				ForLoopInitRewriter{}(*m_ast);
 				break;
 			case 'c':
 				(CommonSubexpressionEliminator{})(*m_ast);
