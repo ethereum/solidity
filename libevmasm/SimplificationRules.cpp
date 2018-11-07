@@ -48,7 +48,7 @@ SimplificationRule<Pattern> const* Rules::findFirstMatch(
 	resetMatchGroups();
 
 	assertThrow(_expr.item, OptimizerException, "");
-	for (auto const& rule: m_rules[byte(_expr.item->instruction())])
+	for (auto const& rule: m_rules[uint8_t(_expr.item->instruction())])
 	{
 		if (rule.pattern.matches(_expr, _classes))
 			return &rule;
@@ -59,7 +59,7 @@ SimplificationRule<Pattern> const* Rules::findFirstMatch(
 
 bool Rules::isInitialized() const
 {
-	return !m_rules[byte(Instruction::ADD)].empty();
+	return !m_rules[uint8_t(Instruction::ADD)].empty();
 }
 
 void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
@@ -70,7 +70,7 @@ void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
 
 void Rules::addRule(SimplificationRule<Pattern> const& _rule)
 {
-	m_rules[byte(_rule.pattern.instruction())].push_back(_rule);
+	m_rules[uint8_t(_rule.pattern.instruction())].push_back(_rule);
 }
 
 Rules::Rules()

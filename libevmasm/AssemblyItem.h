@@ -69,7 +69,7 @@ public:
 		m_location(_location)
 	{
 		if (m_type == Operation)
-			m_instruction = Instruction(byte(_data));
+			m_instruction = Instruction(uint8_t(_data));
 		else
 			m_data = std::make_shared<u256>(_data);
 	}

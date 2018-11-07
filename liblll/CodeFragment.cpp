@@ -348,7 +348,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				else if (i.which() == sp::utree_type::string_type)
 				{
 					auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
-					data.insert(data.end(), (byte const *)sr.begin(), (byte const*)sr.end());
+					data.insert(data.end(), (uint8_t const *)sr.begin(), (uint8_t const*)sr.end());
 				}
 				else if (i.which() == sp::utree_type::any_type)
 				{

@@ -44,7 +44,7 @@ void EVMAssembly::setSourceLocation(SourceLocation const&)
 
 void EVMAssembly::appendInstruction(solidity::Instruction _instr)
 {
-	m_bytecode.push_back(byte(_instr));
+	m_bytecode.push_back(uint8_t(_instr));
 	m_stackHeight += solidity::instructionInfo(_instr).ret - solidity::instructionInfo(_instr).args;
 }
 
@@ -101,7 +101,7 @@ void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(byte(solidity::Instruction::JUMPTO));
+		m_bytecode.push_back(uint8_t(solidity::Instruction::JUMPTO));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight += _stackDiffAfter;
 	}
@@ -116,7 +116,7 @@ void EVMAssembly::appendJumpToIf(LabelID _labelId)
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(byte(solidity::Instruction::JUMPIF));
+		m_bytecode.push_back(uint8_t(solidity::Instruction::JUMPIF));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight--;
 	}
@@ -132,7 +132,7 @@ void EVMAssembly::appendBeginsub(LabelID _labelId, int _arguments)
 	solAssert(m_evm15, "BEGINSUB used for EVM 1.0");
 	solAssert(_arguments >= 0, "");
 	setLabelToCurrentPosition(_labelId);
-	m_bytecode.push_back(byte(solidity::Instruction::BEGINSUB));
+	m_bytecode.push_back(uint8_t(solidity::Instruction::BEGINSUB));
 	m_stackHeight += _arguments;
 }
 
@@ -140,7 +140,7 @@ void EVMAssembly::appendJumpsub(LabelID _labelId, int _arguments, int _returns)
 {
 	solAssert(m_evm15, "JUMPSUB used for EVM 1.0");
 	solAssert(_arguments >= 0 && _returns >= 0, "");
-	m_bytecode.push_back(byte(solidity::Instruction::JUMPSUB));
+	m_bytecode.push_back(uint8_t(solidity::Instruction::JUMPSUB));
 	appendLabelReferenceInternal(_labelId);
 	m_stackHeight += _returns - _arguments;
 }
@@ -149,7 +149,7 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 {
 	solAssert(m_evm15, "RETURNSUB used for EVM 1.0");
 	solAssert(_returns >= 0, "");
-	m_bytecode.push_back(byte(solidity::Instruction::RETURNSUB));
+	m_bytecode.push_back(uint8_t(solidity::Instruction::RETURNSUB));
 	m_stackHeight += _stackDiffAfter - _returns;
 }
 
@@ -198,5 +198,5 @@ void EVMAssembly::updateReference(size_t pos, size_t size, u256 value)
 	solAssert(m_bytecode.size() >= size && pos <= m_bytecode.size() - size, "");
 	solAssert(value < (u256(1) << (8 * size)), "");
 	for (size_t i = 0; i < size; i++)
-		m_bytecode[pos + i] = byte((value >> (8 * (size - i - 1))) & 0xff);
+		m_bytecode[pos + i] = uint8_t((value >> (8 * (size - i - 1))) & 0xff);
 }
