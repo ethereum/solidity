@@ -267,11 +267,18 @@ case $(uname -s) in
             Ubuntu|LinuxMint)
                 #LinuxMint is a distro on top of Ubuntu.
                 #Ubuntu
-                install_z3=""
+                pkgs="build-essential git libboost-all-dev"
+				post_cmd=""
                 case $(lsb_release -cs) in
                     trusty|qiana|rebecca|rafaela|rosa)
                         echo "Installing solidity dependencies on Ubuntu Trusty Tahr (14.04)."
                         echo "Or, you may also be running Linux Mint Qiana / Rebecca / Rafaela / Rosa (base: Ubuntu Trusty Tahr (14.04).)"
+                        sudo apt-get -q update
+                        sudo apt-get -y install software-properties-common
+                        sudo add-apt-repository ppa:george-edison55/cmake-3.x -y
+                        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+                        pkgs="$pkgs cmake3"
+						post_cmd="update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80 --slave /usr/bin/g++ g++ /usr/bin/g++-8"
                         ;;
                     utopic)
                         echo "Installing solidity dependencies on Ubuntu Utopic Unicorn (14.10)."
@@ -285,23 +292,23 @@ case $(uname -s) in
                     xenial|sarah|serena|sonya|sylvia)
                         echo "Installing solidity dependencies on Ubuntu Xenial Xerus (16.04)."
                         echo "Or, you may also be running Linux Mint Sarah / Serena / Sonya / Sylvia (base: Ubuntu Xenial Xerus (16.04).)"
-                        install_z3="libz3-dev"
+                        pkgs="$pkgs cmake libz3-dev"
                         ;;
                     yakkety)
                         echo "Installing solidity dependencies on Ubuntu Yakkety Yak (16.10)."
-                        install_z3="libz3-dev"
+                        pkgs="$pkgs cmake libz3-dev"
                         ;;
                     zesty)
                         echo "Installing solidity dependencies on Ubuntu Zesty (17.04)."
-                        install_z3="libz3-dev"
+                        pkgs="$pkgs cmake libz3-dev"
                         ;;
                     artful)
                         echo "Installing solidity dependencies on Ubuntu Artful (17.10)."
-                        install_z3="libz3-dev"
+                        pkgs="$pkgs cmake libz3-dev"
                         ;;
                     bionic)
                         echo "Installing solidity dependencies on Ubuntu Bionic (18.04)."
-                        install_z3="libz3-dev"
+                        pkgs="$pkgs cmake libz3-dev"
                         ;;
                     betsy)
                         #do not try anything for betsy.
@@ -318,17 +325,13 @@ case $(uname -s) in
                         echo "ERROR - This might not work, but we are trying anyway."
                         echo "Please drop us a message at https://gitter.im/ethereum/solidity-dev."
                         echo "We only support Trusty, Utopic, Vivid, Wily, Xenial, Yakkety, Zesty, Artful and Bionic."
-                        install_z3="libz3-dev"
+                        pkgs="$pkgs cmake libz3-dev"
                         ;;
                 esac
 
                 sudo apt-get -y update
-                sudo apt-get -y install \
-                    build-essential \
-                    cmake \
-                    git \
-                    libboost-all-dev \
-                    "$install_z3"
+                sudo apt-get -y install $pkgs
+				$post_cmd
                 if [ "$CI" = true ]; then
                     # install Z3 from PPA if the distribution does not provide it
                     if ! dpkg -l libz3-dev > /dev/null 2>&1
