@@ -124,7 +124,8 @@ void parsePrintCompare(string const& _source, bool _canWarn = false)
 		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
 	else
 		BOOST_REQUIRE(stack.errors().empty());
-	BOOST_CHECK_EQUAL(stack.print(), _source);
+	string expectation = "object \"object\" {\n    code " + boost::replace_all_copy(_source, "\n", "\n    ") + "\n}\n";
+	BOOST_CHECK_EQUAL(stack.print(), expectation);
 }
 
 }
@@ -567,12 +568,14 @@ BOOST_AUTO_TEST_CASE(print_string_literals)
 BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
-	string parsed = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
+	string parsed = "object \"object\" {\n    code {\n        let x := \"\\xe1\\xae\\xac\"\n    }\n}\n";
 	AssemblyStack stack(dev::test::Options::get().evmVersion());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
-	parsePrintCompare(parsed);
+
+	string parsedInner = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
+	parsePrintCompare(parsedInner);
 }
 
 BOOST_AUTO_TEST_CASE(print_if)

@@ -24,8 +24,8 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 
-#include <libyul/YulObject.h>
-#include <libyul/YulObjectParser.h>
+#include <libyul/Object.h>
+#include <libyul/ObjectParser.h>
 
 #include <libevmasm/LinkerObject.h>
 
@@ -35,12 +35,6 @@
 namespace langutil
 {
 class Scanner;
-}
-
-namespace yul
-{
-struct AsmAnalysisInfo;
-struct Block;
 }
 
 namespace dev
@@ -93,7 +87,7 @@ private:
 	std::shared_ptr<langutil::Scanner> m_scanner;
 
 	bool m_analysisSuccessful = false;
-	std::shared_ptr<yul::YulObject> m_parserResult;
+	std::shared_ptr<yul::Object> m_parserResult;
 	langutil::ErrorList m_errors;
 	langutil::ErrorReporter m_errorReporter;
 };
