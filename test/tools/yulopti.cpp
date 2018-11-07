@@ -45,6 +45,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/VarDeclPropagator.h>
 
 #include <libdevcore/JSON.h>
 
@@ -120,7 +121,7 @@ public:
 				m_nameDispenser = make_shared<NameDispenser>(*m_ast);
 				disambiguated = true;
 			}
-			cout << "(q)quit/(f)flatten/(c)se/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
+			cout << "(q)quit/(f)flatten/(c)se/propagate var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
 			cout << "  (e)xpr inline/(i)nline/(s)implify/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer? ";
 			cout.flush();
@@ -135,6 +136,9 @@ public:
 				break;
 			case 'c':
 				(CommonSubexpressionEliminator{})(*m_ast);
+				break;
+			case 'd':
+				(VarDeclPropagator{})(*m_ast);
 				break;
 			case 'x':
 				ExpressionSplitter{*m_nameDispenser}(*m_ast);
