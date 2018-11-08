@@ -695,20 +695,22 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	}
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
+		if (type(*var)->category() == Type::Category::Mapping)
+		{
+			if (!type(*var)->dataStoredIn(DataLocation::Storage))
+				m_errorReporter.typeError(var->location(), "Mapping types can only have a data location of \"storage\"." );
+			else if (!isLibraryFunction && _function.isPublic())
+				m_errorReporter.typeError(var->location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+		}
+		else
+		{
+			if (!type(*var)->canLiveOutsideStorage() && _function.isPublic())
+				m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
+			if (_function.isPublic() && !(type(*var)->interfaceType(isLibraryFunction)))
+				m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
+		}
 		if (
-			type(*var)->category() == Type::Category::Mapping &&
-			!type(*var)->dataStoredIn(DataLocation::Storage)
-		)
-			m_errorReporter.typeError(var->location(), "Mapping types can only have a data location of \"storage\".");
-		else if (
-			!type(*var)->canLiveOutsideStorage() &&
-			_function.visibility() > FunctionDefinition::Visibility::Internal
-		)
-			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
-		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
-			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
-		if (
-			_function.visibility() > FunctionDefinition::Visibility::Internal &&
+			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
 			!typeSupportedByOldABIEncoder(*type(*var))
 		)

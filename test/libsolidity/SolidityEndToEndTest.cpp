@@ -8658,6 +8658,90 @@ BOOST_AUTO_TEST_CASE(mapping_returns_in_library_named)
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(0), u256(42), u256(0), u256(0), u256(21), u256(17)));
 }
 
+BOOST_AUTO_TEST_CASE(using_library_mappings_public)
+{
+	char const* sourceCode = R"(
+			library Lib {
+				function set(mapping(uint => uint) storage m, uint key, uint value) public
+				{
+					m[key] = value;
+				}
+			}
+			contract Test {
+				mapping(uint => uint) m1;
+				mapping(uint => uint) m2;
+				function f() public returns (uint, uint, uint, uint, uint, uint)
+				{
+					Lib.set(m1, 0, 1);
+					Lib.set(m1, 2, 42);
+					Lib.set(m2, 0, 23);
+					Lib.set(m2, 2, 99);
+					return (m1[0], m1[1], m1[2], m2[0], m2[1], m2[2]);
+				}
+			}
+		)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), u256(0), u256(42), u256(23), u256(0), u256(99)));
+}
+
+BOOST_AUTO_TEST_CASE(using_library_mappings_external)
+{
+	char const* libSourceCode = R"(
+			library Lib {
+				function set(mapping(uint => uint) storage m, uint key, uint value) external
+				{
+					m[key] = value * 2;
+				}
+			}
+		)";
+	char const* sourceCode = R"(
+			library Lib {
+				function set(mapping(uint => uint) storage m, uint key, uint value) external;
+			}
+			contract Test {
+				mapping(uint => uint) m1;
+				mapping(uint => uint) m2;
+				function f() public returns (uint, uint, uint, uint, uint, uint)
+				{
+					Lib.set(m1, 0, 1);
+					Lib.set(m1, 2, 42);
+					Lib.set(m2, 0, 23);
+					Lib.set(m2, 2, 99);
+					return (m1[0], m1[1], m1[2], m2[0], m2[1], m2[2]);
+				}
+			}
+		)";
+	compileAndRun(libSourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(2), u256(0), u256(84), u256(46), u256(0), u256(198)));
+}
+
+BOOST_AUTO_TEST_CASE(using_library_mappings_return)
+{
+	char const* sourceCode = R"(
+			library Lib {
+				function choose(mapping(uint => mapping(uint => uint)) storage m, uint key) external returns (mapping(uint => uint) storage) {
+					return m[key];
+				}
+			}
+			contract Test {
+				mapping(uint => mapping(uint => uint)) m;
+				function f() public returns (uint, uint, uint, uint, uint, uint)
+				{
+					Lib.choose(m, 0)[0] = 1;
+					Lib.choose(m, 0)[2] = 42;
+					Lib.choose(m, 1)[0] = 23;
+					Lib.choose(m, 1)[2] = 99;
+					return (m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2]);
+				}
+			}
+		)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), u256(0), u256(42), u256(23), u256(0), u256(99)));
+}
+
 BOOST_AUTO_TEST_CASE(using_library_structs)
 {
 	char const* sourceCode = R"(
