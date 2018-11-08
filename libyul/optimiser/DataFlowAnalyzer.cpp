@@ -84,13 +84,26 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 
 void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 {
+	// Save all information. We might rather reinstantiate this class,
+	// but this could be difficult if it is subclassed.
+	map<YulString, Expression const*> value;
+	map<YulString, set<YulString>> references;
+	map<YulString, set<YulString>> referencedBy;
+	m_value.swap(value);
+	m_references.swap(references);
+	m_referencedBy.swap(referencedBy);
 	pushScope(true);
+
 	for (auto const& parameter: _fun.parameters)
 		m_variableScopes.back().variables.emplace(parameter.name);
 	for (auto const& var: _fun.returnVariables)
 		m_variableScopes.back().variables.emplace(var.name);
 	ASTModifier::operator()(_fun);
+
 	popScope();
+	m_value.swap(value);
+	m_references.swap(references);
+	m_referencedBy.swap(referencedBy);
 }
 
 void DataFlowAnalyzer::operator()(ForLoop& _for)
