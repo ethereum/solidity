@@ -19,6 +19,7 @@ Bugfixes:
 
 Build System:
  * Replace the trusty PPA build by a static build on cosmic that is used for the trusty package instead.
+ * Z3 can now be statically linked.
 
 ### 0.5.1 (2018-12-03)
 
