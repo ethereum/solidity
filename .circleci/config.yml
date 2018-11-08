@@ -167,7 +167,6 @@ jobs:
       TERM: xterm
       CC: /usr/bin/clang-7
       CXX: /usr/bin/clang++-7
-      IPC_ENABLED: false
     steps:
       - checkout
       - run:
@@ -291,13 +290,12 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            pacman --noconfirm -Syu --noprogressbar --needed boost python2 wget perl z3 cvc4 leveldb git openssh tar
-            ln -sf /usr/bin/core_perl/shasum /usr/bin
+            pacman --noconfirm -Syu --noprogressbar --needed boost z3 cvc4 git openssh tar
       - checkout
       - attach_workspace:
           at: build
       - run: mkdir -p test_results
-      - run: *run_tests
+      - run: build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
       - store_test_results:
           path: test_results/
       - store_artifacts:
