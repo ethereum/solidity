@@ -139,6 +139,27 @@ jobs:
           paths:
             - "*"
 
+  build_x86_archlinux:
+    docker:
+      - image: archlinux/base
+    environment:
+      TERM: xterm
+    steps:
+      - run:
+          name: Install build dependencies
+          command: |
+            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+      - checkout
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
+      - store_artifacts: *solc_artifact
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
+            - test/soltest
+            - test/tools/solfuzzer
+
   build_x86_clang7:
     docker:
       - image: buildpack-deps:cosmic
@@ -146,6 +167,7 @@ jobs:
       TERM: xterm
       CC: /usr/bin/clang-7
       CXX: /usr/bin/clang++-7
+      IPC_ENABLED: false
     steps:
       - checkout
       - run:
@@ -260,6 +282,28 @@ jobs:
           path: test_results/
           destination: test_results/
 
+  test_x86_archlinux:
+    docker:
+      - image: archlinux/base
+    environment:
+      TERM: xterm
+    steps:
+      - run:
+          name: Install dependencies
+          command: |
+            pacman --noconfirm -Syu --noprogressbar --needed boost python2 wget perl z3 cvc4 leveldb git openssh tar
+            ln -sf /usr/bin/core_perl/shasum /usr/bin
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: mkdir -p test_results
+      - run: *run_tests
+      - store_test_results:
+          path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
+
   test_x86_mac:
     macos:
       xcode: "10.0.0"
@@ -330,3 +374,8 @@ workflows:
           requires:
             - build_x86_mac
       - docs: *build_on_tags
+      - build_x86_archlinux: *build_on_tags
+      - test_x86_archlinux:
+          <<: *build_on_tags
+          requires:
+            - build_x86_archlinux
