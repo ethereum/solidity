@@ -24,7 +24,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity::assembly;
 
-
 bool Scope::registerLabel(yul::YulString _name)
 {
 	if (exists(_name))

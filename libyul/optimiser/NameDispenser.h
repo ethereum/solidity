@@ -54,6 +54,7 @@ private:
 	YulString newNameInternal(YulString _nameHint);
 
 	std::set<YulString> m_usedNames;
+	size_t m_counter = 0;
 };
 
 }

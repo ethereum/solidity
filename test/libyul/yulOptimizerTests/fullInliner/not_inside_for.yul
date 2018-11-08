@@ -21,18 +21,18 @@
 //         }
 //         f(x)
 //         {
-//             let f_a_1 := x
-//             let f_r_1
-//             sstore(f_a_1, 0)
-//             f_r_1 := f_a_1
-//             x := f_r_1
+//             let f_a_3 := x
+//             let f_r_4
+//             sstore(f_a_3, 0)
+//             f_r_4 := f_a_3
+//             x := f_r_4
 //         }
 //         {
-//             let f_a_2 := x
-//             let f_r_2
-//             sstore(f_a_2, 0)
-//             f_r_2 := f_a_2
-//             let t := f_r_2
+//             let f_a_6 := x
+//             let f_r_7
+//             sstore(f_a_6, 0)
+//             f_r_7 := f_a_6
+//             let t := f_r_7
 //         }
 //     }
 //     function f(a) -> r
