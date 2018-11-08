@@ -21,6 +21,7 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 
 using namespace std;
+using namespace dev;
 using namespace dev::solidity::assembly;
 
 
