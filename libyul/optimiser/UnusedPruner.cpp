@@ -85,6 +85,16 @@ void UnusedPruner::operator()(Block& _block)
 					}};
 			}
 		}
+		else if (statement.type() == typeid(ExpressionStatement))
+		{
+			ExpressionStatement& exprStmt = boost::get<ExpressionStatement>(statement);
+			if (MovableChecker(exprStmt.expression).movable())
+			{
+				// pop(x) should be movable!
+				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));
+				statement = Block{std::move(exprStmt.location), {}};
+			}
+		}
 
 	removeEmptyBlocks(_block);
 

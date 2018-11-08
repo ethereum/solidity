@@ -16,9 +16,7 @@
 //     {
 //         let _18 := 0x20
 //         let allocate__7 := 0x40
-//         let allocate_p_12 := mload(allocate__7)
-//         mstore(allocate__7, add(allocate_p_12, _18))
-//         pop(allocate_p_12)
+//         mstore(allocate__7, add(mload(allocate__7), _18))
 //         let allocate_p_12_31 := mload(allocate__7)
 //         mstore(allocate__7, add(allocate_p_12_31, allocate__7))
 //         mstore(add(allocate_p_12_31, 96), 2)
