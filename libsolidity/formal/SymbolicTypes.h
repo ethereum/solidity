@@ -48,6 +48,7 @@ bool isAddress(Type::Category _category);
 bool isNumber(Type::Category _category);
 bool isBool(Type::Category _category);
 bool isFunction(Type::Category _category);
+bool isMapping(Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,

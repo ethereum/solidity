@@ -60,8 +60,7 @@ void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _
 bool SMTChecker::visit(ContractDefinition const& _contract)
 {
 	for (auto _var : _contract.stateVariables())
-		if (_var->type()->isValueType())
-			createVariable(*_var);
+		createVariable(*_var);
 	return true;
 }
 
@@ -269,6 +268,11 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		VariableDeclaration const& decl = dynamic_cast<VariableDeclaration const&>(*identifier->annotation().referencedDeclaration);
 		solAssert(knownVariable(decl), "");
 		assignment(decl, _assignment.rightHandSide(), _assignment.location());
+		defineExpr(_assignment, expr(_assignment.rightHandSide()));
+	}
+	else if (dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide()))
+	{
+		arrayAssignment(_assignment);
 		defineExpr(_assignment, expr(_assignment.rightHandSide()));
 	}
 	else
@@ -532,7 +536,7 @@ void SMTChecker::abstractFunctionCall(FunctionCall const& _funCall)
 	for (auto const& arg: _funCall.arguments())
 		smtArguments.push_back(expr(*arg));
 	defineExpr(_funCall, (*m_expressions.at(&_funCall.expression()))(smtArguments));
-	m_uninterpretedTerms.push_back(&_funCall);
+	m_uninterpretedTerms.insert(&_funCall);
 	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, *m_interface);
 }
 
@@ -636,6 +640,68 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 		);
 
 	return true;
+}
+
+void SMTChecker::endVisit(IndexAccess const& _indexAccess)
+{
+	shared_ptr<SymbolicVariable> array;
+	if (auto const& id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
+	{
+		auto const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
+		solAssert(knownVariable(varDecl), "");
+		array = m_variables[&varDecl];
+	}
+	else if (auto const& innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
+	{
+		solAssert(knownExpr(*innerAccess), "");
+		array = m_expressions[innerAccess];
+	}
+	else
+	{
+		m_errorReporter.warning(
+			_indexAccess.location(),
+			"Assertion checker does not yet implement this expression."
+		);
+		return;
+	}
+
+	solAssert(array, "");
+	defineExpr(_indexAccess, smt::Expression::select(
+		array->currentValue(),
+		expr(*_indexAccess.indexExpression())
+	));
+	setSymbolicUnknownValue(
+		expr(_indexAccess),
+		_indexAccess.annotation().type,
+		*m_interface
+	);
+	m_uninterpretedTerms.insert(&_indexAccess);
+}
+
+void SMTChecker::arrayAssignment(Assignment const& _assignment)
+{
+	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_assignment.leftHandSide());
+	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
+	{
+		auto const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
+		solAssert(knownVariable(varDecl), "");
+		smt::Expression store = smt::Expression::store(
+			m_variables[&varDecl]->currentValue(),
+			expr(*indexAccess.indexExpression()),
+			expr(_assignment.rightHandSide())
+		);
+		m_interface->addAssertion(newValue(varDecl) == store);
+	}
+	else if (dynamic_cast<IndexAccess const*>(&indexAccess.baseExpression()))
+		m_errorReporter.warning(
+			indexAccess.location(),
+			"Assertion checker does not yet implement assignments to multi-dimensional mappings or arrays."
+		);
+	else
+		m_errorReporter.warning(
+			_assignment.location(),
+			"Assertion checker does not yet implement this expression."
+		);
 }
 
 void SMTChecker::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
@@ -847,12 +913,19 @@ void SMTChecker::checkCondition(
 		}
 		for (auto const& var: m_variables)
 		{
-			expressionsToEvaluate.emplace_back(currentValue(*var.first));
-			expressionNames.push_back(var.first->name());
+			if (var.first->type()->isValueType())
+			{
+				expressionsToEvaluate.emplace_back(currentValue(*var.first));
+				expressionNames.push_back(var.first->name());
+			}
 		}
 		for (auto const& var: m_globalContext)
 		{
-			if (smtKind(var.second->type()->category()) != smt::Kind::Function)
+			auto const& type = var.second->type();
+			if (
+				type->isValueType() &&
+				smtKind(type->category()) != smt::Kind::Function
+			)
 			{
 				expressionsToEvaluate.emplace_back(var.second->currentValue());
 				expressionNames.push_back(var.first);
@@ -860,8 +933,11 @@ void SMTChecker::checkCondition(
 		}
 		for (auto const& uf: m_uninterpretedTerms)
 		{
-			expressionsToEvaluate.emplace_back(expr(*uf));
-			expressionNames.push_back(m_scanner->sourceAt(uf->location()));
+			if (uf->annotation().type->isValueType())
+			{
+				expressionsToEvaluate.emplace_back(expr(*uf));
+				expressionNames.push_back(m_scanner->sourceAt(uf->location()));
+			}
 		}
 	}
 	smt::CheckResult result;
