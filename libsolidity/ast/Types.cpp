@@ -26,7 +26,7 @@
 
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 #include <libdevcore/UTF8.h>
 #include <libdevcore/Algorithms.h>
 

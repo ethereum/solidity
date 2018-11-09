@@ -25,7 +25,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <libdevcore/Common.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerContext.h>

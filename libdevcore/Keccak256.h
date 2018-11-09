@@ -30,14 +30,8 @@
 namespace dev
 {
 
-// Keccak-256 convenience routines.
-
-/// Calculate Keccak-256 hash of the given input and load it into the given output.
-/// @returns false if o_output.size() != 32.
-bool keccak256(bytesConstRef _input, bytesRef o_output);
-
 /// Calculate Keccak-256 hash of the given input, returning as a 256-bit hash.
-inline h256 keccak256(bytesConstRef _input) { h256 ret; keccak256(_input, ret.ref()); return ret; }
+h256 keccak256(bytesConstRef _input);
 
 /// Calculate Keccak-256 hash of the given input, returning as a 256-bit hash.
 inline h256 keccak256(bytes const& _input) { return keccak256(bytesConstRef(&_input)); }

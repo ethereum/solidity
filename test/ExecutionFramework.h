@@ -28,7 +28,7 @@
 #include <libsolidity/interface/EVMVersion.h>
 
 #include <libdevcore/FixedHash.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <functional>
 
