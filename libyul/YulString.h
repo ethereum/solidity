@@ -35,9 +35,9 @@ namespace yul
 class YulStringRepository: boost::noncopyable
 {
 public:
-	YulStringRepository(): m_strings{std::make_shared<std::string>()}
+	YulStringRepository()
 	{
-		m_ids[std::string{}] = 0;
+		reset();
 	}
 	static YulStringRepository& instance()
 	{
@@ -59,6 +59,14 @@ public:
 	std::string const& idToString(size_t _id) const
 	{
 		return *m_strings.at(_id);
+	}
+
+	void reset()
+	{
+		m_strings.clear();
+		m_ids.clear();
+		m_strings.emplace_back(std::make_shared<std::string>());
+		m_ids[std::string{}] = 0;
 	}
 
 private:
