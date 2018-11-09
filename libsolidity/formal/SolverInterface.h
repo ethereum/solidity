@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolcommon/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
 
 #include <libdevcore/Common.h>

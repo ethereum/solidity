@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/EVMVersion.h>
+#include <libsolcommon/ErrorReporter.h>
+#include <libsolcommon/EVMVersion.h>
 
 #include <libevmasm/LinkerObject.h>
 

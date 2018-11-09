@@ -21,7 +21,7 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolcommon/ErrorReporter.h>
 
 #include <map>
 #include <memory>

@@ -50,10 +50,10 @@
  * Solidity scanner.
  */
 
+#include <libsolcommon/Exceptions.h>
+#include <libsolcommon/Scanner.h>
 #include <algorithm>
 #include <tuple>
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/parsing/Scanner.h>
 
 using namespace std;
 

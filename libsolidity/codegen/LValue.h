@@ -24,7 +24,7 @@
 
 #include <memory>
 #include <vector>
-#include <libevmasm/SourceLocation.h>
+#include <libsolcommon/SourceLocation.h>
 #include <libsolidity/codegen/ArrayUtils.h>
 
 namespace dev

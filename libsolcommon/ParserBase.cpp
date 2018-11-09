@@ -20,9 +20,9 @@
  * Solidity parser shared functionality.
  */
 
-#include <libsolidity/parsing/ParserBase.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolcommon/ParserBase.h>
+#include <libsolcommon/Scanner.h>
+#include <libsolcommon/ErrorReporter.h>
 
 using namespace std;
 using namespace dev;

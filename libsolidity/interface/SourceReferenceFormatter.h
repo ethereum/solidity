@@ -25,7 +25,7 @@
 #include <ostream>
 #include <sstream>
 #include <functional>
-#include <libevmasm/SourceLocation.h>
+#include <libsolcommon/SourceLocation.h>
 
 namespace dev
 {

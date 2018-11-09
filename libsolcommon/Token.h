@@ -43,8 +43,8 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/parsing/UndefMacros.h>
+#include <libsolcommon/Exceptions.h>
+#include <libsolcommon/UndefMacros.h>
 #include <iosfwd>
 
 namespace dev

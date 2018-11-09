@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include <libsolcommon/Token.h>
 #include <memory>
-#include <libsolidity/parsing/Token.h>
 
 namespace dev
 {

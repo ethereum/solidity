@@ -24,8 +24,8 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolcommon/ErrorReporter.h>
+#include <libsolcommon/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
 

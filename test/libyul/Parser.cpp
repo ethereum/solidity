@@ -26,8 +26,8 @@
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolcommon/Scanner.h>
+#include <libsolcommon/ErrorReporter.h>
 
 #include <boost/optional.hpp>
 #include <boost/algorithm/string/replace.hpp>

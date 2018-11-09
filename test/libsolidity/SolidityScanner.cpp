@@ -20,7 +20,7 @@
  * Unit tests for the solidity scanner.
  */
 
-#include <libsolidity/parsing/Scanner.h>
+#include <libsolcommon/Scanner.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;

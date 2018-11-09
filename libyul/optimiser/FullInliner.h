@@ -26,7 +26,7 @@
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/Exceptions.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <libsolcommon/SourceLocation.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>

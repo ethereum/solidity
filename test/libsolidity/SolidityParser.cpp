@@ -22,9 +22,9 @@
 
 #include <string>
 #include <memory>
-#include <libsolidity/parsing/Scanner.h>
+#include <libsolcommon/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolcommon/ErrorReporter.h>
 #include <test/Options.h>
 #include <test/libsolidity/ErrorCheck.h>
 

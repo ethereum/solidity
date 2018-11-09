@@ -17,7 +17,7 @@
 
 #include <libsolidity/formal/Z3Interface.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolcommon/Exceptions.h>
 
 #include <libdevcore/CommonIO.h>
 

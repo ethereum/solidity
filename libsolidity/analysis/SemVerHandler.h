@@ -23,7 +23,7 @@
 #pragma once
 
 #include <vector>
-#include <libsolidity/parsing/Token.h>
+#include <libsolcommon/Token.h>
 
 namespace dev
 {

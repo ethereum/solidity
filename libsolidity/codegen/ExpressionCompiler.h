@@ -25,10 +25,10 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
-#include <libevmasm/SourceLocation.h>
+#include <libsolcommon/SourceLocation.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/LValue.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolcommon/Exceptions.h>
 
 namespace dev {
 namespace eth

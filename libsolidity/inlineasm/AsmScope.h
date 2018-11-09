@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolcommon/Exceptions.h>
 
 #include <libyul/YulString.h>
 

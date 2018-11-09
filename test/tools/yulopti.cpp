@@ -19,15 +19,15 @@
  */
 
 #include <libdevcore/CommonIO.h>
+#include <libsolcommon/ErrorReporter.h>
+#include <libsolcommon/Scanner.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <libsolidity/interface/ErrorReporter.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>

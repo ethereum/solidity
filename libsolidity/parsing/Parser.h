@@ -23,7 +23,7 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/parsing/ParserBase.h>
+#include <libsolcommon/ParserBase.h>
 
 namespace dev
 {

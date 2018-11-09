@@ -16,6 +16,7 @@
 */
 
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
+#include <libsolcommon/SourceLocation.h>
 
 using namespace std;
 using namespace dev::solidity;

@@ -29,7 +29,7 @@
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <libevmasm/Assembly.h>
-#include <libevmasm/SourceLocation.h>
+#include <libsolcommon/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>

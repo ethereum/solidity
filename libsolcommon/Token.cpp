@@ -40,9 +40,9 @@
 // You should have received a copy of the GNU General Public License
 // along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <map>
-#include <libsolidity/parsing/Token.h>
+#include <libsolcommon/Token.h>
 #include <boost/range/iterator_range.hpp>
+#include <map>
 
 using namespace std;
 

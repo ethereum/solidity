@@ -23,7 +23,7 @@
 
 #include <test/Options.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <libsolcommon/EVMVersion.h>
 
 #include <libdevcore/CommonData.h>
 

@@ -30,7 +30,7 @@
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolcommon/ErrorReporter.h>
 #include <libdevcore/Algorithms.h>
 
 using namespace std;

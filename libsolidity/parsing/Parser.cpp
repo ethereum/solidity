@@ -22,11 +22,11 @@
 
 #include <cctype>
 #include <vector>
-#include <libevmasm/SourceLocation.h>
+#include <libsolcommon/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/parsing/Scanner.h>
+#include <libsolcommon/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolcommon/ErrorReporter.h>
 
 using namespace std;
 

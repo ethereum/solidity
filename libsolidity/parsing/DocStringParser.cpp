@@ -1,7 +1,7 @@
 
 #include <libsolidity/parsing/DocStringParser.h>
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolcommon/ErrorReporter.h>
+#include <libsolcommon/Exceptions.h>
 
 #include <boost/range/irange.hpp>
 #include <boost/range/algorithm.hpp>

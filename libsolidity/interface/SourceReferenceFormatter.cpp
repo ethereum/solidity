@@ -21,8 +21,8 @@
  */
 
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <libsolcommon/Scanner.h>
+#include <libsolcommon/Exceptions.h>
 
 using namespace std;
 

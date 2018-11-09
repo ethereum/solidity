@@ -24,9 +24,10 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
-#include <libevmasm/SourceLocation.h>
+#include <libsolcommon/SourceLocation.h>
 
 namespace dev
 {
@@ -38,7 +39,7 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
 struct FatalError: virtual Exception {};
-struct UnimplementedFeatureError: virtual Exception{};
+struct UnimplementedFeatureError: virtual Exception {};
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \
@@ -77,7 +78,7 @@ public:
 	/// helper functions
 	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
 	{
-		for (auto e: _list)
+		for (auto e : _list)
 		{
 			if (e->type() == _type)
 				return e.get();
@@ -86,7 +87,7 @@ public:
 	}
 	static bool containsOnlyWarnings(ErrorList const& _list)
 	{
-		for (auto e: _list)
+		for (auto e : _list)
 		{
 			if (e->type() != Type::Warning)
 				return false;
@@ -97,36 +98,6 @@ private:
 	Type m_type;
 	std::string m_typeName;
 };
-
-
-using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
-
-class SecondarySourceLocation
-{
-public:
-	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
-	{
-		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
-		return *this;
-	}
-	/// Limits the number of secondary source locations to 32 and appends a notice to the
-	/// error message.
-	void limitSize(std::string& _message)
-	{
-		size_t occurrences = infos.size();
-		if (occurrences > 32)
-		{
-			infos.resize(32);
-			_message += " Truncated from " + std::to_string(occurrences) + " to the first 32 occurrences.";
-		}
-	}
-
-	std::vector<errorSourceLocationInfo> infos;
-};
-
-
-using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
-using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
 
 }
 }

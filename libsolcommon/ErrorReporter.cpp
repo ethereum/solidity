@@ -20,8 +20,9 @@
  * Error helper class.
  */
 
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/ast/AST.h>
+#include <libsolcommon/ErrorReporter.h>
+// #include <libsolidity/ast/AST.h>
+#include <libsolcommon/SourceLocation.h>
 #include <memory>
 
 using namespace std;
