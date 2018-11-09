@@ -23,7 +23,7 @@
 
 #include <libevmasm/Exceptions.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libdevcore/Assertions.h>
 #include <libdevcore/CommonData.h>

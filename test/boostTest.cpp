@@ -48,6 +48,7 @@ using namespace boost::unit_test;
 using namespace dev::solidity::test;
 namespace fs = boost::filesystem;
 using namespace std;
+using namespace langutil;
 
 #if BOOST_VERSION < 105900
 test_case *make_test_case(

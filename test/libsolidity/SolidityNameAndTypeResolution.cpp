@@ -33,6 +33,7 @@
 #include <string>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

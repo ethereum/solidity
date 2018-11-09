@@ -29,7 +29,7 @@ namespace solidity
 class ControlFlowAnalyzer: private ASTConstVisitor
 {
 public:
-	explicit ControlFlowAnalyzer(CFG const& _cfg, ErrorReporter& _errorReporter):
+	explicit ControlFlowAnalyzer(CFG const& _cfg, langutil::ErrorReporter& _errorReporter):
 		m_cfg(_cfg), m_errorReporter(_errorReporter) {}
 
 	bool analyze(ASTNode const& _astRoot);
@@ -45,7 +45,7 @@ private:
 	) const;
 
 	CFG const& m_cfg;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 };
 
 }

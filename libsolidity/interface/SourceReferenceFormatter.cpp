@@ -21,10 +21,11 @@
  */
 
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Scanner.h>
+#include <liblangutil/Exceptions.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

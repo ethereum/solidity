@@ -27,7 +27,6 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
@@ -45,6 +44,9 @@
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 
+#include <liblangutil/Scanner.h>
+#include <liblangutil/Exceptions.h>
+
 #include <libevmasm/Exceptions.h>
 
 #include <libyul/YulString.h>
@@ -58,6 +60,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)

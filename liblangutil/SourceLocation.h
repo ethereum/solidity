@@ -22,13 +22,13 @@
 
 #pragma once
 
+#include <libdevcore/Common.h> // defines noexcept macro for MSVC
 #include <memory>
 #include <string>
 #include <ostream>
 #include <tuple>
-#include <libdevcore/Common.h> // defines noexcept macro for MSVC
 
-namespace dev
+namespace langutil
 {
 
 /**
@@ -101,5 +101,34 @@ bool SourceLocation::intersects(SourceLocation const& _other) const
 		return false;
 	return _other.start < end && start < _other.end;
 }
+
+using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
+
+class SecondarySourceLocation
+{
+public:
+	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
+	{
+		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
+		return *this;
+	}
+
+	/// Limits the number of secondary source locations to 32 and appends a notice to the
+	/// error message.
+	void limitSize(std::string& _message)
+	{
+		size_t occurrences = infos.size();
+		if (occurrences > 32)
+		{
+			infos.resize(32);
+			_message += " Truncated from " + std::to_string(occurrences) + " to the first 32 occurrences.";
+		}
+	}
+
+	std::vector<errorSourceLocationInfo> infos;
+};
+
+using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
+using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
 
 }

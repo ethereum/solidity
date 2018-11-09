@@ -23,7 +23,7 @@
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 
@@ -37,6 +37,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace

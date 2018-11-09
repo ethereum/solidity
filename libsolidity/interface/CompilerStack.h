@@ -23,11 +23,12 @@
 
 #pragma once
 
-#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/ReadFile.h>
-#include <libsolidity/interface/EVMVersion.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/EVMVersion.h>
+#include <liblangutil/SourceLocation.h>
+
 #include <libevmasm/LinkerObject.h>
 
 #include <libdevcore/Common.h>
@@ -43,6 +44,11 @@
 #include <vector>
 #include <functional>
 
+namespace langutil
+{
+class Scanner;
+}
+
 namespace dev
 {
 
@@ -57,7 +63,6 @@ namespace solidity
 {
 
 // forward declarations
-class Scanner;
 class ASTNode;
 class ContractDefinition;
 class FunctionDefinition;
@@ -65,7 +70,6 @@ class SourceUnit;
 class Compiler;
 class GlobalContext;
 class Natspec;
-class Error;
 class DeclarationContainer;
 
 /**
@@ -100,7 +104,7 @@ public:
 		m_errorReporter(m_errorList) {}
 
 	/// @returns the list of errors that occurred during parsing and type checking.
-	ErrorList const& errors() const { return m_errorReporter.errors(); }
+	langutil::ErrorList const& errors() const { return m_errorReporter.errors(); }
 
 	/// @returns the current state.
 	State state() const { return m_stackState; }
@@ -174,7 +178,7 @@ public:
 	std::map<std::string, unsigned> sourceIndices() const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
-	Scanner const& scanner(std::string const& _sourceName) const;
+	langutil::Scanner const& scanner(std::string const& _sourceName) const;
 
 	/// @returns the parsed source unit with the supplied name.
 	SourceUnit const& ast(std::string const& _sourceName) const;
@@ -182,7 +186,7 @@ public:
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
 	/// start line, start column, end line, end column
-	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
+	std::tuple<int, int, int, int> positionFromSourceLocation(langutil::SourceLocation const& _sourceLocation) const;
 
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
@@ -248,7 +252,7 @@ private:
 	/// The state per source unit. Filled gradually during parsing.
 	struct Source
 	{
-		std::shared_ptr<Scanner> scanner;
+		std::shared_ptr<langutil::Scanner> scanner;
 		std::shared_ptr<SourceUnit> ast;
 		bool isLibrary = false;
 		void reset() { scanner.reset(); ast.reset(); }
@@ -345,8 +349,8 @@ private:
 	/// This is updated during compilation.
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::map<std::string const, Contract> m_contracts;
-	ErrorList m_errorList;
-	ErrorReporter m_errorReporter;
+	langutil::ErrorList m_errorList;
+	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
 	State m_stackState = Empty;
 };

@@ -40,15 +40,14 @@
 // You should have received a copy of the GNU General Public License
 // along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <map>
-#include <libsolidity/parsing/Token.h>
+#include <liblangutil/Token.h>
 #include <boost/range/iterator_range.hpp>
+#include <map>
 
 using namespace std;
+using namespace dev;
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 
 void ElementaryTypeNameToken::assertDetails(Token _baseType, unsigned const& _first, unsigned const& _second)
@@ -202,6 +201,5 @@ tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _
 	return make_tuple(keywordByName(_literal), 0, 0);
 }
 
-}
 }
 }

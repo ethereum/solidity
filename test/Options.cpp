@@ -23,8 +23,8 @@
 
 #include <test/Common.h>
 
-#include <libsolidity/interface/EVMVersion.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
+#include <liblangutil/Exceptions.h>
 
 #include <boost/test/framework.hpp>
 #include <boost/filesystem.hpp>

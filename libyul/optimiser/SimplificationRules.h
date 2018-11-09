@@ -107,7 +107,7 @@ public:
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
-	Expression toExpression(SourceLocation const& _location) const;
+	Expression toExpression(langutil::SourceLocation const& _location) const;
 
 private:
 	Expression const& matchGroupValue() const;

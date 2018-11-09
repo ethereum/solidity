@@ -31,18 +31,23 @@
 #include <string>
 #include <vector>
 
+namespace langutil
+{
+class ErrorReporter;
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace solidity
 {
 
 class VariableUsage;
-class ErrorReporter;
 
 class SMTChecker: private ASTConstVisitor
 {
 public:
-	SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback);
+	SMTChecker(langutil::ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback);
 
 	void analyze(SourceUnit const& _sources, std::shared_ptr<Scanner> const& _scanner);
 
@@ -88,8 +93,8 @@ private:
 	/// of rounding for signed division.
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
 
-	void assignment(VariableDeclaration const& _variable, Expression const& _value, SourceLocation const& _location);
-	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, Expression const& _value, langutil::SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, langutil::SourceLocation const& _location);
 
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
@@ -103,7 +108,7 @@ private:
 	/// Check that a condition can be satisfied.
 	void checkCondition(
 		smt::Expression _condition,
-		SourceLocation const& _location,
+		langutil::SourceLocation const& _location,
 		std::string const& _description,
 		std::string const& _additionalValueName = "",
 		smt::Expression* _additionalValue = nullptr
@@ -116,7 +121,7 @@ private:
 		std::string const& _description
 	);
 	/// Checks that the value is in the range given by the type.
-	void checkUnderOverflow(smt::Expression _value, IntegerType const& _Type, SourceLocation const& _location);
+	void checkUnderOverflow(smt::Expression _value, IntegerType const& _Type, langutil::SourceLocation const& _location);
 
 
 	std::pair<smt::CheckResult, std::vector<std::string>>
@@ -194,7 +199,7 @@ private:
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
 	std::vector<smt::Expression> m_pathConditions;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 	std::shared_ptr<Scanner> m_scanner;
 
 	/// Stores the current path of function calls.

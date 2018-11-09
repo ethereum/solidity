@@ -32,6 +32,7 @@
 #include <libdevcore/Whiskers.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

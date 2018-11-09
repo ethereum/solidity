@@ -25,7 +25,9 @@
 #include <memory>
 #include <vector>
 #include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/parsing/ParserBase.h>
+#include <liblangutil/SourceLocation.h>
+#include <liblangutil/Scanner.h>
+#include <liblangutil/ParserBase.h>
 
 namespace dev
 {
@@ -34,22 +36,22 @@ namespace solidity
 namespace assembly
 {
 
-class Parser: public ParserBase
+class Parser: public langutil::ParserBase
 {
 public:
-	explicit Parser(ErrorReporter& _errorReporter, AsmFlavour _flavour = AsmFlavour::Loose):
+	explicit Parser(langutil::ErrorReporter& _errorReporter, AsmFlavour _flavour = AsmFlavour::Loose):
 		ParserBase(_errorReporter), m_flavour(_flavour) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
 	/// @returns an empty shared pointer on error.
-	std::shared_ptr<Block> parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner);
+	std::shared_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
 
 protected:
 	using ElementaryOperation = boost::variant<assembly::Instruction, assembly::Literal, assembly::Identifier>;
 
 	/// Creates an inline assembly node with the given source location.
-	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation()) const
+	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
 	{
 		T r;
 		r.location = _loc;
@@ -62,7 +64,7 @@ protected:
 			r.location.sourceName = sourceName();
 		return r;
 	}
-	SourceLocation location() const { return SourceLocation(position(), endPosition(), sourceName()); }
+	langutil::SourceLocation location() const { return {position(), endPosition(), sourceName()}; }
 
 	Block parseBlock();
 	Statement parseStatement();

@@ -23,6 +23,7 @@
 #include <algorithm>
 
 using namespace std;
+using namespace langutil;
 using namespace dev::solidity;
 
 bool CFG::constructFlow(ASTNode const& _astRoot)

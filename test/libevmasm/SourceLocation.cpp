@@ -20,13 +20,11 @@
  * Unit tests for the SourceLocation class.
  */
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <test/Options.h>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 namespace test
 {
@@ -45,6 +43,5 @@ BOOST_AUTO_TEST_CASE(test_fail)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }
 } // end namespaces

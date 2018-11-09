@@ -19,7 +19,7 @@
 
 #include <libsolidity/formal/SolverInterface.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
 
 #include <libdevcore/Common.h>

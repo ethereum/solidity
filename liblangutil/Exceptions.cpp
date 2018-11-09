@@ -20,11 +20,11 @@
  * Solidity exception hierarchy.
  */
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::solidity;
+using namespace langutil;
 
 Error::Error(Type _type, SourceLocation const& _location, string const& _description):
 	m_type(_type)

@@ -22,10 +22,11 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::yul;
 
 namespace

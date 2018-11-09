@@ -21,19 +21,23 @@
 
 #pragma once
 
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libevmasm/LinkerObject.h>
 
 #include <string>
 #include <memory>
 
+namespace langutil
+{
+class Scanner;
+}
+
 namespace dev
 {
 namespace solidity
 {
-class Scanner;
 namespace assembly
 {
 struct AsmAnalysisInfo;
@@ -61,7 +65,7 @@ public:
 	{}
 
 	/// @returns the scanner used during parsing
-	Scanner const& scanner() const;
+	langutil::Scanner const& scanner() const;
 
 	/// Runs parsing and analysis steps, returns false if input cannot be assembled.
 	/// Multiple calls overwrite the previous state.
@@ -69,13 +73,13 @@ public:
 
 	/// Runs analysis step on the supplied block, returns false if input cannot be assembled.
 	/// Multiple calls overwrite the previous state.
-	bool analyze(assembly::Block const& _block, Scanner const* _scanner = nullptr);
+	bool analyze(assembly::Block const& _block, langutil::Scanner const* _scanner = nullptr);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
-	ErrorList const& errors() const { return m_errors; }
+	langutil::ErrorList const& errors() const { return m_errors; }
 
 	/// Pretty-print the input after having parsed it.
 	std::string print() const;
@@ -86,13 +90,13 @@ private:
 	Language m_language = Language::Assembly;
 	EVMVersion m_evmVersion;
 
-	std::shared_ptr<Scanner> m_scanner;
+	std::shared_ptr<langutil::Scanner> m_scanner;
 
 	bool m_analysisSuccessful = false;
 	std::shared_ptr<assembly::Block> m_parserResult;
 	std::shared_ptr<assembly::AsmAnalysisInfo> m_analysisInfo;
-	ErrorList m_errors;
-	ErrorReporter m_errorReporter;
+	langutil::ErrorList m_errors;
+	langutil::ErrorReporter m_errorReporter;
 };
 
 }

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>

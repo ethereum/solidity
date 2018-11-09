@@ -23,7 +23,7 @@
 #include <test/libsolidity/ErrorCheck.h>
 #include <test/Options.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 
 #include <boost/test/unit_test.hpp>

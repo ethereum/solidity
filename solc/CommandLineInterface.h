@@ -23,7 +23,7 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/AssemblyStack.h>
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
