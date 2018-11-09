@@ -90,8 +90,6 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 
 bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	yul::YulStringRepository::instance().reset();
-
 	assembly::AsmPrinter printer{m_yul};
 	shared_ptr<Block> ast;
 	shared_ptr<assembly::AsmAnalysisInfo> analysisInfo;

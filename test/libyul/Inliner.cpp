@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(simple)
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
 		"function g(a:u256) -> b:u256 { b := a }"
 		"function f() -> x:u256 { x := g(2:u256) }"
-	"}"), "f,g");
+	"}"), "g,f");
 }
 
 BOOST_AUTO_TEST_CASE(simple_inside_structures)
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(simple_inside_structures)
 			"function g(a:u256) -> b:u256 { b := a }"
 			"function f() -> x:u256 { x := g(2:u256) }"
 		"}"
-	"}"), "f,g");
+	"}"), "g,f");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
 		"for {"
 			"function g(a:u256) -> b:u256 { b := a }"
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(simple_inside_structures)
 		"{"
 			"function h() -> y:u256 { y := 2:u256 }"
 		"}"
-	"}"), "f,g,h");
+	"}"), "h,g,f");
 }
 
 BOOST_AUTO_TEST_CASE(negative)

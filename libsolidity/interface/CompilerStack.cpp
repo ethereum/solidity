@@ -106,7 +106,6 @@ void CompilerStack::reset(bool _keepSources)
 		m_stackState = Empty;
 		m_sources.clear();
 	}
-	yul::YulStringRepository::instance().reset();
 	m_libraries.clear();
 	m_evmVersion = EVMVersion();
 	m_optimize = false;
