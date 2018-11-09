@@ -41,18 +41,19 @@
 //         h_t := 2
 //         mstore(7, h_t)
 //         let g_x_1 := 10
-//         f(1)
+//         let g_f_x_8 := 1
+//         mstore(0, g_f_x_8)
+//         mstore(7, h())
+//         g(10)
+//         mstore(1, g_f_x_8)
 //         mstore(1, x)
 //     }
 //     function g(x_1)
 //     {
 //         let f_x_8 := 1
 //         mstore(0, f_x_8)
-//         let f_h_t
-//         f_h_t := 2
-//         mstore(7, f_h_t)
-//         let f_g_x_1 := 10
-//         f(1)
+//         mstore(7, h())
+//         g(10)
 //         mstore(1, f_x_8)
 //     }
 //     function h() -> t
