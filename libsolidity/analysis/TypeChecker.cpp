@@ -582,7 +582,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 			if (!actualType->fullEncodingType(false, _abiEncoderV2, false))
 				m_errorReporter.typeError(
 					typeArgument->location(),
-					"Decoding type " + actualType->toString(false)  + " not supported."
+					"Decoding type " + actualType->toString(false) + " not supported."
 				);
 			components.push_back(actualType);
 		}
@@ -1681,352 +1681,570 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	}
 }
 
-bool TypeChecker::visit(FunctionCall const& _functionCall)
+TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
+	FunctionCall const& _functionCall
+)
 {
-	bool isPositionalCall = _functionCall.names().empty();
-	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
-	vector<ASTPointer<ASTString>> const& argumentNames = _functionCall.names();
+	solAssert(_functionCall.annotation().kind == FunctionCallKind::TypeConversion, "");
+	TypePointer const& expressionType = type(_functionCall.expression());
 
-	bool isPure = true;
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
+	bool const isPositionalCall = _functionCall.names().empty();
 
-	// We need to check arguments' type first as they will be needed for overload resolution.
-	shared_ptr<TypePointers> argumentTypes;
-	if (isPositionalCall)
-		argumentTypes = make_shared<TypePointers>();
-	for (ASTPointer<Expression const> const& argument: arguments)
-	{
-		argument->accept(*this);
-		if (!argument->annotation().isPure)
-			isPure = false;
-		// only store them for positional calls
-		if (isPositionalCall)
-			argumentTypes->push_back(type(*argument));
-	}
-	if (isPositionalCall)
-		_functionCall.expression().annotation().argumentTypes = move(argumentTypes);
-
-	_functionCall.expression().accept(*this);
-	TypePointer expressionType = type(_functionCall.expression());
-
-	if (auto const* typeType = dynamic_cast<TypeType const*>(expressionType.get()))
-	{
-		if (typeType->actualType()->category() == Type::Category::Struct)
-			_functionCall.annotation().kind = FunctionCallKind::StructConstructorCall;
-		else
-			_functionCall.annotation().kind = FunctionCallKind::TypeConversion;
-
-	}
-	else
-		_functionCall.annotation().kind = FunctionCallKind::FunctionCall;
-	solAssert(_functionCall.annotation().kind != FunctionCallKind::Unset, "");
-
-	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
-	{
-		TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
-		TypePointer resultType = t.actualType();
-		if (arguments.size() != 1)
-			m_errorReporter.typeError(_functionCall.location(), "Exactly one argument expected for explicit type conversion.");
-		else if (!isPositionalCall)
-			m_errorReporter.typeError(_functionCall.location(), "Type conversion cannot allow named arguments.");
-		else
-		{
-			TypePointer const& argType = type(*arguments.front());
-			// Resulting data location is memory unless we are converting from a reference
-			// type with a different data location.
-			// (data location cannot yet be specified for type conversions)
-			DataLocation dataLoc = DataLocation::Memory;
-			if (auto argRefType = dynamic_cast<ReferenceType const*>(argType.get()))
-				dataLoc = argRefType->location();
-			if (auto type = dynamic_cast<ReferenceType const*>(resultType.get()))
-				resultType = type->copyForLocation(dataLoc, type->isPointer());
-			if (argType->isExplicitlyConvertibleTo(*resultType))
-			{
-				if (auto argArrayType = dynamic_cast<ArrayType const*>(argType.get()))
-				{
-					auto resultArrayType = dynamic_cast<ArrayType const*>(resultType.get());
-					solAssert(!!resultArrayType, "");
-					solAssert(
-						argArrayType->location() != DataLocation::Storage ||
-						((resultArrayType->isPointer() || (argArrayType->isByteArray() && resultArrayType->isByteArray())) &&
-						 resultArrayType->location() == DataLocation::Storage),
-						"Invalid explicit conversion to storage type."
-					);
-				}
-			}
-			else
-			{
-				if (resultType->category() == Type::Category::Contract && argType->category() == Type::Category::Address)
-				{
-					solAssert(dynamic_cast<ContractType const*>(resultType.get())->isPayable(), "");
-					solAssert(dynamic_cast<AddressType const*>(argType.get())->stateMutability() < StateMutability::Payable, "");
-					SecondarySourceLocation ssl;
-					if (auto const* identifier = dynamic_cast<Identifier const*>(arguments.front().get()))
-						if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
-							ssl.append("Did you mean to declare this variable as \"address payable\"?", variableDeclaration->location());
-					m_errorReporter.typeError(
-						_functionCall.location(), ssl,
-						"Explicit type conversion not allowed from non-payable \"address\" to \"" +
-						resultType->toString() +
-						"\", which has a payable fallback function."
-					);
-				}
-				else
-					m_errorReporter.typeError(
-						_functionCall.location(),
-						"Explicit type conversion not allowed from \"" +
-						argType->toString() +
-						"\" to \"" +
-						resultType->toString() +
-						"\"."
-					);
-			}
-			if (resultType->category() == Type::Category::Address)
-			{
-				bool payable = argType->isExplicitlyConvertibleTo(AddressType::addressPayable());
-				resultType = make_shared<AddressType>(payable ? StateMutability::Payable : StateMutability::NonPayable);
-			}
-		}
-		_functionCall.annotation().type = resultType;
-		_functionCall.annotation().isPure = isPure;
-
-		return false;
-	}
-
-	// Actual function call or struct constructor call.
-
-	FunctionTypePointer functionType;
-
-	/// For error message: Struct members that were removed during conversion to memory.
-	set<string> membersRemovedForStructConstructor;
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
-	{
-		TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
-		auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
-		functionType = structType.constructorType();
-		membersRemovedForStructConstructor = structType.membersMissingInMemory();
-		_functionCall.annotation().isPure = isPure;
-	}
-	else if ((functionType = dynamic_pointer_cast<FunctionType const>(expressionType)))
-		_functionCall.annotation().isPure =
-			isPure &&
-			_functionCall.expression().annotation().isPure &&
-			functionType->isPure();
-
-	bool allowDynamicTypes = m_evmVersion.supportsReturndata();
-	if (!functionType)
-	{
-		m_errorReporter.typeError(_functionCall.location(), "Type is not callable");
-		_functionCall.annotation().type = make_shared<TupleType>();
-		return false;
-	}
-
-	if (functionType->kind() == FunctionType::Kind::BareStaticCall && !m_evmVersion.hasStaticCall())
-		m_errorReporter.typeError(_functionCall.location(), "\"staticcall\" is not supported by the VM version.");
-
-	if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
-	{
-		if (functionName->name() == "sha3" && functionType->kind() == FunctionType::Kind::KECCAK256)
-			m_errorReporter.typeError(_functionCall.location(), "\"sha3\" has been deprecated in favour of \"keccak256\"");
-		else if (functionName->name() == "suicide" && functionType->kind() == FunctionType::Kind::Selfdestruct)
-			m_errorReporter.typeError(_functionCall.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\"");
-	}
-	if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
-		m_errorReporter.typeError(_functionCall.location(), "Event invocations have to be prefixed by \"emit\".");
-
-	TypePointers parameterTypes = functionType->parameterTypes();
-
-	if (!functionType->padArguments())
-	{
-		for (size_t i = 0; i < arguments.size(); ++i)
-		{
-			auto const& argType = type(*arguments[i]);
-			if (auto literal = dynamic_cast<RationalNumberType const*>(argType.get()))
-			{
-				if (literal->mobileType())
-					m_errorReporter.typeError(
-						arguments[i]->location(),
-						"Cannot perform packed encoding for a literal. Please convert it to an explicit type first."
-					);
-				else
-				{
-					/* If no mobile type is available an error will be raised elsewhere. */
-					solAssert(m_errorReporter.hasErrors(), "");
-				}
-			}
-		}
-	}
-
-	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2);
-
-	// Will be assigned to .type at the end (turning multi-elements into a tuple).
-	TypePointers returnTypes =
-		allowDynamicTypes ?
-		functionType->returnParameterTypes() :
-		functionType->returnParameterTypesWithoutDynamicTypes();
-
-	if (functionType->kind() == FunctionType::Kind::ABIDecode)
-		returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
-	else if (functionType->takesArbitraryParameters() && arguments.size() < parameterTypes.size())
-	{
-		solAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
+	TypePointer resultType = dynamic_cast<TypeType const&>(*expressionType).actualType();
+	if (arguments.size() != 1)
 		m_errorReporter.typeError(
 			_functionCall.location(),
-			"Need at least " +
-			toString(parameterTypes.size()) +
-			" arguments for function call, but provided only " +
-			toString(arguments.size()) +
-			"."
+			"Exactly one argument expected for explicit type conversion."
 		);
-	}
-	else if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
+	else if (!isPositionalCall)
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"Type conversion cannot allow named arguments."
+		);
+	else
 	{
-		bool isStructConstructorCall = _functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
-
-		string msg =
-			"Wrong argument count for " +
-			string(isStructConstructorCall ? "struct constructor" : "function call") +
-			": " +
-			toString(arguments.size()) +
-			" arguments given but expected " +
-			toString(parameterTypes.size()) +
-			".";
-		// Extend error message in case we try to construct a struct with mapping member.
-		if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall && !membersRemovedForStructConstructor.empty())
+		TypePointer const& argType = type(*arguments.front());
+		// Resulting data location is memory unless we are converting from a reference
+		// type with a different data location.
+		// (data location cannot yet be specified for type conversions)
+		DataLocation dataLoc = DataLocation::Memory;
+		if (auto argRefType = dynamic_cast<ReferenceType const*>(argType.get()))
+			dataLoc = argRefType->location();
+		if (auto type = dynamic_cast<ReferenceType const*>(resultType.get()))
+			resultType = type->copyForLocation(dataLoc, type->isPointer());
+		if (argType->isExplicitlyConvertibleTo(*resultType))
 		{
-			msg += " Members that have to be skipped in memory:";
-			for (auto const& member: membersRemovedForStructConstructor)
-				msg += " " + member;
+			if (auto argArrayType = dynamic_cast<ArrayType const*>(argType.get()))
+			{
+				auto resultArrayType = dynamic_cast<ArrayType const*>(resultType.get());
+				solAssert(!!resultArrayType, "");
+				solAssert(
+					argArrayType->location() != DataLocation::Storage ||
+					(
+						(
+							resultArrayType->isPointer() ||
+							(argArrayType->isByteArray() && resultArrayType->isByteArray())
+						) &&
+						resultArrayType->location() == DataLocation::Storage
+					),
+					"Invalid explicit conversion to storage type."
+				);
+			}
+		}
+		else
+		{
+			if (
+				resultType->category() == Type::Category::Contract &&
+				argType->category() == Type::Category::Address
+			)
+			{
+				solAssert(dynamic_cast<ContractType const*>(resultType.get())->isPayable(), "");
+				solAssert(
+					dynamic_cast<AddressType const*>(argType.get())->stateMutability() <
+						StateMutability::Payable,
+					""
+				);
+				SecondarySourceLocation ssl;
+				if (
+					auto const* identifier = dynamic_cast<Identifier const*>(arguments.front().get())
+				)
+					if (
+						auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(
+							identifier->annotation().referencedDeclaration
+						)
+					)
+						ssl.append(
+							"Did you mean to declare this variable as \"address payable\"?",
+							variableDeclaration->location()
+						);
+				m_errorReporter.typeError(
+					_functionCall.location(), ssl,
+					"Explicit type conversion not allowed from non-payable \"address\" to \"" +
+					resultType->toString() +
+					"\", which has a payable fallback function."
+				);
+			}
+			else
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Explicit type conversion not allowed from \"" +
+					argType->toString() +
+					"\" to \"" +
+					resultType->toString() +
+					"\"."
+				);
+		}
+		if (resultType->category() == Type::Category::Address)
+		{
+			bool const payable = argType->isExplicitlyConvertibleTo(AddressType::addressPayable());
+			resultType = make_shared<AddressType>(
+				payable ? StateMutability::Payable : StateMutability::NonPayable
+			);
+		}
+	}
+	return resultType;
+}
+
+void TypeChecker::typeCheckFunctionCall(
+	FunctionCall const& _functionCall,
+	FunctionTypePointer _functionType
+)
+{
+	// Actual function call or struct constructor call.
+
+	solAssert(!!_functionType, "");
+	solAssert(_functionType->kind() != FunctionType::Kind::ABIDecode, "");
+
+	// Check for unsupported use of bare static call
+	if (
+		_functionType->kind() == FunctionType::Kind::BareStaticCall &&
+		!m_evmVersion.hasStaticCall()
+	)
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"\"staticcall\" is not supported by the VM version."
+		);
+
+	// Check for deprecated function names
+	if (_functionType->kind() == FunctionType::Kind::KECCAK256)
+	{
+		if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+			if (functionName->name() == "sha3")
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"\"sha3\" has been deprecated in favour of \"keccak256\""
+				);
+	}
+	else if (_functionType->kind() == FunctionType::Kind::Selfdestruct)
+	{
+		if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+			if (functionName->name() == "suicide")
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"\"suicide\" has been deprecated in favour of \"selfdestruct\""
+				);
+	}
+
+	// Check for event outside of emit statement
+	if (!m_insideEmitStatement && _functionType->kind() == FunctionType::Kind::Event)
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"Event invocations have to be prefixed by \"emit\"."
+		);
+
+	// Perform standard function call type checking
+	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+}
+
+void TypeChecker::typeCheckABIEncodeFunctions(
+	FunctionCall const& _functionCall,
+	FunctionTypePointer _functionType
+)
+{
+	solAssert(!!_functionType, "");
+	solAssert(
+		_functionType->kind() == FunctionType::Kind::ABIEncode ||
+		_functionType->kind() == FunctionType::Kind::ABIEncodePacked ||
+		_functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+		_functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature,
+		"ABI function has unexpected FunctionType::Kind."
+	);
+	solAssert(_functionType->takesArbitraryParameters(), "ABI functions should be variadic.");
+
+	bool const isPacked = _functionType->kind() == FunctionType::Kind::ABIEncodePacked;
+	solAssert(_functionType->padArguments() != isPacked, "ABI function with unexpected padding");
+
+	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(
+		ExperimentalFeature::ABIEncoderV2
+	);
+
+	// Check for named arguments
+	if (!_functionCall.names().empty())
+	{
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"Named arguments cannot be used for functions that take arbitrary parameters."
+		);
+		return;
+	}
+
+	// Perform standard function call type checking
+	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+
+	// Check additional arguments for variadic functions
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
+	for (size_t i = 0; i < arguments.size(); ++i)
+	{
+		auto const& argType = type(*arguments[i]);
+
+		if (argType->category() == Type::Category::RationalNumber)
+		{
+			if (!argType->mobileType())
+			{
+				m_errorReporter.typeError(
+					arguments[i]->location(),
+					"Invalid rational number (too large or division by zero)."
+				);
+				continue;
+			}
+			else if (isPacked)
+			{
+				m_errorReporter.typeError(
+					arguments[i]->location(),
+					"Cannot perform packed encoding for a literal."
+					" Please convert it to an explicit type first."
+				);
+				continue;
+			}
+		}
+
+		if (!argType->fullEncodingType(false, abiEncoderV2, !_functionType->padArguments()))
+			m_errorReporter.typeError(
+				arguments[i]->location(),
+				"This type cannot be encoded."
+			);
+	}
+}
+
+void TypeChecker::typeCheckFunctionGeneralChecks(
+	FunctionCall const& _functionCall,
+	FunctionTypePointer _functionType
+)
+{
+	// Actual function call or struct constructor call.
+
+	solAssert(!!_functionType, "");
+	solAssert(_functionType->kind() != FunctionType::Kind::ABIDecode, "");
+
+	bool const isPositionalCall = _functionCall.names().empty();
+	bool const isVariadic = _functionType->takesArbitraryParameters();
+
+	solAssert(
+		!isVariadic || _functionCall.annotation().kind == FunctionCallKind::FunctionCall,
+		"Struct constructor calls cannot be variadic."
+	);
+
+	TypePointers const& parameterTypes = _functionType->parameterTypes();
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
+	vector<ASTPointer<ASTString>> const& argumentNames = _functionCall.names();
+
+	// Check number of passed in arguments
+	if (
+		arguments.size() < parameterTypes.size() ||
+		(!isVariadic && arguments.size() > parameterTypes.size())
+	)
+	{
+		bool const isStructConstructorCall =
+			_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
+
+		string msg;
+
+		if (isVariadic)
+			msg +=
+				"Need at least " +
+				toString(parameterTypes.size()) +
+				" arguments for " +
+				string(isStructConstructorCall ? "struct constructor" : "function call") +
+				", but provided only " +
+				toString(arguments.size()) +
+				".";
+		else
+			msg +=
+				"Wrong argument count for " +
+				string(isStructConstructorCall ? "struct constructor" : "function call") +
+				": " +
+				toString(arguments.size()) +
+				" arguments given but " +
+				string(isVariadic ? "need at least " : "expected ") +
+				toString(parameterTypes.size()) +
+				".";
+
+		// Extend error message in case we try to construct a struct with mapping member.
+		if (isStructConstructorCall)
+		{
+			/// For error message: Struct members that were removed during conversion to memory.
+			TypePointer const expressionType = type(_functionCall.expression());
+			TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
+			auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
+			set<string> membersRemovedForStructConstructor = structType.membersMissingInMemory();
+
+			if (!membersRemovedForStructConstructor.empty())
+			{
+				msg += " Members that have to be skipped in memory:";
+				for (auto const& member: membersRemovedForStructConstructor)
+					msg += " " + member;
+			}
 		}
 		else if (
-			functionType->kind() == FunctionType::Kind::BareCall ||
-			functionType->kind() == FunctionType::Kind::BareCallCode ||
-			functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-			functionType->kind() == FunctionType::Kind::BareStaticCall
+			_functionType->kind() == FunctionType::Kind::BareCall ||
+			_functionType->kind() == FunctionType::Kind::BareCallCode ||
+			_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+			_functionType->kind() == FunctionType::Kind::BareStaticCall
 		)
 		{
 			if (arguments.empty())
-				msg += " This function requires a single bytes argument. Use \"\" as argument to provide empty calldata.";
+				msg +=
+					" This function requires a single bytes argument."
+					" Use \"\" as argument to provide empty calldata.";
 			else
-				msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
+				msg +=
+					" This function requires a single bytes argument."
+					" If all your arguments are value types, you can use"
+					" abi.encode(...) to properly generate it.";
 		}
 		else if (
-			functionType->kind() == FunctionType::Kind::KECCAK256 ||
-			functionType->kind() == FunctionType::Kind::SHA256 ||
-			functionType->kind() == FunctionType::Kind::RIPEMD160
+			_functionType->kind() == FunctionType::Kind::KECCAK256 ||
+			_functionType->kind() == FunctionType::Kind::SHA256 ||
+			_functionType->kind() == FunctionType::Kind::RIPEMD160
 		)
 			msg +=
 				" This function requires a single bytes argument."
-				" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
-				" or abi.encode(...) to use ABI encoding.";
+				" Use abi.encodePacked(...) to obtain the pre-0.5.0"
+				" behaviour or abi.encode(...) to use ABI encoding.";
 		m_errorReporter.typeError(_functionCall.location(), msg);
+		return;
 	}
-	else if (isPositionalCall)
-	{
-		for (size_t i = 0; i < arguments.size(); ++i)
-		{
-			auto const& argType = type(*arguments[i]);
-			if (functionType->takesArbitraryParameters() && i >= parameterTypes.size())
-			{
-				bool errored = false;
-				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
-					if (!t->mobileType())
-					{
-						m_errorReporter.typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
-						errored = true;
-					}
-				if (!errored && !argType->fullEncodingType(false, abiEncoderV2, !functionType->padArguments()))
-					m_errorReporter.typeError(arguments[i]->location(), "This type cannot be encoded.");
-			}
-			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
-			{
-				string msg =
-					"Invalid type for argument in function call. "
-					"Invalid implicit conversion from " +
-					type(*arguments[i])->toString() +
-					" to " +
-					parameterTypes[i]->toString() +
-					" requested.";
-				if (
-					functionType->kind() == FunctionType::Kind::BareCall ||
-					functionType->kind() == FunctionType::Kind::BareCallCode ||
-					functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-					functionType->kind() == FunctionType::Kind::BareStaticCall
-				)
-					msg += " This function requires a single bytes argument. If all your arguments are value types, you can use abi.encode(...) to properly generate it.";
-				else if (
-					functionType->kind() == FunctionType::Kind::KECCAK256 ||
-					functionType->kind() == FunctionType::Kind::SHA256 ||
-					functionType->kind() == FunctionType::Kind::RIPEMD160
-				)
-					msg +=
-						" This function requires a single bytes argument."
-						" Use abi.encodePacked(...) to obtain the pre-0.5.0 behaviour"
-						" or abi.encode(...) to use ABI encoding.";
-				m_errorReporter.typeError(arguments[i]->location(), msg);
-			}
-		}
-	}
+
+	// Parameter to argument map
+	std::vector<Expression const*> paramArgMap(parameterTypes.size());
+
+	// Map parameters to arguments - trivially for positional calls, less so for named calls
+	if (isPositionalCall)
+		for (size_t i = 0; i < paramArgMap.size(); ++i)
+			paramArgMap[i] = arguments[i].get();
 	else
 	{
-		// call by named arguments
-		auto const& parameterNames = functionType->parameterNames();
-		if (functionType->takesArbitraryParameters())
+		auto const& parameterNames = _functionType->parameterNames();
+
+		// Check for expected number of named arguments
+		if (parameterNames.size() != argumentNames.size())
+		{
 			m_errorReporter.typeError(
 				_functionCall.location(),
-				"Named arguments cannot be used for functions that take arbitrary parameters."
+				parameterNames.size() > argumentNames.size() ?
+				"Some argument names are missing." :
+				"Too many arguments."
 			);
-		else if (parameterNames.size() > argumentNames.size())
-			m_errorReporter.typeError(_functionCall.location(), "Some argument names are missing.");
-		else if (parameterNames.size() < argumentNames.size())
-			m_errorReporter.typeError(_functionCall.location(), "Too many arguments.");
-		else
+			return;
+		}
+
+		// Check for duplicate argument names
 		{
-			// check duplicate names
 			bool duplication = false;
 			for (size_t i = 0; i < argumentNames.size(); i++)
 				for (size_t j = i + 1; j < argumentNames.size(); j++)
 					if (*argumentNames[i] == *argumentNames[j])
 					{
 						duplication = true;
-						m_errorReporter.typeError(arguments[i]->location(), "Duplicate named argument.");
-					}
-
-			// check actual types
-			if (!duplication)
-				for (size_t i = 0; i < argumentNames.size(); i++)
-				{
-					bool found = false;
-					for (size_t j = 0; j < parameterNames.size(); j++)
-						if (parameterNames[j] == *argumentNames[i])
-						{
-							found = true;
-							// check type convertible
-							if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[j]))
-								m_errorReporter.typeError(
-									arguments[i]->location(),
-									"Invalid type for argument in function call. "
-									"Invalid implicit conversion from " +
-									type(*arguments[i])->toString() +
-									" to " +
-									parameterTypes[i]->toString() +
-									" requested."
-								);
-							break;
-						}
-
-					if (!found)
 						m_errorReporter.typeError(
-							_functionCall.location(),
-							"Named argument \"" + *argumentNames[i] +  "\" does not match function declaration."
+							arguments[i]->location(),
+							"Duplicate named argument \"" + *argumentNames[i] + "\"."
 						);
+					}
+			if (duplication)
+				return;
+		}
+
+		// map parameter names to argument names
+		{
+			bool not_all_mapped = false;
+
+			for (size_t i = 0; i < paramArgMap.size(); i++)
+			{
+				size_t j;
+				for (j = 0; j < argumentNames.size(); j++)
+					if (parameterNames[i] == *argumentNames[j])
+						break;
+
+				if (j < argumentNames.size())
+					paramArgMap[i] = arguments[j].get();
+				else
+				{
+					paramArgMap[i] = nullptr;
+					not_all_mapped = true;
+					m_errorReporter.typeError(
+						_functionCall.location(),
+						"Named argument \"" +
+						*argumentNames[i] +
+						"\" does not match function declaration."
+					);
 				}
+			}
+
+			if (not_all_mapped)
+				return;
 		}
 	}
 
-	if (returnTypes.size() == 1)
-		_functionCall.annotation().type = returnTypes.front();
-	else
-		_functionCall.annotation().type = make_shared<TupleType>(returnTypes);
+	// Check for compatible types between arguments and parameters
+	for (size_t i = 0; i < paramArgMap.size(); ++i)
+	{
+		solAssert(!!paramArgMap[i], "unmapped parameter");
+		if (!type(*paramArgMap[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
+		{
+			string msg =
+				"Invalid type for argument in function call. "
+				"Invalid implicit conversion from " +
+				type(*paramArgMap[i])->toString() +
+				" to " +
+				parameterTypes[i]->toString() +
+				" requested.";
+			if (
+				_functionType->kind() == FunctionType::Kind::BareCall ||
+				_functionType->kind() == FunctionType::Kind::BareCallCode ||
+				_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+				_functionType->kind() == FunctionType::Kind::BareStaticCall
+			)
+				msg +=
+					" This function requires a single bytes argument."
+					" If all your arguments are value types, you can"
+					" use abi.encode(...) to properly generate it.";
+			else if (
+				_functionType->kind() == FunctionType::Kind::KECCAK256 ||
+				_functionType->kind() == FunctionType::Kind::SHA256 ||
+				_functionType->kind() == FunctionType::Kind::RIPEMD160
+			)
+				msg +=
+					" This function requires a single bytes argument."
+					" Use abi.encodePacked(...) to obtain the pre-0.5.0"
+					" behaviour or abi.encode(...) to use ABI encoding.";
+			m_errorReporter.typeError(paramArgMap[i]->location(), msg);
+		}
+	}
+}
+
+bool TypeChecker::visit(FunctionCall const& _functionCall)
+{
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
+	bool argumentsArePure = true;
+
+	// We need to check arguments' type first as they will be needed for overload resolution.
+	for (ASTPointer<Expression const> const& argument: arguments)
+	{
+		argument->accept(*this);
+		if (!argument->annotation().isPure)
+			argumentsArePure = false;
+	}
+
+	// For positional calls only, store argument types
+	if (_functionCall.names().empty())
+	{
+		shared_ptr<TypePointers> argumentTypes = make_shared<TypePointers>();
+		for (ASTPointer<Expression const> const& argument: arguments)
+			argumentTypes->push_back(type(*argument));
+		_functionCall.expression().annotation().argumentTypes = move(argumentTypes);
+	}
+
+	_functionCall.expression().accept(*this);
+
+	TypePointer const& expressionType = type(_functionCall.expression());
+
+	// Determine function call kind and function type for this FunctionCall node
+	FunctionCallAnnotation& funcCallAnno = _functionCall.annotation();
+	FunctionTypePointer functionType;
+
+	// Determine and assign function call kind, purity and function type for this FunctionCall node
+	switch (expressionType->category())
+	{
+	case Type::Category::Function:
+		functionType = dynamic_pointer_cast<FunctionType const>(expressionType);
+		funcCallAnno.kind = FunctionCallKind::FunctionCall;
+
+		// Purity for function calls also depends upon the callee and its FunctionType
+		funcCallAnno.isPure =
+			argumentsArePure &&
+			_functionCall.expression().annotation().isPure &&
+			functionType &&
+			functionType->isPure();
+
+		break;
+
+	case Type::Category::TypeType:
+	{
+		// Determine type for type conversion or struct construction expressions
+		TypePointer const& actualType = dynamic_cast<TypeType const&>(*expressionType).actualType();
+		solAssert(!!actualType, "");
+
+		if (actualType->category() == Type::Category::Struct)
+		{
+			functionType = dynamic_cast<StructType const&>(*actualType).constructorType();
+			funcCallAnno.kind = FunctionCallKind::StructConstructorCall;
+			funcCallAnno.isPure = argumentsArePure;
+		}
+		else
+		{
+			funcCallAnno.kind = FunctionCallKind::TypeConversion;
+			funcCallAnno.isPure = argumentsArePure;
+		}
+
+		break;
+	}
+
+	default:
+		m_errorReporter.typeError(_functionCall.location(), "Type is not callable");
+		funcCallAnno.kind = FunctionCallKind::Unset;
+		funcCallAnno.isPure = argumentsArePure;
+		break;
+	}
+
+	// Determine return types
+	switch (funcCallAnno.kind)
+	{
+	case FunctionCallKind::TypeConversion:
+		funcCallAnno.type = typeCheckTypeConversionAndRetrieveReturnType(_functionCall);
+		break;
+
+	case FunctionCallKind::StructConstructorCall: // fall-through
+	case FunctionCallKind::FunctionCall:
+	{
+		TypePointers returnTypes;
+
+		switch (functionType->kind())
+		{
+		case FunctionType::Kind::ABIDecode:
+		{
+			bool const abiEncoderV2 =
+				m_scope->sourceUnit().annotation().experimentalFeatures.count(
+					ExperimentalFeature::ABIEncoderV2
+				);
+			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
+			break;
+		}
+		case FunctionType::Kind::ABIEncode:
+		case FunctionType::Kind::ABIEncodePacked:
+		case FunctionType::Kind::ABIEncodeWithSelector:
+		case FunctionType::Kind::ABIEncodeWithSignature:
+		{
+			typeCheckABIEncodeFunctions(_functionCall, functionType);
+			returnTypes = functionType->returnParameterTypes();
+			break;
+		}
+		default:
+		{
+			typeCheckFunctionCall(_functionCall, functionType);
+			returnTypes = m_evmVersion.supportsReturndata() ?
+				functionType->returnParameterTypes() :
+				functionType->returnParameterTypesWithoutDynamicTypes();
+			break;
+		}
+		}
+
+		funcCallAnno.type = returnTypes.size() == 1 ?
+			move(returnTypes.front()) :
+			make_shared<TupleType>(move(returnTypes));
+
+		break;
+	}
+
+	case FunctionCallKind::Unset: // fall-through
+	default:
+		// for non-callables, ensure error reported and annotate node to void function
+		solAssert(m_errorReporter.hasErrors(), "");
+		funcCallAnno.kind = FunctionCallKind::FunctionCall;
+		funcCallAnno.type = make_shared<TupleType>();
+		break;
+	}
 
 	return false;
 }
