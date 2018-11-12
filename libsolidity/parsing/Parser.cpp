@@ -1556,7 +1556,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	}
 	case Token::IllegalHex:
 		fatalParserError("Expected even number of hex-nibbles within double-quotes.");
-		break;		
+		break;
 	default:
 		if (TokenTraits::isElementaryTypeName(token))
 		{

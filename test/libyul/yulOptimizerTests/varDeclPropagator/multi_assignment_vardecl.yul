@@ -1,6 +1,6 @@
 {
   function f() -> a, b, c {}
-  let x, y, z 
+  let x, y, z
   z, x, y := f()
 }
 // ----
