@@ -34,9 +34,7 @@
 
 namespace dev
 {
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 
 struct Scope
@@ -100,6 +98,5 @@ struct Scope
 	std::map<yul::YulString, Identifier> identifiers;
 };
 
-}
 }
 }

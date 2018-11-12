@@ -21,7 +21,7 @@
  */
 
 #include <libsolidity/codegen/ContractCompiler.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libyul/AsmCodeGen.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolcommon/ErrorReporter.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
@@ -495,14 +495,14 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 {
 	unsigned startStackHeight = m_context.stackHeight();
 	yul::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, yul::IdentifierContext, bool)
+	identifierAccess.resolve = [&](yul::Identifier const& _identifier, yul::IdentifierContext, bool)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return size_t(-1);
 		return ref->second.valueSize;
 	};
-	identifierAccess.generateCode = [&](assembly::Identifier const& _identifier, yul::IdentifierContext _context, yul::AbstractAssembly& _assembly)
+	identifierAccess.generateCode = [&](yul::Identifier const& _identifier, yul::IdentifierContext _context, yul::AbstractAssembly& _assembly)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		solAssert(ref != _inlineAssembly.annotation().externalReferences.end(), "");
@@ -614,7 +614,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 	solAssert(_inlineAssembly.annotation().analysisInfo, "");
-	assembly::CodeGenerator::assemble(
+	yul::CodeGenerator::assemble(
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
 		m_context.nonConstAssembly(),

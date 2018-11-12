@@ -22,20 +22,21 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/AsmAnalysis.h>
 
 #include <functional>
 
 namespace dev
 {
+
 namespace eth
 {
 class Assembly;
 }
-namespace solidity
+
+namespace yul
 {
-namespace assembly
-{
+
 struct Block;
 
 class CodeGenerator
@@ -46,11 +47,10 @@ public:
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
+		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	);
 };
 
-}
 }
 }

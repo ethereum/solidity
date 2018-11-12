@@ -18,9 +18,8 @@
  * Information generated during analyzer part of inline assembly.
  */
 
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmScope.h>
 
 #include <ostream>
 

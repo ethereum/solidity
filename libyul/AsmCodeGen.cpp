@@ -20,20 +20,20 @@
  * Code-generating part of inline assembly.
  */
 
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libyul/AsmCodeGen.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmScope.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-
-#include <libevmasm/Assembly.h>
-#include <libsolcommon/SourceLocation.h>
-#include <libevmasm/Instruction.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmScope.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
+
+#include <libevmasm/Assembly.h>
+#include <libevmasm/Instruction.h>
+#include <libsolcommon/SourceLocation.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -46,8 +46,8 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::yul;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
 
 class EthAssemblyAdapter: public yul::AbstractAssembly
 {
@@ -141,7 +141,7 @@ private:
 	eth::Assembly& m_assembly;
 };
 
-void assembly::CodeGenerator::assemble(
+void CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,

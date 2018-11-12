@@ -26,9 +26,7 @@
 
 namespace dev
 {
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 
 struct Instruction;
@@ -49,6 +47,7 @@ struct ExpressionStatement;
 struct Block;
 
 struct TypedName;
+class YulString;
 
 using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
 using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
@@ -60,6 +59,5 @@ enum class AsmFlavour
 	Yul     // same as Strict mode with types
 };
 
-}
 }
 }

@@ -21,7 +21,7 @@
 
 #include <libyul/optimiser/SSAValueTracker.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 using namespace std;
 using namespace dev;

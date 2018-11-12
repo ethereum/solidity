@@ -24,29 +24,27 @@
 
 #include <memory>
 #include <vector>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 #include <libsolcommon/ParserBase.h>
 
 namespace dev
 {
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 
-class Parser: public ParserBase
+class Parser: public solidity::ParserBase
 {
 public:
-	explicit Parser(ErrorReporter& _errorReporter, AsmFlavour _flavour = AsmFlavour::Loose):
+	explicit Parser(solidity::ErrorReporter& _errorReporter, AsmFlavour _flavour = AsmFlavour::Loose):
 		ParserBase(_errorReporter), m_flavour(_flavour) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
 	/// @returns an empty shared pointer on error.
-	std::shared_ptr<Block> parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner);
+	std::shared_ptr<Block> parse(std::shared_ptr<solidity::Scanner> const& _scanner, bool _reuseScanner);
 
 protected:
-	using ElementaryOperation = boost::variant<assembly::Instruction, assembly::Literal, assembly::Identifier>;
+	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier>;
 
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation()) const
@@ -69,7 +67,7 @@ protected:
 	Case parseCase();
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
-	assembly::Expression parseExpression();
+	Expression parseExpression();
 	static std::map<std::string, dev::solidity::Instruction> const& instructions();
 	static std::map<dev::solidity::Instruction, std::string> const& instructionNames();
 	/// Parses an elementary operation, i.e. a literal, identifier or instruction.
@@ -78,7 +76,7 @@ protected:
 	ElementaryOperation parseElementaryOperation();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	assembly::Expression parseCall(ElementaryOperation&& _initialOp);
+	Expression parseCall(ElementaryOperation&& _initialOp);
 	TypedName parseTypedName();
 	std::string expectAsmIdentifier();
 
@@ -88,6 +86,5 @@ private:
 	AsmFlavour m_flavour = AsmFlavour::Loose;
 };
 
-}
 }
 }

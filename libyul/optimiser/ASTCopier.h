@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/YulString.h>
 
@@ -72,7 +72,7 @@ class ASTCopier: public ExpressionCopier, public StatementCopier
 public:
 	virtual ~ASTCopier() = default;
 	virtual Expression operator()(Literal const& _literal) override;
-	virtual Statement operator()(Instruction const& _instruction) override;
+	virtual Statement operator()(yul::Instruction const& _instruction) override;
 	virtual Expression operator()(Identifier const& _identifier) override;
 	virtual Expression operator()(FunctionalInstruction const& _instr) override;
 	virtual Expression operator()(FunctionCall const&) override;

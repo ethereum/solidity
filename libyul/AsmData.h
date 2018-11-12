@@ -22,12 +22,11 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmDataForward.h>
+#include <libyul/AsmDataForward.h>
+#include <libyul/YulString.h>
 
 #include <libevmasm/Instruction.h>
 #include <libsolcommon/SourceLocation.h>
-
-#include <libyul/YulString.h>
 
 #include <boost/variant.hpp>
 #include <boost/noncopyable.hpp>
@@ -37,12 +36,9 @@
 
 namespace dev
 {
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 
-using YulString = dev::yul::YulString;
 using Type = YulString;
 
 struct TypedName { SourceLocation location; YulString name; Type type; };
@@ -99,6 +95,5 @@ template <class T> inline SourceLocation locationOf(T const& _node)
 	return boost::apply_visitor(LocationExtractor(), _node);
 }
 
-}
 }
 }

@@ -18,11 +18,11 @@
  * Scopes for identifiers.
  */
 
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmScope.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::solidity::assembly;
+using namespace dev::yul;
 
 bool Scope::registerLabel(yul::YulString _name)
 {

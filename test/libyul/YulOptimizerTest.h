@@ -27,14 +27,11 @@ namespace solidity
 class Scanner;
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
-namespace assembly
-{
-struct AsmAnalysisInfo;
-struct Block;
-}
 }
 namespace yul
 {
+struct AsmAnalysisInfo;
+struct Block;
 namespace test
 {
 
@@ -65,8 +62,8 @@ private:
 	std::string m_optimizerStep;
 	std::string m_expectation;
 
-	std::shared_ptr<solidity::assembly::Block> m_ast;
-	std::shared_ptr<solidity::assembly::AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<Block> m_ast;
+	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;
 };
 

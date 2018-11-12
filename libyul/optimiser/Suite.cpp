@@ -35,10 +35,10 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarDeclPropagator.h>
 
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
 
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmPrinter.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -48,7 +48,7 @@ using namespace dev::yul;
 
 void OptimiserSuite::run(
 	Block& _ast,
-	solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
+	AsmAnalysisInfo const& _analysisInfo,
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {

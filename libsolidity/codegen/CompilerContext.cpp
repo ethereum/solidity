@@ -28,10 +28,10 @@
 #include <libsolcommon/ErrorReporter.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolcommon/Scanner.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmCodeGen.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <libyul/YulString.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -42,7 +42,7 @@
 // Change to "define" to output all intermediate code
 #undef SOL_OUTPUT_ASM
 #ifdef SOL_OUTPUT_ASM
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmPrinter.h>
 #endif
 
 
@@ -322,7 +322,7 @@ void CompilerContext::appendInlineAssembly(
 
 	yul::ExternalIdentifierAccess identifierAccess;
 	identifierAccess.resolve = [&](
-		assembly::Identifier const& _identifier,
+		yul::Identifier const& _identifier,
 		yul::IdentifierContext,
 		bool
 	)
@@ -331,7 +331,7 @@ void CompilerContext::appendInlineAssembly(
 		return it == _localVariables.end() ? size_t(-1) : 1;
 	};
 	identifierAccess.generateCode = [&](
-		assembly::Identifier const& _identifier,
+		yul::Identifier const& _identifier,
 		yul::IdentifierContext _context,
 		yul::AbstractAssembly& _assembly
 	)
@@ -360,19 +360,19 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
-	auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Strict).parse(scanner, false);
+	auto parserResult = yul::Parser(errorReporter, yul::AsmFlavour::Strict).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
-	cout << assembly::AsmPrinter()(*parserResult) << endl;
+	cout << yul::AsmPrinter()(*parserResult) << endl;
 #endif
-	assembly::AsmAnalysisInfo analysisInfo;
+	yul::AsmAnalysisInfo analysisInfo;
 	bool analyzerResult = false;
 	if (parserResult)
-		analyzerResult = assembly::AsmAnalyzer(
+		analyzerResult = yul::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
 			m_evmVersion,
 			boost::none,
-			assembly::AsmFlavour::Strict,
+			yul::AsmFlavour::Strict,
 			identifierAccess.resolve
 		).analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
@@ -394,7 +394,7 @@ void CompilerContext::appendInlineAssembly(
 	}
 
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
-	assembly::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
+	yul::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
 
 	// Reset the source location to the one of the node (instead of the CODEGEN source location)
 	updateSourceLocation();

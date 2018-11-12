@@ -27,9 +27,9 @@
 
 #include <libsolcommon/Scanner.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmPrinter.h>
 
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolcommon/ErrorReporter.h>
@@ -52,18 +52,18 @@ void dev::yul::test::printErrors(ErrorList const& _errors, Scanner const& _scann
 }
 
 
-pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::yul::test::parse(string const& _source, bool _yul)
+pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> dev::yul::test::parse(string const& _source, bool _yul)
 {
-	auto flavour = _yul ? assembly::AsmFlavour::Yul : assembly::AsmFlavour::Strict;
+	auto flavour = _yul ? AsmFlavour::Yul : AsmFlavour::Strict;
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source), "");
-	auto parserResult = assembly::Parser(errorReporter, flavour).parse(scanner, false);
+	auto parserResult = Parser(errorReporter, flavour).parse(scanner, false);
 	if (parserResult)
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());
-		auto analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-		assembly::AsmAnalyzer analyzer(
+		auto analysisInfo = make_shared<AsmAnalysisInfo>();
+		AsmAnalyzer analyzer(
 			*analysisInfo,
 			errorReporter,
 			dev::test::Options::get().evmVersion(),
@@ -83,7 +83,7 @@ pair<shared_ptr<Block>, shared_ptr<assembly::AsmAnalysisInfo>> dev::yul::test::p
 	return {};
 }
 
-assembly::Block dev::yul::test::disambiguate(string const& _source, bool _yul)
+Block dev::yul::test::disambiguate(string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
 	return boost::get<Block>(Disambiguator(*result.second, {})(*result.first));
@@ -91,5 +91,5 @@ assembly::Block dev::yul::test::disambiguate(string const& _source, bool _yul)
 
 string dev::yul::test::format(string const& _source, bool _yul)
 {
-	return assembly::AsmPrinter(_yul)(*parse(_source, _yul).first);
+	return AsmPrinter(_yul)(*parse(_source, _yul).first);
 }

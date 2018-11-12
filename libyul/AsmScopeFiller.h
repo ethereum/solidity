@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 
@@ -29,11 +29,14 @@
 
 namespace dev
 {
+
 struct SourceLocation;
 namespace solidity
 {
 class ErrorReporter;
-namespace assembly
+}
+
+namespace yul
 {
 
 struct TypedName;
@@ -47,23 +50,23 @@ struct AsmAnalysisInfo;
 class ScopeFiller: public boost::static_visitor<bool>
 {
 public:
-	ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter);
+	ScopeFiller(AsmAnalysisInfo& _info, solidity::ErrorReporter& _errorReporter);
 
-	bool operator()(assembly::Instruction const&) { return true; }
-	bool operator()(assembly::Literal const&) { return true; }
-	bool operator()(assembly::Identifier const&) { return true; }
-	bool operator()(assembly::FunctionalInstruction const&) { return true; }
-	bool operator()(assembly::ExpressionStatement const& _expr);
-	bool operator()(assembly::Label const& _label);
-	bool operator()(assembly::StackAssignment const&) { return true; }
-	bool operator()(assembly::Assignment const&) { return true; }
-	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
-	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
-	bool operator()(assembly::FunctionCall const&) { return true; }
-	bool operator()(assembly::If const& _if);
-	bool operator()(assembly::Switch const& _switch);
-	bool operator()(assembly::ForLoop const& _forLoop);
-	bool operator()(assembly::Block const& _block);
+	bool operator()(yul::Instruction const&) { return true; }
+	bool operator()(Literal const&) { return true; }
+	bool operator()(Identifier const&) { return true; }
+	bool operator()(FunctionalInstruction const&) { return true; }
+	bool operator()(ExpressionStatement const& _expr);
+	bool operator()(Label const& _label);
+	bool operator()(StackAssignment const&) { return true; }
+	bool operator()(Assignment const&) { return true; }
+	bool operator()(VariableDeclaration const& _variableDeclaration);
+	bool operator()(FunctionDefinition const& _functionDefinition);
+	bool operator()(FunctionCall const&) { return true; }
+	bool operator()(If const& _if);
+	bool operator()(Switch const& _switch);
+	bool operator()(ForLoop const& _forLoop);
+	bool operator()(Block const& _block);
 
 private:
 	bool registerVariable(
@@ -72,13 +75,12 @@ private:
 		Scope& _scope
 	);
 
-	Scope& scope(assembly::Block const* _block);
+	Scope& scope(Block const* _block);
 
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
-	ErrorReporter& m_errorReporter;
+	solidity::ErrorReporter& m_errorReporter;
 };
 
-}
 }
 }

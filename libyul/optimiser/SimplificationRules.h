@@ -23,9 +23,9 @@
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SimplificationRule.h>
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <boost/noncopyable.hpp>
 

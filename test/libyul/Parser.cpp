@@ -23,9 +23,9 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <libsolcommon/Scanner.h>
 #include <libsolcommon/ErrorReporter.h>
 
@@ -52,16 +52,16 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Yul).parse(scanner, false);
+		auto parserResult = yul::Parser(errorReporter, yul::AsmFlavour::Yul).parse(scanner, false);
 		if (parserResult)
 		{
-			assembly::AsmAnalysisInfo analysisInfo;
-			return (assembly::AsmAnalyzer(
+			yul::AsmAnalysisInfo analysisInfo;
+			return (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
 				dev::test::Options::get().evmVersion(),
 				boost::none,
-				assembly::AsmFlavour::Yul
+				yul::AsmFlavour::Yul
 			)).analyze(*parserResult);
 		}
 	}
