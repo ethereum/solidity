@@ -8207,6 +8207,58 @@ BOOST_AUTO_TEST_CASE(inherited_function) {
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory) {
+	char const* sourceCode = R"(
+		contract A { function f(uint[] calldata a) external returns (uint) { return a[0]; } }
+		contract B is A {
+			function f(uint[] memory a) public returns (uint) { return a[1]; }
+			function g() public returns (uint) {
+				uint[] memory m = new uint[](2);
+				m[0] = 42;
+				m[1] = 23;
+				return A(this).f(m);
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(23)));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory_interface) {
+	char const* sourceCode = R"(
+		interface I { function f(uint[] calldata a) external returns (uint); }
+		contract A is I { function f(uint[] memory a) public returns (uint) { return 42; } }
+		contract B {
+			function f(uint[] memory a) public returns (uint) { return a[1]; }
+			function g() public returns (uint) {
+				I i = I(new A());
+				return i.f(new uint[](2));
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_calldata_interface) {
+	char const* sourceCode = R"(
+		interface I { function f(uint[] calldata a) external returns (uint); }
+		contract A is I { function f(uint[] calldata a) external returns (uint) { return 42; } }
+		contract B {
+			function f(uint[] memory a) public returns (uint) { return a[1]; }
+			function g() public returns (uint) {
+				I i = I(new A());
+				return i.f(new uint[](2));
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(42)));
+}
+
 BOOST_AUTO_TEST_CASE(inherited_function_from_a_library) {
 	char const* sourceCode = R"(
 		library A { function f() internal returns (uint) { return 1; } }
