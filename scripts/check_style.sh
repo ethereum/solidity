@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-REPO_ROOT="$(dirname "$0")"/..
-
 (
+REPO_ROOT="$(dirname "$0")"/..
 cd $REPO_ROOT
+
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" | grep -v "test/libsolidity/ASTJSON\|test/compilationTests/zeppelin/LICENSE")
 
 if [[ "$WHITESPACE" != "" ]]
@@ -12,10 +12,7 @@ then
 	echo "$WHITESPACE" >&2
 	exit 1
 fi
-)
 
-(
-cd $REPO_ROOT
 FORMATERROR=$(
 (
 git grep -nIE "\<(if|for)\(" -- '*.h' '*.cpp'
