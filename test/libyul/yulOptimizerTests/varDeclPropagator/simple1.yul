@@ -1,5 +1,5 @@
 {
-  let f 
+  let f
   f := mload(0)
 }
 // ----
