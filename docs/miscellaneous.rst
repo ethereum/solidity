@@ -31,14 +31,14 @@ Statically-sized variables (everything except mapping and dynamically-sized arra
     declaring your storage variables in the order of ``uint128, uint128, uint256`` instead of
     ``uint128, uint256, uint128``, as the former will only take up two slots of storage whereas the
     latter will take up three.
- 
+
  .. note::
      The layout of state variables in storage is considered to be part of the external interface
      of Solidity due to the fact that storage pointers can be passed to libraries. This means that
      any change to the rules outlined in this section is considered a breaking change
      of the language and due to its critical nature should be considered very carefully before
      being executed.
-     
+
 
 The elements of structs and arrays are stored after each other, just as if they were given explicitly.
 
