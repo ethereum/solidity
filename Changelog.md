@@ -1,4 +1,4 @@
-### 0.5.0 (unreleased)
+### 0.5.0 (2018-11-13)
 
 How to update your code:
  * Change every ``.call()`` to a ``.call("")`` and every ``.call(signature, a, b, c)`` to use ``.call(abi.encodeWithSignature(signature, a, b, c))`` (the last one only works for value types).
