@@ -124,7 +124,7 @@ test_solc_file_input_failures() {
     set -e
 
     sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
-    sed -i -e 's/ \?Consider adding "pragma .*$//' "$stderr_path"
+    sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
 
     if [[ $exitCode -eq 0 ]]; then
         printError "Incorrect exit code. Expected failure (non-zero) but got success (0)."
