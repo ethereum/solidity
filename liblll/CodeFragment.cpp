@@ -45,6 +45,10 @@ using namespace dev::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
 {
+	// NOTE: add this as a safeguard in case the user didn't issue an
+	// explicit stop at the end of the sequence
+	m_asm.append(Instruction::STOP);
+
 	if (_cs.usedAlloc && _cs.vars.size() && !m_finalised)
 	{
 		m_finalised = true;
@@ -232,7 +236,12 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++)
-					m_asm.append(CodeFragment(i, _s, m_readFile, true).m_asm);
+				{
+					auto fragment = CodeFragment(i, _s, m_readFile, true).m_asm;
+					if ((m_asm.deposit() + fragment.deposit()) < 0)
+						error<IncorrectParameterCount>("The assembly instruction resulted in stack underflow");
+					m_asm.append(fragment);
+				}
 		}
 		else if (us == "INCLUDE")
 		{
