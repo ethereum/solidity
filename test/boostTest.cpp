@@ -160,9 +160,11 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			"SolidityAuctionRegistrar",
 			"SolidityFixedFeeRegistrar",
 			"SolidityWallet",
+#if HAVE_LLL
 			"LLLERC20",
 			"LLLENS",
 			"LLLEndToEndTest",
+#endif
 			"GasMeterTests",
 			"SolidityEndToEndTest",
 			"SolidityOptimizer"
