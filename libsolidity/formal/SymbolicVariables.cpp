@@ -66,16 +66,6 @@ smt::Expression SymbolicMappingVariable::valueAtIndex(int _index) const
 	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::ArraySort>(domain, range));
 }
 
-void SymbolicMappingVariable::setZeroValue()
-{
-}
-
-void SymbolicMappingVariable::setUnknownValue()
-{
-	// TODO
-	// \forall d \in D . (select m d) == UNKNOWN (apply type restrictions)
-}
-
 SymbolicBoolVariable::SymbolicBoolVariable(
 	TypePointer _type,
 	string const& _uniqueName,
@@ -89,15 +79,6 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
 {
 	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Bool));
-}
-
-void SymbolicBoolVariable::setZeroValue()
-{
-	m_interface.addAssertion(currentValue() == smt::Expression(false));
-}
-
-void SymbolicBoolVariable::setUnknownValue()
-{
 }
 
 SymbolicIntVariable::SymbolicIntVariable(
@@ -115,19 +96,6 @@ smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
 	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Int));
 }
 
-void SymbolicIntVariable::setZeroValue()
-{
-	m_interface.addAssertion(currentValue() == 0);
-}
-
-void SymbolicIntVariable::setUnknownValue()
-{
-	auto intType = dynamic_cast<IntegerType const*>(m_type.get());
-	solAssert(intType, "");
-	m_interface.addAssertion(currentValue() >= minValue(*intType));
-	m_interface.addAssertion(currentValue() <= maxValue(*intType));
-}
-
 SymbolicAddressVariable::SymbolicAddressVariable(
 	string const& _uniqueName,
 	smt::SolverInterface& _interface
@@ -143,4 +111,27 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 ):
 	SymbolicIntVariable(make_shared<IntegerType>(_numBytes * 8), _uniqueName, _interface)
 {
+}
+
+SymbolicFunctionDeclaration::SymbolicFunctionDeclaration(
+	smt::SortPointer const& _sort,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	m_declaration(_interface.newVariable(_uniqueName, _sort))
+{
+}
+
+SymbolicFunctionDeclaration::SymbolicFunctionDeclaration(
+	FunctionTypePointer const& _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	m_declaration(_interface.newVariable(_uniqueName, smtSort(*_type)))
+{
+}
+
+smt::Expression SymbolicFunctionDeclaration::operator()(vector<smt::Expression> _arguments)
+{
+	return m_declaration(std::move(_arguments));
 }

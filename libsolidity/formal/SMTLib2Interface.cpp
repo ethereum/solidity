@@ -47,8 +47,7 @@ void SMTLib2Interface::reset()
 {
 	m_accumulatedOutput.clear();
 	m_accumulatedOutput.emplace_back();
-	m_constants.clear();
-	m_functions.clear();
+	m_variables.clear();
 	write("(set-option :produce-models true)");
 	write("(set-logic QF_UFLIA)");
 }
@@ -66,29 +65,31 @@ void SMTLib2Interface::pop()
 
 void SMTLib2Interface::declareVariable(string const& _name, Sort const& _sort)
 {
-	if (!m_constants.count(_name))
+	if (_sort.kind == Kind::Function)
+		declareFunction(_name, _sort);
+	else if (!m_variables.count(_name))
 	{
-		m_constants.insert(_name);
-		write("(declare-fun |" + _name + "| () " + toSSort(_sort) + ')');
+		m_variables.insert(_name);
+		write("(declare-fun |" + _name + "| () " + toSmtLibSort(_sort) + ')');
 	}
 }
 
-void SMTLib2Interface::declareFunction(string const& _name, vector<SortPointer> const& _domain, Sort const& _codomain)
+void SMTLib2Interface::declareFunction(string const& _name, Sort const& _sort)
 {
 	// TODO Use domain and codomain as key as well
-	string domain("");
-	for (auto const& sort: _domain)
-		domain += toSmtLibSort(sort) + ' ';
-	if (!m_functions.count(_name))
+	if (!m_variables.count(_name))
 	{
-		m_functions.insert(_name);
+		FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
+		string domain = toSmtLibSort(fSort.domain);
+		string codomain = toSmtLibSort(*fSort.codomain);
+		m_variables.insert(_name);
 		write(
 			"(declare-fun |" +
 			_name +
-			"| (" +
+			"| " +
 			domain +
 			") " +
-			(_codomain == Kind::Int ? "Int" : "Bool") +
+			codomain +
 			")"
 		);
 	}
@@ -144,12 +145,21 @@ string SMTLib2Interface::toSmtLibSort(Sort _sort)
 		return "Bool";
 	case Kind::Array:
 	{
-		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
-		return "(Array " + toSSort(*arraySort.domain) + ' ' + toSSort(*arraySort.range) + ')';
+		ArraySort const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
 	}
 	default:
 		solAssert(false, "Invalid SMT sort");
 	}
+}
+
+string SMTLib2Interface::toSmtLibSort(vector<SortPointer> const& _sorts)
+{
+	string ssort("(");
+	for (auto const& sort: _sorts)
+		ssort += toSmtLibSort(*sort) + ' ';
+	ssort += ')';
+	return ssort;
 }
 
 void SMTLib2Interface::write(string _data)

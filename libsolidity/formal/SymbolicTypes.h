@@ -30,7 +30,8 @@ namespace solidity
 
 /// Returns the SMT sort that models the Solidity type _type,
 /// including sub sorts (for Array, for example).
-std::shared_ptr<smt::Sort> smtSort(Type const& _type);
+smt::SortPointer smtSort(Type const& _type);
+std::vector<smt::SortPointer> smtSort(std::vector<TypePointer> const& _types);
 /// Returns the SMT kind that models the Solidity type type category _category.
 smt::Kind smtKind(Type::Category _category);
 
@@ -57,6 +58,13 @@ std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(Type cons
 
 smt::Expression minValue(IntegerType const& _type);
 smt::Expression maxValue(IntegerType const& _type);
+
+void setZeroValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
+void setZeroValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
+
+void setUnknownValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
+void setUnknownValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
+
 
 }
 }

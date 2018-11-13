@@ -46,7 +46,8 @@ enum class Kind
 {
 	Int,
 	Bool,
-	Array
+	Array,
+	Function
 };
 
 struct Sort
@@ -70,7 +71,26 @@ struct ArraySort: public Sort
 		return Sort::operator==(_other) && *domain == *_other.domain && *range == *_other.range;
 	}
 };
-using ArraySortPointer = std::shared_ptr<ArraySort>;
+
+struct FunctionSort: public Sort
+{
+	FunctionSort(std::vector<SortPointer> _domain, SortPointer _codomain):
+		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain)) {}
+	std::vector<SortPointer> domain;
+	SortPointer codomain = nullptr;
+	bool operator==(FunctionSort const& _other) const
+	{
+		if (!std::equal(
+			domain.begin(),
+			domain.end(),
+			_other.domain.begin(),
+			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
+			)
+		)
+			return false;
+		return Sort::operator==(_other) && *codomain == *_other.codomain;
+	}
+};
 
 /// C++ representation of an SMTLIB2 expression.
 class Expression
@@ -200,22 +220,12 @@ public:
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
 		solAssert(
-			arguments.empty(),
+			sort->kind == Kind::Function,
 			"Attempted function application to non-function."
 		);
-		switch (sort->kind)
-		{
-		case Sort::Int:
-			return Expression(name, std::move(_arguments), Sort::Int);
-		case Sort::Bool:
-			return Expression(name, std::move(_arguments), Sort::Bool);
-		default:
-			solAssert(
-				false,
-				"Attempted function application to invalid type."
-			);
-			break;
-		}
+		auto fSort = dynamic_cast<FunctionSort const*>(sort.get());
+		solAssert(fSort, "");
+		return Expression(name, _arguments, fSort->codomain);
 	}
 
 	std::string name;
@@ -254,14 +264,6 @@ public:
 		// Subclasses should do something here
 		declareVariable(_name, *_sort);
 		return Expression(std::move(_name), {}, std::move(_sort));
-	}
-
-	virtual void declareFunction(std::string const& _name, std::vector<SortPointer> const& _domain, Sort const& _codomain) = 0;
-	Expression newFunction(std::string _name, std::vector<SortPointer> const& _domain, SortPointer _codomain)
-	{
-		// Subclasses should do something here
-		declareFunction(_name, _domain, *_codomain);
-		return Expression(std::move(_name), {}, _codomain);
 	}
 
 	virtual void addAssertion(Expression const& _expr) = 0;

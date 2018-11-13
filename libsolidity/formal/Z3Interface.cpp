@@ -53,14 +53,19 @@ void Z3Interface::pop()
 
 void Z3Interface::declareVariable(string const& _name, Sort const& _sort)
 {
-	if (!m_constants.count(_name))
+	if (_sort.kind == Kind::Function)
+		declareFunction(_name, _sort);
+	else if (!m_constants.count(_name))
 		m_constants.insert({_name, m_context.constant(_name.c_str(), z3Sort(_sort))});
 }
 
-void Z3Interface::declareFunction(string const& _name, vector<SortPointer> const& _domain, Sort const& _codomain)
+void Z3Interface::declareFunction(string const& _name, Sort const& _sort)
 {
 	if (!m_functions.count(_name))
-		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
+	{
+		FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
+		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain))});
+	}
 }
 
 void Z3Interface::addAssertion(Expression const& _expr)
@@ -114,11 +119,6 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	string const& n = _expr.name;
 	if (m_functions.count(n))
 		return m_functions.at(n)(arguments);
-	else if (m_constants.count(n))
-	{
-		solAssert(arguments.empty(), "");
-		return m_constants.at(n);
-	}
 	else if (arguments.empty())
 	{
 		if (n == "true")

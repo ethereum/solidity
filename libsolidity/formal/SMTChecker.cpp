@@ -408,7 +408,7 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 	auto const& symbolicVar = m_specialVariables.at(gasLeft);
 	unsigned index = symbolicVar->index();
 	// We set the current value to unknown anyway to add type constraints.
-	symbolicVar->setUnknownValue();
+	setUnknownValue(*symbolicVar);
 	if (index > 0)
 		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
 }
@@ -416,10 +416,15 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 void SMTChecker::visitBlockHash(FunctionCall const& _funCall)
 {
 	string blockHash = "blockhash";
-	defineUninterpretedFunction(blockHash, {make_shared<smt::Sort>(smt::Kind::Int)}, make_shared<smt::Sort>(smt::Kind::Int));
 	auto const& arguments = _funCall.arguments();
 	solAssert(arguments.size() == 1, "");
-	defineExpr(_funCall, m_uninterpretedFunctions.at(blockHash)({expr(*arguments[0])}));
+	smt::SortPointer paramSort = smtSort(*arguments.at(0)->annotation().type);
+	smt::SortPointer returnSort = smtSort(*_funCall.annotation().type);
+	defineUninterpretedFunction(
+		blockHash,
+		make_shared<smt::FunctionSort>(vector<smt::SortPointer>{paramSort}, returnSort)
+	);
+	defineExpr(_funCall, m_uninterpretedFunctions.at(blockHash)({expr(*arguments.at(0))}));
 	m_uninterpretedTerms.push_back(&_funCall);
 }
 
@@ -579,7 +584,7 @@ void SMTChecker::defineSpecialVariable(string const& _name, Expression const& _e
 	{
 		auto result = newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
 		m_specialVariables.emplace(_name, result.second);
-		result.second->setUnknownValue();
+		setUnknownValue(*result.second);
 		if (result.first)
 			m_errorReporter.warning(
 				_expr.location(),
@@ -593,10 +598,10 @@ void SMTChecker::defineSpecialVariable(string const& _name, Expression const& _e
 	defineExpr(_expr, m_specialVariables.at(_name)->currentValue());
 }
 
-void SMTChecker::defineUninterpretedFunction(string const& _name, vector<smt::SortPointer> const& _domain, smt::SortPointer _codomain)
+void SMTChecker::defineUninterpretedFunction(string const& _name, smt::SortPointer _sort)
 {
 	if (!m_uninterpretedFunctions.count(_name))
-		m_uninterpretedFunctions.emplace(_name, m_interface->newFunction(_name, _domain, _codomain));
+		m_uninterpretedFunctions.emplace(_name, SymbolicFunctionDeclaration{_sort, _name, *m_interface});
 }
 
 void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
@@ -781,10 +786,10 @@ void SMTChecker::checkCondition(
 			expressionsToEvaluate.emplace_back(var.second->currentValue());
 			expressionNames.push_back(var.first);
 		}
-		for (auto const& uf: m_uninterpretedTerms)
+		for (auto const& term: m_uninterpretedTerms)
 		{
-			expressionsToEvaluate.emplace_back(expr(*uf));
-			expressionNames.push_back(m_scanner->sourceAt(uf->location()));
+			expressionsToEvaluate.emplace_back(expr(*term));
+			expressionNames.push_back(m_scanner->sourceAt(term->location()));
 		}
 	}
 	smt::CheckResult result;
@@ -1053,13 +1058,23 @@ smt::Expression SMTChecker::newValue(VariableDeclaration const& _decl)
 void SMTChecker::setZeroValue(VariableDeclaration const& _decl)
 {
 	solAssert(knownVariable(_decl), "");
-	m_variables.at(&_decl)->setZeroValue();
+	setZeroValue(*m_variables.at(&_decl));
+}
+
+void SMTChecker::setZeroValue(SymbolicVariable& _variable)
+{
+	::setZeroValue(_variable, *m_interface);
 }
 
 void SMTChecker::setUnknownValue(VariableDeclaration const& _decl)
 {
 	solAssert(knownVariable(_decl), "");
-	m_variables.at(&_decl)->setUnknownValue();
+	setUnknownValue(*m_variables.at(&_decl));
+}
+
+void SMTChecker::setUnknownValue(SymbolicVariable& _variable)
+{
+	::setUnknownValue(_variable, *m_interface);
 }
 
 smt::Expression SMTChecker::expr(Expression const& _e)

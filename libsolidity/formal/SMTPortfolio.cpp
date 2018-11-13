@@ -70,12 +70,6 @@ void SMTPortfolio::declareVariable(string const& _name, Sort const& _sort)
 		s->declareVariable(_name, _sort);
 }
 
-void SMTPortfolio::declareFunction(string const& _name, vector<SortPointer> const& _domain, Sort const& _codomain)
-{
-	for (auto s : m_solvers)
-		s->declareFunction(_name, _domain, _codomain);
-}
-
 void SMTPortfolio::addAssertion(Expression const& _expr)
 {
 	for (auto s : m_solvers)

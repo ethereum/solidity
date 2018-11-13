@@ -81,9 +81,9 @@ private:
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const&);
-	
+
 	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
-	void defineUninterpretedFunction(std::string const& _name, std::vector<smt::SortPointer> const& _domain, smt::SortPointer _codomain);
+	void defineUninterpretedFunction(std::string const& _name, smt::SortPointer _sort);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -152,8 +152,10 @@ private:
 
 	/// Sets the value of the declaration to zero.
 	void setZeroValue(VariableDeclaration const& _decl);
+	void setZeroValue(SymbolicVariable& _variable);
 	/// Resets the variable to an unknown value (in its range).
 	void setUnknownValue(VariableDeclaration const& decl);
+	void setUnknownValue(SymbolicVariable& _variable);
 
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
@@ -197,7 +199,7 @@ private:
 	/// Stores the symbolic representation of special variables.
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
 	/// Stores the declaration of an Uninterpreted Function.
-	std::unordered_map<std::string, smt::Expression> m_uninterpretedFunctions;
+	std::unordered_map<std::string, SymbolicFunctionDeclaration> m_uninterpretedFunctions;
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
 	/// Used to retrieve models.
 	std::vector<Expression const*> m_uninterpretedTerms;
