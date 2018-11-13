@@ -122,7 +122,7 @@ jobs:
       - image: buildpack-deps:artful
     environment:
       TERM: xterm
-      CMAKE_OPTIONS: -DCOVERAGE=ON
+      CMAKE_OPTIONS: -DCOVERAGE=OFF
     steps:
       - checkout
       - run:
