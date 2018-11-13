@@ -19,14 +19,15 @@
 
 
 #include <libsolidity/formal/SolverInterface.h>
-
-#include <libsolidity/formal/SSAVariable.h>
+#include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <libsolidity/interface/ReadFile.h>
 
-#include <map>
+#include <libsolidity/parsing/Scanner.h>
+
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -43,7 +44,7 @@ class SMTChecker: private ASTConstVisitor
 public:
 	SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback);
 
-	void analyze(SourceUnit const& _sources);
+	void analyze(SourceUnit const& _sources, std::shared_ptr<Scanner> const& _scanner);
 
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
@@ -59,7 +60,6 @@ private:
 	virtual bool visit(WhileStatement const& _node) override;
 	virtual bool visit(ForStatement const& _node) override;
 	virtual void endVisit(VariableDeclarationStatement const& _node) override;
-	virtual void endVisit(ExpressionStatement const& _node) override;
 	virtual void endVisit(Assignment const& _node) override;
 	virtual void endVisit(TupleExpression const& _node) override;
 	virtual void endVisit(UnaryOperation const& _node) override;
@@ -67,26 +67,38 @@ private:
 	virtual void endVisit(FunctionCall const& _node) override;
 	virtual void endVisit(Identifier const& _node) override;
 	virtual void endVisit(Literal const& _node) override;
+	virtual void endVisit(Return const& _node) override;
+	virtual bool visit(MemberAccess const& _node) override;
 
 	void arithmeticOperation(BinaryOperation const& _op);
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
+	void visitAssert(FunctionCall const&);
+	void visitRequire(FunctionCall const&);
+	void visitGasLeft(FunctionCall const&);
+	void visitBlockHash(FunctionCall const&);
+	/// Visits the FunctionDefinition of the called function
+	/// if available and inlines the return value.
+	void inlineFunctionCall(FunctionCall const&);
+
+	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
+
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
 
-	void assignment(Declaration const& _variable, Expression const& _value, SourceLocation const& _location);
-	void assignment(Declaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, Expression const& _value, SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
 
 	/// Maps a variable to an SSA index.
-	using VariableSequenceCounters = std::map<Declaration const*, SSAVariable>;
+	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
 
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
-	/// @returns the variable sequence counter after visiting the branch.
-	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
-	VariableSequenceCounters visitBranch(Statement const& _statement, smt::Expression _condition);
+	/// @returns the variable indices after visiting the branch.
+	VariableIndices visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
+	VariableIndices visitBranch(Statement const& _statement, smt::Expression _condition);
 
 	/// Check that a condition can be satisfied.
 	void checkCondition(
@@ -113,42 +125,46 @@ private:
 	smt::CheckResult checkSatisfiable();
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
+	void initializeFunctionCallParameters(FunctionDefinition const& _function, std::vector<smt::Expression> const& _callArgs);
 	void resetStateVariables();
-	void resetVariables(std::vector<Declaration const*> _variables);
+	void resetVariables(std::vector<VariableDeclaration const*> _variables);
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
-	void mergeVariables(std::vector<Declaration const*> const& _variables, smt::Expression const& _condition, VariableSequenceCounters const& _countersEndTrue, VariableSequenceCounters const& _countersEndFalse);
+	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
 
-	static std::string uniqueSymbol(Expression const& _expr);
-
 	/// @returns true if _delc is a variable that is known at the current point, i.e.
-	/// has a valid sequence number
-	bool knownVariable(Declaration const& _decl);
+	/// has a valid index
+	bool knownVariable(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
-	smt::Expression currentValue(Declaration const& _decl);
+	smt::Expression currentValue(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
-	/// at the given sequence point. Does not ensure that this sequence point exists.
-	smt::Expression valueAtSequence(Declaration const& _decl, int _sequence);
-	/// Allocates a new sequence number for the declaration, updates the current
-	/// sequence number to this value and returns the expression.
-	smt::Expression newValue(Declaration const& _decl);
+	/// at the given index. Does not ensure that this index exists.
+	smt::Expression valueAtIndex(VariableDeclaration const& _decl, int _index);
+	/// Allocates a new index for the declaration, updates the current
+	/// index to this value and returns the expression.
+	smt::Expression newValue(VariableDeclaration const& _decl);
 
 	/// Sets the value of the declaration to zero.
-	void setZeroValue(Declaration const& _decl);
+	void setZeroValue(VariableDeclaration const& _decl);
 	/// Resets the variable to an unknown value (in its range).
-	void setUnknownValue(Declaration const& decl);
+	void setUnknownValue(VariableDeclaration const& decl);
 
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
+	/// Checks if expression was created
+	bool knownExpr(Expression const& _e) const;
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smt::Expression _value);
+
+	/// Checks if special variable was seen.
+	bool knownSpecialVariable(std::string const& _var) const;
 
 	/// Adds a new path condition
 	void pushPathCondition(smt::Expression const& _e);
@@ -161,16 +177,33 @@ private:
 	/// Add to the solver: the given expression implied by the current path conditions
 	void addPathImpliedExpression(smt::Expression const& _e);
 
+	/// Removes local variables from the context.
+	void removeLocalVariables();
+
+	/// Copy the SSA indices of m_variables.
+	VariableIndices copyVariableIndices();
+	/// Resets the variable indices.
+	void resetVariableIndices(VariableIndices const& _indices);
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_loopExecutionHappened = false;
-	std::map<Expression const*, smt::Expression> m_expressions;
-	std::map<Declaration const*, SSAVariable> m_variables;
-	std::map<Declaration const*, SSAVariable> m_stateVariables;
+	/// An Expression may have multiple smt::Expression due to
+	/// repeated calls to the same function.
+	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
+	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
+	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
+	std::shared_ptr<Scanner> m_scanner;
 
-	FunctionDefinition const* m_currentFunction = nullptr;
+	/// Stores the current path of function calls.
+	std::vector<FunctionDefinition const*> m_functionPath;
+	/// Returns true if the current function was not visited by
+	/// a function call.
+	bool isRootFunction();
+	/// Returns true if _funDef was already visited.
+	bool visitedFunction(FunctionDefinition const* _funDef);
 };
 
 }

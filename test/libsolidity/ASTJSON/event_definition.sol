@@ -1,0 +1,1 @@
+contract C { event E(); }

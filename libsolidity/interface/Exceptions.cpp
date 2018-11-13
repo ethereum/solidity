@@ -49,9 +49,6 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 	case Type::Warning:
 		m_typeName = "Warning";
 		break;
-	default:
-		solAssert(false, "");
-		break;
 	}
 
 	if (!_location.isEmpty())

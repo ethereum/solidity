@@ -50,6 +50,11 @@ struct LinkerObject
 	/// addresses by placeholders.
 	std::string toHex() const;
 
+	/// @returns a 36 character string that is used as a placeholder for the library
+	/// address (enclosed by `__` on both sides). The placeholder is the hex representation
+	/// of the first 18 bytes of the keccak-256 hash of @a _libraryName.
+	static std::string libraryPlaceholder(std::string const& _libraryName);
+
 private:
 	static h160 const* matchLibrary(
 		std::string const& _linkRefName,

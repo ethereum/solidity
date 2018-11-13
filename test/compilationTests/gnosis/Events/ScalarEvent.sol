@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 import "../Events/Event.sol";
 
 
@@ -28,7 +28,7 @@ contract ScalarEvent is Event {
     /// @param _oracle Oracle contract used to resolve the event
     /// @param _lowerBound Lower bound for event outcome
     /// @param _upperBound Lower bound for event outcome
-    function ScalarEvent(
+    constructor(
         Token _collateralToken,
         Oracle _oracle,
         int _lowerBound,
@@ -72,16 +72,16 @@ contract ScalarEvent is Event {
         outcomeTokens[LONG].revoke(msg.sender, longOutcomeTokenCount);
         // Payout winnings to sender
         require(collateralToken.transfer(msg.sender, winnings));
-        WinningsRedemption(msg.sender, winnings);
+        emit WinningsRedemption(msg.sender, winnings);
     }
 
     /// @dev Calculates and returns event hash
     /// @return Event hash
     function getEventHash()
         public
-        constant
+        view
         returns (bytes32)
     {
-        return keccak256(collateralToken, oracle, lowerBound, upperBound);
+        return keccak256(abi.encodePacked(collateralToken, oracle, lowerBound, upperBound));
     }
 }

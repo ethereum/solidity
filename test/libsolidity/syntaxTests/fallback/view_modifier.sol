@@ -1,6 +1,6 @@
 contract C {
     uint x;
-    function() view { x = 2; }
+    function() external view { x = 2; }
 }
 // ----
-// TypeError: (29-55): Fallback function must be payable or non-payable, but is "view".
+// TypeError: (29-64): Fallback function must be payable or non-payable, but is "view".

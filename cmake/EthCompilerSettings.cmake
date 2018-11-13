@@ -26,7 +26,7 @@ eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 
 	# Use ISO C++11 standard language.
-	set(CMAKE_CXX_FLAGS -std=c++11)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
@@ -35,13 +35,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wall)
 	add_compile_options(-Wextra)
 	add_compile_options(-Werror)
-
-	# Disable warnings about unknown pragmas (which is enabled by -Wall).  I assume we have external
-	# dependencies (probably Boost) which have some of these.   Whatever the case, we shouldn't be
-	# disabling these globally.   Instead, we should pragma around just the problem #includes.
-	#
-	# TODO - Track down what breaks if we do NOT do this.
-	add_compile_options(-Wno-unknown-pragmas)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
@@ -73,13 +66,13 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			# TODO - Is this even necessary?  Why?
 			# See http://stackoverflow.com/questions/19774778/when-is-it-necessary-to-use-use-the-flag-stdlib-libstdc.
 			add_compile_options(-stdlib=libstdc++)
-			
+
 			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
 			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
-			
+
 			# Use fancy colors in the compiler diagnostics
 			add_compile_options(-fcolor-diagnostics)
-			
+
 			# See "How to silence unused command line argument error with clang without disabling it?"
 			# When using -Werror with clang, it transforms "warning: argument unused during compilation" messages
 			# into errors, which makes sense.
@@ -90,7 +83,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		if (EMSCRIPTEN)
 			# Do not emit a separate memory initialiser file
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0")
-			# Leave only exported symbols as public and agressively remove others
+			# Leave only exported symbols as public and aggressively remove others
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -ffunction-sections -Wl,--gc-sections -fvisibility=hidden")
 			# Optimisation level
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
@@ -146,26 +139,29 @@ endif ()
 
 if (SANITIZE)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZE}")
-	if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-		set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/sanitizer-blacklist.txt")
-	endif()
 endif()
 
-if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")))
-	set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
-	set(CMAKE_C_FLAGS "-g ${CMAKE_C_FLAGS}")
-	add_definitions(-DETH_PROFILING_GPERF)
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lprofiler")
-#	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} -lprofiler")
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
-endif ()
+# Code coverage support.
+# Copied from Cable:
+# https://github.com/ethereum/cable/blob/v0.2.4/CableCompilerSettings.cmake#L118-L132
+option(COVERAGE "Build with code coverage support" OFF)
+if(COVERAGE)
+	# Set the linker flags first, they are required to properly test the compiler flag.
+	set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
 
-if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")))
-        set(CMAKE_CXX_FLAGS "-g --coverage ${CMAKE_CXX_FLAGS}")
-        set(CMAKE_C_FLAGS "-g --coverage ${CMAKE_C_FLAGS}")
-        set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS} -lprofiler")
-        set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
-endif ()
+	set(CMAKE_REQUIRED_LIBRARIES "--coverage ${CMAKE_REQUIRED_LIBRARIES}")
+	check_cxx_compiler_flag(--coverage have_coverage)
+	string(REPLACE "--coverage " "" CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+	if(NOT have_coverage)
+		message(FATAL_ERROR "Coverage not supported")
+	endif()
+	add_compile_options(-g --coverage)
+endif()
+
+# SMT Solvers integration
+option(USE_Z3 "Allow compiling with Z3 SMT solver integration" ON)
+option(USE_CVC4 "Allow compiling with CVC4 SMT solver integration" ON)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	option(USE_LD_GOLD "Use GNU gold linker" ON)

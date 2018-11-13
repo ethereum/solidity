@@ -28,6 +28,7 @@
 #include <boost/program_options.hpp>
 
 #include <string>
+#include <sstream>
 #include <iostream>
 
 using namespace std;
@@ -48,15 +49,17 @@ string contains(string const& _haystack, vector<string> const& _needles)
 	return "";
 }
 
-void testConstantOptimizer()
+void testConstantOptimizer(string const& input)
 {
 	if (!quiet)
 		cout << "Testing constant optimizer" << endl;
 	vector<u256> numbers;
-	while (!cin.eof())
+	stringstream sin(input);
+
+	while (!sin.eof())
 	{
 		h256 data;
-		cin.read(reinterpret_cast<char*>(data.data()), 32);
+		sin.read(reinterpret_cast<char*>(data.data()), 32);
 		numbers.push_back(u256(data));
 	}
 	if (!quiet)
@@ -84,13 +87,9 @@ void testConstantOptimizer()
 	}
 }
 
-void testStandardCompiler()
+void runCompiler(string input)
 {
-	if (!quiet)
-		cout << "Testing compiler via JSON interface." << endl;
-	string input = readStandardInput();
-
-	string outputString(compileStandard(input.c_str(), NULL));
+	string outputString(solidity_compile(input.c_str(), nullptr));
 	Json::Value output;
 	if (!jsonParseStrict(outputString, output))
 	{
@@ -112,48 +111,35 @@ void testStandardCompiler()
 		}
 }
 
-void testCompiler(bool optimize)
+void testStandardCompiler(string const& input)
+{
+	if (!quiet)
+		cout << "Testing compiler via JSON interface." << endl;
+
+	runCompiler(input);
+}
+
+void testCompiler(string const& input, bool optimize)
 {
 	if (!quiet)
 		cout << "Testing compiler " << (optimize ? "with" : "without") << " optimizer." << endl;
-	string input = readStandardInput();
 
-	string outputString(compileJSON(input.c_str(), optimize));
-	Json::Value outputJson;
-	if (!jsonParseStrict(outputString, outputJson))
-	{
-		cout << "Compiler produced invalid JSON output." << endl;
-		abort();
-	}
-	if (outputJson.isMember("errors"))
-	{
-		if (!outputJson["errors"].isArray())
-		{
-			cout << "Output JSON has \"errors\" but it is not an array." << endl;
-			abort();
-		}
-		for (Json::Value const& error: outputJson["errors"])
-		{
-			string invalid = contains(error.asString(), vector<string>{
-				"Internal compiler error",
-				"Exception during compilation",
-				"Unknown exception during compilation",
-				"Unknown exception while generating contract data output",
-				"Unknown exception while generating source name output",
-				"Unknown error while generating JSON"
-			});
-			if (!invalid.empty())
-			{
-				cout << "Invalid error: \"" << error.asString() << "\"" << endl;
-				abort();
-			}
-		}
-	}
-	else if (!outputJson.isMember("contracts"))
-	{
-		cout << "Output JSON has neither \"errors\" nor \"contracts\"." << endl;
-		abort();
-	}
+	Json::Value config = Json::objectValue;
+	config["language"] = "Solidity";
+	config["sources"] = Json::objectValue;
+	config["sources"][""] = Json::objectValue;
+	config["sources"][""]["content"] = input;
+	config["settings"] = Json::objectValue;
+	config["settings"]["optimizer"] = Json::objectValue;
+	config["settings"]["optimizer"]["enabled"] = optimize;
+	config["settings"]["optimizer"]["runs"] = 200;
+
+	// Enable all SourceUnit-level outputs.
+	config["settings"]["outputSelection"]["*"][""][0] = "*";
+	// Enable all Contract-level outputs.
+	config["settings"]["outputSelection"]["*"]["*"][0] = "*";
+
+	runCompiler(jsonCompactPrint(config));
 }
 
 }
@@ -183,15 +169,24 @@ Allowed options)",
 			"Expects a binary string of up to 32 bytes on stdin."
 		)
 		(
+			"input-file",
+			po::value<string>(),
+			"input file"
+		)
+		(
 			"without-optimizer",
 			"Run without optimizations. Cannot be used together with standard-json."
 		);
+
+	// All positional options should be interpreted as input files
+	po::positional_options_description filesPositions;
+	filesPositions.add("input-file", 1);
 
 	po::variables_map arguments;
 	try
 	{
 		po::command_line_parser cmdLineParser(argc, argv);
-		cmdLineParser.options(options);
+		cmdLineParser.options(options).positional(filesPositions);
 		po::store(cmdLineParser.run(), arguments);
 	}
 	catch (po::error const& _exception)
@@ -200,17 +195,23 @@ Allowed options)",
 		return 1;
 	}
 
+	string input;
+	if (arguments.count("input-file"))
+		input = readFileAsString(arguments["input-file"].as<string>());
+	else
+		input = readStandardInput();
+
 	if (arguments.count("quiet"))
 		quiet = true;
 
 	if (arguments.count("help"))
 		cout << options;
 	else if (arguments.count("const-opt"))
-		testConstantOptimizer();
+		testConstantOptimizer(input);
 	else if (arguments.count("standard-json"))
-		testStandardCompiler();
+		testStandardCompiler(input);
 	else
-		testCompiler(!arguments.count("without-optimizer"));
+		testCompiler(input, !arguments.count("without-optimizer"));
 
 	return 0;
 }

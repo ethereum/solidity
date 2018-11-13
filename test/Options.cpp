@@ -21,13 +21,17 @@
 
 #include <test/Options.h>
 
+#include <test/Common.h>
+
 #include <libsolidity/interface/EVMVersion.h>
 #include <libsolidity/interface/Exceptions.h>
 
 #include <boost/test/framework.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace dev::test;
+namespace fs = boost::filesystem;
 
 Options const& Options::get()
 {
@@ -70,6 +74,9 @@ Options::Options()
 	if (testPath.empty())
 		if (auto path = getenv("ETH_TEST_PATH"))
 			testPath = path;
+
+	if (testPath.empty())
+		testPath = discoverTestPath();
 }
 
 void Options::validate() const

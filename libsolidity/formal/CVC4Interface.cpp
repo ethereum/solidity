@@ -37,6 +37,7 @@ void CVC4Interface::reset()
 	m_functions.clear();
 	m_solver.reset();
 	m_solver.setOption("produce-models", true);
+	m_solver.setTimeLimit(queryTimeout);
 }
 
 void CVC4Interface::push()
@@ -49,23 +50,25 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-Expression CVC4Interface::newFunction(string _name, Sort _domain, Sort _codomain)
+void CVC4Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
-	CVC4::Type fType = m_context.mkFunctionType(cvc4Sort(_domain), cvc4Sort(_codomain));
-	m_functions.insert({_name, m_context.mkVar(_name.c_str(), fType)});
-	return SolverInterface::newFunction(move(_name), _domain, _codomain);
+	if (!m_functions.count(_name))
+	{
+		CVC4::Type fType = m_context.mkFunctionType(cvc4Sort(_domain), cvc4Sort(_codomain));
+		m_functions.insert({_name, m_context.mkVar(_name.c_str(), fType)});
+	}
 }
 
-Expression CVC4Interface::newInteger(string _name)
+void CVC4Interface::declareInteger(string _name)
 {
-	m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.integerType())});
-	return SolverInterface::newInteger(move(_name));
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.integerType())});
 }
 
-Expression CVC4Interface::newBool(string _name)
+void CVC4Interface::declareBool(string _name)
 {
-	m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.booleanType())});
-	return SolverInterface::newBool(std::move(_name));
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.booleanType())});
 }
 
 void CVC4Interface::addAssertion(Expression const& _expr)
@@ -109,13 +112,13 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 			solAssert(false, "");
 		}
 
-		if (result != CheckResult::UNSATISFIABLE && !_expressionsToEvaluate.empty())
+		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		{
 			for (Expression const& e: _expressionsToEvaluate)
 				values.push_back(toString(m_solver.getValue(toCVC4Expr(e))));
 		}
 	}
-	catch (CVC4::Exception & e)
+	catch (CVC4::Exception const&)
 	{
 		result = CheckResult::ERROR;
 		values.clear();

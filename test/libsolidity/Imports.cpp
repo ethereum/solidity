@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(simple_alias)
 {
 	CompilerStack c;
 	c.addSource("a", "contract A {} pragma solidity >=0.0;");
-	c.addSource("dir/a/b/c", "import \"../../.././a\" as x; contract B is x.A { function() { x.A r = x.A(20); } } pragma solidity >=0.0;");
+	c.addSource("dir/a/b/c", "import \"../../.././a\" as x; contract B is x.A { function() external { x.A r = x.A(20); } } pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(complex_import)
 	CompilerStack c;
 	c.addSource("a", "contract A {} contract B {} contract C { struct S { uint a; } } pragma solidity >=0.0;");
 	c.addSource("b", "import \"a\" as x; import {B as b, C as c, C} from \"a\"; "
-				"contract D is b { function f(c.S var1, x.C.S var2, C.S var3) internal {} } pragma solidity >=0.0;");
+				"contract D is b { function f(c.S memory var1, x.C.S memory var2, C.S memory var3) internal {} } pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(name_clash_in_import)
 BOOST_AUTO_TEST_CASE(remappings)
 {
 	CompilerStack c;
-	c.setRemappings(vector<string>{"s=s_1.4.6", "t=Tee"});
+	c.setRemappings(vector<CompilerStack::Remapping>{{"", "s", "s_1.4.6"},{"", "t", "Tee"}});
 	c.addSource("a", "import \"s/s.sol\"; contract A is S {} pragma solidity >=0.0;");
 	c.addSource("b", "import \"t/tee.sol\"; contract A is Tee {} pragma solidity >=0.0;");
 	c.addSource("s_1.4.6/s.sol", "contract S {} pragma solidity >=0.0;");
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(remappings)
 BOOST_AUTO_TEST_CASE(context_dependent_remappings)
 {
 	CompilerStack c;
-	c.setRemappings(vector<string>{"a:s=s_1.4.6", "b:s=s_1.4.7"});
+	c.setRemappings(vector<CompilerStack::Remapping>{{"a", "s", "s_1.4.6"}, {"b", "s", "s_1.4.7"}});
 	c.addSource("a/a.sol", "import \"s/s.sol\"; contract A is SSix {} pragma solidity >=0.0;");
 	c.addSource("b/b.sol", "import \"s/s.sol\"; contract B is SSeven {} pragma solidity >=0.0;");
 	c.addSource("s_1.4.6/s.sol", "contract SSix {} pragma solidity >=0.0;");
@@ -200,7 +200,11 @@ BOOST_AUTO_TEST_CASE(filename_with_period)
 BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_preserved)
 {
 	CompilerStack c;
-	c.setRemappings(vector<string>{"foo=vendor/foo_2.0.0", "vendor/bar:foo=vendor/foo_1.0.0", "bar=vendor/bar"});
+	c.setRemappings(vector<CompilerStack::Remapping>{
+		{"", "foo", "vendor/foo_2.0.0"},
+		{"vendor/bar", "foo", "vendor/foo_1.0.0"},
+		{"", "bar", "vendor/bar"}
+	});
 	c.addSource("main.sol", "import \"foo/foo.sol\"; import {Bar} from \"bar/bar.sol\"; contract Main is Foo2, Bar {} pragma solidity >=0.0;");
 	c.addSource("vendor/bar/bar.sol", "import \"foo/foo.sol\"; contract Bar {Foo1 foo;} pragma solidity >=0.0;");
 	c.addSource("vendor/foo_1.0.0/foo.sol", "contract Foo1 {} pragma solidity >=0.0;");
@@ -212,7 +216,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_pres
 BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent)
 {
 	CompilerStack c;
-	c.setRemappings(vector<string>{"a:x/y/z=d", "a/b:x=e"});
+	c.setRemappings(vector<CompilerStack::Remapping>{{"a", "x/y/z", "d"}, {"a/b", "x", "e"}});
 	c.addSource("a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;");
 	c.addSource("a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;");
 	c.addSource("d/z.sol", "contract D {} pragma solidity >=0.0;");
@@ -220,7 +224,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent)
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 	CompilerStack d;
-	d.setRemappings(vector<string>{"a/b:x=e", "a:x/y/z=d"});
+	d.setRemappings(vector<CompilerStack::Remapping>{{"a/b", "x", "e"}, {"a", "x/y/z", "d"}});
 	d.addSource("a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;");
 	d.addSource("a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;");
 	d.addSource("d/z.sol", "contract D {} pragma solidity >=0.0;");

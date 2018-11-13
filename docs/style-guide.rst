@@ -52,31 +52,35 @@ Surround top level declarations in solidity source with two blank lines.
 
 Yes::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract A {
-        ...
+        // ...
     }
 
 
     contract B {
-        ...
+        // ...
     }
 
 
     contract C {
-        ...
+        // ...
     }
 
 No::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract A {
-        ...
+        // ...
     }
     contract B {
-        ...
+        // ...
     }
 
     contract C {
-        ...
+        // ...
     }
 
 Within a contract surround function declarations with a single blank line.
@@ -85,44 +89,48 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract A {
-        function spam() public;
-        function ham() public;
+        function spam() public pure;
+        function ham() public pure;
     }
 
 
     contract B is A {
-        function spam() public {
-            ...
+        function spam() public pure {
+            // ...
         }
 
-        function ham() public {
-            ...
+        function ham() public pure {
+            // ...
         }
     }
 
 No::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract A {
-        function spam() public {
-            ...
+        function spam() public pure {
+            // ...
         }
-        function ham() public {
-            ...
+        function ham() public pure {
+            // ...
         }
     }
 
 .. _maximum_line_length:
 
-Maximum Line Length 
+Maximum Line Length
 ===================
 
-Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ to a maximum of 79 (or 99) 
+Keeping lines under the `PEP 8 recommendation <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_ to a maximum of 79 (or 99)
 characters helps readers easily parse the code.
 
 Wrapped lines should conform to the following guidelines.
 
-1. The first argument should not be attached to the opening parenthesis. 
+1. The first argument should not be attached to the opening parenthesis.
 2. One, and only one, indent should be used.
 3. Each argument should fall on its own line.
 4. The terminating element, :code:`);`, should be placed on the final line by itself.
@@ -132,38 +140,38 @@ Function Calls
 Yes::
 
     thisFunctionCallIsReallyLong(
-        longArgument1, 
-        longArgument2, 
+        longArgument1,
+        longArgument2,
         longArgument3
     );
 
 No::
 
-    thisFunctionCallIsReallyLong(longArgument1, 
-                                  longArgument2, 
+    thisFunctionCallIsReallyLong(longArgument1,
+                                  longArgument2,
                                   longArgument3
     );
-                                  
-    thisFunctionCallIsReallyLong(longArgument1, 
-        longArgument2, 
+
+    thisFunctionCallIsReallyLong(longArgument1,
+        longArgument2,
         longArgument3
-    );                                  
-                                  
+    );
+
     thisFunctionCallIsReallyLong(
         longArgument1, longArgument2,
         longArgument3
-    );                                    
+    );
 
     thisFunctionCallIsReallyLong(
-    longArgument1, 
-    longArgument2, 
+    longArgument1,
+    longArgument2,
     longArgument3
     );
 
     thisFunctionCallIsReallyLong(
-        longArgument1, 
-        longArgument2, 
-        longArgument3);        
+        longArgument1,
+        longArgument2,
+        longArgument3);
 
 Assignment Statements
 
@@ -188,8 +196,8 @@ Event Definitions and Event Emitters
 Yes::
 
     event LongAndLotsOfArgs(
-        adress sender,
-        adress recipient,
+        address sender,
+        address recipient,
         uint256 publicKey,
         uint256 amount,
         bytes32[] options
@@ -205,8 +213,8 @@ Yes::
 
 No::
 
-    event LongAndLotsOfArgs(adress sender,
-                            adress recipient,
+    event LongAndLotsOfArgs(address sender,
+                            address recipient,
                             uint256 publicKey,
                             uint256 amount,
                             bytes32[] options);
@@ -215,7 +223,7 @@ No::
                       recipient,
                       publicKey,
                       amount,
-                      options); 
+                      options);
 
 Source File Encoding
 ====================
@@ -229,30 +237,32 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
-    import "owned";
+    pragma solidity >=0.4.0 <0.6.0;
 
+    import "./Owned.sol";
 
     contract A {
-        ...
+        // ...
     }
 
-
-    contract B is owned {
-        ...
+    contract B is Owned {
+        // ...
     }
 
 No::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract A {
-        ...
+        // ...
     }
 
 
-    import "owned";
+    import "./Owned.sol";
 
 
-    contract B is owned {
-        ...
+    contract B is Owned {
+        // ...
     }
 
 Order of Functions
@@ -273,13 +283,15 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract A {
-        function A() public {
-            ...
+        constructor() public {
+            // ...
         }
 
-        function() public {
-            ...
+        function() external {
+            // ...
         }
 
         // External functions
@@ -303,10 +315,16 @@ Yes::
 
 No::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract A {
 
         // External functions
         // ...
+
+        function() external {
+            // ...
+        }
 
         // Private functions
         // ...
@@ -314,12 +332,8 @@ No::
         // Public functions
         // ...
 
-        function A() public {
-            ...
-        }
-
-        function() public {
-            ...
+        constructor() public {
+            // ...
         }
 
         // Internal functions
@@ -374,13 +388,13 @@ Don't include a whitespace in the fallback function:
 
 Yes::
 
-    function() public {
+    function() external {
         ...
     }
 
 No::
 
-    function () public {
+    function () external {
         ...
     }
 
@@ -397,6 +411,8 @@ should:
 
 Yes::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
     contract Coin {
         struct Bank {
             address owner;
@@ -405,6 +421,8 @@ Yes::
     }
 
 No::
+
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract Coin
     {
@@ -529,7 +547,7 @@ No::
     function increment(uint x) public pure returns (uint) {
         return x + 1;}
 
-You should explicitly label the visibility of all functions, including constructors.  
+You should explicitly label the visibility of all functions, including constructors.
 
 Yes::
 
@@ -540,7 +558,7 @@ Yes::
 No::
 
     function implicitlyPublic(uint val) {
-        doSomething(); 
+        doSomething();
     }
 
 The visibility modifier for a function should come before any custom
@@ -663,19 +681,19 @@ Yes::
         address a,
         address b,
         address c
-    ) 
-        public 
+    )
+        public
         returns (
-            address someAddressName, 
-            uint256 LongArgument, 
+            address someAddressName,
+            uint256 LongArgument,
             uint256 Argument
         )
-    {    
+    {
         doSomething()
-        
+
         return (
-            veryLongReturnArg1, 
-            veryLongReturnArg2, 
+            veryLongReturnArg1,
+            veryLongReturnArg2,
             veryLongReturnArg3
         );
     }
@@ -686,16 +704,16 @@ No::
         address a,
         address b,
         address c
-    ) 
-        public 
-        returns (address someAddressName, 
-                 uint256 LongArgument, 
+    )
+        public
+        returns (address someAddressName,
+                 uint256 LongArgument,
                  uint256 Argument)
-    {    
+    {
         doSomething()
-        
-        return (veryLongReturnArg1, 
-                veryLongReturnArg1, 
+
+        return (veryLongReturnArg1,
+                veryLongReturnArg1,
                 veryLongReturnArg1);
     }
 
@@ -705,37 +723,76 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
+    // Base contracts just to make this compile
+    contract B {
+        constructor(uint) public {
+        }
+    }
+    contract C {
+        constructor(uint, uint) public {
+        }
+    }
+    contract D {
+        constructor(uint) public {
+        }
+    }
+
     contract A is B, C, D {
-        function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+        uint x;
+
+        constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
             B(param1)
             C(param2, param3)
             D(param4)
             public
         {
             // do something with param5
+            x = param5;
         }
     }
 
 No::
 
+    pragma solidity >=0.4.0 <0.6.0;
+
+    // Base contracts just to make this compile
+    contract B {
+        constructor(uint) public {
+        }
+    }
+    contract C {
+        constructor(uint, uint) public {
+        }
+    }
+    contract D {
+        constructor(uint) public {
+        }
+    }
+
     contract A is B, C, D {
-        function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+        uint x;
+
+        constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
         B(param1)
         C(param2, param3)
         D(param4)
         public
         {
-            // do something with param5
+            x = param5;
         }
     }
 
-    contract A is B, C, D {
-        function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+    contract X is B, C, D {
+        uint x;
+
+        constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
             B(param1)
             C(param2, param3)
             D(param4)
             public {
-            // do something with param5
+            x = param5;
         }
     }
 
@@ -817,6 +874,29 @@ No::
     x = y+z;
     x +=1;
 
+***************
+Order of Layout
+***************
+
+Layout contract elements in the following order:
+
+1. Pragma statements
+2. Import statements
+3. Interfaces
+4. Libraries
+5. Contracts
+
+Inside each contract, library or interface, use the following order:
+
+1. Type declarations
+2. State variables
+3. Events
+4. Functions
+
+.. note::
+
+    It might be clearer to declare types close to their use in events or state
+    variables.
 
 ******************
 Naming Conventions
@@ -830,7 +910,7 @@ The naming recommendations given here are intended to improve the readability,
 and thus they are not rules, but rather guidelines to try and help convey the
 most information through the names of things.
 
-Lastly, consistency within a codebase should always supercede any conventions
+Lastly, consistency within a codebase should always supersede any conventions
 outlined in this document.
 
 
@@ -867,7 +947,69 @@ indistinguishable from the numerals one and zero.
 Contract and Library Names
 ==========================
 
-Contracts and libraries should be named using the CapWords style. Examples: ``SimpleToken``, ``SmartBank``, ``CertificateHashRepository``, ``Player``.
+* Contracts and libraries should be named using the CapWords style. Examples: ``SimpleToken``, ``SmartBank``, ``CertificateHashRepository``, ``Player``, ``Congress``, ``Owned``.
+* Contract and library names should also match their filenames.
+* If a contract file includes multiple contracts and/or libraries, then the filename should match the *core contract*. This is not recommended however if it can be avoided.
+
+As shown in the example below, if the contract name is `Congress` and the library name is `Owned`, then their associated filenames should be `Congress.sol` and `Owned.sol`.
+
+Yes::
+
+    pragma solidity >=0.4.0 <0.6.0;
+
+    // Owned.sol
+    contract Owned {
+         address public owner;
+
+         constructor() public {
+             owner = msg.sender;
+         }
+
+         modifier onlyOwner {
+             require(msg.sender == owner);
+             _;
+         }
+
+         function transferOwnership(address newOwner) public onlyOwner {
+             owner = newOwner;
+         }
+    }
+
+    // Congress.sol
+    import "./Owned.sol";
+
+    contract Congress is Owned, TokenRecipient {
+        //...
+    }
+
+No::
+
+    pragma solidity >=0.4.0 <0.6.0;
+
+    // owned.sol
+    contract owned {
+         address public owner;
+
+         constructor() public {
+             owner = msg.sender;
+         }
+
+         modifier onlyOwner {
+             require(msg.sender == owner);
+             _;
+         }
+
+         function transferOwnership(address newOwner) public onlyOwner {
+             owner = newOwner;
+         }
+    }
+
+    // Congress.sol
+    import "./owned.sol";
+
+    contract Congress is owned, tokenRecipient {
+        //...
+    }
 
 
 Struct Names

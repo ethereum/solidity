@@ -28,7 +28,10 @@ using namespace dev::solidity::smt;
 Z3Interface::Z3Interface():
 	m_solver(m_context)
 {
+	// This needs to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
+	// This needs to be set in the context.
+	m_context.set("timeout", queryTimeout);
 }
 
 void Z3Interface::reset()
@@ -48,22 +51,22 @@ void Z3Interface::pop()
 	m_solver.pop();
 }
 
-Expression Z3Interface::newFunction(string _name, Sort _domain, Sort _codomain)
+void Z3Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
-	m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
-	return SolverInterface::newFunction(move(_name), _domain, _codomain);
+	if (!m_functions.count(_name))
+		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
 }
 
-Expression Z3Interface::newInteger(string _name)
+void Z3Interface::declareInteger(string _name)
 {
-	m_constants.insert({_name, m_context.int_const(_name.c_str())});
-	return SolverInterface::newInteger(move(_name));
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.int_const(_name.c_str())});
 }
 
-Expression Z3Interface::newBool(string _name)
+void Z3Interface::declareBool(string _name)
 {
-	m_constants.insert({_name, m_context.bool_const(_name.c_str())});
-	return SolverInterface::newBool(std::move(_name));
+	if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.bool_const(_name.c_str())});
 }
 
 void Z3Interface::addAssertion(Expression const& _expr)
@@ -88,11 +91,9 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 		case z3::check_result::unknown:
 			result = CheckResult::UNKNOWN;
 			break;
-		default:
-			solAssert(false, "");
 		}
 
-		if (result != CheckResult::UNSATISFIABLE && !_expressionsToEvaluate.empty())
+		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		{
 			z3::model m = m_solver.get_model();
 			for (Expression const& e: _expressionsToEvaluate)

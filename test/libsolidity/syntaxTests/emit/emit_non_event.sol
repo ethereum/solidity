@@ -1,10 +1,10 @@
 contract C {
   uint256 Test;
 
-  function f() {
+  function f() public {
     emit Test();
   }
 }
 // ----
-// TypeError: (56-62): Type is not callable
-// TypeError: (56-60): Expression has to be an event invocation.
+// TypeError: (63-69): Type is not callable
+// TypeError: (63-67): Expression has to be an event invocation.

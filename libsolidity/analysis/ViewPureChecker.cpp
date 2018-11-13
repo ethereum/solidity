@@ -116,31 +116,22 @@ private:
 
 bool ViewPureChecker::check()
 {
-	// The bool means "enforce view with errors".
-	map<ContractDefinition const*, bool> contracts;
+	vector<ContractDefinition const*> contracts;
 
 	for (auto const& node: m_ast)
 	{
 		SourceUnit const* source = dynamic_cast<SourceUnit const*>(node.get());
 		solAssert(source, "");
-		bool enforceView = source->annotation().experimentalFeatures.count(ExperimentalFeature::V050);
-		for (ContractDefinition const* c: source->filteredNodes<ContractDefinition>(source->nodes()))
-			contracts[c] = enforceView;
+		contracts += source->filteredNodes<ContractDefinition>(source->nodes());
 	}
 
 	// Check modifiers first to infer their state mutability.
 	for (auto const& contract: contracts)
-	{
-		m_enforceViewWithError = contract.second;
-		for (ModifierDefinition const* mod: contract.first->functionModifiers())
+		for (ModifierDefinition const* mod: contract->functionModifiers())
 			mod->accept(*this);
-	}
 
 	for (auto const& contract: contracts)
-	{
-		m_enforceViewWithError = contract.second;
-		contract.first->accept(*this);
-	}
+		contract->accept(*this);
 
 	return !m_errors;
 }
@@ -151,7 +142,7 @@ bool ViewPureChecker::visit(FunctionDefinition const& _funDef)
 {
 	solAssert(!m_currentFunction, "");
 	m_currentFunction = &_funDef;
-	m_currentBestMutability = StateMutability::Pure;
+	m_bestMutabilityAndLocation = {StateMutability::Pure, _funDef.location()};
 	return true;
 }
 
@@ -159,7 +150,7 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 {
 	solAssert(m_currentFunction == &_funDef, "");
 	if (
-		m_currentBestMutability < _funDef.stateMutability() &&
+		m_bestMutabilityAndLocation.mutability < _funDef.stateMutability() &&
 		_funDef.stateMutability() != StateMutability::Payable &&
 		_funDef.isImplemented() &&
 		!_funDef.isConstructor() &&
@@ -168,22 +159,22 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 	)
 		m_errorReporter.warning(
 			_funDef.location(),
-			"Function state mutability can be restricted to " + stateMutabilityToString(m_currentBestMutability)
+			"Function state mutability can be restricted to " + stateMutabilityToString(m_bestMutabilityAndLocation.mutability)
 		);
 	m_currentFunction = nullptr;
 }
 
-bool ViewPureChecker::visit(ModifierDefinition const&)
+bool ViewPureChecker::visit(ModifierDefinition const& _modifier)
 {
 	solAssert(m_currentFunction == nullptr, "");
-	m_currentBestMutability = StateMutability::Pure;
+	m_bestMutabilityAndLocation = {StateMutability::Pure, _modifier.location()};
 	return true;
 }
 
 void ViewPureChecker::endVisit(ModifierDefinition const& _modifierDef)
 {
 	solAssert(m_currentFunction == nullptr, "");
-	m_inferredMutability[&_modifierDef] = m_currentBestMutability;
+	m_inferredMutability[&_modifierDef] = std::move(m_bestMutabilityAndLocation);
 }
 
 void ViewPureChecker::endVisit(Identifier const& _identifier)
@@ -228,39 +219,72 @@ void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 	}(_inlineAssembly.operations());
 }
 
-void ViewPureChecker::reportMutability(StateMutability _mutability, SourceLocation const& _location)
+void ViewPureChecker::reportMutability(
+	StateMutability _mutability,
+	SourceLocation const& _location,
+	boost::optional<SourceLocation> const& _nestedLocation
+)
 {
-	if (m_currentFunction && m_currentFunction->stateMutability() < _mutability)
-	{
-		string text;
-		if (_mutability == StateMutability::View)
-			text =
-				"Function declared as pure, but this expression (potentially) reads from the "
-				"environment or state and thus requires \"view\".";
-		else if (_mutability == StateMutability::NonPayable)
-			text =
-				"Function declared as " +
-				stateMutabilityToString(m_currentFunction->stateMutability()) +
-				", but this expression (potentially) modifies the state and thus "
-				"requires non-payable (the default) or payable.";
-		else
-			solAssert(false, "");
+	if (_mutability > m_bestMutabilityAndLocation.mutability)
+		m_bestMutabilityAndLocation = MutabilityAndLocation{_mutability, _location};
+	if (!m_currentFunction || _mutability <= m_currentFunction->stateMutability())
+		return;
 
-		solAssert(
-			m_currentFunction->stateMutability() == StateMutability::View ||
-			m_currentFunction->stateMutability() == StateMutability::Pure,
-			""
+	// Check for payable here, because any occurrence of `msg.value`
+	// will set mutability to payable.
+	if (_mutability == StateMutability::View || (
+		_mutability == StateMutability::Payable &&
+		m_currentFunction->stateMutability() == StateMutability::Pure
+	))
+	{
+		m_errorReporter.typeError(
+			_location,
+			"Function declared as pure, but this expression (potentially) reads from the "
+			"environment or state and thus requires \"view\"."
 		);
-		if (!m_enforceViewWithError && m_currentFunction->stateMutability() == StateMutability::View)
-			m_errorReporter.warning(_location, text);
-		else
+		m_errors = true;
+	}
+	else if (_mutability == StateMutability::NonPayable)
+	{
+		m_errorReporter.typeError(
+			_location,
+			"Function declared as " +
+			stateMutabilityToString(m_currentFunction->stateMutability()) +
+			", but this expression (potentially) modifies the state and thus "
+			"requires non-payable (the default) or payable."
+		);
+		m_errors = true;
+	}
+	else if (_mutability == StateMutability::Payable)
+	{
+		// We do not warn for library functions because they cannot be payable anyway.
+		// Also internal functions should be allowed to use `msg.value`.
+		if (m_currentFunction->isPublic() && m_currentFunction->inContractKind() != ContractDefinition::ContractKind::Library)
 		{
+			if (_nestedLocation)
+				m_errorReporter.typeError(
+					_location,
+					SecondarySourceLocation().append("\"msg.value\" appears here inside the modifier.", *_nestedLocation),
+					"This modifier uses \"msg.value\" and thus the function has to be payable or internal."
+				);
+			else
+				m_errorReporter.typeError(
+					_location,
+					"\"msg.value\" can only be used in payable public functions. Make the function "
+					"\"payable\" or use an internal function to avoid this error."
+				);
 			m_errors = true;
-			m_errorReporter.typeError(_location, text);
 		}
 	}
-	if (_mutability > m_currentBestMutability)
-		m_currentBestMutability = _mutability;
+	else
+		solAssert(false, "");
+
+	solAssert(
+		m_currentFunction->stateMutability() == StateMutability::View ||
+		m_currentFunction->stateMutability() == StateMutability::Pure ||
+		m_currentFunction->stateMutability() == StateMutability::NonPayable,
+		""
+	);
 }
 
 void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
@@ -268,11 +292,11 @@ void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 	if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return;
 
-	StateMutability mut = dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability();
+	StateMutability mutability = dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability();
 	// We only require "nonpayable" to call a payble function.
-	if (mut == StateMutability::Payable)
-		mut = StateMutability::NonPayable;
-	reportMutability(mut, _functionCall.location());
+	if (mutability == StateMutability::Payable)
+		mutability = StateMutability::NonPayable;
+	reportMutability(mutability, _functionCall.location());
 }
 
 bool ViewPureChecker::visit(MemberAccess const& _memberAccess)
@@ -299,19 +323,34 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	ASTString const& member = _memberAccess.memberName();
 	switch (_memberAccess.expression().annotation().type->category())
 	{
-	case Type::Category::Contract:
-	case Type::Category::Integer:
-		if (member == "balance" && !_memberAccess.annotation().referencedDeclaration)
+	case Type::Category::Address:
+		if (member == "balance")
 			mutability = StateMutability::View;
 		break;
 	case Type::Category::Magic:
 	{
-		// we can ignore the kind of magic and only look at the name of the member
-		set<string> static const pureMembers{
-			"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "data", "sig", "blockhash"
+		using MagicMember = pair<MagicType::Kind, string>;
+		set<MagicMember> static const pureMembers{
+			{MagicType::Kind::ABI, "decode"},
+			{MagicType::Kind::ABI, "encode"},
+			{MagicType::Kind::ABI, "encodePacked"},
+			{MagicType::Kind::ABI, "encodeWithSelector"},
+			{MagicType::Kind::ABI, "encodeWithSignature"},
+			{MagicType::Kind::Block, "blockhash"},
+			{MagicType::Kind::Message, "data"},
+			{MagicType::Kind::Message, "sig"}
 		};
-		if (!pureMembers.count(member))
+		set<MagicMember> static const payableMembers{
+			{MagicType::Kind::Message, "value"}
+		};
+
+		auto const& type = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type);
+		MagicMember magicMember(type.kind(), member);
+
+		if (!pureMembers.count(magicMember))
 			mutability = StateMutability::View;
+		if (payableMembers.count(magicMember))
+			mutability = StateMutability::Payable;
 		break;
 	}
 	case Type::Category::Struct:
@@ -351,7 +390,8 @@ void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
 	if (ModifierDefinition const* mod = dynamic_cast<decltype(mod)>(_modifier.name()->annotation().referencedDeclaration))
 	{
 		solAssert(m_inferredMutability.count(mod), "");
-		reportMutability(m_inferredMutability.at(mod), _modifier.location());
+		auto const& mutAndLocation = m_inferredMutability.at(mod);
+		reportMutability(mutAndLocation.mutability, _modifier.location(), mutAndLocation.location);
 	}
 	else
 		solAssert(dynamic_cast<ContractDefinition const*>(_modifier.name()->annotation().referencedDeclaration), "");

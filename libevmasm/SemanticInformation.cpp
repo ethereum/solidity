@@ -151,6 +151,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	case Instruction::MSIZE: // depends on previous writes and reads, not only on content
 	case Instruction::BALANCE: // depends on previous calls
 	case Instruction::EXTCODESIZE:
+	case Instruction::EXTCODEHASH:
 	case Instruction::RETURNDATACOPY: // depends on previous calls
 	case Instruction::RETURNDATASIZE:
 		return false;
@@ -172,6 +173,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	case Instruction::KECCAK256:
 	case Instruction::BALANCE:
 	case Instruction::EXTCODESIZE:
+	case Instruction::EXTCODEHASH:
 	case Instruction::RETURNDATASIZE:
 	case Instruction::SLOAD:
 	case Instruction::PC:
@@ -233,6 +235,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::GASPRICE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODECOPY:
+	case Instruction::EXTCODEHASH:
 	case Instruction::BLOCKHASH:
 	case Instruction::COINBASE:
 	case Instruction::TIMESTAMP:

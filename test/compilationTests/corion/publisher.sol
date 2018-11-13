@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 
 import "./announcementTypes.sol";
 import "./module.sol";
@@ -9,7 +9,7 @@ contract publisher is announcementTypes, module, safeMath {
     /*
         module callbacks
     */
-    function transferEvent(address from, address to, uint256 value) external returns (bool success) {
+    function transferEvent(address payable from, address payable to, uint256 value) external returns (bool success) {
         /*
             Transaction completed. This function is available only for moduleHandler
             If a transaction is carried out from or to an address which participated in the objection of an announcement, its objection purport is automatically set
@@ -32,15 +32,15 @@ contract publisher is announcementTypes, module, safeMath {
         }
         return true;
     }
-    
+
     /*
         Pool
     */
-    
+
     uint256 public  minAnnouncementDelay = 40320;
     uint256 public minAnnouncementDelayOnICO = 17280;
     uint8 public oppositeRate = 33;
-    
+
     struct announcements_s {
         announcementType Type;
         uint256 start;
@@ -51,37 +51,37 @@ contract publisher is announcementTypes, module, safeMath {
         bool oppositable;
         uint256 oppositionWeight;
         bool result;
-        
+
         string _str;
         uint256 _uint;
-        address _addr;
+        address payable _addr;
     }
     mapping(uint256 => announcements_s) public announcements;
     uint256 announcementsLength = 1;
-    
+
     mapping (address => uint256[]) public opponents;
-    
-    function publisher(address moduleHandler) {
+
+    constructor(address payable moduleHandler) public {
         /*
             Installation function.  The installer will be registered in the admin list automatically
-            
+
             @moduleHandler      Address of moduleHandler
         */
         super.registerModuleHandler(moduleHandler);
     }
-    
-    function Announcements(uint256 id) public constant returns (uint256 Type, uint256 Start, uint256 End, bool Closed, string Announcement, string Link, bool Opposited, string _str, uint256 _uint, address _addr) {
+
+    function Announcements(uint256 id) public view returns (uint256 Type, uint256 Start, uint256 End, bool Closed, string memory Announcement, string memory Link, bool Opposited, string memory _str, uint256 _uint, address _addr) {
         /*
             Announcement data query
-            
+
             @id             Its identification
-            
+
             @Type           Subject of announcement
             @Start          Height of announcement block
             @End            Planned completion of announcement
             @Closed         Closed or not
             @Announcement   Announcement text
-            @Link           Link  perhaps to a Forum 
+            @Link           Link  perhaps to a Forum
             @Opposited      Objected or not
             @_str           Text value
             @_uint          Number value
@@ -100,32 +100,32 @@ contract publisher is announcementTypes, module, safeMath {
         _uint = announcements[id]._uint;
         _addr = announcements[id]._addr;
     }
-    
-    function checkOpposited(uint256 weight, bool oppositable) public constant returns (bool success) {
+
+    function checkOpposited(uint256 weight, bool oppositable) public view returns (bool success) {
         /*
             Veto check
-            
+
             @weight         Purport of objections so far
             @oppositable    Opposable at all
-            
+
             @success        Opposed or not
         */
         if ( ! oppositable ) { return false; }
-        var (_success, _amount) = moduleHandler(moduleHandlerAddress).totalSupply();
+        (bool _success, uint256 _amount) = moduleHandler(moduleHandlerAddress).totalSupply();
         require( _success );
         return _amount * oppositeRate / 100 > weight;
     }
-    
-    function newAnnouncement(announcementType Type, string Announcement, string Link, bool Oppositable, string _str, uint256 _uint, address _addr) onlyOwner external {
+
+    function newAnnouncement(announcementType Type, string calldata Announcement, string calldata Link, bool Oppositable, string calldata _str, uint256 _uint, address payable _addr) onlyOwner external {
         /*
             New announcement. Can be called  only by those in the admin list
-            
+
             @Type           Topic of announcement
             @Start          height of announcement block
             @End            planned completion of announcement
             @Closed         Completed or not
             @Announcement   Announcement text
-            @Link           link to a Forum 
+            @Link           link to a Forum
             @Opposition     opposed or not
             @_str           text box
             @_uint          number box
@@ -148,13 +148,13 @@ contract publisher is announcementTypes, module, safeMath {
         announcements[announcementsLength]._str = _str;
         announcements[announcementsLength]._uint = _uint;
         announcements[announcementsLength]._addr = _addr;
-        ENewAnnouncement(announcementsLength, Type);
+        emit ENewAnnouncement(announcementsLength, Type);
     }
-    
+
     function closeAnnouncement(uint256 id) onlyOwner external {
         /*
             Close announcement. It can be closed only by those in the admin list. Windup is allowed only after the announcement is completed.
-            
+
             @id     Announcement identification
         */
         require( announcements[id].open && announcements[id].end < block.number );
@@ -168,25 +168,25 @@ contract publisher is announcementTypes, module, safeMath {
                 require( moduleHandler(moduleHandlerAddress).replaceModule(announcements[id]._str, announcements[id]._addr, true) );
             } else if ( announcements[id].Type == announcementType.replaceModuleHandler) {
                 require( moduleHandler(moduleHandlerAddress).replaceModuleHandler(announcements[id]._addr) );
-            } else if ( announcements[id].Type == announcementType.transactionFeeRate || 
-                        announcements[id].Type == announcementType.transactionFeeMin || 
-                        announcements[id].Type == announcementType.transactionFeeMax || 
+            } else if ( announcements[id].Type == announcementType.transactionFeeRate ||
+                        announcements[id].Type == announcementType.transactionFeeMin ||
+                        announcements[id].Type == announcementType.transactionFeeMax ||
                         announcements[id].Type == announcementType.transactionFeeBurn ) {
                 require( moduleHandler(moduleHandlerAddress).configureModule("token", announcements[id].Type, announcements[id]._uint) );
-            } else if ( announcements[id].Type == announcementType.providerPublicFunds || 
-                        announcements[id].Type == announcementType.providerPrivateFunds || 
-                        announcements[id].Type == announcementType.providerPrivateClientLimit || 
-                        announcements[id].Type == announcementType.providerPublicMinRate || 
-                        announcements[id].Type == announcementType.providerPublicMaxRate || 
-                        announcements[id].Type == announcementType.providerPrivateMinRate || 
-                        announcements[id].Type == announcementType.providerPrivateMaxRate || 
-                        announcements[id].Type == announcementType.providerGasProtect || 
-                        announcements[id].Type == announcementType.providerInterestMinFunds || 
+            } else if ( announcements[id].Type == announcementType.providerPublicFunds ||
+                        announcements[id].Type == announcementType.providerPrivateFunds ||
+                        announcements[id].Type == announcementType.providerPrivateClientLimit ||
+                        announcements[id].Type == announcementType.providerPublicMinRate ||
+                        announcements[id].Type == announcementType.providerPublicMaxRate ||
+                        announcements[id].Type == announcementType.providerPrivateMinRate ||
+                        announcements[id].Type == announcementType.providerPrivateMaxRate ||
+                        announcements[id].Type == announcementType.providerGasProtect ||
+                        announcements[id].Type == announcementType.providerInterestMinFunds ||
                         announcements[id].Type == announcementType.providerRentRate ) {
                 require( moduleHandler(moduleHandlerAddress).configureModule("provider", announcements[id].Type, announcements[id]._uint) );
-            } else if ( announcements[id].Type == announcementType.schellingRoundBlockDelay || 
-                        announcements[id].Type == announcementType.schellingCheckRounds || 
-                        announcements[id].Type == announcementType.schellingCheckAboves || 
+            } else if ( announcements[id].Type == announcementType.schellingRoundBlockDelay ||
+                        announcements[id].Type == announcementType.schellingCheckRounds ||
+                        announcements[id].Type == announcementType.schellingCheckAboves ||
                         announcements[id].Type == announcementType.schellingRate ) {
                 require( moduleHandler(moduleHandlerAddress).configureModule("schelling", announcements[id].Type, announcements[id]._uint) );
             } else if ( announcements[id].Type == announcementType.publisherMinAnnouncementDelay) {
@@ -198,7 +198,7 @@ contract publisher is announcementTypes, module, safeMath {
         announcements[id].end = block.number;
         announcements[id].open = false;
     }
-    
+
     function oppositeAnnouncement(uint256 id) external {
         /*
             Opposition of announcement
@@ -206,7 +206,7 @@ contract publisher is announcementTypes, module, safeMath {
             Opposition is automatically with the total amount of tokens
             If the quantity of his tokens changes, the purport of his opposition changes automatically
             The prime time is the windup  of the announcement, because this is the moment when the number of tokens in opposition are counted.
-            One address is entitled to be in oppositon only once. An opposition cannot be withdrawn. 
+            One address is entitled to be in oppositon only once. An opposition cannot be withdrawn.
             Running announcements can be opposed only.
 
             @id     Announcement identification
@@ -229,7 +229,7 @@ contract publisher is announcementTypes, module, safeMath {
                 newArrayID = a;
             }
         }
-        var (_success, _balance) = moduleHandler(moduleHandlerAddress).balanceOf(msg.sender);
+        (bool _success, uint256 _balance) = moduleHandler(moduleHandlerAddress).balanceOf(msg.sender);
         require( _success );
         require( _balance > 0);
         if ( foundEmptyArrayID ) {
@@ -238,39 +238,39 @@ contract publisher is announcementTypes, module, safeMath {
             opponents[msg.sender].push(id);
         }
         announcements[id].oppositionWeight += _balance;
-        EOppositeAnnouncement(id, msg.sender, _balance);
+        emit EOppositeAnnouncement(id, msg.sender, _balance);
     }
-    
+
     function invalidateAnnouncement(uint256 id) onlyOwner external {
         /*
             Withdraw announcement. Only those in the admin list can withdraw it.
-            
+
             @id     Announcement identification
         */
         require( announcements[id].open );
         announcements[id].end = block.number;
         announcements[id].open = false;
-        EInvalidateAnnouncement(id);
+        emit EInvalidateAnnouncement(id);
     }
-    
+
     modifier onlyOwner() {
         /*
-            Only the owner  is allowed to call it.      
+            Only the owner  is allowed to call it.
         */
         require( moduleHandler(moduleHandlerAddress).owners(msg.sender) );
         _;
     }
-    
+
     function checkICO() internal returns (bool isICO) {
         /*
             Inner function to check the ICO status.
-            @bool       Is the ICO in proccess or not?
+            @bool       Is the ICO in process or not?
         */
-        var (_success, _isICO) = moduleHandler(moduleHandlerAddress).isICO();
+        (bool _success, bool _isICO) = moduleHandler(moduleHandlerAddress).isICO();
         require( _success );
         return _isICO;
     }
-    
+
     event ENewAnnouncement(uint256 id, announcementType typ);
     event EOppositeAnnouncement(uint256 id, address addr, uint256 value);
     event EInvalidateAnnouncement(uint256 id);

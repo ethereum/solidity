@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 import "../Tokens/StandardToken.sol";
 
 
@@ -31,12 +31,12 @@ contract OutcomeToken is StandardToken {
      *  Public functions
      */
     /// @dev Constructor sets events contract address
-    function OutcomeToken()
+    constructor()
         public
     {
         eventContract = msg.sender;
     }
-    
+
     /// @dev Events contract issues new tokens for address. Returns success
     /// @param _for Address of receiver
     /// @param outcomeTokenCount Number of tokens to issue
@@ -46,7 +46,7 @@ contract OutcomeToken is StandardToken {
     {
         balances[_for] = balances[_for].add(outcomeTokenCount);
         totalTokens = totalTokens.add(outcomeTokenCount);
-        Issuance(_for, outcomeTokenCount);
+        emit Issuance(_for, outcomeTokenCount);
     }
 
     /// @dev Events contract revokes tokens for address. Returns success
@@ -58,6 +58,6 @@ contract OutcomeToken is StandardToken {
     {
         balances[_for] = balances[_for].sub(outcomeTokenCount);
         totalTokens = totalTokens.sub(outcomeTokenCount);
-        Revocation(_for, outcomeTokenCount);
+        emit Revocation(_for, outcomeTokenCount);
     }
 }

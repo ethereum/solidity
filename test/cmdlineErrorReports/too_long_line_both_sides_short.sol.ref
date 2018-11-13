@@ -1,0 +1,6 @@
+too_long_line_both_sides_short.sol:1:1: Warning: Source file does not specify required compiler version!
+contract C {
+^ (Relevant source part starts here and spans across multiple lines).
+too_long_line_both_sides_short.sol:2:15: Error: Identifier not found or not unique.
+   function f(announcementTypeXXXXXXXXXXXXXXXXXXX ... XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Type,
+              ^-------------------------------------------------------------------------^

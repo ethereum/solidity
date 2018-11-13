@@ -26,6 +26,8 @@
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SimplificationRule.h>
 
+#include <boost/noncopyable.hpp>
+
 #include <functional>
 #include <vector>
 
@@ -52,6 +54,10 @@ public:
 		Expression const& _expr,
 		ExpressionClasses const& _classes
 	);
+
+	/// Checks whether the rulelist is non-empty. This is usually enforced
+	/// by the constructor, but we had some issues with static initialization.
+	bool isInitialized() const;
 
 private:
 	void addRules(std::vector<SimplificationRule<Pattern>> const& _rules);

@@ -40,7 +40,6 @@
 #include <libdevcore/vector_ref.h>
 
 #if defined(__GNUC__)
-#pragma warning(push)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif // defined(__GNUC__)
@@ -57,7 +56,6 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #if defined(__GNUC__)
-#pragma warning(pop)
 #pragma GCC diagnostic pop
 #endif // defined(__GNUC__)
 
@@ -66,15 +64,13 @@
 #include <functional>
 #include <string>
 
-using byte = uint8_t;
-
 namespace dev
 {
 
 // Binary data types.
-using bytes = std::vector<byte>;
-using bytesRef = vector_ref<byte>;
-using bytesConstRef = vector_ref<byte const>;
+using bytes = std::vector<uint8_t>;
+using bytesRef = vector_ref<uint8_t>;
+using bytesConstRef = vector_ref<uint8_t const>;
 
 // Numeric types.
 using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;

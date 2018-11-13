@@ -23,7 +23,7 @@
 
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/AssemblyItem.h>
 
@@ -160,7 +160,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 				if (seqNr < _initialSequenceNumber)
 					// Invalid sequenced operation.
 					// @todo quick fix for now. Proper fix needs to choose representative with higher
-					// sequence number during dependency analyis.
+					// sequence number during dependency analysis.
 					BOOST_THROW_EXCEPTION(StackTooDeepException());
 				sequencedExpressions.insert(make_pair(seqNr, id));
 			}

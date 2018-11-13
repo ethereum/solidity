@@ -21,6 +21,7 @@
 
 #include "./Instruction.h"
 
+#include <algorithm>
 #include <functional>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
@@ -72,6 +73,7 @@ const std::map<std::string, Instruction> dev::solidity::c_instructions =
 	{ "EXTCODECOPY", Instruction::EXTCODECOPY },
 	{ "RETURNDATASIZE", Instruction::RETURNDATASIZE },
 	{ "RETURNDATACOPY", Instruction::RETURNDATACOPY },
+	{ "EXTCODEHASH", Instruction::EXTCODEHASH },
 	{ "BLOCKHASH", Instruction::BLOCKHASH },
 	{ "COINBASE", Instruction::COINBASE },
 	{ "TIMESTAMP", Instruction::TIMESTAMP },
@@ -215,6 +217,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::EXTCODECOPY,	{ "EXTCODECOPY",	0, 4, 0, true, Tier::ExtCode } },
 	{ Instruction::RETURNDATASIZE,	{"RETURNDATASIZE",	0, 0, 1, false, Tier::Base } },
 	{ Instruction::RETURNDATACOPY,	{"RETURNDATACOPY",	0, 3, 0, true, Tier::VeryLow } },
+	{ Instruction::EXTCODEHASH,	{ "EXTCODEHASH",	0, 1, 1, false, Tier::Balance } },
 	{ Instruction::BLOCKHASH,	{ "BLOCKHASH",		0, 1, 1, false, Tier::Ext } },
 	{ Instruction::COINBASE,	{ "COINBASE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::TIMESTAMP,	{ "TIMESTAMP",		0, 0, 1, false, Tier::Base } },
@@ -325,13 +328,20 @@ void dev::solidity::eachInstruction(
 		size_t additional = 0;
 		if (isValidInstruction(instr))
 			additional = instructionInfo(instr).additional;
+
 		u256 data;
-		for (size_t i = 0; i < additional; ++i)
+
+		// fill the data with the additional data bytes from the instruction stream
+		while (additional > 0 && std::next(it) < _mem.end())
 		{
 			data <<= 8;
-			if (++it < _mem.end())
-				data |= *it;
+			data |= *++it;
+			--additional;
 		}
+
+		// pad the remaining number of additional octets with zeros
+		data <<= 8 * additional;
+
 		_onInstruction(instr, data);
 	}
 }

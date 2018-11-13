@@ -17,7 +17,7 @@
 /**
  * @author Christian <c@ethdev.com>
  * @date 2016
- * Forward declaration of classes for inline assembly / JULIA AST
+ * Forward declaration of classes for inline assembly / Yul AST
  */
 
 #pragma once
@@ -57,7 +57,7 @@ enum class AsmFlavour
 {
 	Loose,  // no types, EVM instructions as function, jumps and direct stack manipulations
 	Strict, // no types, EVM instructions as functions, but no jumps and no direct stack manipulations
-	IULIA   // same as Strict mode with types
+	Yul     // same as Strict mode with types
 };
 
 }

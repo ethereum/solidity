@@ -1,0 +1,105 @@
+{
+	"attributes" : 
+	{
+		"absolutePath" : "a",
+		"exportedSymbols" : 
+		{
+			"C1" : 
+			[
+				1
+			],
+			"C2" : 
+			[
+				4
+			]
+		}
+	},
+	"children" : 
+	[
+		{
+			"attributes" : 
+			{
+				"baseContracts" : 
+				[
+					null
+				],
+				"contractDependencies" : 
+				[
+					null
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					1
+				],
+				"name" : "C1",
+				"nodes" : 
+				[
+					null
+				],
+				"scope" : 5
+			},
+			"id" : 1,
+			"name" : "ContractDefinition",
+			"src" : "0:14:1"
+		},
+		{
+			"attributes" : 
+			{
+				"contractDependencies" : 
+				[
+					1
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					4,
+					1
+				],
+				"name" : "C2",
+				"nodes" : 
+				[
+					null
+				],
+				"scope" : 5
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"arguments" : null
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"contractScope" : null,
+								"name" : "C1",
+								"referencedDeclaration" : 1,
+								"type" : "contract C1"
+							},
+							"id" : 2,
+							"name" : "UserDefinedTypeName",
+							"src" : "30:2:1"
+						}
+					],
+					"id" : 3,
+					"name" : "InheritanceSpecifier",
+					"src" : "30:2:1"
+				}
+			],
+			"id" : 4,
+			"name" : "ContractDefinition",
+			"src" : "15:20:1"
+		}
+	],
+	"id" : 5,
+	"name" : "SourceUnit",
+	"src" : "0:36:1"
+}

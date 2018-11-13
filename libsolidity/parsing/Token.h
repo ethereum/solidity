@@ -45,6 +45,7 @@
 #include <libdevcore/Common.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/parsing/UndefMacros.h>
+#include <iosfwd>
 
 namespace dev
 {
@@ -144,11 +145,13 @@ namespace solidity
 	K(Assembly, "assembly", 0)                                         \
 	K(Break, "break", 0)                                               \
 	K(Constant, "constant", 0)                                         \
+	K(Constructor, "constructor", 0)                                   \
 	K(Continue, "continue", 0)                                         \
 	K(Contract, "contract", 0)                                         \
 	K(Do, "do", 0)                                                     \
 	K(Else, "else", 0)                                                 \
 	K(Enum, "enum", 0)                                                 \
+	K(Emit, "emit", 0)                                                 \
 	K(Event, "event", 0)                                               \
 	K(External, "external", 0)                                         \
 	K(For, "for", 0)                                                   \
@@ -173,6 +176,7 @@ namespace solidity
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Storage, "storage", 0)                                           \
+	K(CallData, "calldata", 0)                                         \
 	K(Struct, "struct", 0)                                             \
 	K(Throw, "throw", 0)                                               \
 	K(Using, "using", 0)                                               \
@@ -221,136 +225,138 @@ namespace solidity
 	/* Keywords reserved for future use. */                            \
 	K(Abstract, "abstract", 0)                                         \
 	K(After, "after", 0)                                               \
+	K(Alias, "alias", 0)                                               \
+	K(Apply, "apply", 0)                                               \
+	K(Auto, "auto", 0)                                                 \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
+	K(CopyOf, "copyof", 0)                                             \
 	K(Default, "default", 0)                                           \
+	K(Define, "define", 0)                                             \
 	K(Final, "final", 0)                                               \
+	K(Immutable, "immutable", 0)                                       \
+	K(Implements, "implements", 0)                                     \
 	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \
 	K(Let, "let", 0)                                                   \
+	K(Macro, "macro", 0)                                               \
 	K(Match, "match", 0)                                               \
+	K(Mutable, "mutable", 0)                                           \
 	K(NullLiteral, "null", 0)                                          \
 	K(Of, "of", 0)                                                     \
+	K(Override, "override", 0)                                         \
+	K(Partial, "partial", 0)                                           \
+	K(Promise, "promise", 0)                                           \
+	K(Reference, "reference", 0)                                       \
 	K(Relocatable, "relocatable", 0)                                   \
+	K(Sealed, "sealed", 0)                                             \
+	K(Sizeof, "sizeof", 0)                                             \
 	K(Static, "static", 0)                                             \
+	K(Supports, "supports", 0)                                         \
 	K(Switch, "switch", 0)                                             \
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
+	K(Typedef, "typedef", 0)                                           \
 	K(TypeOf, "typeof", 0)                                             \
+	K(Unchecked, "unchecked", 0)                                       \
+	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
+	/* Illegal hex token */                                            \
+	T(IllegalHex, "ILLEGAL_HEX", 0)                                    \
 	\
 	/* Scanner-internal use only. */                                   \
 	T(Whitespace, NULL, 0)
 
-
-class Token
-{
-public:
-	// All token values.
-	// attention! msvc issue:
-	// http://stackoverflow.com/questions/9567868/compile-errors-after-adding-v8-to-my-project-c2143-c2059
-	// @todo: avoid TOKEN_LIST macro
+// All token values.
+// attention! msvc issue:
+// http://stackoverflow.com/questions/9567868/compile-errors-after-adding-v8-to-my-project-c2143-c2059
+// @todo: avoid TOKEN_LIST macro
+enum class Token : unsigned int {
 #define T(name, string, precedence) name,
-	enum Value
-	{
-		TOKEN_LIST(T, T)
-		NUM_TOKENS
-	};
+	TOKEN_LIST(T, T)
+	NUM_TOKENS
 #undef T
+};
 
-	// @returns a string corresponding to the C++ token name
-	// (e.g. "LT" for the token LT).
-	static char const* name(Value tok)
-	{
-		solAssert(tok < NUM_TOKENS, "");
-		return m_name[tok];
-	}
+namespace TokenTraits
+{
+	constexpr size_t count() { return static_cast<size_t>(Token::NUM_TOKENS); }
 
 	// Predicates
-	static bool isElementaryTypeName(Value tok) { return Int <= tok && tok < TypesEnd; }
-	static bool isAssignmentOp(Value tok) { return Assign <= tok && tok <= AssignMod; }
-	static bool isBinaryOp(Value op) { return Comma <= op && op <= Exp; }
-	static bool isCommutativeOp(Value op) { return op == BitOr || op == BitXor || op == BitAnd ||
-				op == Add || op == Mul || op == Equal || op == NotEqual; }
-	static bool isArithmeticOp(Value op) { return Add <= op && op <= Exp; }
-	static bool isCompareOp(Value op) { return Equal <= op && op <= GreaterThanOrEqual; }
+	constexpr bool isElementaryTypeName(Token tok) { return Token::Int <= tok && tok < Token::TypesEnd; }
+	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
+	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
+	constexpr bool isCommutativeOp(Token op) { return op == Token::BitOr || op == Token::BitXor || op == Token::BitAnd ||
+		 op == Token::Add || op == Token::Mul || op == Token::Equal || op == Token::NotEqual; }
+	constexpr bool isArithmeticOp(Token op) { return Token::Add <= op && op <= Token::Exp; }
+	constexpr bool isCompareOp(Token op) { return Token::Equal <= op && op <= Token::GreaterThanOrEqual; }
 
-	static Value AssignmentToBinaryOp(Value op)
+	constexpr bool isBitOp(Token op) { return (Token::BitOr <= op && op <= Token::BitAnd) || op == Token::BitNot; }
+	constexpr bool isBooleanOp(Token op) { return (Token::Or <= op && op <= Token::And) || op == Token::Not; }
+	constexpr bool isUnaryOp(Token op) { return (Token::Not <= op && op <= Token::Delete) || op == Token::Add || op == Token::Sub; }
+	constexpr bool isCountOp(Token op) { return op == Token::Inc || op == Token::Dec; }
+	constexpr bool isShiftOp(Token op) { return (Token::SHL <= op) && (op <= Token::SHR); }
+	constexpr bool isVariableVisibilitySpecifier(Token op) { return op == Token::Public || op == Token::Private || op == Token::Internal; }
+	constexpr bool isVisibilitySpecifier(Token op) { return isVariableVisibilitySpecifier(op) || op == Token::External; }
+	constexpr bool isLocationSpecifier(Token op) { return op == Token::Memory || op == Token::Storage || op == Token::CallData; }
+
+	constexpr bool isStateMutabilitySpecifier(Token op, bool _allowConstant = true)
 	{
-		solAssert(isAssignmentOp(op) && op != Assign, "");
-		return Value(op + (BitOr - AssignBitOr));
+		return (op == Token::Constant && _allowConstant)
+			|| op == Token::Pure || op == Token::View || op == Token::Payable;
 	}
 
-	static bool isBitOp(Value op) { return (BitOr <= op && op <= BitAnd) || op == BitNot; }
-	static bool isBooleanOp(Value op) { return (Or <= op && op <= And) || op == Not; }
-	static bool isUnaryOp(Value op) { return (Not <= op && op <= Delete) || op == Add || op == Sub; }
-	static bool isCountOp(Value op) { return op == Inc || op == Dec; }
-	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
-	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
-	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Internal; }
-	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
-	static bool isStateMutabilitySpecifier(Value op) { return op == Pure || op == Constant || op == View || op == Payable; }
-	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
-	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
-	static bool isReservedKeyword(Value op) { return (Abstract <= op && op <= TypeOf); }
+	constexpr bool isEtherSubdenomination(Token op) { return op == Token::SubWei || op == Token::SubSzabo || op == Token::SubFinney || op == Token::SubEther; }
+	constexpr bool isTimeSubdenomination(Token op) { return op == Token::SubSecond || op == Token::SubMinute || op == Token::SubHour || op == Token::SubDay || op == Token::SubWeek || op == Token::SubYear; }
+	constexpr bool isReservedKeyword(Token op) { return (Token::Abstract <= op && op <= Token::Unchecked); }
 
-	// @returns a string corresponding to the JS token string
-	// (.e., "<" for the token LT) or NULL if the token doesn't
-	// have a (unique) string (e.g. an IDENTIFIER).
-	static char const* toString(Value tok)
+	inline Token AssignmentToBinaryOp(Token op)
 	{
-		solAssert(tok < NUM_TOKENS, "");
-		return m_string[tok];
-	}
-
-	static std::string friendlyName(Value tok)
-	{
-		char const* ret = toString(tok);
-		if (ret == nullptr)
-		{
-			ret = name(tok);
-			solAssert(ret != nullptr, "");
-		}
-		return std::string(ret);
+		solAssert(isAssignmentOp(op) && op != Token::Assign, "");
+		return static_cast<Token>(static_cast<int>(op) + (static_cast<int>(Token::BitOr) - static_cast<int>(Token::AssignBitOr)));
 	}
 
 	// @returns the precedence > 0 for binary and compare
 	// operators; returns 0 otherwise.
-	static int precedence(Value tok)
-	{
-		solAssert(tok < NUM_TOKENS, "");
-		return m_precedence[tok];
-	}
+	int precedence(Token tok);
 
-	static std::tuple<Token::Value, unsigned int, unsigned int> fromIdentifierOrKeyword(std::string const& _literal);
+	std::tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(std::string const& _literal);
 
-private:
-	// @returns -1 on error (invalid digit or number too large)
-	static int parseSize(std::string::const_iterator _begin, std::string::const_iterator _end);
-	// @returns the keyword with name @a _name or Token::Identifier of no such keyword exists.
-	static Token::Value keywordByName(std::string const& _name);
-	static char const* const m_name[NUM_TOKENS];
-	static char const* const m_string[NUM_TOKENS];
-	static int8_t const m_precedence[NUM_TOKENS];
-	static char const m_tokenType[NUM_TOKENS];
-};
+	// @returns a string corresponding to the C++ token name
+	// (e.g. "LT" for the token LT).
+	char const* name(Token tok);
+
+	// @returns a string corresponding to the JS token string
+	// (.e., "<" for the token LT) or NULL if the token doesn't
+	// have a (unique) string (e.g. an IDENTIFIER).
+	char const* toString(Token tok);
+
+	std::string friendlyName(Token tok);
+}
+
+inline std::ostream& operator<<(std::ostream& os, Token token)
+{
+	os << TokenTraits::friendlyName(token);
+	return os;
+}
 
 class ElementaryTypeNameToken
 {
 public:
-	ElementaryTypeNameToken(Token::Value _token, unsigned const& _firstNumber, unsigned const& _secondNumber)
+	ElementaryTypeNameToken(Token _token, unsigned const& _firstNumber, unsigned const& _secondNumber)
 	{
 		assertDetails(_token, _firstNumber, _secondNumber);
 	}
 
 	unsigned int firstNumber() const { return m_firstNumber; }
 	unsigned int secondNumber() const { return m_secondNumber; }
-	Token::Value token() const { return m_token; }
+	Token token() const { return m_token; }
+
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
-	std::string toString(bool const& tokenValue = false) const 
+	std::string toString(bool const& tokenValue = false) const
 	{
-		std::string name = Token::toString(m_token);
+		std::string name = TokenTraits::toString(m_token);
 		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))
 			return name;
 		solAssert(name.size() >= 3, "Token name size should be greater than 3. Should not reach here.");
@@ -361,11 +367,11 @@ public:
 	}
 
 private:
-	Token::Value m_token;
+	Token m_token;
 	unsigned int m_firstNumber;
 	unsigned int m_secondNumber;
 	/// throws if type is not properly sized
-	void assertDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second);
+	void assertDetails(Token _baseType, unsigned const& _first, unsigned const& _second);
 };
 
 }

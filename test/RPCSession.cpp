@@ -163,6 +163,11 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
 	receipt.blockNumber = result["blockNumber"].asString();
+	if (m_receiptHasStatusField)
+	{
+		BOOST_REQUIRE(!result["status"].isNull());
+		receipt.status = result["status"].asString();
+	}
 	for (auto const& log: result["logs"])
 	{
 		LogEntry entry;
@@ -202,6 +207,11 @@ string RPCSession::eth_getStorageRoot(string const& _address, string const& _blo
 	return rpcCall("eth_getStorageRoot", { quote(address), quote(_blockNumber) }).asString();
 }
 
+string RPCSession::eth_gasPrice()
+{
+	return rpcCall("eth_gasPrice").asString();
+}
+
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
 	BOOST_REQUIRE_MESSAGE(
@@ -225,7 +235,10 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::spuriousDragon())
 		forks += "\"EIP158ForkBlock\": \"0x00\",\n";
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::byzantium())
+	{
 		forks += "\"byzantiumForkBlock\": \"0x00\",\n";
+		m_receiptHasStatusField = true;
+	}
 	if (test::Options::get().evmVersion() >= solidity::EVMVersion::constantinople())
 		forks += "\"constantinopleForkBlock\": \"0x00\",\n";
 	static string const c_configString = R"(
@@ -244,8 +257,11 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"timestamp": "0x00",
 			"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 			"extraData": "0x",
-			"gasLimit": "0x1000000000000"
-		},
+			"gasLimit": "0x1000000000000",
+			"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+			"nonce": "0x0000000000000042",
+			"difficulty": "131072"
+        },
 		"accounts": {
 			"0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
 			"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },

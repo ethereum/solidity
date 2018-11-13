@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity >=0.0;
 import "MultiSigWallet.sol";
 
 
@@ -19,7 +19,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
     /// @param _dailyLimit Amount in wei, which can be withdrawn without confirmations on a daily basis.
-    function MultiSigWalletWithDailyLimit(address[] _owners, uint _required, uint _dailyLimit)
+    constructor(address[] memory _owners, uint _required, uint _dailyLimit)
         public
         MultiSigWallet(_owners, _required)
     {
@@ -33,7 +33,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         onlyWallet
     {
         dailyLimit = _dailyLimit;
-        DailyLimitChange(_dailyLimit);
+        emit DailyLimitChange(_dailyLimit);
     }
 
     /// @dev Allows anyone to execute a confirmed transaction or ether withdraws until daily limit is reached.
@@ -42,17 +42,16 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         public
         notExecuted(transactionId)
     {
-        Transaction tx = transactions[transactionId];
+        Transaction storage tx = transactions[transactionId];
         bool confirmed = isConfirmed(transactionId);
         if (confirmed || tx.data.length == 0 && isUnderLimit(tx.value)) {
-            tx.executed = true;
             if (!confirmed)
                 spentToday += tx.value;
-            if (tx.destination.call.value(tx.value)(tx.data))
-                Execution(transactionId);
+            (tx.executed,) = tx.destination.call.value(tx.value)(tx.data);
+            if (tx.executed)
+                emit Execution(transactionId);
             else {
-                ExecutionFailure(transactionId);
-                tx.executed = false;
+                emit ExecutionFailure(transactionId);
                 if (!confirmed)
                     spentToday -= tx.value;
             }
@@ -85,7 +84,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
     /// @return Returns amount.
     function calcMaxWithdraw()
         public
-        constant
+        view
         returns (uint)
     {
         if (now > lastDay + 24 hours)

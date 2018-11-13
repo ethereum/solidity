@@ -31,7 +31,7 @@ namespace solidity
 {
 
 /**
- * Standard JSON compiler interface, which expects a JSON input and returns a JSON ouput.
+ * Standard JSON compiler interface, which expects a JSON input and returns a JSON output.
  * See docs/using-the-compiler#compiler-input-and-output-json-description.
  */
 class StandardCompiler: boost::noncopyable
@@ -47,10 +47,10 @@ public:
 
 	/// Sets all input parameters according to @a _input which conforms to the standardized input
 	/// format, performs compilation and returns a standardized output.
-	Json::Value compile(Json::Value const& _input);
+	Json::Value compile(Json::Value const& _input) noexcept;
 	/// Parses input as JSON and peforms the above processing steps, returning a serialized JSON
 	/// output. Parsing errors are returned as regular errors.
-	std::string compile(std::string const& _input);
+	std::string compile(std::string const& _input) noexcept;
 
 private:
 	Json::Value compileInternal(Json::Value const& _input);

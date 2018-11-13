@@ -44,12 +44,11 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(bigint(_a) % bigint(_b));
 }
 
-/// @returns a list of simplification rules given certain match placeholders.
-/// A, B and C should represent constants, X and Y arbitrary expressions.
-/// The simplifications should neven change the order of evaluation of
-/// arbitrary operations.
+// This part of simplificationRuleList below was split out to prevent
+// stack overflows in the JavaScript optimizer for emscripten builds
+// that affected certain browser versions.
 template <class Pattern>
-std::vector<SimplificationRule<Pattern>> simplificationRuleList(
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 	Pattern A,
 	Pattern B,
 	Pattern C,
@@ -57,9 +56,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	Pattern Y
 )
 {
-	std::vector<SimplificationRule<Pattern>> rules;
-	rules += std::vector<SimplificationRule<Pattern>>{
-		// arithmetics on constants
+	return std::vector<SimplificationRule<Pattern>> {
+		// arithmetic on constants
 		{{Instruction::ADD, {A, B}}, [=]{ return A.d() + B.d(); }, false},
 		{{Instruction::MUL, {A, B}}, [=]{ return A.d() * B.d(); }, false},
 		{{Instruction::SUB, {A, B}}, [=]{ return A.d() - B.d(); }, false},
@@ -162,6 +160,22 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 		{{Instruction::OR, {X, {Instruction::NOT, {X}}}}, [=]{ return ~u256(0); }, true},
 		{{Instruction::OR, {{Instruction::NOT, {X}}, X}}, [=]{ return ~u256(0); }, true},
 	};
+}
+
+
+// This part of simplificationRuleList below was split out to prevent
+// stack overflows in the JavaScript optimizer for emscripten builds
+// that affected certain browser versions.
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
+	Pattern A,
+	Pattern B,
+	Pattern,
+	Pattern X,
+	Pattern Y
+)
+{
+	std::vector<SimplificationRule<Pattern>> rules;
 
 	// Replace MOD X, <power-of-two> with AND X, <power-of-two> - 1
 	for (size_t i = 0; i < 256; ++i)
@@ -289,6 +303,25 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 			false
 		}
 	};
+	return rules;
+}
+
+/// @returns a list of simplification rules given certain match placeholders.
+/// A, B and C should represent constants, X and Y arbitrary expressions.
+/// The simplifications should never change the order of evaluation of
+/// arbitrary operations.
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleList(
+	Pattern A,
+	Pattern B,
+	Pattern C,
+	Pattern X,
+	Pattern Y
+)
+{
+	std::vector<SimplificationRule<Pattern>> rules;
+	rules += simplificationRuleListPart1(A, B, C, X, Y);
+	rules += simplificationRuleListPart2(A, B, C, X, Y);
 	return rules;
 }
 

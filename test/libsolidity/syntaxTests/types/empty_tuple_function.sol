@@ -1,4 +1,3 @@
-pragma solidity ^0.4.3;
 contract C {
     function f() private pure {}
     function a() public pure {
@@ -8,5 +7,5 @@ contract C {
     }
 }
 // ----
-// Warning: (162-165): Tuple component cannot be empty.
-// Warning: (181-184): Tuple component cannot be empty.
+// TypeError: (138-141): Tuple component cannot be empty.
+// TypeError: (157-160): Tuple component cannot be empty.

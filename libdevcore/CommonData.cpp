@@ -22,7 +22,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -64,7 +64,7 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 		int h = fromHex(_s[i], WhenError::DontThrow);
 		int l = fromHex(_s[i + 1], WhenError::DontThrow);
 		if (h != -1 && l != -1)
-			ret.push_back((byte)(h * 16 + l));
+			ret.push_back((uint8_t)(h * 16 + l));
 		else if (_throw == WhenError::Throw)
 			BOOST_THROW_EXCEPTION(BadHexCharacter());
 		else
@@ -76,18 +76,18 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 
 bool dev::passesAddressChecksum(string const& _str, bool _strict)
 {
-	string s = _str.substr(0, 2) == "0x" ? _str.substr(2) : _str;
+	string s = _str.substr(0, 2) == "0x" ? _str : "0x" + _str;
 
-	if (s.length() != 40)
+	if (s.length() != 42)
 		return false;
 
 	if (!_strict && (
-		_str.find_first_of("abcdef") == string::npos ||
-		_str.find_first_of("ABCDEF") == string::npos
+		s.find_first_of("abcdef") == string::npos ||
+		s.find_first_of("ABCDEF") == string::npos
 	))
 		return true;
 
-	return _str == dev::getChecksummedAddress(_str);
+	return s == dev::getChecksummedAddress(s);
 }
 
 string dev::getChecksummedAddress(string const& _addr)
@@ -109,4 +109,27 @@ string dev::getChecksummedAddress(string const& _addr)
 			ret += tolower(addressCharacter);
 	}
 	return ret;
+}
+
+bool dev::isValidHex(string const& _string)
+{
+	if (_string.substr(0, 2) != "0x")
+		return false;
+	if (_string.find_first_not_of("0123456789abcdefABCDEF", 2) != string::npos)
+		return false;
+	return true;
+}
+
+bool dev::isValidDecimal(string const& _string)
+{
+	if (_string.empty())
+		return false;
+	if (_string == "0")
+		return true;
+	// No leading zeros
+	if (_string.front() == '0')
+		return false;
+	if (_string.find_first_not_of("0123456789") != string::npos)
+		return false;
+	return true;
 }

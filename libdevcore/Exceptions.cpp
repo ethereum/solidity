@@ -17,8 +17,6 @@
 
 #include <libdevcore/Exceptions.h>
 
-#include <boost/lexical_cast.hpp>
-
 using namespace std;
 using namespace dev;
 
@@ -27,7 +25,7 @@ char const* Exception::what() const noexcept
 	// Return the comment if available.
 	if (string const* cmt = comment())
 		return cmt->data();
-	
+
 	// Fallback to base what().
 	// Boost accepts nullptr, but the C++ standard doesn't
 	// and crashes on some platforms.
@@ -43,7 +41,7 @@ string Exception::lineInfo() const
 		ret += *file;
 	ret += ':';
 	if (line)
-		ret += boost::lexical_cast<string>(*line);
+		ret += to_string(*line);
 	return ret;
 }
 

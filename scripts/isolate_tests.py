@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 #
 # This script reads C++ or RST source files and writes all
 # multi-line strings into individual files.
@@ -10,7 +10,7 @@ import sys
 import re
 import os
 import hashlib
-from os.path import join
+from os.path import join, isfile
 
 def extract_test_cases(path):
     lines = open(path, 'rb').read().splitlines()
@@ -35,47 +35,42 @@ def extract_test_cases(path):
     return tests
 
 # Contract sources are indented by 4 spaces.
-# Look for `pragma solidity` and abort a line not indented properly.
-# If the comment `// This will not compile` is above the pragma,
-# the code is skipped.
+# Look for `pragma solidity`, `contract`, `library` or `interface`
+# and abort a line not indented properly.
 def extract_docs_cases(path):
-    # Note: this code works, because splitlines() removes empty new lines
-    #       and thus even if the empty new lines are missing indentation
-    lines = open(path, 'rb').read().splitlines()
-
-    ignore = False
     inside = False
     tests = []
 
-    for l in lines:
-      if inside:
-        # Abort if indentation is missing
-        m = re.search(r'^[^ ]+', l)
-        if m:
-          inside = False
-        else:
-          tests[-1] += l + '\n'
-      else:
-        m = re.search(r'^    // This will not compile', l)
-        if m:
-          ignore = True
+    # Collect all snippets of indented blocks
+    for l in open(path, 'rb').read().splitlines():
+        if l != '':
+            if not inside and l.startswith(' '):
+                # start new test
+                tests += ['']
+            inside = l.startswith(' ')
+        if inside:
+            tests[-1] += l + '\n'
+    # Filter all tests that do not contain Solidity
+    return [
+        test for test in tests
+        if re.search(r'^    [ ]*(pragma solidity|contract |library |interface )', test, re.MULTILINE)
+    ]
 
-        if ignore:
-          # Abort if indentation is missing
-          m = re.search(r'^[^ ]+', l)
-          if m:
-            ignore = False
-        else:
-          m = re.search(r'^    pragma solidity .*[0-9]+\.[0-9]+\.[0-9]+;$', l)
-          if m:
-            inside = True
-            tests += [l]
-
-    return tests
-
-def write_cases(tests):
+def write_cases(f, tests):
+    cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
-        open('test_%s.sol' % hashlib.sha256(test).hexdigest(), 'wb').write(test)
+        open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(), cleaned_filename), 'wb').write(test)
+
+
+def extract_and_write(f, path):
+        if docs:
+            cases = extract_docs_cases(path)
+        else:
+            if f.endswith('.sol'):
+                cases = [open(path, 'r').read()]
+            else:
+                cases = extract_test_cases(path)
+        write_cases(f, cases)
 
 if __name__ == '__main__':
     path = sys.argv[1]
@@ -83,18 +78,14 @@ if __name__ == '__main__':
     if len(sys.argv) > 2 and sys.argv[2] == 'docs':
       docs = True
 
-    for root, subdirs, files in os.walk(path):
-        if '_build' in subdirs:
-          subdirs.remove('_build')
-        if 'compilationTests' in subdirs:
-          subdirs.remove('compilationTests')
-        for f in files:
-            path = join(root, f)
-            if docs:
-              cases = extract_docs_cases(path)
-            else:
-              if f.endswith(".sol"):
-                cases = [open(path, "r").read()]
-              else:
-                cases = extract_test_cases(path)
-            write_cases(cases)
+    if isfile(path):
+        extract_and_write(path, path)
+    else:
+        for root, subdirs, files in os.walk(path):
+            if '_build' in subdirs:
+                subdirs.remove('_build')
+            if 'compilationTests' in subdirs:
+                subdirs.remove('compilationTests')
+            for f in files:
+                path = join(root, f)
+                extract_and_write(f, path)

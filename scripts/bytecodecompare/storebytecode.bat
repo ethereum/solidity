@@ -39,4 +39,5 @@ set REPORT=%DIRECTORY%/windows.txt
 cp ../report.txt %REPORT%
 git add %REPORT%
 git commit -a -m "Added report."
+git pull --rebase
 git push origin 2>&1

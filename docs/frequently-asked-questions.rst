@@ -9,36 +9,11 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-Is it possible to do something on a specific block number? (e.g. publish a contract or execute a transaction)
-=============================================================================================================
-
-Transactions are not guaranteed to happen on the next block or any future
-specific block, since it is up to the miners to include transactions and not up
-to the submitter of the transaction. This applies to function calls/transactions and contract
-creation transactions.
-
-If you want to schedule future calls of your contract, you can use the
-`alarm clock <http://www.ethereum-alarm-clock.com/>`_.
-
 What is the transaction "payload"?
 ==================================
 
 This is just the bytecode "data" sent along with the request.
 
-Is there a decompiler available?
-================================
-
-There is no exact decompiler to Solidity, but
-`Porosity <https://github.com/comaeio/porosity>`_ is close.
-Because some information like variable names, comments, and
-source code formatting is lost in the compilation process,
-it is not possible to completely recover the original source code.
-
-Bytecode can be disassembled to opcodes, a service that is provided by
-several blockchain explorers.
-
-Contracts on the blockchain should have their original source
-code published if they are to be used by third parties.
 
 Create a contract that can be killed and return funds
 =====================================================
@@ -63,38 +38,23 @@ has it (which includes `Remix <https://remix.ethereum.org/>`_), then
 ``contractname.kill.sendTransaction({from:eth.coinbase})``, just the same as my
 examples.
 
-Can you return an array or a ``string`` from a solidity function call?
-======================================================================
-
-Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
-
-What is problematic, though, is returning any variably-sized data (e.g. a
-variably-sized array like ``uint[]``) from a fuction **called from within Solidity**.
-This is a limitation of the EVM and will be solved with the next protocol update.
-
-Returning variably-sized data as part of an external transaction or call is fine.
-
 Is it possible to in-line initialize an array like so: ``string[] myarray = ["a", "b"];``
 =========================================================================================
 
 Yes. However it should be noted that this currently only works with statically sized memory arrays. You can even create an inline memory
-array in the return statement. Pretty cool, huh?
+array in the return statement.
 
 Example::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
-        function f() public pure returns (uint8[5]) {
+        function f() public pure returns (uint8[5] memory) {
             string[4] memory adaArr = ["This", "is", "an", "array"];
-            return ([1, 2, 3, 4, 5]);
+            adaArr[0] = "That";
+            return [1, 2, 3, 4, 5];
         }
     }
-
-Can a contract function return a ``struct``?
-============================================
-
-Yes, but only in ``internal`` function calls.
 
 If I return an ``enum``, I only get integer values in web3.js. How to get the named values?
 ===========================================================================================
@@ -111,7 +71,7 @@ should be noted that you must declare them as static memory arrays.
 
 Examples::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract C {
         struct S {
@@ -133,20 +93,6 @@ How do structs work?
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
-How do for loops work?
-======================
-
-Very similar to JavaScript. There is one point to watch out for, though:
-
-If you use ``for (var i = 0; i < a.length; i ++) { a[i] = i; }``, then
-the type of ``i`` will be inferred only from ``0``, whose type is ``uint8``.
-This means that if ``a`` has more than ``255`` elements, your loop will
-not terminate because ``i`` can only hold values up to ``255``.
-
-Better use ``for (uint i = 0; i < a.length...``
-
-See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
-
 What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
 ==================================================================================================
 
@@ -156,7 +102,7 @@ which will be extended in the future. In addition, Arachnid has written `solidit
 For now, if you want to modify a string (even when you only want to know its length),
 you should always convert it to a ``bytes`` first::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract C {
         string s;
@@ -174,7 +120,17 @@ you should always convert it to a ``bytes`` first::
 Can I concatenate two strings?
 ==============================
 
-You have to do it manually for now.
+Yes, you can use ``abi.encodePacked``::
+
+    pragma solidity >=0.4.0 <0.6.0;
+
+    library ConcatHelper {
+        function concat(bytes memory a, bytes memory b)
+                internal pure returns (bytes memory) {
+            return abi.encodePacked(a, b);
+        }
+    }
+
 
 Why is the low-level function ``.call()`` less favorable than instantiating a contract with a variable (``ContractB b;``) and executing its functions (``b.doSomething();``)?
 =============================================================================================================================================================================
@@ -187,11 +143,6 @@ arguments for you.
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_ and
 `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-Is unused gas automatically refunded?
-=====================================
-
-Yes and it is immediate, i.e. done as part of the transaction.
-
 When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or "null"-like value?
 ============================================================================================================
 
@@ -203,7 +154,7 @@ situation.
 
 If you do not want to throw, you can return a pair::
 
-    pragma solidity >0.4.23 <0.5.0;
+    pragma solidity >0.4.23 <0.6.0;
 
     contract C {
         uint[] counters;
@@ -221,9 +172,10 @@ If you do not want to throw, you can return a pair::
         function checkCounter(uint index) public view {
             (uint counter, bool error) = getCounter(index);
             if (error) {
-                // ...
+                // Handle the error
             } else {
-                // ...
+                // Do something with counter.
+                require(counter > 7, "Invalid counter value");
             }
         }
     }
@@ -241,118 +193,6 @@ What happens if you send ether along with a function call to a contract?
 It gets added to the total balance of the contract, just like when you send ether when creating a contract.
 You can only send ether along to a function that has the ``payable`` modifier,
 otherwise an exception is thrown.
-
-Is it possible to get a tx receipt for a transaction executed contract-to-contract?
-===================================================================================
-
-No, a function call from one contract to another does not create its own transaction,
-you have to look in the overall transaction. This is also the reason why several
-block explorer do not show Ether sent between contracts correctly.
-
-What is the ``memory`` keyword? What does it do?
-================================================
-
-The Ethereum Virtual Machine has three areas where it can store items.
-
-The first is "storage", where all the contract state variables reside.
-Every contract has its own storage and it is persistent between function calls
-and quite expensive to use.
-
-The second is "memory", this is used to hold temporary values. It
-is erased between (external) function calls and is cheaper to use.
-
-The third one is the stack, which is used to hold small local variables.
-It is almost free to use, but can only hold a limited amount of values.
-
-For almost all types, you cannot specify where they should be stored, because
-they are copied everytime they are used.
-
-The types where the so-called storage location is important are structs
-and arrays. If you e.g. pass such variables in function calls, their
-data is not copied if it can stay in memory or stay in storage.
-This means that you can modify their content in the called function
-and these modifications will still be visible in the caller.
-
-There are defaults for the storage location depending on which type
-of variable it concerns:
-
-* state variables are always in storage
-* function arguments are in memory by default
-* local variables of struct, array or mapping type reference storage by default
-* local variables of value type (i.e. neither array, nor struct nor mapping) are stored in the stack
-
-Example::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        uint[] data1;
-        uint[] data2;
-
-        function appendOne() public {
-            append(data1);
-        }
-
-        function appendTwo() public {
-            append(data2);
-        }
-
-        function append(uint[] storage d) internal {
-            d.push(1);
-        }
-    }
-
-The function ``append`` can work both on ``data1`` and ``data2`` and its modifications will be
-stored permanently. If you remove the ``storage`` keyword, the default
-is to use ``memory`` for function arguments. This has the effect that
-at the point where ``append(data1)`` or ``append(data2)`` is called, an
-independent copy of the state variable is created in memory and
-``append`` operates on this copy (which does not support ``.push`` - but that
-is another issue). The modifications to this independent copy do not
-carry back to ``data1`` or ``data2``.
-
-A common mistake is to declare a local variable and assume that it will
-be created in memory, although it will be created in storage::
-
-    /// THIS CONTRACT CONTAINS AN ERROR
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        uint someVariable;
-        uint[] data;
-
-        function f() public {
-            uint[] x;
-            x.push(2);
-            data = x;
-        }
-    }
-
-The type of the local variable ``x`` is ``uint[] storage``, but since
-storage is not dynamically allocated, it has to be assigned from
-a state variable before it can be used. So no space in storage will be
-allocated for ``x``, but instead it functions only as an alias for
-a pre-existing variable in storage.
-
-What will happen is that the compiler interprets ``x`` as a storage
-pointer and will make it point to the storage slot ``0`` by default.
-This has the effect that ``someVariable`` (which resides at storage
-slot ``0``) is modified by ``x.push(2)``.
-
-The correct way to do this is the following::
-
-    pragma solidity ^0.4.0;
-
-    contract C {
-        uint someVariable;
-        uint[] data;
-
-        function f() public {
-            uint[] x = data;
-            x.push(2);
-        }
-    }
 
 ******************
 Advanced Questions
@@ -374,13 +214,6 @@ The key point is that the calling contract needs to know about the function it i
 
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_
 and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
-
-Get contract to do something when it is first mined
-===================================================
-
-Use the constructor. Anything inside it will be executed when the contract is first mined.
-
-See `replicator.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/50_replicator.sol>`_.
 
 How do you create 2-dimensional arrays?
 =======================================
@@ -414,7 +247,7 @@ This is a very interesting question. Suppose that we have a contract field set u
        User user2 = user1;
     }
 
-In this case, the mapping of the struct being copied over into the userList is ignored as there is no "list of mapped keys".
+In this case, the mapping of the struct being copied over into ``user2`` is ignored as there is no "list of mapped keys".
 Therefore it is not possible to find out which values should be copied over.
 
 How do I initialize a contract with only a specific amount of wei?
@@ -426,25 +259,19 @@ In the case of a ``contract A`` calling a new instance of ``contract B``, parent
 You will need to make sure that you have both contracts aware of each other's presence and that ``contract B`` has a ``payable`` constructor.
 In this example::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract B {
-        function B() public payable {}
+        constructor() public payable {}
     }
 
     contract A {
-        address child;
+        B child;
 
         function test() public {
             child = (new B).value(10)(); //construct a new B with 10 wei
         }
     }
-
-Can a contract function accept a two-dimensional array?
-=======================================================
-
-This is not yet implemented for external calls and dynamic arrays -
-you can only use one level of dynamic arrays.
 
 What is the relationship between ``bytes32`` and ``string``? Why is it that ``bytes32 somevar = "stringliteral";`` works and what does the saved 32-byte hex value mean?
 ========================================================================================================================================================================
@@ -474,7 +301,7 @@ Can a contract pass an array (static size) or string or ``bytes`` (dynamic size)
 Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         uint[20] x;
@@ -484,7 +311,7 @@ independent copies will be created::
             h(x);
         }
 
-        function g(uint[20] y) internal pure {
+        function g(uint[20] memory y) internal pure {
             y[2] = 3;
         }
 
@@ -494,10 +321,9 @@ independent copies will be created::
     }
 
 The call to ``g(x)`` will not have an effect on ``x`` because it needs
-to create an independent copy of the storage value in memory
-(the default storage location is memory). On the other hand,
-``h(x)`` successfully modifies ``x`` because only a reference
-and not a copy is passed.
+to create an independent copy of the storage value in memory.
+On the other hand, ``h(x)`` successfully modifies ``x`` because only
+a reference and not a copy is passed.
 
 Sometimes, when I try to change the length of an array with ex: ``arrayname.length = 7;`` I get a compiler error ``Value must be an lvalue``. Why?
 ==================================================================================================================================================
@@ -512,15 +338,14 @@ contract level) with ``arrayname.length = <some new length>;``. If you get the
 
 ::
 
+    pragma solidity >=0.4.18 <0.6.0;
+
     // This will not compile
-
-    pragma solidity ^0.4.18;
-
     contract C {
         int8[] dynamicStorageArray;
         int8[5] fixedStorageArray;
 
-        function f() {
+        function f() public {
             int8[] memory memArr;        // Case 1
             memArr.length++;             // illegal
 
@@ -547,29 +372,7 @@ case in C or Java).
 Is it possible to return an array of strings (``string[]``) from a Solidity function?
 =====================================================================================
 
-Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic array itself).
-
-If you issue a call for an array, it is possible to retrieve the whole array? Or must you write a helper function for that?
-===========================================================================================================================
-
-The automatic :ref:`getter function<getter-functions>`  for a public state variable of array type only returns
-individual elements. If you want to return the complete array, you have to
-manually write a function to do that.
-
-
-What could have happened if an account has storage value(s) but no code?  Example: http://test.ether.camp/account/5f740b3a43fbb99724ce93a879805f4dc89178b5
-==========================================================================================================================================================
-
-The last thing a constructor does is returning the code of the contract.
-The gas costs for this depend on the length of the code and it might be
-that the supplied gas is not enough. This situation is the only one
-where an "out of gas" exception does not revert changes to the state,
-i.e. in this case the initialisation of the state variables.
-
-https://github.com/ethereum/wiki/wiki/Subtleties
-
-After a successful CREATE operation's sub-execution, if the operation returns x, 5 * len(x) gas is subtracted from the remaining gas before the contract is created. If the remaining gas is less than 5 * len(x), then no gas is subtracted, the code of the created contract becomes the empty string, but this is not treated as an exceptional condition - no reverts happen.
-
+Only when ``pragma experimental "ABIEncoderV2";`` is used.
 
 What does the following strange check do in the Custom Token contract?
 ======================================================================
@@ -583,6 +386,25 @@ For ``uint256``, this is ``0`` up to ``2**256 - 1``. If the result of some opera
 does not fit inside this range, it is truncated. These truncations can have
 `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so code like the one
 above is necessary to avoid certain attacks.
+
+
+Why are explicit conversions between fixed-size bytes types and integer types failing?
+======================================================================================
+
+Since version 0.5.0 explicit conversions between fixed-size byte arrays and integers are only allowed,
+if both types have the same size. This prevents unexpected behaviour when truncating or padding.
+Such conversions are still possible, but intermediate casts are required that make the desired
+truncation and padding convention explicit. See :ref:`types-conversion-elementary-types` for a full
+explanation and examples.
+
+
+Why can number literals not be converted to fixed-size bytes types?
+===================================================================
+
+Since version 0.5.0 only hexadecimal number literals can be converted to fixed-size bytes
+types and only if the number of hex digits matches the size of the type. See :ref:`types-conversion-literals`
+for a full explanation and examples.
+
 
 
 More Questions?

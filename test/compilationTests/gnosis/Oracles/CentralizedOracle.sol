@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 import "../Oracles/Oracle.sol";
 
 
@@ -34,7 +34,7 @@ contract CentralizedOracle is Oracle {
      */
     /// @dev Constructor sets owner address and IPFS hash
     /// @param _ipfsHash Hash identifying off chain event description
-    function CentralizedOracle(address _owner, bytes _ipfsHash)
+    constructor(address _owner, bytes memory _ipfsHash)
         public
     {
         // Description hash cannot be null
@@ -52,7 +52,7 @@ contract CentralizedOracle is Oracle {
         // Result is not set yet
         require(!isSet);
         owner = newOwner;
-        OwnerReplacement(newOwner);
+        emit OwnerReplacement(newOwner);
     }
 
     /// @dev Sets event outcome
@@ -65,14 +65,14 @@ contract CentralizedOracle is Oracle {
         require(!isSet);
         isSet = true;
         outcome = _outcome;
-        OutcomeAssignment(_outcome);
+        emit OutcomeAssignment(_outcome);
     }
 
     /// @dev Returns if winning outcome is set
     /// @return Is outcome set?
     function isOutcomeSet()
         public
-        constant
+        view
         returns (bool)
     {
         return isSet;
@@ -82,7 +82,7 @@ contract CentralizedOracle is Oracle {
     /// @return Outcome
     function getOutcome()
         public
-        constant
+        view
         returns (int)
     {
         return outcome;

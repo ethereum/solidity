@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(does_not_include_creation_time_only_internal_functions)
 	char const* sourceCode = R"(
 		contract C {
 			uint x;
-			function C() { f(); }
+			constructor() public { f(); }
 			function f() internal { for (uint i = 0; i < 10; ++i) x += 3 + i; }
 		}
 	)";

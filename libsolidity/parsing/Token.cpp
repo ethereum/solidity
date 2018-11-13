@@ -51,9 +51,9 @@ namespace dev
 namespace solidity
 {
 
-void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second)
+void ElementaryTypeNameToken::assertDetails(Token _baseType, unsigned const& _first, unsigned const& _second)
 {
-	solAssert(Token::isElementaryTypeName(_baseType), "Expected elementary type name: " + string(Token::toString(_baseType)));
+	solAssert(TokenTraits::isElementaryTypeName(_baseType), "Expected elementary type name: " + string(TokenTraits::toString(_baseType)));
 	if (_baseType == Token::BytesM)
 	{
 		solAssert(_second == 0, "There should not be a second size argument to type bytesM.");
@@ -61,17 +61,17 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 	}
 	else if (_baseType == Token::UIntM || _baseType == Token::IntM)
 	{
-		solAssert(_second == 0, "There should not be a second size argument to type " + string(Token::toString(_baseType)) + ".");
+		solAssert(_second == 0, "There should not be a second size argument to type " + string(TokenTraits::toString(_baseType)) + ".");
 		solAssert(
-			_first <= 256 && _first % 8 == 0, 
-			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "."
+			_first <= 256 && _first % 8 == 0,
+			"No elementary type " + string(TokenTraits::toString(_baseType)) + to_string(_first) + "."
 		);
 	}
 	else if (_baseType == Token::UFixedMxN || _baseType == Token::FixedMxN)
 	{
 		solAssert(
 			_first >= 8 && _first <= 256 && _first % 8 == 0 && _second <= 80,
-			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "x" + to_string(_second) + "."
+			"No elementary type " + string(TokenTraits::toString(_baseType)) + to_string(_first) + "x" + to_string(_second) + "."
 		);
 	}
 	m_token = _baseType;
@@ -79,38 +79,54 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 	m_secondNumber = _second;
 }
 
+namespace TokenTraits
+{
+
+char const* toString(Token tok)
+{
+	switch (tok)
+	{
+#define T(name, string, precedence) case Token::name: return string;
+		TOKEN_LIST(T, T)
+#undef T
+		default: // Token::NUM_TOKENS:
+			return "";
+	}
+}
+
+char const* name(Token tok)
+{
 #define T(name, string, precedence) #name,
-char const* const Token::m_name[NUM_TOKENS] =
-{
-	TOKEN_LIST(T, T)
-};
+	static char const* const names[TokenTraits::count()] = { TOKEN_LIST(T, T) };
 #undef T
 
+	solAssert(static_cast<size_t>(tok) < TokenTraits::count(), "");
+	return names[static_cast<size_t>(tok)];
+}
 
-#define T(name, string, precedence) string,
-char const* const Token::m_string[NUM_TOKENS] =
+std::string friendlyName(Token tok)
 {
-	TOKEN_LIST(T, T)
-};
-#undef T
+	char const* ret = toString(tok);
+	if (ret)
+		return std::string(ret);
 
+	ret = name(tok);
+	solAssert(ret != nullptr, "");
+	return std::string(ret);
+}
 
 #define T(name, string, precedence) precedence,
-int8_t const Token::m_precedence[NUM_TOKENS] =
+int precedence(Token tok)
 {
-	TOKEN_LIST(T, T)
-};
+	int8_t const static precs[TokenTraits::count()] =
+	{
+		TOKEN_LIST(T, T)
+	};
+	return precs[static_cast<size_t>(tok)];
+}
 #undef T
 
-
-#define KT(a, b, c) 'T',
-#define KK(a, b, c) 'K',
-char const Token::m_tokenType[] =
-{
-	TOKEN_LIST(KT, KK)
-};
-
-int Token::parseSize(string::const_iterator _begin, string::const_iterator _end)
+int parseSize(string::const_iterator _begin, string::const_iterator _end)
 {
 	try
 	{
@@ -123,7 +139,20 @@ int Token::parseSize(string::const_iterator _begin, string::const_iterator _end)
 	}
 }
 
-tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(string const& _literal)
+static Token keywordByName(string const& _name)
+{
+	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
+	// and keywords to be put inside the keywords variable.
+#define KEYWORD(name, string, precedence) {string, Token::name},
+#define TOKEN(name, string, precedence)
+	static const map<string, Token> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
+#undef KEYWORD
+#undef TOKEN
+	auto it = keywords.find(_name);
+	return it == keywords.end() ? Token::Identifier : it->second;
+}
+
+tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _literal)
 {
 	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
 	if (positionM != _literal.end())
@@ -131,7 +160,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 		string baseType(_literal.begin(), positionM);
 		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
 		int m = parseSize(positionM, positionX);
-		Token::Value keyword = keywordByName(baseType);
+		Token keyword = keywordByName(baseType);
 		if (keyword == Token::Bytes)
 		{
 			if (0 < m && m <= 32 && positionX == _literal.end())
@@ -165,27 +194,14 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 					else
 						return make_tuple(Token::FixedMxN, m, n);
 				}
-			}	
+			}
 		}
 		return make_tuple(Token::Identifier, 0, 0);
 	}
 
 	return make_tuple(keywordByName(_literal), 0, 0);
 }
-Token::Value Token::keywordByName(string const& _name)
-{
-	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
-	// and keywords to be put inside the keywords variable.
-#define KEYWORD(name, string, precedence) {string, Token::name},
-#define TOKEN(name, string, precedence)
-	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
-#undef KEYWORD
-#undef TOKEN
-	auto it = keywords.find(_name);
-	return it == keywords.end() ? Token::Identifier : it->second;
-}
 
-#undef KT
-#undef KK
+}
 }
 }

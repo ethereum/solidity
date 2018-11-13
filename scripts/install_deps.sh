@@ -87,9 +87,12 @@ case $(uname -s) in
             10.13)
                 echo "Installing solidity dependencies on macOS 10.13 High Sierra."
                 ;;
+            10.14)
+                echo "Installing solidity dependencies on macOS 10.14 Mojave."
+                ;;
             *)
                 echo "Unsupported macOS version."
-                echo "We only support Mavericks, Yosemite, El Capitan, Sierra and High Sierra."
+                echo "We only support Mavericks, Yosemite, El Capitan, Sierra, High Sierra and Mojave."
                 exit 1
                 ;;
         esac
@@ -133,19 +136,18 @@ case $(uname -s) in
 # Arch Linux
 #------------------------------------------------------------------------------
 
-            Arch)
+            Arch*|ManjaroLinux)
                 #Arch
                 echo "Installing solidity dependencies on Arch Linux."
 
                 # All our dependencies can be found in the Arch Linux official repositories.
                 # See https://wiki.archlinux.org/index.php/Official_repositories
-                # Also adding ethereum-git to allow for testing with the `eth` client
                 sudo pacman -Syu \
                     base-devel \
                     boost \
                     cmake \
                     git \
-                    ethereum-git \
+                    cvc4
                 ;;
 
 #------------------------------------------------------------------------------
@@ -160,7 +162,7 @@ case $(uname -s) in
                 # See https://pkgs.alpinelinux.org/
 
                 apk update
-                apk add boost-dev build-base cmake
+                apk add boost-dev build-base cmake git
 
                 ;;
 
@@ -329,7 +331,7 @@ case $(uname -s) in
                     "$install_z3"
                 if [ "$CI" = true ]; then
                     # install Z3 from PPA if the distribution does not provide it
-		            if ! dpkg -l libz3-dev > /dev/null 2>&1
+                    if ! dpkg -l libz3-dev > /dev/null 2>&1
                     then
                         sudo apt-add-repository -y ppa:hvr/z3
                         sudo apt-get -y update

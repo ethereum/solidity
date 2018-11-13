@@ -1,0 +1,160 @@
+{
+	"absolutePath" : "a",
+	"exportedSymbols" : 
+	{
+		"C" : 
+		[
+			11
+		]
+	},
+	"id" : 12,
+	"nodeType" : "SourceUnit",
+	"nodes" : 
+	[
+		{
+			"baseContracts" : [],
+			"contractDependencies" : [],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 11,
+			"linearizedBaseContracts" : 
+			[
+				11
+			],
+			"name" : "C",
+			"nodeType" : "ContractDefinition",
+			"nodes" : 
+			[
+				{
+					"body" : 
+					{
+						"id" : 9,
+						"nodeType" : "Block",
+						"src" : "26:19:1",
+						"statements" : 
+						[
+							{
+								"assignments" : 
+								[
+									3
+								],
+								"declarations" : 
+								[
+									{
+										"constant" : false,
+										"id" : 3,
+										"name" : "x",
+										"nodeType" : "VariableDeclaration",
+										"scope" : 9,
+										"src" : "28:5:1",
+										"stateVariable" : false,
+										"storageLocation" : "default",
+										"typeDescriptions" : 
+										{
+											"typeIdentifier" : "t_uint8",
+											"typeString" : "uint8"
+										},
+										"typeName" : null,
+										"value" : null,
+										"visibility" : "internal"
+									}
+								],
+								"id" : 5,
+								"initialValue" : 
+								{
+									"argumentTypes" : null,
+									"hexValue" : "32",
+									"id" : 4,
+									"isConstant" : false,
+									"isLValue" : false,
+									"isPure" : true,
+									"kind" : "number",
+									"lValueRequested" : false,
+									"nodeType" : "Literal",
+									"src" : "36:1:1",
+									"subdenomination" : null,
+									"typeDescriptions" : 
+									{
+										"typeIdentifier" : "t_rational_2_by_1",
+										"typeString" : "int_const 2"
+									},
+									"value" : "2"
+								},
+								"nodeType" : "VariableDeclarationStatement",
+								"src" : "28:9:1"
+							},
+							{
+								"expression" : 
+								{
+									"argumentTypes" : null,
+									"id" : 7,
+									"isConstant" : false,
+									"isLValue" : false,
+									"isPure" : false,
+									"lValueRequested" : false,
+									"nodeType" : "UnaryOperation",
+									"operator" : "++",
+									"prefix" : false,
+									"src" : "39:3:1",
+									"subExpression" : 
+									{
+										"argumentTypes" : null,
+										"id" : 6,
+										"name" : "x",
+										"nodeType" : "Identifier",
+										"overloadedDeclarations" : [],
+										"referencedDeclaration" : 3,
+										"src" : "39:1:1",
+										"typeDescriptions" : 
+										{
+											"typeIdentifier" : "t_uint8",
+											"typeString" : "uint8"
+										}
+									},
+									"typeDescriptions" : 
+									{
+										"typeIdentifier" : "t_uint8",
+										"typeString" : "uint8"
+									}
+								},
+								"id" : 8,
+								"nodeType" : "ExpressionStatement",
+								"src" : "39:3:1"
+							}
+						]
+					},
+					"documentation" : null,
+					"id" : 10,
+					"implemented" : true,
+					"kind" : "function",
+					"modifiers" : [],
+					"name" : "f",
+					"nodeType" : "FunctionDefinition",
+					"parameters" : 
+					{
+						"id" : 1,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "23:2:1"
+					},
+					"returnParameters" : 
+					{
+						"id" : 2,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "26:0:1"
+					},
+					"scope" : 11,
+					"src" : "13:32:1",
+					"stateMutability" : "nonpayable",
+					"superFunction" : null,
+					"visibility" : "public"
+				}
+			],
+			"scope" : 12,
+			"src" : "0:47:1"
+		}
+	],
+	"src" : "0:48:1"
+}

@@ -4,57 +4,82 @@ Solidity Assembly
 
 .. index:: ! assembly, ! asm, ! evmasm
 
-Solidity defines an assembly language that can also be used without Solidity.
-This assembly language can also be used as "inline assembly" inside Solidity
-source code. We start with describing how to use inline assembly and how it
-differs from standalone assembly and then specify assembly itself.
+Solidity defines an assembly language that you can use without Solidity and also
+as "inline assembly" inside Solidity source code. This guide starts with describing
+how to use inline assembly, how it differs from standalone assembly, and
+specifies assembly itself.
 
 .. _inline-assembly:
 
 Inline Assembly
 ===============
 
-For more fine-grained control especially in order to enhance the language by writing libraries,
-it is possible to interleave Solidity statements with inline assembly in a language close
-to the one of the virtual machine. Due to the fact that the EVM is a stack machine, it is
-often hard to address the correct stack slot and provide arguments to opcodes at the correct
-point on the stack. Solidity's inline assembly tries to facilitate that and other issues
-arising when writing manual assembly by the following features:
+You can interleave Solidity statements with inline assembly in a language close
+to the one of the virtual machine. This gives you more fine-grained control,
+especially when you are enhancing the language by writing libraries.
 
-* functional-style opcodes: ``mul(1, add(2, 3))`` instead of ``push1 3 push1 2 add push1 1 mul``
+As the EVM is a stack machine, it is often hard to address the correct stack slot
+and provide arguments to opcodes at the correct point on the stack. Solidity's inline
+assembly helps you do this, and with other issues that arise when writing manual assembly.
+
+Inline assembly has the following features:
+
+* functional-style opcodes: ``mul(1, add(2, 3))``
 * assembly-local variables: ``let x := add(2, 3)  let y := mload(0x40)  x := add(x, y)``
 * access to external variables: ``function f(uint x) public { assembly { x := sub(x, 1) } }``
-* labels: ``let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))``
 * loops: ``for { let i := 0 } lt(i, x) { i := add(i, 1) } { y := mul(2, y) }``
 * if statements: ``if slt(x, 0) { x := sub(0, x) }``
 * switch statements: ``switch x case 0 { y := mul(x, 2) } default { y := 0 }``
 * function calls: ``function f(x) -> y { switch x case 0 { y := 1 } default { y := mul(x, f(sub(x, 1))) }   }``
 
-We now want to describe the inline assembly language in detail.
-
 .. warning::
     Inline assembly is a way to access the Ethereum Virtual Machine
-    at a low level. This discards several important safety
-    features of Solidity.
+    at a low level. This bypasses several important safety
+    features and checks of Solidity. You should only use it for
+    tasks that need it, and only if you are confident with using it.
+
+Syntax
+------
+
+Assembly parses comments, literals and identifiers in the same way as Solidity, so you can use the
+usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { ... }`` and inside
+these curly braces, you can use the following (see the later sections for more details):
+
+ - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
+ - opcodes in functional style, e.g. ``add(1, mlod(0))``
+ - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
+ - identifiers (assembly-local variables and externals if used as inline assembly), e.g. ``add(3, x)``, ``sstore(x_slot, 2)``
+ - assignments, e.g. ``x := add(y, 3)``
+ - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
+
+The following features are only available for standalone assembly:
+
+ - direct stack control via ``dup1``, ``swap1``, ...
+ - direct stack assignments (in "instruction style"), e.g. ``3 =: x``
+ - labels, e.g. ``name:``
+ - jump opcodes
 
 .. note::
-    TODO: Write about how scoping rules of inline assembly are a bit different
-    and the complications that arise when for example using internal functions
-    of libraries. Furthermore, write about the symbols defined by the compiler.
+  Standalone assembly is supported for backwards compatibility but is not documented
+  here anymore.
+
+At the end of the ``assembly { ... }`` block, the stack must be balanced,
+unless you require it otherwise. If it is not balanced, the compiler generates
+a warning.
 
 Example
 -------
 
 The following example provides library code to access the code of another contract and
-load it into a ``bytes`` variable. This is not possible at all with "plain Solidity" and the
-idea is that assembly libraries will be used to enhance the language in such ways.
+load it into a ``bytes`` variable. This is not possible with "plain Solidity" and the
+idea is that assembly libraries will be used to enhance the Solidity language.
 
 .. code::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     library GetCode {
-        function at(address _addr) public view returns (bytes o_code) {
+        function at(address _addr) public view returns (bytes memory o_code) {
             assembly {
                 // retrieve the size of the code, this needs assembly
                 let size := extcodesize(_addr)
@@ -71,19 +96,17 @@ idea is that assembly libraries will be used to enhance the language in such way
         }
     }
 
-Inline assembly could also be beneficial in cases where the optimizer fails to produce
-efficient code. Please be aware that assembly is much more difficult to write because
-the compiler does not perform checks, so you should use it for complex things only if
-you really know what you are doing.
+Inline assembly is also beneficial in cases where the optimizer fails to produce
+efficient code, for example:
 
 .. code::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     library VectorSum {
         // This function is less efficient because the optimizer currently fails to
         // remove the bounds checks in array access.
-        function sumSolidity(uint[] _data) public view returns (uint o_sum) {
+        function sumSolidity(uint[] memory _data) public pure returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i)
                 o_sum += _data[i];
         }
@@ -91,7 +114,7 @@ you really know what you are doing.
         // We know that we only access the array in bounds, so we can avoid the check.
         // 0x20 needs to be added to an array because the first slot contains the
         // array length.
-        function sumAsm(uint[] _data) public view returns (uint o_sum) {
+        function sumAsm(uint[] memory _data) public pure returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
                     o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
@@ -100,7 +123,7 @@ you really know what you are doing.
         }
 
         // Same as above, but accomplish the entire code within inline assembly.
-        function sumPureAsm(uint[] _data) public view returns (uint o_sum) {
+        function sumPureAsm(uint[] memory _data) public pure returns (uint o_sum) {
             assembly {
                // Load the length (first 32 bytes)
                let len := mload(_data)
@@ -115,7 +138,7 @@ you really know what you are doing.
 
                // Iterate until the bound is not met.
                for
-                   { let end := add(data, len) }
+                   { let end := add(data, mul(len, 0x20)) }
                    lt(data, end)
                    { data := add(data, 0x20) }
                {
@@ -126,22 +149,7 @@ you really know what you are doing.
     }
 
 
-Syntax
-------
-
-Assembly parses comments, literals and identifiers exactly as Solidity, so you can use the
-usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { ... }`` and inside
-these curly braces, the following can be used (see the later sections for more details)
-
- - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
- - opcodes (in "instruction style"), e.g. ``mload sload dup1 sstore``, for a list see below
- - opcodes in functional style, e.g. ``add(1, mlod(0))``
- - labels, e.g. ``name:``
- - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
- - identifiers (labels or assembly-local variables and externals if used as inline assembly), e.g. ``jump(name)``, ``3 x add``
- - assignments (in "instruction style"), e.g. ``3 =: x``
- - assignments in functional style, e.g. ``x := add(y, 3)``
- - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
+.. _opcodes:
 
 Opcodes
 -------
@@ -157,7 +165,7 @@ Opcodes marked with ``F``, ``H``, ``B`` or ``C`` are present since Frontier, Hom
 Constantinople is still in planning and all instructions marked as such will result in an invalid instruction exception.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
-(excluding) position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
+but not including position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
 
 The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 
@@ -212,15 +220,13 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | sar(x, y)               |     | C | arithmetic shift right y by x bits                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| addmod(x, y, m)         |     | F | (x + y) % m with arbitrary precision arithmetics                |
+| addmod(x, y, m)         |     | F | (x + y) % m with arbitrary precision arithmetic                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| mulmod(x, y, m)         |     | F | (x * y) % m with arbitrary precision arithmetics                |
+| mulmod(x, y, m)         |     | F | (x * y) % m with arbitrary precision arithmetic                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | signextend(i, x)        |     | F | sign extend from (i*8+7)th bit counting from least significant  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | keccak256(p, n)         |     | F | keccak(mem[p...(p+n)))                                          |
-+-------------------------+-----+---+-----------------------------------------------------------------+
-| sha3(p, n)              |     | F | keccak(mem[p...(p+n)))                                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | jump(label)             | `-` | F | jump to label / code position                                   |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -230,13 +236,13 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | pop(x)                  | `-` | F | remove the element pushed by x                                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| dup1 ... dup16          |     | F | copy ith stack slot to the top (counting from top)              |
+| dup1 ... dup16          |     | F | copy nth stack slot to the top (counting from top)              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| swap1 ... swap16        | `*` | F | swap topmost and ith stack slot below it                        |
+| swap1 ... swap16        | `*` | F | swap topmost and nth stack slot below it                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| mload(p)                |     | F | mem[p..(p+32))                                                  |
+| mload(p)                |     | F | mem[p...(p+32))                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| mstore(p, v)            | `-` | F | mem[p..(p+32)) := v                                             |
+| mstore(p, v)            | `-` | F | mem[p...(p+32)) := v                                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | mstore8(p, v)           | `-` | F | mem[p] := v & 0xff (only modifies a single byte)                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -274,16 +280,20 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | returndatacopy(t, f, s) | `-` | B | copy s bytes from returndata at position f to mem at position t |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| create(v, p, s)         |     | F | create new contract with code mem[p..(p+s)) and send v wei      |
+| extcodehash(a)          |     | C | code hash of address a                                          |
++-------------------------+-----+---+-----------------------------------------------------------------+
+| create(v, p, n)         |     | F | create new contract with code mem[p...(p+n)) and send v wei     |
 |                         |     |   | and return the new address                                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| create2(v, n, p, s)     |     | C | create new contract with code mem[p..(p+s)) at address          |
-|                         |     |   | keccak256(<address> . n . keccak256(mem[p..(p+s))) and send v   |
-|                         |     |   | wei and return the new address                                  |
+| create2(v, p, n, s)     |     | C | create new contract with code mem[p...(p+n)) at address         |
+|                         |     |   | keccak256(0xff . this . s . keccak256(mem[p...(p+n)))           |
+|                         |     |   | and send v wei and return the new address, where ``0xff`` is a  |
+|                         |     |   | 8 byte value, ``this`` is the current contract's address        |
+|                         |     |   | as a 20 byte value and ``s`` is a big-endian 256-bit value      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| call(g, a, v, in,       |     | F | call contract at address a with input mem[in..(in+insize))      |
+| call(g, a, v, in,       |     | F | call contract at address a with input mem[in...(in+insize))     |
 | insize, out, outsize)   |     |   | providing g gas and v wei and output area                       |
-|                         |     |   | mem[out..(out+outsize)) returning 0 on error (eg. out of gas)   |
+|                         |     |   | mem[out...(out+outsize)) returning 0 on error (eg. out of gas)  |
 |                         |     |   | and 1 on success                                                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | callcode(g, a, v, in,   |     | F | identical to ``call`` but only use the code from a and stay     |
@@ -295,23 +305,23 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 | staticcall(g, a, in,    |     | B | identical to ``call(g, a, 0, in, insize, out, outsize)`` but do |
 | insize, out, outsize)   |     |   | not allow state modifications                                   |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| return(p, s)            | `-` | F | end execution, return data mem[p..(p+s))                        |
+| return(p, s)            | `-` | F | end execution, return data mem[p...(p+s))                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| revert(p, s)            | `-` | B | end execution, revert state changes, return data mem[p..(p+s))  |
+| revert(p, s)            | `-` | B | end execution, revert state changes, return data mem[p...(p+s)) |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | selfdestruct(a)         | `-` | F | end execution, destroy current contract and send funds to a     |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | invalid                 | `-` | F | end execution with invalid instruction                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log0(p, s)              | `-` | F | log without topics and data mem[p..(p+s))                       |
+| log0(p, s)              | `-` | F | log without topics and data mem[p...(p+s))                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log1(p, s, t1)          | `-` | F | log with topic t1 and data mem[p..(p+s))                        |
+| log1(p, s, t1)          | `-` | F | log with topic t1 and data mem[p...(p+s))                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log2(p, s, t1, t2)      | `-` | F | log with topics t1, t2 and data mem[p..(p+s))                   |
+| log2(p, s, t1, t2)      | `-` | F | log with topics t1, t2 and data mem[p...(p+s))                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log3(p, s, t1, t2, t3)  | `-` | F | log with topics t1, t2, t3 and data mem[p..(p+s))               |
+| log3(p, s, t1, t2, t3)  | `-` | F | log with topics t1, t2, t3 and data mem[p...(p+s))              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p..(p+s))           |
+| log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p...(p+s))          |
 | t4)                     |     |   |                                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | origin                  |     | F | transaction sender                                              |
@@ -337,75 +347,66 @@ Literals
 You can use integer constants by typing them in decimal or hexadecimal notation and an
 appropriate ``PUSHi`` instruction will automatically be generated. The following creates code
 to add 2 and 3 resulting in 5 and then computes the bitwise and with the string "abc".
+The final value is assigned to a local variable called ``x``.
 Strings are stored left-aligned and cannot be longer than 32 bytes.
 
 .. code::
 
-    assembly { 2 3 add "abc" and }
+    assembly { let x := and("abc", add(3, 2)) }
+
 
 Functional Style
 -----------------
 
-You can type opcode after opcode in the same way they will end up in bytecode. For example
-adding ``3`` to the contents in memory at position ``0x80`` would be
+For a sequence of opcodes, it is often hard to see what the actual
+arguments for certain opcodes are. In the following example,
+``3`` is added to the contents in memory at position ``0x80``.
 
 .. code::
 
     3 0x80 mload add 0x80 mstore
 
-As it is often hard to see what the actual arguments for certain opcodes are,
-Solidity inline assembly also provides a "functional style" notation where the same code
-would be written as follows
+Solidity inline assembly has a "functional style" notation where the same code
+would be written as follows:
 
 .. code::
 
     mstore(0x80, add(mload(0x80), 3))
 
-Functional style expressions cannot use instructional style internally, i.e.
-``1 2 mstore(0x80, add)`` is not valid assembly, it has to be written as
-``mstore(0x80, add(2, 1))``. For opcodes that do not take arguments, the
-parentheses can be omitted.
+If you read the code from right to left, you end up with exactly the same
+sequence of constants and opcodes, but it is much clearer where the
+values end up.
 
-Note that the order of arguments is reversed in functional-style as opposed to the instruction-style
-way. If you use functional-style, the first argument will end up on the stack top.
+If you care about the exact stack layout, just note that the
+syntactically first argument for a function or opcode will be put at the
+top of the stack.
 
+Access to External Variables, Functions and Libraries
+-----------------------------------------------------
 
-Access to External Variables and Functions
-------------------------------------------
-
-Solidity variables and other identifiers can be accessed by simply using their name.
-For memory variables, this will push the address and not the value onto the
-stack. Storage variables are different: Values in storage might not occupy a
-full storage slot, so their "address" is composed of a slot and a byte-offset
+You can access Solidity variables and other identifiers by using their name.
+For variables stored in the memory data location, this pushes the address, and not the value
+onto the stack. Variables stored in the storage data location are different, as they might not
+occupy a full storage slot, so their "address" is composed of a slot and a byte-offset
 inside that slot. To retrieve the slot pointed to by the variable ``x``, you
-used ``x_slot`` and to retrieve the byte-offset you used ``x_offset``.
+use ``x_slot``, and to retrieve the byte-offset you use ``x_offset``.
 
-In assignments (see below), we can even use local Solidity variables to assign to.
-
-Functions external to inline assembly can also be accessed: The assembly will
-push their entry label (with virtual function resolution applied). The calling semantics
-in solidity are:
-
- - the caller pushes ``return label``, ``arg1``, ``arg2``, ..., ``argn``
- - the call returns with ``ret1``, ``ret2``, ..., ``retm``
-
-This feature is still a bit cumbersome to use, because the stack offset essentially
-changes during the call, and thus references to local variables will be wrong.
+Local Solidity variables are available for assignments, for example:
 
 .. code::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >=0.4.11 <0.6.0;
 
     contract C {
         uint b;
-        function f(uint x) public returns (uint r) {
+        function f(uint x) public view returns (uint r) {
             assembly {
                 r := mul(x, sload(b_slot)) // ignore the offset, we know it is zero
             }
         }
     }
 
-.. note::
+.. warning::
     If you access variables of a type that spans less than 256 bits
     (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
     you cannot make any assumptions about bits not part of the
@@ -418,57 +419,8 @@ changes during the call, and thus references to local variables will be wrong.
 Labels
 ------
 
-.. note::
-    Labels are deprecated. Please use functions, loops, if or switch statements instead.
-
-Another problem in EVM assembly is that ``jump`` and ``jumpi`` use absolute addresses
-which can change easily. Solidity inline assembly provides labels to make the use of
-jumps easier. Note that labels are a low-level feature and it is possible to write
-efficient assembly without labels, just using assembly functions, loops, if and switch instructions
-(see below). The following code computes an element in the Fibonacci series.
-
-.. code::
-
-    {
-        let n := calldataload(4)
-        let a := 1
-        let b := a
-    loop:
-        jumpi(loopend, eq(n, 0))
-        a add swap1
-        n := sub(n, 1)
-        jump(loop)
-    loopend:
-        mstore(0, a)
-        return(0, 0x20)
-    }
-
-Please note that automatically accessing stack variables can only work if the
-assembler knows the current stack height. This fails to work if the jump source
-and target have different stack heights. It is still fine to use such jumps, but
-you should just not access any stack variables (even assembly variables) in that case.
-
-Furthermore, the stack height analyser goes through the code opcode by opcode
-(and not according to control flow), so in the following case, the assembler
-will have a wrong impression about the stack height at label ``two``:
-
-.. code::
-
-    {
-        let x := 8
-        jump(two)
-        one:
-            // Here the stack height is 2 (because we pushed x and 7),
-            // but the assembler thinks it is 1 because it reads
-            // from top to bottom.
-            // Accessing the stack variable x here will lead to errors.
-            x := 9
-            jump(three)
-        two:
-            7 // push something onto the stack
-            jump(one)
-        three:
-    }
+Support for labels has been removed in version 0.5.0 of Solidity.
+Please use functions, loops, if or switch statements instead.
 
 Declaring Assembly-Local Variables
 ----------------------------------
@@ -482,7 +434,7 @@ be just ``0``, but it can also be a complex functional-style expression.
 
 .. code::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
         function f(uint x) public view returns (uint b) {
@@ -506,25 +458,18 @@ Assignments are possible to assembly-local variables and to function-local
 variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
-There are two kinds of assignments: functional-style and instruction-style.
-For functional-style assignments (``variable := value``), you need to provide a value in a
-functional-style expression that results in exactly one stack value
-and for instruction-style (``=: variable``), the value is just taken from the stack top.
-For both ways, the colon points to the name of the variable. The assignment
-is performed by replacing the variable's value on the stack by the new value.
+Variables can only be assigned expressions that result in exactly one value.
+If you want to assign the values returned from a function that has
+multiple return parameters, you have to provide multiple variables.
 
 .. code::
 
     {
-        let v := 0 // functional-style assignment as part of variable declaration
+        let v := 0
         let g := add(v, 2)
-        sload(10)
-        =: v // instruction style assignment, puts the result of sload(10) into v
+        function f() -> a, b { }
+        let c, d := f()
     }
-
-.. note::
-    Instruction-style assignment is deprecated.
-
 
 If
 --
@@ -642,12 +587,9 @@ Things to Avoid
 Inline assembly might have a quite high-level look, but it actually is extremely
 low-level. Function calls, loops, ifs and switches are converted by simple
 rewriting rules and after that, the only thing the assembler does for you is re-arranging
-functional-style opcodes, managing jump labels, counting stack height for
+functional-style opcodes, counting stack height for
 variable access and removing stack slots for assembly-local variables when the end
-of their block is reached. Especially for those two last cases, it is important
-to know that the assembler only counts stack height from top to bottom, not
-necessarily following control flow. Furthermore, operations like swap will only
-swap the contents of the stack but not the location of variables.
+of their block is reached.
 
 Conventions in Solidity
 -----------------------
@@ -662,20 +604,31 @@ first.
 
 Solidity manages memory in a very simple way: There is a "free memory pointer"
 at position ``0x40`` in memory. If you want to allocate memory, just use the memory
-from that point on and update the pointer accordingly.
+starting from where this pointer points at and update it accordingly.
+There is no guarantee that the memory has not been used before and thus
+you cannot assume that its contents are zero bytes.
+There is no built-in mechanism to release or free allocated memory.
+Here is an assembly snippet that can be used for allocating memory::
+
+    function allocate(length) -> pos {
+      pos := mload(0x40)
+      mstore(0x40, add(pos, length))
+    }
 
 The first 64 bytes of memory can be used as "scratch space" for short-term
 allocation. The 32 bytes after the free memory pointer (i.e. starting at ``0x60``)
 is meant to be zero permanently and is used as the initial value for
 empty dynamic memory arrays.
+This means that the allocatable memory starts at ``0x80``, which is the initial value
+of the free memory pointer.
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (yes, this is
 even true for ``byte[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
 arrays are pointers to memory arrays. The length of a dynamic array is stored at the
-first slot of the array and then only the array elements follow.
+first slot of the array and followed by the array elements.
 
 .. warning::
-    Statically-sized memory arrays do not have a length field, but it will be added soon
+    Statically-sized memory arrays do not have a length field, but it might be added later
     to allow better convertibility between statically- and dynamically-sized arrays, so
     please do not rely on that.
 
@@ -710,7 +663,7 @@ Scoping: An identifier that is declared (label, variable, function, assembly)
 is only visible in the block where it was declared (including nested blocks
 inside the current block). It is not legal to access local variables across
 function borders, even if they would be in scope. Shadowing is not allowed.
-Local variables cannot be accessed before they were declared, but labels,
+Local variables cannot be accessed before they were declared, but
 functions and assemblies can. Assemblies are special blocks that are used
 for e.g. returning runtime code or creating contracts. No identifier from an
 outer assembly is visible in a sub-assembly.
@@ -721,7 +674,7 @@ Whenever a local variable is referenced, the code generator needs
 to know its current relative position in the stack and thus it needs to
 keep track of the current so-called stack height. Since all local variables
 are removed at the end of a block, the stack height before and after the block
-should be the same. If this is not the case, a warning is issued.
+should be the same. If this is not the case, compilation fails.
 
 Using ``switch``, ``for`` and functions, it should be possible to write
 complex code without using ``jump`` or ``jumpi`` manually. This makes it much
@@ -738,7 +691,7 @@ Example:
 We will follow an example compilation from Solidity to assembly.
 We consider the runtime bytecode of the following Solidity program::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract C {
       function f(uint x) public pure returns (uint y) {
@@ -751,7 +704,7 @@ We consider the runtime bytecode of the following Solidity program::
 The following assembly will be generated::
 
     {
-      mstore(0x40, 0x60) // store the "free memory pointer"
+      mstore(0x40, 0x80) // store the "free memory pointer"
       // function dispatcher
       switch div(calldataload(0), exp(2, 226))
       case 0xb3de648b {

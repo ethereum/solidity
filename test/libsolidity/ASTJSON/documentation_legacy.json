@@ -1,0 +1,177 @@
+{
+	"attributes" : 
+	{
+		"absolutePath" : "c",
+		"exportedSymbols" : 
+		{
+			"C" : 
+			[
+				15
+			]
+		}
+	},
+	"children" : 
+	[
+		{
+			"attributes" : 
+			{
+				"baseContracts" : 
+				[
+					null
+				],
+				"contractDependencies" : 
+				[
+					null
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					15
+				],
+				"name" : "C",
+				"scope" : 16
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"anonymous" : false,
+						"documentation" : "Some comment on Evt.",
+						"name" : "Evt"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 5,
+							"name" : "ParameterList",
+							"src" : "51:2:3"
+						}
+					],
+					"id" : 6,
+					"name" : "EventDefinition",
+					"src" : "42:12:3"
+				},
+				{
+					"attributes" : 
+					{
+						"documentation" : "Some comment on mod.",
+						"name" : "mod",
+						"visibility" : "internal"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 7,
+							"name" : "ParameterList",
+							"src" : "96:2:3"
+						},
+						{
+							"children" : 
+							[
+								{
+									"id" : 8,
+									"name" : "PlaceholderStatement",
+									"src" : "101:1:3"
+								}
+							],
+							"id" : 9,
+							"name" : "Block",
+							"src" : "99:6:3"
+						}
+					],
+					"id" : 10,
+					"name" : "ModifierDefinition",
+					"src" : "84:21:3"
+				},
+				{
+					"attributes" : 
+					{
+						"documentation" : "Some comment on fn.",
+						"implemented" : true,
+						"isConstructor" : false,
+						"kind" : "function",
+						"modifiers" : 
+						[
+							null
+						],
+						"name" : "fn",
+						"scope" : 15,
+						"stateMutability" : "nonpayable",
+						"superFunction" : null,
+						"visibility" : "public"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 11,
+							"name" : "ParameterList",
+							"src" : "145:2:3"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 12,
+							"name" : "ParameterList",
+							"src" : "155:0:3"
+						},
+						{
+							"attributes" : 
+							{
+								"statements" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 13,
+							"name" : "Block",
+							"src" : "155:2:3"
+						}
+					],
+					"id" : 14,
+					"name" : "FunctionDefinition",
+					"src" : "134:23:3"
+				}
+			],
+			"id" : 15,
+			"name" : "ContractDefinition",
+			"src" : "0:159:3"
+		}
+	],
+	"id" : 16,
+	"name" : "SourceUnit",
+	"src" : "0:160:3"
+}

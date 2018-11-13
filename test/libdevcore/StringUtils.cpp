@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE(test_similarity)
 	BOOST_CHECK_EQUAL(stringWithinDistance("abc", "abcdef", 2), false);
 	BOOST_CHECK_EQUAL(stringWithinDistance("abcd", "wxyz", 2), false);
 	BOOST_CHECK_EQUAL(stringWithinDistance("", "", 2), true);
+	BOOST_CHECK_EQUAL(stringWithinDistance("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY", "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYZ", 2, 6400), false);
 }
 
 BOOST_AUTO_TEST_CASE(test_dldistance)
@@ -79,6 +80,24 @@ BOOST_AUTO_TEST_CASE(test_alternatives_list)
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\" or \"c\"");
 	strings.push_back("d");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\", \"c\" or \"d\"");
+}
+
+BOOST_AUTO_TEST_CASE(test_human_readable_join)
+{
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({})), "");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a"})), "a");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b"})), "a, b");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b", "c"})), "a, b, c");
+
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({}), "; "), "");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a"}), "; "), "a");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b"}), "; "), "a; b");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b", "c"}), "; "), "a; b; c");
+
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({}), "; ", " or "), "");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a"}), "; ", " or "), "a");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b"}), "; ", " or "), "a or b");
+	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b", "c"}), "; ", " or "), "a; b or c");
 }
 
 

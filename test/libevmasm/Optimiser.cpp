@@ -30,7 +30,6 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <string>
 #include <tuple>
@@ -965,6 +964,31 @@ BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
 			expectation.begin(), expectation.end()
 		);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(peephole_truthy_and)
+{
+  AssemblyItems items{
+    AssemblyItem(Tag, 1),
+    Instruction::BALANCE,
+    u256(0),
+    Instruction::NOT,
+    Instruction::AND,
+    AssemblyItem(PushTag, 1),
+    Instruction::JUMPI
+  };
+  AssemblyItems expectation{
+    AssemblyItem(Tag, 1),
+    Instruction::BALANCE,
+    AssemblyItem(PushTag, 1),
+    Instruction::JUMPI
+  };
+  PeepholeOptimiser peepOpt(items);
+  BOOST_REQUIRE(peepOpt.optimise());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+    items.begin(), items.end(),
+    expectation.begin(), expectation.end()
+  );
 }
 
 BOOST_AUTO_TEST_CASE(jumpdest_removal)

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 import "../Tokens/Token.sol";
 import "../Utils/Math.sol";
 
@@ -30,7 +30,7 @@ contract StandardToken is Token {
             return false;
         balances[msg.sender] -= value;
         balances[to] += value;
-        Transfer(msg.sender, to, value);
+        emit Transfer(msg.sender, to, value);
         return true;
     }
 
@@ -50,7 +50,7 @@ contract StandardToken is Token {
         balances[from] -= value;
         allowances[from][msg.sender] -= value;
         balances[to] += value;
-        Transfer(from, to, value);
+        emit Transfer(from, to, value);
         return true;
     }
 
@@ -63,7 +63,7 @@ contract StandardToken is Token {
         returns (bool)
     {
         allowances[msg.sender][spender] = value;
-        Approval(msg.sender, spender, value);
+        emit Approval(msg.sender, spender, value);
         return true;
     }
 
@@ -73,7 +73,7 @@ contract StandardToken is Token {
     /// @return Remaining allowance for spender
     function allowance(address owner, address spender)
         public
-        constant
+        view
         returns (uint)
     {
         return allowances[owner][spender];
@@ -84,7 +84,7 @@ contract StandardToken is Token {
     /// @return Balance of owner
     function balanceOf(address owner)
         public
-        constant
+        view
         returns (uint)
     {
         return balances[owner];
@@ -94,7 +94,7 @@ contract StandardToken is Token {
     /// @return Total supply
     function totalSupply()
         public
-        constant
+        view
         returns (uint)
     {
         return totalTokens;

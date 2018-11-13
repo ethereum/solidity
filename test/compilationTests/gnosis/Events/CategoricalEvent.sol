@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 import "../Events/Event.sol";
 
 
@@ -13,7 +13,7 @@ contract CategoricalEvent is Event {
     /// @param _collateralToken Tokens used as collateral in exchange for outcome tokens
     /// @param _oracle Oracle contract used to resolve the event
     /// @param outcomeCount Number of event outcomes
-    function CategoricalEvent(
+    constructor(
         Token _collateralToken,
         Oracle _oracle,
         uint8 outcomeCount
@@ -38,16 +38,16 @@ contract CategoricalEvent is Event {
         outcomeTokens[uint(outcome)].revoke(msg.sender, winnings);
         // Payout winnings
         require(collateralToken.transfer(msg.sender, winnings));
-        WinningsRedemption(msg.sender, winnings);
+        emit WinningsRedemption(msg.sender, winnings);
     }
 
     /// @dev Calculates and returns event hash
     /// @return Event hash
     function getEventHash()
         public
-        constant
+        view
         returns (bytes32)
     {
-        return keccak256(collateralToken, oracle, outcomeTokens.length);
+        return keccak256(abi.encodePacked(collateralToken, oracle, outcomeTokens.length));
     }
 }

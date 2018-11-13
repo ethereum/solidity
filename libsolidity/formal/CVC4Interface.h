@@ -21,7 +21,18 @@
 
 #include <boost/noncopyable.hpp>
 
+#if defined(__GLIBC__)
+// The CVC4 headers includes the deprecated system headers <ext/hash_map>
+// and <ext/hash_set>. These headers cause a warning that will break the
+// build, unless _GLIBCXX_PERMIT_BACKWARD_HASH is set.
+#define _GLIBCXX_PERMIT_BACKWARD_HASH
+#endif
+
 #include <cvc4/cvc4.h>
+
+#if defined(__GLIBC__)
+#undef _GLIBCXX_PERMIT_BACKWARD_HASH
+#endif
 
 namespace dev
 {
@@ -40,9 +51,9 @@ public:
 	void push() override;
 	void pop() override;
 
-	Expression newFunction(std::string _name, Sort _domain, Sort _codomain) override;
-	Expression newInteger(std::string _name) override;
-	Expression newBool(std::string _name) override;
+	void declareFunction(std::string _name, Sort _domain, Sort _codomain) override;
+	void declareInteger(std::string _name) override;
+	void declareBool(std::string _name) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;

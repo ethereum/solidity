@@ -57,7 +57,7 @@ bool AsmAnalyzer::operator()(Label const& _label)
 	solAssert(!_label.name.empty(), "");
 	checkLooseFeature(
 		_label.location,
-		"The use of labels is deprecated. Please use \"if\", \"switch\", \"for\" or function calls instead."
+		"The use of labels is disallowed. Please use \"if\", \"switch\", \"for\" or function calls instead."
 	);
 	m_info.stackHeightInfo[&_label] = m_stackHeight;
 	warnOnInstructions(solidity::Instruction::JUMPDEST, _label.location);
@@ -68,7 +68,7 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 {
 	checkLooseFeature(
 		_instruction.location,
-		"The use of non-functional instructions is deprecated. Please use functional notation instead."
+		"The use of non-functional instructions is disallowed. Please use functional notation instead."
 	);
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
@@ -79,17 +79,17 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 
 bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 {
-	expectValidType(_literal.type, _literal.location);
+	expectValidType(_literal.type.str(), _literal.location);
 	++m_stackHeight;
-	if (_literal.kind == assembly::LiteralKind::String && _literal.value.size() > 32)
+	if (_literal.kind == assembly::LiteralKind::String && _literal.value.str().size() > 32)
 	{
 		m_errorReporter.typeError(
 			_literal.location,
-			"String literal too long (" + boost::lexical_cast<std::string>(_literal.value.size()) + " > 32)"
+			"String literal too long (" + to_string(_literal.value.str().size()) + " > 32)"
 		);
 		return false;
 	}
-	else if (_literal.kind == assembly::LiteralKind::Number && bigint(_literal.value) > u256(-1))
+	else if (_literal.kind == assembly::LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
 	{
 		m_errorReporter.typeError(
 			_literal.location,
@@ -99,8 +99,8 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	}
 	else if (_literal.kind == assembly::LiteralKind::Boolean)
 	{
-		solAssert(m_flavour == AsmFlavour::IULIA, "");
-		solAssert(_literal.value == "true" || _literal.value == "false", "");
+		solAssert(m_flavour == AsmFlavour::Yul, "");
+		solAssert(_literal.value == YulString{string("true")} || _literal.value == YulString{string("false")}, "");
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
@@ -118,7 +118,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 			{
 				m_errorReporter.declarationError(
 					_identifier.location,
-					"Variable " + _identifier.name + " used before it was declared."
+					"Variable " + _identifier.name.str() + " used before it was declared."
 				);
 				success = false;
 			}
@@ -132,7 +132,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		{
 			m_errorReporter.typeError(
 				_identifier.location,
-				"Function " + _identifier.name + " used without being called."
+				"Function " + _identifier.name.str() + " used without being called."
 			);
 			success = false;
 		}
@@ -145,7 +145,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 		if (m_resolver)
 		{
 			bool insideFunction = m_currentScope->insideFunction();
-			stackSize = m_resolver(_identifier, julia::IdentifierContext::RValue, insideFunction);
+			stackSize = m_resolver(_identifier, yul::IdentifierContext::RValue, insideFunction);
 		}
 		if (stackSize == size_t(-1))
 		{
@@ -162,7 +162,7 @@ bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(m_flavour != AsmFlavour::IULIA, "");
+	solAssert(m_flavour != AsmFlavour::Yul, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
@@ -185,7 +185,7 @@ bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
 		Error::Type errorType = m_flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
-			boost::lexical_cast<string>(m_stackHeight - initialStackHeight) +
+			to_string(m_stackHeight - initialStackHeight) +
 			" value" +
 			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
 			"). Use ``pop()`` or assign them.";
@@ -201,7 +201,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 {
 	checkLooseFeature(
 		_assignment.location,
-		"The use of stack assignment is deprecated. Please use assignment in functional notation instead."
+		"The use of stack assignment is disallowed. Please use assignment in functional notation instead."
 	);
 	bool success = checkAssignment(_assignment.variableName, size_t(-1));
 	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
@@ -253,7 +253,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 
 	for (auto const& variable: _varDecl.variables)
 	{
-		expectValidType(variable.type, variable.location);
+		expectValidType(variable.type.str(), variable.location);
 		m_activeVariables.insert(&boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)));
 	}
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
@@ -268,7 +268,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	Scope& varScope = scope(virtualBlock);
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
-		expectValidType(var.type, var.location);
+		expectValidType(var.type.str(), var.location);
 		m_activeVariables.insert(&boost::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
@@ -322,8 +322,8 @@ bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
 		{
 			m_errorReporter.typeError(
 				_funCall.functionName.location,
-				"Expected " + boost::lexical_cast<string>(arguments) + " arguments but got " +
-				boost::lexical_cast<string>(_funCall.arguments.size()) + "."
+				"Expected " + to_string(arguments) + " arguments but got " +
+				to_string(_funCall.arguments.size()) + "."
 			);
 			success = false;
 		}
@@ -361,7 +361,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	if (!expectExpression(*_switch.expression))
 		success = false;
 
-	set<tuple<LiteralKind, string>> cases;
+	set<tuple<LiteralKind, YulString>> cases;
 	for (auto const& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -477,7 +477,7 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 		m_errorReporter.typeError(
 			_location,
 			"Expected expression to return one item to the stack, but did return " +
-			boost::lexical_cast<string>(m_stackHeight - _oldHeight) +
+			to_string(m_stackHeight - _oldHeight) +
 			" items."
 		);
 		return false;
@@ -503,7 +503,7 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 		{
 			m_errorReporter.declarationError(
 				_variable.location,
-				"Variable " + _variable.name + " used before it was declared."
+				"Variable " + _variable.name.str() + " used before it was declared."
 			);
 			success = false;
 		}
@@ -512,7 +512,7 @@ bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t 
 	else if (m_resolver)
 	{
 		bool insideFunction = m_currentScope->insideFunction();
-		variableSize = m_resolver(_variable, julia::IdentifierContext::LValue, insideFunction);
+		variableSize = m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction);
 	}
 	if (variableSize == size_t(-1))
 	{
@@ -550,7 +550,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (m_flavour != AsmFlavour::IULIA)
+	if (m_flavour != AsmFlavour::Yul)
 		return;
 
 	if (!builtinTypes.count(type))
@@ -565,8 +565,10 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.
 	solAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
+	// Similarly we assume bitwise shifting and create2 go together.
+	solAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
-	if (_instr == solidity::Instruction::CREATE2)
+	if (_instr == solidity::Instruction::EXTCODEHASH)
 		m_errorReporter.warning(
 			_location,
 			"The \"" +
@@ -593,7 +595,8 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	else if ((
 		_instr == solidity::Instruction::SHL ||
 		_instr == solidity::Instruction::SHR ||
-		_instr == solidity::Instruction::SAR
+		_instr == solidity::Instruction::SAR ||
+		_instr == solidity::Instruction::CREATE2
 	) && !m_evmVersion.hasBitwiseShifting())
 		m_errorReporter.warning(
 			_location,

@@ -41,12 +41,12 @@ struct Block;
 class CodeGenerator
 {
 public:
-	/// Performs code generation and appends generated to to _assembly.
+	/// Performs code generation and appends generated to _assembly.
 	static void assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		eth::Assembly& _assembly,
-		julia::ExternalIdentifierAccess const& _identifierAccess = julia::ExternalIdentifierAccess(),
+		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	);
 };

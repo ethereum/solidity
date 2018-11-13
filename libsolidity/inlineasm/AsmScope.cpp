@@ -21,10 +21,10 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 
 using namespace std;
+using namespace dev;
 using namespace dev::solidity::assembly;
 
-
-bool Scope::registerLabel(string const& _name)
+bool Scope::registerLabel(yul::YulString _name)
 {
 	if (exists(_name))
 		return false;
@@ -32,7 +32,7 @@ bool Scope::registerLabel(string const& _name)
 	return true;
 }
 
-bool Scope::registerVariable(string const& _name, JuliaType const& _type)
+bool Scope::registerVariable(yul::YulString _name, YulType const& _type)
 {
 	if (exists(_name))
 		return false;
@@ -42,7 +42,7 @@ bool Scope::registerVariable(string const& _name, JuliaType const& _type)
 	return true;
 }
 
-bool Scope::registerFunction(string const& _name, std::vector<JuliaType> const& _arguments, std::vector<JuliaType> const& _returns)
+bool Scope::registerFunction(yul::YulString _name, std::vector<YulType> const& _arguments, std::vector<YulType> const& _returns)
 {
 	if (exists(_name))
 		return false;
@@ -50,7 +50,7 @@ bool Scope::registerFunction(string const& _name, std::vector<JuliaType> const& 
 	return true;
 }
 
-Scope::Identifier* Scope::lookup(string const& _name)
+Scope::Identifier* Scope::lookup(yul::YulString _name)
 {
 	bool crossedFunctionBoundary = false;
 	for (Scope* s = this; s; s = s->superScope)
@@ -70,7 +70,7 @@ Scope::Identifier* Scope::lookup(string const& _name)
 	return nullptr;
 }
 
-bool Scope::exists(string const& _name) const
+bool Scope::exists(yul::YulString _name) const
 {
 	if (identifiers.count(_name))
 		return true;

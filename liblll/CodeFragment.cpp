@@ -22,22 +22,33 @@
 #include "CodeFragment.h"
 
 #include <boost/algorithm/string.hpp>
-#pragma warning(push)
+
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif // defined(__GNUC__)
+
 #include <boost/spirit/include/support_utree.hpp>
-#pragma warning(pop)
+
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif // defined(__GNUC__)
+
 #include <libdevcore/CommonIO.h>
 #include <libevmasm/Instruction.h>
 #include "CompilerState.h"
 #include "Parser.h"
+
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
+using namespace dev::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
 {
+	// NOTE: add this as a safeguard in case the user didn't issue an
+	// explicit stop at the end of the sequence
+	m_asm.append(Instruction::STOP);
+
 	if (_cs.usedAlloc && _cs.vars.size() && !m_finalised)
 	{
 		m_finalised = true;
@@ -225,7 +236,12 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++)
-					m_asm.append(CodeFragment(i, _s, m_readFile, true).m_asm);
+				{
+					auto fragment = CodeFragment(i, _s, m_readFile, true).m_asm;
+					if ((m_asm.deposit() + fragment.deposit()) < 0)
+						error<IncorrectParameterCount>("The assembly instruction resulted in stack underflow");
+					m_asm.append(fragment);
+				}
 		}
 		else if (us == "INCLUDE")
 		{
@@ -341,7 +357,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				else if (i.which() == sp::utree_type::string_type)
 				{
 					auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
-					data.insert(data.end(), (byte const *)sr.begin(), (byte const*)sr.end());
+					data.insert(data.end(), (uint8_t const *)sr.begin(), (uint8_t const*)sr.end());
 				}
 				else if (i.which() == sp::utree_type::any_type)
 				{
@@ -552,7 +568,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int targetDeposit = hasDefault ? code[code.size() - 1].m_asm.deposit() : 0;
 
 			// The conditions
-			AssemblyItems jumpTags;
+			eth::AssemblyItems jumpTags;
 			for (unsigned i = 0; i < code.size() - 1; i += 2)
 			{
 				requireDeposit(i, 1);
@@ -619,7 +635,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireMaxSize(3);
 			requireDeposit(1, 1);
 
-			auto subPush = m_asm.appendSubroutine(make_shared<Assembly>(code[0].assembly(ns)));
+			auto subPush = m_asm.appendSubroutine(make_shared<eth::Assembly>(code[0].assembly(ns)));
 			m_asm.append(Instruction::DUP1);
 			if (code.size() == 3)
 			{

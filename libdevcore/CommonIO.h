@@ -41,14 +41,6 @@ std::string readStandardInput();
 /// Retrieve and returns a character from standard input (without waiting for EOL).
 int readStandardInputChar();
 
-/// Write the given binary data into the given file, replacing the file if it pre-exists.
-/// Throws exception on error.
-/// @param _writeDeleteRename useful not to lose any data: If set, first writes to another file in
-/// the same directory and then moves that file.
-void writeFile(std::string const& _file, bytesConstRef _data, bool _writeDeleteRename = false);
-/// Write the given binary data into the given file, replacing the file if it pre-exists.
-inline void writeFile(std::string const& _file, bytes const& _data, bool _writeDeleteRename = false) { writeFile(_file, bytesConstRef(&_data), _writeDeleteRename); }
-inline void writeFile(std::string const& _file, std::string const& _data, bool _writeDeleteRename = false) { writeFile(_file, bytesConstRef(_data), _writeDeleteRename); }
 /// Converts arbitrary value to string representation using std::stringstream.
 template <class _T>
 std::string toString(_T const& _t)
@@ -61,5 +53,11 @@ std::string toString(_T const& _t)
 /// Partial implementation of boost::filesystem::weakly_canonical (available in boost>=1.60).
 /// Should be replaced by the boost implementation as soon as support for boost<1.60 can be dropped.
 boost::filesystem::path weaklyCanonicalFilesystemPath(boost::filesystem::path const &_path);
+
+/// @returns the absolute path corresponding to @a _path relative to @a _reference.
+std::string absolutePath(std::string const& _path, std::string const& _reference);
+
+/// Helper function to return path converted strings.
+std::string sanitizePath(std::string const& _path);
 
 }

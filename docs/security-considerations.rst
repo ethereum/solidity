@@ -55,7 +55,7 @@ complete contract):
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -78,7 +78,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -86,7 +86,8 @@ as it uses ``call`` which forwards all remaining gas by default:
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            if (msg.sender.call.value(shares[msg.sender])())
+            (bool success,) = msg.sender.call.value(shares[msg.sender])("");
+            if (success)
                 shares[msg.sender] = 0;
         }
     }
@@ -96,14 +97,14 @@ outlined further below:
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >=0.4.11 <0.6.0;
 
     contract Fund {
         /// Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            var share = shares[msg.sender];
+            uint share = shares[msg.sender];
             shares[msg.sender] = 0;
             msg.sender.transfer(share);
         }
@@ -135,15 +136,16 @@ Sending and Receiving Ether
 - If a contract receives Ether (without a function being called), the fallback function is executed.
   If it does not have a fallback function, the Ether will be rejected (by throwing an exception).
   During the execution of the fallback function, the contract can only rely
-  on the "gas stipend" (2300 gas) being available to it at that time. This stipend is not enough to access storage in any way.
+  on the "gas stipend" it is passed (2300 gas) being available to it at that time. This stipend is not enough to modify storage
+  (do not take this for granted though, the stipend might change with future hard forks).
   To be sure that your contract can receive Ether in that way, check the gas requirements of the fallback function
   (for example in the "details" section in Remix).
 
 - There is a way to forward more gas to the receiving contract using
-  ``addr.call.value(x)()``. This is essentially the same as ``addr.transfer(x)``,
+  ``addr.call.value(x)("")``. This is essentially the same as ``addr.transfer(x)``,
   only that it forwards all remaining gas and opens up the ability for the
-  recipient to perform more expensive actions (and it only returns a failure code
-  and does not automatically propagate the error). This might include calling back
+  recipient to perform more expensive actions (and it returns a failure code
+  instead of automatically propagating the error). This might include calling back
   into the sending contract or other state changes you might not have thought of.
   So it allows for great flexibility for honest users but also for malicious actors.
 
@@ -171,7 +173,8 @@ before they interact with your contract.
 
 Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
-``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
+``.call()``, ``.callcode()``, ``.delegatecall()`` and ``.staticcall()`` behave
+in the same way.
 
 tx.origin
 =========
@@ -180,17 +183,17 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >0.4.99 <0.6.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract TxUserWallet {
         address owner;
 
-        function TxUserWallet() public {
+        constructor() public {
             owner = msg.sender;
         }
 
-        function transferTo(address dest, uint amount) public {
+        function transferTo(address payable dest, uint amount) public {
             require(tx.origin == owner);
             dest.transfer(amount);
         }
@@ -200,20 +203,20 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >0.4.99 <0.6.0;
 
     interface TxUserWallet {
-        function transferTo(address dest, uint amount) public;
+        function transferTo(address payable dest, uint amount) external;
     }
 
     contract TxAttackWallet {
-        address owner;
+        address payable owner;
 
-        function TxAttackWallet() public {
+        constructor() public {
             owner = msg.sender;
         }
 
-        function() public {
+        function() external {
             TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
         }
     }
@@ -221,10 +224,29 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet, instead of the owner address. But by checking ``tx.origin``, it gets the original address that kicked off the transaction, which is still the owner address. The attack wallet instantly drains all your funds.
 
 
+
+Two's Complement / Underflows / Overflows
+=========================================
+
+As in many programming languages, Solidity's integer types are not actually integers.
+They resemble integers when the values are small, but behave differently if the numbers are larger.
+For example, the following is true: ``uint8(255) + uint8(1) == 0``. This situation is called
+an *overflow*. It occurs when an operation is performed that requires a fixed size variable
+to store a number (or piece of data) that is outside the range of the variable's data type.
+An *underflow* is the converse situation: ``uint8(0) - uint8(1) == 255``.
+
+In general, read about the limits of two's complement representation, which even has some
+more special edge cases for signed numbers.
+
+Try to use ``require`` to limit the size of inputs to a reasonable range and use the
+:ref:`SMT checker<smt_checker>` to find potential overflows, or
+use a library like
+`SafeMath<https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol>`
+if you want all overflows to cause a revert.
+
 Minor Details
 =============
 
-- In ``for (var i = 0; i < arrayName.length; i++) { ... }``, the type of ``i`` will be ``uint8``, because this is the smallest type that is required to hold the value ``0``. If the array has more than 255 elements, the loop will not terminate.
 - Types that do not occupy the full 32 bytes might contain "dirty higher order bits".
   This is especially important if you access ``msg.data`` - it poses a malleability risk:
   You can craft transactions that call a function ``f(uint8 x)`` with a raw byte argument
@@ -245,12 +267,8 @@ implications, there might be another issue buried beneath it.
 Any compiler warning we issue can be silenced by slight changes to the
 code.
 
-Also try to enable the "0.5.0" safety features as early as possible
-by adding ``pragma experimental "v0.5.0";``. Note that in this case,
-the word ``experimental`` does not mean that the safety features are in any
-way risky, it is just a way to enable some features that are
-not yet part of the latest version of Solidity due to backwards
-compatibility.
+Always use the latest version of the compiler to be notified about all recently
+introduced warnings.
 
 Restrict the Amount of Ether
 ============================
@@ -304,6 +322,12 @@ of "failsafe" mode, which, for example, disables most of the features, hands ove
 control to a fixed and trusted third party or just converts the contract into
 a simple "give me back my money" contract.
 
+Ask for Peer Review
+===================
+
+The more people examine a piece of code, the more issues are found.
+Asking people to review your code also helps as a cross-check to find out whether your code
+is easy to understand - a very important criterion for good smart contracts.
 
 *******************
 Formal Verification

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Full assembly stack that can support EVM-assembly and JULIA as input and EVM, EVM1.5 and
+ * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
  * eWasm as output.
  */
 
@@ -47,13 +47,13 @@ struct MachineAssemblyObject
 };
 
 /*
- * Full assembly stack that can support EVM-assembly and JULIA as input and EVM, EVM1.5 and
+ * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
  * eWasm as output.
  */
 class AssemblyStack
 {
 public:
-	enum class Language { JULIA, Assembly, StrictAssembly };
+	enum class Language { Yul, Assembly, StrictAssembly };
 	enum class Machine { EVM, EVM15, eWasm };
 
 	explicit AssemblyStack(EVMVersion _evmVersion = EVMVersion(), Language _language = Language::Assembly):

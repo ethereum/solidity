@@ -1,0 +1,174 @@
+{
+	"absolutePath" : "a",
+	"exportedSymbols" : 
+	{
+		"C" : 
+		[
+			14
+		]
+	},
+	"id" : 15,
+	"nodeType" : "SourceUnit",
+	"nodes" : 
+	[
+		{
+			"baseContracts" : [],
+			"contractDependencies" : [],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 14,
+			"linearizedBaseContracts" : 
+			[
+				14
+			],
+			"name" : "C",
+			"nodeType" : "ContractDefinition",
+			"nodes" : 
+			[
+				{
+					"body" : 
+					{
+						"id" : 5,
+						"nodeType" : "Block",
+						"src" : "32:6:1",
+						"statements" : 
+						[
+							{
+								"id" : 4,
+								"nodeType" : "PlaceholderStatement",
+								"src" : "34:1:1"
+							}
+						]
+					},
+					"documentation" : null,
+					"id" : 6,
+					"name" : "M",
+					"nodeType" : "ModifierDefinition",
+					"parameters" : 
+					{
+						"id" : 3,
+						"nodeType" : "ParameterList",
+						"parameters" : 
+						[
+							{
+								"constant" : false,
+								"id" : 2,
+								"name" : "i",
+								"nodeType" : "VariableDeclaration",
+								"scope" : 6,
+								"src" : "24:6:1",
+								"stateVariable" : false,
+								"storageLocation" : "default",
+								"typeDescriptions" : 
+								{
+									"typeIdentifier" : "t_uint256",
+									"typeString" : "uint256"
+								},
+								"typeName" : 
+								{
+									"id" : 1,
+									"name" : "uint",
+									"nodeType" : "ElementaryTypeName",
+									"src" : "24:4:1",
+									"typeDescriptions" : 
+									{
+										"typeIdentifier" : "t_uint256",
+										"typeString" : "uint256"
+									}
+								},
+								"value" : null,
+								"visibility" : "internal"
+							}
+						],
+						"src" : "23:8:1"
+					},
+					"src" : "13:25:1",
+					"visibility" : "internal"
+				},
+				{
+					"body" : 
+					{
+						"id" : 12,
+						"nodeType" : "Block",
+						"src" : "64:2:1",
+						"statements" : []
+					},
+					"documentation" : null,
+					"id" : 13,
+					"implemented" : true,
+					"kind" : "function",
+					"modifiers" : 
+					[
+						{
+							"arguments" : 
+							[
+								{
+									"argumentTypes" : null,
+									"hexValue" : "31",
+									"id" : 9,
+									"isConstant" : false,
+									"isLValue" : false,
+									"isPure" : true,
+									"kind" : "number",
+									"lValueRequested" : false,
+									"nodeType" : "Literal",
+									"src" : "54:1:1",
+									"subdenomination" : null,
+									"typeDescriptions" : 
+									{
+										"typeIdentifier" : "t_rational_1_by_1",
+										"typeString" : "int_const 1"
+									},
+									"value" : "1"
+								}
+							],
+							"id" : 10,
+							"modifierName" : 
+							{
+								"argumentTypes" : null,
+								"id" : 8,
+								"name" : "M",
+								"nodeType" : "Identifier",
+								"overloadedDeclarations" : [],
+								"referencedDeclaration" : 6,
+								"src" : "52:1:1",
+								"typeDescriptions" : 
+								{
+									"typeIdentifier" : "t_modifier$_t_uint256_$",
+									"typeString" : "modifier (uint256)"
+								}
+							},
+							"nodeType" : "ModifierInvocation",
+							"src" : "52:4:1"
+						}
+					],
+					"name" : "F",
+					"nodeType" : "FunctionDefinition",
+					"parameters" : 
+					{
+						"id" : 7,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "49:2:1"
+					},
+					"returnParameters" : 
+					{
+						"id" : 11,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "64:0:1"
+					},
+					"scope" : 14,
+					"src" : "39:27:1",
+					"stateMutability" : "nonpayable",
+					"superFunction" : null,
+					"visibility" : "public"
+				}
+			],
+			"scope" : 15,
+			"src" : "0:68:1"
+		}
+	],
+	"src" : "0:69:1"
+}

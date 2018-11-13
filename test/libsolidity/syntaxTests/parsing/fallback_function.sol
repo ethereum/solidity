@@ -1,0 +1,4 @@
+contract c {
+    function() external { }
+}
+// ----

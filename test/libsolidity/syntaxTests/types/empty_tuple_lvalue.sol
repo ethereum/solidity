@@ -1,4 +1,3 @@
-pragma solidity ^0.4.3;
 contract C {
     function f() private pure {}
     function a() public {
@@ -8,6 +7,6 @@ contract C {
     }
 }
 // ----
-// Warning: (146-149): Tuple component cannot be empty.
-// Warning: (151-154): Tuple component cannot be empty.
-// TypeError: (145-155): Type tuple(tuple(),tuple()) is not implicitly convertible to expected type tuple(uint256,uint256).
+// TypeError: (122-125): Tuple component cannot be empty.
+// TypeError: (127-130): Tuple component cannot be empty.
+// TypeError: (121-131): Type tuple(tuple(),tuple()) is not implicitly convertible to expected type tuple(uint256,uint256).

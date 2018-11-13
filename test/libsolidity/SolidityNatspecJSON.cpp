@@ -41,6 +41,7 @@ public:
 
 	void checkNatspec(
 		std::string const& _code,
+		std::string const& _contractName,
 		std::string const& _expectedDocumentationString,
 		bool _userDocumentation
 	)
@@ -52,9 +53,9 @@ public:
 
 		Json::Value generatedDocumentation;
 		if (_userDocumentation)
-			generatedDocumentation = m_compilerStack.natspecUser(m_compilerStack.lastContractName());
+			generatedDocumentation = m_compilerStack.natspecUser(_contractName);
 		else
-			generatedDocumentation = m_compilerStack.natspecDev(m_compilerStack.lastContractName());
+			generatedDocumentation = m_compilerStack.natspecDev(_contractName);
 		Json::Value expectedDocumentation;
 		jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE(user_basic_test)
 	char const* sourceCode = R"(
 		contract test {
 			/// @notice Multiplies `a` by 7
-			function mul(uint a) returns(uint d) { return a * 7; }
+			function mul(uint a) public returns(uint d) { return a * 7; }
 		}
 	)";
 
@@ -93,7 +94,7 @@ BOOST_AUTO_TEST_CASE(user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 		contract test {
 			/// @notice Multiplies `a` by 7
 			/// @dev Multiplies a number by 7
-			function mul(uint a) returns(uint d) { return a * 7; }
+			function mul(uint a) public returns (uint d) { return a * 7; }
 		}
 	)";
 
@@ -119,8 +120,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, devNatspec, false);
-	checkNatspec(sourceCode, userNatspec, true);
+	checkNatspec(sourceCode, "test", devNatspec, false);
+	checkNatspec(sourceCode, "test", userNatspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiline_comment)
@@ -129,7 +130,7 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 		contract test {
 			/// @notice Multiplies `a` by 7
 			/// and then adds `b`
-			function mul_and_add(uint a, uint256 b) returns(uint256 d) {
+			function mul_and_add(uint a, uint256 b) public returns (uint256 d) {
 				return (a * 7) + b;
 			}
 		}
@@ -140,7 +141,7 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 	"    \"mul_and_add(uint256,uint256)\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(user_multiple_functions)
@@ -148,17 +149,17 @@ BOOST_AUTO_TEST_CASE(user_multiple_functions)
 	char const* sourceCode = R"(
 		contract test {
 			/// @notice Multiplies `a` by 7 and then adds `b`
-			function mul_and_add(uint a, uint256 b) returns(uint256 d) {
+			function mul_and_add(uint a, uint256 b) public returns (uint256 d) {
 				return (a * 7) + b;
 			}
 
 			/// @notice Divides `input` by `div`
-			function divide(uint input, uint div) returns(uint d) {
+			function divide(uint input, uint div) public returns (uint d) {
 				return input / div;
 			}
 
 			/// @notice Subtracts 3 from `input`
-			function sub(int input) returns(int d) {
+			function sub(int input) public returns (int d) {
 				return input - 3;
 			}
 		}
@@ -171,7 +172,7 @@ BOOST_AUTO_TEST_CASE(user_multiple_functions)
 	"    \"sub(int256)\":{ \"notice\": \"Subtracts 3 from `input`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(user_empty_contract)
@@ -182,17 +183,17 @@ BOOST_AUTO_TEST_CASE(user_empty_contract)
 
 	char const* natspec = "{\"methods\":{} }";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function mul(uint a) returns(uint d) {
+			function mul(uint a) public returns (uint d) {
 				return a * 7;
 			}
-			function sub(int input) returns(int d) {
+			function sub(int input) public returns (int d) {
 				return input - 3;
 			}
 		}
@@ -201,8 +202,8 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	char const* devNatspec = "{\"methods\":{}}";
 	char const* userNatspec = "{\"methods\":{}}";
 
-	checkNatspec(sourceCode, devNatspec, false);
-	checkNatspec(sourceCode, userNatspec, true);
+	checkNatspec(sourceCode, "test", devNatspec, false);
+	checkNatspec(sourceCode, "test", userNatspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
@@ -213,7 +214,7 @@ BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 			/// Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
 			/// @param second Documentation for the second parameter
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -228,7 +229,7 @@ BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params)
@@ -238,7 +239,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
 			/// @param second Documentation for the second parameter
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -253,7 +254,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
 	"  /// @dev	 Multiplies a number by 7 and adds second parameter\n"
 	"  /// @param 	 a Documentation for the first parameter\n"
 	"  /// @param	 second			 Documentation for the second parameter\n"
-	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"  function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }\n"
 	"}\n";
 
 	char const* natspec = "{"
@@ -276,7 +277,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
@@ -287,7 +288,7 @@ BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -302,7 +303,7 @@ BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_functions)
@@ -312,18 +313,18 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
 			/// @param second Documentation for the second parameter
-			function mul(uint a, uint second) returns(uint d) {
+			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
 			}
 			/// @dev Divides 2 numbers
 			/// @param input Documentation for the input parameter
 			/// @param div Documentation for the div parameter
-			function divide(uint input, uint div) returns(uint d) {
+			function divide(uint input, uint div) public returns (uint d) {
 				return input / div;
 			}
 			/// @dev Subtracts 3 from `input`
 			/// @param input Documentation for the input parameter
-			function sub(int input) returns(int d) {
+			function sub(int input) public returns (int d) {
 				return input - 3;
 			}
 		}
@@ -353,7 +354,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_return)
@@ -365,7 +366,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
 			/// @return The result of the multiplication
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -381,7 +382,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 {
@@ -393,7 +394,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 			/// @param second Documentation for the second parameter
 			/// @return
 			/// The result of the multiplication
-			function mul(uint a, uint second) returns(uint d) {
+			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
 			}
 		}
@@ -411,7 +412,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 
@@ -425,7 +426,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 			/// @param second Documentation for the second parameter
 			/// @return The result of the multiplication
 			/// and cookies with nutella
-			function mul(uint a, uint second) returns(uint d) {
+			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
 			}
 		}
@@ -443,7 +444,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiline_comment)
@@ -458,7 +459,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 			 * @return The result of the multiplication
 			 * and cookies with nutella
 			 */
-			function mul(uint a, uint second) returns(uint d) {
+			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
 			}
 		}
@@ -476,7 +477,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 	"    }\n"
 	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
@@ -484,7 +485,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
 	char const* sourceCode = R"(
 		contract test {
 			/// @dev Mul function
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -496,7 +497,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_doc)
@@ -506,7 +507,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_doc)
 		/// @title Just a test contract
 		contract test {
 			/// @dev Mul function
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -520,7 +521,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_doc)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(dev_author_at_function)
@@ -531,7 +532,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 		contract test {
 			/// @dev Mul function
 			/// @author John Doe
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -546,7 +547,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	"    }\n"
 	"}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
@@ -554,7 +555,7 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 	char const* sourceCode = R"(
 		contract test {
 			/// I do something awesome
-			function mul(uint a) returns(uint d) { return a * 7; }
+			function mul(uint a) public returns (uint d) { return a * 7; }
 		}
 	)";
 
@@ -569,7 +570,7 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
@@ -578,7 +579,7 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 		contract test {
 			/// I do something awesome
 			/// which requires two lines to explain
-			function mul(uint a) returns(uint d) { return a * 7; }
+			function mul(uint a) public returns (uint d) { return a * 7; }
 		}
 	)";
 
@@ -592,7 +593,7 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(empty_comment)
@@ -608,7 +609,7 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	}
 	)ABCDEF";
 
-	checkNatspec(sourceCode, natspec, true);
+	checkNatspec(sourceCode, "test", natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
@@ -619,7 +620,7 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 		contract test {
 			/// @dev Mul function
 			/// @title I really should not be here
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -633,7 +634,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_nonexistent_param)
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
 			/// @param not_existing Documentation for the second parameter
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -646,8 +647,8 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname)
 		contract test {
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
-			/// @param 
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			/// @param
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -661,7 +662,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname_end)
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
 			/// @param se
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
@@ -674,12 +675,137 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
 		contract test {
 			/// @dev Multiplies a number by 7 and adds second parameter
 			/// @param a Documentation for the first parameter
-			/// @param second 
-			function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }
+			/// @param second
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
 
 	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(user_constructor)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @notice this is a really nice constructor
+			constructor(uint a, uint second) public { }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"constructor" : "this is a really nice constructor"
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_constructor_and_function)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @notice this is a really nice constructor
+			constructor(uint a, uint second) public { }
+			/// another multiplier
+			function mul(uint a, uint second) public returns(uint d) { return a * 7 + second; }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"mul(uint256,uint256)" : {
+			"notice" : "another multiplier"
+		},
+		"constructor" : "this is a really nice constructor"
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_constructor)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @author Alex
+			/// @param a the parameter a is really nice and very useful
+			/// @param second the second parameter is not very useful, it just provides additional confusion
+			constructor(uint a, uint second) public { }
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"constructor" : {
+			"author" : "Alex",
+			"params" : {
+				"a" : "the parameter a is really nice and very useful",
+				"second" : "the second parameter is not very useful, it just provides additional confusion"
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_constructor_return)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @author Alex
+			/// @param a the parameter a is really nice and very useful
+			/// @param second the second parameter is not very useful, it just provides additional confusion
+			/// @return return should not work within constructors
+			constructor(uint a, uint second) public { }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
+{
+	char const *sourceCode = R"(
+		contract test {
+			/// @author Alex
+			/// @param a the parameter a is really nice and very useful
+			/// @param second the second parameter is not very useful, it just provides additional confusion
+			constructor(uint a, uint second) public { }
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter starts here.
+			/// Since it's a really complicated parameter we need 2 lines
+			/// @param second Documentation for the second parameter
+			/// @return The result of the multiplication
+			/// and cookies with nutella
+			function mul(uint a, uint second) public returns(uint d) {
+				return a * 7 + second;
+			}
+		}
+	)";
+
+	char const *natspec = R"ABCDEF({
+	"methods" : {
+		"mul(uint256,uint256)" : {
+			"details" : "Multiplies a number by 7 and adds second parameter",
+			"params" : {
+				"a" : "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
+				"second" : "Documentation for the second parameter"
+			},
+			"return" : "The result of the multiplication and cookies with nutella"
+		},
+		"constructor" : {
+			"author" : "Alex",
+			"params" : {
+				"a" : "the parameter a is really nice and very useful",
+				"second" : "the second parameter is not very useful, it just provides additional confusion"
+			}
+		}
+	}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

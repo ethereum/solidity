@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 		pragma solidity >=0.0;
 		pragma experimental __testOnlyAnalysis;
 		contract test {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 	CompilerStack compilerStack;
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 		pragma solidity >=0.0;
 		pragma experimental __test;
 		contract test {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 	CompilerStack compilerStack;
@@ -97,14 +97,14 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 	char const* sourceCode = R"(
 		pragma solidity >=0.0;
 		contract A {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 	compilerStack.addSource("A", std::string(sourceCode));
 	sourceCode = R"(
 		pragma solidity >=0.0;
 		contract B {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 	compilerStack.addSource("B", std::string(sourceCode));
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	char const* sourceCode = R"(
 		pragma solidity >=0.0;
 		contract A {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 	compilerStack.addSource("A", std::string(sourceCode));
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 		pragma solidity >=0.0;
 		import "./A";
 		contract B is A {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 	compilerStack.addSource("B", std::string(sourceCode));
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 		pragma solidity >=0.0;
 		import "./B";
 		contract C is B {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 	compilerStack.addSource("C", std::string(sourceCode));

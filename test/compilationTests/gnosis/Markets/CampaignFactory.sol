@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 import "../Markets/Campaign.sol";
 
 
@@ -34,6 +34,6 @@ contract CampaignFactory {
         returns (Campaign campaign)
     {
         campaign = new Campaign(eventContract, marketFactory, marketMaker, fee, funding, deadline);
-        CampaignCreation(msg.sender, campaign, eventContract, marketFactory, marketMaker, fee, funding, deadline);
+        emit CampaignCreation(msg.sender, campaign, eventContract, marketFactory, marketMaker, fee, funding, deadline);
     }
 }

@@ -25,11 +25,14 @@
 
 #include <libdevcore/Common.h>
 
+#include <boost/optional.hpp>
+
 #include <vector>
 #include <type_traits>
 #include <cstring>
 #include <string>
 #include <set>
+#include <functional>
 
 namespace dev
 {
@@ -85,7 +88,7 @@ inline std::string asString(bytesConstRef _b)
 /// Converts a string to a byte array containing the string's (byte) data.
 inline bytes asBytes(std::string const& _b)
 {
-	return bytes((byte const*)_b.data(), (byte const*)(_b.data() + _b.size()));
+	return bytes((uint8_t const*)_b.data(), (uint8_t const*)(_b.data() + _b.size()));
 }
 
 // Big-endian to/from host endian conversion functions.
@@ -114,7 +117,7 @@ inline T fromBigEndian(_In const& _bytes)
 {
 	T ret = (T)0;
 	for (auto i: _bytes)
-		ret = (T)((ret << 8) | (byte)(typename std::make_unsigned<typename _In::value_type>::type)i);
+		ret = (T)((ret << 8) | (uint8_t)(typename std::make_unsigned<typename _In::value_type>::type)i);
 	return ret;
 }
 inline bytes toBigEndian(u256 _val) { bytes ret(32); toBigEndian(_val, ret); return ret; }
@@ -132,7 +135,7 @@ inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 	toBigEndian(_val, ret);
 	return ret;
 }
-inline bytes toCompactBigEndian(byte _val, unsigned _min = 0)
+inline bytes toCompactBigEndian(uint8_t _val, unsigned _min = 0)
 {
 	return (_min || _val) ? bytes{ _val } : bytes{};
 }
@@ -229,6 +232,37 @@ bool contains(T const& _t, V const& _v)
 	return std::end(_t) != std::find(std::begin(_t), std::end(_t), _v);
 }
 
+
+/// Function that iterates over a vector, calling a function on each of its
+/// elements. If that function returns a vector, the element is replaced by
+/// the returned vector. During the iteration, the original vector is only valid
+/// on the current element and after that. The actual replacement takes
+/// place at the end, but already visited elements might be invalidated.
+/// If nothing is replaced, no copy is performed.
+template <typename T, typename F>
+void iterateReplacing(std::vector<T>& _vector, const F& _f)
+{
+	// Concept: _f must be Callable, must accept param T&, must return optional<vector<T>>
+	bool useModified = false;
+	std::vector<T> modifiedVector;
+	for (size_t i = 0; i < _vector.size(); ++i)
+	{
+		if (boost::optional<std::vector<T>> r = _f(_vector[i]))
+		{
+			if (!useModified)
+			{
+				std::move(_vector.begin(), _vector.begin() + i, back_inserter(modifiedVector));
+				useModified = true;
+			}
+			modifiedVector += std::move(*r);
+		}
+		else if (useModified)
+			modifiedVector.emplace_back(std::move(_vector[i]));
+	}
+	if (useModified)
+		_vector = std::move(modifiedVector);
+}
+
 /// @returns true iff @a _str passess the hex address checksum test.
 /// @param _strict if false, hex strings with only uppercase or only lowercase letters
 /// are considered valid.
@@ -237,5 +271,8 @@ bool passesAddressChecksum(std::string const& _str, bool _strict);
 /// @returns the checksummed version of an address
 /// @param hex strings that look like an address
 std::string getChecksummedAddress(std::string const& _addr);
+
+bool isValidHex(std::string const& _string);
+bool isValidDecimal(std::string const& _string);
 
 }

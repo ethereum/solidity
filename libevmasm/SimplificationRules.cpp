@@ -21,16 +21,19 @@
  * Container for equivalence classes of expressions for use in common subexpression elimination.
  */
 
-#include <libevmasm/ExpressionClasses.h>
-#include <utility>
-#include <functional>
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/noncopyable.hpp>
-#include <libevmasm/Assembly.h>
-#include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/SimplificationRules.h>
 
+#include <libevmasm/ExpressionClasses.h>
+#include <libevmasm/Assembly.h>
+#include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/RuleList.h>
+#include <libdevcore/Assertions.h>
+
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/noncopyable.hpp>
+
+#include <utility>
+#include <functional>
 
 using namespace std;
 using namespace dev;
@@ -45,13 +48,18 @@ SimplificationRule<Pattern> const* Rules::findFirstMatch(
 	resetMatchGroups();
 
 	assertThrow(_expr.item, OptimizerException, "");
-	for (auto const& rule: m_rules[byte(_expr.item->instruction())])
+	for (auto const& rule: m_rules[uint8_t(_expr.item->instruction())])
 	{
 		if (rule.pattern.matches(_expr, _classes))
 			return &rule;
 		resetMatchGroups();
 	}
 	return nullptr;
+}
+
+bool Rules::isInitialized() const
+{
+	return !m_rules[uint8_t(Instruction::ADD)].empty();
 }
 
 void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
@@ -62,12 +70,12 @@ void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
 
 void Rules::addRule(SimplificationRule<Pattern> const& _rule)
 {
-	m_rules[byte(_rule.pattern.instruction())].push_back(_rule);
+	m_rules[uint8_t(_rule.pattern.instruction())].push_back(_rule);
 }
 
 Rules::Rules()
 {
-	// Multiple occurences of one of these inside one rule must match the same equivalence class.
+	// Multiple occurrences of one of these inside one rule must match the same equivalence class.
 	// Constants.
 	Pattern A(Push);
 	Pattern B(Push);
@@ -82,6 +90,7 @@ Rules::Rules()
 	Y.setMatchGroup(5, m_matchGroups);
 
 	addRules(simplificationRuleList(A, B, C, X, Y));
+	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
 Pattern::Pattern(Instruction _instruction, std::vector<Pattern> const& _arguments):

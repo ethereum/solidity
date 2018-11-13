@@ -112,13 +112,13 @@ public:
 	void reset();
 
 	/// @returns the next token and advances input
-	Token::Value next();
+	Token next();
 
 	///@{
 	///@name Information about the current token
 
 	/// @returns the current token
-	Token::Value currentToken() const
+	Token currentToken() const
 	{
 		return m_currentToken.token;
 	}
@@ -149,7 +149,7 @@ public:
 	///@name Information about the next token
 
 	/// @returns the next token without advancing input.
-	Token::Value peekNextToken() const { return m_nextToken.token; }
+	Token peekNextToken() const { return m_nextToken.token; }
 	SourceLocation peekLocation() const { return m_nextToken.location; }
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
@@ -162,13 +162,20 @@ public:
 	/// Do only use in error cases, they are quite expensive.
 	std::string lineAtPosition(int _position) const { return m_source.lineAtPosition(_position); }
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source.translatePositionToLineColumn(_position); }
+	std::string sourceAt(SourceLocation const& _location) const
+	{
+		solAssert(!_location.isEmpty(), "");
+		solAssert(m_sourceName && _location.sourceName, "");
+		solAssert(*m_sourceName == *_location.sourceName, "");
+		return m_source.source().substr(_location.start, _location.end - _location.start);
+	}
 	///@}
 
 private:
 	/// Used for the current and look-ahead token and comments
 	struct TokenDesc
 	{
-		Token::Value token;
+		Token token;
 		SourceLocation location;
 		std::string literal;
 		std::tuple<unsigned, unsigned> extendedTokenInfo;
@@ -185,9 +192,9 @@ private:
 	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
 	void rollback(int _amount) { m_char = m_source.rollback(_amount); }
 
-	inline Token::Value selectToken(Token::Value _tok) { advance(); return _tok; }
+	inline Token selectToken(Token _tok) { advance(); return _tok; }
 	/// If the next character is _next, advance and return _then, otherwise return _else.
-	inline Token::Value selectToken(char _next, Token::Value _then, Token::Value _else);
+	inline Token selectToken(char _next, Token _then, Token _else);
 
 	bool scanHexByte(char& o_scannedByte);
 	bool scanUnicode(unsigned& o_codepoint);
@@ -199,19 +206,19 @@ private:
 	bool skipWhitespace();
 	/// Skips all whitespace that are neither '\r' nor '\n'.
 	void skipWhitespaceExceptUnicodeLinebreak();
-	Token::Value skipSingleLineComment();
-	Token::Value skipMultiLineComment();
+	Token skipSingleLineComment();
+	Token skipMultiLineComment();
 
 	void scanDecimalDigits();
-	Token::Value scanNumber(char _charSeen = 0);
-	std::tuple<Token::Value, unsigned, unsigned> scanIdentifierOrKeyword();
+	Token scanNumber(char _charSeen = 0);
+	std::tuple<Token, unsigned, unsigned> scanIdentifierOrKeyword();
 
-	Token::Value scanString();
-	Token::Value scanHexString();
-	Token::Value scanSingleLineDocComment();
-	Token::Value scanMultiLineDocComment();
+	Token scanString();
+	Token scanHexString();
+	Token scanSingleLineDocComment();
+	Token scanMultiLineDocComment();
 	/// Scans a slash '/' and depending on the characters returns the appropriate token
-	Token::Value scanSlash();
+	Token scanSlash();
 
 	/// Scans an escape-sequence which is part of a string and adds the
 	/// decoded character to the current literal. Returns true if a pattern
@@ -226,7 +233,7 @@ private:
 	bool isSourcePastEndOfInput() const { return m_source.isPastEndOfInput(); }
 
 	TokenDesc m_skippedComment;  // desc for current skipped comment
-	TokenDesc m_nextSkippedComment; // desc for next skiped comment
+	TokenDesc m_nextSkippedComment; // desc for next skipped comment
 
 	TokenDesc m_currentToken;  // desc for current token (as returned by Next())
 	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)

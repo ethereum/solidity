@@ -1,26 +1,26 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 
 contract abstractModuleHandler {
-    function transfer(address from, address to, uint256 value, bool fee) external returns (bool success) {}
-    function balanceOf(address owner) public constant returns (bool success, uint256 value) {}
+    function transfer(address payable from, address payable to, uint256 value, bool fee) external returns (bool success) {}
+    function balanceOf(address payable owner) public view returns (bool success, uint256 value) {}
 }
 
 contract module {
     /*
         Module
     */
-    
+
     enum status {
         New,
         Connected,
         Disconnected,
         Disabled
     }
-    
+
     status public moduleStatus;
     uint256 public disabledUntil;
-    address public moduleHandlerAddress;
-    
+    address payable public moduleHandlerAddress;
+
     function disableModule(bool forever) external onlyForModuleHandler returns (bool success) {
         _disableModule(forever);
         return true;
@@ -29,28 +29,28 @@ contract module {
         /*
             Disable the module for one week, if the forever true then for forever.
             This function calls the Publisher module.
-            
+
             @forever    For forever or not
         */
         if ( forever ) { moduleStatus = status.Disabled; }
         else { disabledUntil = block.number + 5760; }
     }
-    
-    function replaceModuleHandler(address newModuleHandlerAddress) external onlyForModuleHandler returns (bool success) {
+
+    function replaceModuleHandler(address payable newModuleHandlerAddress) external onlyForModuleHandler returns (bool success) {
         _replaceModuleHandler(newModuleHandlerAddress);
         return true;
     }
-    function _replaceModuleHandler(address newModuleHandlerAddress) internal {
+    function _replaceModuleHandler(address payable newModuleHandlerAddress) internal {
         /*
             Replace the ModuleHandler address.
             This function calls the Publisher module.
-            
+
             @newModuleHandlerAddress    New module handler address
         */
         require( moduleStatus == status.Connected );
         moduleHandlerAddress = newModuleHandlerAddress;
     }
-    
+
     function connectModule() external onlyForModuleHandler returns (bool success) {
         _connectModule();
         return true;
@@ -63,7 +63,7 @@ contract module {
         require( moduleStatus == status.New );
         moduleStatus = status.Connected;
     }
-    
+
     function disconnectModule() external onlyForModuleHandler returns (bool success) {
         _disconnectModule();
         return true;
@@ -76,62 +76,62 @@ contract module {
         require( moduleStatus != status.New && moduleStatus != status.Disconnected );
         moduleStatus = status.Disconnected;
     }
-    
-    function replaceModule(address newModuleAddress) external onlyForModuleHandler returns (bool success) {
+
+    function replaceModule(address payable newModuleAddress) external onlyForModuleHandler returns (bool success) {
         _replaceModule(newModuleAddress);
         return true;
     }
-    function _replaceModule(address newModuleAddress) internal {
+    function _replaceModule(address payable newModuleAddress) internal {
         /*
             Replace the module for an another new module.
             This function calls the Publisher module.
             We send every Token and ether to the new module.
-            
+
             @newModuleAddress   New module handler address
         */
         require( moduleStatus != status.New && moduleStatus != status.Disconnected);
-        var (_success, _balance) = abstractModuleHandler(moduleHandlerAddress).balanceOf(address(this));
+        (bool _success, uint256 _balance) = abstractModuleHandler(moduleHandlerAddress).balanceOf(address(this));
         require( _success );
         if ( _balance > 0 ) {
             require( abstractModuleHandler(moduleHandlerAddress).transfer(address(this), newModuleAddress, _balance, false) );
         }
-        if ( this.balance > 0 ) {
-            require( newModuleAddress.send(this.balance) );
+        if ( address(this).balance > 0 ) {
+            require( newModuleAddress.send(address(this).balance) );
         }
         moduleStatus = status.Disconnected;
     }
-    
-    function transferEvent(address from, address to, uint256 value) external onlyForModuleHandler returns (bool success) {
+
+    function transferEvent(address payable from, address payable to, uint256 value) external onlyForModuleHandler returns (bool success) {
         return true;
     }
     function newSchellingRoundEvent(uint256 roundID, uint256 reward) external onlyForModuleHandler returns (bool success) {
         return true;
     }
-    
-    function registerModuleHandler(address _moduleHandlerAddress) internal {
+
+    function registerModuleHandler(address payable _moduleHandlerAddress) internal {
         /*
             Module constructor function for registering ModuleHandler address.
         */
         moduleHandlerAddress = _moduleHandlerAddress;
     }
-    function isModuleHandler(address addr) internal returns (bool ret) {
+    function isModuleHandler(address payable addr) internal returns (bool ret) {
         /*
             Test for ModuleHandler address.
             If the module is not connected then returns always false.
-            
+
             @addr   Address to check
-            
+
             @ret    This is the module handler address or not
         */
-        if ( moduleHandlerAddress == 0x00 ) { return true; }
+        if ( moduleHandlerAddress == address(0x00) ) { return true; }
         if ( moduleStatus != status.Connected ) { return false; }
         return addr == moduleHandlerAddress;
     }
-    function isActive() public constant returns (bool success, bool active) {
+    function isActive() public view returns (bool success, bool active) {
         /*
             Check self for ready for functions or not.
-            
-            @success    Function call was successfull or not
+
+            @success    Function call was successful or not
             @active     Ready for functions or not
         */
         return (true, moduleStatus == status.Connected && block.number >= disabledUntil);
@@ -139,5 +139,7 @@ contract module {
     modifier onlyForModuleHandler() {
         require( msg.sender == moduleHandlerAddress );
         _;
+    }
+    function() external payable {
     }
 }

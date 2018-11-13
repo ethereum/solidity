@@ -1,4 +1,4 @@
 contract B { function f() public {} }
-contract C is B { function f() view {} }
+contract C is B { function f() public view {} }
 // ----
-// TypeError: (56-76): Overriding function changes state mutability from "nonpayable" to "view".
+// TypeError: (56-83): Overriding function changes state mutability from "nonpayable" to "view".

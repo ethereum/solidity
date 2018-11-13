@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 import "../Oracles/UltimateOracle.sol";
 
 
@@ -50,7 +50,7 @@ contract UltimateOracleFactory {
             challengeAmount,
             frontRunnerPeriod
         );
-        UltimateOracleCreation(
+        emit UltimateOracleCreation(
             msg.sender,
             ultimateOracle,
             oracle,

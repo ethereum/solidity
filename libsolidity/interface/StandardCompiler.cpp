@@ -25,7 +25,7 @@
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -117,7 +117,7 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 	{
 		return dev::h256(_hash) == dev::keccak256(_content);
 	}
-	catch (dev::BadHexCharacter)
+	catch (dev::BadHexCharacter const&)
 	{
 		return false;
 	}
@@ -280,6 +280,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 			for (auto const& url: sources[sourceName]["urls"])
 			{
+				if (!url.isString())
+					return formatFatalError("JSONError", "URL must be a string.");
 				ReadCallback::Result result = m_readFile(url.asString());
 				if (result.success)
 				{
@@ -320,21 +322,45 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	if (settings.isMember("evmVersion"))
 	{
-		boost::optional<EVMVersion> version = EVMVersion::fromString(settings.get("evmVersion", {}).asString());
+		if (!settings["evmVersion"].isString())
+			return formatFatalError("JSONError", "evmVersion must be a string.");
+		boost::optional<EVMVersion> version = EVMVersion::fromString(settings["evmVersion"].asString());
 		if (!version)
 			return formatFatalError("JSONError", "Invalid EVM version requested.");
 		m_compilerStack.setEVMVersion(*version);
 	}
 
-	vector<string> remappings;
+	vector<CompilerStack::Remapping> remappings;
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
-		remappings.push_back(remapping.asString());
+	{
+		if (!remapping.isString())
+			return formatFatalError("JSONError", "Remapping entry must be a string.");
+		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
+			remappings.emplace_back(std::move(*r));
+		else
+			return formatFatalError("JSONError", "Invalid remapping: \"" + remapping.asString() + "\"");
+	}
 	m_compilerStack.setRemappings(remappings);
 
-	Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
-	bool const optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
-	unsigned const optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
-	m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
+	if (settings.isMember("optimizer"))
+	{
+		Json::Value optimizerSettings = settings["optimizer"];
+		if (optimizerSettings.isMember("enabled"))
+		{
+			if (!optimizerSettings["enabled"].isBool())
+				return formatFatalError("JSONError", "The \"enabled\" setting must be a boolean.");
+
+			bool const optimize = optimizerSettings["enabled"].asBool();
+			unsigned optimizeRuns = 200;
+			if (optimizerSettings.isMember("runs"))
+			{
+				if (!optimizerSettings["runs"].isUInt())
+					return formatFatalError("JSONError", "The \"runs\" setting must be an unsigned number.");
+				optimizeRuns = optimizerSettings["runs"].asUInt();
+			}
+			m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
+		}
+	}
 
 	map<string, h160> libraries;
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value(Json::objectValue));
@@ -344,9 +370,11 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		auto const& jsonSourceName = jsonLibraries[sourceName];
 		if (!jsonSourceName.isObject())
-			return formatFatalError("JSONError", "library entry is not a JSON object.");
+			return formatFatalError("JSONError", "Library entry is not a JSON object.");
 		for (auto const& library: jsonSourceName.getMemberNames())
 		{
+			if (!jsonSourceName[library].isString())
+				return formatFatalError("JSONError", "Library address must be a string.");
 			string address = jsonSourceName[library].asString();
 
 			if (!boost::starts_with(address, "0x"))
@@ -366,7 +394,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 				// @TODO use libraries only for the given source
 				libraries[library] = h160(address);
 			}
-			catch (dev::BadHexCharacter)
+			catch (dev::BadHexCharacter const&)
 			{
 				return formatFatalError(
 					"JSONError",
@@ -481,7 +509,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	bool const compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
 	/// Inconsistent state - stop here to receive error reports from users
-	if (!compilationSuccess && (errors.size() == 0))
+	if (!compilationSuccess && errors.empty())
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	Json::Value output = Json::objectValue;
@@ -567,7 +595,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	return output;
 }
 
-Json::Value StandardCompiler::compile(Json::Value const& _input)
+Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 {
 	try
 	{
@@ -591,7 +619,7 @@ Json::Value StandardCompiler::compile(Json::Value const& _input)
 	}
 }
 
-string StandardCompiler::compile(string const& _input)
+string StandardCompiler::compile(string const& _input) noexcept
 {
 	Json::Value input;
 	string errors;
@@ -600,9 +628,9 @@ string StandardCompiler::compile(string const& _input)
 		if (!jsonParseStrict(_input, input, &errors))
 			return jsonCompactPrint(formatFatalError("JSONError", errors));
 	}
-	catch(...)
+	catch (...)
 	{
-		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
+		return "{\"errors\":[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error parsing input JSON.\"}]}";
 	}
 
 	// cout << "Input: " << input.toStyledString() << endl;
@@ -613,8 +641,8 @@ string StandardCompiler::compile(string const& _input)
 	{
 		return jsonCompactPrint(output);
 	}
-	catch(...)
+	catch (...)
 	{
-		return "{\"errors\":\"[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
+		return "{\"errors\":[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
 	}
 }

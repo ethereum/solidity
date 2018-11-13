@@ -178,9 +178,9 @@ BOOST_AUTO_TEST_CASE(simple_instructions)
 	BOOST_CHECK(successParse("{ dup1 dup1 mul dup1 sub pop }"));
 }
 
-BOOST_AUTO_TEST_CASE(suicide_selfdestruct)
+BOOST_AUTO_TEST_CASE(selfdestruct)
 {
-	BOOST_CHECK(successParse("{ 0x01 suicide 0x02 selfdestruct }"));
+	BOOST_CHECK(successParse("{ 0x02 selfdestruct }"));
 }
 
 BOOST_AUTO_TEST_CASE(keywords)
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
 	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Label name / variable name must precede \",\" (multiple assignment).");
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name expected in multiple assignemnt.");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name expected in multiple assignment.");
 
 	/// NOTE: Travis hiccups if not having a variable
 	char const* text = R"(
@@ -740,8 +740,6 @@ BOOST_AUTO_TEST_CASE(keccak256)
 {
 	BOOST_CHECK(successAssemble("{ 0 0 keccak256 pop }"));
 	BOOST_CHECK(successAssemble("{ pop(keccak256(0, 0)) }"));
-	BOOST_CHECK(successAssemble("{ 0 0 sha3 pop }"));
-	BOOST_CHECK(successAssemble("{ pop(sha3(0, 0)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatasize)

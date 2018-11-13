@@ -68,7 +68,7 @@ private:
 	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
 	void checkContractDuplicateEvents(ContractDefinition const& _contract);
 	void checkContractIllegalOverrides(ContractDefinition const& _contract);
-	/// Reports a type error with an appropiate message if overriden function signature differs.
+	/// Reports a type error with an appropriate message if overridden function signature differs.
 	/// Also stores the direct super function in the AST annotations.
 	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
@@ -87,13 +87,46 @@ private:
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
 	/// Should only be called if the left hand side is tuple-typed.
 	void checkDoubleStorageAssignment(Assignment const& _assignment);
+	// Checks whether the expression @arg _expression can be assigned from type @arg _type
+	// and reports an error, if not.
+	void checkExpressionAssignment(Type const& _type, Expression const& _expression);
+
+	/// Performs type checks for ``abi.decode(bytes memory, (...))`` and returns the
+	/// vector of return types (which is basically the second argument) if successful. It returns
+	/// the empty vector on error.
+	TypePointers typeCheckABIDecodeAndRetrieveReturnType(
+		FunctionCall const& _functionCall,
+		bool _abiEncoderV2
+	);
+
+	/// Performs type checks and determines result types for type conversion FunctionCall nodes.
+	TypePointer typeCheckTypeConversionAndRetrieveReturnType(
+		FunctionCall const& _functionCall
+	);
+
+	/// Performs type checks on function call and struct ctor FunctionCall nodes (except for kind ABIDecode).
+	void typeCheckFunctionCall(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
+
+	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node parameters.
+	void typeCheckFunctionGeneralChecks(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
+
+	/// Performs general checks and checks specific to ABI encode functions
+	void typeCheckABIEncodeFunctions(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
 
 	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
 	virtual void endVisit(UsingForDirective const& _usingFor) override;
 	virtual bool visit(StructDefinition const& _struct) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(VariableDeclaration const& _variable) override;
-	virtual bool visit(EnumDefinition const& _enum) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
@@ -136,7 +169,7 @@ private:
 
 	/// Runs type checks on @a _expression to infer its type and then checks that it is implicitly
 	/// convertible to @a _expectedType.
-	void expectType(Expression const& _expression, Type const& _expectedType);
+	bool expectType(Expression const& _expression, Type const& _expectedType);
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression);
 
@@ -146,6 +179,9 @@ private:
 
 	/// Flag indicating whether we are currently inside an EmitStatement.
 	bool m_insideEmitStatement = false;
+
+	/// Flag indicating whether we are currently inside a StructDefinition.
+	bool m_insideStruct = false;
 
 	ErrorReporter& m_errorReporter;
 };

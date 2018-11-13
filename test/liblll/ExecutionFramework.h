@@ -56,7 +56,7 @@ public:
 		BOOST_REQUIRE(_libraryAddresses.empty());
 
 		std::vector<std::string> errors;
-		bytes bytecode = eth::compileLLL(_sourceCode, dev::test::Options::get().evmVersion(), m_optimize, &errors);
+		bytes bytecode = lll::compileLLL(_sourceCode, dev::test::Options::get().evmVersion(), m_optimize, &errors);
 		if (!errors.empty())
 		{
 			for (auto const& error: errors)

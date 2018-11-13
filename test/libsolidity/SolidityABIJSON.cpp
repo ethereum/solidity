@@ -40,7 +40,7 @@ class JSONInterfaceChecker
 public:
 	JSONInterfaceChecker(): m_compilerStack() {}
 
-	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
+	void checkInterface(std::string const& _code, std::string const& _contractName, std::string const& _expectedInterfaceString)
 	{
 		m_compilerStack.reset(false);
 		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
@@ -48,7 +48,7 @@ public:
 		m_compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
 		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
 
-		Json::Value generatedInterface = m_compilerStack.contractABI(m_compilerStack.lastContractName());
+		Json::Value generatedInterface = m_compilerStack.contractABI(_contractName);
 		Json::Value expectedInterface;
 		BOOST_REQUIRE(jsonParseStrict(_expectedInterfaceString, expectedInterface));
 		BOOST_CHECK_MESSAGE(
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
+			function f(uint a) public returns (uint d) { return a * 7; }
 		}
 	)";
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	}
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(empty_contract)
@@ -104,15 +104,15 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 	)";
 	char const* interface = "[]";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_methods)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
-			function g(uint b) returns(uint e) { return b * 8; }
+			function f(uint a) public returns (uint d) { return a * 7; }
+			function g(uint b) public returns (uint e) { return b * 8; }
 		}
 	)";
 
@@ -157,14 +157,14 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	}
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_params)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint a, uint b) public returns (uint d) { return a + b; }
 		}
 	)";
 
@@ -194,16 +194,16 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	}
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_methods_order)
 {
-	// methods are expected to be in alpabetical order
+	// methods are expected to be in alphabetical order
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
-			function c(uint b) returns(uint e) { return b * 8; }
+			function f(uint a) public returns (uint d) { return a * 7; }
+			function c(uint b) public returns (uint e) { return b * 8; }
 		}
 	)";
 
@@ -248,15 +248,15 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	}
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(view_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function foo(uint a, uint b) returns(uint d) { return a + b; }
-			function boo(uint32 a) view returns(uint b) { return a * 4; }
+			function foo(uint a, uint b) public returns (uint d) { return a + b; }
+			function boo(uint32 a) public view returns(uint b) { return a * 4; }
 		}
 	)";
 
@@ -303,71 +303,15 @@ BOOST_AUTO_TEST_CASE(view_function)
 	}
 	])";
 
-	checkInterface(sourceCode, interface);
-}
-
-// constant is an alias to view above
-BOOST_AUTO_TEST_CASE(constant_function)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function foo(uint a, uint b) returns(uint d) { return a + b; }
-			function boo(uint32 a) constant returns(uint b) { return a * 4; }
-		}
-	)";
-
-	char const* interface = R"([
-	{
-		"name": "foo",
-		"constant": false,
-		"payable" : false,
-		"stateMutability": "nonpayable",
-		"type": "function",
-		"inputs": [
-		{
-			"name": "a",
-			"type": "uint256"
-		},
-		{
-			"name": "b",
-			"type": "uint256"
-		}
-		],
-		"outputs": [
-		{
-			"name": "d",
-			"type": "uint256"
-		}
-		]
-	},
-	{
-		"name": "boo",
-		"constant": true,
-		"payable" : false,
-		"stateMutability": "view",
-		"type": "function",
-		"inputs": [{
-			"name": "a",
-			"type": "uint32"
-		}],
-		"outputs": [
-		{
-			"name": "b",
-			"type": "uint256"
-		}
-		]
-	}
-	])";
-
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(pure_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function foo(uint a, uint b) returns(uint d) { return a + b; }
-			function boo(uint32 a) pure returns(uint b) { return a * 4; }
+			function foo(uint a, uint b) public returns (uint d) { return a + b; }
+			function boo(uint32 a) public pure returns (uint b) { return a * 4; }
 		}
 	)";
 
@@ -414,14 +358,14 @@ BOOST_AUTO_TEST_CASE(pure_function)
 	}
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(events)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns(uint d) { return a * 7; }
+			function f(uint a) public returns (uint d) { return a * 7; }
 			event e1(uint b, address indexed c);
 			event e2();
 			event e2(uint a);
@@ -492,7 +436,7 @@ BOOST_AUTO_TEST_CASE(events)
 
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(events_anonymous)
@@ -512,18 +456,18 @@ BOOST_AUTO_TEST_CASE(events_anonymous)
 
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(inherited)
 {
 	char const* sourceCode = R"(
 		contract Base {
-			function baseFunction(uint p) returns (uint i) { return p; }
+			function baseFunction(uint p) public returns (uint i) { return p; }
 			event baseEvent(bytes32 indexed evtArgBase);
 		}
 		contract Derived is Base {
-			function derivedFunction(bytes32 p) returns (bytes32 i) { return p; }
+			function derivedFunction(bytes32 p) public returns (bytes32 i) { return p; }
 			event derivedEvent(uint indexed evtArgDerived);
 		}
 	)";
@@ -587,13 +531,13 @@ BOOST_AUTO_TEST_CASE(inherited)
 	}])";
 
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "Derived", interface);
 }
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint, uint k) returns(uint ret_k, uint ret_g) {
+			function f(uint, uint k) public returns (uint ret_k, uint ret_g) {
 				uint g = 8;
 				ret_k = k;
 				ret_g = g;
@@ -631,14 +575,14 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 	}
 	])";
 
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint k) returns(uint) {
+			function f(uint k) public returns (uint) {
 				return k;
 			}
 		}
@@ -665,14 +609,14 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 		]
 	}
 	])";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(constructor_abi)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test(uint param1, test param2, bool param3) {}
+			constructor(uint param1, test param2, bool param3) public {}
 		}
 	)";
 
@@ -697,14 +641,14 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 		"type": "constructor"
 	}
 	])";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(payable_constructor_abi)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test(uint param1, test param2, bool param3) payable {}
+			constructor(uint param1, test param2, bool param3) public payable {}
 		}
 	)";
 
@@ -729,7 +673,7 @@ BOOST_AUTO_TEST_CASE(payable_constructor_abi)
 		"type": "constructor"
 	}
 	])";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(return_param_in_abi)
@@ -738,8 +682,8 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 	char const* sourceCode = R"(
 		contract test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-			function test(ActionChoices param) {}
-			function ret() returns(ActionChoices) {
+			constructor(ActionChoices param) public {}
+			function ret() public returns (ActionChoices) {
 				ActionChoices action = ActionChoices.GoLeft;
 				return action;
 			}
@@ -775,7 +719,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 		}
 	]
 	)";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(strings_and_arrays)
@@ -783,7 +727,7 @@ BOOST_AUTO_TEST_CASE(strings_and_arrays)
 	// bug #1801
 	char const* sourceCode = R"(
 		contract test {
-			function f(string a, bytes b, uint[] c) external {}
+			function f(string calldata a, bytes calldata b, uint[] calldata c) external {}
 		}
 	)";
 
@@ -804,7 +748,7 @@ BOOST_AUTO_TEST_CASE(strings_and_arrays)
 		}
 	]
 	)";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(library_function)
@@ -812,7 +756,7 @@ BOOST_AUTO_TEST_CASE(library_function)
 	char const* sourceCode = R"(
 		library test {
 			struct StructType { uint a; }
-			function f(StructType storage b, uint[] storage c, test d) returns (uint[] e, StructType storage f) {}
+			function f(StructType storage b, uint[] storage c, test d) public returns (uint[] memory e, StructType storage f) { f = f; }
 		}
 	)";
 
@@ -836,14 +780,14 @@ BOOST_AUTO_TEST_CASE(library_function)
 		}
 	]
 	)";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(include_fallback_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function() {}
+			function() external {}
 		}
 	)";
 
@@ -856,15 +800,15 @@ BOOST_AUTO_TEST_CASE(include_fallback_function)
 		}
 	]
 	)";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(payable_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() {}
-			function g() payable {}
+			function f() public {}
+			function g() public payable {}
 		}
 	)";
 
@@ -890,14 +834,14 @@ BOOST_AUTO_TEST_CASE(payable_function)
 		}
 	]
 	)";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(payable_fallback_function)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function () payable {}
+			function () external payable {}
 		}
 	)";
 
@@ -910,14 +854,14 @@ BOOST_AUTO_TEST_CASE(payable_fallback_function)
 		}
 	]
 	)";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(function_type)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function g(function(uint) external returns (uint) x) {}
+			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
 
@@ -937,17 +881,17 @@ BOOST_AUTO_TEST_CASE(function_type)
 	}
 	]
 	)";
-	checkInterface(sourceCode, interface);
+	checkInterface(sourceCode, "test", interface);
 }
 
 BOOST_AUTO_TEST_CASE(return_structs)
 {
-	char const* text = R"(
+	char const* sourceCode = R"(
 		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint a; T[] sub; }
 			struct T { uint[2] x; }
-			function f() returns (uint x, S s) {
+			function f() public returns (uint x, S memory s) {
 			}
 		}
 	)";
@@ -987,16 +931,16 @@ BOOST_AUTO_TEST_CASE(return_structs)
 		"type" : "function"
 	}]
 	)";
-	checkInterface(text, interface);
+	checkInterface(sourceCode, "C", interface);
 }
 
 BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 {
-	char const* text = R"(
+	char const* sourceCode = R"(
 		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { C[] x; C y; }
-			function f() returns (S s, C c) {
+			function f() public returns (S memory s, C c) {
 			}
 		}
 	)";
@@ -1030,12 +974,12 @@ BOOST_AUTO_TEST_CASE(return_structs_with_contracts)
 		"type": "function"
 	}]
 	)";
-	checkInterface(text, interface);
+	checkInterface(sourceCode, "C", interface);
 }
 
 BOOST_AUTO_TEST_CASE(event_structs)
 {
-	char const* text = R"(
+	char const* sourceCode = R"(
 		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint a; T[] sub; bytes b; }
@@ -1088,18 +1032,18 @@ BOOST_AUTO_TEST_CASE(event_structs)
 		"type": "event"
 	}]
 	)";
-	checkInterface(text, interface);
+	checkInterface(sourceCode, "C", interface);
 }
 
 BOOST_AUTO_TEST_CASE(structs_in_libraries)
 {
-	char const* text = R"(
+	char const* sourceCode = R"(
 		pragma experimental ABIEncoderV2;
 		library L {
 			struct S { uint a; T[] sub; bytes b; }
 			struct T { uint[2] x; }
-			function f(L.S storage s) {}
-			function g(L.S s) {}
+			function f(L.S storage s) public {}
+			function g(L.S memory s) public {}
 		}
 	)";
 	char const* interface = R"(
@@ -1152,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 		"type": "function"
 	}]
 	)";
-	checkInterface(text, interface);
+	checkInterface(sourceCode, "L", interface);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

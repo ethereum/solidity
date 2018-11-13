@@ -28,7 +28,7 @@
 #include <libsolidity/interface/EVMVersion.h>
 
 #include <libdevcore/FixedHash.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <functional>
 
@@ -72,6 +72,7 @@ public:
 	)
 	{
 		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments, _libraryAddresses);
+		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
@@ -146,11 +147,11 @@ public:
 
 	static std::pair<bool, std::string> compareAndCreateMessage(bytes const& _result, bytes const& _expectation);
 
-	static bytes encode(bool _value) { return encode(byte(_value)); }
+	static bytes encode(bool _value) { return encode(uint8_t(_value)); }
 	static bytes encode(int _value) { return encode(u256(_value)); }
 	static bytes encode(size_t _value) { return encode(u256(_value)); }
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
-	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
+	static bytes encode(uint8_t _value) { return bytes(31, 0) + bytes{_value}; }
 	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
 	/// @returns the fixed-point encoding of a rational number with a given
 	/// number of fractional bits.
@@ -191,6 +192,13 @@ public:
 	static bytes encodeDyn(Arg const& _arg)
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
+	}
+
+	u256 gasLimit() const;
+	u256 gasPrice() const;
+	u256 blockHash(u256 const& _blockNumber) const;
+	u256 const& blockNumber() const {
+		return m_blockNumber;
 	}
 
 private:
@@ -234,6 +242,7 @@ protected:
 	unsigned m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_showMessages = false;
+	bool m_transactionSuccessful = true;
 	Address m_sender;
 	Address m_contractAddress;
 	u256 m_blockNumber;

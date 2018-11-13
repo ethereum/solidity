@@ -206,7 +206,6 @@ public:
 	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
 	bool isVisibleAsLibraryMember() const { return visibility() >= Visibility::Internal; }
 
-	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
@@ -238,7 +237,7 @@ class PragmaDirective: public ASTNode
 public:
 	PragmaDirective(
 		SourceLocation const& _location,
-		std::vector<Token::Value> const& _tokens,
+		std::vector<Token> const& _tokens,
 		std::vector<ASTString> const& _literals
 	): ASTNode(_location), m_tokens(_tokens), m_literals(_literals)
 	{}
@@ -246,13 +245,13 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	std::vector<Token::Value> const& tokens() const { return m_tokens; }
+	std::vector<Token> const& tokens() const { return m_tokens; }
 	std::vector<ASTString> const& literals() const { return m_literals; }
 
 private:
 
 	/// Sequence of tokens following the "pragma" keyword.
-	std::vector<Token::Value> m_tokens;
+	std::vector<Token> m_tokens;
 	/// Sequence of literals following the "pragma" keyword.
 	std::vector<ASTString> m_literals;
 };
@@ -405,6 +404,8 @@ public:
 	bool constructorIsPublic() const;
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
+
+	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	virtual TypePointer type() const override;
 
@@ -614,13 +615,11 @@ public:
 
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isConstructor() const { return m_isConstructor; }
-	bool isOldStyleConstructor() const { return m_isConstructor && !name().empty(); }
 	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
-	std::string fullyQualifiedName() const;
 	virtual bool isVisibleInContract() const override
 	{
 		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
@@ -656,7 +655,7 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
-	enum Location { Default, Storage, Memory };
+	enum Location { Unspecified, Storage, Memory, CallData };
 
 	VariableDeclaration(
 		SourceLocation const& _sourceLocation,
@@ -667,7 +666,7 @@ public:
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		bool _isConstant = false,
-		Location _referenceLocation = Location::Default
+		Location _referenceLocation = Location::Unspecified
 	):
 		Declaration(_sourceLocation, _name, _visibility),
 		m_typeName(_type),
@@ -686,6 +685,8 @@ public:
 	virtual bool isLValue() const override;
 	virtual bool isPartOfExternalInterface() const override { return isPublic(); }
 
+	/// @returns true iff this variable is the parameter (or return parameter) of a function
+	/// (or function type name or event) or declared inside a function body.
 	bool isLocalVariable() const;
 	/// @returns true if this variable is a parameter or return parameter of a function.
 	bool isCallableParameter() const;
@@ -694,14 +695,27 @@ public:
 	/// @returns true if this variable is a local variable or return parameter.
 	bool isLocalOrReturn() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
+	/// This excludes parameters of external function type names.
 	bool isExternalCallableParameter() const;
+	/// @returns true if this variable is a parameter or return parameter of an internal function
+	/// or a function type of internal visibility.
+	bool isInternalCallableParameter() const;
+	/// @returns true iff this variable is a parameter(or return parameter of a library function
+	bool isLibraryFunctionParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
 	/// in the body of a function or modifier.
-	bool canHaveAutoType() const;
+	/// @returns true if this variable is a parameter of an event.
+	bool isEventParameter() const;
+	/// @returns true if the type of the variable is a reference or mapping type, i.e.
+	/// array, struct or mapping. These types can take a data location (and often require it).
+	/// Can only be called after reference resolution.
+	bool hasReferenceOrMappingType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
 	Location referenceLocation() const { return m_location; }
+	/// @returns a set of allowed storage locations for the variable.
+	std::set<Location> allowedDataLocations() const;
 
 	virtual TypePointer type() const override;
 
@@ -862,23 +876,31 @@ public:
 };
 
 /**
- * Any pre-defined type name represented by a single keyword, i.e. it excludes mappings,
- * contracts, functions, etc.
+ * Any pre-defined type name represented by a single keyword (and possibly a state mutability for address types),
+ * i.e. it excludes mappings, contracts, functions, etc.
  */
 class ElementaryTypeName: public TypeName
 {
 public:
-	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken const& _elem):
-		TypeName(_location), m_type(_elem)
-	{}
+	ElementaryTypeName(
+		SourceLocation const& _location,
+		ElementaryTypeNameToken const& _elem,
+		boost::optional<StateMutability> _stateMutability = {}
+	): TypeName(_location), m_type(_elem), m_stateMutability(_stateMutability)
+	{
+		solAssert(!_stateMutability.is_initialized() || _elem.token() == Token::Address, "");
+	}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ElementaryTypeNameToken const& typeName() const { return m_type; }
 
+	boost::optional<StateMutability> const& stateMutability() const { return m_stateMutability; }
+
 private:
 	ElementaryTypeNameToken m_type;
+	boost::optional<StateMutability> m_stateMutability; ///< state mutability for address type
 };
 
 /**
@@ -1169,11 +1191,11 @@ public:
 	Statement const& body() const { return *m_body; }
 
 private:
-	/// For statement's initialization expresion. for(XXX; ; ). Can be empty
+	/// For statement's initialization expression. for (XXX; ; ). Can be empty
 	ASTPointer<Statement> m_initExpression;
-	/// For statement's condition expresion. for(; XXX ; ). Can be empty
+	/// For statement's condition expression. for (; XXX ; ). Can be empty
 	ASTPointer<Expression> m_condExpression;
-	/// For statement's loop expresion. for(;;XXX). Can be empty
+	/// For statement's loop expression. for (;;XXX). Can be empty
 	ASTPointer<ExpressionStatement> m_loopExpression;
 	/// The body of the loop
 	ASTPointer<Statement> m_body;
@@ -1250,13 +1272,12 @@ private:
 };
 
 /**
- * Definition of a variable as a statement inside a function. It requires a type name (which can
- * also be "var") but the actual assignment can be missing.
- * Examples: var a = 2; uint256 a;
- * As a second form, multiple variables can be declared, cannot have a type and must be assigned
- * right away. If the first or last component is unnamed, it can "consume" an arbitrary number
- * of components.
- * Examples: var (a, b) = f(); var (a,,,c) = g(); var (a,) = d();
+ * Definition of one or more variables as a statement inside a function.
+ * If multiple variables are declared, a value has to be assigned directly.
+ * If only a single variable is declared, the value can be missing.
+ * Examples:
+ * uint[] memory a; uint a = 2;
+ * (uint a, bytes32 b, ) = f(); (, uint a, , StructName storage x) = g();
  */
 class VariableDeclarationStatement: public Statement
 {
@@ -1271,13 +1292,14 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	VariableDeclarationStatementAnnotation& annotation() const override;
-
 	std::vector<ASTPointer<VariableDeclaration>> const& declarations() const { return m_variables; }
 	Expression const* initialValue() const { return m_initialValue.get(); }
 
 private:
 	/// List of variables, some of which can be empty pointers (unnamed components).
+	/// Note that the ``m_value`` member of these is unused. Instead, ``m_initialValue``
+	/// below is used, because the initial value can be a single expression assigned
+	/// to all variables.
 	std::vector<ASTPointer<VariableDeclaration>> m_variables;
 	/// The assigned expression / initial value.
 	ASTPointer<Expression> m_initialValue;
@@ -1357,7 +1379,7 @@ public:
 	Assignment(
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _leftHandSide,
-		Token::Value _assignmentOperator,
+		Token _assignmentOperator,
 		ASTPointer<Expression> const& _rightHandSide
 	):
 		Expression(_location),
@@ -1365,18 +1387,18 @@ public:
 		m_assigmentOperator(_assignmentOperator),
 		m_rightHandSide(_rightHandSide)
 	{
-		solAssert(Token::isAssignmentOp(_assignmentOperator), "");
+		solAssert(TokenTraits::isAssignmentOp(_assignmentOperator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& leftHandSide() const { return *m_leftHandSide; }
-	Token::Value assignmentOperator() const { return m_assigmentOperator; }
+	Token assignmentOperator() const { return m_assigmentOperator; }
 	Expression const& rightHandSide() const { return *m_rightHandSide; }
 
 private:
 	ASTPointer<Expression> m_leftHandSide;
-	Token::Value m_assigmentOperator;
+	Token m_assigmentOperator;
 	ASTPointer<Expression> m_rightHandSide;
 };
 
@@ -1419,7 +1441,7 @@ class UnaryOperation: public Expression
 public:
 	UnaryOperation(
 		SourceLocation const& _location,
-		Token::Value _operator,
+		Token _operator,
 		ASTPointer<Expression> const& _subExpression,
 		bool _isPrefix
 	):
@@ -1428,17 +1450,17 @@ public:
 		m_subExpression(_subExpression),
 		m_isPrefix(_isPrefix)
 	{
-		solAssert(Token::isUnaryOp(_operator), "");
+		solAssert(TokenTraits::isUnaryOp(_operator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value getOperator() const { return m_operator; }
+	Token getOperator() const { return m_operator; }
 	bool isPrefixOperation() const { return m_isPrefix; }
 	Expression const& subExpression() const { return *m_subExpression; }
 
 private:
-	Token::Value m_operator;
+	Token m_operator;
 	ASTPointer<Expression> m_subExpression;
 	bool m_isPrefix;
 };
@@ -1453,25 +1475,25 @@ public:
 	BinaryOperation(
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _left,
-		Token::Value _operator,
+		Token _operator,
 		ASTPointer<Expression> const& _right
 	):
 		Expression(_location), m_left(_left), m_operator(_operator), m_right(_right)
 	{
-		solAssert(Token::isBinaryOp(_operator) || Token::isCompareOp(_operator), "");
+		solAssert(TokenTraits::isBinaryOp(_operator) || TokenTraits::isCompareOp(_operator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& leftExpression() const { return *m_left; }
 	Expression const& rightExpression() const { return *m_right; }
-	Token::Value getOperator() const { return m_operator; }
+	Token getOperator() const { return m_operator; }
 
 	BinaryOperationAnnotation& annotation() const override;
 
 private:
 	ASTPointer<Expression> m_left;
-	Token::Value m_operator;
+	Token m_operator;
 	ASTPointer<Expression> m_right;
 };
 
@@ -1631,21 +1653,21 @@ class Literal: public PrimaryExpression
 public:
 	enum class SubDenomination
 	{
-		None = Token::Illegal,
-		Wei = Token::SubWei,
-		Szabo = Token::SubSzabo,
-		Finney = Token::SubFinney,
-		Ether = Token::SubEther,
-		Second = Token::SubSecond,
-		Minute = Token::SubMinute,
-		Hour = Token::SubHour,
-		Day = Token::SubDay,
-		Week = Token::SubWeek,
-		Year = Token::SubYear
+		None = static_cast<int>(Token::Illegal),
+		Wei = static_cast<int>(Token::SubWei),
+		Szabo = static_cast<int>(Token::SubSzabo),
+		Finney = static_cast<int>(Token::SubFinney),
+		Ether = static_cast<int>(Token::SubEther),
+		Second = static_cast<int>(Token::SubSecond),
+		Minute = static_cast<int>(Token::SubMinute),
+		Hour = static_cast<int>(Token::SubHour),
+		Day = static_cast<int>(Token::SubDay),
+		Week = static_cast<int>(Token::SubWeek),
+		Year = static_cast<int>(Token::SubYear)
 	};
 	Literal(
 		SourceLocation const& _location,
-		Token::Value _token,
+		Token _token,
 		ASTPointer<ASTString> const& _value,
 		SubDenomination _sub = SubDenomination::None
 	):
@@ -1653,9 +1675,11 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value token() const { return m_token; }
+	Token token() const { return m_token; }
 	/// @returns the non-parsed value of the literal
 	ASTString const& value() const { return *m_value; }
+
+	ASTString valueWithoutUnderscores() const;
 
 	SubDenomination subDenomination() const { return m_subDenomination; }
 
@@ -1670,7 +1694,7 @@ public:
 	std::string getChecksummedAddress() const;
 
 private:
-	Token::Value m_token;
+	Token m_token;
 	ASTPointer<ASTString> m_value;
 	SubDenomination m_subDenomination;
 };

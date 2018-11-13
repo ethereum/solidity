@@ -1,0 +1,212 @@
+{
+	"attributes" : 
+	{
+		"absolutePath" : "a",
+		"exportedSymbols" : 
+		{
+			"C" : 
+			[
+				14
+			]
+		}
+	},
+	"children" : 
+	[
+		{
+			"attributes" : 
+			{
+				"baseContracts" : 
+				[
+					null
+				],
+				"contractDependencies" : 
+				[
+					null
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					14
+				],
+				"name" : "C",
+				"scope" : 15
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"documentation" : null,
+						"name" : "M",
+						"visibility" : "internal"
+					},
+					"children" : 
+					[
+						{
+							"children" : 
+							[
+								{
+									"attributes" : 
+									{
+										"constant" : false,
+										"name" : "i",
+										"scope" : 6,
+										"stateVariable" : false,
+										"storageLocation" : "default",
+										"type" : "uint256",
+										"value" : null,
+										"visibility" : "internal"
+									},
+									"children" : 
+									[
+										{
+											"attributes" : 
+											{
+												"name" : "uint",
+												"type" : "uint256"
+											},
+											"id" : 1,
+											"name" : "ElementaryTypeName",
+											"src" : "24:4:1"
+										}
+									],
+									"id" : 2,
+									"name" : "VariableDeclaration",
+									"src" : "24:6:1"
+								}
+							],
+							"id" : 3,
+							"name" : "ParameterList",
+							"src" : "23:8:1"
+						},
+						{
+							"children" : 
+							[
+								{
+									"id" : 4,
+									"name" : "PlaceholderStatement",
+									"src" : "34:1:1"
+								}
+							],
+							"id" : 5,
+							"name" : "Block",
+							"src" : "32:6:1"
+						}
+					],
+					"id" : 6,
+					"name" : "ModifierDefinition",
+					"src" : "13:25:1"
+				},
+				{
+					"attributes" : 
+					{
+						"documentation" : null,
+						"implemented" : true,
+						"isConstructor" : false,
+						"kind" : "function",
+						"name" : "F",
+						"scope" : 14,
+						"stateMutability" : "nonpayable",
+						"superFunction" : null,
+						"visibility" : "public"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 7,
+							"name" : "ParameterList",
+							"src" : "49:2:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 11,
+							"name" : "ParameterList",
+							"src" : "64:0:1"
+						},
+						{
+							"children" : 
+							[
+								{
+									"attributes" : 
+									{
+										"argumentTypes" : null,
+										"overloadedDeclarations" : 
+										[
+											null
+										],
+										"referencedDeclaration" : 6,
+										"type" : "modifier (uint256)",
+										"value" : "M"
+									},
+									"id" : 8,
+									"name" : "Identifier",
+									"src" : "52:1:1"
+								},
+								{
+									"attributes" : 
+									{
+										"argumentTypes" : null,
+										"hexvalue" : "31",
+										"isConstant" : false,
+										"isLValue" : false,
+										"isPure" : true,
+										"lValueRequested" : false,
+										"subdenomination" : null,
+										"token" : "number",
+										"type" : "int_const 1",
+										"value" : "1"
+									},
+									"id" : 9,
+									"name" : "Literal",
+									"src" : "54:1:1"
+								}
+							],
+							"id" : 10,
+							"name" : "ModifierInvocation",
+							"src" : "52:4:1"
+						},
+						{
+							"attributes" : 
+							{
+								"statements" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 12,
+							"name" : "Block",
+							"src" : "64:2:1"
+						}
+					],
+					"id" : 13,
+					"name" : "FunctionDefinition",
+					"src" : "39:27:1"
+				}
+			],
+			"id" : 14,
+			"name" : "ContractDefinition",
+			"src" : "0:68:1"
+		}
+	],
+	"id" : 15,
+	"name" : "SourceUnit",
+	"src" : "0:69:1"
+}

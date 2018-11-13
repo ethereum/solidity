@@ -13,11 +13,11 @@ Withdrawal from Contracts
 The recommended method of sending funds after an effect
 is using the withdrawal pattern. Although the most intuitive
 method of sending Ether, as a result of an effect, is a
-direct ``send`` call, this is not recommended as it
+direct ``transfer`` call, this is not recommended as it
 introduces a potential security risk. You may read
 more about this on the :ref:`security_considerations` page.
 
-This is an example of the withdrawal pattern in practice in
+The following is an example of the withdrawal pattern in practice in
 a contract where the goal is to send the most money to the
 contract in order to become the "richest", inspired by
 `King of the Ether <https://www.kingoftheether.com/>`_.
@@ -28,7 +28,7 @@ become the new richest.
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract WithdrawalContract {
         address public richest;
@@ -36,7 +36,7 @@ become the new richest.
 
         mapping (address => uint) pendingWithdrawals;
 
-        function WithdrawalContract() public payable {
+        constructor() public payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
@@ -65,13 +65,13 @@ This is as opposed to the more intuitive sending pattern:
 
 ::
 
-    pragma solidity ^0.4.11;
+    pragma solidity >0.4.99 <0.6.0;
 
     contract SendContract {
-        address public richest;
+        address payable public richest;
         uint public mostSent;
 
-        function SendContract() public payable {
+        constructor() public payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
@@ -93,7 +93,7 @@ Notice that, in this example, an attacker could trap the
 contract into an unusable state by causing ``richest`` to be
 the address of a contract that has a fallback function
 which fails (e.g. by using ``revert()`` or by just
-consuming more than the 2300 gas stipend). That way,
+consuming more than the 2300 gas stipend transferred to them). That way,
 whenever ``transfer`` is called to deliver funds to the
 "poisoned" contract, it will fail and thus also ``becomeRichest``
 will fail, with the contract being stuck forever.
@@ -130,7 +130,7 @@ restrictions highly readable.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -198,7 +198,7 @@ restrictions highly readable.
             );
             _;
             if (msg.value > _amount)
-                msg.sender.send(msg.value - _amount);
+                msg.sender.transfer(msg.value - _amount);
         }
 
         function forceOwnerChange(address _newOwner)
@@ -282,7 +282,7 @@ function finishes.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract StateMachine {
         enum Stages {

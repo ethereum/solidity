@@ -26,7 +26,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <ctype.h>
+#include <cctype>
 #include <algorithm>
 
 using namespace std;
@@ -97,7 +97,7 @@ assembly::Statement Parser::parseStatement()
 			fatalParserError("Only one default case allowed.");
 		else if (m_scanner->currentToken() == Token::Case)
 			fatalParserError("Case not allowed after default case.");
-		if (_switch.cases.size() == 0)
+		if (_switch.cases.empty())
 			fatalParserError("Switch statement without any cases.");
 		_switch.location.end = _switch.cases.back().body.location.end;
 		return _switch;
@@ -112,8 +112,8 @@ assembly::Statement Parser::parseStatement()
 		advance();
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();
-		assignment.variableName.name = currentLiteral();
-		if (instructions().count(assignment.variableName.name))
+		assignment.variableName.name = YulString(currentLiteral());
+		if (instructions().count(assignment.variableName.name.str()))
 			fatalParserError("Identifier expected, got instruction name.");
 		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
@@ -150,7 +150,7 @@ assembly::Statement Parser::parseStatement()
 			expectToken(Token::Comma);
 			elementary = parseElementaryOperation();
 			if (elementary.type() != typeid(assembly::Identifier))
-				fatalParserError("Variable name expected in multiple assignemnt.");
+				fatalParserError("Variable name expected in multiple assignment.");
 			assignment.variableNames.emplace_back(boost::get<assembly::Identifier>(elementary));
 		}
 		while (currentToken() == Token::Comma);
@@ -173,7 +173,7 @@ assembly::Statement Parser::parseStatement()
 		if (currentToken() == Token::Assign && peekNextToken() != Token::Colon)
 		{
 			assembly::Assignment assignment = createWithLocation<assembly::Assignment>(identifier.location);
-			if (m_flavour != AsmFlavour::IULIA && instructions().count(identifier.name))
+			if (m_flavour != AsmFlavour::Yul && instructions().count(identifier.name.str()))
 				fatalParserError("Cannot use instruction names for identifier names.");
 			advance();
 			assignment.variableNames.emplace_back(identifier);
@@ -279,7 +279,7 @@ assembly::Expression Parser::parseExpression()
 				"Expected '(' (instruction \"" +
 				instructionNames().at(instr.instruction) +
 				"\" expects " +
-				boost::lexical_cast<string>(args) +
+				to_string(args) +
 				" arguments)"
 			));
 	}
@@ -318,11 +318,6 @@ std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
 			s_instructions[name] = instruction.second;
 		}
-
-		// add alias for suicide
-		s_instructions["suicide"] = solidity::Instruction::SELFDESTRUCT;
-		// add alis for sha3
-		s_instructions["sha3"] = solidity::Instruction::KECCAK256;
 	}
 	return s_instructions;
 }
@@ -362,13 +357,13 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		else
 			literal = currentLiteral();
 		// first search the set of instructions.
-		if (m_flavour != AsmFlavour::IULIA && instructions().count(literal))
+		if (m_flavour != AsmFlavour::Yul && instructions().count(literal))
 		{
 			dev::solidity::Instruction const& instr = instructions().at(literal);
 			ret = Instruction{location(), instr};
 		}
 		else
-			ret = Identifier{location(), literal};
+			ret = Identifier{location(), YulString{literal}};
 		advance();
 		break;
 	}
@@ -399,15 +394,15 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		Literal literal{
 			location(),
 			kind,
-			currentLiteral(),
-			""
+			YulString{currentLiteral()},
+			{}
 		};
 		advance();
-		if (m_flavour == AsmFlavour::IULIA)
+		if (m_flavour == AsmFlavour::Yul)
 		{
 			expectToken(Token::Colon);
 			literal.location.end = endPosition();
-			literal.type = expectAsmIdentifier();
+			literal.type = YulString{expectAsmIdentifier()};
 		}
 		else if (kind == LiteralKind::Boolean)
 			fatalParserError("True and false are not valid literals.");
@@ -416,7 +411,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	}
 	default:
 		fatalParserError(
-			m_flavour == AsmFlavour::IULIA ?
+			m_flavour == AsmFlavour::Yul ?
 			"Literal or identifier expected." :
 			"Literal, identifier or instruction expected."
 		);
@@ -454,7 +449,7 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 	RecursionGuard recursionGuard(*this);
 	FunctionDefinition funDef = createWithLocation<FunctionDefinition>();
 	expectToken(Token::Function);
-	funDef.name = expectAsmIdentifier();
+	funDef.name = YulString{expectAsmIdentifier()};
 	expectToken(Token::LParen);
 	while (currentToken() != Token::RParen)
 	{
@@ -486,7 +481,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	RecursionGuard recursionGuard(*this);
 	if (_initialOp.type() == typeid(Instruction))
 	{
-		solAssert(m_flavour != AsmFlavour::IULIA, "Instructions are invalid in JULIA");
+		solAssert(m_flavour != AsmFlavour::Yul, "Instructions are invalid in Yul");
 		Instruction& instruction = boost::get<Instruction>(_initialOp);
 		FunctionalInstruction ret;
 		ret.instruction = instruction.instruction;
@@ -507,7 +502,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 					"Expected expression (instruction \"" +
 					instructionNames().at(instr) +
 					"\" expects " +
-					boost::lexical_cast<string>(args) +
+					to_string(args) +
 					" arguments)"
 				));
 
@@ -519,7 +514,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 						"Expected ',' (instruction \"" +
 						instructionNames().at(instr) +
 						"\" expects " +
-						boost::lexical_cast<string>(args) +
+						to_string(args) +
 						" arguments)"
 					));
 				else
@@ -532,7 +527,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 				"Expected ')' (instruction \"" +
 				instructionNames().at(instr) +
 				"\" expects " +
-				boost::lexical_cast<string>(args) +
+				to_string(args) +
 				" arguments)"
 			));
 		expectToken(Token::RParen);
@@ -557,7 +552,7 @@ assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	}
 	else
 		fatalParserError(
-			m_flavour == AsmFlavour::IULIA ?
+			m_flavour == AsmFlavour::Yul ?
 			"Function name expected." :
 			"Assembly instruction or function name required in front of \"(\")"
 		);
@@ -569,12 +564,12 @@ TypedName Parser::parseTypedName()
 {
 	RecursionGuard recursionGuard(*this);
 	TypedName typedName = createWithLocation<TypedName>();
-	typedName.name = expectAsmIdentifier();
-	if (m_flavour == AsmFlavour::IULIA)
+	typedName.name = YulString{expectAsmIdentifier()};
+	if (m_flavour == AsmFlavour::Yul)
 	{
 		expectToken(Token::Colon);
 		typedName.location.end = endPosition();
-		typedName.type = expectAsmIdentifier();
+		typedName.type = YulString{expectAsmIdentifier()};
 	}
 	return typedName;
 }
@@ -582,7 +577,7 @@ TypedName Parser::parseTypedName()
 string Parser::expectAsmIdentifier()
 {
 	string name = currentLiteral();
-	if (m_flavour == AsmFlavour::IULIA)
+	if (m_flavour == AsmFlavour::Yul)
 	{
 		switch (currentToken())
 		{
@@ -606,7 +601,9 @@ bool Parser::isValidNumberLiteral(string const& _literal)
 {
 	try
 	{
-		u256(_literal);
+		// Try to convert _literal to u256.
+		auto tmp = u256(_literal);
+		(void) tmp;
 	}
 	catch (...)
 	{

@@ -1,6 +1,10 @@
-// It is fine to "override" constructor of a base class since it is invisible
-contract A { function A() public { } }
-contract B is A { function A() public pure returns (uint8) {} }
+contract A { function f() public {} }
+contract B is A {
+  function A() public pure returns (uint8) {}
+  function g() public {
+    A.f();
+  }
+}
 // ----
-// Warning: (91-114): Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
-// Warning: (135-178): This declaration shadows an existing declaration.
+// Warning: (58-101): This declaration shadows an existing declaration.
+// TypeError: (130-133): Member "f" not found or not visible after argument-dependent lookup in function () pure returns (uint8).

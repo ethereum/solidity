@@ -87,6 +87,7 @@ public:
 		for (bytes const& arguments: _argumentVariants)
 		{
 			sendMessage(hash.asBytes() + arguments, false, 0);
+			BOOST_CHECK(m_transactionSuccessful);
 			gasUsed = max(gasUsed, m_gasUsed);
 			gas = max(gas, gasForTransaction(hash.asBytes() + arguments, false));
 		}
@@ -118,10 +119,10 @@ BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
 	char const* sourceCode = R"(
 		contract test {
 			bytes x;
-			function f(uint a) returns (uint b) {
+			function f(uint a) public returns (uint b) {
 				x.length = a;
 				for (; a < 200; ++a) {
-					x[a] = 9;
+					x[a] = 0x09;
 					b = a * a;
 				}
 				return f(a - 1);
@@ -151,8 +152,8 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 	char const* sourceCode = R"(
 		contract test {
 			bytes32 public shaValue;
-			function f(uint a) {
-				shaValue = keccak256(a);
+			function f(uint a) public {
+				shaValue = keccak256(abi.encodePacked(a));
 			}
 		}
 	)";
@@ -164,8 +165,8 @@ BOOST_AUTO_TEST_CASE(store_keccak256)
 	char const* sourceCode = R"(
 		contract test {
 			bytes32 public shaValue;
-			function test(uint a) {
-				shaValue = keccak256(a);
+			constructor(uint a) public {
+				shaValue = keccak256(abi.encodePacked(a));
 			}
 		}
 	)";
@@ -178,7 +179,7 @@ BOOST_AUTO_TEST_CASE(updating_store)
 		contract test {
 			uint data;
 			uint data2;
-			function test() {
+			constructor() public {
 				data = 1;
 				data = 2;
 				data2 = 0;
@@ -194,7 +195,7 @@ BOOST_AUTO_TEST_CASE(branches)
 		contract test {
 			uint data;
 			uint data2;
-			function f(uint x) {
+			function f(uint x) public {
 				if (x > 7)
 					data2 = 1;
 				else
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE(function_calls)
 		contract test {
 			uint data;
 			uint data2;
-			function f(uint x) {
+			function f(uint x) public {
 				if (x > 7)
 					data2 = g(x**8) + 1;
 				else
@@ -233,13 +234,13 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 		contract test {
 			uint data;
 			uint data2;
-			function f(uint x) {
+			function f(uint x) public {
 				if (x > 7)
 					data2 = g(x**8) + 1;
 				else
 					data = 1;
 			}
-			function g(uint x) returns (uint) {
+			function g(uint x) public returns (uint) {
 				return data2;
 			}
 		}
@@ -253,10 +254,10 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function g(uint x) returns (uint) {
+			function g(uint x) public returns (uint) {
 				return x ** 0x100;
 			}
-			function h(uint x) returns (uint) {
+			function h(uint x) public returns (uint) {
 				return x ** 0x10000;
 			}
 		}
@@ -270,7 +271,7 @@ BOOST_AUTO_TEST_CASE(balance_gas)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function lookup_balance(address a) returns (uint) {
+			function lookup_balance(address a) public returns (uint) {
 				return a.balance;
 			}
 		}
@@ -283,7 +284,7 @@ BOOST_AUTO_TEST_CASE(extcodesize_gas)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function f() returns (uint _s) {
+			function f() public returns (uint _s) {
 				assembly {
 					_s := extcodesize(0x30)
 				}
@@ -301,7 +302,7 @@ BOOST_AUTO_TEST_CASE(regular_functions_exclude_fallback)
 	char const* sourceCode = R"(
 		contract A {
 			uint public x;
-			function() { x = 2; }
+			function() external { x = 2; }
 		}
 	)";
 	testCreationTimeGas(sourceCode);
@@ -315,7 +316,7 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	// we previously considered. This of course reduces accuracy.
 	char const* sourceCode = R"(
 		contract log {
-			function ln(int128 x) constant returns (int128 result) {
+			function ln(int128 x) public pure returns (int128 result) {
 				int128 t = x / 256;
 				int128 y = 5545177;
 				x = t;

@@ -28,8 +28,11 @@ bool ControlFlowAnalyzer::analyze(ASTNode const& _astRoot)
 
 bool ControlFlowAnalyzer::visit(FunctionDefinition const& _function)
 {
-	auto const& functionFlow = m_cfg.functionFlow(_function);
-	checkUnassignedStorageReturnValues(_function, functionFlow.entry, functionFlow.exit);
+	if (_function.isImplemented())
+	{
+		auto const& functionFlow = m_cfg.functionFlow(_function);
+		checkUnassignedStorageReturnValues(_function, functionFlow.entry, functionFlow.exit);
+	}
 	return false;
 }
 
@@ -75,7 +78,10 @@ void ControlFlowAnalyzer::checkUnassignedStorageReturnValues(
 	{
 		auto& unassignedAtFunctionEntry = unassigned[_functionEntry];
 		for (auto const& returnParameter: _function.returnParameterList()->parameters())
-			if (returnParameter->type()->dataStoredIn(DataLocation::Storage))
+			if (
+				returnParameter->type()->dataStoredIn(DataLocation::Storage) ||
+				returnParameter->type()->category() == Type::Category::Mapping
+			)
 				unassignedAtFunctionEntry.insert(returnParameter.get());
 	}
 
@@ -144,12 +150,12 @@ void ControlFlowAnalyzer::checkUnassignedStorageReturnValues(
 						ssl.append("Problematic end of function:", _function.location());
 				}
 
-			m_errorReporter.warning(
+			m_errorReporter.typeError(
 				returnVal->location(),
-				"This variable is of storage pointer type and might be returned without assignment. "
-				"This can cause storage corruption. Assign the variable (potentially from itself) "
-				"to remove this warning.",
-				ssl
+				ssl,
+				"This variable is of storage pointer type and might be returned without assignment and "
+				"could be used uninitialized. Assign the variable (potentially from itself) "
+				"to fix this error."
 			);
 		}
 	}

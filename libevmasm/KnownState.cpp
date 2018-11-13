@@ -23,7 +23,7 @@
 
 #include "KnownState.h"
 #include <functional>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 #include <libevmasm/AssemblyItem.h>
 
 using namespace std;
@@ -121,28 +121,33 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 			vector<Id> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
 				arguments[i] = stackElement(m_stackHeight - i, _item.location());
-
-			if (_item.instruction() == Instruction::SSTORE)
+			switch (_item.instruction())
+			{
+			case Instruction::SSTORE:
 				op = storeInStorage(arguments[0], arguments[1], _item.location());
-			else if (_item.instruction() == Instruction::SLOAD)
+				break;
+			case Instruction::SLOAD:
 				setStackElement(
 					m_stackHeight + _item.deposit(),
 					loadFromStorage(arguments[0], _item.location())
 				);
-			else if (_item.instruction() == Instruction::MSTORE)
+				break;
+			case Instruction::MSTORE:
 				op = storeInMemory(arguments[0], arguments[1], _item.location());
-			else if (_item.instruction() == Instruction::MLOAD)
+				break;
+			case Instruction::MLOAD:
 				setStackElement(
 					m_stackHeight + _item.deposit(),
 					loadFromMemory(arguments[0], _item.location())
 				);
-			else if (_item.instruction() == Instruction::KECCAK256)
+				break;
+			case Instruction::KECCAK256:
 				setStackElement(
 					m_stackHeight + _item.deposit(),
 					applyKeccak256(arguments.at(0), arguments.at(1), _item.location())
 				);
-			else
-			{
+				break;
+			default:
 				bool invMem = SemanticInformation::invalidatesMemory(_item.instruction());
 				bool invStor = SemanticInformation::invalidatesStorage(_item.instruction());
 				// We could be a bit more fine-grained here (CALL only invalidates part of

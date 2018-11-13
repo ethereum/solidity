@@ -52,6 +52,12 @@ private:
 	virtual bool visit(ModifierDefinition const& _modifier) override;
 	virtual void endVisit(ModifierDefinition const& _modifier) override;
 
+	/// Reports an error if _statement is a VariableDeclarationStatement.
+	/// Used by if/while/for to check for single statement variable declarations
+	/// without a block.
+	void checkSingleStatementVariableDeclaration(ASTNode const& _statement);
+
+	virtual bool visit(IfStatement const& _ifStatement) override;
 	virtual bool visit(WhileStatement const& _whileStatement) override;
 	virtual void endVisit(WhileStatement const& _whileStatement) override;
 	virtual bool visit(ForStatement const& _forStatement) override;
@@ -66,12 +72,14 @@ private:
 
 	virtual bool visit(PlaceholderStatement const& _placeholderStatement) override;
 
+	virtual bool visit(ContractDefinition const& _contract) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(FunctionTypeName const& _node) override;
 
-	virtual bool visit(VariableDeclaration const& _declaration) override;
+	virtual bool visit(VariableDeclarationStatement const& _statement) override;
 
 	virtual bool visit(StructDefinition const& _struct) override;
+	virtual bool visit(Literal const& _literal) override;
 
 	ErrorReporter& m_errorReporter;
 
@@ -82,6 +90,7 @@ private:
 	bool m_versionPragmaFound = false;
 
 	int m_inLoopDepth = 0;
+	bool m_isInterface = false;
 
 	SourceUnit const* m_sourceUnit = nullptr;
 };

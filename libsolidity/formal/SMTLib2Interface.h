@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include <set>
 
 namespace dev
 {
@@ -48,9 +49,9 @@ public:
 	void push() override;
 	void pop() override;
 
-	Expression newFunction(std::string _name, Sort _domain, Sort _codomain) override;
-	Expression newInteger(std::string _name) override;
-	Expression newBool(std::string _name) override;
+	void declareFunction(std::string _name, Sort _domain, Sort _codomain) override;
+	void declareInteger(std::string _name) override;
+	void declareBool(std::string _name) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
@@ -68,6 +69,8 @@ private:
 
 	ReadCallback::Callback m_queryCallback;
 	std::vector<std::string> m_accumulatedOutput;
+	std::set<std::string> m_constants;
+	std::set<std::string> m_functions;
 };
 
 }

@@ -43,12 +43,12 @@ int ParserBase::endPosition() const
 	return m_scanner->currentLocation().end;
 }
 
-Token::Value ParserBase::currentToken() const
+Token ParserBase::currentToken() const
 {
 	return m_scanner->currentToken();
 }
 
-Token::Value ParserBase::peekNextToken() const
+Token ParserBase::peekNextToken() const
 {
 	return m_scanner->peekNextToken();
 }
@@ -58,31 +58,31 @@ std::string ParserBase::currentLiteral() const
 	return m_scanner->currentLiteral();
 }
 
-Token::Value ParserBase::advance()
+Token ParserBase::advance()
 {
 	return m_scanner->next();
 }
 
-void ParserBase::expectToken(Token::Value _value, bool _advance)
+void ParserBase::expectToken(Token _value, bool _advance)
 {
-	Token::Value tok = m_scanner->currentToken();
+	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		auto tokenName = [this](Token::Value _token)
+		auto tokenName = [this](Token _token)
 		{
 			if (_token == Token::Identifier)
 				return string("identifier");
 			else if (_token == Token::EOS)
 				return string("end of source");
-			else if (Token::isReservedKeyword(_token))
-				return string("reserved keyword '") + Token::friendlyName(_token) + "'";
-			else if (Token::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
+			else if (TokenTraits::isReservedKeyword(_token))
+				return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
+			else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
 			{
 				ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 				return string("'") + elemTypeName.toString() + "'";
 			}
 			else
-				return string("'") + Token::friendlyName(_token) + "'";
+				return string("'") + TokenTraits::friendlyName(_token) + "'";
 		};
 
 		fatalParserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok));

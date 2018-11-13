@@ -303,12 +303,17 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			m_context << _sourceType.length();
 		if (baseSize > 1)
 			m_context << u256(baseSize) << Instruction::MUL;
-		// stack: target source_offset source_len
-		m_context << Instruction::DUP1 << Instruction::DUP3 << Instruction::DUP5;
-		// stack: target source_offset source_len source_len source_offset target
-		m_context << Instruction::CALLDATACOPY;
-		m_context << Instruction::DUP3 << Instruction::ADD;
-		m_context << Instruction::SWAP2 << Instruction::POP << Instruction::POP;
+
+		string routine = "calldatacopy(target, source, len)\n";
+		if (_padToWordBoundaries)
+			routine += R"(
+				// Set padding suffix to zero
+				mstore(add(target, len), 0)
+				len := and(add(len, 0x1f), not(0x1f))
+			)";
+		routine += "target := add(target, len)\n";
+		m_context.appendInlineAssembly("{" + routine + "}", {"target", "source", "len"});
+		m_context << Instruction::POP << Instruction::POP;
 	}
 	else if (_sourceType.location() == DataLocation::Memory)
 	{
@@ -823,6 +828,85 @@ void ArrayUtils::incrementDynamicArraySize(ArrayType const& _type) const
 		})", {"ref"});
 }
 
+void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+	solAssert(_type.isDynamicallySized(), "");
+	if (!_type.isByteArray() && _type.baseType()->storageBytes() < 32)
+		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
+
+	if (_type.isByteArray())
+	{
+		m_context.appendInlineAssembly(R"({
+			let slot_value := sload(ref)
+			switch and(slot_value, 1)
+			case 0 {
+				// short byte array
+				let length := and(div(slot_value, 2), 0x1f)
+				if iszero(length) { invalid() }
+
+				// Zero-out the suffix including the least significant byte.
+				let mask := sub(exp(0x100, sub(33, length)), 1)
+				length := sub(length, 1)
+				slot_value := or(and(not(mask), slot_value), mul(length, 2))
+				sstore(ref, slot_value)
+			}
+			case 1 {
+				// long byte array
+				mstore(0, ref)
+				let length := div(slot_value, 2)
+				let slot := keccak256(0, 0x20)
+				switch length
+				case 32
+				{
+					let data := sload(slot)
+					sstore(slot, 0)
+					data := and(data, not(0xff))
+					sstore(ref, or(data, 62))
+				}
+				default
+				{
+					let offset_inside_slot := and(sub(length, 1), 0x1f)
+					slot := add(slot, div(sub(length, 1), 32))
+					let data := sload(slot)
+
+					// Zero-out the suffix of the byte array by masking it.
+					// ((1<<(8 * (32 - offset))) - 1)
+					let mask := sub(exp(0x100, sub(32, offset_inside_slot)), 1)
+					data := and(not(mask), data)
+					sstore(slot, data)
+
+					// Reduce the length by 1
+					slot_value := sub(slot_value, 2)
+					sstore(ref, slot_value)
+				}
+			}
+		})", {"ref"});
+		m_context << Instruction::POP;
+	}
+	else
+	{
+		// stack: ArrayReference
+		retrieveLength(_type);
+		// stack: ArrayReference oldLength
+		m_context << Instruction::DUP1;
+		// stack: ArrayReference oldLength oldLength
+		m_context << Instruction::ISZERO;
+		m_context.appendConditionalInvalid();
+
+		// Stack: ArrayReference oldLength
+		m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
+		// Stack ArrayReference newLength
+		m_context << Instruction::DUP2 << Instruction::DUP2;
+		// Stack ArrayReference newLength ArrayReference newLength;
+		accessIndex(_type, false);
+		// Stack: ArrayReference newLength storage_slot byte_offset
+		StorageItem(m_context, *_type.baseType()).setToZero(SourceLocation(), true);
+		// Stack: ArrayReference newLength
+		m_context << Instruction::SWAP1 << Instruction::SSTORE;
+	}
+}
+
 void ArrayUtils::clearStorageLoop(TypePointer const& _type) const
 {
 	m_context.callLowLevelFunction(
@@ -1024,8 +1108,6 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 		m_context << endTag;
 		break;
 	}
-	default:
-		solAssert(false, "");
 	}
 }
 

@@ -97,12 +97,12 @@ public:
 
 	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
 	/// From memory if @a _fromMemory is true, otherwise from call data.
-	/// Calls revert if @a _revertOnOutOfBounds is true and the supplied size is shorter
-	/// than the static data requirements or if dynamic data pointers reach outside of the
-	/// area. Also has a hard cap of 0x100000000 for any given length/offset field.
+	/// Calls revert if the supplied size is shorter than the static data requirements
+	/// or if dynamic data pointers reach outside of the area.
+	/// Also has a hard cap of 0x100000000 for any given length/offset field.
 	/// Stack pre: <source_offset> <length>
 	/// Stack post: <value0> <value1> ... <valuen>
-	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false, bool _revertOnOutOfBounds = false);
+	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false);
 
 	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
 	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.
@@ -241,6 +241,10 @@ public:
 	void popStackElement(Type const& _type);
 	/// Removes element from the top of the stack _amount times.
 	void popStackSlots(size_t _amount);
+	/// Pops slots from the stack such that its height is _toHeight.
+	/// Adds jump to _jumpTo.
+	/// Readjusts the stack offset to the original value.
+	void popAndJump(unsigned _toHeight, eth::AssemblyItem const& _jumpTo);
 
 	template <class T>
 	static unsigned sizeOnStack(std::vector<T> const& _variables);
@@ -256,7 +260,7 @@ public:
 	/// Stack post: <shifted_value>
 	void rightShiftNumberOnStack(unsigned _bits);
 
-	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
+	/// Appends code that computes the Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
 	/// Bytes we need to the start of call data.

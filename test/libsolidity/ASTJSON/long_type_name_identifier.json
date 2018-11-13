@@ -1,0 +1,181 @@
+{
+	"absolutePath" : "a",
+	"exportedSymbols" : 
+	{
+		"c" : 
+		[
+			14
+		]
+	},
+	"id" : 15,
+	"nodeType" : "SourceUnit",
+	"nodes" : 
+	[
+		{
+			"baseContracts" : [],
+			"contractDependencies" : [],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 14,
+			"linearizedBaseContracts" : 
+			[
+				14
+			],
+			"name" : "c",
+			"nodeType" : "ContractDefinition",
+			"nodes" : 
+			[
+				{
+					"constant" : false,
+					"id" : 3,
+					"name" : "a",
+					"nodeType" : "VariableDeclaration",
+					"scope" : 14,
+					"src" : "13:8:1",
+					"stateVariable" : true,
+					"storageLocation" : "default",
+					"typeDescriptions" : 
+					{
+						"typeIdentifier" : "t_array$_t_uint256_$dyn_storage",
+						"typeString" : "uint256[]"
+					},
+					"typeName" : 
+					{
+						"baseType" : 
+						{
+							"id" : 1,
+							"name" : "uint",
+							"nodeType" : "ElementaryTypeName",
+							"src" : "13:4:1",
+							"typeDescriptions" : 
+							{
+								"typeIdentifier" : "t_uint256",
+								"typeString" : "uint256"
+							}
+						},
+						"id" : 2,
+						"length" : null,
+						"nodeType" : "ArrayTypeName",
+						"src" : "13:6:1",
+						"typeDescriptions" : 
+						{
+							"typeIdentifier" : "t_array$_t_uint256_$dyn_storage_ptr",
+							"typeString" : "uint256[]"
+						}
+					},
+					"value" : null,
+					"visibility" : "internal"
+				},
+				{
+					"body" : 
+					{
+						"id" : 12,
+						"nodeType" : "Block",
+						"src" : "43:25:1",
+						"statements" : 
+						[
+							{
+								"assignments" : 
+								[
+									9
+								],
+								"declarations" : 
+								[
+									{
+										"constant" : false,
+										"id" : 9,
+										"name" : "b",
+										"nodeType" : "VariableDeclaration",
+										"scope" : 12,
+										"src" : "45:16:1",
+										"stateVariable" : false,
+										"storageLocation" : "storage",
+										"typeDescriptions" : 
+										{
+											"typeIdentifier" : "t_array$_t_uint256_$dyn_storage_ptr",
+											"typeString" : "uint256[]"
+										},
+										"typeName" : 
+										{
+											"baseType" : 
+											{
+												"id" : 7,
+												"name" : "uint",
+												"nodeType" : "ElementaryTypeName",
+												"src" : "45:4:1",
+												"typeDescriptions" : 
+												{
+													"typeIdentifier" : "t_uint256",
+													"typeString" : "uint256"
+												}
+											},
+											"id" : 8,
+											"length" : null,
+											"nodeType" : "ArrayTypeName",
+											"src" : "45:6:1",
+											"typeDescriptions" : 
+											{
+												"typeIdentifier" : "t_array$_t_uint256_$dyn_storage_ptr",
+												"typeString" : "uint256[]"
+											}
+										},
+										"value" : null,
+										"visibility" : "internal"
+									}
+								],
+								"id" : 11,
+								"initialValue" : 
+								{
+									"argumentTypes" : null,
+									"id" : 10,
+									"name" : "a",
+									"nodeType" : "Identifier",
+									"overloadedDeclarations" : [],
+									"referencedDeclaration" : 3,
+									"src" : "64:1:1",
+									"typeDescriptions" : 
+									{
+										"typeIdentifier" : "t_array$_t_uint256_$dyn_storage",
+										"typeString" : "uint256[] storage ref"
+									}
+								},
+								"nodeType" : "VariableDeclarationStatement",
+								"src" : "45:20:1"
+							}
+						]
+					},
+					"documentation" : null,
+					"id" : 13,
+					"implemented" : true,
+					"kind" : "function",
+					"modifiers" : [],
+					"name" : "f",
+					"nodeType" : "FunctionDefinition",
+					"parameters" : 
+					{
+						"id" : 4,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "33:2:1"
+					},
+					"returnParameters" : 
+					{
+						"id" : 5,
+						"nodeType" : "ParameterList",
+						"parameters" : [],
+						"src" : "43:0:1"
+					},
+					"scope" : 14,
+					"src" : "23:45:1",
+					"stateMutability" : "nonpayable",
+					"superFunction" : null,
+					"visibility" : "public"
+				}
+			],
+			"scope" : 15,
+			"src" : "0:70:1"
+		}
+	],
+	"src" : "0:71:1"
+}

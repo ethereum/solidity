@@ -1,8 +1,9 @@
 contract test {
 	function f() pure public {
 		uint256 x;
-		if (true) { uint256 x; }
+		x = 1;
+		if (true) { uint256 x; x = 2; }
 	}
 }
 // ----
-// DeclarationError: (71-80): Identifier already declared.
+// Warning: (80-89): This declaration shadows an existing declaration.

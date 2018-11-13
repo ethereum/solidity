@@ -57,15 +57,14 @@ conditions
     means that the optimizer has to be switched on to enable the bug.
     If no conditions are given, assume that the bug is present.
 check
-    This field contains different checks that can be used to determine
-    whether a smart contract
+    This field contains different checks that report whether the smart contract
     contains the bug or not. The first type of check are Javascript regular
-    expressions that are to be matched against the source code ("source-regex").
-    If there is no match, then the bug is very likely
+    expressions that are to be matched against the source code ("source-regex")
+    if the bug is present.  If there is no match, then the bug is very likely
     not present. If there is a match, the bug might be present.  For improved
     accuracy, the checks should be applied to the source code after stripping
     comments.
-    The second type of check are patterns to be applied to the compact AST of
+    The second type of check are patterns to be checked on the compact AST of
     the Solidity program ("ast-compact-json-path"). The specified search query
     is a `JsonPath <https://github.com/json-path/JsonPath>`_ expression.
     If at least one path of the Solidity AST matches the query, the bug is

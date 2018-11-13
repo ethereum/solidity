@@ -112,9 +112,10 @@ public:
 		static GasConsumption infinite() { return GasConsumption(0, true); }
 
 		GasConsumption& operator+=(GasConsumption const& _other);
-		bool operator<(GasConsumption const& _other) const { return this->tuple() < _other.tuple(); }
-
-		std::tuple<bool const&, u256 const&> tuple() const { return std::tie(isInfinite, value); }
+		bool operator<(GasConsumption const& _other) const
+		{
+			return std::make_pair(isInfinite, value) < std::make_pair(_other.isInfinite, _other.value);
+		}
 
 		u256 value;
 		bool isInfinite;
@@ -134,6 +135,11 @@ public:
 	/// @returns gas costs for simple instructions with constant gas costs (that do not
 	/// change with EVM versions)
 	static unsigned runGas(Instruction _instruction);
+
+	/// @returns the gas cost of the supplied data, depending whether it is in creation code, or not.
+	/// In case of @a _inCreation, the data is only sent as a transaction and is not stored, whereas
+	/// otherwise code will be stored and have to pay "createDataGas" cost.
+	static u256 dataGas(bytes const& _data, bool _inCreation);
 
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.

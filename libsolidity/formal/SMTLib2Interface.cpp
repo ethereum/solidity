@@ -47,6 +47,8 @@ void SMTLib2Interface::reset()
 {
 	m_accumulatedOutput.clear();
 	m_accumulatedOutput.emplace_back();
+	m_constants.clear();
+	m_functions.clear();
 	write("(set-option :produce-models true)");
 	write("(set-logic QF_UFLIA)");
 }
@@ -62,30 +64,40 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-Expression SMTLib2Interface::newFunction(string _name, Sort _domain, Sort _codomain)
+void SMTLib2Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
 {
-	write(
-		"(declare-fun |" +
-		_name +
-		"| (" +
-		(_domain == Sort::Int ? "Int" : "Bool") +
-		") " +
-		(_codomain == Sort::Int ? "Int" : "Bool") +
-		")"
-	);
-	return SolverInterface::newFunction(move(_name), _domain, _codomain);
+	// TODO Use domain and codomain as key as well
+	if (!m_functions.count(_name))
+	{
+		m_functions.insert(_name);
+		write(
+			"(declare-fun |" +
+			_name +
+			"| (" +
+			(_domain == Sort::Int ? "Int" : "Bool") +
+			") " +
+			(_codomain == Sort::Int ? "Int" : "Bool") +
+			")"
+		);
+	}
 }
 
-Expression SMTLib2Interface::newInteger(string _name)
+void SMTLib2Interface::declareInteger(string _name)
 {
-	write("(declare-const |" + _name + "| Int)");
-	return SolverInterface::newInteger(move(_name));
+	if (!m_constants.count(_name))
+	{
+		m_constants.insert(_name);
+		write("(declare-const |" + _name + "| Int)");
+	}
 }
 
-Expression SMTLib2Interface::newBool(string _name)
+void SMTLib2Interface::declareBool(string _name)
 {
-	write("(declare-const |" + _name + "| Bool)");
-	return SolverInterface::newBool(std::move(_name));
+	if (!m_constants.count(_name))
+	{
+		m_constants.insert(_name);
+		write("(declare-const |" + _name + "| Bool)");
+	}
 }
 
 void SMTLib2Interface::addAssertion(Expression const& _expr)
@@ -112,7 +124,7 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 		result = CheckResult::ERROR;
 
 	vector<string> values;
-	if (result != CheckResult::UNSATISFIABLE && result != CheckResult::ERROR)
+	if (result == CheckResult::SATISFIABLE && result != CheckResult::ERROR)
 		values = parseValues(find(response.cbegin(), response.cend(), '\n'), response.cend());
 	return make_pair(result, values);
 }
@@ -146,7 +158,7 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
 			solAssert(e.sort == Sort::Int || e.sort == Sort::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + "\n";
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";

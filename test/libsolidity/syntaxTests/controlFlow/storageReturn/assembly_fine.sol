@@ -8,7 +8,7 @@ contract C {
     }
     function g(bool flag) internal returns (S storage c) {
         // control flow in assembly will not be analyzed for now,
-        // so this will not issue a warning
+        // so this will not issue an error
         assembly {
             if flag {
                 sstore(c_slot, sload(s_slot))
@@ -17,7 +17,7 @@ contract C {
     }
     function h() internal returns (S storage c) {
         // any reference from assembly will be sufficient for now,
-        // so this will not issue a warning
+        // so this will not issue an error
         assembly {
             sstore(s_slot, sload(c_slot))
         }

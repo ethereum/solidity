@@ -57,6 +57,16 @@ public:
 
 	GasMeter::GasConsumption estimateMax(size_t _startIndex, std::shared_ptr<KnownState> const& _state);
 
+	static GasMeter::GasConsumption estimateMax(
+		AssemblyItems const& _items,
+		solidity::EVMVersion _evmVersion,
+		size_t _startIndex,
+		std::shared_ptr<KnownState> const& _state
+	)
+	{
+		return PathGasMeter(_items, _evmVersion).estimateMax(_startIndex, _state);
+	}
+
 private:
 	/// Adds a new path item to the queue, but only if we do not already have
 	/// a higher gas usage at that point.

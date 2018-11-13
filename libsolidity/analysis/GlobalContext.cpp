@@ -42,7 +42,7 @@ m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{
 	make_shared<MagicVariableDeclaration>("blockhash", make_shared<FunctionType>(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
 	make_shared<MagicVariableDeclaration>("ecrecover", make_shared<FunctionType>(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("gasleft", make_shared<FunctionType>(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
-	make_shared<MagicVariableDeclaration>("keccak256", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA3, true, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("keccak256", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("log0", make_shared<FunctionType>(strings{"bytes32"}, strings{}, FunctionType::Kind::Log0)),
 	make_shared<MagicVariableDeclaration>("log1", make_shared<FunctionType>(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log1)),
 	make_shared<MagicVariableDeclaration>("log2", make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log2)),
@@ -55,11 +55,11 @@ m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{
 	make_shared<MagicVariableDeclaration>("require", make_shared<FunctionType>(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("revert", make_shared<FunctionType>(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("revert", make_shared<FunctionType>(strings{"string memory"}, strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("ripemd160", make_shared<FunctionType>(strings(), strings{"bytes20"}, FunctionType::Kind::RIPEMD160, true, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("selfdestruct", make_shared<FunctionType>(strings{"address"}, strings{}, FunctionType::Kind::Selfdestruct)),
-	make_shared<MagicVariableDeclaration>("sha256", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA256, true, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("sha3", make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Kind::SHA3, true, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("suicide", make_shared<FunctionType>(strings{"address"}, strings{}, FunctionType::Kind::Selfdestruct)),
+	make_shared<MagicVariableDeclaration>("ripemd160", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes20"}, FunctionType::Kind::RIPEMD160, false, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("selfdestruct", make_shared<FunctionType>(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
+	make_shared<MagicVariableDeclaration>("sha256", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("sha3", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+	make_shared<MagicVariableDeclaration>("suicide", make_shared<FunctionType>(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
 	make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::Transaction))
 })
 {

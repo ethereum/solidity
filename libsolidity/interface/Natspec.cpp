@@ -36,6 +36,19 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
+	auto constructorDefinition(_contractDef.constructor());
+	if (constructorDefinition)
+	{
+		string value = extractDoc(constructorDefinition->annotation().docTags, "notice");
+		if (!value.empty())
+			// add the constructor, only if we have any documentation to add
+			methods["constructor"] = Json::Value(value);
+	}
+
+	string notice = extractDoc(_contractDef.annotation().docTags, "notice");
+	if (!notice.empty())
+		doc["notice"] = Json::Value(notice);
+
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
 			if (auto const* f = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
@@ -65,34 +78,26 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	auto title = extractDoc(_contractDef.annotation().docTags, "title");
 	if (!title.empty())
 		doc["title"] = title;
+	auto dev = extractDoc(_contractDef.annotation().docTags, "dev");
+	if (!dev.empty())
+		doc["details"] = Json::Value(dev);
+
+	auto constructorDefinition(_contractDef.constructor());
+	if (constructorDefinition)
+	{
+		Json::Value constructor(devDocumentation(constructorDefinition->annotation().docTags));
+		if (!constructor.empty())
+			// add the constructor, only if we have any documentation to add
+			methods["constructor"] = constructor;
+	}
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 	{
 		if (!it.second->hasDeclaration())
 			continue;
-		Json::Value method;
 		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 		{
-			auto dev = extractDoc(fun->annotation().docTags, "dev");
-			if (!dev.empty())
-				method["details"] = Json::Value(dev);
-
-			auto author = extractDoc(fun->annotation().docTags, "author");
-			if (!author.empty())
-				method["author"] = author;
-
-			auto ret = extractDoc(fun->annotation().docTags, "return");
-			if (!ret.empty())
-				method["return"] = ret;
-
-			Json::Value params(Json::objectValue);
-			auto paramRange = fun->annotation().docTags.equal_range("param");
-			for (auto i = paramRange.first; i != paramRange.second; ++i)
-				params[i->second.paramName] = Json::Value(i->second.content);
-
-			if (!params.empty())
-				method["params"] = params;
-
+			Json::Value method(devDocumentation(fun->annotation().docTags));
 			if (!method.empty())
 				// add the function, only if we have any documentation to add
 				methods[it.second->externalSignature()] = method;
@@ -110,4 +115,32 @@ string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& 
 	for (auto i = range.first; i != range.second; i++)
 		value += i->second.content;
 	return value;
+}
+
+Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const &_tags)
+{
+	Json::Value json(Json::objectValue);
+	auto dev = extractDoc(_tags, "dev");
+	if (!dev.empty())
+		json["details"] = Json::Value(dev);
+
+	auto author = extractDoc(_tags, "author");
+	if (!author.empty())
+		json["author"] = author;
+
+	// for constructors, the "return" node will never exist. invalid tags
+	// will already generate an error within dev::solidity::DocStringAnalyzer.
+	auto ret = extractDoc(_tags, "return");
+	if (!ret.empty())
+		json["return"] = ret;
+
+	Json::Value params(Json::objectValue);
+	auto paramRange = _tags.equal_range("param");
+	for (auto i = paramRange.first; i != paramRange.second; ++i)
+		params[i->second.paramName] = Json::Value(i->second.content);
+
+	if (!params.empty())
+		json["params"] = params;
+
+	return json;
 }

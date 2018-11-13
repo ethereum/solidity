@@ -40,23 +40,23 @@ namespace
 {
 
 static char const* registrarCode = R"DELIMITER(
-pragma solidity ^0.4.0;
+pragma solidity >=0.4.0 <0.6.0;
 
 contract NameRegister {
-	function addr(string _name) constant returns (address o_owner);
-	function name(address _owner) constant returns (string o_name);
+	function addr(string memory _name) public view returns (address o_owner);
+	function name(address _owner) public view returns (string memory o_name);
 }
 
 contract Registrar is NameRegister {
 	event Changed(string indexed name);
 	event PrimaryChanged(string indexed name, address indexed addr);
 
-	function owner(string _name) constant returns (address o_owner);
-	function addr(string _name) constant returns (address o_address);
-	function subRegistrar(string _name) constant returns (address o_subRegistrar);
-	function content(string _name) constant returns (bytes32 o_content);
+	function owner(string memory _name) public view returns (address o_owner);
+	function addr(string memory _name) public view returns (address o_address);
+	function subRegistrar(string memory _name) public view returns (address o_subRegistrar);
+	function content(string memory _name) public view returns (bytes32 o_content);
 
-	function name(address _owner) constant returns (string o_name);
+	function name(address _owner) public view returns (string memory o_name);
 }
 
 contract AuctionSystem {
@@ -64,13 +64,13 @@ contract AuctionSystem {
 	event NewBid(string indexed _name, address _bidder, uint _value);
 
 	/// Function that is called once an auction ends.
-	function onAuctionEnd(string _name) internal;
+	function onAuctionEnd(string memory _name) internal;
 
-	function bid(string _name, address _bidder, uint _value) internal {
-		var auction = m_auctions[_name];
+	function bid(string memory _name, address payable _bidder, uint _value) internal {
+		Auction storage auction = m_auctions[_name];
 		if (auction.endDate > 0 && now > auction.endDate)
 		{
-			AuctionEnded(_name, auction.highestBidder);
+			emit AuctionEnded(_name, auction.highestBidder);
 			onAuctionEnd(_name);
 			delete m_auctions[_name];
 			return;
@@ -84,14 +84,14 @@ contract AuctionSystem {
 			auction.highestBidder = _bidder;
 			auction.endDate = now + c_biddingTime;
 
-			NewBid(_name, _bidder, _value);
+			emit NewBid(_name, _bidder, _value);
 		}
 	}
 
 	uint constant c_biddingTime = 7 days;
 
 	struct Auction {
-		address highestBidder;
+		address payable highestBidder;
 		uint highestBid;
 		uint secondHighestBid;
 		uint sumOfBids;
@@ -102,91 +102,91 @@ contract AuctionSystem {
 
 contract GlobalRegistrar is Registrar, AuctionSystem {
 	struct Record {
-		address owner;
+		address payable owner;
 		address primary;
 		address subRegistrar;
 		bytes32 content;
 		uint renewalDate;
 	}
 
-	uint constant c_renewalInterval = 1 years;
+	uint constant c_renewalInterval = 365 days;
 	uint constant c_freeBytes = 12;
 
-	function Registrar() {
+	function Registrar() public {
 		// TODO: Populate with hall-of-fame.
 	}
 
-	function onAuctionEnd(string _name) internal {
-		var auction = m_auctions[_name];
-		var record = m_toRecord[_name];
-		var previousOwner = record.owner;
+	function onAuctionEnd(string memory _name) internal {
+		Auction storage auction = m_auctions[_name];
+		Record storage record = m_toRecord[_name];
+		address previousOwner = record.owner;
 		record.renewalDate = now + c_renewalInterval;
 		record.owner = auction.highestBidder;
-		Changed(_name);
-		if (previousOwner != 0) {
+		emit Changed(_name);
+		if (previousOwner != 0x0000000000000000000000000000000000000000) {
 			if (!record.owner.send(auction.sumOfBids - auction.highestBid / 100))
-				throw;
+				revert();
 		} else {
 			if (!auction.highestBidder.send(auction.highestBid - auction.secondHighestBid))
-				throw;
+				revert();
 		}
 	}
 
-	function reserve(string _name) external payable {
+	function reserve(string calldata _name) external payable {
 		if (bytes(_name).length == 0)
-			throw;
+			revert();
 		bool needAuction = requiresAuction(_name);
 		if (needAuction)
 		{
 			if (now < m_toRecord[_name].renewalDate)
-				throw;
+				revert();
 			bid(_name, msg.sender, msg.value);
 		} else {
-			Record record = m_toRecord[_name];
-			if (record.owner != 0)
-				throw;
+			Record storage record = m_toRecord[_name];
+			if (record.owner != 0x0000000000000000000000000000000000000000)
+				revert();
 			m_toRecord[_name].owner = msg.sender;
-			Changed(_name);
+			emit Changed(_name);
 		}
 	}
 
-	function requiresAuction(string _name) internal returns (bool) {
+	function requiresAuction(string memory _name) internal returns (bool) {
 		return bytes(_name).length < c_freeBytes;
 	}
 
-	modifier onlyrecordowner(string _name) { if (m_toRecord[_name].owner == msg.sender) _; }
+	modifier onlyrecordowner(string memory _name) { if (m_toRecord[_name].owner == msg.sender) _; }
 
-	function transfer(string _name, address _newOwner) onlyrecordowner(_name) {
+	function transfer(string memory _name, address payable _newOwner) onlyrecordowner(_name) public {
 		m_toRecord[_name].owner = _newOwner;
-		Changed(_name);
+		emit Changed(_name);
 	}
 
-	function disown(string _name) onlyrecordowner(_name) {
+	function disown(string memory _name) onlyrecordowner(_name) public {
 		if (stringsEqual(m_toName[m_toRecord[_name].primary], _name))
 		{
-			PrimaryChanged(_name, m_toRecord[_name].primary);
+			emit PrimaryChanged(_name, m_toRecord[_name].primary);
 			m_toName[m_toRecord[_name].primary] = "";
 		}
 		delete m_toRecord[_name];
-		Changed(_name);
+		emit Changed(_name);
 	}
 
-	function setAddress(string _name, address _a, bool _primary) onlyrecordowner(_name) {
+	function setAddress(string memory _name, address _a, bool _primary) onlyrecordowner(_name) public {
 		m_toRecord[_name].primary = _a;
 		if (_primary)
 		{
-			PrimaryChanged(_name, _a);
+			emit PrimaryChanged(_name, _a);
 			m_toName[_a] = _name;
 		}
-		Changed(_name);
+		emit Changed(_name);
 	}
-	function setSubRegistrar(string _name, address _registrar) onlyrecordowner(_name) {
+	function setSubRegistrar(string memory _name, address _registrar) onlyrecordowner(_name) public {
 		m_toRecord[_name].subRegistrar = _registrar;
-		Changed(_name);
+		emit Changed(_name);
 	}
-	function setContent(string _name, bytes32 _content) onlyrecordowner(_name) {
+	function setContent(string memory _name, bytes32 _content) onlyrecordowner(_name) public {
 		m_toRecord[_name].content = _content;
-		Changed(_name);
+		emit Changed(_name);
 	}
 
 	function stringsEqual(string storage _a, string memory _b) internal returns (bool) {
@@ -201,11 +201,11 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		return true;
 	}
 
-	function owner(string _name) constant returns (address) { return m_toRecord[_name].owner; }
-	function addr(string _name) constant returns (address) { return m_toRecord[_name].primary; }
-	function subRegistrar(string _name) constant returns (address) { return m_toRecord[_name].subRegistrar; }
-	function content(string _name) constant returns (bytes32) { return m_toRecord[_name].content; }
-	function name(address _addr) constant returns (string o_name) { return m_toName[_addr]; }
+	function owner(string memory _name) public view returns (address) { return m_toRecord[_name].owner; }
+	function addr(string memory _name) public view returns (address) { return m_toRecord[_name].primary; }
+	function subRegistrar(string memory _name) public view returns (address) { return m_toRecord[_name].subRegistrar; }
+	function content(string memory _name) public view returns (bytes32) { return m_toRecord[_name].content; }
+	function name(address _addr) public view returns (string memory o_name) { return m_toName[_addr]; }
 
 	mapping (address => string) m_toName;
 	mapping (string => Record) m_toRecord;
@@ -223,6 +223,7 @@ protected:
 			s_compiledRegistrar.reset(new bytes(compileContract(registrarCode, "GlobalRegistrar")));
 
 		sendMessage(*s_compiledRegistrar, true);
+		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}
 

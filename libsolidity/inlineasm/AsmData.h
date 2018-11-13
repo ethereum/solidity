@@ -27,7 +27,13 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SourceLocation.h>
 
+#include <libyul/YulString.h>
+
 #include <boost/variant.hpp>
+#include <boost/noncopyable.hpp>
+
+#include <map>
+#include <memory>
 
 namespace dev
 {
@@ -36,20 +42,21 @@ namespace solidity
 namespace assembly
 {
 
-using Type = std::string;
+using YulString = dev::yul::YulString;
+using Type = YulString;
 
-struct TypedName { SourceLocation location; std::string name; Type type; };
+struct TypedName { SourceLocation location; YulString name; Type type; };
 using TypedNameList = std::vector<TypedName>;
 
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
 struct Instruction { SourceLocation location; solidity::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
-struct Literal { SourceLocation location; LiteralKind kind; std::string value; Type type; };
+struct Literal { SourceLocation location; LiteralKind kind; YulString value; Type type; };
 /// External / internal identifier or label reference
-struct Identifier { SourceLocation location; std::string name; };
+struct Identifier { SourceLocation location; YulString name; };
 /// Jump label ("name:")
-struct Label { SourceLocation location; std::string name; };
+struct Label { SourceLocation location; YulString name; };
 /// Assignment from stack (":= x", moves stack top into x, potentially multiple slots)
 struct StackAssignment { SourceLocation location; Identifier variableName; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
@@ -69,7 +76,7 @@ struct VariableDeclaration { SourceLocation location; TypedNameList variables; s
 /// Block that creates a scope (frees declared stack variables)
 struct Block { SourceLocation location; std::vector<Statement> statements; };
 /// Function definition ("function f(a, b) -> (d, e) { ... }")
-struct FunctionDefinition { SourceLocation location; std::string name; TypedNameList parameters; TypedNameList returnVariables; Block body; };
+struct FunctionDefinition { SourceLocation location; YulString name; TypedNameList parameters; TypedNameList returnVariables; Block body; };
 /// Conditional execution without "else" part.
 struct If { SourceLocation location; std::shared_ptr<Expression> condition; Block body; };
 /// Switch case or default case
