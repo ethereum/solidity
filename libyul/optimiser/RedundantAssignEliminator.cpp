@@ -96,9 +96,15 @@ void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDe
 	(*this)(_functionDefinition.body);
 
 	for (auto const& param: _functionDefinition.parameters)
+	{
 		changeUndecidedTo(param.name, State::Unused);
+		finalize(param.name);
+	}
 	for (auto const& retParam: _functionDefinition.returnVariables)
+	{
 		changeUndecidedTo(retParam.name, State::Used);
+		finalize(retParam.name);
+	}
 }
 
 void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
@@ -150,30 +156,48 @@ void RedundantAssignEliminator::run(Block& _ast)
 	RedundantAssignEliminator rae;
 	rae(_ast);
 
-	std::set<Assignment const*> assignmentsToRemove;
-	for (auto const& variables: rae.m_assignments)
-		for (auto const& assignment: variables.second)
-		{
-			assertThrow(assignment.second != State::Undecided, OptimizerException, "");
-			if (assignment.second == State::Unused && MovableChecker{*assignment.first->value}.movable())
-				assignmentsToRemove.emplace(assignment.first);
-		}
-
-	AssignmentRemover remover{assignmentsToRemove};
+	AssignmentRemover remover{rae.m_assignmentsToRemove};
 	remover(_ast);
+}
+
+template <class K, class V, class F>
+void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
+{
+	// TODO Perhaps it is better to just create a sorted list
+	// and then use insert(begin, end)
+
+	auto ita = _a.begin();
+	auto aend = _a.end();
+	auto itb = _b.begin();
+	auto bend = _b.end();
+
+	for (; itb != bend; ++ita)
+	{
+		if (ita == aend)
+			ita = _a.insert(ita, std::move(*itb++));
+		else if (ita->first < itb->first)
+			continue;
+		else if (itb->first < ita->first)
+			ita = _a.insert(ita, std::move(*itb++));
+		else
+		{
+			_conflictSolver(ita->second, std::move(itb->second));
+			++itb;
+		}
+	}
 }
 
 void RedundantAssignEliminator::join(RedundantAssignEliminator& _other)
 {
-	for (auto& var: _other.m_assignments)
-		if (m_assignments.count(var.first))
-		{
-			map<Assignment const*, State>& assignmentsHere = m_assignments[var.first];
-			for (auto& assignment: var.second)
-				assignmentsHere[assignment.first].join(assignment.second);
-		}
-		else
-			m_assignments[var.first] = std::move(var.second);
+	m_assignmentsToRemove.insert(begin(_other.m_assignmentsToRemove), end(_other.m_assignmentsToRemove));
+
+	joinMap(m_assignments, std::move(_other.m_assignments), [](
+		map<Assignment const*, State>& _assignmentHere,
+		map<Assignment const*, State>&& _assignmentThere
+	)
+	{
+		return joinMap(_assignmentHere, std::move(_assignmentThere), State::join);
+	});
 }
 
 void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, RedundantAssignEliminator::State _newState)
@@ -181,6 +205,19 @@ void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, Redundant
 	for (auto& assignment: m_assignments[_variable])
 		if (assignment.second == State{State::Undecided})
 			assignment.second = _newState;
+}
+
+void RedundantAssignEliminator::finalize(YulString _variable)
+{
+	for (auto& assignment: m_assignments[_variable])
+	{
+		assertThrow(assignment.second != State::Undecided, OptimizerException, "");
+		if (assignment.second == State{State::Unused} && MovableChecker{*assignment.first->value}.movable())
+			// TODO the only point where we actually need this
+			// to be a set is for the for loop
+			m_assignmentsToRemove.insert(assignment.first);
+	}
+	m_assignments.erase(_variable);
 }
 
 void AssignmentRemover::operator()(Block& _block)

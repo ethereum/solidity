@@ -127,10 +127,10 @@ private:
 		State(Value _value = Undecided): m_value(_value) {}
 		inline bool operator==(State _other) const { return m_value == _other.m_value; }
 		inline bool operator!=(State _other) const { return !operator==(_other); }
-		inline void join(State const& _other)
+		static inline void join(State& _a, State const& _b)
 		{
 			// Using "max" works here because of the order of the values in the enum.
-			m_value = Value(std::max(int(_other.m_value), int(m_value)));
+			_a.m_value =  Value(std::max(int(_a.m_value), int(_b.m_value)));
 		}
 	private:
 		Value m_value = Undecided;
@@ -149,8 +149,12 @@ private:
 		}
 		~BlockScope()
 		{
+			// This should actually store all declared variables
+			// into a different mapping
 			for (auto const& var: m_rae.m_declaredVariables)
 				m_rae.changeUndecidedTo(var, State::Unused);
+			for (auto const& var: m_rae.m_declaredVariables)
+				m_rae.finalize(var);
 			swap(m_rae.m_declaredVariables, m_outerDeclaredVariables);
 		}
 
@@ -164,10 +168,13 @@ private:
 	/// Will destroy @a _other.
 	void join(RedundantAssignEliminator& _other);
 	void changeUndecidedTo(YulString _variable, State _newState);
+	void finalize(YulString _variable);
 
 	std::set<YulString> m_declaredVariables;
 	// TODO check that this does not cause nondeterminism!
+	// This could also be a pseudo-map from state to assignment.
 	std::map<YulString, std::map<Assignment const*, State>> m_assignments;
+	std::set<Assignment const*> m_assignmentsToRemove;
 };
 
 class AssignmentRemover: public ASTModifier
