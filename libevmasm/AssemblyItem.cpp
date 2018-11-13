@@ -117,6 +117,8 @@ int AssemblyItem::returnValues() const
 
 bool AssemblyItem::canBeFunctional() const
 {
+	if (m_jumpType != JumpType::Ordinary)
+		return false;
 	switch (m_type)
 	{
 	case Operation:
