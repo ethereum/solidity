@@ -37,9 +37,10 @@ SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback con
 {
 }
 
-void SMTChecker::analyze(SourceUnit const& _source)
+void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
 {
 	m_variableUsage = make_shared<VariableUsage>(_source);
+	m_scanner = _scanner;
 	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		_source.accept(*this);
 }
@@ -753,6 +754,7 @@ void SMTChecker::checkCondition(
 	vector<string> expressionNames;
 	if (m_functionPath.size())
 	{
+		solAssert(m_scanner, "");
 		if (_additionalValue)
 		{
 			expressionsToEvaluate.emplace_back(*_additionalValue);

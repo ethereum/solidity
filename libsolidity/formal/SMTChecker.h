@@ -25,6 +25,8 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
+#include <libsolidity/parsing/Scanner.h>
+
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -42,7 +44,7 @@ class SMTChecker: private ASTConstVisitor
 public:
 	SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback);
 
-	void analyze(SourceUnit const& _sources);
+	void analyze(SourceUnit const& _sources, std::shared_ptr<Scanner> const& _scanner);
 
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
@@ -193,6 +195,7 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
 	std::vector<smt::Expression> m_pathConditions;
 	ErrorReporter& m_errorReporter;
+	std::shared_ptr<Scanner> m_scanner;
 
 	/// Stores the current path of function calls.
 	std::vector<FunctionDefinition const*> m_functionPath;

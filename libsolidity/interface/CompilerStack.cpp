@@ -284,7 +284,7 @@ bool CompilerStack::analyze()
 		{
 			SMTChecker smtChecker(m_errorReporter, m_smtQuery);
 			for (Source const* source: m_sourceOrder)
-				smtChecker.analyze(*source->ast);
+				smtChecker.analyze(*source->ast, source->scanner);
 		}
 	}
 	catch(FatalError const&)
