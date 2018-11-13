@@ -111,6 +111,7 @@ Bugfixes:
  * Code Generator: Properly handle negative number literals in ABIEncoderV2.
  * Code Generator: Do not crash on using a length of zero for multidimensional fixed-size arrays.
  * Commandline Interface: Correctly handle paths with backslashes on windows.
+ * Control Flow Analyzer: Ignore unimplemented functions when detecting uninitialized storage pointer returns.
  * Fix NatSpec json output for `@notice` and `@dev` tags on contract definitions.
  * Optimizer: Correctly estimate gas costs of constants for special cases.
  * Optimizer: Fix simplification rule initialization bug that appeared on some emscripten platforms.
