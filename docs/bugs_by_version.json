@@ -608,5 +608,9 @@
             "ConstantOptimizerSubtraction"
         ],
         "released": "2017-01-31"
+    },
+    "0.5.0": {
+        "bugs": [],
+        "released": "2018-11-13"
     }
 }
