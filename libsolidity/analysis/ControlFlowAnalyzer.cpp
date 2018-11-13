@@ -28,8 +28,11 @@ bool ControlFlowAnalyzer::analyze(ASTNode const& _astRoot)
 
 bool ControlFlowAnalyzer::visit(FunctionDefinition const& _function)
 {
-	auto const& functionFlow = m_cfg.functionFlow(_function);
-	checkUnassignedStorageReturnValues(_function, functionFlow.entry, functionFlow.exit);
+	if (_function.isImplemented())
+	{
+		auto const& functionFlow = m_cfg.functionFlow(_function);
+		checkUnassignedStorageReturnValues(_function, functionFlow.entry, functionFlow.exit);
+	}
 	return false;
 }
 
