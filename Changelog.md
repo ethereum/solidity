@@ -11,6 +11,8 @@ How to update your code:
 
 Breaking Changes:
  * ABI Encoder: Properly pad data from calldata (``msg.data`` and external function parameters). Use ``abi.encodePacked`` for unpadded encoding.
+ * C API (``libsolc`` / raw ``soljson.js``): Removed the ``version``, ``license``, ``compileSingle``, ``compileJSON``, ``compileJSONCallback`` methods
+   and replaced them with the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
  * Code Generator: Signed right shift uses proper arithmetic shift, i.e. rounding towards negative infinity. Warning: this may silently change the semantics of existing code!
  * Code Generator: Revert at runtime if calldata is too short or points out of bounds. This is done inside the ``ABI decoder`` and therefore also applies to ``abi.decode()``.
  * Code Generator: Use ``STATICCALL`` for ``pure`` and ``view`` functions. This was already the case in the experimental 0.5.0 mode.
@@ -91,7 +93,6 @@ Language Features:
 
 Compiler Features:
  * Build System: Support for Mojave version of macOS added.
- * C API (``libsolc``): Export the ``solidity_license``, ``solidity_version`` and ``solidity_compile`` methods.
  * Code Generator: ``CREATE2`` instruction has been updated to match EIP1014 (aka "Skinny CREATE2"). It also is accepted as part of Constantinople.
  * Code Generator: ``EXTCODEHASH`` instruction has been added based on EIP1052.
  * Type Checker: Nicer error message when trying to reference overloaded identifiers in inline assembly.
