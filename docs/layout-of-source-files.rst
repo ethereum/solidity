@@ -276,7 +276,7 @@ functions, annotate conditions for formal verification, and provide a
 function.
 
 In the following example we document the title of the contract, the explanation
-for the two input parameters and two returned values.
+for the two function parameters and two return variables.
 
 ::
 
