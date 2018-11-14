@@ -45,7 +45,7 @@ class AnalysisFramework
 {
 
 protected:
-	virtual std::pair<SourceUnit const*, ErrorList>
+	virtual std::pair<SourceUnit const*, langutil::ErrorList>
 	parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
@@ -56,10 +56,10 @@ protected:
 
 	SourceUnit const* parseAndAnalyse(std::string const& _source);
 	bool success(std::string const& _source);
-	ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
+	langutil::ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
 
 	std::string formatErrors() const;
-	std::string formatError(Error const& _error) const;
+	std::string formatError(langutil::Error const& _error) const;
 
 	static ContractDefinition const* retrieveContractByName(SourceUnit const& _source, std::string const& _name);
 	static FunctionTypePointer retrieveFunctionBySignature(
@@ -68,7 +68,7 @@ protected:
 	);
 
 	// filter out the warnings in m_warningsToFilter or all warnings if _includeWarnings is false
-	ErrorList filterErrors(ErrorList const& _errorList, bool _includeWarnings) const;
+	langutil::ErrorList filterErrors(langutil::ErrorList const& _errorList, bool _includeWarnings) const;
 
 	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
 	dev::solidity::CompilerStack m_compiler;

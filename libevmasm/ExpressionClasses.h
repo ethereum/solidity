@@ -31,6 +31,11 @@
 #include <memory>
 #include <set>
 
+namespace langutil
+{
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace eth
@@ -82,7 +87,7 @@ public:
 	void forceEqual(Id _id, AssemblyItem const& _item, Ids const& _arguments, bool _copyItem = true);
 
 	/// @returns the id of a new class which is different to all other classes.
-	Id newClass(SourceLocation const& _location);
+	Id newClass(langutil::SourceLocation const& _location);
 
 	/// @returns true if the values of the given classes are known to be different (on every input).
 	/// @note that this function might still return false for some different inputs.

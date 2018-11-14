@@ -25,12 +25,15 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 
+namespace langutil
+{
+class ErrorReporter;
+}
+
 namespace dev
 {
 namespace solidity
 {
-
-class ErrorReporter;
 
 /**
  * Parses and analyses the doc strings.
@@ -39,7 +42,7 @@ class ErrorReporter;
 class DocStringAnalyser: private ASTConstVisitor
 {
 public:
-	DocStringAnalyser(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	DocStringAnalyser(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 	bool analyseDocStrings(SourceUnit const& _sourceUnit);
 
 private:
@@ -75,7 +78,7 @@ private:
 	void appendError(std::string const& _description);
 
 	bool m_errorOccured = false;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 };
 
 }

@@ -29,6 +29,7 @@
 #include <test/libsolidity/ErrorCheck.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

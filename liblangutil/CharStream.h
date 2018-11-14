@@ -44,24 +44,34 @@
 	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+/**
+ * @author Christian <c@ethdev.com>
+ * @date 2014
+ * Solidity scanner.
+ */
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <tuple>
 
-namespace dev
-{
-namespace solidity
-{
+namespace langutil {
 
+/**
+ * Bidirectional stream of characters.
+ *
+ * This CharStream is used by lexical analyzers as the source.
+ */
 class CharStream
 {
 public:
 	CharStream(): m_position(0) {}
 	explicit CharStream(std::string const& _source): m_source(_source), m_position(0) {}
+
 	int position() const { return m_position; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
+
 	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
 	char advanceAndGet(size_t _chars = 1);
 	char rollback(size_t _amount);
@@ -83,5 +93,4 @@ private:
 	size_t m_position;
 };
 
-}
 }

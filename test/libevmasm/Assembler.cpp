@@ -30,6 +30,7 @@
 #include <memory>
 
 using namespace std;
+using namespace langutil;
 using namespace dev::eth;
 
 namespace dev

@@ -58,6 +58,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)

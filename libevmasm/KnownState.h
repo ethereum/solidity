@@ -46,6 +46,11 @@
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SemanticInformation.h>
 
+namespace langutil
+{
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace eth
@@ -121,9 +126,9 @@ public:
 
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
-	Id stackElement(int _stackHeight, SourceLocation const& _location);
+	Id stackElement(int _stackHeight, langutil::SourceLocation const& _location);
 	/// @returns the stackElement relative to the current stack height.
-	Id relativeStackElement(int _stackOffset, SourceLocation const& _location = SourceLocation());
+	Id relativeStackElement(int _stackOffset, langutil::SourceLocation const& _location = {});
 
 	/// @returns its set of tags if the given expression class is a known tag union; returns a set
 	/// containing the tag if it is a PushTag expression and the empty set otherwise.
@@ -142,22 +147,22 @@ private:
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.
 	void setStackElement(int _stackHeight, Id _class);
 	/// Swaps the given stack elements in their next sequence number.
-	void swapStackElements(int _stackHeightA, int _stackHeightB, SourceLocation const& _location);
+	void swapStackElements(int _stackHeightA, int _stackHeightB, langutil::SourceLocation const& _location);
 
 	/// Increments the sequence number, deletes all storage information that might be overwritten
 	/// and stores the new value at the given slot.
 	/// @returns the store operation, which might be invalid if storage was not modified
-	StoreOperation storeInStorage(Id _slot, Id _value, SourceLocation const& _location);
+	StoreOperation storeInStorage(Id _slot, Id _value, langutil::SourceLocation const& _location);
 	/// Retrieves the current value at the given slot in storage or creates a new special sload class.
-	Id loadFromStorage(Id _slot, SourceLocation const& _location);
+	Id loadFromStorage(Id _slot, langutil::SourceLocation const& _location);
 	/// Increments the sequence number, deletes all memory information that might be overwritten
 	/// and stores the new value at the given slot.
 	/// @returns the store operation, which might be invalid if memory was not modified
-	StoreOperation storeInMemory(Id _slot, Id _value, SourceLocation const& _location);
+	StoreOperation storeInMemory(Id _slot, Id _value, langutil::SourceLocation const& _location);
 	/// Retrieves the current value at the given slot in memory or creates a new special mload class.
-	Id loadFromMemory(Id _slot, SourceLocation const& _location);
+	Id loadFromMemory(Id _slot, langutil::SourceLocation const& _location);
 	/// Finds or creates a new expression that applies the Keccak-256 hash function to the contents in memory.
-	Id applyKeccak256(Id _start, Id _length, SourceLocation const& _location);
+	Id applyKeccak256(Id _start, Id _length, langutil::SourceLocation const& _location);
 
 	/// @returns a new or already used Id representing the given set of tags.
 	Id tagUnion(std::set<u256> _tags);

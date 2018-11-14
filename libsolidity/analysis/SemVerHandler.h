@@ -22,8 +22,9 @@
 
 #pragma once
 
+#include <libsolidity/parsing/Token.h>
+#include <string>
 #include <vector>
-#include <liblangutil/Token.h>
 
 namespace dev
 {

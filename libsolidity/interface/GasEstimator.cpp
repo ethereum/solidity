@@ -35,6 +35,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace langutil;
 using namespace dev::solidity;
 
 GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimation(

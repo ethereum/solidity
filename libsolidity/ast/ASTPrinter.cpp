@@ -28,6 +28,7 @@
 #include <boost/algorithm/string/join.hpp>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

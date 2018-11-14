@@ -27,6 +27,7 @@
 #include <libsolidity/inlineasm/AsmPrinter.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

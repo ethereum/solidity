@@ -24,33 +24,33 @@
 
 #include <string>
 #include <utility>
+#include <vector>
+#include <memory>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
 #include <liblangutil/SourceLocation.h>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
-struct CompilerError: virtual Exception {};
-struct InternalCompilerError: virtual Exception {};
-struct FatalError: virtual Exception {};
-struct UnimplementedFeatureError: virtual Exception{};
+struct CompilerError: virtual dev::Exception {};
+struct InternalCompilerError: virtual dev::Exception {};
+struct FatalError: virtual dev::Exception {};
+struct UnimplementedFeatureError: virtual dev::Exception {};
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \
-        assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
+        assertThrow(CONDITION, ::langutil::InternalCompilerError, DESCRIPTION)
 
 #define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-        assertThrow(CONDITION, ::dev::solidity::UnimplementedFeatureError, DESCRIPTION)
+        assertThrow(CONDITION, ::langutil::UnimplementedFeatureError, DESCRIPTION)
 
 #define solUnimplemented(DESCRIPTION) \
         solUnimplementedAssert(false, DESCRIPTION)
 
-class Error: virtual public Exception
+class Error: virtual public dev::Exception
 {
 public:
 	enum class Type
@@ -98,35 +98,4 @@ private:
 	std::string m_typeName;
 };
 
-
-using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
-
-class SecondarySourceLocation
-{
-public:
-	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
-	{
-		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
-		return *this;
-	}
-	/// Limits the number of secondary source locations to 32 and appends a notice to the
-	/// error message.
-	void limitSize(std::string& _message)
-	{
-		size_t occurrences = infos.size();
-		if (occurrences > 32)
-		{
-			infos.resize(32);
-			_message += " Truncated from " + std::to_string(occurrences) + " to the first 32 occurrences.";
-		}
-	}
-
-	std::vector<errorSourceLocationInfo> infos;
-};
-
-
-using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
-using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
-
-}
 }

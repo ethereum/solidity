@@ -28,6 +28,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)

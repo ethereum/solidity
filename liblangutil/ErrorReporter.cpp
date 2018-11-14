@@ -21,12 +21,12 @@
  */
 
 #include <liblangutil/ErrorReporter.h>
-#include <libsolidity/ast/AST.h>
+#include <liblangutil/SourceLocation.h>
 #include <memory>
 
 using namespace std;
 using namespace dev;
-using namespace dev::solidity;
+using namespace langutil;
 
 ErrorReporter& ErrorReporter::operator=(ErrorReporter const& _errorReporter)
 {

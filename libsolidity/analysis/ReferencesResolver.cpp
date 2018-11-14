@@ -36,9 +36,12 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace langutil;
 
+namespace dev
+{
+namespace solidity
+{
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
 {
@@ -453,4 +456,7 @@ void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, 
 {
 	m_errorOccurred = true;
 	m_errorReporter.fatalDeclarationError(_location, _description);
+}
+
+}
 }

@@ -29,6 +29,7 @@
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 
 using namespace std;
+using namespace langutil;
 using namespace dev::eth;
 using namespace dev::solidity;
 using namespace dev::test;

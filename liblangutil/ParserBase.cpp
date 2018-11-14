@@ -25,8 +25,7 @@
 #include <liblangutil/ErrorReporter.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace langutil;
 
 std::shared_ptr<string const> const& ParserBase::sourceName() const
 {

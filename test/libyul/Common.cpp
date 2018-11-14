@@ -37,6 +37,7 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
+using namespace langutil;
 using namespace dev::yul;
 using namespace dev::solidity;
 

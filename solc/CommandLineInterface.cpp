@@ -62,6 +62,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace langutil;
 namespace po = boost::program_options;
 
 namespace dev
@@ -827,7 +828,7 @@ bool CommandLineInterface::processInput()
 
 	m_compiler.reset(new CompilerStack(fileReader));
 
-	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
+	auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return m_compiler->scanner(_sourceName); };
 	SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
 
 	try

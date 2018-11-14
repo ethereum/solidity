@@ -27,6 +27,8 @@
 #include <liblangutil/Exceptions.h>
 #include <libdevcore/Exceptions.h>
 
+using namespace langutil;
+
 namespace dev
 {
 namespace solidity

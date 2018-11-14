@@ -50,16 +50,14 @@
  * Solidity scanner.
  */
 
-#include <algorithm>
-#include <tuple>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
+#include <algorithm>
+#include <tuple>
 
 using namespace std;
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 
 namespace
@@ -143,10 +141,10 @@ private:
 }; // end of LiteralScope class
 
 
-void Scanner::reset(CharStream const& _source, string const& _sourceName)
+void Scanner::reset(CharStream _source, string _sourceName)
 {
-	m_source = _source;
-	m_sourceName = make_shared<string const>(_sourceName);
+	m_source = std::move(_source);
+	m_sourceName = make_shared<string const>(std::move(_sourceName));
 	reset();
 }
 
@@ -866,5 +864,5 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);
 }
 
-}
+
 }

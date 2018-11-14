@@ -52,15 +52,9 @@
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
-#include <algorithm>
-#include <tuple>
 
 using namespace std;
-
-namespace dev
-{
-namespace solidity
-{
+using namespace langutil;
 
 char CharStream::advanceAndGet(size_t _chars)
 {
@@ -111,5 +105,4 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 	return tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
 
-}
-}
+

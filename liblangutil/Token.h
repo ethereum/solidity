@@ -45,11 +45,12 @@
 #include <libdevcore/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/UndefMacros.h>
-#include <iosfwd>
 
-namespace dev
-{
-namespace solidity
+#include <iosfwd>
+#include <string>
+#include <tuple>
+
+namespace langutil
 {
 
 // TOKEN_LIST takes a list of 3 macros M, all of which satisfy the
@@ -374,5 +375,4 @@ private:
 	void assertDetails(Token _baseType, unsigned const& _first, unsigned const& _second);
 };
 
-}
 }

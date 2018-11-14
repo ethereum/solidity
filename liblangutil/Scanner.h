@@ -52,15 +52,13 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
+#include <liblangutil/Token.h>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/SourceLocation.h>
-#include <liblangutil/Token.h>
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonData.h>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 
 class AstRawString;
@@ -71,13 +69,12 @@ class Scanner
 {
 	friend class LiteralScope;
 public:
-
-	explicit Scanner(CharStream const& _source = CharStream(), std::string const& _sourceName = "") { reset(_source, _sourceName); }
+	explicit Scanner(CharStream _source = CharStream(), std::string _sourceName = "") { reset(std::move(_source), std::move(_sourceName)); }
 
 	std::string source() const { return m_source.source(); }
 
 	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
-	void reset(CharStream const& _source, std::string const& _sourceName);
+	void reset(CharStream _source, std::string _sourceName);
 	/// Resets scanner to the start of input.
 	void reset();
 
@@ -215,5 +212,4 @@ private:
 	char m_char;
 };
 
-}
 }
