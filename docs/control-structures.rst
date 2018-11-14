@@ -2,23 +2,22 @@
 Expressions and Control Structures
 ##################################
 
-.. index:: ! parameter, parameter;input, parameter;output, parameter;multiple
+.. index:: ! parameter, parameter;input, parameter;output, function parameter, parameter;function, return variable, variable;return, return
 
-Input Parameters and Output Parameters
-======================================
+Function Parameters and Return Variables
+========================================
 
-As in Javascript, functions may take parameters as input;
-unlike in Javascript and C, they may also return arbitrary number of
-parameters as output.
+As in JavaScript, functions may take parameters as input. Unlike in JavaScript
+and C, functions may also return an arbitrary number of values as output.
 
-Input Parameters
-----------------
+Function Parameters
+-------------------
 
-The input parameters are declared the same way as variables are.
-The name of unused parameters can be omitted.
-For example, suppose we want our contract to
-accept one kind of external calls with two integers, we would write
-something like::
+Function parameters are declared the same way as variables, and the name of
+unused parameters can be omitted.
+
+For example, if you want your contract to accept one kind of external call
+with two integers, you would use something like::
 
     pragma solidity >=0.4.16 <0.6.0;
 
@@ -29,18 +28,18 @@ something like::
         }
     }
 
-Input parameters can be used just as any other local variable
-can be used, they can also be assigned to.
+Function parameters can be used as any other local variable and they can also be assigned to.
 
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
 
-Output Parameters
------------------
+Return Variables
+----------------
 
-The output parameters can be declared with the same syntax after the
-``returns`` keyword. For example, suppose we wished to return two results:
-the sum and the product of the two given integers, then we would
-write::
+Function return variables are declared with the same syntax after the
+``returns`` keyword.
+
+For example, suppose you want to return two results: the sum and the product of
+two integers passed as function parameters, then you use something like::
 
     pragma solidity >=0.4.16 <0.6.0;
 
@@ -55,12 +54,31 @@ write::
         }
     }
 
-The names of output parameters can be omitted.
-The return values can be specified using ``return`` statements,
-which are also capable of :ref:`returning multiple values<multi-return>`.
-Return parameters can be used as any other local variable and they
-are zero-initialized; if they are not explicitly
-set, they stay zero.
+The names of return variables can be omitted.
+Return variables can be used as any other local variable and they
+are zero-initialized. If they are not explicitly
+set, they stay zero value.
+
+You can either explicitly assign to return variables and
+then leave the function using ``return;``,
+or you can provide return values
+(either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
+statement::
+
+    pragma solidity >=0.4.16 <0.6.0;
+
+    contract Simple {
+        function arithmetic(uint _a, uint _b)
+            public
+            pure
+            returns (uint o_sum, uint o_product)
+        {
+            return (_a + _b, _a * _b);
+        }
+    }
+
+This form is equivalent to first assigning values to the
+return variables and then using ``return;`` to leave the function.
 
 
 .. note::
@@ -90,12 +108,12 @@ Solidity.
 
 .. _multi-return:
 
-Returning Multiple Values
--------------------------
+Returning Multiple Variables
+----------------------------
 
-When a function has multiple output parameters, ``return (v0, v1, ...,
+When a function has multiple return types, ``return (v0, v1, ...,
 vn)`` can return multiple values.  The number of components must be
-the same as the number of output parameters.
+the same as the number of return types.
 
 .. index:: ! function;call, function;internal, function;external
 
