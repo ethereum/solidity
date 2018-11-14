@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 	AssemblyItems items = compileContract(sourceCode);
 	bool hasShifts = dev::test::Options::get().evmVersion().hasBitwiseShifting();
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(hasShifts ? 23 : 24, SourceLocation(2, 82, make_shared<string>(""))) +
+		vector<SourceLocation>(hasShifts ? 21 : 22, SourceLocation(2, 82, make_shared<string>(""))) +
 		vector<SourceLocation>(2, SourceLocation(20, 79, make_shared<string>(""))) +
 		vector<SourceLocation>(1, SourceLocation(8, 17, make_shared<string>("--CODEGEN--"))) +
 		vector<SourceLocation>(3, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
