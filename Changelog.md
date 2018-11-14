@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Build System: LLL is not built anymore by default. Must configure it with CMake as `-DLLL=ON`.
 
 
 Bugfixes:

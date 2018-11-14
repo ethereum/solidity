@@ -146,6 +146,7 @@ jobs:
       TERM: xterm
       CC: /usr/bin/clang-7
       CXX: /usr/bin/clang++-7
+      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
       - run:
@@ -167,6 +168,7 @@ jobs:
       xcode: "10.0.0"
     environment:
       TERM: xterm
+      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
       - run:
