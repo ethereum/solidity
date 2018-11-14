@@ -685,9 +685,7 @@ as it provides a number of other security benefits.
 ::
     /// Hashing first makes things easier
     var hash = web3.utils.sha3("message to sign");
-    web3.eth.personal.sign(hash, web3.eth.defaultAccount, function () {
-      console.log("Signed")
-    });
+    web3.eth.personal.sign(hash, web3.eth.defaultAccount, function () { console.log("Signed"); });
 
 .. note::
   The ``web3.eth.personal.sign`` prepends the length of the message to the signed data. Since we hash first, the message will always be exactly 32 bytes long, and thus this length prefix is always the same.
