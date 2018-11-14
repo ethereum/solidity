@@ -19,14 +19,17 @@
 
 #include <test/libsolidity/TestCase.h>
 
+namespace langutil
+{
+class Scanner;
+class Error;
+using ErrorList = std::vector<std::shared_ptr<Error const>>;
+}
 
 namespace dev
 {
 namespace solidity
 {
-class Scanner;
-class Error;
-using ErrorList = std::vector<std::shared_ptr<Error const>>;
 namespace assembly
 {
 struct AsmAnalysisInfo;
@@ -58,7 +61,7 @@ private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	void disambiguate();
 
-	static void printErrors(std::ostream& _stream, solidity::ErrorList const& _errors, solidity::Scanner const& _scanner);
+	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors, langutil::Scanner const& _scanner);
 
 	std::string m_source;
 	bool m_yul = false;

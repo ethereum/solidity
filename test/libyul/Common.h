@@ -27,13 +27,17 @@
 #include <vector>
 #include <memory>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 class Scanner;
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
+}
+
+namespace dev
+{
+namespace solidity
+{
 namespace assembly
 {
 struct AsmAnalysisInfo;
@@ -44,7 +48,7 @@ namespace yul
 namespace test
 {
 
-void printErrors(solidity::ErrorList const& _errors, solidity::Scanner const& _scanner);
+void printErrors(langutil::ErrorList const& _errors, langutil::Scanner const& _scanner);
 std::pair<std::shared_ptr<solidity::assembly::Block>, std::shared_ptr<solidity::assembly::AsmAnalysisInfo>>
 parse(std::string const& _source, bool _yul = true);
 solidity::assembly::Block disambiguate(std::string const& _source, bool _yul = true);

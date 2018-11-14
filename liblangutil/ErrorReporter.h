@@ -25,12 +25,8 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 
-namespace dev
+namespace langutil
 {
-namespace solidity
-{
-
-class ASTNode;
 
 class ErrorReporter
 {
@@ -120,7 +116,5 @@ private:
 	const unsigned c_maxErrorsAllowed = 256;
 };
 
-
-}
 }
 

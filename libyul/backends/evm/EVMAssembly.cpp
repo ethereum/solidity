@@ -26,6 +26,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::yul;
 
 namespace

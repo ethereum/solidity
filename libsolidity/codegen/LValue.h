@@ -55,17 +55,17 @@ public:
 	/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
 	/// also removes the reference from the stack.
 	/// @a _location source location of the current expression, used for error reporting.
-	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const = 0;
+	virtual void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const = 0;
 	/// Moves a value from the stack to the lvalue. Removes the value if @a _move is true.
 	/// @a _location is the source location of the expression that caused this operation.
 	/// Stack pre: value [lvalue_ref]
 	/// Stack post: if !_move: value_of(lvalue_ref)
 	virtual void storeValue(Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(), bool _move = false) const = 0;
+		langutil::SourceLocation const& _location = {}, bool _move = false) const = 0;
 	/// Stores zero in the lvalue. Removes the reference from the stack if @a _removeReference is true.
 	/// @a _location is the source location of the requested operation
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const = 0;
 
@@ -83,14 +83,14 @@ public:
 	StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
 
 	unsigned sizeOnStack() const override { return 0; }
-	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
 
@@ -109,14 +109,14 @@ class MemoryItem: public LValue
 public:
 	MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded = true);
 	unsigned sizeOnStack() const override { return 1; }
-	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
 private:
@@ -137,14 +137,14 @@ public:
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
 	unsigned sizeOnStack() const override { return 2; }
-	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
 };
@@ -159,14 +159,14 @@ public:
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageByteArrayElement(CompilerContext& _compilerContext);
 	unsigned sizeOnStack() const override { return 2; }
-	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
 };
@@ -181,14 +181,14 @@ class StorageArrayLength: public LValue
 public:
 	/// Constructs the LValue, assumes that the reference to the array head is already on the stack.
 	StorageArrayLength(CompilerContext& _compilerContext, ArrayType const& _arrayType);
-	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
 
@@ -206,14 +206,14 @@ public:
 	/// Empty unique_ptrs are possible if e.g. some values should be ignored during assignment.
 	TupleObject(CompilerContext& _compilerContext, std::vector<std::unique_ptr<LValue>>&& _lvalues);
 	unsigned sizeOnStack() const override;
-	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(),
+		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
 

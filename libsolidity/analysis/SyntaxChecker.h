@@ -23,6 +23,11 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+namespace langutil
+{
+class ErrorReporter;
+}
+
 namespace dev
 {
 namespace solidity
@@ -39,7 +44,7 @@ class SyntaxChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	SyntaxChecker(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	SyntaxChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool checkSyntax(ASTNode const& _astRoot);
 
@@ -81,7 +86,7 @@ private:
 	bool visit(StructDefinition const& _struct) override;
 	bool visit(Literal const& _literal) override;
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 
 	/// Flag that indicates whether a function modifier actually contains '_'.
 	bool m_placeholderFound = false;

@@ -28,6 +28,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)

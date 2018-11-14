@@ -101,7 +101,7 @@ struct ModifierFlow: FunctionFlow
 class CFG: private ASTConstVisitor
 {
 public:
-	explicit CFG(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	explicit CFG(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool constructFlow(ASTNode const& _astRoot);
 
@@ -133,7 +133,7 @@ private:
 		FunctionFlow* _functionFlow
 	);
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 
 	/// Node container.
 	/// All nodes allocated during the construction of the control flow graph

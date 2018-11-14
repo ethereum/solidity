@@ -35,6 +35,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
 
@@ -127,7 +128,7 @@ string AnalysisFramework::formatError(Error const& _error) const
 	return SourceReferenceFormatter::formatExceptionInformation(
 			_error,
 			(_error.type() == Error::Type::Warning) ? "Warning" : "Error",
-			[&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); }
+			[&](std::string const& _sourceName) -> Scanner const& { return m_compiler.scanner(_sourceName); }
 		);
 }
 

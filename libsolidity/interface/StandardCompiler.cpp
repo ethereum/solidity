@@ -31,6 +31,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace {
@@ -411,7 +412,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
 	m_compilerStack.setRequestedContractNames(requestedContractNames(outputSelection));
 
-	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
+	auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return m_compilerStack.scanner(_sourceName); };
 
 	try
 	{

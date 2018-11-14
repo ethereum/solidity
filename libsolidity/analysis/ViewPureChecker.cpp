@@ -22,10 +22,13 @@
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 
+#include <liblangutil/ErrorReporter.h>
+
 #include <functional>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace

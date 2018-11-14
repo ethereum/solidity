@@ -34,7 +34,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
+using namespace langutil;
 
 bool ExpressionClasses::Expression::operator<(ExpressionClasses::Expression const& _other) const
 {

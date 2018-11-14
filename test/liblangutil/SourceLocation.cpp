@@ -24,9 +24,7 @@
 
 #include <test/Options.h>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 namespace test
 {
@@ -45,6 +43,5 @@ BOOST_AUTO_TEST_CASE(test_fail)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }
 } // end namespaces

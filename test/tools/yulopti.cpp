@@ -19,15 +19,15 @@
  */
 
 #include <libdevcore/CommonIO.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <liblangutil/ErrorReporter.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>
@@ -58,6 +58,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 using namespace dev::yul;

@@ -28,12 +28,17 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 
+namespace langutil
+{
+class ErrorReporter;
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace solidity
 {
 
-class ErrorReporter;
 class NameAndTypeResolver;
 
 /**
@@ -44,7 +49,7 @@ class ReferencesResolver: private ASTConstVisitor
 {
 public:
 	ReferencesResolver(
-		ErrorReporter& _errorReporter,
+		langutil::ErrorReporter& _errorReporter,
 		NameAndTypeResolver& _resolver,
 		bool _resolveInsideCode = false
 	):
@@ -77,18 +82,18 @@ private:
 	void endVisit(VariableDeclaration const& _variable) override;
 
 	/// Adds a new error to the list of errors.
-	void typeError(SourceLocation const& _location, std::string const& _description);
+	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort reference resolving.
-	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
+	void fatalTypeError(langutil::SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors.
-	void declarationError(SourceLocation const& _location, std::string const& _description);
+	void declarationError(langutil::SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort reference resolving.
-	void fatalDeclarationError(SourceLocation const& _location, std::string const& _description);
+	void fatalDeclarationError(langutil::SourceLocation const& _location, std::string const& _description);
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	/// Stack of return parameters.
 	std::vector<ParameterList const*> m_returnParameters;

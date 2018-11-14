@@ -56,9 +56,7 @@
 #include <string>
 #include <tuple>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 
 /**
@@ -96,5 +94,4 @@ private:
 	size_t m_position;
 };
 
-}
 }
