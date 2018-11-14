@@ -1,6 +1,6 @@
 # Until we have a clear separation, libyul has to be included here
-file(GLOB_RECURSE sources "*.cpp" "../libyul/*.cpp" "../liblangutil/*.cpp")
-file(GLOB_RECURSE headers "*.h" "../libyul/*.h" "../liblangutil/*.h")
+file(GLOB_RECURSE sources "*.cpp" "../libyul/*.cpp")
+file(GLOB_RECURSE headers "*.h" "../libyul/*.h")
 
 find_package(Z3 QUIET)
 if (${Z3_FOUND})
@@ -26,7 +26,7 @@ if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
 endif()
 
 add_library(solidity ${sources} ${headers})
-target_link_libraries(solidity PUBLIC evmasm devcore ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(solidity PUBLIC evmasm langutil devcore ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 if (${Z3_FOUND})
   target_link_libraries(solidity PUBLIC ${Z3_LIBRARY})
