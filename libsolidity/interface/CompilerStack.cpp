@@ -329,13 +329,14 @@ bool CompilerStack::compile()
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
 				if (isRequestedContract(*contract))
 					compileContract(*contract, compiledContracts);
-	this->link();
 	m_stackState = CompilationSuccessful;
+	this->link();
 	return true;
 }
 
 void CompilerStack::link()
 {
+	solAssert(m_stackState >= CompilationSuccessful, "");
 	for (auto& contract: m_contracts)
 	{
 		contract.second.object.link(m_libraries);
@@ -351,6 +352,19 @@ vector<string> CompilerStack::contractNames() const
 	for (auto const& contract: m_contracts)
 		contractNames.push_back(contract.first);
 	return contractNames;
+}
+
+string const CompilerStack::lastContractName() const
+{
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+	// try to find some user-supplied contract
+	string contractName;
+	for (auto const& it: m_sources)
+		for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+				contractName = contract->fullyQualifiedName();
+	return contractName;
 }
 
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
@@ -389,6 +403,9 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 
 std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
 {
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+
 	// Look up the contract (by its fully-qualified name)
 	Contract const& matchContract = m_contracts.at(_contractName);
 	// Check to see if it could collide on name
@@ -584,6 +601,7 @@ tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocati
 
 StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
 {
+	solAssert(m_stackState < ParsingSuccessful, "");
 	StringMap newSources;
 	for (auto const& node: _ast.nodes())
 		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
@@ -617,6 +635,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 
 string CompilerStack::applyRemapping(string const& _path, string const& _context)
 {
+	solAssert(m_stackState < ParsingSuccessful, "");
 	// Try to find the longest prefix match in all remappings that are active in the current context.
 	auto isPrefixOf = [](string const& _a, string const& _b)
 	{
@@ -658,6 +677,8 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 
 void CompilerStack::resolveImports()
 {
+	solAssert(m_stackState == ParsingSuccessful, "");
+
 	// topological sorting (depth first search) of the import graph, cutting potential cycles
 	vector<Source const*> sourceOrder;
 	set<Source const*> sourcesSeen;
@@ -702,6 +723,8 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
 )
 {
+	solAssert(m_stackState >= AnalysisSuccessful, "");
+
 	if (
 		_compiledContracts.count(&_contract) ||
 		!_contract.annotation().unimplementedFunctions.empty() ||
@@ -757,23 +780,9 @@ void CompilerStack::compileContract(
 	_compiledContracts[compiledContract.contract] = &compiler->assembly();
 }
 
-string const CompilerStack::lastContractName() const
-{
-	if (m_contracts.empty())
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
-	// try to find some user-supplied contract
-	string contractName;
-	for (auto const& it: m_sources)
-		for (ASTPointer<ASTNode> const& node: it.second.ast->nodes())
-			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-				contractName = contract->fullyQualifiedName();
-	return contractName;
-}
-
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
 {
-	if (m_contracts.empty())
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+	solAssert(m_stackState >= AnalysisSuccessful, "");
 
 	auto it = m_contracts.find(_contractName);
 	if (it != m_contracts.end())
