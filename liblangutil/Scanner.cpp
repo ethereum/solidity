@@ -866,55 +866,5 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);
 }
 
-char CharStream::advanceAndGet(size_t _chars)
-{
-	if (isPastEndOfInput())
-		return 0;
-	m_position += _chars;
-	if (isPastEndOfInput())
-		return 0;
-	return m_source[m_position];
-}
-
-char CharStream::rollback(size_t _amount)
-{
-	solAssert(m_position >= _amount, "");
-	m_position -= _amount;
-	return get();
-}
-
-string CharStream::lineAtPosition(int _position) const
-{
-	// if _position points to \n, it returns the line before the \n
-	using size_type = string::size_type;
-	size_type searchStart = min<size_type>(m_source.size(), _position);
-	if (searchStart > 0)
-		searchStart--;
-	size_type lineStart = m_source.rfind('\n', searchStart);
-	if (lineStart == string::npos)
-		lineStart = 0;
-	else
-		lineStart++;
-	return m_source.substr(lineStart, min(m_source.find('\n', lineStart),
-										  m_source.size()) - lineStart);
-}
-
-tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
-{
-	using size_type = string::size_type;
-	size_type searchPosition = min<size_type>(m_source.size(), _position);
-	int lineNumber = count(m_source.begin(), m_source.begin() + searchPosition, '\n');
-	size_type lineStart;
-	if (searchPosition == 0)
-		lineStart = 0;
-	else
-	{
-		lineStart = m_source.rfind('\n', searchPosition - 1);
-		lineStart = lineStart == string::npos ? 0 : lineStart + 1;
-	}
-	return tuple<int, int>(lineNumber, searchPosition - lineStart);
-}
-
-
 }
 }
