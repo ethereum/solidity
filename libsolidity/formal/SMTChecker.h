@@ -25,7 +25,7 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 
 #include <unordered_map>
 #include <string>

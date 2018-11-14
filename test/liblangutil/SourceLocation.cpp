@@ -20,7 +20,7 @@
  * Unit tests for the SourceLocation class.
  */
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <test/Options.h>
 

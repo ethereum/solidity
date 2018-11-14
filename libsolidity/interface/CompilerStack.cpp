@@ -27,7 +27,7 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>

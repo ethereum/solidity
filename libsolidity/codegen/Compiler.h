@@ -23,7 +23,7 @@
 #pragma once
 
 #include <libsolidity/codegen/CompilerContext.h>
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libevmasm/Assembly.h>
 

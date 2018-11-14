@@ -20,7 +20,7 @@
  * Solidity exception hierarchy.
  */
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 using namespace std;
 using namespace dev;

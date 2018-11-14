@@ -23,7 +23,7 @@
 
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <libsolidity/parsing/DocStringParser.h>
 
 using namespace std;

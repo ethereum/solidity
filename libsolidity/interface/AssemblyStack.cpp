@@ -22,7 +22,7 @@
 
 #include <libsolidity/interface/AssemblyStack.h>
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>

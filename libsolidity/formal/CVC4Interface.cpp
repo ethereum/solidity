@@ -17,7 +17,7 @@
 
 #include <libsolidity/formal/CVC4Interface.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 #include <libdevcore/CommonIO.h>
 

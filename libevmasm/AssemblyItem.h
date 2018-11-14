@@ -26,7 +26,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libevmasm/Instruction.h>
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include "Exceptions.h"
 using namespace dev::solidity;
 

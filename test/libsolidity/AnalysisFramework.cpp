@@ -27,7 +27,7 @@
 
 #include <libsolidity/ast/AST.h>
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 
 #include <libdevcore/Keccak256.h>
 

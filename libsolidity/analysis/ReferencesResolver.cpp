@@ -23,12 +23,12 @@
 #include <libsolidity/analysis/ReferencesResolver.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 #include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <libdevcore/StringUtils.h>
 

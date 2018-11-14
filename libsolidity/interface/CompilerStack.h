@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <libsolidity/interface/ReadFile.h>
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libevmasm/LinkerObject.h>
 
 #include <libdevcore/Common.h>

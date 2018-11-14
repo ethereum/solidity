@@ -22,7 +22,7 @@
 #include <libsolidity/formal/VariableUsage.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/range/adaptor/map.hpp>
 #include <boost/algorithm/string/replace.hpp>

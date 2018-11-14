@@ -22,7 +22,7 @@
 
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
 

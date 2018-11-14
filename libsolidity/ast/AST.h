@@ -24,12 +24,12 @@
 
 
 #include <libsolidity/ast/ASTForward.h>
-#include <libsolidity/parsing/Token.h>
+#include <liblangutil/Token.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTEnums.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 
 #include <libdevcore/FixedHash.h>
