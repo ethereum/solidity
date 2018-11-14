@@ -20,7 +20,7 @@
  * Error helper class.
  */
 
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <libsolidity/ast/AST.h>
 #include <memory>
 

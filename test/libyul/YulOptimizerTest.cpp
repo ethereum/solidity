@@ -41,12 +41,12 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/Suite.h>
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/inlineasm/AsmPrinter.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>

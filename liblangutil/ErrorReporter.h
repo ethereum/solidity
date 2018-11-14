@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceLocation.h>
 
 namespace dev
 {

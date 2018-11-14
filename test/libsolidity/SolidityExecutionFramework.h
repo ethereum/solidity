@@ -27,7 +27,7 @@
 #include <test/ExecutionFramework.h>
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 
 namespace dev

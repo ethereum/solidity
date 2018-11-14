@@ -25,7 +25,7 @@
 #include <test/Options.h>
 #include <test/RPCSession.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Keccak256.h>

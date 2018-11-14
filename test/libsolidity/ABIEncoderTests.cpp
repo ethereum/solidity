@@ -22,7 +22,7 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 #include <test/libsolidity/ABITestsCommon.h>

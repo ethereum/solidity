@@ -41,7 +41,7 @@
 // along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
-#include <libsolidity/parsing/Token.h>
+#include <liblangutil/Token.h>
 #include <boost/range/iterator_range.hpp>
 
 using namespace std;

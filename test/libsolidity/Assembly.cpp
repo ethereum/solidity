@@ -22,16 +22,16 @@
 
 #include <test/Options.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libevmasm/Assembly.h>
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/test/unit_test.hpp>
 

@@ -24,7 +24,7 @@
 #include <string>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libdevcore/Exceptions.h>
 
 namespace dev

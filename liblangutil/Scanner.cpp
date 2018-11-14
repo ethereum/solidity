@@ -52,8 +52,8 @@
 
 #include <algorithm>
 #include <tuple>
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/Scanner.h>
 
 using namespace std;
 

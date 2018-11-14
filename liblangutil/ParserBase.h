@@ -23,7 +23,7 @@
 #pragma once
 
 #include <memory>
-#include <libsolidity/parsing/Token.h>
+#include <liblangutil/Token.h>
 
 namespace dev
 {

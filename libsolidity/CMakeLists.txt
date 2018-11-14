@@ -1,6 +1,6 @@
 # Until we have a clear separation, libyul has to be included here
-file(GLOB_RECURSE sources "*.cpp" "../libyul/*.cpp")
-file(GLOB_RECURSE headers "*.h" "../libyul/*.h")
+file(GLOB_RECURSE sources "*.cpp" "../libyul/*.cpp" "../liblangutil/*.cpp")
+file(GLOB_RECURSE headers "*.h" "../libyul/*.h" "../liblangutil/*.h")
 
 find_package(Z3 QUIET)
 if (${Z3_FOUND})

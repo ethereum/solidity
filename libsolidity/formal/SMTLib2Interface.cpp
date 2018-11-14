@@ -17,7 +17,7 @@
 
 #include <libsolidity/formal/SMTLib2Interface.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
 
 #include <boost/algorithm/string/predicate.hpp>

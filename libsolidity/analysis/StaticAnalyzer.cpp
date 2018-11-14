@@ -23,7 +23,7 @@
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <memory>
 
 using namespace std;

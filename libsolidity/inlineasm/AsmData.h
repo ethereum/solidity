@@ -25,7 +25,7 @@
 #include <libsolidity/inlineasm/AsmDataForward.h>
 
 #include <libevmasm/Instruction.h>
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <libyul/YulString.h>
 

@@ -18,7 +18,7 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/SemVerHandler.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
 
 #include <libdevcore/Algorithms.h>

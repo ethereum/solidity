@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libsolidity/ast/ASTForward.h>
 

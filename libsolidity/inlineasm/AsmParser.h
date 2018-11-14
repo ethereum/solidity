@@ -25,7 +25,7 @@
 #include <memory>
 #include <vector>
 #include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/parsing/ParserBase.h>
+#include <liblangutil/ParserBase.h>
 
 namespace dev
 {

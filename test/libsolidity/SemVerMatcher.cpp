@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <test/Options.h>
 

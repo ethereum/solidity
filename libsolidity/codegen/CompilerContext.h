@@ -24,7 +24,7 @@
 
 #include <libsolidity/codegen/ABIFunctions.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>

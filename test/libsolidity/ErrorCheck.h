@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 #include <vector>
 #include <tuple>
