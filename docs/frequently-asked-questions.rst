@@ -232,24 +232,6 @@ Note2: Optimizing storage access can pull the gas costs down considerably, becau
 currently do not work across loops and also have a problem with bounds checking.
 You might get much better results in the future, though.
 
-What happens to a ``struct``'s mapping when copying over a ``struct``?
-======================================================================
-
-This is a very interesting question. Suppose that we have a contract field set up like such::
-
-    struct User {
-        mapping(string => string) comments;
-    }
-
-    function somefunction public {
-       User user1;
-       user1.comments["Hello"] = "World";
-       User user2 = user1;
-    }
-
-In this case, the mapping of the struct being copied over into ``user2`` is ignored as there is no "list of mapped keys".
-Therefore it is not possible to find out which values should be copied over.
-
 How do I initialize a contract with only a specific amount of wei?
 ==================================================================
 
