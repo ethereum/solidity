@@ -1,0 +1,9 @@
+{
+  "auxiliaryInput":
+  {
+	  "smtlib2responses":
+	  {
+		  "0xe9477f683ff20aa57fcb08682150f86c5917e1d4c0686b278ab9b73446d0682c": "sat\n((|EVALEXPR_0| 0))"
+	  }
+  }
+}
