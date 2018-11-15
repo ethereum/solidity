@@ -325,50 +325,6 @@ to create an independent copy of the storage value in memory.
 On the other hand, ``h(x)`` successfully modifies ``x`` because only
 a reference and not a copy is passed.
 
-Sometimes, when I try to change the length of an array with ex: ``arrayname.length = 7;`` I get a compiler error ``Value must be an lvalue``. Why?
-==================================================================================================================================================
-
-You can resize a dynamic array in storage (i.e. an array declared at the
-contract level) with ``arrayname.length = <some new length>;``. If you get the
-"lvalue" error, you are probably doing one of two things wrong.
-
-1. You might be trying to resize an array in "memory", or
-
-2. You might be trying to resize a non-dynamic array.
-
-::
-
-    pragma solidity >=0.4.18 <0.6.0;
-
-    // This will not compile
-    contract C {
-        int8[] dynamicStorageArray;
-        int8[5] fixedStorageArray;
-
-        function f() public {
-            int8[] memory memArr;        // Case 1
-            memArr.length++;             // illegal
-
-            int8[5] storage storageArr = fixedStorageArray;   // Case 2
-            storageArr.length++;                             // illegal
-
-            int8[] storage storageArr2 = dynamicStorageArray;
-            storageArr2.length++;                     // legal
-
-
-        }
-    }
-
-**Important note:** In Solidity, array dimensions are declared backwards from the way you
-might be used to declaring them in C or Java, but they are access as in
-C or Java.
-
-For example, ``int8[][5] somearray;`` are 5 dynamic ``int8`` arrays.
-
-The reason for this is that ``T[5]`` is always an array of 5 ``T``'s,
-no matter whether ``T`` itself is an array or not (this is not the
-case in C or Java).
-
 Is it possible to return an array of strings (``string[]``) from a Solidity function?
 =====================================================================================
 

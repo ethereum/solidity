@@ -913,7 +913,9 @@ Members
     For dynamically-sized arrays (only available for storage), this member can be assigned to resize the array.
     Accessing elements outside the current length does not automatically resize the array and instead causes a failing assertion.
     Increasing the length adds new zero-initialised elements to the array.
-    Reducing the length performs an implicit :ref:``delete`` on each of the removed elements.
+    Reducing the length performs an implicit :ref:``delete`` on each of the
+    removed elements. If you try to resize a non-dynamic array that isn't in
+    storage, you receive a ``Value must be an lvalue`` error.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that you can use to append an element at the end of the array. The element will be zero-initialised. The function returns the new length.
 **pop**:
