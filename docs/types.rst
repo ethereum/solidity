@@ -465,10 +465,12 @@ a non-rational number).
 .. index:: literal, literal;string, string
 .. _string_literals:
 
-String Literals
----------------
+String Literals and Types
+-------------------------
 
 String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes, not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+
+For example, with ``bytes32 samevar = "stringliteral"`` the string literal is interpreted in its raw byte form when assigned to a ``bytes32`` type.
 
 String literals support the following escape characters:
 
@@ -862,13 +864,20 @@ or create a new memory array and copy every element.
         }
     }
 
-.. index:: ! array;literals, !inline;arrays
+.. index:: ! array;literals, ! inline;arrays
 
-Array Literals / Inline Arrays
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Array Literals
+^^^^^^^^^^^^^^
 
-Array literals are arrays that are written as an expression and are not
-assigned to a variable right away.
+An array literal is a comma-separated list of one or more expressions, enclosed
+in square brackets (``[...]``). For example ``[1, a, f(3)]``. There must be a
+common type all elements can be implicitly converted to. This is the elementary
+type of the array.
+
+Array literals are always statically-sized memory arrays.
+
+In the example below, the type of ``[1, 2, 3]`` is
+``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if you want the result to be a ``uint[3] memory`` type, you need to convert the first element to ``uint``.
 
 ::
 
@@ -883,13 +892,7 @@ assigned to a variable right away.
         }
     }
 
-The type of an array literal is a memory array of fixed size whose base
-type is the common type of the given elements. The type of ``[1, 2, 3]`` is
-``uint8[3] memory``, because the type of each of these constants is ``uint8``.
-Because of that, it is necessary to convert the first element in the example
-above to ``uint``. Note that currently, fixed size memory arrays cannot
-be assigned to dynamically-sized memory arrays, i.e. the following is not
-possible:
+Fixed size memory arrays cannot be assigned to dynamically-sized memory arrays, i.e. the following is not possible:
 
 ::
 
@@ -904,8 +907,8 @@ possible:
         }
     }
 
-It is planned to remove this restriction in the future but currently creates
-some complications because of how arrays are passed in the ABI.
+It is planned to remove this restriction in the future, but it creates some
+complications because of how arrays are passed in the ABI.
 
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
