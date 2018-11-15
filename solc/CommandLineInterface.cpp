@@ -438,7 +438,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				m_sourceCodes[infile.generic_string()] = dev::readFileAsString(infile.string());
 				path = boost::filesystem::canonical(infile).string();
 			}
-			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
+			m_allowedDirectories.emplace_back(boost::filesystem::path(path).remove_filename());
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
@@ -761,7 +761,7 @@ bool CommandLineInterface::processInput()
 			{
 				filesystem_path.remove_filename();
 			}
-			m_allowedDirectories.push_back(filesystem_path);
+			m_allowedDirectories.emplace_back(filesystem_path);
 		}
 	}
 
@@ -992,7 +992,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	{
 		vector<ASTNode const*> asts;
 		for (auto const& sourceCode: m_sourceCodes)
-			asts.push_back(&m_compiler->ast(sourceCode.first));
+			asts.emplace_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
 		for (auto const& contract : m_compiler->contractNames())
 		{

@@ -113,7 +113,7 @@ bytes compileFirstExpression(
 	vector<Declaration const*> declarations;
 	declarations.reserve(_globalDeclarations.size() + 1);
 	for (ASTPointer<Declaration const> const& variable: _globalDeclarations)
-		declarations.push_back(variable.get());
+		declarations.emplace_back(variable.get());
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);

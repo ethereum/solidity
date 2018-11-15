@@ -234,7 +234,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
 			}
 		))
-			uniqueFunctions.push_back(declaration);
+			uniqueFunctions.emplace_back(declaration);
 	}
 	return uniqueFunctions;
 }
@@ -437,7 +437,7 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 		_T const* candidate = nextCandidate();
 		if (!candidate)
 			return vector<_T const*>();
-		result.push_back(candidate);
+		result.emplace_back(candidate);
 		removeCandidate(candidate);
 	}
 	return result;

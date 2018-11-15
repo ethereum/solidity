@@ -191,7 +191,7 @@ inline unsigned bytesRequired(T _i)
 template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
 {
 	for (auto const& i: _b)
-		_a.push_back(i);
+		_a.emplace_back(i);
 	return _a;
 }
 /// Concatenate the contents of a container onto a vector, move variant.

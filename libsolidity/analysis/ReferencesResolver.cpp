@@ -139,7 +139,7 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 
 bool ReferencesResolver::visit(FunctionDefinition const& _functionDefinition)
 {
-	m_returnParameters.push_back(_functionDefinition.returnParameterList().get());
+	m_returnParameters.emplace_back(_functionDefinition.returnParameterList().get());
 	return true;
 }
 
@@ -151,7 +151,7 @@ void ReferencesResolver::endVisit(FunctionDefinition const&)
 
 bool ReferencesResolver::visit(ModifierDefinition const&)
 {
-	m_returnParameters.push_back(nullptr);
+	m_returnParameters.emplace_back(nullptr);
 	return true;
 }
 

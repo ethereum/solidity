@@ -66,7 +66,7 @@ bool PostTypeChecker::visit(VariableDeclaration const& _variable)
 	if (_variable.isConstant())
 	{
 		m_currentConstVariable = &_variable;
-		m_constVariables.push_back(&_variable);
+		m_constVariables.emplace_back(&_variable);
 	}
 	return true;
 }

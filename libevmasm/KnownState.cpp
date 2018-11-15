@@ -371,7 +371,7 @@ KnownState::Id KnownState::applyKeccak256(
 			AssemblyItem(Instruction::ADD, _location),
 			{_start, m_expressionClasses->find(i)}
 		);
-		arguments.push_back(loadFromMemory(slot, _location));
+		arguments.emplace_back(loadFromMemory(slot, _location));
 	}
 	if (m_knownKeccak256Hashes.count(arguments))
 		return m_knownKeccak256Hashes.at(arguments);

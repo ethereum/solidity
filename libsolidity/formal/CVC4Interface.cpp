@@ -115,7 +115,7 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		{
 			for (Expression const& e: _expressionsToEvaluate)
-				values.push_back(toString(m_solver.getValue(toCVC4Expr(e))));
+				values.emplace_back(toString(m_solver.getValue(toCVC4Expr(e))));
 		}
 	}
 	catch (CVC4::Exception const&)
@@ -133,7 +133,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		return m_constants.at(_expr.name);
 	vector<CVC4::Expr> arguments;
 	for (auto const& arg: _expr.arguments)
-		arguments.push_back(toCVC4Expr(arg));
+		arguments.emplace_back(toCVC4Expr(arg));
 
 	string const& n = _expr.name;
 	if (m_functions.count(n))

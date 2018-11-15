@@ -185,7 +185,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 		else
 		{
 			solAssert(!function->name().empty(), "");
-			functions[function->name()].push_back(function);
+			functions[function->name()].emplace_back(function);
 		}
 
 	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
@@ -197,7 +197,7 @@ void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contra
 	/// argument types
 	map<string, vector<EventDefinition const*>> events;
 	for (EventDefinition const* event: _contract.events())
-		events[event->name()].push_back(event);
+		events[event->name()].emplace_back(event);
 
 	findDuplicateDefinitions(events, "Event with same name and arguments defined twice.");
 }
@@ -255,7 +255,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 				return funType->hasEqualParameterTypes(*_funAndFlag.first);
 			});
 			if (it == overloads.end())
-				overloads.push_back(make_pair(funType, function->isImplemented()));
+				overloads.emplace_back(make_pair(funType, function->isImplemented()));
 			else if (it->second)
 			{
 				if (!function->isImplemented())
@@ -272,7 +272,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			{
 				FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(&funAndFlag.first->declaration());
 				solAssert(function, "");
-				_contract.annotation().unimplementedFunctions.push_back(function);
+				_contract.annotation().unimplementedFunctions.emplace_back(function);
 				break;
 			}
 }
@@ -316,7 +316,7 @@ void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const
 		if (FunctionDefinition const* constructor = contract->constructor())
 			if (contract != &_contract && !constructor->parameters().empty())
 				if (!_contract.annotation().baseConstructorArguments.count(constructor))
-					_contract.annotation().unimplementedFunctions.push_back(constructor);
+					_contract.annotation().unimplementedFunctions.emplace_back(constructor);
 }
 
 void TypeChecker::annotateBaseConstructorArguments(
@@ -383,7 +383,7 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 			for (FunctionDefinition const* overriding: functions[name])
 				checkFunctionOverride(*overriding, *function);
 
-			functions[name].push_back(function);
+			functions[name].emplace_back(function);
 		}
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
 		{
@@ -457,7 +457,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 				auto functionType = make_shared<FunctionType>(*f);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
+					externalDeclarations[functionType->externalSignature()].emplace_back(
 						make_pair(f, functionType)
 					);
 			}
@@ -467,7 +467,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 				auto functionType = make_shared<FunctionType>(*v);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
+					externalDeclarations[functionType->externalSignature()].emplace_back(
 						make_pair(v, functionType)
 					);
 			}
@@ -584,12 +584,12 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 					typeArgument->location(),
 					"Decoding type " + actualType->toString(false) + " not supported."
 				);
-			components.push_back(actualType);
+			components.emplace_back(actualType);
 		}
 		else
 		{
 			m_errorReporter.typeError(typeArgument->location(), "Argument has to be a type name.");
-			components.push_back(make_shared<TupleType>());
+			components.emplace_back(make_shared<TupleType>());
 		}
 	}
 	return components;
@@ -1096,7 +1096,7 @@ void TypeChecker::endVisit(Return const& _return)
 	}
 	TypePointers returnTypes;
 	for (auto const& var: params->parameters())
-		returnTypes.push_back(type(*var));
+		returnTypes.emplace_back(type(*var));
 	if (auto tupleType = dynamic_cast<TupleType const*>(type(*_return.expression()).get()))
 	{
 		if (tupleType->components().size() != params->parameters().size())
@@ -1529,10 +1529,10 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (component)
 			{
 				requireLValue(*component);
-				types.push_back(type(*component));
+				types.emplace_back(type(*component));
 			}
 			else
-				types.push_back(TypePointer());
+				types.emplace_back(TypePointer());
 		if (components.size() == 1)
 			_tuple.annotation().type = type(*components[0]);
 		else
@@ -1552,7 +1552,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			else if (components[i])
 			{
 				components[i]->accept(*this);
-				types.push_back(type(*components[i]));
+				types.emplace_back(type(*components[i]));
 
 				if (types[i]->category() == Type::Category::Tuple)
 					if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
@@ -1583,7 +1583,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 					isPure = false;
 			}
 			else
-				types.push_back(TypePointer());
+				types.emplace_back(TypePointer());
 		}
 		_tuple.annotation().isPure = isPure;
 		if (_tuple.isInlineArray())
@@ -2132,7 +2132,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	{
 		shared_ptr<TypePointers> argumentTypes = make_shared<TypePointers>();
 		for (ASTPointer<Expression const> const& argument: arguments)
-			argumentTypes->push_back(type(*argument));
+			argumentTypes->emplace_back(type(*argument));
 		_functionCall.expression().annotation().argumentTypes = move(argumentTypes);
 	}
 
@@ -2576,7 +2576,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
 				if (VariableDeclaration const* variableDeclaration = dynamic_cast<decltype(variableDeclaration)>(declaration))
-					candidates.push_back(declaration);
+					candidates.emplace_back(declaration);
 			}
 			if (candidates.empty())
 				m_errorReporter.fatalTypeError(_identifier.location(), "No matching declaration found after variable lookup.");
@@ -2598,7 +2598,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				FunctionTypePointer functionType = declaration->functionType(true);
 				solAssert(!!functionType, "Requested type not present.");
 				if (functionType->canTakeArguments(*annotation.argumentTypes))
-					candidates.push_back(declaration);
+					candidates.emplace_back(declaration);
 			}
 			if (candidates.empty())
 				m_errorReporter.fatalTypeError(_identifier.location(), "No matching declaration found after argument-dependent lookup.");

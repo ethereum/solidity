@@ -72,13 +72,13 @@ BOOST_AUTO_TEST_CASE(test_alternatives_list)
 {
 	vector<string> strings;
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "");
-	strings.push_back("a");
+	strings.emplace_back("a");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\"");
-	strings.push_back("b");
+	strings.emplace_back("b");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\" or \"b\"");
-	strings.push_back("c");
+	strings.emplace_back("c");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\" or \"c\"");
-	strings.push_back("d");
+	strings.emplace_back("d");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\", \"c\" or \"d\"");
 }
 

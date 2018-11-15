@@ -68,7 +68,7 @@ void SimplificationRules::addRules(vector<SimplificationRule<Pattern>> const& _r
 
 void SimplificationRules::addRule(SimplificationRule<Pattern> const& _rule)
 {
-	m_rules[uint8_t(_rule.pattern.instruction())].push_back(_rule);
+	m_rules[uint8_t(_rule.pattern.instruction())].emplace_back(_rule);
 }
 
 SimplificationRules::SimplificationRules()

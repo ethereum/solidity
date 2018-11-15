@@ -82,7 +82,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += _i.deposit();
-	m_items.push_back(_i);
+	m_items.emplace_back(_i);
 	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
 		m_items.back().setLocation(m_currentSourceLocation);
 	return back();
@@ -171,7 +171,7 @@ public:
 			expression += ")";
 		}
 
-		m_pending.push_back(expression);
+		m_pending.emplace_back(expression);
 		if (_item.returnValues() != 1)
 			flush();
 	}
@@ -544,25 +544,25 @@ LinkerObject const& Assembly::assemble() const
 		switch (i.type())
 		{
 		case Operation:
-			ret.bytecode.push_back((uint8_t)i.instruction());
+			ret.bytecode.emplace_back((uint8_t)i.instruction());
 			break;
 		case PushString:
 		{
-			ret.bytecode.push_back((uint8_t)Instruction::PUSH32);
+			ret.bytecode.emplace_back((uint8_t)Instruction::PUSH32);
 			unsigned ii = 0;
 			for (auto j: m_strings.at((h256)i.data()))
 				if (++ii > 32)
 					break;
 				else
-					ret.bytecode.push_back((uint8_t)j);
+					ret.bytecode.emplace_back((uint8_t)j);
 			while (ii++ < 32)
-				ret.bytecode.push_back(0);
+				ret.bytecode.emplace_back(0);
 			break;
 		}
 		case Push:
 		{
 			uint8_t b = max<unsigned>(1, dev::bytesRequired(i.data()));
-			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
+			ret.bytecode.emplace_back((uint8_t)Instruction::PUSH1 - 1 + b);
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(i.data(), byr);
@@ -570,18 +570,18 @@ LinkerObject const& Assembly::assemble() const
 		}
 		case PushTag:
 		{
-			ret.bytecode.push_back(tagPush);
+			ret.bytecode.emplace_back(tagPush);
 			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerTag);
 			break;
 		}
 		case PushData:
-			ret.bytecode.push_back(dataRefPush);
+			ret.bytecode.emplace_back(dataRefPush);
 			dataRef.insert(make_pair((h256)i.data(), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSub:
-			ret.bytecode.push_back(dataRefPush);
+			ret.bytecode.emplace_back(dataRefPush);
 			subRef.insert(make_pair(size_t(i.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
@@ -590,7 +590,7 @@ LinkerObject const& Assembly::assemble() const
 			auto s = m_subs.at(size_t(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
 			uint8_t b = max<unsigned>(1, dev::bytesRequired(s));
-			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
+			ret.bytecode.emplace_back((uint8_t)Instruction::PUSH1 - 1 + b);
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(s, byr);
@@ -598,18 +598,18 @@ LinkerObject const& Assembly::assemble() const
 		}
 		case PushProgramSize:
 		{
-			ret.bytecode.push_back(dataRefPush);
-			sizeRef.push_back(ret.bytecode.size());
+			ret.bytecode.emplace_back(dataRefPush);
+			sizeRef.emplace_back(ret.bytecode.size());
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		}
 		case PushLibraryAddress:
-			ret.bytecode.push_back(uint8_t(Instruction::PUSH20));
+			ret.bytecode.emplace_back(uint8_t(Instruction::PUSH20));
 			ret.linkReferences[ret.bytecode.size()] = m_libraries.at(i.data());
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case PushDeployTimeAddress:
-			ret.bytecode.push_back(uint8_t(Instruction::PUSH20));
+			ret.bytecode.emplace_back(uint8_t(Instruction::PUSH20));
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case Tag:
@@ -618,7 +618,7 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
 			assertThrow(m_tagPositionsInBytecode[size_t(i.data())] == size_t(-1), AssemblyException, "Duplicate tag position.");
 			m_tagPositionsInBytecode[size_t(i.data())] = ret.bytecode.size();
-			ret.bytecode.push_back((uint8_t)Instruction::JUMPDEST);
+			ret.bytecode.emplace_back((uint8_t)Instruction::JUMPDEST);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -627,7 +627,7 @@ LinkerObject const& Assembly::assemble() const
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
 		// Append an INVALID here to help tests find miscompilation.
-		ret.bytecode.push_back(uint8_t(Instruction::INVALID));
+		ret.bytecode.emplace_back(uint8_t(Instruction::INVALID));
 
 	for (size_t i = 0; i < m_subs.size(); ++i)
 	{

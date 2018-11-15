@@ -75,7 +75,7 @@ vector<Declaration const*> GlobalContext::declarations() const
 	vector<Declaration const*> declarations;
 	declarations.reserve(m_magicVariables.size());
 	for (ASTPointer<Declaration const> const& variable: m_magicVariables)
-		declarations.push_back(variable.get());
+		declarations.emplace_back(variable.get());
 	return declarations;
 }
 

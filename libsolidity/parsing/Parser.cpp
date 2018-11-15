@@ -78,15 +78,15 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			switch (m_scanner->currentToken())
 			{
 			case Token::Pragma:
-				nodes.push_back(parsePragmaDirective());
+				nodes.emplace_back(parsePragmaDirective());
 				break;
 			case Token::Import:
-				nodes.push_back(parseImportDirective());
+				nodes.emplace_back(parseImportDirective());
 				break;
 			case Token::Interface:
 			case Token::Contract:
 			case Token::Library:
-				nodes.push_back(parseContractDefinition());
+				nodes.emplace_back(parseContractDefinition());
 				break;
 			default:
 				fatalParserError(string("Expected pragma, import directive or contract/interface/library definition."));
@@ -123,8 +123,8 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 			string literal = m_scanner->currentLiteral();
 			if (literal.empty() && TokenTraits::toString(token))
 				literal = TokenTraits::toString(token);
-			literals.push_back(literal);
-			tokens.push_back(token);
+			literals.emplace_back(literal);
+			tokens.emplace_back(token);
 		}
 		m_scanner->next();
 	}
@@ -169,7 +169,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 					expectToken(Token::As);
 					alias = expectIdentifierToken();
 				}
-				symbolAliases.push_back(make_pair(move(id), move(alias)));
+				symbolAliases.emplace_back(make_pair(move(id), move(alias)));
 				if (m_scanner->currentToken() != Token::Comma)
 					break;
 				m_scanner->next();
@@ -233,7 +233,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		do
 		{
 			m_scanner->next();
-			baseContracts.push_back(parseInheritanceSpecifier());
+			baseContracts.emplace_back(parseInheritanceSpecifier());
 		}
 		while (m_scanner->currentToken() == Token::Comma);
 	vector<ASTPointer<ASTNode>> subNodes;
@@ -246,11 +246,11 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		else if (currentTokenValue == Token::Function || currentTokenValue == Token::Constructor)
 			// This can be a function or a state variable of function type (especially
 			// complicated to distinguish fallback function from function type state variable)
-			subNodes.push_back(parseFunctionDefinitionOrFunctionTypeStateVariable());
+			subNodes.emplace_back(parseFunctionDefinitionOrFunctionTypeStateVariable());
 		else if (currentTokenValue == Token::Struct)
-			subNodes.push_back(parseStructDefinition());
+			subNodes.emplace_back(parseStructDefinition());
 		else if (currentTokenValue == Token::Enum)
-			subNodes.push_back(parseEnumDefinition());
+			subNodes.emplace_back(parseEnumDefinition());
 		else if (
 			currentTokenValue == Token::Identifier ||
 			currentTokenValue == Token::Mapping ||
@@ -260,15 +260,15 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			VarDeclParserOptions options;
 			options.isStateVariable = true;
 			options.allowInitialValue = true;
-			subNodes.push_back(parseVariableDeclaration(options));
+			subNodes.emplace_back(parseVariableDeclaration(options));
 			expectToken(Token::Semicolon);
 		}
 		else if (currentTokenValue == Token::Modifier)
-			subNodes.push_back(parseModifierDefinition());
+			subNodes.emplace_back(parseModifierDefinition());
 		else if (currentTokenValue == Token::Event)
-			subNodes.push_back(parseEventDefinition());
+			subNodes.emplace_back(parseEventDefinition());
 		else if (currentTokenValue == Token::Using)
-			subNodes.push_back(parseUsingDirective());
+			subNodes.emplace_back(parseUsingDirective());
 		else
 			fatalParserError(string("Function, variable, struct or modifier declaration expected."));
 	}
@@ -399,7 +399,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 				// Variable declaration, break here.
 				break;
 			else
-				result.modifiers.push_back(parseModifierInvocation());
+				result.modifiers.emplace_back(parseModifierInvocation());
 		}
 		else if (TokenTraits::isVisibilitySpecifier(token))
 		{
@@ -520,7 +520,7 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 	expectToken(Token::LBrace);
 	while (m_scanner->currentToken() != Token::RBrace)
 	{
-		members.push_back(parseVariableDeclaration());
+		members.emplace_back(parseVariableDeclaration());
 		expectToken(Token::Semicolon);
 	}
 	nodeFactory.markEndPosition();
@@ -547,7 +547,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 
 	while (m_scanner->currentToken() != Token::RBrace)
 	{
-		members.push_back(parseEnumValue());
+		members.emplace_back(parseEnumValue());
 		if (m_scanner->currentToken() == Token::RBrace)
 			break;
 		expectToken(Token::Comma);
@@ -780,7 +780,7 @@ ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 	{
 		m_scanner->next();
 		nodeFactory.markEndPosition();
-		identifierPath.push_back(*expectIdentifierToken());
+		identifierPath.emplace_back(*expectIdentifierToken());
 	}
 	return nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
 }
@@ -904,13 +904,13 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 	expectToken(Token::LParen);
 	if (!_allowEmpty || m_scanner->currentToken() != Token::RParen)
 	{
-		parameters.push_back(parseVariableDeclaration(options));
+		parameters.emplace_back(parseVariableDeclaration(options));
 		while (m_scanner->currentToken() != Token::RParen)
 		{
 			if (m_scanner->currentToken() == Token::Comma && m_scanner->peekNextToken() == Token::RParen)
 				fatalParserError("Unexpected trailing comma in parameter list.");
 			expectToken(Token::Comma);
-			parameters.push_back(parseVariableDeclaration(options));
+			parameters.emplace_back(parseVariableDeclaration(options));
 		}
 	}
 	nodeFactory.markEndPosition();
@@ -925,7 +925,7 @@ ASTPointer<Block> Parser::parseBlock(ASTPointer<ASTString> const& _docString)
 	expectToken(Token::LBrace);
 	vector<ASTPointer<Statement>> statements;
 	while (m_scanner->currentToken() != Token::RBrace)
-		statements.push_back(parseStatement());
+		statements.emplace_back(parseStatement());
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
 	return nodeFactory.createNode<Block>(_docString, statements);
@@ -1115,7 +1115,7 @@ ASTPointer<EmitStatement> Parser::parseEmitStatement(ASTPointer<ASTString> const
 	IndexAccessedPath iap;
 	while (true)
 	{
-		iap.path.push_back(parseIdentifier());
+		iap.path.emplace_back(parseIdentifier());
 		if (m_scanner->currentToken() != Token::Period)
 			break;
 		m_scanner->next();
@@ -1165,15 +1165,15 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 			VarDeclParserOptions options;
 			options.allowLocationSpecifier = true;
 			variables = vector<ASTPointer<VariableDeclaration>>(emptyComponents, nullptr);
-			variables.push_back(parseVariableDeclaration(options, typeNameFromIndexAccessStructure(iap)));
+			variables.emplace_back(parseVariableDeclaration(options, typeNameFromIndexAccessStructure(iap)));
 
 			while (m_scanner->currentToken() != Token::RParen)
 			{
 				expectToken(Token::Comma);
 				if (m_scanner->currentToken() == Token::Comma || m_scanner->currentToken() == Token::RParen)
-					variables.push_back(nullptr);
+					variables.emplace_back(nullptr);
 				else
-					variables.push_back(parseVariableDeclaration(options));
+					variables.emplace_back(parseVariableDeclaration(options));
 			}
 			expectToken(Token::RParen);
 			expectToken(Token::Assign);
@@ -1185,14 +1185,14 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 		{
 			// Complete parsing the expression in the current component.
 			vector<ASTPointer<Expression>> components(emptyComponents, nullptr);
-			components.push_back(parseExpression(expressionFromIndexAccessStructure(iap)));
+			components.emplace_back(parseExpression(expressionFromIndexAccessStructure(iap)));
 			while (m_scanner->currentToken() != Token::RParen)
 			{
 				expectToken(Token::Comma);
 				if (m_scanner->currentToken() == Token::Comma || m_scanner->currentToken() == Token::RParen)
-					components.push_back(ASTPointer<Expression>());
+					components.emplace_back(ASTPointer<Expression>());
 				else
-					components.push_back(parseExpression());
+					components.emplace_back(parseExpression());
 			}
 			nodeFactory.markEndPosition();
 			expectToken(Token::RParen);
@@ -1300,7 +1300,7 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 						VariableDeclaration::Visibility::Default
 					);
 				}
-				variables.push_back(var);
+				variables.emplace_back(var);
 				if (m_scanner->currentToken() == Token::RParen)
 					break;
 				else
@@ -1314,7 +1314,7 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 		VarDeclParserOptions options;
 		options.allowVar = true;
 		options.allowLocationSpecifier = true;
-		variables.push_back(parseVariableDeclaration(options, _lookAheadArrayType));
+		variables.emplace_back(parseVariableDeclaration(options, _lookAheadArrayType));
 		nodeFactory.setEndPositionFromNode(variables.back());
 	}
 	if (m_scanner->currentToken() == Token::Assign)
@@ -1538,11 +1538,11 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			while (true)
 			{
 				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
-					components.push_back(parseExpression());
+					components.emplace_back(parseExpression());
 				else if (isArray)
 					parserError("Expected expression (inline array elements cannot be omitted).");
 				else
-					components.push_back(ASTPointer<Expression>());
+					components.emplace_back(ASTPointer<Expression>());
 
 				if (m_scanner->currentToken() == oppositeToken)
 					break;
@@ -1581,11 +1581,11 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 	vector<ASTPointer<Expression>> arguments;
 	if (m_scanner->currentToken() != Token::RParen)
 	{
-		arguments.push_back(parseExpression());
+		arguments.emplace_back(parseExpression());
 		while (m_scanner->currentToken() != Token::RParen)
 		{
 			expectToken(Token::Comma);
-			arguments.push_back(parseExpression());
+			arguments.emplace_back(parseExpression());
 		}
 	}
 	return arguments;
@@ -1607,9 +1607,9 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 			if (!first)
 				expectToken(Token::Comma);
 
-			ret.second.push_back(expectIdentifierToken());
+			ret.second.emplace_back(expectIdentifierToken());
 			expectToken(Token::Colon);
-			ret.first.push_back(parseExpression());
+			ret.first.emplace_back(parseExpression());
 
 			if (
 				m_scanner->currentToken() == Token::Comma &&
@@ -1665,11 +1665,11 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 	IndexAccessedPath iap;
 	if (m_scanner->currentToken() == Token::Identifier)
 	{
-		iap.path.push_back(parseIdentifier());
+		iap.path.emplace_back(parseIdentifier());
 		while (m_scanner->currentToken() == Token::Period)
 		{
 			m_scanner->next();
-			iap.path.push_back(parseIdentifier());
+			iap.path.emplace_back(parseIdentifier());
 		}
 	}
 	else
@@ -1678,7 +1678,7 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 		unsigned secondNum;
 		tie(firstNum, secondNum) = m_scanner->currentTokenInfo();
 		ElementaryTypeNameToken elemToken(m_scanner->currentToken(), firstNum, secondNum);
-		iap.path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
+		iap.path.emplace_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
 		m_scanner->next();
 	}
 	while (m_scanner->currentToken() == Token::LBrack)
@@ -1689,7 +1689,7 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 			index = parseExpression();
 		SourceLocation indexLocation = iap.path.front()->location();
 		indexLocation.end = endPosition();
-		iap.indices.push_back(make_pair(index, indexLocation));
+		iap.indices.emplace_back(make_pair(index, indexLocation));
 		expectToken(Token::RBrack);
 	}
 
@@ -1717,7 +1717,7 @@ ASTPointer<TypeName> Parser::typeNameFromIndexAccessStructure(Parser::IndexAcces
 	{
 		vector<ASTString> path;
 		for (auto const& el: _iap.path)
-			path.push_back(dynamic_cast<Identifier const&>(*el).name());
+			path.emplace_back(dynamic_cast<Identifier const&>(*el).name());
 		type = nodeFactory.createNode<UserDefinedTypeName>(path);
 	}
 	for (auto const& lengthExpression: _iap.indices)

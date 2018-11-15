@@ -97,7 +97,7 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 		{
 			z3::model m = m_solver.get_model();
 			for (Expression const& e: _expressionsToEvaluate)
-				values.push_back(toString(m.eval(toZ3Expr(e))));
+				values.emplace_back(toString(m.eval(toZ3Expr(e))));
 		}
 	}
 	catch (z3::exception const&)

@@ -43,7 +43,7 @@ VariableUsage::VariableUsage(ASTNode const& _node)
 	auto edgeFun = [&](ASTNode const& _parent, ASTNode const& _child)
 	{
 		if (m_touchedVariable.count(&_child) || m_children.count(&_child))
-			m_children[&_parent].push_back(&_child);
+			m_children[&_parent].emplace_back(&_child);
 	};
 
 	ASTReduce reducer(nodeFun, edgeFun);
@@ -57,7 +57,7 @@ vector<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const
 
 	set<VariableDeclaration const*> touched;
 	vector<ASTNode const*> toVisit;
-	toVisit.push_back(&_node);
+	toVisit.emplace_back(&_node);
 
 	while (!toVisit.empty())
 	{

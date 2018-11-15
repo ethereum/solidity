@@ -69,7 +69,7 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, st
 		errinfo_sourceLocation(_location) <<
 		errinfo_comment(_description);
 
-	m_errorList.push_back(err);
+	m_errorList.emplace_back(err);
 }
 
 void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, string const& _description)
@@ -83,7 +83,7 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, Se
 		errinfo_secondarySourceLocation(_secondaryLocation) <<
 		errinfo_comment(_description);
 
-	m_errorList.push_back(err);
+	m_errorList.emplace_back(err);
 }
 
 bool ErrorReporter::checkForExcessiveErrors(Error::Type _type)
@@ -96,7 +96,7 @@ bool ErrorReporter::checkForExcessiveErrors(Error::Type _type)
 		{
 			auto err = make_shared<Error>(Error::Type::Warning);
 			*err << errinfo_comment("There are more than 256 warnings. Ignoring the rest.");
-			m_errorList.push_back(err);
+			m_errorList.emplace_back(err);
 		}
 
 		if (m_warningCount >= c_maxWarningsAllowed)
@@ -110,7 +110,7 @@ bool ErrorReporter::checkForExcessiveErrors(Error::Type _type)
 		{
 			auto err = make_shared<Error>(Error::Type::Warning);
 			*err << errinfo_comment("There are more than 256 errors. Aborting.");
-			m_errorList.push_back(err);
+			m_errorList.emplace_back(err);
 			BOOST_THROW_EXCEPTION(FatalError());
 		}
 	}

@@ -67,7 +67,7 @@ void Disambiguator::leaveFunction(FunctionDefinition const& _function)
 
 void Disambiguator::enterScopeInternal(Scope& _scope)
 {
-	m_scopes.push_back(&_scope);
+	m_scopes.emplace_back(&_scope);
 }
 
 void Disambiguator::leaveScopeInternal(Scope& _scope)

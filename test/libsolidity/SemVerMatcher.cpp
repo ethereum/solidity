@@ -49,8 +49,8 @@ SemVerMatchExpression parseExpression(string const& _input)
 		string literal = scanner.currentLiteral();
 		if (literal.empty() && TokenTraits::toString(token))
 			literal = TokenTraits::toString(token);
-		literals.push_back(literal);
-		tokens.push_back(token);
+		literals.emplace_back(literal);
+		tokens.emplace_back(token);
 		scanner.next();
 	}
 

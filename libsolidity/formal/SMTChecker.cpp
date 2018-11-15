@@ -71,7 +71,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 			_function.location(),
 			"Assertion checker does not yet support constructors and functions with modifiers."
 		);
-	m_functionPath.push_back(&_function);
+	m_functionPath.emplace_back(&_function);
 	// Not visited by a function call
 	if (isRootFunction())
 	{
@@ -452,7 +452,7 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 	{
 		vector<smt::Expression> funArgs;
 		for (auto arg: _funCall.arguments())
-			funArgs.push_back(expr(*arg));
+			funArgs.emplace_back(expr(*arg));
 		initializeFunctionCallParameters(*_funDef, funArgs);
 		_funDef->accept(*this);
 		auto const& returnParams = _funDef->returnParameters();
@@ -758,17 +758,17 @@ void SMTChecker::checkCondition(
 		if (_additionalValue)
 		{
 			expressionsToEvaluate.emplace_back(*_additionalValue);
-			expressionNames.push_back(_additionalValueName);
+			expressionNames.emplace_back(_additionalValueName);
 		}
 		for (auto const& var: m_variables)
 		{
 			expressionsToEvaluate.emplace_back(currentValue(*var.first));
-			expressionNames.push_back(var.first->name());
+			expressionNames.emplace_back(var.first->name());
 		}
 		for (auto const& var: m_specialVariables)
 		{
 			expressionsToEvaluate.emplace_back(var.second->currentValue());
-			expressionNames.push_back(var.first);
+			expressionNames.emplace_back(var.first);
 		}
 	}
 	smt::CheckResult result;
@@ -1097,7 +1097,7 @@ void SMTChecker::popPathCondition()
 
 void SMTChecker::pushPathCondition(smt::Expression const& _e)
 {
-	m_pathConditions.push_back(currentPathConditions() && _e);
+	m_pathConditions.emplace_back(currentPathConditions() && _e);
 }
 
 smt::Expression SMTChecker::currentPathConditions()

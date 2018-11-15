@@ -65,7 +65,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		targetStackContents
 	);
 	if (m_breakingItem)
-		items.push_back(*m_breakingItem);
+		items.emplace_back(*m_breakingItem);
 
 	return items;
 }
@@ -74,7 +74,7 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item, bool _co
 {
 	StoreOperation op = m_state.feedItem(_item, _copyItem);
 	if (op.isValid())
-		m_storeOperations.push_back(op);
+		m_storeOperations.emplace_back(op);
 }
 
 void CommonSubexpressionEliminator::optimizeBreakingItem()
@@ -126,7 +126,7 @@ CSECodeGenerator::CSECodeGenerator(
 	m_expressionClasses(_expressionClasses)
 {
 	for (auto const& store: _storeOperations)
-		m_storeOperations[make_pair(store.target, store.slot)].push_back(store);
+		m_storeOperations[make_pair(store.target, store.slot)].emplace_back(store);
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
@@ -504,6 +504,6 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 
 void CSECodeGenerator::appendItem(AssemblyItem const& _item)
 {
-	m_generatedItems.push_back(_item);
+	m_generatedItems.emplace_back(_item);
 	m_stackHeight += _item.deposit();
 }

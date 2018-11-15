@@ -154,9 +154,9 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		LogEntry entry;
 		entry.address = Address(log.address);
 		for (auto const& topic: log.topics)
-			entry.topics.push_back(h256(topic));
+			entry.topics.emplace_back(h256(topic));
 		entry.data = fromHex(log.data, WhenError::Throw);
-		m_logs.push_back(entry);
+		m_logs.emplace_back(entry);
 	}
 
 	if (!receipt.status.empty())

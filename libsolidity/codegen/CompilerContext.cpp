@@ -132,7 +132,7 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 	// Variables should not have stack size other than [1, 2],
 	// but that might change when new types are introduced.
 	solAssert(sizeOnStack == 1 || sizeOnStack == 2, "");
-	m_localVariables[&_declaration].push_back(unsigned(m_asm->deposit()) - _offsetToCurrent);
+	m_localVariables[&_declaration].emplace_back(unsigned(m_asm->deposit()) - _offsetToCurrent);
 }
 
 void CompilerContext::removeVariable(Declaration const& _declaration)
@@ -151,7 +151,7 @@ void CompilerContext::removeVariablesAboveStackHeight(unsigned _stackHeight)
 		solAssert(!_var.second.empty(), "");
 		solAssert(_var.second.back() <= stackHeight(), "");
 		if (_var.second.back() >= _stackHeight)
-			toRemove.push_back(_var.first);
+			toRemove.emplace_back(_var.first);
 	}
 	for (auto _var: toRemove)
 		removeVariable(*_var);

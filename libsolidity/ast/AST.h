@@ -113,7 +113,7 @@ std::vector<_T const*> ASTNode::filteredNodes(std::vector<ASTPointer<ASTNode>> c
 	std::vector<_T const*> ret;
 	for (auto const& n: _nodes)
 		if (auto const* nt = dynamic_cast<_T const*>(n.get()))
-			ret.push_back(nt);
+			ret.emplace_back(nt);
 	return ret;
 }
 
@@ -308,7 +308,7 @@ class VariableScope
 {
 public:
 	virtual ~VariableScope() = default;
-	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
+	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.emplace_back(&_localVariable); }
 	std::vector<VariableDeclaration const*> const& localVariables() const { return m_localVariables; }
 
 private:

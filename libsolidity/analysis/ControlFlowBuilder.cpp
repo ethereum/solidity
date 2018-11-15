@@ -329,8 +329,8 @@ void ControlFlowBuilder::connect(CFGNode* _from, CFGNode* _to)
 {
 	solAssert(_from, "");
 	solAssert(_to, "");
-	_from->exits.push_back(_to);
-	_to->entries.push_back(_from);
+	_from->exits.emplace_back(_to);
+	_to->entries.emplace_back(_from);
 }
 
 CFGNode* ControlFlowBuilder::newLabel()

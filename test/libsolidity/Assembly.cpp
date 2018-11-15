@@ -109,7 +109,7 @@ void printAssemblyLocations(AssemblyItems const& _items)
 
 	vector<SourceLocation> locations;
 	for (auto const& item: _items)
-		locations.push_back(item.location());
+		locations.emplace_back(item.location());
 	size_t repetitions = 0;
 	SourceLocation const* previousLoc = nullptr;
 	for (size_t i = 0; i < locations.size(); ++i)

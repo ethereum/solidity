@@ -122,7 +122,7 @@ public:
 		MemberMap members;
 		for (auto const& it: m_memberTypes)
 			if (it.name == _name)
-				members.push_back(it);
+				members.emplace_back(it);
 		return members;
 	}
 	/// @returns the offset of the given member in storage slots and bytes inside a slot or

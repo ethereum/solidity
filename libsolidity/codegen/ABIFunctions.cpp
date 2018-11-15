@@ -141,8 +141,8 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 			vector<string> valueNamesLocal;
 			for (size_t j = 0; j < sizeOnStack; j++)
 			{
-				valueNamesLocal.push_back("value" + to_string(stackPos));
-				valueReturnParams.push_back("value" + to_string(stackPos));
+				valueNamesLocal.emplace_back("value" + to_string(stackPos));
+				valueReturnParams.emplace_back("value" + to_string(stackPos));
 				stackPos++;
 			}
 			bool dynamic = decodingTypes[i]->isDynamicallyEncoded();

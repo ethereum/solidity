@@ -140,7 +140,7 @@ bool CompilerStack::parse()
 
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
-		sourcesToParse.push_back(s.first);
+		sourcesToParse.emplace_back(s.first);
 	for (size_t i = 0; i < sourcesToParse.size(); ++i)
 	{
 		string const& path = sourcesToParse[i];
@@ -157,7 +157,7 @@ bool CompilerStack::parse()
 				string const& newPath = newSource.first;
 				string const& newContents = newSource.second;
 				m_sources[newPath].scanner = make_shared<Scanner>(CharStream(newContents), newPath);
-				sourcesToParse.push_back(newPath);
+				sourcesToParse.emplace_back(newPath);
 			}
 		}
 	}
@@ -274,7 +274,7 @@ bool CompilerStack::analyze()
 			// Check for state mutability in every function.
 			vector<ASTPointer<ASTNode>> ast;
 			for (Source const* source: m_sourceOrder)
-				ast.push_back(source->ast);
+				ast.emplace_back(source->ast);
 
 			if (!ViewPureChecker(ast, m_errorReporter).check())
 				noErrors = false;
@@ -350,7 +350,7 @@ vector<string> CompilerStack::contractNames() const
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 	vector<string> contractNames;
 	for (auto const& contract: m_contracts)
-		contractNames.push_back(contract.first);
+		contractNames.emplace_back(contract.first);
 	return contractNames;
 }
 
@@ -459,7 +459,7 @@ vector<string> CompilerStack::sourceNames() const
 {
 	vector<string> names;
 	for (auto const& s: m_sources)
-		names.push_back(s.first);
+		names.emplace_back(s.first);
 	return names;
 }
 
@@ -697,7 +697,7 @@ void CompilerStack::resolveImports()
 				import->annotation().sourceUnit = m_sources[path].ast.get();
 				toposort(&m_sources[path]);
 			}
-		sourceOrder.push_back(_source);
+		sourceOrder.emplace_back(_source);
 	};
 
 	for (auto const& sourcePair: m_sources)

@@ -174,8 +174,8 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 		entry.address = log["address"].asString();
 		entry.data = log["data"].asString();
 		for (auto const& topic: log["topics"])
-			entry.topics.push_back(topic.asString());
-		receipt.logEntries.push_back(entry);
+			entry.topics.emplace_back(topic.asString());
+		receipt.logEntries.emplace_back(entry);
 	}
 	return receipt;
 }
@@ -371,7 +371,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 
 string const& RPCSession::accountCreate()
 {
-	m_accounts.push_back(personal_newAccount(""));
+	m_accounts.emplace_back(personal_newAccount(""));
 	personal_unlockAccount(m_accounts.back(), "", 100000);
 	return m_accounts.back();
 }

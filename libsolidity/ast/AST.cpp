@@ -166,7 +166,7 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 				if (eventsSeen.count(eventSignature) == 0)
 				{
 					eventsSeen.insert(eventSignature);
-					m_interfaceEvents->push_back(e);
+					m_interfaceEvents->emplace_back(e);
 				}
 			}
 	}
@@ -184,10 +184,10 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 			vector<FunctionTypePointer> functions;
 			for (FunctionDefinition const* f: contract->definedFunctions())
 				if (f->isPartOfExternalInterface())
-					functions.push_back(make_shared<FunctionType>(*f, false));
+					functions.emplace_back(make_shared<FunctionType>(*f, false));
 			for (VariableDeclaration const* v: contract->stateVariables())
 				if (v->isPartOfExternalInterface())
-					functions.push_back(make_shared<FunctionType>(*v));
+					functions.emplace_back(make_shared<FunctionType>(*v));
 			for (FunctionTypePointer const& fun: functions)
 			{
 				if (!fun->interfaceFunctionType())
@@ -198,7 +198,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 				{
 					signaturesSeen.insert(functionSignature);
 					FixedHash<4> hash(dev::keccak256(functionSignature));
-					m_interfaceFunctionList->push_back(make_pair(hash, fun));
+					m_interfaceFunctionList->emplace_back(make_pair(hash, fun));
 				}
 			}
 		}
@@ -218,7 +218,7 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 			if (memberSeen.count(_decl->name()) == 0 && _decl->isVisibleInDerivedContracts())
 			{
 				memberSeen.insert(_decl->name());
-				m_inheritableMembers->push_back(_decl);
+				m_inheritableMembers->emplace_back(_decl);
 			}
 		};
 

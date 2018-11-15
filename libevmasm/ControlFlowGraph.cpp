@@ -87,7 +87,7 @@ void ControlFlowGraph::splitBlocks()
 			m_blocks[id].begin = index;
 		}
 		if (item.type() == PushTag)
-			m_blocks[id].pushedTags.push_back(BlockId(item.data()));
+			m_blocks[id].pushedTags.emplace_back(BlockId(item.data()));
 		if (SemanticInformation::altersControlFlow(item))
 		{
 			m_blocks[id].end = index + 1;
@@ -147,12 +147,12 @@ void ControlFlowGraph::removeUnusedBlocks()
 			if (!neededBlocks.count(tag) && m_blocks.count(tag))
 			{
 				neededBlocks.insert(tag);
-				blocksToProcess.push_back(tag);
+				blocksToProcess.emplace_back(tag);
 			}
 		if (block.next && !neededBlocks.count(block.next))
 		{
 			neededBlocks.insert(block.next);
-			blocksToProcess.push_back(block.next);
+			blocksToProcess.emplace_back(block.next);
 		}
 	}
 	for (auto it = m_blocks.begin(); it != m_blocks.end();)
@@ -235,7 +235,7 @@ void ControlFlowGraph::gatherKnowledge()
 		item.state = _state->copy();
 		item.blocksSeen = _currentItem.blocksSeen;
 		item.blocksSeen.insert(_currentItem.blockId);
-		workQueue.push_back(move(item));
+		workQueue.emplace_back(move(item));
 	};
 
 	while (!workQueue.empty())
@@ -288,7 +288,7 @@ void ControlFlowGraph::gatherKnowledge()
 					unknownJumpEncountered = true;
 					for (auto const& it: m_blocks)
 						if (it.second.begin < it.second.end && m_items[it.second.begin].type() == Tag)
-							workQueue.push_back(WorkQueueItem{it.first, emptyState->copy(), set<BlockId>()});
+							workQueue.emplace_back(WorkQueueItem{it.first, emptyState->copy(), set<BlockId>()});
 				}
 			}
 			else
@@ -354,7 +354,7 @@ BasicBlocks ControlFlowGraph::rebuildCode()
 				++block.begin;
 			if (block.begin < block.end)
 			{
-				blocks.push_back(block);
+				blocks.emplace_back(block);
 				blocks.back().startState->clearTagUnions();
 				blocks.back().endState->clearTagUnions();
 			}

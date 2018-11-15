@@ -87,7 +87,7 @@ ExpressionClasses::Id ExpressionClasses::find(
 	else
 	{
 		exp.id = m_representatives.size();
-		m_representatives.push_back(exp);
+		m_representatives.emplace_back(exp);
 	}
 	m_expressions.insert(exp);
 	return exp.id;
@@ -119,7 +119,7 @@ ExpressionClasses::Id ExpressionClasses::newClass(SourceLocation const& _locatio
 	Expression exp;
 	exp.id = m_representatives.size();
 	exp.item = storeItem(AssemblyItem(UndefinedItem, (u256(1) << 255) + exp.id, _location));
-	m_representatives.push_back(exp);
+	m_representatives.emplace_back(exp);
 	m_expressions.insert(exp);
 	return exp.id;
 }
@@ -160,7 +160,7 @@ u256 const* ExpressionClasses::knownConstant(Id _c)
 
 AssemblyItem const* ExpressionClasses::storeItem(AssemblyItem const& _item)
 {
-	m_spareAssemblyItems.push_back(make_shared<AssemblyItem>(_item));
+	m_spareAssemblyItems.emplace_back(make_shared<AssemblyItem>(_item));
 	return m_spareAssemblyItems.back().get();
 }
 
@@ -216,6 +216,6 @@ ExpressionClasses::Id ExpressionClasses::rebuildExpression(ExpressionTemplate co
 
 	Ids arguments;
 	for (ExpressionTemplate const& t: _template.arguments)
-		arguments.push_back(rebuildExpression(t));
+		arguments.emplace_back(rebuildExpression(t));
 	return find(_template.item, arguments);
 }

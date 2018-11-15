@@ -60,7 +60,7 @@ void testConstantOptimizer(string const& input)
 	{
 		h256 data;
 		sin.read(reinterpret_cast<char*>(data.data()), 32);
-		numbers.push_back(u256(data));
+		numbers.emplace_back(u256(data));
 	}
 	if (!quiet)
 		cout << "Got " << numbers.size() << " inputs:" << endl;

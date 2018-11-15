@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 	vector<string> errors;
 	if (src.empty())
 	{
-		errors.push_back("Empty file.");
+		errors.emplace_back("Empty file.");
 	}
 	else if (mode == Disassemble)
 	{

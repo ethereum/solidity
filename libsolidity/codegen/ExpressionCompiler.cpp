@@ -306,11 +306,11 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 				if (_tuple.annotation().lValueRequested)
 				{
 					solAssert(!!m_currentLValue, "");
-					lvalues.push_back(move(m_currentLValue));
+					lvalues.emplace_back(move(m_currentLValue));
 				}
 			}
 			else if (_tuple.annotation().lValueRequested)
-				lvalues.push_back(unique_ptr<LValue>());
+				lvalues.emplace_back(unique_ptr<LValue>());
 		if (_tuple.annotation().lValueRequested)
 		{
 			if (_tuple.components().size() == 1)
@@ -484,7 +484,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			for (size_t j = 0; j < callArgumentNames.size() && !found; j++)
 				if ((found = (parameterName == *callArgumentNames[j])))
 					// we found the actual parameter position
-					arguments.push_back(callArguments[j]);
+					arguments.emplace_back(callArguments[j]);
 			solAssert(found, "");
 		}
 
@@ -584,7 +584,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			for (auto const& arg: arguments)
 			{
 				arg->accept(*this);
-				argumentTypes.push_back(arg->annotation().type);
+				argumentTypes.emplace_back(arg->annotation().type);
 			}
 			ContractDefinition const* contract =
 				&dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
@@ -789,8 +789,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				if (!event.parameters()[arg]->isIndexed())
 				{
 					arguments[arg]->accept(*this);
-					nonIndexedArgTypes.push_back(arguments[arg]->annotation().type);
-					nonIndexedParamTypes.push_back(function.parameterTypes()[arg]);
+					nonIndexedArgTypes.emplace_back(arguments[arg]->annotation().type);
+					nonIndexedParamTypes.emplace_back(function.parameterTypes()[arg]);
 				}
 			utils().fetchFreeMemoryPointer();
 			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);
@@ -989,7 +989,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				arguments[i]->accept(*this);
 				// Do not keep the selector as part of the ABI encoded args
 				if (!hasSelectorOrSignature || i > 0)
-					argumentTypes.push_back(arguments[i]->annotation().type);
+					argumentTypes.emplace_back(arguments[i]->annotation().type);
 			}
 			utils().fetchFreeMemoryPointer();
 			// stack now: [<selector>] <arg1> .. <argN> <free_mem>
@@ -1878,13 +1878,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	TypePointers parameterTypes = _functionType.parameterTypes();
 	if (_functionType.bound())
 	{
-		argumentTypes.push_back(_functionType.selfType());
+		argumentTypes.emplace_back(_functionType.selfType());
 		parameterTypes.insert(parameterTypes.begin(), _functionType.selfType());
 	}
 	for (size_t i = 0; i < _arguments.size(); ++i)
 	{
 		_arguments[i]->accept(*this);
-		argumentTypes.push_back(_arguments[i]->annotation().type);
+		argumentTypes.emplace_back(_arguments[i]->annotation().type);
 	}
 
 	if (funKind == FunctionType::Kind::ECRecover)

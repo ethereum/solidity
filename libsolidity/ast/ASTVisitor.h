@@ -296,7 +296,7 @@ public:
 protected:
 	bool visitNode(ASTNode const& _node) override
 	{
-		m_parents.push_back(&_node);
+		m_parents.emplace_back(&_node);
 		return m_onNode(_node);
 	}
 	void endVisitNode(ASTNode const& _node) override

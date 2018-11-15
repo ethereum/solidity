@@ -44,7 +44,7 @@ void EVMAssembly::setSourceLocation(SourceLocation const&)
 
 void EVMAssembly::appendInstruction(solidity::Instruction _instr)
 {
-	m_bytecode.push_back(uint8_t(_instr));
+	m_bytecode.emplace_back(uint8_t(_instr));
 	m_stackHeight += solidity::instructionInfo(_instr).ret - solidity::instructionInfo(_instr).args;
 }
 
@@ -101,7 +101,7 @@ void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(uint8_t(solidity::Instruction::JUMPTO));
+		m_bytecode.emplace_back(uint8_t(solidity::Instruction::JUMPTO));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight += _stackDiffAfter;
 	}
@@ -116,7 +116,7 @@ void EVMAssembly::appendJumpToIf(LabelID _labelId)
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(uint8_t(solidity::Instruction::JUMPIF));
+		m_bytecode.emplace_back(uint8_t(solidity::Instruction::JUMPIF));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight--;
 	}
@@ -132,7 +132,7 @@ void EVMAssembly::appendBeginsub(LabelID _labelId, int _arguments)
 	solAssert(m_evm15, "BEGINSUB used for EVM 1.0");
 	solAssert(_arguments >= 0, "");
 	setLabelToCurrentPosition(_labelId);
-	m_bytecode.push_back(uint8_t(solidity::Instruction::BEGINSUB));
+	m_bytecode.emplace_back(uint8_t(solidity::Instruction::BEGINSUB));
 	m_stackHeight += _arguments;
 }
 
@@ -140,7 +140,7 @@ void EVMAssembly::appendJumpsub(LabelID _labelId, int _arguments, int _returns)
 {
 	solAssert(m_evm15, "JUMPSUB used for EVM 1.0");
 	solAssert(_arguments >= 0 && _returns >= 0, "");
-	m_bytecode.push_back(uint8_t(solidity::Instruction::JUMPSUB));
+	m_bytecode.emplace_back(uint8_t(solidity::Instruction::JUMPSUB));
 	appendLabelReferenceInternal(_labelId);
 	m_stackHeight += _returns - _arguments;
 }
@@ -149,7 +149,7 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 {
 	solAssert(m_evm15, "RETURNSUB used for EVM 1.0");
 	solAssert(_returns >= 0, "");
-	m_bytecode.push_back(uint8_t(solidity::Instruction::RETURNSUB));
+	m_bytecode.emplace_back(uint8_t(solidity::Instruction::RETURNSUB));
 	m_stackHeight += _stackDiffAfter - _returns;
 }
 
@@ -189,7 +189,7 @@ void EVMAssembly::appendLabelReferenceInternal(LabelID _labelId)
 void EVMAssembly::appendAssemblySize()
 {
 	appendInstruction(solidity::pushInstruction(assemblySizeReferenceSize));
-	m_assemblySizePositions.push_back(m_bytecode.size());
+	m_assemblySizePositions.emplace_back(m_bytecode.size());
 	m_bytecode += bytes(assemblySizeReferenceSize);
 }
 

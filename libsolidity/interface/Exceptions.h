@@ -106,7 +106,7 @@ class SecondarySourceLocation
 public:
 	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
 	{
-		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
+		infos.emplace_back(std::make_pair(_errMsg, _sourceLocation));
 		return *this;
 	}
 	/// Limits the number of secondary source locations to 32 and appends a notice to the

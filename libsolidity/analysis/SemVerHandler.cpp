@@ -182,18 +182,18 @@ void SemVerMatchExpressionParser::parseMatchExpression()
 	// or component component* (conjunction)
 
 	SemVerMatchExpression::Conjunction range;
-	range.components.push_back(parseMatchComponent());
+	range.components.emplace_back(parseMatchComponent());
 	if (currentToken() == Token::Sub)
 	{
 		range.components[0].prefix = Token::GreaterThanOrEqual;
 		nextToken();
-		range.components.push_back(parseMatchComponent());
+		range.components.emplace_back(parseMatchComponent());
 		range.components[1].prefix = Token::LessThanOrEqual;
 	}
 	else
 		while (currentToken() != Token::Or && currentToken() != Token::Illegal)
-			range.components.push_back(parseMatchComponent());
-	m_expression.m_disjunction.push_back(range);
+			range.components.emplace_back(parseMatchComponent());
+	m_expression.m_disjunction.emplace_back(range);
 }
 
 SemVerMatchExpression::MatchComponent SemVerMatchExpressionParser::parseMatchComponent()

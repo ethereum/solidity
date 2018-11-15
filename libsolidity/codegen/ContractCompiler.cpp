@@ -449,10 +449,10 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	unsigned const c_returnValuesSize = CompilerUtils::sizeOnStack(_function.returnParameters());
 
 	vector<int> stackLayout;
-	stackLayout.push_back(c_returnValuesSize); // target of return address
+	stackLayout.emplace_back(c_returnValuesSize); // target of return address
 	stackLayout += vector<int>(c_argumentsSize, -1); // discard all arguments
 	for (unsigned i = 0; i < c_returnValuesSize; ++i)
-		stackLayout.push_back(i);
+		stackLayout.emplace_back(i);
 
 	if (stackLayout.size() > 17)
 		BOOST_THROW_EXCEPTION(
@@ -762,7 +762,7 @@ bool ContractCompiler::visit(Return const& _return)
 			_return.annotation().functionReturnParameters->parameters();
 		TypePointers types;
 		for (auto const& retVariable: returnParameters)
-			types.push_back(retVariable->annotation().type);
+			types.emplace_back(retVariable->annotation().type);
 
 		TypePointer expectedType;
 		if (expression->annotation().type->category() == Type::Category::Tuple || types.size() != 1)
@@ -914,7 +914,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			for (unsigned i = 0; i < modifier.parameters().size(); ++i)
 			{
 				m_context.addVariable(*modifier.parameters()[i]);
-				addedVariables.push_back(modifier.parameters()[i].get());
+				addedVariables.emplace_back(modifier.parameters()[i].get());
 				compileExpression(
 					*modifierArguments[i],
 					modifier.parameters()[i]->annotation().type

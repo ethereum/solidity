@@ -314,7 +314,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 							if (j.tag() || j.which() != sp::utree_type::symbol_type)
 								error<InvalidMacroArgs>();
 							auto sr = j.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
-							args.push_back(string(sr.begin(), sr.end()));
+							args.emplace_back(string(sr.begin(), sr.end()));
 						}
 				else if (ii == 3)
 				{
@@ -425,9 +425,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			if (c++)
 			{
 				if (us == "LLL" && c == 1)
-					code.push_back(CodeFragment(i, ns, m_readFile));
+					code.emplace_back(CodeFragment(i, ns, m_readFile));
 				else
-					code.push_back(CodeFragment(i, _s, m_readFile));
+					code.emplace_back(CodeFragment(i, _s, m_readFile));
 			}
 		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(us); };
 		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(us); };
@@ -573,7 +573,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			{
 				requireDeposit(i, 1);
 				m_asm.append(code[i].m_asm);
-				jumpTags.push_back(m_asm.appendJumpI());
+				jumpTags.emplace_back(m_asm.appendJumpI());
 			}
 
 			// The default, if present
@@ -712,6 +712,6 @@ CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s, ReadCa
 	parseTreeLLL(_src, o);
 	if (!o.empty())
 		ret = CodeFragment(o, _s, _readFile);
-	_s.treesToKill.push_back(o);
+	_s.treesToKill.emplace_back(o);
 	return ret;
 }

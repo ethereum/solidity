@@ -350,10 +350,10 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		// modified parallel to the actual stack.
 		vector<int> stackLayout;
 		if (!m_evm15)
-			stackLayout.push_back(_function.returnVariables.size()); // Move return label to the top
+			stackLayout.emplace_back(_function.returnVariables.size()); // Move return label to the top
 		stackLayout += vector<int>(_function.parameters.size(), -1); // discard all arguments
 		for (size_t i = 0; i < _function.returnVariables.size(); ++i)
-			stackLayout.push_back(i); // Move return values down, but keep order.
+			stackLayout.emplace_back(i); // Move return values down, but keep order.
 
 		solAssert(stackLayout.size() <= 17, "Stack too deep");
 		while (!stackLayout.empty() && stackLayout.back() != int(stackLayout.size() - 1))

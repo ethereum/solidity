@@ -119,7 +119,7 @@ void ConstantOptimisationMethod::replaceConstants(
 				continue;
 			}
 		}
-		replaced.push_back(item);
+		replaced.emplace_back(item);
 	}
 	_items = std::move(replaced);
 }
@@ -219,7 +219,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			if (lowerPart > 0)
 				newRoutine += AssemblyItems{Instruction::ADD};
 			else if (lowerPart < 0)
-				newRoutine.push_back(Instruction::SUB);
+				newRoutine.emplace_back(Instruction::SUB);
 
 			if (m_maxSteps > 0)
 				m_maxSteps--;
@@ -273,7 +273,7 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 			break;
 		}
 		case Push:
-			stack.push_back(item.data());
+			stack.emplace_back(item.data());
 			break;
 		default:
 			return false;

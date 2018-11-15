@@ -70,7 +70,7 @@ void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
 
 void Rules::addRule(SimplificationRule<Pattern> const& _rule)
 {
-	m_rules[uint8_t(_rule.pattern.instruction())].push_back(_rule);
+	m_rules[uint8_t(_rule.pattern.instruction())].emplace_back(_rule);
 }
 
 Rules::Rules()
@@ -209,7 +209,7 @@ ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern, SourceLocation c
 		item = _pattern.toAssemblyItem(_location);
 	}
 	for (auto const& arg: _pattern.arguments())
-		arguments.push_back(ExpressionTemplate(arg, _location));
+		arguments.emplace_back(ExpressionTemplate(arg, _location));
 }
 
 string ExpressionTemplate::toString() const
