@@ -280,7 +280,7 @@ Example::
 
 It is possible to adjust the supplied gas with the ``.gas()`` modifier::
 
-    address(namReg).call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Similarly, the supplied Ether value can be controlled too::
 
