@@ -143,44 +143,6 @@ arguments for you.
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_ and
 `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or "null"-like value?
-============================================================================================================
-
-This is not possible, because all types use up the full value range.
-
-You have the option to ``throw`` on error, which will also revert the whole
-transaction, which might be a good idea if you ran into an unexpected
-situation.
-
-If you do not want to throw, you can return a pair::
-
-    pragma solidity >0.4.23 <0.6.0;
-
-    contract C {
-        uint[] counters;
-
-        function getCounter(uint index)
-            public
-            view
-            returns (uint counter, bool error) {
-                if (index >= counters.length)
-                    return (0, true);
-                else
-                    return (counters[index], false);
-        }
-
-        function checkCounter(uint index) public view {
-            (uint counter, bool error) = getCounter(index);
-            if (error) {
-                // Handle the error
-            } else {
-                // Do something with counter.
-                require(counter > 7, "Invalid counter value");
-            }
-        }
-    }
-
-
 Are comments included with deployed contracts and do they increase deployment gas?
 ==================================================================================
 

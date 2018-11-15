@@ -13,6 +13,8 @@ Solidity provides several elementary types which can be combined to form complex
 In addition, types can interact with each other in expressions containing
 operators. For a quick reference of the various operators, see :ref:`order`.
 
+The concept of "undefined" or "null" values do not exist in Solidity. To handle any unexpected values, you should use the :ref:`revert function<assert-and-require>` to revert the whole transaction.
+
 .. index:: ! value type, ! type;value
 
 Value Types
