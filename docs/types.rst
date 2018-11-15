@@ -280,15 +280,15 @@ Example::
 
 It is possible to adjust the supplied gas with the ``.gas()`` modifier::
 
-    namReg.call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Similarly, the supplied Ether value can be controlled too::
 
-    nameReg.call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Lastly, these modifiers can be combined. Their order does not matter::
 
-    nameReg.call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used.
 
