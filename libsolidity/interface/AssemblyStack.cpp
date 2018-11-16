@@ -23,11 +23,11 @@
 #include <libsolidity/interface/AssemblyStack.h>
 
 #include <liblangutil/Scanner.h>
-#include <libsolidity/inlineasm/AsmPrinter.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmCodeGen.h>
 
 #include <libevmasm/Assembly.h>
 

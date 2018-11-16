@@ -28,7 +28,7 @@
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/Exceptions.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Visitor.h>

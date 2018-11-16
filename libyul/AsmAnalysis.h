@@ -23,11 +23,11 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmScope.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
 
-#include <libsolidity/inlineasm/AsmDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>

@@ -19,7 +19,7 @@
 
 #include <libevmasm/SemanticInformation.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 
 #include <liblangutil/ErrorReporter.h>

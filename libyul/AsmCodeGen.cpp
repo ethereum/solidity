@@ -20,13 +20,13 @@
  * Code-generating part of inline assembly.
  */
 
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libyul/AsmCodeGen.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmScope.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmScope.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 
 #include <libevmasm/Assembly.h>
 #include <liblangutil/SourceLocation.h>

@@ -22,7 +22,7 @@
 
 #include <libyul/ASTDataForward.h>
 
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmScope.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>

@@ -18,9 +18,35 @@
  * Information generated during analyzer part of inline assembly.
  */
 
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#pragma once
 
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmDataForward.h>
 
-#include <ostream>
+#include <boost/variant.hpp>
 
+#include <map>
+#include <memory>
+#include <vector>
+
+namespace dev
+{
+namespace solidity
+{
+namespace assembly
+{
+
+struct Scope;
+
+struct AsmAnalysisInfo
+{
+	using StackHeightInfo = std::map<void const*, int>;
+	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
+	Scopes scopes;
+	StackHeightInfo stackHeightInfo;
+	/// Virtual blocks which will be used for scopes for function arguments and return values.
+	std::map<FunctionDefinition const*, std::shared_ptr<assembly::Block const>> virtualBlocks;
+};
+
+}
+}
+}

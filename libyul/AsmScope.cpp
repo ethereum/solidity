@@ -18,7 +18,7 @@
  * Scopes for identifiers.
  */
 
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmScope.h>
 
 using namespace std;
 using namespace dev;

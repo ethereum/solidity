@@ -20,7 +20,7 @@
 
 #include <libyul/optimiser/Substitution.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 using namespace std;
 using namespace dev;

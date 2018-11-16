@@ -25,7 +25,7 @@
 
 #include <libyul/ASTDataForward.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <boost/noncopyable.hpp>
 

@@ -22,8 +22,8 @@
 
 #include <libyul/Exceptions.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmScope.h>
 
 using namespace std;
 using namespace dev;

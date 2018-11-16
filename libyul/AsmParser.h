@@ -24,7 +24,7 @@
 
 #include <memory>
 #include <vector>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>

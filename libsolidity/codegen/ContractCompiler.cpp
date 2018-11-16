@@ -21,7 +21,7 @@
  */
 
 #include <libsolidity/codegen/ContractCompiler.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libyul/AsmCodeGen.h>
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>

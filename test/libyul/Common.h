@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <string>
 #include <vector>

@@ -24,7 +24,7 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 
