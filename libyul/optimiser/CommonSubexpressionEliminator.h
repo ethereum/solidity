@@ -38,7 +38,7 @@ class CommonSubexpressionEliminator: public DataFlowAnalyzer
 {
 protected:
 	using ASTModifier::visit;
-	virtual void visit(Expression& _e) override;
+	void visit(Expression& _e) override;
 };
 
 }

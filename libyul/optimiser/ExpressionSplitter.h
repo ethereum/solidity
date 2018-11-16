@@ -63,12 +63,12 @@ public:
 		m_nameDispenser(_nameDispenser)
 	{ }
 
-	virtual void operator()(FunctionalInstruction&) override;
-	virtual void operator()(FunctionCall&) override;
-	virtual void operator()(If&) override;
-	virtual void operator()(Switch&) override;
-	virtual void operator()(ForLoop&) override;
-	virtual void operator()(Block& _block) override;
+	void operator()(FunctionalInstruction&) override;
+	void operator()(FunctionCall&) override;
+	void operator()(If&) override;
+	void operator()(Switch&) override;
+	void operator()(ForLoop&) override;
+	void operator()(Block& _block) override;
 
 private:
 	/// Replaces the expression by a variable if it is a function call or functional

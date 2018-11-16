@@ -52,11 +52,11 @@ public:
 	}
 
 protected:
-	virtual void enterScope(Block const& _block) override;
-	virtual void leaveScope(Block const& _block) override;
-	virtual void enterFunction(FunctionDefinition const& _function) override;
-	virtual void leaveFunction(FunctionDefinition const& _function) override;
-	virtual YulString translateIdentifier(YulString _name) override;
+	void enterScope(Block const& _block) override;
+	void leaveScope(Block const& _block) override;
+	void enterFunction(FunctionDefinition const& _function) override;
+	void leaveFunction(FunctionDefinition const& _function) override;
+	YulString translateIdentifier(YulString _name) override;
 
 	void enterScopeInternal(solidity::assembly::Scope& _scope);
 	void leaveScopeInternal(solidity::assembly::Scope& _scope);

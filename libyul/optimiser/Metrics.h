@@ -41,8 +41,8 @@ public:
 	static size_t codeSize(Block const& _block);
 
 private:
-	virtual void visit(Statement const& _statement) override;
-	virtual void visit(Expression const& _expression) override;
+	void visit(Statement const& _statement) override;
+	void visit(Expression const& _expression) override;
 
 private:
 	size_t m_size = 0;

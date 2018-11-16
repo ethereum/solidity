@@ -34,7 +34,7 @@ public:
 
 	bool analyze(ASTNode const& _astRoot);
 
-	virtual bool visit(FunctionDefinition const& _function) override;
+	bool visit(FunctionDefinition const& _function) override;
 
 private:
 	static std::set<VariableDeclaration const*> variablesAssignedInNode(CFGNode const *node);

@@ -88,22 +88,22 @@ private:
 	void registerStateVariables(ContractDefinition const& _contract);
 	void initializeStateVariables(ContractDefinition const& _contract);
 
-	virtual bool visit(VariableDeclaration const& _variableDeclaration) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
-	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
-	virtual bool visit(IfStatement const& _ifStatement) override;
-	virtual bool visit(WhileStatement const& _whileStatement) override;
-	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual bool visit(Continue const& _continueStatement) override;
-	virtual bool visit(Break const& _breakStatement) override;
-	virtual bool visit(Return const& _return) override;
-	virtual bool visit(Throw const& _throw) override;
-	virtual bool visit(EmitStatement const& _emit) override;
-	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
-	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
-	virtual bool visit(PlaceholderStatement const&) override;
-	virtual bool visit(Block const& _block) override;
-	virtual void endVisit(Block const& _block) override;
+	bool visit(VariableDeclaration const& _variableDeclaration) override;
+	bool visit(FunctionDefinition const& _function) override;
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(IfStatement const& _ifStatement) override;
+	bool visit(WhileStatement const& _whileStatement) override;
+	bool visit(ForStatement const& _forStatement) override;
+	bool visit(Continue const& _continueStatement) override;
+	bool visit(Break const& _breakStatement) override;
+	bool visit(Return const& _return) override;
+	bool visit(Throw const& _throw) override;
+	bool visit(EmitStatement const& _emit) override;
+	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
+	bool visit(ExpressionStatement const& _expressionStatement) override;
+	bool visit(PlaceholderStatement const&) override;
+	bool visit(Block const& _block) override;
+	void endVisit(Block const& _block) override;
 
 	/// Repeatedly visits all function which are referenced but which are not compiled yet.
 	void appendMissingFunctions();

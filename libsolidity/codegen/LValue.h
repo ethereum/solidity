@@ -82,8 +82,8 @@ class StackVariable: public LValue
 public:
 	StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
 
-	virtual unsigned sizeOnStack() const override { return 0; }
-	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	unsigned sizeOnStack() const override { return 0; }
+	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
 		SourceLocation const& _location = SourceLocation(),
@@ -108,8 +108,8 @@ class MemoryItem: public LValue
 {
 public:
 	MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded = true);
-	virtual unsigned sizeOnStack() const override { return 1; }
-	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	unsigned sizeOnStack() const override { return 1; }
+	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
 		SourceLocation const& _location = SourceLocation(),
@@ -136,8 +136,8 @@ public:
 	StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
-	virtual unsigned sizeOnStack() const override { return 2; }
-	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	unsigned sizeOnStack() const override { return 2; }
+	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
 		SourceLocation const& _location = SourceLocation(),
@@ -158,8 +158,8 @@ class StorageByteArrayElement: public LValue
 public:
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageByteArrayElement(CompilerContext& _compilerContext);
-	virtual unsigned sizeOnStack() const override { return 2; }
-	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	unsigned sizeOnStack() const override { return 2; }
+	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
 		SourceLocation const& _location = SourceLocation(),
@@ -181,7 +181,7 @@ class StorageArrayLength: public LValue
 public:
 	/// Constructs the LValue, assumes that the reference to the array head is already on the stack.
 	StorageArrayLength(CompilerContext& _compilerContext, ArrayType const& _arrayType);
-	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
 		SourceLocation const& _location = SourceLocation(),
@@ -205,8 +205,8 @@ public:
 	/// Constructs the LValue assuming that the other LValues are present on the stack.
 	/// Empty unique_ptrs are possible if e.g. some values should be ignored during assignment.
 	TupleObject(CompilerContext& _compilerContext, std::vector<std::unique_ptr<LValue>>&& _lvalues);
-	virtual unsigned sizeOnStack() const override;
-	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	unsigned sizeOnStack() const override;
+	void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
 		SourceLocation const& _location = SourceLocation(),

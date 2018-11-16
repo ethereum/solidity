@@ -45,7 +45,7 @@ public:
 	explicit UnusedPruner(Block& _ast, std::set<YulString> const& _externallyUsedFunctions = {});
 
 	using ASTModifier::operator();
-	virtual void operator()(Block& _block) override;
+	void operator()(Block& _block) override;
 
 	// @returns true iff the code changed in the previous run.
 	bool shouldRunAgain() const { return m_shouldRunAgain; }

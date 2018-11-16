@@ -62,7 +62,7 @@ public:
 
 private:
 
-	virtual bool visit(ContractDefinition const& _contract) override;
+	bool visit(ContractDefinition const& _contract) override;
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
 	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
@@ -122,37 +122,37 @@ private:
 		FunctionTypePointer _functionType
 	);
 
-	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
-	virtual void endVisit(UsingForDirective const& _usingFor) override;
-	virtual bool visit(StructDefinition const& _struct) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
-	virtual bool visit(VariableDeclaration const& _variable) override;
+	void endVisit(InheritanceSpecifier const& _inheritance) override;
+	void endVisit(UsingForDirective const& _usingFor) override;
+	bool visit(StructDefinition const& _struct) override;
+	bool visit(FunctionDefinition const& _function) override;
+	bool visit(VariableDeclaration const& _variable) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
-	virtual bool visit(EventDefinition const& _eventDef) override;
-	virtual void endVisit(FunctionTypeName const& _funType) override;
-	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
-	virtual bool visit(IfStatement const& _ifStatement) override;
-	virtual bool visit(WhileStatement const& _whileStatement) override;
-	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual void endVisit(Return const& _return) override;
-	virtual bool visit(EmitStatement const&) override { m_insideEmitStatement = true; return true; }
-	virtual void endVisit(EmitStatement const& _emit) override;
-	virtual bool visit(VariableDeclarationStatement const& _variable) override;
-	virtual void endVisit(ExpressionStatement const& _statement) override;
-	virtual bool visit(Conditional const& _conditional) override;
-	virtual bool visit(Assignment const& _assignment) override;
-	virtual bool visit(TupleExpression const& _tuple) override;
-	virtual void endVisit(BinaryOperation const& _operation) override;
-	virtual bool visit(UnaryOperation const& _operation) override;
-	virtual bool visit(FunctionCall const& _functionCall) override;
-	virtual void endVisit(NewExpression const& _newExpression) override;
-	virtual bool visit(MemberAccess const& _memberAccess) override;
-	virtual bool visit(IndexAccess const& _indexAccess) override;
-	virtual bool visit(Identifier const& _identifier) override;
-	virtual void endVisit(ElementaryTypeNameExpression const& _expr) override;
-	virtual void endVisit(Literal const& _literal) override;
+	bool visit(EventDefinition const& _eventDef) override;
+	void endVisit(FunctionTypeName const& _funType) override;
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(IfStatement const& _ifStatement) override;
+	bool visit(WhileStatement const& _whileStatement) override;
+	bool visit(ForStatement const& _forStatement) override;
+	void endVisit(Return const& _return) override;
+	bool visit(EmitStatement const&) override { m_insideEmitStatement = true; return true; }
+	void endVisit(EmitStatement const& _emit) override;
+	bool visit(VariableDeclarationStatement const& _variable) override;
+	void endVisit(ExpressionStatement const& _statement) override;
+	bool visit(Conditional const& _conditional) override;
+	bool visit(Assignment const& _assignment) override;
+	bool visit(TupleExpression const& _tuple) override;
+	void endVisit(BinaryOperation const& _operation) override;
+	bool visit(UnaryOperation const& _operation) override;
+	bool visit(FunctionCall const& _functionCall) override;
+	void endVisit(NewExpression const& _newExpression) override;
+	bool visit(MemberAccess const& _memberAccess) override;
+	bool visit(IndexAccess const& _indexAccess) override;
+	bool visit(Identifier const& _identifier) override;
+	void endVisit(ElementaryTypeNameExpression const& _expr) override;
+	void endVisit(Literal const& _literal) override;
 
 	template <class T>
 	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
