@@ -80,6 +80,10 @@ boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string c
 	return r;
 }
 
+void CompilerStack::setHexReadable(bool _hexReadable) {
+	hexReadable = _hexReadable;
+}
+
 void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 {
 	for (auto const& remapping: _remappings)
@@ -174,6 +178,7 @@ bool CompilerStack::analyze()
 {
 	if (m_stackState != ParsingSuccessful)
 		return false;
+
 	resolveImports();
 
 	bool noErrors = true;
@@ -282,7 +287,7 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			SMTChecker smtChecker(m_errorReporter, m_smtQuery);
+			SMTChecker smtChecker(m_errorReporter, m_smtQuery, hexReadable);
 			for (Source const* source: m_sourceOrder)
 				smtChecker.analyze(*source->ast, source->scanner);
 		}

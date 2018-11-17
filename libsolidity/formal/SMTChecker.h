@@ -42,9 +42,12 @@ class ErrorReporter;
 class SMTChecker: private ASTConstVisitor
 {
 public:
-	SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback);
+	SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback, bool hexReadable = false);
 
 	void analyze(SourceUnit const& _sources, std::shared_ptr<Scanner> const& _scanner);
+
+protected:
+	bool hexReadable = false;
 
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,

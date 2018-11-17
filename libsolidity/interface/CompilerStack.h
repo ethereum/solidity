@@ -244,7 +244,14 @@ public:
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
+	// Sets whether or not hex values are returned in a readable format
+	void setHexReadable(bool _hexReadable = false);
+
 private:
+
+	// If set to true, hex values are returned in a readable format.
+	bool hexReadable = false;
+
 	/// The state per source unit. Filled gradually during parsing.
 	struct Source
 	{

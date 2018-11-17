@@ -166,6 +166,47 @@ inline std::string formatNumber(u256 const& _value)
 		return _value.str();
 }
 
+template <class T>
+std::string toHexMixed(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd)
+{
+	std::ostringstream ret;
+	unsigned ii = 0;
+	ret << std::hex << std::setfill('0') << std::setw(ii++ ? 2 : _w);
+ 	int n = 0;
+	for (auto i: _data) {
+		// switch hex case every two bytes (4 chars)
+		ret << std::hex << ((( n++ & 2) == 0 ) ? std::uppercase : std::nouppercase)
+			<< std::setfill('0') << std::setw(2) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
+	}
+	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
+}
+ /// @a T will typically by unsigned, u160, u256 or bigint.
+template <class T>
+inline std::string formatNumberReadable(T _value)
+{
+	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
+
+	// smaller numbers return as decimal
+	if (_value <= 0x1000000) return _value.str();
+
+ 	// when multiple trailing zero bytes, format as N * 2^x
+	int i = 0; T v = _value;
+
+	for (i = 0, v = _value; (v & 0xff) == 0; i++, v >>= 8) {}
+
+ 	if (i > 2) return toHex(toCompactBigEndian(v), 2, HexPrefix::Add) + " * 2**" + std::to_string(i * 8);
+
+ 	// when multiple trailing FF bytes, format as N * 2^x - 1
+	for (i = 0, v = _value; (v & 0xff) == 0xff; i++, v >>= 8) {}
+
+	v = v + 1;
+
+	if (i > 2) return toHex(toCompactBigEndian(v), 2, HexPrefix::Add) + " * 2**" + std::to_string(i * 8) + " - 1";
+
+ 	// otherwise, return as truncated hex.
+	return toHexMixed(toCompactBigEndian(_value), 2, HexPrefix::Add).substr(0,10) + "...";
+}
+
 inline std::string toCompactHexWithPrefix(u256 val)
 {
 	std::ostringstream ret;

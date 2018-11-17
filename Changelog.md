@@ -6,7 +6,7 @@ Language Features:
 Compiler Features:
  * Build System: LLL is not built anymore by default. Must configure it with CMake as `-DLLL=ON`.
  * Code generator: Do not perform redundant double cleanup on unsigned integers when loading from calldata.
-
+ * SMTChecker: `--hex-readable` flag to format hex values into a more readable format.
 
 Bugfixes:
 

@@ -113,6 +113,7 @@ static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
+static string const g_strHexReadable = "hex-readable";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
 
@@ -147,6 +148,7 @@ static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argStandardJSON = g_strStandardJSON;
 static string const g_argStrictAssembly = g_strStrictAssembly;
+static string const g_argHexReadable = g_strHexReadable;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
@@ -214,7 +216,8 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argNatspecUser,
 		g_argNatspecDev,
 		g_argOpcodes,
-		g_argSignatureHashes
+		g_argSignatureHashes,
+		g_argHexReadable
 	})
 		if (_args.count(arg))
 			return true;
@@ -387,6 +390,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
 	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
+
 	if (m_args.count(g_argInputFile))
 		for (string path: m_args[g_argInputFile].as<vector<string>>())
 		{
@@ -631,7 +635,10 @@ Allowed options)",
 			po::value<string>()->value_name("path(s)"),
 			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
 		)
+		(g_argHexReadable.c_str(), "Output hex in a readable format when using the SMT Checker.")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
+
+
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAst.c_str(), "AST of all source files.")
@@ -647,6 +654,7 @@ Allowed options)",
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
 		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.");
+
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
@@ -826,6 +834,9 @@ bool CommandLineInterface::processInput()
 	}
 
 	m_compiler.reset(new CompilerStack(fileReader));
+
+	bool hexReadable = (m_args.count(g_argHexReadable) > 0) ? true : false;
+	m_compiler->setHexReadable(hexReadable);
 
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	SourceReferenceFormatter formatter(cerr, scannerFromSourceName);

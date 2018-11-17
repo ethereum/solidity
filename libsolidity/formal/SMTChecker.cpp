@@ -31,10 +31,11 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readFileCallback):
+SMTChecker::SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readFileCallback, bool hexReadable):
 	m_interface(make_shared<smt::SMTPortfolio>(_readFileCallback)),
 	m_errorReporter(_errorReporter)
 {
+	this->hexReadable = hexReadable;
 }
 
 void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
@@ -258,14 +259,14 @@ void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _
 	checkCondition(
 		_value < minValue(_type),
 		_location,
-		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
+		"Underflow (resulting value less than " + (this->hexReadable == false ? formatNumber(_type.minValue()) : formatNumberReadable(_type.minValue())) + ")",
 		"<result>",
 		&_value
 	);
 	checkCondition(
 		_value > maxValue(_type),
 		_location,
-		"Overflow (resulting value larger than " + formatNumber(_type.maxValue()) + ")",
+		"Overflow (resulting value larger than " + (this->hexReadable == false ? formatNumber(_type.maxValue()) : formatNumberReadable(_type.maxValue())) + ")",
 		"<result>",
 		&_value
 	);
@@ -889,7 +890,7 @@ SMTChecker::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _exp
 		try
 		{
 			// Parse and re-format nicely
-			value = formatNumber(bigint(value));
+			(this->hexReadable == false) ? (value = formatNumber(bigint(value))) : (value = formatNumberReadable(bigint(value)));
 		}
 		catch (...) { }
 	}
