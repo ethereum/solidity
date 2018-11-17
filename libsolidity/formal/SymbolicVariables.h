@@ -51,6 +51,8 @@ public:
 		return valueAtIndex(m_ssa->index());
 	}
 
+	std::string currentName() const;
+
 	virtual smt::Expression valueAtIndex(int _index) const = 0;
 
 	smt::Expression increaseIndex()

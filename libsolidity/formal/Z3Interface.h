@@ -40,7 +40,7 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareFunction(std::string _name, Sort _domain, Sort _codomain) override;
+	void declareFunction(std::string _name, std::vector<Sort> const& _domain, Sort _codomain) override;
 	void declareInteger(std::string _name) override;
 	void declareBool(std::string _name) override;
 
@@ -50,6 +50,7 @@ public:
 private:
 	z3::expr toZ3Expr(Expression const& _expr);
 	z3::sort z3Sort(smt::Sort _sort);
+	z3::sort_vector z3Sort(std::vector<smt::Sort> const& _sort);
 
 	z3::context m_context;
 	z3::solver m_solver;

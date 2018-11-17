@@ -24,6 +24,15 @@
 using namespace std;
 using namespace dev::solidity;
 
+smt::Sort dev::solidity::smtSort(Type::Category _category)
+{
+	if (isNumber(_category))
+		return smt::Sort::Int;
+	else if (isBool(_category))
+		return smt::Sort::Bool;
+	solAssert(false, "Invalid type");
+}
+
 bool dev::solidity::isSupportedType(Type::Category _category)
 {
 	return isNumber(_category) ||

@@ -64,9 +64,12 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-void SMTLib2Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
+void SMTLib2Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
 {
 	// TODO Use domain and codomain as key as well
+	string domain("");
+	for (auto const& sort: _domain)
+		domain += toSmtLibSort(sort) + ' ';
 	if (!m_functions.count(_name))
 	{
 		m_functions.insert(_name);
@@ -74,7 +77,7 @@ void SMTLib2Interface::declareFunction(string _name, Sort _domain, Sort _codomai
 			"(declare-fun |" +
 			_name +
 			"| (" +
-			(_domain == Sort::Int ? "Int" : "Bool") +
+			domain +
 			") " +
 			(_codomain == Sort::Int ? "Int" : "Bool") +
 			")"
@@ -138,6 +141,19 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		sexpr += " " + toSExpr(arg);
 	sexpr += ")";
 	return sexpr;
+}
+
+string SMTLib2Interface::toSmtLibSort(Sort _sort)
+{
+	switch (_sort)
+	{
+	case Sort::Int:
+		return "Int";
+	case Sort::Bool:
+		return "Bool";
+	default:
+		solAssert(false, "Invalid SMT sort");
+	}
 }
 
 void SMTLib2Interface::write(string _data)
