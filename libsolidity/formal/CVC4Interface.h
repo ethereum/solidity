@@ -51,7 +51,7 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareFunction(std::string _name, Sort _domain, Sort _codomain) override;
+	void declareFunction(std::string _name, std::vector<Sort> const& _domain, Sort _codomain) override;
 	void declareInteger(std::string _name) override;
 	void declareBool(std::string _name) override;
 
@@ -61,6 +61,7 @@ public:
 private:
 	CVC4::Expr toCVC4Expr(Expression const& _expr);
 	CVC4::Type cvc4Sort(smt::Sort _sort);
+	std::vector<CVC4::Type> cvc4Sort(std::vector<smt::Sort> const& _sort);
 
 	CVC4::ExprManager m_context;
 	CVC4::SmtEngine m_solver;

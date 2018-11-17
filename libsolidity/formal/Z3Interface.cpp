@@ -51,7 +51,7 @@ void Z3Interface::pop()
 	m_solver.pop();
 }
 
-void Z3Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
+void Z3Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
 {
 	if (!m_functions.count(_name))
 		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
@@ -182,4 +182,12 @@ z3::sort Z3Interface::z3Sort(Sort _sort)
 	solAssert(false, "");
 	// Cannot be reached.
 	return m_context.int_sort();
+}
+
+z3::sort_vector Z3Interface::z3Sort(vector<Sort> const& _sorts)
+{
+	z3::sort_vector z3Sorts(m_context);
+	for (auto const& _sort: _sorts)
+		z3Sorts.push_back(z3Sort(_sort));
+	return z3Sorts;
 }
