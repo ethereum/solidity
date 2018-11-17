@@ -64,7 +64,7 @@ void SMTPortfolio::pop()
 		s->pop();
 }
 
-void SMTPortfolio::declareFunction(string _name, Sort _domain, Sort _codomain)
+void SMTPortfolio::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
 {
 	for (auto s : m_solvers)
 		s->declareFunction(_name, _domain, _codomain);

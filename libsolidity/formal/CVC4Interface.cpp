@@ -50,7 +50,7 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-void CVC4Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
+void CVC4Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
 {
 	if (!m_functions.count(_name))
 	{
@@ -200,4 +200,12 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort _sort)
 	solAssert(false, "");
 	// Cannot be reached.
 	return m_context.integerType();
+}
+
+vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<Sort> const& _sorts)
+{
+	vector<CVC4::Type> cvc4Sorts;
+	for (auto const& _sort: _sorts)
+		cvc4Sorts.push_back(cvc4Sort(_sort));
+	return cvc4Sorts;
 }

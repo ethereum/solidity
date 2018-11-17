@@ -6,6 +6,8 @@ Language Features:
 Compiler Features:
  * Build System: LLL is not built anymore by default. Must configure it with CMake as `-DLLL=ON`.
  * Code generator: Do not perform redundant double cleanup on unsigned integers when loading from calldata.
+ * SMTChecker: Support ``msg``, ``tx`` and ``block`` member variables.
+ * SMTChecker: Support ``gasleft()`` and ``blockhash()`` functions.
 
 
 Bugfixes:
