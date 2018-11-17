@@ -186,14 +186,14 @@ solidity::Instruction Pattern::instruction() const
 	return m_instruction;
 }
 
-Expression Pattern::toExpression(SourceLocation const& _location, bool readable) const
+Expression Pattern::toExpression(SourceLocation const& _location) const
 {
 	if (matchGroup())
 		return ASTCopier().translate(matchGroupValue());
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, assembly::LiteralKind::Number, YulString{(readable == false ? formatNumber(*m_data) : formatNumberReadable(*m_data))}, {}};
+		return Literal{_location, assembly::LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{

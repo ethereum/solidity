@@ -259,7 +259,7 @@ void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _
 	checkCondition(
 		_value < minValue(_type),
 		_location,
-		"Underflow (resulting value less than " + (this->hexReadable == false ? formatNumber(_type.minValue()) : formatNumberReadable(_type.minValue())) + ")",
+		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
 		"<result>",
 		&_value
 	);
