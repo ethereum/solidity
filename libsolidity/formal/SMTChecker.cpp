@@ -457,6 +457,14 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 	else if (_funDef && _funDef->isImplemented())
 	{
 		vector<smt::Expression> funArgs;
+		auto const& funType = dynamic_cast<FunctionType const*>(_calledExpr->annotation().type.get());
+		solAssert(funType, "");
+		if (funType->bound())
+		{
+			auto const& boundFunction = dynamic_cast<MemberAccess const*>(_calledExpr);
+			solAssert(boundFunction, "");
+			funArgs.push_back(expr(boundFunction->expression()));
+		}
 		for (auto arg: _funCall.arguments())
 			funArgs.push_back(expr(*arg));
 		initializeFunctionCallParameters(*_funDef, funArgs);
@@ -548,6 +556,10 @@ void SMTChecker::endVisit(Return const& _return)
 
 bool SMTChecker::visit(MemberAccess const& _memberAccess)
 {
+	auto const& accessType = _memberAccess.annotation().type;
+	if (accessType->category() == Type::Category::Function)
+		return true;
+
 	auto const& exprType = _memberAccess.expression().annotation().type;
 	solAssert(exprType, "");
 	if (exprType->category() == Type::Category::Magic)
