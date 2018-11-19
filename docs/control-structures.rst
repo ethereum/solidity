@@ -112,9 +112,9 @@ Solidity.
 Returning Multiple Variables
 ----------------------------
 
-When a function has multiple return types, ``return (v0, v1, ...,
-vn)`` can return multiple values.  The number of components must be
-the same as the number of return types.
+When a function has multiple return variable types, for example ``return (v0, v1, ..., vn)``,
+the function can return multiple values.  The number of 
+components must be the same as the number of return types.
 
 .. index:: ! function;call, function;internal, function;external
 
