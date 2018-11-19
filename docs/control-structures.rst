@@ -2,13 +2,14 @@
 Expressions and Control Structures
 ##################################
 
-.. index:: ! parameter, parameter;input, parameter;output, function parameter, parameter;function, return variable, variable;return, return
+.. index:: ! parameter, parameter;input, parameter;output, function parameter, parameter;function, return variable, variable;return, return value, value;return, return
 
 Function Parameters and Return Variables
 ========================================
 
 As in JavaScript, functions may take parameters as input. Unlike in JavaScript
-and C, functions may also return an arbitrary number of values as output.
+and C, functions may also return an arbitrary number of variables that each
+hold a value as output.
 
 Function Parameters
 -------------------
@@ -61,7 +62,7 @@ set, they stay zero value.
 
 You can either explicitly assign to return variables and
 then leave the function using ``return;``,
-or you can provide return values
+or you can provide return values to the variable
 (either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
 statement::
 
