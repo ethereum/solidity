@@ -83,7 +83,7 @@ private:
 	void inlineFunctionCall(FunctionCall const&);
 
 	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
-	void defineUninterpretedFunction(std::string const& _name, std::vector<smt::Sort> const& _domain, smt::Sort _codomain);
+	void defineUninterpretedFunction(std::string const& _name, std::vector<smt::SortPointer> const& _domain, smt::Sort const& _codomain);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.

@@ -29,7 +29,9 @@ namespace solidity
 {
 
 /// Returns the SMT sort that models the Solidity type _type.
-smt::Sort smtSort(Type::Category _type);
+smt::SortPointer smtSort(Type const& _type);
+/// Returns the SMT kind that models the Solidity type type category _category.
+smt::Kind smtKind(Type::Category _category);
 
 /// So far int, bool and address are supported.
 /// Returns true if type is supported.

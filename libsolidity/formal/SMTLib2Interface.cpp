@@ -64,12 +64,12 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-void SMTLib2Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
+void SMTLib2Interface::declareFunction(string _name, vector<SortPointer> const& _domain, Sort const& _codomain)
 {
 	// TODO Use domain and codomain as key as well
 	string domain("");
 	for (auto const& sort: _domain)
-		domain += toSmtLibSort(sort) + ' ';
+		domain += toSmtLibSort(*sort) + ' ';
 	if (!m_functions.count(_name))
 	{
 		m_functions.insert(_name);
@@ -79,7 +79,7 @@ void SMTLib2Interface::declareFunction(string _name, vector<Sort> const& _domain
 			"| (" +
 			domain +
 			") " +
-			(_codomain == Sort::Int ? "Int" : "Bool") +
+			(_codomain.kind == Kind::Int ? "Int" : "Bool") +
 			")"
 		);
 	}
@@ -143,13 +143,13 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	return sexpr;
 }
 
-string SMTLib2Interface::toSmtLibSort(Sort _sort)
+string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 {
-	switch (_sort)
+	switch (_sort.kind)
 	{
-	case Sort::Int:
+	case Kind::Int:
 		return "Int";
-	case Sort::Bool:
+	case Kind::Bool:
 		return "Bool";
 	default:
 		solAssert(false, "Invalid SMT sort");
@@ -173,8 +173,8 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			solAssert(e.sort == Sort::Int || e.sort == Sort::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + ")\n";
+			solAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";

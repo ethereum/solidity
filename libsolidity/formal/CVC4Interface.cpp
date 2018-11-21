@@ -50,7 +50,7 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-void CVC4Interface::declareFunction(string _name, vector<Sort> const& _domain, Sort _codomain)
+void CVC4Interface::declareFunction(string _name, vector<SortPointer> const& _domain, Sort const& _codomain)
 {
 	if (!m_functions.count(_name))
 	{
@@ -186,13 +186,13 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 	return arguments[0];
 }
 
-CVC4::Type CVC4Interface::cvc4Sort(Sort _sort)
+CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 {
-	switch (_sort)
+	switch (_sort.kind)
 	{
-	case Sort::Bool:
+	case Kind::Bool:
 		return m_context.booleanType();
-	case Sort::Int:
+	case Kind::Int:
 		return m_context.integerType();
 	default:
 		break;
@@ -202,10 +202,10 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort _sort)
 	return m_context.integerType();
 }
 
-vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<Sort> const& _sorts)
+vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<SortPointer> const& _sorts)
 {
 	vector<CVC4::Type> cvc4Sorts;
 	for (auto const& _sort: _sorts)
-		cvc4Sorts.push_back(cvc4Sort(_sort));
+		cvc4Sorts.push_back(cvc4Sort(*_sort));
 	return cvc4Sorts;
 }

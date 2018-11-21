@@ -24,12 +24,24 @@
 using namespace std;
 using namespace dev::solidity;
 
-smt::Sort dev::solidity::smtSort(Type::Category _category)
+smt::SortPointer dev::solidity::smtSort(Type const& _type)
+{
+	switch (smtKind(_type.category()))
+	{
+	case smt::Kind::Int:
+		return make_shared<smt::Sort>(smt::Kind::Int);
+	case smt::Kind::Bool:
+		return make_shared<smt::Sort>(smt::Kind::Bool);
+	}
+	solAssert(false, "Invalid type");
+}
+
+smt::Kind dev::solidity::smtKind(Type::Category _category)
 {
 	if (isNumber(_category))
-		return smt::Sort::Int;
+		return smt::Kind::Int;
 	else if (isBool(_category))
-		return smt::Sort::Bool;
+		return smt::Kind::Bool;
 	solAssert(false, "Invalid type");
 }
 
