@@ -110,7 +110,8 @@ int AssemblyItem::returnValues() const
 		return 1;
 	case Tag:
 		return 0;
-	default:;
+	default:
+		break;
 	}
 	return 0;
 }
@@ -135,9 +136,10 @@ bool AssemblyItem::canBeFunctional() const
 		return true;
 	case Tag:
 		return false;
-	default:;
+	default:
+		break;
 	}
-	return 0;
+	return false;
 }
 
 string AssemblyItem::getJumpTypeAsString() const
