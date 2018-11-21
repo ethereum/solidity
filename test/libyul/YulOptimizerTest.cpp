@@ -31,6 +31,7 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
@@ -107,6 +108,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		VarDeclPropagator{}(*m_ast);
+	}
+	else if (m_optimizerStep == "forLoopInitRewriter")
+	{
+		disambiguate();
+		ForLoopInitRewriter{}(*m_ast);
 	}
 	else if (m_optimizerStep == "commonSubexpressionEliminator")
 	{
