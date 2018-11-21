@@ -64,22 +64,10 @@ void SMTPortfolio::pop()
 		s->pop();
 }
 
-void SMTPortfolio::declareFunction(string _name, vector<SortPointer> const& _domain, Sort const& _codomain)
+void SMTPortfolio::declareVariable(string const& _name, Sort const& _sort)
 {
 	for (auto s : m_solvers)
-		s->declareFunction(_name, _domain, _codomain);
-}
-
-void SMTPortfolio::declareInteger(string _name)
-{
-	for (auto s : m_solvers)
-		s->declareInteger(_name);
-}
-
-void SMTPortfolio::declareBool(string _name)
-{
-	for (auto s : m_solvers)
-		s->declareBool(_name);
+		s->declareVariable(_name, _sort);
 }
 
 void SMTPortfolio::addAssertion(Expression const& _expr)

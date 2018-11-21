@@ -32,8 +32,27 @@ smt::SortPointer dev::solidity::smtSort(Type const& _type)
 		return make_shared<smt::Sort>(smt::Kind::Int);
 	case smt::Kind::Bool:
 		return make_shared<smt::Sort>(smt::Kind::Bool);
+	case smt::Kind::Function:
+	{
+		auto fType = dynamic_cast<FunctionType const*>(&_type);
+		solAssert(fType, "");
+		vector<smt::SortPointer> parameterSorts = smtSort(fType->parameterTypes());
+		auto returnTypes = fType->returnParameterTypes();
+		// TODO remove this when we support tuples.
+		solAssert(returnTypes.size() == 1, "");
+		smt::SortPointer returnSort = smtSort(*returnTypes.at(0));
+		return make_shared<smt::FunctionSort>(parameterSorts, returnSort);
+	}
 	}
 	solAssert(false, "Invalid type");
+}
+
+vector<smt::SortPointer> dev::solidity::smtSort(vector<TypePointer> const& _types)
+{
+	vector<smt::SortPointer> sorts;
+	for (auto const& type: _types)
+		sorts.push_back(smtSort(*type));
+	return sorts;
 }
 
 smt::Kind dev::solidity::smtKind(Type::Category _category)

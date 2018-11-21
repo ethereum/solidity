@@ -40,14 +40,14 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareFunction(std::string _name, std::vector<SortPointer> const& _domain, Sort const& _codomain) override;
-	void declareInteger(std::string _name) override;
-	void declareBool(std::string _name) override;
+	void declareVariable(std::string const& _name, Sort const& _sort) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 private:
+	void declareFunction(std::string const& _name, Sort const& _sort);
+
 	z3::expr toZ3Expr(Expression const& _expr);
 	z3::sort z3Sort(smt::Sort const& _sort);
 	z3::sort_vector z3Sort(std::vector<smt::SortPointer> const& _sorts);

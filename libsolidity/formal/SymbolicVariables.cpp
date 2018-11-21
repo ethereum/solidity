@@ -59,7 +59,7 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 
 smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
 {
-	return m_interface.newBool(uniqueSymbol(_index));
+	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Bool));
 }
 
 void SymbolicBoolVariable::setZeroValue()
@@ -83,7 +83,7 @@ SymbolicIntVariable::SymbolicIntVariable(
 
 smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
 {
-	return m_interface.newInteger(uniqueSymbol(_index));
+	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Int));
 }
 
 void SymbolicIntVariable::setZeroValue()
