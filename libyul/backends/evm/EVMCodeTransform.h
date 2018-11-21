@@ -20,7 +20,7 @@
 
 #include <libyul/backends/evm/EVMAssembly.h>
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/AsmScope.h>
 

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 #include <libyul/YulString.h>
 
 #include <set>
