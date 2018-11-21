@@ -26,6 +26,11 @@
 
 #include <map>
 
+namespace langutil
+{
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace yul
@@ -38,7 +43,7 @@ public:
 	virtual ~EVMAssembly() {}
 
 	/// Set a new source location valid starting from the next instruction.
-	void setSourceLocation(SourceLocation const& _location) override;
+	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
 	int stackHeight() const override { return m_stackHeight; }

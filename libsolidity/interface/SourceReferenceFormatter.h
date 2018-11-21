@@ -25,7 +25,12 @@
 #include <ostream>
 #include <sstream>
 #include <functional>
-#include <libevmasm/SourceLocation.h>
+
+namespace langutil
+{
+struct SourceLocation;
+class Scanner;
+}
 
 namespace dev
 {
@@ -35,13 +40,12 @@ struct Exception; // forward
 namespace solidity
 {
 
-class Scanner; // forward
 class CompilerStack; // forward
 
 class SourceReferenceFormatter
 {
 public:
-	using ScannerFromSourceNameFun = std::function<Scanner const&(std::string const&)>;
+	using ScannerFromSourceNameFun = std::function<langutil::Scanner const&(std::string const&)>;
 
 	explicit SourceReferenceFormatter(
 		std::ostream& _stream,
@@ -52,7 +56,7 @@ public:
 	{}
 
 	/// Prints source location if it is given.
-	void printSourceLocation(SourceLocation const* _location);
+	void printSourceLocation(langutil::SourceLocation const* _location);
 	void printExceptionInformation(Exception const& _exception, std::string const& _name);
 
 	static std::string formatExceptionInformation(
@@ -69,7 +73,7 @@ public:
 	}
 private:
 	/// Prints source name if location is given.
-	void printSourceName(SourceLocation const* _location);
+	void printSourceName(langutil::SourceLocation const* _location);
 
 	std::ostream& m_stream;
 	ScannerFromSourceNameFun m_scannerFromSourceName;

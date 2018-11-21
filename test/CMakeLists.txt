@@ -5,6 +5,8 @@ file(GLOB contracts_sources "contracts/*.cpp")
 file(GLOB contracts_headers "contracts/*.h")
 file(GLOB libdevcore_sources "libdevcore/*.cpp")
 file(GLOB libdevcore_headers "libdevcore/*.h")
+file(GLOB liblangutil_sources "liblangutil/*.cpp")
+file(GLOB liblangutil_headers "liblangutil/*.h")
 file(GLOB libevmasm_sources "libevmasm/*.cpp")
 file(GLOB libevmasm_headers "libevmasm/*.h")
 file(GLOB libyul_sources "libyul/*.cpp")
@@ -19,6 +21,7 @@ file(GLOB libsolidity_headers "libsolidity/*.h")
 add_executable(soltest ${sources} ${headers}
     ${contracts_sources} ${contracts_headers}
     ${libdevcore_sources} ${libdevcore_headers}
+    ${liblangutil_sources} ${liblangutil_headers}
     ${libevmasm_sources} ${libevmasm_headers}
     ${libyul_sources} ${libyul_headers}
     ${liblll_sources} ${liblll_headers}

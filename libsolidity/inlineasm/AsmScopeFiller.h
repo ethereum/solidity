@@ -27,12 +27,16 @@
 #include <functional>
 #include <memory>
 
-namespace dev
-{
-struct SourceLocation;
-namespace solidity
+namespace langutil
 {
 class ErrorReporter;
+struct SourceLocation;
+}
+
+namespace dev
+{
+namespace solidity
+{
 namespace assembly
 {
 
@@ -47,7 +51,7 @@ struct AsmAnalysisInfo;
 class ScopeFiller: public boost::static_visitor<bool>
 {
 public:
-	ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter);
+	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter);
 
 	bool operator()(assembly::Instruction const&) { return true; }
 	bool operator()(assembly::Literal const&) { return true; }
@@ -68,7 +72,7 @@ public:
 private:
 	bool registerVariable(
 		TypedName const& _name,
-		SourceLocation const& _location,
+		langutil::SourceLocation const& _location,
 		Scope& _scope
 	);
 
@@ -76,7 +80,7 @@ private:
 
 	Scope* m_currentScope = nullptr;
 	AsmAnalysisInfo& m_info;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 };
 
 }

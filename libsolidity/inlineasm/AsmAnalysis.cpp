@@ -25,7 +25,7 @@
 #include <libsolidity/inlineasm/AsmScope.h>
 #include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
@@ -35,6 +35,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 

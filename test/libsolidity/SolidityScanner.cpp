@@ -20,10 +20,11 @@
  * Unit tests for the solidity scanner.
  */
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

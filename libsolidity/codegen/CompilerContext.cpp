@@ -25,9 +25,10 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/inlineasm/AsmAnalysis.h>
@@ -47,6 +48,7 @@
 
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -359,7 +361,7 @@ void CompilerContext::appendInlineAssembly(
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(CharStream(_assembly), "--CODEGEN--");
+	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly), "--CODEGEN--");
 	auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Strict).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << assembly::AsmPrinter()(*parserResult) << endl;

@@ -52,62 +52,29 @@
 
 #pragma once
 
+#include <liblangutil/Token.h>
+#include <liblangutil/CharStream.h>
+#include <liblangutil/SourceLocation.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
-#include <libevmasm/SourceLocation.h>
-#include <libsolidity/parsing/Token.h>
 
-namespace dev
+namespace langutil
 {
-namespace solidity
-{
-
 
 class AstRawString;
 class AstValueFactory;
 class ParserRecorder;
 
-class CharStream
-{
-public:
-	CharStream(): m_position(0) {}
-	explicit CharStream(std::string const& _source): m_source(_source), m_position(0) {}
-	int position() const { return m_position; }
-	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
-	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
-	char advanceAndGet(size_t _chars = 1);
-	char rollback(size_t _amount);
-
-	void reset() { m_position = 0; }
-
-	std::string const& source() const { return m_source; }
-
-	///@{
-	///@name Error printing helper functions
-	/// Functions that help pretty-printing parse errors
-	/// Do only use in error cases, they are quite expensive.
-	std::string lineAtPosition(int _position) const;
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
-	///@}
-
-private:
-	std::string m_source;
-	size_t m_position;
-};
-
-
-
 class Scanner
 {
 	friend class LiteralScope;
 public:
-
-	explicit Scanner(CharStream const& _source = CharStream(), std::string const& _sourceName = "") { reset(_source, _sourceName); }
+	explicit Scanner(CharStream _source = CharStream(), std::string _sourceName = "") { reset(std::move(_source), std::move(_sourceName)); }
 
 	std::string source() const { return m_source.source(); }
 
 	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
-	void reset(CharStream const& _source, std::string const& _sourceName);
+	void reset(CharStream _source, std::string _sourceName);
 	/// Resets scanner to the start of input.
 	void reset();
 
@@ -245,5 +212,4 @@ private:
 	char m_char;
 };
 
-}
 }

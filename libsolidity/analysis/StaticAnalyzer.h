@@ -28,6 +28,11 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+namespace langutil
+{
+class ErrorReporter;
+}
+
 namespace dev
 {
 namespace solidity
@@ -44,7 +49,7 @@ class StaticAnalyzer: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	explicit StaticAnalyzer(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	explicit StaticAnalyzer(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	/// Performs static analysis on the given source unit and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
@@ -70,7 +75,7 @@ private:
 	/// @returns the size of this type in storage, including all sub-types.
 	static bigint structureSizeEstimate(Type const& _type, std::set<StructDefinition const*>& _structsSeen);
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 
 	/// Flag that indicates whether the current contract definition is a library.
 	bool m_library = false;

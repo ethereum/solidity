@@ -25,6 +25,7 @@
 #include <stdexcept>
 
 using namespace dev;
+using namespace langutil;
 using namespace solidity;
 using namespace dev::solidity::test;
 using namespace dev::solidity::test::formatting;

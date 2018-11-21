@@ -20,13 +20,12 @@
  * Solidity parser shared functionality.
  */
 
-#include <libsolidity/parsing/ParserBase.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ParserBase.h>
+#include <liblangutil/Scanner.h>
+#include <liblangutil/ErrorReporter.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace langutil;
 
 std::shared_ptr<string const> const& ParserBase::sourceName() const
 {

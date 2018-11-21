@@ -21,10 +21,14 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
-#include <libsolidity/interface/ErrorReporter.h>
-
 #include <map>
 #include <memory>
+
+namespace langutil
+{
+class ErrorReporter;
+struct SourceLocation;
+}
 
 namespace dev
 {
@@ -34,7 +38,7 @@ namespace solidity
 class ViewPureChecker: private ASTConstVisitor
 {
 public:
-	ViewPureChecker(std::vector<std::shared_ptr<ASTNode>> const& _ast, ErrorReporter& _errorReporter):
+	ViewPureChecker(std::vector<std::shared_ptr<ASTNode>> const& _ast, langutil::ErrorReporter& _errorReporter):
 		m_ast(_ast), m_errorReporter(_errorReporter) {}
 
 	bool check();
@@ -43,7 +47,7 @@ private:
 	struct MutabilityAndLocation
 	{
 		StateMutability mutability;
-		SourceLocation location;
+		langutil::SourceLocation location;
 	};
 
 	bool visit(FunctionDefinition const& _funDef) override;
@@ -62,15 +66,15 @@ private:
 	/// Creates appropriate warnings and errors and sets @a m_currentBestMutability.
 	void reportMutability(
 		StateMutability _mutability,
-		SourceLocation const& _location,
-		boost::optional<SourceLocation> const& _nestedLocation = {}
+		langutil::SourceLocation const& _location,
+		boost::optional<langutil::SourceLocation> const& _nestedLocation = {}
 	);
 
 	std::vector<std::shared_ptr<ASTNode>> const& m_ast;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 
 	bool m_errors = false;
-	MutabilityAndLocation m_bestMutabilityAndLocation = MutabilityAndLocation{StateMutability::Payable, SourceLocation()};
+	MutabilityAndLocation m_bestMutabilityAndLocation = MutabilityAndLocation{StateMutability::Payable, langutil::SourceLocation()};
 	FunctionDefinition const* m_currentFunction = nullptr;
 	std::map<ModifierDefinition const*, MutabilityAndLocation> m_inferredMutability;
 };

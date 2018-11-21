@@ -23,21 +23,24 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/parsing/ParserBase.h>
+#include <liblangutil/ParserBase.h>
+
+namespace langutil
+{
+class Scanner;
+}
 
 namespace dev
 {
 namespace solidity
 {
 
-class Scanner;
-
-class Parser: public ParserBase
+class Parser: public langutil::ParserBase
 {
 public:
-	explicit Parser(ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
+	explicit Parser(langutil::ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
 
-	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
+	ASTPointer<SourceUnit> parse(std::shared_ptr<langutil::Scanner> const& _scanner);
 
 private:
 	class ASTNodeFactory;
@@ -146,7 +149,7 @@ private:
 	struct IndexAccessedPath
 	{
 		std::vector<ASTPointer<PrimaryExpression>> path;
-		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> indices;
+		std::vector<std::pair<ASTPointer<Expression>, langutil::SourceLocation>> indices;
 		bool empty() const;
 	};
 

@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libsolidity/inlineasm/AsmScope.h>
 
@@ -35,11 +35,16 @@
 #include <functional>
 #include <memory>
 
+namespace langutil
+{
+class ErrorReporter;
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace solidity
 {
-class ErrorReporter;
 namespace assembly
 {
 
@@ -55,9 +60,9 @@ class AsmAnalyzer: public boost::static_visitor<bool>
 public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
-		ErrorReporter& _errorReporter,
+		langutil::ErrorReporter& _errorReporter,
 		EVMVersion _evmVersion,
-		boost::optional<Error::Type> _errorTypeForLoose,
+		boost::optional<langutil::Error::Type> _errorTypeForLoose,
 		AsmFlavour _flavour = AsmFlavour::Loose,
 		yul::ExternalIdentifierAccess::Resolver const& _resolver = yul::ExternalIdentifierAccess::Resolver()
 	):
@@ -90,20 +95,20 @@ public:
 private:
 	/// Visits the statement and expects it to deposit one item onto the stack.
 	bool expectExpression(Expression const& _expr);
-	bool expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location);
+	bool expectDeposit(int _deposit, int _oldHeight, langutil::SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists and has the same size
 	/// as the value, @a _valueSize, unless that is equal to -1.
 	bool checkAssignment(assembly::Identifier const& _assignment, size_t _valueSize = size_t(-1));
 
 	Scope& scope(assembly::Block const* _block);
-	void expectValidType(std::string const& type, SourceLocation const& _location);
-	void warnOnInstructions(solidity::Instruction _instr, SourceLocation const& _location);
+	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
+	void warnOnInstructions(solidity::Instruction _instr, langutil::SourceLocation const& _location);
 
 	/// Depending on @a m_flavour and @a m_errorTypeForLoose, throws an internal compiler
 	/// exception (if the flavour is not Loose), reports an error/warning
 	/// (if m_errorTypeForLoose is set) or does nothing.
-	void checkLooseFeature(SourceLocation const& _location, std::string const& _description);
+	void checkLooseFeature(langutil::SourceLocation const& _location, std::string const& _description);
 
 	int m_stackHeight = 0;
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
@@ -112,10 +117,10 @@ private:
 	/// "part of the scope but not yet declared")
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 	EVMVersion m_evmVersion;
 	AsmFlavour m_flavour = AsmFlavour::Loose;
-	boost::optional<Error::Type> m_errorTypeForLoose;
+	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
 };
 
 }

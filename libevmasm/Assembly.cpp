@@ -35,6 +35,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace langutil;
 
 void Assembly::append(Assembly const& _a)
 {

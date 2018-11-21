@@ -23,13 +23,13 @@
 #pragma once
 
 
-#include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
+#include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTEnums.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 
 #include <libdevcore/FixedHash.h>
@@ -58,6 +58,8 @@ class ASTConstVisitor;
 class ASTNode: private boost::noncopyable
 {
 public:
+	using SourceLocation = langutil::SourceLocation;
+
 	explicit ASTNode(SourceLocation const& _location);
 	virtual ~ASTNode();
 

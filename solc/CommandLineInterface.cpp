@@ -26,12 +26,12 @@
 #include "license.h"
 
 #include <libsolidity/interface/Version.h>
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTPrinter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
@@ -62,6 +62,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace langutil;
 namespace po = boost::program_options;
 
 namespace dev
@@ -827,7 +828,7 @@ bool CommandLineInterface::processInput()
 
 	m_compiler.reset(new CompilerStack(fileReader));
 
-	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
+	auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return m_compiler->scanner(_sourceName); };
 	SourceReferenceFormatter formatter(cerr, scannerFromSourceName);
 
 	try

@@ -1,13 +1,14 @@
 
 #include <libsolidity/parsing/DocStringParser.h>
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Exceptions.h>
 
 #include <boost/range/irange.hpp>
 #include <boost/range/algorithm.hpp>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 

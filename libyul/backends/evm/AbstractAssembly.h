@@ -26,9 +26,13 @@
 
 #include <functional>
 
-namespace dev
+namespace langutil
 {
 struct SourceLocation;
+}
+
+namespace dev
+{
 namespace solidity
 {
 enum class Instruction: uint8_t;
@@ -52,7 +56,7 @@ public:
 	virtual ~AbstractAssembly() {}
 
 	/// Set a new source location valid starting from the next instruction.
-	virtual void setSourceLocation(SourceLocation const& _location) = 0;
+	virtual void setSourceLocation(langutil::SourceLocation const& _location) = 0;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
 	virtual int stackHeight() const = 0;

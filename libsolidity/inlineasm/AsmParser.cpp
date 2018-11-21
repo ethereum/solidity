@@ -21,8 +21,8 @@
  */
 
 #include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -31,6 +31,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 using namespace dev::solidity::assembly;
 

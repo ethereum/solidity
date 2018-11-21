@@ -23,8 +23,8 @@
 #include <test/Options.h>
 
 #include <libsolidity/interface/AssemblyStack.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Scanner.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/ast/AST.h>
 #include <test/libsolidity/ErrorCheck.h>
 #include <libevmasm/Assembly.h>
@@ -36,6 +36,7 @@
 #include <memory>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {

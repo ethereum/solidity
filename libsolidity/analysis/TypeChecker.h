@@ -22,19 +22,22 @@
 
 #pragma once
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+namespace langutil
+{
+class ErrorReporter;
+}
+
 namespace dev
 {
 namespace solidity
 {
-
-class ErrorReporter;
 
 /**
  * The module that performs type analysis on the AST, checks the applicability of operations on
@@ -45,7 +48,7 @@ class TypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	TypeChecker(EVMVersion _evmVersion, ErrorReporter& _errorReporter):
+	TypeChecker(EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter):
 		m_evmVersion(_evmVersion),
 		m_errorReporter(_errorReporter)
 	{}
@@ -183,7 +186,7 @@ private:
 	/// Flag indicating whether we are currently inside a StructDefinition.
 	bool m_insideStruct = false;
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 };
 
 }

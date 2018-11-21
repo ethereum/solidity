@@ -22,12 +22,11 @@
 
 #pragma once
 
+#include <liblangutil/Token.h>
 #include <memory>
-#include <libsolidity/parsing/Token.h>
+#include <string>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 
 class ErrorReporter;
@@ -89,5 +88,4 @@ protected:
 	size_t m_recursionDepth = 0;
 };
 
-}
 }
