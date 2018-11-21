@@ -26,8 +26,6 @@
 #include <map>
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -61,5 +59,4 @@ private:
 	std::map<YulString, size_t> m_references;
 };
 
-}
 }

@@ -27,8 +27,6 @@
 
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -189,5 +187,4 @@ private:
 	std::set<Assignment const*> const& m_toRemove;
 };
 
-}
 }

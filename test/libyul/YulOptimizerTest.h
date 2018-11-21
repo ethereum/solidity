@@ -26,22 +26,18 @@ class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 }
 
-namespace dev
-{
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 struct AsmAnalysisInfo;
 struct Block;
 }
-}
+
 namespace yul
 {
 namespace test
 {
 
-class YulOptimizerTest: public solidity::test::TestCase
+class YulOptimizerTest: public dev::solidity::test::TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(std::string const& _filename)
@@ -68,11 +64,10 @@ private:
 	std::string m_optimizerStep;
 	std::string m_expectation;
 
-	std::shared_ptr<solidity::assembly::Block> m_ast;
-	std::shared_ptr<solidity::assembly::AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<Block> m_ast;
+	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;
 };
 
-}
 }
 }

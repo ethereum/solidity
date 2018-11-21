@@ -26,7 +26,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void InlinableExpressionFunctionFinder::operator()(Identifier const& _identifier)
 {

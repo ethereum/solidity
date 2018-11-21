@@ -27,18 +27,14 @@
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 class ErrorReporter;
-namespace assembly
-{
-struct AsmAnalysisInfo;
 }
-}
+
 namespace yul
 {
+struct AsmAnalysisInfo;
 class EVMAssembly;
 
 class CodeTransform: public boost::static_visitor<>
@@ -47,8 +43,8 @@ public:
 	/// Create the code transformer.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
 	CodeTransform(
-		yul::AbstractAssembly& _assembly,
-		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
+		AbstractAssembly& _assembly,
+		AsmAnalysisInfo& _analysisInfo,
 		bool _yul = false,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
@@ -69,15 +65,14 @@ public:
 protected:
 	struct Context
 	{
-		using Scope = solidity::assembly::Scope;
 		std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
 		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
 		std::map<Scope::Variable const*, int> variableStackHeights;
 	};
 
 	CodeTransform(
-		yul::AbstractAssembly& _assembly,
-		solidity::assembly::AsmAnalysisInfo& _analysisInfo,
+		AbstractAssembly& _assembly,
+		AsmAnalysisInfo& _analysisInfo,
 		bool _yul,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
@@ -116,8 +111,8 @@ private:
 	AbstractAssembly::LabelID labelFromIdentifier(Identifier const& _identifier);
 	/// @returns the label ID corresponding to the given label, allocating a new one if
 	/// necessary.
-	AbstractAssembly::LabelID labelID(solidity::assembly::Scope::Label const& _label);
-	AbstractAssembly::LabelID functionEntryID(YulString _name, solidity::assembly::Scope::Function const& _function);
+	AbstractAssembly::LabelID labelID(Scope::Label const& _label);
+	AbstractAssembly::LabelID functionEntryID(YulString _name, Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(Expression const& _expression);
 
@@ -133,15 +128,15 @@ private:
 	/// Determines the stack height difference to the given variables. Throws
 	/// if it is not yet in scope or the height difference is too large. Returns
 	/// the (positive) stack height difference otherwise.
-	int variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap) const;
+	int variableHeightDiff(Scope::Variable const& _var, bool _forSwap) const;
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
 	void checkStackHeight(void const* _astElement) const;
 
-	yul::AbstractAssembly& m_assembly;
-	solidity::assembly::AsmAnalysisInfo& m_info;
-	solidity::assembly::Scope* m_scope = nullptr;
+	AbstractAssembly& m_assembly;
+	AsmAnalysisInfo& m_info;
+	Scope* m_scope = nullptr;
 	bool m_yul = false;
 	bool m_evm15 = false;
 	bool m_useNamedLabelsForFunctions = false;
@@ -154,5 +149,4 @@ private:
 	std::shared_ptr<Context> m_context;
 };
 
-}
 }

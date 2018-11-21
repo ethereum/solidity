@@ -28,8 +28,6 @@
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -68,5 +66,4 @@ private:
 };
 
 
-}
 }

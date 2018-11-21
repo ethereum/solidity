@@ -25,8 +25,6 @@
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -57,5 +55,4 @@ private:
 	size_t m_counter = 0;
 };
 
-}
 }

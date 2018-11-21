@@ -32,9 +32,9 @@ namespace eth
 {
 class Assembly;
 }
-namespace solidity
-{
-namespace assembly
+}
+
+namespace yul
 {
 struct Block;
 
@@ -45,12 +45,10 @@ public:
 	static void assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
-		eth::Assembly& _assembly,
+		dev::eth::Assembly& _assembly,
 		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	);
 };
 
-}
-}
 }

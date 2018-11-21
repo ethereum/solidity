@@ -25,8 +25,6 @@
 #include <map>
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -82,5 +80,4 @@ private:
 	std::set<YulString> m_names;
 };
 
-}
 }

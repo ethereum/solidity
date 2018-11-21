@@ -24,8 +24,6 @@
 
 #include <vector>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -46,5 +44,4 @@ protected:
 	static bool equalVector(std::vector<Expression> const& _e1, std::vector<Expression> const& _e2);
 };
 
-}
 }

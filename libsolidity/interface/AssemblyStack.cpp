@@ -41,19 +41,19 @@ using namespace dev::solidity;
 
 namespace
 {
-assembly::AsmFlavour languageToAsmFlavour(AssemblyStack::Language _language)
+yul::AsmFlavour languageToAsmFlavour(AssemblyStack::Language _language)
 {
 	switch (_language)
 	{
 	case AssemblyStack::Language::Assembly:
-		return assembly::AsmFlavour::Loose;
+		return yul::AsmFlavour::Loose;
 	case AssemblyStack::Language::StrictAssembly:
-		return assembly::AsmFlavour::Strict;
+		return yul::AsmFlavour::Strict;
 	case AssemblyStack::Language::Yul:
-		return assembly::AsmFlavour::Yul;
+		return yul::AsmFlavour::Yul;
 	}
 	solAssert(false, "");
-	return assembly::AsmFlavour::Yul;
+	return yul::AsmFlavour::Yul;
 }
 
 }
@@ -70,7 +70,7 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
-	m_parserResult = assembly::Parser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
+	m_parserResult = yul::Parser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
@@ -78,21 +78,21 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	return analyzeParsed();
 }
 
-bool AssemblyStack::analyze(assembly::Block const& _block, Scanner const* _scanner)
+bool AssemblyStack::analyze(yul::Block const& _block, Scanner const* _scanner)
 {
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	if (_scanner)
 		m_scanner = make_shared<Scanner>(*_scanner);
-	m_parserResult = make_shared<assembly::Block>(_block);
+	m_parserResult = make_shared<yul::Block>(_block);
 
 	return analyzeParsed();
 }
 
 bool AssemblyStack::analyzeParsed()
 {
-	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToAsmFlavour(m_language));
+	m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	yul::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToAsmFlavour(m_language));
 	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
 	return m_analysisSuccessful;
 }
@@ -109,7 +109,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
-		assembly::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
+		yul::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -133,5 +133,5 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 string AssemblyStack::print() const
 {
 	solAssert(m_parserResult, "");
-	return assembly::AsmPrinter(m_language == Language::Yul)(*m_parserResult);
+	return yul::AsmPrinter(m_language == Language::Yul)(*m_parserResult);
 }

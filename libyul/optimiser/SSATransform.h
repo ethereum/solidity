@@ -26,8 +26,6 @@
 
 #include <vector>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -94,5 +92,4 @@ private:
 	std::map<YulString, YulString> m_currentVariableValues;
 };
 
-}
 }

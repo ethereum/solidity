@@ -954,7 +954,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	// External references have already been resolved in a prior stage and stored in the annotation.
 	// We run the resolve step again regardless.
 	yul::ExternalIdentifierAccess::Resolver identifierAccess = [&](
-		assembly::Identifier const& _identifier,
+		yul::Identifier const& _identifier,
 		yul::IdentifierContext _context,
 		bool
 	)
@@ -1039,13 +1039,13 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		return size_t(1);
 	};
 	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
-	_inlineAssembly.annotation().analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(
+	_inlineAssembly.annotation().analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
 		m_evmVersion,
 		Error::Type::SyntaxError,
-		assembly::AsmFlavour::Loose,
+		yul::AsmFlavour::Loose,
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))

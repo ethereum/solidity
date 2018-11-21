@@ -23,8 +23,6 @@
 
 #include <libyul/ASTDataForward.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -37,5 +35,4 @@ public:
 	void operator()(Block& _block);
 };
 
-}
 }

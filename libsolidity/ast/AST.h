@@ -41,6 +41,12 @@
 #include <vector>
 #include <memory>
 
+namespace yul
+{
+// Forward-declaration to <yul/AsmData.h>
+struct Block;
+}
+
 namespace dev
 {
 namespace solidity
@@ -1028,12 +1034,6 @@ public:
 	virtual StatementAnnotation& annotation() const override;
 };
 
-namespace assembly
-{
-// Forward-declaration to AsmData.h
-struct Block;
-}
-
 /**
  * Inline assembly.
  */
@@ -1043,18 +1043,18 @@ public:
 	InlineAssembly(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
-		std::shared_ptr<assembly::Block> const& _operations
+		std::shared_ptr<yul::Block> const& _operations
 	):
 		Statement(_location, _docString), m_operations(_operations) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	assembly::Block const& operations() const { return *m_operations; }
+	yul::Block const& operations() const { return *m_operations; }
 
 	virtual InlineAssemblyAnnotation& annotation() const override;
 
 private:
-	std::shared_ptr<assembly::Block> m_operations;
+	std::shared_ptr<yul::Block> m_operations;
 };
 
 /**

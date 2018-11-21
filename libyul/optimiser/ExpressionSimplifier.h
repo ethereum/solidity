@@ -24,8 +24,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -51,5 +49,4 @@ private:
 	std::map<YulString, Expression const*> m_ssaValues;
 };
 
-}
 }

@@ -22,8 +22,6 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -40,5 +38,4 @@ protected:
 
 };
 
-}
 }
