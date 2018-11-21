@@ -49,7 +49,7 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareFunction(std::string _name, std::vector<Sort> const& _domain, Sort _codomain) override;
+	void declareFunction(std::string _name, std::vector<SortPointer> const& _domain, Sort const& _codomain) override;
 	void declareInteger(std::string _name) override;
 	void declareBool(std::string _name) override;
 

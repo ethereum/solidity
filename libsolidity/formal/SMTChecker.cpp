@@ -416,7 +416,7 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 void SMTChecker::visitBlockHash(FunctionCall const& _funCall)
 {
 	string blockHash = "blockhash";
-	defineUninterpretedFunction(blockHash, {smt::Sort::Int}, smt::Sort::Int);
+	defineUninterpretedFunction(blockHash, {make_shared<smt::Sort>(smt::Kind::Int)}, smt::Kind::Int);
 	auto const& arguments = _funCall.arguments();
 	solAssert(arguments.size() == 1, "");
 	defineExpr(_funCall, m_uninterpretedFunctions.at(blockHash)({expr(*arguments[0])}));
@@ -605,7 +605,7 @@ void SMTChecker::defineSpecialVariable(string const& _name, Expression const& _e
 	defineExpr(_expr, m_specialVariables.at(_name)->currentValue());
 }
 
-void SMTChecker::defineUninterpretedFunction(string const& _name, vector<smt::Sort> const& _domain, smt::Sort _codomain)
+void SMTChecker::defineUninterpretedFunction(string const& _name, vector<smt::SortPointer> const& _domain, smt::Sort const& _codomain)
 {
 	if (!m_uninterpretedFunctions.count(_name))
 		m_uninterpretedFunctions.emplace(_name, m_interface->newFunction(_name, _domain, _codomain));
