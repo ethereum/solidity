@@ -262,10 +262,19 @@ SOLTMPDIR=$(mktemp -d)
 )
 rm -rf "$SOLTMPDIR"
 
-printTask "Testing assemble, yul, strict-assembly..."
-echo '{}' | "$SOLC" - --assemble &>/dev/null
-echo '{}' | "$SOLC" - --yul &>/dev/null
-echo '{}' | "$SOLC" - --strict-assembly &>/dev/null
+printTask "Testing assemble, yul, strict-assembly and optimize..."
+(
+    echo '{}' | "$SOLC" - --assemble &>/dev/null
+    echo '{}' | "$SOLC" - --yul &>/dev/null
+    echo '{}' | "$SOLC" - --strict-assembly &>/dev/null
+
+    # Test options above in conjunction with --optimize.
+    # Using both, --assemble and --optimize should fail.
+    ! echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null
+    echo '{}' | "$SOLC" - --yul --optimize &>/dev/null
+    echo '{}' | "$SOLC" - --strict-assembly --optimize &>/dev/null
+)
+
 
 printTask "Testing standard input..."
 SOLTMPDIR=$(mktemp -d)
