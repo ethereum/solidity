@@ -8,7 +8,7 @@ Miscellaneous
 Layout of State Variables in Storage
 ************************************
 
-Statically-sized variables (everything except mapping and dynamically-sized array types) are laid out contiguously in storage starting from position ``0``. Multiple items that need less than 32 bytes are packed into a single storage slot if possible, according to the following rules:
+Statically-sized variables (everything except mapping and dynamically-sized array types) are laid out contiguously in storage starting from position ``0``. Multiple, contiguous items that need less than 32 bytes are packed into a single storage slot if possible, according to the following rules:
 
 - The first item in a storage slot is stored lower-order aligned.
 - Elementary types use only that many bytes that are necessary to store them.
