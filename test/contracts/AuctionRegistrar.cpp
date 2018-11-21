@@ -112,7 +112,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 	uint constant c_renewalInterval = 365 days;
 	uint constant c_freeBytes = 12;
 
-	function Registrar() public {
+	constructor() public {
 		// TODO: Populate with hall-of-fame.
 	}
 
