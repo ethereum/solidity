@@ -23,8 +23,6 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -41,5 +39,4 @@ protected:
 	void visit(Expression& _e) override;
 };
 
-}
 }

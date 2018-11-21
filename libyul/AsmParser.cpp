@@ -32,10 +32,10 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
+using namespace yul;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
 
-shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
+shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
 	m_recursionDepth = 0;
 	try
@@ -54,10 +54,10 @@ shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scann
 	return nullptr;
 }
 
-assembly::Block Parser::parseBlock()
+Block Parser::parseBlock()
 {
 	RecursionGuard recursionGuard(*this);
-	assembly::Block block = createWithLocation<Block>();
+	Block block = createWithLocation<Block>();
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
@@ -66,7 +66,7 @@ assembly::Block Parser::parseBlock()
 	return block;
 }
 
-assembly::Statement Parser::parseStatement()
+Statement Parser::parseStatement()
 {
 	RecursionGuard recursionGuard(*this);
 	switch (currentToken())
@@ -79,7 +79,7 @@ assembly::Statement Parser::parseStatement()
 		return parseBlock();
 	case Token::If:
 	{
-		assembly::If _if = createWithLocation<assembly::If>();
+		If _if = createWithLocation<If>();
 		m_scanner->next();
 		_if.condition = make_shared<Expression>(parseExpression());
 		_if.body = parseBlock();
@@ -87,7 +87,7 @@ assembly::Statement Parser::parseStatement()
 	}
 	case Token::Switch:
 	{
-		assembly::Switch _switch = createWithLocation<assembly::Switch>();
+		Switch _switch = createWithLocation<Switch>();
 		m_scanner->next();
 		_switch.expression = make_shared<Expression>(parseExpression());
 		while (m_scanner->currentToken() == Token::Case)
@@ -109,7 +109,7 @@ assembly::Statement Parser::parseStatement()
 	{
 		if (m_flavour != AsmFlavour::Loose)
 			break;
-		assembly::StackAssignment assignment = createWithLocation<assembly::StackAssignment>();
+		StackAssignment assignment = createWithLocation<StackAssignment>();
 		advance();
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();
@@ -139,9 +139,9 @@ assembly::Statement Parser::parseStatement()
 	{
 		// if a comma follows, a multiple assignment is assumed
 
-		if (elementary.type() != typeid(assembly::Identifier))
+		if (elementary.type() != typeid(Identifier))
 			fatalParserError("Label name / variable name must precede \",\" (multiple assignment).");
-		assembly::Identifier const& identifier = boost::get<assembly::Identifier>(elementary);
+		Identifier const& identifier = boost::get<Identifier>(elementary);
 
 		Assignment assignment = createWithLocation<Assignment>(identifier.location);
 		assignment.variableNames.emplace_back(identifier);
@@ -150,9 +150,9 @@ assembly::Statement Parser::parseStatement()
 		{
 			expectToken(Token::Comma);
 			elementary = parseElementaryOperation();
-			if (elementary.type() != typeid(assembly::Identifier))
+			if (elementary.type() != typeid(Identifier))
 				fatalParserError("Variable name expected in multiple assignment.");
-			assignment.variableNames.emplace_back(boost::get<assembly::Identifier>(elementary));
+			assignment.variableNames.emplace_back(boost::get<Identifier>(elementary));
 		}
 		while (currentToken() == Token::Comma);
 
@@ -165,15 +165,15 @@ assembly::Statement Parser::parseStatement()
 	}
 	case Token::Colon:
 	{
-		if (elementary.type() != typeid(assembly::Identifier))
+		if (elementary.type() != typeid(Identifier))
 			fatalParserError("Label name / variable name must precede \":\".");
-		assembly::Identifier const& identifier = boost::get<assembly::Identifier>(elementary);
+		Identifier const& identifier = boost::get<Identifier>(elementary);
 		advance();
 		// identifier:=: should be parsed as identifier: =: (i.e. a label),
 		// while identifier:= (being followed by a non-colon) as identifier := (assignment).
 		if (currentToken() == Token::Assign && peekNextToken() != Token::Colon)
 		{
-			assembly::Assignment assignment = createWithLocation<assembly::Assignment>(identifier.location);
+			Assignment assignment = createWithLocation<Assignment>(identifier.location);
 			if (m_flavour != AsmFlavour::Yul && instructions().count(identifier.name.str()))
 				fatalParserError("Cannot use instruction names for identifier names.");
 			advance();
@@ -197,36 +197,36 @@ assembly::Statement Parser::parseStatement()
 			fatalParserError("Call or assignment expected.");
 		break;
 	}
-	if (elementary.type() == typeid(assembly::Identifier))
+	if (elementary.type() == typeid(Identifier))
 	{
-		Expression expr = boost::get<assembly::Identifier>(elementary);
+		Expression expr = boost::get<Identifier>(elementary);
 		return ExpressionStatement{locationOf(expr), expr};
 	}
-	else if (elementary.type() == typeid(assembly::Literal))
+	else if (elementary.type() == typeid(Literal))
 	{
-		Expression expr = boost::get<assembly::Literal>(elementary);
+		Expression expr = boost::get<Literal>(elementary);
 		return ExpressionStatement{locationOf(expr), expr};
 	}
 	else
 	{
-		solAssert(elementary.type() == typeid(assembly::Instruction), "Invalid elementary operation.");
-		return boost::get<assembly::Instruction>(elementary);
+		solAssert(elementary.type() == typeid(Instruction), "Invalid elementary operation.");
+		return boost::get<Instruction>(elementary);
 	}
 }
 
-assembly::Case Parser::parseCase()
+Case Parser::parseCase()
 {
 	RecursionGuard recursionGuard(*this);
-	assembly::Case _case = createWithLocation<assembly::Case>();
+	Case _case = createWithLocation<Case>();
 	if (m_scanner->currentToken() == Token::Default)
 		m_scanner->next();
 	else if (m_scanner->currentToken() == Token::Case)
 	{
 		m_scanner->next();
 		ElementaryOperation literal = parseElementaryOperation();
-		if (literal.type() != typeid(assembly::Literal))
+		if (literal.type() != typeid(Literal))
 			fatalParserError("Literal expected.");
-		_case.value = make_shared<Literal>(boost::get<assembly::Literal>(std::move(literal)));
+		_case.value = make_shared<Literal>(boost::get<Literal>(std::move(literal)));
 	}
 	else
 		fatalParserError("Case or default case expected.");
@@ -235,7 +235,7 @@ assembly::Case Parser::parseCase()
 	return _case;
 }
 
-assembly::ForLoop Parser::parseForLoop()
+ForLoop Parser::parseForLoop()
 {
 	RecursionGuard recursionGuard(*this);
 	ForLoop forLoop = createWithLocation<ForLoop>();
@@ -248,7 +248,7 @@ assembly::ForLoop Parser::parseForLoop()
 	return forLoop;
 }
 
-assembly::Expression Parser::parseExpression()
+Expression Parser::parseExpression()
 {
 	RecursionGuard recursionGuard(*this);
 	// In strict mode, this might parse a plain Instruction, but
@@ -293,12 +293,12 @@ assembly::Expression Parser::parseExpression()
 		Instruction& instr = boost::get<Instruction>(operation);
 		return FunctionalInstruction{std::move(instr.location), instr.instruction, {}};
 	}
-	else if (operation.type() == typeid(assembly::Identifier))
-		return boost::get<assembly::Identifier>(operation);
+	else if (operation.type() == typeid(Identifier))
+		return boost::get<Identifier>(operation);
 	else
 	{
-		solAssert(operation.type() == typeid(assembly::Literal), "");
-		return boost::get<assembly::Literal>(operation);
+		solAssert(operation.type() == typeid(Literal), "");
+		return boost::get<Literal>(operation);
 	}
 }
 
@@ -420,7 +420,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	return ret;
 }
 
-assembly::VariableDeclaration Parser::parseVariableDeclaration()
+VariableDeclaration Parser::parseVariableDeclaration()
 {
 	RecursionGuard recursionGuard(*this);
 	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
@@ -445,7 +445,7 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 	return varDecl;
 }
 
-assembly::FunctionDefinition Parser::parseFunctionDefinition()
+FunctionDefinition Parser::parseFunctionDefinition()
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionDefinition funDef = createWithLocation<FunctionDefinition>();
@@ -477,7 +477,7 @@ assembly::FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-assembly::Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
+Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 	if (_initialOp.type() == typeid(Instruction))

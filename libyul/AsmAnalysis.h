@@ -41,11 +41,7 @@ class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 
 struct AsmAnalysisInfo;
@@ -61,10 +57,10 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
-		EVMVersion _evmVersion,
+		dev::solidity::EVMVersion _evmVersion,
 		boost::optional<langutil::Error::Type> _errorTypeForLoose,
 		AsmFlavour _flavour = AsmFlavour::Loose,
-		yul::ExternalIdentifierAccess::Resolver const& _resolver = yul::ExternalIdentifierAccess::Resolver()
+		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
 	):
 		m_resolver(_resolver),
 		m_info(_analysisInfo),
@@ -74,23 +70,23 @@ public:
 		m_errorTypeForLoose(_errorTypeForLoose)
 	{}
 
-	bool analyze(assembly::Block const& _block);
+	bool analyze(Block const& _block);
 
-	bool operator()(assembly::Instruction const&);
-	bool operator()(assembly::Literal const& _literal);
-	bool operator()(assembly::Identifier const&);
-	bool operator()(assembly::FunctionalInstruction const& _functionalInstruction);
-	bool operator()(assembly::Label const& _label);
-	bool operator()(assembly::ExpressionStatement const&);
-	bool operator()(assembly::StackAssignment const&);
-	bool operator()(assembly::Assignment const& _assignment);
-	bool operator()(assembly::VariableDeclaration const& _variableDeclaration);
-	bool operator()(assembly::FunctionDefinition const& _functionDefinition);
-	bool operator()(assembly::FunctionCall const& _functionCall);
-	bool operator()(assembly::If const& _if);
-	bool operator()(assembly::Switch const& _switch);
-	bool operator()(assembly::ForLoop const& _forLoop);
-	bool operator()(assembly::Block const& _block);
+	bool operator()(Instruction const&);
+	bool operator()(Literal const& _literal);
+	bool operator()(Identifier const&);
+	bool operator()(FunctionalInstruction const& _functionalInstruction);
+	bool operator()(Label const& _label);
+	bool operator()(ExpressionStatement const&);
+	bool operator()(StackAssignment const&);
+	bool operator()(Assignment const& _assignment);
+	bool operator()(VariableDeclaration const& _variableDeclaration);
+	bool operator()(FunctionDefinition const& _functionDefinition);
+	bool operator()(FunctionCall const& _functionCall);
+	bool operator()(If const& _if);
+	bool operator()(Switch const& _switch);
+	bool operator()(ForLoop const& _forLoop);
+	bool operator()(Block const& _block);
 
 private:
 	/// Visits the statement and expects it to deposit one item onto the stack.
@@ -99,11 +95,11 @@ private:
 
 	/// Verifies that a variable to be assigned to exists and has the same size
 	/// as the value, @a _valueSize, unless that is equal to -1.
-	bool checkAssignment(assembly::Identifier const& _assignment, size_t _valueSize = size_t(-1));
+	bool checkAssignment(Identifier const& _assignment, size_t _valueSize = size_t(-1));
 
-	Scope& scope(assembly::Block const* _block);
+	Scope& scope(Block const* _block);
 	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
-	void warnOnInstructions(solidity::Instruction _instr, langutil::SourceLocation const& _location);
+	void warnOnInstructions(dev::solidity::Instruction _instr, langutil::SourceLocation const& _location);
 
 	/// Depending on @a m_flavour and @a m_errorTypeForLoose, throws an internal compiler
 	/// exception (if the flavour is not Loose), reports an error/warning
@@ -118,11 +114,9 @@ private:
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
-	EVMVersion m_evmVersion;
+	dev::solidity::EVMVersion m_evmVersion;
 	AsmFlavour m_flavour = AsmFlavour::Loose;
 	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
 };
 
-}
-}
 }

@@ -25,8 +25,6 @@
 
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -97,5 +95,4 @@ private:
 	std::map<YulString, size_t> m_references;	///< Holds reference counts to all variable declarations in current block.
 };
 
-}
 }

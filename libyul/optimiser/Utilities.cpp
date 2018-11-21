@@ -28,9 +28,9 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
-void dev::yul::removeEmptyBlocks(Block& _block)
+void yul::removeEmptyBlocks(Block& _block)
 {
 	auto isEmptyBlock = [](Statement const& _st) -> bool {
 		return _st.type() == typeid(Block) && boost::get<Block>(_st).statements.empty();

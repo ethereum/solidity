@@ -22,8 +22,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -48,5 +46,4 @@ private:
 	size_t m_size = 0;
 };
 
-}
 }

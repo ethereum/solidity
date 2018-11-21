@@ -30,8 +30,6 @@
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -42,7 +40,7 @@ class Disambiguator: public ASTCopier
 {
 public:
 	explicit Disambiguator(
-		solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
+		AsmAnalysisInfo const& _analysisInfo,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	):
 		m_info(_analysisInfo), m_externallyUsedIdentifiers(_externallyUsedIdentifiers), m_nameDispenser(m_externallyUsedIdentifiers)
@@ -56,16 +54,15 @@ protected:
 	void leaveFunction(FunctionDefinition const& _function) override;
 	YulString translateIdentifier(YulString _name) override;
 
-	void enterScopeInternal(solidity::assembly::Scope& _scope);
-	void leaveScopeInternal(solidity::assembly::Scope& _scope);
+	void enterScopeInternal(Scope& _scope);
+	void leaveScopeInternal(Scope& _scope);
 
-	solidity::assembly::AsmAnalysisInfo const& m_info;
+	AsmAnalysisInfo const& m_info;
 	std::set<YulString> const& m_externallyUsedIdentifiers;
 
-	std::vector<solidity::assembly::Scope*> m_scopes;
+	std::vector<Scope*> m_scopes;
 	std::map<void const*, YulString> m_translations;
 	NameDispenser m_nameDispenser;
 };
 
-}
 }

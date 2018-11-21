@@ -24,8 +24,6 @@
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -56,5 +54,4 @@ private:
 	bool m_movable = true;
 };
 
-}
 }

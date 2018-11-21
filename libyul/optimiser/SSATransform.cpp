@@ -31,7 +31,7 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
 
 void SSATransform::operator()(Identifier& _identifier)

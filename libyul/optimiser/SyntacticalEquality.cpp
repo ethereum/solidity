@@ -27,7 +27,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 bool SyntacticalEqualityChecker::equal(Expression const& _e1, Expression const& _e2)
 {

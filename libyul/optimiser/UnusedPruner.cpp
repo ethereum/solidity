@@ -30,7 +30,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 UnusedPruner::UnusedPruner(Block& _ast, set<YulString> const& _externallyUsedFunctions)
 {

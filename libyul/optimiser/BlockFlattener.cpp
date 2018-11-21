@@ -22,7 +22,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void BlockFlattener::operator()(Block& _block)
 {

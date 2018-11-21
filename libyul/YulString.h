@@ -27,8 +27,6 @@
 #include <vector>
 #include <string>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -129,5 +127,4 @@ private:
 	YulStringRepository::Handle m_handle{ 0, YulStringRepository::emptyHash() };
 };
 
-}
 }

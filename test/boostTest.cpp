@@ -143,7 +143,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		master,
 		dev::test::Options::get().testPath / "libyul",
 		"yulOptimizerTests",
-		dev::yul::test::YulOptimizerTest::create
+		yul::test::YulOptimizerTest::create
 	) > 0, "no Yul Optimizer tests found");
 	if (!dev::test::Options::get().disableSMT)
 		solAssert(registerTests(

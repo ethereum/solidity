@@ -18,8 +18,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -35,5 +33,4 @@ public:
 	void operator()(Block& _block) override;
 };
 
-}
 }

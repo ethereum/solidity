@@ -32,8 +32,6 @@
 #include <set>
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -119,5 +117,4 @@ protected:
 	}
 };
 
-}
 }

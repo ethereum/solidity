@@ -23,33 +23,3 @@
 
 #include <libyul/AsmDataForward.h>
 
-namespace dev
-{
-namespace yul
-{
-
-using Instruction = solidity::assembly::Instruction;
-using Literal = solidity::assembly::Literal;
-using Label = solidity::assembly::Label;
-using StackAssignment = solidity::assembly::StackAssignment;
-using Identifier = solidity::assembly::Identifier;
-using Assignment = solidity::assembly::Assignment;
-using VariableDeclaration = solidity::assembly::VariableDeclaration;
-using FunctionalInstruction = solidity::assembly::FunctionalInstruction;
-using FunctionDefinition = solidity::assembly::FunctionDefinition;
-using FunctionCall = solidity::assembly::FunctionCall;
-using If = solidity::assembly::If;
-using Case = solidity::assembly::Case;
-using Switch = solidity::assembly::Switch;
-using ForLoop = solidity::assembly::ForLoop;
-using ExpressionStatement = solidity::assembly::ExpressionStatement;
-using Block = solidity::assembly::Block;
-
-using TypedName = solidity::assembly::TypedName;
-class YulString;
-
-using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
-using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Block>;
-
-}
-}

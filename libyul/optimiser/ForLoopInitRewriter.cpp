@@ -21,7 +21,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void ForLoopInitRewriter::operator()(Block& _block)
 {

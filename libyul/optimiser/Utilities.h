@@ -22,13 +22,10 @@
 
 #include <libyul/ASTDataForward.h>
 
-namespace dev
-{
 namespace yul
 {
 
 /// Removes statements that are just empty blocks (non-recursive).
 void removeEmptyBlocks(Block& _block);
 
-}
 }

@@ -24,11 +24,7 @@
 
 #include <boost/variant.hpp>
 
-namespace dev
-{
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 
 struct Instruction;
@@ -60,6 +56,4 @@ enum class AsmFlavour
 	Yul     // same as Strict mode with types
 };
 
-}
-}
 }

@@ -25,8 +25,6 @@
 
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -45,5 +43,4 @@ private:
 	std::map<YulString, Expression const*> const& m_substitutions;
 };
 
-}
 }

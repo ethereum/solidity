@@ -34,15 +34,16 @@ namespace langutil
 class Scanner;
 }
 
-namespace dev
-{
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 struct AsmAnalysisInfo;
 struct Block;
 }
+
+namespace dev
+{
+namespace solidity
+{
 
 struct MachineAssemblyObject
 {
@@ -73,7 +74,7 @@ public:
 
 	/// Runs analysis step on the supplied block, returns false if input cannot be assembled.
 	/// Multiple calls overwrite the previous state.
-	bool analyze(assembly::Block const& _block, langutil::Scanner const* _scanner = nullptr);
+	bool analyze(yul::Block const& _block, langutil::Scanner const* _scanner = nullptr);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
@@ -93,8 +94,8 @@ private:
 	std::shared_ptr<langutil::Scanner> m_scanner;
 
 	bool m_analysisSuccessful = false;
-	std::shared_ptr<assembly::Block> m_parserResult;
-	std::shared_ptr<assembly::AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<yul::Block> m_parserResult;
+	std::shared_ptr<yul::AsmAnalysisInfo> m_analysisInfo;
 	langutil::ErrorList m_errors;
 	langutil::ErrorReporter m_errorReporter;
 };

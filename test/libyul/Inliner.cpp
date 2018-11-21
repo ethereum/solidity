@@ -35,8 +35,8 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
-using namespace dev::yul::test;
+using namespace yul;
+using namespace yul::test;
 using namespace dev::solidity;
 
 namespace

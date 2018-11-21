@@ -29,11 +29,7 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace assembly
+namespace yul
 {
 
 class Parser: public langutil::ParserBase
@@ -48,7 +44,7 @@ public:
 	std::shared_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
 
 protected:
-	using ElementaryOperation = boost::variant<assembly::Instruction, assembly::Literal, assembly::Identifier>;
+	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier>;
 
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
@@ -71,7 +67,7 @@ protected:
 	Case parseCase();
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
-	assembly::Expression parseExpression();
+	Expression parseExpression();
 	static std::map<std::string, dev::solidity::Instruction> const& instructions();
 	static std::map<dev::solidity::Instruction, std::string> const& instructionNames();
 	/// Parses an elementary operation, i.e. a literal, identifier or instruction.
@@ -80,7 +76,7 @@ protected:
 	ElementaryOperation parseElementaryOperation();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	assembly::Expression parseCall(ElementaryOperation&& _initialOp);
+	Expression parseCall(ElementaryOperation&& _initialOp);
 	TypedName parseTypedName();
 	std::string expectAsmIdentifier();
 
@@ -90,6 +86,4 @@ private:
 	AsmFlavour m_flavour = AsmFlavour::Loose;
 };
 
-}
-}
 }

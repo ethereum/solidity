@@ -27,8 +27,6 @@
 
 #include <vector>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -82,5 +80,4 @@ private:
 	NameDispenser& m_nameDispenser;
 };
 
-}
 }

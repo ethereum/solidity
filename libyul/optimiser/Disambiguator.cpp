@@ -26,10 +26,8 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
-
-using Scope = dev::solidity::assembly::Scope;
 
 YulString Disambiguator::translateIdentifier(YulString _originalName)
 {

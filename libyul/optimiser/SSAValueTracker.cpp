@@ -25,7 +25,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void SSAValueTracker::operator()(Assignment const& _assignment)
 {

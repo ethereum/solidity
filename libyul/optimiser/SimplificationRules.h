@@ -31,8 +31,6 @@
 #include <functional>
 #include <vector>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -85,11 +83,11 @@ public:
 	/// Matches any expression.
 	Pattern(PatternKind _kind = PatternKind::Any): m_kind(_kind) {}
 	// Matches a specific constant value.
-	Pattern(unsigned _value): Pattern(u256(_value)) {}
+	Pattern(unsigned _value): Pattern(dev::u256(_value)) {}
 	// Matches a specific constant value.
-	Pattern(u256 const& _value): m_kind(PatternKind::Constant), m_data(std::make_shared<u256>(_value)) {}
+	Pattern(dev::u256 const& _value): m_kind(PatternKind::Constant), m_data(std::make_shared<dev::u256>(_value)) {}
 	// Matches a given instruction with given arguments
-	Pattern(solidity::Instruction _instruction, std::vector<Pattern> const& _arguments = {});
+	Pattern(dev::solidity::Instruction _instruction, std::vector<Pattern> const& _arguments = {});
 	/// Sets this pattern to be part of the match group with the identifier @a _group.
 	/// Inside one rule, all patterns in the same match group have to match expressions from the
 	/// same expression equivalence class.
@@ -100,9 +98,9 @@ public:
 	std::vector<Pattern> arguments() const { return m_arguments; }
 
 	/// @returns the data of the matched expression if this pattern is part of a match group.
-	u256 d() const;
+	dev::u256 d() const;
 
-	solidity::Instruction instruction() const;
+	dev::solidity::Instruction instruction() const;
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
@@ -112,12 +110,11 @@ private:
 	Expression const& matchGroupValue() const;
 
 	PatternKind m_kind = PatternKind::Any;
-	solidity::Instruction m_instruction; ///< Only valid if m_kind is Operation
-	std::shared_ptr<u256> m_data; ///< Only valid if m_kind is Constant
+	dev::solidity::Instruction m_instruction; ///< Only valid if m_kind is Operation
+	std::shared_ptr<dev::u256> m_data; ///< Only valid if m_kind is Constant
 	std::vector<Pattern> m_arguments;
 	unsigned m_matchGroup = 0;
 	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;
 };
 
-}
 }

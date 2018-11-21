@@ -48,10 +48,10 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
+using namespace yul;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
 
-class EthAssemblyAdapter: public yul::AbstractAssembly
+class EthAssemblyAdapter: public AbstractAssembly
 {
 public:
 	explicit EthAssemblyAdapter(eth::Assembly& _assembly):
@@ -143,16 +143,16 @@ private:
 	eth::Assembly& m_assembly;
 };
 
-void assembly::CodeGenerator::assemble(
+void CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
-	yul::ExternalIdentifierAccess const& _identifierAccess,
+	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	yul::CodeTransform(
+	CodeTransform(
 		assemblyAdapter,
 		_analysisInfo,
 		false,

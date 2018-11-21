@@ -37,8 +37,8 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
+using namespace yul;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
 
 ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
 	m_info(_info), m_errorReporter(_errorReporter)
@@ -65,7 +65,7 @@ bool ScopeFiller::operator()(Label const& _item)
 	return true;
 }
 
-bool ScopeFiller::operator()(assembly::VariableDeclaration const& _varDecl)
+bool ScopeFiller::operator()(VariableDeclaration const& _varDecl)
 {
 	for (auto const& variable: _varDecl.variables)
 		if (!registerVariable(variable, _varDecl.location, *m_currentScope))
@@ -73,7 +73,7 @@ bool ScopeFiller::operator()(assembly::VariableDeclaration const& _varDecl)
 	return true;
 }
 
-bool ScopeFiller::operator()(assembly::FunctionDefinition const& _funDef)
+bool ScopeFiller::operator()(FunctionDefinition const& _funDef)
 {
 	bool success = true;
 	vector<Scope::YulType> arguments;

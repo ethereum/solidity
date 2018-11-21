@@ -28,8 +28,6 @@
 #include <map>
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -86,5 +84,4 @@ protected:
 	std::vector<Scope> m_variableScopes;
 };
 
-}
 }

@@ -24,10 +24,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
-
-using dev::solidity::assembly::TypedName;
-using dev::solidity::assembly::TypedNameList;
+using namespace yul;
 
 void VarDeclPropagator::operator()(Block& _block)
 {

@@ -25,8 +25,6 @@
 #include <set>
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -59,5 +57,4 @@ private:
 	std::map<YulString, TypedName> m_lazyInitializedVarDecls;
 };
 
-}
 }

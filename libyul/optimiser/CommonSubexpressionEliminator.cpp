@@ -28,7 +28,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void CommonSubexpressionEliminator::visit(Expression& _e)
 {

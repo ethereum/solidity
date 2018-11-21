@@ -43,11 +43,11 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void OptimiserSuite::run(
 	Block& _ast,
-	solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
+	AsmAnalysisInfo const& _analysisInfo,
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {

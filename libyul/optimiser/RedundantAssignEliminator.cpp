@@ -30,7 +30,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
 
 void RedundantAssignEliminator::operator()(Identifier const& _identifier)
