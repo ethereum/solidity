@@ -101,6 +101,14 @@ cmake \
 make -j 4
 
 cd ..
+
+md5sum $BUILD_DIR/libsolc/soljson.js
+
+# Remove debug message "NO_DYNAMIC_EXECUTION was set, using slow cwrap implementation"
+sed -i "s/Runtime\.warnOnce('NO_DYNAMIC_EXECUTION was set,'/if (false) Runtime\.warnOnce('NO_DYNAMIC_EXECUTION was set'/" $BUILD_DIR/libsolc/soljson.js
+
+md5sum $BUILD_DIR/libsolc/soljson.js
+
 mkdir -p upload
 # Patch soljson.js to provide backwards-compatibility with older emscripten versions
 echo ";/* backwards compatibility */ Module['Runtime'] = Module;" >> $BUILD_DIR/libsolc/soljson.js
