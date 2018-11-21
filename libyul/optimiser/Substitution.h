@@ -40,7 +40,7 @@ public:
 	Substitution(std::map<YulString, Expression const*> const& _substitutions):
 		m_substitutions(_substitutions)
 	{}
-	virtual Expression translate(Expression const& _expression) override;
+	Expression translate(Expression const& _expression) override;
 
 private:
 	std::map<YulString, Expression const*> const& m_substitutions;

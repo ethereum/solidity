@@ -39,10 +39,10 @@ public:
 	{ return std::unique_ptr<TestCase>(new ASTJSONTest(_filename)); }
 	ASTJSONTest(std::string const& _filename);
 
-	virtual bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
-	virtual void printSource(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
-	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
+	void printSource(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 private:
 	std::vector<std::pair<std::string, std::string>> m_sources;
 	std::string m_expectation;

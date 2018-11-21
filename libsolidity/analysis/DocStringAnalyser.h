@@ -43,10 +43,10 @@ public:
 	bool analyseDocStrings(SourceUnit const& _sourceUnit);
 
 private:
-	virtual bool visit(ContractDefinition const& _contract) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
-	virtual bool visit(ModifierDefinition const& _modifier) override;
-	virtual bool visit(EventDefinition const& _event) override;
+	bool visit(ContractDefinition const& _contract) override;
+	bool visit(FunctionDefinition const& _function) override;
+	bool visit(ModifierDefinition const& _modifier) override;
+	bool visit(EventDefinition const& _event) override;
 
 	void checkParameters(
 		CallableDeclaration const& _callable,

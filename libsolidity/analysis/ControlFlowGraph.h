@@ -105,8 +105,8 @@ public:
 
 	bool constructFlow(ASTNode const& _astRoot);
 
-	virtual bool visit(ModifierDefinition const& _modifier) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
+	bool visit(ModifierDefinition const& _modifier) override;
+	bool visit(FunctionDefinition const& _function) override;
 
 	FunctionFlow const& functionFlow(FunctionDefinition const& _function) const;
 

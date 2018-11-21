@@ -46,19 +46,19 @@ public:
 private:
 	explicit ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow);
 
-	virtual bool visit(BinaryOperation const& _operation) override;
-	virtual bool visit(Conditional const& _conditional) override;
-	virtual bool visit(IfStatement const& _ifStatement) override;
-	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual bool visit(WhileStatement const& _whileStatement) override;
-	virtual bool visit(Break const&) override;
-	virtual bool visit(Continue const&) override;
-	virtual bool visit(Throw const&) override;
-	virtual bool visit(Block const&) override;
-	virtual void endVisit(Block const&) override;
-	virtual bool visit(Return const& _return) override;
-	virtual bool visit(PlaceholderStatement const&) override;
-	virtual bool visit(FunctionCall const& _functionCall) override;
+	bool visit(BinaryOperation const& _operation) override;
+	bool visit(Conditional const& _conditional) override;
+	bool visit(IfStatement const& _ifStatement) override;
+	bool visit(ForStatement const& _forStatement) override;
+	bool visit(WhileStatement const& _whileStatement) override;
+	bool visit(Break const&) override;
+	bool visit(Continue const&) override;
+	bool visit(Throw const&) override;
+	bool visit(Block const&) override;
+	void endVisit(Block const&) override;
+	bool visit(Return const& _return) override;
+	bool visit(PlaceholderStatement const&) override;
+	bool visit(FunctionCall const& _functionCall) override;
 
 
 	/// Appends the control flow of @a _node to the current control flow.
@@ -74,7 +74,7 @@ private:
 
 
 protected:
-	virtual bool visitNode(ASTNode const& node) override;
+	bool visitNode(ASTNode const& node) override;
 
 private:
 

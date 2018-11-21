@@ -52,20 +52,20 @@ public:
 
 private:
 
-	virtual bool visit(ContractDefinition const& _contract) override;
-	virtual void endVisit(ContractDefinition const& _contract) override;
+	bool visit(ContractDefinition const& _contract) override;
+	void endVisit(ContractDefinition const& _contract) override;
 
-	virtual bool visit(FunctionDefinition const& _function) override;
-	virtual void endVisit(FunctionDefinition const& _function) override;
+	bool visit(FunctionDefinition const& _function) override;
+	void endVisit(FunctionDefinition const& _function) override;
 
-	virtual bool visit(ExpressionStatement const& _statement) override;
-	virtual bool visit(VariableDeclaration const& _variable) override;
-	virtual bool visit(Identifier const& _identifier) override;
-	virtual bool visit(Return const& _return) override;
-	virtual bool visit(MemberAccess const& _memberAccess) override;
-	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
-	virtual bool visit(BinaryOperation const& _operation) override;
-	virtual bool visit(FunctionCall const& _functionCall) override;
+	bool visit(ExpressionStatement const& _statement) override;
+	bool visit(VariableDeclaration const& _variable) override;
+	bool visit(Identifier const& _identifier) override;
+	bool visit(Return const& _return) override;
+	bool visit(MemberAccess const& _memberAccess) override;
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(BinaryOperation const& _operation) override;
+	bool visit(FunctionCall const& _functionCall) override;
 
 	/// @returns the size of this type in storage, including all sub-types.
 	static bigint structureSizeEstimate(Type const& _type, std::set<StructDefinition const*>& _structsSeen);

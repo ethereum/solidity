@@ -49,9 +49,9 @@ public:
 	}
 
 	using ASTWalker::operator();
-	virtual void operator()(Identifier const& _identifier) override;
-	virtual void operator()(FunctionCall const& _funCall) override;
-	virtual void operator()(FunctionDefinition const& _function) override;
+	void operator()(Identifier const& _identifier) override;
+	void operator()(FunctionCall const& _funCall) override;
+	void operator()(FunctionDefinition const& _function) override;
 
 private:
 	void checkAllowed(YulString _name)

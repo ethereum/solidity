@@ -109,8 +109,8 @@ class LiteralMethod: public ConstantOptimisationMethod
 public:
 	explicit LiteralMethod(Params const& _params, u256 const& _value):
 		ConstantOptimisationMethod(_params, _value) {}
-	virtual bigint gasNeeded() const override;
-	virtual AssemblyItems execute(Assembly&) const override { return AssemblyItems{}; }
+	bigint gasNeeded() const override;
+	AssemblyItems execute(Assembly&) const override { return AssemblyItems{}; }
 };
 
 /**
@@ -120,8 +120,8 @@ class CodeCopyMethod: public ConstantOptimisationMethod
 {
 public:
 	explicit CodeCopyMethod(Params const& _params, u256 const& _value);
-	virtual bigint gasNeeded() const override;
-	virtual AssemblyItems execute(Assembly& _assembly) const override;
+	bigint gasNeeded() const override;
+	AssemblyItems execute(Assembly& _assembly) const override;
 
 protected:
 	static AssemblyItems const& copyRoutine();
@@ -144,8 +144,8 @@ public:
 		);
 	}
 
-	virtual bigint gasNeeded() const override { return gasNeeded(m_routine); }
-	virtual AssemblyItems execute(Assembly&) const override
+	bigint gasNeeded() const override { return gasNeeded(m_routine); }
+	AssemblyItems execute(Assembly&) const override
 	{
 		return m_routine;
 	}

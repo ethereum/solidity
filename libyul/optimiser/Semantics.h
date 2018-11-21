@@ -38,12 +38,12 @@ public:
 	MovableChecker() = default;
 	explicit MovableChecker(Expression const& _expression);
 
-	virtual void operator()(Identifier const& _identifier) override;
-	virtual void operator()(FunctionalInstruction const& _functionalInstruction) override;
-	virtual void operator()(FunctionCall const& _functionCall) override;
+	void operator()(Identifier const& _identifier) override;
+	void operator()(FunctionalInstruction const& _functionalInstruction) override;
+	void operator()(FunctionCall const& _functionCall) override;
 
 	/// Disallow visiting anything apart from Expressions (this throws).
-	virtual void visit(Statement const&) override;
+	void visit(Statement const&) override;
 	using ASTWalker::visit;
 
 	bool movable() const { return m_movable; }

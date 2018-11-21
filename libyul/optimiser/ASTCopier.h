@@ -71,21 +71,21 @@ class ASTCopier: public ExpressionCopier, public StatementCopier
 {
 public:
 	virtual ~ASTCopier() = default;
-	virtual Expression operator()(Literal const& _literal) override;
-	virtual Statement operator()(Instruction const& _instruction) override;
-	virtual Expression operator()(Identifier const& _identifier) override;
-	virtual Expression operator()(FunctionalInstruction const& _instr) override;
-	virtual Expression operator()(FunctionCall const&) override;
-	virtual Statement operator()(ExpressionStatement const& _statement) override;
-	virtual Statement operator()(Label const& _label) override;
-	virtual Statement operator()(StackAssignment const& _assignment) override;
-	virtual Statement operator()(Assignment const& _assignment) override;
-	virtual Statement operator()(VariableDeclaration const& _varDecl) override;
-	virtual Statement operator()(If const& _if) override;
-	virtual Statement operator()(Switch const& _switch) override;
-	virtual Statement operator()(FunctionDefinition const&) override;
-	virtual Statement operator()(ForLoop const&) override;
-	virtual Statement operator()(Block const& _block) override;
+	Expression operator()(Literal const& _literal) override;
+	Statement operator()(Instruction const& _instruction) override;
+	Expression operator()(Identifier const& _identifier) override;
+	Expression operator()(FunctionalInstruction const& _instr) override;
+	Expression operator()(FunctionCall const&) override;
+	Statement operator()(ExpressionStatement const& _statement) override;
+	Statement operator()(Label const& _label) override;
+	Statement operator()(StackAssignment const& _assignment) override;
+	Statement operator()(Assignment const& _assignment) override;
+	Statement operator()(VariableDeclaration const& _varDecl) override;
+	Statement operator()(If const& _if) override;
+	Statement operator()(Switch const& _switch) override;
+	Statement operator()(FunctionDefinition const&) override;
+	Statement operator()(ForLoop const&) override;
+	Statement operator()(Block const& _block) override;
 
 	virtual Expression translate(Expression const& _expression);
 	virtual Statement translate(Statement const& _statement);

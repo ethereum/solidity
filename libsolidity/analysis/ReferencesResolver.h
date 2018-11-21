@@ -57,24 +57,24 @@ public:
 	bool resolve(ASTNode const& _root);
 
 private:
-	virtual bool visit(Block const& _block) override;
-	virtual void endVisit(Block const& _block) override;
-	virtual bool visit(ForStatement const& _for) override;
-	virtual void endVisit(ForStatement const& _for) override;
-	virtual void endVisit(VariableDeclarationStatement const& _varDeclStatement) override;
-	virtual bool visit(Identifier const& _identifier) override;
-	virtual bool visit(ElementaryTypeName const& _typeName) override;
-	virtual bool visit(FunctionDefinition const& _functionDefinition) override;
-	virtual void endVisit(FunctionDefinition const& _functionDefinition) override;
-	virtual bool visit(ModifierDefinition const& _modifierDefinition) override;
-	virtual void endVisit(ModifierDefinition const& _modifierDefinition) override;
-	virtual void endVisit(UserDefinedTypeName const& _typeName) override;
-	virtual void endVisit(FunctionTypeName const& _typeName) override;
-	virtual void endVisit(Mapping const& _typeName) override;
-	virtual void endVisit(ArrayTypeName const& _typeName) override;
-	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
-	virtual bool visit(Return const& _return) override;
-	virtual void endVisit(VariableDeclaration const& _variable) override;
+	bool visit(Block const& _block) override;
+	void endVisit(Block const& _block) override;
+	bool visit(ForStatement const& _for) override;
+	void endVisit(ForStatement const& _for) override;
+	void endVisit(VariableDeclarationStatement const& _varDeclStatement) override;
+	bool visit(Identifier const& _identifier) override;
+	bool visit(ElementaryTypeName const& _typeName) override;
+	bool visit(FunctionDefinition const& _functionDefinition) override;
+	void endVisit(FunctionDefinition const& _functionDefinition) override;
+	bool visit(ModifierDefinition const& _modifierDefinition) override;
+	void endVisit(ModifierDefinition const& _modifierDefinition) override;
+	void endVisit(UserDefinedTypeName const& _typeName) override;
+	void endVisit(FunctionTypeName const& _typeName) override;
+	void endVisit(Mapping const& _typeName) override;
+	void endVisit(ArrayTypeName const& _typeName) override;
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(Return const& _return) override;
+	void endVisit(VariableDeclaration const& _variable) override;
 
 	/// Adds a new error to the list of errors.
 	void typeError(SourceLocation const& _location, std::string const& _description);

@@ -262,8 +262,8 @@ public:
 	): m_onVisit(_onVisit), m_onEndVisit(_onEndVisit) {}
 
 protected:
-	virtual bool visitNode(ASTNode const& _n) override { return m_onVisit ? m_onVisit(_n) : true; }
-	virtual void endVisitNode(ASTNode const& _n) override { m_onEndVisit(_n); }
+	bool visitNode(ASTNode const& _n) override { return m_onVisit ? m_onVisit(_n) : true; }
+	void endVisitNode(ASTNode const& _n) override { m_onEndVisit(_n); }
 
 private:
 	std::function<bool(ASTNode const&)> m_onVisit;
