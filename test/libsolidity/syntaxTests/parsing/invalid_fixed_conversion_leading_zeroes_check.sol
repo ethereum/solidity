@@ -4,4 +4,4 @@ contract test {
 	}
 }
 // ----
-// ParserError: (44-47): Expected primary expression.
+// ParserError: (44-47): Digit or Identifier-Start not allowed at end of Number.
