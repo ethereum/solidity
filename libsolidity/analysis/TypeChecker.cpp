@@ -409,6 +409,8 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, Fun
 
 	if (!functionType->hasEqualParameterTypes(*superType))
 		return;
+	if (!functionType->hasEqualReturnTypes(*superType))
+		overrideError(_function, _super, "Overriding function return types differ.");
 
 	if (!_function.annotation().superFunction)
 		_function.annotation().superFunction = &_super;
@@ -423,7 +425,7 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, Fun
 		))
 			overrideError(_function, _super, "Overriding function visibility differs.");
 	}
-	else if (_function.stateMutability() != _super.stateMutability())
+	if (_function.stateMutability() != _super.stateMutability())
 		overrideError(
 			_function,
 			_super,
@@ -433,8 +435,6 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, Fun
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	else if (*functionType != *superType)
-		overrideError(_function, _super, "Overriding function return types differ.");
 }
 
 void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
