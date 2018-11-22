@@ -51,9 +51,7 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareFunction(std::string _name, std::vector<SortPointer> const& _domain, Sort const& _codomain) override;
-	void declareInteger(std::string _name) override;
-	void declareBool(std::string _name) override;
+	void declareVariable(std::string const&, Sort const&) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
@@ -65,8 +63,7 @@ private:
 
 	CVC4::ExprManager m_context;
 	CVC4::SmtEngine m_solver;
-	std::map<std::string, CVC4::Expr> m_constants;
-	std::map<std::string, CVC4::Expr> m_functions;
+	std::map<std::string, CVC4::Expr> m_variables;
 };
 
 }

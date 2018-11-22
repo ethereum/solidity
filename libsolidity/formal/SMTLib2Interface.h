@@ -49,16 +49,17 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareFunction(std::string _name, std::vector<SortPointer> const& _domain, Sort const& _codomain) override;
-	void declareInteger(std::string _name) override;
-	void declareBool(std::string _name) override;
+	void declareVariable(std::string const&, Sort const&) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 private:
+	void declareFunction(std::string const&, Sort const&);
+
 	std::string toSExpr(Expression const& _expr);
 	std::string toSmtLibSort(Sort const& _sort);
+	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	void write(std::string _data);
 
@@ -70,8 +71,7 @@ private:
 
 	ReadCallback::Callback m_queryCallback;
 	std::vector<std::string> m_accumulatedOutput;
-	std::set<std::string> m_constants;
-	std::set<std::string> m_functions;
+	std::set<std::string> m_variables;
 };
 
 }

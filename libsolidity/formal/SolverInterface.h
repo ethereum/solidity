@@ -45,7 +45,8 @@ enum class CheckResult
 enum class Kind
 {
 	Int,
-	Bool
+	Bool,
+	Function
 };
 
 struct Sort
@@ -58,6 +59,25 @@ struct Sort
 };
 using SortPointer = std::shared_ptr<Sort>;
 
+struct FunctionSort: public Sort
+{
+	FunctionSort(std::vector<SortPointer> _domain, SortPointer _codomain):
+		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain)) {}
+	std::vector<SortPointer> domain;
+	SortPointer codomain;
+	bool operator==(FunctionSort const& _other) const
+	{
+		if (!std::equal(
+			domain.begin(),
+			domain.end(),
+			_other.domain.begin(),
+			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
+			)
+		)
+			return false;
+		return Sort::operator==(_other) && *codomain == *_other.codomain;
+	}
+};
 
 /// C++ representation of an SMTLIB2 expression.
 class Expression
@@ -162,10 +182,12 @@ public:
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
 		solAssert(
-			arguments.empty(),
+			sort->kind == Kind::Function,
 			"Attempted function application to non-function."
 		);
-		return Expression(name, std::move(_arguments), sort);
+		auto fSort = dynamic_cast<FunctionSort const*>(sort.get());
+		solAssert(fSort, "");
+		return Expression(name, std::move(_arguments), fSort->codomain);
 	}
 
 	std::string name;
@@ -198,26 +220,12 @@ public:
 	virtual void push() = 0;
 	virtual void pop() = 0;
 
-	virtual void declareFunction(std::string _name, std::vector<SortPointer> const& _domain, Sort const& _codomain) = 0;
-	Expression newFunction(std::string _name, std::vector<SortPointer> const& _domain, Sort const& _codomain)
-	{
-		declareFunction(_name, _domain, _codomain);
-		// Subclasses should do something here
-		return Expression(std::move(_name), {}, _codomain.kind);
-	}
-	virtual void declareInteger(std::string _name) = 0;
-	Expression newInteger(std::string _name)
+	virtual void declareVariable(std::string const& _name, Sort const& _sort) = 0;
+	Expression newVariable(std::string _name, SortPointer _sort)
 	{
 		// Subclasses should do something here
-		declareInteger(_name);
-		return Expression(std::move(_name), {}, Kind::Int);
-	}
-	virtual void declareBool(std::string _name) = 0;
-	Expression newBool(std::string _name)
-	{
-		// Subclasses should do something here
-		declareBool(_name);
-		return Expression(std::move(_name), {}, Kind::Bool);
+		declareVariable(_name, *_sort);
+		return Expression(std::move(_name), {}, std::move(_sort));
 	}
 
 	virtual void addAssertion(Expression const& _expr) = 0;

@@ -51,22 +51,22 @@ void Z3Interface::pop()
 	m_solver.pop();
 }
 
-void Z3Interface::declareFunction(string _name, vector<SortPointer> const& _domain, Sort const& _codomain)
+void Z3Interface::declareVariable(string const& _name, Sort const& _sort)
 {
+	if (_sort.kind == Kind::Function)
+		declareFunction(_name, _sort);
+	else if (!m_constants.count(_name))
+		m_constants.insert({_name, m_context.constant(_name.c_str(), z3Sort(_sort))});
+}
+
+void Z3Interface::declareFunction(string const& _name, Sort const& _sort)
+{
+	solAssert(_sort.kind == smt::Kind::Function, "");
 	if (!m_functions.count(_name))
-		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(_domain), z3Sort(_codomain))});
-}
-
-void Z3Interface::declareInteger(string _name)
-{
-	if (!m_constants.count(_name))
-		m_constants.insert({_name, m_context.int_const(_name.c_str())});
-}
-
-void Z3Interface::declareBool(string _name)
-{
-	if (!m_constants.count(_name))
-		m_constants.insert({_name, m_context.bool_const(_name.c_str())});
+	{
+		FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
+		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain))});
+	}
 }
 
 void Z3Interface::addAssertion(Expression const& _expr)
