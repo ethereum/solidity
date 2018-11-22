@@ -442,10 +442,11 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 					continue;
 				seenFunctions.insert(function);
-				FunctionType funType(*function, false);
-				if (auto fun = funType.asCallableFunction(true, true))
-					if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
-						members.push_back(MemberList::Member(function->name(), fun, function));
+				if (function->parameters().empty())
+					continue;
+				FunctionTypePointer fun = FunctionType(*function, false).asCallableFunction(true, true);
+				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
+					members.push_back(MemberList::Member(function->name(), fun, function));
 			}
 		}
 	return members;
@@ -3061,8 +3062,8 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 
 FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _bound) const
 {
-	if (_bound && m_parameterTypes.empty())
-		return FunctionTypePointer();
+	if (_bound)
+		solAssert(!m_parameterTypes.empty(), "");
 
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)

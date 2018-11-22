@@ -1158,9 +1158,8 @@ public:
 	/// from CallData to Memory. This is the type that would be used when the function is
 	/// called, as opposed to the parameter types that are available inside the function body.
 	/// Also supports variants to be used for library or bound calls.
-	/// Returns empty shared pointer on a failure. Namely, if a bound function has no parameters.
 	/// @param _inLibrary if true, uses DelegateCall as location.
-	/// @param _bound if true, the arguments are placed as `arg1.functionName(arg2, ..., argn)`.
+	/// @param _bound if true, the function type is set to be bound.
 	FunctionTypePointer asCallableFunction(bool _inLibrary, bool _bound = false) const;
 
 private:
