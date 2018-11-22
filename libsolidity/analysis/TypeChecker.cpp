@@ -456,7 +456,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(f, functionType)
+						make_pair(f, functionType->asCallableFunction(false))
 					);
 			}
 		for (VariableDeclaration const* v: contract->stateVariables())
@@ -466,7 +466,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(v, functionType)
+						make_pair(v, functionType->asCallableFunction(false))
 					);
 			}
 	}
