@@ -163,6 +163,10 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		return arguments[0] * arguments[1];
 	else if (n == "/")
 		return arguments[0] / arguments[1];
+	else if (n == "select")
+		return z3::select(arguments[0], arguments[1]);
+	else if (n == "store")
+		return z3::store(arguments[0], arguments[1], arguments[2]);
 	// Cannot reach here.
 	solAssert(false, "");
 	return arguments[0];
@@ -176,6 +180,11 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 		return m_context.bool_sort();
 	case Kind::Int:
 		return m_context.int_sort();
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return m_context.array_sort(z3Sort(*arraySort.domain), z3Sort(*arraySort.range));
+	}
 	default:
 		break;
 	}

@@ -46,7 +46,8 @@ enum class Kind
 {
 	Int,
 	Bool,
-	Function
+	Function,
+	Array
 };
 
 struct Sort
@@ -76,6 +77,20 @@ struct FunctionSort: public Sort
 		)
 			return false;
 		return Sort::operator==(_other) && *codomain == *_other.codomain;
+	}
+};
+
+struct ArraySort: public Sort
+{
+	/// _domain is the sort of the indices
+	/// _range is the sort of the values
+	ArraySort(SortPointer _domain, SortPointer _range):
+		Sort(Kind::Array), domain(std::move(_domain)), range(std::move(_range)) {}
+	SortPointer domain;
+	SortPointer range;
+	bool operator==(ArraySort const& _other) const
+	{
+		return Sort::operator==(_other) && *domain == *_other.domain && *range == *_other.range;
 	}
 };
 
@@ -109,7 +124,9 @@ public:
 			{"+", 2},
 			{"-", 2},
 			{"*", 2},
-			{"/", 2}
+			{"/", 2},
+			{"select", 2},
+			{"store", 3}
 		};
 		return operatorsArity.count(name) && operatorsArity.at(name) == arguments.size();
 	}
@@ -125,6 +142,36 @@ public:
 	static Expression implies(Expression _a, Expression _b)
 	{
 		return !std::move(_a) || std::move(_b);
+	}
+
+	/// select is the SMT representation of an array index access.
+	static Expression select(Expression _array, Expression _index)
+	{
+		solAssert(_array.sort->kind == Kind::Array, "");
+		auto const& arraySort = dynamic_cast<ArraySort const*>(_array.sort.get());
+		solAssert(arraySort, "");
+		solAssert(*arraySort->domain == *_index.sort, "");
+		return Expression(
+			"select",
+			std::vector<Expression>{std::move(_array), std::move(_index)},
+			arraySort->range
+		);
+	}
+
+	/// store is the SMT representation of an assignment to array index.
+	/// The function is pure and returns the modified array.
+	static Expression store(Expression _array, Expression _index, Expression _element)
+	{
+		solAssert(_array.sort->kind == Kind::Array, "");
+		auto const& arraySort = dynamic_cast<ArraySort const*>(_array.sort.get());
+		solAssert(arraySort, "");
+		solAssert(*arraySort->domain == *_index.sort, "");
+		solAssert(*arraySort->range == *_element.sort, "");
+		return Expression(
+			"store",
+			std::vector<Expression>{std::move(_array), std::move(_index), std::move(_element)},
+			_array.sort
+		);
 	}
 
 	friend Expression operator!(Expression _a)
