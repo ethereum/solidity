@@ -409,7 +409,7 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 	auto const& symbolicVar = m_specialVariables.at(gasLeft);
 	unsigned index = symbolicVar->index();
 	// We set the current value to unknown anyway to add type constraints.
-	symbolicVar->setUnknownValue();
+	setUnknownValue(*symbolicVar);
 	if (index > 0)
 		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
 }
@@ -597,7 +597,7 @@ void SMTChecker::defineSpecialVariable(string const& _name, Expression const& _e
 	{
 		auto result = newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
 		m_specialVariables.emplace(_name, result.second);
-		result.second->setUnknownValue();
+		setUnknownValue(*result.second);
 		if (result.first)
 			m_errorReporter.warning(
 				_expr.location(),
@@ -1071,13 +1071,23 @@ smt::Expression SMTChecker::newValue(VariableDeclaration const& _decl)
 void SMTChecker::setZeroValue(VariableDeclaration const& _decl)
 {
 	solAssert(knownVariable(_decl), "");
-	m_variables.at(&_decl)->setZeroValue();
+	setZeroValue(*m_variables.at(&_decl));
+}
+
+void SMTChecker::setZeroValue(SymbolicVariable& _variable)
+{
+	smt::setSymbolicZeroValue(_variable, *m_interface);
 }
 
 void SMTChecker::setUnknownValue(VariableDeclaration const& _decl)
 {
 	solAssert(knownVariable(_decl), "");
-	m_variables.at(&_decl)->setUnknownValue();
+	setUnknownValue(*m_variables.at(&_decl));
+}
+
+void SMTChecker::setUnknownValue(SymbolicVariable& _variable)
+{
+	smt::setSymbolicUnknownValue(_variable, *m_interface);
 }
 
 smt::Expression SMTChecker::expr(Expression const& _e)

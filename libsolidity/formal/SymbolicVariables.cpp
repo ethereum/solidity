@@ -62,15 +62,6 @@ smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
 	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Bool));
 }
 
-void SymbolicBoolVariable::setZeroValue()
-{
-	m_interface.addAssertion(currentValue() == smt::Expression(false));
-}
-
-void SymbolicBoolVariable::setUnknownValue()
-{
-}
-
 SymbolicIntVariable::SymbolicIntVariable(
 	TypePointer _type,
 	string const& _uniqueName,
@@ -84,19 +75,6 @@ SymbolicIntVariable::SymbolicIntVariable(
 smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
 {
 	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Int));
-}
-
-void SymbolicIntVariable::setZeroValue()
-{
-	m_interface.addAssertion(currentValue() == 0);
-}
-
-void SymbolicIntVariable::setUnknownValue()
-{
-	auto intType = dynamic_cast<IntegerType const*>(m_type.get());
-	solAssert(intType, "");
-	m_interface.addAssertion(currentValue() >= minValue(*intType));
-	m_interface.addAssertion(currentValue() <= maxValue(*intType));
 }
 
 SymbolicAddressVariable::SymbolicAddressVariable(

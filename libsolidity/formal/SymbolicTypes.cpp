@@ -169,3 +169,32 @@ smt::Expression dev::solidity::maxValue(IntegerType const& _type)
 {
 	return smt::Expression(_type.maxValue());
 }
+
+void dev::solidity::smt::setSymbolicZeroValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface)
+{
+	setSymbolicZeroValue(_variable.currentValue(), _variable.type(), _interface);
+}
+
+void dev::solidity::smt::setSymbolicZeroValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface)
+{
+	if (isInteger(_type->category()))
+		_interface.addAssertion(_expr == 0);
+	else if (isBool(_type->category()))
+		_interface.addAssertion(_expr == smt::Expression(false));
+}
+
+void dev::solidity::smt::setSymbolicUnknownValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface)
+{
+	setSymbolicUnknownValue(_variable.currentValue(), _variable.type(), _interface);
+}
+
+void dev::solidity::smt::setSymbolicUnknownValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface)
+{
+	if (isInteger(_type->category()))
+	{
+		auto intType = dynamic_cast<IntegerType const*>(_type.get());
+		solAssert(intType, "");
+		_interface.addAssertion(_expr >= minValue(*intType));
+		_interface.addAssertion(_expr <= maxValue(*intType));
+	}
+}
