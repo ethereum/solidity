@@ -28,4 +28,4 @@ contract test {
 
 }
 // ----
-// ParserError: (678-681): Expected primary expression.
+// ParserError: (678-681): Invalid String Escape.

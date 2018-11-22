@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (100-109): Expected primary expression.
+// ParserError: (100-109): Expected String end-quote.

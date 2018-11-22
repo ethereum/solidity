@@ -265,6 +265,15 @@ namespace langutil
 	T(Illegal, "ILLEGAL", 0)                                           \
 	/* Illegal hex token */                                            \
 	T(IllegalHex, "ILLEGAL_HEX", 0)                                    \
+	T(IllegalCommentTerminator, "ILLEGAL_COMMENT_TERMINATOR", 0)       \
+	T(IllegalStringEscape, "ILLEGAL_STRING_ESCAPE", 0)                 \
+	T(IllegalStringEndQuote, "ILLEGAL_STRING_END_QUOTE", 0)            \
+	T(IllegalNumberSeparator, "ILLEGAL_NUMER_SEPARATOR", 0)            \
+	T(IllegalHexDigit, "ILLEGAL_HEX_DIGIT", 0)                         \
+	T(IllegalOctalNotAllowed, "ILLEGAL_OCTAL_NOT_ALLOWED", 0)          \
+	T(IllegalExponent, "ILLEGAL_EXPONENT", 0)                          \
+	T(IllegalNumberEnd, "ILLEGAL_NUMBER_END", 0)                       \
+	T(IllegalEnd, NULL, 0) /* used as type Illegal enum end marker */  \
 	\
 	/* Scanner-internal use only. */                                   \
 	T(Whitespace, nullptr, 0)
@@ -311,6 +320,9 @@ namespace TokenTraits
 	constexpr bool isEtherSubdenomination(Token op) { return op == Token::SubWei || op == Token::SubSzabo || op == Token::SubFinney || op == Token::SubEther; }
 	constexpr bool isTimeSubdenomination(Token op) { return op == Token::SubSecond || op == Token::SubMinute || op == Token::SubHour || op == Token::SubDay || op == Token::SubWeek || op == Token::SubYear; }
 	constexpr bool isReservedKeyword(Token op) { return (Token::Abstract <= op && op <= Token::Unchecked); }
+
+	// @returns true if token is illegal
+	constexpr bool isIllegal(Token tok) { return Token::Illegal <= tok && tok < Token::IllegalEnd; };
 
 	inline Token AssignmentToBinaryOp(Token op)
 	{

@@ -311,7 +311,7 @@ Token Scanner::skipMultiLineComment()
 		}
 	}
 	// Unterminated multi-line comment.
-	return Token::Illegal;
+	return Token::IllegalCommentTerminator;
 }
 
 Token Scanner::scanMultiLineDocComment()
@@ -362,7 +362,7 @@ Token Scanner::scanMultiLineDocComment()
 	}
 	literal.complete();
 	if (!endFound)
-		return Token::Illegal;
+		return Token::IllegalCommentTerminator;
 	else
 		return Token::CommentLiteral;
 }
@@ -392,7 +392,7 @@ Token Scanner::scanSlash()
 	{
 		// doxygen style /** natspec comment
 		if (!advance()) /* slash star comment before EOS */
-			return Token::Illegal;
+			return Token::IllegalCommentTerminator;
 		else if (m_char == '*')
 		{
 			advance(); //consume the last '*' at /**
@@ -409,8 +409,9 @@ Token Scanner::scanSlash()
 			comment = scanMultiLineDocComment();
 			m_nextSkippedComment.location.end = sourcePos();
 			m_nextSkippedComment.token = comment;
-			if (comment == Token::Illegal)
-				return Token::Illegal;
+			// @todo possibly: if (comment.isIllegal) return comment; to pass all errors
+			if (comment == Token::IllegalCommentTerminator)
+				return Token::IllegalCommentTerminator;
 			else
 				return Token::Whitespace;
 		}
@@ -620,6 +621,7 @@ void Scanner::scanToken()
 			else if (isSourcePastEndOfInput())
 				token = Token::EOS;
 			else
+				// @todo verfiy if this is actually an "IllegalUnknown" case
 				token = selectToken(Token::Illegal);
 			break;
 		}
@@ -713,13 +715,13 @@ Token Scanner::scanString()
 		if (c == '\\')
 		{
 			if (isSourcePastEndOfInput() || !scanEscape())
-				return Token::Illegal;
+				return Token::IllegalStringEscape;
 		}
 		else
 			addLiteralChar(c);
 	}
 	if (m_char != quote)
-		return Token::Illegal;
+		return Token::IllegalStringEndQuote;
 	literal.complete();
 	advance();  // consume quote
 	return Token::StringLiteral;
@@ -767,7 +769,8 @@ Token Scanner::scanNumber(char _charSeen)
 		// we have already seen a decimal point of the float
 		addLiteralChar('.');
 		if (m_char == '_')
-			return Token::Illegal;
+			// @todo add test-case (change of return value did not break test)
+			return Token::IllegalNumberSeparator;
 		scanDecimalDigits();  // we know we have at least one digit
 	}
 	else
@@ -784,14 +787,14 @@ Token Scanner::scanNumber(char _charSeen)
 				kind = HEX;
 				addLiteralCharAndAdvance();
 				if (!isHexDigit(m_char))
-					return Token::Illegal; // we must have at least one hex digit after 'x'
+					return Token::IllegalHexDigit; // we must have at least one hex digit after 'x'
 
 				while (isHexDigit(m_char) || m_char == '_') // We keep the underscores for later validation
 					addLiteralCharAndAdvance();
 			}
 			else if (isDecimalDigit(m_char))
 				// We do not allow octal numbers
-				return Token::Illegal;
+				return Token::IllegalOctalNotAllowed;
 		}
 		// Parse decimal digits and allow trailing fractional part.
 		if (kind == DECIMAL)
@@ -823,7 +826,8 @@ Token Scanner::scanNumber(char _charSeen)
 	{
 		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
 		if (kind != DECIMAL)
-			return Token::Illegal;
+			// @todo add test (change introduced no failing)
+			return Token::IllegalExponent;
 		else if (!m_source.isPastEndOfInput(1) && m_source.get(1) == '_')
 		{
 			// Recover from wrongly placed underscore as delimiter in literal with scientific
@@ -839,7 +843,7 @@ Token Scanner::scanNumber(char _charSeen)
 		if (m_char == '+' || m_char == '-')
 			addLiteralCharAndAdvance();
 		if (!isDecimalDigit(m_char))
-			return Token::Illegal; // we must have at least one decimal digit after 'e'/'E'
+			return Token::IllegalExponent; // we must have at least one decimal digit after 'e'/'E'
 		scanDecimalDigits();
 	}
 	// The source character immediately following a numeric literal must
@@ -847,7 +851,7 @@ Token Scanner::scanNumber(char _charSeen)
 	// section 7.8.3, page 17 (note that we read only one decimal digit
 	// if the value is 0).
 	if (isDecimalDigit(m_char) || isIdentifierStart(m_char))
-		return Token::Illegal;
+		return Token::IllegalNumberEnd;
 	literal.complete();
 	return Token::Number;
 }
