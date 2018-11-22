@@ -402,10 +402,10 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 
 void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
 {
-	FunctionType functionType(_function);
-	FunctionType superType(_super);
+	FunctionTypePointer functionType = FunctionType(_function).asCallableFunction(false);
+	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
 
-	if (!functionType.hasEqualParameterTypes(superType))
+	if (!functionType->hasEqualParameterTypes(*superType))
 		return;
 
 	if (!_function.annotation().superFunction)
@@ -431,7 +431,7 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, Fun
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	else if (functionType != superType)
+	else if (*functionType != *superType)
 		overrideError(_function, _super, "Overriding function return types differ.");
 }
 
