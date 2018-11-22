@@ -413,16 +413,14 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, Fun
 
 	if (_function.visibility() != _super.visibility())
 	{
-		// visibility is enforced to be external in interfaces, but a contract can override that with public
-		if (
-			_super.inContractKind() == ContractDefinition::ContractKind::Interface &&
-			_function.inContractKind() != ContractDefinition::ContractKind::Interface &&
+		// Visibility change from external to public is fine.
+		// Any other change is disallowed.
+		if (!(
+			_super.visibility() == FunctionDefinition::Visibility::External &&
 			_function.visibility() == FunctionDefinition::Visibility::Public
-		)
-			return;
-		overrideError(_function, _super, "Overriding function visibility differs.");
+		))
+			overrideError(_function, _super, "Overriding function visibility differs.");
 	}
-
 	else if (_function.stateMutability() != _super.stateMutability())
 		overrideError(
 			_function,
@@ -433,7 +431,6 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, Fun
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-
 	else if (functionType != superType)
 		overrideError(_function, _super, "Overriding function return types differ.");
 }
