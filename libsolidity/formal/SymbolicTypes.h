@@ -55,5 +55,15 @@ std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(Type cons
 smt::Expression minValue(IntegerType const& _type);
 smt::Expression maxValue(IntegerType const& _type);
 
+namespace smt
+{
+
+void setSymbolicZeroValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
+void setSymbolicZeroValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
+void setSymbolicUnknownValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
+void setSymbolicUnknownValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
+
+}
+
 }
 }
