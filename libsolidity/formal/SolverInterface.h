@@ -55,8 +55,9 @@ struct Sort
 	Sort(Kind _kind):
 		kind(_kind) {}
 	virtual ~Sort() = default;
-	Kind const kind;
 	bool operator==(Sort const& _other) const { return kind == _other.kind; }
+
+	Kind const kind;
 };
 using SortPointer = std::shared_ptr<Sort>;
 
@@ -64,8 +65,6 @@ struct FunctionSort: public Sort
 {
 	FunctionSort(std::vector<SortPointer> _domain, SortPointer _codomain):
 		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain)) {}
-	std::vector<SortPointer> domain;
-	SortPointer codomain;
 	bool operator==(FunctionSort const& _other) const
 	{
 		if (!std::equal(
@@ -73,11 +72,13 @@ struct FunctionSort: public Sort
 			domain.end(),
 			_other.domain.begin(),
 			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
-			)
-		)
+		))
 			return false;
 		return Sort::operator==(_other) && *codomain == *_other.codomain;
 	}
+
+	std::vector<SortPointer> domain;
+	SortPointer codomain;
 };
 
 struct ArraySort: public Sort
@@ -86,12 +87,13 @@ struct ArraySort: public Sort
 	/// _range is the sort of the values
 	ArraySort(SortPointer _domain, SortPointer _range):
 		Sort(Kind::Array), domain(std::move(_domain)), range(std::move(_range)) {}
-	SortPointer domain;
-	SortPointer range;
 	bool operator==(ArraySort const& _other) const
 	{
 		return Sort::operator==(_other) && *domain == *_other.domain && *range == *_other.range;
 	}
+
+	SortPointer domain;
+	SortPointer range;
 };
 
 /// C++ representation of an SMTLIB2 expression.
