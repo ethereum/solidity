@@ -9388,6 +9388,25 @@ BOOST_AUTO_TEST_CASE(using_for_by_name)
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(6 * 7)));
 }
 
+BOOST_AUTO_TEST_CASE(bound_function_in_function)
+{
+	char const* sourceCode = R"(
+		library L {
+			function g(function() internal returns (uint) _t) internal returns (uint) { return _t(); }
+		}
+		contract C {
+			using L for *;
+			function f() public returns (uint) {
+				return t.g();
+			}
+			function t() public pure returns (uint)  { return 7; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "L");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(7)));
+}
+
 BOOST_AUTO_TEST_CASE(bound_function_in_var)
 {
 	char const* sourceCode = R"(
