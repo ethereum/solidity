@@ -62,5 +62,6 @@ if you want to help.
 [@chriseth](https://github.com/chriseth)
 
 ## License
-Solidity is licensed under [GNU General Public License v3.0](https://github.com/ethereum/solidity/blob/develop/LICENSE.txt)
+Solidity is licensed under [GNU General Public License v3.0](LICENSE.txt)
 
+Some third-party code has its [own licensing terms](cmake/templates/license.h.in).
