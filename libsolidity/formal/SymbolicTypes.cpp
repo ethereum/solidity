@@ -43,6 +43,10 @@ smt::SortPointer dev::solidity::smtSort(Type const& _type)
 		smt::SortPointer returnSort = smtSort(*returnTypes.at(0));
 		return make_shared<smt::FunctionSort>(parameterSorts, returnSort);
 	}
+	case smt::Kind::Array:
+	{
+		solUnimplementedAssert(false, "Invalid type");
+	}
 	}
 	solAssert(false, "Invalid type");
 }

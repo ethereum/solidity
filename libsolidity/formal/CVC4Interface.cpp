@@ -164,6 +164,10 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		return m_context.mkExpr(CVC4::kind::MULT, arguments[0], arguments[1]);
 	else if (n == "/")
 		return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
+	else if (n == "select")
+		return m_context.mkExpr(CVC4::kind::SELECT, arguments[0], arguments[1]);
+	else if (n == "store")
+		return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
 	// Cannot reach here.
 	solAssert(false, "");
 	return arguments[0];
@@ -181,6 +185,11 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 	{
 		FunctionSort const& fSort = dynamic_cast<FunctionSort const&>(_sort);
 		return m_context.mkFunctionType(cvc4Sort(fSort.domain), cvc4Sort(*fSort.codomain));
+	}
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return m_context.mkArrayType(cvc4Sort(*arraySort.domain), cvc4Sort(*arraySort.range));
 	}
 	default:
 		break;

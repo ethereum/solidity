@@ -144,6 +144,11 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 		return "Int";
 	case Kind::Bool:
 		return "Bool";
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
+	}
 	default:
 		solAssert(false, "Invalid SMT sort");
 	}
