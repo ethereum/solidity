@@ -250,7 +250,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			if (function->isConstructor())
 				continue;
 			auto& overloads = functions[function->name()];
-			FunctionTypePointer funType = make_shared<FunctionType>(*function);
+			FunctionTypePointer funType = make_shared<FunctionType>(*function)->asCallableFunction(false);
 			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
 			{
 				return funType->hasEqualParameterTypes(*_funAndFlag.first);
