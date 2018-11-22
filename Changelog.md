@@ -1,6 +1,7 @@
 ### 0.5.1 (unreleased)
 
 Language Features:
+ * Allow public functions to override external functions.
 
 
 Compiler Features:

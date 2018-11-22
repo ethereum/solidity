@@ -4,4 +4,3 @@ contract C {
 }
 // ----
 // DeclarationError: (17-66): Function with same name and arguments defined twice.
-// TypeError: (17-66): Overriding function visibility differs.
