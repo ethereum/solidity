@@ -24,6 +24,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
+#include <libdevcore/StringUtils.h>
+
 #include <boost/range/adaptor/map.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
@@ -300,14 +302,14 @@ void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _
 	checkCondition(
 		_value < minValue(_type),
 		_location,
-		"Underflow (resulting value less than " + formatNumber(_type.minValue()) + ")",
+		"Underflow (resulting value less than " + formatNumberReadable(_type.minValue()) + ")",
 		"<result>",
 		&_value
 	);
 	checkCondition(
 		_value > maxValue(_type),
 		_location,
-		"Overflow (resulting value larger than " + formatNumber(_type.maxValue()) + ")",
+		"Overflow (resulting value larger than " + formatNumberReadable(_type.maxValue()) + ")",
 		"<result>",
 		&_value
 	);
@@ -963,7 +965,7 @@ SMTChecker::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _exp
 		try
 		{
 			// Parse and re-format nicely
-			value = formatNumber(bigint(value));
+			value = formatNumberReadable(bigint(value));
 		}
 		catch (...) { }
 	}

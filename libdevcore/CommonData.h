@@ -50,16 +50,35 @@ enum class HexPrefix
 	DontAdd = 0,
 	Add = 1,
 };
+
+enum class HexCase
+{
+	Lower = 0,
+	Upper = 1,
+	Mixed = 2,
+};
+
 /// Convert a series of bytes to the corresponding string of hex duplets.
 /// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
 /// @example toHex("A\x69") == "4169"
 template <class T>
-std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd)
+std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower)
 {
 	std::ostringstream ret;
-	unsigned ii = 0;
-	for (auto i: _data)
-		ret << std::hex << std::setfill('0') << std::setw(ii++ ? 2 : _w) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
+	int rix = _data.size() - 1;
+	for (auto datum: _data)
+	{
+		// switch hex case every four hexchars
+		auto hexcase = std::nouppercase;
+		if (_case == HexCase::Upper)
+			hexcase = std::uppercase;
+		else if (_case == HexCase::Mixed)
+			hexcase = (rix-- & 2) == 0 ? std::nouppercase : std::uppercase;
+
+		ret << std::hex << hexcase << std::setfill('0') << std::setw(_w)
+			<< +static_cast<typename std::make_unsigned<decltype(datum)>::type>(datum);
+	}
+
 	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
 }
 
