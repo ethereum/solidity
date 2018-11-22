@@ -82,8 +82,8 @@ for (var optimize of [false, true])
             {
                 for (var contractName in result['contracts'][filename])
                 {
-                    console.log(contractName + ' ' + result['contracts'][filename][contractName].evm.bytecode.object)
-                    console.log(contractName + ' ' + result['contracts'][filename][contractName].metadata)
+                    console.log(filename + ':' + contractName + ' ' + result['contracts'][filename][contractName].evm.bytecode.object)
+                    console.log(filename + ':' + contractName + ' ' + result['contracts'][filename][contractName].metadata)
                 }
             }
         }
