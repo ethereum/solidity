@@ -206,7 +206,7 @@ static inline int hash(uint8_t* out, size_t outlen,
 	if (outlen > (bits/8)) {                                      \
 	  return -1;                                                  \
 	}                                                             \
-	return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x01);  \
+	return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x06);  \
   }
 
 /*** FIPS202 SHAKE VOFs ***/
