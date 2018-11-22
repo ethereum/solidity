@@ -58,7 +58,7 @@ for (var optimize of [false, true])
         if (filename !== undefined)
         {
             var inputs = {}
-            inputs[filename] = fs.readFileSync(filename).toString()
+            inputs[filename] = { content: fs.readFileSync(filename).toString() }
             var input = {
                 language: 'Solidity',
                 sources: inputs,
@@ -68,16 +68,22 @@ for (var optimize of [false, true])
                 }
             }
             var result = JSON.parse(compiler.compile(JSON.stringify(input)))
-            if (!('contracts' in result) || Object.keys(result['contracts']).length === 0)
+            if (
+                !('contracts' in result) ||
+                Object.keys(result['contracts']).length === 0 ||
+                !result['contracts'][filename] ||
+                Object.keys(result['contracts'][filename]).length === 0
+            )
             {
+                // NOTE: do not exit here because this may be run on source which cannot be compiled
                 console.log(filename + ': ERROR')
             }
             else
             {
-                for (var contractName in result['contracts'])
+                for (var contractName in result['contracts'][filename])
                 {
-                    console.log(contractName + ' ' + result['contracts'][contractName].evm.bytecode.object)
-                    console.log(contractName + ' ' + result['contracts'][contractName].metadata)
+                    console.log(contractName + ' ' + result['contracts'][filename][contractName].evm.bytecode.object)
+                    console.log(contractName + ' ' + result['contracts'][filename][contractName].metadata)
                 }
             }
         }
