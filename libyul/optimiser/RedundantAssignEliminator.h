@@ -21,14 +21,11 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
-
+#include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -189,5 +186,4 @@ private:
 	std::set<Assignment const*> const& m_toRemove;
 };
 
-}
 }

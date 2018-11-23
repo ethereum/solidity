@@ -21,8 +21,7 @@
 #include <libyul/optimiser/Semantics.h>
 
 #include <libyul/Exceptions.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libevmasm/SemanticInformation.h>
 
@@ -30,7 +29,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 MovableChecker::MovableChecker(Expression const& _expression)
 {

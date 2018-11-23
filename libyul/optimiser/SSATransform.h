@@ -20,14 +20,11 @@
  */
 #pragma once
 
-#include <libyul/ASTDataForward.h>
-
+#include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <vector>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -94,5 +91,4 @@ private:
 	std::map<YulString, YulString> m_currentVariableValues;
 };
 
-}
 }

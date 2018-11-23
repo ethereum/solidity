@@ -18,13 +18,13 @@
  * Scopes for identifiers.
  */
 
-#include <libsolidity/inlineasm/AsmScope.h>
+#include <libyul/AsmScope.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::solidity::assembly;
+using namespace yul;
 
-bool Scope::registerLabel(yul::YulString _name)
+bool Scope::registerLabel(YulString _name)
 {
 	if (exists(_name))
 		return false;
@@ -32,7 +32,7 @@ bool Scope::registerLabel(yul::YulString _name)
 	return true;
 }
 
-bool Scope::registerVariable(yul::YulString _name, YulType const& _type)
+bool Scope::registerVariable(YulString _name, YulType const& _type)
 {
 	if (exists(_name))
 		return false;
@@ -42,7 +42,7 @@ bool Scope::registerVariable(yul::YulString _name, YulType const& _type)
 	return true;
 }
 
-bool Scope::registerFunction(yul::YulString _name, std::vector<YulType> const& _arguments, std::vector<YulType> const& _returns)
+bool Scope::registerFunction(YulString _name, std::vector<YulType> const& _arguments, std::vector<YulType> const& _returns)
 {
 	if (exists(_name))
 		return false;
@@ -50,7 +50,7 @@ bool Scope::registerFunction(yul::YulString _name, std::vector<YulType> const& _
 	return true;
 }
 
-Scope::Identifier* Scope::lookup(yul::YulString _name)
+Scope::Identifier* Scope::lookup(YulString _name)
 {
 	bool crossedFunctionBoundary = false;
 	for (Scope* s = this; s; s = s->superScope)
@@ -70,7 +70,7 @@ Scope::Identifier* Scope::lookup(yul::YulString _name)
 	return nullptr;
 }
 
-bool Scope::exists(yul::YulString _name) const
+bool Scope::exists(YulString _name) const
 {
 	if (identifiers.count(_name))
 		return true;

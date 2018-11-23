@@ -24,14 +24,13 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/Utilities.h>
 #include <libyul/Exceptions.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <boost/algorithm/cxx11/none_of.hpp>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 UnusedPruner::UnusedPruner(Block& _ast, set<YulString> const& _externallyUsedFunctions)
 {

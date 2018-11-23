@@ -21,9 +21,6 @@
 
 #include <test/Options.h>
 
-#include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
-
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclPropagator.h>
 #include <libyul/optimiser/Disambiguator.h>
@@ -43,11 +40,13 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/Suite.h>
-
-#include <libsolidity/inlineasm/AsmPrinter.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
+
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
@@ -56,8 +55,8 @@
 
 using namespace dev;
 using namespace langutil;
-using namespace dev::yul;
-using namespace dev::yul::test;
+using namespace yul;
+using namespace yul::test;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
 using namespace std;
@@ -93,9 +92,9 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 
 bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	assembly::AsmPrinter printer{m_yul};
+	yul::AsmPrinter printer{m_yul};
 	shared_ptr<Block> ast;
-	shared_ptr<assembly::AsmAnalysisInfo> analysisInfo;
+	shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 	if (!parse(_stream, _linePrefix, _formatted))
 		return false;
 
@@ -257,19 +256,19 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	assembly::AsmFlavour flavour = m_yul ? assembly::AsmFlavour::Yul : assembly::AsmFlavour::Strict;
+	yul::AsmFlavour flavour = m_yul ? yul::AsmFlavour::Yul : yul::AsmFlavour::Strict;
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source), "");
-	m_ast = assembly::Parser(errorReporter, flavour).parse(scanner, false);
+	m_ast = yul::Parser(errorReporter, flavour).parse(scanner, false);
 	if (!m_ast || !errorReporter.errors().empty())
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, errorReporter.errors(), *scanner);
 		return false;
 	}
-	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(
+	m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	yul::AsmAnalyzer analyzer(
 		*m_analysisInfo,
 		errorReporter,
 		dev::test::Options::get().evmVersion(),

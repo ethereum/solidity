@@ -25,8 +25,7 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/Exceptions.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -34,7 +33,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
 {

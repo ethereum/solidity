@@ -21,12 +21,12 @@
 #include <libdevcore/CommonIO.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -60,8 +60,7 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
-using namespace dev::yul;
+using namespace yul;
 
 namespace po = boost::program_options;
 
@@ -83,14 +82,14 @@ public:
 	{
 		ErrorReporter errorReporter(m_errors);
 		shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_input), "");
-		m_ast = assembly::Parser(errorReporter, assembly::AsmFlavour::Strict).parse(scanner, false);
+		m_ast = yul::Parser(errorReporter, yul::AsmFlavour::Strict).parse(scanner, false);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
 			cout << "Error parsing source." << endl;
 			printErrors(*scanner);
 			return false;
 		}
-		m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
+		m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
 		AsmAnalyzer analyzer(
 			*m_analysisInfo,
 			errorReporter,
@@ -118,7 +117,7 @@ public:
 				return;
 			if (!disambiguated)
 			{
-				*m_ast = boost::get<assembly::Block>(Disambiguator(*m_analysisInfo)(*m_ast));
+				*m_ast = boost::get<yul::Block>(Disambiguator(*m_analysisInfo)(*m_ast));
 				m_analysisInfo.reset();
 				m_nameDispenser = make_shared<NameDispenser>(*m_ast);
 				disambiguated = true;
@@ -187,7 +186,7 @@ public:
 
 private:
 	ErrorList m_errors;
-	shared_ptr<assembly::Block> m_ast;
+	shared_ptr<yul::Block> m_ast;
 	shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	shared_ptr<NameDispenser> m_nameDispenser;
 };

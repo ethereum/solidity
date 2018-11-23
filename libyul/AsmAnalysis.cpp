@@ -18,12 +18,12 @@
  * Analyzer part of inline assembly.
  */
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/AsmAnalysis.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmScopeFiller.h>
-#include <libsolidity/inlineasm/AsmScope.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmScopeFiller.h>
+#include <libyul/AsmScope.h>
+#include <libyul/AsmAnalysisInfo.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -36,8 +36,9 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
+using namespace yul;
+using namespace dev;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
 
 namespace {
 
@@ -65,7 +66,7 @@ bool AsmAnalyzer::operator()(Label const& _label)
 	return true;
 }
 
-bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
+bool AsmAnalyzer::operator()(yul::Instruction const& _instruction)
 {
 	checkLooseFeature(
 		_instruction.location,
@@ -78,11 +79,11 @@ bool AsmAnalyzer::operator()(assembly::Instruction const& _instruction)
 	return true;
 }
 
-bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
+bool AsmAnalyzer::operator()(Literal const& _literal)
 {
 	expectValidType(_literal.type.str(), _literal.location);
 	++m_stackHeight;
-	if (_literal.kind == assembly::LiteralKind::String && _literal.value.str().size() > 32)
+	if (_literal.kind == LiteralKind::String && _literal.value.str().size() > 32)
 	{
 		m_errorReporter.typeError(
 			_literal.location,
@@ -90,7 +91,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 		);
 		return false;
 	}
-	else if (_literal.kind == assembly::LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
+	else if (_literal.kind == LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
 	{
 		m_errorReporter.typeError(
 			_literal.location,
@@ -98,7 +99,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 		);
 		return false;
 	}
-	else if (_literal.kind == assembly::LiteralKind::Boolean)
+	else if (_literal.kind == LiteralKind::Boolean)
 	{
 		solAssert(m_flavour == AsmFlavour::Yul, "");
 		solAssert(_literal.value == YulString{string("true")} || _literal.value == YulString{string("false")}, "");
@@ -107,7 +108,7 @@ bool AsmAnalyzer::operator()(assembly::Literal const& _literal)
 	return true;
 }
 
-bool AsmAnalyzer::operator()(assembly::Identifier const& _identifier)
+bool AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	solAssert(!_identifier.name.empty(), "");
 	size_t numErrorsBefore = m_errorReporter.errors().size();
@@ -177,7 +178,7 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
+bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
@@ -198,7 +199,7 @@ bool AsmAnalyzer::operator()(assembly::ExpressionStatement const& _statement)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
+bool AsmAnalyzer::operator()(StackAssignment const& _assignment)
 {
 	checkLooseFeature(
 		_assignment.location,
@@ -209,7 +210,7 @@ bool AsmAnalyzer::operator()(assembly::StackAssignment const& _assignment)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
+bool AsmAnalyzer::operator()(Assignment const& _assignment)
 {
 	solAssert(_assignment.value, "");
 	int const expectedItems = _assignment.variableNames.size();
@@ -235,7 +236,7 @@ bool AsmAnalyzer::operator()(assembly::Assignment const& _assignment)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
+bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 {
 	bool success = true;
 	int const numVariables = _varDecl.variables.size();
@@ -261,7 +262,7 @@ bool AsmAnalyzer::operator()(assembly::VariableDeclaration const& _varDecl)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
+bool AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 {
 	solAssert(!_funDef.name.empty(), "");
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
@@ -283,7 +284,7 @@ bool AsmAnalyzer::operator()(assembly::FunctionDefinition const& _funDef)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::FunctionCall const& _funCall)
+bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
 	solAssert(!_funCall.functionName.name.empty(), "");
 	bool success = true;
@@ -397,7 +398,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(assembly::ForLoop const& _for)
+bool AsmAnalyzer::operator()(ForLoop const& _for)
 {
 	solAssert(_for.condition, "");
 
@@ -486,7 +487,7 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 	return true;
 }
 
-bool AsmAnalyzer::checkAssignment(assembly::Identifier const& _variable, size_t _valueSize)
+bool AsmAnalyzer::checkAssignment(Identifier const& _variable, size_t _valueSize)
 {
 	solAssert(!_variable.name.empty(), "");
 	bool success = true;

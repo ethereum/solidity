@@ -22,8 +22,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 
 #include <libyul/optimiser/Semantics.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -31,7 +30,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
 
 void RedundantAssignEliminator::operator()(Identifier const& _identifier)

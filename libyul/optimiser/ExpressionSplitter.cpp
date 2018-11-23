@@ -23,7 +23,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -32,7 +32,7 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
 
 void ExpressionSplitter::operator()(FunctionalInstruction& _instruction)

@@ -15,38 +15,40 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Information generated during analyzer part of inline assembly.
+ * @author Christian <c@ethdev.com>
+ * @date 2016
+ * Code-generating part of inline assembly.
  */
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmDataForward.h>
+#include <libyul/AsmAnalysis.h>
 
-#include <boost/variant.hpp>
-
-#include <map>
-#include <memory>
-#include <vector>
+#include <functional>
 
 namespace dev
 {
-namespace solidity
+namespace eth
 {
-namespace assembly
-{
+class Assembly;
+}
+}
 
-struct Scope;
-
-struct AsmAnalysisInfo
+namespace yul
 {
-	using StackHeightInfo = std::map<void const*, int>;
-	using Scopes = std::map<assembly::Block const*, std::shared_ptr<Scope>>;
-	Scopes scopes;
-	StackHeightInfo stackHeightInfo;
-	/// Virtual blocks which will be used for scopes for function arguments and return values.
-	std::map<FunctionDefinition const*, std::shared_ptr<assembly::Block const>> virtualBlocks;
+struct Block;
+
+class CodeGenerator
+{
+public:
+	/// Performs code generation and appends generated to _assembly.
+	static void assemble(
+		Block const& _parsedData,
+		AsmAnalysisInfo& _analysisInfo,
+		dev::eth::Assembly& _assembly,
+		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
+		bool _useNamedLabelsForFunctions = false
+	);
 };
 
-}
-}
 }

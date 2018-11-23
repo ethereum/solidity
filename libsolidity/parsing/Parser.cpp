@@ -22,11 +22,11 @@
 
 #include <cctype>
 #include <vector>
-#include <liblangutil/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
-#include <liblangutil/Scanner.h>
-#include <libsolidity/inlineasm/AsmParser.h>
+#include <libyul/AsmParser.h>
+#include <liblangutil/SourceLocation.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 
 using namespace std;
 using namespace langutil;
@@ -1012,8 +1012,8 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		m_scanner->next();
 	}
 
-	assembly::Parser asmParser(m_errorReporter);
-	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner, true);
+	yul::Parser asmParser(m_errorReporter);
+	shared_ptr<yul::Block> block = asmParser.parse(m_scanner, true);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);
 }

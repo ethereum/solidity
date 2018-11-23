@@ -23,18 +23,15 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
 
-namespace dev
-{
 namespace yul
 {
 
-struct YulException: virtual Exception {};
+struct YulException: virtual dev::Exception {};
 struct OptimizerException: virtual YulException {};
 struct YulAssertion: virtual YulException {};
 
 /// Assertion that throws an YulAssertion containing the given description if it is not met.
 #define yulAssert(CONDITION, DESCRIPTION) \
-        assertThrow(CONDITION, ::dev::yul::YulException, DESCRIPTION)
+        assertThrow(CONDITION, ::yul::YulException, DESCRIPTION)
 
-}
 }

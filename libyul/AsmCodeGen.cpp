@@ -20,20 +20,21 @@
  * Code-generating part of inline assembly.
  */
 
-#include <libsolidity/inlineasm/AsmCodeGen.h>
+#include <libyul/AsmCodeGen.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmScope.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-
-#include <libevmasm/Assembly.h>
-#include <liblangutil/SourceLocation.h>
-#include <libevmasm/Instruction.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmScope.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
+
+#include <libevmasm/Assembly.h>
+#include <libevmasm/Instruction.h>
+
+#include <liblangutil/SourceLocation.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -47,10 +48,10 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
+using namespace yul;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
 
-class EthAssemblyAdapter: public yul::AbstractAssembly
+class EthAssemblyAdapter: public AbstractAssembly
 {
 public:
 	explicit EthAssemblyAdapter(eth::Assembly& _assembly):
@@ -142,16 +143,16 @@ private:
 	eth::Assembly& m_assembly;
 };
 
-void assembly::CodeGenerator::assemble(
+void CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
-	yul::ExternalIdentifierAccess const& _identifierAccess,
+	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	yul::CodeTransform(
+	CodeTransform(
 		assemblyAdapter,
 		_analysisInfo,
 		false,

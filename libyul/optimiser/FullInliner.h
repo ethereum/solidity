@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/ASTWalker.h>
@@ -33,8 +33,6 @@
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -152,5 +150,4 @@ public:
 };
 
 
-}
 }

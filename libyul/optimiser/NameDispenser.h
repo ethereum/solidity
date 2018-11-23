@@ -19,14 +19,12 @@
  */
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/YulString.h>
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -57,5 +55,4 @@ private:
 	size_t m_counter = 0;
 };
 
-}
 }

@@ -20,15 +20,13 @@
  */
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
 
 #include <vector>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -82,5 +80,4 @@ private:
 	NameDispenser& m_nameDispenser;
 };
 
-}
 }

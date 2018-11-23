@@ -27,7 +27,6 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
-#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
@@ -45,9 +44,11 @@
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 
-#include <libevmasm/Exceptions.h>
-
 #include <libyul/YulString.h>
+
+#include <liblangutil/Scanner.h>
+
+#include <libevmasm/Exceptions.h>
 
 #include <libdevcore/SwarmHash.h>
 #include <libdevcore/JSON.h>

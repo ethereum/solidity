@@ -30,6 +30,12 @@
 #include <vector>
 #include <set>
 
+namespace yul
+{
+	struct AsmAnalysisInfo;
+	struct Identifier;
+}
+
 namespace dev
 {
 namespace solidity
@@ -120,12 +126,6 @@ struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
 {
 };
 
-namespace assembly
-{
-	struct AsmAnalysisInfo;
-	struct Identifier;
-}
-
 struct InlineAssemblyAnnotation: StatementAnnotation
 {
 	struct ExternalIdentifierInfo
@@ -137,9 +137,9 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	};
 
 	/// Mapping containing resolved references to external identifiers and their value size
-	std::map<assembly::Identifier const*, ExternalIdentifierInfo> externalReferences;
+	std::map<yul::Identifier const*, ExternalIdentifierInfo> externalReferences;
 	/// Information generated during analysis phase.
-	std::shared_ptr<assembly::AsmAnalysisInfo> analysisInfo;
+	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 };
 
 struct ReturnAnnotation: StatementAnnotation

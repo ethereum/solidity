@@ -21,13 +21,13 @@
 
 #include <libyul/optimiser/FunctionGrouper.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
 
 

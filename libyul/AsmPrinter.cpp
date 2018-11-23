@@ -20,8 +20,8 @@
  * Converts a parsed assembly into its textual form.
  */
 
-#include <libsolidity/inlineasm/AsmPrinter.h>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/AsmData.h>
 #include <liblangutil/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
@@ -35,19 +35,19 @@
 
 using namespace std;
 using namespace dev;
+using namespace yul;
 using namespace dev::solidity;
-using namespace dev::solidity::assembly;
 
 //@TODO source locations
 
-string AsmPrinter::operator()(assembly::Instruction const& _instruction)
+string AsmPrinter::operator()(yul::Instruction const& _instruction)
 {
 	solAssert(!m_yul, "");
 	solAssert(isValidInstruction(_instruction.instruction), "Invalid instruction");
 	return boost::to_lower_copy(instructionInfo(_instruction.instruction).name);
 }
 
-string AsmPrinter::operator()(assembly::Literal const& _literal)
+string AsmPrinter::operator()(Literal const& _literal)
 {
 	switch (_literal.kind)
 	{
@@ -90,13 +90,13 @@ string AsmPrinter::operator()(assembly::Literal const& _literal)
 	return "\"" + out + "\"" + appendTypeName(_literal.type);
 }
 
-string AsmPrinter::operator()(assembly::Identifier const& _identifier)
+string AsmPrinter::operator()(Identifier const& _identifier)
 {
 	solAssert(!_identifier.name.empty(), "Invalid identifier.");
 	return _identifier.name.str();
 }
 
-string AsmPrinter::operator()(assembly::FunctionalInstruction const& _functionalInstruction)
+string AsmPrinter::operator()(FunctionalInstruction const& _functionalInstruction)
 {
 	solAssert(!m_yul, "");
 	solAssert(isValidInstruction(_functionalInstruction.instruction), "Invalid instruction");
@@ -114,21 +114,21 @@ string AsmPrinter::operator()(ExpressionStatement const& _statement)
 	return boost::apply_visitor(*this, _statement.expression);
 }
 
-string AsmPrinter::operator()(assembly::Label const& _label)
+string AsmPrinter::operator()(Label const& _label)
 {
 	solAssert(!m_yul, "");
 	solAssert(!_label.name.empty(), "Invalid label.");
 	return _label.name.str() + ":";
 }
 
-string AsmPrinter::operator()(assembly::StackAssignment const& _assignment)
+string AsmPrinter::operator()(StackAssignment const& _assignment)
 {
 	solAssert(!m_yul, "");
 	solAssert(!_assignment.variableName.name.empty(), "Invalid variable name.");
 	return "=: " + (*this)(_assignment.variableName);
 }
 
-string AsmPrinter::operator()(assembly::Assignment const& _assignment)
+string AsmPrinter::operator()(Assignment const& _assignment)
 {
 	solAssert(_assignment.variableNames.size() >= 1, "");
 	string variables = (*this)(_assignment.variableNames.front());
@@ -137,7 +137,7 @@ string AsmPrinter::operator()(assembly::Assignment const& _assignment)
 	return variables + " := " + boost::apply_visitor(*this, *_assignment.value);
 }
 
-string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDeclaration)
+string AsmPrinter::operator()(VariableDeclaration const& _variableDeclaration)
 {
 	string out = "let ";
 	out += boost::algorithm::join(
@@ -154,7 +154,7 @@ string AsmPrinter::operator()(assembly::VariableDeclaration const& _variableDecl
 	return out;
 }
 
-string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefinition)
+string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition)
 {
 	solAssert(!_functionDefinition.name.empty(), "Invalid function name.");
 	string out = "function " + _functionDefinition.name.str() + "(";
@@ -179,7 +179,7 @@ string AsmPrinter::operator()(assembly::FunctionDefinition const& _functionDefin
 	return out + "\n" + (*this)(_functionDefinition.body);
 }
 
-string AsmPrinter::operator()(assembly::FunctionCall const& _functionCall)
+string AsmPrinter::operator()(FunctionCall const& _functionCall)
 {
 	return
 		(*this)(_functionCall.functionName) + "(" +
@@ -210,7 +210,7 @@ string AsmPrinter::operator()(Switch const& _switch)
 	return out;
 }
 
-string AsmPrinter::operator()(assembly::ForLoop const& _forLoop)
+string AsmPrinter::operator()(ForLoop const& _forLoop)
 {
 	solAssert(_forLoop.condition, "Invalid for loop condition.");
 	string out = "for ";

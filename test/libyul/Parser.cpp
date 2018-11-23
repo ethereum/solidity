@@ -23,9 +23,9 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 
@@ -36,11 +36,10 @@
 #include <memory>
 
 using namespace std;
+using namespace dev;
 using namespace langutil;
 
-namespace dev
-{
-namespace solidity
+namespace yul
 {
 namespace test
 {
@@ -53,16 +52,16 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source));
-		auto parserResult = assembly::Parser(errorReporter, assembly::AsmFlavour::Yul).parse(scanner, false);
+		auto parserResult = yul::Parser(errorReporter, yul::AsmFlavour::Yul).parse(scanner, false);
 		if (parserResult)
 		{
-			assembly::AsmAnalysisInfo analysisInfo;
-			return (assembly::AsmAnalyzer(
+			yul::AsmAnalysisInfo analysisInfo;
+			return (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
 				dev::test::Options::get().evmVersion(),
 				boost::none,
-				assembly::AsmFlavour::Yul
+				yul::AsmFlavour::Yul
 			)).analyze(*parserResult);
 		}
 	}
@@ -117,7 +116,7 @@ do \
 { \
 	Error err = expectError((text), false); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
-	BOOST_CHECK(searchErrorMessage(err, (substring))); \
+	BOOST_CHECK(dev::solidity::searchErrorMessage(err, (substring))); \
 } while(0)
 
 BOOST_AUTO_TEST_SUITE(YulParser)
@@ -302,6 +301,5 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }
 } // end namespaces

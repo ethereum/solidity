@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/YulString.h>
 
@@ -31,8 +31,6 @@
 #include <set>
 #include <memory>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -122,5 +120,4 @@ std::vector<T> ASTCopier::translateVector(std::vector<T> const& _values)
 }
 
 
-}
 }

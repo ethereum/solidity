@@ -20,12 +20,10 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/optimiser/ASTWalker.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -51,5 +49,4 @@ private:
 	std::map<YulString, Expression const*> m_ssaValues;
 };
 
-}
 }

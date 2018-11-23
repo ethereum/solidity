@@ -21,14 +21,13 @@
 #include <libyul/optimiser/SyntacticalEquality.h>
 
 #include <libyul/Exceptions.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 bool SyntacticalEqualityChecker::equal(Expression const& _e1, Expression const& _e2)
 {
