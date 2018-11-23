@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <libyul/optimiser/ForLoopInitRewriter.h>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 #include <libdevcore/CommonData.h>
 #include <functional>
 

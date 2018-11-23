@@ -18,11 +18,11 @@
  * Module responsible for registering identifiers inside their scopes.
  */
 
-#include <libsolidity/inlineasm/AsmScopeFiller.h>
+#include <libyul/AsmScopeFiller.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmScope.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmScope.h>
+#include <libyul/AsmAnalysisInfo.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>

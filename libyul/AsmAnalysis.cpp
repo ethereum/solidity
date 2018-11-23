@@ -18,12 +18,12 @@
  * Analyzer part of inline assembly.
  */
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/AsmAnalysis.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmScopeFiller.h>
-#include <libsolidity/inlineasm/AsmScope.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmScopeFiller.h>
+#include <libyul/AsmScope.h>
+#include <libyul/AsmAnalysisInfo.h>
 
 #include <liblangutil/ErrorReporter.h>
 

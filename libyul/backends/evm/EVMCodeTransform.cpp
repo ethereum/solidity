@@ -20,8 +20,8 @@
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
 
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
 
 #include <liblangutil/Exceptions.h>
 

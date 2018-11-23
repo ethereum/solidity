@@ -21,12 +21,12 @@
 #include <libdevcore/CommonIO.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 
 #include <libyul/optimiser/BlockFlattener.h>

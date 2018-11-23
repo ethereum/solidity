@@ -20,7 +20,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 

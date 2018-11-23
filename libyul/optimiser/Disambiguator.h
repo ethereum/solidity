@@ -25,7 +25,7 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameDispenser.h>
 
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmAnalysisInfo.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>

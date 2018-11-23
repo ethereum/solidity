@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 namespace dev
 {

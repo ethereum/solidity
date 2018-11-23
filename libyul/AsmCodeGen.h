@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/AsmAnalysis.h>
 
 #include <functional>
 

@@ -24,7 +24,7 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 

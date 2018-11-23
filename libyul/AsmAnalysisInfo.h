@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libsolidity/inlineasm/AsmDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 

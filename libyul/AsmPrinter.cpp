@@ -20,8 +20,8 @@
  * Converts a parsed assembly into its textual form.
  */
 
-#include <libsolidity/inlineasm/AsmPrinter.h>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/AsmData.h>
 #include <liblangutil/Exceptions.h>
 
 #include <libdevcore/CommonData.h>

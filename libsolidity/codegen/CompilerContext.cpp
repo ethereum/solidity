@@ -29,10 +29,10 @@
 #include <liblangutil/Scanner.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <liblangutil/Scanner.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmCodeGen.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <libyul/YulString.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -43,7 +43,7 @@
 // Change to "define" to output all intermediate code
 #undef SOL_OUTPUT_ASM
 #ifdef SOL_OUTPUT_ASM
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmPrinter.h>
 #endif
 
 

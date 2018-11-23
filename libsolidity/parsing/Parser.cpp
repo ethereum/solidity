@@ -25,7 +25,7 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
 #include <liblangutil/Scanner.h>
-#include <libsolidity/inlineasm/AsmParser.h>
+#include <libyul/AsmParser.h>
 #include <liblangutil/ErrorReporter.h>
 
 using namespace std;

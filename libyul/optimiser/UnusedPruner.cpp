@@ -25,7 +25,7 @@
 #include <libyul/optimiser/Utilities.h>
 #include <libyul/Exceptions.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <boost/algorithm/cxx11/none_of.hpp>
 

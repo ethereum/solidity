@@ -27,9 +27,9 @@
 
 #include <liblangutil/Scanner.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmPrinter.h>
 
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <liblangutil/ErrorReporter.h>

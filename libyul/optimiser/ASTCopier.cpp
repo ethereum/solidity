@@ -22,7 +22,7 @@
 
 #include <libyul/Exceptions.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/Common.h>
 

@@ -23,9 +23,9 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 

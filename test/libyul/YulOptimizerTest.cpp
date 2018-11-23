@@ -44,9 +44,9 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/Suite.h>
 
-#include <libsolidity/inlineasm/AsmPrinter.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 
 #include <boost/test/unit_test.hpp>

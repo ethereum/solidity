@@ -23,8 +23,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <libdevcore/UTF8.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/inlineasm/AsmPrinter.h>
+#include <libyul/AsmData.h>
+#include <libyul/AsmPrinter.h>
 
 using namespace std;
 using namespace langutil;

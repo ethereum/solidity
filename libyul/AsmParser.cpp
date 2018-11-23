@@ -20,7 +20,7 @@
  * Solidity inline assembly parser.
  */
 
-#include <libsolidity/inlineasm/AsmParser.h>
+#include <libyul/AsmParser.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 
