@@ -27,7 +27,6 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/Exceptions.h>
-
 #include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>

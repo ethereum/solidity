@@ -24,10 +24,10 @@
 
 #include <libyul/AsmDataForward.h>
 
+#include <libyul/YulString.h>
+
 #include <libevmasm/Instruction.h>
 #include <liblangutil/SourceLocation.h>
-
-#include <libyul/YulString.h>
 
 #include <boost/variant.hpp>
 #include <boost/noncopyable.hpp>

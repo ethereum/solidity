@@ -19,8 +19,8 @@
 
 #include <libevmasm/SemanticInformation.h>
 
-#include <libyul/AsmData.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
+#include <libyul/AsmData.h>
 
 #include <liblangutil/ErrorReporter.h>
 

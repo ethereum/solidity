@@ -28,12 +28,13 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 
-#include <libevmasm/Assembly.h>
-#include <liblangutil/SourceLocation.h>
-#include <libevmasm/Instruction.h>
-
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
+
+#include <libevmasm/Assembly.h>
+#include <libevmasm/Instruction.h>
+
+#include <liblangutil/SourceLocation.h>
 
 #include <libdevcore/CommonIO.h>
 

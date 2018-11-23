@@ -24,7 +24,6 @@
 #include <libevmasm/SimplificationRule.h>
 
 #include <libyul/ASTDataForward.h>
-
 #include <libyul/AsmData.h>
 
 #include <boost/noncopyable.hpp>

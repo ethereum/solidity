@@ -23,15 +23,14 @@
 
 #include <test/Options.h>
 
+#include <libsolidity/interface/SourceReferenceFormatter.h>
+
 #include <libyul/optimiser/Disambiguator.h>
-
-#include <liblangutil/Scanner.h>
-
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
 
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 
 #include <boost/test/unit_test.hpp>

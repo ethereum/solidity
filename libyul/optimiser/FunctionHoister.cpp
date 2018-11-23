@@ -22,7 +22,6 @@
 
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/Utilities.h>
-
 #include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>

@@ -23,7 +23,6 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/Exceptions.h>
-
 #include <libyul/AsmData.h>
 
 using namespace std;

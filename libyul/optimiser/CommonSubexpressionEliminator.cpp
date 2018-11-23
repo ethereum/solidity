@@ -24,7 +24,6 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/Exceptions.h>
-
 #include <libyul/AsmData.h>
 
 using namespace std;

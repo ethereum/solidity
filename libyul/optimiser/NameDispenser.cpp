@@ -21,7 +21,6 @@
 #include <libyul/optimiser/NameDispenser.h>
 
 #include <libyul/optimiser/NameCollector.h>
-
 #include <libyul/AsmData.h>
 
 using namespace std;

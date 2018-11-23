@@ -21,7 +21,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTCopier.h>
-
 #include <libyul/YulString.h>
 
 #include <map>

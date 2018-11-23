@@ -24,7 +24,6 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/Utilities.h>
 #include <libyul/Exceptions.h>
-
 #include <libyul/AsmData.h>
 
 #include <boost/algorithm/cxx11/none_of.hpp>

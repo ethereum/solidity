@@ -24,7 +24,6 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Utilities.h>
 #include <libyul/Exceptions.h>
-
 #include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>

@@ -22,7 +22,6 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 
 #include <libyul/optimiser/Semantics.h>
-
 #include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>

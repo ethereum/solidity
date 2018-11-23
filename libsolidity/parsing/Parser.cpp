@@ -22,11 +22,11 @@
 
 #include <cctype>
 #include <vector>
-#include <liblangutil/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
-#include <liblangutil/Scanner.h>
 #include <libyul/AsmParser.h>
+#include <liblangutil/SourceLocation.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 
 using namespace std;
 using namespace langutil;

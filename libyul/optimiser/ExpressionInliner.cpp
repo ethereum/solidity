@@ -23,7 +23,6 @@
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
 #include <libyul/optimiser/Substitution.h>
 #include <libyul/optimiser/Semantics.h>
-
 #include <libyul/AsmData.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>

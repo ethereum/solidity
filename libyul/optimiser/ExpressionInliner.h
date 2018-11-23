@@ -20,7 +20,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-
 #include <libyul/ASTDataForward.h>
 
 #include <boost/variant.hpp>

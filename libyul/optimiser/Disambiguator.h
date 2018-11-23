@@ -21,11 +21,9 @@
 #pragma once
 
 #include <libyul/ASTDataForward.h>
-
+#include <libyul/AsmAnalysisInfo.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameDispenser.h>
-
-#include <libyul/AsmAnalysisInfo.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>

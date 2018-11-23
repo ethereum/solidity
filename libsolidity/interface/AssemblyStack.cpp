@@ -28,11 +28,10 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmCodeGen.h>
-
-#include <libevmasm/Assembly.h>
-
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMAssembly.h>
+
+#include <libevmasm/Assembly.h>
 
 using namespace std;
 using namespace dev;

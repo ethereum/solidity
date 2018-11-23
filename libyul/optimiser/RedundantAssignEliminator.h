@@ -22,7 +22,6 @@
 #pragma once
 
 #include <libyul/ASTDataForward.h>
-
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <map>

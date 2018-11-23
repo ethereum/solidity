@@ -21,9 +21,6 @@
 
 #include <test/Options.h>
 
-#include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
-
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclPropagator.h>
 #include <libyul/optimiser/Disambiguator.h>
@@ -43,11 +40,13 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/Suite.h>
-
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
+
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>

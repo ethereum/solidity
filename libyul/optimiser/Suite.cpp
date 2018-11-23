@@ -35,10 +35,8 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarDeclPropagator.h>
-
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
-
 #include <libyul/AsmPrinter.h>
 
 #include <libdevcore/CommonData.h>

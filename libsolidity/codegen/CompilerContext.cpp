@@ -25,15 +25,14 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
-#include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <liblangutil/Scanner.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmCodeGen.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/YulString.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 
 #include <boost/algorithm/string/replace.hpp>
 

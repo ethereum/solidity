@@ -21,7 +21,6 @@
 #include <libyul/optimiser/Disambiguator.h>
 
 #include <libyul/Exceptions.h>
-
 #include <libyul/AsmData.h>
 #include <libyul/AsmScope.h>
 

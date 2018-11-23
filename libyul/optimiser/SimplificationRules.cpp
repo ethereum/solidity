@@ -24,7 +24,6 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
-
 #include <libyul/AsmData.h>
 
 #include <libevmasm/RuleList.h>
