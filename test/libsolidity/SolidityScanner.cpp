@@ -59,8 +59,6 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
-// STRING ESCAPES
-
 BOOST_AUTO_TEST_CASE(string_escapes)
 {
 	Scanner scanner(CharStream("  { \"a\\x61\""));
@@ -89,12 +87,13 @@ BOOST_AUTO_TEST_CASE(string_escape_illegal)
 {
 	Scanner scanner(CharStream(" bla \"\\x6rf\" (illegalescape)"));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalStringEscape);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalEscapeSequence);
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "");
 	// TODO recovery from illegal tokens should be improved
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalNumberEnd);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalStringEndQuote);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
@@ -112,19 +111,18 @@ BOOST_AUTO_TEST_CASE(hex_numbers)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0x1234");
 	scanner.reset(CharStream("0X1234"), "");
-	// @todo update underlying code to return "Expected lower-case 'x' for Hex-Numbers." or similar.
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalNumberEnd);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 }
 
 BOOST_AUTO_TEST_CASE(octal_numbers)
 {
 	Scanner scanner(CharStream("07"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalOctalNotAllowed);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 	scanner.reset(CharStream("007"), "");
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalOctalNotAllowed);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 	scanner.reset(CharStream("-07"), "");
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Sub);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalOctalNotAllowed);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	scanner.reset(CharStream("-.07"), "");
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Sub);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
@@ -207,7 +205,7 @@ BOOST_AUTO_TEST_CASE(leading_underscore_exp_after_e_illegal)
 BOOST_AUTO_TEST_CASE(leading_underscore_hex_illegal)
 {
 	Scanner scanner(CharStream("0x_abc"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalHexDigit);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
@@ -472,7 +470,7 @@ BOOST_AUTO_TEST_CASE(invalid_short_unicode_string_escape)
 {
 	Scanner scanner(CharStream("{ \"\\uFFnicode\""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalStringEscape);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 }
 
 //  HEX STRING LITERAL
@@ -489,28 +487,32 @@ BOOST_AUTO_TEST_CASE(invalid_short_hex_literal)
 {
 	Scanner scanner(CharStream("{ hex\"00112233F\""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_with_space)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF \""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_with_wrong_quotes)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF'"));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_nonhex_string)
 {
 	Scanner scanner(CharStream("{ hex\"hello\""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 //  COMMENTS
@@ -519,7 +521,7 @@ BOOST_AUTO_TEST_CASE(invalid_multiline_comment_close)
 {
 	// This used to parse as "comment", "identifier"
 	Scanner scanner(CharStream("/** / x"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalCommentTerminator);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
@@ -527,14 +529,14 @@ BOOST_AUTO_TEST_CASE(multiline_doc_comment_at_eos)
 {
 	// This used to parse as "whitespace"
 	Scanner scanner(CharStream("/**"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalCommentTerminator);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
 BOOST_AUTO_TEST_CASE(multiline_comment_at_eos)
 {
 	Scanner scanner(CharStream("/*"));
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalCommentTerminator);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
@@ -597,10 +599,10 @@ BOOST_AUTO_TEST_CASE(regular_line_breaks_in_strings)
 	for (auto const& nl: {"\n", "\r"})
 	{
 		Scanner scanner(CharStream("\"abc " + string(nl) + " def\""));
-		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalStringEndQuote);
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
-		BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalStringEndQuote);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	}
 }
@@ -610,12 +612,12 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_strings)
 	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})
 	{
 		Scanner scanner(CharStream("\"abc " + string(nl) + " def\""));
-		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::IllegalStringEndQuote);
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 		for (size_t i = 0; i < string(nl).size(); i++)
 			BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
-		BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalStringEndQuote);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	}
 }

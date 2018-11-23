@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (100-109): Expected String end-quote.
+// ParserError: (100-109): Expected string end-quote.

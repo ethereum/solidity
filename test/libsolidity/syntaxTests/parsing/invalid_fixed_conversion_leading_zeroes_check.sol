@@ -4,4 +4,4 @@ contract test {
 	}
 }
 // ----
-// ParserError: (44-47): Digit or Identifier-Start not allowed at end of Number.
+// ParserError: (44-47): Identifier-start is not allowed at end of a number.

@@ -28,4 +28,4 @@ contract test {
 
 }
 // ----
-// ParserError: (678-681): Invalid String Escape.
+// ParserError: (678-681): Invalid escape sequence.
