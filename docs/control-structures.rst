@@ -8,8 +8,7 @@ Function Parameters and Return Variables
 ========================================
 
 As in JavaScript, functions may take parameters as input. Unlike in JavaScript
-and C, functions may also return an arbitrary number of variables that each
-hold a value as output.
+and C, functions may also return an arbitrary number of values as output.
 
 Function Parameters
 -------------------
@@ -113,7 +112,7 @@ Returning Multiple Variables
 ----------------------------
 
 When a function has multiple return variable types, for example ``return (v0, v1, ..., vn)``,
-the function can return multiple values.  The number of 
+the function can return multiple values.  The number of
 components must be the same as the number of return types.
 
 .. index:: ! function;call, function;internal, function;external
