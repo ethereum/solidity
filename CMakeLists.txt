@@ -47,6 +47,7 @@ configure_project(TESTS)
 add_subdirectory(libdevcore)
 add_subdirectory(liblangutil)
 add_subdirectory(libevmasm)
+add_subdirectory(libyul)
 add_subdirectory(libsolidity)
 add_subdirectory(libsolc)
 
