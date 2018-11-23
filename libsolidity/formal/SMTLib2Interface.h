@@ -22,6 +22,8 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
 
+#include <libdevcore/FixedHash.h>
+
 #include <libdevcore/Common.h>
 
 #include <boost/noncopyable.hpp>
@@ -42,7 +44,7 @@ namespace smt
 class SMTLib2Interface: public SolverInterface, public boost::noncopyable
 {
 public:
-	explicit SMTLib2Interface(ReadCallback::Callback const& _queryCallback);
+	explicit SMTLib2Interface(std::map<h256, std::string> const& _queryResponses);
 
 	void reset() override;
 
@@ -53,6 +55,8 @@ public:
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+
+	std::vector<std::string> unhandledQueries() override { return m_unhandledQueries; }
 
 private:
 	void declareFunction(std::string const&, Sort const&);
@@ -69,9 +73,11 @@ private:
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
-	ReadCallback::Callback m_queryCallback;
 	std::vector<std::string> m_accumulatedOutput;
 	std::set<std::string> m_variables;
+
+	std::map<h256, std::string> const& m_queryResponses;
+	std::vector<std::string> m_unhandledQueries;
 };
 
 }

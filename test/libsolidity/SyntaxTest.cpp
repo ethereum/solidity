@@ -92,6 +92,11 @@ bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool const _fo
 		});
 	}
 
+	return printExpectationAndError(_stream, _linePrefix, _formatted);
+}
+
+bool SyntaxTest::printExpectationAndError(ostream& _stream, string const& _linePrefix, bool const _formatted)
+{
 	if (m_expectations != m_errorList)
 	{
 		string nextIndentLevel = _linePrefix + "  ";

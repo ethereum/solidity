@@ -67,13 +67,15 @@ public:
 	}
 
 	static std::string errorMessage(Exception const& _e);
-private:
+protected:
 	static void printErrorList(
 		std::ostream& _stream,
 		std::vector<SyntaxTestError> const& _errors,
 		std::string const& _linePrefix,
 		bool const _formatted = false
 	);
+
+	virtual bool printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false);
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 

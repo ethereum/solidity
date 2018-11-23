@@ -22,8 +22,11 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
+#include <libdevcore/FixedHash.h>
+
 #include <boost/noncopyable.hpp>
 
+#include <map>
 #include <vector>
 
 namespace dev
@@ -42,7 +45,7 @@ namespace smt
 class SMTPortfolio: public SolverInterface, public boost::noncopyable
 {
 public:
-	SMTPortfolio(ReadCallback::Callback const& _readCallback);
+	SMTPortfolio(std::map<h256, std::string> const& _smtlib2Responses);
 
 	void reset() override;
 
@@ -54,6 +57,7 @@ public:
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
+	std::vector<std::string> unhandledQueries() override { return m_solvers.at(0)->unhandledQueries(); }
 private:
 	static bool solverAnswered(CheckResult result);
 

@@ -21,6 +21,7 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
+#include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/YulOptimizerTest.h>
 
 #include <boost/algorithm/string.hpp>
@@ -407,6 +408,17 @@ Allowed options)",
 			testPath / "libsolidity",
 			"smtCheckerTests",
 			SyntaxTest::create,
+			formatted
+		))
+			global_stats += *stats;
+		else
+			return 1;
+
+		if (auto stats = runTestSuite(
+			"SMT Checker JSON",
+			testPath / "libsolidity",
+			"smtCheckerTestsJSON",
+			SMTCheckerTest::create,
 			formatted
 		))
 			global_stats += *stats;

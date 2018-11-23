@@ -23,27 +23,22 @@
 #ifdef HAVE_CVC4
 #include <libsolidity/formal/CVC4Interface.h>
 #endif
-#if !defined (HAVE_Z3) && !defined (HAVE_CVC4)
 #include <libsolidity/formal/SMTLib2Interface.h>
-#endif
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTPortfolio::SMTPortfolio(ReadCallback::Callback const& _readCallback)
+SMTPortfolio::SMTPortfolio(map<h256, string> const& _smtlib2Responses)
 {
+	m_solvers.emplace_back(make_shared<smt::SMTLib2Interface>(_smtlib2Responses));
 #ifdef HAVE_Z3
 	m_solvers.emplace_back(make_shared<smt::Z3Interface>());
 #endif
 #ifdef HAVE_CVC4
 	m_solvers.emplace_back(make_shared<smt::CVC4Interface>());
 #endif
-#if !defined (HAVE_Z3) && !defined (HAVE_CVC4)
-	m_solvers.emplace_back(make_shared<smt::SMTLib2Interface>(_readCallback)),
-#endif
-	(void)_readCallback;
 }
 
 void SMTPortfolio::reset()

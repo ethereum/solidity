@@ -38,6 +38,7 @@
 #include <test/Options.h>
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/libsolidity/SyntaxTest.h>
+#include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/YulOptimizerTest.h>
 
 #include <boost/algorithm/string.hpp>
@@ -146,12 +147,21 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		dev::yul::test::YulOptimizerTest::create
 	) > 0, "no Yul Optimizer tests found");
 	if (!dev::test::Options::get().disableSMT)
+	{
 		solAssert(registerTests(
 			master,
 			dev::test::Options::get().testPath / "libsolidity",
 			"smtCheckerTests",
 			SyntaxTest::create
 		) > 0, "no SMT checker tests found");
+
+		solAssert(registerTests(
+			master,
+			dev::test::Options::get().testPath / "libsolidity",
+			"smtCheckerTestsJSON",
+			SMTCheckerTest::create
+		) > 0, "no SMT checker JSON tests found");
+	}
 	if (dev::test::Options::get().disableIPC)
 	{
 		for (auto suite: {
