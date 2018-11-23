@@ -57,6 +57,7 @@
 #include <liblangutil/SourceLocation.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
+#include <iosfwd>
 
 namespace langutil
 {
@@ -64,6 +65,26 @@ namespace langutil
 class AstRawString;
 class AstValueFactory;
 class ParserRecorder;
+
+enum class ScannerError
+{
+	NoError,
+
+	IllegalToken,
+	IllegalHexString,
+	IllegalHexDigit,
+	IllegalCommentTerminator,
+	IllegalEscapeSequence,
+	IllegalStringEndQuote,
+	IllegalNumberSeparator,
+	IllegalExponent,
+	IllegalNumberEnd,
+
+	OctalNotAllowed,
+};
+
+std::string to_string(ScannerError _errorCode);
+std::ostream& operator<<(std::ostream& os, ScannerError _errorCode);
 
 class Scanner
 {
@@ -100,6 +121,10 @@ public:
 	SourceLocation currentLocation() const { return m_currentToken.location; }
 	std::string const& currentLiteral() const { return m_currentToken.literal; }
 	std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_currentToken.extendedTokenInfo; }
+
+	/// Retrieves the last error that occurred during lexical analysis.
+	/// @note If no error occurred, the value is undefined.
+	ScannerError currentError() const noexcept { return m_currentToken.error; }
 	///@}
 
 	///@{
@@ -139,12 +164,19 @@ public:
 	///@}
 
 private:
+	inline Token setError(ScannerError _error) noexcept
+	{
+		m_nextToken.error = _error;
+		return Token::Illegal;
+	}
+
 	/// Used for the current and look-ahead token and comments
 	struct TokenDesc
 	{
 		Token token;
 		SourceLocation location;
 		std::string literal;
+		ScannerError error = ScannerError::NoError;
 		std::tuple<unsigned, unsigned> extendedTokenInfo;
 	};
 
@@ -159,6 +191,7 @@ private:
 	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
 	void rollback(int _amount) { m_char = m_source.rollback(_amount); }
 
+	inline Token selectErrorToken(ScannerError _err) { advance(); return setError(_err); }
 	inline Token selectToken(Token _tok) { advance(); return _tok; }
 	/// If the next character is _next, advance and return _then, otherwise return _else.
 	inline Token selectToken(char _next, Token _then, Token _else);

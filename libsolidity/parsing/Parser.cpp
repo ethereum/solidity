@@ -1555,32 +1555,8 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<TupleExpression>(components, isArray);
 		break;
 	}
-	case Token::IllegalHex:
-		fatalParserError("Expected even number of hex-nibbles within double-quotes.");
-		break;
-	case Token::IllegalCommentTerminator:
-		fatalParserError("Expected multi-line comment-terminator.");
-		break;
-	case Token::IllegalStringEscape:
-		fatalParserError("Invalid String Escape.");
-		break;
-	case Token::IllegalStringEndQuote:
-		fatalParserError("Expected String end-quote.");
-		break;
-	case Token::IllegalNumberSeparator:
-		fatalParserError("Invalid use of Number Separator '_'.");
-		break;
-	case Token::IllegalHexDigit:
-		fatalParserError("Hex Digit missing or invalid.");
-		break;
-	case Token::IllegalOctalNotAllowed:
-		fatalParserError("Octal Numbers not allowed.");
-		break;
-	case Token::IllegalExponent:
-		fatalParserError("Invalid Exponent.");
-		break;
-	case Token::IllegalNumberEnd:
-		fatalParserError("Digit or Identifier-Start not allowed at end of Number.");
+	case Token::Illegal:
+		fatalParserError(to_string(m_scanner->currentError()));
 		break;
 	default:
 		if (TokenTraits::isElementaryTypeName(token))

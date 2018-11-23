@@ -53,6 +53,7 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <algorithm>
+#include <ostream>
 #include <tuple>
 
 using namespace std;
@@ -100,7 +101,32 @@ int hexValue(char c)
 }
 } // end anonymous namespace
 
+std::string to_string(ScannerError _errorCode)
+{
+	switch (_errorCode)
+	{
+		case ScannerError::NoError: return "No error.";
+		case ScannerError::IllegalToken: return "Invalid token.";
+		case ScannerError::IllegalHexString: return "Expected even number of hex-nibbles within double-quotes.";
+		case ScannerError::IllegalHexDigit: return "Hexadecimal digit missing or invalid.";
+		case ScannerError::IllegalCommentTerminator: return "Expected multi-line comment-terminator.";
+		case ScannerError::IllegalEscapeSequence: return "Invalid escape sequence.";
+		case ScannerError::IllegalStringEndQuote: return "Expected string end-quote.";
+		case ScannerError::IllegalNumberSeparator: return "Invalid use of number separator '_'.";
+		case ScannerError::IllegalExponent: return "Invalid exponent.";
+		case ScannerError::IllegalNumberEnd: return "Identifier-start is not allowed at end of a number.";
+		case ScannerError::OctalNotAllowed: return "Octal numbers not allowed.";
+		default:
+			solAssert(false, "Unhandled case in to_string(ScannerError)");
+			return "";
+	}
+}
 
+std::ostream& operator<<(std::ostream& os, ScannerError _errorCode)
+{
+	os << to_string(_errorCode);
+	return os;
+}
 
 /// Scoped helper for literal recording. Automatically drops the literal
 /// if aborting the scanning before it's complete.
@@ -311,7 +337,7 @@ Token Scanner::skipMultiLineComment()
 		}
 	}
 	// Unterminated multi-line comment.
-	return Token::IllegalCommentTerminator;
+	return setError(ScannerError::IllegalCommentTerminator);
 }
 
 Token Scanner::scanMultiLineDocComment()
@@ -362,7 +388,7 @@ Token Scanner::scanMultiLineDocComment()
 	}
 	literal.complete();
 	if (!endFound)
-		return Token::IllegalCommentTerminator;
+		return setError(ScannerError::IllegalCommentTerminator);
 	else
 		return Token::CommentLiteral;
 }
@@ -392,7 +418,7 @@ Token Scanner::scanSlash()
 	{
 		// doxygen style /** natspec comment
 		if (!advance()) /* slash star comment before EOS */
-			return Token::IllegalCommentTerminator;
+			return setError(ScannerError::IllegalCommentTerminator);
 		else if (m_char == '*')
 		{
 			advance(); //consume the last '*' at /**
@@ -409,9 +435,8 @@ Token Scanner::scanSlash()
 			comment = scanMultiLineDocComment();
 			m_nextSkippedComment.location.end = sourcePos();
 			m_nextSkippedComment.token = comment;
-			// @todo possibly: if (comment.isIllegal) return comment; to pass all errors
-			if (comment == Token::IllegalCommentTerminator)
-				return Token::IllegalCommentTerminator;
+			if (comment == Token::Illegal)
+				return Token::Illegal; // error already set
 			else
 				return Token::Whitespace;
 		}
@@ -426,6 +451,7 @@ Token Scanner::scanSlash()
 
 void Scanner::scanToken()
 {
+	m_nextToken.error = ScannerError::NoError;
 	m_nextToken.literal.clear();
 	m_nextToken.extendedTokenInfo = make_tuple(0, 0);
 	m_nextSkippedComment.literal.clear();
@@ -611,7 +637,7 @@ void Scanner::scanToken()
 					if (m_char == '"' || m_char == '\'')
 						token = scanHexString();
 					else
-						token = Token::IllegalHex;
+						token = setError(ScannerError::IllegalToken);
 				}
 			}
 			else if (isDecimalDigit(m_char))
@@ -621,8 +647,7 @@ void Scanner::scanToken()
 			else if (isSourcePastEndOfInput())
 				token = Token::EOS;
 			else
-				// @todo verfiy if this is actually an "IllegalUnknown" case
-				token = selectToken(Token::Illegal);
+				token = selectErrorToken(ScannerError::IllegalToken);
 			break;
 		}
 		// Continue scanning for tokens as long as we're just skipping
@@ -715,13 +740,13 @@ Token Scanner::scanString()
 		if (c == '\\')
 		{
 			if (isSourcePastEndOfInput() || !scanEscape())
-				return Token::IllegalStringEscape;
+				return setError(ScannerError::IllegalEscapeSequence);
 		}
 		else
 			addLiteralChar(c);
 	}
 	if (m_char != quote)
-		return Token::IllegalStringEndQuote;
+		return setError(ScannerError::IllegalStringEndQuote);
 	literal.complete();
 	advance();  // consume quote
 	return Token::StringLiteral;
@@ -736,11 +761,14 @@ Token Scanner::scanHexString()
 	{
 		char c = m_char;
 		if (!scanHexByte(c))
-			return Token::IllegalHex;
+			// can only return false if hex-byte is incomplete (only one hex digit instead of two)
+			return setError(ScannerError::IllegalHexString);
 		addLiteralChar(c);
 	}
+
 	if (m_char != quote)
-		return Token::IllegalHex;
+		return setError(ScannerError::IllegalStringEndQuote);
+
 	literal.complete();
 	advance();  // consume quote
 	return Token::StringLiteral;
@@ -769,8 +797,7 @@ Token Scanner::scanNumber(char _charSeen)
 		// we have already seen a decimal point of the float
 		addLiteralChar('.');
 		if (m_char == '_')
-			// @todo add test-case (change of return value did not break test)
-			return Token::IllegalNumberSeparator;
+			return setError(ScannerError::IllegalToken);
 		scanDecimalDigits();  // we know we have at least one digit
 	}
 	else
@@ -787,14 +814,14 @@ Token Scanner::scanNumber(char _charSeen)
 				kind = HEX;
 				addLiteralCharAndAdvance();
 				if (!isHexDigit(m_char))
-					return Token::IllegalHexDigit; // we must have at least one hex digit after 'x'
+					return setError(ScannerError::IllegalHexDigit); // we must have at least one hex digit after 'x'
 
 				while (isHexDigit(m_char) || m_char == '_') // We keep the underscores for later validation
 					addLiteralCharAndAdvance();
 			}
 			else if (isDecimalDigit(m_char))
 				// We do not allow octal numbers
-				return Token::IllegalOctalNotAllowed;
+				return setError(ScannerError::OctalNotAllowed);
 		}
 		// Parse decimal digits and allow trailing fractional part.
 		if (kind == DECIMAL)
@@ -826,8 +853,7 @@ Token Scanner::scanNumber(char _charSeen)
 	{
 		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
 		if (kind != DECIMAL)
-			// @todo add test (change introduced no failing)
-			return Token::IllegalExponent;
+			return setError(ScannerError::IllegalExponent);
 		else if (!m_source.isPastEndOfInput(1) && m_source.get(1) == '_')
 		{
 			// Recover from wrongly placed underscore as delimiter in literal with scientific
@@ -842,8 +868,8 @@ Token Scanner::scanNumber(char _charSeen)
 		addLiteralCharAndAdvance(); // 'e' | 'E'
 		if (m_char == '+' || m_char == '-')
 			addLiteralCharAndAdvance();
-		if (!isDecimalDigit(m_char))
-			return Token::IllegalExponent; // we must have at least one decimal digit after 'e'/'E'
+		if (!isDecimalDigit(m_char)) // we must have at least one decimal digit after 'e'/'E'
+			return setError(ScannerError::IllegalExponent);
 		scanDecimalDigits();
 	}
 	// The source character immediately following a numeric literal must
@@ -851,7 +877,7 @@ Token Scanner::scanNumber(char _charSeen)
 	// section 7.8.3, page 17 (note that we read only one decimal digit
 	// if the value is 0).
 	if (isDecimalDigit(m_char) || isIdentifierStart(m_char))
-		return Token::IllegalNumberEnd;
+		return setError(ScannerError::IllegalNumberEnd);
 	literal.complete();
 	return Token::Number;
 }
