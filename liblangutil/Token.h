@@ -56,7 +56,7 @@ namespace langutil
 // TOKEN_LIST takes a list of 3 macros M, all of which satisfy the
 // same signature M(name, string, precedence), where name is the
 // symbolic token name, string is the corresponding syntactic symbol
-// (or NULL, for literals), and precedence is the precedence (or 0).
+// (or nullptr, for literals), and precedence is the precedence (or 0).
 // The parameters are invoked for token categories as follows:
 //
 //   T: Non-keyword tokens
@@ -211,17 +211,17 @@ namespace langutil
 	T(BytesM, "bytesM", 0)                                             \
 	T(FixedMxN, "fixedMxN", 0)                                         \
 	T(UFixedMxN, "ufixedMxN", 0)                                       \
-	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
+	T(TypesEnd, nullptr, 0) /* used as type enum end marker */         \
 	\
 	/* Literals */                                                     \
 	K(TrueLiteral, "true", 0)                                          \
 	K(FalseLiteral, "false", 0)                                        \
-	T(Number, NULL, 0)                                                 \
-	T(StringLiteral, NULL, 0)                                          \
-	T(CommentLiteral, NULL, 0)                                         \
+	T(Number, nullptr, 0)                                              \
+	T(StringLiteral, nullptr, 0)                                       \
+	T(CommentLiteral, nullptr, 0)                                      \
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
-	T(Identifier, NULL, 0)                                             \
+	T(Identifier, nullptr, 0)                                          \
 	\
 	/* Keywords reserved for future use. */                            \
 	K(Abstract, "abstract", 0)                                         \
@@ -267,7 +267,7 @@ namespace langutil
 	T(IllegalHex, "ILLEGAL_HEX", 0)                                    \
 	\
 	/* Scanner-internal use only. */                                   \
-	T(Whitespace, NULL, 0)
+	T(Whitespace, nullptr, 0)
 
 // All token values.
 // attention! msvc issue:
@@ -329,7 +329,7 @@ namespace TokenTraits
 	char const* name(Token tok);
 
 	// @returns a string corresponding to the JS token string
-	// (.e., "<" for the token LT) or NULL if the token doesn't
+	// (.e., "<" for the token LT) or nullptr if the token doesn't
 	// have a (unique) string (e.g. an IDENTIFIER).
 	char const* toString(Token tok);
 
