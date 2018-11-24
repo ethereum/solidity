@@ -23,7 +23,7 @@
 #include <test/Options.h>
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolidity/ast/AST.h>
 

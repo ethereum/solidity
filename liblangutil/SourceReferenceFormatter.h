@@ -26,21 +26,15 @@
 #include <sstream>
 #include <functional>
 
+namespace dev
+{
+struct Exception; // forward
+}
+
 namespace langutil
 {
 struct SourceLocation;
 class Scanner;
-}
-
-namespace dev
-{
-
-struct Exception; // forward
-
-namespace solidity
-{
-
-class CompilerStack; // forward
 
 class SourceReferenceFormatter
 {
@@ -57,10 +51,10 @@ public:
 
 	/// Prints source location if it is given.
 	void printSourceLocation(langutil::SourceLocation const* _location);
-	void printExceptionInformation(Exception const& _exception, std::string const& _name);
+	void printExceptionInformation(dev::Exception const& _exception, std::string const& _name);
 
 	static std::string formatExceptionInformation(
-		Exception const& _exception,
+		dev::Exception const& _exception,
 		std::string const& _name,
 		ScannerFromSourceNameFun const& _scannerFromSourceName
 	)
@@ -79,5 +73,4 @@ private:
 	ScannerFromSourceNameFun m_scannerFromSourceName;
 };
 
-}
 }

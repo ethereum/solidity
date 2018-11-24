@@ -23,7 +23,7 @@
 
 #include <test/Options.h>
 
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/AsmParser.h>
