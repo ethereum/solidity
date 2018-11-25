@@ -115,7 +115,7 @@ Arch Linux also has packages, albeit limited to the latest development version:
 
     pacman -S solidity
 
-We distribute the Solidity compiler through Homebrow
+We distribute the Solidity compiler through Homebrew
 as a build-from-source version. Pre-built bottles are
 currently not supported.
 

@@ -400,7 +400,7 @@ within a word). At the time of expansion, the cost in gas must be paid. Memory i
 costly the larger it grows (it scales quadratically).
 
 The EVM is not a register machine but a stack machine, so all
-computations are performed on an data area called the **stack**. It has a maximum size of
+computations are performed on a data area called the **stack**. It has a maximum size of
 1024 elements and contains words of 256 bits. Access to the stack is
 limited to the top end in the following way:
 It is possible to copy one of
