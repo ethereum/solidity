@@ -19,7 +19,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/FormattedScope.h>
-#include <test/libsolidity/TestCase.h>
+#include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
 
 #include <iosfwd>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <test/libsolidity/TestCase.h>
+#include <test/TestCase.h>
 
 namespace langutil
 {

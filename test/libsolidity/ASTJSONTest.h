@@ -18,7 +18,7 @@
 #pragma once
 
 #include <test/libsolidity/FormattedScope.h>
-#include <test/libsolidity/TestCase.h>
+#include <test/TestCase.h>
 
 #include <iosfwd>
 #include <string>
