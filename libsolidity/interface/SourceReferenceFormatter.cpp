@@ -43,31 +43,32 @@ void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _locati
 	int endLine;
 	int endColumn;
 	tie(endLine, endColumn) = scanner.translatePositionToLineColumn(_location->end);
+
+	string line = scanner.lineAtPosition(_location->start);
+
+	int locationLength = endColumn - startColumn;
+	if (locationLength > 150)
+	{
+		line = line.substr(0, startColumn + 35) + " ... " + line.substr(endColumn - 35);
+		endColumn = startColumn + 75;
+		locationLength = 75;
+	}
+	if (line.length() > 150)
+	{
+		int len = line.length();
+		line = line.substr(max(0, startColumn - 35), min(startColumn, 35) + min(locationLength + 35, len - startColumn));
+		if (startColumn + locationLength + 35 < len)
+			line += " ...";
+		if (startColumn > 35)
+		{
+			line = " ... " + line;
+			startColumn = 40;
+		}
+		endColumn = startColumn + locationLength;
+	}
+
 	if (startLine == endLine)
 	{
-		string line = scanner.lineAtPosition(_location->start);
-
-		int locationLength = endColumn - startColumn;
-		if (locationLength > 150)
-		{
-			line = line.substr(0, startColumn + 35) + " ... " + line.substr(endColumn - 35);
-			endColumn = startColumn + 75;
-			locationLength = 75;
-		}
-		if (line.length() > 150)
-		{
-			int len = line.length();
-			line = line.substr(max(0, startColumn - 35), min(startColumn, 35) + min(locationLength + 35, len - startColumn));
-			if (startColumn + locationLength + 35 < len)
-				line += " ...";
-			if (startColumn > 35)
-			{
-				line = " ... " + line;
-				startColumn = 40;
-			}
-			endColumn = startColumn + locationLength;
-		}
-
 		m_stream << line << endl;
 
 		for_each(
@@ -83,12 +84,14 @@ void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _locati
 		m_stream << endl;
 	}
 	else
+	{
 		m_stream <<
-			scanner.lineAtPosition(_location->start) <<
+			line <<
 			endl <<
 			string(startColumn, ' ') <<
 			"^ (Relevant source part starts here and spans across multiple lines)." <<
 			endl;
+	}
 }
 
 void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
