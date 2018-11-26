@@ -273,7 +273,7 @@ Example::
     when the call returns. The regular way to interact with other contracts
     is to call a function on a contract object (``x.f()``).
 
-:: note::
+.. note::
     Previous versions of Solidity allowed these functions to receive
     arbitrary arguments and would also handle a first argument of type
     ``bytes4`` differently. These edge cases were removed in version 0.5.0.
