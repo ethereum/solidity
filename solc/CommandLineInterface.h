@@ -109,6 +109,8 @@ private:
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
 	/// EVM version to use
 	EVMVersion m_evmVersion;
+	/// Whether or not to colorize diagnostics output.
+	bool m_coloredOutput = true;
 };
 
 }

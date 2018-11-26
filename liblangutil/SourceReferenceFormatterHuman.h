@@ -15,17 +15,19 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2014
  * Formatting functions for errors referencing positions and locations in the source.
  */
 
 #pragma once
 
+#include <liblangutil/SourceReferenceExtractor.h>
+#include <liblangutil/SourceReferenceFormatter.h> // SourceReferenceFormatterBase
+
+#include <libdevcore/AnsiColorized.h>
+
 #include <ostream>
 #include <sstream>
 #include <functional>
-#include <liblangutil/SourceReferenceExtractor.h>
 
 namespace dev
 {
@@ -34,42 +36,45 @@ struct Exception; // forward
 
 namespace langutil
 {
-struct SourceLocation;
-class Scanner;
 
-class SourceReferenceFormatter
+struct SourceLocation;
+struct SourceReference;
+
+class SourceReferenceFormatterHuman: public SourceReferenceFormatter
 {
 public:
-	explicit SourceReferenceFormatter(std::ostream& _stream):
-		m_stream(_stream)
+	SourceReferenceFormatterHuman(std::ostream& _stream, bool colored):
+		SourceReferenceFormatter{_stream}, m_colored{colored}
 	{}
 
-	virtual ~SourceReferenceFormatter() = default;
-
-	/// Prints source location if it is given.
-	virtual void printSourceLocation(SourceReference const& _ref);
-	virtual void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
-
-	virtual void printSourceLocation(SourceLocation const* _location);
-	virtual void printExceptionInformation(dev::Exception const& _error, std::string const& _category);
+	void printSourceLocation(SourceReference const& _ref) override;
+	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg) override;
+	using SourceReferenceFormatter::printExceptionInformation;
 
 	static std::string formatExceptionInformation(
 		dev::Exception const& _exception,
-		std::string const& _name
+		std::string const& _name,
+		bool colored = false
 	)
 	{
 		std::ostringstream errorOutput;
 
-		SourceReferenceFormatter formatter(errorOutput);
+		SourceReferenceFormatterHuman formatter(errorOutput, colored);
 		formatter.printExceptionInformation(_exception, _name);
 		return errorOutput.str();
 	}
 
-protected:
-	/// Prints source name if location is given.
-	void printSourceName(SourceReference const& _ref);
+private:
+	dev::AnsiColorized normalColored() const;
+	dev::AnsiColorized frameColored() const;
+	dev::AnsiColorized errorColored() const;
+	dev::AnsiColorized messageColored() const;
+	dev::AnsiColorized secondaryColored() const;
+	dev::AnsiColorized highlightColored() const;
+	dev::AnsiColorized diagColored() const;
 
-	std::ostream& m_stream;
+private:
+	bool m_colored;
 };
 
 }

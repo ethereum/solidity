@@ -35,6 +35,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/AssemblyStack.h>
 
@@ -45,6 +46,8 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/JSON.h>
+
+#include <memory>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -134,6 +137,9 @@ static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
+static string const g_strColor = "color";
+static string const g_strNoColor = "no-color";
+static string const g_strNewReporter = "new-reporter";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -169,6 +175,9 @@ static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
+static string const g_argColor = g_strColor;
+static string const g_argNoColor = g_strNoColor;
+static string const g_argNewReporter = g_strNewReporter;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -652,6 +661,9 @@ Allowed options)",
 			po::value<string>()->value_name("path(s)"),
 			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
 		)
+		(g_argColor.c_str(), "Force colored output.")
+		(g_argNoColor.c_str(), "Explicitly disable colored output, disabling terminal auto-detection.")
+		(g_argNewReporter.c_str(), "Enables new diagnostics reporter.")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
@@ -690,6 +702,14 @@ Allowed options)",
 		serr() << _exception.what() << endl;
 		return false;
 	}
+
+	if (m_args.count(g_argColor) && m_args.count(g_argNoColor))
+	{
+		serr() << "Option " << g_argColor << " and " << g_argNoColor << " are mutualy exclusive." << endl;
+		return false;
+	}
+
+	m_coloredOutput = !m_args.count(g_argNoColor) && (isatty(STDERR_FILENO) || m_args.count(g_argColor));
 
 	if (m_args.count(g_argHelp) || (isatty(fileno(stdin)) && _argc == 1))
 	{
@@ -858,7 +878,11 @@ bool CommandLineInterface::processInput()
 
 	m_compiler.reset(new CompilerStack(fileReader));
 
-	SourceReferenceFormatter formatter(serr(false));
+	unique_ptr<SourceReferenceFormatter> formatter;
+	if (m_args.count(g_argNewReporter))
+		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
+	else
+		formatter = make_unique<SourceReferenceFormatter>(serr(false));
 
 	try
 	{
@@ -881,7 +905,7 @@ bool CommandLineInterface::processInput()
 		for (auto const& error: m_compiler->errors())
 		{
 			g_hasOutput = true;
-			formatter.printExceptionInformation(
+			formatter->printExceptionInformation(
 				*error,
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
@@ -893,7 +917,7 @@ bool CommandLineInterface::processInput()
 	catch (CompilerError const& _exception)
 	{
 		g_hasOutput = true;
-		formatter.printExceptionInformation(_exception, "Compiler error");
+		formatter->printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
 	catch (InternalCompilerError const& _exception)
@@ -915,7 +939,7 @@ bool CommandLineInterface::processInput()
 		else
 		{
 			g_hasOutput = true;
-			formatter.printExceptionInformation(_error, _error.typeName());
+			formatter->printExceptionInformation(_error, _error.typeName());
 		}
 
 		return false;
@@ -1221,12 +1245,16 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
-		SourceReferenceFormatter formatter(serr(false));
+		unique_ptr<SourceReferenceFormatter> formatter;
+		if (m_args.count(g_argNewReporter))
+			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
+		else
+			formatter = make_unique<SourceReferenceFormatter>(serr(false));
 
 		for (auto const& error: stack.errors())
 		{
 			g_hasOutput = true;
-			formatter.printExceptionInformation(
+			formatter->printExceptionInformation(
 				*error,
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
