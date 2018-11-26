@@ -344,7 +344,10 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			m_context << Instruction::DUP1 << Instruction::CALLDATASIZE << Instruction::SUB;
 			CompilerUtils(m_context).abiDecode(functionType->parameterTypes());
 		}
-		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
+		m_context.appendJumpTo(
+			m_context.functionEntryLabel(functionType->declaration()),
+			eth::AssemblyItem::JumpType::IntoFunction
+		);
 		m_context << returnTag;
 		// Return tag and input parameters get consumed.
 		m_context.adjustStackOffset(

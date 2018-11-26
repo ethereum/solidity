@@ -15,6 +15,7 @@ Compiler Features:
 
 Bugfixes:
  * Assembly output: Do not mix in/out jump annotations with arguments.
+ * Code Generator: Annotate jump from calldata decoder to function as "jump in".
 
 Build System:
  * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
