@@ -3,7 +3,6 @@
 Language Features:
  * Allow public functions to override external functions.
 
-
 Compiler Features:
  * Build System: LLL is not built anymore by default. Must configure it with CMake as `-DLLL=ON`.
  * Code generator: Do not perform redundant double cleanup on unsigned integers when loading from calldata.
@@ -16,6 +15,7 @@ Compiler Features:
 Bugfixes:
  * Assembly output: Do not mix in/out jump annotations with arguments.
  * Code Generator: Annotate jump from calldata decoder to function as "jump in".
+ * Type Checker: Properly detect different return types when overriding an external interface function with a public contract function.
 
 Build System:
  * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
