@@ -4,100 +4,6 @@ Expressions and Control Structures
 
 .. index:: ! parameter, parameter;input, parameter;output, function parameter, parameter;function, return variable, variable;return, return
 
-Function Parameters and Return Variables
-========================================
-
-As in JavaScript, functions may take parameters as input. Unlike in JavaScript
-and C, functions may also return an arbitrary number of values as output.
-
-Function Parameters
--------------------
-
-Function parameters are declared the same way as variables, and the name of
-unused parameters can be omitted.
-
-For example, if you want your contract to accept one kind of external call
-with two integers, you would use something like::
-
-    pragma solidity >=0.4.16 <0.6.0;
-
-    contract Simple {
-        uint sum;
-        function taker(uint _a, uint _b) public {
-            sum = _a + _b;
-        }
-    }
-
-Function parameters can be used as any other local variable and they can also be assigned to.
-
-.. note::
-
-  An :ref:`external function<external-function-calls>` cannot accept a
-  multi-dimensional array as an input
-  parameter. This functionality is possible if you enable the new
-  experimental ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
-
-  An :ref:`internal function<external-function-calls>` can accept a
-  multi-dimensional array without enabling the feature.
-
-.. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
-
-Return Variables
-----------------
-
-Function return variables are declared with the same syntax after the
-``returns`` keyword.
-
-For example, suppose you want to return two results: the sum and the product of
-two integers passed as function parameters, then you use something like::
-
-    pragma solidity >=0.4.16 <0.6.0;
-
-    contract Simple {
-        function arithmetic(uint _a, uint _b)
-            public
-            pure
-            returns (uint o_sum, uint o_product)
-        {
-            o_sum = _a + _b;
-            o_product = _a * _b;
-        }
-    }
-
-The names of return variables can be omitted.
-Return variables can be used as any other local variable and they
-are initialized with their :ref:`default value <default-value>` and have that value unless explicitly set.
-set, they stay zero value.
-
-You can either explicitly assign to return variables and
-then leave the function using ``return;``,
-or you can provide return values
-(either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
-statement::
-
-    pragma solidity >=0.4.16 <0.6.0;
-
-    contract Simple {
-        function arithmetic(uint _a, uint _b)
-            public
-            pure
-            returns (uint o_sum, uint o_product)
-        {
-            return (_a + _b, _a * _b);
-        }
-    }
-
-This form is equivalent to first assigning values to the
-return variables and then using ``return;`` to leave the function.
-
-
-.. note::
-    You cannot return some types from non-internal functions, notably
-    multi-dimensional dynamic arrays and structs. If you enable the
-    new experimental ``ABIEncoderV2`` feature by adding ``pragma experimental
-    ABIEncoderV2;`` to your source file then more types are available, but
-    ``mapping`` types are still limited to inside a single contract and you
-    cannot transfer them.
 
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
@@ -115,15 +21,6 @@ around single-statement bodies.
 Note that there is no type conversion from non-boolean to boolean types as
 there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
 Solidity.
-
-.. _multi-return:
-
-Returning Multiple Variables
-----------------------------
-
-When a function has multiple return types, ``return (v0, v1, ...,
-vn)`` can return multiple values.  The number of components must be
-the same as the number of return types.
 
 .. index:: ! function;call, function;internal, function;external
 
