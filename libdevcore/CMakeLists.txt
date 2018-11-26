@@ -9,6 +9,7 @@ set(sources
 	SwarmHash.cpp
 	UTF8.cpp
 	Whiskers.cpp
+	termcolor.cpp
 )
 
 add_library(devcore ${sources})
