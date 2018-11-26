@@ -88,6 +88,7 @@ BOOST_AUTO_TEST_CASE(string_escape_illegal)
 	Scanner scanner(CharStream(" bla \"\\x6rf\" (illegalescape)"));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalEscapeSequence);
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "");
 	// TODO recovery from illegal tokens should be improved
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
@@ -486,28 +487,32 @@ BOOST_AUTO_TEST_CASE(invalid_short_hex_literal)
 {
 	Scanner scanner(CharStream("{ hex\"00112233F\""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_with_space)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF \""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_with_wrong_quotes)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF'"));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_hex_literal_nonhex_string)
 {
 	Scanner scanner(CharStream("{ hex\"hello\""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::IllegalHex);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
 //  COMMENTS

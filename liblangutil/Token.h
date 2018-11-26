@@ -263,8 +263,6 @@ namespace langutil
 	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
-	/* Illegal hex token */                                            \
-	T(IllegalHex, "ILLEGAL_HEX", 0)                                    \
 	\
 	/* Scanner-internal use only. */                                   \
 	T(Whitespace, nullptr, 0)
