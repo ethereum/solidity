@@ -40,7 +40,6 @@ set(sources
 	interface/CompilerStack.cpp
 	interface/GasEstimator.cpp
 	interface/Natspec.cpp
-	interface/SourceReferenceFormatter.cpp
 	interface/StandardCompiler.cpp
 	interface/Version.cpp
 	parsing/DocStringParser.cpp
