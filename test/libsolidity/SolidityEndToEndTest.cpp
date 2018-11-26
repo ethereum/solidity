@@ -14062,6 +14062,21 @@ BOOST_AUTO_TEST_CASE(flipping_sign_tests)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(external_public_override)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() external returns (uint) { return 1; }
+		}
+		contract B is A {
+			function f() public returns (uint) { return 2; }
+			function g() public returns (uint) { return f(); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(2));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(2));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }
