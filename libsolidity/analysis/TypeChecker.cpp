@@ -215,7 +215,9 @@ void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _defini
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (FunctionType(*overloads[i]).hasEqualParameterTypes(FunctionType(*overloads[j])))
+				if (FunctionType(*overloads[i]).asCallableFunction(false)->hasEqualParameterTypes(
+					*FunctionType(*overloads[j]).asCallableFunction(false))
+				)
 				{
 					ssl.append("Other declaration is here:", overloads[j]->location());
 					reported.insert(j);
@@ -250,7 +252,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 			if (function->isConstructor())
 				continue;
 			auto& overloads = functions[function->name()];
-			FunctionTypePointer funType = make_shared<FunctionType>(*function);
+			FunctionTypePointer funType = make_shared<FunctionType>(*function)->asCallableFunction(false);
 			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
 			{
 				return funType->hasEqualParameterTypes(*_funAndFlag.first);
@@ -402,10 +404,10 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 
 void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
 {
-	FunctionType functionType(_function);
-	FunctionType superType(_super);
+	FunctionTypePointer functionType = FunctionType(_function).asCallableFunction(false);
+	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
 
-	if (!functionType.hasEqualParameterTypes(superType))
+	if (!functionType->hasEqualParameterTypes(*superType))
 		return;
 
 	if (!_function.annotation().superFunction)
@@ -431,7 +433,7 @@ void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, Fun
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	else if (functionType != superType)
+	else if (*functionType != *superType)
 		overrideError(_function, _super, "Overriding function return types differ.");
 }
 
@@ -456,7 +458,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(f, functionType)
+						make_pair(f, functionType->asCallableFunction(false))
 					);
 			}
 		for (VariableDeclaration const* v: contract->stateVariables())
@@ -466,7 +468,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(v, functionType)
+						make_pair(v, functionType->asCallableFunction(false))
 					);
 			}
 	}
