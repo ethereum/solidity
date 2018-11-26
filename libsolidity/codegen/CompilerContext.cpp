@@ -25,7 +25,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/Version.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmCodeGen.h>
 #include <libyul/AsmAnalysis.h>

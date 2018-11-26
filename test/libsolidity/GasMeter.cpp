@@ -26,7 +26,7 @@
 #include <libevmasm/PathGasMeter.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace std;
 using namespace langutil;

@@ -27,7 +27,7 @@
 #include <libyul/AsmData.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>

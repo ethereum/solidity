@@ -20,17 +20,13 @@
  * Formatting functions for errors referencing positions and locations in the source.
  */
 
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
 
 using namespace std;
+using namespace dev;
 using namespace langutil;
-
-namespace dev
-{
-namespace solidity
-{
 
 void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _location)
 {
@@ -103,7 +99,7 @@ void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
 }
 
 void SourceReferenceFormatter::printExceptionInformation(
-	Exception const& _exception,
+	dev::Exception const& _exception,
 	string const& _name
 )
 {
@@ -130,7 +126,4 @@ void SourceReferenceFormatter::printExceptionInformation(
 		}
 		m_stream << endl;
 	}
-}
-
-}
 }

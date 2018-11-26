@@ -28,7 +28,7 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 namespace dev
 {
@@ -73,7 +73,7 @@ public:
 		if (!m_compiler.compile())
 		{
 			auto scannerFromSourceName = [&](std::string const& _sourceName) -> langutil::Scanner const& { return m_compiler.scanner(_sourceName); };
-			SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
+			langutil::SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
 
 			for (auto const& error: m_compiler.errors())
 				formatter.printExceptionInformation(

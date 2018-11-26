@@ -34,7 +34,7 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/AssemblyStack.h>
 
