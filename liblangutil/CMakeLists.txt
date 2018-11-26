@@ -5,6 +5,7 @@ set(sources
 	Exceptions.cpp
 	ParserBase.cpp
 	Scanner.cpp
+	SourceReferenceFormatter.cpp
 	Token.cpp
 )
 
