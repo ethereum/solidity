@@ -269,11 +269,6 @@ to create an independent copy of the storage value in memory.
 On the other hand, ``h(x)`` successfully modifies ``x`` because only
 a reference and not a copy is passed.
 
-Is it possible to return an array of strings (``string[]``) from a Solidity function?
-=====================================================================================
-
-Only when ``pragma experimental "ABIEncoderV2";`` is used.
-
 What does the following strange check do in the Custom Token contract?
 ======================================================================
 
