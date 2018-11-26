@@ -671,6 +671,20 @@ In addition to the list of state modifying statements explained above, the follo
         }
     }
 
+Pure functions are able to use the `revert()` and `require()` functions to revert
+potential state changes when an :ref:`error occurs <assert-and-require>`.
+
+Reverting a state change is not considered a "state modification", as only changes to the
+state made previously in code that did not have the ``view`` or ``pure`` restriction
+are reverted and that code has the option to catch the ``revert`` and not pass it on.
+
+This behaviour is also in line with the ``STATICCALL`` opcode.
+
+.. warning::
+  It is not possible to prevent functions from reading the state at the level
+  of the EVM, it is only possible to prevent them from writing to the state
+  (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
+
 .. note::
   Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
   for ``pure`` functions.
@@ -679,13 +693,8 @@ In addition to the list of state modifying statements explained above, the follo
   By using  ``STATICCALL`` for ``pure`` functions, modifications to the
   state are prevented on the level of the EVM.
 
-.. warning::
-  It is not possible to prevent functions from reading the state at the level
-  of the EVM, it is only possible to prevent them from writing to the state
-  (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
-
-.. warning::
-  Before version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
+.. note::
+  Prior to version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
   It is a compile-time type check, which can be circumvented doing invalid explicit conversions
   between contract types, because the compiler can verify that the type of the contract does
   not do state-changing operations, but it cannot check that the contract that will be called
