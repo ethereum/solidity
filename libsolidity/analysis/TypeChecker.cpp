@@ -400,42 +400,42 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 	}
 }
 
-void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super)
+void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
 {
-	FunctionType functionType(function);
-	FunctionType superType(super);
+	FunctionType functionType(_function);
+	FunctionType superType(_super);
 
 	if (!functionType.hasEqualParameterTypes(superType))
 		return;
 
-	if (!function.annotation().superFunction)
-		function.annotation().superFunction = &super;
+	if (!_function.annotation().superFunction)
+		_function.annotation().superFunction = &_super;
 
-	if (function.visibility() != super.visibility())
+	if (_function.visibility() != _super.visibility())
 	{
 		// visibility is enforced to be external in interfaces, but a contract can override that with public
 		if (
-			super.inContractKind() == ContractDefinition::ContractKind::Interface &&
-			function.inContractKind() != ContractDefinition::ContractKind::Interface &&
-			function.visibility() == FunctionDefinition::Visibility::Public
+			_super.inContractKind() == ContractDefinition::ContractKind::Interface &&
+			_function.inContractKind() != ContractDefinition::ContractKind::Interface &&
+			_function.visibility() == FunctionDefinition::Visibility::Public
 		)
 			return;
-		overrideError(function, super, "Overriding function visibility differs.");
+		overrideError(_function, _super, "Overriding function visibility differs.");
 	}
 
-	else if (function.stateMutability() != super.stateMutability())
+	else if (_function.stateMutability() != _super.stateMutability())
 		overrideError(
-			function,
-			super,
+			_function,
+			_super,
 			"Overriding function changes state mutability from \"" +
-			stateMutabilityToString(super.stateMutability()) +
+			stateMutabilityToString(_super.stateMutability()) +
 			"\" to \"" +
-			stateMutabilityToString(function.stateMutability()) +
+			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
 
 	else if (functionType != superType)
-		overrideError(function, super, "Overriding function return types differ.");
+		overrideError(_function, _super, "Overriding function return types differ.");
 }
 
 void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)

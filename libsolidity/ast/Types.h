@@ -1154,14 +1154,13 @@ public:
 	/// of the parameters to false.
 	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
 
-	/// @returns a copy of this function type where all return parameters of dynamic size are
-	/// removed and the location of reference types is changed from CallData to Memory.
-	/// This is needed if external functions are called on other contracts, as they cannot return
-	/// dynamic values.
-	/// Returns empty shared pointer on a failure. Namely, if a bound function has no parameters.
+	/// @returns a copy of this function type where the location of reference types is changed
+	/// from CallData to Memory. This is the type that would be used when the function is
+	/// called, as opposed to the parameter types that are available inside the function body.
+	/// Also supports variants to be used for library or bound calls.
 	/// @param _inLibrary if true, uses DelegateCall as location.
-	/// @param _bound if true, the arguments are placed as `arg1.functionName(arg2, ..., argn)`.
-	FunctionTypePointer asMemberFunction(bool _inLibrary, bool _bound = false) const;
+	/// @param _bound if true, the function type is set to be bound.
+	FunctionTypePointer asCallableFunction(bool _inLibrary, bool _bound = false) const;
 
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);

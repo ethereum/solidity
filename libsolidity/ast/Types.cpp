@@ -442,10 +442,11 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 					continue;
 				seenFunctions.insert(function);
-				FunctionType funType(*function, false);
-				if (auto fun = funType.asMemberFunction(true, true))
-					if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
-						members.push_back(MemberList::Member(function->name(), fun, function));
+				if (function->parameters().empty())
+					continue;
+				FunctionTypePointer fun = FunctionType(*function, false).asCallableFunction(true, true);
+				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
+					members.push_back(MemberList::Member(function->name(), fun, function));
 			}
 		}
 	return members;
@@ -1970,7 +1971,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.push_back(MemberList::Member(
 				it.second->declaration().name(),
-				it.second->asMemberFunction(m_contract.isLibrary()),
+				it.second->asCallableFunction(m_contract.isLibrary()),
 				&it.second->declaration()
 			));
 	}
@@ -3059,10 +3060,10 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 	);
 }
 
-FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound) const
+FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _bound) const
 {
-	if (_bound && m_parameterTypes.empty())
-		return FunctionTypePointer();
+	if (_bound)
+		solAssert(!m_parameterTypes.empty(), "");
 
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
@@ -3201,7 +3202,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 				if (function->isVisibleAsLibraryMember())
 					members.push_back(MemberList::Member(
 						function->name(),
-						FunctionType(*function).asMemberFunction(true),
+						FunctionType(*function).asCallableFunction(true),
 						function
 					));
 		if (isBase)
