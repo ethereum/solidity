@@ -889,6 +889,10 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 	{
 		// everything fine.
 	}
+	else if (positiveResult == smt::CheckResult::UNKNOWN || negatedResult == smt::CheckResult::UNKNOWN)
+	{
+		// can't do anything.
+	}
 	else if (positiveResult == smt::CheckResult::UNSATISFIABLE && negatedResult == smt::CheckResult::UNSATISFIABLE)
 		m_errorReporter.warning(_condition.location(), "Condition unreachable.");
 	else
