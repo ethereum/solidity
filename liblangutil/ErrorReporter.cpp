@@ -30,7 +30,7 @@ using namespace langutil;
 
 ErrorReporter& ErrorReporter::operator=(ErrorReporter const& _errorReporter)
 {
-	if (&_errorReporter == this)
+	if(&_errorReporter == this)
 		return *this;
 	m_errorList = _errorReporter.m_errorList;
 	return *this;
