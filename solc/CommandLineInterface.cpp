@@ -1016,20 +1016,6 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	// do we need AST output?
 	if (m_args.count(_argStr))
 	{
-		vector<ASTNode const*> asts;
-		for (auto const& sourceCode: m_sourceCodes)
-			asts.push_back(&m_compiler->ast(sourceCode.first));
-		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
-		for (auto const& contract : m_compiler->contractNames())
-		{
-			auto ret = GasEstimator::breakToStatementLevel(
-				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(contract), asts),
-				asts
-			);
-			for (auto const& it: ret)
-				gasCosts[it.first] += it.second;
-		}
-
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))
 		{
@@ -1059,11 +1045,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				sout() << endl << "======= " << sourceCode.first << " =======" << endl;
 				if (_argStr == g_argAst)
 				{
-					ASTPrinter printer(
-						m_compiler->ast(sourceCode.first),
-						sourceCode.second,
-						gasCosts
-					);
+					ASTPrinter printer(m_compiler->ast(sourceCode.first), sourceCode.second);
 					printer.print(sout());
 				}
 				else
