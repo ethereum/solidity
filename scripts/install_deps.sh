@@ -55,7 +55,7 @@ detect_linux_distro() {
         DISTRO=$(lsb_release -is)
     elif [ -f /etc/os-release ]; then
         # extract 'foo' from NAME=foo, only on the line with NAME=foo
-        DISTRO=$(sed -n -e 's/^NAME="\(.*\)\"/\1/p' /etc/os-release)
+        DISTRO=$(sed -n -e 's/^NAME="\?\([^"]*\)"\?$/\1/p' /etc/os-release)
     elif [ -f /etc/centos-release ]; then
         DISTRO=CentOS
     else
