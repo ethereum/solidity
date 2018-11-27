@@ -193,7 +193,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 		bigint bestGas = gasNeeded(routine);
 		for (unsigned bits = 255; bits > 8 && m_maxSteps > 0; --bits)
 		{
-			unsigned gapDetector = unsigned(_value >> (bits - 8)) & 0x1ff;
+			unsigned gapDetector = unsigned((_value >> (bits - 8)) & 0x1ff);
 			if (gapDetector != 0xff && gapDetector != 0x100)
 				continue;
 
