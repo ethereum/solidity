@@ -23,6 +23,7 @@
 #pragma once
 
 #include <liblangutil/Token.h>
+#include <liblangutil/Scanner.h>
 #include <memory>
 #include <string>
 
@@ -38,6 +39,7 @@ public:
 	explicit ParserBase(ErrorReporter& errorReporter): m_errorReporter(errorReporter) {}
 
 	std::shared_ptr<std::string const> const& sourceName() const;
+	CharStream const* charStream() const { return &m_scanner->charStream(); }
 
 protected:
 	/// Utility class that creates an error and throws an exception if the
