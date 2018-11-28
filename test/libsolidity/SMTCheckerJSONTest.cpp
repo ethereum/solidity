@@ -38,11 +38,15 @@ using namespace boost::unit_test;
 SMTCheckerTest::SMTCheckerTest(string const& _filename)
 : SyntaxTest(_filename)
 {
-	BOOST_REQUIRE_MESSAGE(boost::algorithm::ends_with(_filename, ".sol"), "Invalid test contract file name: \"" + _filename + "\".");
+	if (!boost::algorithm::ends_with(_filename, ".sol"))
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
 
 	string jsonFilename = _filename.substr(0, _filename.size() - 4) + ".json";
-	BOOST_CHECK(jsonParseFile(jsonFilename, m_smtResponses));
-	BOOST_CHECK(m_smtResponses.isObject());
+	if (
+		!jsonParseFile(jsonFilename, m_smtResponses) ||
+		!m_smtResponses.isObject()
+	)
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid JSON file."));
 }
 
 bool SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -59,42 +63,62 @@ bool SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool const
 
 	// This is the list of responses provided in the test
 	string auxInput("auxiliaryInput");
-	BOOST_CHECK(m_smtResponses.isMember(auxInput));
+	if (!m_smtResponses.isMember(auxInput))
+		BOOST_THROW_EXCEPTION(runtime_error("JSON file does not contain field \"auxiliaryInput\"."));
+
 	vector<string> inHashes = hashesFromJson(m_smtResponses, auxInput, "smtlib2responses");
 
 	// Ensure that the provided list matches the requested one
-	BOOST_CHECK_MESSAGE(
-		outHashes == inHashes,
-		"SMT query hashes differ: " + boost::algorithm::join(outHashes, ", ") + " x " + boost::algorithm::join(inHashes, ", ")
-	);
+	if (outHashes != inHashes)
+		BOOST_THROW_EXCEPTION(runtime_error(
+			"SMT query hashes differ: " +
+			boost::algorithm::join(outHashes, ", ") +
+			" x " +
+			boost::algorithm::join(inHashes, ", ")
+		));
 
 	// Rerun the compiler with the provided hashed (2nd run)
 	input[auxInput] = m_smtResponses[auxInput];
 	Json::Value endResult = compiler.compile(input);
 
-	BOOST_CHECK(endResult.isMember("errors"));
-	Json::Value const& errors = endResult["errors"];
-	for (auto const& error: errors)
+	if (endResult.isMember("errors") && endResult["errors"].isArray())
 	{
-		BOOST_CHECK(error.isMember("type") && error["type"].isString());
-		BOOST_CHECK(error.isMember("message") && error["message"].isString());
-		if (!error.isMember("sourceLocation"))
-			continue;
-		Json::Value const& location = error["sourceLocation"];
-		BOOST_CHECK(location.isMember("start") && location["start"].isInt());
-		BOOST_CHECK(location.isMember("end") && location["end"].isInt());
-		int start = location["start"].asInt();
-		int end = location["end"].asInt();
-		if (start >= static_cast<int>(versionPragma.size()))
-			start -= versionPragma.size();
-		if (end >= static_cast<int>(versionPragma.size()))
-			end -= versionPragma.size();
-		m_errorList.emplace_back(SyntaxTestError{
-			error["type"].asString(),
-			error["message"].asString(),
-			start,
-			end
-		});
+		Json::Value const& errors = endResult["errors"];
+		for (auto const& error: errors)
+		{
+			if (
+				!error.isMember("type") ||
+				!error["type"].isString()
+			)
+				BOOST_THROW_EXCEPTION(runtime_error("Error must have a type."));
+			if (
+				!error.isMember("message") ||
+				!error["message"].isString()
+			)
+				BOOST_THROW_EXCEPTION(runtime_error("Error must have a message."));
+			if (!error.isMember("sourceLocation"))
+				continue;
+			Json::Value const& location = error["sourceLocation"];
+			if (
+				!location.isMember("start") ||
+				!location["start"].isInt() ||
+				!location.isMember("end") ||
+				!location["end"].isInt()
+			)
+				BOOST_THROW_EXCEPTION(runtime_error("Error must have a SourceLocation with start and end."));
+			int start = location["start"].asInt();
+			int end = location["end"].asInt();
+			if (start >= static_cast<int>(versionPragma.size()))
+				start -= versionPragma.size();
+			if (end >= static_cast<int>(versionPragma.size()))
+				end -= versionPragma.size();
+			m_errorList.emplace_back(SyntaxTestError{
+				error["type"].asString(),
+				error["message"].asString(),
+				start,
+				end
+			});
+		}
 	}
 
 	return printExpectationAndError(_stream, _linePrefix, _formatted);
@@ -123,6 +147,7 @@ Json::Value SMTCheckerTest::buildJson(string const& _extra)
 	string sources = " \"sources\": { " + sourceName + ": " + sourceObj + "}";
 	string input = "{" + language + ", " + sources + "}";
 	Json::Value source;
-	BOOST_REQUIRE(jsonParse(input, source));
+	if (!jsonParse(input, source))
+		BOOST_THROW_EXCEPTION(runtime_error("Could not build JSON from string."));
 	return source;
 }
