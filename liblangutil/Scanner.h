@@ -94,6 +94,8 @@ public:
 
 	std::string source() const { return m_source.source(); }
 
+	CharStream const& charStream() const noexcept { return m_source; }
+
 	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
 	void reset(CharStream _source, std::string _sourceName);
 	/// Resets scanner to the start of input.
