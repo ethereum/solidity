@@ -2124,9 +2124,15 @@ bool StructType::canBeUsedExternally(bool _inLibrary) const
 		// We pass "false" to canBeUsedExternally (_inLibrary), because this struct will be
 		// passed by value and thus the encoding does not differ, but it will disallow
 		// mappings.
+		// Also return false if at least one struct member does not have a type.
+		// This might happen, for example, if the type of the member does not exist,
+		// which is reported as an error.
 		for (auto const& var: m_struct.members())
 		{
-			solAssert(var->annotation().type, "");
+			// If the struct member does not have a type return false.
+			// A TypeError is expected in this case.
+			if (!var->annotation().type)
+				return false;
 			if (!var->annotation().type->canBeUsedExternally(false))
 				return false;
 		}
