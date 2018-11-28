@@ -52,11 +52,49 @@ YulString NameDispenser::newName(YulString _nameHint, YulString _context)
 YulString NameDispenser::newNameInternal(YulString _nameHint)
 {
 	YulString name = _nameHint;
-	while (name.empty() || m_usedNames.count(name))
-	{
-		m_counter++;
-		name = YulString(_nameHint.str() + "_" + to_string(m_counter));
-	}
-	m_usedNames.emplace(name);
-	return name;
+    
+    // if has name but doens't have counter, make a new entry in counter
+    // if it has a counter, increment it and then make it
+    // it it doesnt have a counter, make a new entry in counter.
+    //
+    //
+    
+    //if (m_usedNames.count(name))
+        
+    
+    //if (!m_counters.count(name.id()))
+        //m_counters.emplace(name.id(), -1);
+    //return YulString(_nameHint.str(), ++m_counters.at(name.id()));
+    //
+    //
+    // id is going to be different???
+    // a and a_1 are going to have differnt id's 
+    // but two a's are going to have the same id.
+    //
+    if (!m_counters.count(name.id()))
+        m_counters.emplace(name.id(), 0);
+    else
+        name = YulString(_nameHint.str(), ++m_counters.at(name.id()));
+
+    return name;
+    
+
+    //if (m_usedNames.count(name) && m_counters.count(name.id()) == 0)
+       //m_counters.emplace(name.id(), 0); 
+
+    //if (m_counters.count(name.id()) == 1)
+        //name = YulString(_nameHint.str(), ++m_counters.at(name.id()));
+    //else
+        //m_counters.emplace(name.id(), 0);
+    //m_usedNames.emplace(name);
+    //return name;
+
+    // Previous work-- 
+	//while (name.empty() || m_usedNames.count(name))
+	//{
+		//m_counter++;
+		//name = YulString(_nameHint.str() + "_" + to_string(m_counter));
+	//}
+	//m_usedNames.emplace(name);
+	//return name;
 }

@@ -53,21 +53,30 @@ public:
 		static YulStringRepository inst;
 		return inst;
 	}
-	Handle stringToHandle(std::string const& _string)
+	Handle stringToHandle(std::string const& _string, const size_t _suffix)
 	{
 		if (_string.empty())
 			return { 0, emptyHash() };
 		std::uint64_t h = hash(_string);
 		auto range = m_hashToID.equal_range(h);
 		for (auto it = range.first; it != range.second; ++it)
-			if (*m_strings[it->second] == _string)
-				return Handle{it->second, h};
+			if (*m_strings[it->second] == _string && m_idToSuffix.count(it->second))
+                if (m_idToSuffix.at(it->second) == _suffix)
+                    return Handle{it->second, h};
 		m_strings.emplace_back(std::make_shared<std::string>(_string));
-		size_t id = m_strings.size() - 1;
+        size_t id = m_strings.size() - 1;
+        m_idToSuffix.emplace(id, _suffix);
 		m_hashToID.emplace_hint(range.second, std::make_pair(h, id));
 		return Handle{id, h};
 	}
-	std::string const& idToString(size_t _id) const	{ return *m_strings.at(_id); }
+	std::string const& idToString(size_t _id) const	{ 
+        size_t suffix = 0;
+        std::shared_ptr<std::string> temp(m_strings.at(_id));
+        if (m_idToSuffix.count(_id)) 
+           suffix = m_idToSuffix.at(_id);
+        return suffix > 0 ? *std::make_shared<std::string>(*temp + "_" + std::to_string(suffix))
+                          : *temp;//m_strings.at(_id);
+    }
 
 	static std::uint64_t hash(std::string const& v)
 	{
@@ -85,6 +94,7 @@ public:
 private:
 	std::vector<std::shared_ptr<std::string>> m_strings;
 	std::unordered_multimap<std::uint64_t, size_t> m_hashToID;
+    std::unordered_map<size_t, size_t> m_idToSuffix; 
 };
 
 /// Wrapper around handles into the YulString repository.
@@ -95,7 +105,7 @@ class YulString
 {
 public:
 	YulString() = default;
-	explicit YulString(std::string const& _s): m_handle(YulStringRepository::instance().stringToHandle(_s)) {}
+	explicit YulString(std::string const& _s, const size_t suffix = 0): m_handle(YulStringRepository::instance().stringToHandle(_s, suffix)) {}
 	YulString(YulString const&) = default;
 	YulString(YulString&&) = default;
 	YulString& operator=(YulString const&) = default;
@@ -123,6 +133,7 @@ public:
 	{
 		return YulStringRepository::instance().idToString(m_handle.id);
 	}
+    size_t id() const { return m_handle.id; } 
 
 private:
 	/// Handle of the string. Assumes that the empty string has ID zero.
