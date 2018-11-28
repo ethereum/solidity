@@ -122,8 +122,8 @@ void ASTJsonConverter::setJsonNode(
 string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location) const
 {
 	int sourceIndex{-1};
-	if (_location.sourceName && m_sourceIndices.count(*_location.sourceName))
-		sourceIndex = m_sourceIndices.at(*_location.sourceName);
+	if (_location.source && m_sourceIndices.count(_location.source->name()))
+		sourceIndex = m_sourceIndices.at(_location.source->name());
 	int length = -1;
 	if (_location.start >= 0 && _location.end >= 0)
 		length = _location.end - _location.start;

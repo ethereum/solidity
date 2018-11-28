@@ -598,8 +598,8 @@ tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocati
 	int startColumn;
 	int endLine;
 	int endColumn;
-	tie(startLine, startColumn) = scanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.start);
-	tie(endLine, endColumn) = scanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.end);
+	tie(startLine, startColumn) = scanner(_sourceLocation.source->name()).translatePositionToLineColumn(_sourceLocation.start);
+	tie(endLine, endColumn) = scanner(_sourceLocation.source->name()).translatePositionToLineColumn(_sourceLocation.end);
 
 	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
 }
@@ -922,8 +922,8 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 		SourceLocation const& location = item.location();
 		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
 		int sourceIndex =
-			location.sourceName && sourceIndicesMap.count(*location.sourceName) ?
-			sourceIndicesMap.at(*location.sourceName) :
+			location.source && sourceIndicesMap.count(location.source->name()) ?
+			sourceIndicesMap.at(location.source->name()) :
 			-1;
 		char jump = '-';
 		if (item.getJumpType() == eth::AssemblyItem::JumpType::IntoFunction)

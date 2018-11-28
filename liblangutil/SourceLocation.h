@@ -23,6 +23,7 @@
 #pragma once
 
 #include <libdevcore/Common.h> // defines noexcept macro for MSVC
+#include <liblangutil/CharStream.h>
 #include <memory>
 #include <string>
 #include <ostream>
@@ -37,13 +38,13 @@ namespace langutil
  */
 struct SourceLocation
 {
-	SourceLocation(): start(-1), end(-1) { }
-	SourceLocation(int _start, int _end, std::shared_ptr<std::string const> _sourceName):
-		start(_start), end(_end), sourceName(_sourceName) { }
+	SourceLocation(): start(-1), end(-1), source{nullptr} { }
+	SourceLocation(int _start, int _end, std::shared_ptr<CharStream> _source):
+		start(_start), end(_end), source{std::move(_source)} { }
 	SourceLocation(SourceLocation&& _other) noexcept:
 		start(_other.start),
 		end(_other.end),
-		sourceName(std::move(_other.sourceName))
+		source{std::move(_other.source)}
 	{}
 	SourceLocation(SourceLocation const&) = default;
 	SourceLocation& operator=(SourceLocation const&) = default;
@@ -51,14 +52,15 @@ struct SourceLocation
 	{
 		start = _other.start;
 		end = _other.end;
-		sourceName = std::move(_other.sourceName);
+		source = std::move(_other.source);
 		return *this;
 	}
 
 	bool operator==(SourceLocation const& _other) const
 	{
 		return start == _other.start && end == _other.end &&
-			((!sourceName && !_other.sourceName) || (sourceName && _other.sourceName && *sourceName == *_other.sourceName));
+			((!source.get() && !_other.source.get()) ||
+			  (source.get() && _other.source.get() && source->name() == _other.source->name()));
 	}
 	bool operator!=(SourceLocation const& _other) const { return !operator==(_other); }
 	inline bool operator<(SourceLocation const& _other) const;
@@ -69,7 +71,7 @@ struct SourceLocation
 
 	int start;
 	int end;
-	std::shared_ptr<std::string const> sourceName;
+	std::shared_ptr<CharStream> source;
 };
 
 /// Stream output for Location (used e.g. in boost exceptions).
@@ -77,27 +79,33 @@ inline std::ostream& operator<<(std::ostream& _out, SourceLocation const& _locat
 {
 	if (_location.isEmpty())
 		return _out << "NO_LOCATION_SPECIFIED";
-	return _out << *_location.sourceName << "[" << _location.start << "," << _location.end << ")";
+
+	if (_location.source)
+		_out << _location.source->name();
+
+	_out << "[" << _location.start << "," << _location.end << ")";
+
+	return _out;
 }
 
 bool SourceLocation::operator<(SourceLocation const& _other) const
 {
-	if (!sourceName || !_other.sourceName)
-		return std::make_tuple(int(!!sourceName), start, end) < std::make_tuple(int(!!_other.sourceName), _other.start, _other.end);
+	if (!source|| !_other.source)
+		return std::make_tuple(int(!!source), start, end) < std::make_tuple(int(!!_other.source), _other.start, _other.end);
 	else
-		return std::make_tuple(*sourceName, start, end) < std::make_tuple(*_other.sourceName, _other.start, _other.end);
+		return std::make_tuple(source->name(), start, end) < std::make_tuple(_other.source->name(), _other.start, _other.end);
 }
 
 bool SourceLocation::contains(SourceLocation const& _other) const
 {
-	if (isEmpty() || _other.isEmpty() || ((!sourceName || !_other.sourceName || *sourceName != *_other.sourceName) && (sourceName || _other.sourceName)))
+	if (isEmpty() || _other.isEmpty() || ((!source || !_other.source || source->name() != _other.source->name()) && (source || _other.source)))
 		return false;
 	return start <= _other.start && _other.end <= end;
 }
 
 bool SourceLocation::intersects(SourceLocation const& _other) const
 {
-	if (isEmpty() || _other.isEmpty() || ((!sourceName || !_other.sourceName || *sourceName != *_other.sourceName) && (sourceName || _other.sourceName)))
+	if (isEmpty() || _other.isEmpty() || ((!source || !_other.source || source->name() != _other.source->name()) && (source || _other.source)))
 		return false;
 	return _other.start < end && start < _other.end;
 }

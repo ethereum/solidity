@@ -169,15 +169,22 @@ private:
 
 void Scanner::reset(CharStream _source, string _sourceName)
 {
-	m_source = std::move(_source);
+	m_source = make_shared<CharStream>(std::move(_source));
 	m_sourceName = make_shared<string const>(std::move(_sourceName));
+	reset();
+}
+
+void Scanner::reset(std::shared_ptr<CharStream> _source)
+{
+	solAssert(_source.get() != nullptr, "You MUST provide a CharStream when resetting.");
+	m_source = _source;
 	reset();
 }
 
 void Scanner::reset()
 {
-	m_source.reset();
-	m_char = m_source.get();
+	m_source->reset();
+	m_char = m_source->get();
 	skipWhitespace();
 	scanToken();
 	next();
@@ -296,13 +303,13 @@ Token Scanner::scanSingleLineDocComment()
 		{
 			// check if next line is also a documentation comment
 			skipWhitespace();
-			if (!m_source.isPastEndOfInput(3) &&
-				m_source.get(0) == '/' &&
-				m_source.get(1) == '/' &&
-				m_source.get(2) == '/')
+			if (!m_source->isPastEndOfInput(3) &&
+				m_source->get(0) == '/' &&
+				m_source->get(1) == '/' &&
+				m_source->get(2) == '/')
 			{
 				addCommentLiteralChar('\n');
-				m_char = m_source.advanceAndGet(3);
+				m_char = m_source->advanceAndGet(3);
 			}
 			else
 				break; // next line is not a documentation comment, we are done
@@ -355,20 +362,20 @@ Token Scanner::scanMultiLineDocComment()
 		if (isLineTerminator(m_char))
 		{
 			skipWhitespace();
-			if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '*')
+			if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) == '*')
 			{ // it is unknown if this leads to the end of the comment
 				addCommentLiteralChar('*');
 				advance();
 			}
-			else if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) != '/')
+			else if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) != '/')
 			{ // skip first '*' in subsequent lines
 				if (charsAdded)
 					addCommentLiteralChar('\n');
-				m_char = m_source.advanceAndGet(2);
+				m_char = m_source->advanceAndGet(2);
 			}
-			else if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '/')
+			else if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) == '/')
 			{ // if after newline the comment ends, don't insert the newline
-				m_char = m_source.advanceAndGet(2);
+				m_char = m_source->advanceAndGet(2);
 				endFound = true;
 				break;
 			}
@@ -376,9 +383,9 @@ Token Scanner::scanMultiLineDocComment()
 				addCommentLiteralChar('\n');
 		}
 
-		if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '/')
+		if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) == '/')
 		{
-			m_char = m_source.advanceAndGet(2);
+			m_char = m_source->advanceAndGet(2);
 			endFound = true;
 			break;
 		}
@@ -715,11 +722,11 @@ bool Scanner::isUnicodeLinebreak()
 	if (0x0a <= m_char && m_char <= 0x0d)
 		// line feed, vertical tab, form feed, carriage return
 		return true;
-	else if (!m_source.isPastEndOfInput(1) && uint8_t(m_source.get(0)) == 0xc2 && uint8_t(m_source.get(1)) == 0x85)
+	else if (!m_source->isPastEndOfInput(1) && uint8_t(m_source->get(0)) == 0xc2 && uint8_t(m_source->get(1)) == 0x85)
 		// NEL - U+0085, C2 85 in utf8
 		return true;
-	else if (!m_source.isPastEndOfInput(2) && uint8_t(m_source.get(0)) == 0xe2 && uint8_t(m_source.get(1)) == 0x80 && (
-		uint8_t(m_source.get(2)) == 0xa8 || uint8_t(m_source.get(2)) == 0xa9
+	else if (!m_source->isPastEndOfInput(2) && uint8_t(m_source->get(0)) == 0xe2 && uint8_t(m_source->get(1)) == 0x80 && (
+		uint8_t(m_source->get(2)) == 0xa8 || uint8_t(m_source->get(2)) == 0xa9
 	))
 		// LS - U+2028, E2 80 A8  in utf8
 		// PS - U+2029, E2 80 A9  in utf8
@@ -783,7 +790,7 @@ void Scanner::scanDecimalDigits()
 
 	// May continue with decimal digit or underscore for grouping.
 	do addLiteralCharAndAdvance();
-	while (!m_source.isPastEndOfInput() && (isDecimalDigit(m_char) || m_char == '_'));
+	while (!m_source->isPastEndOfInput() && (isDecimalDigit(m_char) || m_char == '_'));
 
 	// Defer further validation of underscore to SyntaxChecker.
 }
@@ -829,7 +836,7 @@ Token Scanner::scanNumber(char _charSeen)
 			scanDecimalDigits();  // optional
 			if (m_char == '.')
 			{
-				if (!m_source.isPastEndOfInput(1) && m_source.get(1) == '_')
+				if (!m_source->isPastEndOfInput(1) && m_source->get(1) == '_')
 				{
 					// Assume the input may be a floating point number with leading '_' in fraction part.
 					// Recover by consuming it all but returning `Illegal` right away.
@@ -837,7 +844,7 @@ Token Scanner::scanNumber(char _charSeen)
 					addLiteralCharAndAdvance(); // '_'
 					scanDecimalDigits();
 				}
-				if (m_source.isPastEndOfInput() || !isDecimalDigit(m_source.get(1)))
+				if (m_source->isPastEndOfInput() || !isDecimalDigit(m_source->get(1)))
 				{
 					// A '.' has to be followed by a number.
 					literal.complete();
@@ -854,7 +861,7 @@ Token Scanner::scanNumber(char _charSeen)
 		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
 		if (kind != DECIMAL)
 			return setError(ScannerError::IllegalExponent);
-		else if (!m_source.isPastEndOfInput(1) && m_source.get(1) == '_')
+		else if (!m_source->isPastEndOfInput(1) && m_source->get(1) == '_')
 		{
 			// Recover from wrongly placed underscore as delimiter in literal with scientific
 			// notation by consuming until the end.
