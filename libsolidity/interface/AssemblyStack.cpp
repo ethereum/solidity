@@ -30,6 +30,7 @@
 #include <libyul/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMAssembly.h>
+#include <libyul/ObjectParser.h>
 
 #include <libevmasm/Assembly.h>
 
@@ -69,30 +70,22 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
-	m_parserResult = yul::Parser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
+	m_parserResult = yul::ObjectParser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
-
-	return analyzeParsed();
-}
-
-bool AssemblyStack::analyze(yul::Block const& _block, Scanner const* _scanner)
-{
-	m_errors.clear();
-	m_analysisSuccessful = false;
-	if (_scanner)
-		m_scanner = make_shared<Scanner>(*_scanner);
-	m_parserResult = make_shared<yul::Block>(_block);
+	solAssert(m_parserResult->code, "");
 
 	return analyzeParsed();
 }
 
 bool AssemblyStack::analyzeParsed()
 {
-	m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-	yul::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToAsmFlavour(m_language));
-	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
+	solAssert(m_parserResult, "");
+	solAssert(m_parserResult->code, "");
+	m_parserResult->analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	yul::AsmAnalyzer analyzer(*m_parserResult->analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToAsmFlavour(m_language));
+	m_analysisSuccessful = analyzer.analyze(*m_parserResult->code);
 	return m_analysisSuccessful;
 }
 
@@ -100,7 +93,8 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 {
 	solAssert(m_analysisSuccessful, "");
 	solAssert(m_parserResult, "");
-	solAssert(m_analysisInfo, "");
+	solAssert(m_parserResult->code, "");
+	solAssert(m_parserResult->analysisInfo, "");
 
 	switch (_machine)
 	{
@@ -108,7 +102,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
-		yul::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
+		yul::CodeGenerator::assemble(*m_parserResult->code, *m_parserResult->analysisInfo, assembly);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -117,7 +111,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		yul::EVMAssembly assembly(true);
-		yul::CodeTransform(assembly, *m_analysisInfo, m_language == Language::Yul, true)(*m_parserResult);
+		yul::CodeTransform(assembly, *m_parserResult->analysisInfo, m_language == Language::Yul, true)(*m_parserResult->code);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;
@@ -132,5 +126,6 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 string AssemblyStack::print() const
 {
 	solAssert(m_parserResult, "");
-	return yul::AsmPrinter(m_language == Language::Yul)(*m_parserResult);
+	solAssert(m_parserResult->code, "");
+	return m_parserResult->toString(m_language == Language::Yul) + "\n";
 }

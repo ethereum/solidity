@@ -11,6 +11,7 @@ Compiler Features:
  * SMTChecker: Support ``msg``, ``tx`` and ``block`` member variables.
  * SMTChecker: Support ``gasleft()`` and ``blockhash()`` functions.
  * SMTChecker: Support internal bound function calls.
+ * Yul: Support Yul objects in ``--assemble`` and ``--yul`` commandline options.
 
 
 Bugfixes:

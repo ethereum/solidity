@@ -6,6 +6,8 @@ add_library(yul
 	AsmPrinter.cpp
 	AsmScope.cpp
 	AsmScopeFiller.cpp
+	Object.cpp
+	ObjectParser.cpp
 	backends/evm/EVMAssembly.cpp
 	backends/evm/EVMCodeTransform.cpp
 	optimiser/ASTCopier.cpp
