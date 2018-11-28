@@ -22,6 +22,7 @@ Bugfixes:
 
 Build System:
  * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
+ * Docker: Includes both Scratch and Alpine images.
 
 
 
