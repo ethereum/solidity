@@ -21,17 +21,24 @@
  */
 
 #include <libsolidity/analysis/TypeChecker.h>
-#include <memory>
+#include <libsolidity/ast/AST.h>
+
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
+
+#include <liblangutil/ErrorReporter.h>
+
+#include <libdevcore/Algorithms.h>
+#include <libdevcore/StringUtils.h>
+
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libsolidity/ast/AST.h>
-#include <libyul/AsmAnalysis.h>
-#include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmData.h>
-#include <liblangutil/ErrorReporter.h>
-#include <libdevcore/Algorithms.h>
+
+#include <memory>
+#include <vector>
 
 using namespace std;
 using namespace dev;
@@ -814,11 +821,25 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (!varType->canLiveOutsideStorage())
 				m_errorReporter.typeError(_variable.location(), "Type " + varType->toString() + " is only valid in storage.");
 	}
-	else if (
-		_variable.visibility() >= VariableDeclaration::Visibility::Public &&
-		!FunctionType(_variable).interfaceFunctionType()
-	)
-		m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
+	else if (_variable.visibility() >= VariableDeclaration::Visibility::Public)
+	{
+		FunctionType getter(_variable);
+		if (!_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+		{
+			vector<string> unsupportedTypes;
+			for (auto const& param: getter.parameterTypes() + getter.returnParameterTypes())
+				if (!typeSupportedByOldABIEncoder(*param))
+					unsupportedTypes.emplace_back(param->toString());
+			if (!unsupportedTypes.empty())
+				m_errorReporter.typeError(_variable.location(),
+					"The following types are only supported for getters in the new experimental ABI encoder: " +
+					joinHumanReadable(unsupportedTypes) +
+					". Either remove \"public\" or use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+				);
+		}
+		if (!getter.interfaceFunctionType())
+			m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
+	}
 
 	switch (varType->category())
 	{
