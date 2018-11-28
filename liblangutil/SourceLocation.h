@@ -69,6 +69,15 @@ struct SourceLocation
 
 	bool isEmpty() const { return start == -1 && end == -1; }
 
+	bool hasSource() const noexcept { return charStream; }
+	bool hasSourceName() const noexcept { return charStream && !charStream->filename().empty(); }
+
+	std::string const& sourceName() const
+	{
+		static std::string const empty;
+		return charStream ? charStream->filename() : empty;
+	}
+
 	int start;
 	int end;
 	std::shared_ptr<CharStream> source;
