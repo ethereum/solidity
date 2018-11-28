@@ -101,7 +101,7 @@ bytes compileFirstExpression(
 	{
 		ErrorList errors;
 		ErrorReporter errorReporter(errors);
-		sourceUnit = Parser(errorReporter).parse(make_shared<Scanner>(CharStream(_sourceCode)));
+		sourceUnit = Parser(errorReporter).parse(make_shared<Scanner>(CharStream(_sourceCode, "")));
 		if (!sourceUnit)
 			return bytes();
 	}

@@ -58,7 +58,7 @@ eth::AssemblyItems compileContract(string const& _sourceCode)
 	ErrorReporter errorReporter(errors);
 	Parser parser(errorReporter);
 	ASTPointer<SourceUnit> sourceUnit;
-	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
+	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode, ""))));
 	BOOST_CHECK(!!sourceUnit);
 
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;

@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(SemVerMatcher)
 
 SemVerMatchExpression parseExpression(string const& _input)
 {
-	Scanner scanner{CharStream(_input)};
+	Scanner scanner{CharStream(_input, "")};
 	vector<string> literals;
 	vector<Token> tokens;
 	while (scanner.currentToken() != Token::EOS)

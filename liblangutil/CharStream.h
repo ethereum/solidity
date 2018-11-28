@@ -68,7 +68,8 @@ class CharStream
 {
 public:
 	CharStream(): m_position(0) {}
-	explicit CharStream(std::string const& _source): m_source(_source), m_position(0) {}
+	explicit CharStream(std::string const& _source, std::string const& name):
+		m_source(_source), m_name(name), m_position(0) {}
 
 	int position() const { return m_position; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
@@ -80,6 +81,7 @@ public:
 	void reset() { m_position = 0; }
 
 	std::string const& source() const { return m_source; }
+	std::string const& name() const noexcept { return m_name; }
 
 	///@{
 	///@name Error printing helper functions
@@ -91,6 +93,7 @@ public:
 
 private:
 	std::string m_source;
+	std::string m_name;
 	size_t m_position;
 };
 

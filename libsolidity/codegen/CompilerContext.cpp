@@ -360,7 +360,7 @@ void CompilerContext::appendInlineAssembly(
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly), "--CODEGEN--");
+	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, "--CODEGEN--"), "--CODEGEN--");
 	auto parserResult = yul::Parser(errorReporter, yul::AsmFlavour::Strict).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter()(*parserResult) << endl;

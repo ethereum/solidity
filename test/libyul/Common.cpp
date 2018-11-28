@@ -57,7 +57,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 	auto flavour = _yul ? yul::AsmFlavour::Yul : yul::AsmFlavour::Strict;
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(CharStream(_source), "");
+	auto scanner = make_shared<Scanner>(CharStream(_source, ""), "");
 	auto parserResult = yul::Parser(errorReporter, flavour).parse(scanner, false);
 	if (parserResult)
 	{

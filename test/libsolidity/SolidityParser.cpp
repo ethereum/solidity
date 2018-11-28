@@ -43,7 +43,7 @@ namespace
 ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors)
 {
 	ErrorReporter errorReporter(_errors);
-	ASTPointer<SourceUnit> sourceUnit = Parser(errorReporter).parse(std::make_shared<Scanner>(CharStream(_source)));
+	ASTPointer<SourceUnit> sourceUnit = Parser(errorReporter).parse(std::make_shared<Scanner>(CharStream(_source, "")));
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())

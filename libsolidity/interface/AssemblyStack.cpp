@@ -69,7 +69,7 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 {
 	m_errors.clear();
 	m_analysisSuccessful = false;
-	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
+	m_scanner = make_shared<Scanner>(CharStream(_source, _sourceName), _sourceName);
 	m_parserResult = yul::ObjectParser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;

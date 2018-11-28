@@ -81,7 +81,7 @@ public:
 	bool parse(string const& _input)
 	{
 		ErrorReporter errorReporter(m_errors);
-		shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_input), "");
+		shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_input, ""), "");
 		m_ast = yul::Parser(errorReporter, yul::AsmFlavour::Strict).parse(scanner, false);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
