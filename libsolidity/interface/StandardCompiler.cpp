@@ -85,9 +85,9 @@ Json::Value formatErrorWithException(
 		message = _message;
 
 	Json::Value sourceLocation;
-	if (location && location->sourceName)
+	if (location && location->source && location->source->name() != "")
 	{
-		sourceLocation["file"] = *location->sourceName;
+		sourceLocation["file"] = location->source->name();
 		sourceLocation["start"] = location->start;
 		sourceLocation["end"] = location->end;
 	}

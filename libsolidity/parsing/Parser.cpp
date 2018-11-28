@@ -42,7 +42,7 @@ class Parser::ASTNodeFactory
 {
 public:
 	explicit ASTNodeFactory(Parser const& _parser):
-		m_parser(_parser), m_location(_parser.position(), -1, _parser.sourceName()) {}
+		m_parser(_parser), m_location(_parser.position(), -1, _parser.source()) {}
 	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location(_childNode->location()) {}
 
@@ -55,7 +55,7 @@ public:
 	template <class NodeType, typename... Args>
 	ASTPointer<NodeType> createNode(Args&& ... _args)
 	{
-		solAssert(m_location.sourceName, "");
+		solAssert(m_location.source, "");
 		if (m_location.end < 0)
 			markEndPosition();
 		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
