@@ -1022,12 +1022,16 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
 		for (auto const& contract : m_compiler->contractNames())
 		{
-			auto ret = GasEstimator::breakToStatementLevel(
-				GasEstimator(m_evmVersion).structuralEstimation(*m_compiler->runtimeAssemblyItems(contract), asts),
-				asts
-			);
-			for (auto const& it: ret)
-				gasCosts[it.first] += it.second;
+			if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
+			{
+				auto ret = GasEstimator::breakToStatementLevel(
+					GasEstimator(m_evmVersion).structuralEstimation(*assemblyItems, asts),
+					asts
+				);
+				for (auto const& it: ret)
+					gasCosts[it.first] += it.second;
+			}
+
 		}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
