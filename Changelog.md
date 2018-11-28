@@ -16,6 +16,7 @@ Compiler Features:
 
 Bugfixes:
  * Assembly output: Do not mix in/out jump annotations with arguments.
+ * Commandline interface: Fix crash when using ``--ast`` on empty runtime code.
  * Code Generator: Annotate jump from calldata decoder to function as "jump in".
  * Type Checker: Properly detect different return types when overriding an external interface function with a public contract function.
  * Optimizer: Fix nondeterminism bug related to the boost version and constants representation. The bug only resulted in less optimal but still correct code because the generated routine is always verified to be correct.
