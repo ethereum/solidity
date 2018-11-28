@@ -36,11 +36,19 @@
 #pragma GCC diagnostic pop
 
 #include <test/Options.h>
+#include <test/TestCase.h>
+#include <libdevcore/Exceptions.h>
+
+// Quick Workaround: to be able to reuse boostTest.cpp without coupling to solidity
+// todo: make this more elegant
+#ifndef DECOUPLE_FROM_SOLIDITY
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/YulOptimizerTest.h>
+#endif
 
+#include <libdevcore/Exceptions.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -128,6 +136,10 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
 	dev::test::Options::get().validate();
+
+// Quick Workaround: to be able to reuse boostTest.cpp without coupling to solidity
+// todo: make this more elegant
+#ifndef DECOUPLE_FROM_SOLIDITY
 	solAssert(registerTests(
 		master,
 		dev::test::Options::get().testPath / "libsolidity",
@@ -154,7 +166,6 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			"smtCheckerTests",
 			SyntaxTest::create
 		) > 0, "no SMT checker tests found");
-
 		solAssert(registerTests(
 			master,
 			dev::test::Options::get().testPath / "libsolidity",
@@ -162,6 +173,8 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			SMTCheckerTest::create
 		) > 0, "no SMT checker JSON tests found");
 	}
+#endif
+
 	if (dev::test::Options::get().disableIPC)
 	{
 		for (auto suite: {
