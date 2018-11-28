@@ -17,8 +17,9 @@ Compiler Features:
 Bugfixes:
  * Assembly output: Do not mix in/out jump annotations with arguments.
  * Code Generator: Annotate jump from calldata decoder to function as "jump in".
- * Type Checker: Properly detect different return types when overriding an external interface function with a public contract function.
  * Optimizer: Fix nondeterminism bug related to the boost version and constants representation. The bug only resulted in less optimal but still correct code because the generated routine is always verified to be correct.
+ * Type Checker: Properly detect different return types when overriding an external interface function with a public contract function.
+ * Type Checker: Disallow struct return types for getters of public state variables unless the new ABI encoder is active.
 
 Build System:
  * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
