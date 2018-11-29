@@ -64,6 +64,12 @@ private:
 	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
 	void checkContractAbstractFunctions(ContractDefinition const& _contract);
+	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
+	void annotateBaseConstructorArguments(
+		ContractDefinition const& _currentContract,
+		FunctionDefinition const* _baseConstructor,
+		ASTNode const* _argumentNode
+	);
 
 	langutil::ErrorReporter& m_errorReporter;
 };

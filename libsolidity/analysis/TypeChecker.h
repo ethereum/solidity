@@ -66,12 +66,6 @@ public:
 private:
 
 	bool visit(ContractDefinition const& _contract) override;
-	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
-	void annotateBaseConstructorArguments(
-		ContractDefinition const& _currentContract,
-		FunctionDefinition const* _baseConstructor,
-		ASTNode const* _argumentNode
-	);
 	/// Checks that different functions with external visibility end up having different
 	/// external argument types (i.e. different signature).
 	void checkContractExternalTypeClashes(ContractDefinition const& _contract);

@@ -95,8 +95,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
-	checkContractBaseConstructorArguments(_contract);
-
 	FunctionDefinition const* function = _contract.constructor();
 	if (function)
 	{
@@ -155,91 +153,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		checkLibraryRequirements(_contract);
 
 	return false;
-}
-
-void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
-{
-	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
-
-	// Determine the arguments that are used for the base constructors.
-	for (ContractDefinition const* contract: bases)
-	{
-		if (FunctionDefinition const* constructor = contract->constructor())
-			for (auto const& modifier: constructor->modifiers())
-				if (auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name())))
-				{
-					if (modifier->arguments())
-					{
-						if (baseContract->constructor())
-							annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
-					}
-					else
-						m_errorReporter.declarationError(
-							modifier->location(),
-							"Modifier-style base constructor call without arguments."
-						);
-				}
-
-		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
-		{
-			auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(base->name()));
-			solAssert(baseContract, "");
-
-			if (baseContract->constructor() && base->arguments() && !base->arguments()->empty())
-				annotateBaseConstructorArguments(_contract, baseContract->constructor(), base.get());
-		}
-	}
-
-	// check that we get arguments for all base constructors that need it.
-	// If not mark the contract as abstract (not fully implemented)
-	for (ContractDefinition const* contract: bases)
-		if (FunctionDefinition const* constructor = contract->constructor())
-			if (contract != &_contract && !constructor->parameters().empty())
-				if (!_contract.annotation().baseConstructorArguments.count(constructor))
-					_contract.annotation().unimplementedFunctions.push_back(constructor);
-}
-
-void TypeChecker::annotateBaseConstructorArguments(
-	ContractDefinition const& _currentContract,
-	FunctionDefinition const* _baseConstructor,
-	ASTNode const* _argumentNode
-)
-{
-	solAssert(_baseConstructor, "");
-	solAssert(_argumentNode, "");
-
-	auto insertionResult = _currentContract.annotation().baseConstructorArguments.insert(
-		std::make_pair(_baseConstructor, _argumentNode)
-	);
-	if (!insertionResult.second)
-	{
-		ASTNode const* previousNode = insertionResult.first->second;
-
-		SourceLocation const* mainLocation = nullptr;
-		SecondarySourceLocation ssl;
-
-		if (
-			_currentContract.location().contains(previousNode->location()) ||
-			_currentContract.location().contains(_argumentNode->location())
-		)
-		{
-			mainLocation = &previousNode->location();
-			ssl.append("Second constructor call is here:", _argumentNode->location());
-		}
-		else
-		{
-			mainLocation = &_currentContract.location();
-			ssl.append("First constructor call is here: ", _argumentNode->location());
-			ssl.append("Second constructor call is here: ", previousNode->location());
-		}
-
-		m_errorReporter.declarationError(
-			*mainLocation,
-			ssl,
-			"Base constructor arguments given twice."
-		);
-	}
-
 }
 
 void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)
