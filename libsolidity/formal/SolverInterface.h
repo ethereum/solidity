@@ -136,9 +136,10 @@ public:
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
 		solAssert(*_trueValue.sort == *_falseValue.sort, "");
+		SortPointer sort = _trueValue.sort;
 		return Expression("ite", std::vector<Expression>{
 			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
-		}, _trueValue.sort);
+		}, std::move(sort));
 	}
 
 	static Expression implies(Expression _a, Expression _b)
