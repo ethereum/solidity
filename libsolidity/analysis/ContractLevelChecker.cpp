@@ -41,6 +41,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkAbstractFunctions(_contract);
 	checkBaseConstructorArguments(_contract);
 	checkConstructor(_contract);
+	checkFallbackFunction(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -358,4 +359,27 @@ void ContractLevelChecker::checkConstructor(ContractDefinition const& _contract)
 		);
 	if (constructor->visibility() != FunctionDefinition::Visibility::Public && constructor->visibility() != FunctionDefinition::Visibility::Internal)
 		m_errorReporter.typeError(constructor->location(), "Constructor must be public or internal.");
+}
+
+void ContractLevelChecker::checkFallbackFunction(ContractDefinition const& _contract)
+{
+	FunctionDefinition const* fallback = _contract.fallbackFunction();
+	if (!fallback)
+		return;
+
+	if (_contract.isLibrary())
+		m_errorReporter.typeError(fallback->location(), "Libraries cannot have fallback functions.");
+	if (fallback->stateMutability() != StateMutability::NonPayable && fallback->stateMutability() != StateMutability::Payable)
+		m_errorReporter.typeError(
+			fallback->location(),
+			"Fallback function must be payable or non-payable, but is \"" +
+			stateMutabilityToString(fallback->stateMutability()) +
+			"\"."
+	);
+	if (!fallback->parameters().empty())
+		m_errorReporter.typeError(fallback->parameterList().location(), "Fallback function cannot take parameters.");
+	if (!fallback->returnParameters().empty())
+		m_errorReporter.typeError(fallback->returnParameterList()->location(), "Fallback function cannot return values.");
+	if (fallback->visibility() != FunctionDefinition::Visibility::External)
+		m_errorReporter.typeError(fallback->location(), "Fallback function must be defined as \"external\".");
 }

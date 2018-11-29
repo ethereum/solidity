@@ -90,26 +90,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
-	for (FunctionDefinition const* function: _contract.definedFunctions())
-		if (function->isFallback())
-		{
-			if (_contract.isLibrary())
-				m_errorReporter.typeError(function->location(), "Libraries cannot have fallback functions.");
-			if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
-				m_errorReporter.typeError(
-					function->location(),
-					"Fallback function must be payable or non-payable, but is \"" +
-					stateMutabilityToString(function->stateMutability()) +
-					"\"."
-			);
-			if (!function->parameters().empty())
-				m_errorReporter.typeError(function->parameterList().location(), "Fallback function cannot take parameters.");
-			if (!function->returnParameters().empty())
-				m_errorReporter.typeError(function->returnParameterList()->location(), "Fallback function cannot return values.");
-			if (function->visibility() != FunctionDefinition::Visibility::External)
-				m_errorReporter.typeError(function->location(), "Fallback function must be defined as \"external\".");
-		}
-
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 

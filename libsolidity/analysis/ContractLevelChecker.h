@@ -71,6 +71,7 @@ private:
 		ASTNode const* _argumentNode
 	);
 	void checkConstructor(ContractDefinition const& _contract);
+	void checkFallbackFunction(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 };
