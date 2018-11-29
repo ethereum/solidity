@@ -72,6 +72,9 @@ private:
 	);
 	void checkConstructor(ContractDefinition const& _contract);
 	void checkFallbackFunction(ContractDefinition const& _contract);
+	/// Checks that different functions with external visibility end up having different
+	/// external argument types (i.e. different signature).
+	void checkExternalTypeClashes(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 };

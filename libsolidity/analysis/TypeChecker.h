@@ -66,9 +66,6 @@ public:
 private:
 
 	bool visit(ContractDefinition const& _contract) override;
-	/// Checks that different functions with external visibility end up having different
-	/// external argument types (i.e. different signature).
-	void checkContractExternalTypeClashes(ContractDefinition const& _contract);
 	/// Checks that all requirements for a library are fulfilled if this is a library.
 	void checkLibraryRequirements(ContractDefinition const& _contract);
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.

@@ -93,7 +93,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 
-	checkContractExternalTypeClashes(_contract);
 	// check for hash collisions in function signatures
 	set<FixedHash<4>> hashes;
 	for (auto const& it: _contract.interfaceFunctionList())
@@ -111,42 +110,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		checkLibraryRequirements(_contract);
 
 	return false;
-}
-
-void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)
-{
-	map<string, vector<pair<Declaration const*, FunctionTypePointer>>> externalDeclarations;
-	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
-	{
-		for (FunctionDefinition const* f: contract->definedFunctions())
-			if (f->isPartOfExternalInterface())
-			{
-				auto functionType = make_shared<FunctionType>(*f);
-				// under non error circumstances this should be true
-				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(f, functionType->asCallableFunction(false))
-					);
-			}
-		for (VariableDeclaration const* v: contract->stateVariables())
-			if (v->isPartOfExternalInterface())
-			{
-				auto functionType = make_shared<FunctionType>(*v);
-				// under non error circumstances this should be true
-				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(v, functionType->asCallableFunction(false))
-					);
-			}
-	}
-	for (auto const& it: externalDeclarations)
-		for (size_t i = 0; i < it.second.size(); ++i)
-			for (size_t j = i + 1; j < it.second.size(); ++j)
-				if (!it.second[i].second->hasEqualParameterTypes(*it.second[j].second))
-					m_errorReporter.typeError(
-						it.second[j].first->location(),
-						"Function overload clash during conversion to external types for arguments."
-					);
 }
 
 void TypeChecker::checkLibraryRequirements(ContractDefinition const& _contract)

@@ -42,6 +42,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkBaseConstructorArguments(_contract);
 	checkConstructor(_contract);
 	checkFallbackFunction(_contract);
+	checkExternalTypeClashes(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -382,4 +383,40 @@ void ContractLevelChecker::checkFallbackFunction(ContractDefinition const& _cont
 		m_errorReporter.typeError(fallback->returnParameterList()->location(), "Fallback function cannot return values.");
 	if (fallback->visibility() != FunctionDefinition::Visibility::External)
 		m_errorReporter.typeError(fallback->location(), "Fallback function must be defined as \"external\".");
+}
+
+void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _contract)
+{
+	map<string, vector<pair<Declaration const*, FunctionTypePointer>>> externalDeclarations;
+	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
+	{
+		for (FunctionDefinition const* f: contract->definedFunctions())
+			if (f->isPartOfExternalInterface())
+			{
+				auto functionType = make_shared<FunctionType>(*f);
+				// under non error circumstances this should be true
+				if (functionType->interfaceFunctionType())
+					externalDeclarations[functionType->externalSignature()].push_back(
+						make_pair(f, functionType->asCallableFunction(false))
+					);
+			}
+		for (VariableDeclaration const* v: contract->stateVariables())
+			if (v->isPartOfExternalInterface())
+			{
+				auto functionType = make_shared<FunctionType>(*v);
+				// under non error circumstances this should be true
+				if (functionType->interfaceFunctionType())
+					externalDeclarations[functionType->externalSignature()].push_back(
+						make_pair(v, functionType->asCallableFunction(false))
+					);
+			}
+	}
+	for (auto const& it: externalDeclarations)
+		for (size_t i = 0; i < it.second.size(); ++i)
+			for (size_t j = i + 1; j < it.second.size(); ++j)
+				if (!it.second[i].second->hasEqualParameterTypes(*it.second[j].second))
+					m_errorReporter.typeError(
+						it.second[j].first->location(),
+						"Function overload clash during conversion to external types for arguments."
+					);
 }
