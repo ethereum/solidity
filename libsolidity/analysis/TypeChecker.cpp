@@ -1824,26 +1824,6 @@ void TypeChecker::typeCheckFunctionCall(
 			"\"staticcall\" is not supported by the VM version."
 		);
 
-	// Check for deprecated function names
-	if (_functionType->kind() == FunctionType::Kind::KECCAK256)
-	{
-		if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
-			if (functionName->name() == "sha3")
-				m_errorReporter.typeError(
-					_functionCall.location(),
-					"\"sha3\" has been deprecated in favour of \"keccak256\""
-				);
-	}
-	else if (_functionType->kind() == FunctionType::Kind::Selfdestruct)
-	{
-		if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
-			if (functionName->name() == "suicide")
-				m_errorReporter.typeError(
-					_functionCall.location(),
-					"\"suicide\" has been deprecated in favour of \"selfdestruct\""
-				);
-	}
-
 	// Check for event outside of emit statement
 	if (!m_insideEmitStatement && _functionType->kind() == FunctionType::Kind::Event)
 		m_errorReporter.typeError(
@@ -2639,6 +2619,23 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
 		if (dynamic_cast<FunctionType const*>(annotation.type.get()))
 			annotation.isPure = true;
+
+	// Check for deprecated function names.
+	// The check is done here for the case without an actual function call.
+	if (FunctionType const* fType = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
+	{
+		if (_identifier.name() == "sha3" && fType->kind() == FunctionType::Kind::KECCAK256)
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"\"sha3\" has been deprecated in favour of \"keccak256\""
+			);
+		else if (_identifier.name() == "suicide" && fType->kind() == FunctionType::Kind::Selfdestruct)
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"\"suicide\" has been deprecated in favour of \"selfdestruct\""
+			);
+	}
+
 	return false;
 }
 
