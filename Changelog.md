@@ -22,6 +22,7 @@ Bugfixes:
  * Type Checker: Properly detect different return types when overriding an external interface function with a public contract function.
  * Type Checker: Disallow struct return types for getters of public state variables unless the new ABI encoder is active.
  * Type Checker: Fix internal compiler error when a field of a struct used as a parameter in a function type has a non-existent type.
+ * Type Checker: Disallow functions ``sha3`` and ``suicide`` also without a function call.
 
 Build System:
  * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
