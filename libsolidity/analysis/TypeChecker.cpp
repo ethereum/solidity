@@ -88,11 +88,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 {
 	m_scope = &_contract;
 
-	// We force our own visiting order here. The structs have to be excluded below.
-	set<ASTNode const*> visited;
-	for (auto const& s: _contract.definedStructs())
-		visited.insert(s);
-	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
 	FunctionDefinition const* function = _contract.constructor();
@@ -132,8 +127,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		}
 
 	for (auto const& n: _contract.subNodes())
-		if (!visited.count(n.get()))
-			n->accept(*this);
+		n->accept(*this);
 
 	checkContractExternalTypeClashes(_contract);
 	// check for hash collisions in function signatures
