@@ -14213,6 +14213,26 @@ BOOST_AUTO_TEST_CASE(external_public_override)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(2));
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(2));
 }
+
+BOOST_AUTO_TEST_CASE(base_access_to_function_type_variables)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function () internal returns (uint) x;
+			function set() public {
+				C.x = g;
+			}
+			function g() public pure returns (uint) { return 2; }
+			function h() public returns (uint) { return C.x(); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(2));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs());
+	ABI_CHECK(callContractFunction("set()"), encodeArgs());
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
