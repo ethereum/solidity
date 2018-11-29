@@ -61,6 +61,7 @@ public:
 		std::uint64_t h = hash(_string, _suffix);
 		auto range = m_hashToID.equal_range(h);
 		for (auto it = range.first; it != range.second; ++it)
+<<<<<<< HEAD
 			if (m_strings[it->second]->first == _string && m_strings[it->second]->second == _suffix)
                 return Handle{it->second, h};
 		m_strings.emplace_back(std::make_shared<std::pair<std::string, size_t>>(std::make_pair(_string, _suffix)));
@@ -74,6 +75,24 @@ public:
     }
 	std::string const idToPrefix(size_t _id) const	{ 
         return m_strings[_id]->first;
+=======
+			if (*m_strings[it->second] == _string && m_idToSuffix.count(it->second))
+                if (m_idToSuffix.at(it->second) == _suffix)
+                    return Handle{it->second, h};
+		m_strings.emplace_back(std::make_shared<std::string>(_string));
+        size_t id = m_strings.size() - 1;
+        m_idToSuffix.emplace(id, _suffix);
+		m_hashToID.emplace_hint(range.second, std::make_pair(h, id));
+		return Handle{id, h};
+	}
+	std::string const& idToString(size_t _id) const	{ 
+        size_t suffix = 0;
+        std::shared_ptr<std::string> temp(m_strings.at(_id));
+        if (m_idToSuffix.count(_id)) 
+           suffix = m_idToSuffix.at(_id);
+        return suffix > 0 ? *std::make_shared<std::string>(*temp + "_" + std::to_string(suffix))
+                          : *temp;//m_strings.at(_id);
+>>>>>>> 5b63495ca44bcad6dc45c950a451c10a42c704a2
     }
 
 
@@ -101,6 +120,7 @@ private:
     std::vector<std::shared_ptr<std::pair<std::string, size_t>>> m_strings;
 	//std::vector<std::shared_ptr<std::string>> m_strings;
 	std::unordered_multimap<std::uint64_t, size_t> m_hashToID;
+    std::unordered_map<size_t, size_t> m_idToSuffix; 
 };
 
 /// Wrapper around handles into the YulString repository.
