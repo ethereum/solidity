@@ -75,6 +75,8 @@ private:
 	/// Checks that different functions with external visibility end up having different
 	/// external argument types (i.e. different signature).
 	void checkExternalTypeClashes(ContractDefinition const& _contract);
+	/// Checks for hash collisions in external function signatures.
+	void checkHashCollisions(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 };

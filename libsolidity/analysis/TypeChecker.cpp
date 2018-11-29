@@ -93,19 +93,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 
-	// check for hash collisions in function signatures
-	set<FixedHash<4>> hashes;
-	for (auto const& it: _contract.interfaceFunctionList())
-	{
-		FixedHash<4> const& hash = it.first;
-		if (hashes.count(hash))
-			m_errorReporter.typeError(
-				_contract.location(),
-				string("Function signature hash collision for ") + it.second->externalSignature()
-			);
-		hashes.insert(hash);
-	}
-
 	if (_contract.isLibrary())
 		checkLibraryRequirements(_contract);
 

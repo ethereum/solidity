@@ -43,6 +43,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkConstructor(_contract);
 	checkFallbackFunction(_contract);
 	checkExternalTypeClashes(_contract);
+	checkHashCollisions(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -419,4 +420,19 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 						it.second[j].first->location(),
 						"Function overload clash during conversion to external types for arguments."
 					);
+}
+
+void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contract)
+{
+	set<FixedHash<4>> hashes;
+	for (auto const& it: _contract.interfaceFunctionList())
+	{
+		FixedHash<4> const& hash = it.first;
+		if (hashes.count(hash))
+			m_errorReporter.typeError(
+				_contract.location(),
+				string("Function signature hash collision for ") + it.second->externalSignature()
+			);
+		hashes.insert(hash);
+	}
 }
