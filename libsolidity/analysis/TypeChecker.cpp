@@ -93,21 +93,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 
-	if (_contract.isLibrary())
-		checkLibraryRequirements(_contract);
-
 	return false;
-}
-
-void TypeChecker::checkLibraryRequirements(ContractDefinition const& _contract)
-{
-	solAssert(_contract.isLibrary(), "");
-	if (!_contract.baseContracts().empty())
-		m_errorReporter.typeError(_contract.location(), "Library is not allowed to inherit.");
-
-	for (auto const& var: _contract.stateVariables())
-		if (!var->isConstant())
-			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables");
 }
 
 void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)

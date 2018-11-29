@@ -44,6 +44,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkFallbackFunction(_contract);
 	checkExternalTypeClashes(_contract);
 	checkHashCollisions(_contract);
+	checkLibraryRequirements(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -435,4 +436,17 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 			);
 		hashes.insert(hash);
 	}
+}
+
+void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _contract)
+{
+	if (!_contract.isLibrary())
+		return;
+
+	if (!_contract.baseContracts().empty())
+		m_errorReporter.typeError(_contract.location(), "Library is not allowed to inherit.");
+
+	for (auto const& var: _contract.stateVariables())
+		if (!var->isConstant())
+			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables");
 }

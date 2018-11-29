@@ -77,6 +77,8 @@ private:
 	void checkExternalTypeClashes(ContractDefinition const& _contract);
 	/// Checks for hash collisions in external function signatures.
 	void checkHashCollisions(ContractDefinition const& _contract);
+	/// Checks that all requirements for a library are fulfilled if this is a library.
+	void checkLibraryRequirements(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 };

@@ -66,8 +66,6 @@ public:
 private:
 
 	bool visit(ContractDefinition const& _contract) override;
-	/// Checks that all requirements for a library are fulfilled if this is a library.
-	void checkLibraryRequirements(ContractDefinition const& _contract);
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
 	/// Should only be called if the left hand side is tuple-typed.
 	void checkDoubleStorageAssignment(Assignment const& _assignment);
