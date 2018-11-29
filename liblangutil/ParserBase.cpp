@@ -27,11 +27,6 @@
 using namespace std;
 using namespace langutil;
 
-std::shared_ptr<string const> const& ParserBase::sourceName() const
-{
-	return m_scanner->sourceName();
-}
-
 int ParserBase::position() const
 {
 	return m_scanner->currentLocation().start;

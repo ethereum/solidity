@@ -125,7 +125,7 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 {
 	bool existed = m_sources.count(_name) != 0;
 	reset(true);
-	m_sources[_name].scanner = make_shared<Scanner>(CharStream(_content, _name), _name);
+	m_sources[_name].scanner = make_shared<Scanner>(CharStream(_content, _name));
 	m_sources[_name].isLibrary = _isLibrary;
 	m_stackState = SourcesSet;
 	return existed;
@@ -160,7 +160,7 @@ bool CompilerStack::parse()
 			{
 				string const& newPath = newSource.first;
 				string const& newContents = newSource.second;
-				m_sources[newPath].scanner = make_shared<Scanner>(CharStream(newContents, newPath), newPath);
+				m_sources[newPath].scanner = make_shared<Scanner>(CharStream(newContents, newPath));
 				sourcesToParse.push_back(newPath);
 			}
 		}

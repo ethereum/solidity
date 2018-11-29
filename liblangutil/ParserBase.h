@@ -38,7 +38,6 @@ class ParserBase
 public:
 	explicit ParserBase(ErrorReporter& errorReporter): m_errorReporter(errorReporter) {}
 
-	std::shared_ptr<std::string const> const& sourceName() const;
 	std::shared_ptr<CharStream> source() const { return m_scanner->charStream(); }
 
 protected:

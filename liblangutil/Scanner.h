@@ -91,14 +91,14 @@ class Scanner
 	friend class LiteralScope;
 public:
 	explicit Scanner(std::shared_ptr<CharStream> _source) { reset(std::move(_source)); }
-	explicit Scanner(CharStream _source = CharStream(), std::string _sourceName = "") { reset(std::move(_source), std::move(_sourceName)); }
+	explicit Scanner(CharStream _source = CharStream()) { reset(std::move(_source)); }
 
 	std::string source() const { return m_source->source(); }
 
 	std::shared_ptr<CharStream> charStream() noexcept { return m_source; }
 
-	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
-	void reset(CharStream _source, std::string _sourceName);
+	/// Resets the scanner as if newly constructed with _source as input.
+	void reset(CharStream _source);
 	void reset(std::shared_ptr<CharStream> _source);
 	/// Resets scanner to the start of input.
 	void reset();
@@ -149,8 +149,6 @@ public:
 	SourceLocation peekLocation() const { return m_nextToken.location; }
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
-
-	std::shared_ptr<std::string const> const& sourceName() const { return m_sourceName; }
 
 	///@{
 	///@name Error printing helper functions
@@ -242,7 +240,6 @@ private:
 	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
 
 	std::shared_ptr<CharStream> m_source;
-	std::shared_ptr<std::string const> m_sourceName;
 
 	/// one character look-ahead, equals 0 at end of input
 	char m_char;

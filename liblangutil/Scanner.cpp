@@ -167,10 +167,9 @@ private:
 }; // end of LiteralScope class
 
 
-void Scanner::reset(CharStream _source, string _sourceName)
+void Scanner::reset(CharStream _source)
 {
 	m_source = make_shared<CharStream>(std::move(_source));
-	m_sourceName = make_shared<string const>(std::move(_sourceName));
 	reset();
 }
 
