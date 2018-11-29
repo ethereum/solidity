@@ -558,7 +558,7 @@ string ABIFunctions::abiEncodingFunction(
 			// special case: convert storage reference type to value type - this is only
 			// possible for library calls where we just forward the storage reference
 			solAssert(_encodeAsLibraryTypes, "");
-			solAssert(to == IntegerType(256), "");
+			solAssert(to == IntegerType::uint256(), "");
 			templ("cleanupConvert", "value");
 		}
 		else
