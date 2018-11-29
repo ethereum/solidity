@@ -35,16 +35,16 @@ using namespace dev::solidity;
 
 bool ContractLevelChecker::check(ContractDefinition const& _contract)
 {
-	checkContractDuplicateFunctions(_contract);
-	checkContractDuplicateEvents(_contract);
-	checkContractIllegalOverrides(_contract);
-	checkContractAbstractFunctions(_contract);
-	checkContractBaseConstructorArguments(_contract);
+	checkDuplicateFunctions(_contract);
+	checkDuplicateEvents(_contract);
+	checkIllegalOverrides(_contract);
+	checkAbstractFunctions(_contract);
+	checkBaseConstructorArguments(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
-void ContractLevelChecker::checkContractDuplicateFunctions(ContractDefinition const& _contract)
+void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _contract)
 {
 	/// Checks that two functions with the same name defined in this contract have different
 	/// argument types and that there is at most one constructor.
@@ -81,7 +81,7 @@ void ContractLevelChecker::checkContractDuplicateFunctions(ContractDefinition co
 	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
 }
 
-void ContractLevelChecker::checkContractDuplicateEvents(ContractDefinition const& _contract)
+void ContractLevelChecker::checkDuplicateEvents(ContractDefinition const& _contract)
 {
 	/// Checks that two events with the same name defined in this contract have different
 	/// argument types
@@ -126,7 +126,7 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 	}
 }
 
-void ContractLevelChecker::checkContractIllegalOverrides(ContractDefinition const& _contract)
+void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 {
 	// TODO unify this at a later point. for this we need to put the constness and the access specifier
 	// into the types
@@ -207,7 +207,7 @@ void ContractLevelChecker::overrideError(FunctionDefinition const& function, Fun
 	);
 }
 
-void ContractLevelChecker::checkContractAbstractFunctions(ContractDefinition const& _contract)
+void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _contract)
 {
 	// Mapping from name to function definition (exactly one per argument type equality class) and
 	// flag to indicate whether it is fully implemented.
@@ -251,7 +251,7 @@ void ContractLevelChecker::checkContractAbstractFunctions(ContractDefinition con
 }
 
 
-void ContractLevelChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
+void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition const& _contract)
 {
 	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
 

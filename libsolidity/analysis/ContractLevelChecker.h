@@ -54,17 +54,17 @@ public:
 private:
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
-	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
-	void checkContractDuplicateEvents(ContractDefinition const& _contract);
+	void checkDuplicateFunctions(ContractDefinition const& _contract);
+	void checkDuplicateEvents(ContractDefinition const& _contract);
 	template <class T>
 	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
-	void checkContractIllegalOverrides(ContractDefinition const& _contract);
+	void checkIllegalOverrides(ContractDefinition const& _contract);
 	/// Reports a type error with an appropriate message if overridden function signature differs.
 	/// Also stores the direct super function in the AST annotations.
 	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
-	void checkContractAbstractFunctions(ContractDefinition const& _contract);
-	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
+	void checkAbstractFunctions(ContractDefinition const& _contract);
+	void checkBaseConstructorArguments(ContractDefinition const& _contract);
 	void annotateBaseConstructorArguments(
 		ContractDefinition const& _currentContract,
 		FunctionDefinition const* _baseConstructor,
