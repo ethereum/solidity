@@ -96,8 +96,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
-	checkContractDuplicateFunctions(_contract);
-	checkContractDuplicateEvents(_contract);
 	checkContractIllegalOverrides(_contract);
 	checkContractAbstractFunctions(_contract);
 	checkContractBaseConstructorArguments(_contract);
@@ -160,88 +158,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		checkLibraryRequirements(_contract);
 
 	return false;
-}
-
-void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _contract)
-{
-	/// Checks that two functions with the same name defined in this contract have different
-	/// argument types and that there is at most one constructor.
-	map<string, vector<FunctionDefinition const*>> functions;
-	FunctionDefinition const* constructor = nullptr;
-	FunctionDefinition const* fallback = nullptr;
-	for (FunctionDefinition const* function: _contract.definedFunctions())
-		if (function->isConstructor())
-		{
-			if (constructor)
-				m_errorReporter.declarationError(
-					function->location(),
-					SecondarySourceLocation().append("Another declaration is here:", constructor->location()),
-					"More than one constructor defined."
-				);
-			constructor = function;
-		}
-		else if (function->isFallback())
-		{
-			if (fallback)
-				m_errorReporter.declarationError(
-					function->location(),
-					SecondarySourceLocation().append("Another declaration is here:", fallback->location()),
-					"Only one fallback function is allowed."
-				);
-			fallback = function;
-		}
-		else
-		{
-			solAssert(!function->name().empty(), "");
-			functions[function->name()].push_back(function);
-		}
-
-	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
-}
-
-void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contract)
-{
-	/// Checks that two events with the same name defined in this contract have different
-	/// argument types
-	map<string, vector<EventDefinition const*>> events;
-	for (EventDefinition const* event: _contract.events())
-		events[event->name()].push_back(event);
-
-	findDuplicateDefinitions(events, "Event with same name and arguments defined twice.");
-}
-
-template <class T>
-void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _definitions, string _message)
-{
-	for (auto const& it: _definitions)
-	{
-		vector<T> const& overloads = it.second;
-		set<size_t> reported;
-		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
-		{
-			SecondarySourceLocation ssl;
-
-			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (FunctionType(*overloads[i]).asCallableFunction(false)->hasEqualParameterTypes(
-					*FunctionType(*overloads[j]).asCallableFunction(false))
-				)
-				{
-					ssl.append("Other declaration is here:", overloads[j]->location());
-					reported.insert(j);
-				}
-
-			if (ssl.infos.size() > 0)
-			{
-				ssl.limitSize(_message);
-
-				m_errorReporter.declarationError(
-					overloads[i]->location(),
-					ssl,
-					_message
-				);
-			}
-		}
-	}
 }
 
 void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _contract)

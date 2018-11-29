@@ -52,6 +52,13 @@ public:
 	bool check(ContractDefinition const& _contract);
 
 private:
+	/// Checks that two functions defined in this contract with the same name have different
+	/// arguments and that there is at most one constructor.
+	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
+	void checkContractDuplicateEvents(ContractDefinition const& _contract);
+	template <class T>
+	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
+
 	langutil::ErrorReporter& m_errorReporter;
 };
 

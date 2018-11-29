@@ -66,10 +66,6 @@ public:
 private:
 
 	bool visit(ContractDefinition const& _contract) override;
-	/// Checks that two functions defined in this contract with the same name have different
-	/// arguments and that there is at most one constructor.
-	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
-	void checkContractDuplicateEvents(ContractDefinition const& _contract);
 	void checkContractIllegalOverrides(ContractDefinition const& _contract);
 	/// Reports a type error with an appropriate message if overridden function signature differs.
 	/// Also stores the direct super function in the AST annotations.
@@ -156,9 +152,6 @@ private:
 	bool visit(Identifier const& _identifier) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;
-
-	template <class T>
-	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
 
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,
