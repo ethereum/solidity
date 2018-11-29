@@ -90,22 +90,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
-	FunctionDefinition const* function = _contract.constructor();
-	if (function)
-	{
-		if (!function->returnParameters().empty())
-			m_errorReporter.typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
-		if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
-			m_errorReporter.typeError(
-				function->location(),
-				"Constructor must be payable or non-payable, but is \"" +
-				stateMutabilityToString(function->stateMutability()) +
-				"\"."
-			);
-		if (function->visibility() != FunctionDefinition::Visibility::Public && function->visibility() != FunctionDefinition::Visibility::Internal)
-			m_errorReporter.typeError(function->location(), "Constructor must be public or internal.");
-	}
-
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 		if (function->isFallback())
 		{

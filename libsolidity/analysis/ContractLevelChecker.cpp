@@ -40,6 +40,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkIllegalOverrides(_contract);
 	checkAbstractFunctions(_contract);
 	checkBaseConstructorArguments(_contract);
+	checkConstructor(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -338,4 +339,23 @@ void ContractLevelChecker::annotateBaseConstructorArguments(
 		);
 	}
 
+}
+
+void ContractLevelChecker::checkConstructor(ContractDefinition const& _contract)
+{
+	FunctionDefinition const* constructor = _contract.constructor();
+	if (!constructor)
+		return;
+
+	if (!constructor->returnParameters().empty())
+		m_errorReporter.typeError(constructor->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
+	if (constructor->stateMutability() != StateMutability::NonPayable && constructor->stateMutability() != StateMutability::Payable)
+		m_errorReporter.typeError(
+			constructor->location(),
+			"Constructor must be payable or non-payable, but is \"" +
+			stateMutabilityToString(constructor->stateMutability()) +
+			"\"."
+		);
+	if (constructor->visibility() != FunctionDefinition::Visibility::Public && constructor->visibility() != FunctionDefinition::Visibility::Internal)
+		m_errorReporter.typeError(constructor->location(), "Constructor must be public or internal.");
 }

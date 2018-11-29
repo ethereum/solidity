@@ -70,6 +70,7 @@ private:
 		FunctionDefinition const* _baseConstructor,
 		ASTNode const* _argumentNode
 	);
+	void checkConstructor(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 };
