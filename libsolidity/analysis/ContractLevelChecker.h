@@ -63,6 +63,7 @@ private:
 	/// Also stores the direct super function in the AST annotations.
 	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
+	void checkContractAbstractFunctions(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 };

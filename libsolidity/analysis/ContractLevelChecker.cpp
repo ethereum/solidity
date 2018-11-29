@@ -24,6 +24,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
+#include <boost/range/adaptor/reversed.hpp>
+
 
 using namespace std;
 using namespace dev;
@@ -36,6 +38,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkContractDuplicateFunctions(_contract);
 	checkContractDuplicateEvents(_contract);
 	checkContractIllegalOverrides(_contract);
+	checkContractAbstractFunctions(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -203,3 +206,45 @@ void ContractLevelChecker::overrideError(FunctionDefinition const& function, Fun
 	);
 }
 
+void ContractLevelChecker::checkContractAbstractFunctions(ContractDefinition const& _contract)
+{
+	// Mapping from name to function definition (exactly one per argument type equality class) and
+	// flag to indicate whether it is fully implemented.
+	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
+	map<string, vector<FunTypeAndFlag>> functions;
+
+	// Search from base to derived
+	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+		for (FunctionDefinition const* function: contract->definedFunctions())
+		{
+			// Take constructors out of overload hierarchy
+			if (function->isConstructor())
+				continue;
+			auto& overloads = functions[function->name()];
+			FunctionTypePointer funType = make_shared<FunctionType>(*function)->asCallableFunction(false);
+			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
+			{
+				return funType->hasEqualParameterTypes(*_funAndFlag.first);
+			});
+			if (it == overloads.end())
+				overloads.push_back(make_pair(funType, function->isImplemented()));
+			else if (it->second)
+			{
+				if (!function->isImplemented())
+					m_errorReporter.typeError(function->location(), "Redeclaring an already implemented function as abstract");
+			}
+			else if (function->isImplemented())
+				it->second = true;
+		}
+
+	// Set to not fully implemented if at least one flag is false.
+	for (auto const& it: functions)
+		for (auto const& funAndFlag: it.second)
+			if (!funAndFlag.second)
+			{
+				FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(&funAndFlag.first->declaration());
+				solAssert(function, "");
+				_contract.annotation().unimplementedFunctions.push_back(function);
+				break;
+			}
+}

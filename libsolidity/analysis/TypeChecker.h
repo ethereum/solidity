@@ -66,7 +66,6 @@ public:
 private:
 
 	bool visit(ContractDefinition const& _contract) override;
-	void checkContractAbstractFunctions(ContractDefinition const& _contract);
 	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
 	void annotateBaseConstructorArguments(
 		ContractDefinition const& _currentContract,
