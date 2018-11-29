@@ -96,7 +96,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
-	checkContractIllegalOverrides(_contract);
 	checkContractAbstractFunctions(_contract);
 	checkContractBaseConstructorArguments(_contract);
 
@@ -286,87 +285,6 @@ void TypeChecker::annotateBaseConstructorArguments(
 		);
 	}
 
-}
-
-void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contract)
-{
-	// TODO unify this at a later point. for this we need to put the constness and the access specifier
-	// into the types
-	map<string, vector<FunctionDefinition const*>> functions;
-	map<string, ModifierDefinition const*> modifiers;
-
-	// We search from derived to base, so the stored item causes the error.
-	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
-	{
-		for (FunctionDefinition const* function: contract->definedFunctions())
-		{
-			if (function->isConstructor())
-				continue; // constructors can neither be overridden nor override anything
-			string const& name = function->name();
-			if (modifiers.count(name))
-				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
-
-			for (FunctionDefinition const* overriding: functions[name])
-				checkFunctionOverride(*overriding, *function);
-
-			functions[name].push_back(function);
-		}
-		for (ModifierDefinition const* modifier: contract->functionModifiers())
-		{
-			string const& name = modifier->name();
-			ModifierDefinition const*& override = modifiers[name];
-			if (!override)
-				override = modifier;
-			else if (ModifierType(*override) != ModifierType(*modifier))
-				m_errorReporter.typeError(override->location(), "Override changes modifier signature.");
-			if (!functions[name].empty())
-				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
-		}
-	}
-}
-
-void TypeChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
-{
-	FunctionTypePointer functionType = FunctionType(_function).asCallableFunction(false);
-	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
-
-	if (!functionType->hasEqualParameterTypes(*superType))
-		return;
-	if (!functionType->hasEqualReturnTypes(*superType))
-		overrideError(_function, _super, "Overriding function return types differ.");
-
-	if (!_function.annotation().superFunction)
-		_function.annotation().superFunction = &_super;
-
-	if (_function.visibility() != _super.visibility())
-	{
-		// Visibility change from external to public is fine.
-		// Any other change is disallowed.
-		if (!(
-			_super.visibility() == FunctionDefinition::Visibility::External &&
-			_function.visibility() == FunctionDefinition::Visibility::Public
-		))
-			overrideError(_function, _super, "Overriding function visibility differs.");
-	}
-	if (_function.stateMutability() != _super.stateMutability())
-		overrideError(
-			_function,
-			_super,
-			"Overriding function changes state mutability from \"" +
-			stateMutabilityToString(_super.stateMutability()) +
-			"\" to \"" +
-			stateMutabilityToString(_function.stateMutability()) +
-			"\"."
-		);
-}
-
-void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
-{
-	m_errorReporter.typeError(
-		function.location(),
-		SecondarySourceLocation().append("Overridden function is here:", super.location()),
-		message
-	);
 }
 
 void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)

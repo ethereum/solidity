@@ -58,6 +58,11 @@ private:
 	void checkContractDuplicateEvents(ContractDefinition const& _contract);
 	template <class T>
 	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
+	void checkContractIllegalOverrides(ContractDefinition const& _contract);
+	/// Reports a type error with an appropriate message if overridden function signature differs.
+	/// Also stores the direct super function in the AST annotations.
+	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
+	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
 
 	langutil::ErrorReporter& m_errorReporter;
 };
