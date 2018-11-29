@@ -107,10 +107,10 @@ BOOST_AUTO_TEST_CASE(hex_numbers)
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0x765432536763762734623472346");
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Semicolon);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	scanner.reset(CharStream("0x1234", ""), "");
+	scanner.reset(CharStream("0x1234", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0x1234");
-	scanner.reset(CharStream("0X1234", ""), "");
+	scanner.reset(CharStream("0X1234", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 }
 
@@ -118,17 +118,17 @@ BOOST_AUTO_TEST_CASE(octal_numbers)
 {
 	Scanner scanner(CharStream("07", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
-	scanner.reset(CharStream("007", ""), "");
+	scanner.reset(CharStream("007", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
-	scanner.reset(CharStream("-07", ""), "");
+	scanner.reset(CharStream("-07", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Sub);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
-	scanner.reset(CharStream("-.07", ""), "");
+	scanner.reset(CharStream("-.07", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Sub);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
-	scanner.reset(CharStream("0", ""), "");
+	scanner.reset(CharStream("0", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
-	scanner.reset(CharStream("0.1", ""), "");
+	scanner.reset(CharStream("0.1", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 }
 
@@ -149,16 +149,16 @@ BOOST_AUTO_TEST_CASE(trailing_dot)
 	Scanner scanner(CharStream("2.5", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	scanner.reset(CharStream("2.5e10", ""), "");
+	scanner.reset(CharStream("2.5e10", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	scanner.reset(CharStream(".5", ""), "");
+	scanner.reset(CharStream(".5", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	scanner.reset(CharStream(".5e10", ""), "");
+	scanner.reset(CharStream(".5e10", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	scanner.reset(CharStream("2.", ""), "");
+	scanner.reset(CharStream("2.", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(leading_underscore_decimal_after_dot_illegal)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 
-	scanner.reset(CharStream("1._", ""), "");
+	scanner.reset(CharStream("1._", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
@@ -225,11 +225,11 @@ BOOST_AUTO_TEST_CASE(number_literals_with_trailing_underscore_at_eos)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 
-	scanner.reset(CharStream("123_", ""), "");
+	scanner.reset(CharStream("123_", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 
-	scanner.reset(CharStream("12.34_", ""), "");
+	scanner.reset(CharStream("12.34_", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
