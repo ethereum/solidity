@@ -83,6 +83,15 @@ YulString NameDispenser::newNameInternal(YulString _nameHint)
     return name;
     
 
+    //if (m_usedNames.count(name) && m_counters.count(name.id()) == 0)
+       //m_counters.emplace(name.id(), 0); 
+
+    //if (m_counters.count(name.id()) == 1)
+        //name = YulString(_nameHint.str(), ++m_counters.at(name.id()));
+    //else
+        //m_counters.emplace(name.id(), 0);
+    //m_usedNames.emplace(name);
+    //return name;
 
     // Previous work-- 
 	//while (name.empty() || m_usedNames.count(name))

@@ -101,6 +101,7 @@ private:
     std::vector<std::shared_ptr<std::pair<std::string, size_t>>> m_strings;
 	//std::vector<std::shared_ptr<std::string>> m_strings;
 	std::unordered_multimap<std::uint64_t, size_t> m_hashToID;
+    std::unordered_map<size_t, size_t> m_idToSuffix; 
 };
 
 /// Wrapper around handles into the YulString repository.
