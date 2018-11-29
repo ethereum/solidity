@@ -374,6 +374,8 @@ public:
 		Unsigned, Signed
 	};
 
+	static IntegerType& uint256() { static std::shared_ptr<IntegerType> uint256(std::make_shared<IntegerType>(256)); return *uint256; }
+
 	Category category() const override { return Category::Integer; }
 
 	explicit IntegerType(unsigned _bits, Modifier _modifier = Modifier::Unsigned);

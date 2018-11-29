@@ -2506,7 +2506,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		}
 		else
 		{
-			expectType(*index, IntegerType(256));
+			expectType(*index, IntegerType::uint256());
 			if (!m_errorReporter.hasErrors())
 				if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				{
@@ -2537,7 +2537,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			resultType = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, typeType.actualType()));
 		else
 		{
-			expectType(*index, IntegerType(256));
+			expectType(*index, IntegerType::uint256());
 			if (auto length = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				resultType = make_shared<TypeType>(make_shared<ArrayType>(
 					DataLocation::Memory,
@@ -2556,7 +2556,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			m_errorReporter.typeError(_access.location(), "Index expression cannot be omitted.");
 		else
 		{
-			if (!expectType(*index, IntegerType(256)))
+			if (!expectType(*index, IntegerType::uint256()))
 				m_errorReporter.fatalTypeError(_access.location(), "Index expression cannot be represented as an unsigned integer.");
 			if (auto integerType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				if (bytesType.numBytes() <= integerType->literalValue(nullptr))
