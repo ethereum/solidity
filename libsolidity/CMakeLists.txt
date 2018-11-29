@@ -1,6 +1,7 @@
 # Until we have a clear separation, libyul has to be included here
 set(sources
 	analysis/ConstantEvaluator.cpp
+	analysis/ContractLevelChecker.cpp
 	analysis/ControlFlowAnalyzer.cpp
 	analysis/ControlFlowBuilder.cpp
 	analysis/ControlFlowGraph.cpp
