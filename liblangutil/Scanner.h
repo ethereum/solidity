@@ -90,12 +90,16 @@ class Scanner
 {
 	friend class LiteralScope;
 public:
-	explicit Scanner(CharStream _source = CharStream(), std::string _sourceName = "") { reset(std::move(_source), std::move(_sourceName)); }
+	explicit Scanner(std::shared_ptr<CharStream> _source) { reset(std::move(_source)); }
+	explicit Scanner(CharStream _source = CharStream()) { reset(std::move(_source)); }
 
-	std::string source() const { return m_source.source(); }
+	std::string const& source() const noexcept { return m_source->source(); }
 
-	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
-	void reset(CharStream _source, std::string _sourceName);
+	std::shared_ptr<CharStream> charStream() noexcept { return m_source; }
+
+	/// Resets the scanner as if newly constructed with _source as input.
+	void reset(CharStream _source);
+	void reset(std::shared_ptr<CharStream> _source);
 	/// Resets scanner to the start of input.
 	void reset();
 
@@ -146,20 +150,17 @@ public:
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
 
-	std::shared_ptr<std::string const> const& sourceName() const { return m_sourceName; }
-
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	std::string lineAtPosition(int _position) const { return m_source.lineAtPosition(_position); }
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source.translatePositionToLineColumn(_position); }
+	std::string lineAtPosition(int _position) const { return m_source->lineAtPosition(_position); }
+	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source->translatePositionToLineColumn(_position); }
 	std::string sourceAt(SourceLocation const& _location) const
 	{
 		solAssert(!_location.isEmpty(), "");
-		solAssert(m_sourceName && _location.sourceName, "");
-		solAssert(*m_sourceName == *_location.sourceName, "");
-		return m_source.source().substr(_location.start, _location.end - _location.start);
+		solAssert(m_source.get() == _location.source.get(), "CharStream memory locations must match.");
+		return m_source->source().substr(_location.start, _location.end - _location.start);
 	}
 	///@}
 
@@ -188,8 +189,8 @@ private:
 	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
 
-	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
-	void rollback(int _amount) { m_char = m_source.rollback(_amount); }
+	bool advance() { m_char = m_source->advanceAndGet(); return !m_source->isPastEndOfInput(); }
+	void rollback(int _amount) { m_char = m_source->rollback(_amount); }
 
 	inline Token selectErrorToken(ScannerError _err) { advance(); return setError(_err); }
 	inline Token selectToken(Token _tok) { advance(); return _tok; }
@@ -229,8 +230,8 @@ private:
 	bool isUnicodeLinebreak();
 
 	/// Return the current source position.
-	int sourcePos() const { return m_source.position(); }
-	bool isSourcePastEndOfInput() const { return m_source.isPastEndOfInput(); }
+	int sourcePos() const { return m_source->position(); }
+	bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
 
 	TokenDesc m_skippedComment;  // desc for current skipped comment
 	TokenDesc m_nextSkippedComment; // desc for next skipped comment
@@ -238,8 +239,7 @@ private:
 	TokenDesc m_currentToken;  // desc for current token (as returned by Next())
 	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
 
-	CharStream m_source;
-	std::shared_ptr<std::string const> m_sourceName;
+	std::shared_ptr<CharStream> m_source;
 
 	/// one character look-ahead, equals 0 at end of input
 	char m_char;

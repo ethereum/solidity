@@ -51,7 +51,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 {
 	try
 	{
-		auto scanner = make_shared<Scanner>(CharStream(_source));
+		auto scanner = make_shared<Scanner>(CharStream(_source, ""));
 		auto parserResult = yul::Parser(errorReporter, yul::AsmFlavour::Yul).parse(scanner, false);
 		if (parserResult)
 		{

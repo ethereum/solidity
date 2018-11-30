@@ -27,11 +27,6 @@
 using namespace std;
 using namespace langutil;
 
-std::shared_ptr<string const> const& ParserBase::sourceName() const
-{
-	return m_scanner->sourceName();
-}
-
 int ParserBase::position() const
 {
 	return m_scanner->currentLocation().start;
@@ -105,10 +100,10 @@ void ParserBase::decreaseRecursionDepth()
 
 void ParserBase::parserError(string const& _description)
 {
-	m_errorReporter.parserError(SourceLocation(position(), endPosition(), sourceName()), _description);
+	m_errorReporter.parserError(SourceLocation(position(), endPosition(), source()), _description);
 }
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	m_errorReporter.fatalParserError(SourceLocation(position(), endPosition(), sourceName()), _description);
+	m_errorReporter.fatalParserError(SourceLocation(position(), endPosition(), source()), _description);
 }

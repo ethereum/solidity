@@ -259,7 +259,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	yul::AsmFlavour flavour = m_yul ? yul::AsmFlavour::Yul : yul::AsmFlavour::Strict;
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source), "");
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source, ""));
 	m_ast = yul::Parser(errorReporter, flavour).parse(scanner, false);
 	if (!m_ast || !errorReporter.errors().empty())
 	{

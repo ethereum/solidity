@@ -30,9 +30,9 @@ using namespace langutil;
 
 void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _location)
 {
-	if (!_location || !_location->sourceName)
+	if (!_location || !_location->source)
 		return; // Nothing we can print here
-	auto const& scanner = m_scannerFromSourceName(*_location->sourceName);
+	auto const& scanner = m_scannerFromSourceName(_location->source->name());
 	int startLine;
 	int startColumn;
 	tie(startLine, startColumn) = scanner.translatePositionToLineColumn(_location->start);
@@ -89,13 +89,13 @@ void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _locati
 
 void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
 {
-	if (!_location || !_location->sourceName)
+	if (!_location || !_location->source)
 		return; // Nothing we can print here
-	auto const& scanner = m_scannerFromSourceName(*_location->sourceName);
+	auto const& scanner = m_scannerFromSourceName(_location->source->name());
 	int startLine;
 	int startColumn;
 	tie(startLine, startColumn) = scanner.translatePositionToLineColumn(_location->start);
-	m_stream << *_location->sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
+	m_stream << _location->source->name() << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
 }
 
 void SourceReferenceFormatter::printExceptionInformation(

@@ -492,9 +492,9 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 		Declaration const* conflictingDeclaration = _container.conflictingDeclaration(_declaration, _name);
 		solAssert(conflictingDeclaration, "");
 		bool const comparable =
-			_errorLocation->sourceName &&
-			conflictingDeclaration->location().sourceName &&
-			*_errorLocation->sourceName == *conflictingDeclaration->location().sourceName;
+			_errorLocation->source &&
+			conflictingDeclaration->location().source &&
+			_errorLocation->source->name() == conflictingDeclaration->location().source->name();
 		if (comparable && _errorLocation->start < conflictingDeclaration->location().start)
 		{
 			firstDeclarationLocation = *_errorLocation;

@@ -56,11 +56,11 @@ protected:
 			r.location.start = position();
 			r.location.end = endPosition();
 		}
-		if (!r.location.sourceName)
-			r.location.sourceName = sourceName();
+		if (!r.location.source)
+			r.location.source = m_scanner->charStream();
 		return r;
 	}
-	langutil::SourceLocation location() const { return {position(), endPosition(), sourceName()}; }
+	langutil::SourceLocation location() const { return {position(), endPosition(), m_scanner->charStream()}; }
 
 	Block parseBlock();
 	Statement parseStatement();
