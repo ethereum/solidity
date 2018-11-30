@@ -66,27 +66,6 @@ public:
 private:
 
 	bool visit(ContractDefinition const& _contract) override;
-	/// Checks that two functions defined in this contract with the same name have different
-	/// arguments and that there is at most one constructor.
-	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
-	void checkContractDuplicateEvents(ContractDefinition const& _contract);
-	void checkContractIllegalOverrides(ContractDefinition const& _contract);
-	/// Reports a type error with an appropriate message if overridden function signature differs.
-	/// Also stores the direct super function in the AST annotations.
-	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
-	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
-	void checkContractAbstractFunctions(ContractDefinition const& _contract);
-	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
-	void annotateBaseConstructorArguments(
-		ContractDefinition const& _currentContract,
-		FunctionDefinition const* _baseConstructor,
-		ASTNode const* _argumentNode
-	);
-	/// Checks that different functions with external visibility end up having different
-	/// external argument types (i.e. different signature).
-	void checkContractExternalTypeClashes(ContractDefinition const& _contract);
-	/// Checks that all requirements for a library are fulfilled if this is a library.
-	void checkLibraryRequirements(ContractDefinition const& _contract);
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
 	/// Should only be called if the left hand side is tuple-typed.
 	void checkDoubleStorageAssignment(Assignment const& _assignment);
@@ -156,9 +135,6 @@ private:
 	bool visit(Identifier const& _identifier) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;
-
-	template <class T>
-	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
 
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,

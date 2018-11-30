@@ -28,6 +28,7 @@
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/parsing/Parser.h>
+#include <libsolidity/analysis/ContractLevelChecker.h>
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
 #include <libsolidity/analysis/GlobalContext.h>
@@ -225,8 +226,21 @@ bool CompilerStack::analyze()
 						m_contracts[contract->fullyQualifiedName()].contract = contract;
 				}
 
-		// This cannot be done in the above loop, because cross-contract types couldn't be resolved.
-		// A good example is `LibraryName.TypeName x;`.
+		// Next, we check inheritance, overrides, function collisions and other things at
+		// contract or function level.
+		// This also calculates whether a contract is abstract, which is needed by the
+		// type checker.
+		ContractLevelChecker contractLevelChecker(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+					if (!contractLevelChecker.check(*contract))
+						noErrors = false;
+
+		// New we run full type checks that go down to the expression level. This
+		// cannot be done earlier, because we need cross-contract types and information
+		// about whether a contract is abstract for the `new` expression.
+		// This populates the `type` annotation for all expressions.
 		//
 		// Note: this does not resolve overloaded functions. In order to do that, types of arguments are needed,
 		// which is only done one step later.
