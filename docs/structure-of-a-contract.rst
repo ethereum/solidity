@@ -56,7 +56,8 @@ Functions are the executable units of code within a contract.
 
 :ref:`function-calls` can happen internally or externally
 and have different levels of :ref:`visibility<visibility-and-getters>`
-towards other contracts.
+towards other contracts. :ref:`Functions<functions>` accept :ref:`parameters and return variables<function-parameters-return-variables>` to pass parameters
+and values between them.
 
 .. _structure-function-modifiers:
 
