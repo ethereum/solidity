@@ -135,7 +135,8 @@ void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> 
 	BOOST_CHECK_EQUAL(_items.size(), _locations.size());
 	for (size_t i = 0; i < min(_items.size(), _locations.size()); ++i)
 	{
-		if (_items[i].location() != _locations[i])
+		if (_items[i].location().start != _locations[i].start ||
+			_items[i].location().end != _locations[i].end)
 		{
 			BOOST_CHECK_MESSAGE(false, "Location mismatch for item " + to_string(i) + ". Found the following locations:");
 			printAssemblyLocations(_items);
