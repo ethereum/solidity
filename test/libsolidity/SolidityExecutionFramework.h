@@ -72,8 +72,7 @@ public:
 		m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
 		if (!m_compiler.compile())
 		{
-			auto scannerFromSourceName = [&](std::string const& _sourceName) -> langutil::Scanner const& { return m_compiler.scanner(_sourceName); };
-			langutil::SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
+			langutil::SourceReferenceFormatter formatter(std::cerr);
 
 			for (auto const& error: m_compiler.errors())
 				formatter.printExceptionInformation(

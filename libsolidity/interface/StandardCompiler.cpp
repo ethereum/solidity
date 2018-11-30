@@ -69,12 +69,11 @@ Json::Value formatErrorWithException(
 	bool const& _warning,
 	string const& _type,
 	string const& _component,
-	string const& _message,
-	function<Scanner const&(string const&)> const& _scannerFromSourceName
+	string const& _message
 )
 {
 	string message;
-	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type, _scannerFromSourceName);
+	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
 
 	// NOTE: the below is partially a copy from SourceReferenceFormatter
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
@@ -433,8 +432,6 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
 	m_compilerStack.setRequestedContractNames(requestedContractNames(outputSelection));
 
-	auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return m_compilerStack.scanner(_sourceName); };
-
 	try
 	{
 		m_compilerStack.compile();
@@ -448,8 +445,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 				err.type() == Error::Type::Warning,
 				err.typeName(),
 				"general",
-				"",
-				scannerFromSourceName
+				""
 			));
 		}
 	}
@@ -461,8 +457,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			false,
 			_error.typeName(),
 			"general",
-			"Uncaught error: ",
-			scannerFromSourceName
+			"Uncaught error: "
 		));
 	}
 	/// This should not be leaked from compile().
@@ -482,8 +477,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			false,
 			"CompilerError",
 			"general",
-			"Compiler error (" + _exception.lineInfo() + ")",
-			scannerFromSourceName
+			"Compiler error (" + _exception.lineInfo() + ")"
 		));
 	}
 	catch (InternalCompilerError const& _exception)
@@ -493,8 +487,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			false,
 			"InternalCompilerError",
 			"general",
-			"Internal compiler error (" + _exception.lineInfo() + ")",
-			scannerFromSourceName
+			"Internal compiler error (" + _exception.lineInfo() + ")"
 		));
 	}
 	catch (UnimplementedFeatureError const& _exception)
@@ -504,8 +497,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			false,
 			"UnimplementedFeatureError",
 			"general",
-			"Unimplemented feature (" + _exception.lineInfo() + ")",
-			scannerFromSourceName
+			"Unimplemented feature (" + _exception.lineInfo() + ")"
 		));
 	}
 	catch (Exception const& _exception)

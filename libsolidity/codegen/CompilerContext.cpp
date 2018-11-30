@@ -386,8 +386,7 @@ void CompilerContext::appendInlineAssembly(
 		for (auto const& error: errorReporter.errors())
 			message += SourceReferenceFormatter::formatExceptionInformation(
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-				[&](string const&) -> Scanner const& { return *scanner; }
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
 			);
 		message += "-------------------------------------------\n";
 

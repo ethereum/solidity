@@ -30,100 +30,63 @@ using namespace langutil;
 
 void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _location)
 {
-	if (!_location || !_location->source)
+	printSourceLocation(SourceReferenceExtractor::extract(_location));
+}
+
+void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
+{
+	if (_ref.position.line < 0)
 		return; // Nothing we can print here
-	auto const& scanner = m_scannerFromSourceName(_location->source->name());
-	int startLine;
-	int startColumn;
-	tie(startLine, startColumn) = scanner.translatePositionToLineColumn(_location->start);
-	int endLine;
-	int endColumn;
-	tie(endLine, endColumn) = scanner.translatePositionToLineColumn(_location->end);
-	if (startLine == endLine)
+
+	if (!_ref.multiline)
 	{
-		string line = scanner.lineAtPosition(_location->start);
+		m_stream << _ref.text << endl;
 
-		int locationLength = endColumn - startColumn;
-		if (locationLength > 150)
-		{
-			line = line.substr(0, startColumn + 35) + " ... " + line.substr(endColumn - 35);
-			endColumn = startColumn + 75;
-			locationLength = 75;
-		}
-		if (line.length() > 150)
-		{
-			int len = line.length();
-			line = line.substr(max(0, startColumn - 35), min(startColumn, 35) + min(locationLength + 35, len - startColumn));
-			if (startColumn + locationLength + 35 < len)
-				line += " ...";
-			if (startColumn > 35)
-			{
-				line = " ... " + line;
-				startColumn = 40;
-			}
-			endColumn = startColumn + locationLength;
-		}
-
-		m_stream << line << endl;
-
+		// mark the text-range like this: ^-----^
 		for_each(
-			line.cbegin(),
-			line.cbegin() + startColumn,
-			[this](char const& ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
+			_ref.text.cbegin(),
+			_ref.text.cbegin() + _ref.startColumn,
+			[this](char ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
 		);
 		m_stream << "^";
-		if (endColumn > startColumn + 2)
-			m_stream << string(endColumn - startColumn - 2, '-');
-		if (endColumn > startColumn + 1)
+		if (_ref.endColumn > _ref.startColumn + 2)
+			m_stream << string(_ref.endColumn - _ref.startColumn - 2, '-');
+		if (_ref.endColumn > _ref.startColumn + 1)
 			m_stream << "^";
 		m_stream << endl;
 	}
 	else
 		m_stream <<
-			scanner.lineAtPosition(_location->start) <<
+			_ref.text <<
 			endl <<
-			string(startColumn, ' ') <<
+			string(_ref.startColumn, ' ') <<
 			"^ (Relevant source part starts here and spans across multiple lines)." <<
 			endl;
 }
 
-void SourceReferenceFormatter::printSourceName(SourceLocation const* _location)
+void SourceReferenceFormatter::printSourceName(SourceReference const& _ref)
 {
-	if (!_location || !_location->source)
-		return; // Nothing we can print here
-	auto const& scanner = m_scannerFromSourceName(_location->source->name());
-	int startLine;
-	int startColumn;
-	tie(startLine, startColumn) = scanner.translatePositionToLineColumn(_location->start);
-	m_stream << _location->source->name() << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
+	if (_ref.position.line != -1)
+		m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ": ";
 }
 
-void SourceReferenceFormatter::printExceptionInformation(
-	dev::Exception const& _exception,
-	string const& _name
-)
+void SourceReferenceFormatter::printExceptionInformation(dev::Exception const& _error, std::string const& _category)
 {
-	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
-	auto secondarylocation = boost::get_error_info<errinfo_secondarySourceLocation>(_exception);
+	printExceptionInformation(SourceReferenceExtractor::extract(_error, _category));
+}
 
-	printSourceName(location);
+void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
+{
+	printSourceName(_msg.primary);
 
-	m_stream << _name;
-	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
-		m_stream << ": " << *description << endl;
-	else
-		m_stream << endl;
+	m_stream << _msg.category << ": " << _msg.primary.message << endl;
 
-	printSourceLocation(location);
+	printSourceLocation(_msg.primary);
 
-	if (secondarylocation && !secondarylocation->infos.empty())
+	for (auto const& ref: _msg.secondary)
 	{
-		for (auto info: secondarylocation->infos)
-		{
-			printSourceName(&info.second);
-			m_stream << info.first << endl;
-			printSourceLocation(&info.second);
-		}
-		m_stream << endl;
+		printSourceName(ref);
+		m_stream << ref.message << endl;
+		printSourceLocation(ref);
 	}
 }

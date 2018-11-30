@@ -67,9 +67,9 @@ namespace po = boost::program_options;
 class YulOpti
 {
 public:
-	void printErrors(Scanner const& _scanner)
+	void printErrors()
 	{
-		SourceReferenceFormatter formatter(cout, [&](string const&) -> Scanner const& { return _scanner; });
+		SourceReferenceFormatter formatter(cout);
 
 		for (auto const& error: m_errors)
 			formatter.printExceptionInformation(
@@ -86,7 +86,7 @@ public:
 		if (!m_ast || !errorReporter.errors().empty())
 		{
 			cout << "Error parsing source." << endl;
-			printErrors(*scanner);
+			printErrors();
 			return false;
 		}
 		m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
@@ -100,7 +100,7 @@ public:
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 		{
 			cout << "Error analyzing source." << endl;
-			printErrors(*scanner);
+			printErrors();
 			return false;
 		}
 		return true;
