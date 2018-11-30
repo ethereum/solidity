@@ -219,29 +219,40 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
 	map<string, vector<FunTypeAndFlag>> functions;
 
-	// Search from base to derived
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
-		for (FunctionDefinition const* function: contract->definedFunctions())
+	auto registerFunction = [&](Declaration const& _declaration, FunctionTypePointer const& _type, bool _implemented)
+	{
+		auto& overloads = functions[_declaration.name()];
+		auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
 		{
-			// Take constructors out of overload hierarchy
-			if (function->isConstructor())
-				continue;
-			auto& overloads = functions[function->name()];
-			FunctionTypePointer funType = make_shared<FunctionType>(*function)->asCallableFunction(false);
-			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
-			{
-				return funType->hasEqualParameterTypes(*_funAndFlag.first);
-			});
-			if (it == overloads.end())
-				overloads.push_back(make_pair(funType, function->isImplemented()));
-			else if (it->second)
-			{
-				if (!function->isImplemented())
-					m_errorReporter.typeError(function->location(), "Redeclaring an already implemented function as abstract");
-			}
-			else if (function->isImplemented())
-				it->second = true;
+			return _type->hasEqualParameterTypes(*_funAndFlag.first);
+		});
+		if (it == overloads.end())
+			overloads.push_back(make_pair(_type, _implemented));
+		else if (it->second)
+		{
+			if (!_implemented)
+				m_errorReporter.typeError(_declaration.location(), "Redeclaring an already implemented function as abstract");
 		}
+		else if (_implemented)
+			it->second = true;
+	};
+
+	// Search from base to derived, collect all functions and update
+	// the 'implemented' flag.
+	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	{
+		for (VariableDeclaration const* v: contract->stateVariables())
+			if (v->isPartOfExternalInterface())
+				registerFunction(*v, make_shared<FunctionType>(*v), true);
+
+		for (FunctionDefinition const* function: contract->definedFunctions())
+			if (!function->isConstructor())
+				registerFunction(
+					*function,
+					make_shared<FunctionType>(*function)->asCallableFunction(false),
+					function->isImplemented()
+				);
+	}
 
 	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
