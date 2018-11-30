@@ -1043,14 +1043,15 @@ Additional Resources for Understanding Events
 Inheritance
 ***********
 
-Solidity supports multiple inheritance by copying code including polymorphism.
+Solidity supports multiple inheritance including polymorphism.
 
 All function calls are virtual, which means that the most derived function
-is called, except when the contract name is explicitly given.
+is called, except when the contract name is explicitly given or the
+``super`` keyword is used.
 
 When a contract inherits from other contracts, only a single
 contract is created on the blockchain, and the code from all the base contracts
-is copied into the created contract.
+is compiled into the created contract.
 
 The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
