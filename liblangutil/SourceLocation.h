@@ -41,20 +41,6 @@ struct SourceLocation
 	SourceLocation(): start(-1), end(-1), source{nullptr} { }
 	SourceLocation(int _start, int _end, std::shared_ptr<CharStream> _source):
 		start(_start), end(_end), source{std::move(_source)} { }
-	SourceLocation(SourceLocation&& _other) noexcept:
-		start(_other.start),
-		end(_other.end),
-		source{std::move(_other.source)}
-	{}
-	SourceLocation(SourceLocation const&) = default;
-	SourceLocation& operator=(SourceLocation const&) = default;
-	SourceLocation& operator=(SourceLocation&& _other) noexcept
-	{
-		start = _other.start;
-		end = _other.end;
-		source = std::move(_other.source);
-		return *this;
-	}
 
 	bool operator==(SourceLocation const& _other) const
 	{

@@ -93,7 +93,7 @@ public:
 	explicit Scanner(std::shared_ptr<CharStream> _source) { reset(std::move(_source)); }
 	explicit Scanner(CharStream _source = CharStream()) { reset(std::move(_source)); }
 
-	std::string source() const { return m_source->source(); }
+	std::string const& source() const noexcept { return m_source->source(); }
 
 	std::shared_ptr<CharStream> charStream() noexcept { return m_source; }
 

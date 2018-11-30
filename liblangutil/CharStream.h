@@ -80,7 +80,7 @@ public:
 
 	void reset() { m_position = 0; }
 
-	std::string const& source() const { return m_source; }
+	std::string const& source() const noexcept { return m_source; }
 	std::string const& name() const noexcept { return m_name; }
 
 	///@{
