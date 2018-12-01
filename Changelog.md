@@ -25,6 +25,7 @@ Bugfixes:
  * Type Checker: Disallow struct return types for getters of public state variables unless the new ABI encoder is active.
  * Type Checker: Fix internal compiler error when a field of a struct used as a parameter in a function type has a non-existent type.
  * Type Checker: Disallow functions ``sha3`` and ``suicide`` also without a function call.
+ * Type Checker: Fix internal compiler error with ``super`` when base contract function is not implemented.
  * Type Checker: Fixed internal error when trying to create abstract contract in some cases.
  * Type Checker: Fixed internal error related to double declaration of events.
  * Type Checker: Disallow inline arrays of mapping type.
