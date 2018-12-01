@@ -87,11 +87,24 @@ public:
 			hash ^= c;
 		}
 
-        const unsigned char *buf = (unsigned char *) &s;
+        unsigned char * byte = new unsigned char[8];
+
+        byte[0] = (s >> 56) & 0xFF;
+        byte[1] = (s >> 48) & 0xFF;
+        byte[2] = (s >> 40) & 0xFF;
+        byte[3] = (s >> 32) & 0xFF;
+        byte[4] = (s >> 24) & 0xFF;
+        byte[5] = (s >> 16) & 0xFF;
+        byte[6] = (s >> 8) & 0xFF;
+        byte[7] = s & 0xFF;
+
+
+        //const unsigned char *buf = (unsigned char *) &s;
         for (int i = 0; i < 8; i++)
         {
 		    hash *= 1099511628211u;
-            hash ^= *buf++;
+            hash ^= byte[i];
+            //hash ^= *buf++;
         }
 
 		return hash;
@@ -101,7 +114,6 @@ private:
     std::vector<std::shared_ptr<std::pair<std::string, size_t>>> m_strings;
 	//std::vector<std::shared_ptr<std::string>> m_strings;
 	std::unordered_multimap<std::uint64_t, size_t> m_hashToID;
-    std::unordered_map<size_t, size_t> m_idToSuffix; 
 };
 
 /// Wrapper around handles into the YulString repository.

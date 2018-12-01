@@ -5024,7 +5024,7 @@ hasSimpleZeroValueInMemory	libsolidity/ast/Types.h	/^	virtual bool hasSimpleZero
 hasStaticCall	libsolidity/interface/EVMVersion.h	/^	bool hasStaticCall() const { return *this >= byzantium(); }$/;"	f	class:dev::solidity::EVMVersion
 hash	libdevcore/Keccak256.cpp	/^inline void hash($/;"	f	namespace:dev::__anon29
 hash	libyul/YulString.h	/^		std::uint64_t hash;$/;"	m	struct:dev::yul::YulStringRepository::Handle
-hash	libyul/YulString.h	/^	static std::uint64_t hash(std::string const& v)$/;"	f	class:dev::yul::YulStringRepository
+hash	libyul/YulString.h	/^	static std::uint64_t hash(std::string const& v, const size_t s)$/;"	f	class:dev::yul::YulStringRepository
 hashMatchesContent	libsolidity/interface/StandardCompiler.cpp	/^bool hashMatchesContent(string const& _hash, string const& _content)$/;"	f	namespace:__anon38
 hashlib	scripts/extract_test_cases.py	/^import hashlib$/;"	i
 hashlib	scripts/isolate_tests.py	/^import hashlib$/;"	i
@@ -5047,7 +5047,8 @@ id	libsolidity/ast/AST.h	/^	size_t id() const { return m_id; }$/;"	f	class:dev::
 id	libyul/YulString.h	/^		size_t id;$/;"	m	struct:dev::yul::YulStringRepository::Handle
 id	libyul/YulString.h	/^    size_t id() const { return m_handle.id; } $/;"	f	class:dev::yul::YulString
 idOrNull	libsolidity/ast/ASTJsonConverter.h	/^	static Json::Value idOrNull(ASTNode const* _pt)$/;"	f	class:dev::solidity::ASTJsonConverter
-idToString	libyul/YulString.h	/^	std::string const& idToString(size_t _id) const	{ $/;"	f	class:dev::yul::YulStringRepository::std
+idToPrefix	libyul/YulString.h	/^	std::string const idToPrefix(size_t _id) const	{ $/;"	f	class:dev::yul::YulStringRepository::std
+idToString	libyul/YulString.h	/^	std::string const idToString(size_t _id) const	{ $/;"	f	class:dev::yul::YulStringRepository::std
 id_	build/deps/src/jsoncpp-project/src/test_lib_json/jsontest.h	/^  Id id_;$/;"	m	struct:JsonTest::PredicateContext
 identifier	libsolidity/ast/Types.cpp	/^string Type::identifier() const$/;"	f	class:Type
 identifierList	libsolidity/ast/Types.cpp	/^string identifierList(Range const&& _list)$/;"	f	namespace:__anon47
@@ -5842,7 +5843,6 @@ m_hashToID	libyul/YulString.h	/^	std::unordered_multimap<std::uint64_t, size_t> 
 m_highestGasUsagePerJumpdest	libevmasm/PathGasMeter.h	/^	std::map<size_t, GasMeter::GasConsumption> m_highestGasUsagePerJumpdest;$/;"	m	class:dev::eth::PathGasMeter
 m_id	libevmasm/ControlFlowGraph.h	/^	unsigned m_id;$/;"	m	class:dev::eth::BlockId
 m_id	libsolidity/ast/AST.h	/^	size_t const m_id = 0;$/;"	m	class:dev::solidity::ASTNode
-m_idToSuffix	libyul/YulString.h	/^    std::unordered_map<size_t, size_t> m_idToSuffix; $/;"	m	class:dev::yul::YulStringRepository
 m_identifierAccess	libyul/backends/evm/EVMCodeTransform.h	/^	ExternalIdentifierAccess m_identifierAccess;$/;"	m	class:dev::yul::CodeTransform
 m_implemented	libsolidity/ast/AST.h	/^	bool m_implemented;$/;"	m	class:dev::solidity::ImplementationOptional
 m_inEvent	libsolidity/ast/ASTJsonConverter.h	/^	bool m_inEvent = false; \/\/\/< whether we are currently inside an event or not$/;"	m	class:dev::solidity::ASTJsonConverter
@@ -6164,7 +6164,7 @@ m_storeOperations	libevmasm/CommonSubexpressionEliminator.h	/^	std::vector<Store
 m_stream	libsolidity/interface/SourceReferenceFormatter.h	/^	std::ostream& m_stream;$/;"	m	class:dev::solidity::SourceReferenceFormatter
 m_stream	test/libsolidity/FormattedScope.h	/^	std::ostream& m_stream;$/;"	m	class:dev::solidity::test::FormattedScope
 m_strings	libevmasm/Assembly.h	/^	std::map<h256, std::string> m_strings;$/;"	m	class:dev::eth::Assembly
-m_strings	libyul/YulString.h	/^	std::vector<std::shared_ptr<std::string>> m_strings;$/;"	m	class:dev::yul::YulStringRepository
+m_strings	libyul/YulString.h	/^    std::vector<std::shared_ptr<std::pair<std::string, size_t>>> m_strings;$/;"	m	class:dev::yul::YulStringRepository
 m_struct	libsolidity/ast/Types.h	/^	StructDefinition const& m_struct;$/;"	m	class:dev::solidity::StructType
 m_subDenomination	libsolidity/ast/AST.h	/^	SubDenomination m_subDenomination;$/;"	m	class:dev::solidity::Literal::SubDenomination
 m_subExpression	libsolidity/ast/AST.h	/^	ASTPointer<Expression> m_subExpression;$/;"	m	class:dev::solidity::UnaryOperation
@@ -7871,6 +7871,7 @@ predicateId_	build/deps/src/jsoncpp-project/src/test_lib_json/jsontest.h	/^  Pre
 predicateStackTail_	build/deps/src/jsoncpp-project/src/test_lib_json/jsontest.h	/^  PredicateContext* predicateStackTail_;$/;"	m	class:JsonTest::TestResult
 prefix	libsolidity/analysis/SemVerHandler.h	/^		Token prefix = Token::Illegal;$/;"	m	struct:dev::solidity::SemVerMatchExpression::MatchComponent
 prefix	libsolidity/interface/CompilerStack.h	/^		std::string prefix;$/;"	m	struct:dev::solidity::CompilerStack::Remapping
+prefix	libyul/YulString.h	/^    std::string const prefix() const $/;"	f	class:dev::yul::YulString::std
 prepareMemoryStore	libsolidity/codegen/CompilerUtils.cpp	/^unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)$/;"	f	class:dev::solidity::CompilerUtils
 prerelease	libsolidity/analysis/SemVerHandler.h	/^	std::string prerelease;$/;"	m	struct:dev::solidity::SemVerVersion
 prev	libevmasm/ControlFlowGraph.h	/^	BlockId prev = BlockId::invalid();$/;"	m	struct:dev::eth::BasicBlock
@@ -8627,7 +8628,7 @@ storeValue	libsolidity/codegen/LValue.cpp	/^void StorageArrayLength::storeValue(
 storeValue	libsolidity/codegen/LValue.cpp	/^void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, bool _move) const$/;"	f	class:StorageByteArrayElement
 storeValue	libsolidity/codegen/LValue.cpp	/^void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const$/;"	f	class:StorageItem
 storeValue	libsolidity/codegen/LValue.cpp	/^void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _location, bool) const$/;"	f	class:TupleObject
-str	libyul/YulString.h	/^	std::string const& str() const$/;"	f	class:dev::yul::YulString::std
+str	libyul/YulString.h	/^	std::string const str() const$/;"	f	class:dev::yul::YulString::std
 stream	libevmasm/KnownState.cpp	/^ostream& KnownState::stream(ostream& _out) const$/;"	f	class:KnownState
 strictMode	build/deps/src/jsoncpp-project/src/lib_json/json_reader.cpp	/^Features Features::strictMode() {$/;"	f	class:Json::Features
 strictMode	build/deps/src/jsoncpp-project/src/lib_json/json_reader.cpp	/^void CharReaderBuilder::strictMode(Json::Value* settings)$/;"	f	class:Json::CharReaderBuilder
