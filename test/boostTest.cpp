@@ -36,10 +36,8 @@
 #pragma GCC diagnostic pop
 
 #include <test/Options.h>
-#include <test/libsolidity/ASTJSONTest.h>
-#include <test/libsolidity/SyntaxTest.h>
-#include <test/libsolidity/SMTCheckerJSONTest.h>
-#include <test/libyul/YulOptimizerTest.h>
+#include <test/TestCase.h>
+#include <libdevcore/Exceptions.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -62,7 +60,9 @@ test_case *make_test_case(
 }
 #endif
 
-namespace
+namespace dev
+{
+namespace test
 {
 void removeTestSuite(std::string const& _name)
 {
@@ -122,69 +122,6 @@ int registerTests(
 	return numTestsAdded;
 }
 }
-
-test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
-{
-	master_test_suite_t& master = framework::master_test_suite();
-	master.p_name.value = "SolidityTests";
-	dev::test::Options::get().validate();
-	solAssert(registerTests(
-		master,
-		dev::test::Options::get().testPath / "libsolidity",
-		"syntaxTests",
-		SyntaxTest::create
-	) > 0, "no syntax tests found");
-	solAssert(registerTests(
-		master,
-		dev::test::Options::get().testPath / "libsolidity",
-		"ASTJSON",
-		ASTJSONTest::create
-	) > 0, "no JSON AST tests found");
-	solAssert(registerTests(
-		master,
-		dev::test::Options::get().testPath / "libyul",
-		"yulOptimizerTests",
-		yul::test::YulOptimizerTest::create
-	) > 0, "no Yul Optimizer tests found");
-	if (!dev::test::Options::get().disableSMT)
-	{
-		solAssert(registerTests(
-			master,
-			dev::test::Options::get().testPath / "libsolidity",
-			"smtCheckerTests",
-			SyntaxTest::create
-		) > 0, "no SMT checker tests found");
-
-		solAssert(registerTests(
-			master,
-			dev::test::Options::get().testPath / "libsolidity",
-			"smtCheckerTestsJSON",
-			SMTCheckerTest::create
-		) > 0, "no SMT checker JSON tests found");
-	}
-	if (dev::test::Options::get().disableIPC)
-	{
-		for (auto suite: {
-			"ABIDecoderTest",
-			"ABIEncoderTest",
-			"SolidityAuctionRegistrar",
-			"SolidityFixedFeeRegistrar",
-			"SolidityWallet",
-#if HAVE_LLL
-			"LLLERC20",
-			"LLLENS",
-			"LLLEndToEndTest",
-#endif
-			"GasMeterTests",
-			"SolidityEndToEndTest",
-			"SolidityOptimizer"
-		})
-			removeTestSuite(suite);
-	}
-	if (dev::test::Options::get().disableSMT)
-		removeTestSuite("SMTChecker");
-
-	return 0;
 }
 
 // BOOST_TEST_DYN_LINK should be defined if user want to link against shared boost test library
