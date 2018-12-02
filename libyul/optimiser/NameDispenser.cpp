@@ -7,7 +7,7 @@
 	(at your option) any later version.
 
 	solidity is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	but WITHOUT ANY WARRANTYwithout even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
@@ -42,6 +42,21 @@ YulString NameDispenser::newName(YulString _nameHint, YulString _context)
 	// Shortening rules: Use a suffix of _prefix and a prefix of _context.
 	YulString prefix = _nameHint;
 
+	// If the name itself has a suffix supplied by user, get rid of it
+	// so that we have no conflicts and the order of suffix is in order.
+	std::string nameHintStr = _nameHint.str();
+	size_t underscore = nameHintStr.find_last_of("_");
+	if (underscore != std::string::npos && underscore != 0)
+	{
+		try
+		{
+			std::stoi(nameHintStr.substr(underscore + 1));
+			prefix = YulString(nameHintStr.substr(0, underscore));
+		} catch (std::invalid_argument &e) {
+			// don't do any conversion
+		}
+	}
+
 	if (!_context.empty())
 		prefix = YulString{_context.str().substr(0, 10) + "_" + prefix.str()};
 
@@ -51,11 +66,14 @@ YulString NameDispenser::newName(YulString _nameHint, YulString _context)
 YulString NameDispenser::newNameInternal(YulString _nameHint)
 {
 	YulString name = _nameHint;
-	while (name.empty() || m_usedNames.count(name))
-	{
-		m_counter++;
-		name = YulString(_nameHint.str() + "_" + to_string(m_counter));
-	}
+
+	if ((m_usedNames.count(name) && !m_counters.count(name.id())) || name.empty())
+		m_counters.emplace(name.id(), 0);
+
+	if (m_counters.count(name.id()))
+		name = YulString(name.prefix(), ++m_counters.at(name.id()));
+	else
+		m_counters.emplace(name.id(), 0);
 	m_usedNames.emplace(name);
 	return name;
 }

@@ -38,15 +38,15 @@
 //     function allocate(size) -> p
 //     {
 //         let _1 := 0x40
-//         let p_2 := mload(_1)
-//         p := p_2
-//         let _20 := add(p_2, size)
+//         let p_1 := mload(_1)
+//         p := p_1
+//         let _20 := add(p_1, size)
 //         mstore(_1, _20)
 //     }
-//     function array_index_access(array, index) -> p_1
+//     function array_index_access(array, index) -> p_2
 //     {
 //         let _21 := 0x20
 //         let _22 := mul(index, _21)
-//         p_1 := add(array, _22)
+//         p_2 := add(array, _22)
 //     }
 // }
