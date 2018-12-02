@@ -98,6 +98,20 @@ To run a subset of tests, you can use filters:
 ``./scripts/soltest.sh -t TestSuite/TestName --ipcpath /tmp/testeth/geth.ipc``,
 where ``TestName`` can be a wildcard ``*``.
 
+For example, here's an example test you might run;
+``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-ipc --no-smt``.
+This will test all the tests for the disambiguator.
+
+If you want to debug using GDB, make sure you build differently than the "usual".
+For example, you could run the following command in your ``build`` folder:
+::
+
+   cmake -DCMAKE_BUILD_TYPE=Debug ..
+   make
+
+This will create symbols such that when you debug a test using the ``--debug`` flag, you will have acecess to functions and varialbes in which you can break or print with.
+
+
 The script ``./scripts/tests.sh`` also runs commandline tests and compilation tests
 in addition to those found in ``soltest``.
 
