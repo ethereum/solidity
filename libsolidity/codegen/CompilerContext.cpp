@@ -361,7 +361,7 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, "--CODEGEN--"));
-	auto parserResult = yul::Parser(errorReporter, yul::AsmFlavour::Strict).parse(scanner, false);
+	auto parserResult = yul::Parser(errorReporter, yul::Dialect::strictAssemblyForEVM()).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter()(*parserResult) << endl;
 #endif
@@ -373,7 +373,7 @@ void CompilerContext::appendInlineAssembly(
 			errorReporter,
 			m_evmVersion,
 			boost::none,
-			yul::AsmFlavour::Strict,
+			yul::Dialect::strictAssemblyForEVM(),
 			identifierAccess.resolve
 		).analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)

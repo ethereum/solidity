@@ -256,11 +256,11 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	yul::AsmFlavour flavour = m_yul ? yul::AsmFlavour::Yul : yul::AsmFlavour::Strict;
+	yul::Dialect dialect = m_yul ? yul::Dialect::yul() : yul::Dialect::strictAssemblyForEVM();
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source, ""));
-	m_ast = yul::Parser(errorReporter, flavour).parse(scanner, false);
+	m_ast = yul::Parser(errorReporter, dialect).parse(scanner, false);
 	if (!m_ast || !errorReporter.errors().empty())
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
@@ -273,7 +273,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 		errorReporter,
 		dev::test::Options::get().evmVersion(),
 		boost::none,
-		flavour
+		dialect
 	);
 	if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 	{

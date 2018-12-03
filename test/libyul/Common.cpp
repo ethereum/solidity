@@ -54,11 +54,11 @@ void yul::test::printErrors(ErrorList const& _errors, Scanner const& _scanner)
 
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
-	auto flavour = _yul ? yul::AsmFlavour::Yul : yul::AsmFlavour::Strict;
+	Dialect dialect = _yul ? yul::Dialect::yul() : yul::Dialect::strictAssemblyForEVM();
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source, ""));
-	auto parserResult = yul::Parser(errorReporter, flavour).parse(scanner, false);
+	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
 	if (parserResult)
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());
@@ -68,7 +68,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 			errorReporter,
 			dev::test::Options::get().evmVersion(),
 			boost::none,
-			flavour
+			dialect
 		);
 		if (analyzer.analyze(*parserResult))
 		{
