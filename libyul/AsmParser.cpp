@@ -348,23 +348,23 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	case Token::Byte:
 	case Token::Address:
 	{
-		string literal;
+		YulString literal;
 		if (currentToken() == Token::Return)
-			literal = "return";
+			literal = YulString{"return"};
 		else if (currentToken() == Token::Byte)
-			literal = "byte";
+			literal = YulString{"byte"};
 		else if (currentToken() == Token::Address)
-			literal = "address";
+			literal = YulString{"address"};
 		else
-			literal = currentLiteral();
+			literal = YulString{currentLiteral()};
 		// first search the set of instructions.
-		if (m_flavour != AsmFlavour::Yul && instructions().count(literal))
+		if (m_flavour != AsmFlavour::Yul && instructions().count(literal.str()))
 		{
-			dev::solidity::Instruction const& instr = instructions().at(literal);
+			dev::solidity::Instruction const& instr = instructions().at(literal.str());
 			ret = Instruction{location(), instr};
 		}
 		else
-			ret = Identifier{location(), YulString{literal}};
+			ret = Identifier{location(), literal};
 		advance();
 		break;
 	}
@@ -403,7 +403,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		{
 			expectToken(Token::Colon);
 			literal.location.end = endPosition();
-			literal.type = YulString{expectAsmIdentifier()};
+			literal.type = expectAsmIdentifier();
 		}
 		else if (kind == LiteralKind::Boolean)
 			fatalParserError("True and false are not valid literals.");
@@ -450,7 +450,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	RecursionGuard recursionGuard(*this);
 	FunctionDefinition funDef = createWithLocation<FunctionDefinition>();
 	expectToken(Token::Function);
-	funDef.name = YulString{expectAsmIdentifier()};
+	funDef.name = expectAsmIdentifier();
 	expectToken(Token::LParen);
 	while (currentToken() != Token::RParen)
 	{
@@ -565,19 +565,19 @@ TypedName Parser::parseTypedName()
 {
 	RecursionGuard recursionGuard(*this);
 	TypedName typedName = createWithLocation<TypedName>();
-	typedName.name = YulString{expectAsmIdentifier()};
+	typedName.name = expectAsmIdentifier();
 	if (m_flavour == AsmFlavour::Yul)
 	{
 		expectToken(Token::Colon);
 		typedName.location.end = endPosition();
-		typedName.type = YulString{expectAsmIdentifier()};
+		typedName.type = expectAsmIdentifier();
 	}
 	return typedName;
 }
 
-string Parser::expectAsmIdentifier()
+YulString Parser::expectAsmIdentifier()
 {
-	string name = currentLiteral();
+	YulString name = YulString{currentLiteral()};
 	if (m_flavour == AsmFlavour::Yul)
 	{
 		switch (currentToken())
@@ -592,7 +592,7 @@ string Parser::expectAsmIdentifier()
 			break;
 		}
 	}
-	else if (instructions().count(name))
+	else if (instructions().count(name.str()))
 		fatalParserError("Cannot use instruction names for identifier names.");
 	expectToken(Token::Identifier);
 	return name;
