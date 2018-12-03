@@ -23,7 +23,7 @@
 
 #include <libevmasm/GasMeter.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <set>
 #include <vector>

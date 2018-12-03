@@ -20,16 +20,13 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -54,9 +51,9 @@ public:
 	void run();
 
 	using ASTModifier::operator();
-	virtual void operator()(FunctionDefinition& _fun) override;
+	void operator()(FunctionDefinition& _fun) override;
 
-	virtual void visit(Expression& _expression) override;
+	void visit(Expression& _expression) override;
 
 private:
 	std::map<YulString, FunctionDefinition const*> m_inlinableFunctions;
@@ -68,5 +65,4 @@ private:
 };
 
 
-}
 }

@@ -30,12 +30,15 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 
+namespace langutil
+{
+class ErrorReporter;
+}
+
 namespace dev
 {
 namespace solidity
 {
-
-class ErrorReporter;
 
 /**
  * Resolves name references, typenames and sets the (explicitly given) types for all variable
@@ -50,7 +53,7 @@ public:
 	NameAndTypeResolver(
 		std::vector<Declaration const*> const& _globals,
 		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
-		ErrorReporter& _errorReporter
+		langutil::ErrorReporter& _errorReporter
 	);
 	/// Registers all declarations found in the AST node, usually a source unit.
 	/// @returns false in case of error.
@@ -125,7 +128,7 @@ private:
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 
 	DeclarationContainer* m_currentScope = nullptr;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 };
 
 /**
@@ -142,7 +145,7 @@ public:
 	DeclarationRegistrationHelper(
 		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
 		ASTNode& _astRoot,
-		ErrorReporter& _errorReporter,
+		langutil::ErrorReporter& _errorReporter,
 		ASTNode const* _currentScope = nullptr
 	);
 
@@ -150,10 +153,10 @@ public:
 		DeclarationContainer& _container,
 		Declaration const& _declaration,
 		std::string const* _name,
-		SourceLocation const* _errorLocation,
+		langutil::SourceLocation const* _errorLocation,
 		bool _warnOnShadow,
 		bool _inactive,
-		ErrorReporter& _errorReporter
+		langutil::ErrorReporter& _errorReporter
 	);
 
 private:
@@ -194,7 +197,7 @@ private:
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 	ASTNode const* m_currentScope = nullptr;
 	VariableScope* m_currentFunction = nullptr;
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 };
 
 }

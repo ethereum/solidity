@@ -38,7 +38,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
+using namespace langutil;
 
 SimplificationRule<Pattern> const* Rules::findFirstMatch(
 	Expression const& _expr,

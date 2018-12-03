@@ -25,8 +25,6 @@
 #include <map>
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -42,8 +40,8 @@ public:
 	}
 
 	using ASTWalker::operator ();
-	virtual void operator()(VariableDeclaration const& _varDecl) override;
-	virtual void operator()(FunctionDefinition const& _funDef) override;
+	void operator()(VariableDeclaration const& _varDecl) override;
+	void operator()(FunctionDefinition const& _funDef) override;
 
 	std::set<YulString> names() const { return m_names; }
 private:
@@ -75,12 +73,11 @@ class Assignments: public ASTWalker
 {
 public:
 	using ASTWalker::operator ();
-	virtual void operator()(Assignment const& _assignment) override;
+	void operator()(Assignment const& _assignment) override;
 
 	std::set<YulString> const& names() const { return m_names; }
 private:
 	std::set<YulString> m_names;
 };
 
-}
 }

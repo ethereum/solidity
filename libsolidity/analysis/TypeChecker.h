@@ -22,19 +22,22 @@
 
 #pragma once
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+namespace langutil
+{
+class ErrorReporter;
+}
+
 namespace dev
 {
 namespace solidity
 {
-
-class ErrorReporter;
 
 /**
  * The module that performs type analysis on the AST, checks the applicability of operations on
@@ -45,7 +48,7 @@ class TypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	TypeChecker(EVMVersion _evmVersion, ErrorReporter& _errorReporter):
+	TypeChecker(EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter):
 		m_evmVersion(_evmVersion),
 		m_errorReporter(_errorReporter)
 	{}
@@ -62,28 +65,7 @@ public:
 
 private:
 
-	virtual bool visit(ContractDefinition const& _contract) override;
-	/// Checks that two functions defined in this contract with the same name have different
-	/// arguments and that there is at most one constructor.
-	void checkContractDuplicateFunctions(ContractDefinition const& _contract);
-	void checkContractDuplicateEvents(ContractDefinition const& _contract);
-	void checkContractIllegalOverrides(ContractDefinition const& _contract);
-	/// Reports a type error with an appropriate message if overridden function signature differs.
-	/// Also stores the direct super function in the AST annotations.
-	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
-	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
-	void checkContractAbstractFunctions(ContractDefinition const& _contract);
-	void checkContractBaseConstructorArguments(ContractDefinition const& _contract);
-	void annotateBaseConstructorArguments(
-		ContractDefinition const& _currentContract,
-		FunctionDefinition const* _baseConstructor,
-		ASTNode const* _argumentNode
-	);
-	/// Checks that different functions with external visibility end up having different
-	/// external argument types (i.e. different signature).
-	void checkContractExternalTypeClashes(ContractDefinition const& _contract);
-	/// Checks that all requirements for a library are fulfilled if this is a library.
-	void checkLibraryRequirements(ContractDefinition const& _contract);
+	bool visit(ContractDefinition const& _contract) override;
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
 	/// Should only be called if the left hand side is tuple-typed.
 	void checkDoubleStorageAssignment(Assignment const& _assignment);
@@ -122,40 +104,37 @@ private:
 		FunctionTypePointer _functionType
 	);
 
-	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
-	virtual void endVisit(UsingForDirective const& _usingFor) override;
-	virtual bool visit(StructDefinition const& _struct) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
-	virtual bool visit(VariableDeclaration const& _variable) override;
+	void endVisit(InheritanceSpecifier const& _inheritance) override;
+	void endVisit(UsingForDirective const& _usingFor) override;
+	bool visit(StructDefinition const& _struct) override;
+	bool visit(FunctionDefinition const& _function) override;
+	bool visit(VariableDeclaration const& _variable) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
-	virtual bool visit(EventDefinition const& _eventDef) override;
-	virtual void endVisit(FunctionTypeName const& _funType) override;
-	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
-	virtual bool visit(IfStatement const& _ifStatement) override;
-	virtual bool visit(WhileStatement const& _whileStatement) override;
-	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual void endVisit(Return const& _return) override;
-	virtual bool visit(EmitStatement const&) override { m_insideEmitStatement = true; return true; }
-	virtual void endVisit(EmitStatement const& _emit) override;
-	virtual bool visit(VariableDeclarationStatement const& _variable) override;
-	virtual void endVisit(ExpressionStatement const& _statement) override;
-	virtual bool visit(Conditional const& _conditional) override;
-	virtual bool visit(Assignment const& _assignment) override;
-	virtual bool visit(TupleExpression const& _tuple) override;
-	virtual void endVisit(BinaryOperation const& _operation) override;
-	virtual bool visit(UnaryOperation const& _operation) override;
-	virtual bool visit(FunctionCall const& _functionCall) override;
-	virtual void endVisit(NewExpression const& _newExpression) override;
-	virtual bool visit(MemberAccess const& _memberAccess) override;
-	virtual bool visit(IndexAccess const& _indexAccess) override;
-	virtual bool visit(Identifier const& _identifier) override;
-	virtual void endVisit(ElementaryTypeNameExpression const& _expr) override;
-	virtual void endVisit(Literal const& _literal) override;
-
-	template <class T>
-	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
+	bool visit(EventDefinition const& _eventDef) override;
+	void endVisit(FunctionTypeName const& _funType) override;
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(IfStatement const& _ifStatement) override;
+	bool visit(WhileStatement const& _whileStatement) override;
+	bool visit(ForStatement const& _forStatement) override;
+	void endVisit(Return const& _return) override;
+	bool visit(EmitStatement const&) override { m_insideEmitStatement = true; return true; }
+	void endVisit(EmitStatement const& _emit) override;
+	bool visit(VariableDeclarationStatement const& _variable) override;
+	void endVisit(ExpressionStatement const& _statement) override;
+	bool visit(Conditional const& _conditional) override;
+	bool visit(Assignment const& _assignment) override;
+	bool visit(TupleExpression const& _tuple) override;
+	void endVisit(BinaryOperation const& _operation) override;
+	bool visit(UnaryOperation const& _operation) override;
+	bool visit(FunctionCall const& _functionCall) override;
+	void endVisit(NewExpression const& _newExpression) override;
+	bool visit(MemberAccess const& _memberAccess) override;
+	bool visit(IndexAccess const& _indexAccess) override;
+	bool visit(Identifier const& _identifier) override;
+	void endVisit(ElementaryTypeNameExpression const& _expr) override;
+	void endVisit(Literal const& _literal) override;
 
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,
@@ -183,7 +162,7 @@ private:
 	/// Flag indicating whether we are currently inside a StructDefinition.
 	bool m_insideStruct = false;
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 };
 
 }

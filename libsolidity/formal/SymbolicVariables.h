@@ -51,6 +51,8 @@ public:
 		return valueAtIndex(m_ssa->index());
 	}
 
+	std::string currentName() const;
+
 	virtual smt::Expression valueAtIndex(int _index) const = 0;
 
 	smt::Expression increaseIndex()
@@ -62,20 +64,15 @@ public:
 	unsigned index() const { return m_ssa->index(); }
 	unsigned& index() { return m_ssa->index(); }
 
-	/// Sets the var to the default value of its type.
-	/// Inherited types must implement.
-	virtual void setZeroValue() = 0;
-	/// The unknown value is the full range of valid values.
-	/// It is sub-type dependent, but not mandatory.
-	virtual void setUnknownValue() {}
+	TypePointer const& type() const { return m_type; }
 
 protected:
 	std::string uniqueSymbol(unsigned _index) const;
 
-	TypePointer m_type = nullptr;
+	TypePointer m_type;
 	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
-	std::shared_ptr<SSAVariable> m_ssa = nullptr;
+	std::shared_ptr<SSAVariable> m_ssa;
 };
 
 /**
@@ -89,11 +86,6 @@ public:
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
-
-	/// Sets the var to false.
-	void setZeroValue();
-	/// Does nothing since the SMT solver already knows the valid values for Bool.
-	void setUnknownValue();
 
 protected:
 	smt::Expression valueAtIndex(int _index) const;
@@ -110,11 +102,6 @@ public:
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
-
-	/// Sets the var to 0.
-	void setZeroValue();
-	/// Sets the variable to the full valid value range.
-	void setUnknownValue();
 
 protected:
 	smt::Expression valueAtIndex(int _index) const;

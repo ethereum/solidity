@@ -23,12 +23,11 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/Exceptions.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void Rematerialiser::visit(Expression& _e)
 {

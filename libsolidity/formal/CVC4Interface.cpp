@@ -17,7 +17,7 @@
 
 #include <libsolidity/formal/CVC4Interface.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -33,8 +33,7 @@ CVC4Interface::CVC4Interface():
 
 void CVC4Interface::reset()
 {
-	m_constants.clear();
-	m_functions.clear();
+	m_variables.clear();
 	m_solver.reset();
 	m_solver.setOption("produce-models", true);
 	m_solver.setTimeLimit(queryTimeout);
@@ -50,25 +49,10 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-void CVC4Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
+void CVC4Interface::declareVariable(string const& _name, Sort const& _sort)
 {
-	if (!m_functions.count(_name))
-	{
-		CVC4::Type fType = m_context.mkFunctionType(cvc4Sort(_domain), cvc4Sort(_codomain));
-		m_functions.insert({_name, m_context.mkVar(_name.c_str(), fType)});
-	}
-}
-
-void CVC4Interface::declareInteger(string _name)
-{
-	if (!m_constants.count(_name))
-		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.integerType())});
-}
-
-void CVC4Interface::declareBool(string _name)
-{
-	if (!m_constants.count(_name))
-		m_constants.insert({_name, m_context.mkVar(_name.c_str(), m_context.booleanType())});
+	if (!m_variables.count(_name))
+		m_variables.insert({_name, m_context.mkVar(_name.c_str(), cvc4Sort(_sort))});
 }
 
 void CVC4Interface::addAssertion(Expression const& _expr)
@@ -129,20 +113,19 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 
 CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 {
-	if (_expr.arguments.empty() && m_constants.count(_expr.name))
-		return m_constants.at(_expr.name);
+	// Variable
+	if (_expr.arguments.empty() && m_variables.count(_expr.name))
+		return m_variables.at(_expr.name);
+
 	vector<CVC4::Expr> arguments;
 	for (auto const& arg: _expr.arguments)
 		arguments.push_back(toCVC4Expr(arg));
 
 	string const& n = _expr.name;
-	if (m_functions.count(n))
-		return m_context.mkExpr(CVC4::kind::APPLY_UF, m_functions[n], arguments);
-	else if (m_constants.count(n))
-	{
-		solAssert(arguments.empty(), "");
-		return m_constants.at(n);
-	}
+	// Function application
+	if (!arguments.empty() && m_variables.count(_expr.name))
+		return m_context.mkExpr(CVC4::kind::APPLY_UF, m_variables.at(n), arguments);
+	// Literal
 	else if (arguments.empty())
 	{
 		if (n == "true")
@@ -181,23 +164,45 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		return m_context.mkExpr(CVC4::kind::MULT, arguments[0], arguments[1]);
 	else if (n == "/")
 		return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
+	else if (n == "select")
+		return m_context.mkExpr(CVC4::kind::SELECT, arguments[0], arguments[1]);
+	else if (n == "store")
+		return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
 	// Cannot reach here.
 	solAssert(false, "");
 	return arguments[0];
 }
 
-CVC4::Type CVC4Interface::cvc4Sort(Sort _sort)
+CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 {
-	switch (_sort)
+	switch (_sort.kind)
 	{
-	case Sort::Bool:
+	case Kind::Bool:
 		return m_context.booleanType();
-	case Sort::Int:
+	case Kind::Int:
 		return m_context.integerType();
+	case Kind::Function:
+	{
+		FunctionSort const& fSort = dynamic_cast<FunctionSort const&>(_sort);
+		return m_context.mkFunctionType(cvc4Sort(fSort.domain), cvc4Sort(*fSort.codomain));
+	}
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return m_context.mkArrayType(cvc4Sort(*arraySort.domain), cvc4Sort(*arraySort.range));
+	}
 	default:
 		break;
 	}
 	solAssert(false, "");
 	// Cannot be reached.
 	return m_context.integerType();
+}
+
+vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<SortPointer> const& _sorts)
+{
+	vector<CVC4::Type> cvc4Sorts;
+	for (auto const& _sort: _sorts)
+		cvc4Sorts.push_back(cvc4Sort(*_sort));
+	return cvc4Sorts;
 }

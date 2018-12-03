@@ -20,13 +20,11 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -49,9 +47,9 @@ public:
 	}
 
 	using ASTWalker::operator();
-	virtual void operator()(Identifier const& _identifier) override;
-	virtual void operator()(FunctionCall const& _funCall) override;
-	virtual void operator()(FunctionDefinition const& _function) override;
+	void operator()(Identifier const& _identifier) override;
+	void operator()(FunctionCall const& _funCall) override;
+	void operator()(FunctionDefinition const& _function) override;
 
 private:
 	void checkAllowed(YulString _name)
@@ -65,5 +63,4 @@ private:
 	std::map<YulString, FunctionDefinition const*> m_inlinableFunctions;
 };
 
-}
 }

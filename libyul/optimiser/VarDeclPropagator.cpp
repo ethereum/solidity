@@ -16,7 +16,7 @@
 */
 
 #include <libyul/optimiser/VarDeclPropagator.h>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 #include <libdevcore/CommonData.h>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <algorithm>
@@ -24,10 +24,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
-
-using dev::solidity::assembly::TypedName;
-using dev::solidity::assembly::TypedNameList;
+using namespace yul;
 
 void VarDeclPropagator::operator()(Block& _block)
 {

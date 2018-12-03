@@ -26,8 +26,11 @@
 
 #include <map>
 
-namespace dev
+namespace langutil
 {
+struct SourceLocation;
+}
+
 namespace yul
 {
 
@@ -38,60 +41,59 @@ public:
 	virtual ~EVMAssembly() {}
 
 	/// Set a new source location valid starting from the next instruction.
-	virtual void setSourceLocation(SourceLocation const& _location) override;
+	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
-	virtual int stackHeight() const override { return m_stackHeight; }
+	int stackHeight() const override { return m_stackHeight; }
 	/// Append an EVM instruction.
-	virtual void appendInstruction(solidity::Instruction _instruction) override;
+	void appendInstruction(dev::solidity::Instruction _instruction) override;
 	/// Append a constant.
-	virtual void appendConstant(u256 const& _constant) override;
+	void appendConstant(dev::u256 const& _constant) override;
 	/// Append a label.
-	virtual void appendLabel(LabelID _labelId) override;
+	void appendLabel(LabelID _labelId) override;
 	/// Append a label reference.
-	virtual void appendLabelReference(LabelID _labelId) override;
+	void appendLabelReference(LabelID _labelId) override;
 	/// Generate a new unique label.
-	virtual LabelID newLabelId() override;
+	LabelID newLabelId() override;
 	/// Returns a label identified by the given name. Creates it if it does not yet exist.
-	virtual LabelID namedLabel(std::string const& _name) override;
+	LabelID namedLabel(std::string const& _name) override;
 	/// Append a reference to a to-be-linked symbol.
 	/// Currently, we assume that the value is always a 20 byte number.
-	virtual void appendLinkerSymbol(std::string const& _name) override;
+	void appendLinkerSymbol(std::string const& _name) override;
 
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	virtual void appendJump(int _stackDiffAfter) override;
+	void appendJump(int _stackDiffAfter) override;
 	/// Append a jump-to-immediate operation.
-	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
+	void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
 	/// Append a jump-to-if-immediate operation.
-	virtual void appendJumpToIf(LabelID _labelId) override;
+	void appendJumpToIf(LabelID _labelId) override;
 	/// Start a subroutine.
-	virtual void appendBeginsub(LabelID _labelId, int _arguments) override;
+	void appendBeginsub(LabelID _labelId, int _arguments) override;
 	/// Call a subroutine.
-	virtual void appendJumpsub(LabelID _labelId, int _arguments, int _returns) override;
+	void appendJumpsub(LabelID _labelId, int _arguments, int _returns) override;
 	/// Return from a subroutine.
-	virtual void appendReturnsub(int _returns, int _stackDiffAfter) override;
+	void appendReturnsub(int _returns, int _stackDiffAfter) override;
 
 	/// Append the assembled size as a constant.
-	virtual void appendAssemblySize() override;
+	void appendAssemblySize() override;
 
 	/// Resolves references inside the bytecode and returns the linker object.
-	eth::LinkerObject finalize();
+	dev::eth::LinkerObject finalize();
 
 private:
 	void setLabelToCurrentPosition(AbstractAssembly::LabelID _labelId);
 	void appendLabelReferenceInternal(AbstractAssembly::LabelID _labelId);
-	void updateReference(size_t pos, size_t size, u256 value);
+	void updateReference(size_t pos, size_t size, dev::u256 value);
 
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	LabelID m_nextLabelId = 0;
 	int m_stackHeight = 0;
-	bytes m_bytecode;
+	dev::bytes m_bytecode;
 	std::map<std::string, LabelID> m_namedLabels;
 	std::map<LabelID, size_t> m_labelPositions;
 	std::map<size_t, LabelID> m_labelReferences;
 	std::vector<size_t> m_assemblySizePositions;
 };
 
-}
 }

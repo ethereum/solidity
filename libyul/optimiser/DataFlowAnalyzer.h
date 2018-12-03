@@ -23,14 +23,11 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-
 #include <libyul/YulString.h>
 
 #include <map>
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -45,13 +42,13 @@ class DataFlowAnalyzer: public ASTModifier
 {
 public:
 	using ASTModifier::operator();
-	virtual void operator()(Assignment& _assignment) override;
-	virtual void operator()(VariableDeclaration& _varDecl) override;
-	virtual void operator()(If& _if) override;
-	virtual void operator()(Switch& _switch) override;
-	virtual void operator()(FunctionDefinition&) override;
-	virtual void operator()(ForLoop&) override;
-	virtual void operator()(Block& _block) override;
+	void operator()(Assignment& _assignment) override;
+	void operator()(VariableDeclaration& _varDecl) override;
+	void operator()(If& _if) override;
+	void operator()(Switch& _switch) override;
+	void operator()(FunctionDefinition&) override;
+	void operator()(ForLoop&) override;
+	void operator()(Block& _block) override;
 
 protected:
 	/// Registers the assignment.
@@ -87,5 +84,4 @@ protected:
 	std::vector<Scope> m_variableScopes;
 };
 
-}
 }

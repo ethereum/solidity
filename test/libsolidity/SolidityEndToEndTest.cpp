@@ -25,8 +25,8 @@
 
 #include <test/Options.h>
 
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libevmasm/Assembly.h>
 
@@ -8207,6 +8207,58 @@ BOOST_AUTO_TEST_CASE(inherited_function) {
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory) {
+	char const* sourceCode = R"(
+		contract A { function f(uint[] calldata a) external returns (uint) { return a[0]; } }
+		contract B is A {
+			function f(uint[] memory a) public returns (uint) { return a[1]; }
+			function g() public returns (uint) {
+				uint[] memory m = new uint[](2);
+				m[0] = 42;
+				m[1] = 23;
+				return A(this).f(m);
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(23)));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory_interface) {
+	char const* sourceCode = R"(
+		interface I { function f(uint[] calldata a) external returns (uint); }
+		contract A is I { function f(uint[] memory a) public returns (uint) { return 42; } }
+		contract B {
+			function f(uint[] memory a) public returns (uint) { return a[1]; }
+			function g() public returns (uint) {
+				I i = I(new A());
+				return i.f(new uint[](2));
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(42)));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_calldata_interface) {
+	char const* sourceCode = R"(
+		interface I { function f(uint[] calldata a) external returns (uint); }
+		contract A is I { function f(uint[] calldata a) external returns (uint) { return 42; } }
+		contract B {
+			function f(uint[] memory a) public returns (uint) { return a[1]; }
+			function g() public returns (uint) {
+				I i = I(new A());
+				return i.f(new uint[](2));
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "B");
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(42)));
+}
+
 BOOST_AUTO_TEST_CASE(inherited_function_from_a_library) {
 	char const* sourceCode = R"(
 		library A { function f() internal returns (uint) { return 1; } }
@@ -8656,6 +8708,90 @@ BOOST_AUTO_TEST_CASE(mapping_returns_in_library_named)
 	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0), u256(42), u256(0), u256(0), u256(21), u256(84)));
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(0), u256(42), u256(0), u256(0), u256(21), u256(17)));
+}
+
+BOOST_AUTO_TEST_CASE(using_library_mappings_public)
+{
+	char const* sourceCode = R"(
+			library Lib {
+				function set(mapping(uint => uint) storage m, uint key, uint value) public
+				{
+					m[key] = value;
+				}
+			}
+			contract Test {
+				mapping(uint => uint) m1;
+				mapping(uint => uint) m2;
+				function f() public returns (uint, uint, uint, uint, uint, uint)
+				{
+					Lib.set(m1, 0, 1);
+					Lib.set(m1, 2, 42);
+					Lib.set(m2, 0, 23);
+					Lib.set(m2, 2, 99);
+					return (m1[0], m1[1], m1[2], m2[0], m2[1], m2[2]);
+				}
+			}
+		)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), u256(0), u256(42), u256(23), u256(0), u256(99)));
+}
+
+BOOST_AUTO_TEST_CASE(using_library_mappings_external)
+{
+	char const* libSourceCode = R"(
+			library Lib {
+				function set(mapping(uint => uint) storage m, uint key, uint value) external
+				{
+					m[key] = value * 2;
+				}
+			}
+		)";
+	char const* sourceCode = R"(
+			library Lib {
+				function set(mapping(uint => uint) storage m, uint key, uint value) external;
+			}
+			contract Test {
+				mapping(uint => uint) m1;
+				mapping(uint => uint) m2;
+				function f() public returns (uint, uint, uint, uint, uint, uint)
+				{
+					Lib.set(m1, 0, 1);
+					Lib.set(m1, 2, 42);
+					Lib.set(m2, 0, 23);
+					Lib.set(m2, 2, 99);
+					return (m1[0], m1[1], m1[2], m2[0], m2[1], m2[2]);
+				}
+			}
+		)";
+	compileAndRun(libSourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(2), u256(0), u256(84), u256(46), u256(0), u256(198)));
+}
+
+BOOST_AUTO_TEST_CASE(using_library_mappings_return)
+{
+	char const* sourceCode = R"(
+			library Lib {
+				function choose(mapping(uint => mapping(uint => uint)) storage m, uint key) external returns (mapping(uint => uint) storage) {
+					return m[key];
+				}
+			}
+			contract Test {
+				mapping(uint => mapping(uint => uint)) m;
+				function f() public returns (uint, uint, uint, uint, uint, uint)
+				{
+					Lib.choose(m, 0)[0] = 1;
+					Lib.choose(m, 0)[2] = 42;
+					Lib.choose(m, 1)[0] = 23;
+					Lib.choose(m, 1)[2] = 99;
+					return (m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2]);
+				}
+			}
+		)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1), u256(0), u256(42), u256(23), u256(0), u256(99)));
 }
 
 BOOST_AUTO_TEST_CASE(using_library_structs)
@@ -9386,6 +9522,25 @@ BOOST_AUTO_TEST_CASE(using_for_by_name)
 	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
 	ABI_CHECK(callContractFunction("f(uint256)", u256(7)), encodeArgs(u256(6 * 7)));
 	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(6 * 7)));
+}
+
+BOOST_AUTO_TEST_CASE(bound_function_in_function)
+{
+	char const* sourceCode = R"(
+		library L {
+			function g(function() internal returns (uint) _t) internal returns (uint) { return _t(); }
+		}
+		contract C {
+			using L for *;
+			function f() public returns (uint) {
+				return t.g();
+			}
+			function t() public pure returns (uint)  { return 7; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "L");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(7)));
 }
 
 BOOST_AUTO_TEST_CASE(bound_function_in_var)
@@ -14041,6 +14196,41 @@ BOOST_AUTO_TEST_CASE(flipping_sign_tests)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(external_public_override)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() external returns (uint) { return 1; }
+		}
+		contract B is A {
+			function f() public returns (uint) { return 2; }
+			function g() public returns (uint) { return f(); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(2));
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(base_access_to_function_type_variables)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function () internal returns (uint) x;
+			function set() public {
+				C.x = g;
+			}
+			function g() public pure returns (uint) { return 2; }
+			function h() public returns (uint) { return C.x(); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("g()"), encodeArgs(2));
+	ABI_CHECK(callContractFunction("h()"), encodeArgs());
+	ABI_CHECK(callContractFunction("set()"), encodeArgs());
+	ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

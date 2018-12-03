@@ -13,6 +13,11 @@ Solidity provides several elementary types which can be combined to form complex
 In addition, types can interact with each other in expressions containing
 operators. For a quick reference of the various operators, see :ref:`order`.
 
+The concept of "undefined" or "null" values does not exist in Solidity, but newly
+declared variables always have a :ref:`default value<default-value>` dependent
+on its type. To handle any unexpected values, you should use the :ref:`revert function<assert-and-require>` to revert the whole transaction, or return a
+tuple with a second `bool` value denoting success.
+
 .. index:: ! value type, ! type;value
 
 Value Types
@@ -253,7 +258,7 @@ Send is the low-level counterpart of ``transfer``. If the execution fails, the c
 In order to interface with contracts that do not adhere to the ABI,
 or to get more direct control over the encoding,
 the functions ``call``, ``delegatecall`` and ``staticcall`` are provided.
-They all take a single ``bytes memory`` argument as input and
+They all take a single ``bytes memory`` parameter and
 return the success condition (as a ``bool``) and the returned data
 (``bytes memory``).
 The functions ``abi.encode``, ``abi.encodePacked``, ``abi.encodeWithSelector``
@@ -273,22 +278,22 @@ Example::
     when the call returns. The regular way to interact with other contracts
     is to call a function on a contract object (``x.f()``).
 
-:: note::
+.. note::
     Previous versions of Solidity allowed these functions to receive
     arbitrary arguments and would also handle a first argument of type
     ``bytes4`` differently. These edge cases were removed in version 0.5.0.
 
 It is possible to adjust the supplied gas with the ``.gas()`` modifier::
 
-    namReg.call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Similarly, the supplied Ether value can be controlled too::
 
-    nameReg.call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 Lastly, these modifiers can be combined. Their order does not matter::
 
-    nameReg.call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
 
 In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used.
 
@@ -460,10 +465,12 @@ a non-rational number).
 .. index:: literal, literal;string, string
 .. _string_literals:
 
-String Literals
----------------
+String Literals and Types
+-------------------------
 
 String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``).  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes, not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+
+For example, with ``bytes32 samevar = "stringliteral"`` the string literal is interpreted in its raw byte form when assigned to a ``bytes32`` type.
 
 String literals support the following escape characters:
 
@@ -857,13 +864,20 @@ or create a new memory array and copy every element.
         }
     }
 
-.. index:: ! array;literals, !inline;arrays
+.. index:: ! array;literals, ! inline;arrays
 
-Array Literals / Inline Arrays
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Array Literals
+^^^^^^^^^^^^^^
 
-Array literals are arrays that are written as an expression and are not
-assigned to a variable right away.
+An array literal is a comma-separated list of one or more expressions, enclosed
+in square brackets (``[...]``). For example ``[1, a, f(3)]``. There must be a
+common type all elements can be implicitly converted to. This is the elementary
+type of the array.
+
+Array literals are always statically-sized memory arrays.
+
+In the example below, the type of ``[1, 2, 3]`` is
+``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if you want the result to be a ``uint[3] memory`` type, you need to convert the first element to ``uint``.
 
 ::
 
@@ -878,13 +892,7 @@ assigned to a variable right away.
         }
     }
 
-The type of an array literal is a memory array of fixed size whose base
-type is the common type of the given elements. The type of ``[1, 2, 3]`` is
-``uint8[3] memory``, because the type of each of these constants is ``uint8``.
-Because of that, it is necessary to convert the first element in the example
-above to ``uint``. Note that currently, fixed size memory arrays cannot
-be assigned to dynamically-sized memory arrays, i.e. the following is not
-possible:
+Fixed size memory arrays cannot be assigned to dynamically-sized memory arrays, i.e. the following is not possible:
 
 ::
 
@@ -899,8 +907,8 @@ possible:
         }
     }
 
-It is planned to remove this restriction in the future but currently creates
-some complications because of how arrays are passed in the ABI.
+It is planned to remove this restriction in the future, but it creates some
+complications because of how arrays are passed in the ABI.
 
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
@@ -913,7 +921,9 @@ Members
     For dynamically-sized arrays (only available for storage), this member can be assigned to resize the array.
     Accessing elements outside the current length does not automatically resize the array and instead causes a failing assertion.
     Increasing the length adds new zero-initialised elements to the array.
-    Reducing the length performs an implicit :ref:``delete`` on each of the removed elements.
+    Reducing the length performs an implicit :ref:``delete`` on each of the
+    removed elements. If you try to resize a non-dynamic array that isn't in
+    storage, you receive a ``Value must be an lvalue`` error.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that you can use to append an element at the end of the array. The element will be zero-initialised. The function returns the new length.
 **pop**:

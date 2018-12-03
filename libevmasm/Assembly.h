@@ -18,12 +18,12 @@
 #pragma once
 
 #include <libevmasm/Instruction.h>
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/LinkerObject.h>
 #include <libevmasm/Exceptions.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
@@ -93,7 +93,7 @@ public:
 	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 
 	/// Changes the source location used for each appended item.
-	void setSourceLocation(SourceLocation const& _location) { m_currentSourceLocation = _location; }
+	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
 
 	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
 	LinkerObject const& assemble() const;
@@ -178,7 +178,7 @@ protected:
 
 	int m_deposit = 0;
 
-	SourceLocation m_currentSourceLocation;
+	langutil::SourceLocation m_currentSourceLocation;
 };
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)

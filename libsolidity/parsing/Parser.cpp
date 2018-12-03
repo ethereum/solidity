@@ -22,13 +22,14 @@
 
 #include <cctype>
 #include <vector>
-#include <libevmasm/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libyul/AsmParser.h>
+#include <liblangutil/SourceLocation.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Scanner.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -41,7 +42,7 @@ class Parser::ASTNodeFactory
 {
 public:
 	explicit ASTNodeFactory(Parser const& _parser):
-		m_parser(_parser), m_location(_parser.position(), -1, _parser.sourceName()) {}
+		m_parser(_parser), m_location(_parser.position(), -1, _parser.source()) {}
 	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location(_childNode->location()) {}
 
@@ -54,7 +55,7 @@ public:
 	template <class NodeType, typename... Args>
 	ASTPointer<NodeType> createNode(Args&& ... _args)
 	{
-		solAssert(m_location.sourceName, "");
+		solAssert(m_location.source, "");
 		if (m_location.end < 0)
 			markEndPosition();
 		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
@@ -1011,8 +1012,8 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		m_scanner->next();
 	}
 
-	assembly::Parser asmParser(m_errorReporter);
-	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner, true);
+	yul::Parser asmParser(m_errorReporter);
+	shared_ptr<yul::Block> block = asmParser.parse(m_scanner, true);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);
 }
@@ -1554,8 +1555,8 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<TupleExpression>(components, isArray);
 		break;
 	}
-	case Token::IllegalHex:
-		fatalParserError("Expected even number of hex-nibbles within double-quotes.");
+	case Token::Illegal:
+		fatalParserError(to_string(m_scanner->currentError()));
 		break;
 	default:
 		if (TokenTraits::isElementaryTypeName(token))

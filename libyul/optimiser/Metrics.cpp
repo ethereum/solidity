@@ -20,10 +20,10 @@
 
 #include <libyul/optimiser/Metrics.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 size_t CodeSize::codeSize(Statement const& _statement)
 {

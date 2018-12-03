@@ -21,12 +21,11 @@
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
 
 #include <libyul/optimiser/Utilities.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void InlinableExpressionFunctionFinder::operator()(Identifier const& _identifier)
 {

@@ -24,12 +24,11 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/Exceptions.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 
 void CommonSubexpressionEliminator::visit(Expression& _e)
 {

@@ -24,7 +24,7 @@
 #include <string>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Common.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <solidity/BuildInfo.h>
 
 using namespace dev;

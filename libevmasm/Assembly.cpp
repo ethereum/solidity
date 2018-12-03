@@ -35,6 +35,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace langutil;
 
 void Assembly::append(Assembly const& _a)
 {
@@ -113,10 +114,10 @@ namespace
 
 string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
 {
-	if (_location.isEmpty() || _sourceCodes.empty() || _location.start >= _location.end || _location.start < 0)
+	if (_location.isEmpty() || !_location.source.get() || _sourceCodes.empty() || _location.start >= _location.end || _location.start < 0)
 		return "";
 
-	auto it = _sourceCodes.find(*_location.sourceName);
+	auto it = _sourceCodes.find(_location.source->name());
 	if (it == _sourceCodes.end())
 		return "";
 
@@ -185,11 +186,11 @@ public:
 
 	void printLocation()
 	{
-		if (!m_location.sourceName && m_location.isEmpty())
+		if (!m_location.source && m_location.isEmpty())
 			return;
 		m_out << m_prefix << "    /*";
-		if (m_location.sourceName)
-			m_out << " \"" + *m_location.sourceName + "\"";
+		if (m_location.source)
+			m_out << " \"" + m_location.source->name() + "\"";
 		if (!m_location.isEmpty())
 			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
 		m_out << "  " << locationFromSources(m_sourceCodes, m_location);

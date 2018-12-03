@@ -21,11 +21,11 @@
  */
 
 #include <libsolidity/codegen/ContractCompiler.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+#include <libsolidity/ast/AST.h>
+#include <libyul/AsmCodeGen.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
@@ -37,6 +37,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace
@@ -343,7 +344,10 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			m_context << Instruction::DUP1 << Instruction::CALLDATASIZE << Instruction::SUB;
 			CompilerUtils(m_context).abiDecode(functionType->parameterTypes());
 		}
-		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
+		m_context.appendJumpTo(
+			m_context.functionEntryLabel(functionType->declaration()),
+			eth::AssemblyItem::JumpType::IntoFunction
+		);
 		m_context << returnTag;
 		// Return tag and input parameters get consumed.
 		m_context.adjustStackOffset(
@@ -495,14 +499,14 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 {
 	unsigned startStackHeight = m_context.stackHeight();
 	yul::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](assembly::Identifier const& _identifier, yul::IdentifierContext, bool)
+	identifierAccess.resolve = [&](yul::Identifier const& _identifier, yul::IdentifierContext, bool)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		if (ref == _inlineAssembly.annotation().externalReferences.end())
 			return size_t(-1);
 		return ref->second.valueSize;
 	};
-	identifierAccess.generateCode = [&](assembly::Identifier const& _identifier, yul::IdentifierContext _context, yul::AbstractAssembly& _assembly)
+	identifierAccess.generateCode = [&](yul::Identifier const& _identifier, yul::IdentifierContext _context, yul::AbstractAssembly& _assembly)
 	{
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
 		solAssert(ref != _inlineAssembly.annotation().externalReferences.end(), "");
@@ -614,7 +618,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 	solAssert(_inlineAssembly.annotation().analysisInfo, "");
-	assembly::CodeGenerator::assemble(
+	yul::CodeGenerator::assemble(
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
 		m_context.nonConstAssembly(),

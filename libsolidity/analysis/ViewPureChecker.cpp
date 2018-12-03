@@ -19,13 +19,16 @@
 
 #include <libevmasm/SemanticInformation.h>
 
-#include <libsolidity/inlineasm/AsmData.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
+#include <libyul/AsmData.h>
+
+#include <liblangutil/ErrorReporter.h>
 
 #include <functional>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace
@@ -37,48 +40,48 @@ public:
 	explicit AssemblyViewPureChecker(std::function<void(StateMutability, SourceLocation const&)> _reportMutability):
 		m_reportMutability(_reportMutability) {}
 
-	void operator()(assembly::Label const&) { }
-	void operator()(assembly::Instruction const& _instruction)
+	void operator()(yul::Label const&) { }
+	void operator()(yul::Instruction const& _instruction)
 	{
 		checkInstruction(_instruction.location, _instruction.instruction);
 	}
-	void operator()(assembly::Literal const&) {}
-	void operator()(assembly::Identifier const&) {}
-	void operator()(assembly::FunctionalInstruction const& _instr)
+	void operator()(yul::Literal const&) {}
+	void operator()(yul::Identifier const&) {}
+	void operator()(yul::FunctionalInstruction const& _instr)
 	{
 		checkInstruction(_instr.location, _instr.instruction);
 		for (auto const& arg: _instr.arguments)
 			boost::apply_visitor(*this, arg);
 	}
-	void operator()(assembly::ExpressionStatement const& _expr)
+	void operator()(yul::ExpressionStatement const& _expr)
 	{
 		boost::apply_visitor(*this, _expr.expression);
 	}
-	void operator()(assembly::StackAssignment const&) {}
-	void operator()(assembly::Assignment const& _assignment)
+	void operator()(yul::StackAssignment const&) {}
+	void operator()(yul::Assignment const& _assignment)
 	{
 		boost::apply_visitor(*this, *_assignment.value);
 	}
-	void operator()(assembly::VariableDeclaration const& _varDecl)
+	void operator()(yul::VariableDeclaration const& _varDecl)
 	{
 		if (_varDecl.value)
 			boost::apply_visitor(*this, *_varDecl.value);
 	}
-	void operator()(assembly::FunctionDefinition const& _funDef)
+	void operator()(yul::FunctionDefinition const& _funDef)
 	{
 		(*this)(_funDef.body);
 	}
-	void operator()(assembly::FunctionCall const& _funCall)
+	void operator()(yul::FunctionCall const& _funCall)
 	{
 		for (auto const& arg: _funCall.arguments)
 			boost::apply_visitor(*this, arg);
 	}
-	void operator()(assembly::If const& _if)
+	void operator()(yul::If const& _if)
 	{
 		boost::apply_visitor(*this, *_if.condition);
 		(*this)(_if.body);
 	}
-	void operator()(assembly::Switch const& _switch)
+	void operator()(yul::Switch const& _switch)
 	{
 		boost::apply_visitor(*this, *_switch.expression);
 		for (auto const& _case: _switch.cases)
@@ -88,14 +91,14 @@ public:
 			(*this)(_case.body);
 		}
 	}
-	void operator()(assembly::ForLoop const& _for)
+	void operator()(yul::ForLoop const& _for)
 	{
 		(*this)(_for.pre);
 		boost::apply_visitor(*this, *_for.condition);
 		(*this)(_for.body);
 		(*this)(_for.post);
 	}
-	void operator()(assembly::Block const& _block)
+	void operator()(yul::Block const& _block)
 	{
 		for (auto const& s: _block.statements)
 			boost::apply_visitor(*this, s);

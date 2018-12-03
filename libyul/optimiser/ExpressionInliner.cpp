@@ -23,14 +23,13 @@
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
 #include <libyul/optimiser/Substitution.h>
 #include <libyul/optimiser/Semantics.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
 
 void ExpressionInliner::run()

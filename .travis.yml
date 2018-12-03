@@ -90,7 +90,7 @@ matrix:
           before_install:
               - nvm install 8
               - nvm use 8
-              - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
+              - docker pull trzeci/emscripten:sdk-tag-1.37.21-64bit
           env:
               - SOLC_EMSCRIPTEN=On
               - SOLC_INSTALL_DEPS_TRAVIS=Off
@@ -153,7 +153,7 @@ git:
 cache:
     ccache: true
     directories:
-        - boost_1_57_0
+        - boost_1_67_0
         - $HOME/.local
 
 install:

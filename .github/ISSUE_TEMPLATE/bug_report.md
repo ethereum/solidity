@@ -21,6 +21,7 @@ about: Bug reports about the Solidity Compiler.
 ## Environment
 
 - Compiler version:
+- Target EVM version (as per compiler settings):
 - Framework/IDE (e.g. Truffle or Remix):
 - EVM execution environment / backend / blockchain client:
 - Operating system:

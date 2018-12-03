@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/Exceptions.h>
 #include <libyul/YulString.h>
@@ -32,8 +32,6 @@
 #include <set>
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -119,5 +117,4 @@ protected:
 	}
 };
 
-}
 }

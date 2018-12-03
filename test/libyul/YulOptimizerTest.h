@@ -17,28 +17,27 @@
 
 #pragma once
 
-#include <test/libsolidity/TestCase.h>
+#include <test/TestCase.h>
 
-
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 class Scanner;
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
-namespace assembly
+}
+
+namespace yul
 {
 struct AsmAnalysisInfo;
 struct Block;
 }
-}
+
 namespace yul
 {
 namespace test
 {
 
-class YulOptimizerTest: public solidity::test::TestCase
+class YulOptimizerTest: public dev::solidity::test::TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(std::string const& _filename)
@@ -58,18 +57,17 @@ private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	void disambiguate();
 
-	static void printErrors(std::ostream& _stream, solidity::ErrorList const& _errors, solidity::Scanner const& _scanner);
+	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors, langutil::Scanner const& _scanner);
 
 	std::string m_source;
 	bool m_yul = false;
 	std::string m_optimizerStep;
 	std::string m_expectation;
 
-	std::shared_ptr<solidity::assembly::Block> m_ast;
-	std::shared_ptr<solidity::assembly::AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<Block> m_ast;
+	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;
 };
 
-}
 }
 }

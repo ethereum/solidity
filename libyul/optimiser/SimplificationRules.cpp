@@ -24,14 +24,14 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libevmasm/RuleList.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace langutil;
+using namespace yul;
 
 
 SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(
@@ -123,7 +123,7 @@ bool Pattern::matches(Expression const& _expr, map<YulString, Expression const*>
 		if (expr->type() != typeid(Literal))
 			return false;
 		Literal const& literal = boost::get<Literal>(*expr);
-		if (literal.kind != assembly::LiteralKind::Number)
+		if (literal.kind != LiteralKind::Number)
 			return false;
 		if (m_data && *m_data != u256(literal.value.str()))
 			return false;
@@ -193,7 +193,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, assembly::LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
+		return Literal{_location, LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
@@ -208,7 +208,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 u256 Pattern::d() const
 {
 	Literal const& literal = boost::get<Literal>(matchGroupValue());
-	assertThrow(literal.kind == assembly::LiteralKind::Number, OptimizerException, "");
+	assertThrow(literal.kind == LiteralKind::Number, OptimizerException, "");
 	assertThrow(isValidDecimal(literal.value.str()) || isValidHex(literal.value.str()), OptimizerException, "");
 	return u256(literal.value.str());
 }

@@ -36,6 +36,7 @@
 #include <libdevcore/Whiskers.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -528,6 +529,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				bool shortcutTaken = false;
 				if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+				{
+					solAssert(!function.bound(), "");
 					if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
 					{
 						// Do not directly visit the identifier, because this way, we can avoid
@@ -536,6 +539,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef), false);
 						shortcutTaken = true;
 					}
+				}
 
 				if (!shortcutTaken)
 					_functionCall.expression().accept(*this);
@@ -627,7 +631,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().accept(*this);
 
 			arguments.front()->accept(*this);
-			utils().convertType(*arguments.front()->annotation().type, IntegerType(256), true);
+			utils().convertType(*arguments.front()->annotation().type, IntegerType::uint256(), true);
 			// Note that function is not the original function, but the ".gas" function.
 			// Its values of gasSet and valueSet is equal to the original function's though.
 			unsigned stackDepth = (function.gasSet() ? 1 : 0) + (function.valueSet() ? 1 : 0);
@@ -810,13 +814,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::MulMod:
 		{
 			arguments[2]->accept(*this);
-			utils().convertType(*arguments[2]->annotation().type, IntegerType(256));
+			utils().convertType(*arguments[2]->annotation().type, IntegerType::uint256());
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
 			m_context.appendConditionalInvalid();
 			for (unsigned i = 1; i < 3; i ++)
 			{
 				arguments[2 - i]->accept(*this);
-				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType(256));
+				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType::uint256());
 			}
 			if (function.kind() == FunctionType::Kind::AddMod)
 				m_context << Instruction::ADDMOD;
@@ -900,7 +904,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			// Fetch requested length.
 			arguments[0]->accept(*this);
-			utils().convertType(*arguments[0]->annotation().type, IntegerType(256));
+			utils().convertType(*arguments[0]->annotation().type, IntegerType::uint256());
 
 			// Stack: requested_length
 			utils().fetchFreeMemoryPointer();
@@ -1149,7 +1153,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (dynamic_cast<ContractType const*>(type->actualType().get()))
 		{
 			solAssert(_memberAccess.annotation().type, "_memberAccess has no type");
-			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
+			if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+				appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
+			else if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			{
 				switch (funType->kind())
 				{
@@ -1195,8 +1201,6 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				// no-op
 			}
-			else if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
-				appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
 			else
 				_memberAccess.expression().accept(*this);
 		}
@@ -1448,7 +1452,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				TypePointers{keyType}
 			);
 			m_context << Instruction::SWAP1;
-			utils().storeInMemoryDynamic(IntegerType(256));
+			utils().storeInMemoryDynamic(IntegerType::uint256());
 			utils().toSizeAfterFreeMemoryPointer();
 		}
 		else
@@ -1457,7 +1461,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			appendExpressionCopyToMemory(*keyType, *_indexAccess.indexExpression());
 			m_context << Instruction::SWAP1;
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
-			utils().storeInMemoryDynamic(IntegerType(256));
+			utils().storeInMemoryDynamic(IntegerType::uint256());
 			m_context << u256(0);
 		}
 		m_context << Instruction::KECCAK256;
@@ -1470,7 +1474,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 		_indexAccess.indexExpression()->accept(*this);
-		utils().convertType(*_indexAccess.indexExpression()->annotation().type, IntegerType(256), true);
+		utils().convertType(*_indexAccess.indexExpression()->annotation().type, IntegerType::uint256(), true);
 		// stack layout: <base_ref> [<length>] <index>
 		ArrayUtils(m_context).accessIndex(arrayType);
 		switch (arrayType.location())
@@ -1506,7 +1510,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 		_indexAccess.indexExpression()->accept(*this);
-		utils().convertType(*_indexAccess.indexExpression()->annotation().type, IntegerType(256), true);
+		utils().convertType(*_indexAccess.indexExpression()->annotation().type, IntegerType::uint256(), true);
 		// stack layout: <value> <index>
 		// check out-of-bounds access
 		m_context << u256(fixedBytesType.numBytes());
@@ -1869,6 +1873,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 				retSize = 0;
 				break;
 			}
+			else if (retType->decodingType())
+				retSize += retType->decodingType()->calldataEncodedSize();
 			else
 				retSize += retType->calldataEncodedSize();
 	}

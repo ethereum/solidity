@@ -21,20 +21,27 @@
  */
 
 #include <libsolidity/analysis/TypeChecker.h>
-#include <memory>
+#include <libsolidity/ast/AST.h>
+
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
+
+#include <liblangutil/ErrorReporter.h>
+
+#include <libdevcore/Algorithms.h>
+#include <libdevcore/StringUtils.h>
+
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/reversed.hpp>
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/interface/ErrorReporter.h>
-#include <libdevcore/Algorithms.h>
+
+#include <memory>
+#include <vector>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace
@@ -81,416 +88,12 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 {
 	m_scope = &_contract;
 
-	// We force our own visiting order here. The structs have to be excluded below.
-	set<ASTNode const*> visited;
-	for (auto const& s: _contract.definedStructs())
-		visited.insert(s);
-	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
-	checkContractDuplicateFunctions(_contract);
-	checkContractDuplicateEvents(_contract);
-	checkContractIllegalOverrides(_contract);
-	checkContractAbstractFunctions(_contract);
-	checkContractBaseConstructorArguments(_contract);
-
-	FunctionDefinition const* function = _contract.constructor();
-	if (function)
-	{
-		if (!function->returnParameters().empty())
-			m_errorReporter.typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
-		if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
-			m_errorReporter.typeError(
-				function->location(),
-				"Constructor must be payable or non-payable, but is \"" +
-				stateMutabilityToString(function->stateMutability()) +
-				"\"."
-			);
-		if (function->visibility() != FunctionDefinition::Visibility::Public && function->visibility() != FunctionDefinition::Visibility::Internal)
-			m_errorReporter.typeError(function->location(), "Constructor must be public or internal.");
-	}
-
-	for (FunctionDefinition const* function: _contract.definedFunctions())
-		if (function->isFallback())
-		{
-			if (_contract.isLibrary())
-				m_errorReporter.typeError(function->location(), "Libraries cannot have fallback functions.");
-			if (function->stateMutability() != StateMutability::NonPayable && function->stateMutability() != StateMutability::Payable)
-				m_errorReporter.typeError(
-					function->location(),
-					"Fallback function must be payable or non-payable, but is \"" +
-					stateMutabilityToString(function->stateMutability()) +
-					"\"."
-			);
-			if (!function->parameters().empty())
-				m_errorReporter.typeError(function->parameterList().location(), "Fallback function cannot take parameters.");
-			if (!function->returnParameters().empty())
-				m_errorReporter.typeError(function->returnParameterList()->location(), "Fallback function cannot return values.");
-			if (function->visibility() != FunctionDefinition::Visibility::External)
-				m_errorReporter.typeError(function->location(), "Fallback function must be defined as \"external\".");
-		}
-
 	for (auto const& n: _contract.subNodes())
-		if (!visited.count(n.get()))
-			n->accept(*this);
-
-	checkContractExternalTypeClashes(_contract);
-	// check for hash collisions in function signatures
-	set<FixedHash<4>> hashes;
-	for (auto const& it: _contract.interfaceFunctionList())
-	{
-		FixedHash<4> const& hash = it.first;
-		if (hashes.count(hash))
-			m_errorReporter.typeError(
-				_contract.location(),
-				string("Function signature hash collision for ") + it.second->externalSignature()
-			);
-		hashes.insert(hash);
-	}
-
-	if (_contract.isLibrary())
-		checkLibraryRequirements(_contract);
+		n->accept(*this);
 
 	return false;
-}
-
-void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _contract)
-{
-	/// Checks that two functions with the same name defined in this contract have different
-	/// argument types and that there is at most one constructor.
-	map<string, vector<FunctionDefinition const*>> functions;
-	FunctionDefinition const* constructor = nullptr;
-	FunctionDefinition const* fallback = nullptr;
-	for (FunctionDefinition const* function: _contract.definedFunctions())
-		if (function->isConstructor())
-		{
-			if (constructor)
-				m_errorReporter.declarationError(
-					function->location(),
-					SecondarySourceLocation().append("Another declaration is here:", constructor->location()),
-					"More than one constructor defined."
-				);
-			constructor = function;
-		}
-		else if (function->isFallback())
-		{
-			if (fallback)
-				m_errorReporter.declarationError(
-					function->location(),
-					SecondarySourceLocation().append("Another declaration is here:", fallback->location()),
-					"Only one fallback function is allowed."
-				);
-			fallback = function;
-		}
-		else
-		{
-			solAssert(!function->name().empty(), "");
-			functions[function->name()].push_back(function);
-		}
-
-	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
-}
-
-void TypeChecker::checkContractDuplicateEvents(ContractDefinition const& _contract)
-{
-	/// Checks that two events with the same name defined in this contract have different
-	/// argument types
-	map<string, vector<EventDefinition const*>> events;
-	for (EventDefinition const* event: _contract.events())
-		events[event->name()].push_back(event);
-
-	findDuplicateDefinitions(events, "Event with same name and arguments defined twice.");
-}
-
-template <class T>
-void TypeChecker::findDuplicateDefinitions(map<string, vector<T>> const& _definitions, string _message)
-{
-	for (auto const& it: _definitions)
-	{
-		vector<T> const& overloads = it.second;
-		set<size_t> reported;
-		for (size_t i = 0; i < overloads.size() && !reported.count(i); ++i)
-		{
-			SecondarySourceLocation ssl;
-
-			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (FunctionType(*overloads[i]).hasEqualParameterTypes(FunctionType(*overloads[j])))
-				{
-					ssl.append("Other declaration is here:", overloads[j]->location());
-					reported.insert(j);
-				}
-
-			if (ssl.infos.size() > 0)
-			{
-				ssl.limitSize(_message);
-
-				m_errorReporter.declarationError(
-					overloads[i]->location(),
-					ssl,
-					_message
-				);
-			}
-		}
-	}
-}
-
-void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _contract)
-{
-	// Mapping from name to function definition (exactly one per argument type equality class) and
-	// flag to indicate whether it is fully implemented.
-	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
-	map<string, vector<FunTypeAndFlag>> functions;
-
-	// Search from base to derived
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
-		for (FunctionDefinition const* function: contract->definedFunctions())
-		{
-			// Take constructors out of overload hierarchy
-			if (function->isConstructor())
-				continue;
-			auto& overloads = functions[function->name()];
-			FunctionTypePointer funType = make_shared<FunctionType>(*function);
-			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
-			{
-				return funType->hasEqualParameterTypes(*_funAndFlag.first);
-			});
-			if (it == overloads.end())
-				overloads.push_back(make_pair(funType, function->isImplemented()));
-			else if (it->second)
-			{
-				if (!function->isImplemented())
-					m_errorReporter.typeError(function->location(), "Redeclaring an already implemented function as abstract");
-			}
-			else if (function->isImplemented())
-				it->second = true;
-		}
-
-	// Set to not fully implemented if at least one flag is false.
-	for (auto const& it: functions)
-		for (auto const& funAndFlag: it.second)
-			if (!funAndFlag.second)
-			{
-				FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(&funAndFlag.first->declaration());
-				solAssert(function, "");
-				_contract.annotation().unimplementedFunctions.push_back(function);
-				break;
-			}
-}
-
-void TypeChecker::checkContractBaseConstructorArguments(ContractDefinition const& _contract)
-{
-	vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
-
-	// Determine the arguments that are used for the base constructors.
-	for (ContractDefinition const* contract: bases)
-	{
-		if (FunctionDefinition const* constructor = contract->constructor())
-			for (auto const& modifier: constructor->modifiers())
-				if (auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(*modifier->name())))
-				{
-					if (modifier->arguments())
-					{
-						if (baseContract->constructor())
-							annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
-					}
-					else
-						m_errorReporter.declarationError(
-							modifier->location(),
-							"Modifier-style base constructor call without arguments."
-						);
-				}
-
-		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
-		{
-			auto baseContract = dynamic_cast<ContractDefinition const*>(&dereference(base->name()));
-			solAssert(baseContract, "");
-
-			if (baseContract->constructor() && base->arguments() && !base->arguments()->empty())
-				annotateBaseConstructorArguments(_contract, baseContract->constructor(), base.get());
-		}
-	}
-
-	// check that we get arguments for all base constructors that need it.
-	// If not mark the contract as abstract (not fully implemented)
-	for (ContractDefinition const* contract: bases)
-		if (FunctionDefinition const* constructor = contract->constructor())
-			if (contract != &_contract && !constructor->parameters().empty())
-				if (!_contract.annotation().baseConstructorArguments.count(constructor))
-					_contract.annotation().unimplementedFunctions.push_back(constructor);
-}
-
-void TypeChecker::annotateBaseConstructorArguments(
-	ContractDefinition const& _currentContract,
-	FunctionDefinition const* _baseConstructor,
-	ASTNode const* _argumentNode
-)
-{
-	solAssert(_baseConstructor, "");
-	solAssert(_argumentNode, "");
-
-	auto insertionResult = _currentContract.annotation().baseConstructorArguments.insert(
-		std::make_pair(_baseConstructor, _argumentNode)
-	);
-	if (!insertionResult.second)
-	{
-		ASTNode const* previousNode = insertionResult.first->second;
-
-		SourceLocation const* mainLocation = nullptr;
-		SecondarySourceLocation ssl;
-
-		if (
-			_currentContract.location().contains(previousNode->location()) ||
-			_currentContract.location().contains(_argumentNode->location())
-		)
-		{
-			mainLocation = &previousNode->location();
-			ssl.append("Second constructor call is here:", _argumentNode->location());
-		}
-		else
-		{
-			mainLocation = &_currentContract.location();
-			ssl.append("First constructor call is here: ", _argumentNode->location());
-			ssl.append("Second constructor call is here: ", previousNode->location());
-		}
-
-		m_errorReporter.declarationError(
-			*mainLocation,
-			ssl,
-			"Base constructor arguments given twice."
-		);
-	}
-
-}
-
-void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contract)
-{
-	// TODO unify this at a later point. for this we need to put the constness and the access specifier
-	// into the types
-	map<string, vector<FunctionDefinition const*>> functions;
-	map<string, ModifierDefinition const*> modifiers;
-
-	// We search from derived to base, so the stored item causes the error.
-	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
-	{
-		for (FunctionDefinition const* function: contract->definedFunctions())
-		{
-			if (function->isConstructor())
-				continue; // constructors can neither be overridden nor override anything
-			string const& name = function->name();
-			if (modifiers.count(name))
-				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
-
-			for (FunctionDefinition const* overriding: functions[name])
-				checkFunctionOverride(*overriding, *function);
-
-			functions[name].push_back(function);
-		}
-		for (ModifierDefinition const* modifier: contract->functionModifiers())
-		{
-			string const& name = modifier->name();
-			ModifierDefinition const*& override = modifiers[name];
-			if (!override)
-				override = modifier;
-			else if (ModifierType(*override) != ModifierType(*modifier))
-				m_errorReporter.typeError(override->location(), "Override changes modifier signature.");
-			if (!functions[name].empty())
-				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
-		}
-	}
-}
-
-void TypeChecker::checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super)
-{
-	FunctionType functionType(function);
-	FunctionType superType(super);
-
-	if (!functionType.hasEqualParameterTypes(superType))
-		return;
-
-	if (!function.annotation().superFunction)
-		function.annotation().superFunction = &super;
-
-	if (function.visibility() != super.visibility())
-	{
-		// visibility is enforced to be external in interfaces, but a contract can override that with public
-		if (
-			super.inContractKind() == ContractDefinition::ContractKind::Interface &&
-			function.inContractKind() != ContractDefinition::ContractKind::Interface &&
-			function.visibility() == FunctionDefinition::Visibility::Public
-		)
-			return;
-		overrideError(function, super, "Overriding function visibility differs.");
-	}
-
-	else if (function.stateMutability() != super.stateMutability())
-		overrideError(
-			function,
-			super,
-			"Overriding function changes state mutability from \"" +
-			stateMutabilityToString(super.stateMutability()) +
-			"\" to \"" +
-			stateMutabilityToString(function.stateMutability()) +
-			"\"."
-		);
-
-	else if (functionType != superType)
-		overrideError(function, super, "Overriding function return types differ.");
-}
-
-void TypeChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
-{
-	m_errorReporter.typeError(
-		function.location(),
-		SecondarySourceLocation().append("Overridden function is here:", super.location()),
-		message
-	);
-}
-
-void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _contract)
-{
-	map<string, vector<pair<Declaration const*, FunctionTypePointer>>> externalDeclarations;
-	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
-	{
-		for (FunctionDefinition const* f: contract->definedFunctions())
-			if (f->isPartOfExternalInterface())
-			{
-				auto functionType = make_shared<FunctionType>(*f);
-				// under non error circumstances this should be true
-				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(f, functionType)
-					);
-			}
-		for (VariableDeclaration const* v: contract->stateVariables())
-			if (v->isPartOfExternalInterface())
-			{
-				auto functionType = make_shared<FunctionType>(*v);
-				// under non error circumstances this should be true
-				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(v, functionType)
-					);
-			}
-	}
-	for (auto const& it: externalDeclarations)
-		for (size_t i = 0; i < it.second.size(); ++i)
-			for (size_t j = i + 1; j < it.second.size(); ++j)
-				if (!it.second[i].second->hasEqualParameterTypes(*it.second[j].second))
-					m_errorReporter.typeError(
-						it.second[j].first->location(),
-						"Function overload clash during conversion to external types for arguments."
-					);
-}
-
-void TypeChecker::checkLibraryRequirements(ContractDefinition const& _contract)
-{
-	solAssert(_contract.isLibrary(), "");
-	if (!_contract.baseContracts().empty())
-		m_errorReporter.typeError(_contract.location(), "Library is not allowed to inherit.");
-
-	for (auto const& var: _contract.stateVariables())
-		if (!var->isConstant())
-			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables");
 }
 
 void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
@@ -697,20 +300,22 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	}
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
+		if (type(*var)->category() == Type::Category::Mapping)
+		{
+			if (!type(*var)->dataStoredIn(DataLocation::Storage))
+				m_errorReporter.typeError(var->location(), "Mapping types can only have a data location of \"storage\"." );
+			else if (!isLibraryFunction && _function.isPublic())
+				m_errorReporter.typeError(var->location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+		}
+		else
+		{
+			if (!type(*var)->canLiveOutsideStorage() && _function.isPublic())
+				m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
+			if (_function.isPublic() && !(type(*var)->interfaceType(isLibraryFunction)))
+				m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
+		}
 		if (
-			type(*var)->category() == Type::Category::Mapping &&
-			!type(*var)->dataStoredIn(DataLocation::Storage)
-		)
-			m_errorReporter.typeError(var->location(), "Mapping types can only have a data location of \"storage\".");
-		else if (
-			!type(*var)->canLiveOutsideStorage() &&
-			_function.visibility() > FunctionDefinition::Visibility::Internal
-		)
-			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
-		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
-			m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
-		if (
-			_function.visibility() > FunctionDefinition::Visibility::Internal &&
+			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
 			!typeSupportedByOldABIEncoder(*type(*var))
 		)
@@ -775,15 +380,10 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	)
 		m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
 
-	// Variables can be declared without type (with "var"), in which case the first assignment
-	// sets the type.
-	// Note that assignments before the first declaration are legal because of the special scoping
-	// rules inherited from JavaScript.
-
 	// type is filled either by ReferencesResolver directly from the type name or by
 	// TypeChecker at the VariableDeclarationStatement level.
 	TypePointer varType = _variable.annotation().type;
-	solAssert(!!varType, "Failed to infer variable type.");
+	solAssert(!!varType, "Variable type not provided.");
 
 	if (_variable.value())
 		expectType(*_variable.value(), *varType);
@@ -812,11 +412,25 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (!varType->canLiveOutsideStorage())
 				m_errorReporter.typeError(_variable.location(), "Type " + varType->toString() + " is only valid in storage.");
 	}
-	else if (
-		_variable.visibility() >= VariableDeclaration::Visibility::Public &&
-		!FunctionType(_variable).interfaceFunctionType()
-	)
-		m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
+	else if (_variable.visibility() >= VariableDeclaration::Visibility::Public)
+	{
+		FunctionType getter(_variable);
+		if (!_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+		{
+			vector<string> unsupportedTypes;
+			for (auto const& param: getter.parameterTypes() + getter.returnParameterTypes())
+				if (!typeSupportedByOldABIEncoder(*param))
+					unsupportedTypes.emplace_back(param->toString());
+			if (!unsupportedTypes.empty())
+				m_errorReporter.typeError(_variable.location(),
+					"The following types are only supported for getters in the new experimental ABI encoder: " +
+					joinHumanReadable(unsupportedTypes) +
+					". Either remove \"public\" or use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+				);
+		}
+		if (!getter.interfaceFunctionType())
+			m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
+	}
 
 	switch (varType->category())
 	{
@@ -953,7 +567,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	// External references have already been resolved in a prior stage and stored in the annotation.
 	// We run the resolve step again regardless.
 	yul::ExternalIdentifierAccess::Resolver identifierAccess = [&](
-		assembly::Identifier const& _identifier,
+		yul::Identifier const& _identifier,
 		yul::IdentifierContext _context,
 		bool
 	)
@@ -1038,13 +652,13 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		return size_t(1);
 	};
 	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
-	_inlineAssembly.annotation().analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(
+	_inlineAssembly.annotation().analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
 		m_evmVersion,
 		Error::Type::SyntaxError,
-		assembly::AsmFlavour::Loose,
+		yul::AsmFlavour::Loose,
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
@@ -1590,6 +1204,9 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		{
 			if (!inlineArrayType)
 				m_errorReporter.fatalTypeError(_tuple.location(), "Unable to deduce common type for array elements.");
+			else if (!inlineArrayType->canLiveOutsideStorage())
+				m_errorReporter.fatalTypeError(_tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
+
 			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, inlineArrayType, types.size());
 		}
 		else
@@ -1805,26 +1422,6 @@ void TypeChecker::typeCheckFunctionCall(
 			_functionCall.location(),
 			"\"staticcall\" is not supported by the VM version."
 		);
-
-	// Check for deprecated function names
-	if (_functionType->kind() == FunctionType::Kind::KECCAK256)
-	{
-		if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
-			if (functionName->name() == "sha3")
-				m_errorReporter.typeError(
-					_functionCall.location(),
-					"\"sha3\" has been deprecated in favour of \"keccak256\""
-				);
-	}
-	else if (_functionType->kind() == FunctionType::Kind::Selfdestruct)
-	{
-		if (auto functionName = dynamic_cast<Identifier const*>(&_functionCall.expression()))
-			if (functionName->name() == "suicide")
-				m_errorReporter.typeError(
-					_functionCall.location(),
-					"\"suicide\" has been deprecated in favour of \"selfdestruct\""
-				);
-	}
 
 	// Check for event outside of emit statement
 	if (!m_insideEmitStatement && _functionType->kind() == FunctionType::Kind::Event)
@@ -2488,7 +2085,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		}
 		else
 		{
-			expectType(*index, IntegerType(256));
+			expectType(*index, IntegerType::uint256());
 			if (!m_errorReporter.hasErrors())
 				if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				{
@@ -2519,7 +2116,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			resultType = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, typeType.actualType()));
 		else
 		{
-			expectType(*index, IntegerType(256));
+			expectType(*index, IntegerType::uint256());
 			if (auto length = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				resultType = make_shared<TypeType>(make_shared<ArrayType>(
 					DataLocation::Memory,
@@ -2538,7 +2135,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			m_errorReporter.typeError(_access.location(), "Index expression cannot be omitted.");
 		else
 		{
-			if (!expectType(*index, IntegerType(256)))
+			if (!expectType(*index, IntegerType::uint256()))
 				m_errorReporter.fatalTypeError(_access.location(), "Index expression cannot be represented as an unsigned integer.");
 			if (auto integerType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				if (bytesType.numBytes() <= integerType->literalValue(nullptr))
@@ -2621,6 +2218,23 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
 		if (dynamic_cast<FunctionType const*>(annotation.type.get()))
 			annotation.isPure = true;
+
+	// Check for deprecated function names.
+	// The check is done here for the case without an actual function call.
+	if (FunctionType const* fType = dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
+	{
+		if (_identifier.name() == "sha3" && fType->kind() == FunctionType::Kind::KECCAK256)
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"\"sha3\" has been deprecated in favour of \"keccak256\""
+			);
+		else if (_identifier.name() == "suicide" && fType->kind() == FunctionType::Kind::Selfdestruct)
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"\"suicide\" has been deprecated in favour of \"selfdestruct\""
+			);
+	}
+
 	return false;
 }
 

@@ -24,12 +24,13 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <libdevcore/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -59,7 +60,7 @@ bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode 
 	{
 		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errorReporter, _currentScope);
 	}
-	catch (FatalError const&)
+	catch (langutil::FatalError const&)
 	{
 		if (m_errorReporter.errors().empty())
 			throw; // Something is weird here, rather throw again.
@@ -129,7 +130,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsi
 	{
 		return resolveNamesAndTypesInternal(_node, _resolveInsideCode);
 	}
-	catch (FatalError const&)
+	catch (langutil::FatalError const&)
 	{
 		if (m_errorReporter.errors().empty())
 			throw; // Something is weird here, rather throw again.
@@ -144,7 +145,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 		m_scopes[nullptr]->registerDeclaration(_declaration, nullptr, false, true);
 		solAssert(_declaration.scope() == nullptr, "Updated declaration outside global scope.");
 	}
-	catch (FatalError const&)
+	catch (langutil::FatalError const&)
 	{
 		if (m_errorReporter.errors().empty())
 			throw; // Something is weird here, rather throw again.
@@ -491,9 +492,9 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 		Declaration const* conflictingDeclaration = _container.conflictingDeclaration(_declaration, _name);
 		solAssert(conflictingDeclaration, "");
 		bool const comparable =
-			_errorLocation->sourceName &&
-			conflictingDeclaration->location().sourceName &&
-			*_errorLocation->sourceName == *conflictingDeclaration->location().sourceName;
+			_errorLocation->source &&
+			conflictingDeclaration->location().source &&
+			_errorLocation->source->name() == conflictingDeclaration->location().source->name();
 		if (comparable && _errorLocation->start < conflictingDeclaration->location().start)
 		{
 			firstDeclarationLocation = *_errorLocation;

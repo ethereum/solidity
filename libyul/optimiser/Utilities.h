@@ -20,15 +20,12 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
-namespace dev
-{
 namespace yul
 {
 
 /// Removes statements that are just empty blocks (non-recursive).
 void removeEmptyBlocks(Block& _block);
 
-}
 }

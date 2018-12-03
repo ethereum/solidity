@@ -22,16 +22,16 @@
 
 #include <test/Options.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libevmasm/Assembly.h>
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -39,6 +39,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace langutil;
 using namespace dev::eth;
 
 namespace dev
@@ -51,13 +52,13 @@ namespace test
 namespace
 {
 
-eth::AssemblyItems compileContract(string const& _sourceCode)
+eth::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	Parser parser(errorReporter);
 	ASTPointer<SourceUnit> sourceUnit;
-	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
+	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(_sourceCode)));
 	BOOST_CHECK(!!sourceUnit);
 
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
@@ -103,7 +104,7 @@ void printAssemblyLocations(AssemblyItems const& _items)
 			", " <<
 			_loc.end <<
 			", make_shared<string>(\"" <<
-			*_loc.sourceName <<
+			_loc.source->name() <<
 			"\"))) +" << endl;
 	};
 
@@ -134,7 +135,8 @@ void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> 
 	BOOST_CHECK_EQUAL(_items.size(), _locations.size());
 	for (size_t i = 0; i < min(_items.size(), _locations.size()); ++i)
 	{
-		if (_items[i].location() != _locations[i])
+		if (_items[i].location().start != _locations[i].start ||
+			_items[i].location().end != _locations[i].end)
 		{
 			BOOST_CHECK_MESSAGE(false, "Location mismatch for item " + to_string(i) + ". Found the following locations:");
 			printAssemblyLocations(_items);
@@ -150,29 +152,32 @@ BOOST_AUTO_TEST_SUITE(Assembly)
 
 BOOST_AUTO_TEST_CASE(location_test)
 {
-	char const* sourceCode = R"(
+	auto sourceCode = make_shared<CharStream>(R"(
 	contract test {
 		function f() public returns (uint256 a) {
 			return 16;
 		}
 	}
-	)";
+	)", "");
 	AssemblyItems items = compileContract(sourceCode);
 	bool hasShifts = dev::test::Options::get().evmVersion().hasBitwiseShifting();
+
+	auto codegenCharStream = make_shared<CharStream>("", "--CODEGEN--");
+
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(hasShifts ? 23 : 24, SourceLocation(2, 82, make_shared<string>(""))) +
-		vector<SourceLocation>(2, SourceLocation(20, 79, make_shared<string>(""))) +
-		vector<SourceLocation>(1, SourceLocation(8, 17, make_shared<string>("--CODEGEN--"))) +
-		vector<SourceLocation>(3, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
-		vector<SourceLocation>(1, SourceLocation(30, 31, make_shared<string>("--CODEGEN--"))) +
-		vector<SourceLocation>(1, SourceLocation(27, 28, make_shared<string>("--CODEGEN--"))) +
-		vector<SourceLocation>(1, SourceLocation(20, 32, make_shared<string>("--CODEGEN--"))) +
-		vector<SourceLocation>(1, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
-		vector<SourceLocation>(24, SourceLocation(20, 79, make_shared<string>(""))) +
-		vector<SourceLocation>(1, SourceLocation(49, 58, make_shared<string>(""))) +
-		vector<SourceLocation>(1, SourceLocation(72, 74, make_shared<string>(""))) +
-		vector<SourceLocation>(2, SourceLocation(65, 74, make_shared<string>(""))) +
-		vector<SourceLocation>(2, SourceLocation(20, 79, make_shared<string>("")));
+		vector<SourceLocation>(hasShifts ? 21 : 22, SourceLocation(2, 82, sourceCode)) +
+		vector<SourceLocation>(2, SourceLocation(20, 79, sourceCode)) +
+		vector<SourceLocation>(1, SourceLocation(8, 17,  codegenCharStream)) +
+		vector<SourceLocation>(3, SourceLocation(5, 7,   codegenCharStream)) +
+		vector<SourceLocation>(1, SourceLocation(30, 31, codegenCharStream)) +
+		vector<SourceLocation>(1, SourceLocation(27, 28, codegenCharStream)) +
+		vector<SourceLocation>(1, SourceLocation(20, 32, codegenCharStream)) +
+		vector<SourceLocation>(1, SourceLocation(5, 7,   codegenCharStream)) +
+		vector<SourceLocation>(24, SourceLocation(20, 79, sourceCode)) +
+		vector<SourceLocation>(1, SourceLocation(49, 58, sourceCode)) +
+		vector<SourceLocation>(1, SourceLocation(72, 74, sourceCode)) +
+		vector<SourceLocation>(2, SourceLocation(65, 74, sourceCode)) +
+		vector<SourceLocation>(2, SourceLocation(20, 79, sourceCode));
 	checkAssemblyLocations(items, locations);
 }
 

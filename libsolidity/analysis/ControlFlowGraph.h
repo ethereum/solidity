@@ -19,7 +19,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <map>
 #include <memory>
@@ -101,12 +101,12 @@ struct ModifierFlow: FunctionFlow
 class CFG: private ASTConstVisitor
 {
 public:
-	explicit CFG(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	explicit CFG(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool constructFlow(ASTNode const& _astRoot);
 
-	virtual bool visit(ModifierDefinition const& _modifier) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
+	bool visit(ModifierDefinition const& _modifier) override;
+	bool visit(FunctionDefinition const& _function) override;
 
 	FunctionFlow const& functionFlow(FunctionDefinition const& _function) const;
 
@@ -133,7 +133,7 @@ private:
 		FunctionFlow* _functionFlow
 	);
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 
 	/// Node container.
 	/// All nodes allocated during the construction of the control flow graph

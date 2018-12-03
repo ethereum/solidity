@@ -20,19 +20,17 @@
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
 
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
-
-using Scope = dev::solidity::assembly::Scope;
 
 void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
@@ -147,7 +145,7 @@ void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 			solAssert(_instruction.arguments.size() == 1, "");
 		}
 		m_assembly.setSourceLocation(_instruction.location);
-		auto label = labelFromIdentifier(boost::get<assembly::Identifier>(_instruction.arguments.at(0)));
+		auto label = labelFromIdentifier(boost::get<Identifier>(_instruction.arguments.at(0)));
 		if (isJumpI)
 			m_assembly.appendJumpToIf(label);
 		else
@@ -163,7 +161,7 @@ void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 	checkStackHeight(&_instruction);
 }
 
-void CodeTransform::operator()(assembly::Identifier const& _identifier)
+void CodeTransform::operator()(Identifier const& _identifier)
 {
 	m_assembly.setSourceLocation(_identifier.location);
 	// First search internals, then externals.
@@ -197,12 +195,12 @@ void CodeTransform::operator()(assembly::Identifier const& _identifier)
 	checkStackHeight(&_identifier);
 }
 
-void CodeTransform::operator()(assembly::Literal const& _literal)
+void CodeTransform::operator()(Literal const& _literal)
 {
 	m_assembly.setSourceLocation(_literal.location);
-	if (_literal.kind == assembly::LiteralKind::Number)
+	if (_literal.kind == LiteralKind::Number)
 		m_assembly.appendConstant(u256(_literal.value.str()));
-	else if (_literal.kind == assembly::LiteralKind::Boolean)
+	else if (_literal.kind == LiteralKind::Boolean)
 	{
 		if (_literal.value.str() == "true")
 			m_assembly.appendConstant(u256(1));
@@ -217,7 +215,7 @@ void CodeTransform::operator()(assembly::Literal const& _literal)
 	checkStackHeight(&_literal);
 }
 
-void CodeTransform::operator()(assembly::Instruction const& _instruction)
+void CodeTransform::operator()(yul::Instruction const& _instruction)
 {
 	solAssert(!m_evm15 || _instruction.instruction != solidity::Instruction::JUMP, "Bare JUMP instruction used for EVM1.5");
 	solAssert(!m_evm15 || _instruction.instruction != solidity::Instruction::JUMPI, "Bare JUMPI instruction used for EVM1.5");
@@ -522,7 +520,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-int CodeTransform::variableHeightDiff(solidity::assembly::Scope::Variable const& _var, bool _forSwap) const
+int CodeTransform::variableHeightDiff(Scope::Variable const& _var, bool _forSwap) const
 {
 	solAssert(m_context->variableStackHeights.count(&_var), "");
 	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];

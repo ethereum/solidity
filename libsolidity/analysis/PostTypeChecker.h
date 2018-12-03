@@ -23,12 +23,16 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+namespace langutil
+{
+class ErrorReporter;
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace solidity
 {
-
-class ErrorReporter;
 
 /**
  * This module performs analyses on the AST that are done after type checking and assignments of types:
@@ -39,25 +43,25 @@ class PostTypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	PostTypeChecker(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool check(ASTNode const& _astRoot);
 
 private:
 	/// Adds a new error to the list of errors.
-	void typeError(SourceLocation const& _location, std::string const& _description);
+	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
 
-	virtual bool visit(ContractDefinition const& _contract) override;
-	virtual void endVisit(ContractDefinition const& _contract) override;
+	bool visit(ContractDefinition const& _contract) override;
+	void endVisit(ContractDefinition const& _contract) override;
 
-	virtual bool visit(VariableDeclaration const& _variable) override;
-	virtual void endVisit(VariableDeclaration const& _variable) override;
+	bool visit(VariableDeclaration const& _variable) override;
+	void endVisit(VariableDeclaration const& _variable) override;
 
-	virtual bool visit(Identifier const& _identifier) override;
+	bool visit(Identifier const& _identifier) override;
 
 	VariableDeclaration const* findCycle(VariableDeclaration const& _startingFrom);
 
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 
 	VariableDeclaration const* m_currentConstVariable = nullptr;
 	std::vector<VariableDeclaration const*> m_constVariables; ///< Required for determinism.

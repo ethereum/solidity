@@ -24,7 +24,7 @@
 
 #include <libsolidity/codegen/ABIFunctions.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
@@ -167,7 +167,10 @@ public:
 	/// the data.
 	CompilerContext& appendConditionalRevert(bool _forwardReturnData = false);
 	/// Appends a JUMP to a specific tag
-	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJump(_tag); return *this; }
+	CompilerContext& appendJumpTo(
+		eth::AssemblyItem const& _tag,
+		eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary
+	) { *m_asm << _tag.pushTag(); return appendJump(_jumpType); }
 	/// Appends pushing of a new tag and @returns the new tag.
 	eth::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
 	/// @returns a new tag without pushing any opcodes or data

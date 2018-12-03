@@ -16,8 +16,10 @@
 */
 
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
+#include <liblangutil/SourceLocation.h>
 
 using namespace std;
+using namespace langutil;
 using namespace dev::solidity;
 
 bool ControlFlowAnalyzer::analyze(ASTNode const& _astRoot)

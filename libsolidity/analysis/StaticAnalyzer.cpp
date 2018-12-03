@@ -23,11 +23,12 @@
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <memory>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)

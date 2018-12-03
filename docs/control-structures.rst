@@ -2,74 +2,8 @@
 Expressions and Control Structures
 ##################################
 
-.. index:: ! parameter, parameter;input, parameter;output, parameter;multiple
+.. index:: ! parameter, parameter;input, parameter;output, function parameter, parameter;function, return variable, variable;return, return
 
-Input Parameters and Output Parameters
-======================================
-
-As in Javascript, functions may take parameters as input;
-unlike in Javascript and C, they may also return arbitrary number of
-parameters as output.
-
-Input Parameters
-----------------
-
-The input parameters are declared the same way as variables are.
-The name of unused parameters can be omitted.
-For example, suppose we want our contract to
-accept one kind of external calls with two integers, we would write
-something like::
-
-    pragma solidity >=0.4.16 <0.6.0;
-
-    contract Simple {
-        uint sum;
-        function taker(uint _a, uint _b) public {
-            sum = _a + _b;
-        }
-    }
-
-Input parameters can be used just as any other local variable
-can be used, they can also be assigned to.
-
-.. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
-
-Output Parameters
------------------
-
-The output parameters can be declared with the same syntax after the
-``returns`` keyword. For example, suppose we wished to return two results:
-the sum and the product of the two given integers, then we would
-write::
-
-    pragma solidity >=0.4.16 <0.6.0;
-
-    contract Simple {
-        function arithmetic(uint _a, uint _b)
-            public
-            pure
-            returns (uint o_sum, uint o_product)
-        {
-            o_sum = _a + _b;
-            o_product = _a * _b;
-        }
-    }
-
-The names of output parameters can be omitted.
-The return values can be specified using ``return`` statements,
-which are also capable of :ref:`returning multiple values<multi-return>`.
-Return parameters can be used as any other local variable and they
-are zero-initialized; if they are not explicitly
-set, they stay zero.
-
-
-.. note::
-    You cannot return some types from non-internal functions, notably
-    multi-dimensional dynamic arrays and structs. If you enable the
-    new experimental ``ABIEncoderV2`` feature by adding ``pragma experimental
-    ABIEncoderV2;`` to your source file then more types are available, but
-    ``mapping`` types are still limited to inside a single contract and you
-    cannot transfer them.
 
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
@@ -88,21 +22,14 @@ Note that there is no type conversion from non-boolean to boolean types as
 there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
 Solidity.
 
-.. _multi-return:
-
-Returning Multiple Values
--------------------------
-
-When a function has multiple output parameters, ``return (v0, v1, ...,
-vn)`` can return multiple values.  The number of components must be
-the same as the number of output parameters.
-
 .. index:: ! function;call, function;internal, function;external
 
 .. _function-calls:
 
 Function Calls
 ==============
+
+.. _internal-function-calls:
 
 Internal Function Calls
 -----------------------
@@ -124,6 +51,8 @@ contract can be called internally.
 
 You should still avoid excessive recursion, as every internal function call
 uses up at least one stack slot and there are at most 1024 slots available.
+
+.. _external-function-calls:
 
 External Function Calls
 -----------------------

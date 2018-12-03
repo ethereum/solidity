@@ -19,22 +19,20 @@
  */
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/Exceptions.h>
 
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -110,7 +108,7 @@ public:
 		m_nameDispenser(_nameDispenser)
 	{ }
 
-	virtual void operator()(Block& _block) override;
+	void operator()(Block& _block) override;
 
 private:
 	boost::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
@@ -141,10 +139,10 @@ public:
 
 	using ASTCopier::operator ();
 
-	virtual Statement operator()(VariableDeclaration const& _varDecl) override;
-	virtual Statement operator()(FunctionDefinition const& _funDef) override;
+	Statement operator()(VariableDeclaration const& _varDecl) override;
+	Statement operator()(FunctionDefinition const& _funDef) override;
 
-	virtual YulString translateIdentifier(YulString _name) override;
+	YulString translateIdentifier(YulString _name) override;
 
 	NameDispenser& m_nameDispenser;
 	YulString m_varNamePrefix;
@@ -152,5 +150,4 @@ public:
 };
 
 
-}
 }

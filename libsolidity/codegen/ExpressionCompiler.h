@@ -25,10 +25,10 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/LValue.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 namespace dev {
 namespace eth
@@ -71,17 +71,17 @@ public:
 	void appendConstStateVariableAccessor(const VariableDeclaration& _varDecl);
 
 private:
-	virtual bool visit(Conditional const& _condition) override;
-	virtual bool visit(Assignment const& _assignment) override;
-	virtual bool visit(TupleExpression const& _tuple) override;
-	virtual bool visit(UnaryOperation const& _unaryOperation) override;
-	virtual bool visit(BinaryOperation const& _binaryOperation) override;
-	virtual bool visit(FunctionCall const& _functionCall) override;
-	virtual bool visit(NewExpression const& _newExpression) override;
-	virtual bool visit(MemberAccess const& _memberAccess) override;
-	virtual bool visit(IndexAccess const& _indexAccess) override;
-	virtual void endVisit(Identifier const& _identifier) override;
-	virtual void endVisit(Literal const& _literal) override;
+	bool visit(Conditional const& _condition) override;
+	bool visit(Assignment const& _assignment) override;
+	bool visit(TupleExpression const& _tuple) override;
+	bool visit(UnaryOperation const& _unaryOperation) override;
+	bool visit(BinaryOperation const& _binaryOperation) override;
+	bool visit(FunctionCall const& _functionCall) override;
+	bool visit(NewExpression const& _newExpression) override;
+	bool visit(MemberAccess const& _memberAccess) override;
+	bool visit(IndexAccess const& _indexAccess) override;
+	void endVisit(Identifier const& _identifier) override;
+	void endVisit(Literal const& _literal) override;
 
 	///@{
 	///@name Append code for various operator types

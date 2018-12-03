@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
 
 #include <libdevcore/Common.h>
@@ -42,12 +42,68 @@ enum class CheckResult
 	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
 };
 
-enum class Sort
+enum class Kind
 {
 	Int,
 	Bool,
-	IntIntFun, // Function of one Int returning a single Int
-	IntBoolFun // Function of one Int returning a single Bool
+	Function,
+	Array
+};
+
+struct Sort
+{
+	Sort(Kind _kind):
+		kind(_kind) {}
+	virtual ~Sort() = default;
+	virtual bool operator==(Sort const& _other) const { return kind == _other.kind; }
+
+	Kind const kind;
+};
+using SortPointer = std::shared_ptr<Sort>;
+
+struct FunctionSort: public Sort
+{
+	FunctionSort(std::vector<SortPointer> _domain, SortPointer _codomain):
+		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain)) {}
+	bool operator==(Sort const& _other) const override
+	{
+		if (!Sort::operator==(_other))
+			return false;
+		auto _otherFunction = dynamic_cast<FunctionSort const*>(&_other);
+		solAssert(_otherFunction, "");
+		if (domain.size() != _otherFunction->domain.size())
+			return false;
+		if (!std::equal(
+			domain.begin(),
+			domain.end(),
+			_otherFunction->domain.begin(),
+			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
+		))
+			return false;
+		return *codomain == *_otherFunction->codomain;
+	}
+
+	std::vector<SortPointer> domain;
+	SortPointer codomain;
+};
+
+struct ArraySort: public Sort
+{
+	/// _domain is the sort of the indices
+	/// _range is the sort of the values
+	ArraySort(SortPointer _domain, SortPointer _range):
+		Sort(Kind::Array), domain(std::move(_domain)), range(std::move(_range)) {}
+	bool operator==(Sort const& _other) const override
+	{
+		if (!Sort::operator==(_other))
+			return false;
+		auto _otherArray = dynamic_cast<ArraySort const*>(&_other);
+		solAssert(_otherArray, "");
+		return *domain == *_otherArray->domain && *range == *_otherArray->range;
+	}
+
+	SortPointer domain;
+	SortPointer range;
 };
 
 /// C++ representation of an SMTLIB2 expression.
@@ -55,10 +111,10 @@ class Expression
 {
 	friend class SolverInterface;
 public:
-	explicit Expression(bool _v): name(_v ? "true" : "false"), sort(Sort::Bool) {}
-	Expression(size_t _number): name(std::to_string(_number)), sort(Sort::Int) {}
-	Expression(u256 const& _number): name(_number.str()), sort(Sort::Int) {}
-	Expression(bigint const& _number): name(_number.str()), sort(Sort::Int) {}
+	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
+	Expression(size_t _number): Expression(std::to_string(_number), Kind::Int) {}
+	Expression(u256 const& _number): Expression(_number.str(), Kind::Int) {}
+	Expression(bigint const& _number): Expression(_number.str(), Kind::Int) {}
 
 	Expression(Expression const&) = default;
 	Expression(Expression&&) = default;
@@ -80,17 +136,20 @@ public:
 			{"+", 2},
 			{"-", 2},
 			{"*", 2},
-			{"/", 2}
+			{"/", 2},
+			{"select", 2},
+			{"store", 3}
 		};
 		return operatorsArity.count(name) && operatorsArity.at(name) == arguments.size();
 	}
 
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
-		solAssert(_trueValue.sort == _falseValue.sort, "");
+		solAssert(*_trueValue.sort == *_falseValue.sort, "");
+		SortPointer sort = _trueValue.sort;
 		return Expression("ite", std::vector<Expression>{
 			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
-		}, _trueValue.sort);
+		}, std::move(sort));
 	}
 
 	static Expression implies(Expression _a, Expression _b)
@@ -98,21 +157,51 @@ public:
 		return !std::move(_a) || std::move(_b);
 	}
 
+	/// select is the SMT representation of an array index access.
+	static Expression select(Expression _array, Expression _index)
+	{
+		solAssert(_array.sort->kind == Kind::Array, "");
+		auto const& arraySort = dynamic_cast<ArraySort const*>(_array.sort.get());
+		solAssert(arraySort, "");
+		solAssert(*arraySort->domain == *_index.sort, "");
+		return Expression(
+			"select",
+			std::vector<Expression>{std::move(_array), std::move(_index)},
+			arraySort->range
+		);
+	}
+
+	/// store is the SMT representation of an assignment to array index.
+	/// The function is pure and returns the modified array.
+	static Expression store(Expression _array, Expression _index, Expression _element)
+	{
+		solAssert(_array.sort->kind == Kind::Array, "");
+		auto const& arraySort = dynamic_cast<ArraySort const*>(_array.sort.get());
+		solAssert(arraySort, "");
+		solAssert(*arraySort->domain == *_index.sort, "");
+		solAssert(*arraySort->range == *_element.sort, "");
+		return Expression(
+			"store",
+			std::vector<Expression>{std::move(_array), std::move(_index), std::move(_element)},
+			_array.sort
+		);
+	}
+
 	friend Expression operator!(Expression _a)
 	{
-		return Expression("not", std::move(_a), Sort::Bool);
+		return Expression("not", std::move(_a), Kind::Bool);
 	}
 	friend Expression operator&&(Expression _a, Expression _b)
 	{
-		return Expression("and", std::move(_a), std::move(_b), Sort::Bool);
+		return Expression("and", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator||(Expression _a, Expression _b)
 	{
-		return Expression("or", std::move(_a), std::move(_b), Sort::Bool);
+		return Expression("or", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator==(Expression _a, Expression _b)
 	{
-		return Expression("=", std::move(_a), std::move(_b), Sort::Bool);
+		return Expression("=", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator!=(Expression _a, Expression _b)
 	{
@@ -120,72 +209,64 @@ public:
 	}
 	friend Expression operator<(Expression _a, Expression _b)
 	{
-		return Expression("<", std::move(_a), std::move(_b), Sort::Bool);
+		return Expression("<", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator<=(Expression _a, Expression _b)
 	{
-		return Expression("<=", std::move(_a), std::move(_b), Sort::Bool);
+		return Expression("<=", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator>(Expression _a, Expression _b)
 	{
-		return Expression(">", std::move(_a), std::move(_b), Sort::Bool);
+		return Expression(">", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator>=(Expression _a, Expression _b)
 	{
-		return Expression(">=", std::move(_a), std::move(_b), Sort::Bool);
+		return Expression(">=", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator+(Expression _a, Expression _b)
 	{
-		return Expression("+", std::move(_a), std::move(_b), Sort::Int);
+		return Expression("+", std::move(_a), std::move(_b), Kind::Int);
 	}
 	friend Expression operator-(Expression _a, Expression _b)
 	{
-		return Expression("-", std::move(_a), std::move(_b), Sort::Int);
+		return Expression("-", std::move(_a), std::move(_b), Kind::Int);
 	}
 	friend Expression operator*(Expression _a, Expression _b)
 	{
-		return Expression("*", std::move(_a), std::move(_b), Sort::Int);
+		return Expression("*", std::move(_a), std::move(_b), Kind::Int);
 	}
 	friend Expression operator/(Expression _a, Expression _b)
 	{
-		return Expression("/", std::move(_a), std::move(_b), Sort::Int);
+		return Expression("/", std::move(_a), std::move(_b), Kind::Int);
 	}
-	Expression operator()(Expression _a) const
+	Expression operator()(std::vector<Expression> _arguments) const
 	{
 		solAssert(
-			arguments.empty(),
+			sort->kind == Kind::Function,
 			"Attempted function application to non-function."
 		);
-		switch (sort)
-		{
-		case Sort::IntIntFun:
-			return Expression(name, _a, Sort::Int);
-		case Sort::IntBoolFun:
-			return Expression(name, _a, Sort::Bool);
-		default:
-			solAssert(
-				false,
-				"Attempted function application to invalid type."
-			);
-			break;
-		}
+		auto fSort = dynamic_cast<FunctionSort const*>(sort.get());
+		solAssert(fSort, "");
+		return Expression(name, std::move(_arguments), fSort->codomain);
 	}
 
 	std::string name;
 	std::vector<Expression> arguments;
-	Sort sort;
+	SortPointer sort;
 
 private:
-	/// Manual constructor, should only be used by SolverInterface and this class itself.
-	Expression(std::string _name, std::vector<Expression> _arguments, Sort _sort):
-		name(std::move(_name)), arguments(std::move(_arguments)), sort(_sort) {}
+	/// Manual constructors, should only be used by SolverInterface and this class itself.
+	Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
+		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
+	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):
+		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
 
-	explicit Expression(std::string _name, Sort _sort):
-		Expression(std::move(_name), std::vector<Expression>{}, _sort) {}
-	Expression(std::string _name, Expression _arg, Sort _sort):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _sort) {}
-	Expression(std::string _name, Expression _arg1, Expression _arg2, Sort _sort):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _sort) {}
+	explicit Expression(std::string _name, Kind _kind):
+		Expression(std::move(_name), std::vector<Expression>{}, _kind) {}
+	Expression(std::string _name, Expression _arg, Kind _kind):
+		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _kind) {}
+	Expression(std::string _name, Expression _arg1, Expression _arg2, Kind _kind):
+		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _kind) {}
 };
 
 DEV_SIMPLE_EXCEPTION(SolverError);
@@ -199,36 +280,12 @@ public:
 	virtual void push() = 0;
 	virtual void pop() = 0;
 
-	virtual void declareFunction(std::string _name, Sort _domain, Sort _codomain) = 0;
-	Expression newFunction(std::string _name, Sort _domain, Sort _codomain)
-	{
-		declareFunction(_name, _domain, _codomain);
-		solAssert(_domain == Sort::Int, "Function sort not supported.");
-		// Subclasses should do something here
-		switch (_codomain)
-		{
-		case Sort::Int:
-			return Expression(std::move(_name), {}, Sort::IntIntFun);
-		case Sort::Bool:
-			return Expression(std::move(_name), {}, Sort::IntBoolFun);
-		default:
-			solAssert(false, "Function sort not supported.");
-			break;
-		}
-	}
-	virtual void declareInteger(std::string _name) = 0;
-	Expression newInteger(std::string _name)
+	virtual void declareVariable(std::string const& _name, Sort const& _sort) = 0;
+	Expression newVariable(std::string _name, SortPointer _sort)
 	{
 		// Subclasses should do something here
-		declareInteger(_name);
-		return Expression(std::move(_name), {}, Sort::Int);
-	}
-	virtual void declareBool(std::string _name) = 0;
-	Expression newBool(std::string _name)
-	{
-		// Subclasses should do something here
-		declareBool(_name);
-		return Expression(std::move(_name), {}, Sort::Bool);
+		declareVariable(_name, *_sort);
+		return Expression(std::move(_name), {}, std::move(_sort));
 	}
 
 	virtual void addAssertion(Expression const& _expr) = 0;
@@ -237,6 +294,9 @@ public:
 	/// is available. Throws SMTSolverError on error.
 	virtual std::pair<CheckResult, std::vector<std::string>>
 	check(std::vector<Expression> const& _expressionsToEvaluate) = 0;
+
+	/// @returns a list of queries that the system was not able to respond to.
+	virtual std::vector<std::string> unhandledQueries() { return {}; }
 
 protected:
 	// SMT query timeout in milliseconds.

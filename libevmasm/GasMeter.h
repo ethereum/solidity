@@ -24,7 +24,7 @@
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/AssemblyItem.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <ostream>
 #include <tuple>

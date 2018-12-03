@@ -21,10 +21,8 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -37,5 +35,4 @@ public:
 	void operator()(Block& _block);
 };
 
-}
 }

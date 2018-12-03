@@ -23,11 +23,12 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/analysis/SemVerHandler.h>
 #include <test/Options.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(SemVerMatcher)
 
 SemVerMatchExpression parseExpression(string const& _input)
 {
-	Scanner scanner{CharStream(_input)};
+	Scanner scanner{CharStream(_input, "")};
 	vector<string> literals;
 	vector<Token> tokens;
 	while (scanner.currentToken() != Token::EOS)

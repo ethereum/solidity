@@ -56,18 +56,14 @@ else
     echo 'NODE_JS=["nodejs", "--stack_size=8192"]' > ~/.emscripten
 fi
 
-
 # Boost
 echo -en 'travis_fold:start:compiling_boost\\r'
-cd "$WORKSPACE"/boost_1_57_0
+cd "$WORKSPACE"/boost_1_67_0
 # if b2 exists, it is a fresh checkout, otherwise it comes from the cache
 # and is already compiled
 test -e b2 && (
-sed -i 's|using gcc ;|using gcc : : em++ ;|g' ./project-config.jam
-sed -i 's|$(archiver\[1\])|emar|g' ./tools/build/src/tools/gcc.jam
-sed -i 's|$(ranlib\[1\])|emranlib|g' ./tools/build/src/tools/gcc.jam
-./b2 link=static variant=release threading=single runtime-link=static \
-       system regex filesystem unit_test_framework program_options
+./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
+       system regex filesystem unit_test_framework program_options cxxflags="-Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all"
 find . -name 'libboost*.a' -exec cp {} . \;
 rm -rf b2 libs doc tools more bin.v2 status
 )
@@ -89,17 +85,12 @@ cmake \
   -DBoost_FOUND=1 \
   -DBoost_USE_STATIC_LIBS=1 \
   -DBoost_USE_STATIC_RUNTIME=1 \
-  -DBoost_INCLUDE_DIR="$WORKSPACE"/boost_1_57_0/ \
-  -DBoost_FILESYSTEM_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_filesystem.a \
-  -DBoost_FILESYSTEM_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_filesystem.a \
-  -DBoost_PROGRAM_OPTIONS_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_program_options.a \
-  -DBoost_PROGRAM_OPTIONS_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_program_options.a \
-  -DBoost_REGEX_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_regex.a \
-  -DBoost_REGEX_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_regex.a \
-  -DBoost_SYSTEM_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_system.a \
-  -DBoost_SYSTEM_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_system.a \
-  -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY="$WORKSPACE"/boost_1_57_0/libboost_unit_test_framework.a \
-  -DBoost_UNIT_TEST_FRAMEWORK_LIBRARIES="$WORKSPACE"/boost_1_57_0/libboost_unit_test_framework.a \
+  -DBoost_INCLUDE_DIR="$WORKSPACE"/boost_1_67_0/ \
+  -DBoost_FILESYSTEM_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_filesystem.a \
+  -DBoost_PROGRAM_OPTIONS_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_program_options.a \
+  -DBoost_REGEX_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_regex.a \
+  -DBoost_SYSTEM_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_system.a \
+  -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE="$WORKSPACE"/boost_1_67_0/libboost_unit_test_framework.a \
   -DTESTS=0 \
   ..
 make -j 4

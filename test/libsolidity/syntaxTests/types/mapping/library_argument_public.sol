@@ -3,4 +3,3 @@ library L {
     }
 }
 // ----
-// TypeError: (27-56): Type is required to live outside storage.

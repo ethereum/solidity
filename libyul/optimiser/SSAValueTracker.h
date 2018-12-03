@@ -26,8 +26,6 @@
 #include <map>
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -41,8 +39,8 @@ class SSAValueTracker: public ASTWalker
 {
 public:
 	using ASTWalker::operator();
-	virtual void operator()(VariableDeclaration const& _varDecl) override;
-	virtual void operator()(Assignment const& _assignment) override;
+	void operator()(VariableDeclaration const& _varDecl) override;
+	void operator()(Assignment const& _assignment) override;
 
 	std::map<YulString, Expression const*> const& values() const { return m_values; }
 	Expression const* value(YulString _name) const { return m_values.at(_name); }
@@ -53,5 +51,4 @@ private:
 	std::map<YulString, Expression const*> m_values;
 };
 
-}
 }

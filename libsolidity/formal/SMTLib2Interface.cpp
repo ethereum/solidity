@@ -17,8 +17,10 @@
 
 #include <libsolidity/formal/SMTLib2Interface.h>
 
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
+
+#include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -37,8 +39,8 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTLib2Interface::SMTLib2Interface(ReadCallback::Callback const& _queryCallback):
-	m_queryCallback(_queryCallback)
+SMTLib2Interface::SMTLib2Interface(map<h256, string> const& _queryResponses):
+	m_queryResponses(_queryResponses)
 {
 	reset();
 }
@@ -47,8 +49,7 @@ void SMTLib2Interface::reset()
 {
 	m_accumulatedOutput.clear();
 	m_accumulatedOutput.emplace_back();
-	m_constants.clear();
-	m_functions.clear();
+	m_variables.clear();
 	write("(set-option :produce-models true)");
 	write("(set-logic QF_UFLIA)");
 }
@@ -64,39 +65,36 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-void SMTLib2Interface::declareFunction(string _name, Sort _domain, Sort _codomain)
+void SMTLib2Interface::declareVariable(string const& _name, Sort const& _sort)
 {
-	// TODO Use domain and codomain as key as well
-	if (!m_functions.count(_name))
+	if (_sort.kind == Kind::Function)
+		declareFunction(_name, _sort);
+	else if (!m_variables.count(_name))
 	{
-		m_functions.insert(_name);
+		m_variables.insert(_name);
+		write("(declare-fun |" + _name + "| () " + toSmtLibSort(_sort) + ')');
+	}
+}
+
+void SMTLib2Interface::declareFunction(string const& _name, Sort const& _sort)
+{
+	solAssert(_sort.kind == smt::Kind::Function, "");
+	// TODO Use domain and codomain as key as well
+	if (!m_variables.count(_name))
+	{
+		FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
+		string domain = toSmtLibSort(fSort.domain);
+		string codomain = toSmtLibSort(*fSort.codomain);
+		m_variables.insert(_name);
 		write(
 			"(declare-fun |" +
 			_name +
-			"| (" +
-			(_domain == Sort::Int ? "Int" : "Bool") +
-			") " +
-			(_codomain == Sort::Int ? "Int" : "Bool") +
+			"| " +
+			domain +
+			" " +
+			codomain +
 			")"
 		);
-	}
-}
-
-void SMTLib2Interface::declareInteger(string _name)
-{
-	if (!m_constants.count(_name))
-	{
-		m_constants.insert(_name);
-		write("(declare-const |" + _name + "| Int)");
-	}
-}
-
-void SMTLib2Interface::declareBool(string _name)
-{
-	if (!m_constants.count(_name))
-	{
-		m_constants.insert(_name);
-		write("(declare-const |" + _name + "| Bool)");
 	}
 }
 
@@ -140,6 +138,33 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	return sexpr;
 }
 
+string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
+{
+	switch (_sort.kind)
+	{
+	case Kind::Int:
+		return "Int";
+	case Kind::Bool:
+		return "Bool";
+	case Kind::Array:
+	{
+		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
+	}
+	default:
+		solAssert(false, "Invalid SMT sort");
+	}
+}
+
+string SMTLib2Interface::toSmtLibSort(vector<SortPointer> const& _sorts)
+{
+	string ssort("(");
+	for (auto const& sort: _sorts)
+		ssort += toSmtLibSort(*sort) + " ";
+	ssort += ")";
+	return ssort;
+}
+
 void SMTLib2Interface::write(string _data)
 {
 	solAssert(!m_accumulatedOutput.empty(), "");
@@ -157,8 +182,8 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			solAssert(e.sort == Sort::Int || e.sort == Sort::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort == Sort::Int ? "Int" : "Bool") + ")\n";
+			solAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";
@@ -189,11 +214,12 @@ vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, stri
 
 string SMTLib2Interface::querySolver(string const& _input)
 {
-	if (!m_queryCallback)
-		BOOST_THROW_EXCEPTION(SolverError() << errinfo_comment("No SMT solver available."));
-
-	ReadCallback::Result queryResult = m_queryCallback(_input);
-	if (!queryResult.success)
-		BOOST_THROW_EXCEPTION(SolverError() << errinfo_comment(queryResult.responseOrErrorMessage));
-	return queryResult.responseOrErrorMessage;
+	h256 inputHash = dev::keccak256(_input);
+	if (m_queryResponses.count(inputHash))
+		return m_queryResponses.at(inputHash);
+	else
+	{
+		m_unhandledQueries.push_back(_input);
+		return "unknown\n";
+	}
 }

@@ -37,6 +37,11 @@ SymbolicVariable::SymbolicVariable(
 {
 }
 
+string SymbolicVariable::currentName() const
+{
+	return uniqueSymbol(m_ssa->index());
+}
+
 string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
@@ -54,16 +59,7 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 
 smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
 {
-	return m_interface.newBool(uniqueSymbol(_index));
-}
-
-void SymbolicBoolVariable::setZeroValue()
-{
-	m_interface.addAssertion(currentValue() == smt::Expression(false));
-}
-
-void SymbolicBoolVariable::setUnknownValue()
-{
+	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Bool));
 }
 
 SymbolicIntVariable::SymbolicIntVariable(
@@ -78,20 +74,7 @@ SymbolicIntVariable::SymbolicIntVariable(
 
 smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
 {
-	return m_interface.newInteger(uniqueSymbol(_index));
-}
-
-void SymbolicIntVariable::setZeroValue()
-{
-	m_interface.addAssertion(currentValue() == 0);
-}
-
-void SymbolicIntVariable::setUnknownValue()
-{
-	auto intType = dynamic_cast<IntegerType const*>(m_type.get());
-	solAssert(intType, "");
-	m_interface.addAssertion(currentValue() >= minValue(*intType));
-	m_interface.addAssertion(currentValue() <= maxValue(*intType));
+	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Int));
 }
 
 SymbolicAddressVariable::SymbolicAddressVariable(

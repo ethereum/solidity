@@ -1,0 +1,11 @@
+{
+  "auxiliaryInput":
+  {
+	  "smtlib2responses":
+	  {
+		  "0x0426cd198d1e7123a28ffac2b759a666b86508ad046babf5166500dd6d8ed308": "unsat\n(error \"line 31 column 26: model is not available\")",
+		  "0xa51ca41ae407f5a727f27101cbc079834743cc8955f9f585582034ca634953f6": "sat\n((|EVALEXPR_0| 1))",
+		  "0xe9477f683ff20aa57fcb08682150f86c5917e1d4c0686b278ab9b73446d0682c": "sat\n((|EVALEXPR_0| 0))"
+	  }
+  }
+}

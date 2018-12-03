@@ -17,16 +17,14 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
+#include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/Exceptions.h>
-#include <libsolidity/inlineasm/AsmDataForward.h>
+#include <libyul/AsmDataForward.h>
 #include <vector>
 #include <set>
 #include <map>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -59,5 +57,4 @@ private:
 	std::map<YulString, TypedName> m_lazyInitializedVarDecls;
 };
 
-}
 }

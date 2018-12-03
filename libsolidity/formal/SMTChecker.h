@@ -25,11 +25,17 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 
 #include <unordered_map>
 #include <string>
 #include <vector>
+
+namespace langutil
+{
+class ErrorReporter;
+struct SourceLocation;
+}
 
 namespace dev
 {
@@ -37,38 +43,42 @@ namespace solidity
 {
 
 class VariableUsage;
-class ErrorReporter;
 
 class SMTChecker: private ASTConstVisitor
 {
 public:
-	SMTChecker(ErrorReporter& _errorReporter, ReadCallback::Callback const& _readCallback);
+	SMTChecker(langutil::ErrorReporter& _errorReporter, std::map<h256, std::string> const& _smtlib2Responses);
 
-	void analyze(SourceUnit const& _sources, std::shared_ptr<Scanner> const& _scanner);
+	void analyze(SourceUnit const& _sources, std::shared_ptr<langutil::Scanner> const& _scanner);
+
+	/// This is used if the SMT solver is not directly linked into this binary.
+	/// @returns a list of inputs to the SMT solver that were not part of the argument to
+	/// the constructor.
+	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
 
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.
 
-	virtual bool visit(ContractDefinition const& _node) override;
-	virtual void endVisit(ContractDefinition const& _node) override;
-	virtual void endVisit(VariableDeclaration const& _node) override;
-	virtual bool visit(FunctionDefinition const& _node) override;
-	virtual void endVisit(FunctionDefinition const& _node) override;
-	virtual bool visit(IfStatement const& _node) override;
-	virtual bool visit(WhileStatement const& _node) override;
-	virtual bool visit(ForStatement const& _node) override;
-	virtual void endVisit(VariableDeclarationStatement const& _node) override;
-	virtual void endVisit(Assignment const& _node) override;
-	virtual void endVisit(TupleExpression const& _node) override;
-	virtual void endVisit(UnaryOperation const& _node) override;
-	virtual void endVisit(BinaryOperation const& _node) override;
-	virtual void endVisit(FunctionCall const& _node) override;
-	virtual void endVisit(Identifier const& _node) override;
-	virtual void endVisit(Literal const& _node) override;
-	virtual void endVisit(Return const& _node) override;
-	virtual bool visit(MemberAccess const& _node) override;
+	bool visit(ContractDefinition const& _node) override;
+	void endVisit(ContractDefinition const& _node) override;
+	void endVisit(VariableDeclaration const& _node) override;
+	bool visit(FunctionDefinition const& _node) override;
+	void endVisit(FunctionDefinition const& _node) override;
+	bool visit(IfStatement const& _node) override;
+	bool visit(WhileStatement const& _node) override;
+	bool visit(ForStatement const& _node) override;
+	void endVisit(VariableDeclarationStatement const& _node) override;
+	void endVisit(Assignment const& _node) override;
+	void endVisit(TupleExpression const& _node) override;
+	void endVisit(UnaryOperation const& _node) override;
+	void endVisit(BinaryOperation const& _node) override;
+	void endVisit(FunctionCall const& _node) override;
+	void endVisit(Identifier const& _node) override;
+	void endVisit(Literal const& _node) override;
+	void endVisit(Return const& _node) override;
+	bool visit(MemberAccess const& _node) override;
 
 	void arithmeticOperation(BinaryOperation const& _op);
 	void compareOperation(BinaryOperation const& _op);
@@ -83,13 +93,14 @@ private:
 	void inlineFunctionCall(FunctionCall const&);
 
 	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
+	void defineUninterpretedFunction(std::string const& _name, smt::SortPointer _sort);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
 
-	void assignment(VariableDeclaration const& _variable, Expression const& _value, SourceLocation const& _location);
-	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, Expression const& _value, langutil::SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, langutil::SourceLocation const& _location);
 
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
@@ -103,7 +114,7 @@ private:
 	/// Check that a condition can be satisfied.
 	void checkCondition(
 		smt::Expression _condition,
-		SourceLocation const& _location,
+		langutil::SourceLocation const& _location,
 		std::string const& _description,
 		std::string const& _additionalValueName = "",
 		smt::Expression* _additionalValue = nullptr
@@ -116,7 +127,7 @@ private:
 		std::string const& _description
 	);
 	/// Checks that the value is in the range given by the type.
-	void checkUnderOverflow(smt::Expression _value, IntegerType const& _Type, SourceLocation const& _location);
+	void checkUnderOverflow(smt::Expression _value, IntegerType const& _Type, langutil::SourceLocation const& _location);
 
 
 	std::pair<smt::CheckResult, std::vector<std::string>>
@@ -151,8 +162,10 @@ private:
 
 	/// Sets the value of the declaration to zero.
 	void setZeroValue(VariableDeclaration const& _decl);
+	void setZeroValue(SymbolicVariable& _variable);
 	/// Resets the variable to an unknown value (in its range).
 	void setUnknownValue(VariableDeclaration const& decl);
+	void setUnknownValue(SymbolicVariable& _variable);
 
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
@@ -193,9 +206,14 @@ private:
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
+	/// Stores the declaration of an Uninterpreted Function.
+	std::unordered_map<std::string, smt::Expression> m_uninterpretedFunctions;
+	/// Stores the instances of an Uninterpreted Function applied to arguments.
+	/// Used to retrieve models.
+	std::vector<Expression const*> m_uninterpretedTerms;
 	std::vector<smt::Expression> m_pathConditions;
-	ErrorReporter& m_errorReporter;
-	std::shared_ptr<Scanner> m_scanner;
+	langutil::ErrorReporter& m_errorReporter;
+	std::shared_ptr<langutil::Scanner> m_scanner;
 
 	/// Stores the current path of function calls.
 	std::vector<FunctionDefinition const*> m_functionPath;

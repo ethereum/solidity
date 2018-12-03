@@ -27,8 +27,8 @@
 #include <test/ExecutionFramework.h>
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 namespace dev
 {
@@ -72,13 +72,13 @@ public:
 		m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
 		if (!m_compiler.compile())
 		{
-			auto scannerFromSourceName = [&](std::string const& _sourceName) -> solidity::Scanner const& { return m_compiler.scanner(_sourceName); };
-			SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
+			auto scannerFromSourceName = [&](std::string const& _sourceName) -> langutil::Scanner const& { return m_compiler.scanner(_sourceName); };
+			langutil::SourceReferenceFormatter formatter(std::cerr, scannerFromSourceName);
 
 			for (auto const& error: m_compiler.errors())
 				formatter.printExceptionInformation(
 					*error,
-					(error->type() == Error::Type::Warning) ? "Warning" : "Error"
+					(error->type() == langutil::Error::Type::Warning) ? "Warning" : "Error"
 				);
 			BOOST_ERROR("Compiling contract failed");
 		}

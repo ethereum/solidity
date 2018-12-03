@@ -22,8 +22,6 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -36,9 +34,8 @@ class Rematerialiser: public DataFlowAnalyzer
 {
 protected:
 	using ASTModifier::visit;
-	virtual void visit(Expression& _e) override;
+	void visit(Expression& _e) override;
 
 };
 
-}
 }

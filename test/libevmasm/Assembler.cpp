@@ -30,6 +30,7 @@
 #include <memory>
 
 using namespace std;
+using namespace langutil;
 using namespace dev::eth;
 
 namespace dev
@@ -54,10 +55,12 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
 	Assembly _assembly;
-	_assembly.setSourceLocation(SourceLocation(1, 3, make_shared<string>("root.asm")));
+	auto root_asm = make_shared<CharStream>("", "root.asm");
+	_assembly.setSourceLocation(SourceLocation(1, 3, root_asm));
 
 	Assembly _subAsm;
-	_subAsm.setSourceLocation(SourceLocation(6, 8, make_shared<string>("sub.asm")));
+	auto sub_asm = make_shared<CharStream>("", "sub.asm");
+	_subAsm.setSourceLocation(SourceLocation(6, 8, sub_asm));
 	_subAsm.append(Instruction::INVALID);
 	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
 

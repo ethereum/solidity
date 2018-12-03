@@ -26,7 +26,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libevmasm/Instruction.h>
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include "Exceptions.h"
 using namespace dev::solidity;
 
@@ -57,14 +57,14 @@ class AssemblyItem
 public:
 	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
-	AssemblyItem(u256 _push, SourceLocation const& _location = SourceLocation()):
+	AssemblyItem(u256 _push, langutil::SourceLocation const& _location = langutil::SourceLocation()):
 		AssemblyItem(Push, _push, _location) { }
-	AssemblyItem(solidity::Instruction _i, SourceLocation const& _location = SourceLocation()):
+	AssemblyItem(solidity::Instruction _i, langutil::SourceLocation const& _location = langutil::SourceLocation()):
 		m_type(Operation),
 		m_instruction(_i),
 		m_location(_location)
 	{}
-	AssemblyItem(AssemblyItemType _type, u256 _data = 0, SourceLocation const& _location = SourceLocation()):
+	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::SourceLocation const& _location = langutil::SourceLocation()):
 		m_type(_type),
 		m_location(_location)
 	{
@@ -124,8 +124,8 @@ public:
 	/// @returns true if the assembly item can be used in a functional context.
 	bool canBeFunctional() const;
 
-	void setLocation(SourceLocation const& _location) { m_location = _location; }
-	SourceLocation const& location() const { return m_location; }
+	void setLocation(langutil::SourceLocation const& _location) { m_location = _location; }
+	langutil::SourceLocation const& location() const { return m_location; }
 
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
 	JumpType getJumpType() const { return m_jumpType; }
@@ -140,7 +140,7 @@ private:
 	AssemblyItemType m_type;
 	Instruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
-	SourceLocation m_location;
+	langutil::SourceLocation m_location;
 	JumpType m_jumpType = JumpType::Ordinary;
 	/// Pushed value for operations with data to be determined during assembly stage,
 	/// e.g. PushSubSize, PushTag, PushSub, etc.

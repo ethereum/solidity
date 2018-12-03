@@ -21,7 +21,7 @@
  */
 
 #include <libsolidity/interface/StandardCompiler.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
@@ -31,6 +31,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace {
@@ -84,9 +85,9 @@ Json::Value formatErrorWithException(
 		message = _message;
 
 	Json::Value sourceLocation;
-	if (location && location->sourceName)
+	if (location && location->source && location->source->name() != "")
 	{
-		sourceLocation["file"] = *location->sourceName;
+		sourceLocation["file"] = location->source->name();
 		sourceLocation["start"] = location->start;
 		sourceLocation["end"] = location->end;
 	}
@@ -318,6 +319,27 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			return formatFatalError("JSONError", "Invalid input source specified.");
 	}
 
+	Json::Value const& auxInputs = _input["auxiliaryInput"];
+	if (!!auxInputs)
+	{
+		Json::Value const& smtlib2Responses = auxInputs["smtlib2responses"];
+		if (!!smtlib2Responses)
+			for (auto const& hashString: smtlib2Responses.getMemberNames())
+			{
+				h256 hash;
+				try
+				{
+					hash = h256(hashString);
+				}
+				catch (dev::BadHexCharacter const&)
+				{
+					return formatFatalError("JSONError", "Invalid hex encoding of SMTLib2 auxiliary input.");
+				}
+
+				m_compilerStack.addSMTLib2Response(hash, smtlib2Responses[hashString].asString());
+			}
+	}
+
 	Json::Value const& settings = _input.get("settings", Json::Value());
 
 	if (settings.isMember("evmVersion"))
@@ -411,7 +433,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
 	m_compilerStack.setRequestedContractNames(requestedContractNames(outputSelection));
 
-	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compilerStack.scanner(_sourceName); };
+	auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return m_compilerStack.scanner(_sourceName); };
 
 	try
 	{
@@ -516,6 +538,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	if (errors.size() > 0)
 		output["errors"] = errors;
+
+	if (!m_compilerStack.unhandledSMTLib2Queries().empty())
+		for (string const& query: m_compilerStack.unhandledSMTLib2Queries())
+			output["auxiliaryInputRequested"]["smtlib2queries"]["0x" + keccak256(query).hex()] = query;
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;

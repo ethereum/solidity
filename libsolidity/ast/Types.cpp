@@ -45,6 +45,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace
@@ -441,10 +442,11 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 					continue;
 				seenFunctions.insert(function);
-				FunctionType funType(*function, false);
-				if (auto fun = funType.asMemberFunction(true, true))
-					if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
-						members.push_back(MemberList::Member(function->name(), fun, function));
+				if (function->parameters().empty())
+					continue;
+				FunctionTypePointer fun = FunctionType(*function, false).asCallableFunction(true, true);
+				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
+					members.push_back(MemberList::Member(function->name(), fun, function));
 			}
 		}
 	return members;
@@ -1941,8 +1943,9 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 		for (ContractDefinition const* base: bases | boost::adaptors::sliced(1, bases.size()))
 			for (FunctionDefinition const* function: base->definedFunctions())
 			{
-				if (!function->isVisibleInDerivedContracts())
+				if (!function->isVisibleInDerivedContracts() || !function->isImplemented())
 					continue;
+
 				auto functionType = make_shared<FunctionType>(*function, true);
 				bool functionWithEqualArgumentsFound = false;
 				for (auto const& member: members)
@@ -1969,7 +1972,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.push_back(MemberList::Member(
 				it.second->declaration().name(),
-				it.second->asMemberFunction(m_contract.isLibrary()),
+				it.second->asCallableFunction(m_contract.isLibrary()),
 				&it.second->declaration()
 			));
 	}
@@ -2122,9 +2125,15 @@ bool StructType::canBeUsedExternally(bool _inLibrary) const
 		// We pass "false" to canBeUsedExternally (_inLibrary), because this struct will be
 		// passed by value and thus the encoding does not differ, but it will disallow
 		// mappings.
+		// Also return false if at least one struct member does not have a type.
+		// This might happen, for example, if the type of the member does not exist,
+		// which is reported as an error.
 		for (auto const& var: m_struct.members())
 		{
-			solAssert(var->annotation().type, "");
+			// If the struct member does not have a type return false.
+			// A TypeError is expected in this case.
+			if (!var->annotation().type)
+				return false;
 			if (!var->annotation().type->canBeUsedExternally(false))
 				return false;
 		}
@@ -3058,10 +3067,10 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 	);
 }
 
-FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound) const
+FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _bound) const
 {
-	if (_bound && m_parameterTypes.empty())
-		return FunctionTypePointer();
+	if (_bound)
+		solAssert(!m_parameterTypes.empty(), "");
 
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
@@ -3200,7 +3209,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 				if (function->isVisibleAsLibraryMember())
 					members.push_back(MemberList::Member(
 						function->name(),
-						FunctionType(*function).asMemberFunction(true),
+						FunctionType(*function).asCallableFunction(true),
 						function
 					));
 		if (isBase)

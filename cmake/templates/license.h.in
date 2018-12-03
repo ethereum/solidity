@@ -67,7 +67,7 @@ jsoncpp:
   license you like.
 
 scanner/token:
-  The libsolidity/parsing/{scanner,token}.{h,cpp} files are dervied from
+  The liblangutil/{CharStream,Scanner,Token}.{h,cpp} files are dervied from
   code originating from the V8 project licensed under the following terms:
 
   Copyright 2006-2012, the V8 project authors. All rights reserved.

@@ -1,0 +1,45 @@
+add_library(yul
+	AsmAnalysis.cpp
+	AsmAnalysisInfo.cpp
+	AsmCodeGen.cpp
+	AsmParser.cpp
+	AsmPrinter.cpp
+	AsmScope.cpp
+	AsmScopeFiller.cpp
+	Object.cpp
+	ObjectParser.cpp
+	backends/evm/EVMAssembly.cpp
+	backends/evm/EVMCodeTransform.cpp
+	optimiser/ASTCopier.cpp
+	optimiser/ASTWalker.cpp
+	optimiser/BlockFlattener.cpp
+	optimiser/CommonSubexpressionEliminator.cpp
+	optimiser/DataFlowAnalyzer.cpp
+	optimiser/Disambiguator.cpp
+	optimiser/ExpressionInliner.cpp
+	optimiser/ExpressionJoiner.cpp
+	optimiser/ExpressionSimplifier.cpp
+	optimiser/ExpressionSplitter.cpp
+	optimiser/ForLoopInitRewriter.cpp
+	optimiser/FullInliner.cpp
+	optimiser/FunctionGrouper.cpp
+	optimiser/FunctionHoister.cpp
+	optimiser/InlinableExpressionFunctionFinder.cpp
+	optimiser/MainFunction.cpp
+	optimiser/Metrics.cpp
+	optimiser/NameCollector.cpp
+	optimiser/NameDispenser.cpp
+	optimiser/RedundantAssignEliminator.cpp
+	optimiser/Rematerialiser.cpp
+	optimiser/SSATransform.cpp
+	optimiser/SSAValueTracker.cpp
+	optimiser/Semantics.cpp
+	optimiser/SimplificationRules.cpp
+	optimiser/Substitution.cpp
+	optimiser/Suite.cpp
+	optimiser/SyntacticalEquality.cpp
+	optimiser/UnusedPruner.cpp
+	optimiser/Utilities.cpp
+	optimiser/VarDeclPropagator.cpp
+)
+target_link_libraries(yul PUBLIC devcore)

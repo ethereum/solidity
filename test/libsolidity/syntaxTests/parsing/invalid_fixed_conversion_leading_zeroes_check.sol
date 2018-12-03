@@ -4,4 +4,4 @@ contract test {
 	}
 }
 // ----
-// ParserError: (44-47): Expected primary expression.
+// ParserError: (44-47): Identifier-start is not allowed at end of a number.

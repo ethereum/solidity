@@ -28,6 +28,12 @@ namespace dev
 namespace solidity
 {
 
+/// Returns the SMT sort that models the Solidity type _type.
+smt::SortPointer smtSort(Type const& _type);
+std::vector<smt::SortPointer> smtSort(std::vector<TypePointer> const& _types);
+/// Returns the SMT kind that models the Solidity type type category _category.
+smt::Kind smtKind(Type::Category _category);
+
 /// So far int, bool and address are supported.
 /// Returns true if type is supported.
 bool isSupportedType(Type::Category _category);
@@ -48,6 +54,16 @@ std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(Type cons
 
 smt::Expression minValue(IntegerType const& _type);
 smt::Expression maxValue(IntegerType const& _type);
+
+namespace smt
+{
+
+void setSymbolicZeroValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
+void setSymbolicZeroValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
+void setSymbolicUnknownValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
+void setSymbolicUnknownValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
+
+}
 
 }
 }

@@ -20,20 +20,16 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
-
+#include <libyul/AsmDataForward.h>
+#include <libyul/AsmAnalysisInfo.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameDispenser.h>
-
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
 #include <set>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -44,7 +40,7 @@ class Disambiguator: public ASTCopier
 {
 public:
 	explicit Disambiguator(
-		solidity::assembly::AsmAnalysisInfo const& _analysisInfo,
+		AsmAnalysisInfo const& _analysisInfo,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	):
 		m_info(_analysisInfo), m_externallyUsedIdentifiers(_externallyUsedIdentifiers), m_nameDispenser(m_externallyUsedIdentifiers)
@@ -52,22 +48,21 @@ public:
 	}
 
 protected:
-	virtual void enterScope(Block const& _block) override;
-	virtual void leaveScope(Block const& _block) override;
-	virtual void enterFunction(FunctionDefinition const& _function) override;
-	virtual void leaveFunction(FunctionDefinition const& _function) override;
-	virtual YulString translateIdentifier(YulString _name) override;
+	void enterScope(Block const& _block) override;
+	void leaveScope(Block const& _block) override;
+	void enterFunction(FunctionDefinition const& _function) override;
+	void leaveFunction(FunctionDefinition const& _function) override;
+	YulString translateIdentifier(YulString _name) override;
 
-	void enterScopeInternal(solidity::assembly::Scope& _scope);
-	void leaveScopeInternal(solidity::assembly::Scope& _scope);
+	void enterScopeInternal(Scope& _scope);
+	void leaveScopeInternal(Scope& _scope);
 
-	solidity::assembly::AsmAnalysisInfo const& m_info;
+	AsmAnalysisInfo const& m_info;
 	std::set<YulString> const& m_externallyUsedIdentifiers;
 
-	std::vector<solidity::assembly::Scope*> m_scopes;
+	std::vector<Scope*> m_scopes;
 	std::map<void const*, YulString> m_translations;
 	NameDispenser m_nameDispenser;
 };
 
-}
 }

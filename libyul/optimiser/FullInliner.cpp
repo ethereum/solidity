@@ -27,8 +27,7 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/Exceptions.h>
-
-#include <libsolidity/inlineasm/AsmData.h>
+#include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Visitor.h>
@@ -37,7 +36,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::yul;
+using namespace yul;
 using namespace dev::solidity;
 
 FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):

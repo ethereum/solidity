@@ -21,12 +21,9 @@
 
 #pragma once
 
-#include <libyul/ASTDataForward.h>
-
+#include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
-namespace dev
-{
 namespace yul
 {
 
@@ -48,5 +45,4 @@ private:
 	std::vector<Statement> m_functions;
 };
 
-}
 }
