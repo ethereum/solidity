@@ -1,18 +1,17 @@
-### 0.5.1 (unreleased)
+### 0.5.1 (2018-12-03)
 
 Language Features:
  * Allow mapping type for parameters and return variables of public and external library functions.
  * Allow public functions to override external functions.
 
 Compiler Features:
- * Build System: LLL is not built anymore by default. Must configure it with CMake as `-DLLL=ON`.
  * Code generator: Do not perform redundant double cleanup on unsigned integers when loading from calldata.
- * Commandline interface: Experimental ``--optimize`` option for assembly mode.
+ * Commandline interface: Experimental ``--optimize`` option for assembly mode (``--strict-assembly`` and ``--yul``).
  * SMTChecker: SMTLib2 queries and responses passed via standard JSON compiler interface.
  * SMTChecker: Support ``msg``, ``tx`` and ``block`` member variables.
  * SMTChecker: Support ``gasleft()`` and ``blockhash()`` functions.
  * SMTChecker: Support internal bound function calls.
- * Yul: Support Yul objects in ``--assemble`` and ``--yul`` commandline options.
+ * Yul: Support Yul objects in ``--assemble``, ``--strict-assembly`` and ``--yul`` commandline options.
 
 Bugfixes:
  * Assembly output: Do not mix in/out jump annotations with arguments.
@@ -31,8 +30,9 @@ Bugfixes:
  * Type Checker: Consider abstract function to be implemented by public state variable.
 
 Build System:
- * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
+ * CMake: LLL is not built anymore by default. Must configure it with CMake as `-DLLL=ON`.
  * Docker: Includes both Scratch and Alpine images.
+ * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
 
 Solc-Js:
  * Fix handling of standard-json in the commandline executable.
