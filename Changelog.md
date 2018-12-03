@@ -14,7 +14,6 @@ Compiler Features:
  * SMTChecker: Support internal bound function calls.
  * Yul: Support Yul objects in ``--assemble`` and ``--yul`` commandline options.
 
-
 Bugfixes:
  * Assembly output: Do not mix in/out jump annotations with arguments.
  * Commandline interface: Fix crash when using ``--ast`` on empty runtime code.
@@ -34,6 +33,9 @@ Build System:
  * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
  * Docker: Includes both Scratch and Alpine images.
 
+Solc-Js:
+ * Fix handling of standard-json in the commandline executable.
+ * Remove support of nodejs 4.
 
 
 ### 0.5.0 (2018-11-13)
