@@ -559,8 +559,7 @@ regular strings in native encoding. For code,
 
 Grammar::
 
-    TopLevelObject = 'object' '{' Code? ( Object | Data )* '}'
-    Object = 'object' StringLiteral '{' Code? ( Object | Data )* '}'
+    Object = 'object' StringLiteral '{' Code ( Object | Data )* '}'
     Code = 'code' Block
     Data = 'data' StringLiteral ( HexLiteral | StringLiteral )
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
