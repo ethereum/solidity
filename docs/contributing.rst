@@ -102,6 +102,9 @@ For example, here's an example test you might run;
 ``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-ipc --no-smt``.
 This will test all the tests for the disambiguator.
 
+To get a list of all tests, use
+``./build/test/soltest --list_content=HRF -- --ipcpath /tmp/irrelevant``.
+
 If you want to debug using GDB, make sure you build differently than the "usual".
 For example, you could run the following command in your ``build`` folder:
 ::
