@@ -33,6 +33,7 @@
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarDeclPropagator.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -58,6 +59,7 @@ void OptimiserSuite::run(
 	(FunctionHoister{})(ast);
 	(FunctionGrouper{})(ast);
 	(ForLoopInitRewriter{})(ast);
+	StructuralSimplifier{}(ast);
 
 	NameDispenser dispenser{ast};
 
@@ -71,6 +73,7 @@ void OptimiserSuite::run(
 
 		CommonSubexpressionEliminator{}(ast);
 		ExpressionSimplifier::run(ast);
+		StructuralSimplifier{}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);
 		RedundantAssignEliminator::run(ast);
@@ -98,6 +101,7 @@ void OptimiserSuite::run(
 		VarDeclPropagator{}(ast);
 		RedundantAssignEliminator::run(ast);
 		ExpressionSimplifier::run(ast);
+		StructuralSimplifier{}(ast);
 		CommonSubexpressionEliminator{}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);

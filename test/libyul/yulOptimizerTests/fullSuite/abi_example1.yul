@@ -599,10 +599,6 @@
 //                     revert(_2, _2)
 //                 }
 //                 let abi_decode_abi_decode_length_14_1069 := 0x2
-//                 if _2
-//                 {
-//                     revert(_2, _2)
-//                 }
 //                 let allocateMe_memPtr_315 := mload(abi_encode_pos_590)
 //                 let allocateMe_newFreePtr := add(allocateMe_memPtr_315, abi_encode_pos_590)
 //                 if or(gt(allocateMe_newFreePtr, _945), lt(allocateMe_newFreePtr, allocateMe_memPtr_315))

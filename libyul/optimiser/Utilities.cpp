@@ -21,6 +21,7 @@
 #include <libyul/optimiser/Utilities.h>
 
 #include <libyul/AsmData.h>
+#include <libyul/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -36,4 +37,12 @@ void yul::removeEmptyBlocks(Block& _block)
 		return _st.type() == typeid(Block) && boost::get<Block>(_st).statements.empty();
 	};
 	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
+}
+
+u256 yul::valueOfNumberLiteral(Literal const& _literal)
+{
+	assertThrow(_literal.kind == LiteralKind::Number, OptimizerException, "");
+	std::string const& literalString = _literal.value.str();
+	assertThrow(isValidDecimal(literalString) || isValidHex(literalString), OptimizerException, "");
+	return u256(literalString);
 }
