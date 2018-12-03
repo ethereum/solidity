@@ -302,6 +302,23 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 	BOOST_CHECK(successParse("{ if 42:u256 { } }"));
 }
 
+BOOST_AUTO_TEST_CASE(builtins_parser)
+{
+	struct SimpleBuiltins: public Builtins
+	{
+		BuiltinFunction const* query(YulString _name) const override
+		{
+			return _name == YulString{"builtin"} ? &f : nullptr;
+		}
+		BuiltinFunction f;
+	};
+
+	Dialect dialect(AsmFlavour::Strict, make_shared<SimpleBuiltins>());
+	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
+	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
+	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Cannot assign to builtin function \"builtin\".", dialect);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
