@@ -34,6 +34,8 @@
 
 #include <libevmasm/Assembly.h>
 
+#include <libyul/optimiser/Suite.h>
+
 using namespace std;
 using namespace dev;
 using namespace langutil;
@@ -77,6 +79,13 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	solAssert(m_parserResult->code, "");
 
 	return analyzeParsed();
+}
+
+void AssemblyStack::optimize()
+{
+	solAssert(m_language != Language::Assembly, "Optimization requested for loose assembly.");
+	yul::OptimiserSuite::run(*m_parserResult->code, *m_parserResult->analysisInfo);
+	solAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
 
 bool AssemblyStack::analyzeParsed()
