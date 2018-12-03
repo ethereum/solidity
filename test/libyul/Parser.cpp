@@ -47,12 +47,12 @@ namespace test
 namespace
 {
 
-bool parse(string const& _source, ErrorReporter& errorReporter)
+bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
 {
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source, ""));
-		auto parserResult = yul::Parser(errorReporter, yul::Dialect::yul()).parse(scanner, false);
+		auto parserResult = yul::Parser(errorReporter, _dialect).parse(scanner, false);
 		if (parserResult)
 		{
 			yul::AsmAnalysisInfo analysisInfo;
@@ -61,7 +61,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 				errorReporter,
 				dev::test::Options::get().evmVersion(),
 				boost::none,
-				yul::Dialect::yul()
+				_dialect
 			)).analyze(*parserResult);
 		}
 	}
@@ -72,11 +72,11 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	return false;
 }
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	if (!parse(_source, errorReporter))
+	if (!parse(_source, _dialect, errorReporter))
 	{
 		BOOST_REQUIRE(!errors.empty());
 		BOOST_CHECK_EQUAL(errors.size(), 1);
@@ -97,28 +97,30 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _all
 	return {};
 }
 
-bool successParse(std::string const& _source, bool _allowWarnings = true)
+bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = true)
 {
-	return !parseAndReturnFirstError(_source, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _dialect, _allowWarnings);
 }
 
-Error expectError(std::string const& _source, bool _allowWarnings = false)
+Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = false)
 {
 
-	auto error = parseAndReturnFirstError(_source, _allowWarnings);
+	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarnings);
 	BOOST_REQUIRE(error);
 	return *error;
 }
 
 }
 
-#define CHECK_ERROR(text, typ, substring) \
+#define CHECK_ERROR_DIALECT(text, typ, substring, dialect) \
 do \
 { \
-	Error err = expectError((text), false); \
+	Error err = expectError((text), dialect, false); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
 	BOOST_CHECK(dev::solidity::searchErrorMessage(err, (substring))); \
 } while(0)
+
+#define CHECK_ERROR(text, typ, substring) CHECK_ERROR_DIALECT(text, typ, substring, Dialect::yul())
 
 BOOST_AUTO_TEST_SUITE(YulParser)
 
