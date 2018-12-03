@@ -27,6 +27,7 @@ Bugfixes:
  * Type Checker: Fixed internal error when trying to create abstract contract in some cases.
  * Type Checker: Fixed internal error related to double declaration of events.
  * Type Checker: Disallow inline arrays of mapping type.
+ * Type Checker: Consider abstract function to be implemented by public state variable.
 
 Build System:
  * Emscripten: Upgrade to Emscripten SDK 1.37.21 and boost 1.67.
