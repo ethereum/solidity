@@ -114,7 +114,9 @@ Statement Parser::parseStatement()
 		expectToken(Token::Colon);
 		assignment.variableName.location = location();
 		assignment.variableName.name = YulString(currentLiteral());
-		if (instructions().count(assignment.variableName.name.str()))
+		if (m_dialect.builtins->query(assignment.variableName.name))
+			fatalParserError("Identifier expected, got builtin symbol.");
+		else if (instructions().count(assignment.variableName.name.str()))
 			fatalParserError("Identifier expected, got instruction name.");
 		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
@@ -174,7 +176,9 @@ Statement Parser::parseStatement()
 		if (currentToken() == Token::Assign && peekNextToken() != Token::Colon)
 		{
 			Assignment assignment = createWithLocation<Assignment>(identifier.location);
-			if (m_dialect.flavour != AsmFlavour::Yul && instructions().count(identifier.name.str()))
+			if (m_dialect.builtins->query(identifier.name))
+				fatalParserError("Cannot assign to builtin function \"" + identifier.name.str() + "\".");
+			else if (m_dialect.flavour != AsmFlavour::Yul && instructions().count(identifier.name.str()))
 				fatalParserError("Cannot use instruction names for identifier names.");
 			advance();
 			assignment.variableNames.emplace_back(identifier);
@@ -357,8 +361,10 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			literal = YulString{"address"};
 		else
 			literal = YulString{currentLiteral()};
-		// first search the set of instructions.
-		if (m_dialect.flavour != AsmFlavour::Yul && instructions().count(literal.str()))
+		// first search the set of builtins, then the instructions.
+		if (m_dialect.builtins->query(literal))
+			ret = Identifier{location(), literal};
+		else if (m_dialect.flavour != AsmFlavour::Yul && instructions().count(literal.str()))
 		{
 			dev::solidity::Instruction const& instr = instructions().at(literal.str());
 			ret = Instruction{location(), instr};
@@ -592,6 +598,8 @@ YulString Parser::expectAsmIdentifier()
 			break;
 		}
 	}
+	else if (m_dialect.builtins->query(name))
+		fatalParserError("Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	else if (instructions().count(name.str()))
 		fatalParserError("Cannot use instruction names for identifier names.");
 	expectToken(Token::Identifier);
