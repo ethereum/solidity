@@ -72,7 +72,7 @@ WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
 SimpleStatement = VariableDefinition | ExpressionStatement
 ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
-InlineAssemblyStatement = 'assembly' StringLiteral? InlineAssemblyBlock
+InlineAssemblyStatement = 'assembly' StringLiteral? AssemblyBlock
 DoWhileStatement = 'do' Statement 'while' '(' Expression ')'
 Continue = 'continue'
 Break = 'break'
@@ -152,11 +152,30 @@ Fixed = 'fixed' | ( 'fixed' [0-9]+ 'x' [0-9]+ )
 
 Ufixed = 'ufixed' | ( 'ufixed' [0-9]+ 'x' [0-9]+ )
 
-InlineAssemblyBlock = '{' AssemblyItem* '}'
 
-AssemblyItem = Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyVariableDeclaration | AssemblyAssignment | AssemblyLabel | NumberLiteral | StringLiteral | HexLiteral
-AssemblyExpression = Identifier | FunctionalAssemblyExpression | NumberLiteral | StringLiteral | HexLiteral
-AssemblyVariableDeclaration = 'let' Identifier ':=' AssemblyExpression
-AssemblyAssignment = ( Identifier ':=' AssemblyExpression ) | ( '=:' Identifier )
-AssemblyLabel = Identifier ':'
-FunctionalAssemblyExpression = Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
+AssemblyBlock = '{' AssemblyStatement* '}'
+
+AssemblyStatement = AssemblyBlock
+                  | AssemblyFunctionDefinition
+                  | AssemblyVariableDeclaration
+                  | AssemblyAssignment
+                  | AssemblyIf
+                  | AssemblyExpression
+                  | AssemblySwitch
+                  | AssemblyForLoop
+                  | AssemblyBreakContinue
+AssemblyFunctionDefinition =
+    'function' Identifier '(' AssemblyIdentifierList? ')'
+    ( '->' AssemblyIdentifierList )? AssemblyBlock
+AssemblyVariableDeclaration = 'let' AssemblyIdentifierList ( ':=' AssemblyExpression )?
+AssemblyAssignment = AssemblyIdentifierList ':=' AssemblyExpression
+AssemblyExpression = AssemblyFunctionCall | Identifier | Literal
+AssemblyIf = 'if' AssemblyExpression AssemblyBlock
+AssemblySwitch = 'switch' AssemblyExpression ( Case+ AssemblyDefault? | AssemblyDefault )
+AssemblyCase = 'case' Literal AssemblyBlock
+AssemblyDefault = 'default' AssemblyBlock
+AssemblyForLoop = 'for' AssemblyBlock AssemblyExpression AssemblyBlock AssemblyBlock
+AssemblyBreakContinue = 'break' | 'continue'
+AssemblyFunctionCall = Identifier '(' ( AssemblyExpression ( ',' AssemblyExpression )* )? ')'
+
+AssemblyIdentifierList = Identifier ( ',' Identifier )*
