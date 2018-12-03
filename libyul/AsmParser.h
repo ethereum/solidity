@@ -78,7 +78,7 @@ protected:
 	FunctionDefinition parseFunctionDefinition();
 	Expression parseCall(ElementaryOperation&& _initialOp);
 	TypedName parseTypedName();
-	std::string expectAsmIdentifier();
+	YulString expectAsmIdentifier();
 
 	static bool isValidNumberLiteral(std::string const& _literal);
 
