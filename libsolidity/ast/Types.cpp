@@ -1943,8 +1943,9 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 		for (ContractDefinition const* base: bases | boost::adaptors::sliced(1, bases.size()))
 			for (FunctionDefinition const* function: base->definedFunctions())
 			{
-				if (!function->isVisibleInDerivedContracts())
+				if (!function->isVisibleInDerivedContracts() || !function->isImplemented())
 					continue;
+
 				auto functionType = make_shared<FunctionType>(*function, true);
 				bool functionWithEqualArgumentsFound = false;
 				for (auto const& member: members)
