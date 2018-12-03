@@ -611,14 +611,14 @@ TypeResult IntegerType::unaryOperatorResult(Token _operator) const
 {
 	// "delete" is ok for all integer types
 	if (_operator == Token::Delete)
-		return TypeResult::Ok(make_shared<TupleType>());
+		return TypeResult{make_shared<TupleType>()};
 	// we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
 			_operator == Token::Inc || _operator == Token::Dec ||
 			_operator == Token::BitNot)
-		return TypeResult::Ok(shared_from_this());
+		return TypeResult{shared_from_this()};
 	else
-		return TypeResult::Err();
+		return TypeResult{""};
 }
 
 bool IntegerType::operator==(Type const& _other) const

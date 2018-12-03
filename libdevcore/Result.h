@@ -28,44 +28,22 @@ namespace dev
 /// Result<bool> check()
 /// {
 ///		if (false)
-///			return Result<bool>(false, "Error message.")
+///			return Result<bool>("Error message.")
 ///		return true;
 /// }
 ///
-///	A result can also be instantiated using one of the factory methods it provides:
-///
-/// using BoolResult = Result<bool>;
-/// BoolResult check()
-/// {
-///		if (false)
-///			return BoolResult::failure("Error message");
-///		return BoolResult::success(true);
-/// }
-///
-///
-struct ResultError { std::string reason; };
 
 template <class ResultType>
 class Result
 {
 public:
-	/// @{
-	/// @name Factory functions
-	/// Factory functions that provide a verbose way to create a result
-	static Result<ResultType> Ok(ResultType _value) { return Result(std::move(_value)); }
-	static Result<ResultType> Err() { return Result(ResultError{std::string()}); }
-	static Result<ResultType> Err(std::string _error) { return Result(ResultError{std::move(_error)}); }
-	/// @}
-
-	Result(ResultType _value): m_value(std::move(_value)) {}
-	Result(ResultError _error): m_error(std::move(_error.reason)) {}
-	Result(ResultType _value, ResultError _error): m_value(std::move(_value)), m_error(std::move(_error.reason)) {}
+	Result(ResultType _value): Result(_value, std::string{}) {}
+	Result(std::string _error): Result(ResultType{}, _error) {}
 
 	/// @{
 	/// @name Wrapper functions
 	/// Wrapper functions that provide implicit conversions to and explicit retrieval of
 	/// the value this result holds.
-	/// If the result is an error, accessing the value results in undefined behaviour.
 	operator ResultType const&() const { return m_value; }
 	ResultType& operator*() const { return m_value; }
 	ResultType const& get() const { return m_value; }
@@ -73,9 +51,14 @@ public:
 	/// @}
 
 	/// @returns the error message (can be empty).
-	std::string const& err() const { return m_error; }
+	std::string const& error() const { return m_error; }
 
 private:
+	explicit Result(ResultType _value, std::string _error):
+		m_value(std::move(_value)),
+		m_error(std::move(_error))
+	{}
+
 	ResultType m_value;
 	std::string m_error;
 };
