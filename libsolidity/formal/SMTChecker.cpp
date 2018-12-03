@@ -323,9 +323,6 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 			);
 		break;
 	}
-	case Token::Add: // +
-		defineExpr(_op, expr(_op.subExpression()));
-		break;
 	case Token::Sub: // -
 	{
 		defineExpr(_op, 0 - expr(_op.subExpression()));
