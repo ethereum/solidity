@@ -244,9 +244,18 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 	{
 		int const stackHeight = m_stackHeight;
 		success = boost::apply_visitor(*this, *_varDecl.value);
-		if ((m_stackHeight - stackHeight) != numVariables)
+		int numValues = m_stackHeight - stackHeight;
+		if (numValues != numVariables)
 		{
-			m_errorReporter.declarationError(_varDecl.location, "Variable count mismatch.");
+			m_errorReporter.declarationError(_varDecl.location,
+				"Variable count mismatch: " +
+				to_string(numVariables) +
+				" variables and " +
+				to_string(numValues) +
+				" values."
+			);
+			// Adjust stack height to avoid misleading additional errors.
+			m_stackHeight += numVariables - numValues;
 			return false;
 		}
 	}
@@ -288,7 +297,7 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
 	solAssert(!_funCall.functionName.name.empty(), "");
 	bool success = true;
-	size_t arguments = 0;
+	size_t parameters = 0;
 	size_t returns = 0;
 	if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
 		[&](Scope::Variable const&)
@@ -310,7 +319,7 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		[&](Scope::Function const& _fun)
 		{
 			/// TODO: compare types too
-			arguments = _fun.arguments.size();
+			parameters = _fun.arguments.size();
 			returns = _fun.returns.size();
 		}
 	)))
@@ -319,21 +328,23 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		success = false;
 	}
 	if (success)
-	{
-		if (_funCall.arguments.size() != arguments)
+		if (_funCall.arguments.size() != parameters)
 		{
 			m_errorReporter.typeError(
 				_funCall.functionName.location,
-				"Expected " + to_string(arguments) + " arguments but got " +
+				"Function expects " +
+				to_string(parameters) +
+				" arguments but got " +
 				to_string(_funCall.arguments.size()) + "."
 			);
 			success = false;
 		}
-	}
+
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
 			success = false;
-	m_stackHeight += int(returns) - int(arguments);
+	// Use argument size instead of parameter count to avoid misleading errors.
+	m_stackHeight += int(returns) - int(_funCall.arguments.size());
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
 }

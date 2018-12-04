@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Inline Assembly: Improve error messages around invalid function argument count.
 
 
 Bugfixes:

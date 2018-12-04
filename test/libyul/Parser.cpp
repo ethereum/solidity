@@ -78,7 +78,8 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _all
 	ErrorReporter errorReporter(errors);
 	if (!parse(_source, errorReporter))
 	{
-		BOOST_REQUIRE_EQUAL(errors.size(), 1);
+		BOOST_REQUIRE(!errors.empty());
+		BOOST_CHECK_EQUAL(errors.size(), 1);
 		return *errors.front();
 	}
 	else
