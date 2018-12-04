@@ -17,7 +17,7 @@
 
 #include <libdevcore/CommonIO.h>
 
-#include <test/Common.h>
+#include <test/libtestcore/Common.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
