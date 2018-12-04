@@ -22,10 +22,12 @@
 #include <test/Options.h>
 
 #include <test/libsolidity/ErrorCheck.h>
+#include <test/libyul/Common.h>
 
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/Dialect.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 
@@ -317,6 +319,23 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Cannot assign to builtin function \"builtin\".", dialect);
+}
+
+BOOST_AUTO_TEST_CASE(builtins_analysis)
+{
+	struct SimpleBuiltinsAnalysis: public Builtins
+	{
+		yul::BuiltinFunction const* query(YulString _name) const override
+		{
+			return _name == YulString("builtin") ? &m_builtin : nullptr;
+		}
+		BuiltinFunction m_builtin{YulString{"builtin"}, vector<Type>(2), vector<Type>(3), false};
+	};
+
+	Dialect dialect(AsmFlavour::Strict, make_shared<SimpleBuiltinsAnalysis>());
+	BOOST_CHECK(successParse("{ let a, b, c := builtin(1, 2) }", dialect));
+	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
+	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
