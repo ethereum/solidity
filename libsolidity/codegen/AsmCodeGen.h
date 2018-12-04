@@ -15,9 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Adaptor between the abstract assembly and eth assembly.
  */
 
 #pragma once

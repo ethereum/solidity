@@ -24,10 +24,10 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/codegen/AsmCodeGen.h>
 #include <libsolidity/interface/Version.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libyul/AsmParser.h>
-#include <libyul/AsmCodeGen.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/YulString.h>

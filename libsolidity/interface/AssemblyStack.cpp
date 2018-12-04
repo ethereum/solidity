@@ -22,12 +22,13 @@
 
 #include <libsolidity/interface/AssemblyStack.h>
 
+#include <libsolidity/codegen/AsmCodeGen.h>
+
 #include <liblangutil/Scanner.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMAssembly.h>
 #include <libyul/ObjectParser.h>

@@ -23,8 +23,8 @@
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+#include <libsolidity/codegen/AsmCodeGen.h>
 #include <libsolidity/ast/AST.h>
-#include <libyul/AsmCodeGen.h>
 #include <liblangutil/ErrorReporter.h>
 
 #include <libevmasm/Instruction.h>
