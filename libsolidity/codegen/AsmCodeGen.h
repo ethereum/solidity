@@ -24,29 +24,33 @@
 
 #include <functional>
 
+namespace yul
+{
+struct Block;
+}
+
 namespace dev
 {
 namespace eth
 {
 class Assembly;
 }
-}
 
-namespace yul
+namespace solidity
 {
-struct Block;
 
 class CodeGenerator
 {
 public:
 	/// Performs code generation and appends generated to _assembly.
 	static void assemble(
-		Block const& _parsedData,
-		AsmAnalysisInfo& _analysisInfo,
+		yul::Block const& _parsedData,
+		yul::AsmAnalysisInfo& _analysisInfo,
 		dev::eth::Assembly& _assembly,
 		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	);
 };
 
+}
 }
