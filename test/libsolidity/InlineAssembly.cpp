@@ -433,8 +433,7 @@ BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
 
 BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
 {
-	/// The push(42) is added here to silence the unbalanced stack error, so that there's only one error reported.
-	CHECK_PARSE_ERROR("{ 42 let x, y := 1 }", DeclarationError, "Variable count mismatch.");
+	CHECK_PARSE_ERROR("{ let x, y := 1 }", DeclarationError, "Variable count mismatch: 2 variables and 1 values");
 }
 
 BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
