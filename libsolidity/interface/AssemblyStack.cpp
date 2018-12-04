@@ -29,6 +29,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMAssembly.h>
 #include <libyul/ObjectParser.h>
@@ -85,18 +86,40 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 void AssemblyStack::optimize()
 {
 	solAssert(m_language != Language::Assembly, "Optimization requested for loose assembly.");
-	yul::OptimiserSuite::run(*m_parserResult->code, *m_parserResult->analysisInfo);
+	solAssert(m_analysisSuccessful, "Analysis was not successful.");
+	m_analysisSuccessful = false;
+	optimize(*m_parserResult);
 	solAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
 
 bool AssemblyStack::analyzeParsed()
 {
 	solAssert(m_parserResult, "");
-	solAssert(m_parserResult->code, "");
-	m_parserResult->analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-	yul::AsmAnalyzer analyzer(*m_parserResult->analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToDialect(m_language));
-	m_analysisSuccessful = analyzer.analyze(*m_parserResult->code);
+	m_analysisSuccessful = analyzeParsed(*m_parserResult);
 	return m_analysisSuccessful;
+}
+
+bool AssemblyStack::analyzeParsed(yul::Object& _object)
+{
+	solAssert(_object.code, "");
+	_object.analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	yul::AsmAnalyzer analyzer(*_object.analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToDialect(m_language));
+	bool success = analyzer.analyze(*_object.code);
+	for (auto& subNode: _object.subObjects)
+		if (auto subObject = dynamic_cast<yul::Object*>(subNode.get()))
+			if (!analyzeParsed(*subObject))
+				success = false;
+	return success;
+}
+
+void AssemblyStack::optimize(yul::Object& _object)
+{
+	solAssert(_object.code, "");
+	solAssert(_object.analysisInfo, "");
+	for (auto& subNode: _object.subObjects)
+		if (auto subObject = dynamic_cast<yul::Object*>(subNode.get()))
+			optimize(*subObject);
+	yul::OptimiserSuite::run(*_object.code, *_object.analysisInfo);
 }
 
 MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
@@ -112,7 +135,8 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
-		CodeGenerator::assemble(*m_parserResult->code, *m_parserResult->analysisInfo, assembly);
+		EthAssemblyAdapter adapter(assembly);
+		yul::EVMObjectCompiler::compile(*m_parserResult, adapter, m_language == Language::Yul, false);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -121,7 +145,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		yul::EVMAssembly assembly(true);
-		yul::CodeTransform(assembly, *m_parserResult->analysisInfo, m_language == Language::Yul, true)(*m_parserResult->code);
+		yul::EVMObjectCompiler::compile(*m_parserResult, assembly, m_language == Language::Yul, true);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;
