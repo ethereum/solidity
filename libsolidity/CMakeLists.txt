@@ -23,6 +23,7 @@ set(sources
 	ast/Types.cpp
 	codegen/ABIFunctions.cpp
 	codegen/ArrayUtils.cpp
+	codegen/AsmCodeGen.cpp
 	codegen/Compiler.cpp
 	codegen/CompilerContext.cpp
 	codegen/CompilerUtils.cpp

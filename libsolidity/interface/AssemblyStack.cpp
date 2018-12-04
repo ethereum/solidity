@@ -22,12 +22,13 @@
 
 #include <libsolidity/interface/AssemblyStack.h>
 
+#include <libsolidity/codegen/AsmCodeGen.h>
+
 #include <liblangutil/Scanner.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMAssembly.h>
 #include <libyul/ObjectParser.h>
@@ -111,7 +112,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
-		yul::CodeGenerator::assemble(*m_parserResult->code, *m_parserResult->analysisInfo, assembly);
+		CodeGenerator::assemble(*m_parserResult->code, *m_parserResult->analysisInfo, assembly);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;

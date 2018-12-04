@@ -15,17 +15,12 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Code-generating part of inline assembly.
+ * Adaptor between the abstract assembly and eth assembly.
  */
 
-#include <libyul/AsmCodeGen.h>
+#include <libsolidity/codegen/AsmCodeGen.h>
 
-#include <libyul/AsmParser.h>
 #include <libyul/AsmData.h>
-#include <libyul/AsmScope.h>
-#include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
@@ -35,12 +30,6 @@
 #include <libevmasm/Instruction.h>
 
 #include <liblangutil/SourceLocation.h>
-
-#include <libdevcore/CommonIO.h>
-
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/adaptor/map.hpp>
-#include <boost/range/algorithm/count_if.hpp>
 
 #include <memory>
 #include <functional>
