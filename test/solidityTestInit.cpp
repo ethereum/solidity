@@ -23,8 +23,8 @@
  */
 
 
-#include <test/boostTest.h>
-#include <test/Options.h>
+#include <test/libtestcore/boostTest.h>
+#include <test/libtestcore/Options.h>
 
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/libsolidity/SyntaxTest.h>
