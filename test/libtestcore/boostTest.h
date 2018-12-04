@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <test/TestCase.h>
+#include <test/libtestcore/TestCase.h>
 #include <boost/test/unit_test.hpp>
 
 namespace dev

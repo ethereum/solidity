@@ -20,7 +20,7 @@
  * Framework for executing contracts and testing them using RPC.
  */
 
-#include <test/ExecutionFramework.h>
+#include <test/libtestcore/ExecutionFramework.h>
 
 #include <libdevcore/CommonIO.h>
 

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/Common.h>
+#include <test/libtestcore/Common.h>
 
 #include <boost/filesystem.hpp>
 

@@ -35,8 +35,8 @@
 
 #pragma GCC diagnostic pop
 
-#include <test/Options.h>
-#include <test/TestCase.h>
+#include <test/libtestcore/Options.h>
+#include <test/libtestcore/TestCase.h>
 #include <libdevcore/Exceptions.h>
 
 #include <boost/algorithm/string.hpp>

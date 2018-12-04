@@ -19,9 +19,9 @@
 /// @file RPCSession.cpp
 /// Low-level IPC communication between the test framework and the Ethereum node.
 
-#include <test/RPCSession.h>
+#include <test/libtestcore/RPCSession.h>
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 #include <liblangutil/EVMVersion.h>
 

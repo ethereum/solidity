@@ -19,9 +19,9 @@
 * @date 2014
 */
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
-#include <test/Common.h>
+#include <test/libtestcore/Common.h>
 
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>

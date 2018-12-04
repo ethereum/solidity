@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <test/Options.h>
-#include <test/RPCSession.h>
+#include <test/libtestcore/Options.h>
+#include <test/libtestcore/RPCSession.h>
 
 #include <liblangutil/EVMVersion.h>
 
