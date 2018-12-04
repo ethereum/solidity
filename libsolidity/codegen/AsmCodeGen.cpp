@@ -40,97 +40,103 @@ using namespace langutil;
 using namespace yul;
 using namespace dev::solidity;
 
-class EthAssemblyAdapter: public AbstractAssembly
+EthAssemblyAdapter::EthAssemblyAdapter(eth::Assembly& _assembly):
+	m_assembly(_assembly)
 {
-public:
-	explicit EthAssemblyAdapter(eth::Assembly& _assembly):
-		m_assembly(_assembly)
-	{
-	}
-	virtual void setSourceLocation(SourceLocation const& _location) override
-	{
-		m_assembly.setSourceLocation(_location);
-	}
-	virtual int stackHeight() const override { return m_assembly.deposit(); }
-	virtual void appendInstruction(solidity::Instruction _instruction) override
-	{
-		m_assembly.append(_instruction);
-	}
-	virtual void appendConstant(u256 const& _constant) override
-	{
-		m_assembly.append(_constant);
-	}
-	/// Append a label.
-	virtual void appendLabel(LabelID _labelId) override
-	{
-		m_assembly.append(eth::AssemblyItem(eth::Tag, _labelId));
-	}
-	/// Append a label reference.
-	virtual void appendLabelReference(LabelID _labelId) override
-	{
-		m_assembly.append(eth::AssemblyItem(eth::PushTag, _labelId));
-	}
-	virtual size_t newLabelId() override
-	{
-		return assemblyTagToIdentifier(m_assembly.newTag());
-	}
-	virtual size_t namedLabel(std::string const& _name) override
-	{
-		return assemblyTagToIdentifier(m_assembly.namedTag(_name));
-	}
-	virtual void appendLinkerSymbol(std::string const& _linkerSymbol) override
-	{
-		m_assembly.appendLibraryAddress(_linkerSymbol);
-	}
-	virtual void appendJump(int _stackDiffAfter) override
-	{
-		appendInstruction(solidity::Instruction::JUMP);
-		m_assembly.adjustDeposit(_stackDiffAfter);
-	}
-	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override
-	{
-		appendLabelReference(_labelId);
-		appendJump(_stackDiffAfter);
-	}
-	virtual void appendJumpToIf(LabelID _labelId) override
-	{
-		appendLabelReference(_labelId);
-		appendInstruction(solidity::Instruction::JUMPI);
-	}
-	virtual void appendBeginsub(LabelID, int) override
-	{
-		// TODO we could emulate that, though
-		solAssert(false, "BEGINSUB not implemented for EVM 1.0");
-	}
-	/// Call a subroutine.
-	virtual void appendJumpsub(LabelID, int, int) override
-	{
-		// TODO we could emulate that, though
-		solAssert(false, "JUMPSUB not implemented for EVM 1.0");
-	}
+}
 
-	/// Return from a subroutine.
-	virtual void appendReturnsub(int, int) override
-	{
-		// TODO we could emulate that, though
-		solAssert(false, "RETURNSUB not implemented for EVM 1.0");
-	}
+void EthAssemblyAdapter::setSourceLocation(SourceLocation const& _location)
+{
+	m_assembly.setSourceLocation(_location);
+}
 
-	virtual void appendAssemblySize() override
-	{
-		m_assembly.appendProgramSize();
-	}
+int EthAssemblyAdapter::stackHeight() const
+{
+	return m_assembly.deposit();
+}
 
-private:
-	static LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag)
-	{
-		u256 id = _tag.data();
-		solAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
-		return LabelID(id);
-	}
+void EthAssemblyAdapter::appendInstruction(solidity::Instruction _instruction)
+{
+	m_assembly.append(_instruction);
+}
 
-	eth::Assembly& m_assembly;
-};
+void EthAssemblyAdapter::appendConstant(u256 const& _constant)
+{
+	m_assembly.append(_constant);
+}
+
+void EthAssemblyAdapter::appendLabel(LabelID _labelId)
+{
+	m_assembly.append(eth::AssemblyItem(eth::Tag, _labelId));
+}
+
+void EthAssemblyAdapter::appendLabelReference(LabelID _labelId)
+{
+	m_assembly.append(eth::AssemblyItem(eth::PushTag, _labelId));
+}
+
+size_t EthAssemblyAdapter::newLabelId()
+{
+	return assemblyTagToIdentifier(m_assembly.newTag());
+}
+
+size_t EthAssemblyAdapter::namedLabel(std::string const& _name)
+{
+	return assemblyTagToIdentifier(m_assembly.namedTag(_name));
+}
+
+void EthAssemblyAdapter::appendLinkerSymbol(std::string const& _linkerSymbol)
+{
+	m_assembly.appendLibraryAddress(_linkerSymbol);
+}
+
+void EthAssemblyAdapter::appendJump(int _stackDiffAfter)
+{
+	appendInstruction(solidity::Instruction::JUMP);
+	m_assembly.adjustDeposit(_stackDiffAfter);
+}
+
+void EthAssemblyAdapter::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
+{
+	appendLabelReference(_labelId);
+	appendJump(_stackDiffAfter);
+}
+
+void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId)
+{
+	appendLabelReference(_labelId);
+	appendInstruction(solidity::Instruction::JUMPI);
+}
+
+void EthAssemblyAdapter::appendBeginsub(LabelID, int)
+{
+	// TODO we could emulate that, though
+	solAssert(false, "BEGINSUB not implemented for EVM 1.0");
+}
+
+void EthAssemblyAdapter::appendJumpsub(LabelID, int, int)
+{
+	// TODO we could emulate that, though
+	solAssert(false, "JUMPSUB not implemented for EVM 1.0");
+}
+
+void EthAssemblyAdapter::appendReturnsub(int, int)
+{
+	// TODO we could emulate that, though
+	solAssert(false, "RETURNSUB not implemented for EVM 1.0");
+}
+
+void EthAssemblyAdapter::appendAssemblySize()
+{
+	m_assembly.appendProgramSize();
+}
+
+EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(eth::AssemblyItem const& _tag)
+{
+	u256 id = _tag.data();
+	solAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
+	return LabelID(id);
+}
 
 void CodeGenerator::assemble(
 	Block const& _parsedData,

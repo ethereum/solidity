@@ -21,6 +21,9 @@
 #pragma once
 
 #include <libyul/AsmAnalysis.h>
+#include <libyul/backends/evm/AbstractAssembly.h>
+
+#include <liblangutil/SourceLocation.h>
 
 #include <functional>
 
@@ -34,10 +37,38 @@ namespace dev
 namespace eth
 {
 class Assembly;
+class AssemblyItem;
 }
 
 namespace solidity
 {
+
+class EthAssemblyAdapter: public yul::AbstractAssembly
+{
+public:
+	explicit EthAssemblyAdapter(eth::Assembly& _assembly);
+	void setSourceLocation(langutil::SourceLocation const& _location) override;
+	int stackHeight() const override;
+	void appendInstruction(solidity::Instruction _instruction) override;
+	void appendConstant(u256 const& _constant) override;
+	void appendLabel(LabelID _labelId) override;
+	void appendLabelReference(LabelID _labelId) override;
+	size_t newLabelId() override;
+	size_t namedLabel(std::string const& _name) override;
+	void appendLinkerSymbol(std::string const& _linkerSymbol) override;
+	void appendJump(int _stackDiffAfter) override;
+	void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
+	void appendJumpToIf(LabelID _labelId) override;
+	void appendBeginsub(LabelID, int) override;
+	void appendJumpsub(LabelID, int, int) override;
+	void appendReturnsub(int, int) override;
+	void appendAssemblySize() override;
+
+private:
+	static LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag);
+
+	eth::Assembly& m_assembly;
+};
 
 class CodeGenerator
 {
