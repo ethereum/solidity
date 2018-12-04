@@ -658,7 +658,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		m_errorReporter,
 		m_evmVersion,
 		Error::Type::SyntaxError,
-		yul::AsmFlavour::Loose,
+		yul::Dialect::looseAssemblyForEVM(),
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))

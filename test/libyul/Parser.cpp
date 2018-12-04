@@ -52,7 +52,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 	try
 	{
 		auto scanner = make_shared<Scanner>(CharStream(_source, ""));
-		auto parserResult = yul::Parser(errorReporter, yul::AsmFlavour::Yul).parse(scanner, false);
+		auto parserResult = yul::Parser(errorReporter, yul::Dialect::yul()).parse(scanner, false);
 		if (parserResult)
 		{
 			yul::AsmAnalysisInfo analysisInfo;
@@ -61,7 +61,7 @@ bool parse(string const& _source, ErrorReporter& errorReporter)
 				errorReporter,
 				dev::test::Options::get().evmVersion(),
 				boost::none,
-				yul::AsmFlavour::Yul
+				yul::Dialect::yul()
 			)).analyze(*parserResult);
 		}
 	}

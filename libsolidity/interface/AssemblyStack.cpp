@@ -43,19 +43,19 @@ using namespace dev::solidity;
 
 namespace
 {
-yul::AsmFlavour languageToAsmFlavour(AssemblyStack::Language _language)
+yul::Dialect languageToDialect(AssemblyStack::Language _language)
 {
 	switch (_language)
 	{
 	case AssemblyStack::Language::Assembly:
-		return yul::AsmFlavour::Loose;
+		return yul::Dialect::looseAssemblyForEVM();
 	case AssemblyStack::Language::StrictAssembly:
-		return yul::AsmFlavour::Strict;
+		return yul::Dialect::strictAssemblyForEVM();
 	case AssemblyStack::Language::Yul:
-		return yul::AsmFlavour::Yul;
+		return yul::Dialect::yul();
 	}
 	solAssert(false, "");
-	return yul::AsmFlavour::Yul;
+	return yul::Dialect::yul();
 }
 
 }
@@ -72,7 +72,7 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source, _sourceName));
-	m_parserResult = yul::ObjectParser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
+	m_parserResult = yul::ObjectParser(m_errorReporter, languageToDialect(m_language)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
@@ -93,7 +93,7 @@ bool AssemblyStack::analyzeParsed()
 	solAssert(m_parserResult, "");
 	solAssert(m_parserResult->code, "");
 	m_parserResult->analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-	yul::AsmAnalyzer analyzer(*m_parserResult->analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToAsmFlavour(m_language));
+	yul::AsmAnalyzer analyzer(*m_parserResult->analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToDialect(m_language));
 	m_analysisSuccessful = analyzer.analyze(*m_parserResult->code);
 	return m_analysisSuccessful;
 }
