@@ -299,7 +299,13 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	bool success = true;
 	size_t parameters = 0;
 	size_t returns = 0;
-	if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
+	if (BuiltinFunction const* f = m_dialect.builtins->query(_funCall.functionName.name))
+	{
+		// TODO: compare types, too
+		parameters = f->parameters.size();
+		returns = f->returns.size();
+	}
+	else if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
 		[&](Scope::Variable const&)
 		{
 			m_errorReporter.typeError(
