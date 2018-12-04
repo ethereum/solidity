@@ -19,7 +19,7 @@
 
 #include <test/libsolidity/FormattedScope.h>
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclPropagator.h>

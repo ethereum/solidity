@@ -16,7 +16,7 @@
 */
 
 #include <test/libsolidity/SyntaxTest.h>
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/throw_exception.hpp>

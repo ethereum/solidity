@@ -19,7 +19,7 @@
  * Unit tests for the Yul object parser.
  */
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 #include <test/libsolidity/ErrorCheck.h>
 

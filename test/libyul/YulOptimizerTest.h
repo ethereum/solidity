@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <test/TestCase.h>
+#include <test/libtestcore/TestCase.h>
 
 namespace langutil
 {

@@ -20,7 +20,7 @@
 
 #include <libdevcore/CommonData.h>
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 using namespace std;
 

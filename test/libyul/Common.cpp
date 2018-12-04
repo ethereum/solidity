@@ -21,7 +21,7 @@
 
 #include <test/libyul/Common.h>
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 

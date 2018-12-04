@@ -16,7 +16,7 @@
 */
 
 #include <test/libsolidity/ASTJSONTest.h>
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <boost/algorithm/string.hpp>

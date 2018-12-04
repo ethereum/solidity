@@ -18,7 +18,7 @@
 #pragma once
 
 #include <boost/test/unit_test.hpp>
-#include <test/ExecutionFramework.h>
+#include <test/libtestcore/ExecutionFramework.h>
 
 #include <functional>
 

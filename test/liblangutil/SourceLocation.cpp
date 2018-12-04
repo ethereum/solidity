@@ -22,7 +22,7 @@
 
 #include <liblangutil/SourceLocation.h>
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 namespace langutil
 {

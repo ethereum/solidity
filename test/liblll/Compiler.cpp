@@ -20,7 +20,7 @@
  * Unit tests for the LLL compiler.
  */
 
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 #include <libdevcore/FixedHash.h>
 

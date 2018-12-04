@@ -21,7 +21,7 @@
  */
 
 #include <test/liblll/ExecutionFramework.h>
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 #include <boost/test/unit_test.hpp>
 

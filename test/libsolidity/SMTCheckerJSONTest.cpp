@@ -16,7 +16,7 @@
 */
 
 #include <test/libsolidity/SMTCheckerJSONTest.h>
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libdevcore/JSON.h>
 #include <boost/algorithm/string.hpp>

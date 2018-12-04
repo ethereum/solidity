@@ -19,8 +19,8 @@
  * Unit tests for the metadata output.
  */
 
-#include <test/Metadata.h>
-#include <test/Options.h>
+#include <test/libtestcore/Metadata.h>
+#include <test/libtestcore/Options.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libdevcore/SwarmHash.h>
 #include <libdevcore/JSON.h>

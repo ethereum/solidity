@@ -25,7 +25,7 @@
 #include <tuple>
 #include <liblangutil/Scanner.h>
 #include <libsolidity/analysis/SemVerHandler.h>
-#include <test/Options.h>
+#include <test/libtestcore/Options.h>
 
 using namespace std;
 using namespace langutil;

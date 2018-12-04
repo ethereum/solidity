@@ -24,7 +24,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libdevcore/JSON.h>
 
-#include "../Metadata.h"
+#include "test/libtestcore/Metadata.h"
 
 using namespace std;
 using namespace dev::eth;
