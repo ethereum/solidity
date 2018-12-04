@@ -63,11 +63,17 @@ public:
 	void appendJumpsub(LabelID, int, int) override;
 	void appendReturnsub(int, int) override;
 	void appendAssemblySize() override;
+	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
+	void appendDataOffset(SubID _sub) override;
+	void appendDataSize(SubID _sub) override;
+	SubID appendData(dev::bytes const& _data) override;
 
 private:
 	static LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag);
 
 	eth::Assembly& m_assembly;
+	std::map<SubID, dev::u256> m_dataHashBySubId;
+	size_t m_nextDataCounter = std::numeric_limits<size_t>::max() / 2;
 };
 
 class CodeGenerator

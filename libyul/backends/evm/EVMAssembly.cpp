@@ -194,6 +194,27 @@ void EVMAssembly::appendAssemblySize()
 	m_bytecode += bytes(assemblySizeReferenceSize);
 }
 
+pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EVMAssembly::createSubAssembly()
+{
+	solAssert(false, "Sub assemblies not implemented.");
+	return {};
+}
+
+void EVMAssembly::appendDataOffset(AbstractAssembly::SubID)
+{
+	solAssert(false, "Data not implemented.");
+}
+
+void EVMAssembly::appendDataSize(AbstractAssembly::SubID)
+{
+	solAssert(false, "Data not implemented.");
+}
+
+AbstractAssembly::SubID EVMAssembly::appendData(bytes const&)
+{
+	solAssert(false, "Data not implemented.");
+}
+
 void EVMAssembly::updateReference(size_t pos, size_t size, u256 value)
 {
 	solAssert(m_bytecode.size() >= size && pos <= m_bytecode.size() - size, "");

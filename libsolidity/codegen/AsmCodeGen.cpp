@@ -27,9 +27,12 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 
 #include <libevmasm/Assembly.h>
+#include <libevmasm/AssemblyItem.h>
 #include <libevmasm/Instruction.h>
 
 #include <liblangutil/SourceLocation.h>
+
+#include <libdevcore/FixedHash.h>
 
 #include <memory>
 #include <functional>
@@ -129,6 +132,39 @@ void EthAssemblyAdapter::appendReturnsub(int, int)
 void EthAssemblyAdapter::appendAssemblySize()
 {
 	m_assembly.appendProgramSize();
+}
+
+pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::createSubAssembly()
+{
+	shared_ptr<eth::Assembly> assembly{make_shared<eth::Assembly>()};
+	auto sub = m_assembly.newSub(assembly);
+	return {make_shared<EthAssemblyAdapter>(*assembly), size_t(sub.data())};
+}
+
+void EthAssemblyAdapter::appendDataOffset(AbstractAssembly::SubID _sub)
+{
+	auto it = m_dataHashBySubId.find(_sub);
+	if (it == m_dataHashBySubId.end())
+		m_assembly.pushSubroutineOffset(size_t(_sub));
+	else
+		m_assembly << eth::AssemblyItem(eth::PushData, it->second);
+}
+
+void EthAssemblyAdapter::appendDataSize(AbstractAssembly::SubID _sub)
+{
+	auto it = m_dataHashBySubId.find(_sub);
+	if (it == m_dataHashBySubId.end())
+		m_assembly.pushSubroutineSize(size_t(_sub));
+	else
+		m_assembly << u256(m_assembly.data(h256(it->second)).size());
+}
+
+AbstractAssembly::SubID EthAssemblyAdapter::appendData(bytes const& _data)
+{
+	eth::AssemblyItem pushData = m_assembly.newData(_data);
+	SubID subID = m_nextDataCounter++;
+	m_dataHashBySubId[subID] = pushData.data();
+	return subID;
 }
 
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(eth::AssemblyItem const& _tag)
