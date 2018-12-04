@@ -1,7 +1,6 @@
 add_library(yul
 	AsmAnalysis.cpp
 	AsmAnalysisInfo.cpp
-	AsmCodeGen.cpp
 	AsmParser.cpp
 	AsmPrinter.cpp
 	AsmScope.cpp
