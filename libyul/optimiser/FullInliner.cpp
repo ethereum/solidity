@@ -94,8 +94,11 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (_funCall.functionName.name == _callSite)
 		return false;
 
-	FunctionDefinition& calledFunction = function(_funCall.functionName.name);
-	if (m_alwaysInline.count(calledFunction.name))
+	FunctionDefinition* calledFunction = function(_funCall.functionName.name);
+	if (!calledFunction)
+		return false;
+
+	if (m_alwaysInline.count(calledFunction->name))
 		return true;
 
 	// Constant arguments might provide a means for further optimization, so they cause a bonus.
@@ -110,7 +113,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 			break;
 		}
 
-	size_t size = m_functionSizes.at(calledFunction.name);
+	size_t size = m_functionSizes.at(calledFunction->name);
 	return (size < 10 || (constantArg && size < 50));
 }
 
@@ -149,12 +152,13 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	vector<Statement> newStatements;
 	map<YulString, YulString> variableReplacements;
 
-	FunctionDefinition& function = m_driver.function(_funCall.functionName.name);
+	FunctionDefinition* function = m_driver.function(_funCall.functionName.name);
+	assertThrow(!!function, OptimizerException, "Attempt to inline invalid function.");
 
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
-		YulString newName = m_nameDispenser.newName(_existingVariable.name, function.name);
+		YulString newName = m_nameDispenser.newName(_existingVariable.name, function->name);
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
 		if (_value)
@@ -163,11 +167,11 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	};
 
 	for (size_t i = 0; i < _funCall.arguments.size(); ++i)
-		newVariable(function.parameters[i], &_funCall.arguments[i]);
-	for (auto const& var: function.returnVariables)
+		newVariable(function->parameters[i], &_funCall.arguments[i]);
+	for (auto const& var: function->returnVariables)
 		newVariable(var, nullptr);
 
-	Statement newBody = BodyCopier(m_nameDispenser, function.name, variableReplacements)(function.body);
+	Statement newBody = BodyCopier(m_nameDispenser, function->name, variableReplacements)(function->body);
 	newStatements += std::move(boost::get<Block>(newBody).statements);
 
 	boost::apply_visitor(GenericFallbackVisitor<Assignment, VariableDeclaration>{
@@ -179,7 +183,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 					{_assignment.variableNames[i]},
 					make_shared<Expression>(Identifier{
 						_assignment.location,
-						variableReplacements.at(function.returnVariables[i].name)
+						variableReplacements.at(function->returnVariables[i].name)
 					})
 				});
 		},
@@ -191,7 +195,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 					{std::move(_varDecl.variables[i])},
 					make_shared<Expression>(Identifier{
 						_varDecl.location,
-						variableReplacements.at(function.returnVariables[i].name)
+						variableReplacements.at(function->returnVariables[i].name)
 					})
 				});
 		}
