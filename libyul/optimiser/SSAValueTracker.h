@@ -33,6 +33,8 @@ namespace yul
  * Class that walks the AST and stores the initial value of each variable
  * that is never assigned to.
  *
+ * Default value is represented as nullptr.
+ *
  * Prerequisite: Disambiguator
  */
 class SSAValueTracker: public ASTWalker
