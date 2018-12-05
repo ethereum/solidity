@@ -23,7 +23,9 @@ namespace dev
 
 /// Simple generic result that holds a value and an optional error message.
 /// Results can be implicitly converted to and created from the type of
-/// the value they hold.
+/// the value they hold. The class is mainly designed for a result type of
+/// bool or pointer type. The idea is that the default constructed value of
+/// the result type is interpreted as an error value.
 ///
 /// Result<bool> check()
 /// {
@@ -38,29 +40,27 @@ class Result
 {
 public:
 	Result(ResultType _value): Result(_value, std::string{}) {}
-	Result(std::string _error): Result(ResultType{}, _error) {}
+	Result(std::string _message): Result(ResultType{}, std::move(_message)) {}
 
 	/// @{
 	/// @name Wrapper functions
 	/// Wrapper functions that provide implicit conversions to and explicit retrieval of
 	/// the value this result holds.
 	operator ResultType const&() const { return m_value; }
-	ResultType& operator*() const { return m_value; }
 	ResultType const& get() const { return m_value; }
-	ResultType& get() { return m_value; }
 	/// @}
 
 	/// @returns the error message (can be empty).
-	std::string const& error() const { return m_error; }
+	std::string const& message() const { return m_message; }
 
 private:
-	explicit Result(ResultType _value, std::string _error):
+	explicit Result(ResultType _value, std::string _message):
 		m_value(std::move(_value)),
-		m_error(std::move(_error))
+		m_message(std::move(_message))
 	{}
 
 	ResultType m_value;
-	std::string m_error;
+	std::string m_message;
 };
 
 }
