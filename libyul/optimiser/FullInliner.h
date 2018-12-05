@@ -63,8 +63,8 @@ class NameCollector;
  * code of f, with replacements: a -> f_a, b -> f_b, c -> f_c
  * let z := f_c
  *
- * Prerequisites: Disambiguator, Function Hoister
- * More efficient if run after: Expression Splitter
+ * Prerequisites: Disambiguator
+ * More efficient if run after: Function Hoister, Expression Splitter
  */
 class FullInliner: public ASTModifier
 {
@@ -77,7 +77,13 @@ public:
 	/// @param _callSite the name of the function in which the function call is located.
 	bool shallInline(FunctionCall const& _funCall, YulString _callSite);
 
-	FunctionDefinition& function(YulString _name) { return *m_functions.at(_name); }
+	FunctionDefinition* function(YulString _name)
+	{
+		auto it = m_functions.find(_name);
+		if (it != m_functions.end())
+			return it->second;
+		return nullptr;
+	}
 
 private:
 	void updateCodeSize(FunctionDefinition& fun);
