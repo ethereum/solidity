@@ -32,6 +32,9 @@ using namespace dev;
 string dev::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 {
 	std::ostringstream ret;
+	if (_prefix == HexPrefix::Add)
+		ret << "0x";
+
 	int rix = _data.size() - 1;
 	for (uint8_t c: _data)
 	{
@@ -45,7 +48,7 @@ string dev::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 		ret << std::hex << hexcase << std::setfill('0') << std::setw(2) << size_t(c);
 	}
 
-	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
+	return ret.str();
 }
 
 int dev::fromHex(char _i, WhenError _throw)
