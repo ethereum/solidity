@@ -629,7 +629,9 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 
 	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 	{
-		solAssert(m_dialect.flavour == AsmFlavour::Loose, "");
+		if (m_dialect.flavour != AsmFlavour::Loose)
+			solAssert(m_errorTypeForLoose && *m_errorTypeForLoose != Error::Type::Warning, "");
+
 		m_errorReporter.error(
 			m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
 			_location,

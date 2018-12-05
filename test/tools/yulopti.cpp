@@ -94,7 +94,7 @@ public:
 			*m_analysisInfo,
 			errorReporter,
 			EVMVersion::byzantium(),
-			boost::none,
+			langutil::Error::Type::SyntaxError,
 			Dialect::strictAssemblyForEVM()
 		);
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
