@@ -168,7 +168,7 @@ string AssemblyItem::toAssemblyText() const
 		break;
 	}
 	case Push:
-		text = toHex(toCompactBigEndian(data(), 1), 1, HexPrefix::Add);
+		text = toHex(toCompactBigEndian(data(), 1), HexPrefix::Add);
 		break;
 	case PushString:
 		text = string("data_") + toHex(data());

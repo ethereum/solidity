@@ -29,7 +29,7 @@
 using namespace std;
 using namespace dev;
 
-string dev::toHex(bytes const& _data, int, HexPrefix _prefix, HexCase _case)
+string dev::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 {
 	std::ostringstream ret;
 	int rix = _data.size() - 1;
@@ -42,8 +42,7 @@ string dev::toHex(bytes const& _data, int, HexPrefix _prefix, HexCase _case)
 		else if (_case == HexCase::Mixed)
 			hexcase = (rix-- & 2) == 0 ? std::nouppercase : std::uppercase;
 
-		ret << std::hex << hexcase << std::setfill('0') << std::setw(_w)
-			<< size_t(c);
+		ret << std::hex << hexcase << std::setfill('0') << std::setw(2) << size_t(c);
 	}
 
 	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();

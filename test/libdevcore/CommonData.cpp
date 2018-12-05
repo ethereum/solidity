@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(CommonData)
 
 BOOST_AUTO_TEST_CASE(test_to_hex)
 {
-	BOOST_CHECK_EQUAL(toHex(fromHex("FF"), 2, HexPrefix::DontAdd,  HexCase::Lower), "ff");
+	BOOST_CHECK_EQUAL(toHex(fromHex("FF"), HexPrefix::DontAdd,  HexCase::Lower), "ff");
 }
 
 BOOST_AUTO_TEST_CASE(test_format_number)
