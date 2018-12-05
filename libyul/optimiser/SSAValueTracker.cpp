@@ -37,7 +37,7 @@ void SSAValueTracker::operator()(VariableDeclaration const& _varDecl)
 {
 	if (_varDecl.variables.size() == 1)
 		setValue(_varDecl.variables.front().name, _varDecl.value.get());
-	else
+	else if (!_varDecl.value)
 		for (auto const& var: _varDecl.variables)
 			setValue(var.name, nullptr);
 }
