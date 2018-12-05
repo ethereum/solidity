@@ -19,11 +19,7 @@
 
 #include <test/Common.h>
 #include <test/libsolidity/AnalysisFramework.h>
-#include <test/libsolidity/SyntaxTest.h>
-#include <test/libsolidity/ASTJSONTest.h>
-#include <test/libsolidity/SMTCheckerJSONTest.h>
-#include <test/libyul/YulOptimizerTest.h>
-#include <test/libyul/ObjectCompilerTest.h>
+#include <test/InteractiveTests.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -380,59 +376,13 @@ Allowed options)",
 	TestStats global_stats{0, 0};
 
 	// Actually run the tests.
-	// If you add new tests here, you also have to add them in boostTest.cpp
-	if (auto stats = runTestSuite("Syntax", testPath / "libsolidity", "syntaxTests", SyntaxTest::create, formatted))
-		global_stats += *stats;
-	else
-		return 1;
-
-	if (auto stats = runTestSuite("JSON AST", testPath / "libsolidity", "ASTJSON", ASTJSONTest::create, formatted))
-		global_stats += *stats;
-	else
-		return 1;
-
-	if (auto stats = runTestSuite(
-		"Yul Optimizer",
-		testPath / "libyul",
-		"yulOptimizerTests",
-		yul::test::YulOptimizerTest::create,
-		formatted
-	))
-		global_stats += *stats;
-	else
-		return 1;
-
-	if (auto stats = runTestSuite(
-		"Yul Object Compiler",
-		testPath / "libyul",
-		"objectCompiler",
-		yul::test::ObjectCompilerTest::create,
-		formatted
-	))
-		global_stats += *stats;
-	else
-		return 1;
-
-	if (!disableSMT)
+	// Interactive tests are added in InteractiveTests.h
+	for (auto const& ts: g_interactiveTestsuites)
 	{
-		if (auto stats = runTestSuite(
-			"SMT Checker",
-			testPath / "libsolidity",
-			"smtCheckerTests",
-			SyntaxTest::create,
-			formatted
-		))
-			global_stats += *stats;
-		else
-			return 1;
+		if (ts.smt && disableSMT)
+			continue;
 
-		if (auto stats = runTestSuite(
-			"SMT Checker JSON",
-			testPath / "libsolidity",
-			"smtCheckerTestsJSON",
-			SMTCheckerTest::create,
-			formatted
-		))
+		if (auto stats = runTestSuite(ts.title, testPath / ts.path, ts.subpath, ts.testCaseCreator, formatted))
 			global_stats += *stats;
 		else
 			return 1;
