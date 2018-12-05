@@ -37,6 +37,12 @@ tag_and_push()
 rm -rf .git
 docker build -t "$image":build -f scripts/Dockerfile .
 tmp_container=$(docker create "$image":build sh)
+
+# Alpine image
+mkdir -p upload
+docker cp ${tmp_container}:/usr/bin/solc upload/solc-static-linux
+docker build -t "$image":build-alpine -f scripts/Dockerfile_alpine .
+
 if [ "$branch" = "develop" ]
 then
     tag_and_push build nightly
