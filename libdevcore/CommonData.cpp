@@ -29,6 +29,26 @@
 using namespace std;
 using namespace dev;
 
+string dev::toHex(bytes const& _data, int, HexPrefix _prefix, HexCase _case)
+{
+	std::ostringstream ret;
+	int rix = _data.size() - 1;
+	for (uint8_t c: _data)
+	{
+		// switch hex case every four hexchars
+		auto hexcase = std::nouppercase;
+		if (_case == HexCase::Upper)
+			hexcase = std::uppercase;
+		else if (_case == HexCase::Mixed)
+			hexcase = (rix-- & 2) == 0 ? std::nouppercase : std::uppercase;
+
+		ret << std::hex << hexcase << std::setfill('0') << std::setw(_w)
+			<< size_t(c);
+	}
+
+	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
+}
+
 int dev::fromHex(char _i, WhenError _throw)
 {
 	if (_i >= '0' && _i <= '9')
