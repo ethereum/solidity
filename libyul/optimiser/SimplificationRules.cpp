@@ -114,7 +114,8 @@ bool Pattern::matches(Expression const& _expr, map<YulString, Expression const*>
 	{
 		YulString varName = boost::get<Identifier>(_expr).name;
 		if (_ssaValues.count(varName))
-			expr = _ssaValues.at(varName);
+			if (Expression const* new_expr = _ssaValues.at(varName))
+				expr = new_expr;
 	}
 	assertThrow(expr, OptimizerException, "");
 
