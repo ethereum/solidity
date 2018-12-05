@@ -20,12 +20,11 @@
 // fullSuite
 // {
 //     {
-//         let _1 := 0x20
 //         let allocate__19 := 0x40
-//         mstore(allocate__19, add(mload(allocate__19), _1))
+//         mstore(allocate__19, add(mload(allocate__19), 0x20))
 //         let allocate_p_24_41 := mload(allocate__19)
 //         mstore(allocate__19, add(allocate_p_24_41, allocate__19))
 //         mstore(add(allocate_p_24_41, 96), 2)
-//         mstore(allocate__19, _1)
+//         mstore(allocate__19, 0x20)
 //     }
 // }

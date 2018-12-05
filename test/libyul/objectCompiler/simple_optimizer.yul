@@ -9,15 +9,10 @@
 // Assembly:
 //     /* "source":38:39   */
 //   0x00
-//     /* "source":109:110   */
-//   dup1
-//     /* "source":38:39   */
-//   dup2
+//   0x00
 //     /* "source":25:40   */
 //   calldataload
 //     /* "source":91:111   */
 //   sstore
-//     /* "source":12:113   */
-//   pop
-// Bytecode: 60008081355550
-// Opcodes: PUSH1 0x0 DUP1 DUP2 CALLDATALOAD SSTORE POP
+// Bytecode: 600060003555
+// Opcodes: PUSH1 0x0 PUSH1 0x0 CALLDATALOAD SSTORE
