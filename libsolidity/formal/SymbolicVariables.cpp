@@ -37,14 +37,30 @@ SymbolicVariable::SymbolicVariable(
 {
 }
 
+smt::Expression SymbolicVariable::currentValue() const
+{
+	return valueAtIndex(m_ssa->index());
+}
+
 string SymbolicVariable::currentName() const
 {
 	return uniqueSymbol(m_ssa->index());
 }
 
+smt::Expression SymbolicVariable::valueAtIndex(int _index) const
+{
+	return m_interface.newVariable(uniqueSymbol(_index), smtSort(*m_type));
+}
+
 string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
+}
+
+smt::Expression SymbolicVariable::increaseIndex()
+{
+	++(*m_ssa);
+	return currentValue();
 }
 
 SymbolicBoolVariable::SymbolicBoolVariable(
@@ -57,11 +73,6 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 	solAssert(m_type->category() == Type::Category::Bool, "");
 }
 
-smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
-{
-	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Bool));
-}
-
 SymbolicIntVariable::SymbolicIntVariable(
 	TypePointer _type,
 	string const& _uniqueName,
@@ -70,11 +81,6 @@ SymbolicIntVariable::SymbolicIntVariable(
 	SymbolicVariable(move(_type), _uniqueName, _interface)
 {
 	solAssert(isNumber(m_type->category()), "");
-}
-
-smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
-{
-	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Int));
 }
 
 SymbolicAddressVariable::SymbolicAddressVariable(

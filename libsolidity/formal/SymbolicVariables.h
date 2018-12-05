@@ -46,20 +46,10 @@ public:
 
 	virtual ~SymbolicVariable() = default;
 
-	smt::Expression currentValue() const
-	{
-		return valueAtIndex(m_ssa->index());
-	}
-
+	smt::Expression currentValue() const;
 	std::string currentName() const;
-
-	virtual smt::Expression valueAtIndex(int _index) const = 0;
-
-	smt::Expression increaseIndex()
-	{
-		++(*m_ssa);
-		return currentValue();
-	}
+	virtual smt::Expression valueAtIndex(int _index) const;
+	smt::Expression increaseIndex();
 
 	unsigned index() const { return m_ssa->index(); }
 	unsigned& index() { return m_ssa->index(); }
@@ -86,9 +76,6 @@ public:
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
-
-protected:
-	smt::Expression valueAtIndex(int _index) const;
 };
 
 /**
@@ -102,9 +89,6 @@ public:
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
-
-protected:
-	smt::Expression valueAtIndex(int _index) const;
 };
 
 /**
