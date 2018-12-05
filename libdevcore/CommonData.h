@@ -61,12 +61,11 @@ enum class HexCase
 /// Convert a series of bytes to the corresponding string of hex duplets.
 /// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
 /// @example toHex("A\x69") == "4169"
-template <class T>
-std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower)
+inline std::string toHex(bytes const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower)
 {
 	std::ostringstream ret;
 	int rix = _data.size() - 1;
-	for (auto datum: _data)
+	for (uint8_t c: _data)
 	{
 		// switch hex case every four hexchars
 		auto hexcase = std::nouppercase;
@@ -76,7 +75,7 @@ std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::Don
 			hexcase = (rix-- & 2) == 0 ? std::nouppercase : std::uppercase;
 
 		ret << std::hex << hexcase << std::setfill('0') << std::setw(_w)
-			<< +static_cast<typename std::make_unsigned<decltype(datum)>::type>(datum);
+			<< size_t(c);
 	}
 
 	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
