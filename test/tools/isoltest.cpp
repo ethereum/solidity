@@ -23,6 +23,7 @@
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/YulOptimizerTest.h>
+#include <test/libyul/ObjectCompilerTest.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -395,6 +396,17 @@ Allowed options)",
 		testPath / "libyul",
 		"yulOptimizerTests",
 		yul::test::YulOptimizerTest::create,
+		formatted
+	))
+		global_stats += *stats;
+	else
+		return 1;
+
+	if (auto stats = runTestSuite(
+		"Yul Object Compiler",
+		testPath / "libyul",
+		"objectCompiler",
+		yul::test::ObjectCompilerTest::create,
 		formatted
 	))
 		global_stats += *stats;
