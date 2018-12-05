@@ -512,9 +512,8 @@ TypeResult AddressType::unaryOperatorResult(Token _operator) const
 
 TypeResult AddressType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
-	// Addresses can only be compared.
 	if (!TokenTraits::isCompareOp(_operator))
-		return TypePointer();
+		return TypeResult{"Addresses can only be compared"};
 
 	return Type::commonType(shared_from_this(), _other);
 }
@@ -678,9 +677,8 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, TypePointer const&
 		return TypePointer();
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
 	{
-		// Signed EXP is not allowed
 		if (Token::Exp == _operator && intType->isSigned())
-			return TypePointer();
+			return TypeResult{"Signed exponentiation is not allowed"};
 	}
 	else if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
 		if (Token::Exp == _operator)
@@ -1128,9 +1126,8 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, TypePointer
 
 				uint32_t absExp = bigint(abs(exp)).convert_to<uint32_t>();
 
-				// Limit size to 4096 bits
 				if (!fitsPrecisionExp(abs(m_value.numerator()), absExp) || !fitsPrecisionExp(abs(m_value.denominator()), absExp))
-					return TypePointer();
+					return TypeResult{"Precision is limited to 4096 bits"};
 
 				static auto const optimizedPow = [](bigint const& _base, uint32_t _exponent) -> bigint {
 					if (_base == 1)
@@ -1211,7 +1208,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, TypePointer
 
 		// verify that numerator and denominator fit into 4096 bit after every operation
 		if (value.numerator() != 0 && max(mostSignificantBit(abs(value.numerator())), mostSignificantBit(abs(value.denominator()))) > 4096)
-			return TypePointer();
+			return TypeResult{"Precision is limited to 4096 bits"};
 
 		return TypeResult(make_shared<RationalNumberType>(value));
 	}
