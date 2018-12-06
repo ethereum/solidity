@@ -208,10 +208,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 
 u256 Pattern::d() const
 {
-	Literal const& literal = boost::get<Literal>(matchGroupValue());
-	assertThrow(literal.kind == LiteralKind::Number, OptimizerException, "");
-	assertThrow(isValidDecimal(literal.value.str()) || isValidHex(literal.value.str()), OptimizerException, "");
-	return u256(literal.value.str());
+	return valueOfNumberLiteral(boost::get<Literal>(matchGroupValue()));
 }
 
 Expression const& Pattern::matchGroupValue() const

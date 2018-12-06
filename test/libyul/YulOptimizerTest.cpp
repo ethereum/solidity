@@ -39,6 +39,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
@@ -212,6 +213,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		NameDispenser nameDispenser(*m_ast);
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_ast);
+	}
+	else if (m_optimizerStep == "structuralSimplifier")
+	{
+		disambiguate();
+		StructuralSimplifier{}(*m_ast);
 	}
 	else if (m_optimizerStep == "fullSuite")
 		OptimiserSuite::run(*m_ast, *m_analysisInfo);

@@ -46,6 +46,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/VarDeclPropagator.h>
 
 #include <libdevcore/JSON.h>
@@ -124,7 +125,8 @@ public:
 			}
 			cout << "(q)quit/(f)flatten/(c)se/propagate var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
 			cout << "  (e)xpr inline/(i)nline/(s)implify/(u)nusedprune/ss(a) transform/" << endl;
-			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter? ";
+			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
+			cout << "  s(t)ructural simplifier? " << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -164,6 +166,9 @@ public:
 				break;
 			case 's':
 				ExpressionSimplifier::run(*m_ast);
+				break;
+			case 't':
+				(StructuralSimplifier{})(*m_ast);
 				break;
 			case 'u':
 				UnusedPruner::runUntilStabilised(*m_ast);

@@ -36,6 +36,7 @@ add_library(yul
 	optimiser/SSAValueTracker.cpp
 	optimiser/Semantics.cpp
 	optimiser/SimplificationRules.cpp
+	optimiser/StructuralSimplifier.cpp
 	optimiser/Substitution.cpp
 	optimiser/Suite.cpp
 	optimiser/SyntacticalEquality.cpp
