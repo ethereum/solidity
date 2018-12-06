@@ -264,7 +264,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	if (!m_ast || !errorReporter.errors().empty())
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, errorReporter.errors(), *scanner);
+		printErrors(_stream, errorReporter.errors());
 		return false;
 	}
 	m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
@@ -278,7 +278,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error analyzing source." << endl;
-		printErrors(_stream, errorReporter.errors(), *scanner);
+		printErrors(_stream, errorReporter.errors());
 		return false;
 	}
 	return true;
@@ -290,9 +290,9 @@ void YulOptimizerTest::disambiguate()
 	m_analysisInfo.reset();
 }
 
-void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors, Scanner const& _scanner)
+void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream, [&](string const&) -> Scanner const& { return _scanner; });
+	SourceReferenceFormatter formatter(_stream);
 
 	for (auto const& error: _errors)
 		formatter.printExceptionInformation(

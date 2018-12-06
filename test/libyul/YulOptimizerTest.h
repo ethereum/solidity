@@ -57,7 +57,7 @@ private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	void disambiguate();
 
-	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors, langutil::Scanner const& _scanner);
+	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
 	std::string m_source;
 	bool m_yul = false;

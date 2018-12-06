@@ -138,8 +138,7 @@ BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
 			if (first->first->location().intersects(second->first->location()))
 			{
 				BOOST_CHECK_MESSAGE(false, "Source locations should not overlap!");
-				auto scannerFromSource = [&](string const& _sourceName) -> Scanner const& { return m_compiler.scanner(_sourceName); };
-				SourceReferenceFormatter formatter(cout, scannerFromSource);
+				SourceReferenceFormatter formatter(cout);
 
 				formatter.printSourceLocation(&first->first->location());
 				formatter.printSourceLocation(&second->first->location());

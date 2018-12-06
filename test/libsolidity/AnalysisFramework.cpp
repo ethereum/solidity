@@ -127,8 +127,7 @@ string AnalysisFramework::formatError(Error const& _error) const
 {
 	return SourceReferenceFormatter::formatExceptionInformation(
 			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error",
-			[&](std::string const& _sourceName) -> Scanner const& { return m_compiler.scanner(_sourceName); }
+			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
 		);
 }
 

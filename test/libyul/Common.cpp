@@ -40,9 +40,9 @@ using namespace langutil;
 using namespace yul;
 using namespace dev::solidity;
 
-void yul::test::printErrors(ErrorList const& _errors, Scanner const& _scanner)
+void yul::test::printErrors(ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(cout, [&](std::string const&) -> Scanner const& { return _scanner; });
+	SourceReferenceFormatter formatter(cout);
 
 	for (auto const& error: _errors)
 		formatter.printExceptionInformation(
@@ -76,7 +76,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 			return make_pair(parserResult, analysisInfo);
 		}
 	}
-	printErrors(errors, *scanner);
+	printErrors(errors);
 	BOOST_FAIL("Invalid source.");
 
 	// Unreachable.

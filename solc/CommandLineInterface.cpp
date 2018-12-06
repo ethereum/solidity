@@ -858,8 +858,7 @@ bool CommandLineInterface::processInput()
 
 	m_compiler.reset(new CompilerStack(fileReader));
 
-	auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return m_compiler->scanner(_sourceName); };
-	SourceReferenceFormatter formatter(serr(false), scannerFromSourceName);
+	SourceReferenceFormatter formatter(serr(false));
 
 	try
 	{
@@ -1222,8 +1221,7 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
-		auto scannerFromSourceName = [&](string const&) -> Scanner const& { return stack.scanner(); };
-		SourceReferenceFormatter formatter(serr(false), scannerFromSourceName);
+		SourceReferenceFormatter formatter(serr(false));
 
 		for (auto const& error: stack.errors())
 		{
