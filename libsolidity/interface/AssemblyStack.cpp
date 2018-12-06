@@ -52,7 +52,7 @@ yul::Dialect languageToDialect(AssemblyStack::Language _language)
 	case AssemblyStack::Language::Assembly:
 		return yul::Dialect::looseAssemblyForEVM();
 	case AssemblyStack::Language::StrictAssembly:
-		return yul::Dialect::strictAssemblyForEVM();
+		return yul::Dialect::strictAssemblyForEVMObjects();
 	case AssemblyStack::Language::Yul:
 		return yul::Dialect::yul();
 	}

@@ -5,6 +5,7 @@ add_library(yul
 	AsmPrinter.cpp
 	AsmScope.cpp
 	AsmScopeFiller.cpp
+	Dialect.cpp
 	Object.cpp
 	ObjectParser.cpp
 	backends/evm/EVMAssembly.cpp

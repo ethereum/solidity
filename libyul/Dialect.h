@@ -72,6 +72,7 @@ struct Dialect
 		// The EVM instructions will be moved to builtins at some point.
 		return Dialect{AsmFlavour::Strict, std::make_shared<Builtins>()};
 	}
+	static Dialect strictAssemblyForEVMObjects();
 	static Dialect yul()
 	{
 		// Will have to add builtins later.
