@@ -31,6 +31,7 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/YulString.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 
@@ -361,7 +362,7 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, "--CODEGEN--"));
-	auto parserResult = yul::Parser(errorReporter, yul::Dialect::strictAssemblyForEVM()).parse(scanner, false);
+	auto parserResult = yul::Parser(errorReporter, yul::EVMDialect::strictAssemblyForEVM()).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter()(*parserResult) << endl;
 #endif
@@ -373,7 +374,7 @@ void CompilerContext::appendInlineAssembly(
 			errorReporter,
 			m_evmVersion,
 			boost::none,
-			yul::Dialect::strictAssemblyForEVM(),
+			yul::EVMDialect::strictAssemblyForEVM(),
 			identifierAccess.resolve
 		).analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)

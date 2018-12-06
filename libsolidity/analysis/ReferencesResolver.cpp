@@ -27,6 +27,7 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 
@@ -321,7 +322,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 		errorsIgnored,
 		EVMVersion(),
 		errorTypeForLoose,
-		yul::Dialect::looseAssemblyForEVM(),
+		yul::EVMDialect::looseAssemblyForEVM(),
 		resolver
 	).analyze(_inlineAssembly.operations());
 	return false;

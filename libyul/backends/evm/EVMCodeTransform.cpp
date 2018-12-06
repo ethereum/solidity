@@ -97,7 +97,7 @@ CodeTransform::CodeTransform(
 	AsmAnalysisInfo& _analysisInfo,
 	Block const& _block,
 	bool _allowStackOpt,
-	bool _yul,
+	EVMDialect const& _dialect,
 	bool _evm15,
 	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions,
@@ -106,8 +106,8 @@ CodeTransform::CodeTransform(
 ):
 	m_assembly(_assembly),
 	m_info(_analysisInfo),
+	m_dialect(_dialect),
 	m_allowStackOpt(_allowStackOpt),
-	m_yul(_yul),
 	m_evm15(_evm15),
 	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
 	m_identifierAccess(_identifierAccess),
@@ -267,35 +267,46 @@ void CodeTransform::operator()(FunctionCall const& _call)
 {
 	solAssert(m_scope, "");
 
-	m_assembly.setSourceLocation(_call.location);
-	EVMAssembly::LabelID returnLabel(-1); // only used for evm 1.0
-	if (!m_evm15)
+	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
-		returnLabel = m_assembly.newLabelId();
-		m_assembly.appendLabelReference(returnLabel);
-		m_stackAdjustment++;
+		builtin->generateCode(_call, m_assembly, [&]() {
+			for (auto const& arg: _call.arguments | boost::adaptors::reversed)
+				visitExpression(arg);
+			m_assembly.setSourceLocation(_call.location);
+		});
 	}
-
-	Scope::Function* function = nullptr;
-	solAssert(m_scope->lookup(_call.functionName.name, Scope::NonconstVisitor(
-		[=](Scope::Variable&) { solAssert(false, "Expected function name."); },
-		[=](Scope::Label&) { solAssert(false, "Expected function name."); },
-		[&](Scope::Function& _function) { function = &_function; }
-	)), "Function name not found.");
-	solAssert(function, "");
-	solAssert(function->arguments.size() == _call.arguments.size(), "");
-	for (auto const& arg: _call.arguments | boost::adaptors::reversed)
-		visitExpression(arg);
-	m_assembly.setSourceLocation(_call.location);
-	if (m_evm15)
-		m_assembly.appendJumpsub(functionEntryID(_call.functionName.name, *function), function->arguments.size(), function->returns.size());
 	else
 	{
-		m_assembly.appendJumpTo(functionEntryID(_call.functionName.name, *function), function->returns.size() - function->arguments.size() - 1);
-		m_assembly.appendLabel(returnLabel);
-		m_stackAdjustment--;
+		m_assembly.setSourceLocation(_call.location);
+		EVMAssembly::LabelID returnLabel(-1); // only used for evm 1.0
+		if (!m_evm15)
+		{
+			returnLabel = m_assembly.newLabelId();
+			m_assembly.appendLabelReference(returnLabel);
+			m_stackAdjustment++;
+		}
+
+		Scope::Function* function = nullptr;
+		solAssert(m_scope->lookup(_call.functionName.name, Scope::NonconstVisitor(
+			[=](Scope::Variable&) { solAssert(false, "Expected function name."); },
+			[=](Scope::Label&) { solAssert(false, "Expected function name."); },
+			[&](Scope::Function& _function) { function = &_function; }
+		)), "Function name not found.");
+		solAssert(function, "");
+		solAssert(function->arguments.size() == _call.arguments.size(), "");
+		for (auto const& arg: _call.arguments | boost::adaptors::reversed)
+			visitExpression(arg);
+		m_assembly.setSourceLocation(_call.location);
+		if (m_evm15)
+			m_assembly.appendJumpsub(functionEntryID(_call.functionName.name, *function), function->arguments.size(), function->returns.size());
+		else
+		{
+			m_assembly.appendJumpTo(functionEntryID(_call.functionName.name, *function), function->returns.size() - function->arguments.size() - 1);
+			m_assembly.appendLabel(returnLabel);
+			m_stackAdjustment--;
+		}
+		checkStackHeight(&_call);
 	}
-	checkStackHeight(&_call);
 }
 
 void CodeTransform::operator()(FunctionalInstruction const& _instruction)

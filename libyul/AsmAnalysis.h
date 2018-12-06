@@ -59,7 +59,7 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		dev::solidity::EVMVersion _evmVersion,
 		boost::optional<langutil::Error::Type> _errorTypeForLoose,
-		Dialect _dialect = Dialect::looseAssemblyForEVM(),
+		std::shared_ptr<Dialect> _dialect,
 		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
 	):
 		m_resolver(_resolver),
@@ -115,7 +115,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
 	dev::solidity::EVMVersion m_evmVersion;
-	Dialect m_dialect = Dialect::looseAssemblyForEVM();
+	std::shared_ptr<Dialect> m_dialect;
 	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
 };
 

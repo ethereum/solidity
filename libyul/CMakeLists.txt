@@ -10,6 +10,7 @@ add_library(yul
 	ObjectParser.cpp
 	backends/evm/EVMAssembly.cpp
 	backends/evm/EVMCodeTransform.cpp
+	backends/evm/EVMDialect.cpp
 	backends/evm/EVMObjectCompiler.cpp
 	optimiser/ASTCopier.cpp
 	optimiser/ASTWalker.cpp

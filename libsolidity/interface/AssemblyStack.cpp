@@ -32,6 +32,7 @@
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMAssembly.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/ObjectParser.h>
 
 #include <libevmasm/Assembly.h>
@@ -45,14 +46,14 @@ using namespace dev::solidity;
 
 namespace
 {
-yul::Dialect languageToDialect(AssemblyStack::Language _language)
+shared_ptr<yul::Dialect> languageToDialect(AssemblyStack::Language _language)
 {
 	switch (_language)
 	{
 	case AssemblyStack::Language::Assembly:
-		return yul::Dialect::looseAssemblyForEVM();
+		return yul::EVMDialect::looseAssemblyForEVM();
 	case AssemblyStack::Language::StrictAssembly:
-		return yul::Dialect::strictAssemblyForEVMObjects();
+		return yul::EVMDialect::strictAssemblyForEVMObjects();
 	case AssemblyStack::Language::Yul:
 		return yul::Dialect::yul();
 	}
@@ -112,6 +113,22 @@ bool AssemblyStack::analyzeParsed(yul::Object& _object)
 	return success;
 }
 
+void AssemblyStack::compileEVM(yul::AbstractAssembly& _assembly, bool _evm15, bool _optimize) const
+{
+	shared_ptr<yul::EVMDialect> dialect;
+
+	if (m_language == Language::Assembly)
+		dialect = yul::EVMDialect::looseAssemblyForEVM();
+	else if (m_language == AssemblyStack::Language::StrictAssembly)
+		dialect = yul::EVMDialect::strictAssemblyForEVMObjects();
+	else if (m_language == AssemblyStack::Language::Yul)
+		dialect = yul::EVMDialect::yulForEVM();
+	else
+		solAssert(false, "Invalid language.");
+
+	yul::EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _evm15, _optimize);
+}
+
 void AssemblyStack::optimize(yul::Object& _object)
 {
 	solAssert(_object.code, "");
@@ -136,7 +153,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
 		EthAssemblyAdapter adapter(assembly);
-		yul::EVMObjectCompiler::compile(*m_parserResult, adapter, languageToDialect(m_language), false, _optimize);
+		compileEVM(adapter, false, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -145,7 +162,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 	{
 		MachineAssemblyObject object;
 		yul::EVMAssembly assembly(true);
-		yul::EVMObjectCompiler::compile(*m_parserResult, assembly, languageToDialect(m_language), true, _optimize);
+		compileEVM(assembly, true, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;

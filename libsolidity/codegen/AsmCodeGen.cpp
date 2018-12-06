@@ -188,8 +188,8 @@ void CodeGenerator::assemble(
 		assemblyAdapter,
 		_analysisInfo,
 		_parsedData,
+		*EVMDialect::strictAssemblyForEVM(),
 		_optimize,
-		Dialect::strictAssemblyForEVM(),
 		false,
 		_identifierAccess,
 		_useNamedLabelsForFunctions

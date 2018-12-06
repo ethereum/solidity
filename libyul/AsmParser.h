@@ -38,7 +38,7 @@ namespace yul
 class Parser: public langutil::ParserBase
 {
 public:
-	explicit Parser(langutil::ErrorReporter& _errorReporter, Dialect _dialect = Dialect::looseAssemblyForEVM()):
+	explicit Parser(langutil::ErrorReporter& _errorReporter, std::shared_ptr<Dialect> _dialect):
 		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
@@ -86,7 +86,7 @@ protected:
 	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
-	Dialect m_dialect = Dialect::looseAssemblyForEVM();
+	std::shared_ptr<Dialect> m_dialect;
 };
 
 }
