@@ -12245,7 +12245,7 @@ BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
 	compileAndRun(sourceCode);
 	BOOST_CHECK_LE(
 		double(m_compiler.object("Double").bytecode.size()),
-		1.1 * double(m_compiler.object("Single").bytecode.size())
+		1.2 * double(m_compiler.object("Single").bytecode.size())
 	);
 }
 

@@ -1,0 +1,7 @@
+
+======= data_storage.sol:C =======
+Gas estimation:
+construction:
+   306 + 264400 = 264706
+external:
+   f():	263
