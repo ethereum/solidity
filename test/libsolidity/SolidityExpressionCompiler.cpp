@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(int y) { !(~+- y == 2); }
+			function f(int y) { !(~- y == 2); }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
