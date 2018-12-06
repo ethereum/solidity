@@ -91,17 +91,12 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			methods["constructor"] = constructor;
 	}
 
-	for (auto const& it: _contractDef.interfaceFunctions())
+	for (auto const& it: _contractDef.definedFunctions())
 	{
-		if (!it.second->hasDeclaration())
-			continue;
-		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
-		{
-			Json::Value method(devDocumentation(fun->annotation().docTags));
-			if (!method.empty())
-				// add the function, only if we have any documentation to add
-				methods[it.second->externalSignature()] = method;
-		}
+		Json::Value method(devDocumentation(it->annotation().docTags));
+		if (!method.empty())
+			// add the function, only if we have any documentation to add
+			methods[it->externalSignature()] = method;
 	}
 	doc["methods"] = methods;
 
