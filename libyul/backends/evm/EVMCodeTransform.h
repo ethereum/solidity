@@ -22,8 +22,8 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/AsmDataForward.h>
-
 #include <libyul/AsmScope.h>
+#include <libyul/Dialect.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -88,7 +88,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		bool _allowStackOpt = false,
-		bool _yul = false,
+		Dialect const& _dialect,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
@@ -97,7 +97,7 @@ public:
 		_analysisInfo,
 		_block,
 		_allowStackOpt,
-		_yul,
+		_dialect,
 		_evm15,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
@@ -115,7 +115,7 @@ protected:
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		bool _allowStackOpt,
-		bool _yul,
+		Dialect const& _dialect,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
 		bool _useNamedLabelsForFunctions,
@@ -180,7 +180,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
 	bool const m_allowStackOpt = true;
-	bool m_yul = false;
+	Dialect const& m_dialect;
 	bool m_evm15 = false;
 	bool m_useNamedLabelsForFunctions = false;
 	ExternalIdentifierAccess m_identifierAccess;

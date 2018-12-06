@@ -136,7 +136,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
 		EthAssemblyAdapter adapter(assembly);
-		yul::EVMObjectCompiler::compile(*m_parserResult, adapter, m_language == Language::Yul, false, _optimize);
+		yul::EVMObjectCompiler::compile(*m_parserResult, adapter, languageToDialect(m_language), false, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -145,7 +145,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 	{
 		MachineAssemblyObject object;
 		yul::EVMAssembly assembly(true);
-		yul::EVMObjectCompiler::compile(*m_parserResult, assembly, m_language == Language::Yul, true, _optimize);
+		yul::EVMObjectCompiler::compile(*m_parserResult, assembly, languageToDialect(m_language), true, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;

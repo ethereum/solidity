@@ -506,7 +506,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_info,
 		_function.body,
 		m_allowStackOpt,
-		m_yul,
+		m_dialect,
 		m_evm15,
 		m_identifierAccess,
 		m_useNamedLabelsForFunctions,

@@ -189,7 +189,7 @@ void CodeGenerator::assemble(
 		_analysisInfo,
 		_parsedData,
 		_optimize,
-		false,
+		Dialect::strictAssemblyForEVM(),
 		false,
 		_identifierAccess,
 		_useNamedLabelsForFunctions
