@@ -724,7 +724,7 @@ bool ASTJsonConverter::visit(Literal const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair(m_legacy ? "token" : "kind", literalTokenKind(_node.token())),
 		make_pair("value", value),
-		make_pair(m_legacy ? "hexvalue" : "hexValue", toHex(_node.value())),
+		make_pair(m_legacy ? "hexvalue" : "hexValue", toHex(asBytes(_node.value()))),
 		make_pair(
 			"subdenomination",
 			subdenomination == Token::Illegal ?

@@ -111,7 +111,7 @@ inline std::string formatNumberReadable(
 		// 0x100 yields 2**8 (N is 1 and redundant)
 		if (v == 1)
 			return "2**" + std::to_string(i * 8);
-		return toHex(toCompactBigEndian(v), 2, prefix, hexcase) +
+		return toHex(toCompactBigEndian(v), prefix, hexcase) +
 			" * 2**" +
 			std::to_string(i * 8);
 	}
@@ -125,12 +125,12 @@ inline std::string formatNumberReadable(
 		// 0xFF yields 2**8 - 1 (v is 0 in that case)
 		if (v == 0)
 			return "2**" + std::to_string(i * 8) + " - 1";
-		return toHex(toCompactBigEndian(T(v + 1)), 2, prefix, hexcase) +
+		return toHex(toCompactBigEndian(T(v + 1)), prefix, hexcase) +
 			" * 2**" + std::to_string(i * 8) +
 			" - 1";
 	}
 
-	std::string str = toHex(toCompactBigEndian(_value), 2, prefix, hexcase);
+	std::string str = toHex(toCompactBigEndian(_value), prefix, hexcase);
 	if (_useTruncation)
 	{
 		// return as interior-truncated hex.

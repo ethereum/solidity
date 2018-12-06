@@ -552,7 +552,7 @@ Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
 {
 	Json::Value methodIdentifiers(Json::objectValue);
 	for (auto const& it: contractDefinition(_contractName).interfaceFunctions())
-		methodIdentifiers[it.second->externalSignature()] = toHex(it.first.ref());
+		methodIdentifiers[it.second->externalSignature()] = it.first.hex();
 	return methodIdentifiers;
 }
 
