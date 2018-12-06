@@ -77,6 +77,10 @@ public:
 
 	/// Append the assembled size as a constant.
 	void appendAssemblySize() override;
+	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
+	void appendDataOffset(SubID _sub) override;
+	void appendDataSize(SubID _sub) override;
+	SubID appendData(dev::bytes const& _data) override;
 
 	/// Resolves references inside the bytecode and returns the linker object.
 	dev::eth::LinkerObject finalize();

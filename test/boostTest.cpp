@@ -40,6 +40,7 @@
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/YulOptimizerTest.h>
+#include <test/libyul/ObjectCompilerTest.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -146,6 +147,12 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		"yulOptimizerTests",
 		yul::test::YulOptimizerTest::create
 	) > 0, "no Yul Optimizer tests found");
+	solAssert(registerTests(
+		master,
+		dev::test::Options::get().testPath / "libyul",
+		"objectCompiler",
+		yul::test::ObjectCompilerTest::create
+	) > 0, "no Yul Object compiler tests found");
 	if (!dev::test::Options::get().disableSMT)
 	{
 		solAssert(registerTests(

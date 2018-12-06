@@ -83,6 +83,9 @@ public:
 
 private:
 	bool analyzeParsed();
+	bool analyzeParsed(yul::Object& _object);
+
+	void optimize(yul::Object& _object);
 
 	Language m_language = Language::Assembly;
 	EVMVersion m_evmVersion;
