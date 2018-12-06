@@ -110,13 +110,15 @@ printTask "Testing unknown options..."
 
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
 # An failure is expected.
-test_solc_file_input_failures() {
+test_solc_behaviour() {
     local filename="${1}"
     local solc_args="${2}"
     local stdout_expected="${3}"
-    local stderr_expected="${4}"
+    local exit_code_expected="${4}"
+    local stderr_expected="${5}"
     local stdout_path=`mktemp`
     local stderr_path=`mktemp`
+    if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
     set +e
     "$SOLC" "${filename}" ${solc_args} 1>$stdout_path 2>$stderr_path
@@ -126,14 +128,14 @@ test_solc_file_input_failures() {
     sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
     sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
 
-    if [[ $exitCode -eq 0 ]]; then
-        printError "Incorrect exit code. Expected failure (non-zero) but got success (0)."
+    if [[ $exitCode -ne "$exit_code_expected" ]]; then
+        printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
         rm -f $stdout_path $stderr_path
         exit 1
     fi
 
     if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]; then
-        printError "Incorrect output on stderr received. Expected:"
+        printError "Incorrect output on stdout received. Expected:"
         echo -e "${stdout_expected}"
 
         printError "But got:"
@@ -156,22 +158,26 @@ test_solc_file_input_failures() {
 }
 
 printTask "Testing passing files that are not found..."
-test_solc_file_input_failures "file_not_found.sol" "" "" "\"file_not_found.sol\" is not found."
+test_solc_behaviour "file_not_found.sol" "" "" 1 "\"file_not_found.sol\" is not found."
 
 printTask "Testing passing files that are not files..."
-test_solc_file_input_failures "." "" "" "\".\" is not a valid file."
+test_solc_behaviour "." "" "" 1 "\".\" is not a valid file."
 
 printTask "Testing passing empty remappings..."
-test_solc_file_input_failures "${0}" "=/some/remapping/target" "" "Invalid remapping: \"=/some/remapping/target\"."
-test_solc_file_input_failures "${0}" "ctx:=/some/remapping/target" "" "Invalid remapping: \"ctx:=/some/remapping/target\"."
+test_solc_behaviour "${0}" "=/some/remapping/target" "" 1 "Invalid remapping: \"=/some/remapping/target\"."
+test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"."
 
-printTask "Testing passing location printing..."
+printTask "Running general commandline tests..."
 (
-cd "$REPO_ROOT"/test/cmdlineErrorReports/
+cd "$REPO_ROOT"/test/cmdlineTests/
 for file in *.sol
 do
-    ret=`cat $file.ref`
-    test_solc_file_input_failures "$file" "" "" "$ret"
+    args=$(cat $file.args 2>/dev/null || true)
+    stdout=$(cat $file.stdout 2>/dev/null || true)
+    exitCode=$(cat $file.exit 2>/dev/null || true)
+    err=$(cat $file.err 2>/dev/null || true)
+    printTask " - $file"
+    test_solc_behaviour "$file" "$args" "$stdout" "$exitCode" "$err"
 done
 )
 
