@@ -9,7 +9,7 @@ contract C {
     }
 }
 // ----
-// TypeError: (85-108): Operator + not compatible with types address payable and address payable. Addresses can only be compared
-// TypeError: (122-145): Operator - not compatible with types address payable and address payable. Addresses can only be compared
-// TypeError: (159-182): Operator * not compatible with types address payable and address payable. Addresses can only be compared
-// TypeError: (196-219): Operator / not compatible with types address payable and address payable. Addresses can only be compared
+// TypeError: (85-108): Operator + not compatible with types address payable and address payable. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
+// TypeError: (122-145): Operator - not compatible with types address payable and address payable. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
+// TypeError: (159-182): Operator * not compatible with types address payable and address payable. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
+// TypeError: (196-219): Operator / not compatible with types address payable and address payable. Arithmetic operations on addresses are not supported. Convert to integer first before using them.
