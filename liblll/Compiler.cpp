@@ -46,22 +46,22 @@ bytes dev::lll::compileLLL(string const& _src, dev::solidity::EVMVersion _evmVer
 	{
 		if (_errors)
 		{
-			_errors->push_back("Parse error.");
-			_errors->push_back(boost::diagnostic_information(_e));
+			_errors->emplace_back("Parse error.");
+			_errors->emplace_back(boost::diagnostic_information(_e));
 		}
 	}
 	catch (std::exception const& _e)
 	{
 		if (_errors)
 		{
-			_errors->push_back("Parse exception.");
-			_errors->push_back(boost::diagnostic_information(_e));
+			_errors->emplace_back("Parse exception.");
+			_errors->emplace_back(boost::diagnostic_information(_e));
 		}
 	}
 	catch (...)
 	{
 		if (_errors)
-			_errors->push_back("Internal compiler exception.");
+			_errors->emplace_back("Internal compiler exception.");
 	}
 	return bytes();
 }
@@ -84,22 +84,22 @@ std::string dev::lll::compileLLLToAsm(std::string const& _src, EVMVersion _evmVe
 	{
 		if (_errors)
 		{
-			_errors->push_back("Parse error.");
-			_errors->push_back(boost::diagnostic_information(_e));
+			_errors->emplace_back("Parse error.");
+			_errors->emplace_back(boost::diagnostic_information(_e));
 		}
 	}
 	catch (std::exception const& _e)
 	{
 		if (_errors)
 		{
-			_errors->push_back("Parse exception.");
-			_errors->push_back(boost::diagnostic_information(_e));
+			_errors->emplace_back("Parse exception.");
+			_errors->emplace_back(boost::diagnostic_information(_e));
 		}
 	}
 	catch (...)
 	{
 		if (_errors)
-			_errors->push_back("Internal compiler exception.");
+			_errors->emplace_back("Internal compiler exception.");
 	}
 	return string();
 }

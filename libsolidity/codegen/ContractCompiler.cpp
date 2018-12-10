@@ -721,14 +721,14 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
-	m_breakTags.push_back({loopEnd, m_context.stackHeight()});
+	m_breakTags.emplace_back(loopEnd, m_context.stackHeight());
 
 	m_context << loopStart;
 
 	if (_whileStatement.isDoWhile())
 	{
 		eth::AssemblyItem condition = m_context.newTag();
-		m_continueTags.push_back({condition, m_context.stackHeight()});
+		m_continueTags.emplace_back(condition, m_context.stackHeight());
 
 		_whileStatement.body().accept(*this);
 
@@ -739,7 +739,7 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 	}
 	else
 	{
-		m_continueTags.push_back({loopStart, m_context.stackHeight()});
+		m_continueTags.emplace_back(loopStart, m_context.stackHeight());
 		compileExpression(_whileStatement.condition());
 		m_context << Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(loopEnd);
@@ -770,8 +770,8 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 	if (_forStatement.initializationExpression())
 		_forStatement.initializationExpression()->accept(*this);
 
-	m_breakTags.push_back({loopEnd, m_context.stackHeight()});
-	m_continueTags.push_back({loopNext, m_context.stackHeight()});
+	m_breakTags.emplace_back(loopEnd, m_context.stackHeight());
+	m_continueTags.emplace_back(loopNext, m_context.stackHeight());
 	m_context << loopStart;
 
 	// if there is no terminating condition in for, default is to always be true
@@ -997,7 +997,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 
 	if (codeBlock)
 	{
-		m_returnTags.push_back({m_context.newTag(), m_context.stackHeight()});
+		m_returnTags.emplace_back(m_context.newTag(), m_context.stackHeight());
 		codeBlock->accept(*this);
 
 		solAssert(!m_returnTags.empty(), "");

@@ -462,7 +462,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 					continue;
 				FunctionTypePointer fun = FunctionType(*function, false).asCallableFunction(true, true);
 				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
-					members.push_back(MemberList::Member(function->name(), fun, function));
+					members.emplace_back(function->name(), fun, function);
 			}
 		}
 	return members;
@@ -1821,23 +1821,23 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 	MemberList::MemberMap members;
 	if (!isString())
 	{
-		members.push_back({"length", make_shared<IntegerType>(256)});
+		members.emplace_back("length", make_shared<IntegerType>(256));
 		if (isDynamicallySized() && location() == DataLocation::Storage)
 		{
-			members.push_back({"push", make_shared<FunctionType>(
+			members.emplace_back("push", make_shared<FunctionType>(
 				TypePointers{baseType()},
 				TypePointers{make_shared<IntegerType>(256)},
 				strings{string()},
 				strings{string()},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
-			)});
-			members.push_back({"pop", make_shared<FunctionType>(
+			));
+			members.emplace_back("pop", make_shared<FunctionType>(
 				TypePointers{},
 				TypePointers{},
 				strings{string()},
 				strings{string()},
 				FunctionType::Kind::ArrayPop
-			)});
+			));
 		}
 	}
 	return members;
@@ -1966,21 +1966,17 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 					break;
 				}
 				if (!functionWithEqualArgumentsFound)
-					members.push_back(MemberList::Member(
-						function->name(),
-						functionType,
-						function
-					));
+					members.emplace_back(function->name(), functionType, function);
 			}
 	}
 	else if (!m_contract.isLibrary())
 	{
 		for (auto const& it: m_contract.interfaceFunctions())
-			members.push_back(MemberList::Member(
+			members.emplace_back(
 				it.second->declaration().name(),
 				it.second->asCallableFunction(m_contract.isLibrary()),
 				&it.second->declaration()
-			));
+			);
 	}
 	return members;
 }
@@ -2008,7 +2004,7 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 	vector<tuple<VariableDeclaration const*, u256, unsigned>> variablesAndOffsets;
 	for (size_t index = 0; index < variables.size(); ++index)
 		if (auto const* offset = offsets.offset(index))
-			variablesAndOffsets.push_back(make_tuple(variables[index], offset->first, offset->second));
+			variablesAndOffsets.emplace_back(variables[index], offset->first, offset->second);
 	return variablesAndOffsets;
 }
 
@@ -2098,10 +2094,10 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 		// Skip all mapping members if we are not in storage.
 		if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
 			continue;
-		members.push_back(MemberList::Member(
+		members.emplace_back(
 			variable->name(),
 			copyForLocationIfReference(type),
-			variable.get())
+			variable.get()
 		);
 	}
 	return members;
@@ -2438,7 +2434,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 		{
 			m_parameterTypes.push_back(mappingType->keyType());
-			m_parameterNames.push_back("");
+			m_parameterNames.emplace_back("");
 			returnType = mappingType->valueType();
 		}
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
@@ -2447,7 +2443,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				// Return byte arrays as whole.
 				break;
 			returnType = arrayType->baseType();
-			m_parameterNames.push_back("");
+			m_parameterNames.emplace_back("");
 			m_parameterTypes.push_back(make_shared<IntegerType>(256));
 		}
 		else
@@ -2478,7 +2474,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 			DataLocation::Memory,
 			returnType
 		));
-		m_returnParameterNames.push_back("");
+		m_returnParameterNames.emplace_back("");
 	}
 }
 
@@ -2847,14 +2843,11 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
-			members.push_back(MemberList::Member(
-				"selector",
-				make_shared<FixedBytesType>(4)
-			));
+			members.emplace_back("selector", make_shared<FixedBytesType>(4));
 		if (m_kind != Kind::BareDelegateCall)
 		{
 			if (isPayable())
-				members.push_back(MemberList::Member(
+				members.emplace_back(
 					"value",
 					make_shared<FunctionType>(
 						parseElementaryTypeVector({"uint"}),
@@ -2868,10 +2861,10 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						m_gasSet,
 						m_valueSet
 					)
-				));
+				);
 		}
 		if (m_kind != Kind::Creation)
-			members.push_back(MemberList::Member(
+			members.emplace_back(
 				"gas",
 				make_shared<FunctionType>(
 					parseElementaryTypeVector({"uint"}),
@@ -2885,7 +2878,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					m_gasSet,
 					m_valueSet
 				)
-			));
+			);
 		return members;
 	}
 	default:
@@ -3213,24 +3206,24 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 		if (contract.isLibrary())
 			for (FunctionDefinition const* function: contract.definedFunctions())
 				if (function->isVisibleAsLibraryMember())
-					members.push_back(MemberList::Member(
+					members.emplace_back(
 						function->name(),
 						FunctionType(*function).asCallableFunction(true),
 						function
-					));
+					);
 		if (isBase)
 		{
 			// We are accessing the type of a base contract, so add all public and protected
 			// members. Note that this does not add inherited functions on purpose.
 			for (Declaration const* decl: contract.inheritableMembers())
-				members.push_back(MemberList::Member(decl->name(), decl->type(), decl));
+				members.emplace_back(decl->name(), decl->type(), decl);
 		}
 		else
 		{
 			for (auto const& stru: contract.definedStructs())
-				members.push_back(MemberList::Member(stru->name(), stru->type(), stru));
+				members.emplace_back(stru->name(), stru->type(), stru);
 			for (auto const& enu: contract.definedEnums())
-				members.push_back(MemberList::Member(enu->name(), enu->type(), enu));
+				members.emplace_back(enu->name(), enu->type(), enu);
 		}
 	}
 	else if (m_actualType->category() == Category::Enum)
@@ -3238,7 +3231,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 		EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).enumDefinition();
 		auto enumType = make_shared<EnumType>(enumDef);
 		for (ASTPointer<EnumValue> const& enumValue: enumDef.members())
-			members.push_back(MemberList::Member(enumValue->name(), enumType));
+			members.emplace_back(enumValue->name(), enumType);
 	}
 	return members;
 }
@@ -3303,7 +3296,7 @@ MemberList::MemberMap ModuleType::nativeMembers(ContractDefinition const*) const
 	MemberList::MemberMap symbols;
 	for (auto const& symbolName: m_sourceUnit.annotation().exportedSymbols)
 		for (Declaration const* symbol: symbolName.second)
-			symbols.push_back(MemberList::Member(symbolName.first, symbol->type(), symbol));
+			symbols.emplace_back(symbolName.first, symbol->type(), symbol);
 	return symbols;
 }
 
