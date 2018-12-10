@@ -1252,7 +1252,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 {
 	TypePointer const& leftType = type(_operation.leftExpression());
 	TypePointer const& rightType = type(_operation.rightExpression());
-	TypePointer commonType = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
+	TypeResult result = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
+	TypePointer commonType = result.get();
 	if (!commonType)
 	{
 		m_errorReporter.typeError(
@@ -1262,7 +1263,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			" not compatible with types " +
 			leftType->toString() +
 			" and " +
-			rightType->toString()
+			rightType->toString() +
+			(!result.message().empty() ? ". " + result.message() : "")
 		);
 		commonType = leftType;
 	}
