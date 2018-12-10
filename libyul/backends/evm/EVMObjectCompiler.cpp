@@ -27,13 +27,13 @@
 using namespace yul;
 using namespace std;
 
-void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, bool _yul, bool _evm15)
+void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, bool _yul, bool _evm15, bool _optimize)
 {
 	EVMObjectCompiler compiler(_assembly, _yul, _evm15);
-	compiler.run(_object);
+	compiler.run(_object, _optimize);
 }
 
-void EVMObjectCompiler::run(Object& _object)
+void EVMObjectCompiler::run(Object& _object, bool _optimize)
 {
 	map<YulString, AbstractAssembly::SubID> subIDs;
 
@@ -42,7 +42,7 @@ void EVMObjectCompiler::run(Object& _object)
 		{
 			auto subAssemblyAndID = m_assembly.createSubAssembly();
 			subIDs[subObject->name] = subAssemblyAndID.second;
-			compile(*subObject, *subAssemblyAndID.first, m_yul, m_evm15);
+			compile(*subObject, *subAssemblyAndID.first, m_yul, m_evm15, _optimize);
 		}
 		else
 		{
@@ -51,5 +51,6 @@ void EVMObjectCompiler::run(Object& _object)
 		}
 
 	yulAssert(_object.analysisInfo, "No analysis info.");
-	CodeTransform{m_assembly, *_object.analysisInfo, m_yul, m_evm15}(*_object.code);
+	yulAssert(_object.code, "No code.");
+	CodeTransform{m_assembly, *_object.analysisInfo, *_object.code, _optimize, m_yul, m_evm15}(*_object.code);
 }

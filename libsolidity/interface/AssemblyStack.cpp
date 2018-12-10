@@ -122,7 +122,7 @@ void AssemblyStack::optimize(yul::Object& _object)
 	yul::OptimiserSuite::run(*_object.code, *_object.analysisInfo);
 }
 
-MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
+MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) const
 {
 	solAssert(m_analysisSuccessful, "");
 	solAssert(m_parserResult, "");
@@ -136,7 +136,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
 		EthAssemblyAdapter adapter(assembly);
-		yul::EVMObjectCompiler::compile(*m_parserResult, adapter, m_language == Language::Yul, false);
+		yul::EVMObjectCompiler::compile(*m_parserResult, adapter, m_language == Language::Yul, false, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -145,7 +145,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		yul::EVMAssembly assembly(true);
-		yul::EVMObjectCompiler::compile(*m_parserResult, assembly, m_language == Language::Yul, true);
+		yul::EVMObjectCompiler::compile(*m_parserResult, assembly, m_language == Language::Yul, true, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;
