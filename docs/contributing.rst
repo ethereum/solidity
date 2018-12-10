@@ -61,7 +61,7 @@ New features and bugfixes should be added to the ``Changelog.md`` file: please
 follow the style of previous entries, when applicable.
 
 Finally, please make sure you respect the `coding style
-<https://raw.githubusercontent.com/ethereum/solidity/develop/CODING_STYLE.md>`_
+<https://github.com/ethereum/solidity/blob/develop/CODING_STYLE.md>`_
 for this project. Also, even though we do CI testing, please test your code and
 ensure that it builds locally before submitting a pull request.
 
