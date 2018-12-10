@@ -170,7 +170,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 					expectToken(Token::As);
 					alias = expectIdentifierToken();
 				}
-				symbolAliases.push_back(make_pair(move(id), move(alias)));
+				symbolAliases.emplace_back(move(id), move(alias));
 				if (m_scanner->currentToken() != Token::Comma)
 					break;
 				m_scanner->next();
@@ -1690,7 +1690,7 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 			index = parseExpression();
 		SourceLocation indexLocation = iap.path.front()->location();
 		indexLocation.end = endPosition();
-		iap.indices.push_back(make_pair(index, indexLocation));
+		iap.indices.emplace_back(index, indexLocation);
 		expectToken(Token::RBrack);
 	}
 

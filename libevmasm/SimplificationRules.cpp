@@ -209,7 +209,7 @@ ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern, SourceLocation c
 		item = _pattern.toAssemblyItem(_location);
 	}
 	for (auto const& arg: _pattern.arguments())
-		arguments.push_back(ExpressionTemplate(arg, _location));
+		arguments.emplace_back(arg, _location);
 }
 
 string ExpressionTemplate::toString() const

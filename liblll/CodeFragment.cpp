@@ -353,7 +353,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 							if (j.tag() || j.which() != sp::utree_type::symbol_type)
 								error<InvalidMacroArgs>();
 							auto sr = j.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
-							args.push_back(string(sr.begin(), sr.end()));
+							args.emplace_back(sr.begin(), sr.end());
 						}
 				else if (ii == 3)
 				{
@@ -464,9 +464,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			if (c++)
 			{
 				if (us == "LLL" && c == 1)
-					code.push_back(CodeFragment(i, ns, m_readFile));
+					code.emplace_back(i, ns, m_readFile);
 				else
-					code.push_back(CodeFragment(i, _s, m_readFile));
+					code.emplace_back(i, _s, m_readFile);
 			}
 		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(us); };
 		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(us); };

@@ -105,7 +105,7 @@ class SecondarySourceLocation
 public:
 	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
 	{
-		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
+		infos.emplace_back(_errMsg, _sourceLocation);
 		return *this;
 	}
 
