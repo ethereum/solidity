@@ -99,3 +99,31 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 	SymbolicIntVariable(make_shared<IntegerType>(_numBytes * 8), _uniqueName, _interface)
 {
 }
+
+SymbolicFunctionVariable::SymbolicFunctionVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface&_interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface),
+	m_declaration(m_interface.newVariable(currentName(), smtSort(*m_type)))
+{
+	solAssert(m_type->category() == Type::Category::Function, "");
+}
+
+void SymbolicFunctionVariable::resetDeclaration()
+{
+	m_declaration = m_interface.newVariable(currentName(), smtSort(*m_type));
+}
+
+smt::Expression SymbolicFunctionVariable::increaseIndex()
+{
+	++(*m_ssa);
+	resetDeclaration();
+	return currentValue();
+}
+
+smt::Expression SymbolicFunctionVariable::operator()(vector<smt::Expression> _arguments) const
+{
+	return m_declaration(_arguments);
+}

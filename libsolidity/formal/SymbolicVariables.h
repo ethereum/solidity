@@ -49,7 +49,11 @@ public:
 	smt::Expression currentValue() const;
 	std::string currentName() const;
 	virtual smt::Expression valueAtIndex(int _index) const;
-	smt::Expression increaseIndex();
+	virtual smt::Expression increaseIndex();
+	virtual smt::Expression operator()(std::vector<smt::Expression> /*_arguments*/) const
+	{
+		solAssert(false, "Function application to non-function.");
+	}
 
 	unsigned index() const { return m_ssa->index(); }
 	unsigned& index() { return m_ssa->index(); }
@@ -114,6 +118,29 @@ public:
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
+};
+
+/**
+ * Specialization of SymbolicVariable for FunctionType
+ */
+class SymbolicFunctionVariable: public SymbolicVariable
+{
+public:
+	SymbolicFunctionVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+
+	smt::Expression increaseIndex();
+	smt::Expression operator()(std::vector<smt::Expression> _arguments) const;
+
+private:
+	/// Creates a new function declaration.
+	void resetDeclaration();
+
+	/// Stores the current function declaration.
+	smt::Expression m_declaration;
 };
 
 }
