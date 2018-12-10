@@ -125,6 +125,22 @@ bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
 	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2);
 }
 
+/// Checks whether _value fits into IntegerType _type.
+bool fitsIntegerType(bigint const& _value, IntegerType const& _type)
+{
+	return (_type.minValue() <= _value) && (_value <= _type.maxValue());
+}
+
+/// Checks whether _value fits into _bits bits when having 1 bit as the sign bit
+/// if _signed is true.
+bool fitsIntoBits(bigint const& _value, unsigned _bits, bool _signed)
+{
+	return fitsIntegerType(_value, IntegerType(
+		_bits,
+		_signed ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
+	));
+}
+
 }
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
@@ -963,27 +979,21 @@ BoolResult RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo)
 		if (isFractional())
 			return false;
 		IntegerType const& targetType = dynamic_cast<IntegerType const&>(_convertTo);
-		if (m_value == rational(0))
-			return true;
-		unsigned forSignBit = (targetType.isSigned() ? 1 : 0);
-		if (m_value > rational(0))
-		{
-			if (m_value.numerator() <= (u256(-1) >> (256 - targetType.numBits() + forSignBit)))
-				return true;
-			return false;
-		}
-		if (targetType.isSigned())
-		{
-			if (-m_value.numerator() <= (u256(1) << (targetType.numBits() - forSignBit)))
-				return true;
-		}
-		return false;
+		return fitsIntegerType(m_value.numerator(), targetType);
 	}
 	case Category::FixedPoint:
 	{
-		if (auto fixed = fixedPointType())
-			return fixed->isImplicitlyConvertibleTo(_convertTo);
-		return false;
+		FixedPointType const& targetType = dynamic_cast<FixedPointType const&>(_convertTo);
+		// Store a negative number into an unsigned.
+		if (isNegative() && !targetType.isSigned())
+			return false;
+		if (!isFractional())
+			return (targetType.minIntegerValue() <= m_value) && (m_value <= targetType.maxIntegerValue());
+		rational value = m_value * pow(bigint(10), targetType.fractionalDigits());
+		// Need explicit conversion since truncation will occur.
+		if (value.denominator() != 1)
+			return false;
+		return fitsIntoBits(value.numerator(), targetType.numBits(), targetType.isSigned());
 	}
 	case Category::FixedBytes:
 		return (m_value == rational(0)) || (m_compatibleBytesType && *m_compatibleBytesType == _convertTo);
