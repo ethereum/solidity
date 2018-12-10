@@ -55,8 +55,8 @@ string AsmPrinter::operator()(Literal const& _literal)
 		solAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
 		return _literal.value.str() + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
-		solAssert(_literal.value.str() == "true" || _literal.value.str() == "false", "Invalid bool literal.");
-		return ((_literal.value.str() == "true") ? "true" : "false") + appendTypeName(_literal.type);
+		solAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "Invalid bool literal.");
+		return ((_literal.value == "true"_yulstring) ? "true" : "false") + appendTypeName(_literal.type);
 	case LiteralKind::String:
 		break;
 	}

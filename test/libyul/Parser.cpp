@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
 		BuiltinFunction const* builtin(YulString _name) const override
 		{
-			return _name == YulString{"builtin"} ? &f : nullptr;
+			return _name == "builtin"_yulstring ? &f : nullptr;
 		}
 		BuiltinFunction f;
 	};
@@ -329,9 +329,9 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
 		BuiltinFunction const* builtin(YulString _name) const override
 		{
-			return _name == YulString{"builtin"} ? &f : nullptr;
+			return _name == "builtin"_yulstring ? &f : nullptr;
 		}
-		BuiltinFunction f{YulString{"builtin"}, vector<Type>(2), vector<Type>(3), false};
+		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), false};
 	};
 
 	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
