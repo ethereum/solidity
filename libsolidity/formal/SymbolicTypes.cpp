@@ -38,15 +38,25 @@ smt::SortPointer dev::solidity::smtSort(Type const& _type)
 		solAssert(fType, "");
 		vector<smt::SortPointer> parameterSorts = smtSort(fType->parameterTypes());
 		auto returnTypes = fType->returnParameterTypes();
-		// TODO remove this when we support tuples.
-		solAssert(returnTypes.size() == 1, "");
-		smt::SortPointer returnSort = smtSort(*returnTypes.at(0));
+		smt::SortPointer returnSort;
+		// TODO change this when we support tuples.
+		if (returnTypes.size() == 0)
+			// We cannot declare functions without a return sort, so we use the smallest.
+			returnSort = make_shared<smt::Sort>(smt::Kind::Bool);
+		else if (returnTypes.size() > 1)
+			// Abstract sort.
+			returnSort = make_shared<smt::Sort>(smt::Kind::Int);
+		else
+			returnSort = smtSort(*returnTypes.at(0));
 		return make_shared<smt::FunctionSort>(parameterSorts, returnSort);
 	}
 	case smt::Kind::Array:
 	{
 		solUnimplementedAssert(false, "Invalid type");
 	}
+	default:
+		// Abstract case.
+		return make_shared<smt::Sort>(smt::Kind::Int);
 	}
 	solAssert(false, "Invalid type");
 }
@@ -65,13 +75,21 @@ smt::Kind dev::solidity::smtKind(Type::Category _category)
 		return smt::Kind::Int;
 	else if (isBool(_category))
 		return smt::Kind::Bool;
-	solAssert(false, "Invalid type");
+	else if (isFunction(_category))
+		return smt::Kind::Function;
+	// Abstract case.
+	return smt::Kind::Int;
 }
 
 bool dev::solidity::isSupportedType(Type::Category _category)
 {
 	return isNumber(_category) ||
-		isBool(_category) ||
+		isBool(_category);
+}
+
+bool dev::solidity::isSupportedTypeDeclaration(Type::Category _category)
+{
+	return isSupportedType(_category) ||
 		isFunction(_category);
 }
 
@@ -84,7 +102,7 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 	bool abstract = false;
 	shared_ptr<SymbolicVariable> var;
 	TypePointer type = _type.shared_from_this();
-	if (!isSupportedType(_type))
+	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;
 		var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
@@ -92,7 +110,7 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 	else if (isBool(_type.category()))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _solver);
 	else if (isFunction(_type.category()))
-		var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
+		var = make_shared<SymbolicFunctionVariable>(type, _uniqueName, _solver);
 	else if (isInteger(_type.category()))
 		var = make_shared<SymbolicIntVariable>(type, _uniqueName, _solver);
 	else if (isFixedBytes(_type.category()))
@@ -120,6 +138,11 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 bool dev::solidity::isSupportedType(Type const& _type)
 {
 	return isSupportedType(_type.category());
+}
+
+bool dev::solidity::isSupportedTypeDeclaration(Type const& _type)
+{
+	return isSupportedTypeDeclaration(_type.category());
 }
 
 bool dev::solidity::isInteger(Type::Category _category)

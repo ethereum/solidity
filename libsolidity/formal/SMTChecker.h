@@ -84,16 +84,18 @@ private:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
-	void visitAssert(FunctionCall const&);
-	void visitRequire(FunctionCall const&);
-	void visitGasLeft(FunctionCall const&);
-	void visitBlockHash(FunctionCall const&);
+	void visitAssert(FunctionCall const& _funCall);
+	void visitRequire(FunctionCall const& _funCall);
+	void visitGasLeft(FunctionCall const& _funCall);
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
-	void inlineFunctionCall(FunctionCall const&);
+	void inlineFunctionCall(FunctionCall const& _funCall);
+	/// Creates an uninterpreted function call.
+	void abstractFunctionCall(FunctionCall const& _funCall);
+	void visitFunctionIdentifier(Identifier const& _identifier);
 
-	void defineSpecialVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
-	void defineUninterpretedFunction(std::string const& _name, smt::SortPointer _sort);
+	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
+	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -176,8 +178,8 @@ private:
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smt::Expression _value);
 
-	/// Checks if special variable was seen.
-	bool knownSpecialVariable(std::string const& _var) const;
+	/// Checks if special variable or function was seen.
+	bool knownGlobalSymbol(std::string const& _var) const;
 
 	/// Adds a new path condition
 	void pushPathCondition(smt::Expression const& _e);
@@ -205,9 +207,7 @@ private:
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
-	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_specialVariables;
-	/// Stores the declaration of an Uninterpreted Function.
-	std::unordered_map<std::string, smt::Expression> m_uninterpretedFunctions;
+	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_globalContext;
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
 	/// Used to retrieve models.
 	std::vector<Expression const*> m_uninterpretedTerms;
