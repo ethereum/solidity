@@ -353,14 +353,14 @@ AssemblyItem Assembly::namedTag(string const& _name)
 	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
 	if (!m_namedTags.count(_name))
 		m_namedTags[_name] = size_t(newTag().data());
-	return AssemblyItem(Tag, m_namedTags.at(_name));
+	return AssemblyItem{Tag, m_namedTags.at(_name)};
 }
 
 AssemblyItem Assembly::newPushLibraryAddress(string const& _identifier)
 {
 	h256 h(dev::keccak256(_identifier));
 	m_libraries[h] = _identifier;
-	return AssemblyItem(PushLibraryAddress, h);
+	return AssemblyItem{PushLibraryAddress, h};
 }
 
 Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreation, size_t _runs)
@@ -415,14 +415,14 @@ map<u256, u256> Assembly::optimiseInternal(
 
 		if (_settings.runJumpdestRemover)
 		{
-			JumpdestRemover jumpdestOpt(m_items);
+			JumpdestRemover jumpdestOpt{m_items};
 			if (jumpdestOpt.optimise(_tagsReferencedFromOutside))
 				count++;
 		}
 
 		if (_settings.runPeephole)
 		{
-			PeepholeOptimiser peepOpt(m_items);
+			PeepholeOptimiser peepOpt{m_items};
 			while (peepOpt.optimise())
 			{
 				count++;
@@ -433,7 +433,7 @@ map<u256, u256> Assembly::optimiseInternal(
 		// This only modifies PushTags, we have to run again to actually remove code.
 		if (_settings.runDeduplicate)
 		{
-			BlockDeduplicator dedup(m_items);
+			BlockDeduplicator dedup{m_items};
 			if (dedup.deduplicate())
 			{
 				tagReplacements.insert(dedup.replacedTags().begin(), dedup.replacedTags().end());
@@ -448,13 +448,13 @@ map<u256, u256> Assembly::optimiseInternal(
 			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
 
-			bool usesMSize = (find(m_items.begin(), m_items.end(), AssemblyItem(Instruction::MSIZE)) != m_items.end());
+			bool usesMSize = (find(m_items.begin(), m_items.end(), AssemblyItem{Instruction::MSIZE}) != m_items.end());
 
 			auto iter = m_items.begin();
 			while (iter != m_items.end())
 			{
 				KnownState emptyState;
-				CommonSubexpressionEliminator eliminator(emptyState);
+				CommonSubexpressionEliminator eliminator{emptyState};
 				auto orig = iter;
 				iter = eliminator.feedItems(iter, m_items.end(), usesMSize);
 				bool shouldReplace = false;
