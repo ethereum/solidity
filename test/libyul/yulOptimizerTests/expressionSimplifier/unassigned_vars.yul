@@ -1,5 +1,4 @@
-// c & d can't be optimized as expression simplifier doesn't handle default
-// values yet
+// Unassigned variables are assumed to be zero.
 {
 	let c
 	let d
@@ -10,5 +9,5 @@
 // {
 //     let c
 //     let d
-//     let y := add(add(d, c), 7)
+//     let y := 7
 // }

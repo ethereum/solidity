@@ -13,6 +13,9 @@
     let r := f(a)
     // This should be inlined because it is a constant
     let t := f(a2)
+    let a3
+    // This should be inlined because it is a constant as well (zero)
+    let s := f(a3)
 }
 // ----
 // fullInliner
@@ -30,6 +33,16 @@
 //         let f_y := add(f_a, f_x)
 //         sstore(f_y, 10)
 //         let t := f_b
+//         let a3
+//         let f_a_5 := a3
+//         let f_b_6
+//         let f_x_7 := mload(f_a_5)
+//         f_b_6 := sload(f_x_7)
+//         let f_c_8 := 3
+//         mstore(mul(f_a_5, f_b_6), mload(f_x_7))
+//         let f_y_11 := add(f_a_5, f_x_7)
+//         sstore(f_y_11, 10)
+//         let s := f_b_6
 //     }
 //     function f(a) -> b
 //     {
