@@ -41,6 +41,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
@@ -262,7 +263,7 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	yul::Dialect dialect = m_yul ? yul::Dialect::yul() : yul::Dialect::strictAssemblyForEVM();
+	shared_ptr<yul::Dialect> dialect = m_yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source, ""));

@@ -49,6 +49,8 @@
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/VarDeclPropagator.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libdevcore/JSON.h>
 
 #include <boost/program_options.hpp>
@@ -83,7 +85,7 @@ public:
 	{
 		ErrorReporter errorReporter(m_errors);
 		shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_input, ""));
-		m_ast = yul::Parser(errorReporter, yul::Dialect::strictAssemblyForEVM()).parse(scanner, false);
+		m_ast = yul::Parser(errorReporter, yul::EVMDialect::strictAssemblyForEVM()).parse(scanner, false);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
 			cout << "Error parsing source." << endl;
@@ -96,7 +98,7 @@ public:
 			errorReporter,
 			EVMVersion::byzantium(),
 			langutil::Error::Type::SyntaxError,
-			Dialect::strictAssemblyForEVM()
+			EVMDialect::strictAssemblyForEVM()
 		);
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 		{

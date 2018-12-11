@@ -36,6 +36,10 @@ namespace langutil
 {
 class Scanner;
 }
+namespace yul
+{
+class AbstractAssembly;
+}
 
 namespace dev
 {
@@ -85,6 +89,8 @@ public:
 private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
+
+	void compileEVM(yul::AbstractAssembly& _assembly, bool _evm15, bool _optimize) const;
 
 	void optimize(yul::Object& _object);
 

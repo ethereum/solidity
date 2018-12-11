@@ -101,7 +101,7 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 	}
 	else if (_literal.kind == LiteralKind::Boolean)
 	{
-		solAssert(m_dialect.flavour == AsmFlavour::Yul, "");
+		solAssert(m_dialect->flavour == AsmFlavour::Yul, "");
 		solAssert(_literal.value == YulString{string("true")} || _literal.value == YulString{string("false")}, "");
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
@@ -164,7 +164,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(m_dialect.flavour != AsmFlavour::Yul, "");
+	solAssert(m_dialect->flavour != AsmFlavour::Yul, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
@@ -182,9 +182,9 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
-	if (m_stackHeight != initialStackHeight && (m_dialect.flavour != AsmFlavour::Loose || m_errorTypeForLoose))
+	if (m_stackHeight != initialStackHeight && (m_dialect->flavour != AsmFlavour::Loose || m_errorTypeForLoose))
 	{
-		Error::Type errorType = m_dialect.flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
+		Error::Type errorType = m_dialect->flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
 			to_string(m_stackHeight - initialStackHeight) +
@@ -299,7 +299,7 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	bool success = true;
 	size_t parameters = 0;
 	size_t returns = 0;
-	if (BuiltinFunction const* f = m_dialect.builtins->query(_funCall.functionName.name))
+	if (BuiltinFunction const* f = m_dialect->builtin(_funCall.functionName.name))
 	{
 		// TODO: compare types, too
 		parameters = f->parameters.size();
@@ -569,7 +569,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (m_dialect.flavour != AsmFlavour::Yul)
+	if (m_dialect->flavour != AsmFlavour::Yul)
 		return;
 
 	if (!builtinTypes.count(type))
@@ -629,7 +629,7 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 
 	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 	{
-		if (m_dialect.flavour != AsmFlavour::Loose)
+		if (m_dialect->flavour != AsmFlavour::Loose)
 			solAssert(m_errorTypeForLoose && *m_errorTypeForLoose != Error::Type::Warning, "");
 
 		m_errorReporter.error(
@@ -644,7 +644,7 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 
 void AsmAnalyzer::checkLooseFeature(SourceLocation const& _location, string const& _description)
 {
-	if (m_dialect.flavour != AsmFlavour::Loose)
+	if (m_dialect->flavour != AsmFlavour::Loose)
 		solAssert(false, _description);
 	else if (m_errorTypeForLoose)
 		m_errorReporter.error(*m_errorTypeForLoose, _location, _description);

@@ -49,7 +49,7 @@ namespace test
 namespace
 {
 
-bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
+bool parse(string const& _source, std::shared_ptr<Dialect> _dialect, ErrorReporter& errorReporter)
 {
 	try
 	{
@@ -74,7 +74,7 @@ bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorR
 	return false;
 }
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(string const& _source, shared_ptr<Dialect> _dialect, bool _allowWarnings = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -99,12 +99,12 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, Dialect c
 	return {};
 }
 
-bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = true)
+bool successParse(std::string const& _source, shared_ptr<Dialect> _dialect = Dialect::yul(), bool _allowWarnings = true)
 {
 	return !parseAndReturnFirstError(_source, _dialect, _allowWarnings);
 }
 
-Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = false)
+Error expectError(std::string const& _source, shared_ptr<Dialect> _dialect = Dialect::yul(), bool _allowWarnings = false)
 {
 
 	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarnings);
@@ -306,16 +306,17 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 
 BOOST_AUTO_TEST_CASE(builtins_parser)
 {
-	struct SimpleBuiltins: public Builtins
+	struct SimpleDialect: public Dialect
 	{
-		BuiltinFunction const* query(YulString _name) const override
+		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
+		BuiltinFunction const* builtin(YulString _name) const override
 		{
 			return _name == YulString{"builtin"} ? &f : nullptr;
 		}
 		BuiltinFunction f;
 	};
 
-	Dialect dialect(AsmFlavour::Strict, make_shared<SimpleBuiltins>());
+	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Cannot assign to builtin function \"builtin\".", dialect);
@@ -323,16 +324,17 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 
 BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
-	struct SimpleBuiltinsAnalysis: public Builtins
+	struct SimpleDialect: public Dialect
 	{
-		yul::BuiltinFunction const* query(YulString _name) const override
+		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
+		BuiltinFunction const* builtin(YulString _name) const override
 		{
-			return _name == YulString("builtin") ? &m_builtin : nullptr;
+			return _name == YulString{"builtin"} ? &f : nullptr;
 		}
-		BuiltinFunction m_builtin{YulString{"builtin"}, vector<Type>(2), vector<Type>(3), false};
+		BuiltinFunction f{YulString{"builtin"}, vector<Type>(2), vector<Type>(3), false};
 	};
 
-	Dialect dialect(AsmFlavour::Strict, make_shared<SimpleBuiltinsAnalysis>());
+	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
 	BOOST_CHECK(successParse("{ let a, b, c := builtin(1, 2) }", dialect));
 	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
 	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);

@@ -20,9 +20,9 @@
 
 #include <libyul/backends/evm/EVMAssembly.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/AsmDataForward.h>
-
 #include <libyul/AsmScope.h>
 
 #include <boost/variant.hpp>
@@ -87,8 +87,8 @@ public:
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
+		EVMDialect const& _dialect,
 		bool _allowStackOpt = false,
-		bool _yul = false,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
@@ -97,7 +97,7 @@ public:
 		_analysisInfo,
 		_block,
 		_allowStackOpt,
-		_yul,
+		_dialect,
 		_evm15,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
@@ -115,7 +115,7 @@ protected:
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		bool _allowStackOpt,
-		bool _yul,
+		EVMDialect const& _dialect,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
 		bool _useNamedLabelsForFunctions,
@@ -179,10 +179,10 @@ private:
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
+	EVMDialect const& m_dialect;
 	bool const m_allowStackOpt = true;
-	bool m_yul = false;
-	bool m_evm15 = false;
-	bool m_useNamedLabelsForFunctions = false;
+	bool const m_evm15 = false;
+	bool const m_useNamedLabelsForFunctions = false;
 	ExternalIdentifierAccess m_identifierAccess;
 	/// Adjustment between the stack height as determined during the analysis phase
 	/// and the stack height in the assembly. This is caused by an initial stack being present

@@ -23,20 +23,21 @@ namespace yul
 {
 struct Object;
 class AbstractAssembly;
+struct EVMDialect;
 
 class EVMObjectCompiler
 {
 public:
-	static void compile(Object& _object, AbstractAssembly& _assembly, bool _yul, bool _evm15, bool _optimize);
+	static void compile(Object& _object, AbstractAssembly& _assembly, EVMDialect& _dialect, bool _evm15, bool _optimize);
 private:
-	EVMObjectCompiler(AbstractAssembly& _assembly, bool _yul, bool _evm15):
-		m_assembly(_assembly), m_yul(_yul), m_evm15(_evm15)
+	EVMObjectCompiler(AbstractAssembly& _assembly, EVMDialect& _dialect, bool _evm15):
+		m_assembly(_assembly), m_dialect(_dialect), m_evm15(_evm15)
 	{}
 
 	void run(Object& _object, bool _optimize);
 
 	AbstractAssembly& m_assembly;
-	bool m_yul = false;
+	EVMDialect& m_dialect;
 	bool m_evm15 = false;
 };
 

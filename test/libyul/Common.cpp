@@ -29,6 +29,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
@@ -54,7 +55,7 @@ void yul::test::printErrors(ErrorList const& _errors)
 
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
-	Dialect dialect = _yul ? yul::Dialect::yul() : yul::Dialect::strictAssemblyForEVM();
+	shared_ptr<Dialect> dialect = _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source, ""));

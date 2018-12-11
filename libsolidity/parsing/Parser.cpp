@@ -24,6 +24,7 @@
 #include <vector>
 #include <libsolidity/parsing/Parser.h>
 #include <libyul/AsmParser.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
@@ -1012,7 +1013,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		m_scanner->next();
 	}
 
-	yul::Parser asmParser(m_errorReporter);
+	yul::Parser asmParser(m_errorReporter, yul::EVMDialect::looseAssemblyForEVM());
 	shared_ptr<yul::Block> block = asmParser.parse(m_scanner, true);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);

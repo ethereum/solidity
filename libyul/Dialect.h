@@ -22,7 +22,9 @@
 
 #include <libyul/YulString.h>
 
-#include <memory>
+#include <boost/noncopyable.hpp>
+
+#include <vector>
 
 namespace yul
 {
@@ -45,38 +47,19 @@ struct BuiltinFunction
 	bool movable;
 };
 
-/**
- * Class to query for builtin functions and their semantics.
- */
-struct Builtins
+struct Dialect: boost::noncopyable
 {
-	virtual ~Builtins() = default;
+	AsmFlavour const flavour = AsmFlavour::Loose;
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
-	virtual BuiltinFunction const* query(YulString /*_name*/) const { return nullptr; }
-};
+	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
-struct Dialect
-{
-	AsmFlavour flavour = AsmFlavour::Loose;
-	std::shared_ptr<Builtins> builtins;
+	Dialect(AsmFlavour _flavour): flavour(_flavour) {}
+	virtual ~Dialect() {}
 
-	Dialect(AsmFlavour _flavour, std::shared_ptr<Builtins> _builtins):
-		flavour(_flavour), builtins(std::move(_builtins))
-	{}
-	static Dialect looseAssemblyForEVM()
-	{
-		return Dialect{AsmFlavour::Loose, std::make_shared<Builtins>()};
-	}
-	static Dialect strictAssemblyForEVM()
-	{
-		// The EVM instructions will be moved to builtins at some point.
-		return Dialect{AsmFlavour::Strict, std::make_shared<Builtins>()};
-	}
-	static Dialect strictAssemblyForEVMObjects();
-	static Dialect yul()
+	static std::shared_ptr<Dialect> yul()
 	{
 		// Will have to add builtins later.
-		return Dialect{AsmFlavour::Yul, std::make_shared<Builtins>()};
+		return std::make_shared<Dialect>(AsmFlavour::Yul);
 	}
 };
 
