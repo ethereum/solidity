@@ -27,7 +27,10 @@
 #include <libdevcore/JSON.h>
 #include <libdevcore/Keccak256.h>
 
+#include <algorithm>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/optional.hpp>
 
 using namespace std;
 using namespace dev;
@@ -225,6 +228,50 @@ Json::Value collectEVMObject(eth::LinkerObject const& _object, string const* _so
 	return output;
 }
 
+boost::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> const& _keys)
+{
+	for (auto const& member: _input.getMemberNames())
+		if (!_keys.count(member))
+			return formatFatalError("JSONError", "Unknown key \"" + member + "\"");
+	return boost::none;
+}
+
+boost::optional<Json::Value> checkRootKeys(Json::Value const& _input)
+{
+	static set<string> keys{"auxiliaryInput", "language", "settings", "sources"};
+	return checkKeys(_input, keys);
+}
+
+boost::optional<Json::Value> checkSourceKeys(Json::Value const& _input)
+{
+	static set<string> keys{"content", "keccak256", "urls"};
+	return checkKeys(_input, keys);
+}
+
+boost::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
+{
+	static set<string> keys{"smtlib2responses"};
+	return checkKeys(_input, keys);
+}
+
+boost::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
+{
+	static set<string> keys{"evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
+	return checkKeys(_input, keys);
+}
+
+boost::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
+{
+	static set<string> keys{"enabled", "runs"};
+	return checkKeys(_input, keys);
+}
+
+boost::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
+{
+	static set<string> keys{"useLiteralContent"};
+	return checkKeys(_input, keys);
+}
+
 }
 
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
@@ -233,6 +280,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	if (!_input.isObject())
 		return formatFatalError("JSONError", "Input is not a JSON object.");
+
+	if (auto result = checkRootKeys(_input))
+		return *result;
 
 	if (_input["language"] != "Solidity")
 		return formatFatalError("JSONError", "Only \"Solidity\" is supported as a language.");
@@ -253,6 +303,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 		if (!sources[sourceName].isObject())
 			return formatFatalError("JSONError", "Source input is not a JSON object.");
+
+		if (auto result = checkSourceKeys(sources[sourceName]))
+			return *result;
 
 		if (sources[sourceName]["keccak256"].isString())
 			hash = sources[sourceName]["keccak256"].asString();
@@ -319,6 +372,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	}
 
 	Json::Value const& auxInputs = _input["auxiliaryInput"];
+
+	if (auto result = checkAuxiliaryInputKeys(auxInputs))
+		return *result;
+
 	if (!!auxInputs)
 	{
 		Json::Value const& smtlib2Responses = auxInputs["smtlib2responses"];
@@ -340,6 +397,9 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	}
 
 	Json::Value const& settings = _input.get("settings", Json::Value());
+
+	if (auto result = checkSettingsKeys(settings))
+		return *result;
 
 	if (settings.isMember("evmVersion"))
 	{
@@ -366,6 +426,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	if (settings.isMember("optimizer"))
 	{
 		Json::Value optimizerSettings = settings["optimizer"];
+
+		if (auto result = checkOptimizerKeys(optimizerSettings))
+			return *result;
+
 		if (optimizerSettings.isMember("enabled"))
 		{
 			if (!optimizerSettings["enabled"].isBool())
@@ -427,6 +491,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	m_compilerStack.setLibraries(libraries);
 
 	Json::Value metadataSettings = settings.get("metadata", Json::Value());
+
+	if (auto result = checkMetadataKeys(metadataSettings))
+		return *result;
+
 	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
 
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
