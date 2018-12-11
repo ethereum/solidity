@@ -55,6 +55,18 @@ matrix:
           env:
               - ZIP_SUFFIX=ubuntu-trusty
               - SOLC_STOREBYTECODE=On
+          before_install:
+              - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+              - sudo add-apt-repository -y ppa:mhier/libboost-latest
+              - sudo add-apt-repository -y ppa:hvr/z3
+              - sudo apt-get update -qq
+          install:
+              - sudo apt-get install -qq g++-8 gcc-8
+              - sudo apt-get install -qq libboost1.67-dev
+              - sudo apt-get install -qq libleveldb1
+              - sudo apt-get install -qq libz3-dev
+              - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
+              - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
 
         - os: linux
           dist: trusty
@@ -63,6 +75,18 @@ matrix:
           env:
               - ZIP_SUFFIX=ubuntu-trusty-clang
               - SOLC_STOREBYTECODE=On
+          before_install:
+              - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+              - sudo add-apt-repository -y ppa:mhier/libboost-latest
+              - sudo add-apt-repository -y ppa:hvr/z3
+              - sudo apt-get update -qq
+          install:
+              - sudo apt-get install -qq g++-8 gcc-8
+              - sudo apt-get install -qq libboost1.67-dev
+              - sudo apt-get install -qq libleveldb1
+              - sudo apt-get install -qq libz3-dev
+              - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
+              - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
 
         # Docker target, which generates a statically linked alpine image
         - os: linux
@@ -159,18 +183,15 @@ cache:
 install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
     - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
-    # Disable tests unless run on the release branch, on tags or with daily cron
-    #- if [ "$TRAVIS_BRANCH" != release -a -z "$TRAVIS_TAG" -a "$TRAVIS_EVENT_TYPE" != cron ]; then SOLC_TESTS=Off; fi
-    - SOLC_TESTS=Off
-    - if [ "$TRAVIS_BRANCH" = release -o -n "$TRAVIS_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
-    - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
 
 before_script:
+    # Disable tests unless run on the release branch, on tags or with daily cron
+    - if [ "$TRAVIS_BRANCH" != release -a -z "$TRAVIS_TAG" -a "$TRAVIS_EVENT_TYPE" != cron ]; then SOLC_TESTS=Off; fi
+    - if [ "$TRAVIS_BRANCH" = release -o -n "$TRAVIS_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+    - echo -n "$TRAVIS_COMMIT" > commit_hash.txt
     - test $SOLC_EMSCRIPTEN != On || (scripts/build_emscripten.sh)
     - test $SOLC_DOCKER != On || (scripts/docker_build.sh)
-    - test $SOLC_RELEASE != On || (scripts/build.sh $SOLC_BUILD_TYPE
-      && scripts/release.sh $ZIP_SUFFIX
-      && scripts/create_source_tarball.sh)
+    - test $SOLC_RELEASE != On || (scripts/build.sh $SOLC_BUILD_TYPE -DBoost_USE_STATIC_LIBS=OFF && scripts/create_source_tarball.sh)
 
 script:
     - test $SOLC_EMSCRIPTEN != On -o $SOLC_TESTS != On || (scripts/test_emscripten.sh)
@@ -204,7 +225,7 @@ deploy:
             - release
             - /^v\d/
     # This is the deploy target for the native build (Linux and macOS)
-    # which generates ZIPs per commit and the source tarball.
+    # which generates the source tarball.
     #
     # This runs for each tag that is created and adds the corresponding files.
     - provider: releases

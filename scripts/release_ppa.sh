@@ -114,7 +114,7 @@ Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
 Build-Depends: ${Z3DEPENDENCY}debhelper (>= 9.0.0),
                cmake,
-               g++-4.8,
+               g++-8,
                git,
                libgmp-dev,
                libboost-all-dev,
@@ -168,7 +168,7 @@ override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DINSTALL_LLLC=Off
+	dh_auto_configure -- -DINSTALL_LLLC=Off -DCMAKE_C_COMPILER=gcc-8 -DCMAKE_CXX_COMPILER=g++-8
 EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
