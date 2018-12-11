@@ -224,9 +224,9 @@ for displaying the current position in the source code inside a debugger
 or for breakpoint handling.
 
 Both kinds of source mappings use integer identifiers to refer to source files.
-These are regular array indices into a list of source files usually called
-``"sourceList"``, which is part of the combined-json and the output of
-the json / npm compiler.
+The identifier of a source file is stored in
+``output['sources'][sourceName]['id']`` where ``output`` is the output of the
+standard-json compiler interface parsed as JSON.
 
 .. note ::
     In the case of instructions that are not associated with any particular source file,

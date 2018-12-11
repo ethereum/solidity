@@ -293,7 +293,7 @@ Output Description
       // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
       sources: {
         "sourceFile.sol": {
-          // Identifier (used in source maps)
+          // Identifier of the source (used in source maps)
           id: 1,
           // The AST object
           ast: {},
