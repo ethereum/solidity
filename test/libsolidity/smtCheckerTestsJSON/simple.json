@@ -1,9 +1,9 @@
 {
-  "auxiliaryInput":
-  {
-	  "smtlib2responses":
-	  {
-		  "0xe9477f683ff20aa57fcb08682150f86c5917e1d4c0686b278ab9b73446d0682c": "sat\n((|EVALEXPR_0| 0))"
-	  }
-  }
+	"auxiliaryInput":
+	{
+		"smtlib2responses":
+		{
+			"0xa0c072acdbe5181dd56cbad8960cb5bb0b9e97fd598cfd895467bd73bbcca028": "sat\n((|EVALEXPR_0| 0))\n"
+		}
+	}
 }

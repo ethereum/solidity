@@ -34,10 +34,12 @@ std::vector<smt::SortPointer> smtSort(std::vector<TypePointer> const& _types);
 /// Returns the SMT kind that models the Solidity type type category _category.
 smt::Kind smtKind(Type::Category _category);
 
-/// So far int, bool and address are supported.
-/// Returns true if type is supported.
+/// Returns true if type is fully supported (declaration and operations).
 bool isSupportedType(Type::Category _category);
 bool isSupportedType(Type const& _type);
+/// Returns true if type is partially supported (declaration).
+bool isSupportedTypeDeclaration(Type::Category _category);
+bool isSupportedTypeDeclaration(Type const& _type);
 
 bool isInteger(Type::Category _category);
 bool isRational(Type::Category _category);
