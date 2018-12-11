@@ -351,17 +351,19 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
+	{
 		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
 
-	// stack now is: <can-call-non-view-functions>? <funhash>
-	vector<FixedHash<4>> sortedIDs;
-	for (auto const& it: interfaceFunctions)
-	{
-		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
-		sortedIDs.emplace_back(it.first);
+		// stack now is: <can-call-non-view-functions>? <funhash>
+		vector<FixedHash<4>> sortedIDs;
+		for (auto const& it: interfaceFunctions)
+		{
+			callDataUnpackerEntryPoints.emplace(it.first, m_context.newTag());
+			sortedIDs.emplace_back(it.first);
+		}
+		std::sort(sortedIDs.begin(), sortedIDs.end());
+		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimise_runs);
 	}
-	std::sort(sortedIDs.begin(), sortedIDs.end());
-	appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimise_runs);
 
 	m_context << notFound;
 	if (fallback)
