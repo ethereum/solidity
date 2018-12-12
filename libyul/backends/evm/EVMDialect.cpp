@@ -38,7 +38,7 @@ using namespace dev::solidity;
 
 
 EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess):
-	Dialect(_flavour), m_objectAccess(_objectAccess)
+	Dialect{_flavour}, m_objectAccess(_objectAccess)
 {
 	// The EVM instructions will be moved to builtins at some point.
 	if (!m_objectAccess)

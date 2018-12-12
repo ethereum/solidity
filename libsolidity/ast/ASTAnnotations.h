@@ -46,7 +46,7 @@ using TypePointer = std::shared_ptr<Type const>;
 
 struct ASTAnnotation
 {
-	virtual ~ASTAnnotation() {}
+	virtual ~ASTAnnotation() = default;
 };
 
 struct DocTag
@@ -57,7 +57,7 @@ struct DocTag
 
 struct DocumentedAnnotation
 {
-	virtual ~DocumentedAnnotation() {}
+	virtual ~DocumentedAnnotation() = default;
 	/// Mapping docstring tag name -> content.
 	std::multimap<std::string, DocTag> docTags;
 };

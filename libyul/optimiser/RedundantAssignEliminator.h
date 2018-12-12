@@ -115,7 +115,7 @@ public:
 	static void run(Block& _ast);
 
 private:
-	RedundantAssignEliminator() {}
+	RedundantAssignEliminator() = default;
 
 	class State
 	{

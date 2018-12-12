@@ -31,28 +31,29 @@ namespace langutil
 
 struct LineColumn
 {
-	int line;
-	int column;
+	int line = {-1};
+	int column = {-1};
 
+	LineColumn() = default;
 	LineColumn(std::tuple<int, int> const& _t): line{std::get<0>(_t)}, column{std::get<1>(_t)} {}
-	LineColumn(int _line, int _column): line{_line}, column{_column} {}
-	LineColumn(): line{-1}, column{-1} {}
 };
 
 struct SourceReference
 {
-	std::string message;    ///< A message that relates to this source reference (such as a warning or an error message).
-	std::string sourceName; ///< Underlying source name (for example the filename).
-	LineColumn position;    ///< Actual (error) position this source reference is surrounding.
-	bool multiline;         ///< Indicates whether the actual SourceReference is truncated to one line.
-	std::string text;       ///< Extracted source code text (potentially truncated if multiline or too long).
-	int startColumn;        ///< Highlighting range-start of text field.
-	int endColumn;          ///< Highlighting range-end of text field.
+	std::string message;      ///< A message that relates to this source reference (such as a warning or an error message).
+	std::string sourceName;   ///< Underlying source name (for example the filename).
+	LineColumn position;      ///< Actual (error) position this source reference is surrounding.
+	bool multiline = {false}; ///< Indicates whether the actual SourceReference is truncated to one line.
+	std::string text;         ///< Extracted source code text (potentially truncated if multiline or too long).
+	int startColumn = {-1};   ///< Highlighting range-start of text field.
+	int endColumn = {-1};     ///< Highlighting range-end of text field.
 
 	/// Constructs a SourceReference containing a message only.
 	static SourceReference MessageOnly(std::string _msg)
 	{
-		return SourceReference{std::move(_msg), "", LineColumn{-1, -1}, false, "", -1, -1};
+		SourceReference sref;
+		sref.message = std::move(_msg);
+		return sref;
 	}
 };
 

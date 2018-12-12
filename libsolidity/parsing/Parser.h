@@ -47,7 +47,10 @@ private:
 
 	struct VarDeclParserOptions
 	{
+		// This is actually not needed, but due to a defect in the C++ standard, we have to.
+		// https://stackoverflow.com/questions/17430377
 		VarDeclParserOptions() {}
+
 		bool allowVar = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
@@ -85,7 +88,7 @@ private:
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(
-		VarDeclParserOptions const& _options = VarDeclParserOptions(),
+		VarDeclParserOptions const& _options = {},
 		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>()
 	);
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
@@ -99,7 +102,7 @@ private:
 	ASTPointer<FunctionTypeName> parseFunctionType();
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(
-		VarDeclParserOptions const& _options,
+		VarDeclParserOptions const& _options = {},
 		bool _allowEmpty = true
 	);
 	ASTPointer<Block> parseBlock(ASTPointer<ASTString> const& _docString = {});

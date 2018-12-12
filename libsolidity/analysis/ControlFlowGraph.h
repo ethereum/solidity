@@ -103,7 +103,8 @@ struct CFGNode
 /** Describes the control flow of a function. */
 struct FunctionFlow
 {
-	virtual ~FunctionFlow() {}
+	virtual ~FunctionFlow() = default;
+
 	/// Entry node. Control flow of the function starts here.
 	/// This node is empty and does not have any entries.
 	CFGNode* entry = nullptr;

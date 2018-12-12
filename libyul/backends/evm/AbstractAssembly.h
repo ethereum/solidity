@@ -55,7 +55,7 @@ public:
 	using LabelID = size_t;
 	using SubID = size_t;
 
-	virtual ~AbstractAssembly() {}
+	virtual ~AbstractAssembly() = default;
 
 	/// Set a new source location valid starting from the next instruction.
 	virtual void setSourceLocation(langutil::SourceLocation const& _location) = 0;

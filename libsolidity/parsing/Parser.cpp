@@ -48,7 +48,7 @@ public:
 	explicit ASTNodeFactory(Parser const& _parser):
 		m_parser(_parser), m_location{_parser.position(), -1, _parser.source()} {}
 	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
-		m_parser(_parser), m_location(_childNode->location()) {}
+		m_parser(_parser), m_location{_childNode->location()} {}
 
 	void markEndPosition() { m_location.end = m_parser.endPosition(); }
 	void setLocation(SourceLocation const& _location) { m_location = _location; }

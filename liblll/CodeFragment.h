@@ -41,7 +41,7 @@ class CodeFragment
 public:
 	using ReadCallback = std::function<std::string(std::string const&)>;
 
-	CodeFragment() {}
+	CodeFragment() = default;
 	CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback const& _readFile, bool _allowASM = false);
 
 	static CodeFragment compile(std::string const& _src, CompilerState& _s, ReadCallback const& _readFile);

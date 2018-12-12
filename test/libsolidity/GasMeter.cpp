@@ -44,7 +44,6 @@ namespace test
 class GasMeterTestFramework: public SolidityExecutionFramework
 {
 public:
-	GasMeterTestFramework() { }
 	void compile(string const& _sourceCode)
 	{
 		m_compiler.reset(false);
