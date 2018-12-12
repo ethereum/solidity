@@ -9,12 +9,6 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Basic Questions
 ***************
 
-What is the transaction "payload"?
-==================================
-
-This is just the bytecode "data" sent along with the request.
-
-
 Create a contract that can be killed and return funds
 =====================================================
 
