@@ -267,7 +267,7 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
   (these are NEL, LS and PS), it will lead to a parser error.
 
 Additionally, there is another type of comment called a natspec comment,
-for which the documentation is not yet written. They are written with a
+which is detailed in the :ref:`style guide<natspec>`. They are written with a
 triple slash (``///``) or a double asterisk block(``/** ... */``) and
 they should be used directly above function declarations or statements.
 You can use `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_-style tags inside these comments to document
