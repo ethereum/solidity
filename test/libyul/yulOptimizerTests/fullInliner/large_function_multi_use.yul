@@ -2,8 +2,6 @@
 	function f(a) -> b {
         let x := mload(a)
         b := sload(x)
-        let c := 3
-        mstore(mul(a, b), mload(x))
         let y := add(a, x)
         sstore(y, 10)
     }
@@ -28,28 +26,22 @@
 //         let f_b
 //         let f_x := mload(f_a)
 //         f_b := sload(f_x)
-//         let f_c := 3
-//         mstore(mul(f_a, f_b), mload(f_x))
 //         let f_y := add(f_a, f_x)
 //         sstore(f_y, 10)
 //         let t := f_b
 //         let a3
-//         let f_a_5 := a3
-//         let f_b_6
-//         let f_x_7 := mload(f_a_5)
-//         f_b_6 := sload(f_x_7)
-//         let f_c_8 := 3
-//         mstore(mul(f_a_5, f_b_6), mload(f_x_7))
-//         let f_y_11 := add(f_a_5, f_x_7)
-//         sstore(f_y_11, 10)
-//         let s := f_b_6
+//         let f_a_3 := a3
+//         let f_b_4
+//         let f_x_5 := mload(f_a_3)
+//         f_b_4 := sload(f_x_5)
+//         let f_y_6 := add(f_a_3, f_x_5)
+//         sstore(f_y_6, 10)
+//         let s := f_b_4
 //     }
 //     function f(a) -> b
 //     {
 //         let x := mload(a)
 //         b := sload(x)
-//         let c := 3
-//         mstore(mul(a, b), mload(x))
 //         let y := add(a, x)
 //         sstore(y, 10)
 //     }

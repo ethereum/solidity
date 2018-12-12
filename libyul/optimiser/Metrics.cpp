@@ -48,6 +48,9 @@ size_t CodeSize::codeSize(Block const& _block)
 
 void CodeSize::visit(Statement const& _statement)
 {
+	if (_statement.type() == typeid(FunctionDefinition))
+		return;
+
 	++m_size;
 	ASTWalker::visit(_statement);
 }

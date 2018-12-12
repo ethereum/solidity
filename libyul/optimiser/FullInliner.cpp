@@ -49,6 +49,8 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 		if (ssaValue.second && ssaValue.second->type() == typeid(Literal))
 			m_constants.emplace(ssaValue.first);
 
+	// Store size of global statements.
+	m_functionSizes[YulString{}] = CodeSize::codeSize(_ast);
 	map<YulString, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (auto& statement: m_ast.statements)
 	{
@@ -58,7 +60,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 		m_functions[fun.name] = &fun;
 		// Always inline functions that are only called once.
 		if (references[fun.name] == 1)
-			m_alwaysInline.emplace(fun.name);
+			m_singleUse.emplace(fun.name);
 		updateCodeSize(fun);
 	}
 }
@@ -98,7 +100,11 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (!calledFunction)
 		return false;
 
-	if (m_alwaysInline.count(calledFunction->name))
+	// Do not inline into already big functions.
+	if (m_functionSizes.at(_callSite) > 100)
+		return false;
+
+	if (m_singleUse.count(calledFunction->name))
 		return true;
 
 	// Constant arguments might provide a means for further optimization, so they cause a bonus.
@@ -114,7 +120,12 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 		}
 
 	size_t size = m_functionSizes.at(calledFunction->name);
-	return (size < 10 || (constantArg && size < 50));
+	return (size < 10 || (constantArg && size < 30));
+}
+
+void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _callSite)
+{
+	m_functionSizes.at(_callSite) += m_functionSizes.at(_function);
 }
 
 
@@ -154,6 +165,8 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 
 	FunctionDefinition* function = m_driver.function(_funCall.functionName.name);
 	assertThrow(!!function, OptimizerException, "Attempt to inline invalid function.");
+
+	m_driver.tentativelyUpdateCodeSize(function->name, m_currentFunction);
 
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
