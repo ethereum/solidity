@@ -42,7 +42,7 @@ namespace
 
 Json::Value compile(string const& _input)
 {
-	string output(solidity_compile(_input.c_str(), nullptr));
+	string output(solidity_compile(_input.c_str(), nullptr, nullptr));
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;

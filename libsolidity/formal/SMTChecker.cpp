@@ -34,8 +34,12 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
-	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
+SMTChecker::SMTChecker(
+	ErrorReporter& _errorReporter,
+	map<h256, string> const& _smtlib2Responses,
+	ReadCallback::Callback const& _smtSolver
+):
+	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses, _smtSolver)),
 	m_errorReporter(_errorReporter)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)

@@ -45,7 +45,10 @@ namespace smt
 class SMTPortfolio: public SolverInterface, public boost::noncopyable
 {
 public:
-	SMTPortfolio(std::map<h256, std::string> const& _smtlib2Responses);
+	SMTPortfolio(
+		std::map<h256, std::string> const& _smtlib2Responses,
+		ReadCallback::Callback const& _smtSolver = ReadCallback::Callback()
+	);
 
 	void reset() override;
 

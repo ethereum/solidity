@@ -72,9 +72,9 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = n
 	return readCallback;
 }
 
-string compile(string const& _input, CStyleReadFileCallback _readCallback = nullptr)
+string compile(string const& _input, CStyleReadFileCallback _readCallback = nullptr, CStyleReadFileCallback _smtSolver = nullptr)
 {
-	StandardCompiler compiler(wrapReadCallback(_readCallback));
+	StandardCompiler compiler(wrapReadCallback(_readCallback), wrapReadCallback(_smtSolver));
 	return compiler.compile(_input);
 }
 
@@ -93,9 +93,9 @@ extern char const* solidity_version() noexcept
 {
 	return VersionString.c_str();
 }
-extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) noexcept
+extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, CStyleReadFileCallback _smtSolver) noexcept
 {
-	s_outputBuffer = compile(_input, _readCallback);
+	s_outputBuffer = compile(_input, _readCallback, _smtSolver);
 	return s_outputBuffer.c_str();
 }
 }

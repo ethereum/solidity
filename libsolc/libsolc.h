@@ -40,7 +40,7 @@ typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, cha
 
 char const* solidity_license() SOLC_NOEXCEPT;
 char const* solidity_version() SOLC_NOEXCEPT;
-char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) SOLC_NOEXCEPT;
+char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, CStyleReadFileCallback _smtSolver) SOLC_NOEXCEPT;
 
 #ifdef __cplusplus
 }

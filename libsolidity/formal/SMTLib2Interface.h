@@ -44,7 +44,10 @@ namespace smt
 class SMTLib2Interface: public SolverInterface, public boost::noncopyable
 {
 public:
-	explicit SMTLib2Interface(std::map<h256, std::string> const& _queryResponses);
+	explicit SMTLib2Interface(
+		std::map<h256, std::string> const& _queryResponses,
+		ReadCallback::Callback const& _smtSolver = ReadCallback::Callback()
+	);
 
 	void reset() override;
 
@@ -78,6 +81,9 @@ private:
 
 	std::map<h256, std::string> const& m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
+
+	/// Emscripten SMT solver callback
+	ReadCallback::Callback m_smtSolverCallback;
 };
 
 }

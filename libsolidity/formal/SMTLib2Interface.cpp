@@ -39,8 +39,12 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTLib2Interface::SMTLib2Interface(map<h256, string> const& _queryResponses):
-	m_queryResponses(_queryResponses)
+SMTLib2Interface::SMTLib2Interface(
+	map<h256, string> const& _queryResponses,
+	ReadCallback::Callback const& _smtSolver
+):
+	m_queryResponses(_queryResponses),
+	m_smtSolverCallback(_smtSolver)
 {
 	reset();
 }
@@ -214,6 +218,13 @@ vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, stri
 
 string SMTLib2Interface::querySolver(string const& _input)
 {
+	if (m_smtSolverCallback)
+	{
+		auto result = m_smtSolverCallback(_input);
+		if (result.success)
+			return result.responseOrErrorMessage;
+		return "error";
+	}
 	h256 inputHash = dev::keccak256(_input);
 	if (m_queryResponses.count(inputHash))
 		return m_queryResponses.at(inputHash);

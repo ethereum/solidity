@@ -98,8 +98,12 @@ public:
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit CompilerStack(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
+	explicit CompilerStack(
+		ReadCallback::Callback const& _readFile = ReadCallback::Callback(),
+		ReadCallback::Callback const& _smtSolver = ReadCallback::Callback()
+	):
 		m_readFile(_readFile),
+		m_smtSolver(_smtSolver),
 		m_errorList(),
 		m_errorReporter(m_errorList) {}
 
@@ -341,6 +345,7 @@ private:
 	) const;
 
 	ReadCallback::Callback m_readFile;
+	ReadCallback::Callback m_smtSolver;
 	bool m_optimize = false;
 	unsigned m_optimizeRuns = 200;
 	EVMVersion m_evmVersion;
