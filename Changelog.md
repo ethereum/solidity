@@ -17,6 +17,9 @@ Compiler Features:
 Bugfixes:
 
 
+Build System:
+ * Replace the trusty PPA build by a static build on cosmic that is used for the trusty package instead.
+
 ### 0.5.1 (2018-12-03)
 
 Language Features:
