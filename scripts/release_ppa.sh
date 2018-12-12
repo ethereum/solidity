@@ -69,6 +69,12 @@ else
     Z3DEPENDENCY="libz3-dev,
                "
 fi
+if [ $distribution = trusty ]
+then
+    BOOSTDEPENDENCY="libboost1.67-dev"
+else
+    BOOSTDEPENDENCY="libboost-all-dev"
+fi
 
 # Fetch source
 git clone --depth 2 --recursive https://github.com/ethereum/solidity.git -b "$branch"
@@ -117,7 +123,7 @@ Build-Depends: ${Z3DEPENDENCY}debhelper (>= 9.0.0),
                g++-8,
                git,
                libgmp-dev,
-               libboost-all-dev,
+               ${BOOSTDEPENDENCY},
                automake,
                libtool,
                scons
