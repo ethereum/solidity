@@ -38,14 +38,11 @@ public:
 		CFG::NodeContainer& _nodeContainer,
 		FunctionDefinition const& _function
 	);
-	static std::unique_ptr<ModifierFlow> createModifierFlow(
-		CFG::NodeContainer& _nodeContainer,
-		ModifierDefinition const& _modifier
-	);
 
 private:
 	explicit ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow);
 
+	// Visits for constructing the control flow.
 	bool visit(BinaryOperation const& _operation) override;
 	bool visit(Conditional const& _conditional) override;
 	bool visit(IfStatement const& _ifStatement) override;
@@ -54,12 +51,20 @@ private:
 	bool visit(Break const&) override;
 	bool visit(Continue const&) override;
 	bool visit(Throw const&) override;
-	bool visit(Block const&) override;
-	void endVisit(Block const&) override;
-	bool visit(Return const& _return) override;
 	bool visit(PlaceholderStatement const&) override;
 	bool visit(FunctionCall const& _functionCall) override;
+	bool visit(ModifierInvocation const& _modifierInvocation) override;
 
+	// Visits for constructing the control flow as well as filling variable occurrences.
+	bool visit(FunctionDefinition const& _functionDefinition) override;
+	bool visit(Return const& _return) override;
+
+	// Visits for filling variable occurrences.
+	bool visit(FunctionTypeName const& _functionTypeName) override;
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(VariableDeclaration const& _variableDeclaration) override;
+	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
+	bool visit(Identifier const& _identifier) override;
 
 	/// Appends the control flow of @a _node to the current control flow.
 	void appendControlFlow(ASTNode const& _node);
@@ -72,9 +77,6 @@ private:
 	/// Creates an arc from @a _from to @a _to.
 	static void connect(CFGNode* _from, CFGNode* _to);
 
-
-protected:
-	bool visitNode(ASTNode const& node) override;
 
 private:
 
@@ -114,16 +116,17 @@ private:
 
 	CFG::NodeContainer& m_nodeContainer;
 
-	/// The control flow of the function that is currently parsed.
-	/// Note: this can also be a ModifierFlow
-	FunctionFlow const& m_currentFunctionFlow;
-
 	CFGNode* m_currentNode = nullptr;
+	CFGNode* m_returnNode = nullptr;
+	CFGNode* m_revertNode = nullptr;
 
 	/// The current jump destination of break Statements.
 	CFGNode* m_breakJump = nullptr;
 	/// The current jump destination of continue Statements.
 	CFGNode* m_continueJump = nullptr;
+
+	CFGNode* m_placeholderEntry = nullptr;
+	CFGNode* m_placeholderExit = nullptr;
 
 	/// Helper class that replaces the break and continue jump destinations for the
 	/// current scope and restores the originals at the end of the scope.

@@ -1,6 +1,7 @@
 ### 0.5.2 (unreleased)
 
 Language Features:
+ * Control Flow Graph: Detect every access to uninitialized storage pointers.
 
 
 Compiler Features:
