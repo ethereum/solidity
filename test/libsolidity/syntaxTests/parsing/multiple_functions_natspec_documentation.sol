@@ -10,7 +10,3 @@ contract test {
     function functionName4(bytes32 input) public returns (bytes32 out) {}
 }
 // ----
-// Warning: (74-143): Function state mutability can be restricted to pure
-// Warning: (180-249): Function state mutability can be restricted to pure
-// Warning: (281-350): Function state mutability can be restricted to pure
-// Warning: (387-456): Function state mutability can be restricted to pure
