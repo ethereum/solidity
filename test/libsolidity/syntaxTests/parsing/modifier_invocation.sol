@@ -4,4 +4,3 @@ contract c {
     function f() public mod1(7) mod2 { }
 }
 // ----
-// Warning: (135-171): Function state mutability can be restricted to view

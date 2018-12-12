@@ -11,4 +11,3 @@ contract C {
     }
 }
 // ----
-// Warning: (128-189): Function state mutability can be restricted to pure

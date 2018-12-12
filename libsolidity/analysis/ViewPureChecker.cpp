@@ -156,6 +156,7 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		m_bestMutabilityAndLocation.mutability < _funDef.stateMutability() &&
 		_funDef.stateMutability() != StateMutability::Payable &&
 		_funDef.isImplemented() &&
+		!_funDef.body().statements().empty() &&
 		!_funDef.isConstructor() &&
 		!_funDef.isFallback() &&
 		!_funDef.annotation().superFunction

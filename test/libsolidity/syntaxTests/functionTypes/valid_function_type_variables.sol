@@ -18,9 +18,3 @@ contract test {
     function(uint) pure internal h = fh;
 }
 // ----
-// Warning: (20-47): Function state mutability can be restricted to pure
-// Warning: (52-81): Function state mutability can be restricted to pure
-// Warning: (86-115): Function state mutability can be restricted to pure
-// Warning: (120-149): Function state mutability can be restricted to pure
-// Warning: (154-183): Function state mutability can be restricted to pure
-// Warning: (188-217): Function state mutability can be restricted to pure
