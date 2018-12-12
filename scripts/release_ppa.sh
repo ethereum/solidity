@@ -174,7 +174,7 @@ override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DINSTALL_LLLC=Off -DCMAKE_C_COMPILER=gcc-8 -DCMAKE_CXX_COMPILER=g++-8
+	dh_auto_configure -- -DINSTALL_LLLC=Off -DCMAKE_C_COMPILER=gcc-8 -DCMAKE_CXX_COMPILER=g++-8 -DBoost_USE_STATIC_LIBS=OFF
 EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
