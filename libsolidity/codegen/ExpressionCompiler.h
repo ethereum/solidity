@@ -21,6 +21,8 @@
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
+#pragma once
+
 #include <functional>
 #include <memory>
 #include <boost/noncopyable.hpp>

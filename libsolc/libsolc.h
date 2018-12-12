@@ -20,6 +20,8 @@
  * Public compiler API.
  */
 
+#pragma once
+
 #include <stdbool.h>
 
 #ifdef __cplusplus
