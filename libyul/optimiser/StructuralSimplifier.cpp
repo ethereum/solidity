@@ -55,7 +55,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
 			else if (expressionAlwaysFalse(*_ifStmt.condition))
-				return {{}};
+				return {vector<Statement>{}};
 			return {};
 		},
 		[](Switch& _switchStmt) -> OptionalStatements {
