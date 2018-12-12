@@ -18,6 +18,7 @@
  * Compiler that transforms Yul Objects to EVM bytecode objects.
  */
 
+#pragma once
 
 namespace yul
 {

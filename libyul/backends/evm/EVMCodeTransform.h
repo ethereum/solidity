@@ -18,6 +18,8 @@
  * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
  */
 
+#pragma once
+
 #include <libyul/backends/evm/EVMAssembly.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
