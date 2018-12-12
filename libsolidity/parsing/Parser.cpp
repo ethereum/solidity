@@ -46,7 +46,7 @@ class Parser::ASTNodeFactory
 {
 public:
 	explicit ASTNodeFactory(Parser const& _parser):
-		m_parser(_parser), m_location(_parser.position(), -1, _parser.source()) {}
+		m_parser(_parser), m_location{_parser.position(), -1, _parser.source()} {}
 	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location(_childNode->location()) {}
 

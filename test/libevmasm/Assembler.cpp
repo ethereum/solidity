@@ -56,11 +56,11 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
 	Assembly _assembly;
 	auto root_asm = make_shared<CharStream>("", "root.asm");
-	_assembly.setSourceLocation(SourceLocation(1, 3, root_asm));
+	_assembly.setSourceLocation({1, 3, root_asm});
 
 	Assembly _subAsm;
 	auto sub_asm = make_shared<CharStream>("", "sub.asm");
-	_subAsm.setSourceLocation(SourceLocation(6, 8, sub_asm));
+	_subAsm.setSourceLocation({6, 8, sub_asm});
 	_subAsm.append(Instruction::INVALID);
 	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
 
