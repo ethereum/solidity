@@ -89,3 +89,5 @@ test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
+
+test_truffle ERC1484 https://github.com/hydrogen-dev/ERC-1484.git master
