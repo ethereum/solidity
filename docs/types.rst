@@ -1189,7 +1189,14 @@ If ``a`` is an LValue (i.e. a variable or something that can be assigned to), th
 delete
 ------
 
-``delete a`` assigns the initial value for the type to ``a``. I.e. for integers it is equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset. In other words, the value of ``a`` after ``delete a`` is the same as if ``a`` would be declared without assignment, with the following caveat:
+``delete a`` assigns the initial value for the type to ``a``. I.e. for integers it is
+equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic
+array of length zero or a static array of the same length with all elements set to their
+initial value. ``delete a[x]`` deletes the item at index ``x`` of the array and leaves
+all other elements and the length of the array untouched. This especially means that it leaves
+a gap in the array. If you plan to remove items, a mapping is probably a better choice.
+
+For structs, it assigns a struct with all members reset. In other words, the value of ``a`` after ``delete a`` is the same as if ``a`` would be declared without assignment, with the following caveat:
 
 ``delete`` has no effect on mappings (as the keys of mappings may be arbitrary and are generally unknown). So if you delete a struct, it will reset all members that are not mappings and also recurse into the members unless they are mappings. However, individual keys and what they map to can be deleted: If ``a`` is a mapping, then ``delete a[x]`` will delete the value stored at ``x``.
 
