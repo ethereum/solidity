@@ -60,7 +60,7 @@ DIR=$(mktemp -d)
 
     # Update version (needed for some tests)
     echo "Updating package.json to version $VERSION"
-    npm version --no-git-tag-version $VERSION
+    npm version --allow-same-version --no-git-tag-version $VERSION
 
     echo "Running solc-js tests..."
     npm run test

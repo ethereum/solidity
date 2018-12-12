@@ -62,7 +62,7 @@ public:
 		);
 	}
 
-	void testCreationTimeGas(string const& _sourceCode)
+	void testCreationTimeGas(string const& _sourceCode, u256 const& _tolerance = u256(0))
 	{
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
@@ -75,12 +75,13 @@ public:
 		gas += gasForTransaction(m_compiler.object(m_compiler.lastContractName()).bytecode, true);
 
 		BOOST_REQUIRE(!gas.isInfinite);
-		BOOST_CHECK_EQUAL(gas.value, m_gasUsed);
+		BOOST_CHECK_LE(m_gasUsed, gas.value);
+		BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
 	}
 
 	/// Compares the gas computed by PathGasMeter for the given signature (but unknown arguments)
 	/// against the actual gas usage computed by the VM on the given set of argument variants.
-	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants)
+	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants, u256 const& _tolerance = u256(0))
 	{
 		u256 gasUsed = 0;
 		GasMeter::GasConsumption gas;
@@ -98,7 +99,8 @@ public:
 			_sig
 		);
 		BOOST_REQUIRE(!gas.isInfinite);
-		BOOST_CHECK_EQUAL(gas.value, m_gasUsed);
+		BOOST_CHECK_LE(m_gasUsed, gas.value);
+		BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
 	}
 
 	static GasMeter::GasConsumption gasForTransaction(bytes const& _data, bool _isCreation)
@@ -186,7 +188,7 @@ BOOST_AUTO_TEST_CASE(updating_store)
 			}
 		}
 	)";
-	testCreationTimeGas(sourceCode);
+	testCreationTimeGas(sourceCode, m_evmVersion < EVMVersion::constantinople() ? u256(0) : u256(9600));
 }
 
 BOOST_AUTO_TEST_CASE(branches)
