@@ -45,31 +45,6 @@ Enums are not supported by the ABI, they are just supported by Solidity.
 You have to do the mapping yourself for now, we might provide some help
 later.
 
-Can state variables be initialized in-line?
-===========================================
-
-Yes, this is possible for all types (even for structs). However, for arrays it
-should be noted that you must declare them as static memory arrays.
-
-Examples::
-
-    pragma solidity >=0.4.0 <0.6.0;
-
-    contract C {
-        struct S {
-            uint a;
-            uint b;
-        }
-
-        S public x = S(1, 2);
-        string name = "Ada";
-        string[4] adaArr = ["This", "is", "an", "array"];
-    }
-
-    contract D {
-        C c = new C();
-    }
-
 How do structs work?
 ====================
 
