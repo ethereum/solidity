@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"\"settings.outputSelection\" must be an object","message":"\"settings.outputSelection\" must be an object","severity":"error","type":"JSONError"}]}

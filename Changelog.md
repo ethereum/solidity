@@ -17,6 +17,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Compiler Interface: Report specific error message for json input errors instead of internal compiler error
 
 
 Build System:
