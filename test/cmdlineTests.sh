@@ -113,15 +113,20 @@ printTask "Testing unknown options..."
 test_solc_behaviour() {
     local filename="${1}"
     local solc_args="${2}"
-    local stdout_expected="${3}"
-    local exit_code_expected="${4}"
-    local stderr_expected="${5}"
+    local solc_stdin="${3}"
+    local stdout_expected="${4}"
+    local exit_code_expected="${5}"
+    local stderr_expected="${6}"
     local stdout_path=`mktemp`
     local stderr_path=`mktemp`
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
     set +e
-    "$SOLC" "${filename}" ${solc_args} 1>$stdout_path 2>$stderr_path
+    if [[ "$solc_stdin" = "" ]]; then
+        "$SOLC" "${filename}" ${solc_args} 1>$stdout_path 2>$stderr_path
+    else
+        "$SOLC" "${filename}" ${solc_args} <$solc_stdin 1>$stdout_path 2>$stderr_path
+    fi
     exitCode=$?
     set -e
 
@@ -158,14 +163,29 @@ test_solc_behaviour() {
 }
 
 printTask "Testing passing files that are not found..."
-test_solc_behaviour "file_not_found.sol" "" "" 1 "\"file_not_found.sol\" is not found."
+test_solc_behaviour "file_not_found.sol" "" "" "" 1 "\"file_not_found.sol\" is not found."
 
 printTask "Testing passing files that are not files..."
-test_solc_behaviour "." "" "" 1 "\".\" is not a valid file."
+test_solc_behaviour "." "" "" "" 1 "\".\" is not a valid file."
 
 printTask "Testing passing empty remappings..."
-test_solc_behaviour "${0}" "=/some/remapping/target" "" 1 "Invalid remapping: \"=/some/remapping/target\"."
-test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"."
+test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "Invalid remapping: \"=/some/remapping/target\"."
+test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"."
+
+printTask "Running standard JSON commandline tests..."
+(
+cd "$REPO_ROOT"/test/cmdlineTests/
+for file in *.json
+do
+    args="--standard-json"
+    stdin="$REPO_ROOT/test/cmdlineTests/$file"
+    stdout=$(cat $file.stdout 2>/dev/null || true)
+    exitCode=$(cat $file.exit 2>/dev/null || true)
+    err=$(cat $file.err 2>/dev/null || true)
+    printTask " - $file"
+    test_solc_behaviour "" "$args" "$stdin" "$stdout" "$exitCode" "$err"
+done
+)
 
 printTask "Running general commandline tests..."
 (
@@ -177,7 +197,7 @@ do
     exitCode=$(cat $file.exit 2>/dev/null || true)
     err=$(cat $file.err 2>/dev/null || true)
     printTask " - $file"
-    test_solc_behaviour "$file" "$args" "$stdout" "$exitCode" "$err"
+    test_solc_behaviour "$file" "$args" "" "$stdout" "$exitCode" "$err"
 done
 )
 

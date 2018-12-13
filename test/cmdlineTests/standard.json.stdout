@@ -1,0 +1,1 @@
+{"contracts":{"A":{"C":{"evm":{}}}},"errors":[{"component":"general","formattedMessage":"Warning: This is a pre-release compiler version, please do not use it in production.\n","message":"This is a pre-release compiler version, please do not use it in production.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}
