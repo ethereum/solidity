@@ -47,7 +47,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
-#include <libyul/optimiser/VarDeclPropagator.h>
+#include <libyul/optimiser/VarDeclInitializer.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -125,7 +125,7 @@ public:
 				m_nameDispenser = make_shared<NameDispenser>(*m_ast);
 				disambiguated = true;
 			}
-			cout << "(q)quit/(f)flatten/(c)se/propagate var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
+			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
 			cout << "  (e)xpr inline/(i)nline/(s)implify/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
 			cout << "  s(t)ructural simplifier? " << endl;
@@ -146,7 +146,7 @@ public:
 				(CommonSubexpressionEliminator{})(*m_ast);
 				break;
 			case 'd':
-				(VarDeclPropagator{})(*m_ast);
+				(VarDeclInitializer{})(*m_ast);
 				break;
 			case 'x':
 				ExpressionSplitter{*m_nameDispenser}(*m_ast);

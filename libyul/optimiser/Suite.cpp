@@ -36,7 +36,6 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
-#include <libyul/optimiser/VarDeclPropagator.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
@@ -70,7 +69,6 @@ void OptimiserSuite::run(
 		ExpressionSplitter{dispenser}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);
-		VarDeclPropagator{}(ast);
 		RedundantAssignEliminator::run(ast);
 
 		CommonSubexpressionEliminator{}(ast);
@@ -97,27 +95,22 @@ void OptimiserSuite::run(
 		RedundantAssignEliminator::run(ast);
 		CommonSubexpressionEliminator{}(ast);
 		FullInliner{ast, dispenser}.run();
-		VarDeclPropagator{}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);
-		VarDeclPropagator{}(ast);
 		RedundantAssignEliminator::run(ast);
 		ExpressionSimplifier::run(ast);
 		StructuralSimplifier{}(ast);
 		CommonSubexpressionEliminator{}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(ast);
-		VarDeclPropagator{}(ast);
 		RedundantAssignEliminator::run(ast);
 		UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
 	}
 	ExpressionJoiner::run(ast);
-	VarDeclPropagator{}(ast);
 	UnusedPruner::runUntilStabilised(ast);
 	ExpressionJoiner::run(ast);
 	UnusedPruner::runUntilStabilised(ast);
 	ExpressionJoiner::run(ast);
-	VarDeclPropagator{}(ast);
 	UnusedPruner::runUntilStabilised(ast);
 	ExpressionJoiner::run(ast);
 	UnusedPruner::runUntilStabilised(ast);
