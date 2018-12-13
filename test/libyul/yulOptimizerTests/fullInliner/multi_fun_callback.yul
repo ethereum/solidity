@@ -37,7 +37,7 @@
 //     function f(x)
 //     {
 //         mstore(0, x)
-//         let h_t
+//         let h_t := 0
 //         h_t := 2
 //         mstore(7, h_t)
 //         let g_x_1 := 10

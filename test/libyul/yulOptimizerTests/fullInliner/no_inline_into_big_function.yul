@@ -19,25 +19,25 @@
 //     function g() -> x_1
 //     {
 //         let f_a := 2
-//         let f_b
+//         let f_b := 0
 //         f_b := sload(mload(f_a))
 //         let f_a_20 := f_b
-//         let f_b_21
+//         let f_b_21 := 0
 //         f_b_21 := sload(mload(f_a_20))
 //         let f_a_23 := f_b_21
-//         let f_b_24
+//         let f_b_24 := 0
 //         f_b_24 := sload(mload(f_a_23))
 //         let f_a_26 := f_b_24
-//         let f_b_27
+//         let f_b_27 := 0
 //         f_b_27 := sload(mload(f_a_26))
 //         let f_a_29 := f_b_27
-//         let f_b_30
+//         let f_b_30 := 0
 //         f_b_30 := sload(mload(f_a_29))
 //         let f_a_32 := f_b_30
-//         let f_b_33
+//         let f_b_33 := 0
 //         f_b_33 := sload(mload(f_a_32))
 //         let f_a_35 := f_b_33
-//         let f_b_36
+//         let f_b_36 := 0
 //         f_b_36 := sload(mload(f_a_35))
 //         x_1 := f(f(f(f(f(f(f(f(f(f(f(f(f_b_36))))))))))))
 //     }
