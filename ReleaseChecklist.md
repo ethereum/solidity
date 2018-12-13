@@ -10,7 +10,7 @@ Checklist for making a release:
  - [ ] Thank voluntary contributors in the Github release page (use ``git shortlog -s -n -e origin/release..origin/develop``).
  - [ ] Wait for the CI runs on the tag itself (they should push artifacts onto the Github release page).
  - [ ] Run ``scripts/release_ppa.sh release`` to create the PPA release (you need the relevant openssl key).
- - [ ] Once the ``~ethereum/ubuntu/ethereum-static`` PPA build is finished, copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty`` while selecting ``Copy existing binaries``.
+ - [ ] Once the ``~ethereum/ubuntu/ethereum-static`` PPA build is finished and published for all platforms (make sure not to do this earlier), copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty`` while selecting ``Copy existing binaries``.
  - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems, run ``./scripts/docker_deploy_manual.sh release``).
  - [ ] Update the homebrew realease in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb (version and hash)
  - [ ] Update the default version on readthedocs.
