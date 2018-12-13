@@ -15,7 +15,7 @@
 // {
 //     {
 //         let f_a := mload(1)
-//         let f_b
+//         let f_b := 0
 //         let f_x := mload(f_a)
 //         f_b := sload(f_x)
 //         let f_c := 3

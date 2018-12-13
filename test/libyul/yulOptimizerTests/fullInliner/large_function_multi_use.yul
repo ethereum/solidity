@@ -23,7 +23,7 @@
 //         let a2 := 2
 //         let r := f(a_1)
 //         let f_a := a2
-//         let f_b
+//         let f_b := 0
 //         let f_x := mload(f_a)
 //         f_b := sload(f_x)
 //         let f_y := add(f_a, f_x)
@@ -31,7 +31,7 @@
 //         let t := f_b
 //         let a3
 //         let f_a_3 := a3
-//         let f_b_4
+//         let f_b_4 := 0
 //         let f_x_5 := mload(f_a_3)
 //         f_b_4 := sload(f_x_5)
 //         let f_y_6 := add(f_a_3, f_x_5)

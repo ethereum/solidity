@@ -9,11 +9,11 @@
 //     {
 //         let _1 := 7
 //         let f_a := 3
-//         let f_x
+//         let f_x := 0
 //         f_x := add(f_a, f_a)
 //         let g_b := f_x
 //         let g_c := _1
-//         let g_y
+//         let g_y := 0
 //         g_y := mul(mload(g_c), f(g_b))
 //         let y_1 := g_y
 //     }
@@ -24,7 +24,7 @@
 //     function g(b, c) -> y
 //     {
 //         let f_a_6 := b
-//         let f_x_7
+//         let f_x_7 := 0
 //         f_x_7 := add(f_a_6, f_a_6)
 //         y := mul(mload(c), f_x_7)
 //     }
