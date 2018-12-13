@@ -149,7 +149,7 @@ function download_aleth()
 # echos the PID
 function run_aleth()
 {
-    $ALETH_PATH --test -d "${WORKDIR}" >/dev/null 2>&1 &
+    $ALETH_PATH --db memorydb --test -d "${WORKDIR}" >/dev/null 2>&1 &
     echo $!
     # Wait until the IPC endpoint is available.
     while [ ! -S "${WORKDIR}/geth.ipc" ] ; do sleep 1; done
