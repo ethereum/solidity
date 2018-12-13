@@ -41,6 +41,7 @@ class SSAValueTracker: public ASTWalker
 {
 public:
 	using ASTWalker::operator();
+	void operator()(FunctionDefinition const& _funDef) override;
 	void operator()(VariableDeclaration const& _varDecl) override;
 	void operator()(Assignment const& _assignment) override;
 
