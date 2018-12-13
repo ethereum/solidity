@@ -463,11 +463,12 @@
 //         let _2 := 0
 //         let _485 := mload(_2)
 //         let abi_encode_pos := _1
+//         let abi_encode_end_67_610
 //         let abi_encode_length_68 := mload(_485)
 //         mstore(_1, abi_encode_length_68)
 //         abi_encode_pos := 64
 //         let abi_encode_srcPtr := add(_485, _1)
-//         let abi_encode_i_69 := _2
+//         let abi_encode_i_69 := abi_encode_end_67_610
 //         for {
 //         }
 //         lt(abi_encode_i_69, abi_encode_length_68)
@@ -475,21 +476,21 @@
 //             abi_encode_i_69 := add(abi_encode_i_69, 1)
 //         }
 //         {
-//             let _854 := mload(abi_encode_srcPtr)
-//             let abi_encode_pos_71_961 := abi_encode_pos
-//             let abi_encode_length_72_962 := 0x3
-//             let abi_encode_srcPtr_73_963 := _854
-//             let abi_encode_i_74_964 := _2
+//             let _857 := mload(abi_encode_srcPtr)
+//             let abi_encode_pos_71_965 := abi_encode_pos
+//             let abi_encode_length_72_966 := 0x3
+//             let abi_encode_srcPtr_73_967 := _857
+//             let abi_encode_i_74_968 := _2
 //             for {
 //             }
-//             lt(abi_encode_i_74_964, abi_encode_length_72_962)
+//             lt(abi_encode_i_74_968, abi_encode_length_72_966)
 //             {
-//                 abi_encode_i_74_964 := add(abi_encode_i_74_964, 1)
+//                 abi_encode_i_74_968 := add(abi_encode_i_74_968, 1)
 //             }
 //             {
-//                 mstore(abi_encode_pos_71_961, and(mload(abi_encode_srcPtr_73_963), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
-//                 abi_encode_srcPtr_73_963 := add(abi_encode_srcPtr_73_963, _1)
-//                 abi_encode_pos_71_961 := add(abi_encode_pos_71_961, _1)
+//                 mstore(abi_encode_pos_71_965, and(mload(abi_encode_srcPtr_73_967), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
+//                 abi_encode_srcPtr_73_967 := add(abi_encode_srcPtr_73_967, _1)
+//                 abi_encode_pos_71_965 := add(abi_encode_pos_71_965, _1)
 //             }
 //             abi_encode_srcPtr := add(abi_encode_srcPtr, _1)
 //             abi_encode_pos := add(abi_encode_pos, 0x60)
@@ -503,8 +504,7 @@
 //     {
 //         if iszero(slt(add(offset_3, 0x1f), end_4))
 //         {
-//             let _33 := 0
-//             revert(_33, _33)
+//             revert(array_5, array_5)
 //         }
 //         let length_6 := calldataload(offset_3)
 //         let array_5_254 := allocateMemory(array_allocation_size_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(length_6))
@@ -538,17 +538,16 @@
 //     {
 //         if iszero(slt(add(offset_11, 0x1f), end_12))
 //         {
-//             let _52 := 0
-//             revert(_52, _52)
+//             revert(array_13, array_13)
 //         }
 //         let length_14 := 0x2
-//         let array_allo__558 := 0x20
-//         let array_allo_size_95_604 := 64
-//         let array_13_263 := allocateMemory(array_allo_size_95_604)
+//         let array_allo__559 := 0x20
+//         let array_allo_size_95_605 := 64
+//         let array_13_263 := allocateMemory(array_allo_size_95_605)
 //         array_13 := array_13_263
 //         let dst_15 := array_13_263
 //         let src_16 := offset_11
-//         if gt(add(offset_11, array_allo_size_95_604), end_12)
+//         if gt(add(offset_11, array_allo_size_95_605), end_12)
 //         {
 //             let _59 := 0
 //             revert(_59, _59)
@@ -562,16 +561,15 @@
 //         }
 //         {
 //             mstore(dst_15, calldataload(src_16))
-//             dst_15 := add(dst_15, array_allo__558)
-//             src_16 := add(src_16, array_allo__558)
+//             dst_15 := add(dst_15, array_allo__559)
+//             src_16 := add(src_16, array_allo__559)
 //         }
 //     }
 //     function abi_decode_t_array$_t_uint256_$dyn_memory_ptr(offset_27, end_28) -> array_29
 //     {
 //         if iszero(slt(add(offset_27, 0x1f), end_28))
 //         {
-//             let _88 := 0
-//             revert(_88, _88)
+//             revert(array_29, array_29)
 //         }
 //         let length_30 := calldataload(offset_27)
 //         let array_29_279 := allocateMemory(array_allocation_size_t_array$_t_uint256_$dyn_memory_ptr(length_30))
@@ -604,11 +602,10 @@
 //     {
 //         if slt(sub(dataEnd_59, headStart_58), 128)
 //         {
-//             let _159 := 0
-//             revert(_159, _159)
+//             revert(value2, value2)
 //         }
 //         {
-//             value0_60 := calldataload(headStart_58)
+//             value0_60 := calldataload(add(headStart_58, value2))
 //         }
 //         {
 //             value1_61 := calldataload(add(headStart_58, 32))
@@ -617,8 +614,7 @@
 //             let offset_64 := calldataload(add(headStart_58, 64))
 //             if gt(offset_64, 0xffffffffffffffff)
 //             {
-//                 let _167 := 0
-//                 revert(_167, _167)
+//                 revert(value2, value2)
 //             }
 //             value2 := abi_decode_t_array$_t_uint256_$dyn_memory_ptr(add(headStart_58, offset_64), dataEnd_59)
 //         }
@@ -626,8 +622,7 @@
 //             let offset_65 := calldataload(add(headStart_58, 96))
 //             if gt(offset_65, 0xffffffffffffffff)
 //             {
-//                 let _174 := 0
-//                 revert(_174, _174)
+//                 revert(value3, value3)
 //             }
 //             value3 := abi_decode_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(add(headStart_58, offset_65), dataEnd_59)
 //         }
@@ -649,8 +644,7 @@
 //     {
 //         if gt(length_92, 0xffffffffffffffff)
 //         {
-//             let _215 := 0
-//             revert(_215, _215)
+//             revert(size_93, size_93)
 //         }
 //         let _217 := 0x20
 //         size_93 := add(mul(length_92, _217), _217)
@@ -659,8 +653,7 @@
 //     {
 //         if gt(length_98, 0xffffffffffffffff)
 //         {
-//             let _232 := 0
-//             revert(_232, _232)
+//             revert(size_99, size_99)
 //         }
 //         let _234 := 0x20
 //         size_99 := add(mul(length_98, _234), _234)

@@ -96,7 +96,10 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	for (auto const& parameter: _fun.parameters)
 		m_variableScopes.back().variables.emplace(parameter.name);
 	for (auto const& var: _fun.returnVariables)
+	{
 		m_variableScopes.back().variables.emplace(var.name);
+		handleAssignment({var.name}, nullptr);
+	}
 	ASTModifier::operator()(_fun);
 
 	popScope();
