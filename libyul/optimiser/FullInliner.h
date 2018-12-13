@@ -85,6 +85,11 @@ public:
 		return nullptr;
 	}
 
+	/// Adds the size of _funCall to the size of _callSite. This is just
+	/// a rough estimate that is done during inlining. The proper size
+	/// should be determined after inlining is completed.
+	void tentativelyUpdateCodeSize(YulString _function, YulString _callSite);
+
 private:
 	void updateCodeSize(FunctionDefinition& fun);
 	void handleBlock(YulString _currentFunctionName, Block& _block);
@@ -94,7 +99,7 @@ private:
 	Block& m_ast;
 	std::map<YulString, FunctionDefinition*> m_functions;
 	/// Names of functions to always inline.
-	std::set<YulString> m_alwaysInline;
+	std::set<YulString> m_singleUse;
 	/// Variables that are constants (used for inlining heuristic)
 	std::set<YulString> m_constants;
 	std::map<YulString, size_t> m_functionSizes;

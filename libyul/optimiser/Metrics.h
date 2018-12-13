@@ -25,17 +25,17 @@
 namespace yul
 {
 
+/**
+ * Metric for the size of code.
+ * More specifically, the number of AST nodes.
+ * Ignores function definitions while traversing the AST.
+ * If you want to know the size of a function, you have to invoke this on its body.
+ */
 class CodeSize: public ASTWalker
 {
 public:
-	/// Returns a metric for the code size of an AST element.
-	/// More specifically, it returns the number of AST nodes.
 	static size_t codeSize(Statement const& _statement);
-	/// Returns a metric for the code size of an AST element.
-	/// More specifically, it returns the number of AST nodes.
 	static size_t codeSize(Expression const& _expression);
-	/// Returns a metric for the code size of an AST element.
-	/// More specifically, it returns the number of AST nodes.
 	static size_t codeSize(Block const& _block);
 
 private:
