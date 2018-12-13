@@ -21,6 +21,7 @@
 #include <libyul/optimiser/Suite.h>
 
 #include <libyul/optimiser/Disambiguator.h>
+#include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
@@ -56,6 +57,7 @@ void OptimiserSuite::run(
 
 	Block ast = boost::get<Block>(Disambiguator(_analysisInfo, reservedIdentifiers)(_ast));
 
+	(VarDeclInitializer{})(ast);
 	(FunctionHoister{})(ast);
 	(FunctionGrouper{})(ast);
 	(ForLoopInitRewriter{})(ast);

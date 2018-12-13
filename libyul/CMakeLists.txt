@@ -44,5 +44,6 @@ add_library(yul
 	optimiser/UnusedPruner.cpp
 	optimiser/Utilities.cpp
 	optimiser/VarDeclPropagator.cpp
+	optimiser/VarDeclInitializer.cpp
 )
 target_link_libraries(yul PUBLIC evmasm devcore langutil)
