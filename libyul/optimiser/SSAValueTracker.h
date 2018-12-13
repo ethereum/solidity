@@ -33,7 +33,7 @@ namespace yul
  * Class that walks the AST and stores the initial value of each variable
  * that is never assigned to.
  *
- * Default value is represented as nullptr.
+ * A special zero constant expression is used for the default value of variables.
  *
  * Prerequisite: Disambiguator
  */

@@ -36,6 +36,8 @@ namespace yul
  * Tracks assignments and is used as base class for both Rematerialiser and
  * Common Subexpression Eliminator.
  *
+ * A special zero constant expression is used for the default value of variables.
+ *
  * Prerequisite: Disambiguator
  */
 class DataFlowAnalyzer: public ASTModifier
