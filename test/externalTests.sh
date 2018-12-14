@@ -79,6 +79,7 @@ function test_truffle
       fi
       # Change "compileStandard" to "compile"
       sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
+      npx truffle compile
       npm run test
     )
     rm -rf "$DIR"
@@ -89,3 +90,5 @@ test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
+
+test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development
