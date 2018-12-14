@@ -93,9 +93,10 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		m_uninterpretedTerms.clear();
 		resetStateVariables();
 		initializeLocalVariables(_function);
+		m_loopExecutionHappened = false;
+		m_arrayAssignmentHappened = false;
 	}
 
-	m_loopExecutionHappened = false;
 	return true;
 }
 
@@ -272,7 +273,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 	}
 	else if (dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide()))
 	{
-		arrayAssignment(_assignment);
+		arrayIndexAssignment(_assignment);
 		defineExpr(_assignment, expr(_assignment.rightHandSide()));
 	}
 	else
@@ -461,6 +462,13 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 	setUnknownValue(*symbolicVar);
 	if (index > 0)
 		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
+}
+
+void SMTChecker::eraseArrayKnowledge()
+{
+	for (auto const& var: m_variables)
+		if (var.first->annotation().type->category() == Type::Category::Mapping)
+			newValue(*var.first);
 }
 
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
@@ -678,7 +686,13 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	m_uninterpretedTerms.insert(&_indexAccess);
 }
 
-void SMTChecker::arrayAssignment(Assignment const& _assignment)
+void SMTChecker::arrayAssignment()
+{
+	m_arrayAssignmentHappened = true;
+	eraseArrayKnowledge();
+}
+
+void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
 {
 	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_assignment.leftHandSide());
 	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
@@ -869,6 +883,8 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 		checkUnderOverflow(_value, *intType, _location);
 	else if (dynamic_cast<AddressType const*>(type.get()))
 		checkUnderOverflow(_value, IntegerType(160), _location);
+	else if (dynamic_cast<MappingType const*>(type.get()))
+		arrayAssignment();
 	m_interface->addAssertion(newValue(_variable) == _value);
 }
 
@@ -948,6 +964,12 @@ void SMTChecker::checkCondition(
 	if (m_loopExecutionHappened)
 		loopComment =
 			"\nNote that some information is erased after the execution of loops.\n"
+			"You can re-introduce information using require().";
+	if (m_arrayAssignmentHappened)
+		loopComment +=
+			"\nNote that array aliasing is not supported,"
+			" therefore all mapping information is erased after"
+			" a mapping local variable/parameter is assigned.\n"
 			"You can re-introduce information using require().";
 
 	switch (result)
@@ -1082,7 +1104,11 @@ void SMTChecker::initializeFunctionCallParameters(FunctionDefinition const& _fun
 	solAssert(funParams.size() == _callArgs.size(), "");
 	for (unsigned i = 0; i < funParams.size(); ++i)
 		if (createVariable(*funParams[i]))
+		{
 			m_interface->addAssertion(_callArgs[i] == newValue(*funParams[i]));
+			if (funParams[i]->annotation().type->category() == Type::Category::Mapping)
+				m_arrayAssignmentHappened = true;
+		}
 
 	for (auto const& variable: _function.localVariables())
 		if (createVariable(*variable))

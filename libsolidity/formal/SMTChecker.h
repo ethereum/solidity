@@ -97,7 +97,14 @@ private:
 
 	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
 	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
-	void arrayAssignment(Assignment const& _assignment);
+	/// Handles the side effects of assignment
+	/// to variable of some SMT array type
+	/// while aliasing is not supported.
+	void arrayAssignment();
+	/// Handles assignment to SMT array index.
+	void arrayIndexAssignment(Assignment const& _assignment);
+	/// Erases information about SMT arrays.
+	void eraseArrayKnowledge();
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -205,6 +212,7 @@ private:
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_loopExecutionHappened = false;
+	bool m_arrayAssignmentHappened = false;
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
