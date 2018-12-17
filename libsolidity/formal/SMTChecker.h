@@ -79,6 +79,7 @@ private:
 	void endVisit(Literal const& _node) override;
 	void endVisit(Return const& _node) override;
 	bool visit(MemberAccess const& _node) override;
+	void endVisit(IndexAccess const& _node) override;
 
 	void arithmeticOperation(BinaryOperation const& _op);
 	void compareOperation(BinaryOperation const& _op);
@@ -96,6 +97,14 @@ private:
 
 	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
 	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
+	/// Handles the side effects of assignment
+	/// to variable of some SMT array type
+	/// while aliasing is not supported.
+	void arrayAssignment();
+	/// Handles assignment to SMT array index.
+	void arrayIndexAssignment(Assignment const& _assignment);
+	/// Erases information about SMT arrays.
+	void eraseArrayKnowledge();
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -203,14 +212,16 @@ private:
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_loopExecutionHappened = false;
+	bool m_arrayAssignmentHappened = false;
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_globalContext;
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
+	/// These may be direct application of UFs or Array index access.
 	/// Used to retrieve models.
-	std::vector<Expression const*> m_uninterpretedTerms;
+	std::set<Expression const*> m_uninterpretedTerms;
 	std::vector<smt::Expression> m_pathConditions;
 	langutil::ErrorReporter& m_errorReporter;
 	std::shared_ptr<langutil::Scanner> m_scanner;

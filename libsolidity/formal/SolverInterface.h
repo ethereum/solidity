@@ -80,6 +80,8 @@ struct FunctionSort: public Sort
 			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
 		))
 			return false;
+		solAssert(codomain, "");
+		solAssert(_otherFunction->codomain, "");
 		return *codomain == *_otherFunction->codomain;
 	}
 
@@ -99,6 +101,10 @@ struct ArraySort: public Sort
 			return false;
 		auto _otherArray = dynamic_cast<ArraySort const*>(&_other);
 		solAssert(_otherArray, "");
+		solAssert(_otherArray->domain, "");
+		solAssert(_otherArray->range, "");
+		solAssert(domain, "");
+		solAssert(range, "");
 		return *domain == *_otherArray->domain && *range == *_otherArray->range;
 	}
 
@@ -161,8 +167,9 @@ public:
 	static Expression select(Expression _array, Expression _index)
 	{
 		solAssert(_array.sort->kind == Kind::Array, "");
-		auto const& arraySort = dynamic_cast<ArraySort const*>(_array.sort.get());
+		std::shared_ptr<ArraySort> arraySort = std::dynamic_pointer_cast<ArraySort>(_array.sort);
 		solAssert(arraySort, "");
+		solAssert(_index.sort, "");
 		solAssert(*arraySort->domain == *_index.sort, "");
 		return Expression(
 			"select",
@@ -176,14 +183,16 @@ public:
 	static Expression store(Expression _array, Expression _index, Expression _element)
 	{
 		solAssert(_array.sort->kind == Kind::Array, "");
-		auto const& arraySort = dynamic_cast<ArraySort const*>(_array.sort.get());
+		std::shared_ptr<ArraySort> arraySort = std::dynamic_pointer_cast<ArraySort>(_array.sort);
 		solAssert(arraySort, "");
+		solAssert(_index.sort, "");
+		solAssert(_element.sort, "");
 		solAssert(*arraySort->domain == *_index.sort, "");
 		solAssert(*arraySort->range == *_element.sort, "");
 		return Expression(
 			"store",
 			std::vector<Expression>{std::move(_array), std::move(_index), std::move(_element)},
-			_array.sort
+			arraySort
 		);
 	}
 

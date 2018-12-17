@@ -127,3 +127,13 @@ smt::Expression SymbolicFunctionVariable::operator()(vector<smt::Expression> _ar
 {
 	return m_declaration(_arguments);
 }
+
+SymbolicMappingVariable::SymbolicMappingVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface)
+{
+	solAssert(isMapping(m_type->category()), "");
+}
