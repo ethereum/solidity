@@ -364,9 +364,12 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
 	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have fallback functions");
 
-	bool hasPayableFun = hasPayableFunctions(_contract);
-	if (!hasPayableFun && !interfaceFunctions.empty() && !_contract.isLibrary())
+	bool needToAddCallvalueCheck = true;
+	if (!hasPayableFunctions(_contract) && !interfaceFunctions.empty() && !_contract.isLibrary())
+	{
 		appendCallValueCheck();
+		needToAddCallvalueCheck = false;
+	}
 
 	eth::AssemblyItem notFound = m_context.newTag();
 	// directly jump to fallback if the data is too short to contain a function selector
@@ -395,7 +398,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	if (fallback)
 	{
 		solAssert(!_contract.isLibrary(), "");
-		if (!fallback->isPayable() && hasPayableFun)
+		if (!fallback->isPayable() && needToAddCallvalueCheck)
 			appendCallValueCheck();
 
 		solAssert(fallback->isFallback(), "");
@@ -425,7 +428,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		m_context.setStackOffset(0);
 		// We have to allow this for libraries, because value of the previous
 		// call is still visible in the delegatecall.
-		if (!functionType->isPayable() && !_contract.isLibrary() && hasPayableFun)
+		if (!functionType->isPayable() && !_contract.isLibrary() && needToAddCallvalueCheck)
 			appendCallValueCheck();
 
 		// Return tag is used to jump out of the function.
