@@ -387,7 +387,7 @@ void CodeTransform::operator()(Literal const& _literal)
 		m_assembly.appendConstant(u256(_literal.value.str()));
 	else if (_literal.kind == LiteralKind::Boolean)
 	{
-		if (_literal.value.str() == "true")
+		if (_literal.value == "true"_yulstring)
 			m_assembly.appendConstant(u256(1));
 		else
 			m_assembly.appendConstant(u256(0));

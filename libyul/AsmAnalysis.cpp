@@ -102,7 +102,7 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 	else if (_literal.kind == LiteralKind::Boolean)
 	{
 		solAssert(m_dialect->flavour == AsmFlavour::Yul, "");
-		solAssert(_literal.value == YulString{string("true")} || _literal.value == YulString{string("false")}, "");
+		solAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;

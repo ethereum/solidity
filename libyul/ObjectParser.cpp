@@ -42,7 +42,7 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 		{
 			// Special case: Code-only form.
 			object = make_shared<Object>();
-			object->name = YulString{"object"};
+			object->name = "object"_yulstring;
 			object->code = parseBlock();
 			if (!object->code)
 				return nullptr;

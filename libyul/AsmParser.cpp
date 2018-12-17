@@ -354,11 +354,11 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	{
 		YulString literal;
 		if (currentToken() == Token::Return)
-			literal = YulString{"return"};
+			literal = "return"_yulstring;
 		else if (currentToken() == Token::Byte)
-			literal = YulString{"byte"};
+			literal = "byte"_yulstring;
 		else if (currentToken() == Token::Address)
-			literal = YulString{"address"};
+			literal = "address"_yulstring;
 		else
 			literal = YulString{currentLiteral()};
 		// first search the set of builtins, then the instructions.
