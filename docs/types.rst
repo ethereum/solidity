@@ -19,6 +19,7 @@ on its type. To handle any unexpected values, you should use the :ref:`revert fu
 tuple with a second `bool` value denoting success.
 
 .. index:: ! value type, ! type;value
+.. _value-types:
 
 Value Types
 ===========
@@ -728,6 +729,8 @@ Another example that uses external function types::
 
 .. index:: ! type;reference, ! reference type, storage, memory, location, array, struct
 
+.. _reference-types:
+
 Reference Types
 ===============
 
@@ -761,14 +764,17 @@ non-persistent area where function arguments are stored, and behaves mostly like
     depending on the kind of variable, function type, etc., but all complex types must now give an explicit
     data location.
 
+.. _data-location-assignment:
+
+Data location and assignment behaviour
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Data locations are not only relevant for persistency of data, but also for the semantics of assignments:
-assignments between storage and memory (or from calldata) always create an independent copy.
-Assignments from memory to memory only create references. This means that changes to one memory variable
-are also visible in all other memory variables that refer to the same data.
-Assignments from storage to a local storage variables also only assign a reference.
-In contrast, all other assignments to storage always copy. Examples for this case
-are assignments to state variables or to members of local variables of storage struct type, even
-if the local variable itself is just a reference.
+
+* Assignments between ``storage`` and ``memory`` (or from ``calldata``) always create an independent copy.
+* Assignments from ``memory`` to ``memory`` only create references. This means that changes to one memory variable are also visible in all other memory variables that refer to the same data.
+* Assignments from ``storage`` to a local storage variable also only assign a reference.
+* All other assignments to ``storage`` always copy. Examples for this case are assignments to state variables or to members of local variables of storage struct type, even if the local variable itself is just a reference.
 
 ::
 
@@ -1120,9 +1126,10 @@ assigning it to a local variable, as in
 ``campaigns[campaignID].amount = 0``.
 
 .. index:: !mapping
+.. _mapping-types:
 
-Mappings
---------
+Mapping Types
+=============
 
 You declare mapping types with the syntax ``mapping(_KeyType => _ValueType)``.
 The ``_KeyType`` can be any elementary type. This means it can be any of
