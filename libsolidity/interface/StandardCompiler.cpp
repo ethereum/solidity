@@ -21,16 +21,16 @@
  */
 
 #include <libsolidity/interface/StandardCompiler.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
 #include <libdevcore/Keccak256.h>
 
-#include <algorithm>
-
 #include <boost/algorithm/string.hpp>
 #include <boost/optional.hpp>
+#include <algorithm>
 
 using namespace std;
 using namespace dev;

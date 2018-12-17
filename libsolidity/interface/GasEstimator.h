@@ -24,12 +24,12 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libevmasm/GasMeter.h>
 #include <libevmasm/Assembly.h>
+#include <libevmasm/GasMeter.h>
 
-#include <vector>
-#include <map>
 #include <array>
+#include <map>
+#include <vector>
 
 namespace dev
 {

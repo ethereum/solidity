@@ -24,26 +24,27 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 
-#include <libsolidity/interface/Version.h>
-#include <libsolidity/analysis/SemVerHandler.h>
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/parsing/Parser.h>
-#include <libsolidity/analysis/ContractLevelChecker.h>
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
+#include <libsolidity/analysis/ContractLevelChecker.h>
+#include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <libsolidity/analysis/TypeChecker.h>
-#include <libsolidity/analysis/DocStringAnalyser.h>
-#include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
+#include <libsolidity/analysis/SemVerHandler.h>
+#include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
+#include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/ViewPureChecker.h>
+
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/SMTChecker.h>
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/Version.h>
+#include <libsolidity/parsing/Parser.h>
 
 #include <libyul/YulString.h>
 
