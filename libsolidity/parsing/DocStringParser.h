@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <string>
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <string>
 
 namespace langutil
 {
