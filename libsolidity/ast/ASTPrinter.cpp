@@ -21,11 +21,10 @@
  */
 
 #include <libsolidity/ast/ASTPrinter.h>
+
 #include <libsolidity/ast/AST.h>
-
-#include <json/json.h>
-
 #include <boost/algorithm/string/join.hpp>
+#include <json/json.h>
 
 using namespace std;
 using namespace langutil;

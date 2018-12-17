@@ -20,11 +20,12 @@
  */
 
 #include <libsolidity/ast/ASTJsonConverter.h>
-#include <boost/algorithm/string/join.hpp>
-#include <libdevcore/UTF8.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
+#include <libdevcore/UTF8.h>
+#include <boost/algorithm/string/join.hpp>
 
 using namespace std;
 using namespace langutil;

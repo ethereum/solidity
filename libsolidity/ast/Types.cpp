@@ -24,22 +24,22 @@
 
 #include <libsolidity/ast/AST.h>
 
-#include <libdevcore/CommonIO.h>
+#include <libdevcore/Algorithms.h>
 #include <libdevcore/CommonData.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/Keccak256.h>
 #include <libdevcore/UTF8.h>
-#include <libdevcore/Algorithms.h>
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
-#include <boost/algorithm/string.hpp>
+#include <boost/range/algorithm/copy.hpp>
 
 #include <limits>
 
