@@ -1,14 +1,32 @@
 set(sources
+	Algorithms.h
+	Assertions.h
+	boost_multiprecision_number_compare_bug_workaround.hpp
+	Common.h
 	CommonData.cpp
+	CommonData.h
 	CommonIO.cpp
+	CommonIO.h
 	Exceptions.cpp
+	Exceptions.h
+	FixedHash.h
 	IndentedWriter.cpp
+	IndentedWriter.h
 	JSON.cpp
+	JSON.h
 	Keccak256.cpp
+	Keccak256.h
+	Result.h
 	StringUtils.cpp
+	StringUtils.h
 	SwarmHash.cpp
+	SwarmHash.h
 	UTF8.cpp
+	UTF8.h
+	vector_ref.h
+	Visitor.h
 	Whiskers.cpp
+	Whiskers.h
 )
 
 add_library(devcore ${sources})
