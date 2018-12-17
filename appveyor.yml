@@ -35,7 +35,6 @@ configuration:
     - RelWithDebInfo
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   # This is used for pushing to solidity-test-bytecodes
   priv_key:
@@ -63,12 +62,11 @@ install:
 before_build:
     - if not exist build mkdir build
     - cd build
-    - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2015" ( cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=On )
-      else ( cmake -G "Visual Studio 15 2017 Win64" .. -DTESTS=On )
+    - cmake -G "Visual Studio 15 2017 Win64" .. -DTESTS=On
 build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
-    - if "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2017" ( scripts\release.bat %CONFIGURATION% 2017 )
+    - scripts\release.bat %CONFIGURATION% 2017
     - ps: $bytecodedir = git show -s --format="%cd-%H" --date=short
 
 test_script:
