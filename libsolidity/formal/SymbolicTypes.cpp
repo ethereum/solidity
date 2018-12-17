@@ -18,7 +18,6 @@
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsolidity/ast/Types.h>
-
 #include <memory>
 
 using namespace std;
