@@ -22,9 +22,7 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
-
 #include <liblangutil/SourceLocation.h>
-
 #include <functional>
 
 namespace yul

@@ -20,19 +20,18 @@
  * Solidity compiler.
  */
 
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/codegen/AsmCodeGen.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
-#include <libsolidity/codegen/CompilerUtils.h>
-#include <libsolidity/codegen/AsmCodeGen.h>
-#include <libsolidity/ast/AST.h>
-#include <liblangutil/ErrorReporter.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
+#include <liblangutil/ErrorReporter.h>
 
 #include <boost/range/adaptor/reversed.hpp>
-
 #include <algorithm>
 
 using namespace std;

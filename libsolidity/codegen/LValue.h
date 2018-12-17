@@ -22,10 +22,10 @@
 
 #pragma once
 
+#include <libsolidity/codegen/ArrayUtils.h>
+#include <liblangutil/SourceLocation.h>
 #include <memory>
 #include <vector>
-#include <liblangutil/SourceLocation.h>
-#include <libsolidity/codegen/ArrayUtils.h>
 
 namespace dev
 {

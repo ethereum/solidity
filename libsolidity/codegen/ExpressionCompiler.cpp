@@ -20,20 +20,22 @@
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
-#include <utility>
-#include <numeric>
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <libdevcore/Common.h>
-#include <libdevcore/Keccak256.h>
-#include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
+
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
-#include <libevmasm/GasMeter.h>
 
+#include <libevmasm/GasMeter.h>
+#include <libdevcore/Common.h>
+#include <libdevcore/Keccak256.h>
 #include <libdevcore/Whiskers.h>
+
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+#include <numeric>
+#include <utility>
 
 using namespace std;
 using namespace langutil;

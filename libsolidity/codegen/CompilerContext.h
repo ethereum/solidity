@@ -22,24 +22,21 @@
 
 #pragma once
 
-#include <libsolidity/codegen/ABIFunctions.h>
-
-#include <liblangutil/EVMVersion.h>
-
+#include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
-#include <libsolidity/ast/ASTAnnotations.h>
+#include <libsolidity/codegen/ABIFunctions.h>
 
-#include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
-
+#include <libevmasm/Instruction.h>
+#include <liblangutil/EVMVersion.h>
 #include <libdevcore/Common.h>
 
+#include <functional>
 #include <ostream>
 #include <stack>
 #include <queue>
 #include <utility>
-#include <functional>
 
 namespace dev {
 namespace solidity {
