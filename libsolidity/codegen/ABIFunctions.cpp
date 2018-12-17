@@ -24,7 +24,6 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-
 #include <libdevcore/Whiskers.h>
 
 #include <boost/algorithm/string/join.hpp>

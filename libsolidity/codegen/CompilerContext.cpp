@@ -21,19 +21,22 @@
  */
 
 #include <libsolidity/codegen/CompilerContext.h>
-#include <libsolidity/codegen/CompilerUtils.h>
+
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/codegen/AsmCodeGen.h>
+#include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/interface/Version.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/YulString.h>
+
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/algorithm/string/replace.hpp>
 

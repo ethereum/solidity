@@ -21,12 +21,14 @@
  */
 
 #include <libsolidity/codegen/ArrayUtils.h>
-#include <libevmasm/Instruction.h>
+
+#include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-#include <libsolidity/ast/Types.h>
-#include <liblangutil/Exceptions.h>
 #include <libsolidity/codegen/LValue.h>
+
+#include <libevmasm/Instruction.h>
+#include <liblangutil/Exceptions.h>
 
 using namespace std;
 using namespace dev;

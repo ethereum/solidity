@@ -22,14 +22,13 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTForward.h>
 #include <liblangutil/EVMVersion.h>
 
-#include <libsolidity/ast/ASTForward.h>
-
-#include <vector>
 #include <functional>
-#include <set>
 #include <map>
+#include <set>
+#include <vector>
 
 namespace dev {
 namespace solidity {

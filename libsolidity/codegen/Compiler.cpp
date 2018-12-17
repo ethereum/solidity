@@ -21,8 +21,9 @@
  */
 
 #include <libsolidity/codegen/Compiler.h>
-#include <libevmasm/Assembly.h>
+
 #include <libsolidity/codegen/ContractCompiler.h>
+#include <libevmasm/Assembly.h>
 
 using namespace std;
 using namespace dev;

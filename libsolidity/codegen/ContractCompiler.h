@@ -22,11 +22,11 @@
 
 #pragma once
 
-#include <ostream>
-#include <functional>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libevmasm/Assembly.h>
+#include <functional>
+#include <ostream>
 
 namespace dev {
 namespace solidity {
