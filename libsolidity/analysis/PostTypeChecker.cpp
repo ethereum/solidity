@@ -16,15 +16,14 @@
 */
 
 #include <libsolidity/analysis/PostTypeChecker.h>
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/analysis/SemVerHandler.h>
-#include <liblangutil/ErrorReporter.h>
-#include <libsolidity/interface/Version.h>
 
+#include <libsolidity/analysis/SemVerHandler.h>
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/interface/Version.h>
+#include <liblangutil/ErrorReporter.h>
 #include <libdevcore/Algorithms.h>
 
 #include <boost/range/adaptor/map.hpp>
-
 #include <memory>
 
 using namespace std;

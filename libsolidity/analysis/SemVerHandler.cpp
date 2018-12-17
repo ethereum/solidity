@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/analysis/SemVerHandler.h>
+
 #include <functional>
 
 using namespace std;

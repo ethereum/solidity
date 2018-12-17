@@ -22,9 +22,10 @@
  */
 
 #include <libsolidity/analysis/DocStringAnalyser.h>
+
 #include <libsolidity/ast/AST.h>
-#include <liblangutil/ErrorReporter.h>
 #include <libsolidity/parsing/DocStringParser.h>
+#include <liblangutil/ErrorReporter.h>
 
 using namespace std;
 using namespace dev;

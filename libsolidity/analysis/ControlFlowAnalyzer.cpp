@@ -16,6 +16,7 @@
 */
 
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
+
 #include <liblangutil/SourceLocation.h>
 #include <boost/range/algorithm/sort.hpp>
 

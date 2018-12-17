@@ -21,10 +21,11 @@
  * Container of the (implicit and explicit) global objects.
  */
 
-#include <memory>
 #include <libsolidity/analysis/GlobalContext.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
+#include <memory>
 
 using namespace std;
 

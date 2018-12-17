@@ -16,15 +16,18 @@
 */
 
 #include <libsolidity/analysis/SyntaxChecker.h>
-#include <memory>
+
+#include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
-#include <libsolidity/analysis/SemVerHandler.h>
-#include <liblangutil/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
-#include <boost/algorithm/cxx11/all_of.hpp>
 
+#include <liblangutil/ErrorReporter.h>
+
+#include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <memory>
 #include <string>
 
 using namespace std;

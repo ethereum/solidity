@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/analysis/ConstantEvaluator.h>
+
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ErrorReporter.h>
 

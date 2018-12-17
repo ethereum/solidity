@@ -16,14 +16,10 @@
 */
 
 #include <libsolidity/analysis/ViewPureChecker.h>
-
-#include <libevmasm/SemanticInformation.h>
-
 #include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libyul/AsmData.h>
-
 #include <liblangutil/ErrorReporter.h>
-
+#include <libevmasm/SemanticInformation.h>
 #include <functional>
 
 using namespace std;

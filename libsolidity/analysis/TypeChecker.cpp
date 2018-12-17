@@ -26,7 +26,6 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -35,8 +34,8 @@
 #include <libdevcore/StringUtils.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <memory>
 #include <vector>

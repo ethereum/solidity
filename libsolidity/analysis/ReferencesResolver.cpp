@@ -21,13 +21,15 @@
  */
 
 #include <libsolidity/analysis/ReferencesResolver.h>
-#include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
+#include <libsolidity/ast/AST.h>
+
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
 #include <libyul/backends/evm/EVMDialect.h>
+
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 

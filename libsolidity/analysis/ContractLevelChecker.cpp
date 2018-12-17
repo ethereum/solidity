@@ -20,10 +20,9 @@
  */
 
 #include <libsolidity/analysis/ContractLevelChecker.h>
+
 #include <libsolidity/ast/AST.h>
-
 #include <liblangutil/ErrorReporter.h>
-
 #include <boost/range/adaptor/reversed.hpp>
 
 
