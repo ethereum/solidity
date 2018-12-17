@@ -20,14 +20,15 @@
  * Solidity parser.
  */
 
-#include <cctype>
-#include <vector>
 #include <libsolidity/parsing/Parser.h>
+
 #include <libyul/AsmParser.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <liblangutil/SourceLocation.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SourceLocation.h>
+#include <cctype>
+#include <vector>
 
 using namespace std;
 using namespace langutil;
