@@ -22,24 +22,22 @@
 
 #pragma once
 
-
-#include <libsolidity/parsing/Token.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTEnums.h>
+#include <libsolidity/parsing/Token.h>
 
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
-
 #include <libdevcore/FixedHash.h>
-#include <json/json.h>
 
 #include <boost/noncopyable.hpp>
+#include <json/json.h>
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace yul
 {

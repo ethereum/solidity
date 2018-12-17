@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include <ostream>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <ostream>
 
 namespace dev
 {
