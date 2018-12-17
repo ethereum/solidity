@@ -22,7 +22,6 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
-
 #include <map>
 
 namespace langutil

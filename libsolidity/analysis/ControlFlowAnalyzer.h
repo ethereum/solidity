@@ -18,7 +18,6 @@
 #pragma once
 
 #include <libsolidity/analysis/ControlFlowGraph.h>
-
 #include <set>
 
 namespace dev
