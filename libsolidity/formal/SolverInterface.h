@@ -17,18 +17,16 @@
 
 #pragma once
 
-#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
-
+#include <liblangutil/Exceptions.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Exceptions.h>
 
 #include <boost/noncopyable.hpp>
-
+#include <cstdio>
 #include <map>
 #include <string>
 #include <vector>
-#include <cstdio>
 
 namespace dev
 {

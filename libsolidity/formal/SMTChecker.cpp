@@ -18,12 +18,10 @@
 #include <libsolidity/formal/SMTChecker.h>
 
 #include <libsolidity/formal/SMTPortfolio.h>
-
 #include <libsolidity/formal/VariableUsage.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <liblangutil/ErrorReporter.h>
-
 #include <libdevcore/StringUtils.h>
 
 #include <boost/range/adaptor/map.hpp>

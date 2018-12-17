@@ -17,12 +17,9 @@
 
 #pragma once
 
-#include <libsolidity/formal/SSAVariable.h>
-
 #include <libsolidity/formal/SolverInterface.h>
-
+#include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/ast/Types.h>
-
 #include <memory>
 
 namespace dev

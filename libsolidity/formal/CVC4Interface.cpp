@@ -18,7 +18,6 @@
 #include <libsolidity/formal/CVC4Interface.h>
 
 #include <liblangutil/Exceptions.h>
-
 #include <libdevcore/CommonIO.h>
 
 using namespace std;

@@ -22,13 +22,11 @@
 #include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
-
 #include <libsolidity/interface/ReadFile.h>
-
 #include <liblangutil/Scanner.h>
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace langutil

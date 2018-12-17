@@ -18,7 +18,6 @@
 #include <libsolidity/formal/Z3Interface.h>
 
 #include <liblangutil/Exceptions.h>
-
 #include <libdevcore/CommonIO.h>
 
 using namespace std;
