@@ -87,21 +87,17 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck_no_payable)
 	char const* sourceCode = R"(
 		contract C {
 			address a;
-			function f(address b) public returns (address c) {
-				address d = b;
-				return d;
+			function f(address b) public {
+				a = b;
 			}
-			function f1(address b) public returns (address c) {
-				address d = b;
-				return d;
+			function f1(address b) public pure returns (uint c) {
+				return uint(b) + 2;
 			}
-			function f2(address b) public returns (address c) {
-				address d = b;
-				return d;
+			function f2(address b) public pure returns (uint) {
+				return uint(b) + 8;
 			}
-			function f3(address b) public returns (address c) {
-				address d = b;
-				return d;
+			function f3(address, uint c) pure public returns (uint) {
+				return c - 5;
 			}
 		}
 	)";
@@ -109,9 +105,9 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck_no_payable)
 
 	// With no payable functions we run the callvalue check only once
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
-		CHECK_GAS(250964, 116827, 0);
+		CHECK_GAS(225293, 163547, 0);
 	else
-		CHECK_GAS(244850, 111045, 0);
+		CHECK_GAS(219243, 157765, 0);
 }
 
 // With at least one payable function we run the check for each
@@ -120,30 +116,26 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck_payable)
 	char const* sourceCode = R"(
 		contract C {
 			address a;
-			function f(address b) public returns (address c) {
-				address d = b;
-				return d;
+			function f(address b) public {
+				a = b;
 			}
-			function f1(address b) public returns (address c) {
-				address d = b;
-				return d;
+			function f1(address b) public pure returns (uint c) {
+				return uint(b) + 2;
 			}
-			function f2(address b) public returns (address c) {
-				address d = b;
-				return d;
+			function f2(address b) public pure returns (uint) {
+				return uint(b) + 8;
 			}
-			function f3(address b) public payable returns (address c) {
-				address d = b;
-				return d;
+			function f3(address, uint c) payable public returns (uint) {
+				return c - 5;
 			}
 		}
 	)";
 	compileAndRun(sourceCode);
 
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
-		CHECK_GAS(257740, 122133, 0);
+		CHECK_GAS(232139, 170387, 0);
 	else
-		CHECK_GAS(251760, 116411, 0);
+		CHECK_GAS(226089, 164541, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
