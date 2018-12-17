@@ -1,48 +1,98 @@
 add_library(yul
 	AsmAnalysis.cpp
+	AsmAnalysis.h
 	AsmAnalysisInfo.cpp
+	AsmAnalysisInfo.h
+	AsmData.h
+	AsmDataForward.h
 	AsmParser.cpp
+	AsmParser.h
 	AsmPrinter.cpp
+	AsmPrinter.h
 	AsmScope.cpp
+	AsmScope.h
 	AsmScopeFiller.cpp
+	AsmScopeFiller.h
 	Dialect.cpp
+	Dialect.h
+	Exceptions.h
 	Object.cpp
+	Object.h
 	ObjectParser.cpp
+	ObjectParser.h
+	YulString.h
+	backends/evm/AbstractAssembly.h
 	backends/evm/EVMAssembly.cpp
+	backends/evm/EVMAssembly.h
 	backends/evm/EVMCodeTransform.cpp
+	backends/evm/EVMCodeTransform.h
 	backends/evm/EVMDialect.cpp
+	backends/evm/EVMDialect.h
 	backends/evm/EVMObjectCompiler.cpp
+	backends/evm/EVMObjectCompiler.h
 	optimiser/ASTCopier.cpp
+	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
+	optimiser/ASTWalker.h
 	optimiser/BlockFlattener.cpp
+	optimiser/BlockFlattener.h
 	optimiser/CommonSubexpressionEliminator.cpp
+	optimiser/CommonSubexpressionEliminator.h
 	optimiser/DataFlowAnalyzer.cpp
+	optimiser/DataFlowAnalyzer.h
 	optimiser/Disambiguator.cpp
+	optimiser/Disambiguator.h
 	optimiser/ExpressionInliner.cpp
+	optimiser/ExpressionInliner.h
 	optimiser/ExpressionJoiner.cpp
+	optimiser/ExpressionJoiner.h
 	optimiser/ExpressionSimplifier.cpp
+	optimiser/ExpressionSimplifier.h
 	optimiser/ExpressionSplitter.cpp
+	optimiser/ExpressionSplitter.h
 	optimiser/ForLoopInitRewriter.cpp
+	optimiser/ForLoopInitRewriter.h
 	optimiser/FullInliner.cpp
+	optimiser/FullInliner.h
 	optimiser/FunctionGrouper.cpp
+	optimiser/FunctionGrouper.h
 	optimiser/FunctionHoister.cpp
+	optimiser/FunctionHoister.h
 	optimiser/InlinableExpressionFunctionFinder.cpp
+	optimiser/InlinableExpressionFunctionFinder.h
 	optimiser/MainFunction.cpp
+	optimiser/MainFunction.h
 	optimiser/Metrics.cpp
+	optimiser/Metrics.h
 	optimiser/NameCollector.cpp
+	optimiser/NameCollector.h
 	optimiser/NameDispenser.cpp
+	optimiser/NameDispenser.h
 	optimiser/RedundantAssignEliminator.cpp
+	optimiser/RedundantAssignEliminator.h
 	optimiser/Rematerialiser.cpp
+	optimiser/Rematerialiser.h
 	optimiser/SSATransform.cpp
+	optimiser/SSATransform.h
 	optimiser/SSAValueTracker.cpp
+	optimiser/SSAValueTracker.h
 	optimiser/Semantics.cpp
+	optimiser/Semantics.h
 	optimiser/SimplificationRules.cpp
+	optimiser/SimplificationRules.h
 	optimiser/StructuralSimplifier.cpp
+	optimiser/StructuralSimplifier.h
 	optimiser/Substitution.cpp
+	optimiser/Substitution.h
 	optimiser/Suite.cpp
+	optimiser/Suite.h
 	optimiser/SyntacticalEquality.cpp
+	optimiser/SyntacticalEquality.h
 	optimiser/UnusedPruner.cpp
+	optimiser/UnusedPruner.h
 	optimiser/Utilities.cpp
+	optimiser/Utilities.h
 	optimiser/VarDeclInitializer.cpp
+	optimiser/VarDeclInitializer.h
 )
 target_link_libraries(yul PUBLIC evmasm devcore langutil)
