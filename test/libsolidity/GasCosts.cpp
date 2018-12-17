@@ -103,6 +103,9 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck_no_payable)
 	)";
 	compileAndRun(sourceCode);
 
+	//auto trace = m_rpc.rpcCall("admin_eth_vmTrace", {"\"1\"", "0", "\"3/j+U82YZ4U=\""});
+	//cout << trace << endl;
+
 	// With no payable functions we run the callvalue check only once
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
 		CHECK_GAS(225293, 163547, 0);
@@ -131,6 +134,9 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck_payable)
 		}
 	)";
 	compileAndRun(sourceCode);
+
+	//auto trace = m_rpc.rpcCall("admin_eth_vmTrace", {"\"1\"", "0", "\"3/j+U82YZ4U=\""});
+	//cout << trace << endl;
 
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
 		CHECK_GAS(232139, 170387, 0);
