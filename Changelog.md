@@ -20,6 +20,7 @@ Bugfixes:
 
 Build System:
  * Replace the trusty PPA build by a static build on cosmic that is used for the trusty package instead.
+ * Remove support for Visual Studio 2015.
 
 ### 0.5.1 (2018-12-03)
 
