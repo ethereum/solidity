@@ -346,7 +346,7 @@ Literals
 
 You can use integer constants by typing them in decimal or hexadecimal notation and an
 appropriate ``PUSHi`` instruction will automatically be generated. The following creates code
-to add 2 and 3 resulting in 5 and then computes the bitwise and with the string "abc".
+to add 2 and 3 resulting in 5 and then computes the bitwise ``AND`` with the string "abc".
 The final value is assigned to a local variable called ``x``.
 Strings are stored left-aligned and cannot be longer than 32 bytes.
 
