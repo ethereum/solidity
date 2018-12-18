@@ -159,8 +159,8 @@ following list can be used as a reference of its opcodes.
 
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
 Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
-Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
-special and all others push exactly one item onto the stack.
+Opcodes marked with ``-`` do not push an item onto the stack (do not return a result),
+those marked with ``*`` are special and all others push exactly one item onto the stack (their "return value").
 Opcodes marked with ``F``, ``H``, ``B`` or ``C`` are present since Frontier, Homestead, Byzantium or Constantinople, respectively.
 Constantinople is still in planning and all instructions marked as such will result in an invalid instruction exception.
 
@@ -346,7 +346,7 @@ Literals
 
 You can use integer constants by typing them in decimal or hexadecimal notation and an
 appropriate ``PUSHi`` instruction will automatically be generated. The following creates code
-to add 2 and 3 resulting in 5 and then computes the bitwise and with the string "abc".
+to add 2 and 3 resulting in 5 and then computes the bitwise ``AND`` with the string "abc".
 The final value is assigned to a local variable called ``x``.
 Strings are stored left-aligned and cannot be longer than 32 bytes.
 
