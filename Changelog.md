@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * Inline Assembly: Improve error messages around invalid function argument count.
+ * Code Generator: Only check callvalue once if all functions are non-payable.
  * Code Generator: Use codecopy for string constants more aggressively.
  * Code Generator: Use binary search for dispatch function if more efficient. The size/speed tradeoff can be tuned using ``--optimize-runs``.
  * Compiler Interface: Disallow unknown keys in standard JSON input.
