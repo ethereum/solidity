@@ -1,5 +1,5 @@
 
-======= gas_test_dispatch_optimize.sol:Large =======
+======= gas_test_dispatch_optimize/input.sol:Large =======
 Gas estimation:
 construction:
    300 + 262000 = 262300
@@ -27,7 +27,7 @@ external:
    g8(uint256):	20980
    g9(uint256):	20826
 
-======= gas_test_dispatch_optimize.sol:Medium =======
+======= gas_test_dispatch_optimize/input.sol:Medium =======
 Gas estimation:
 construction:
    190 + 143000 = 143190
@@ -42,7 +42,7 @@ external:
    g8(uint256):	20870
    g9(uint256):	20826
 
-======= gas_test_dispatch_optimize.sol:Small =======
+======= gas_test_dispatch_optimize/input.sol:Small =======
 Gas estimation:
 construction:
    117 + 67400 = 67517
