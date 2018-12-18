@@ -29,8 +29,8 @@
 
 #include <libevmasm/LinkerObject.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace langutil
 {

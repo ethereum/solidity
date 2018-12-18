@@ -34,15 +34,14 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 
+#include <boost/noncopyable.hpp>
 #include <json/json.h>
 
-#include <boost/noncopyable.hpp>
-
+#include <functional>
+#include <memory>
 #include <ostream>
 #include <string>
-#include <memory>
 #include <vector>
-#include <functional>
 
 namespace langutil
 {
