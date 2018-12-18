@@ -619,6 +619,22 @@ tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocati
 	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
 }
 
+
+h256 const& CompilerStack::Source::keccak256() const
+{
+	if (keccak256HashCached == h256{})
+		keccak256HashCached = dev::keccak256(scanner->source());
+	return keccak256HashCached;
+}
+
+h256 const& CompilerStack::Source::swarmHash() const
+{
+	if (swarmHashCached == h256{})
+		swarmHashCached = dev::swarmHash(scanner->source());
+	return swarmHashCached;
+}
+
+
 StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
 {
 	solAssert(m_stackState < ParsingSuccessful, "");
@@ -860,16 +876,13 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 			continue;
 
 		solAssert(s.second.scanner, "Scanner not available");
-		meta["sources"][s.first]["keccak256"] =
-			"0x" + toHex(dev::keccak256(s.second.scanner->source()).asBytes());
+		meta["sources"][s.first]["keccak256"] = "0x" + toHex(s.second.keccak256().asBytes());
 		if (m_metadataLiteralSources)
 			meta["sources"][s.first]["content"] = s.second.scanner->source();
 		else
 		{
 			meta["sources"][s.first]["urls"] = Json::arrayValue;
-			meta["sources"][s.first]["urls"].append(
-				"bzzr://" + toHex(dev::swarmHash(s.second.scanner->source()).asBytes())
-			);
+			meta["sources"][s.first]["urls"].append("bzzr://" + toHex(s.second.swarmHash().asBytes()));
 		}
 	}
 	meta["settings"]["optimizer"]["enabled"] = m_optimize;
@@ -896,7 +909,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	return jsonCompactPrint(meta);
 }
 
-bytes CompilerStack::createCBORMetadata(string _metadata, bool _experimentalMode)
+bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
 {
 	bytes cborEncodedHash =
 		// CBOR-encoding of the key "bzzr0"
