@@ -301,7 +301,7 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			SMTChecker smtChecker(m_errorReporter, m_smtlib2Responses);
+			SMTChecker smtChecker(m_errorReporter, m_smtlib2Responses, m_readFile);
 			for (Source const* source: m_sourceOrder)
 				smtChecker.analyze(*source->ast, source->scanner);
 			m_unhandledSMTLib2Queries += smtChecker.unhandledQueries();
