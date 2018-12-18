@@ -113,6 +113,14 @@ while(0)
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
+BOOST_AUTO_TEST_CASE(unsatisfied_version)
+{
+	char const* text = R"(
+		pragma solidity ^99.99.0;
+	)";
+	CHECK_PARSE_ERROR(text, "Source file requires different compiler version");
+}
+
 BOOST_AUTO_TEST_CASE(unsatisfied_version_followed_by_invalid_syntax)
 {
 	char const* text = R"(
