@@ -118,6 +118,13 @@ public:
 			return data() < _other.data();
 	}
 
+	/// Shortcut that avoids constructing an AssemblyItem just to perform the comparison.
+	bool operator==(Instruction _instr) const
+	{
+		return type() == Operation && instruction() == _instr;
+	}
+	bool operator!=(Instruction _instr) const { return !operator==(_instr); }
+
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
 	unsigned bytesRequired(unsigned _addressLength) const;
