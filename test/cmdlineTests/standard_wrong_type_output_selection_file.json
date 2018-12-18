@@ -1,0 +1,13 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"fileA": {
+			"content": "contract A { }"
+		}
+	},
+	"settings": {
+		"outputSelection": {
+			"fileA": "awesome file!"
+		}
+	}
+}

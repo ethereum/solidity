@@ -1,0 +1,11 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "pragma solidity >=0.0; contract C { function f() public pure {} }"
+		}
+	},
+	"auxiliaryInput": [1, 2, 3]
+}

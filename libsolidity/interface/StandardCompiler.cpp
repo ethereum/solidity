@@ -228,48 +228,97 @@ Json::Value collectEVMObject(eth::LinkerObject const& _object, string const* _so
 	return output;
 }
 
-boost::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> const& _keys)
+boost::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> const& _keys, string const& _name)
 {
+	if (!!_input && !_input.isObject())
+		return formatFatalError("JSONError", "\"" + _name + "\" must be an object");
+
 	for (auto const& member: _input.getMemberNames())
 		if (!_keys.count(member))
 			return formatFatalError("JSONError", "Unknown key \"" + member + "\"");
+
 	return boost::none;
 }
 
 boost::optional<Json::Value> checkRootKeys(Json::Value const& _input)
 {
 	static set<string> keys{"auxiliaryInput", "language", "settings", "sources"};
-	return checkKeys(_input, keys);
+	return checkKeys(_input, keys, "root");
 }
 
-boost::optional<Json::Value> checkSourceKeys(Json::Value const& _input)
+boost::optional<Json::Value> checkSourceKeys(Json::Value const& _input, string const& _name)
 {
 	static set<string> keys{"content", "keccak256", "urls"};
-	return checkKeys(_input, keys);
+	return checkKeys(_input, keys, "sources." + _name);
 }
 
 boost::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 {
 	static set<string> keys{"smtlib2responses"};
-	return checkKeys(_input, keys);
+	return checkKeys(_input, keys, "auxiliaryInput");
 }
 
 boost::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
 	static set<string> keys{"evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
-	return checkKeys(_input, keys);
+	return checkKeys(_input, keys, "settings");
 }
 
 boost::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
 {
 	static set<string> keys{"enabled", "runs"};
-	return checkKeys(_input, keys);
+	return checkKeys(_input, keys, "settings.optimizer");
 }
 
 boost::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
 	static set<string> keys{"useLiteralContent"};
-	return checkKeys(_input, keys);
+	return checkKeys(_input, keys, "settings.metadata");
+}
+
+boost::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelection)
+{
+	if (!!_outputSelection && !_outputSelection.isObject())
+		return formatFatalError("JSONError", "\"settings.outputSelection\" must be an object");
+
+	for (auto const& sourceName: _outputSelection.getMemberNames())
+	{
+		auto const& sourceVal = _outputSelection[sourceName];
+
+		if (!sourceVal.isObject())
+			return formatFatalError(
+				"JSONError",
+				"\"settings.outputSelection." + sourceName + "\" must be an object"
+			);
+
+		for (auto const& contractName: sourceVal.getMemberNames())
+		{
+			auto const& contractVal = sourceVal[contractName];
+
+			if (!contractVal.isArray())
+				return formatFatalError(
+					"JSONError",
+					"\"settings.outputSelection." +
+					sourceName +
+					"." +
+					contractName +
+					"\" must be a string array"
+				);
+
+			for (auto const& output: contractVal)
+				if (!output.isString())
+					return formatFatalError(
+						"JSONError",
+						"\"settings.outputSelection." +
+						sourceName +
+						"." +
+						contractName +
+						"\" must be a string array"
+					);
+		}
+	}
+
+	return boost::none;
 }
 
 }
@@ -301,10 +350,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		string hash;
 
-		if (!sources[sourceName].isObject())
-			return formatFatalError("JSONError", "Source input is not a JSON object.");
-
-		if (auto result = checkSourceKeys(sources[sourceName]))
+		if (auto result = checkSourceKeys(sources[sourceName], sourceName))
 			return *result;
 
 		if (sources[sourceName]["keccak256"].isString())
@@ -380,6 +426,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		Json::Value const& smtlib2Responses = auxInputs["smtlib2responses"];
 		if (!!smtlib2Responses)
+		{
+			if (!smtlib2Responses.isObject())
+				return formatFatalError("JSONError", "\"auxiliaryInput.smtlib2responses\" must be an object.");
+
 			for (auto const& hashString: smtlib2Responses.getMemberNames())
 			{
 				h256 hash;
@@ -392,8 +442,15 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 					return formatFatalError("JSONError", "Invalid hex encoding of SMTLib2 auxiliary input.");
 				}
 
+				if (!smtlib2Responses[hashString].isString())
+					return formatFatalError(
+						"JSONError",
+						"\"smtlib2Responses." + hashString + "\" must be a string."
+					);
+
 				m_compilerStack.addSMTLib2Response(hash, smtlib2Responses[hashString].asString());
 			}
+		}
 	}
 
 	Json::Value const& settings = _input.get("settings", Json::Value());
@@ -411,11 +468,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		m_compilerStack.setEVMVersion(*version);
 	}
 
+	if (settings.isMember("remappings") && !settings["remappings"].isArray())
+		return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings.");
+
 	vector<CompilerStack::Remapping> remappings;
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
 	{
 		if (!remapping.isString())
-			return formatFatalError("JSONError", "Remapping entry must be a string.");
+			return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings");
 		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
 			remappings.emplace_back(std::move(*r));
 		else
@@ -498,6 +558,10 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	m_compilerStack.useMetadataLiteralSources(metadataSettings.get("useLiteralContent", Json::Value(false)).asBool());
 
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
+
+	if (auto jsonError = checkOutputSelection(outputSelection))
+		return *jsonError;
+
 	m_compilerStack.setRequestedContractNames(requestedContractNames(outputSelection));
 
 	try
