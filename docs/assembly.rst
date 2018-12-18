@@ -159,8 +159,8 @@ following list can be used as a reference of its opcodes.
 
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
 Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
-Opcodes marked with ``-`` do not push an item onto the stack, those marked with ``*`` are
-special and all others push exactly one item onto the stack.
+Opcodes marked with ``-`` do not push an item onto the stack (do not return a result),
+those marked with ``*`` are special and all others push exactly one item onto the stack (their "return value").
 Opcodes marked with ``F``, ``H``, ``B`` or ``C`` are present since Frontier, Homestead, Byzantium or Constantinople, respectively.
 Constantinople is still in planning and all instructions marked as such will result in an invalid instruction exception.
 
