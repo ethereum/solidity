@@ -811,40 +811,50 @@ Data locations are not only relevant for persistency of data, but also for the s
 Arrays
 ------
 
-Arrays can have a compile-time fixed size or they can be dynamic.
-The are few restrictions for the element, it can also be
-another array, a mapping or a struct. The general restrictions for
-types apply, though, in that mappings can only be used in storage
-and publicly-visible functions need parameters that are :ref:`ABI types <ABI>`.
+Arrays can have a compile-time fixed size, or they can have a dynamic size.
 
-An array of fixed size ``k`` and element type ``T`` is written as ``T[k]``,
-an array of dynamic size as ``T[]``. As an example, an array of 5 dynamic
-arrays of ``uint`` is ``uint[][5]`` (note that the notation is reversed when
-compared to some other languages). To access the second uint in the
-third dynamic array, you use ``x[2][1]`` (indices are zero-based and
-access works in the opposite way of the declaration, i.e. ``x[2]``
-shaves off one level in the type from the right).
+The type of an array of fixed size ``k`` and element type ``T`` is written as ``T[k]``,
+and an array of dynamic size as ``T[]``.
 
-Accessing an array past its end causes a revert. If you want to add
-new elements, you have to use ``.push()`` or increase the ``.length``
-member (see below).
+For example, an array of 5 dynamic arrays of ``uint`` is written as
+``uint[][5]``. The notation is reversed compared to some other languages. In
+Solidity, ``X[3]`` is always an array containing three elements of type ``X``,
+even if ``X`` is itself an array. This is not the case in other languages such
+as C.
+
+Indices are zero-based, and access is in the opposite direction of the
+declaration.
+
+For example, if you have a variable ``uint[][5] x memory``, you access the
+second ``uint`` in the third dynamic array using ``x[2][1]``, and to access the
+third dynamic array, use ``x[2]``. Again,
+if you have an array ``T[5] a`` for a type ``T`` that can also be an array,
+then ``a[2]`` always has type ``T``.
+
+Array elements can be of any type, including mapping or struct. The general
+restrictions for types apply, in that mappings can only be stored in the
+``storage`` data location and publicly-visible functions need parameters that are :ref:`ABI types <ABI>`.
+
+Accessing an array past its end causes a failing assertion. You can use the ``.push()`` method to append a new element at the end or assign to the ``.length`` :ref:`member <array-members>` to change the size (see below for caveats).
+method or increase the ``.length`` :ref:`member <array-members>` to add elements.
 
 Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
 but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
 length or index access.
-So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
-As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
-for arbitrary-length string (UTF-8) data. If you can limit the length to a certain
-number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
+
+You should use ``bytes`` over ``byte[]`` because it is cheaper, since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
+use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
+string (UTF-8) data. If you can limit the length to a certain number of bytes,
+always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 .. note::
     If you want to access the byte-representation of a string ``s``, use
     ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the UTF-8 representation,
-    and not the individual characters!
+    and not the individual characters.
 
 It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
-The numeric index will become a required parameter for the getter.
+The numeric index becomes a required parameter for the getter.
 
 .. index:: ! array;allocating, new
 
@@ -918,8 +928,10 @@ complications because of how arrays are passed in the ABI.
 
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
-Members
-^^^^^^^
+.. _array-members:
+
+Array Members
+^^^^^^^^^^^^^
 
 **length**:
     Arrays have a ``length`` member that contains their number of elements.
