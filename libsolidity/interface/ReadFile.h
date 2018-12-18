@@ -37,8 +37,21 @@ public:
 		std::string responseOrErrorMessage;
 	};
 
+	enum class Kind
+	{
+		ReadFile,
+		SmtQuery
+	};
+
+	static std::string kindString(Kind _kind)
+	{
+		if (_kind == Kind::SmtQuery)
+			return "smt-query:";
+		return "source:";
+	}
+
 	/// File reading or generic query callback.
-	using Callback = std::function<Result(std::string const&)>;
+	using Callback = std::function<Result(std::string const&, Kind)>;
 };
 
 }

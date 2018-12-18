@@ -335,7 +335,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 			{
 				if (!url.isString())
 					return formatFatalError("JSONError", "URL must be a string.");
-				ReadCallback::Result result = m_readFile(url.asString());
+				ReadCallback::Result result = m_readFile(url.asString(), ReadCallback::Kind::ReadFile);
 				if (result.success)
 				{
 					if (!hash.empty() && !hashMatchesContent(hash, result.responseOrErrorMessage))

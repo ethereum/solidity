@@ -637,7 +637,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 
 			ReadCallback::Result result{false, string("File not supplied initially.")};
 			if (m_readFile)
-				result = m_readFile(importPath);
+				result = m_readFile(importPath, ReadCallback::Kind::ReadFile);
 
 			if (result.success)
 				newSources[importPath] = result.responseOrErrorMessage;
