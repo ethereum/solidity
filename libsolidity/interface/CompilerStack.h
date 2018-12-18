@@ -261,7 +261,11 @@ private:
 		std::shared_ptr<langutil::Scanner> scanner;
 		std::shared_ptr<SourceUnit> ast;
 		bool isLibrary = false;
-		void reset() { scanner.reset(); ast.reset(); }
+		h256 mutable keccak256HashCached;
+		h256 mutable swarmHashCached;
+		void reset() { *this = Source(); }
+		h256 const& keccak256() const;
+		h256 const& swarmHash() const;
 	};
 
 	/// The state per contract. Filled gradually during compilation.
@@ -315,7 +319,7 @@ private:
 	std::string createMetadata(Contract const& _contract) const;
 
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
-	static bytes createCBORMetadata(std::string _metadata, bool _experimentalMode);
+	static bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);
 
 	/// @returns the computer source mapping string.
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
