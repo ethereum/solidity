@@ -51,5 +51,6 @@ ExternalProject_Add(jsoncpp-project
 add_library(jsoncpp STATIC IMPORTED)
 file(MAKE_DIRECTORY ${JSONCPP_INCLUDE_DIR})  # Must exist.
 set_property(TARGET jsoncpp PROPERTY IMPORTED_LOCATION ${JSONCPP_LIBRARY})
+set_property(TARGET jsoncpp PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${JSONCPP_INCLUDE_DIR})
 set_property(TARGET jsoncpp PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONCPP_INCLUDE_DIR})
 add_dependencies(jsoncpp jsoncpp-project)

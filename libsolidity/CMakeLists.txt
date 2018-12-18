@@ -104,7 +104,6 @@ set(sources
 
 find_package(Z3 QUIET)
 if (${Z3_FOUND})
-  include_directories(${Z3_INCLUDE_DIR})
   add_definitions(-DHAVE_Z3)
   message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
   set(z3_SRCS formal/Z3Interface.cpp formal/Z3Interface.h)
@@ -114,7 +113,6 @@ endif()
 
 find_package(CVC4 QUIET)
 if (${CVC4_FOUND})
-  include_directories(${CVC4_INCLUDE_DIR})
   add_definitions(-DHAVE_CVC4)
   message("CVC4 SMT solver found. This enables optional SMT checking with CVC4.")
   set(cvc4_SRCS formal/CVC4Interface.cpp formal/CVC4Interface.h)
@@ -131,9 +129,9 @@ add_library(solidity ${sources} ${z3_SRCS} ${cvc4_SRCS})
 target_link_libraries(solidity PUBLIC yul evmasm langutil devcore ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 if (${Z3_FOUND})
-  target_link_libraries(solidity PUBLIC ${Z3_LIBRARY})
+  target_link_libraries(solidity PUBLIC Z3::Z3)
 endif()
 
 if (${CVC4_FOUND})
-  target_link_libraries(solidity PUBLIC ${CVC4_LIBRARIES})
+  target_link_libraries(solidity PUBLIC CVC4::CVC4)
 endif()
