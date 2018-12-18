@@ -743,7 +743,7 @@ In general, ECDSA signatures consist of two parameters, ``r`` and ``s``. Signatu
 Extracting the Signature Parameters
 -----------------------------------
 
-Signatures produced by web3.js are the concatenation of ``r``, ``s`` and ``v``, so the first step is to split these parameters apart. You can do this on the client-side, but doing it inside the smart contract means you only need to send one signature parameter rather than three. Splitting apart a byte array into component parts is a messy, so we use `inline assembly <assembly>`_ to do the job in the ``splitSignature`` function (the third function in the full contract at the end of this section).
+Signatures produced by web3.js are the concatenation of ``r``, ``s`` and ``v``, so the first step is to split these parameters apart. You can do this on the client-side, but doing it inside the smart contract means you only need to send one signature parameter rather than three. Splitting apart a byte array into component parts is a mess, so we use `inline assembly <assembly>`_ to do the job in the ``splitSignature`` function (the third function in the full contract at the end of this section).
 
 Computing the Message Hash
 --------------------------
