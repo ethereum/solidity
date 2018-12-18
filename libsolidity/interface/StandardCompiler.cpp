@@ -28,6 +28,7 @@
 #include <libdevcore/JSON.h>
 #include <libdevcore/Keccak256.h>
 
+#include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/optional.hpp>
 #include <algorithm>
@@ -188,6 +189,31 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 	for (auto const& artifact: _artifacts)
 		if (isArtifactRequested(_outputSelection, _file, _contract, artifact))
 			return true;
+	return false;
+}
+
+/// @returns true if any binary was requested, i.e. we actually have to perform compilation.
+bool isBinaryRequested(Json::Value const& _outputSelection)
+{
+	if (!_outputSelection.isObject())
+		return false;
+
+	// This does not inculde "evm.methodIdentifiers" on purpose!
+	static vector<string> const outputsThatRequireBinaries{
+		"*",
+		"metadata", // This is only generated at the end of compilation, but could be generated earlier.
+		"evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes",
+		"evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences",
+		"evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap",
+		"evm.bytecode.linkReferences",
+		"evm.gasEstimates", "evm.legacyAssembly", "evm.assembly"
+	};
+
+	for (auto const& fileRequests: _outputSelection)
+		for (auto const& requests: fileRequests)
+			for (auto const& output: outputsThatRequireBinaries)
+				if (isArtifactRequested(requests, output))
+					return true;
 	return false;
 }
 
@@ -564,9 +590,14 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 
 	m_compilerStack.setRequestedContractNames(requestedContractNames(outputSelection));
 
+	bool const binariesRequested = isBinaryRequested(outputSelection);
+
 	try
 	{
-		m_compilerStack.compile();
+		if (binariesRequested)
+			m_compilerStack.compile();
+		else
+			m_compilerStack.parseAndAnalyze();
 
 		for (auto const& error: m_compilerStack.errors())
 		{
@@ -655,7 +686,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	bool const compilationSuccess = m_compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
 	/// Inconsistent state - stop here to receive error reports from users
-	if (!compilationSuccess && errors.empty())
+	if (((binariesRequested && !compilationSuccess) || !analysisSuccess) && errors.empty())
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	Json::Value output = Json::objectValue;
@@ -681,7 +712,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
-	for (string const& contractName: compilationSuccess ? m_compilerStack.contractNames() : vector<string>())
+	for (string const& contractName: analysisSuccess ? m_compilerStack.contractNames() : vector<string>())
 	{
 		size_t colon = contractName.rfind(':');
 		solAssert(colon != string::npos, "");
@@ -692,7 +723,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		Json::Value contractData(Json::objectValue);
 		if (isArtifactRequested(outputSelection, file, name, "abi"))
 			contractData["abi"] = m_compilerStack.contractABI(contractName);
-		if (isArtifactRequested(outputSelection, file, name, "metadata"))
+		if (compilationSuccess && isArtifactRequested(outputSelection, file, name, "metadata"))
 			contractData["metadata"] = m_compilerStack.metadata(contractName);
 		if (isArtifactRequested(outputSelection, file, name, "userdoc"))
 			contractData["userdoc"] = m_compilerStack.natspecUser(contractName);
@@ -702,16 +733,16 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		// EVM
 		Json::Value evmData(Json::objectValue);
 		// @TODO: add ir
-		if (isArtifactRequested(outputSelection, file, name, "evm.assembly"))
+		if (compilationSuccess && isArtifactRequested(outputSelection, file, name, "evm.assembly"))
 			evmData["assembly"] = m_compilerStack.assemblyString(contractName, createSourceList(_input));
-		if (isArtifactRequested(outputSelection, file, name, "evm.legacyAssembly"))
+		if (compilationSuccess && isArtifactRequested(outputSelection, file, name, "evm.legacyAssembly"))
 			evmData["legacyAssembly"] = m_compilerStack.assemblyJSON(contractName, createSourceList(_input));
 		if (isArtifactRequested(outputSelection, file, name, "evm.methodIdentifiers"))
 			evmData["methodIdentifiers"] = m_compilerStack.methodIdentifiers(contractName);
-		if (isArtifactRequested(outputSelection, file, name, "evm.gasEstimates"))
+		if (compilationSuccess && isArtifactRequested(outputSelection, file, name, "evm.gasEstimates"))
 			evmData["gasEstimates"] = m_compilerStack.gasEstimates(contractName);
 
-		if (isArtifactRequested(
+		if (compilationSuccess && isArtifactRequested(
 			outputSelection,
 			file,
 			name,
@@ -722,7 +753,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 				m_compilerStack.sourceMapping(contractName)
 			);
 
-		if (isArtifactRequested(
+		if (compilationSuccess && isArtifactRequested(
 			outputSelection,
 			file,
 			name,
