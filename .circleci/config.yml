@@ -15,7 +15,7 @@ defaults:
         mkdir -p build
         cd build
         [ -n "$COVERAGE" -a "$CIRCLE_BRANCH" != release -a -z "$CIRCLE_TAG" ] && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCOVERAGE=ON"
-        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo $CMAKE_OPTIONS
+        cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
         make -j4
   - run_tests: &run_tests
       name: Tests

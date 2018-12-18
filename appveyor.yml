@@ -32,7 +32,7 @@ branches:
     - release
     - develop
 configuration:
-    - RelWithDebInfo
+    - Release
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
