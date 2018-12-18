@@ -52,7 +52,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
 	if (!m_compiler.parse())
 	{
-		BOOST_ERROR("Parsing contract failed in analysis test suite:" + formatErrors());
+		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors());
 	}
 
 	m_compiler.analyze();

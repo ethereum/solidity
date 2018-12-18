@@ -22,6 +22,8 @@
 
 #include <libsolidity/parsing/Parser.h>
 
+#include <libsolidity/analysis/SemVerHandler.h>
+#include <libsolidity/interface/Version.h>
 #include <libyul/AsmParser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
@@ -106,6 +108,20 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 }
 
+void Parser::parsePragmaVersion(vector<Token> const& tokens, vector<string> const& literals)
+{
+	SemVerMatchExpressionParser parser(tokens, literals);
+	auto matchExpression = parser.parse();
+	static SemVerVersion const currentVersion{string(VersionString)};
+	// FIXME: only match for major version incompatibility
+	if (!matchExpression.matches(currentVersion))
+		fatalParserError(
+			"Source file requires different compiler version (current compiler is " +
+			string(VersionString) + " - note that nightly builds are considered to be "
+			"strictly less than the released version"
+		);
+}
+
 ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 {
 	RecursionGuard recursionGuard(*this);
@@ -134,6 +150,15 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 	while (m_scanner->currentToken() != Token::Semicolon && m_scanner->currentToken() != Token::EOS);
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
+
+	if (literals.size() >= 2 && literals[0] == "solidity")
+	{
+		parsePragmaVersion(
+			vector<Token>(tokens.begin() + 1, tokens.end()),
+			vector<string>(literals.begin() + 1, literals.end())
+		);
+	}
+
 	return nodeFactory.createNode<PragmaDirective>(tokens, literals);
 }
 
