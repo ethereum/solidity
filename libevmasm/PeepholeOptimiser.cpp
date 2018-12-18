@@ -177,7 +177,7 @@ struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison, 2>
 {
 	static bool applySimple(AssemblyItem const& _swap, AssemblyItem const& _op, std::back_insert_iterator<AssemblyItems> _out)
 	{
-		map<Instruction, Instruction> swappableOps{
+		static map<Instruction, Instruction> const swappableOps{
 			{ Instruction::LT, Instruction::GT },
 			{ Instruction::GT, Instruction::LT },
 			{ Instruction::SLT, Instruction::SGT },
