@@ -21,85 +21,8 @@ tuple with a second `bool` value denoting success.
 .. include:: types/value-types.rst
 .. include:: types/reference-types.rst
 .. include:: types/operators-involving-lvalues.rst
+.. include:: types/conversion-elementary-types.rst
 
-.. index:: ! type;conversion, ! cast
-
-.. _types-conversion-elementary-types:
-
-Conversions between Elementary Types
-====================================
-
-Implicit Conversions
---------------------
-
-If an operator is applied to different types, the compiler tries to
-implicitly convert one of the operands to the type of the other (the same is
-true for assignments). In general, an implicit conversion between value-types
-is possible if it
-makes sense semantically and no information is lost: ``uint8`` is convertible to
-``uint16`` and ``int128`` to ``int256``, but ``int8`` is not convertible to ``uint256``
-(because ``uint256`` cannot hold e.g. ``-1``).
-
-For more details, please consult the sections about the types themselves.
-
-Explicit Conversions
---------------------
-
-If the compiler does not allow implicit conversion but you know what you are
-doing, an explicit type conversion is sometimes possible. Note that this may
-give you some unexpected behaviour and allows you to bypass some security
-features of the compiler, so be sure to test that the
-result is what you want! Take the following example where you are converting
-a negative ``int8`` to a ``uint``:
-
-::
-
-    int8 y = -3;
-    uint x = uint(y);
-
-At the end of this code snippet, ``x`` will have the value ``0xfffff..fd`` (64 hex
-characters), which is -3 in the two's complement representation of 256 bits.
-
-If an integer is explicitly converted to a smaller type, higher-order bits are
-cut off::
-
-    uint32 a = 0x12345678;
-    uint16 b = uint16(a); // b will be 0x5678 now
-
-If an integer is explicitly converted to a larger type, it is padded on the left (i.e. at the higher order end).
-The result of the conversion will compare equal to the original integer.
-
-    uint16 a = 0x1234;
-    uint32 b = uint32(a); // b will be 0x00001234 now
-    assert(a == b);
-
-Fixed-size bytes types behave differently during conversions. They can be thought of as
-sequences of individual bytes and converting to a smaller type will cut off the
-sequence::
-
-    bytes2 a = 0x1234;
-    bytes1 b = bytes1(a); // b will be 0x12
-
-If a fixed-size bytes type is explicitly converted to a larger type, it is padded on
-the right. Accessing the byte at a fixed index will result in the same value before and
-after the conversion (if the index is still in range)::
-
-    bytes2 a = 0x1234;
-    bytes4 b = bytes4(a); // b will be 0x12340000
-    assert(a[0] == b[0]);
-    assert(a[1] == b[1]);
-
-Since integers and fixed-size byte arrays behave differently when truncating or
-padding, explicit conversions between integers and fixed-size byte arrays are only allowed,
-if both have the same size. If you want to convert between integers and fixed-size byte arrays of
-different size, you have to use intermediate conversions that make the desired truncation and padding
-rules explicit::
-
-    bytes2 a = 0x1234;
-    uint32 b = uint16(a); // b will be 0x00001234
-    uint32 c = uint32(bytes4(a)); // c will be 0x12340000
-    uint8 d = uint8(uint16(a)); // d will be 0x34
-    uint8 e = uint8(bytes1(a)); // d will be 0x12
 
 .. _types-conversion-literals:
 
