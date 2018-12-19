@@ -132,7 +132,7 @@ test_solc_behaviour() {
 
     if [[ "$solc_args" == *"--standard-json"* ]]; then
         sed -i -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
-        sed -i -e 's/,"errors":\[\]//' "$stdout_path"
+        sed -i -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
     else
         sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
         sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
