@@ -11,6 +11,7 @@ Compiler Features:
  * Code Generator: Use binary search for dispatch function if more efficient. The size/speed tradeoff can be tuned using ``--optimize-runs``.
  * Compiler Interface: Disallow unknown keys in standard JSON input.
  * SMTChecker: Support mathematical and cryptographic functions in an uninterpreted way.
+ * Standard JSON interface: Only run code generation if it has been requested. This could lead to unsupported feature errors only being reported at the point where you request bytecode.
  * Static Analyzer: Do not warn about unused variables or state mutability for functions with an empty body.
  * Type Checker: Add an additional reason to be displayed when type conversion fails.
  * Yul: Support object access via ``datasize``, ``dataoffset`` and ``datacopy`` in standalone assembly mode.
