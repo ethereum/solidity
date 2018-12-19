@@ -71,12 +71,6 @@ arguments for you.
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_ and
 `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-Are comments included with deployed contracts and do they increase deployment gas?
-==================================================================================
-
-No, everything that is not needed for execution is removed during compilation.
-This includes, among others, comments, variable names and type names.
-
 What happens if you send ether along with a function call to a contract?
 ========================================================================
 
