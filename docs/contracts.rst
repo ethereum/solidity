@@ -12,14 +12,14 @@ variables. Calling a function on a different contract (instance) will perform
 an EVM function call and thus switch the context such that state variables are
 inaccessible.
 
-.. include:: conracts/creating-contracts.rst
-.. include:: conracts/visibility-and-getters.rst
-.. include:: conracts/function-modifiers.rst
-.. include:: conracts/constant-state-variables.rst
-.. include:: conracts/functions.rst
-.. include:: conracts/events.rst
-.. include:: conracts/inheritance.rst
-.. include:: conracts/abstract-contracts.rst
-.. include:: conracts/interfaces.rst
-.. include:: conracts/libraries.rst
-.. include:: conracts/using-for.rst
+.. include:: contracts/creating-contracts.rst
+.. include:: contracts/visibility-and-getters.rst
+.. include:: contracts/function-modifiers.rst
+.. include:: contracts/constant-state-variables.rst
+.. include:: contracts/functions.rst
+.. include:: contracts/events.rst
+.. include:: contracts/inheritance.rst
+.. include:: contracts/abstract-contracts.rst
+.. include:: contracts/interfaces.rst
+.. include:: contracts/libraries.rst
+.. include:: contracts/using-for.rst
