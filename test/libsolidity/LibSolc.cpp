@@ -81,7 +81,9 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 
 	// Only tests some assumptions. The StandardCompiler is tested properly in another suite.
 	BOOST_CHECK(result.isMember("sources"));
-	BOOST_CHECK(result.isMember("contracts"));
+	// This used to test that it is a member, but we did not actually request any output,
+	// so there should not be a contract member.
+	BOOST_CHECK(!result.isMember("contracts"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

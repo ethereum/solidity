@@ -764,14 +764,18 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 				m_compilerStack.runtimeSourceMapping(contractName)
 			);
 
-		contractData["evm"] = evmData;
+		if (!evmData.empty())
+			contractData["evm"] = evmData;
 
-		if (!contractsOutput.isMember(file))
-			contractsOutput[file] = Json::objectValue;
-
-		contractsOutput[file][name] = contractData;
+		if (!contractData.empty())
+		{
+			if (!contractsOutput.isMember(file))
+				contractsOutput[file] = Json::objectValue;
+			contractsOutput[file][name] = contractData;
+		}
 	}
-	output["contracts"] = contractsOutput;
+	if (!contractsOutput.empty())
+		output["contracts"] = contractsOutput;
 
 	return output;
 }
