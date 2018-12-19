@@ -165,19 +165,19 @@ BOOST_AUTO_TEST_CASE(location_test)
 	auto codegenCharStream = make_shared<CharStream>("", "--CODEGEN--");
 
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(4, SourceLocation(2, 82, sourceCode)) +
-		vector<SourceLocation>(1, SourceLocation(8, 17, codegenCharStream)) +
-		vector<SourceLocation>(3, SourceLocation(5, 7, codegenCharStream)) +
-		vector<SourceLocation>(1, SourceLocation(30, 31, codegenCharStream)) +
-		vector<SourceLocation>(1, SourceLocation(27, 28, codegenCharStream)) +
-		vector<SourceLocation>(1, SourceLocation(20, 32, codegenCharStream)) +
-		vector<SourceLocation>(1, SourceLocation(5, 7, codegenCharStream)) +
-		vector<SourceLocation>(hasShifts ? 19 : 20, SourceLocation(2, 82, sourceCode)) +
-		vector<SourceLocation>(24, SourceLocation(20, 79, sourceCode)) +
-		vector<SourceLocation>(1, SourceLocation(49, 58, sourceCode)) +
-		vector<SourceLocation>(1, SourceLocation(72, 74, sourceCode)) +
-		vector<SourceLocation>(2, SourceLocation(65, 74, sourceCode)) +
-		vector<SourceLocation>(2, SourceLocation(20, 79, sourceCode));
+		vector<SourceLocation>(4, SourceLocation{2, 82, sourceCode}) +
+		vector<SourceLocation>(1, SourceLocation{8, 17, codegenCharStream}) +
+		vector<SourceLocation>(3, SourceLocation{5, 7, codegenCharStream}) +
+		vector<SourceLocation>(1, SourceLocation{30, 31, codegenCharStream}) +
+		vector<SourceLocation>(1, SourceLocation{27, 28, codegenCharStream}) +
+		vector<SourceLocation>(1, SourceLocation{20, 32, codegenCharStream}) +
+		vector<SourceLocation>(1, SourceLocation{5, 7, codegenCharStream}) +
+		vector<SourceLocation>(hasShifts ? 19 : 20, SourceLocation{2, 82, sourceCode}) +
+		vector<SourceLocation>(24, SourceLocation{20, 79, sourceCode}) +
+		vector<SourceLocation>(1, SourceLocation{49, 58, sourceCode}) +
+		vector<SourceLocation>(1, SourceLocation{72, 74, sourceCode}) +
+		vector<SourceLocation>(2, SourceLocation{65, 74, sourceCode}) +
+		vector<SourceLocation>(2, SourceLocation{20, 79, sourceCode});
 	checkAssemblyLocations(items, locations);
 }
 

@@ -67,9 +67,9 @@ namespace langutil
 class CharStream
 {
 public:
-	CharStream(): m_position(0) {}
+	CharStream() = default;
 	explicit CharStream(std::string const& _source, std::string const& name):
-		m_source(_source), m_name(name), m_position(0) {}
+		m_source(_source), m_name(name) {}
 
 	int position() const { return m_position; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
@@ -94,7 +94,7 @@ public:
 private:
 	std::string m_source;
 	std::string m_name;
-	size_t m_position;
+	size_t m_position{0};
 };
 
 }

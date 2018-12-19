@@ -36,7 +36,7 @@ class TestCase
 public:
 	using TestCaseCreator = std::unique_ptr<TestCase>(*)(std::string const&);
 
-	virtual ~TestCase() {}
+	virtual ~TestCase() = default;
 
 	/// Runs the test case.
 	/// Outputs error messages to @arg _stream. Each line of output is prefixed with @arg _linePrefix.

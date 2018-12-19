@@ -601,7 +601,6 @@ private:
 class BoolType: public Type
 {
 public:
-	BoolType() {}
 	Category category() const override { return Category::Bool; }
 	std::string richIdentifier() const override { return "t_bool"; }
 	TypeResult unaryOperatorResult(Token _operator) const override;

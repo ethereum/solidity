@@ -54,7 +54,7 @@ struct Dialect: boost::noncopyable
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
 	Dialect(AsmFlavour _flavour): flavour(_flavour) {}
-	virtual ~Dialect() {}
+	virtual ~Dialect() = default;
 
 	static std::shared_ptr<Dialect> yul()
 	{

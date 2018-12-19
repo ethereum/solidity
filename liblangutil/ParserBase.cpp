@@ -100,10 +100,10 @@ void ParserBase::decreaseRecursionDepth()
 
 void ParserBase::parserError(string const& _description)
 {
-	m_errorReporter.parserError(SourceLocation(position(), endPosition(), source()), _description);
+	m_errorReporter.parserError(SourceLocation{position(), endPosition(), source()}, _description);
 }
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	m_errorReporter.fatalParserError(SourceLocation(position(), endPosition(), source()), _description);
+	m_errorReporter.fatalParserError(SourceLocation{position(), endPosition(), source()}, _description);
 }

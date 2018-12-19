@@ -53,7 +53,7 @@ namespace
 		// add dummy locations to each item so that we can check that they are not deleted
 		AssemblyItems input = _input;
 		for (AssemblyItem& item: input)
-			item.setLocation(SourceLocation(1, 3, nullptr));
+			item.setLocation({1, 3, nullptr});
 		return input;
 	}
 
