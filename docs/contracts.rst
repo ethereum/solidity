@@ -15,7 +15,7 @@ inaccessible.
 .. include:: conracts/creating-contracts.rst
 .. include:: conracts/visibility-and-getters.rst
 .. include:: conracts/function-modifiers.rst
-.. include:: conracts/constat-state-variables.rst
+.. include:: conracts/constant-state-variables.rst
 .. include:: conracts/functions.rst
 .. include:: conracts/events.rst
 .. include:: conracts/inheritance.rst
