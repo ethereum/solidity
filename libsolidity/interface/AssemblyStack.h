@@ -29,12 +29,16 @@
 
 #include <libevmasm/LinkerObject.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace langutil
 {
 class Scanner;
+}
+namespace yul
+{
+class AbstractAssembly;
 }
 
 namespace dev
@@ -73,7 +77,8 @@ public:
 	void optimize();
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
-	MachineAssemblyObject assemble(Machine _machine) const;
+	/// @param _optimize does not run the optimizer but performs optimized code generation.
+	MachineAssemblyObject assemble(Machine _machine, bool _optimize = false) const;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	langutil::ErrorList const& errors() const { return m_errors; }
@@ -83,6 +88,11 @@ public:
 
 private:
 	bool analyzeParsed();
+	bool analyzeParsed(yul::Object& _object);
+
+	void compileEVM(yul::AbstractAssembly& _assembly, bool _evm15, bool _optimize) const;
+
+	void optimize(yul::Object& _object);
 
 	Language m_language = Language::Assembly;
 	EVMVersion m_evmVersion;

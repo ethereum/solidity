@@ -50,18 +50,18 @@ enum class HexPrefix
 	DontAdd = 0,
 	Add = 1,
 };
+
+enum class HexCase
+{
+	Lower = 0,
+	Upper = 1,
+	Mixed = 2,
+};
+
 /// Convert a series of bytes to the corresponding string of hex duplets.
 /// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
 /// @example toHex("A\x69") == "4169"
-template <class T>
-std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd)
-{
-	std::ostringstream ret;
-	unsigned ii = 0;
-	for (auto i: _data)
-		ret << std::hex << std::setfill('0') << std::setw(ii++ ? 2 : _w) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
-	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
-}
+std::string toHex(bytes const& _data, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower);
 
 /// Converts a (printable) ASCII hex character into the correspnding integer value.
 /// @example fromHex('A') == 10 && fromHex('f') == 15 && fromHex('5') == 5
@@ -153,7 +153,7 @@ inline std::string formatNumber(bigint const& _value)
 	if (_value < 0)
 		return "-" + formatNumber(-_value);
 	if (_value > 0x1000000)
-		return toHex(toCompactBigEndian(_value), 2, HexPrefix::Add);
+		return toHex(toCompactBigEndian(_value), HexPrefix::Add);
 	else
 		return _value.str();
 }
@@ -161,7 +161,7 @@ inline std::string formatNumber(bigint const& _value)
 inline std::string formatNumber(u256 const& _value)
 {
 	if (_value > 0x1000000)
-		return toHex(toCompactBigEndian(_value), 2, HexPrefix::Add);
+		return toHex(toCompactBigEndian(_value), HexPrefix::Add);
 	else
 		return _value.str();
 }

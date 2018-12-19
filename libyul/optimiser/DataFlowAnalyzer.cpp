@@ -96,7 +96,10 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	for (auto const& parameter: _fun.parameters)
 		m_variableScopes.back().variables.emplace(parameter.name);
 	for (auto const& var: _fun.returnVariables)
+	{
 		m_variableScopes.back().variables.emplace(var.name);
+		handleAssignment({var.name}, nullptr);
+	}
 	ASTModifier::operator()(_fun);
 
 	popScope();
@@ -136,17 +139,22 @@ void DataFlowAnalyzer::operator()(Block& _block)
 
 void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expression* _value)
 {
+	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	clearValues(_variables);
 
 	MovableChecker movableChecker;
 	if (_value)
 		movableChecker.visit(*_value);
-	if (_variables.size() == 1)
+	else
+		for (auto const& var: _variables)
+			m_value[var] = &zero;
+
+	if (_value && _variables.size() == 1)
 	{
 		YulString name = *_variables.begin();
 		// Expression has to be movable and cannot contain a reference
 		// to the variable that will be assigned to.
-		if (_value && movableChecker.movable() && !movableChecker.referencedVariables().count(name))
+		if (movableChecker.movable() && !movableChecker.referencedVariables().count(name))
 			m_value[name] = _value;
 	}
 

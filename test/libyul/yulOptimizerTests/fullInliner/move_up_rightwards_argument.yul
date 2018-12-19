@@ -15,7 +15,7 @@
 //         let f_a := mload(2)
 //         let f_b := _6
 //         let f_c := _4
-//         let f_x
+//         let f_x := 0
 //         f_x := add(f_a, f_b)
 //         f_x := mul(f_x, f_c)
 //         let _10 := add(f_x, _2)

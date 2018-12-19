@@ -39,7 +39,7 @@ class EVMVersion:
 	boost::equality_comparable<EVMVersion>
 {
 public:
-	EVMVersion() {}
+	EVMVersion() = default;
 
 	static EVMVersion homestead() { return {Version::Homestead}; }
 	static EVMVersion tangerineWhistle() { return {Version::TangerineWhistle}; }

@@ -1,28 +1,26 @@
 #!/usr/bin/env bash
+set -e
 
-if [ -z "$1" ]; then
+ROOTDIR="$(dirname "$0")/.."
+BUILDDIR="${ROOTDIR}/build"
+
+if [[ $# -eq 0 ]]; then
     BUILD_TYPE=Release
 else
     BUILD_TYPE="$1"
 fi
 
-cd $(dirname "$0")/.. &&
-
 if [[ "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]; then
-	touch prerelease.txt
+	touch "${ROOTDIR}/prerelease.txt"
 fi
 
-mkdir -p build &&
-cd build &&
-cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE" &&
+mkdir -p "${BUILDDIR}"
+cd "${BUILDDIR}"
+
+cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${@:2}"
 make -j2
 
-if [ $? -ne 0 ]; then
-	echo "Failed to build"
-	exit 1
-fi
-
-if [ -z $CI ]; then
-	echo "Installing solc and soltest"
-	install solc/solc /usr/local/bin && install test/soltest /usr/local/bin
+if [[ "${CI}" == "" ]]; then
+	echo "Installing ..."
+	sudo make install
 fi

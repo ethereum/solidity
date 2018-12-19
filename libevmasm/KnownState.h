@@ -74,18 +74,13 @@ public:
 	struct StoreOperation
 	{
 		enum Target { Invalid, Memory, Storage };
-		StoreOperation(): target(Invalid), sequenceNumber(-1) {}
-		StoreOperation(
-			Target _target,
-			Id _slot,
-			unsigned _sequenceNumber,
-			Id _expression
-		): target(_target), slot(_slot), sequenceNumber(_sequenceNumber), expression(_expression) {}
+
 		bool isValid() const { return target != Invalid; }
-		Target target;
-		Id slot;
-		unsigned sequenceNumber;
-		Id expression;
+
+		Target target{Invalid};
+		Id slot{std::numeric_limits<Id>::max()};
+		unsigned sequenceNumber{std::numeric_limits<unsigned>::max()};
+		Id expression{std::numeric_limits<Id>::max()};
 	};
 
 	explicit KnownState(

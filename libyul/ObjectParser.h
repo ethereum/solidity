@@ -22,6 +22,7 @@
 
 #include <libyul/YulString.h>
 #include <libyul/Object.h>
+#include <libyul/Dialect.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/ParserBase.h>
@@ -46,9 +47,9 @@ class ObjectParser: public langutil::ParserBase
 public:
 	explicit ObjectParser(
 		langutil::ErrorReporter& _errorReporter,
-		yul::AsmFlavour _flavour = yul::AsmFlavour::Loose
+		std::shared_ptr<Dialect> _dialect
 	):
-		ParserBase(_errorReporter), m_flavour(_flavour) {}
+		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
 
 	/// Parses a Yul object.
 	/// Falls back to code-only parsing if the source starts with `{`.
@@ -66,7 +67,7 @@ private:
 	YulString parseUniqueName(Object const* _containingObject);
 	void addNamedSubObject(Object& _container, YulString _name, std::shared_ptr<ObjectNode> _subObject);
 
-	yul::AsmFlavour m_flavour;
+	std::shared_ptr<Dialect> m_dialect;
 };
 
 }

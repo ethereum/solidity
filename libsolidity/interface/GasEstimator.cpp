@@ -20,17 +20,20 @@
  * Gas consumption estimator working alongside the AST.
  */
 
-#include "GasEstimator.h"
-#include <map>
-#include <functional>
-#include <memory>
-#include <libdevcore/Keccak256.h>
-#include <libevmasm/ControlFlowGraph.h>
-#include <libevmasm/KnownState.h>
-#include <libevmasm/PathGasMeter.h>
+#include <libsolidity/interface/GasEstimator.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+
+#include <libevmasm/ControlFlowGraph.h>
+#include <libevmasm/KnownState.h>
+#include <libevmasm/PathGasMeter.h>
+#include <libdevcore/Keccak256.h>
+
+#include <functional>
+#include <map>
+#include <memory>
 
 using namespace std;
 using namespace dev;

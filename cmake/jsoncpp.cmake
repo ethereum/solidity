@@ -15,9 +15,9 @@ set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 # versions used in the CI runs.
 if(EMSCRIPTEN)
     # Do not include all flags in CMAKE_CXX_FLAGS for emscripten,
-    # but only use -std=c++11. Using all flags causes build failures
+    # but only use -std=c++14. Using all flags causes build failures
     # at the moment.
-    set(JSONCPP_CXX_FLAGS -std=c++11)
+    set(JSONCPP_CXX_FLAGS -std=c++14)
 else()
     set(JSONCPP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()
@@ -51,5 +51,6 @@ ExternalProject_Add(jsoncpp-project
 add_library(jsoncpp STATIC IMPORTED)
 file(MAKE_DIRECTORY ${JSONCPP_INCLUDE_DIR})  # Must exist.
 set_property(TARGET jsoncpp PROPERTY IMPORTED_LOCATION ${JSONCPP_LIBRARY})
+set_property(TARGET jsoncpp PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${JSONCPP_INCLUDE_DIR})
 set_property(TARGET jsoncpp PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONCPP_INCLUDE_DIR})
 add_dependencies(jsoncpp jsoncpp-project)

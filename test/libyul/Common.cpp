@@ -29,6 +29,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
@@ -40,9 +41,9 @@ using namespace langutil;
 using namespace yul;
 using namespace dev::solidity;
 
-void yul::test::printErrors(ErrorList const& _errors, Scanner const& _scanner)
+void yul::test::printErrors(ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(cout, [&](std::string const&) -> Scanner const& { return _scanner; });
+	SourceReferenceFormatter formatter(cout);
 
 	for (auto const& error: _errors)
 		formatter.printExceptionInformation(
@@ -54,11 +55,11 @@ void yul::test::printErrors(ErrorList const& _errors, Scanner const& _scanner)
 
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
-	auto flavour = _yul ? yul::AsmFlavour::Yul : yul::AsmFlavour::Strict;
+	shared_ptr<Dialect> dialect = _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source, ""));
-	auto parserResult = yul::Parser(errorReporter, flavour).parse(scanner, false);
+	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
 	if (parserResult)
 	{
 		BOOST_REQUIRE(errorReporter.errors().empty());
@@ -68,7 +69,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 			errorReporter,
 			dev::test::Options::get().evmVersion(),
 			boost::none,
-			flavour
+			dialect
 		);
 		if (analyzer.analyze(*parserResult))
 		{
@@ -76,7 +77,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 			return make_pair(parserResult, analysisInfo);
 		}
 	}
-	printErrors(errors, *scanner);
+	printErrors(errors);
 	BOOST_FAIL("Invalid source.");
 
 	// Unreachable.

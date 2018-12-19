@@ -18,10 +18,13 @@
  * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
  */
 
+#pragma once
+
 #include <libyul/backends/evm/EVMAssembly.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/optimiser/ASTWalker.h>
 #include <libyul/AsmDataForward.h>
-
 #include <libyul/AsmScope.h>
 
 #include <boost/variant.hpp>
@@ -37,6 +40,46 @@ namespace yul
 struct AsmAnalysisInfo;
 class EVMAssembly;
 
+struct CodeTransformContext
+{
+	std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
+	std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
+	std::map<Scope::Variable const*, int> variableStackHeights;
+	std::map<Scope::Variable const*, unsigned> variableReferences;
+};
+
+/**
+ * Counts the number of references to a variable. This includes actual (read) references
+ * but also assignments to the variable. It does not include the declaration itself or
+ * function parameters, but it does include function return parameters.
+ *
+ * This component can handle multiple variables of the same name.
+ *
+ * Can only be applied to strict assembly.
+ */
+class VariableReferenceCounter: public yul::ASTWalker
+{
+public:
+	explicit VariableReferenceCounter(
+		CodeTransformContext& _context,
+		AsmAnalysisInfo const& _assemblyInfo
+	): m_context(_context), m_info(_assemblyInfo)
+	{}
+
+public:
+	void operator()(Identifier const& _identifier);
+	void operator()(FunctionDefinition const&);
+	void operator()(ForLoop const&);
+	void operator()(Block const& _block);
+
+private:
+	void increaseRefIfFound(YulString _variableName);
+
+	CodeTransformContext& m_context;
+	AsmAnalysisInfo const& m_info;
+	Scope* m_scope = nullptr;
+};
+
 class CodeTransform: public boost::static_visitor<>
 {
 public:
@@ -45,50 +88,51 @@ public:
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
-		bool _yul = false,
+		Block const& _block,
+		EVMDialect const& _dialect,
+		bool _allowStackOpt = false,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	): CodeTransform(
 		_assembly,
 		_analysisInfo,
-		_yul,
+		_block,
+		_allowStackOpt,
+		_dialect,
 		_evm15,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
 		_assembly.stackHeight(),
-		std::make_shared<Context>()
+		nullptr
 	)
 	{
 	}
 
 protected:
-	struct Context
-	{
-		std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
-		std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
-		std::map<Scope::Variable const*, int> variableStackHeights;
-	};
+	using Context = CodeTransformContext;
 
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
-		bool _yul,
+		Block const& _block,
+		bool _allowStackOpt,
+		EVMDialect const& _dialect,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
 		bool _useNamedLabelsForFunctions,
 		int _stackAdjustment,
 		std::shared_ptr<Context> _context
-	):
-		m_assembly(_assembly),
-		m_info(_analysisInfo),
-		m_yul(_yul),
-		m_evm15(_evm15),
-		m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
-		m_identifierAccess(_identifierAccess),
-		m_stackAdjustment(_stackAdjustment),
-		m_context(_context)
-	{}
+	);
+
+	void decreaseReference(YulString _name, Scope::Variable const& _var);
+	bool unreferenced(Scope::Variable const& _var) const;
+	/// Marks slots of variables that are not used anymore
+	/// and were defined in the current scope for reuse.
+	/// Also POPs unused topmost stack slots.
+	void freeUnusedVariables();
+	/// Marks the stack slot of @a _var to be reused.
+	void deleteVariable(Scope::Variable const& _var);
 
 public:
 	void operator()(Instruction const& _instruction);
@@ -137,9 +181,10 @@ private:
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
-	bool m_yul = false;
-	bool m_evm15 = false;
-	bool m_useNamedLabelsForFunctions = false;
+	EVMDialect const& m_dialect;
+	bool const m_allowStackOpt = true;
+	bool const m_evm15 = false;
+	bool const m_useNamedLabelsForFunctions = false;
 	ExternalIdentifierAccess m_identifierAccess;
 	/// Adjustment between the stack height as determined during the analysis phase
 	/// and the stack height in the assembly. This is caused by an initial stack being present
@@ -147,6 +192,12 @@ private:
 	/// (EVM 1.0 or 1.5).
 	int m_stackAdjustment = 0;
 	std::shared_ptr<Context> m_context;
+
+	/// Set of variables whose reference counter has reached zero,
+	/// and whose stack slot will be marked as unused once we reach
+	/// statement level in the scope where the variable was defined.
+	std::set<Scope::Variable const*> m_variablesScheduledForDeletion;
+	std::set<int> m_unusedStackSlots;
 };
 
 }

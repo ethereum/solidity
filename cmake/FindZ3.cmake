@@ -1,9 +1,14 @@
 if (USE_Z3)
     find_path(Z3_INCLUDE_DIR NAMES z3++.h PATH_SUFFIXES z3)
-    find_library(Z3_LIBRARY NAMES z3 )
+    find_library(Z3_LIBRARY NAMES z3)
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(Z3 DEFAULT_MSG Z3_LIBRARY Z3_INCLUDE_DIR)
+
+    if (NOT TARGET Z3::Z3)
+        add_library(Z3::Z3 UNKNOWN IMPORTED)
+        set_property(TARGET Z3::Z3 PROPERTY IMPORTED_LOCATION ${Z3_LIBRARY})
+        set_property(TARGET Z3::Z3 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Z3_INCLUDE_DIR})
+    endif()
 else()
     set(Z3_FOUND FALSE)
 endif()
-# TODO: Create IMPORTED library for Z3.

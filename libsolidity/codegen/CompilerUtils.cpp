@@ -23,12 +23,10 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/ArrayUtils.h>
 #include <libsolidity/codegen/LValue.h>
-#include <libsolidity/codegen/ABIFunctions.h>
-
 #include <libevmasm/Instruction.h>
-
 #include <libdevcore/Whiskers.h>
 
 using namespace std;
@@ -1205,7 +1203,7 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 {
 	//@todo provide both alternatives to the optimiser
 	// stack: mempos
-	if (_data.size() <= 128)
+	if (_data.size() <= 32)
 	{
 		for (unsigned i = 0; i < _data.size(); i += 32)
 		{

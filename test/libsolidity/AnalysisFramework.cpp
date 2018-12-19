@@ -52,7 +52,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
 	if (!m_compiler.parse())
 	{
-		BOOST_ERROR("Parsing contract failed in analysis test suite:" + formatErrors());
+		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors());
 	}
 
 	m_compiler.analyze();
@@ -127,8 +127,7 @@ string AnalysisFramework::formatError(Error const& _error) const
 {
 	return SourceReferenceFormatter::formatExceptionInformation(
 			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error",
-			[&](std::string const& _sourceName) -> Scanner const& { return m_compiler.scanner(_sourceName); }
+			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
 		);
 }
 

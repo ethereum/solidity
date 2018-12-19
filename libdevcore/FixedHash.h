@@ -95,7 +95,7 @@ public:
 	uint8_t operator[](unsigned _i) const { return m_data[_i]; }
 
 	/// @returns the hash as a user-readable hex string.
-	std::string hex() const { return toHex(ref()); }
+	std::string hex() const { return toHex(asBytes()); }
 
 	/// @returns a mutable byte vector_ref to the object's data.
 	bytesRef ref() { return bytesRef(m_data.data(), N); }

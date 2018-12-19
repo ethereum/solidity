@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (87-98): This variable is of storage pointer type and might be returned without assignment and could be used uninitialized. Assign the variable (potentially from itself) to fix this error.
+// TypeError: (87-98): This variable is of storage pointer type and can be returned without prior assignment.

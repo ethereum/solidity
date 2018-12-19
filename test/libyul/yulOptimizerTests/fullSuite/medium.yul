@@ -9,16 +9,23 @@
     pop(allocate(0x20))
     let x := allocate(0x40)
     mstore(array_index_access(x, 3), 2)
+    if 0 {
+        mstore(0x40, 0x20)
+    }
+    if sub(2,1) {
+        for { switch mul(1,2) case 2 { mstore(0x40, 0x20) } } sub(1,1) {} { mstore(0x80, 0x40) }
+    }
 }
 // ----
 // fullSuite
 // {
 //     {
-//         let _18 := 0x20
-//         let allocate__7 := 0x40
-//         mstore(allocate__7, add(mload(allocate__7), _18))
-//         let allocate_p_12_31 := mload(allocate__7)
-//         mstore(allocate__7, add(allocate_p_12_31, allocate__7))
-//         mstore(add(allocate_p_12_31, 96), 2)
+//         let _1 := 0x20
+//         let allocate__19 := 0x40
+//         mstore(allocate__19, add(mload(allocate__19), _1))
+//         let allocate_p_24_41 := mload(allocate__19)
+//         mstore(allocate__19, add(allocate_p_24_41, allocate__19))
+//         mstore(add(allocate_p_24_41, 96), 2)
+//         mstore(allocate__19, _1)
 //     }
 // }

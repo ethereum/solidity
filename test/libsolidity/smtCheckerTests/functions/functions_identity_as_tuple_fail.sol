@@ -12,4 +12,5 @@ contract C
 }
 
 // ----
+// Warning: (153-156): Assertion checker does not yet implement tuples and inline arrays.
 // Warning: (163-176): Assertion violation happens here

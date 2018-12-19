@@ -22,7 +22,7 @@
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
-#include <libyul/optimiser/VarDeclPropagator.h>
+#include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -39,7 +39,9 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
@@ -105,11 +107,8 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		disambiguate();
 		BlockFlattener{}(*m_ast);
 	}
-	else if (m_optimizerStep == "varDeclPropagator")
-	{
-		disambiguate();
-		VarDeclPropagator{}(*m_ast);
-	}
+	else if (m_optimizerStep == "varDeclInitializer")
+		VarDeclInitializer{}(*m_ast);
 	else if (m_optimizerStep == "forLoopInitRewriter")
 	{
 		disambiguate();
@@ -213,6 +212,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_ast);
 	}
+	else if (m_optimizerStep == "structuralSimplifier")
+	{
+		disambiguate();
+		StructuralSimplifier{}(*m_ast);
+	}
 	else if (m_optimizerStep == "fullSuite")
 		OptimiserSuite::run(*m_ast, *m_analysisInfo);
 	else
@@ -256,15 +260,15 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	yul::AsmFlavour flavour = m_yul ? yul::AsmFlavour::Yul : yul::AsmFlavour::Strict;
+	shared_ptr<yul::Dialect> dialect = m_yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source, ""));
-	m_ast = yul::Parser(errorReporter, flavour).parse(scanner, false);
+	m_ast = yul::Parser(errorReporter, dialect).parse(scanner, false);
 	if (!m_ast || !errorReporter.errors().empty())
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, errorReporter.errors(), *scanner);
+		printErrors(_stream, errorReporter.errors());
 		return false;
 	}
 	m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
@@ -273,12 +277,12 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 		errorReporter,
 		dev::test::Options::get().evmVersion(),
 		boost::none,
-		flavour
+		dialect
 	);
 	if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error analyzing source." << endl;
-		printErrors(_stream, errorReporter.errors(), *scanner);
+		printErrors(_stream, errorReporter.errors());
 		return false;
 	}
 	return true;
@@ -290,9 +294,9 @@ void YulOptimizerTest::disambiguate()
 	m_analysisInfo.reset();
 }
 
-void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors, Scanner const& _scanner)
+void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream, [&](string const&) -> Scanner const& { return _scanner; });
+	SourceReferenceFormatter formatter(_stream);
 
 	for (auto const& error: _errors)
 		formatter.printExceptionInformation(

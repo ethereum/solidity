@@ -14,7 +14,7 @@
 //     {
 //         let _2 := mload(0)
 //         let f_a := mload(1)
-//         let f_r
+//         let f_r := 0
 //         f_a := mload(f_a)
 //         f_r := add(f_a, calldatasize())
 //         if gt(f_r, _2)

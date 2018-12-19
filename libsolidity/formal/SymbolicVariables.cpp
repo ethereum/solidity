@@ -18,7 +18,6 @@
 #include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/formal/SymbolicTypes.h>
-
 #include <libsolidity/ast/AST.h>
 
 using namespace std;
@@ -37,14 +36,30 @@ SymbolicVariable::SymbolicVariable(
 {
 }
 
+smt::Expression SymbolicVariable::currentValue() const
+{
+	return valueAtIndex(m_ssa->index());
+}
+
 string SymbolicVariable::currentName() const
 {
 	return uniqueSymbol(m_ssa->index());
 }
 
+smt::Expression SymbolicVariable::valueAtIndex(int _index) const
+{
+	return m_interface.newVariable(uniqueSymbol(_index), smtSort(*m_type));
+}
+
 string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
+}
+
+smt::Expression SymbolicVariable::increaseIndex()
+{
+	++(*m_ssa);
+	return currentValue();
 }
 
 SymbolicBoolVariable::SymbolicBoolVariable(
@@ -57,11 +72,6 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 	solAssert(m_type->category() == Type::Category::Bool, "");
 }
 
-smt::Expression SymbolicBoolVariable::valueAtIndex(int _index) const
-{
-	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Bool));
-}
-
 SymbolicIntVariable::SymbolicIntVariable(
 	TypePointer _type,
 	string const& _uniqueName,
@@ -70,11 +80,6 @@ SymbolicIntVariable::SymbolicIntVariable(
 	SymbolicVariable(move(_type), _uniqueName, _interface)
 {
 	solAssert(isNumber(m_type->category()), "");
-}
-
-smt::Expression SymbolicIntVariable::valueAtIndex(int _index) const
-{
-	return m_interface.newVariable(uniqueSymbol(_index), make_shared<smt::Sort>(smt::Kind::Int));
 }
 
 SymbolicAddressVariable::SymbolicAddressVariable(
@@ -92,4 +97,42 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 ):
 	SymbolicIntVariable(make_shared<IntegerType>(_numBytes * 8), _uniqueName, _interface)
 {
+}
+
+SymbolicFunctionVariable::SymbolicFunctionVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface&_interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface),
+	m_declaration(m_interface.newVariable(currentName(), smtSort(*m_type)))
+{
+	solAssert(m_type->category() == Type::Category::Function, "");
+}
+
+void SymbolicFunctionVariable::resetDeclaration()
+{
+	m_declaration = m_interface.newVariable(currentName(), smtSort(*m_type));
+}
+
+smt::Expression SymbolicFunctionVariable::increaseIndex()
+{
+	++(*m_ssa);
+	resetDeclaration();
+	return currentValue();
+}
+
+smt::Expression SymbolicFunctionVariable::operator()(vector<smt::Expression> _arguments) const
+{
+	return m_declaration(_arguments);
+}
+
+SymbolicMappingVariable::SymbolicMappingVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface)
+{
+	solAssert(isMapping(m_type->category()), "");
 }

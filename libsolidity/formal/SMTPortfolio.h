@@ -19,13 +19,10 @@
 
 
 #include <libsolidity/formal/SolverInterface.h>
-
 #include <libsolidity/interface/ReadFile.h>
-
 #include <libdevcore/FixedHash.h>
 
 #include <boost/noncopyable.hpp>
-
 #include <map>
 #include <vector>
 

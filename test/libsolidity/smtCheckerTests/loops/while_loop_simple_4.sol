@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// Warning: (199-213): Assertion violation happens here\nNote that some information is erased after the execution of loops.\nYou can re-introduce information using require().
+// Warning: (199-213): Assertion violation happens here

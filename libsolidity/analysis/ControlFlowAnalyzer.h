@@ -18,7 +18,6 @@
 #pragma once
 
 #include <libsolidity/analysis/ControlFlowGraph.h>
-
 #include <set>
 
 namespace dev
@@ -37,12 +36,8 @@ public:
 	bool visit(FunctionDefinition const& _function) override;
 
 private:
-	static std::set<VariableDeclaration const*> variablesAssignedInNode(CFGNode const *node);
-	void checkUnassignedStorageReturnValues(
-		FunctionDefinition const& _function,
-		CFGNode const* _functionEntry,
-		CFGNode const* _functionExit
-	) const;
+	/// Checks for uninitialized variable accesses in the control flow between @param _entry and @param _exit.
+	void checkUninitializedAccess(CFGNode const* _entry, CFGNode const* _exit) const;
 
 	CFG const& m_cfg;
 	langutil::ErrorReporter& m_errorReporter;

@@ -22,12 +22,15 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
 #include <libyul/AsmData.h>
+#include <libyul/Dialect.h>
+
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
+
+#include <memory>
+#include <vector>
 
 namespace yul
 {
@@ -35,8 +38,8 @@ namespace yul
 class Parser: public langutil::ParserBase
 {
 public:
-	explicit Parser(langutil::ErrorReporter& _errorReporter, AsmFlavour _flavour = AsmFlavour::Loose):
-		ParserBase(_errorReporter), m_flavour(_flavour) {}
+	explicit Parser(langutil::ErrorReporter& _errorReporter, std::shared_ptr<Dialect> _dialect):
+		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
@@ -78,12 +81,12 @@ protected:
 	FunctionDefinition parseFunctionDefinition();
 	Expression parseCall(ElementaryOperation&& _initialOp);
 	TypedName parseTypedName();
-	std::string expectAsmIdentifier();
+	YulString expectAsmIdentifier();
 
 	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
-	AsmFlavour m_flavour = AsmFlavour::Loose;
+	std::shared_ptr<Dialect> m_dialect;
 };
 
 }

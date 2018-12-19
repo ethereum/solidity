@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/codegen/CompilerContext.h>
 
 namespace dev {
 namespace solidity {

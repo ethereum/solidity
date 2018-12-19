@@ -101,8 +101,8 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 	}
 	else if (_literal.kind == LiteralKind::Boolean)
 	{
-		solAssert(m_flavour == AsmFlavour::Yul, "");
-		solAssert(_literal.value == YulString{string("true")} || _literal.value == YulString{string("false")}, "");
+		solAssert(m_dialect->flavour == AsmFlavour::Yul, "");
+		solAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
 	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
@@ -164,7 +164,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 
 bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 {
-	solAssert(m_flavour != AsmFlavour::Yul, "");
+	solAssert(m_dialect->flavour != AsmFlavour::Yul, "");
 	bool success = true;
 	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
@@ -182,9 +182,9 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
-	if (m_stackHeight != initialStackHeight && (m_flavour != AsmFlavour::Loose || m_errorTypeForLoose))
+	if (m_stackHeight != initialStackHeight && (m_dialect->flavour != AsmFlavour::Loose || m_errorTypeForLoose))
 	{
-		Error::Type errorType = m_flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
+		Error::Type errorType = m_dialect->flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
 			to_string(m_stackHeight - initialStackHeight) +
@@ -244,9 +244,18 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 	{
 		int const stackHeight = m_stackHeight;
 		success = boost::apply_visitor(*this, *_varDecl.value);
-		if ((m_stackHeight - stackHeight) != numVariables)
+		int numValues = m_stackHeight - stackHeight;
+		if (numValues != numVariables)
 		{
-			m_errorReporter.declarationError(_varDecl.location, "Variable count mismatch.");
+			m_errorReporter.declarationError(_varDecl.location,
+				"Variable count mismatch: " +
+				to_string(numVariables) +
+				" variables and " +
+				to_string(numValues) +
+				" values."
+			);
+			// Adjust stack height to avoid misleading additional errors.
+			m_stackHeight += numVariables - numValues;
 			return false;
 		}
 	}
@@ -288,9 +297,15 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
 	solAssert(!_funCall.functionName.name.empty(), "");
 	bool success = true;
-	size_t arguments = 0;
+	size_t parameters = 0;
 	size_t returns = 0;
-	if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
+	if (BuiltinFunction const* f = m_dialect->builtin(_funCall.functionName.name))
+	{
+		// TODO: compare types, too
+		parameters = f->parameters.size();
+		returns = f->returns.size();
+	}
+	else if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
 		[&](Scope::Variable const&)
 		{
 			m_errorReporter.typeError(
@@ -310,7 +325,7 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		[&](Scope::Function const& _fun)
 		{
 			/// TODO: compare types too
-			arguments = _fun.arguments.size();
+			parameters = _fun.arguments.size();
 			returns = _fun.returns.size();
 		}
 	)))
@@ -319,21 +334,23 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		success = false;
 	}
 	if (success)
-	{
-		if (_funCall.arguments.size() != arguments)
+		if (_funCall.arguments.size() != parameters)
 		{
 			m_errorReporter.typeError(
 				_funCall.functionName.location,
-				"Expected " + to_string(arguments) + " arguments but got " +
+				"Function expects " +
+				to_string(parameters) +
+				" arguments but got " +
 				to_string(_funCall.arguments.size()) + "."
 			);
 			success = false;
 		}
-	}
+
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
 		if (!expectExpression(arg))
 			success = false;
-	m_stackHeight += int(returns) - int(arguments);
+	// Use argument size instead of parameter count to avoid misleading errors.
+	m_stackHeight += int(returns) - int(_funCall.arguments.size());
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
 	return success;
 }
@@ -552,7 +569,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
 {
-	if (m_flavour != AsmFlavour::Yul)
+	if (m_dialect->flavour != AsmFlavour::Yul)
 		return;
 
 	if (!builtinTypes.count(type))
@@ -612,7 +629,9 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 
 	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 	{
-		solAssert(m_flavour == AsmFlavour::Loose, "");
+		if (m_dialect->flavour != AsmFlavour::Loose)
+			solAssert(m_errorTypeForLoose && *m_errorTypeForLoose != Error::Type::Warning, "");
+
 		m_errorReporter.error(
 			m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
 			_location,
@@ -625,7 +644,7 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 
 void AsmAnalyzer::checkLooseFeature(SourceLocation const& _location, string const& _description)
 {
-	if (m_flavour != AsmFlavour::Loose)
+	if (m_dialect->flavour != AsmFlavour::Loose)
 		solAssert(false, _description);
 	else if (m_errorTypeForLoose)
 		m_errorReporter.error(*m_errorTypeForLoose, _location, _description);

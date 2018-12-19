@@ -26,6 +26,7 @@
 #include <libdevcore/CommonData.h>
 
 #include <functional>
+#include <memory>
 
 namespace langutil
 {
@@ -52,8 +53,9 @@ class AbstractAssembly
 {
 public:
 	using LabelID = size_t;
+	using SubID = size_t;
 
-	virtual ~AbstractAssembly() {}
+	virtual ~AbstractAssembly() = default;
 
 	/// Set a new source location valid starting from the next instruction.
 	virtual void setSourceLocation(langutil::SourceLocation const& _location) = 0;
@@ -98,6 +100,14 @@ public:
 
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;
+	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
+	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() = 0;
+	/// Appends the offset of the given sub-assembly or data.
+	virtual void appendDataOffset(SubID _sub) = 0;
+	/// Appends the size of the given sub-assembly or data.
+	virtual void appendDataSize(SubID _sub) = 0;
+	/// Appends the given data to the assembly and returns its ID.
+	virtual SubID appendData(dev::bytes const& _data) = 0;
 };
 
 enum class IdentifierContext { LValue, RValue };

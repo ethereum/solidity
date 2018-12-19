@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"\"sources\" is not a JSON object.","message":"\"sources\" is not a JSON object.","severity":"error","type":"JSONError"}]}

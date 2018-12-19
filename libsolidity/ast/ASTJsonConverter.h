@@ -22,12 +22,13 @@
 
 #pragma once
 
-#include <ostream>
-#include <stack>
+#include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <liblangutil/Exceptions.h>
-#include <libsolidity/ast/ASTAnnotations.h>
+
 #include <json/json.h>
+#include <ostream>
+#include <stack>
 
 namespace langutil
 {

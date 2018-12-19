@@ -1,3 +1,32 @@
+### 0.5.2 (2018-12-19)
+
+Language Features:
+ * Control Flow Graph: Detect every access to uninitialized storage pointers.
+
+
+Compiler Features:
+ * Inline Assembly: Improve error messages around invalid function argument count.
+ * Code Generator: Only check callvalue once if all functions are non-payable.
+ * Code Generator: Use codecopy for string constants more aggressively.
+ * Code Generator: Use binary search for dispatch function if more efficient. The size/speed tradeoff can be tuned using ``--optimize-runs``.
+ * SMTChecker: Support mathematical and cryptographic functions in an uninterpreted way.
+ * SMTChecker: Support one-dimensional mappings.
+ * Standard JSON Interface: Disallow unknown keys in standard JSON input.
+ * Standard JSON Interface: Only run code generation if it has been requested. This could lead to unsupported feature errors only being reported at the point where you request bytecode.
+ * Static Analyzer: Do not warn about unused variables or state mutability for functions with an empty body.
+ * Type Checker: Add an additional reason to be displayed when type conversion fails.
+ * Yul: Support object access via ``datasize``, ``dataoffset`` and ``datacopy`` in standalone assembly mode.
+
+
+Bugfixes:
+ * Standard JSON Interface: Report specific error message for json input errors instead of internal compiler error.
+
+
+Build System:
+ * Replace the trusty PPA build by a static build on cosmic that is used for the trusty package instead.
+ * Remove support for Visual Studio 2015.
+
+
 ### 0.5.1 (2018-12-03)
 
 Language Features:

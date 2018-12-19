@@ -49,6 +49,8 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 		if (ssaValue.second && ssaValue.second->type() == typeid(Literal))
 			m_constants.emplace(ssaValue.first);
 
+	// Store size of global statements.
+	m_functionSizes[YulString{}] = CodeSize::codeSize(_ast);
 	map<YulString, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (auto& statement: m_ast.statements)
 	{
@@ -58,7 +60,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 		m_functions[fun.name] = &fun;
 		// Always inline functions that are only called once.
 		if (references[fun.name] == 1)
-			m_alwaysInline.emplace(fun.name);
+			m_singleUse.emplace(fun.name);
 		updateCodeSize(fun);
 	}
 }
@@ -94,8 +96,15 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (_funCall.functionName.name == _callSite)
 		return false;
 
-	FunctionDefinition& calledFunction = function(_funCall.functionName.name);
-	if (m_alwaysInline.count(calledFunction.name))
+	FunctionDefinition* calledFunction = function(_funCall.functionName.name);
+	if (!calledFunction)
+		return false;
+
+	// Do not inline into already big functions.
+	if (m_functionSizes.at(_callSite) > 100)
+		return false;
+
+	if (m_singleUse.count(calledFunction->name))
 		return true;
 
 	// Constant arguments might provide a means for further optimization, so they cause a bonus.
@@ -110,8 +119,13 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 			break;
 		}
 
-	size_t size = m_functionSizes.at(calledFunction.name);
-	return (size < 10 || (constantArg && size < 50));
+	size_t size = m_functionSizes.at(calledFunction->name);
+	return (size < 10 || (constantArg && size < 30));
+}
+
+void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _callSite)
+{
+	m_functionSizes.at(_callSite) += m_functionSizes.at(_function);
 }
 
 
@@ -149,25 +163,32 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	vector<Statement> newStatements;
 	map<YulString, YulString> variableReplacements;
 
-	FunctionDefinition& function = m_driver.function(_funCall.functionName.name);
+	FunctionDefinition* function = m_driver.function(_funCall.functionName.name);
+	assertThrow(!!function, OptimizerException, "Attempt to inline invalid function.");
+
+	m_driver.tentativelyUpdateCodeSize(function->name, m_currentFunction);
+
+	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
-		YulString newName = m_nameDispenser.newName(_existingVariable.name, function.name);
+		YulString newName = m_nameDispenser.newName(_existingVariable.name, function->name);
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
 		if (_value)
 			varDecl.value = make_shared<Expression>(std::move(*_value));
+		else
+			varDecl.value = make_shared<Expression>(zero);
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
 	for (size_t i = 0; i < _funCall.arguments.size(); ++i)
-		newVariable(function.parameters[i], &_funCall.arguments[i]);
-	for (auto const& var: function.returnVariables)
+		newVariable(function->parameters[i], &_funCall.arguments[i]);
+	for (auto const& var: function->returnVariables)
 		newVariable(var, nullptr);
 
-	Statement newBody = BodyCopier(m_nameDispenser, function.name, variableReplacements)(function.body);
+	Statement newBody = BodyCopier(m_nameDispenser, function->name, variableReplacements)(function->body);
 	newStatements += std::move(boost::get<Block>(newBody).statements);
 
 	boost::apply_visitor(GenericFallbackVisitor<Assignment, VariableDeclaration>{
@@ -179,7 +200,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 					{_assignment.variableNames[i]},
 					make_shared<Expression>(Identifier{
 						_assignment.location,
-						variableReplacements.at(function.returnVariables[i].name)
+						variableReplacements.at(function->returnVariables[i].name)
 					})
 				});
 		},
@@ -191,7 +212,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 					{std::move(_varDecl.variables[i])},
 					make_shared<Expression>(Identifier{
 						_varDecl.location,
-						variableReplacements.at(function.returnVariables[i].name)
+						variableReplacements.at(function->returnVariables[i].name)
 					})
 				});
 		}

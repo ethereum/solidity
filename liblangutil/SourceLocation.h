@@ -38,10 +38,6 @@ namespace langutil
  */
 struct SourceLocation
 {
-	SourceLocation(): start(-1), end(-1), source{nullptr} { }
-	SourceLocation(int _start, int _end, std::shared_ptr<CharStream> _source):
-		start(_start), end(_end), source{std::move(_source)} { }
-
 	bool operator==(SourceLocation const& _other) const
 	{
 		return source.get() == _other.source.get() && start == _other.start && end == _other.end;
@@ -53,8 +49,8 @@ struct SourceLocation
 
 	bool isEmpty() const { return start == -1 && end == -1; }
 
-	int start;
-	int end;
+	int start = -1;
+	int end = -1;
 	std::shared_ptr<CharStream> source;
 };
 

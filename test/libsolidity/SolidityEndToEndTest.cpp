@@ -3039,7 +3039,8 @@ BOOST_AUTO_TEST_CASE(gaslimit)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(gasLimit()));
+	auto result = callContractFunction("f()");
+	ABI_CHECK(result, encodeArgs(gasLimit()));
 }
 
 BOOST_AUTO_TEST_CASE(gasprice)
@@ -12245,7 +12246,7 @@ BOOST_AUTO_TEST_CASE(include_creation_bytecode_only_once)
 	compileAndRun(sourceCode);
 	BOOST_CHECK_LE(
 		double(m_compiler.object("Double").bytecode.size()),
-		1.1 * double(m_compiler.object("Single").bytecode.size())
+		1.2 * double(m_compiler.object("Single").bytecode.size())
 	);
 }
 

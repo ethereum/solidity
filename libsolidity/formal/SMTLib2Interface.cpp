@@ -17,22 +17,20 @@
 
 #include <libsolidity/formal/SMTLib2Interface.h>
 
-#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/ReadFile.h>
-
+#include <liblangutil/Exceptions.h>
 #include <libdevcore/Keccak256.h>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include <cstdio>
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <array>
 
 using namespace std;
 using namespace dev;

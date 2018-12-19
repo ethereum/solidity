@@ -108,7 +108,7 @@ bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 {
-	return _item == AssemblyItem(Instruction::JUMP) || _item == AssemblyItem(Instruction::JUMPI);
+	return _item == Instruction::JUMP || _item == Instruction::JUMPI;
 }
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)

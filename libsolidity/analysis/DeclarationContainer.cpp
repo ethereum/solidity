@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/analysis/DeclarationContainer.h>
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
 #include <libdevcore/StringUtils.h>

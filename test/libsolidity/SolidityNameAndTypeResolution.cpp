@@ -376,18 +376,6 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file does not specify required compiler version!"));
 }
 
-BOOST_AUTO_TEST_CASE(unsatisfied_version)
-{
-	char const* text = R"(
-		pragma solidity ^99.99.0;
-	)";
-	auto sourceAndError = parseAnalyseAndReturnError(text, false, false, false);
-	BOOST_REQUIRE(!sourceAndError.second.empty());
-	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_CHECK(sourceAndError.second.front()->type() == Error::Type::SyntaxError);
-	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file requires different compiler version"));
-}
-
 BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 {
 	char const* text = R"(

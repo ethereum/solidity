@@ -40,12 +40,12 @@ void MainFunction::operator()(Block& _block)
 	for (size_t i = 1; i < _block.statements.size(); ++i)
 		assertThrow(_block.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
 	/// @todo this should handle scopes properly and instead of an assertion it should rename the conflicting function
-	assertThrow(NameCollector(_block).names().count(YulString{"main"}) == 0, OptimizerException, "");
+	assertThrow(NameCollector(_block).names().count("main"_yulstring) == 0, OptimizerException, "");
 
 	Block& block = boost::get<Block>(_block.statements[0]);
 	FunctionDefinition main{
 		block.location,
-		YulString{"main"},
+		"main"_yulstring,
 		{},
 		{},
 		std::move(block)

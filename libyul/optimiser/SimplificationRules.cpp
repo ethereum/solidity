@@ -114,7 +114,8 @@ bool Pattern::matches(Expression const& _expr, map<YulString, Expression const*>
 	{
 		YulString varName = boost::get<Identifier>(_expr).name;
 		if (_ssaValues.count(varName))
-			expr = _ssaValues.at(varName);
+			if (Expression const* new_expr = _ssaValues.at(varName))
+				expr = new_expr;
 	}
 	assertThrow(expr, OptimizerException, "");
 
@@ -207,10 +208,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 
 u256 Pattern::d() const
 {
-	Literal const& literal = boost::get<Literal>(matchGroupValue());
-	assertThrow(literal.kind == LiteralKind::Number, OptimizerException, "");
-	assertThrow(isValidDecimal(literal.value.str()) || isValidHex(literal.value.str()), OptimizerException, "");
-	return u256(literal.value.str());
+	return valueOfNumberLiteral(boost::get<Literal>(matchGroupValue()));
 }
 
 Expression const& Pattern::matchGroupValue() const

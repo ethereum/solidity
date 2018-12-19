@@ -11,8 +11,8 @@
 // {
 //     {
 //         let f_a := mload(0)
-//         let f_x
-//         let f_y
+//         let f_x := 0
+//         let f_y := 0
 //         f_x := mul(f_a, f_a)
 //         f_y := add(f_a, f_x)
 //         let r := f_x

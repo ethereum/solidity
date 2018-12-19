@@ -39,8 +39,6 @@ namespace test
 class DocumentationChecker
 {
 public:
-	DocumentationChecker(): m_compilerStack() {}
-
 	void checkNatspec(
 		std::string const& _code,
 		std::string const& _contractName,

@@ -28,6 +28,7 @@ namespace yul
 
 struct YulException: virtual dev::Exception {};
 struct OptimizerException: virtual YulException {};
+struct CodegenException: virtual YulException {};
 struct YulAssertion: virtual YulException {};
 
 /// Assertion that throws an YulAssertion containing the given description if it is not met.

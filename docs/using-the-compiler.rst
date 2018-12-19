@@ -200,15 +200,27 @@ Input Description
             "MyLib": "0x123123..."
           }
         }
-        // The following can be used to select desired outputs.
-        // If this field is omitted, then the compiler loads and does type checking, but will not generate any outputs apart from errors.
-        // The first level key is the file name and the second is the contract name, where empty contract name refers to the file itself,
-        // while the star refers to all of the contracts.
+        // The following can be used to select desired outputs based
+        // on file and contract names.
+        // If this field is omitted, then the compiler loads and does type checking,
+        // but will not generate any outputs apart from errors.
+        // The first level key is the file name and the second level key is the contract name.
+        // An empty contract name is used for outputs that are not tied to a contract
+        // but to the whole source file like the AST.
+        // A star as contract name refers to all contracts in the file.
+        // Similarly, a star as a file name matches all files.
+        // To select all outputs the compiler can possibly generate, use
+        // "outputSelection: { "*": { "*": [ "*" ], "": [ "*" ] } }"
+        // but note that this might slow down the compilation process needlessly.
         //
         // The available output types are as follows:
-        //   abi - ABI
+        //
+        // File level (needs empty string as contract name):
         //   ast - AST of all source files
         //   legacyAST - legacy AST of all source files
+        //
+        // Contract level (needs the contract name or "*"):
+        //   abi - ABI
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
@@ -281,7 +293,7 @@ Output Description
       // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
       sources: {
         "sourceFile.sol": {
-          // Identifier (used in source maps)
+          // Identifier of the source (used in source maps)
           id: 1,
           // The AST object
           ast: {},

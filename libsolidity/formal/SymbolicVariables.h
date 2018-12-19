@@ -17,12 +17,9 @@
 
 #pragma once
 
-#include <libsolidity/formal/SSAVariable.h>
-
 #include <libsolidity/formal/SolverInterface.h>
-
+#include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/ast/Types.h>
-
 #include <memory>
 
 namespace dev
@@ -46,19 +43,13 @@ public:
 
 	virtual ~SymbolicVariable() = default;
 
-	smt::Expression currentValue() const
-	{
-		return valueAtIndex(m_ssa->index());
-	}
-
+	smt::Expression currentValue() const;
 	std::string currentName() const;
-
-	virtual smt::Expression valueAtIndex(int _index) const = 0;
-
-	smt::Expression increaseIndex()
+	virtual smt::Expression valueAtIndex(int _index) const;
+	virtual smt::Expression increaseIndex();
+	virtual smt::Expression operator()(std::vector<smt::Expression> /*_arguments*/) const
 	{
-		++(*m_ssa);
-		return currentValue();
+		solAssert(false, "Function application to non-function.");
 	}
 
 	unsigned index() const { return m_ssa->index(); }
@@ -86,9 +77,6 @@ public:
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
-
-protected:
-	smt::Expression valueAtIndex(int _index) const;
 };
 
 /**
@@ -102,9 +90,6 @@ public:
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);
-
-protected:
-	smt::Expression valueAtIndex(int _index) const;
 };
 
 /**
@@ -127,6 +112,42 @@ class SymbolicFixedBytesVariable: public SymbolicIntVariable
 public:
 	SymbolicFixedBytesVariable(
 		unsigned _numBytes,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+};
+
+/**
+ * Specialization of SymbolicVariable for FunctionType
+ */
+class SymbolicFunctionVariable: public SymbolicVariable
+{
+public:
+	SymbolicFunctionVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+
+	smt::Expression increaseIndex();
+	smt::Expression operator()(std::vector<smt::Expression> _arguments) const;
+
+private:
+	/// Creates a new function declaration.
+	void resetDeclaration();
+
+	/// Stores the current function declaration.
+	smt::Expression m_declaration;
+};
+
+/**
+ * Specialization of SymbolicVariable for Mapping
+ */
+class SymbolicMappingVariable: public SymbolicVariable
+{
+public:
+	SymbolicMappingVariable(
+		TypePointer _type,
 		std::string const& _uniqueName,
 		smt::SolverInterface& _interface
 	);

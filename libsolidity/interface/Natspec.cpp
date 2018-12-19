@@ -24,8 +24,9 @@
  */
 
 #include <libsolidity/interface/Natspec.h>
-#include <boost/range/irange.hpp>
+
 #include <libsolidity/ast/AST.h>
+#include <boost/range/irange.hpp>
 
 using namespace std;
 using namespace dev;

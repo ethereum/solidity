@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning: (167-181): Assertion violation happens here\nNote that some information is erased after the execution of loops.\nYou can re-introduce information using require().
+// Warning: (167-181): Assertion violation happens here

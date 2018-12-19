@@ -19,7 +19,6 @@
 
 #include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicVariables.h>
-
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
 
@@ -34,10 +33,12 @@ std::vector<smt::SortPointer> smtSort(std::vector<TypePointer> const& _types);
 /// Returns the SMT kind that models the Solidity type type category _category.
 smt::Kind smtKind(Type::Category _category);
 
-/// So far int, bool and address are supported.
-/// Returns true if type is supported.
+/// Returns true if type is fully supported (declaration and operations).
 bool isSupportedType(Type::Category _category);
 bool isSupportedType(Type const& _type);
+/// Returns true if type is partially supported (declaration).
+bool isSupportedTypeDeclaration(Type::Category _category);
+bool isSupportedTypeDeclaration(Type const& _type);
 
 bool isInteger(Type::Category _category);
 bool isRational(Type::Category _category);
@@ -46,6 +47,7 @@ bool isAddress(Type::Category _category);
 bool isNumber(Type::Category _category);
 bool isBool(Type::Category _category);
 bool isFunction(Type::Category _category);
+bool isMapping(Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,

@@ -27,17 +27,24 @@ void ForLoopInitRewriter::operator()(Block& _block)
 {
 	iterateReplacing(
 		_block.statements,
-		[](Statement& _stmt) -> boost::optional<vector<Statement>>
+		[&](Statement& _stmt) -> boost::optional<vector<Statement>>
 		{
 			if (_stmt.type() == typeid(ForLoop))
 			{
 				auto& forLoop = boost::get<ForLoop>(_stmt);
+				(*this)(forLoop.pre);
+				(*this)(forLoop.body);
+				(*this)(forLoop.post);
 				vector<Statement> rewrite;
 				swap(rewrite, forLoop.pre.statements);
 				rewrite.emplace_back(move(forLoop));
 				return rewrite;
 			}
-			return {};
+			else
+			{
+				visit(_stmt);
+				return {};
+			}
 		}
 	);
 }

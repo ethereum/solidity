@@ -33,12 +33,15 @@ namespace yul
  * Class that walks the AST and stores the initial value of each variable
  * that is never assigned to.
  *
+ * A special zero constant expression is used for the default value of variables.
+ *
  * Prerequisite: Disambiguator
  */
 class SSAValueTracker: public ASTWalker
 {
 public:
 	using ASTWalker::operator();
+	void operator()(FunctionDefinition const& _funDef) override;
 	void operator()(VariableDeclaration const& _varDecl) override;
 	void operator()(Assignment const& _assignment) override;
 

@@ -36,21 +36,21 @@ class AsmPrinter: public boost::static_visitor<std::string>
 public:
 	explicit AsmPrinter(bool _yul = false): m_yul(_yul) {}
 
-	std::string operator()(Instruction const& _instruction);
-	std::string operator()(Literal const& _literal);
-	std::string operator()(Identifier const& _identifier);
-	std::string operator()(FunctionalInstruction const& _functionalInstruction);
-	std::string operator()(ExpressionStatement const& _expr);
-	std::string operator()(Label const& _label);
-	std::string operator()(StackAssignment const& _assignment);
-	std::string operator()(Assignment const& _assignment);
-	std::string operator()(VariableDeclaration const& _variableDeclaration);
-	std::string operator()(FunctionDefinition const& _functionDefinition);
-	std::string operator()(FunctionCall const& _functionCall);
-	std::string operator()(If const& _if);
-	std::string operator()(Switch const& _switch);
-	std::string operator()(ForLoop const& _forLoop);
-	std::string operator()(Block const& _block);
+	std::string operator()(Instruction const& _instruction) const;
+	std::string operator()(Literal const& _literal) const;
+	std::string operator()(Identifier const& _identifier) const;
+	std::string operator()(FunctionalInstruction const& _functionalInstruction) const;
+	std::string operator()(ExpressionStatement const& _expr) const;
+	std::string operator()(Label const& _label) const;
+	std::string operator()(StackAssignment const& _assignment) const;
+	std::string operator()(Assignment const& _assignment) const;
+	std::string operator()(VariableDeclaration const& _variableDeclaration) const;
+	std::string operator()(FunctionDefinition const& _functionDefinition) const;
+	std::string operator()(FunctionCall const& _functionCall) const;
+	std::string operator()(If const& _if) const;
+	std::string operator()(Switch const& _switch) const;
+	std::string operator()(ForLoop const& _forLoop) const;
+	std::string operator()(Block const& _block) const;
 
 private:
 	std::string formatTypedName(TypedName _variable) const;

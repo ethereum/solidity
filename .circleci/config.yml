@@ -15,7 +15,7 @@ defaults:
         mkdir -p build
         cd build
         [ -n "$COVERAGE" -a "$CIRCLE_BRANCH" != release -a -z "$CIRCLE_TAG" ] && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCOVERAGE=ON"
-        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo $CMAKE_OPTIONS
+        cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
         make -j4
   - run_tests: &run_tests
       name: Tests
@@ -68,7 +68,7 @@ jobs:
             - version.txt
   test_emscripten_solcjs:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: circleci/node:10
     environment:
       TERM: xterm
     steps:
@@ -78,23 +78,15 @@ jobs:
       - run:
           name: Install external tests deps
           command: |
-            apt-get -qq update
-            apt-get -qy install netcat curl
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
-            export NVM_DIR="/usr/local/nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            nvm --version
-            nvm install 8
             node --version
             npm --version
       - run:
           name: Test solcjs
           command: |
-            . /usr/local/nvm/nvm.sh
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
   test_emscripten_external:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: circleci/node:10
     environment:
       TERM: xterm
     steps:
@@ -104,19 +96,11 @@ jobs:
       - run:
           name: Install external tests deps
           command: |
-            apt-get -qq update
-            apt-get -qy install netcat curl
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
-            export NVM_DIR="/usr/local/nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            nvm --version
-            nvm install 8
             node --version
             npm --version
       - run:
           name: External tests
           command: |
-            . /usr/local/nvm/nvm.sh
             test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
   build_x86_linux:
     docker:

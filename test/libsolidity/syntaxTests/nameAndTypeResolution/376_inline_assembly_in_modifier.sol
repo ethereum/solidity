@@ -10,4 +10,3 @@ contract test {
     }
 }
 // ----
-// Warning: (122-151): Function state mutability can be restricted to pure

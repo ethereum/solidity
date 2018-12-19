@@ -20,10 +20,9 @@
  */
 
 #include <libsolidity/analysis/ContractLevelChecker.h>
+
 #include <libsolidity/ast/AST.h>
-
 #include <liblangutil/ErrorReporter.h>
-
 #include <boost/range/adaptor/reversed.hpp>
 
 
@@ -227,7 +226,7 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 			return _type->hasEqualParameterTypes(*_funAndFlag.first);
 		});
 		if (it == overloads.end())
-			overloads.push_back(make_pair(_type, _implemented));
+			overloads.emplace_back(_type, _implemented);
 		else if (it->second)
 		{
 			if (!_implemented)
@@ -409,8 +408,8 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 				auto functionType = make_shared<FunctionType>(*f);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(f, functionType->asCallableFunction(false))
+					externalDeclarations[functionType->externalSignature()].emplace_back(
+						f, functionType->asCallableFunction(false)
 					);
 			}
 		for (VariableDeclaration const* v: contract->stateVariables())
@@ -419,8 +418,8 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 				auto functionType = make_shared<FunctionType>(*v);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
-					externalDeclarations[functionType->externalSignature()].push_back(
-						make_pair(v, functionType->asCallableFunction(false))
+					externalDeclarations[functionType->externalSignature()].emplace_back(
+						v, functionType->asCallableFunction(false)
 					);
 			}
 	}

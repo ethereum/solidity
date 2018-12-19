@@ -87,7 +87,7 @@ void ControlFlowGraph::splitBlocks()
 			m_blocks[id].begin = index;
 		}
 		if (item.type() == PushTag)
-			m_blocks[id].pushedTags.push_back(BlockId(item.data()));
+			m_blocks[id].pushedTags.emplace_back(item.data());
 		if (SemanticInformation::altersControlFlow(item))
 		{
 			m_blocks[id].end = index + 1;

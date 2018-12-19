@@ -22,11 +22,10 @@
 
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 
-#include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
+#include <libsolidity/ast/AST.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libdevcore/StringUtils.h>
-
 #include <boost/algorithm/string.hpp>
 
 using namespace std;

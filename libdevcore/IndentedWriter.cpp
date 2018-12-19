@@ -36,7 +36,7 @@ string IndentedWriter::format() const
 void IndentedWriter::newLine()
 {
 	if (!m_lines.back().contents.empty())
-		m_lines.push_back({ string(), m_lines.back().indentation });
+		m_lines.emplace_back(Line{string(), m_lines.back().indentation});
 }
 
 void IndentedWriter::indent()

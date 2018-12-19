@@ -21,12 +21,15 @@
  */
 
 #include <libsolidity/analysis/ReferencesResolver.h>
-#include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
+#include <libsolidity/ast/AST.h>
+
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 
@@ -316,7 +319,14 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// We use the latest EVM version because we will re-run it anyway.
 	yul::AsmAnalysisInfo analysisInfo;
 	boost::optional<Error::Type> errorTypeForLoose = Error::Type::SyntaxError;
-	yul::AsmAnalyzer(analysisInfo, errorsIgnored, EVMVersion(), errorTypeForLoose, yul::AsmFlavour::Loose, resolver).analyze(_inlineAssembly.operations());
+	yul::AsmAnalyzer(
+		analysisInfo,
+		errorsIgnored,
+		EVMVersion(),
+		errorTypeForLoose,
+		yul::EVMDialect::looseAssemblyForEVM(),
+		resolver
+	).analyze(_inlineAssembly.operations());
 	return false;
 }
 

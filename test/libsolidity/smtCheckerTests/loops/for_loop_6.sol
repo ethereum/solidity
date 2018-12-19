@@ -5,8 +5,9 @@ contract C {
         for (y = 2; x < 10; ) {
             y = 3;
         }
-        assert(y == 2);
+        // False positive due to resetting y.
+        assert(y < 4);
     }
 }
 // ----
-// Warning: (167-181): Assertion violation happens here\nNote that some information is erased after the execution of loops.\nYou can re-introduce information using require().
+// Warning: (213-226): Assertion violation happens here
