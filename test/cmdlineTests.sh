@@ -100,17 +100,19 @@ printTask "Testing unknown options..."
     failed=$?
     set -e
 
-    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ] ; then
-	echo "Passed"
+    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ]
+    then
+        echo "Passed"
     else
-	printError "Incorrect response to unknown options: $STDERR"
-	exit 1
+        printError "Incorrect response to unknown options: $STDERR"
+        exit 1
     fi
 )
 
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
 # An failure is expected.
-test_solc_behaviour() {
+function test_solc_behaviour()
+{
     local filename="${1}"
     local solc_args="${2}"
     local solc_stdin="${3}"
@@ -122,7 +124,8 @@ test_solc_behaviour() {
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
     set +e
-    if [[ "$solc_stdin" = "" ]]; then
+    if [[ "$solc_stdin" = "" ]]
+    then
         "$SOLC" "${filename}" ${solc_args} 1>$stdout_path 2>$stderr_path
     else
         "$SOLC" "${filename}" ${solc_args} <$solc_stdin 1>$stdout_path 2>$stderr_path
@@ -130,7 +133,8 @@ test_solc_behaviour() {
     exitCode=$?
     set -e
 
-    if [[ "$solc_args" == *"--standard-json"* ]]; then
+    if [[ "$solc_args" == *"--standard-json"* ]]
+    then
         sed -i -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
     else
@@ -138,13 +142,15 @@ test_solc_behaviour() {
         sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
     fi
 
-    if [[ $exitCode -ne "$exit_code_expected" ]]; then
+    if [[ $exitCode -ne "$exit_code_expected" ]]
+    then
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
         rm -f $stdout_path $stderr_path
         exit 1
     fi
 
-    if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]; then
+    if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]
+    then
         printError "Incorrect output on stdout received. Expected:"
         echo -e "${stdout_expected}"
 
@@ -154,7 +160,8 @@ test_solc_behaviour() {
         exit 1
     fi
 
-    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]; then
+    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]
+    then
         printError "Incorrect output on stderr received. Expected:"
         echo -e "${stderr_expected}"
 
@@ -179,46 +186,43 @@ test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "Invalid remapp
 
 printTask "Running standard JSON commandline tests..."
 (
-cd "$REPO_ROOT"/test/cmdlineTests/
-for file in *.json
-do
-    args="--standard-json"
-    stdin="$REPO_ROOT/test/cmdlineTests/$file"
-    stdout=$(cat $file.stdout 2>/dev/null || true)
-    exitCode=$(cat $file.exit 2>/dev/null || true)
-    err=$(cat $file.err 2>/dev/null || true)
-    printTask " - $file"
-    test_solc_behaviour "" "$args" "$stdin" "$stdout" "$exitCode" "$err"
-done
+    cd "$REPO_ROOT"/test/cmdlineTests/
+    for file in *.json
+    do
+        args="--standard-json"
+        stdin="$REPO_ROOT/test/cmdlineTests/$file"
+        stdout=$(cat $file.stdout 2>/dev/null || true)
+        exitCode=$(cat $file.exit 2>/dev/null || true)
+        err=$(cat $file.err 2>/dev/null || true)
+        printTask " - $file"
+        test_solc_behaviour "" "$args" "$stdin" "$stdout" "$exitCode" "$err"
+    done
 )
 
 printTask "Running general commandline tests..."
 (
-cd "$REPO_ROOT"/test/cmdlineTests/
-for file in *.sol
-do
-    args=$(cat $file.args 2>/dev/null || true)
-    stdout=$(cat $file.stdout 2>/dev/null || true)
-    exitCode=$(cat $file.exit 2>/dev/null || true)
-    err=$(cat $file.err 2>/dev/null || true)
-    printTask " - $file"
-    test_solc_behaviour "$file" "$args" "" "$stdout" "$exitCode" "$err"
-done
+    cd "$REPO_ROOT"/test/cmdlineTests/
+    for file in *.sol
+    do
+        args=$(cat $file.args 2>/dev/null || true)
+        stdout=$(cat $file.stdout 2>/dev/null || true)
+        exitCode=$(cat $file.exit 2>/dev/null || true)
+        err=$(cat $file.err 2>/dev/null || true)
+        printTask " - $file"
+        test_solc_behaviour "$file" "$args" "" "$stdout" "$exitCode" "$err"
+    done
 )
 
 printTask "Compiling various other contracts and libraries..."
 (
-cd "$REPO_ROOT"/test/compilationTests/
-for dir in *
-do
-    if [ "$dir" != "README.md" ]
-    then
+    cd "$REPO_ROOT"/test/compilationTests/
+    for dir in */
+    do
         echo " - $dir"
         cd "$dir"
         compileFull -w *.sol */*.sol
         cd ..
-    fi
-done
+    done
 )
 
 printTask "Compiling all examples from the documentation..."
@@ -293,7 +297,8 @@ SOLTMPDIR=$(mktemp -d)
 )
 rm -rf "$SOLTMPDIR"
 
-test_solc_assembly_output() {
+function test_solc_assembly_output()
+{
     local input="${1}"
     local expected="${2}"
     local solc_args="${3}"
@@ -342,7 +347,8 @@ SOLTMPDIR=$(mktemp -d)
     set -e
 
     # This should fail
-    if [[ !("$output" =~ "No input files given") || ($result == 0) ]] ; then
+    if [[ !("$output" =~ "No input files given") || ($result == 0) ]]
+    then
         printError "Incorrect response to empty input arg list: $STDERR"
         exit 1
     fi
@@ -353,7 +359,8 @@ SOLTMPDIR=$(mktemp -d)
     set -e
 
     # The contract should be compiled
-    if [[ "$result" != 0 ]] ; then
+    if [[ "$result" != 0 ]]
+    then
         exit 1
     fi
 
@@ -361,7 +368,8 @@ SOLTMPDIR=$(mktemp -d)
     set +e
     output=$(echo '' | "$SOLC" --ast - 2>/dev/null)
     set -e
-    if [[ $? != 0 ]] ; then
+    if [[ $? != 0 ]]
+    then
         exit 1
     fi
 )
@@ -379,14 +387,16 @@ SOLTMPDIR=$(mktemp -d)
     do
         set +e
         "$REPO_ROOT"/build/test/tools/solfuzzer --quiet < "$f"
-        if [ $? -ne 0 ]; then
+        if [ $? -ne 0 ]
+        then
             printError "Fuzzer failed on:"
             cat "$f"
             exit 1
         fi
 
         "$REPO_ROOT"/build/test/tools/solfuzzer --without-optimizer --quiet < "$f"
-        if [ $? -ne 0 ]; then
+        if [ $? -ne 0 ]
+        then
             printError "Fuzzer (without optimizer) failed on:"
             cat "$f"
             exit 1
