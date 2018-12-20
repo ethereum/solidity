@@ -216,15 +216,12 @@ printTask "Running general commandline tests..."
 printTask "Compiling various other contracts and libraries..."
 (
     cd "$REPO_ROOT"/test/compilationTests/
-    for dir in *
+    for dir in */
     do
-        if [ "$dir" != "README.md" ]
-        then
-            echo " - $dir"
-            cd "$dir"
-            compileFull -w *.sol */*.sol
-            cd ..
-        fi
+        echo " - $dir"
+        cd "$dir"
+        compileFull -w *.sol */*.sol
+        cd ..
     done
 )
 
