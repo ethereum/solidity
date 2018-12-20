@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (106-114): Assertion checker does not yet implement this expression.
+// Warning: (106-114): Type conversion is not yet fully supported and might yield false positives.

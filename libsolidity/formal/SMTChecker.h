@@ -86,6 +86,7 @@ private:
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
+	void visitTypeConversion(FunctionCall const& _funCall);
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const& _funCall);
