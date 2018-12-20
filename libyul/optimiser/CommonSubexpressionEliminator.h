@@ -26,6 +26,8 @@
 namespace yul
 {
 
+struct Dialect;
+
 /**
  * Optimisation stage that replaces expressions known to be the current value of a variable
  * in scope by a reference to that variable.

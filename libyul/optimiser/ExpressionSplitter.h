@@ -31,6 +31,7 @@ namespace yul
 {
 
 class NameCollector;
+struct Dialect;
 
 
 /**
@@ -57,8 +58,8 @@ class NameCollector;
 class ExpressionSplitter: public ASTModifier
 {
 public:
-	explicit ExpressionSplitter(NameDispenser& _nameDispenser):
-		m_nameDispenser(_nameDispenser)
+	explicit ExpressionSplitter(Dialect const& _dialect, NameDispenser& _nameDispenser):
+		m_dialect(_dialect), m_nameDispenser(_nameDispenser)
 	{ }
 
 	void operator()(FunctionalInstruction&) override;
@@ -77,6 +78,7 @@ private:
 	/// List of statements that should go in front of the currently visited AST element,
 	/// at the statement level.
 	std::vector<Statement> m_statementsToPrefix;
+	Dialect const& m_dialect;
 	NameDispenser& m_nameDispenser;
 };
 

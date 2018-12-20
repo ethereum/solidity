@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 		{
 			return _name == "builtin"_yulstring ? &f : nullptr;
 		}
-		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), false};
+		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), false, false};
 	};
 
 	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();

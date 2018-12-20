@@ -149,7 +149,7 @@ public:
 				(VarDeclInitializer{})(*m_ast);
 				break;
 			case 'x':
-				ExpressionSplitter{*m_nameDispenser}(*m_ast);
+				ExpressionSplitter{*m_dialect, *m_nameDispenser}(*m_ast);
 				break;
 			case 'j':
 				ExpressionJoiner::run(*m_ast);

@@ -122,7 +122,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else if (m_optimizerStep == "expressionSplitter")
 	{
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
-		ExpressionSplitter{nameDispenser}(*m_ast);
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
 	}
 	else if (m_optimizerStep == "expressionJoiner")
 	{
@@ -133,7 +133,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
-		ExpressionSplitter{nameDispenser}(*m_ast);
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 	}
@@ -158,7 +158,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		(FunctionHoister{})(*m_ast);
 		(FunctionGrouper{})(*m_ast);
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
-		ExpressionSplitter{nameDispenser}(*m_ast);
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
 		FullInliner(*m_ast, nameDispenser).run();
 		ExpressionJoiner::run(*m_ast);
 	}
@@ -182,7 +182,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
-		ExpressionSplitter{nameDispenser}(*m_ast);
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
@@ -260,7 +260,7 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	m_dialect = m_yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
+	m_dialect = m_yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVMObjects();
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source, ""));

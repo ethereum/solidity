@@ -44,7 +44,13 @@ struct BuiltinFunction
 	YulString name;
 	std::vector<Type> parameters;
 	std::vector<Type> returns;
-	bool movable;
+	/// If true, calls to this function can be freely moved and copied (as long as their
+	/// arguments are either variables or also movable) without altering the semantics.
+	/// This means the function cannot depend on storage or memory, cannot have any side-effects,
+	/// but it can depend on state that is constant across an EVM-call.
+	bool movable = false;
+	/// If true, can only accept literals as arguments and they cannot be moved to voriables.
+	bool literalArguments = false;
 };
 
 struct Dialect: boost::noncopyable
