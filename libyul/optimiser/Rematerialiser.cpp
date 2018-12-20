@@ -30,12 +30,13 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void Rematerialiser::run(Block& _ast)
+void Rematerialiser::run(Dialect const& _dialect, Block& _ast)
 {
-	Rematerialiser{_ast}(_ast);
+	Rematerialiser{_dialect, _ast}(_ast);
 }
 
-Rematerialiser::Rematerialiser(Block& _ast):
+Rematerialiser::Rematerialiser(Dialect const& _dialect, Block& _ast):
+	DataFlowAnalyzer(_dialect),
 	m_referenceCounts(ReferencesCounter::countReferences(_ast))
 {
 }

@@ -26,6 +26,7 @@
 
 namespace yul
 {
+struct Dialect;
 
 /**
  * Applies simplification rules to all expressions.
@@ -40,12 +41,13 @@ public:
 	using ASTModifier::operator();
 	virtual void visit(Expression& _expression);
 
-	static void run(Block& _ast);
+	static void run(Dialect const& _dialect, Block& _ast);
 private:
-	explicit ExpressionSimplifier(std::map<YulString, Expression const*> _ssaValues):
-		m_ssaValues(std::move(_ssaValues))
+	explicit ExpressionSimplifier(Dialect const& _dialect, std::map<YulString, Expression const*> _ssaValues):
+		m_dialect(_dialect), m_ssaValues(std::move(_ssaValues))
 	{}
 
+	Dialect const& m_dialect;
 	std::map<YulString, Expression const*> m_ssaValues;
 };
 

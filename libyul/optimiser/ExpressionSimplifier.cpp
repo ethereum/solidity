@@ -36,7 +36,7 @@ using namespace dev::solidity;
 void ExpressionSimplifier::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
-	while (auto match = SimplificationRules::findFirstMatch(_expression, m_ssaValues))
+	while (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_ssaValues))
 	{
 		// Do not apply the rule if it removes non-constant parts of the expression.
 		// TODO: The check could actually be less strict than "movable".
@@ -45,15 +45,15 @@ void ExpressionSimplifier::visit(Expression& _expression)
 		// so if the value of the variable is not movable, the expression that references
 		// the variable still is.
 
-		if (match->removesNonConstants && !MovableChecker(_expression).movable())
+		if (match->removesNonConstants && !MovableChecker(m_dialect, _expression).movable())
 			return;
 		_expression = match->action().toExpression(locationOf(_expression));
 	}
 }
 
-void ExpressionSimplifier::run(Block& _ast)
+void ExpressionSimplifier::run(Dialect const& _dialect, Block& _ast)
 {
 	SSAValueTracker ssaValues;
 	ssaValues(_ast);
-	ExpressionSimplifier{ssaValues.values()}(_ast);
+	ExpressionSimplifier{_dialect, ssaValues.values()}(_ast);
 }

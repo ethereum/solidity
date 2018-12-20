@@ -32,6 +32,7 @@
 
 namespace yul
 {
+struct Dialect;
 
 /**
  * Creates a copy of a Yul AST replacing all identifiers by unique names.
@@ -40,10 +41,14 @@ class Disambiguator: public ASTCopier
 {
 public:
 	explicit Disambiguator(
+		Dialect const& _dialect,
 		AsmAnalysisInfo const& _analysisInfo,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	):
-		m_info(_analysisInfo), m_externallyUsedIdentifiers(_externallyUsedIdentifiers), m_nameDispenser(m_externallyUsedIdentifiers)
+		m_info(_analysisInfo),
+		m_dialect(_dialect),
+		m_externallyUsedIdentifiers(_externallyUsedIdentifiers),
+		m_nameDispenser(_dialect, m_externallyUsedIdentifiers)
 	{
 	}
 
@@ -58,6 +63,7 @@ protected:
 	void leaveScopeInternal(Scope& _scope);
 
 	AsmAnalysisInfo const& m_info;
+	Dialect const& m_dialect;
 	std::set<YulString> const& m_externallyUsedIdentifiers;
 
 	std::vector<Scope*> m_scopes;

@@ -56,7 +56,7 @@ void ExpressionInliner::visit(Expression& _expression)
 
 		bool movable = boost::algorithm::all_of(
 			funCall.arguments,
-			[=](Expression const& _arg) { return MovableChecker(_arg).movable(); }
+			[=](Expression const& _arg) { return MovableChecker(m_dialect, _arg).movable(); }
 		);
 		if (m_inlinableFunctions.count(funCall.functionName.name) && movable)
 		{

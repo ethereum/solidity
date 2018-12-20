@@ -34,6 +34,9 @@ namespace yul
  */
 class CommonSubexpressionEliminator: public DataFlowAnalyzer
 {
+public:
+	CommonSubexpressionEliminator(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+
 protected:
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;

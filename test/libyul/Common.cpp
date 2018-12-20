@@ -41,6 +41,14 @@ using namespace langutil;
 using namespace yul;
 using namespace dev::solidity;
 
+namespace
+{
+shared_ptr<Dialect> defaultDialect(bool _yul)
+{
+	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
+}
+}
+
 void yul::test::printErrors(ErrorList const& _errors)
 {
 	SourceReferenceFormatter formatter(cout);
@@ -55,7 +63,7 @@ void yul::test::printErrors(ErrorList const& _errors)
 
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
-	shared_ptr<Dialect> dialect = _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
+	shared_ptr<Dialect> dialect = defaultDialect(_yul);
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(CharStream(_source, ""));
@@ -87,7 +95,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 yul::Block yul::test::disambiguate(string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
-	return boost::get<Block>(Disambiguator(*result.second, {})(*result.first));
+	return boost::get<Block>(Disambiguator(*defaultDialect(_yul), *result.second, {})(*result.first));
 }
 
 string yul::test::format(string const& _source, bool _yul)
