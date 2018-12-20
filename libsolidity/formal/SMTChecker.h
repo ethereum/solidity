@@ -147,8 +147,11 @@ private:
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(FunctionDefinition const& _function, std::vector<smt::Expression> const& _callArgs);
+	void resetVariable(VariableDeclaration const& _variable);
 	void resetStateVariables();
+	void resetStorageReferences();
 	void resetVariables(std::vector<VariableDeclaration const*> _variables);
+	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.

@@ -7,6 +7,7 @@ Language Features:
 Compiler Features:
  * Control Flow Graph: Warn about unreachable code.
  * SMTChecker: Support basic typecasts without truncation.
+ * SMTChecker: Support external function calls and erase all knowledge regarding storage variables and references.
 
 
 Bugfixes:
