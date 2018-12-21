@@ -158,7 +158,10 @@ TestTool::Request TestTool::handleResponse(bool const _exception)
 	if (_exception)
 		cout << "(e)dit/(s)kip/(q)uit? ";
 	else
-		cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
+		if (m_test->allowsUpdate())
+			cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
+		else
+			cout << "(e)dit/(s)kip/(q)uit? ";
 	cout.flush();
 
 	while (true)
@@ -326,6 +329,8 @@ int main(int argc, char *argv[])
 		TestTool::editor = "/usr/bin/editor";
 
 	fs::path testPath;
+	string ipcPath;
+	bool disableIPC = false;
 	bool disableSMT = false;
 	bool formatted = true;
 	po::options_description options(
@@ -339,6 +344,8 @@ Allowed options)",
 	options.add_options()
 		("help", "Show this help screen.")
 		("testpath", po::value<fs::path>(&testPath), "path to test files")
+		("ipcpath", po::value<string>(&ipcPath), "path to ipc socket")
+		("no-ipc", "disable semantic tests")
 		("no-smt", "disable SMT checker")
 		("no-color", "don't use colors")
 		("editor", po::value<string>(&TestTool::editor), "editor for opening contracts");
@@ -361,8 +368,24 @@ Allowed options)",
 
 		po::notify(arguments);
 
+		if (arguments.count("no-ipc"))
+			disableIPC = true;
+		else
+		{
+			solAssert(
+				!ipcPath.empty(),
+				"No ipc path specified. The --ipcpath argument is required, unless --no-ipc is used."
+			);
+			solAssert(
+				fs::exists(ipcPath),
+				"Invalid ipc path specified."
+			);
+			SemanticTest::ipcPath = ipcPath;
+		}
+
 		if (arguments.count("no-smt"))
 			disableSMT = true;
+
 	}
 	catch (std::exception const& _exception)
 	{
@@ -379,6 +402,9 @@ Allowed options)",
 	// Interactive tests are added in InteractiveTests.h
 	for (auto const& ts: g_interactiveTestsuites)
 	{
+		if (ts.ipc && disableIPC)
+			continue;
+
 		if (ts.smt && disableSMT)
 			continue;
 

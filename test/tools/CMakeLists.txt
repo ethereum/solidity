@@ -10,6 +10,7 @@ add_executable(isoltest
 	../Common.cpp
 	../TestCase.cpp
 	../libsolidity/SyntaxTest.cpp
+        ../libsolidity/SemanticTest.cpp
 	../libsolidity/AnalysisFramework.cpp
 	../libsolidity/SolidityExecutionFramework.cpp
 	../ExecutionFramework.cpp

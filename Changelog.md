@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * Control Flow Graph: Warn about unreachable code.
+ * Tests: Add infrastructure to ``isoltest`` for running semantic tests.
 
 
 Bugfixes:
