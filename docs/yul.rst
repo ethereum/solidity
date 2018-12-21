@@ -171,7 +171,7 @@ As an exception, identifiers defined in the "init" part of the for-loop
 (the first block) are visible in all other parts of the for-loop
 (but not outside of the loop).
 Identifiers declared in the other parts of the for loop respect the regular
-syntatical scoping rules.
+syntactical scoping rules.
 The parameters and return parameters of functions are visible in the
 function body and their names cannot overlap.
 
