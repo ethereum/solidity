@@ -1289,7 +1289,7 @@ cut off::
     uint16 b = uint16(a); // b will be 0x5678 now
 
 If an integer is explicitly converted to a larger type, it is padded on the left (i.e. at the higher order end).
-The result of the conversion will compare equal to the original integer.
+The result of the conversion will compare equal to the original integer::
 
     uint16 a = 0x1234;
     uint32 b = uint32(a); // b will be 0x00001234 now
@@ -1321,7 +1321,7 @@ rules explicit::
     uint32 b = uint16(a); // b will be 0x00001234
     uint32 c = uint32(bytes4(a)); // c will be 0x12340000
     uint8 d = uint8(uint16(a)); // d will be 0x34
-    uint8 e = uint8(bytes1(a)); // d will be 0x12
+    uint8 e = uint8(bytes1(a)); // e will be 0x12
 
 .. _types-conversion-literals:
 
