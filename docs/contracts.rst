@@ -343,7 +343,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -619,7 +619,7 @@ The following statements are considered modifying the state:
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract C {
         function f(uint a, uint b) public view returns (uint) {
@@ -664,7 +664,7 @@ In addition to the list of state modifying statements explained above, the follo
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract C {
         function f(uint a, uint b) public pure returns (uint) {
@@ -758,7 +758,7 @@ Like any function, the fallback function can execute complex operations as long 
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract Test {
         // This function is called for all messages sent to
@@ -1063,7 +1063,7 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -1228,7 +1228,7 @@ equivalent to ``constructor() public {}``. For example:
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract A {
         uint public a;
@@ -1407,7 +1407,7 @@ Interfaces are denoted by their own keyword:
 
 ::
 
-    pragma solidity >=0.5.0 <0.6.0;
+    pragma solidity ^0.5.0;
 
     interface Token {
         enum TokenType { Fungible, NonFungible }
