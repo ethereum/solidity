@@ -317,12 +317,12 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::DELEGATECALL,	{ "DELEGATECALL",	0, 6, 1, true, Tier::Special } },
 	{ Instruction::STATICCALL,	{ "STATICCALL",		0, 6, 1, true, Tier::Special } },
 	{ Instruction::CREATE2,		{ "CREATE2",		0, 4, 1, true, Tier::Special } },
-	{ Instruction::REVERT,		{ "REVERT",		0, 2, 0, true, Tier::Zero } },
+	{ Instruction::REVERT,		{ "REVERT",			0, 2, 0, true, Tier::Zero } },
 	{ Instruction::INVALID,		{ "INVALID",		0, 0, 0, true, Tier::Zero } },
-	{ Instruction::SELFDESTRUCT,	{ "SELFDESTRUCT",		0, 1, 0, true, Tier::Special } },
-	{Instruction::BALANCEOF,{ "BALANCEOF",		0, 2, 1, true, Tier::Zero } },
-	{Instruction::TRANSFERASSET, { "TRANSFERASSET",		0, 3, 1, true, Tier::Special } },
-	{Instruction::SENDASSET, { "SENDASSET",		0, 3, 1, true, Tier::Zero } }
+	{ Instruction::SELFDESTRUCT,{ "SELFDESTRUCT",	0, 1, 0, true, Tier::Special } },
+	{Instruction::BALANCEOF,	{ "BALANCEOF",		0, 2, 1, true, Tier::Special } },
+	{Instruction::TRANSFERASSET, { "TRANSFERASSET",	0, 3, 1, true, Tier::Special } },
+	{Instruction::SENDASSET, 	{ "SENDASSET",		0, 3, 1, true, Tier::Special } }
 };
 
 void dev::solidity::eachInstruction(

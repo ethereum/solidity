@@ -274,14 +274,14 @@ inline Instruction logInstruction(unsigned _number)
 enum class Tier : unsigned
 {
 	Zero = 0,	// 0, Zero
-	Base,		// 2, Quick
-	VeryLow,	// 3, Fastest
-	Low,		// 5, Fast
-	Mid,		// 8, Mid
-	High,		// 10, Slow
-	Ext,		// 20, Ext
-	ExtCode,	// 700, Extcode
-	Balance,	// 400, Balance
+	Base,		// 1, Quick
+	VeryLow,	// 1, Fastest
+	Low,		// 2, Fast
+	Mid,		// 3, Mid
+	High,		// 4, Slow
+	Ext,		// 7, Ext
+	ExtCode,	// 45, Extcode
+	Balance,	// 25, Balance
 	Special,	// multiparam or otherwise special
 	Invalid		// Invalid.
 };
