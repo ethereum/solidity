@@ -103,11 +103,11 @@ Block and Transaction Properties
     values will be zero.
 
 .. note::
-    The function ``blockhash`` was previously known as ``block.blockhash``. It was deprecated in
+    The function ``blockhash`` was previously known as ``block.blockhash``, which was deprecated in
     version 0.4.22 and removed in version 0.5.0.
 
 .. note::
-    The function ``gasleft`` was previously known as ``msg.gas``. It was deprecated in
+    The function ``gasleft`` was previously known as ``msg.gas``, which was deprecated in
     version 0.4.21 and removed in version 0.5.0.
 
 .. index:: abi, encoding, packed
