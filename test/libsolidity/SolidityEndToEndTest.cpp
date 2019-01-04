@@ -67,7 +67,6 @@ BOOST_AUTO_TEST_CASE(transaction_status)
 	BOOST_CHECK(!m_transactionSuccessful);
 }
 
-
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	char const* sourceCode = R"(
@@ -77,15 +76,6 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	)";
 	compileAndRun(sourceCode);
 	testContractAgainstCppOnRange("f(uint256)", [](u256 const& a) -> u256 { return a * 7; }, 0, 100);
-}
-
-BOOST_AUTO_TEST_CASE(empty_contract)
-{
-	char const* sourceCode = R"(
-		contract test { }
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()).empty());
 }
 
 BOOST_AUTO_TEST_CASE(exp_operator)
@@ -99,28 +89,6 @@ BOOST_AUTO_TEST_CASE(exp_operator)
 	testContractAgainstCppOnRange("f(uint256)", [](u256 const& a) -> u256 { return u256(1 << a.convert_to<int>()); }, 0, 16);
 }
 
-BOOST_AUTO_TEST_CASE(exp_operator_const)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f() public returns(uint d) { return 2 ** 3; }
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()", bytes()), toBigEndian(u256(8)));
-}
-
-BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f() public returns(int d) { return (-2) ** 3; }
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()", bytes()), toBigEndian(u256(-8)));
-}
-
 BOOST_AUTO_TEST_CASE(exp_zero)
 {
 	char const* sourceCode = R"(
@@ -131,18 +99,6 @@ BOOST_AUTO_TEST_CASE(exp_zero)
 	compileAndRun(sourceCode);
 	testContractAgainstCppOnRange("f(uint256)", [](u256 const&) -> u256 { return u256(1); }, 0, 16);
 }
-
-BOOST_AUTO_TEST_CASE(exp_zero_literal)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f() public returns(uint d) { return 0 ** 0; }
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()", bytes()), toBigEndian(u256(1)));
-}
-
 
 BOOST_AUTO_TEST_CASE(conditional_expression_true_literal)
 {
