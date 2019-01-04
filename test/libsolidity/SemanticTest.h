@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <test/libsolidity/ExpectationParser.h>
 #include <test/libsolidity/FormattedScope.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <test/libsolidity/AnalysisFramework.h>
@@ -49,26 +50,12 @@ public:
 	static std::string ipcPath;
 
 private:
-	struct FunctionCall
-	{
-		std::string signature;
-		std::string arguments;
-		bytes argumentBytes;
-		std::string argumentComment;
-		u256 etherValue;
-		bool expectedStatus = true;
-		std::string expectedResult;
-		bytes expectedBytes;
-//		std::vector<ByteRangeFormat> expectedFormat;
-		std::string resultComment;
-	};
-
 	void parseExpectations(std::istream& _stream);
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments);
 	void printCalls(bool _actualResults, std::ostream& _stream, std::string const& _linePrefix, bool const _formatted) const;
 
 	std::string m_source;
-	std::vector<FunctionCall> m_calls;
+	std::vector<ExpectationParser::FunctionCall> m_calls;
 	std::map<std::string, dev::test::Address> m_libraryAddresses;
 	std::vector<std::pair<bool, bytes>> m_results;
 };

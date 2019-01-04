@@ -138,6 +138,8 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		if (ts.ipc && options.disableIPC)
 			continue;
 
+		// TODO: remove this or the equivalent call in isoltest.cpp
+		SemanticTest::ipcPath = dev::test::Options::get().ipcPath;
 		solAssert(registerTests(
 			master,
 			options.testPath / ts.path,

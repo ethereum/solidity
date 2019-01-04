@@ -49,8 +49,6 @@ SemanticTest::SemanticTest(string const& _filename):
 
 bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-
 	if (!deploy("", 0, bytes()))
 		BOOST_THROW_EXCEPTION(runtime_error("Failed to deploy contract."));
 
@@ -61,11 +59,10 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _
 	{
 		bytes output = callContractFunctionWithValueNoEncoding(
 			test.signature,
-			test.etherValue,
-			test.argumentBytes
+			test.costs,
+			test.arguments.input
 		);
-
-		if ((m_transactionSuccessful != test.expectedStatus) || (output != test.expectedBytes))
+		if ((m_transactionSuccessful != test.result.status) || (output != test.result.output))
 			success = false;
 
 		m_results.emplace_back(m_transactionSuccessful, std::move(output));
@@ -80,7 +77,6 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _
 		printCalls(true, _stream, nextIndentLevel, _formatted);
 		return false;
 	}
-
 	return true;
 }
 
@@ -98,35 +94,8 @@ void SemanticTest::printUpdatedExpectations(ostream& _stream, string const& _lin
 
 void SemanticTest::parseExpectations(istream& _stream)
 {
-	string line;
-	bool isPreamble = true;
-	while (getline(_stream, line))
-	{
-		auto it = line.begin();
-
-		skipSlashes(it, line.end());
-		skipWhitespace(it, line.end());
-
-		if (it == line.end())
-			continue;
-
-
-		if (isPreamble)
-		{
-
-		}
-
-		FunctionCall call;
-
-		auto signatureBegin = it;
-		while (it != line.end() && *it != ')')
-			++it;
-		expect(it, line.end(), ')');
-
-		call.signature = string(signatureBegin, it);
-
-		m_calls.emplace_back(std::move(call));
-	}
+	ExpectationParser parser{_stream};
+	m_calls = parser.parseFunctionCalls();
 }
 
 bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments)
@@ -147,48 +116,43 @@ void SemanticTest::printCalls(
 	{
 		auto const& call = m_calls[i];
 		_stream << _linePrefix << call.signature;
-		if (call.etherValue > u256(0))
-			_stream << "[" << call.etherValue << "]";
-		if (!call.arguments.empty())
-			_stream << ": " << boost::algorithm::trim_copy(call.arguments);
-		if (!call.argumentComment.empty())
-			_stream << " # " << call.argumentComment;
+		if (call.costs > u256(0))
+			_stream << "[" << call.costs << "]";
+		if (!call.arguments.raw.empty())
+			_stream << ": " << boost::algorithm::trim_copy(call.arguments.raw);
+		if (!call.arguments.comment.empty())
+			_stream << " # " << call.arguments.comment;
 		_stream << endl;
 
-		if(_actualResults && _formatted)
-			_stream << endl;
+		string result;
+		auto expectedBytes = ExpectationParser::stringToBytes(call.result.raw);
+		if (_actualResults)
+		{
+			if (m_results[i].first)
+				result = "-> " + ExpectationParser::bytesToString(m_results[i].second);
+			else
+				result = "REVERT";
+		}
+		else
+		{
+			if (call.result.status)
+				result = "-> " + call.result.raw;
+			else
+				result = "REVERT";
+		}
 
-//		string result;
-//		std::vector<ByteRangeFormat> formatList;
-//		auto expectedBytes = stringToBytes(call.expectedResult, &formatList);
-//		if (_actualResults)
-//		{
-//			if (m_results[i].first)
-//				result = "-> " + bytesToString(m_results[i].second, formatList);
-//			else
-//				result = "REVERT";
-//		}
-//		else
-//		{
-//			if (call.expectedStatus)
-//				result = "-> " + call.expectedResult;
-//			else
-//				result = "REVERT";
-//		}
+		bool expectationsMatch = (m_results[i].first == call.result.status) && (m_results[i].second == expectedBytes);
 
-//		bool expectationsMatch = (m_results[i].first == call.expectedStatus) && (m_results[i].second == expectedBytes);
-
-//		_stream << _linePrefix;
-//		if (_formatted && !expectationsMatch)
-//			_stream << formatting::RED_BACKGROUND;
-//		_stream << boost::algorithm::trim_copy(result);
-//		if (_formatted && !expectationsMatch)
-//			_stream << formatting::RESET;
-//		if (!call.resultComment.empty())
-//			_stream << " # " << call.resultComment;
-//		_stream << endl;
+		_stream << _linePrefix;
+		if (_formatted && !expectationsMatch)
+			_stream << formatting::RED_BACKGROUND;
+		_stream << boost::algorithm::trim_copy(result);
+		if (_formatted && !expectationsMatch)
+			_stream << formatting::RESET;
+		if (!call.result.comment.empty())
+			_stream << " # " << call.result.comment;
+		_stream << endl;
 	}
 }
-
 
 string SemanticTest::ipcPath;
