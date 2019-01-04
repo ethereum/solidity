@@ -106,8 +106,9 @@ vector<ExpectationParser::FunctionCall> ExpectationParser::parseFunctionCalls()
 	vector<ExpectationParser::FunctionCall> calls;
 	while (advanceLine())
 	{
-		if (endOfLine())
+		if (m_scanner.eol())
 			continue;
+
 		ExpectationParser::FunctionCall call;
 		call.signature = parseFunctionCallSignature();
 		call.costs = parseFunctionCallCosts();
@@ -124,39 +125,39 @@ vector<ExpectationParser::FunctionCall> ExpectationParser::parseFunctionCalls()
 
 string ExpectationParser::parseFunctionCallSignature()
 {
-	auto signatureBegin = m_char;
-	while (!endOfLine() && *m_char != ')')
-		++m_char;
-	expect(m_char, m_line.end(), ')');
+	auto signatureBegin = m_scanner.position();
+	while (!m_scanner.eol() && m_scanner.current() != ')')
+		m_scanner.advance();
+	expectCharacter(')');
 
-	return string{signatureBegin, m_char};
+	return string{signatureBegin, m_scanner.position()};
 }
 
 ExpectationParser::FunctionCallArgs ExpectationParser::parseFunctionCallArgument()
 {
-	skipWhitespace(m_char, m_line.end());
+	skipWhitespaces();
 
 	FunctionCallArgs arguments;
-	if (!endOfLine())
+	if (!m_scanner.eol())
 	{
-		if (*m_char != '#')
+		if (m_scanner.current() != '#')
 		{
-			expect(m_char, m_line.end(), ':');
-			skipWhitespace(m_char, m_line.end());
+			expectCharacter(':');
+			skipWhitespaces();
 
-			auto argumentBegin = m_char;
+			auto argumentBegin = m_scanner.position();
 			// TODO: allow # in quotes
-			while (!endOfLine() && *m_char != '#')
-				++m_char;
-			arguments.raw = string(argumentBegin, m_char);
+			while (!m_scanner.eol() && m_scanner.current() != '#')
+				m_scanner.advance();
+			arguments.raw = string(argumentBegin, m_scanner.position());
 			arguments.input = stringToBytes(arguments.raw);
 		}
 
-		if (!endOfLine())
+		if (!m_scanner.eol())
 		{
-			expect(m_char, m_line.end(), '#');
-			skipWhitespace(m_char, m_line.end());
-			arguments.comment = string(m_char, m_line.end());
+			expectCharacter('#');
+			skipWhitespaces();
+			arguments.comment = string(m_scanner.position(), m_scanner.endPosition());
 		}
 	}
 	return arguments;
@@ -165,33 +166,32 @@ ExpectationParser::FunctionCallArgs ExpectationParser::parseFunctionCallArgument
 ExpectationParser::FunctionCallResult ExpectationParser::parseFunctionCallResult()
 {
 	FunctionCallResult result;
-	if (!endOfLine() && *m_char == '-')
+	if (!m_scanner.eol() && m_scanner.current() == '-')
 	{
-		expect(m_char, m_line.end(), '-');
-		expect(m_char, m_line.end(), '>');
+		expectCharacter('-');
+		expectCharacter('>');
+		skipWhitespaces();
 
-		skipWhitespace(m_char, m_line.end());
-
-		auto expectedResultBegin = m_char;
+		auto expectedResultBegin = m_scanner.position();
 		// TODO: allow # in quotes
-		while (!endOfLine() && *m_char != '#')
-			++m_char;
+		while (!m_scanner.eol() && m_scanner.current() != '#')
+			m_scanner.advance();
 
-		result.raw = string(expectedResultBegin, m_char);
+		result.raw = string(expectedResultBegin, m_scanner.position());
 		result.output = stringToBytes(result.raw);
 		result.status = true;
 
-		if (!endOfLine())
+		if (!m_scanner.eol())
 		{
-			expect(m_char, m_line.end(), '#');
-			skipWhitespace(m_char, m_line.end());
-			result.comment = string(m_char, m_line.end());
+			expectCharacter('#');
+			skipWhitespaces();
+			result.comment = string(m_scanner.position(), m_scanner.endPosition());
 		}
 	}
 	else
 	{
 		for (char c: string("REVERT"))
-			expect(m_char, m_line.end(), c);
+			expectCharacter(c);
 		result.status = false;
 	}
 	return result;
@@ -200,33 +200,36 @@ ExpectationParser::FunctionCallResult ExpectationParser::parseFunctionCallResult
 u256 ExpectationParser::parseFunctionCallCosts()
 {
 	u256 cost;
-	if (!endOfLine() && *m_char == '[')
+	if (!m_scanner.eol() && m_scanner.current() == '[')
 	{
-		++m_char;
-		auto etherBegin = m_char;
-		while (m_char != m_line.end() && *m_char != ']')
-			++m_char;
-		string etherString(etherBegin, m_char);
+		m_scanner.advance();
+		auto etherBegin = m_scanner.position();
+		while (!m_scanner.eol() && m_scanner.current() != ']')
+			m_scanner.advance();
+		string etherString(etherBegin, m_scanner.position());
 		cost = u256(etherString);
-		expect(m_char, m_line.end(), ']');
+		expectCharacter(']');
 	}
 	return cost;
 }
 
+
 bool ExpectationParser::advanceLine()
 {
-	auto& line = getline(m_stream, m_line);
+	bool success = m_scanner.advanceLine();
 
-	m_char = m_line.begin();
-	skipSlashes(m_char, m_line.end());
-	skipWhitespace(m_char, m_line.end());
+	skipSlashes(m_scanner.position(), m_scanner.endPosition());
+	skipWhitespaces();
 
-	if (!line)
-		return false;
-	return true;
+	return success;
 }
 
-bool ExpectationParser::endOfLine()
+void ExpectationParser::expectCharacter(char const _char)
 {
-	return m_char == m_line.end();
+	expect(m_scanner.position(), m_scanner.endPosition(), _char);
+}
+
+void ExpectationParser::skipWhitespaces()
+{
+	skipWhitespace(m_scanner.position(), m_scanner.endPosition());
 }

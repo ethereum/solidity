@@ -57,23 +57,44 @@ public:
 	static std::string bytesToString(bytes const& _bytes);
 	static bytes stringToBytes(std::string _string);
 
-	ExpectationParser(std::istream& _stream): m_stream(_stream) {}
+	ExpectationParser(std::istream& _stream): m_scanner(_stream) {}
 
 	std::vector<FunctionCall> parseFunctionCalls();
 
 private:
+	class Scanner {
+	public:
+		Scanner(std::istream& _stream): m_stream(_stream) {}
+
+		char current() const { return *m_char; }
+		bool eol() const { return m_char == m_line.end(); }
+		std::string::iterator& position() { return m_char; }
+		std::string::iterator endPosition() { return m_line.end(); }
+
+		void advance() { ++m_char; }
+		bool advanceLine()
+		{
+			auto& line = getline(m_stream, m_line);
+			m_char = m_line.begin();
+			return line ? true : false;
+		}
+
+	private:
+		std::string m_line;
+		std::string::iterator m_char;
+		std::istream& m_stream;
+	};
+
 	std::string parseFunctionCallSignature();
 	FunctionCallArgs parseFunctionCallArgument();
 	FunctionCallResult parseFunctionCallResult();
 	u256 parseFunctionCallCosts();
 
+	void skipWhitespaces();
+	void expectCharacter(char const _char);
 	bool advanceLine();
-	bool endOfLine();
 
-	std::istream& m_stream;
-	std::string m_line;
-	std::string::iterator m_char;
-
+	Scanner m_scanner;
 };
 
 }

@@ -80,15 +80,18 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _
 	return true;
 }
 
-void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool const _formatted) const
+void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
 {
-	if (_formatted)
-		_stream << _linePrefix;
+	stringstream stream(m_source);
+	string line;
+	while (getline(stream, line))
+		_stream << _linePrefix << line << endl;
 }
 
-void SemanticTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
+void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
-	_stream << _linePrefix;
+	solAssert(_stream, "");
+	solUnimplemented("Printing update expectations not implemented.");
 }
 
 
