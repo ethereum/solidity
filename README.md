@@ -7,14 +7,14 @@ This branch(branch aoa-solidity) extends some instructions to support `MultiAsse
 ## Useful links
 To get started you can find an introduction to the language in the [Solidity documentation](https://solidity.readthedocs.org). In the documentation, you can find [code examples](https://solidity.readthedocs.io/en/latest/solidity-by-example.html) as well as [a reference](https://solidity.readthedocs.io/en/latest/solidity-in-depth.html) of the syntax and details on how to write smart contracts.
 
-You can start using [Solidity in your browser](http://remix.ethereum.org) with no need to download or compile anything.
+The changelog for this project can be found [here](https://github.com/aoaio/solidity/blob/aoa-solidity/Changelog.md).
 
-The changelog for this project can be found [here](https://github.com/ethereum/solidity/blob/develop/Changelog.md).
-
-Solidity is still under development. So please do not hesitate and open an [issue in GitHub](https://github.com/ethereum/solidity/issues) if you encounter anything strange.
+Solidity is still under development. So please do not hesitate and open an [issue in GitHub](https://github.com/aoaio/solidity/issues) if you encounter anything strange.
 
 ## Building
 See the [Solidity documentation](https://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source) for build instructions.
+
+See [here](https://hub.docker.com/r/aoaio/solc) for docker images of aoa-solidity.
 
 ## How to Contribute
 Please see our [contribution guidelines](https://solidity.readthedocs.io/en/latest/contributing.html) in the Solidity documentation.

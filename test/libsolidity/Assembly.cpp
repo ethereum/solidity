@@ -160,19 +160,19 @@ BOOST_AUTO_TEST_CASE(location_test)
 	AssemblyItems items = compileContract(sourceCode);
 	bool hasShifts = dev::test::Options::get().evmVersion().hasBitwiseShifting();
 	vector<SourceLocation> locations =
-		vector<SourceLocation>(hasShifts ? 23 : 24, SourceLocation(2, 75, make_shared<string>(""))) +
-		vector<SourceLocation>(2, SourceLocation(20, 72, make_shared<string>(""))) +
+		vector<SourceLocation>(hasShifts ? 23 : 24, SourceLocation(2, 82, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(20, 79, make_shared<string>(""))) +
 		vector<SourceLocation>(1, SourceLocation(8, 17, make_shared<string>("--CODEGEN--"))) +
 		vector<SourceLocation>(3, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
 		vector<SourceLocation>(1, SourceLocation(30, 31, make_shared<string>("--CODEGEN--"))) +
 		vector<SourceLocation>(1, SourceLocation(27, 28, make_shared<string>("--CODEGEN--"))) +
 		vector<SourceLocation>(1, SourceLocation(20, 32, make_shared<string>("--CODEGEN--"))) +
 		vector<SourceLocation>(1, SourceLocation(5, 7, make_shared<string>("--CODEGEN--"))) +
-		vector<SourceLocation>(24, SourceLocation(20, 72, make_shared<string>(""))) +
-		vector<SourceLocation>(1, SourceLocation(42, 51, make_shared<string>(""))) +
-		vector<SourceLocation>(1, SourceLocation(65, 67, make_shared<string>(""))) +
-		vector<SourceLocation>(2, SourceLocation(58, 67, make_shared<string>(""))) +
-		vector<SourceLocation>(2, SourceLocation(20, 72, make_shared<string>("")));
+		vector<SourceLocation>(24, SourceLocation(20, 79, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(49, 58, make_shared<string>(""))) +
+		vector<SourceLocation>(1, SourceLocation(72, 74, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(65, 74, make_shared<string>(""))) +
+		vector<SourceLocation>(2, SourceLocation(20, 79, make_shared<string>("")));
 	checkAssemblyLocations(items, locations);
 }
 

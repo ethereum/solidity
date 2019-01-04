@@ -34,8 +34,8 @@ SOLC="$REPO_ROOT/build/solc/solc"
 
 FULLARGS="--optimize --ignore-missing --combined-json abi,asm,ast,bin,bin-runtime,clone-bin,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
 
-echo "Checking that the bug list is up to date..."
-"$REPO_ROOT"/scripts/update_bugs_by_version.py
+# echo "Checking that the bug list is up to date..."
+# "$REPO_ROOT"/scripts/update_bugs_by_version.py
 
 echo "Checking that StandardToken.sol, owned.sol and mortal.sol produce bytecode..."
 output=$("$REPO_ROOT"/build/solc/solc --bin "$REPO_ROOT"/std/*.sol 2>/dev/null | grep "ffff" | wc -l)

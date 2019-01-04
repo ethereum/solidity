@@ -1,3 +1,10 @@
+### 0.4.24-aoaio-v1.2 (2019-01-04)
+
+Bugfixes:
+ * Fix gas estimation error for instructions ``TRANSFERASSET``, ``SENDASSET``.
+ * Change gas value to keep the same with aurorachain.
+ * Fix some build problems
+
 ### 0.4.24-aoaio-v1.1 (2018-09-07)
 
 Language Features:
