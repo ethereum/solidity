@@ -41,7 +41,6 @@ public:
 		Dialect const& _dialect,
 		Block& _ast,
 		AsmAnalysisInfo const& _analysisInfo,
-
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
 };

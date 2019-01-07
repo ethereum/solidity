@@ -299,11 +299,14 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	bool success = true;
 	size_t parameters = 0;
 	size_t returns = 0;
+	bool needsLiteralArguments = false;
 	if (BuiltinFunction const* f = m_dialect->builtin(_funCall.functionName.name))
 	{
 		// TODO: compare types, too
 		parameters = f->parameters.size();
 		returns = f->returns.size();
+		if (f->literalArguments)
+			needsLiteralArguments = true;
 	}
 	else if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
 		[&](Scope::Variable const&)
@@ -347,8 +350,15 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
+	{
 		if (!expectExpression(arg))
 			success = false;
+		else if (needsLiteralArguments && arg.type() != typeid(Literal))
+			m_errorReporter.typeError(
+				_funCall.functionName.location,
+				"Function expects direct literals as arguments."
+			);
+	}
 	// Use argument size instead of parameter count to avoid misleading errors.
 	m_stackHeight += int(returns) - int(_funCall.arguments.size());
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;

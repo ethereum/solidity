@@ -250,6 +250,36 @@ BOOST_AUTO_TEST_CASE(to_string)
 	BOOST_CHECK_EQUAL(asmStack.print(), expectation);
 }
 
+BOOST_AUTO_TEST_CASE(arg_to_dataoffset_must_be_literal)
+{
+	string code = R"(
+		object "outer" {
+			code { let x := "outer" let y := dataoffset(x) }
+		}
+	)";
+	CHECK_ERROR(code, TypeError, "Function expects direct literals as arguments.");
+}
+
+BOOST_AUTO_TEST_CASE(arg_to_datasize_must_be_literal)
+{
+	string code = R"(
+		object "outer" {
+			code { let x := "outer" let y := datasize(x) }
+		}
+	)";
+	CHECK_ERROR(code, TypeError, "Function expects direct literals as arguments.");
+}
+
+BOOST_AUTO_TEST_CASE(args_to_datacopy_are_arbitrary)
+{
+	string code = R"(
+		object "outer" {
+			code { let x := 0 let y := 2 let s := 3 datacopy(x, y, s) }
+		}
+	)";
+	BOOST_CHECK(successParse(code));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

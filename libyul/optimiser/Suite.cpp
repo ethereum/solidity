@@ -67,7 +67,7 @@ void OptimiserSuite::run(
 
 	for (size_t i = 0; i < 4; i++)
 	{
-		ExpressionSplitter{dispenser}(ast);
+		ExpressionSplitter{_dialect, dispenser}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(_dialect, ast);
 		RedundantAssignEliminator::run(_dialect, ast);
@@ -90,7 +90,7 @@ void OptimiserSuite::run(
 		ExpressionInliner(_dialect, ast).run();
 		UnusedPruner::runUntilStabilised(_dialect, ast);
 
-		ExpressionSplitter{dispenser}(ast);
+		ExpressionSplitter{_dialect, dispenser}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(_dialect, ast);
 		RedundantAssignEliminator::run(_dialect, ast);
