@@ -156,6 +156,8 @@ function test_solc_behaviour()
 
         printError "But got:"
         cat $stdout_path
+        printError "When running $SOLC ${filename} ${solc_args} <$solc_stdin"
+
         rm -f $stdout_path $stderr_path
         exit 1
     fi
@@ -167,6 +169,8 @@ function test_solc_behaviour()
 
         printError "But got:"
         cat $stderr_path
+        printError "When running $SOLC ${filename} ${solc_args} <$solc_stdin"
+
         rm -f $stdout_path $stderr_path
         exit 1
     fi
