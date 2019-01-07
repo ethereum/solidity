@@ -181,7 +181,6 @@ jobs:
           name: Install build dependencies
           command: |
             brew update
-            brew upgrade
             brew unlink python
             brew install z3
             brew install boost
@@ -302,7 +301,6 @@ jobs:
           name: Install dependencies
           command: |
             brew update
-            brew upgrade
             brew unlink python
             brew install z3
       - run: mkdir -p test_results
