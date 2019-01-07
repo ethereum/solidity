@@ -58,7 +58,9 @@ SourceReference SourceReferenceExtractor::extract(SourceLocation const* _locatio
 	int locationLength = isMultiline ? line.length() - start.column : end.column - start.column;
 	if (locationLength > 150)
 	{
-		line = line.substr(0, start.column + 35) + " ... " + line.substr(end.column - 35);
+		int const lhs = start.column + 35;
+		int const rhs = (isMultiline ? line.length() : end.column) - 35;
+		line = line.substr(0, lhs) + " ... " + line.substr(rhs);
 		end.column = start.column + 75;
 		locationLength = 75;
 	}
