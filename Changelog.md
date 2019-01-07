@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Yul: Check that arguments to ``dataoffset`` and ``datasize`` are literals at parse time and properly take this into account in the optimizer.
 
 
 Build System:
