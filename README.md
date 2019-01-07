@@ -19,6 +19,8 @@ that run on the Ethereum Virtual Machine. Smart contracts are programs that are 
 network where nobody has special authority over the execution and thus they allow to implement tokens of value,
 ownership, voting and other kinds of logics.
 
+When deploying contracts, you should use the latest released version of Solidity. This is because breaking changes as well as new features and bug fixes are introduced regularly. We currently use a 0.x version number [to indicate this fast pace of change](https://semver.org/#spec-item-4).
+
 ## Build and Install
 
 Instructions about how to build and install the Solidity compiler can be found in the [Solidity documentation](https://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source)
@@ -29,7 +31,7 @@ Instructions about how to build and install the Solidity compiler can be found i
 A "Hello World" program in Solidity is of even less use than in other languages, but still:
 
 ```
-pragma solidity ^0.4.16;
+pragma solidity ^0.5.0;
 
 contract HelloWorld {
   function helloWorld() external pure returns (string memory) {
