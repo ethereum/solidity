@@ -177,7 +177,7 @@ git:
 cache:
     ccache: true
     directories:
-        - boost_1_67_0
+        - boost_1_68_0
         - $HOME/.local
 
 install:

@@ -54,7 +54,7 @@ jobs:
           name: Save Boost build
           key: *boost-cache-key
           paths:
-            - boost_1_67_0
+            - boost_1_68_0
       - store_artifacts:
           path: build/libsolc/soljson.js
           destination: soljson.js
