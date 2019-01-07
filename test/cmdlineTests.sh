@@ -215,32 +215,27 @@ printTask "Testing passing empty remappings..."
 test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "Invalid remapping: \"=/some/remapping/target\"."
 test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"."
 
-printTask "Running standard JSON commandline tests..."
-(
-    cd "$REPO_ROOT"/test/cmdlineTests/
-    for file in *.json
-    do
-        args="--standard-json"
-        stdin="$REPO_ROOT/test/cmdlineTests/$file"
-        stdout=$(cat $file.stdout 2>/dev/null || true)
-        exitCode=$(cat $file.exit 2>/dev/null || true)
-        err=$(cat $file.err 2>/dev/null || true)
-        printTask " - $file"
-        test_solc_behaviour "" "$args" "$stdin" "$stdout" "$exitCode" "$err"
-    done
-)
-
 printTask "Running general commandline tests..."
 (
     cd "$REPO_ROOT"/test/cmdlineTests/
-    for file in *.sol
+    for tdir in */
     do
-        args=$(cat $file.args 2>/dev/null || true)
-        stdout=$(cat $file.stdout 2>/dev/null || true)
-        exitCode=$(cat $file.exit 2>/dev/null || true)
-        err=$(cat $file.err 2>/dev/null || true)
-        printTask " - $file"
-        test_solc_behaviour "$file" "$args" "" "$stdout" "$exitCode" "$err"
+        if [ -e "${tdir}/input.json" ]
+        then
+            inputFile=""
+            stdin="${tdir}/input.json"
+            stdout=$(cat ${tdir}/output.json 2>/dev/null || true)
+            args="--standard-json "$(cat ${tdir}/args 2>/dev/null || true)
+        else
+            inputFile="${tdir}input.sol"
+            stdin=""
+            stdout=$(cat ${tdir}/output 2>/dev/null || true)
+            args=$(cat ${tdir}/args 2>/dev/null || true)
+        fi
+        exitCode=$(cat ${tdir}/exit 2>/dev/null || true)
+        err=$(cat ${tdir}/err 2>/dev/null || true)
+        printTask " - ${tdir}"
+        test_solc_behaviour "$inputFile" "$args" "$stdin" "$stdout" "$exitCode" "$err"
     done
 )
 

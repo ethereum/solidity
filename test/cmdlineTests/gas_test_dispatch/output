@@ -1,5 +1,5 @@
 
-======= gas_test_dispatch.sol:Large =======
+======= gas_test_dispatch/input.sol:Large =======
 Gas estimation:
 construction:
    1034 + 998400 = 999434
@@ -27,7 +27,7 @@ external:
    g8(uint256):	20721
    g9(uint256):	20678
 
-======= gas_test_dispatch.sol:Medium =======
+======= gas_test_dispatch/input.sol:Medium =======
 Gas estimation:
 construction:
    411 + 376600 = 377011
@@ -42,7 +42,7 @@ external:
    g8(uint256):	20699
    g9(uint256):	20655
 
-======= gas_test_dispatch.sol:Small =======
+======= gas_test_dispatch/input.sol:Small =======
 Gas estimation:
 construction:
    153 + 107800 = 107953
