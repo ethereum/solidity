@@ -171,7 +171,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else if (m_optimizerStep == "rematerialiser")
 	{
 		disambiguate();
-		(Rematerialiser{})(*m_ast);
+		Rematerialiser::run(*m_ast);
 	}
 	else if (m_optimizerStep == "expressionSimplifier")
 	{

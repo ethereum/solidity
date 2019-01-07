@@ -182,7 +182,7 @@ public:
 				RedundantAssignEliminator::run(*m_ast);
 				break;
 			case 'm':
-				Rematerialiser{}(*m_ast);
+				Rematerialiser::run(*m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;

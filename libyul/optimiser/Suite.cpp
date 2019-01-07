@@ -105,14 +105,17 @@ void OptimiserSuite::run(
 		RedundantAssignEliminator::run(ast);
 		RedundantAssignEliminator::run(ast);
 		UnusedPruner::runUntilStabilised(ast, reservedIdentifiers);
+		CommonSubexpressionEliminator{}(ast);
 	}
 	ExpressionJoiner::run(ast);
+	Rematerialiser::run(ast);
 	UnusedPruner::runUntilStabilised(ast);
 	ExpressionJoiner::run(ast);
 	UnusedPruner::runUntilStabilised(ast);
 	ExpressionJoiner::run(ast);
 	UnusedPruner::runUntilStabilised(ast);
 	ExpressionJoiner::run(ast);
+	Rematerialiser::run(ast);
 	UnusedPruner::runUntilStabilised(ast);
 
 	_ast = std::move(ast);

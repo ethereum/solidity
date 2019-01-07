@@ -22,12 +22,23 @@
 
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/ASTCopier.h>
+#include <libyul/optimiser/NameCollector.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+void Rematerialiser::run(Block& _ast)
+{
+	Rematerialiser{_ast}(_ast);
+}
+
+Rematerialiser::Rematerialiser(Block& _ast):
+	m_referenceCounts(ReferencesCounter::countReferences(_ast))
+{
+}
 
 void Rematerialiser::visit(Expression& _e)
 {
@@ -37,12 +48,21 @@ void Rematerialiser::visit(Expression& _e)
 		if (m_value.count(identifier.name))
 		{
 			YulString name = identifier.name;
-			for (auto const& ref: m_references[name])
-				assertThrow(inScope(ref), OptimizerException, "");
 			assertThrow(m_value.at(name), OptimizerException, "");
 			auto const& value = *m_value.at(name);
-			if (CodeSize::codeSize(value) <= 7)
+			size_t refs = m_referenceCounts[name];
+			size_t cost = CodeCost::codeCost(value);
+			if (refs <= 1 || cost == 0 || (refs <= 5 && cost <= 1))
+			{
+				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
+				for (auto const& ref: m_references[name])
+					assertThrow(inScope(ref), OptimizerException, "");
+				// update reference counts
+				m_referenceCounts[name]--;
+				for (auto const& ref: ReferencesCounter::countReferences(value))
+					m_referenceCounts[ref.first] += ref.second;
 				_e = (ASTCopier{}).translate(value);
+			}
 		}
 	}
 	DataFlowAnalyzer::visit(_e);
