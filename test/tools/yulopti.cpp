@@ -85,7 +85,7 @@ public:
 	{
 		ErrorReporter errorReporter(m_errors);
 		shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_input, ""));
-		m_ast = yul::Parser(errorReporter, yul::EVMDialect::strictAssemblyForEVM()).parse(scanner, false);
+		m_ast = yul::Parser(errorReporter, m_dialect).parse(scanner, false);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
 			cout << "Error parsing source." << endl;
@@ -98,7 +98,7 @@ public:
 			errorReporter,
 			EVMVersion::byzantium(),
 			langutil::Error::Type::SyntaxError,
-			EVMDialect::strictAssemblyForEVM()
+			m_dialect
 		);
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 		{
@@ -120,9 +120,9 @@ public:
 				return;
 			if (!disambiguated)
 			{
-				*m_ast = boost::get<yul::Block>(Disambiguator(*m_analysisInfo)(*m_ast));
+				*m_ast = boost::get<yul::Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_ast));
 				m_analysisInfo.reset();
-				m_nameDispenser = make_shared<NameDispenser>(*m_ast);
+				m_nameDispenser = make_shared<NameDispenser>(*m_dialect, *m_ast);
 				disambiguated = true;
 			}
 			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
@@ -143,7 +143,7 @@ public:
 				ForLoopInitRewriter{}(*m_ast);
 				break;
 			case 'c':
-				(CommonSubexpressionEliminator{})(*m_ast);
+				(CommonSubexpressionEliminator{*m_dialect})(*m_ast);
 				break;
 			case 'd':
 				(VarDeclInitializer{})(*m_ast);
@@ -161,28 +161,28 @@ public:
 				(FunctionHoister{})(*m_ast);
 				break;
 			case 'e':
-				ExpressionInliner{*m_ast}.run();
+				ExpressionInliner{*m_dialect, *m_ast}.run();
 				break;
 			case 'i':
 				FullInliner(*m_ast, *m_nameDispenser).run();
 				break;
 			case 's':
-				ExpressionSimplifier::run(*m_ast);
+				ExpressionSimplifier::run(*m_dialect, *m_ast);
 				break;
 			case 't':
-				(StructuralSimplifier{})(*m_ast);
+				(StructuralSimplifier{*m_dialect})(*m_ast);
 				break;
 			case 'u':
-				UnusedPruner::runUntilStabilised(*m_ast);
+				UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 				break;
 			case 'a':
 				SSATransform::run(*m_ast, *m_nameDispenser);
 				break;
 			case 'r':
-				RedundantAssignEliminator::run(*m_ast);
+				RedundantAssignEliminator::run(*m_dialect, *m_ast);
 				break;
 			case 'm':
-				Rematerialiser::run(*m_ast);
+				Rematerialiser::run(*m_dialect, *m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;
@@ -194,6 +194,7 @@ public:
 private:
 	ErrorList m_errors;
 	shared_ptr<yul::Block> m_ast;
+	shared_ptr<Dialect> m_dialect{EVMDialect::strictAssemblyForEVMObjects()};
 	shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	shared_ptr<NameDispenser> m_nameDispenser;
 };

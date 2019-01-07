@@ -30,6 +30,7 @@
 
 namespace yul
 {
+struct Dialect;
 
 /**
  * Base class to perform data flow analysis during AST walks.
@@ -43,6 +44,8 @@ namespace yul
 class DataFlowAnalyzer: public ASTModifier
 {
 public:
+	explicit DataFlowAnalyzer(Dialect const& _dialect): m_dialect(_dialect) {}
+
 	using ASTModifier::operator();
 	void operator()(Assignment& _assignment) override;
 	void operator()(VariableDeclaration& _varDecl) override;
@@ -84,6 +87,7 @@ protected:
 	};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
+	Dialect const& m_dialect;
 };
 
 }

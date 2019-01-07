@@ -26,6 +26,7 @@
 
 namespace yul
 {
+struct Dialect;
 
 /**
  * Specific AST walker that determines whether an expression is movable.
@@ -33,8 +34,8 @@ namespace yul
 class MovableChecker: public ASTWalker
 {
 public:
-	MovableChecker() = default;
-	explicit MovableChecker(Expression const& _expression);
+	explicit MovableChecker(Dialect const& _dialect);
+	MovableChecker(Dialect const& _dialect, Expression const& _expression);
 
 	void operator()(Identifier const& _identifier) override;
 	void operator()(FunctionalInstruction const& _functionalInstruction) override;
@@ -48,6 +49,7 @@ public:
 	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
 
 private:
+	Dialect const& m_dialect;
 	/// Which variables the current expression references.
 	std::set<YulString> m_variableReferences;
 	/// Is the current expression movable or not.

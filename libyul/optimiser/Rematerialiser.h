@@ -38,10 +38,10 @@ namespace yul
 class Rematerialiser: public DataFlowAnalyzer
 {
 public:
-	static void run(Block& _ast);
+	static void run(Dialect const& _dialect, Block& _ast);
 
 protected:
-	Rematerialiser(Block& _ast);
+	Rematerialiser(Dialect const& _dialect, Block& _ast);
 
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;

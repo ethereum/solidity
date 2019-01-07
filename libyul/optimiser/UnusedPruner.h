@@ -28,6 +28,7 @@
 
 namespace yul
 {
+struct Dialect;
 
 /**
  * Optimisation stage that removes unused variables and functions and also
@@ -40,7 +41,11 @@ namespace yul
 class UnusedPruner: public ASTModifier
 {
 public:
-	explicit UnusedPruner(Block& _ast, std::set<YulString> const& _externallyUsedFunctions = {});
+	UnusedPruner(
+		Dialect const& _dialect,
+		Block& _ast,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	);
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
@@ -49,12 +54,17 @@ public:
 	bool shouldRunAgain() const { return m_shouldRunAgain; }
 
 	// Run the pruner until the code does not change anymore.
-	static void runUntilStabilised(Block& _ast, std::set<YulString> const& _externallyUsedFunctions = {});
+	static void runUntilStabilised(
+		Dialect const& _dialect,
+		Block& _ast,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	);
 
 private:
 	bool used(YulString _name) const;
 	void subtractReferences(std::map<YulString, size_t> const& _subtrahend);
 
+	Dialect const& m_dialect;
 	bool m_shouldRunAgain = false;
 	std::map<YulString, size_t> m_references;
 };
