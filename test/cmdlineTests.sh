@@ -28,14 +28,14 @@
 
 set -e
 
+## GLOBAL VARIABLES
+
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
-echo $REPO_ROOT
 SOLC="$REPO_ROOT/build/solc/solc"
 
 FULLARGS="--optimize --ignore-missing --combined-json abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
 
-echo "Checking that the bug list is up to date..."
-"$REPO_ROOT"/scripts/update_bugs_by_version.py
+## FUNCTIONS
 
 if [ "$CIRCLECI" ]
 then
@@ -92,22 +92,6 @@ function compileFull()
         false
     fi
 }
-
-printTask "Testing unknown options..."
-(
-    set +e
-    output=$("$SOLC" --allow=test 2>&1)
-    failed=$?
-    set -e
-
-    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ]
-    then
-        echo "Passed"
-    else
-        printError "Incorrect response to unknown options: $STDERR"
-        exit 1
-    fi
-)
 
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
 # An failure is expected.
@@ -177,6 +161,49 @@ function test_solc_behaviour()
 
     rm -f $stdout_path $stderr_path
 }
+
+
+function test_solc_assembly_output()
+{
+    local input="${1}"
+    local expected="${2}"
+    local solc_args="${3}"
+
+    local expected_object="object \"object\" { code "${expected}" }"
+
+    output=$(echo "${input}" | "$SOLC" - ${solc_args} 2>/dev/null)
+    empty=$(echo $output | sed -ne '/'"${expected_object}"'/p')
+    if [ -z "$empty" ]
+    then
+        printError "Incorrect assembly output. Expected: "
+        echo -e ${expected}
+        printError "with arguments ${solc_args}, but got:"
+        echo "${output}"
+        exit 1
+    fi
+}
+
+## RUN
+
+echo "Checking that the bug list is up to date..."
+"$REPO_ROOT"/scripts/update_bugs_by_version.py
+
+printTask "Testing unknown options..."
+(
+    set +e
+    output=$("$SOLC" --allow=test 2>&1)
+    failed=$?
+    set -e
+
+    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ]
+    then
+        echo "Passed"
+    else
+        printError "Incorrect response to unknown options: $STDERR"
+        exit 1
+    fi
+)
+
 
 printTask "Testing passing files that are not found..."
 test_solc_behaviour "file_not_found.sol" "" "" "" 1 "\"file_not_found.sol\" is not found."
@@ -301,26 +328,6 @@ SOLTMPDIR=$(mktemp -d)
 )
 rm -rf "$SOLTMPDIR"
 
-function test_solc_assembly_output()
-{
-    local input="${1}"
-    local expected="${2}"
-    local solc_args="${3}"
-
-    local expected_object="object \"object\" { code "${expected}" }"
-
-    output=$(echo "${input}" | "$SOLC" - ${solc_args} 2>/dev/null)
-    empty=$(echo $output | sed -ne '/'"${expected_object}"'/p')
-    if [ -z "$empty" ]
-    then
-        printError "Incorrect assembly output. Expected: "
-        echo -e ${expected}
-        printError "with arguments ${solc_args}, but got:"
-        echo "${output}"
-        exit 1
-    fi
-}
-
 printTask "Testing assemble, yul, strict-assembly and optimize..."
 (
     echo '{}' | "$SOLC" - --assemble &>/dev/null
@@ -409,4 +416,5 @@ SOLTMPDIR=$(mktemp -d)
     done
 )
 rm -rf "$SOLTMPDIR"
+
 echo "Commandline tests successful."
