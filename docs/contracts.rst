@@ -585,9 +585,8 @@ return variables and then using ``return;`` to leave the function.
 Returning Multiple Values
 -------------------------
 
-When a function has multiple return types, the statement ``return (v0, v1, ..., vn) can be used to return multiple values.
-vn)`` can return multiple values.  The number of components must be
-the same as the number of return types.
+When a function has multiple return types, the statement ``return (v0, v1, ..., vn)`` can be used to return multiple values.
+The number of components must be the same as the number of return types.
 
 .. index:: ! view function, function;view
 
