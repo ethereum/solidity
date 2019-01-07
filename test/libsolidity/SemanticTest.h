@@ -33,6 +33,9 @@ namespace solidity
 namespace test
 {
 
+using FunctionCall = ExpectationParser::FunctionCall;
+using Expectation = ExpectationParser::FunctionCallExpectations;
+
 class SemanticTest: public SolidityExecutionFramework, public TestCase
 {
 public:
@@ -40,24 +43,48 @@ public:
 	{ return std::unique_ptr<TestCase>(new SemanticTest(_filename)); }
 	SemanticTest(std::string const& _filename);
 
-	virtual bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
-
-	virtual void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
-	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix = "") const override;
-
-	virtual bool allowsUpdate() const override { return false; }
+	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix = "") const override;
+	bool allowsUpdate() const override { return false; }
 
 	static std::string ipcPath;
 
 private:
+	struct FunctionCallTest
+	{
+		FunctionCall call;
+		bool status;
+		bytes rawBytes;
+		std::string output;
+		bool matchesExpectation() const
+		{
+			auto expectedBytes = ExpectationParser::stringToBytes(call.expectations.raw);
+			return status == call.expectations.status && rawBytes == expectedBytes;
+		}
+		void reset()
+		{
+			status = false;
+			rawBytes = bytes{};
+			output = std::string{};
+		}
+	};
+
 	void parseExpectations(std::istream& _stream);
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments);
-	void printCalls(bool _actualResults, std::ostream& _stream, std::string const& _linePrefix, bool const _formatted) const;
+
+	void printFunctionCall(std::ostream& _stream, FunctionCall const& _call, std::string const& _linePrefix = "") const;
+	void printFunctionCallTest(
+		std::ostream& _stream,
+		FunctionCallTest const& test,
+		bool _expected,
+		std::string const& _linePrefix = "",
+		bool const _formatted = false
+	) const;
 
 	std::string m_source;
-	std::vector<ExpectationParser::FunctionCall> m_calls;
 	std::map<std::string, dev::test::Address> m_libraryAddresses;
-	std::vector<std::pair<bool, bytes>> m_results;
+	std::vector<FunctionCallTest> m_tests;
 };
 
 }

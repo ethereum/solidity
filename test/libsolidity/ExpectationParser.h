@@ -33,16 +33,19 @@ namespace test
 class ExpectationParser
 {
 public:
-	struct FunctionCallResult {
+	struct FunctionCallExpectations
+	{
 		std::string raw;
-		bytes output;
+		bytes rawBytes;
 		bool status = true;
+		std::string output;
 		std::string comment;
 	};
 
-	struct FunctionCallArgs {
+	struct FunctionCallArgs
+	{
 		std::string raw;
-		bytes input;
+		bytes rawBytes;
 		std::string comment;
 	};
 
@@ -50,8 +53,8 @@ public:
 	{
 		std::string signature;
 		FunctionCallArgs arguments;
-		FunctionCallResult result;
-		u256 costs;
+		FunctionCallExpectations expectations;
+		u256 value;
 	};
 
 	static std::string bytesToString(bytes const& _bytes);
@@ -87,8 +90,8 @@ private:
 
 	std::string parseFunctionCallSignature();
 	FunctionCallArgs parseFunctionCallArgument();
-	FunctionCallResult parseFunctionCallResult();
-	u256 parseFunctionCallCosts();
+	FunctionCallExpectations parseFunctionCallExpectations();
+	u256 parseFunctionCallValue();
 
 	void skipWhitespaces();
 	void expectCharacter(char const _char);

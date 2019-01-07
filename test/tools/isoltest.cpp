@@ -380,7 +380,6 @@ Allowed options)",
 				fs::exists(ipcPath),
 				"Invalid ipc path specified."
 			);
-			// TODO: remove this or the equivalent call in boostTest.cpp
 			SemanticTest::ipcPath = ipcPath;
 		}
 
