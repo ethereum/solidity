@@ -1059,54 +1059,36 @@
 // ----
 // fullSuite
 // {
+//     let _1 := 1
+//     let _2 := mload(_1)
+//     let _3 := 0
+//     let _1017 := mload(_3)
+//     if slt(sub(_2, _1017), 64)
 //     {
-//         let _1 := 1
-//         let _2 := mload(_1)
-//         let _3 := 0
-//         let _1017 := mload(_3)
-//         let abi_decode_value0_156 := _3
-//         if slt(sub(_2, _1017), 64)
-//         {
-//             revert(_3, _3)
-//         }
-//         {
-//             abi_decode_value0_156 := and(calldataload(_1017), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
-//         }
-//         sstore(_3, abi_decode_value0_156)
-//         let _1019 := mload(8)
-//         let _1021 := mload(7)
-//         let abi_decode_value0_57 := _3
-//         let abi_decode_value1_58 := _3
-//         let abi_decode_value2_59 := _3
-//         let abi_decode_value3 := _3
-//         let abi_decode_value4 := _3
-//         if slt(sub(_1019, _1021), 128)
-//         {
-//             revert(_3, _3)
-//         }
-//         {
-//             abi_decode_value0_57 := and(calldataload(_1021), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
-//         }
-//         {
-//             abi_decode_value1_58 := calldataload(add(_1021, 32))
-//         }
-//         {
-//             let abi_decode_offset_62 := calldataload(add(_1021, 64))
-//             if gt(abi_decode_offset_62, 0xffffffffffffffff)
-//             {
-//                 revert(_3, _3)
-//             }
-//             abi_decode_value2_59, abi_decode_value3 := abi_decode_t_bytes_calldata_ptr(add(_1021, abi_decode_offset_62), _1019)
-//         }
-//         {
-//             abi_decode_value4 := cleanup_revert_t_enum$_Operation_$1949(calldataload(add(_1021, 96)))
-//         }
-//         sstore(_1, abi_decode_value0_57)
-//         sstore(_1, abi_decode_value1_58)
-//         sstore(_1, _3)
-//         sstore(_1, _3)
-//         sstore(_1, abi_decode_value4)
+//         revert(_3, _3)
 //     }
+//     let _1145 := 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+//     sstore(_3, and(calldataload(_1017), _1145))
+//     let _1019 := mload(8)
+//     let _1021 := mload(7)
+//     let abi_decode_value2_59 := _3
+//     let abi_decode_value3 := _3
+//     if slt(sub(_1019, _1021), 128)
+//     {
+//         revert(_3, _3)
+//     }
+//     let abi_decode_offset_62 := calldataload(add(_1021, 64))
+//     if gt(abi_decode_offset_62, 0xffffffffffffffff)
+//     {
+//         revert(_3, _3)
+//     }
+//     abi_decode_value2_59, abi_decode_value3 := abi_decode_t_bytes_calldata_ptr(add(_1021, abi_decode_offset_62), _1019)
+//     let abi_decode_value4_1063 := cleanup_revert_t_enum$_Operation_$1949(calldataload(add(_1021, 96)))
+//     sstore(_1, and(calldataload(_1021), _1145))
+//     sstore(_1, calldataload(add(_1021, 32)))
+//     sstore(_1, _3)
+//     sstore(_1, _3)
+//     sstore(_1, abi_decode_value4_1063)
 //     function abi_decode_t_bytes_calldata_ptr(offset_12, end_13) -> arrayPos_14, length_15
 //     {
 //         if iszero(slt(add(offset_12, 0x1f), end_13))

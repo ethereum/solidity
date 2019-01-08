@@ -22,6 +22,7 @@
 
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
+#include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
@@ -59,8 +60,10 @@ void OptimiserSuite::run(
 
 	(VarDeclInitializer{})(ast);
 	(FunctionHoister{})(ast);
+	(BlockFlattener{})(ast);
 	(FunctionGrouper{})(ast);
 	(ForLoopInitRewriter{})(ast);
+	(BlockFlattener{})(ast);
 	StructuralSimplifier{_dialect}(ast);
 
 	NameDispenser dispenser{_dialect, ast};
@@ -75,6 +78,7 @@ void OptimiserSuite::run(
 		CommonSubexpressionEliminator{_dialect}(ast);
 		ExpressionSimplifier::run(_dialect, ast);
 		StructuralSimplifier{_dialect}(ast);
+		(BlockFlattener{})(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(_dialect, ast);
 		RedundantAssignEliminator::run(_dialect, ast);
@@ -95,12 +99,16 @@ void OptimiserSuite::run(
 		RedundantAssignEliminator::run(_dialect, ast);
 		RedundantAssignEliminator::run(_dialect, ast);
 		CommonSubexpressionEliminator{_dialect}(ast);
+
+		(FunctionGrouper{})(ast);
 		FullInliner{ast, dispenser}.run();
+
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(_dialect, ast);
 		RedundantAssignEliminator::run(_dialect, ast);
 		ExpressionSimplifier::run(_dialect, ast);
 		StructuralSimplifier{_dialect}(ast);
+		(BlockFlattener{})(ast);
 		CommonSubexpressionEliminator{_dialect}(ast);
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(_dialect, ast);
