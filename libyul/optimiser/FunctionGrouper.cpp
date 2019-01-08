@@ -33,6 +33,9 @@ using namespace dev::solidity;
 
 void FunctionGrouper::operator()(Block& _block)
 {
+	if (alreadyGrouped(_block))
+		return;
+
 	vector<Statement> reordered;
 	reordered.emplace_back(Block{_block.location, {}});
 
@@ -44,4 +47,16 @@ void FunctionGrouper::operator()(Block& _block)
 			boost::get<Block>(reordered.front()).statements.emplace_back(std::move(statement));
 	}
 	_block.statements = std::move(reordered);
+}
+
+bool FunctionGrouper::alreadyGrouped(Block const& _block)
+{
+	if (_block.statements.empty())
+		return false;
+	if (_block.statements.front().type() != typeid(Block))
+		return false;
+	for (size_t i = 1; i < _block.statements.size(); ++i)
+		if (_block.statements.at(i).type() != typeid(FunctionDefinition))
+			return false;
+	return true;
 }
