@@ -6,3 +6,5 @@ contract C {
         b;
     }
 }
+// ----
+// Warning: (125-126): Unreachable code.

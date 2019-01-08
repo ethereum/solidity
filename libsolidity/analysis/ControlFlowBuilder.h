@@ -66,6 +66,11 @@ private:
 	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(Identifier const& _identifier) override;
 
+protected:
+	bool visitNode(ASTNode const&) override;
+
+private:
+
 	/// Appends the control flow of @a _node to the current control flow.
 	void appendControlFlow(ASTNode const& _node);
 
@@ -76,9 +81,6 @@ private:
 
 	/// Creates an arc from @a _from to @a _to.
 	static void connect(CFGNode* _from, CFGNode* _to);
-
-
-private:
 
 	/// Splits the control flow starting at the current node into n paths.
 	/// m_currentNode is set to nullptr and has to be set manually or
