@@ -30,6 +30,13 @@ namespace yul
  * More specifically, the number of AST nodes.
  * Ignores function definitions while traversing the AST.
  * If you want to know the size of a function, you have to invoke this on its body.
+ *
+ * As an exception, the following AST elements have a cost of zero:
+ *  - expression statement (only the expression inside has a cost)
+ *  - block (only the statements inside have a cost)
+ *  - variable references
+ *  - variable declarations (only the right hand side has a cost)
+ *  - assignments (only the value has a cost)
  */
 class CodeSize: public ASTWalker
 {
@@ -39,6 +46,8 @@ public:
 	static size_t codeSize(Block const& _block);
 
 private:
+	CodeSize() {}
+
 	void visit(Statement const& _statement) override;
 	void visit(Expression const& _expression) override;
 
