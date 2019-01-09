@@ -94,23 +94,6 @@ The key point is that the calling contract needs to know about the function it i
 See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_
 and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
 
-How do you create 2-dimensional arrays?
-=======================================
-
-See `2D_array.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/55_2D_array.sol>`_.
-
-Note that filling a 10x10 square of ``uint8`` + contract creation took more than ``800,000``
-gas at the time of this writing. 17x17 took ``2,000,000`` gas. With the limit at
-3.14 million... well, there’s a pretty low ceiling for what you can create right
-now.
-
-Note that merely "creating" the array is free, the costs are in filling it.
-
-Note2: Optimizing storage access can pull the gas costs down considerably, because
-32 ``uint8`` values can be stored in a single slot. The problem is that these optimizations
-currently do not work across loops and also have a problem with bounds checking.
-You might get much better results in the future, though.
-
 How do I initialize a contract with only a specific amount of wei?
 ==================================================================
 
