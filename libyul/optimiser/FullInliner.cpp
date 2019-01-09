@@ -80,9 +80,9 @@ void FullInliner::run()
 	}
 }
 
-void FullInliner::updateCodeSize(FunctionDefinition& fun)
+void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
 {
-	m_functionSizes[fun.name] = CodeSize::codeSize(fun.body);
+	m_functionSizes[_fun.name] = CodeSize::codeSize(_fun.body);
 }
 
 void FullInliner::handleBlock(YulString _currentFunctionName, Block& _block)
@@ -100,8 +100,13 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (!calledFunction)
 		return false;
 
+	// Inline really, really tiny functions
+	size_t size = m_functionSizes.at(calledFunction->name);
+	if (size <= 1)
+		return true;
+
 	// Do not inline into already big functions.
-	if (m_functionSizes.at(_callSite) > 100)
+	if (m_functionSizes.at(_callSite) > 45)
 		return false;
 
 	if (m_singleUse.count(calledFunction->name))
@@ -119,8 +124,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 			break;
 		}
 
-	size_t size = m_functionSizes.at(calledFunction->name);
-	return (size < 10 || (constantArg && size < 30));
+	return (size < 6 || (constantArg && size < 12));
 }
 
 void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _callSite)
