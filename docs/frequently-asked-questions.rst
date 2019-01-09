@@ -77,15 +77,6 @@ otherwise an exception is thrown.
 Advanced Questions
 ******************
 
-How do you get a random number in a contract? (Implement a self-returning gambling contract.)
-=============================================================================================
-
-Getting randomness right is often the crucial part in a crypto project and
-most failures result from bad random number generators.
-
-If you do not want it to be safe, you build something similar to the `coin flipper <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/35_coin_flipper.sol>`_
-but otherwise, rather use a contract that supplies randomness, like the `RANDAO <https://github.com/randao/randao>`_.
-
 Get return value from non-constant function from another contract
 =================================================================
 
