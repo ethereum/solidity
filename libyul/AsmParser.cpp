@@ -81,15 +81,15 @@ Statement Parser::parseStatement()
 	{
 		If _if = createWithLocation<If>();
 		m_scanner->next();
-		_if.condition = make_shared<Expression>(parseExpression());
+		_if.condition = make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
-		return _if;
+		return Statement{move(_if)};
 	}
 	case Token::Switch:
 	{
 		Switch _switch = createWithLocation<Switch>();
 		m_scanner->next();
-		_switch.expression = make_shared<Expression>(parseExpression());
+		_switch.expression = make_unique<Expression>(parseExpression());
 		while (m_scanner->currentToken() == Token::Case)
 			_switch.cases.emplace_back(parseCase());
 		if (m_scanner->currentToken() == Token::Default)
@@ -101,7 +101,7 @@ Statement Parser::parseStatement()
 		if (_switch.cases.empty())
 			fatalParserError("Switch statement without any cases.");
 		_switch.location.end = _switch.cases.back().body.location.end;
-		return _switch;
+		return Statement{move(_switch)};
 	}
 	case Token::For:
 		return parseForLoop();
@@ -120,7 +120,7 @@ Statement Parser::parseStatement()
 			fatalParserError("Identifier expected, got instruction name.");
 		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
-		return assignment;
+		return Statement{move(assignment)};
 	}
 	default:
 		break;
@@ -163,7 +163,7 @@ Statement Parser::parseStatement()
 
 		assignment.value.reset(new Expression(parseExpression()));
 		assignment.location.end = locationOf(*assignment.value).end;
-		return assignment;
+		return Statement{std::move(assignment)};
 	}
 	case Token::Colon:
 	{
@@ -184,7 +184,7 @@ Statement Parser::parseStatement()
 			assignment.variableNames.emplace_back(identifier);
 			assignment.value.reset(new Expression(parseExpression()));
 			assignment.location.end = locationOf(*assignment.value).end;
-			return assignment;
+			return Statement{std::move(assignment)};
 		}
 		else
 		{
@@ -230,7 +230,7 @@ Case Parser::parseCase()
 		ElementaryOperation literal = parseElementaryOperation();
 		if (literal.type() != typeid(Literal))
 			fatalParserError("Literal expected.");
-		_case.value = make_shared<Literal>(boost::get<Literal>(std::move(literal)));
+		_case.value = make_unique<Literal>(boost::get<Literal>(std::move(literal)));
 	}
 	else
 		fatalParserError("Case or default case expected.");
@@ -245,7 +245,7 @@ ForLoop Parser::parseForLoop()
 	ForLoop forLoop = createWithLocation<ForLoop>();
 	expectToken(Token::For);
 	forLoop.pre = parseBlock();
-	forLoop.condition = make_shared<Expression>(parseExpression());
+	forLoop.condition = make_unique<Expression>(parseExpression());
 	forLoop.post = parseBlock();
 	forLoop.body = parseBlock();
 	forLoop.location.end = forLoop.body.location.end;
@@ -443,7 +443,7 @@ VariableDeclaration Parser::parseVariableDeclaration()
 	{
 		expectToken(Token::Colon);
 		expectToken(Token::Assign);
-		varDecl.value.reset(new Expression(parseExpression()));
+		varDecl.value = make_unique<Expression>(parseExpression());
 		varDecl.location.end = locationOf(*varDecl.value).end;
 	}
 	else

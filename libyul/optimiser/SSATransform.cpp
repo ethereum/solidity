@@ -66,12 +66,13 @@ void SSATransform::operator()(Block& _block)
 
 	// Creates a new variable (and returns its declaration) with value _value
 	// and replaces _value by a reference to that new variable.
-	auto replaceByNew = [&](SourceLocation _loc, YulString _varName, YulString _type, shared_ptr<Expression>& _value) -> VariableDeclaration
+
+	auto replaceByNew = [&](SourceLocation _loc, YulString _varName, YulString _type, unique_ptr<Expression>& _value) -> VariableDeclaration
 	{
 		YulString newName = m_nameDispenser.newName(_varName);
 		m_currentVariableValues[_varName] = newName;
 		variablesToClearAtEnd.emplace(_varName);
-		shared_ptr<Expression> v = make_shared<Expression>(Identifier{_loc, newName});
+		unique_ptr<Expression> v = make_unique<Expression>(Identifier{_loc, newName});
 		_value.swap(v);
 		return VariableDeclaration{_loc, {TypedName{_loc, std::move(newName), std::move(_type)}}, std::move(v)};
 	};
@@ -87,14 +88,16 @@ void SSATransform::operator()(Block& _block)
 					visit(*varDecl.value);
 				if (varDecl.variables.size() != 1 || !m_variablesToReplace.count(varDecl.variables.front().name))
 					return {};
-				// Replace "let a := v" by "let a_1 := v  let a := v"
-				VariableDeclaration newVarDecl = replaceByNew(
+				vector<Statement> v;
+				// Replace "let a := v" by "let a_1 := v  let a := a_1"
+				v.emplace_back(replaceByNew(
 					varDecl.location,
 					varDecl.variables.front().name,
 					varDecl.variables.front().type,
 					varDecl.value
-				);
-				return vector<Statement>{std::move(newVarDecl), std::move(varDecl)};
+				));
+				v.emplace_back(move(varDecl));
+				return v;
 			}
 			else if (_s.type() == typeid(Assignment))
 			{
@@ -103,14 +106,16 @@ void SSATransform::operator()(Block& _block)
 				if (assignment.variableNames.size() != 1)
 					return {};
 				assertThrow(m_variablesToReplace.count(assignment.variableNames.front().name), OptimizerException, "");
+				vector<Statement> v;
 				// Replace "a := v" by "let a_1 := v  a := v"
-				VariableDeclaration newVarDecl = replaceByNew(
+				v.emplace_back(replaceByNew(
 					assignment.location,
 					assignment.variableNames.front().name,
 					{}, // TODO determine type
 					assignment.value
-				);
-				return vector<Statement>{std::move(newVarDecl), std::move(assignment)};
+				));
+				v.emplace_back(move(assignment));
+				return v;
 			}
 			else
 				visit(_s);

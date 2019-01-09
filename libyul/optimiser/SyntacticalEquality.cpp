@@ -100,7 +100,7 @@ bool SyntacticallyEqual::statementEqual(Assignment const& _lhs, Assignment const
 bool SyntacticallyEqual::statementEqual(VariableDeclaration const& _lhs, VariableDeclaration const& _rhs)
 {
 	// first visit expression, then variable declarations
-	if (!compareSharedPtr<Expression, &SyntacticallyEqual::operator()>(_lhs.value, _rhs.value))
+	if (!compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.value, _rhs.value))
 		return false;
 	return containerEqual(_lhs.variables, _rhs.variables, [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool {
 		return this->visitDeclaration(_lhsVarName, _rhsVarName);
@@ -123,7 +123,7 @@ bool SyntacticallyEqual::statementEqual(FunctionDefinition const& _lhs, Function
 bool SyntacticallyEqual::statementEqual(If const& _lhs, If const& _rhs)
 {
 	return
-		compareSharedPtr<Expression, &SyntacticallyEqual::operator()>(_lhs.condition, _rhs.condition) &&
+		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.condition, _rhs.condition) &&
 		statementEqual(_lhs.body, _rhs.body);
 }
 
@@ -139,7 +139,7 @@ bool SyntacticallyEqual::statementEqual(Switch const& _lhs, Switch const& _rhs)
 	for (auto const& rhsCase: _rhs.cases)
 		rhsCases.insert(&rhsCase);
 	return
-		compareSharedPtr<Expression, &SyntacticallyEqual::operator()>(_lhs.expression, _rhs.expression) &&
+		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.expression, _rhs.expression) &&
 		containerEqual(lhsCases, rhsCases, [this](Case const* _lhsCase, Case const* _rhsCase) -> bool {
 			return this->switchCaseEqual(*_lhsCase, *_rhsCase);
 		});
@@ -149,7 +149,7 @@ bool SyntacticallyEqual::statementEqual(Switch const& _lhs, Switch const& _rhs)
 bool SyntacticallyEqual::switchCaseEqual(Case const& _lhs, Case const& _rhs)
 {
 	return
-		compareSharedPtr<Literal, &SyntacticallyEqual::expressionEqual>(_lhs.value, _rhs.value) &&
+		compareUniquePtr<Literal, &SyntacticallyEqual::expressionEqual>(_lhs.value, _rhs.value) &&
 		statementEqual(_lhs.body, _rhs.body);
 }
 
@@ -157,7 +157,7 @@ bool SyntacticallyEqual::statementEqual(ForLoop const& _lhs, ForLoop const& _rhs
 {
 	return
 		statementEqual(_lhs.pre, _rhs.pre) &&
-		compareSharedPtr<Expression, &SyntacticallyEqual::operator()>(_lhs.condition, _rhs.condition) &&
+		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.condition, _rhs.condition) &&
 		statementEqual(_lhs.body, _rhs.body) &&
 		statementEqual(_lhs.post, _rhs.post);
 }

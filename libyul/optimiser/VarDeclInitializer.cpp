@@ -39,7 +39,7 @@ void VarDeclInitializer::operator()(Block& _block)
 				return {};
 			else if (_varDecl.variables.size() == 1)
 			{
-				_varDecl.value = make_shared<Expression>(zero);
+				_varDecl.value = make_unique<Expression>(zero);
 				return {};
 			}
 			else
@@ -47,7 +47,7 @@ void VarDeclInitializer::operator()(Block& _block)
 				OptionalStatements ret{vector<Statement>{}};
 				langutil::SourceLocation loc{std::move(_varDecl.location)};
 				for (auto& var: _varDecl.variables)
-					ret->push_back(VariableDeclaration{loc, {std::move(var)}, make_shared<Expression>(zero)});
+					ret->push_back(VariableDeclaration{loc, {std::move(var)}, make_unique<Expression>(zero)});
 				return ret;
 			}
 		}
