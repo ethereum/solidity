@@ -45,11 +45,13 @@ public:
 	/// @arg _metadata contains the to be injected metadata CBOR
 	void compileContract(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts,
+		std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> const& _otherCompilers,
 		bytes const& _metadata
 	);
 	/// @returns Entire assembly.
 	eth::Assembly const& assembly() const { return m_context.assembly(); }
+	/// @returns Runtime assembly.
+	eth::Assembly const& runtimeAssembly() const { return m_context.assembly().sub(m_runtimeSub); }
 	/// @returns The entire assembled object (with constructor).
 	eth::LinkerObject assembledObject() const { return m_context.assembledObject(); }
 	/// @returns Only the runtime object (without constructor).

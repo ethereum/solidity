@@ -3455,3 +3455,10 @@ string MagicType::toString(bool _short) const
 	solAssert(false, "Unknown kind of magic.");
 	return {};
 }
+
+TypePointer MagicType::typeArgument() const
+{
+	solAssert(m_kind == Kind::MetaType, "");
+	solAssert(m_typeArgument, "");
+	return m_typeArgument;
+}

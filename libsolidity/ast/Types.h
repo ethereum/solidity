@@ -1335,6 +1335,8 @@ public:
 
 	Kind kind() const { return m_kind; }
 
+	TypePointer typeArgument() const;
+
 private:
 	Kind m_kind;
 	/// Contract type used for contract metadata magic.

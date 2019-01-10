@@ -41,6 +41,7 @@
 namespace dev {
 namespace solidity {
 
+class Compiler;
 
 /**
  * Context to be shared by all units that compile the same contract.
@@ -74,8 +75,9 @@ public:
 	/// Returns the number of currently allocated local variables.
 	unsigned numberOfLocalVariables() const;
 
-	void setCompiledContracts(std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts) { m_compiledContracts = _contracts; }
+	void setOtherCompilers(std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> const& _otherCompilers) { m_otherCompilers = _otherCompilers; }
 	eth::Assembly const& compiledContract(ContractDefinition const& _contract) const;
+	eth::Assembly const& compiledContractRuntime(ContractDefinition const& _contract) const;
 
 	void setStackOffset(int _offset) { m_asm->setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm->adjustDeposit(_adjustment); }
@@ -307,7 +309,7 @@ private:
 	/// Activated experimental features.
 	std::set<ExperimentalFeature> m_experimentalFeatures;
 	/// Other already compiled contracts to be used in contract creation calls.
-	std::map<ContractDefinition const*, eth::Assembly const*> m_compiledContracts;
+	std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> m_otherCompilers;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).

@@ -594,22 +594,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			ContractDefinition const* contract =
 				&dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
-			m_context.callLowLevelFunction(
-				"$copyContractCreationCodeToMemory_" + contract->type()->identifier(),
-				0,
-				1,
-				[contract](CompilerContext& _context)
-				{
-					// copy the contract's code into memory
-					eth::Assembly const& assembly = _context.compiledContract(*contract);
-					CompilerUtils(_context).fetchFreeMemoryPointer();
-					// pushes size
-					auto subroutine = _context.addSubroutine(make_shared<eth::Assembly>(assembly));
-					_context << Instruction::DUP1 << subroutine;
-					_context << Instruction::DUP4 << Instruction::CODECOPY;
-					_context << Instruction::ADD;
-				}
-			);
+			utils().fetchFreeMemoryPointer();
+			utils().copyContractCodeToMemory(*contract, true);
 			utils().abiEncode(argumentTypes, function.parameterTypes());
 			// now on stack: memory_end_ptr
 			// need: size, offset, endowment
@@ -1351,6 +1337,23 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(false, "Gas has been removed.");
 		else if (member == "blockhash")
 			solAssert(false, "Blockhash has been removed.");
+		else if (member == "creationCode" || member == "runtimeCode")
+		{
+			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			utils().fetchFreeMemoryPointer();
+			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
+			utils().copyContractCodeToMemory(contract, member == "creationCode");
+			// Stack: start end
+			m_context.appendInlineAssembly(
+				Whiskers(R"({
+					mstore(start, sub(end, add(start, 0x20)))
+					mstore(<free>, end)
+				})")("free", to_string(CompilerUtils::freeMemoryPointer)).render(),
+				{"start", "end"}
+			);
+			m_context << Instruction::POP;
+		}
 		else
 			solAssert(false, "Unknown magic member.");
 		break;

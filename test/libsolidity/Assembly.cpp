@@ -46,6 +46,7 @@ namespace dev
 {
 namespace solidity
 {
+class Contract;
 namespace test
 {
 
@@ -84,7 +85,7 @@ eth::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			Compiler compiler(dev::test::Options::get().evmVersion());
-			compiler.compileContract(*contract, map<ContractDefinition const*, Assembly const*>{}, bytes());
+			compiler.compileContract(*contract, map<ContractDefinition const*, shared_ptr<Compiler const>>{}, bytes());
 
 			return compiler.runtimeAssemblyItems();
 		}

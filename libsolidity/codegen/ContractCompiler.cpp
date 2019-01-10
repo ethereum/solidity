@@ -60,7 +60,7 @@ private:
 
 void ContractCompiler::compileContract(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+	map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
@@ -70,7 +70,7 @@ void ContractCompiler::compileContract(
 		// This has to be the first code in the contract.
 		appendDelegatecallCheck();
 
-	initializeContext(_contract, _contracts);
+	initializeContext(_contract, _otherCompilers);
 	// This generates the dispatch function for externally visible functions
 	// and adds the function to the compilation queue. Additionally internal functions,
 	// which are referenced directly or indirectly will be added.
@@ -81,7 +81,7 @@ void ContractCompiler::compileContract(
 
 size_t ContractCompiler::compileConstructor(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+	std::map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers
 )
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
@@ -89,18 +89,18 @@ size_t ContractCompiler::compileConstructor(
 		return deployLibrary(_contract);
 	else
 	{
-		initializeContext(_contract, _contracts);
+		initializeContext(_contract, _otherCompilers);
 		return packIntoContractCreator(_contract);
 	}
 }
 
 void ContractCompiler::initializeContext(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
+	map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers
 )
 {
 	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
-	m_context.setCompiledContracts(_compiledContracts);
+	m_context.setOtherCompilers(_otherCompilers);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	registerStateVariables(_contract);

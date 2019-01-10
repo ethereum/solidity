@@ -31,18 +31,18 @@ using namespace dev::solidity;
 
 void Compiler::compileContract(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts,
+	std::map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers,
 	bytes const& _metadata
 )
 {
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimize, m_optimizeRuns);
-	runtimeCompiler.compileContract(_contract, _contracts);
+	runtimeCompiler.compileContract(_contract, _otherCompilers);
 	m_runtimeContext.appendAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
 	ContractCompiler creationCompiler(&runtimeCompiler, m_context, m_optimize, 1);
-	m_runtimeSub = creationCompiler.compileConstructor(_contract, _contracts);
+	m_runtimeSub = creationCompiler.compileConstructor(_contract, _otherCompilers);
 
 	m_context.optimise(m_optimize, m_optimizeRuns);
 }
