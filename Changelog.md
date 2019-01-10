@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Control Flow Graph: Warn about unreachable code.
 
 
 Bugfixes:

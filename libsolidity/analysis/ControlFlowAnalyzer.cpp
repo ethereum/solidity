@@ -18,6 +18,7 @@
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 
 #include <liblangutil/SourceLocation.h>
+#include <libdevcore/Algorithms.h>
 #include <boost/range/algorithm/sort.hpp>
 
 using namespace std;
@@ -36,6 +37,7 @@ bool ControlFlowAnalyzer::visit(FunctionDefinition const& _function)
 	{
 		auto const& functionFlow = m_cfg.functionFlow(_function);
 		checkUninitializedAccess(functionFlow.entry, functionFlow.exit);
+		checkUnreachable(functionFlow.entry, functionFlow.exit, functionFlow.revert);
 	}
 	return false;
 }
@@ -143,5 +145,37 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 				" without prior assignment."
 			);
 		}
+	}
+}
+
+void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert) const
+{
+	// collect all nodes reachable from the entry point
+	std::set<CFGNode const*> reachable = BreadthFirstSearch<CFGNode>{{_entry}}.run(
+		[](CFGNode const& _node, auto&& _addChild) {
+			for (CFGNode const* exit: _node.exits)
+				_addChild(*exit);
+		}
+	).visited;
+
+	// traverse all paths backwards from exit and revert
+	// and extract (valid) source locations of unreachable nodes into sorted set
+	std::set<SourceLocation> unreachable;
+	BreadthFirstSearch<CFGNode>{{_exit, _revert}}.run(
+		[&](CFGNode const& _node, auto&& _addChild) {
+			if (!reachable.count(&_node) && !_node.location.isEmpty())
+				unreachable.insert(_node.location);
+			for (CFGNode const* entry: _node.entries)
+				_addChild(*entry);
+		}
+	);
+
+	for (auto it = unreachable.begin(); it != unreachable.end();)
+	{
+		SourceLocation location = *it++;
+		// Extend the location, as long as the next location overlaps (unreachable is sorted).
+		for (; it != unreachable.end() && it->start <= location.end; ++it)
+			location.end = std::max(location.end, it->end);
+		m_errorReporter.warning(location, "Unreachable code.");
 	}
 }
