@@ -21,22 +21,28 @@
 //     {
 //         let a_1 := mload(2)
 //         let a2 := 2
-//         let r := f(a_1)
-//         let f_a := a2
+//         let f_a := a_1
 //         let f_b := 0
 //         let f_x := mload(f_a)
 //         f_b := sload(f_x)
 //         let f_y := add(f_a, f_x)
 //         sstore(f_y, 10)
-//         let t := f_b
-//         let a3
-//         let f_a_3 := a3
+//         let r := f_b
+//         let f_a_3 := a2
 //         let f_b_4 := 0
 //         let f_x_5 := mload(f_a_3)
 //         f_b_4 := sload(f_x_5)
 //         let f_y_6 := add(f_a_3, f_x_5)
 //         sstore(f_y_6, 10)
-//         let s := f_b_4
+//         let t := f_b_4
+//         let a3
+//         let f_a_8 := a3
+//         let f_b_9 := 0
+//         let f_x_10 := mload(f_a_8)
+//         f_b_9 := sload(f_x_10)
+//         let f_y_11 := add(f_a_8, f_x_10)
+//         sstore(f_y_11, 10)
+//         let s := f_b_9
 //     }
 //     function f(a) -> b
 //     {

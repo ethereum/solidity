@@ -1072,8 +1072,13 @@
 // ----
 // fullSuite
 // {
-//     let a, b := abi_decode_tuple_t_contract$_Module_$1038t_contract$_Module_$1038(mload(0), mload(1))
-//     sstore(0, a)
+//     let _2 := mload(1)
+//     let _1042 := mload(0)
+//     if slt(sub(_2, _1042), 64)
+//     {
+//         revert(0, 0)
+//     }
+//     sstore(0, and(calldataload(_1042), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
 //     let x0, x1, x2, x3, x4 := abi_decode_tuple_t_addresst_uint256t_bytes_calldata_ptrt_enum$_Operation_$1949(mload(7), mload(8))
 //     sstore(x1, x0)
 //     sstore(x3, x2)
@@ -1109,59 +1114,31 @@
 //         }
 //         value2_59 := add(_1092, 0x20)
 //         value3 := abi_decode_length_15_689
-//         value4 := cleanup_revert_t_enum$_Operation_$1949(calldataload(add(headStart_55, 96)))
-//     }
-//     function abi_decode_tuple_t_contract$_Module_$1038t_contract$_Module_$1038(headStart_154, dataEnd_155) -> value0_156, value1_157
-//     {
-//         if slt(sub(dataEnd_155, headStart_154), 64)
+//         let _1095 := calldataload(add(headStart_55, 96))
+//         if iszero(lt(_1095, 3))
 //         {
-//             revert(0, 0)
+//             revert(value4, value4)
 //         }
-//         let cleanup_as__1127 := 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-//         value0_156 := and(calldataload(add(headStart_154, 0)), cleanup_as__1127)
-//         value1_157 := and(calldataload(add(headStart_154, 32)), cleanup_as__1127)
-//     }
-//     function abi_encode_t_address_to_t_address(value_164, pos)
-//     {
-//         mstore(pos, and(value_164, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
-//     }
-//     function abi_encode_t_bytes32_to_t_bytes32(value_171, pos_172)
-//     {
-//         mstore(pos_172, value_171)
-//     }
-//     function abi_encode_t_enum$_Operation_$1949_to_t_uint8(value_181, pos_182)
-//     {
-//         if iszero(lt(value_181, 3))
-//         {
-//             invalid()
-//         }
-//         mstore(pos_182, value_181)
-//     }
-//     function abi_encode_t_uint256_to_t_uint256(value_235, pos_236)
-//     {
-//         mstore(pos_236, value_235)
+//         value4 := _1095
 //     }
 //     function abi_encode_tuple_t_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_$1949_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256__to_t_bytes32_t_address_t_uint256_t_bytes32_t_uint8_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256_(headStart_252, value10_253, value9_254, value8_255, value7_256, value6_257, value5_258, value4_259, value3_260, value2_261, value1_262, value0_263) -> tail_264
 //     {
 //         tail_264 := add(headStart_252, 352)
-//         abi_encode_t_bytes32_to_t_bytes32(value0_263, headStart_252)
-//         abi_encode_t_address_to_t_address(value1_262, add(headStart_252, 32))
-//         abi_encode_t_uint256_to_t_uint256(value2_261, add(headStart_252, 64))
-//         abi_encode_t_bytes32_to_t_bytes32(value3_260, add(headStart_252, 96))
-//         abi_encode_t_enum$_Operation_$1949_to_t_uint8(value4_259, add(headStart_252, 128))
-//         abi_encode_t_uint256_to_t_uint256(value5_258, add(headStart_252, 160))
-//         abi_encode_t_uint256_to_t_uint256(value6_257, add(headStart_252, 192))
-//         abi_encode_t_uint256_to_t_uint256(value7_256, add(headStart_252, 224))
-//         abi_encode_t_address_to_t_address(value8_255, add(headStart_252, 256))
-//         abi_encode_t_address_to_t_address(value9_254, add(headStart_252, 288))
-//         abi_encode_t_uint256_to_t_uint256(value10_253, add(headStart_252, 320))
-//     }
-//     function cleanup_revert_t_enum$_Operation_$1949(value_369) -> cleaned_370
-//     {
-//         if iszero(lt(value_369, 3))
+//         mstore(headStart_252, value0_263)
+//         let _1307 := 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+//         mstore(add(headStart_252, 32), and(value1_262, _1307))
+//         mstore(add(headStart_252, 64), value2_261)
+//         mstore(add(headStart_252, 96), value3_260)
+//         if iszero(lt(value4_259, 3))
 //         {
-//             revert(0, 0)
+//             invalid()
 //         }
-//         cleaned_370 := value_369
+//         mstore(add(headStart_252, 128), value4_259)
+//         mstore(add(headStart_252, 160), value5_258)
+//         mstore(add(headStart_252, 192), value6_257)
+//         mstore(add(headStart_252, 224), value7_256)
+//         mstore(add(headStart_252, 256), and(value8_255, _1307))
+//         mstore(add(headStart_252, 288), and(value9_254, _1307))
+//         mstore(add(headStart_252, 320), value10_253)
 //     }
 // }

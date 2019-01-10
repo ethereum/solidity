@@ -32,7 +32,25 @@
 //         let f_a_35 := f_b_33
 //         let f_b_36 := 0
 //         f_b_36 := sload(mload(f_a_35))
-//         let x_1 := f(f(f(f(f(f(f(f(f(f(f(f(f_b_36))))))))))))
+//         let f_a_38 := f_b_36
+//         let f_b_39 := 0
+//         f_b_39 := sload(mload(f_a_38))
+//         let f_a_41 := f_b_39
+//         let f_b_42 := 0
+//         f_b_42 := sload(mload(f_a_41))
+//         let f_a_44 := f_b_42
+//         let f_b_45 := 0
+//         f_b_45 := sload(mload(f_a_44))
+//         let f_a_47 := f_b_45
+//         let f_b_48 := 0
+//         f_b_48 := sload(mload(f_a_47))
+//         let f_a_50 := f_b_48
+//         let f_b_51 := 0
+//         f_b_51 := sload(mload(f_a_50))
+//         let f_a_53 := f_b_51
+//         let f_b_54 := 0
+//         f_b_54 := sload(mload(f_a_53))
+//         let x_1 := f(f(f(f(f(f(f_b_54))))))
 //     }
 //     function f(a) -> b
 //     {

@@ -25,6 +25,9 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <libdevcore/Visitor.h>
+
+using namespace std;
 using namespace dev;
 using namespace yul;
 
@@ -45,7 +48,7 @@ size_t CodeSize::codeSize(Expression const& _expression)
 size_t CodeSize::codeSize(Block const& _block)
 {
 	CodeSize cs;
-	cs(_block);
+	cs.visit(_block);
 	return cs.m_size;
 }
 
@@ -53,14 +56,21 @@ void CodeSize::visit(Statement const& _statement)
 {
 	if (_statement.type() == typeid(FunctionDefinition))
 		return;
+	else if (!(
+		_statement.type() == typeid(Block) ||
+		_statement.type() == typeid(ExpressionStatement) ||
+		_statement.type() == typeid(Assignment) ||
+		_statement.type() == typeid(VariableDeclaration)
+	))
+		++m_size;
 
-	++m_size;
 	ASTWalker::visit(_statement);
 }
 
 void CodeSize::visit(Expression const& _expression)
 {
-	++m_size;
+	if (_expression.type() != typeid(Identifier))
+		++m_size;
 	ASTWalker::visit(_expression);
 }
 
