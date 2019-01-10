@@ -989,6 +989,7 @@ public:
 		ABIEncodeWithSignature,
 		ABIDecode,
 		GasLeft, ///< gasleft()
+		MetaType ///< type(...)
 	};
 
 	Category category() const override { return Category::Function; }
@@ -1299,16 +1300,23 @@ private:
 };
 
 /**
- * Special type for magic variables (block, msg, tx), similar to a struct but without any reference
- * (it always references a global singleton by name).
+ * Special type for magic variables (block, msg, tx, type(...)), similar to a struct but without any reference.
  */
 class MagicType: public Type
 {
 public:
-	enum class Kind { Block, Message, Transaction, ABI };
+	enum class Kind {
+		Block, ///< "block"
+		Message, ///< "msg"
+		Transaction, ///< "tx"
+		ABI, ///< "abi"
+		MetaType ///< "type(...)"
+	};
 	Category category() const override { return Category::Magic; }
 
 	explicit MagicType(Kind _kind): m_kind(_kind) {}
+	/// Factory function for meta type
+	static std::shared_ptr<MagicType> metaType(TypePointer _type);
 
 	TypeResult binaryOperatorResult(Token, TypePointer const&) const override
 	{
@@ -1329,6 +1337,9 @@ public:
 
 private:
 	Kind m_kind;
+	/// Contract type used for contract metadata magic.
+	TypePointer m_typeArgument;
+
 };
 
 /**

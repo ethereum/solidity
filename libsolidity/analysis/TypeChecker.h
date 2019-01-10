@@ -81,6 +81,8 @@ private:
 		bool _abiEncoderV2
 	);
 
+	TypePointers typeCheckMetaTypeFunctionAndRetrieveReturnType(FunctionCall const& _functionCall);
+
 	/// Performs type checks and determines result types for type conversion FunctionCall nodes.
 	TypePointer typeCheckTypeConversionAndRetrieveReturnType(
 		FunctionCall const& _functionCall
