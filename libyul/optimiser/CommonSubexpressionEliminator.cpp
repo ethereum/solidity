@@ -74,7 +74,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		{
 			assertThrow(var.second, OptimizerException, "");
 			assertThrow(inScope(var.first), OptimizerException, "");
-			if (SyntacticalEqualityChecker::equal(_e, *var.second))
+			if (SyntacticallyEqual{}(_e, *var.second))
 			{
 				_e = Identifier{locationOf(_e), var.first};
 				break;

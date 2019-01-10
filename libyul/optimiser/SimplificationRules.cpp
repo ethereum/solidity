@@ -171,7 +171,7 @@ bool Pattern::matches(
 			Expression const* firstMatch = (*m_matchGroups)[m_matchGroup];
 			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
 			return
-				SyntacticalEqualityChecker::equal(*firstMatch, _expr) &&
+				SyntacticallyEqual{}(*firstMatch, _expr) &&
 				MovableChecker(_dialect, _expr).movable();
 		}
 		else if (m_kind == PatternKind::Any)
