@@ -48,7 +48,7 @@ size_t CodeSize::codeSize(Expression const& _expression)
 size_t CodeSize::codeSize(Block const& _block)
 {
 	CodeSize cs;
-	cs.visit(_block);
+	cs(_block);
 	return cs.m_size;
 }
 
