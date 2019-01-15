@@ -38,6 +38,8 @@ namespace dev
 namespace solidity
 {
 
+class ConstructorUsesAssembly;
+
 
 /**
  * The module that performs static analysis on the AST.
@@ -49,7 +51,8 @@ class StaticAnalyzer: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	explicit StaticAnalyzer(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	explicit StaticAnalyzer(langutil::ErrorReporter& _errorReporter);
+	~StaticAnalyzer();
 
 	/// Performs static analysis on the given source unit and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
@@ -84,6 +87,10 @@ private:
 	/// Pairs of AST ids and pointers are used as keys to ensure a deterministic order
 	/// when traversing.
 	std::map<std::pair<size_t, VariableDeclaration const*>, int> m_localVarUseCount;
+
+	/// Cache that holds information about whether a contract's constructor
+	/// uses inline assembly.
+	std::unique_ptr<ConstructorUsesAssembly> m_constructorUsesAssembly;
 
 	FunctionDefinition const* m_currentFunction = nullptr;
 

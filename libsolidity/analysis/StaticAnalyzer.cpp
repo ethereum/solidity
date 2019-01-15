@@ -32,6 +32,56 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
+/**
+ * Helper class that determines whether a contract's constructor uses inline assembly.
+ */
+class dev::solidity::ConstructorUsesAssembly
+{
+public:
+	/// @returns true if and only if the contract's or any of its bases' constructors
+	/// use inline assembly.
+	bool check(ContractDefinition const& _contract)
+	{
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			if (checkInternal(*base))
+				return true;
+		return false;
+	}
+
+
+private:
+	class Checker: public ASTConstVisitor
+	{
+	public:
+		Checker(FunctionDefinition const& _f) { _f.accept(*this); }
+		bool visit(InlineAssembly const&) override { assemblySeen = true; return false; }
+		bool assemblySeen = false;
+	};
+
+	bool checkInternal(ContractDefinition const& _contract)
+	{
+		if (!m_usesAssembly.count(&_contract))
+		{
+			bool usesAssembly = false;
+			if (_contract.constructor())
+				usesAssembly = Checker{*_contract.constructor()}.assemblySeen;
+			m_usesAssembly[&_contract] = usesAssembly;
+		}
+		return m_usesAssembly[&_contract];
+	}
+
+	map<ContractDefinition const*, bool> m_usesAssembly;
+};
+
+StaticAnalyzer::StaticAnalyzer(ErrorReporter& _errorReporter):
+	m_errorReporter(_errorReporter)
+{
+}
+
+StaticAnalyzer::~StaticAnalyzer()
+{
+}
+
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
@@ -152,6 +202,18 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 				_memberAccess.location(),
 				"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
 			);
+		else if (type->kind() == MagicType::Kind::MetaType && _memberAccess.memberName() == "runtimeCode")
+		{
+			if (!m_constructorUsesAssembly)
+				m_constructorUsesAssembly = make_unique<ConstructorUsesAssembly>();
+			ContractType const& contract = dynamic_cast<ContractType const&>(*type->typeArgument());
+			if (m_constructorUsesAssembly->check(contract.contractDefinition()))
+				m_errorReporter.warning(
+					_memberAccess.location(),
+					"The constructor of the contract (or its base) uses inline assembly. "
+					"Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode."
+				);
+		}
 	}
 
 	if (_memberAccess.memberName() == "callcode")
