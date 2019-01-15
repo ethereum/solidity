@@ -24,6 +24,7 @@
 #include <libyul/AsmScopeFiller.h>
 #include <libyul/AsmScope.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/Utilities.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -390,7 +391,29 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	if (!expectExpression(*_switch.expression))
 		success = false;
 
-	set<tuple<LiteralKind, YulString>> cases;
+	if (m_dialect->flavour == AsmFlavour::Yul)
+	{
+		YulString caseType;
+		bool mismatchingTypes = false;
+		for (auto const& _case: _switch.cases)
+			if (_case.value)
+			{
+				if (caseType.empty())
+					caseType = _case.value->type;
+				else if (caseType != _case.value->type)
+				{
+					mismatchingTypes = true;
+					break;
+				}
+			}
+		if (mismatchingTypes)
+			m_errorReporter.typeError(
+				_switch.location,
+				"Switch cases have non-matching types."
+			);
+	}
+
+	set<Literal const*, Less<Literal*>> cases;
 	for (auto const& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -404,12 +427,11 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 			m_stackHeight--;
 
 			/// Note: the parser ensures there is only one default case
-			auto val = make_tuple(_case.value->kind, _case.value->value);
-			if (!cases.insert(val).second)
+			if (!cases.insert(_case.value.get()).second)
 			{
 				m_errorReporter.declarationError(
 					_case.location,
-					"Duplicate case defined"
+					"Duplicate case defined."
 				);
 				success = false;
 			}

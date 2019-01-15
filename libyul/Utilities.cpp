@@ -1,4 +1,4 @@
-/*(
+/*
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify
@@ -18,26 +18,16 @@
  * Some useful snippets for the optimiser.
  */
 
-#include <libyul/optimiser/Utilities.h>
+#include <libyul/Utilities.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
-
 using namespace std;
 using namespace dev;
 using namespace yul;
-
-void yul::removeEmptyBlocks(Block& _block)
-{
-	auto isEmptyBlock = [](Statement const& _st) -> bool {
-		return _st.type() == typeid(Block) && boost::get<Block>(_st).statements.empty();
-	};
-	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
-}
 
 u256 yul::valueOfNumberLiteral(Literal const& _literal)
 {
@@ -45,4 +35,16 @@ u256 yul::valueOfNumberLiteral(Literal const& _literal)
 	std::string const& literalString = _literal.value.str();
 	assertThrow(isValidDecimal(literalString) || isValidHex(literalString), OptimizerException, "");
 	return u256(literalString);
+}
+
+template<>
+bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const
+{
+	if (std::make_tuple(_lhs.kind, _lhs.type) != std::make_tuple(_rhs.kind, _rhs.type))
+		return std::make_tuple(_lhs.kind, _lhs.type) < std::make_tuple(_rhs.kind, _rhs.type);
+
+	if (_lhs.kind == LiteralKind::Number)
+		return valueOfNumberLiteral(_lhs) < valueOfNumberLiteral(_rhs);
+	else
+		return _lhs.value < _rhs.value;
 }

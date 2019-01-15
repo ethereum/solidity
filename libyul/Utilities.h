@@ -26,9 +26,34 @@
 namespace yul
 {
 
-/// Removes statements that are just empty blocks (non-recursive).
-void removeEmptyBlocks(Block& _block);
-
 dev::u256 valueOfNumberLiteral(Literal const& _literal);
+
+/**
+ * Linear order on Yul AST nodes.
+ *
+ * Defines a linear order on Yul AST nodes to be used in maps and sets.
+ * Note: the order is total and deterministic, but independent of the semantics, e.g.
+ * it is not guaranteed that the false Literal is "less" than the true Literal.
+ */
+template<typename T>
+struct Less
+{
+	bool operator()(T const& _lhs, T const& _rhs) const;
+};
+
+template<typename T>
+struct Less<T*>
+{
+	bool operator()(T const* _lhs, T const* _rhs) const
+	{
+		if (_lhs && _rhs)
+			return Less<T>{}(*_lhs, *_rhs);
+		else
+			return _lhs < _rhs;
+	}
+};
+
+template<> bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const;
+extern template struct Less<Literal>;
 
 }

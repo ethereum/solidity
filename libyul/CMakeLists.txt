@@ -20,6 +20,8 @@ add_library(yul
 	Object.h
 	ObjectParser.cpp
 	ObjectParser.h
+	Utilities.cpp
+	Utilities.h
 	YulString.h
 	backends/evm/AbstractAssembly.h
 	backends/evm/EVMAssembly.cpp
@@ -68,6 +70,8 @@ add_library(yul
 	optimiser/NameCollector.h
 	optimiser/NameDispenser.cpp
 	optimiser/NameDispenser.h
+	optimiser/OptimizerUtilities.cpp
+	optimiser/OptimizerUtilities.h
 	optimiser/RedundantAssignEliminator.cpp
 	optimiser/RedundantAssignEliminator.h
 	optimiser/Rematerialiser.cpp
@@ -90,8 +94,6 @@ add_library(yul
 	optimiser/SyntacticalEquality.h
 	optimiser/UnusedPruner.cpp
 	optimiser/UnusedPruner.h
-	optimiser/Utilities.cpp
-	optimiser/Utilities.h
 	optimiser/VarDeclInitializer.cpp
 	optimiser/VarDeclInitializer.h
 )

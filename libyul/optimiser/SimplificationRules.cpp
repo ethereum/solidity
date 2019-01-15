@@ -20,11 +20,11 @@
 
 #include <libyul/optimiser/SimplificationRules.h>
 
-#include <libyul/optimiser/Utilities.h>
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/AsmData.h>
+#include <libyul/Utilities.h>
 
 #include <libevmasm/RuleList.h>
 

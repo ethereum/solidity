@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(switch_no_cases)
 
 BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 {
-	CHECK_PARSE_ERROR("{ switch 42 case 1 {} case 1 {} default {} }", DeclarationError, "Duplicate case defined");
+	CHECK_PARSE_ERROR("{ switch 42 case 1 {} case 1 {} default {} }", DeclarationError, "Duplicate case defined.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
