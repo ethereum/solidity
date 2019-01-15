@@ -15,36 +15,25 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Optimiser component that changes the code so that it consists of a block starting with
- * a single block followed only by function definitions and with no functions defined
- * anywhere else.
+ * Some useful snippets for the optimiser.
  */
 
-#include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
+
 #include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
 
+#include <boost/range/algorithm_ext/erase.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
 
-void FunctionHoister::operator()(Block& _block)
+void yul::removeEmptyBlocks(Block& _block)
 {
-	bool topLevel = m_isTopLevel;
-	m_isTopLevel = false;
-	for (auto&& statement: _block.statements)
-	{
-		boost::apply_visitor(*this, statement);
-		if (statement.type() == typeid(FunctionDefinition))
-		{
-			m_functions.emplace_back(std::move(statement));
-			statement = Block{_block.location, {}};
-		}
-	}
-	removeEmptyBlocks(_block);
-	if (topLevel)
-		_block.statements += std::move(m_functions);
+	auto isEmptyBlock = [](Statement const& _st) -> bool {
+		return _st.type() == typeid(Block) && boost::get<Block>(_st).statements.empty();
+	};
+	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
 }

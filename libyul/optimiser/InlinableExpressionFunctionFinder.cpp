@@ -20,7 +20,7 @@
 
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
 
-#include <libyul/optimiser/Utilities.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AsmData.h>
 
 using namespace std;

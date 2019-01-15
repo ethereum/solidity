@@ -130,9 +130,10 @@ Restrictions on the Grammar
 ---------------------------
 
 Switches must have at least one case (including the default case).
-If all possible values of the expression is covered, the default case should
-not be allowed (i.e. a switch with a ``bool`` expression and having both a
-true and false case should not allow a default case).
+If all possible values of the expression are covered, a default case should
+not be allowed (i.e. a switch with a ``bool`` expression that has both a
+true and a false case should not allow a default case). All case values need to
+have the same type.
 
 Every expression evaluates to zero or more values. Identifiers and Literals
 evaluate to exactly

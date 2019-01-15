@@ -16,8 +16,8 @@
 */
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/Utilities.h>
 #include <libyul/AsmData.h>
+#include <libyul/Utilities.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Visitor.h>
 
