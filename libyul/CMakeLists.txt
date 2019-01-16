@@ -44,6 +44,10 @@ add_library(yul
 	optimiser/DataFlowAnalyzer.h
 	optimiser/Disambiguator.cpp
 	optimiser/Disambiguator.h
+	optimiser/EquivalentFunctionDetector.cpp
+	optimiser/EquivalentFunctionDetector.h
+	optimiser/EquivalentFunctionCombiner.cpp
+	optimiser/EquivalentFunctionCombiner.h
 	optimiser/ExpressionInliner.cpp
 	optimiser/ExpressionInliner.h
 	optimiser/ExpressionJoiner.cpp

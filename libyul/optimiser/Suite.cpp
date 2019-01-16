@@ -25,6 +25,7 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
+#include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/ExpressionInliner.h>
@@ -62,6 +63,8 @@ void OptimiserSuite::run(
 	(FunctionHoister{})(ast);
 	(BlockFlattener{})(ast);
 	(FunctionGrouper{})(ast);
+	EquivalentFunctionCombiner::run(ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 	(ForLoopInitRewriter{})(ast);
 	(BlockFlattener{})(ast);
 	StructuralSimplifier{_dialect}(ast);
@@ -101,6 +104,7 @@ void OptimiserSuite::run(
 		CommonSubexpressionEliminator{_dialect}(ast);
 
 		(FunctionGrouper{})(ast);
+		EquivalentFunctionCombiner::run(ast);
 		FullInliner{ast, dispenser}.run();
 
 		SSATransform::run(ast, dispenser);

@@ -26,6 +26,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
+#include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -216,6 +217,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		StructuralSimplifier{*m_dialect}(*m_ast);
+	}
+	else if (m_optimizerStep == "equivalentFunctionCombiner")
+	{
+		disambiguate();
+		EquivalentFunctionCombiner::run(*m_ast);
 	}
 	else if (m_optimizerStep == "fullSuite")
 		OptimiserSuite::run(*m_dialect, *m_ast, *m_analysisInfo);

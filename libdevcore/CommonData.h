@@ -275,4 +275,10 @@ std::string getChecksummedAddress(std::string const& _addr);
 bool isValidHex(std::string const& _string);
 bool isValidDecimal(std::string const& _string);
 
+template<typename Container, typename Compare>
+bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _compare)
+{
+	return std::equal(std::begin(_lhs), std::end(_lhs), std::begin(_rhs), std::end(_rhs), std::forward<Compare>(_compare));
+}
+
 }
