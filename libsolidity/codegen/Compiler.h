@@ -50,8 +50,10 @@ public:
 	);
 	/// @returns Entire assembly.
 	eth::Assembly const& assembly() const { return m_context.assembly(); }
+	/// @returns Entire assembly as a shared pointer to non-const.
+	std::shared_ptr<eth::Assembly> assemblyPtr() const { return m_context.assemblyPtr(); }
 	/// @returns Runtime assembly.
-	eth::Assembly const& runtimeAssembly() const { return m_context.assembly().sub(m_runtimeSub); }
+	std::shared_ptr<eth::Assembly> runtimeAssemblyPtr() const;
 	/// @returns The entire assembled object (with constructor).
 	eth::LinkerObject assembledObject() const { return m_context.assembledObject(); }
 	/// @returns Only the runtime object (without constructor).

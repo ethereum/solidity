@@ -47,6 +47,12 @@ void Compiler::compileContract(
 	m_context.optimise(m_optimize, m_optimizeRuns);
 }
 
+std::shared_ptr<eth::Assembly> Compiler::runtimeAssemblyPtr() const
+{
+	solAssert(m_context.runtimeContext(), "");
+	return m_context.runtimeContext()->assemblyPtr();
+}
+
 eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const
 {
 	return m_runtimeContext.functionEntryLabelIfExists(_function);

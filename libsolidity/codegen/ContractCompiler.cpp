@@ -716,7 +716,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 	CodeGenerator::assemble(
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
-		m_context.nonConstAssembly(),
+		*m_context.assemblyPtr(),
 		identifierAccess
 	);
 	m_context.setStackOffset(startStackHeight);

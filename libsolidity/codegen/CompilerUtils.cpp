@@ -1209,12 +1209,12 @@ void CompilerUtils::copyContractCodeToMemory(ContractDefinition const& contract,
 		[&contract, _creation](CompilerContext& _context)
 		{
 			// copy the contract's code into memory
-			eth::Assembly const& assembly =
+			shared_ptr<eth::Assembly> assembly =
 				_creation ?
 				_context.compiledContract(contract) :
 				_context.compiledContractRuntime(contract);
 			// pushes size
-			auto subroutine = _context.addSubroutine(make_shared<eth::Assembly>(assembly));
+			auto subroutine = _context.addSubroutine(assembly);
 			_context << Instruction::DUP1 << subroutine;
 			_context << Instruction::DUP4 << Instruction::CODECOPY;
 			_context << Instruction::ADD;
