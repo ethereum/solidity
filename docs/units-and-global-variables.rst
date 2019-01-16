@@ -244,3 +244,33 @@ Furthermore, all functions of the current contract are callable directly includi
 .. note::
     Prior to version 0.5.0, there was a function called ``suicide`` with the same
     semantics as ``selfdestruct``.
+
+.. index:: type, creationCode, runtimeCode
+
+.. _meta-type:
+
+Type Information
+----------------
+
+The expression ``type(X)`` can be used to retrieve information about the
+type ``X``. Currently, there is limited support for this feature, but
+it might be expanded in the future. The following properties are
+available for a conract type ``C``:
+
+``type(C).creationCode``:
+    Memory byte array that contains the creation bytecode of the contract.
+    This can be used in inline assembly to build custom creation routines,
+    especially by using the ``create2`` opcode.
+    This property can **not** be accessed in the contract itself or any
+    derived contract. It causes the bytecode to be included in the bytecode
+    of the call site and thus circular references like that are not possible.
+
+``type(C).runtimeCode``:
+    Memory byte array that contains the runtime bytecode of the contract.
+    This is the code that is usually deployed by the constructor of ``C``.
+    If ``C`` has a constructor that uses inline assembly, this might be
+    different from the actually deployed bytecode. Also note that libraries
+    modify their runtime bytecode at time of deployment to guard against
+    regular calls.
+    The same restrictions as with ``.creationCode`` also apply for this
+    property.

@@ -329,6 +329,9 @@ Contracts do not support any operators.
 The members of contract types are the external functions of the contract
 including public state variables.
 
+For a contract ``C`` you can use ``type(C)`` to access
+:ref:`type information<meta-type>` about the contract.
+
 .. index:: byte array, bytes32
 
 Fixed-size byte arrays
