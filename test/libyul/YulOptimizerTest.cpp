@@ -38,6 +38,7 @@
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
+#include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
@@ -222,6 +223,23 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		EquivalentFunctionCombiner::run(*m_ast);
+	}
+	else if (m_optimizerStep == "ssaReverser")
+	{
+		disambiguate();
+		SSAReverser{}(*m_ast);
+	}
+	else if (m_optimizerStep == "ssaAndBack")
+	{
+		disambiguate();
+		// apply SSA
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
+		SSATransform::run(*m_ast, nameDispenser);
+		RedundantAssignEliminator::run(*m_dialect, *m_ast);
+		// reverse SSA
+		SSAReverser{}(*m_ast);
+		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "fullSuite")
 		OptimiserSuite::run(*m_dialect, *m_ast, *m_analysisInfo);

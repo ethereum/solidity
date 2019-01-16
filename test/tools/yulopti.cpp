@@ -46,6 +46,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
@@ -129,7 +130,7 @@ public:
 			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
 			cout << "  (e)xpr inline/(i)nline/(s)implify/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
-			cout << "  s(t)ructural simplifier/equi(v)alent function combiner? " << endl;
+			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser? " << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -187,6 +188,9 @@ public:
 				break;
 			case 'v':
 				EquivalentFunctionCombiner::run(*m_ast);
+				break;
+			case 'V':
+				SSAReverser{}(*m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;

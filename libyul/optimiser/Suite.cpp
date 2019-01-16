@@ -35,6 +35,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
+#include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
@@ -88,9 +89,10 @@ void OptimiserSuite::run(
 		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 		CommonSubexpressionEliminator{_dialect}(ast);
 		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-		SSATransform::run(ast, dispenser);
-		RedundantAssignEliminator::run(_dialect, ast);
-		RedundantAssignEliminator::run(_dialect, ast);
+
+		SSAReverser{}(ast);
+		CommonSubexpressionEliminator{_dialect}(ast);
+		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 		ExpressionJoiner::run(ast);
 		ExpressionJoiner::run(ast);
@@ -127,6 +129,11 @@ void OptimiserSuite::run(
 	UnusedPruner::runUntilStabilised(_dialect, ast);
 	ExpressionJoiner::run(ast);
 	UnusedPruner::runUntilStabilised(_dialect, ast);
+
+	SSAReverser{}(ast);
+	CommonSubexpressionEliminator{_dialect}(ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+
 	ExpressionJoiner::run(ast);
 	Rematerialiser::run(_dialect, ast);
 	UnusedPruner::runUntilStabilised(_dialect, ast);

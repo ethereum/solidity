@@ -264,10 +264,10 @@
 //     }
 //     {
 //         let validateJo__34 := 0x20
-//         let validateJo__373 := add(validateJo__10, mul(validateJo_i, 0xc0))
-//         let validateJo_noteIndex := add(validateJo__373, 0x24)
+//         let validateJo__351 := add(validateJo__10, mul(validateJo_i, 0xc0))
+//         let validateJo_noteIndex := add(validateJo__351, 0x24)
 //         let validateJo_k := validateJo_i_290
-//         let validateJo_a_292 := calldataload(add(validateJo__373, 0x44))
+//         let validateJo_a_292 := calldataload(add(validateJo__351, 0x44))
 //         let validateJo_a := validateJo_a_292
 //         let validateJo_c := validateJo_challenge
 //         let validateJo__39 := add(validateJo_i, 0x01)
@@ -296,8 +296,8 @@
 //             validateJo_kn := addmod(validateJo_kn, validateJo_k, validateJo_gen_order)
 //         }
 //         let validateJo__52 := 0x40
-//         calldatacopy(0xe0, add(validateJo__373, 164), validateJo__52)
-//         calldatacopy(validateJo__34, add(validateJo__373, 100), validateJo__52)
+//         calldatacopy(0xe0, add(validateJo__351, 164), validateJo__52)
+//         calldatacopy(validateJo__34, add(validateJo__351, 100), validateJo__52)
 //         let validateJo__61 := 0x120
 //         mstore(validateJo__61, sub(validateJo_gen_order, validateJo_c))
 //         let validateJo__62 := 0x60
@@ -310,8 +310,7 @@
 //         let validateJo__80 := 0x160
 //         let validateJo_result_304 := and(validateJo_result_303, call(gas(), 7, validateJo_i_290, validateJo__6, validateJo__62, validateJo__80, validateJo__52))
 //         let validateJo_result_305 := and(validateJo_result_304, call(gas(), 6, validateJo_i_290, validateJo__61, validateJo__6, validateJo__80, validateJo__52))
-//         let validateJo_result_306 := and(validateJo_result_305, call(gas(), 6, validateJo_i_290, validateJo__80, validateJo__6, validateJo_b, validateJo__52))
-//         validateJo_result := validateJo_result_306
+//         validateJo_result := and(validateJo_result_305, call(gas(), 6, validateJo_i_290, validateJo__80, validateJo__6, validateJo_b, validateJo__52))
 //         if eq(validateJo_i, validateJo_m)
 //         {
 //             mstore(0x260, mload(validateJo__34))
@@ -323,7 +322,7 @@
 //         {
 //             mstore(validateJo__62, validateJo_c)
 //             let validateJo__120 := 0x220
-//             let validateJo_result_307 := and(validateJo_result_306, call(gas(), 7, validateJo_i_290, validateJo__34, validateJo__62, validateJo__120, validateJo__52))
+//             let validateJo_result_307 := and(validateJo_result, call(gas(), 7, validateJo_i_290, validateJo__34, validateJo__62, validateJo__120, validateJo__52))
 //             let validateJo_result_308 := and(validateJo_result_307, call(gas(), 6, validateJo_i_290, validateJo__120, validateJo__6, 0x260, validateJo__52))
 //             validateJo_result := and(validateJo_result_308, call(gas(), 6, validateJo_i_290, validateJo__65, validateJo__6, 0x1e0, validateJo__52))
 //         }
