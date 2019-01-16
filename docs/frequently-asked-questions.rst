@@ -54,18 +54,6 @@ Yes, you can use ``abi.encodePacked``::
         }
     }
 
-
-Why is the low-level function ``.call()`` less favorable than instantiating a contract with a variable (``ContractB b;``) and executing its functions (``b.doSomething();``)?
-=============================================================================================================================================================================
-
-If you use actual functions, the compiler will tell you if the types
-or your arguments do not match, if the function does not exist
-or is not visible and it will do the packing of the
-arguments for you.
-
-See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_ and
-`pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
-
 What happens if you send ether along with a function call to a contract?
 ========================================================================
 
