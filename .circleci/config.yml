@@ -104,7 +104,7 @@ jobs:
             test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
   build_x86_linux:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
     environment:
       TERM: xterm
       COVERAGE: "ON"
@@ -212,7 +212,7 @@ jobs:
 
   test_check_style:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
     steps:
       - checkout
       - run:
@@ -238,7 +238,7 @@ jobs:
 
   test_x86_linux:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
     environment:
       TERM: xterm
     steps:
@@ -315,7 +315,9 @@ jobs:
 
   docs:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
+    environment:
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
       - run:
