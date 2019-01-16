@@ -151,16 +151,6 @@ does not fit inside this range, it is truncated. These truncations can have
 `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so code like the one
 above is necessary to avoid certain attacks.
 
-
-Why can number literals not be converted to fixed-size bytes types?
-===================================================================
-
-Since version 0.5.0 only hexadecimal number literals can be converted to fixed-size bytes
-types and only if the number of hex digits matches the size of the type. See :ref:`types-conversion-literals`
-for a full explanation and examples.
-
-
-
 More Questions?
 ===============
 
