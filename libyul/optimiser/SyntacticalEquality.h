@@ -76,7 +76,7 @@ private:
 	}
 
 	template<typename T, bool (SyntacticallyEqual::*CompareMember)(T const&, T const&)>
-	bool compareSharedPtr(std::shared_ptr<T> const& _lhs, std::shared_ptr<T> const& _rhs)
+	bool compareUniquePtr(std::unique_ptr<T> const& _lhs, std::unique_ptr<T> const& _rhs)
 	{
 		return (_lhs == _rhs) || (_lhs && _rhs && (this->*CompareMember)(*_lhs, *_rhs));
 	}

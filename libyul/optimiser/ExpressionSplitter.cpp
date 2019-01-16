@@ -106,7 +106,7 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		location,
 		{{TypedName{location, var, {}}}},
-		make_shared<Expression>(std::move(_expr))
+		make_unique<Expression>(std::move(_expr))
 	});
 	_expr = Identifier{location, var};
 }

@@ -51,8 +51,10 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 	for (auto const& var: _varDecl.variables)
 		names.emplace(var.name);
 	m_variableScopes.back().variables += names;
+
 	if (_varDecl.value)
 		visit(*_varDecl.value);
+
 	handleAssignment(names, _varDecl.value.get());
 }
 
