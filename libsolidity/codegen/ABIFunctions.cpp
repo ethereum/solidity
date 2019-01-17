@@ -243,7 +243,12 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			{
 				size_t numBits = type.numBytes() * 8;
 				u256 mask = ((u256(1) << numBits) - 1) << (256 - numBits);
-				templ("body", "cleaned := and(value, " + toCompactHexWithPrefix(mask) + ")");
+				Whiskers w("if gt(value, <bound>) { <failure> } cleaned := value");
+				w("bound", mask);
+				if (_revertOnFailure)
+					w("failure", "revert(0, 0)");
+				else
+					w("failure", "invalid()");
 			}
 			break;
 		}
