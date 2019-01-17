@@ -216,7 +216,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 		switch (_type.category())
 		{
 		case Type::Category::Address:
-			templ("body", "cleaned := " + cleanupFunction(IntegerType(160)) + "(value)");
+			templ("body", "cleaned := " + cleanupFunction(IntegerType(160), _revertOnFailure) + "(value)");
 			break;
 		case Type::Category::Integer:
 		{
@@ -265,7 +265,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 				StateMutability::Payable :
 				StateMutability::NonPayable
 			);
-			templ("body", "cleaned := " + cleanupFunction(addressType) + "(value)");
+			templ("body", "cleaned := " + cleanupFunction(addressType, _revertOnFailure) + "(value)");
 			break;
 		}
 		case Type::Category::Enum:
@@ -341,7 +341,7 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 				solAssert(_from.mobileType(), "");
 				body =
 					Whiskers("converted := <cleanEnum>(<cleanInt>(value))")
-					("cleanEnum", cleanupFunction(_to, false))
+					("cleanEnum", cleanupFunction(_to))
 					// "mobileType()" returns integer type for rational
 					("cleanInt", cleanupFunction(*_from.mobileType()))
 					.render();
