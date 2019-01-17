@@ -1,6 +1,7 @@
 ### 0.5.3 (unreleased)
 
 Language Features:
+ * Provide access to creation and runtime code of contracts via ``type(C).creationCode`` / ``type(C).runtimeCode``.
 
 
 Compiler Features:
