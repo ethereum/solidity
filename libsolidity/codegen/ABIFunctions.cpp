@@ -255,10 +255,9 @@ string ABIFunctions::EncodingOptions::toFunctionNameSuffix() const
 	return suffix;
 }
 
-
-string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
+string ABIFunctions::cleanupFunction(Type const& _type)
 {
-	string functionName = string("cleanup_") + (_revertOnFailure ? "revert_" : "assert_") + _type.identifier();
+	string functionName = string("cleanup_") + _type.identifier();
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(value) -> cleaned {
@@ -269,7 +268,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 		switch (_type.category())
 		{
 		case Type::Category::Address:
-			templ("body", "cleaned := " + cleanupFunction(IntegerType(160), _revertOnFailure) + "(value)");
+			templ("body", "cleaned := " + cleanupFunction(IntegerType(160)) + "(value)");
 			break;
 		case Type::Category::Integer:
 		{
@@ -290,6 +289,10 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			break;
 		case Type::Category::FixedPoint:
 			solUnimplemented("Fixed point types not implemented.");
+			break;
+		case Type::Category::Function:
+			solAssert(dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External, "");
+			templ("body", "cleaned := " + cleanupFunction(FixedBytesType(24)) + "(value)");
 			break;
 		case Type::Category::Array:
 		case Type::Category::Struct:
@@ -319,20 +322,13 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 				StateMutability::Payable :
 				StateMutability::NonPayable
 			);
-			templ("body", "cleaned := " + cleanupFunction(addressType, _revertOnFailure) + "(value)");
+			templ("body", "cleaned := " + cleanupFunction(addressType) + "(value)");
 			break;
 		}
 		case Type::Category::Enum:
 		{
-			size_t members = dynamic_cast<EnumType const&>(_type).numberOfMembers();
-			solAssert(members > 0, "empty enum should have caused a parser error.");
-			Whiskers w("if iszero(lt(value, <members>)) { <failure> } cleaned := value");
-			w("members", to_string(members));
-			if (_revertOnFailure)
-				w("failure", "revert(0, 0)");
-			else
-				w("failure", "invalid()");
-			templ("body", w.render());
+			// Out of range enums cannot be truncated unambigiously and therefore it should be an error.
+			templ("body", "cleaned := value " + validatorFunction(_type) + "(value)");
 			break;
 		}
 		case Type::Category::InaccessibleDynamic:
@@ -340,6 +336,56 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			break;
 		default:
 			solAssert(false, "Cleanup of type " + _type.identifier() + " requested.");
+		}
+
+		return templ.render();
+	});
+}
+
+string ABIFunctions::validatorFunction(Type const& _type, bool _revertOnFailure)
+{
+	string functionName = string("validator_") + (_revertOnFailure ? "revert_" : "assert_") + _type.identifier();
+	return createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			function <functionName>(value) {
+				if iszero(<condition>) { <failure> }
+			}
+		)");
+		templ("functionName", functionName);
+		if (_revertOnFailure)
+			templ("failure", "revert(0, 0)");
+		else
+			templ("failure", "invalid()");
+
+		switch (_type.category())
+		{
+		case Type::Category::Address:
+		case Type::Category::Integer:
+		case Type::Category::RationalNumber:
+		case Type::Category::Bool:
+		case Type::Category::FixedPoint:
+		case Type::Category::Function:
+		case Type::Category::Array:
+		case Type::Category::Struct:
+		case Type::Category::Mapping:
+		case Type::Category::FixedBytes:
+		case Type::Category::Contract:
+		{
+			templ("condition", "eq(value, " + cleanupFunction(_type) + "(value))");
+			break;
+		}
+		case Type::Category::Enum:
+		{
+			size_t members = dynamic_cast<EnumType const&>(_type).numberOfMembers();
+			solAssert(members > 0, "empty enum should have caused a parser error.");
+			templ("condition", "lt(value, " + to_string(members) + ")");
+			break;
+		}
+		case Type::Category::InaccessibleDynamic:
+			templ("condition", "1");
+			break;
+		default:
+			solAssert(false, "Validation of type " + _type.identifier() + " requested.");
 		}
 
 		return templ.render();
@@ -541,21 +587,6 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 		solAssert(!body.empty(), _from.canonicalName() + " to " + _to.canonicalName());
 		templ("body", body);
 		return templ.render();
-	});
-}
-
-string ABIFunctions::cleanupCombinedExternalFunctionIdFunction()
-{
-	string functionName = "cleanup_combined_external_function_id";
-	return createFunction(functionName, [&]() {
-		return Whiskers(R"(
-			function <functionName>(addr_and_selector) -> cleaned {
-				cleaned := <clean>(addr_and_selector)
-			}
-		)")
-		("functionName", functionName)
-		("clean", cleanupFunction(FixedBytesType(24)))
-		.render();
 	});
 }
 
@@ -1248,7 +1279,7 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 				}
 			)")
 			("functionName", functionName)
-			("cleanExtFun", cleanupCombinedExternalFunctionIdFunction())
+			("cleanExtFun", cleanupFunction(_to))
 			.render();
 		});
 }
@@ -1306,14 +1337,15 @@ string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromM
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(offset, end) -> value {
-				value := <cleanup>(<load>(offset))
+				value := <load>(offset)
+				<validator>(value)
 			}
 		)");
 		templ("functionName", functionName);
 		templ("load", _fromMemory ? "mload" : "calldataload");
-		// Cleanup itself should use the type and not decodingType, because e.g.
+		// Validation should use the type and not decodingType, because e.g.
 		// the decoding type of an enum is a plain int.
-		templ("cleanup", cleanupFunction(_type, true));
+		templ("validator", validatorFunction(_type, true));
 		return templ.render();
 	});
 
@@ -1560,11 +1592,11 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 		{
 			return Whiskers(R"(
 				function <functionName>(offset, end) -> addr, function_selector {
-					addr, function_selector := <splitExtFun>(<load>(offset))
+					addr, function_selector := <splitExtFun>(<decodeFun>(offset, end))
 				}
 			)")
 			("functionName", functionName)
-			("load", _fromMemory ? "mload" : "calldataload")
+			("decodeFun", abiDecodingFunctionFunctionType(_type, _fromMemory, false))
 			("splitExtFun", m_utils.splitExternalFunctionIdFunction())
 			.render();
 		}
@@ -1572,12 +1604,13 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 		{
 			return Whiskers(R"(
 				function <functionName>(offset, end) -> fun {
-					fun := <cleanExtFun>(<load>(offset))
+					fun := <load>(offset)
+					<validateExtFun>(fun)
 				}
 			)")
 			("functionName", functionName)
 			("load", _fromMemory ? "mload" : "calldataload")
-			("cleanExtFun", cleanupCombinedExternalFunctionIdFunction())
+			("validateExtFun", validatorFunction(_type, true))
 			.render();
 		}
 	});

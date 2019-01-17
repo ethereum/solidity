@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(cleanup)
 		ABI_CHECK(
 			callContractFunction(
 				"f(uint16,int16,address,bytes3,bool)",
-				u256(0xffffff), u256(0x1ffff), u256(-1), string("abcd"), u256(4)
+				u256(0xffffff), u256(0x1ffff), u256(-1), string("abcd"), u256(1)
 			),
 			encodeArgs(u256(0xffff), u256(-1), (u256(1) << 160) - 1, string("abc"), true)
 		);
@@ -759,7 +759,6 @@ BOOST_AUTO_TEST_CASE(complex_struct)
 	)
 }
 
-
 BOOST_AUTO_TEST_CASE(return_dynamic_types_cross_call_simple)
 {
 	if (m_evmVersion == langutil::EVMVersion::homestead())
@@ -841,6 +840,24 @@ BOOST_AUTO_TEST_CASE(return_dynamic_types_cross_call_out_of_range)
 			ABI_CHECK(callContractFunction("f(uint256)", 0x61), encodeArgs(true));
 		}
 		ABI_CHECK(callContractFunction("f(uint256)", 0x80), encodeArgs(true));
+	)
+}
+
+BOOST_AUTO_TEST_CASE(out_of_bounds_bool_value)
+{
+	string sourceCode = R"(
+		contract C {
+			function f(bool b) public pure returns (bool) { return b; }
+		}
+	)";
+	bool newDecoder = false;
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(true));
+		ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs(false));
+		ABI_CHECK(callContractFunctionNoEncoding("f(bool)", bytes(32, 0)), encodeArgs(0));
+		ABI_CHECK(callContractFunctionNoEncoding("f(bool)", bytes(32, 0xff)), newDecoder ? encodeArgs() : encodeArgs(1));
+		newDecoder = true;
 	)
 }
 

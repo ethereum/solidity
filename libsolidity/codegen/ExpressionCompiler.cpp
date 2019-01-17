@@ -1406,6 +1406,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	case Type::Category::Struct:
 	{
 		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.expression().annotation().type);
+		TypePointer const& memberType = _memberAccess.annotation().type;
 		switch (type.location())
 		{
 		case DataLocation::Storage:
@@ -1418,7 +1419,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		case DataLocation::Memory:
 		{
 			m_context << type.memoryOffsetOfMember(member) << Instruction::ADD;
-			setLValue<MemoryItem>(_memberAccess, *_memberAccess.annotation().type);
+			setLValue<MemoryItem>(_memberAccess, *memberType);
 			break;
 		}
 		case DataLocation::CallData:
@@ -1427,21 +1428,28 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				m_context << Instruction::DUP1;
 				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
-				CompilerUtils(m_context).accessCalldataTail(*_memberAccess.annotation().type);
+				CompilerUtils(m_context).accessCalldataTail(*memberType);
 			}
 			else
 			{
 				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
 				// For non-value types the calldata offset is returned directly.
-				if (_memberAccess.annotation().type->isValueType())
+				if (memberType->isValueType())
 				{
-					solAssert(_memberAccess.annotation().type->calldataEncodedSize() > 0, "");
-					CompilerUtils(m_context).loadFromMemoryDynamic(*_memberAccess.annotation().type, true, true, false);
+					solAssert(memberType->calldataEncodedSize() > 0, "");
+					solAssert(memberType->storageBytes() <= 32, "");
+					if (memberType->storageBytes() < 32 && m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+					{
+						m_context << u256(32);
+						CompilerUtils(m_context).abiDecodeV2({memberType}, false);
+					}
+					else
+						CompilerUtils(m_context).loadFromMemoryDynamic(*memberType, true, true, false);
 				}
 				else
 					solAssert(
-						_memberAccess.annotation().type->category() == Type::Category::Array ||
-						_memberAccess.annotation().type->category() == Type::Category::Struct,
+						memberType->category() == Type::Category::Array ||
+						memberType->category() == Type::Category::Struct,
 						""
 					);
 			}
@@ -1588,12 +1596,25 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			{
 				ArrayUtils(m_context).accessIndex(arrayType, true);
 				if (arrayType.baseType()->isValueType())
-					CompilerUtils(m_context).loadFromMemoryDynamic(
-						*arrayType.baseType(),
-						true,
-						!arrayType.isByteArray(),
-						false
-					);
+				{
+					solAssert(arrayType.baseType()->storageBytes() <= 32, "");
+					if (
+						!arrayType.isByteArray() &&
+						arrayType.baseType()->storageBytes() < 32 &&
+						m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
+					)
+					{
+						m_context << u256(32);
+						CompilerUtils(m_context).abiDecodeV2({arrayType.baseType()}, false);
+					}
+					else
+						CompilerUtils(m_context).loadFromMemoryDynamic(
+							*arrayType.baseType(),
+							true,
+							!arrayType.isByteArray(),
+							false
+						);
+				}
 				else
 					solAssert(
 						arrayType.baseType()->category() == Type::Category::Struct ||

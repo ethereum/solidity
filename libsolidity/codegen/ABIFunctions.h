@@ -130,9 +130,17 @@ private:
 
 	/// @returns the name of the cleanup function for the given type and
 	/// adds its implementation to the requested functions.
+	/// The cleanup function defers to the validator function with "assert"
+	/// if there is no reasonable way to clean a value.
+	std::string cleanupFunction(Type const& _type);
+
+	/// @returns the name of the validator function for the given type and
+	/// adds its implementation to the requested functions.
 	/// @param _revertOnFailure if true, causes revert on invalid data,
 	/// otherwise an assertion failure.
-	std::string cleanupFunction(Type const& _type, bool _revertOnFailure = false);
+	///
+	/// This is used for data decoded from external sources.
+	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
 
 	/// Performs cleanup after reading from a potentially compressed storage slot.
 	/// The function does not perform any validation, it just masks or sign-extends
@@ -146,9 +154,9 @@ private:
 	/// @returns the name of the function that converts a value of type @a _from
 	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
 	/// (i.e. "clean"). Asserts on failure.
+	///
+	/// This is used for data being encoded or general type conversions in the code.
 	std::string conversionFunction(Type const& _from, Type const& _to);
-
-	std::string cleanupCombinedExternalFunctionIdFunction();
 
 	/// @returns the name of the ABI encoding function with the given type
 	/// and queues the generation of the function to the requested functions.
