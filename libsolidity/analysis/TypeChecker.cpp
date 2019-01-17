@@ -299,32 +299,40 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (!_function.isConstructor() && !_function.isFallback() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(_function.location(), "Internal functions cannot be payable.");
 	}
-	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
-	{
-		if (type(*var)->category() == Type::Category::Mapping)
+	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
+		if (type(var)->category() == Type::Category::Mapping)
 		{
-			if (!type(*var)->dataStoredIn(DataLocation::Storage))
-				m_errorReporter.typeError(var->location(), "Mapping types can only have a data location of \"storage\"." );
+			if (!type(var)->dataStoredIn(DataLocation::Storage))
+				m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\"." );
 			else if (!isLibraryFunction && _function.isPublic())
-				m_errorReporter.typeError(var->location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+				m_errorReporter.typeError(var.location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
 		}
 		else
 		{
-			if (!type(*var)->canLiveOutsideStorage() && _function.isPublic())
-				m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
-			if (_function.isPublic() && !(type(*var)->interfaceType(isLibraryFunction)))
-				m_errorReporter.fatalTypeError(var->location(), "Internal or recursive type is not allowed for public or external functions.");
+			if (!type(var)->canLiveOutsideStorage() && _function.isPublic())
+				m_errorReporter.typeError(var.location(), "Type is required to live outside storage.");
+			if (_function.isPublic() && !(type(var)->interfaceType(isLibraryFunction)))
+				m_errorReporter.fatalTypeError(var.location(), "Internal or recursive type is not allowed for public or external functions.");
 		}
 		if (
 			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(*var))
+			!typeSupportedByOldABIEncoder(*type(var))
 		)
 			m_errorReporter.typeError(
-				var->location(),
+				var.location(),
 				"This type is only supported in the new experimental ABI encoder. "
 				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 			);
+	};
+	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
+	{
+		checkArgumentAndReturnParameter(*var);
+		var->accept(*this);
+	}
+	for (ASTPointer<VariableDeclaration> const& var: _function.returnParameters())
+	{
+		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}
 	set<Declaration const*> modifiers;
