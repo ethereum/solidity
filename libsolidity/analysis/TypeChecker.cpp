@@ -1487,7 +1487,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 			{
 				m_errorReporter.typeError(
 					arguments[i]->location(),
-					"Fixed point numbers cannot yet be encoded."
+					"Fractional numbers cannot yet be encoded."
 				);
 				continue;
 			}
