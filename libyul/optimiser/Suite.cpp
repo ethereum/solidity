@@ -90,7 +90,7 @@ void OptimiserSuite::run(
 		CommonSubexpressionEliminator{_dialect}(ast);
 		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
-		SSAReverser{}(ast);
+		SSAReverser::run(ast);
 		CommonSubexpressionEliminator{_dialect}(ast);
 		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
@@ -130,7 +130,7 @@ void OptimiserSuite::run(
 	ExpressionJoiner::run(ast);
 	UnusedPruner::runUntilStabilised(_dialect, ast);
 
-	SSAReverser{}(ast);
+	SSAReverser::run(ast);
 	CommonSubexpressionEliminator{_dialect}(ast);
 	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 

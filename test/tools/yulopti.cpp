@@ -190,7 +190,7 @@ public:
 				EquivalentFunctionCombiner::run(*m_ast);
 				break;
 			case 'V':
-				SSAReverser{}(*m_ast);
+				SSAReverser::run(*m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;

@@ -227,7 +227,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else if (m_optimizerStep == "ssaReverser")
 	{
 		disambiguate();
-		SSAReverser{}(*m_ast);
+		SSAReverser::run(*m_ast);
 	}
 	else if (m_optimizerStep == "ssaAndBack")
 	{
@@ -237,7 +237,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
 		// reverse SSA
-		SSAReverser{}(*m_ast);
+		SSAReverser::run(*m_ast);
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 	}

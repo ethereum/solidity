@@ -15,12 +15,20 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <libyul/optimiser/SSAReverser.h>
+#include <libyul/optimiser/Metrics.h>
 #include <libyul/AsmData.h>
 #include <libdevcore/CommonData.h>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+void SSAReverser::run(Block& _block)
+{
+	AssignmentCounter assignmentCounter;
+	assignmentCounter(_block);
+	SSAReverser{assignmentCounter}(_block);
+}
 
 void SSAReverser::operator()(Block& _block)
 {
@@ -47,7 +55,7 @@ void SSAReverser::operator()(Block& _block)
 					assignment->variableNames.size() == 1 &&
 					identifier &&
 					identifier->name == varDecl->variables.front().name
-					)
+				)
 				{
 					vector<Statement> result;
 					result.emplace_back(Assignment{
@@ -75,7 +83,10 @@ void SSAReverser::operator()(Block& _block)
 				if (
 					varDecl2->variables.size() == 1 &&
 					identifier &&
-					identifier->name == varDecl->variables.front().name
+					identifier->name == varDecl->variables.front().name && (
+						m_assignmentCounter.assignmentCount(varDecl2->variables.front().name) >
+						m_assignmentCounter.assignmentCount(varDecl->variables.front().name)
+				   )
 				)
 				{
 					vector<Statement> result;

@@ -21,6 +21,8 @@
 namespace yul
 {
 
+class AssignmentCounter;
+
 /**
  * Reverses the SSA transformation.
  *
@@ -54,7 +56,7 @@ namespace yul
  * 	After that the CSE can replace references of a_1 by references to a,
  * 	after which the unused pruner can remove the declaration of a_1.
  *
- * 	Prerequisites: None
+ * 	Prerequisites: Disambiguator
  *
  */
 class SSAReverser: public ASTModifier
@@ -62,6 +64,11 @@ class SSAReverser: public ASTModifier
 public:
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
+
+	static void run(Block& _block);
+private:
+	SSAReverser(AssignmentCounter const& _assignmentCounter): m_assignmentCounter(_assignmentCounter) {}
+	AssignmentCounter const& m_assignmentCounter;
 };
 
 }
