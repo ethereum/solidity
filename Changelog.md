@@ -11,6 +11,7 @@ Bugfixes:
 
 
 Build System:
+ * Add support for continuous fuzzing via Google oss-fuzz
 
 
 ### 0.5.3 (2019-01-22)
