@@ -142,7 +142,8 @@ private:
 	std::string abiEncodingFunctionMemoryByteArray(
 		ArrayType const& _givenType,
 		ArrayType const& _targetType,
-		bool _encodeAsLibraryTypes
+		bool _encodeAsLibraryTypes,
+		Packed _packed
 	);
 	/// Part of @a abiEncodingFunction for array target type and given storage array
 	/// where multiple items are packed into the same storage slot.

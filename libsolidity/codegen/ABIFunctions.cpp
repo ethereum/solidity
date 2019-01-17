@@ -573,7 +573,7 @@ string ABIFunctions::abiEncodingFunction(
 		))
 			return abiEncodingFunctionSimpleArray(fromArray, *toArray, _encodeAsLibraryTypes); // TODO
 		else if (fromArray.location() == DataLocation::Memory)
-			return abiEncodingFunctionMemoryByteArray(fromArray, *toArray, _encodeAsLibraryTypes);
+			return abiEncodingFunctionMemoryByteArray(fromArray, *toArray, _encodeAsLibraryTypes, _packed);
 		else if (fromArray.location() == DataLocation::Storage)
 			return abiEncodingFunctionCompactStorageArray(fromArray, *toArray, _encodeAsLibraryTypes); // TODO
 		else
@@ -772,11 +772,13 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 string ABIFunctions::abiEncodingFunctionMemoryByteArray(
 	ArrayType const& _from,
 	ArrayType const& _to,
-	bool _encodeAsLibraryTypes
+	bool _encodeAsLibraryTypes,
+	Packed _packed
 )
 {
 	string functionName =
 		"abi_encode_" +
+		string(_packed == Packed::PACKED ? "packed_" : "") +
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
@@ -789,18 +791,28 @@ string ABIFunctions::abiEncodingFunctionMemoryByteArray(
 
 	return createFunction(functionName, [&]() {
 		solAssert(_to.isByteArray(), "");
-		Whiskers templ(R"(
-			function <functionName>(value, pos) -> end {
-				let length := <lengthFun>(value)
-				mstore(pos, length)
-				<copyFun>(add(value, 0x20), add(pos, 0x20), length)
-				end := add(add(pos, 0x20), <roundUpFun>(length))
-			}
-		)");
+		Whiskers templ(
+			_packed == Packed::PADDED ?
+			R"(
+				function <functionName>(value, pos) -> end {
+					let length := <lengthFun>(value)
+					mstore(pos, length)
+					<copyFun>(add(value, 0x20), add(pos, 0x20), length)
+					end := add(add(pos, 0x20), <roundUpFun>(length))
+				}
+			)" : R"(
+				function <functionName>(value, pos) -> end {
+					let length := <lengthFun>(value)
+					<copyFun>(add(value, 0x20), pos, length)
+					end := add(pos, length)
+				}
+			)"
+		);
 		templ("functionName", functionName);
 		templ("lengthFun", arrayLengthFunction(_from));
 		templ("copyFun", copyToMemoryFunction(false));
-		templ("roundUpFun", roundUpFunction());
+		if (_packed == Packed::PADDED)
+			templ("roundUpFun", roundUpFunction());
 		return templ.render();
 	});
 }
