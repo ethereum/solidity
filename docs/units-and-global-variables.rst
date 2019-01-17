@@ -200,7 +200,7 @@ Members of Address Types
 For more information, see the section on :ref:`address`.
 
 .. warning::
-    You should avoid using ``.call()`` when executing another contract function as it bypasses the compiler type checking,
+    You should avoid using ``.call()`` whenever possible when executing another contract function as it bypasses type checking,
     function existence check, and argument packing.
 
 .. warning::
