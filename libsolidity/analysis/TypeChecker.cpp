@@ -1482,7 +1482,16 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 
 		if (argType->category() == Type::Category::RationalNumber)
 		{
-			if (!argType->mobileType())
+			auto const& rationalType = dynamic_cast<RationalNumberType const&>(*argType);
+			if (rationalType.isFractional())
+			{
+				m_errorReporter.typeError(
+					arguments[i]->location(),
+					"Fixed point numbers cannot yet be encoded."
+				);
+				continue;
+			}
+			else if (!argType->mobileType())
 			{
 				m_errorReporter.typeError(
 					arguments[i]->location(),
