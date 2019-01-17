@@ -134,3 +134,15 @@ void CodeCost::visit(Expression const& _expression)
 	++m_cost;
 	ASTWalker::visit(_expression);
 }
+
+void AssignmentCounter::operator()(Assignment const& _assignment)
+{
+	for (auto const& variable: _assignment.variableNames)
+		++m_assignmentCounters[variable.name];
+}
+
+size_t AssignmentCounter::assignmentCount(YulString _name) const
+{
+	auto it = m_assignmentCounters.find(_name);
+	return (it == m_assignmentCounters.end()) ? 0 : it->second;
+}

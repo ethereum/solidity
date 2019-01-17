@@ -80,6 +80,8 @@ add_library(yul
 	optimiser/RedundantAssignEliminator.h
 	optimiser/Rematerialiser.cpp
 	optimiser/Rematerialiser.h
+	optimiser/SSAReverser.cpp
+	optimiser/SSAReverser.h
 	optimiser/SSATransform.cpp
 	optimiser/SSATransform.h
 	optimiser/SSAValueTracker.cpp

@@ -77,4 +77,18 @@ private:
 	size_t m_cost = 0;
 };
 
+/**
+ * Counts the number of assignments to every variable.
+ * Only works after running the Disambiguator.
+ */
+class AssignmentCounter: public ASTWalker
+{
+public:
+	using ASTWalker::operator();
+	void operator()(Assignment const& _assignment) override;
+	std::size_t assignmentCount(YulString _name) const;
+private:
+	std::map<YulString, size_t> m_assignmentCounters;
+};
+
 }
