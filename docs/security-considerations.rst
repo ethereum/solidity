@@ -240,9 +240,7 @@ more special edge cases for signed numbers.
 
 Try to use ``require`` to limit the size of inputs to a reasonable range and use the
 :ref:`SMT checker<smt_checker>` to find potential overflows, or
-use a library like
-`SafeMath<https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol>`
-if you want all overflows to cause a revert.
+use a library like [SafeMath](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol) if you want all overflows to cause a revert.
 
 Minor Details
 =============
