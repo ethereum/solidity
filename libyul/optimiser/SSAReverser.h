@@ -33,9 +33,22 @@ namespace yul
  * 		let a_1 := E
  * 		a := a_1
  *
- * 	To undo this transformation, the SSAReverser changes this back to
+ * To undo this kind of transformation, the SSAReverser changes this back to
  *
  * 		a := E
+ * 		let a_1 := a
+ *
+ * Secondly, the SSA transform will rewrite
+ *
+ * 		let a := E
+ * to
+ *
+ * 		let a_1 := E
+ * 		let a := a_1
+ *
+ * To undo this kind of transformation, the SSAReverser changes this back to
+ *
+ * 		let a := E
  * 		let a_1 := a
  *
  * 	After that the CSE can replace references of a_1 by references to a,

@@ -531,8 +531,7 @@
 //         {
 //             revert(0, 0)
 //         }
-//         let i_9_296 := 0
-//         let i_9 := i_9_296
+//         let i_9 := 0
 //         for {
 //         }
 //         lt(i_9, length_6)
@@ -542,17 +541,17 @@
 //         {
 //             if iszero(slt(add(src_8, 0x1f), end_4))
 //             {
-//                 revert(i_9_296, i_9_296)
+//                 revert(0, 0)
 //             }
-//             let abi_decode_array_13_300 := allocateMemory(array_allocation_size_t_array$_t_uint256_$2_memory(0x2))
-//             let abi_decode_dst_15 := abi_decode_array_13_300
+//             let abi_decode_dst_15 := allocateMemory(array_allocation_size_t_array$_t_uint256_$2_memory(0x2))
+//             let abi_decode_dst_15_1155 := abi_decode_dst_15
 //             let abi_decode_src_16 := src_8
 //             let abi_decode__239 := add(src_8, 0x40)
 //             if gt(abi_decode__239, end_4)
 //             {
-//                 revert(i_9_296, i_9_296)
+//                 revert(0, 0)
 //             }
-//             let abi_decode_i_17 := i_9_296
+//             let abi_decode_i_17 := 0
 //             for {
 //             }
 //             lt(abi_decode_i_17, 0x2)
@@ -564,7 +563,7 @@
 //                 abi_decode_dst_15 := add(abi_decode_dst_15, _16)
 //                 abi_decode_src_16 := add(abi_decode_src_16, _16)
 //             }
-//             mstore(dst_7, abi_decode_array_13_300)
+//             mstore(dst_7, abi_decode_dst_15_1155)
 //             dst_7 := add(dst_7, _16)
 //             src_8 := abi_decode__239
 //         }
