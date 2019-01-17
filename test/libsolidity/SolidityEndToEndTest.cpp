@@ -14242,8 +14242,8 @@ BOOST_AUTO_TEST_CASE(code_access)
 				uint crLen = type(D).creationCode.length;
 				uint runLen = type(D).runtimeCode.length;
 				require(runLen < crLen);
-				require(crLen >= 0x95 && crLen < 0xd0);
-				require(runLen >= 0x7a && runLen < 0xb0);
+				require(crLen >= 0x20);
+				require(runLen >= 0x20);
 				return true;
 			}
 			function creation() public pure returns (bytes memory) {
@@ -14296,6 +14296,49 @@ BOOST_AUTO_TEST_CASE(code_access_create)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(7));
+}
+
+BOOST_AUTO_TEST_CASE(code_access_content)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function testRuntime() public returns (bool) {
+				D d = new D();
+				bytes32 runtimeHash = keccak256(type(D).runtimeCode);
+				bytes32 otherHash;
+				uint size;
+				assembly {
+					size := extcodesize(d)
+					extcodecopy(d, mload(0x40), 0, size)
+					otherHash := keccak256(mload(0x40), size)
+				}
+				require(size == type(D).runtimeCode.length);
+				require(runtimeHash == otherHash);
+				return true;
+			}
+			function testCreation() public returns (bool) {
+				D d = new D();
+				bytes32 creationHash = keccak256(type(D).creationCode);
+				require(creationHash == d.x());
+				return true;
+			}
+		}
+		contract D {
+			bytes32 public x;
+			constructor() public {
+				bytes32 codeHash;
+				assembly {
+					let size := codesize()
+					codecopy(mload(0x40), 0, size)
+					codeHash := keccak256(mload(0x40), size)
+				}
+				x = codeHash;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("testRuntime()"), encodeArgs(true));
+	ABI_CHECK(callContractFunction("testCreation()"), encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
