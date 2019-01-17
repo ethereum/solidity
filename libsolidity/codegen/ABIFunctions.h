@@ -91,11 +91,15 @@ private:
 	/// adds its implementation to the requested functions.
 	/// @param _revertOnFailure if true, causes revert on invalid data,
 	/// otherwise an assertion failure.
+	///
+	/// This is used for data decoded from external sources.
 	std::string cleanupFunction(Type const& _type, bool _revertOnFailure = false);
 
 	/// @returns the name of the function that converts a value of type @a _from
 	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
 	/// (i.e. "clean"). Asserts on failure.
+	///
+	/// This is used for data being encoded.
 	std::string conversionFunction(Type const& _from, Type const& _to);
 
 	std::string cleanupCombinedExternalFunctionIdFunction();
