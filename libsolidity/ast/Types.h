@@ -378,7 +378,8 @@ public:
 		Unsigned, Signed
 	};
 
-	static IntegerType& uint256() { static std::shared_ptr<IntegerType> uint256(std::make_shared<IntegerType>(256)); return *uint256; }
+	static IntegerType& uint256() { static std::unique_ptr<IntegerType> uint256(std::make_unique<IntegerType>(256)); return *uint256; }
+	static IntegerType& uint160() { static std::unique_ptr<IntegerType> uint160(std::make_unique<IntegerType>(160)); return *uint160; }
 
 	Category category() const override { return Category::Integer; }
 
