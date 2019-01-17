@@ -800,11 +800,7 @@ void CompilerStack::compileContract(
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
 
-	if (
-		_otherCompilers.count(&_contract) ||
-		!_contract.annotation().unimplementedFunctions.empty() ||
-		!_contract.constructorIsPublic()
-	)
+	if (_otherCompilers.count(&_contract) || !_contract.canBeDeployed())
 		return;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _otherCompilers);

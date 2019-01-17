@@ -3423,7 +3423,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 			"Only contracts supported for now"
 		);
 		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_typeArgument).contractDefinition();
-		if (contract.annotation().unimplementedFunctions.empty() && contract.constructorIsPublic())
+		if (contract.canBeDeployed())
 			return MemberList::MemberMap({
 				{"creationCode", std::make_shared<ArrayType>(DataLocation::Memory)},
 				{"runtimeCode", std::make_shared<ArrayType>(DataLocation::Memory)}
