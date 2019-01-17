@@ -200,6 +200,10 @@ Members of Address Types
 For more information, see the section on :ref:`address`.
 
 .. warning::
+    You should avoid using ``.call()`` whenever possible when executing another contract function as it bypasses type checking,
+    function existence check, and argument packing.
+
+.. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
