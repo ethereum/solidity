@@ -55,11 +55,20 @@ function test_truffle
       cd "$DIR"
       echo "Current commit hash: `git rev-parse HEAD`"
       npm install
-      find . -name soljson.js -exec cp "$SOLJSON" {} \;
-      if [ "$name" == "Gnosis" ]; then
+      # Replace solc package by master
+      for d in node_modules node_modules/truffle/node_modules
+      do
+      (
+        cd $d
+        rm -rf solc
+        git clone --depth 1 https://github.com/ethereum/solc-js.git solc
+        cp "$SOLJSON" solc/
+      )
+      done
+      if [ "$name" == "Zeppelin" -o "$name" == "Gnosis" ]; then
         echo "Replaced fixed-version pragmas..."
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
-        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity 0/pragma solidity ^0/'
+        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
       fi
       assertsol="node_modules/truffle/build/Assert.sol"
       if [ -f "$assertsol" ]
@@ -68,6 +77,9 @@ function test_truffle
         rm "$assertsol"
         wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
       fi
+      # Change "compileStandard" to "compile"
+      sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
+      npx truffle compile
       npm run test
     )
     rm -rf "$DIR"
@@ -78,3 +90,5 @@ test_truffle Zeppelin https://github.com/axic/openzeppelin-solidity.git solidity
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
+
+test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development

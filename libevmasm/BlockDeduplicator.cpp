@@ -41,7 +41,7 @@ bool BlockDeduplicator::deduplicate()
 
 	// Virtual tag that signifies "the current block" and which is used to optimise loops.
 	// We abort if this virtual tag actually exists.
-	AssemblyItem pushSelf(PushTag, u256(-4));
+	AssemblyItem pushSelf{PushTag, u256(-4)};
 	if (
 		std::count(m_items.cbegin(), m_items.cend(), pushSelf.tag()) ||
 		std::count(m_items.cbegin(), m_items.cend(), pushSelf.pushTag())
@@ -55,17 +55,17 @@ bool BlockDeduplicator::deduplicate()
 
 		// To compare recursive loops, we have to already unify PushTag opcodes of the
 		// block's own tag.
-		AssemblyItem pushFirstTag(pushSelf);
-		AssemblyItem pushSecondTag(pushSelf);
+		AssemblyItem pushFirstTag{pushSelf};
+		AssemblyItem pushSecondTag{pushSelf};
 
 		if (_i < m_items.size() && m_items.at(_i).type() == Tag)
 			pushFirstTag = m_items.at(_i).pushTag();
 		if (_j < m_items.size() && m_items.at(_j).type() == Tag)
 			pushSecondTag = m_items.at(_j).pushTag();
 
-		BlockIterator first(m_items.begin() + _i, m_items.end(), &pushFirstTag, &pushSelf);
-		BlockIterator second(m_items.begin() + _j, m_items.end(), &pushSecondTag, &pushSelf);
-		BlockIterator end(m_items.end(), m_items.end());
+		BlockIterator first{m_items.begin() + _i, m_items.end(), &pushFirstTag, &pushSelf};
+		BlockIterator second{m_items.begin() + _j, m_items.end(), &pushSecondTag, &pushSelf};
+		BlockIterator end{m_items.end(), m_items.end()};
 
 		if (first != end && (*first).type() == Tag)
 			++first;
@@ -126,7 +126,7 @@ BlockDeduplicator::BlockIterator& BlockDeduplicator::BlockIterator::operator++()
 {
 	if (it == end)
 		return *this;
-	if (SemanticInformation::altersControlFlow(*it) && *it != AssemblyItem(Instruction::JUMPI))
+	if (SemanticInformation::altersControlFlow(*it) && *it != AssemblyItem{Instruction::JUMPI})
 		it = end;
 	else
 	{

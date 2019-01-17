@@ -2,15 +2,29 @@
 Layout of a Solidity Source File
 ********************************
 
-Source files can contain an arbitrary number of contract definitions, include directives
-and pragma directives.
+Source files can contain an arbitrary number of
+:ref:`contract definitions<contract_structure>`, import_ directives
+and :ref:`pragma directives<pragma>`.
+
+.. index:: ! pragma
+
+.. _pragma:
+
+Pragmas
+=======
+
+The ``pragma`` keyword can be used to enable certain compiler features
+or checks. A pragma directive is always local to a source file, so
+you have to add the pragma to all your files if you want enable it
+in all of your project. If you :ref:`import<import>` another file, the pragma
+from that file will not automatically apply to the importing file.
 
 .. index:: ! pragma, version
 
 .. _version_pragma:
 
 Version Pragma
-==============
+--------------
 
 Source files can (and should) be annotated with a so-called version pragma to reject
 being compiled with future compiler versions that might introduce incompatible
@@ -23,17 +37,64 @@ breaking changes, those releases will always have versions of the form
 
 The version pragma is used as follows::
 
-  pragma solidity ^0.4.0;
+  pragma solidity ^0.5.2;
 
-Such a source file will not compile with a compiler earlier than version 0.4.0
-and it will also not work on a compiler starting from version 0.5.0 (this
+Such a source file will not compile with a compiler earlier than version 0.5.2
+and it will also not work on a compiler starting from version 0.6.0 (this
 second condition is added by using ``^``). The idea behind this is that
-there will be no breaking changes until version ``0.5.0``, so we can always
+there will be no breaking changes until version ``0.6.0``, so we can always
 be sure that our code will compile the way we intended it to. We do not fix
 the exact version of the compiler, so that bugfix releases are still possible.
 
 It is possible to specify much more complex rules for the compiler version,
 the expression follows those used by `npm <https://docs.npmjs.com/misc/semver>`_.
+
+.. note::
+  Using the version pragma will *not* change the version of the compiler.
+  It will also *not* enable or disable features of the compiler. It will just
+  instruct the compiler to check whether its version matches the one
+  required by the pragma. If it does not match, the compiler will issue
+  an error.
+
+.. index:: ! pragma, experimental
+
+.. _experimental_pragma:
+
+Experimental Pragma
+-------------------
+
+The second pragma is the experimental pragma. It can be used to enable
+features of the compiler or language that are not yet enabled by default.
+The following experimental pragmas are currently supported:
+
+
+ABIEncoderV2
+~~~~~~~~~~~~
+
+The new ABI encoder is able to encode and decode arbitrarily nested
+arrays and structs. It produces less optimal code (the optimizer
+for this part of the code is still under development) and has not
+received as much testing as the old encoder. You can activate it
+using ``pragma experimental ABIEncoderV2;``.
+
+.. _smt_checker:
+
+SMTChecker
+~~~~~~~~~~
+
+This component has to be enabled when the Solidity compiler is built
+and therefore it is not available in all Solidity binaries.
+The :ref:`build instructions<smt_solvers_build>` explain how to activate this option.
+It is activated for the Ubuntu PPA releases in most versions,
+but not for solc-js, the Docker images, Windows binaries or the
+statically-built Linux binaries.
+
+If you use
+``pragma experimental SMTChecker;``, then you get additional
+safety warnings which are obtained by querying an SMT solver.
+The component does not yet support all features of the Solidity language
+and likely outputs many warnings. In case it reports unsupported
+features, the analysis may not be fully sound.
 
 .. index:: source file, ! import
 
@@ -56,18 +117,27 @@ At a global level, you can use import statements of the following form:
 
 This statement imports all global symbols from "filename" (and symbols imported there) into the
 current global scope (different than in ES6 but backwards-compatible for Solidity).
+This simple form is not recommended for use, because it pollutes the namespace in an
+unpredictable way: If you add new top-level items inside "filename", they will automatically
+appear in all files that import like this from "filename". It is better to import specific
+symbols explicitly.
+
+The following example creates a new global symbol ``symbolName`` whose members are all
+the global symbols from ``"filename"``.
 
 ::
 
   import * as symbolName from "filename";
 
-...creates a new global symbol ``symbolName`` whose members are all the global symbols from ``"filename"``.
+If there is a naming collision, you can also rename symbols while importing.
+This code
+creates new global symbols ``alias`` and ``symbol2`` which reference ``symbol1`` and ``symbol2`` from inside ``"filename"``, respectively.
 
 ::
 
   import {symbol1 as alias, symbol2} from "filename";
 
-...creates new global symbols ``alias`` and ``symbol2`` which reference ``symbol1`` and ``symbol2`` from ``"filename"``, respectively.
+
 
 Another syntax is not part of ES6, but probably convenient:
 
@@ -76,6 +146,10 @@ Another syntax is not part of ES6, but probably convenient:
   import "filename" as symbolName;
 
 which is equivalent to ``import * as symbolName from "filename";``.
+
+.. note::
+  If you use `import "filename.sol" as moduleName;`, you access a contract called `C`
+  from inside `"filename.sol"` as `moduleName.C` and not by using `C` directly.
 
 Paths
 -----
@@ -92,6 +166,11 @@ If you use ``import "x" as x;`` instead, a different file could be referenced
 It depends on the compiler (see below) how to actually resolve the paths.
 In general, the directory hierarchy does not need to strictly map onto your local
 filesystem, it can also map to resources discovered via e.g. ipfs, http or git.
+
+.. note::
+    Always use relative imports like ``import "./filename.sol";`` and avoid
+    using ``..`` in path specifiers. In the latter case, it is probably better to use
+    global paths and set up remappings as explained below.
 
 Use in Actual Compilers
 -----------------------
@@ -181,9 +260,14 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
   multi-line comment.
   */
 
+.. note::
+  A single-line comment is terminated by any unicode line terminator
+  (LF, VF, FF, CR, NEL, LS or PS) in utf8 encoding. The terminator is still part of
+  the source code after the comment, so if it is not an ascii symbol
+  (these are NEL, LS and PS), it will lead to a parser error.
 
 Additionally, there is another type of comment called a natspec comment,
-for which the documentation is not yet written. They are written with a
+which is detailed in the :ref:`style guide<natspec>`. They are written with a
 triple slash (``///``) or a double asterisk block(``/** ... */``) and
 they should be used directly above function declarations or statements.
 You can use `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_-style tags inside these comments to document
@@ -192,11 +276,11 @@ functions, annotate conditions for formal verification, and provide a
 function.
 
 In the following example we document the title of the contract, the explanation
-for the two input parameters and two returned values.
+for the two function parameters and two return variables.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     /** @title Shape calculator. */
     contract ShapeCalculator {

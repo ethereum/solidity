@@ -91,7 +91,7 @@ string dev::quotedAlternativesList(vector<string> const& suggestions)
 	vector<string> quotedSuggestions;
 
 	for (auto& suggestion: suggestions)
-		quotedSuggestions.push_back("\"" + suggestion + "\"");
+		quotedSuggestions.emplace_back("\"" + suggestion + "\"");
 
 	return joinHumanReadable(quotedSuggestions, ", ", " or ");
 }

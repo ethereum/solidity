@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <string>
-#include <memory>
 #include <json/json.h>
+#include <memory>
+#include <string>
 
 namespace dev
 {

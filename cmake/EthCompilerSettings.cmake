@@ -24,10 +24,6 @@ endif()
 eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-
-	# Use ISO C++11 standard language.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
 	# enabled by -Wall.   Finally, treat at warnings-as-errors, which forces developers
@@ -78,10 +74,8 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			# into errors, which makes sense.
 			# http://stackoverflow.com/questions/21617158/how-to-silence-unused-command-line-argument-error-with-clang-without-disabling-i
 			add_compile_options(-Qunused-arguments)
-		endif()
 
-		if (EMSCRIPTEN)
-			# Do not emit a separate memory initialiser file
+		elseif(EMSCRIPTEN)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0")
 			# Leave only exported symbols as public and aggressively remove others
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdata-sections -ffunction-sections -Wl,--gc-sections -fvisibility=hidden")
@@ -166,9 +160,8 @@ option(USE_CVC4 "Allow compiling with CVC4 SMT solver integration" ON)
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	option(USE_LD_GOLD "Use GNU gold linker" ON)
 	if (USE_LD_GOLD)
-		execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
+		execute_process(COMMAND ${CMAKE_CXX_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
 		if ("${LD_VERSION}" MATCHES "GNU gold")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
 		endif ()
 	endif ()

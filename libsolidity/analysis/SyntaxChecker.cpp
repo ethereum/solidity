@@ -16,19 +16,23 @@
 */
 
 #include <libsolidity/analysis/SyntaxChecker.h>
-#include <memory>
+
+#include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
-#include <libsolidity/analysis/SemVerHandler.h>
-#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/interface/Version.h>
-#include <boost/algorithm/cxx11/all_of.hpp>
 
+#include <liblangutil/ErrorReporter.h>
+
+#include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <memory>
 #include <string>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 
@@ -53,7 +57,7 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 		SemVerVersion recommendedVersion{string(VersionString)};
 		if (!recommendedVersion.isPrerelease())
 			errorString +=
-				"Consider adding \"pragma solidity ^" +
+				" Consider adding \"pragma solidity ^" +
 				to_string(recommendedVersion.major()) +
 				string(".") +
 				to_string(recommendedVersion.minor()) +
@@ -76,7 +80,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	{
 		solAssert(m_sourceUnit, "");
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
-		if (literals.size() == 0)
+		if (literals.empty())
 			m_errorReporter.syntaxError(
 				_pragma.location(),
 				"Experimental feature name is missing."
@@ -106,11 +110,11 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	}
 	else if (_pragma.literals()[0] == "solidity")
 	{
-		vector<Token::Value> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
+		vector<Token> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 		SemVerMatchExpressionParser parser(tokens, literals);
 		auto matchExpression = parser.parse();
-		SemVerVersion currentVersion{string(VersionString)};
+		static SemVerVersion const currentVersion{string(VersionString)};
 		if (!matchExpression.matches(currentVersion))
 			m_errorReporter.syntaxError(
 				_pragma.location(),

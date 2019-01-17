@@ -22,12 +22,18 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTAnnotations.h>
+#include <libsolidity/ast/ASTVisitor.h>
+#include <liblangutil/Exceptions.h>
+
+#include <json/json.h>
 #include <ostream>
 #include <stack>
-#include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/interface/Exceptions.h>
-#include <libsolidity/ast/ASTAnnotations.h>
-#include <json/json.h>
+
+namespace langutil
+{
+struct SourceLocation;
+}
 
 namespace dev
 {
@@ -120,7 +126,7 @@ private:
 		std::string const& _nodeName,
 		std::vector<std::pair<std::string, Json::Value>>&& _attributes
 	);
-	std::string sourceLocationToString(SourceLocation const& _location) const;
+	std::string sourceLocationToString(langutil::SourceLocation const& _location) const;
 	static std::string namePathToString(std::vector<ASTString> const& _namePath);
 	static Json::Value idOrNull(ASTNode const* _pt)
 	{
@@ -130,11 +136,11 @@ private:
 	{
 		return _node ? toJson(*_node) : Json::nullValue;
 	}
-	Json::Value inlineAssemblyIdentifierToJson(std::pair<assembly::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info) const;
+	Json::Value inlineAssemblyIdentifierToJson(std::pair<yul::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info) const;
 	static std::string location(VariableDeclaration::Location _location);
 	static std::string contractKind(ContractDefinition::ContractKind _kind);
 	static std::string functionCallKind(FunctionCallKind _kind);
-	static std::string literalTokenKind(Token::Value _token);
+	static std::string literalTokenKind(Token _token);
 	static std::string type(Expression const& _expression);
 	static std::string type(VariableDeclaration const& _varDecl);
 	static int nodeId(ASTNode const& _node)

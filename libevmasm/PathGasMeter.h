@@ -23,7 +23,7 @@
 
 #include <libevmasm/GasMeter.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <set>
 #include <vector>
@@ -56,6 +56,16 @@ public:
 	explicit PathGasMeter(AssemblyItems const& _items, solidity::EVMVersion _evmVersion);
 
 	GasMeter::GasConsumption estimateMax(size_t _startIndex, std::shared_ptr<KnownState> const& _state);
+
+	static GasMeter::GasConsumption estimateMax(
+		AssemblyItems const& _items,
+		solidity::EVMVersion _evmVersion,
+		size_t _startIndex,
+		std::shared_ptr<KnownState> const& _state
+	)
+	{
+		return PathGasMeter(_items, _evmVersion).estimateMax(_startIndex, _state);
+	}
 
 private:
 	/// Adds a new path item to the queue, but only if we do not already have

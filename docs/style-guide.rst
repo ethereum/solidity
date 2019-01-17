@@ -52,7 +52,7 @@ Surround top level declarations in solidity source with two blank lines.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         // ...
@@ -70,7 +70,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         // ...
@@ -89,7 +89,7 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         function spam() public pure;
@@ -109,7 +109,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         function spam() public pure {
@@ -237,7 +237,7 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     import "./Owned.sol";
 
@@ -251,7 +251,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         // ...
@@ -283,7 +283,7 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
         constructor() public {
@@ -315,7 +315,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract A {
 
@@ -411,7 +411,7 @@ should:
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract Coin {
         struct Bank {
@@ -422,7 +422,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract Coin
     {
@@ -723,7 +723,7 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -755,7 +755,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -809,7 +809,23 @@ possible permutations for function declarations.
 Mappings
 ========
 
-TODO
+In variable declarations, do not separate the keyword ``mapping`` from its
+type by a space. Do not separate any nested ``mapping`` keyword from its type by
+whitespace.
+
+Yes::
+
+    mapping(uint => uint) map;
+    mapping(address => bool) registeredAddresses;
+    mapping(uint => mapping(bool => Data[])) public data;
+    mapping(uint => mapping(uint => s)) data;
+
+No::
+
+    mapping (uint => uint) map;
+    mapping( address => bool ) registeredAddresses;
+    mapping (uint => mapping (bool => Data[])) public data;
+    mapping(uint => mapping (uint => s)) data;
 
 Variable Declarations
 =====================
@@ -874,6 +890,29 @@ No::
     x = y+z;
     x +=1;
 
+***************
+Order of Layout
+***************
+
+Layout contract elements in the following order:
+
+1. Pragma statements
+2. Import statements
+3. Interfaces
+4. Libraries
+5. Contracts
+
+Inside each contract, library or interface, use the following order:
+
+1. Type declarations
+2. State variables
+3. Events
+4. Functions
+
+.. note::
+
+    It might be clearer to declare types close to their use in events or state
+    variables.
 
 ******************
 Naming Conventions
@@ -932,7 +971,7 @@ As shown in the example below, if the contract name is `Congress` and the librar
 
 Yes::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // Owned.sol
     contract Owned {
@@ -961,7 +1000,7 @@ Yes::
 
 No::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     // owned.sol
     contract owned {
@@ -1054,3 +1093,64 @@ General Recommendations
 =======================
 
 TODO
+
+.. _natspec:
+
+*******
+NatSpec
+*******
+
+Solidity contracts can have a form of comments that are the basis of the
+Ethereum Natural Language Specification Format.
+
+Add comments above functions or contracts following `doxygen <http://www.doxygen.nl>`_ notation
+of one or multiple lines starting with `///` or a
+multiline comment starting with `/**` and ending with `*/`.
+
+For example, the contract from `a simple smart contract <simple-smart-contract>`_ with the comments
+added looks like the one below::
+
+    pragma solidity >=0.4.0 <0.6.0;
+
+    /// @author The Solidity Team
+    /// @title A simple storage example
+    contract SimpleStorage {
+        uint storedData;
+
+        /// Store `x`.
+        /// @param x the new value to store
+        /// @dev stores the number in the state variable `storedData`
+        function set(uint x) public {
+            storedData = x;
+        }
+
+        /// Return the stored value.
+        /// @dev retrieves the value of the state variable `storedData`
+        /// @return the stored value
+        function get() public view returns (uint) {
+            return storedData;
+        }
+    }
+
+Natspec uses doxygen style tags with some special meaning.
+If no tag is used, then the comment applies to ``@notice``.
+The ``@notice`` tag is the main NatSpec tag and its audience is
+users of the contract who have never seen the source code, so it should make
+as little assumptions about the inner details as possible.
+All tags are optional.
+
++-------------+-------------------------------------------+-------------------------------+
+| Tag         | Description                               | Context                       |
++=============+===========================================+===============================+
+| ``@title``  | A title that describes the contract       | contract, interface           |
++-------------+-------------------------------------------+-------------------------------+
+| ``@author`` | The name of the author                    | contract, interface, function |
++-------------+-------------------------------------------+-------------------------------+
+| ``@notice`` | Explanation of functionality              | contract, interface, function |
++-------------+-------------------------------------------+-------------------------------+
+| ``@dev``    | Any extra details                         | contract, interface, function |
++-------------+-------------------------------------------+-------------------------------+
+| ``@param``  | Parameter type followed by parameter name | function                      |
++-------------+-------------------------------------------+-------------------------------+
+| ``@return`` | The return value of a contract's function | function                      |
++-------------+-------------------------------------------+-------------------------------+

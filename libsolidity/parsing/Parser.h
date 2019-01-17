@@ -23,28 +23,34 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/parsing/ParserBase.h>
+#include <liblangutil/ParserBase.h>
+
+namespace langutil
+{
+class Scanner;
+}
 
 namespace dev
 {
 namespace solidity
 {
 
-class Scanner;
-
-class Parser: public ParserBase
+class Parser: public langutil::ParserBase
 {
 public:
-	explicit Parser(ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
+	explicit Parser(langutil::ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
 
-	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
+	ASTPointer<SourceUnit> parse(std::shared_ptr<langutil::Scanner> const& _scanner);
 
 private:
 	class ASTNodeFactory;
 
 	struct VarDeclParserOptions
 	{
+		// This is actually not needed, but due to a defect in the C++ standard, we have to.
+		// https://stackoverflow.com/questions/17430377
 		VarDeclParserOptions() {}
+
 		bool allowVar = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
@@ -67,6 +73,7 @@ private:
 
 	///@{
 	///@name Parsing functions for the AST nodes
+	void parsePragmaVersion(std::vector<Token> const& tokens, std::vector<std::string> const& literals);
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
 	ContractDefinition::ContractKind parseContractKind();
@@ -81,7 +88,7 @@ private:
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(
-		VarDeclParserOptions const& _options = VarDeclParserOptions(),
+		VarDeclParserOptions const& _options = {},
 		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>()
 	);
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
@@ -95,7 +102,7 @@ private:
 	ASTPointer<FunctionTypeName> parseFunctionType();
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(
-		VarDeclParserOptions const& _options,
+		VarDeclParserOptions const& _options = {},
 		bool _allowEmpty = true
 	);
 	ASTPointer<Block> parseBlock(ASTPointer<ASTString> const& _docString = {});
@@ -146,7 +153,7 @@ private:
 	struct IndexAccessedPath
 	{
 		std::vector<ASTPointer<PrimaryExpression>> path;
-		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> indices;
+		std::vector<std::pair<ASTPointer<Expression>, langutil::SourceLocation>> indices;
 		bool empty() const;
 	};
 

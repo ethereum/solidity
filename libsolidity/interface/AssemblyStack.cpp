@@ -22,37 +22,41 @@
 
 #include <libsolidity/interface/AssemblyStack.h>
 
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/inlineasm/AsmPrinter.h>
-#include <libsolidity/inlineasm/AsmParser.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmCodeGen.h>
-
+#include <libsolidity/codegen/AsmCodeGen.h>
 #include <libevmasm/Assembly.h>
+#include <liblangutil/Scanner.h>
 
-#include <libjulia/backends/evm/EVMCodeTransform.h>
-#include <libjulia/backends/evm/EVMAssembly.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/backends/evm/EVMAssembly.h>
+#include <libyul/backends/evm/EVMCodeTransform.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/EVMObjectCompiler.h>
+#include <libyul/ObjectParser.h>
+#include <libyul/optimiser/Suite.h>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 namespace
 {
-assembly::AsmFlavour languageToAsmFlavour(AssemblyStack::Language _language)
+shared_ptr<yul::Dialect> languageToDialect(AssemblyStack::Language _language)
 {
 	switch (_language)
 	{
 	case AssemblyStack::Language::Assembly:
-		return assembly::AsmFlavour::Loose;
+		return yul::EVMDialect::looseAssemblyForEVM();
 	case AssemblyStack::Language::StrictAssembly:
-		return assembly::AsmFlavour::Strict;
+		return yul::EVMDialect::strictAssemblyForEVMObjects();
 	case AssemblyStack::Language::Yul:
-		return assembly::AsmFlavour::Yul;
+		return yul::Dialect::yul();
 	}
 	solAssert(false, "");
-	return assembly::AsmFlavour::Yul;
+	return yul::Dialect::yul();
 }
 
 }
@@ -68,39 +72,77 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 {
 	m_errors.clear();
 	m_analysisSuccessful = false;
-	m_scanner = make_shared<Scanner>(CharStream(_source), _sourceName);
-	m_parserResult = assembly::Parser(m_errorReporter, languageToAsmFlavour(m_language)).parse(m_scanner, false);
+	m_scanner = make_shared<Scanner>(CharStream(_source, _sourceName));
+	m_parserResult = yul::ObjectParser(m_errorReporter, languageToDialect(m_language)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
+	solAssert(m_parserResult->code, "");
 
 	return analyzeParsed();
 }
 
-bool AssemblyStack::analyze(assembly::Block const& _block, Scanner const* _scanner)
+void AssemblyStack::optimize()
 {
-	m_errors.clear();
+	solAssert(m_language != Language::Assembly, "Optimization requested for loose assembly.");
+	solAssert(m_analysisSuccessful, "Analysis was not successful.");
 	m_analysisSuccessful = false;
-	if (_scanner)
-		m_scanner = make_shared<Scanner>(*_scanner);
-	m_parserResult = make_shared<assembly::Block>(_block);
-
-	return analyzeParsed();
+	optimize(*m_parserResult);
+	solAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
 
 bool AssemblyStack::analyzeParsed()
 {
-	m_analysisInfo = make_shared<assembly::AsmAnalysisInfo>();
-	assembly::AsmAnalyzer analyzer(*m_analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToAsmFlavour(m_language));
-	m_analysisSuccessful = analyzer.analyze(*m_parserResult);
+	solAssert(m_parserResult, "");
+	m_analysisSuccessful = analyzeParsed(*m_parserResult);
 	return m_analysisSuccessful;
 }
 
-MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
+bool AssemblyStack::analyzeParsed(yul::Object& _object)
+{
+	solAssert(_object.code, "");
+	_object.analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	yul::AsmAnalyzer analyzer(*_object.analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToDialect(m_language));
+	bool success = analyzer.analyze(*_object.code);
+	for (auto& subNode: _object.subObjects)
+		if (auto subObject = dynamic_cast<yul::Object*>(subNode.get()))
+			if (!analyzeParsed(*subObject))
+				success = false;
+	return success;
+}
+
+void AssemblyStack::compileEVM(yul::AbstractAssembly& _assembly, bool _evm15, bool _optimize) const
+{
+	shared_ptr<yul::EVMDialect> dialect;
+
+	if (m_language == Language::Assembly)
+		dialect = yul::EVMDialect::looseAssemblyForEVM();
+	else if (m_language == AssemblyStack::Language::StrictAssembly)
+		dialect = yul::EVMDialect::strictAssemblyForEVMObjects();
+	else if (m_language == AssemblyStack::Language::Yul)
+		dialect = yul::EVMDialect::yulForEVM();
+	else
+		solAssert(false, "Invalid language.");
+
+	yul::EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _evm15, _optimize);
+}
+
+void AssemblyStack::optimize(yul::Object& _object)
+{
+	solAssert(_object.code, "");
+	solAssert(_object.analysisInfo, "");
+	for (auto& subNode: _object.subObjects)
+		if (auto subObject = dynamic_cast<yul::Object*>(subNode.get()))
+			optimize(*subObject);
+	yul::OptimiserSuite::run(*languageToDialect(m_language), *_object.code, *_object.analysisInfo);
+}
+
+MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) const
 {
 	solAssert(m_analysisSuccessful, "");
 	solAssert(m_parserResult, "");
-	solAssert(m_analysisInfo, "");
+	solAssert(m_parserResult->code, "");
+	solAssert(m_parserResult->analysisInfo, "");
 
 	switch (_machine)
 	{
@@ -108,7 +150,8 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
-		assembly::CodeGenerator::assemble(*m_parserResult, *m_analysisInfo, assembly);
+		EthAssemblyAdapter adapter(assembly);
+		compileEVM(adapter, false, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -116,8 +159,8 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	case Machine::EVM15:
 	{
 		MachineAssemblyObject object;
-		julia::EVMAssembly assembly(true);
-		julia::CodeTransform(assembly, *m_analysisInfo, m_language == Language::Yul, true)(*m_parserResult);
+		yul::EVMAssembly assembly(true);
+		compileEVM(assembly, true, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;
@@ -132,5 +175,6 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 string AssemblyStack::print() const
 {
 	solAssert(m_parserResult, "");
-	return assembly::AsmPrinter(m_language == Language::Yul)(*m_parserResult);
+	solAssert(m_parserResult->code, "");
+	return m_parserResult->toString(m_language == Language::Yul) + "\n";
 }

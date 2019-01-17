@@ -26,8 +26,15 @@
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SimplificationRule.h>
 
+#include <boost/noncopyable.hpp>
+
 #include <functional>
 #include <vector>
+
+namespace langutil
+{
+struct SourceLocation;
+}
 
 namespace dev
 {
@@ -52,6 +59,10 @@ public:
 		Expression const& _expr,
 		ExpressionClasses const& _classes
 	);
+
+	/// Checks whether the rulelist is non-empty. This is usually enforced
+	/// by the constructor, but we had some issues with static initialization.
+	bool isInitialized() const;
 
 private:
 	void addRules(std::vector<SimplificationRule<Pattern>> const& _rules);
@@ -91,7 +102,7 @@ public:
 	unsigned matchGroup() const { return m_matchGroup; }
 	bool matches(Expression const& _expr, ExpressionClasses const& _classes) const;
 
-	AssemblyItem toAssemblyItem(SourceLocation const& _location) const;
+	AssemblyItem toAssemblyItem(langutil::SourceLocation const& _location) const;
 	std::vector<Pattern> arguments() const { return m_arguments; }
 
 	/// @returns the id of the matched expression if this pattern is part of a match group.
@@ -129,7 +140,7 @@ struct ExpressionTemplate
 {
 	using Expression = ExpressionClasses::Expression;
 	using Id = ExpressionClasses::Id;
-	explicit ExpressionTemplate(Pattern const& _pattern, SourceLocation const& _location);
+	explicit ExpressionTemplate(Pattern const& _pattern, langutil::SourceLocation const& _location);
 	std::string toString() const;
 	bool hasId = false;
 	/// Id of the matched expression, if available.

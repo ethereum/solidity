@@ -40,14 +40,16 @@ TMPDIR=$(mktemp -d)
 
     if [[ "$SOLC_EMSCRIPTEN" = "On" ]]
     then
-        cp "$REPO_ROOT/build/libsolc/soljson.js" .
-        npm install solc
+        # npm install solc
+        git clone --depth 1 https://github.com/ethereum/solc-js.git solc-js
+        ( cd solc-js; npm install )
+        cp "$REPO_ROOT/build/libsolc/soljson.js" solc-js/
         cat > solc <<EOF
 #!/usr/bin/env node
 var process = require('process')
 var fs = require('fs')
 
-var compiler = require('solc/wrapper.js')(require('./soljson.js'))
+var compiler = require('./solc-js/wrapper.js')(require('./solc-js/soljson.js'))
 
 for (var optimize of [false, true])
 {
@@ -56,18 +58,32 @@ for (var optimize of [false, true])
         if (filename !== undefined)
         {
             var inputs = {}
-            inputs[filename] = fs.readFileSync(filename).toString()
-            var result = compiler.compile({sources: inputs}, optimize)
-            if (!('contracts' in result) || Object.keys(result['contracts']).length === 0)
+            inputs[filename] = { content: fs.readFileSync(filename).toString() }
+            var input = {
+                language: 'Solidity',
+                sources: inputs,
+                settings: {
+                    optimizer: { enabled: optimize },
+                    outputSelection: { '*': { '*': ['evm.bytecode.object', 'metadata'] } }
+                }
+            }
+            var result = JSON.parse(compiler.compile(JSON.stringify(input)))
+            if (
+                !('contracts' in result) ||
+                Object.keys(result['contracts']).length === 0 ||
+                !result['contracts'][filename] ||
+                Object.keys(result['contracts'][filename]).length === 0
+            )
             {
+                // NOTE: do not exit here because this may be run on source which cannot be compiled
                 console.log(filename + ': ERROR')
             }
             else
             {
-                for (var contractName in result['contracts'])
+                for (var contractName in result['contracts'][filename])
                 {
-                    console.log(contractName + ' ' + result['contracts'][contractName].bytecode)
-                    console.log(contractName + ' ' + result['contracts'][contractName].metadata)
+                    console.log(filename + ':' + contractName + ' ' + result['contracts'][filename][contractName].evm.bytecode.object)
+                    console.log(filename + ':' + contractName + ' ' + result['contracts'][filename][contractName].metadata)
                 }
             }
         }

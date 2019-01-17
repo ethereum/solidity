@@ -2,20 +2,28 @@
 
 set -e
 
+image="ethereum/solc"
+
+tag_and_push()
+{
+    docker tag "$image:$1" "$image:$2"
+    docker push "$image:$2"
+}
+
 docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
 version=$($(dirname "$0")/get_version.sh)
 if [ "$TRAVIS_BRANCH" = "develop" ]
 then
-    docker tag ethereum/solc:build ethereum/solc:nightly;
-    docker tag ethereum/solc:build ethereum/solc:nightly-"$version"-"$TRAVIS_COMMIT"
-    docker push ethereum/solc:nightly-"$version"-"$TRAVIS_COMMIT";
-    docker push ethereum/solc:nightly;
+    tag_and_push build nightly
+    tag_and_push build nightly-"$version"-"$TRAVIS_COMMIT"
+    tag_and_push build-alpine nightly-alpine
+    tag_and_push build-alpine nightly-alpine-"$version"-"$TRAVIS_COMMIT"
 elif [ "$TRAVIS_TAG" = v"$version" ]
 then
-    docker tag ethereum/solc:build ethereum/solc:stable;
-    docker tag ethereum/solc:build ethereum/solc:"$version";
-    docker push ethereum/solc:stable;
-    docker push ethereum/solc:"$version";
+    tag_and_push build stable
+    tag_and_push build "$version"
+    tag_and_push build-alpine stable-alpine
+    tag_and_push build-alpine "$version"-alpine
 else
     echo "Not publishing docker image from branch $TRAVIS_BRANCH or tag $TRAVIS_TAG"
 fi

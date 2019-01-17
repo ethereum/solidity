@@ -18,16 +18,16 @@
 #pragma once
 
 #include <libevmasm/Instruction.h>
-#include <libevmasm/SourceLocation.h>
+#include <liblangutil/SourceLocation.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/LinkerObject.h>
 #include <libevmasm/Exceptions.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <json/json.h>
 
@@ -45,25 +45,24 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
-	Assembly() {}
-
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
 	AssemblyItem namedTag(std::string const& _name);
 	AssemblyItem newData(bytes const& _data) { h256 h(dev::keccak256(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	bytes const& data(h256 const& _i) const { return m_data.at(_i); }
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
 	Assembly& sub(size_t _sub) { return *m_subs.at(_sub); }
-	AssemblyItem newPushString(std::string const& _data) { h256 h(dev::keccak256(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 
-	void append(Assembly const& _a);
-	void append(Assembly const& _a, int _deposit);
 	AssemblyItem const& append(AssemblyItem const& _i);
 	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
+
+	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
+
 	/// Pushes the final size of the current assembly itself. Use this when the code is modified
 	/// after compilation and CODESIZE is not an option.
 	void appendProgramSize() { append(AssemblyItem(PushProgramSize)); }
@@ -84,22 +83,18 @@ public:
 	/// Appends @a _data literally to the very end of the bytecode.
 	void appendAuxiliaryDataToEnd(bytes const& _data) { m_auxiliaryData += _data; }
 
-	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
+	/// Returns the assembly items.
 	AssemblyItems const& items() const { return m_items; }
-	AssemblyItem const& back() const { return m_items.back(); }
-	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
 
-	void injectStart(AssemblyItem const& _i);
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 
 	/// Changes the source location used for each appended item.
-	void setSourceLocation(SourceLocation const& _location) { m_currentSourceLocation = _location; }
+	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
 
-	/// Assembles the assembly into bytecode. The assembly should not be modified after this call.
+	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
 	LinkerObject const& assemble() const;
-	bytes const& data(h256 const& _i) const { return m_data.at(_i); }
 
 	struct OptimiserSettings
 	{
@@ -140,6 +135,18 @@ public:
 		StringMap const& _sourceCodes = StringMap()
 	) const;
 
+public:
+	// These features are only used by LLL
+	AssemblyItem newPushString(std::string const& _data) { h256 h(dev::keccak256(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
+
+	void append(Assembly const& _a);
+	void append(Assembly const& _a, int _deposit);
+
+	void injectStart(AssemblyItem const& _i);
+
+	AssemblyItem const& back() const { return m_items.back(); }
+	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -169,7 +176,7 @@ protected:
 
 	int m_deposit = 0;
 
-	SourceLocation m_currentSourceLocation;
+	langutil::SourceLocation m_currentSourceLocation;
 };
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)

@@ -20,12 +20,12 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/throw_exception.hpp>
-#include <cctype>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
 
 using namespace dev;
+using namespace langutil;
 using namespace solidity;
 using namespace dev::solidity::test;
 using namespace dev::solidity::test::formatting;
@@ -92,6 +92,11 @@ bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool const _fo
 		});
 	}
 
+	return printExpectationAndError(_stream, _linePrefix, _formatted);
+}
+
+bool SyntaxTest::printExpectationAndError(ostream& _stream, string const& _linePrefix, bool const _formatted)
+{
 	if (m_expectations != m_errorList)
 	{
 		string nextIndentLevel = _linePrefix + "  ";

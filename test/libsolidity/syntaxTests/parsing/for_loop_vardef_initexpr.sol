@@ -6,6 +6,8 @@ contract test {
     }
 }
 // ----
+// Warning: (89-92): Unreachable code.
+// Warning: (130-138): Unreachable code.
 // Warning: (33-42): Unused function parameter. Remove or comment out the variable name to silence this warning.
 // Warning: (108-117): Unused local variable.
 // Warning: (20-155): Function state mutability can be restricted to pure

@@ -24,8 +24,9 @@
  */
 
 #include <libsolidity/interface/Natspec.h>
-#include <boost/range/irange.hpp>
+
 #include <libsolidity/ast/AST.h>
+#include <boost/range/irange.hpp>
 
 using namespace std;
 using namespace dev;
@@ -83,7 +84,8 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		doc["details"] = Json::Value(dev);
 
 	auto constructorDefinition(_contractDef.constructor());
-	if (constructorDefinition) {
+	if (constructorDefinition)
+	{
 		Json::Value constructor(devDocumentation(constructorDefinition->annotation().docTags));
 		if (!constructor.empty())
 			// add the constructor, only if we have any documentation to add

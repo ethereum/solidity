@@ -100,8 +100,14 @@ else
     log_directory=""
 fi
 
-function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
-function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+if [ "$CIRCLECI" ]
+then
+    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
+    function printError() { echo "$(tput setaf 1)$1$(tput setaf 7)"; }
+else
+    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+    function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
+fi
 
 printTask "Running commandline tests..."
 # Only run in parallel if this is run on CI infrastructure
@@ -124,21 +130,14 @@ function download_aleth()
     elif [ -z $CI ]; then
         ALETH_PATH="aleth"
     else
-        # Any time the hash is updated here, the "Running compiler tests" section should also be updated.
         mkdir -p /tmp/test
-        if grep -i trusty /etc/lsb-release >/dev/null 2>&1
-        then
-            # built from d661ac4fec0aeffbedcdc195f67f5ded0c798278 at 2018-06-20
-            ALETH_BINARY=aleth_2018-06-20_trusty
-            ALETH_HASH="54b8a5455e45b295e3a962f353ff8f1580ed106c"
-        else
-            # built from d661ac4fec0aeffbedcdc195f67f5ded0c798278 at 2018-06-20
-            ALETH_BINARY=aleth_2018-06-20_artful
-            ALETH_HASH="02e6c4b3d98299885e73f7db6c9e3fbe3d66d444"
-        fi
-        ALETH_PATH="/tmp/test/aleth"
-        wget -q -O $ALETH_PATH https://github.com/ethereum/cpp-ethereum/releases/download/solidityTester/$ALETH_BINARY
-        test "$(shasum $ALETH_PATH)" = "$ALETH_HASH  $ALETH_PATH"
+        # Any time the hash is updated here, the "Running compiler tests" section should also be updated.
+        ALETH_HASH="8ce2f00539d2fd8b5f093d854c6999424f7494ff"
+        ALETH_VERSION=1.5.0-alpha.7
+        wget -q -O /tmp/test/aleth.tar.gz https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz
+        test "$(shasum /tmp/test/aleth.tar.gz)" = "$ALETH_HASH  /tmp/test/aleth.tar.gz"
+        tar -xf /tmp/test/aleth.tar.gz -C /tmp/test
+        ALETH_PATH="/tmp/test/bin/aleth"
         sync
         chmod +x $ALETH_PATH
         sync # Otherwise we might get a "text file busy" error
@@ -150,7 +149,7 @@ function download_aleth()
 # echos the PID
 function run_aleth()
 {
-    $ALETH_PATH --test -d "${WORKDIR}" >/dev/null 2>&1 &
+    $ALETH_PATH --db memorydb --test -d "${WORKDIR}" >/dev/null 2>&1 &
     echo $!
     # Wait until the IPC endpoint is available.
     while [ ! -S "${WORKDIR}/geth.ipc" ] ; do sleep 1; done

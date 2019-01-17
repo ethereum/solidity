@@ -14,7 +14,8 @@ defaults:
       command: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo $CMAKE_OPTIONS
+        [ -n "$COVERAGE" -a "$CIRCLE_BRANCH" != release -a -z "$CIRCLE_TAG" ] && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCOVERAGE=ON"
+        cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
         make -j4
   - run_tests: &run_tests
       name: Tests
@@ -53,7 +54,7 @@ jobs:
           name: Save Boost build
           key: *boost-cache-key
           paths:
-            - boost_1_57_0
+            - boost_1_68_0
       - store_artifacts:
           path: build/libsolc/soljson.js
           destination: soljson.js
@@ -67,7 +68,7 @@ jobs:
             - version.txt
   test_emscripten_solcjs:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: circleci/node:10
     environment:
       TERM: xterm
     steps:
@@ -77,23 +78,15 @@ jobs:
       - run:
           name: Install external tests deps
           command: |
-            apt-get -qq update
-            apt-get -qy install netcat curl
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
-            export NVM_DIR="/usr/local/nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            nvm --version
-            nvm install 8
             node --version
             npm --version
       - run:
           name: Test solcjs
           command: |
-            . /usr/local/nvm/nvm.sh
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
   test_emscripten_external:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: circleci/node:10
     environment:
       TERM: xterm
     steps:
@@ -103,26 +96,18 @@ jobs:
       - run:
           name: Install external tests deps
           command: |
-            apt-get -qq update
-            apt-get -qy install netcat curl
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | NVM_DIR=/usr/local/nvm bash
-            export NVM_DIR="/usr/local/nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            nvm --version
-            nvm install 8
             node --version
             npm --version
       - run:
           name: External tests
           command: |
-            . /usr/local/nvm/nvm.sh
             test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
   build_x86_linux:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
     environment:
       TERM: xterm
-      CMAKE_OPTIONS: -DCOVERAGE=ON
+      COVERAGE: "ON"
     steps:
       - checkout
       - run:
@@ -139,11 +124,57 @@ jobs:
           paths:
             - "*"
 
-  build_x86_mac:
-    macos:
-      xcode: "9.0"
+  build_x86_archlinux:
+    docker:
+      - image: archlinux/base
     environment:
       TERM: xterm
+    steps:
+      - run:
+          name: Install build dependencies
+          command: |
+            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+      - checkout
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
+      - store_artifacts: *solc_artifact
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
+            - test/soltest
+            - test/tools/solfuzzer
+
+  build_x86_clang7:
+    docker:
+      - image: buildpack-deps:cosmic
+    environment:
+      TERM: xterm
+      CC: /usr/bin/clang-7
+      CXX: /usr/bin/clang++-7
+      CMAKE_OPTIONS: -DLLL=ON
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
+      - store_artifacts: *solc_artifact
+      - persist_to_workspace:
+          root: build
+          paths:
+            - "*"
+
+  build_x86_mac:
+    macos:
+      xcode: "10.0.0"
+    environment:
+      TERM: xterm
+      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
       - run:
@@ -179,29 +210,35 @@ jobs:
           name: Check spelling
           command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
 
-  test_trailing_whitespace:
+  test_check_style:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
     steps:
       - checkout
       - run:
           name: Check for trailing whitespace
-          command: ./scripts/detect_trailing_whitespace.sh
+          command: ./scripts/check_style.sh
 
   test_buglist:
-      docker:
-        - image: circleci/node
-      environment:
-        TERM: xterm
-      steps:
-        - checkout
-        - run:
-            name: Test buglist
-            command: ./test/buglistTests.js
+    docker:
+      - image: circleci/node
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run:
+          name: JS deps
+          command: |
+            npm install download
+            npm install JSONPath
+            npm install mktemp
+      - run:
+          name: Test buglist
+          command: ./test/buglistTests.js
 
   test_x86_linux:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
     environment:
       TERM: xterm
     steps:
@@ -227,10 +264,34 @@ jobs:
           command: codecov --flags all --gcov-root build
       - store_test_results:
           path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
+
+  test_x86_archlinux:
+    docker:
+      - image: archlinux/base
+    environment:
+      TERM: xterm
+    steps:
+      - run:
+          name: Install dependencies
+          command: |
+            pacman --noconfirm -Syu --noprogressbar --needed boost z3 cvc4 git openssh tar
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: mkdir -p test_results
+      - run: build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
+      - store_test_results:
+          path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
 
   test_x86_mac:
     macos:
-      xcode: "9.0"
+      xcode: "10.0.0"
     environment:
       TERM: xterm
     steps:
@@ -248,10 +309,15 @@ jobs:
       - run: *run_tests
       - store_test_results:
           path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
 
   docs:
     docker:
-      - image: buildpack-deps:artful
+      - image: buildpack-deps:bionic
+    environment:
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
       - run:
@@ -272,7 +338,7 @@ workflows:
   build_all:
     jobs:
       - test_check_spelling: *build_on_tags
-      - test_trailing_whitespace: *build_on_tags
+      - test_check_style: *build_on_tags
       - test_buglist: *build_on_tags
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
@@ -284,6 +350,7 @@ workflows:
           requires:
             - build_emscripten
       - build_x86_linux: *build_on_tags
+      - build_x86_clang7: *build_on_tags
       - build_x86_mac: *build_on_tags
       - test_x86_linux:
           <<: *build_on_tags
@@ -294,3 +361,8 @@ workflows:
           requires:
             - build_x86_mac
       - docs: *build_on_tags
+      - build_x86_archlinux: *build_on_tags
+      - test_x86_archlinux:
+          <<: *build_on_tags
+          requires:
+            - build_x86_archlinux

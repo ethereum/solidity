@@ -16,9 +16,10 @@
 */
 
 #include <libdevcore/CommonIO.h>
+
+#include <test/Common.h>
 #include <test/libsolidity/AnalysisFramework.h>
-#include <test/libsolidity/SyntaxTest.h>
-#include <test/libsolidity/ASTJSONTest.h>
+#include <test/InteractiveTests.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -47,6 +48,12 @@ struct TestStats
 	int successCount;
 	int testCount;
 	operator bool() const { return successCount == testCount; }
+	TestStats& operator+=(TestStats const& _other) noexcept
+	{
+		successCount += _other.successCount;
+		testCount += _other.testCount;
+		return *this;
+	}
 };
 
 class TestTool
@@ -256,6 +263,9 @@ TestStats TestTool::processPath(
 
 }
 
+namespace
+{
+
 void setupTerminal()
 {
 #if defined(_WIN32) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
@@ -276,6 +286,36 @@ void setupTerminal()
 #endif
 }
 
+boost::optional<TestStats> runTestSuite(
+	string const& _name,
+	fs::path const& _basePath,
+	fs::path const& _subdirectory,
+	TestCase::TestCaseCreator _testCaseCreator,
+	bool _formatted
+)
+{
+	fs::path testPath = _basePath / _subdirectory;
+
+	if (!fs::exists(testPath) || !fs::is_directory(testPath))
+	{
+		cerr << _name << " tests not found. Use the --testpath argument." << endl;
+		return {};
+	}
+
+	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _formatted);
+
+	cout << endl << _name << " Test Summary: ";
+	FormattedScope(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
+		stats.successCount <<
+		"/" <<
+		stats.testCount;
+	cout << " tests successful." << endl << endl;
+
+	return stats;
+}
+
+}
+
 int main(int argc, char *argv[])
 {
 	setupTerminal();
@@ -286,6 +326,7 @@ int main(int argc, char *argv[])
 		TestTool::editor = "/usr/bin/editor";
 
 	fs::path testPath;
+	bool disableSMT = false;
 	bool formatted = true;
 	po::options_description options(
 		R"(isoltest, tool for interactively managing test contracts.
@@ -298,6 +339,7 @@ Allowed options)",
 	options.add_options()
 		("help", "Show this help screen.")
 		("testpath", po::value<fs::path>(&testPath), "path to test files")
+		("no-smt", "disable SMT checker")
 		("no-color", "don't use colors")
 		("editor", po::value<string>(&TestTool::editor), "editor for opening contracts");
 
@@ -318,6 +360,9 @@ Allowed options)",
 			formatted = false;
 
 		po::notify(arguments);
+
+		if (arguments.count("no-smt"))
+			disableSMT = true;
 	}
 	catch (std::exception const& _exception)
 	{
@@ -326,73 +371,27 @@ Allowed options)",
 	}
 
 	if (testPath.empty())
+		testPath = dev::test::discoverTestPath();
+
+	TestStats global_stats{0, 0};
+
+	// Actually run the tests.
+	// Interactive tests are added in InteractiveTests.h
+	for (auto const& ts: g_interactiveTestsuites)
 	{
-		auto const searchPath =
-		{
-			fs::current_path() / ".." / ".." / ".." / "test",
-			fs::current_path() / ".." / ".." / "test",
-			fs::current_path() / ".." / "test",
-			fs::current_path() / "test",
-			fs::current_path()
-		};
-		for (auto const& basePath : searchPath)
-		{
-			fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
-			if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
-			{
-				testPath = basePath;
-				break;
-			}
-		}
-	}
+		if (ts.smt && disableSMT)
+			continue;
 
-	TestStats global_stats { 0, 0 };
-
-	fs::path syntaxTestPath = testPath / "libsolidity" / "syntaxTests";
-
-	if (fs::exists(syntaxTestPath) && fs::is_directory(syntaxTestPath))
-	{
-		auto stats = TestTool::processPath(SyntaxTest::create, testPath / "libsolidity", "syntaxTests", formatted);
-
-		cout << endl << "Syntax Test Summary: ";
-		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
-			stats.successCount << "/" << stats.testCount;
-		cout << " tests successful." << endl << endl;
-
-		global_stats.testCount += stats.testCount;
-		global_stats.successCount += stats.successCount;
-	}
-	else
-	{
-		cerr << "Syntax tests not found. Use the --testpath argument." << endl;
-		return 1;
-	}
-
-	fs::path astJsonTestPath = testPath / "libsolidity" / "ASTJSON";
-
-	if (fs::exists(astJsonTestPath) && fs::is_directory(astJsonTestPath))
-	{
-		auto stats = TestTool::processPath(ASTJSONTest::create, testPath / "libsolidity", "ASTJSON", formatted);
-
-		cout << endl << "JSON AST Test Summary: ";
-		FormattedScope(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
-			stats.successCount << "/" << stats.testCount;
-		cout << " tests successful." << endl << endl;
-
-		global_stats.testCount += stats.testCount;
-		global_stats.successCount += stats.successCount;
-	}
-	else
-	{
-		cerr << "JSON AST tests not found." << endl;
-		return 1;
+		if (auto stats = runTestSuite(ts.title, testPath / ts.path, ts.subpath, ts.testCaseCreator, formatted))
+			global_stats += *stats;
+		else
+			return 1;
 	}
 
 	cout << endl << "Summary: ";
 	FormattedScope(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
 		 global_stats.successCount << "/" << global_stats.testCount;
 	cout << " tests successful." << endl;
-
 
 	return global_stats ? 0 : 1;
 }

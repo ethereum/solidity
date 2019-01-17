@@ -8,4 +8,4 @@ contract test {
 }
 // ----
 // Warning: (31-37): This declaration shadows an existing declaration.
-// TypeError: (159-160): Duplicate named argument.
+// TypeError: (159-160): Duplicate named argument "a".

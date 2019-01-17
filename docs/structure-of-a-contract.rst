@@ -11,16 +11,22 @@ Each contract can contain declarations of :ref:`structure-state-variables`, :ref
 :ref:`structure-function-modifiers`, :ref:`structure-events`, :ref:`structure-struct-types` and :ref:`structure-enum-types`.
 Furthermore, contracts can inherit from other contracts.
 
+There are also special kinds of contracts called :ref:`libraries<libraries>` and :ref:`interfaces<interfaces>`.
+
+The section about :ref:`contracts<contracts>` contains more details than this section,
+which serves to provide a quick overview.
+
 .. _structure-state-variables:
 
 State Variables
 ===============
 
-State variables are values which are permanently stored in contract storage.
+State variables are variables whose values are permanently stored in contract
+storage.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract SimpleStorage {
         uint storedData; // State variable
@@ -40,7 +46,7 @@ Functions are the executable units of code within a contract.
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract SimpleAuction {
         function bid() public payable { // Function
@@ -49,8 +55,9 @@ Functions are the executable units of code within a contract.
     }
 
 :ref:`function-calls` can happen internally or externally
-and have different levels of visibility (:ref:`visibility-and-getters`)
-towards other contracts.
+and have different levels of :ref:`visibility<visibility-and-getters>`
+towards other contracts. :ref:`Functions<functions>` accept :ref:`parameters and return variables<function-parameters-return-variables>` to pass parameters
+and values between them.
 
 .. _structure-function-modifiers:
 
@@ -58,11 +65,11 @@ Function Modifiers
 ==================
 
 Function modifiers can be used to amend the semantics of functions in a declarative way
-(see :ref:`modifiers` in contracts section).
+(see :ref:`modifiers` in the contracts section).
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract Purchase {
         address public seller;
@@ -89,7 +96,7 @@ Events are convenience interfaces with the EVM logging facilities.
 
 ::
 
-    pragma solidity ^0.4.21;
+    pragma solidity >=0.4.21 <0.6.0;
 
     contract SimpleAuction {
         event HighestBidIncreased(address bidder, uint amount); // Event
@@ -113,7 +120,7 @@ Structs are custom defined types that can group several variables (see
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract Ballot {
         struct Voter { // Struct
@@ -134,7 +141,7 @@ Enums can be used to create custom types with a finite set of 'constant values' 
 
 ::
 
-    pragma solidity ^0.4.0;
+    pragma solidity >=0.4.0 <0.6.0;
 
     contract Purchase {
         enum State { Created, Locked, Inactive } // Enum

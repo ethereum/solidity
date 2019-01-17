@@ -21,14 +21,17 @@
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
-#include <functional>
-#include <memory>
-#include <boost/noncopyable.hpp>
-#include <libdevcore/Common.h>
-#include <libevmasm/SourceLocation.h>
+#pragma once
+
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/LValue.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceLocation.h>
+#include <libdevcore/Common.h>
+
+#include <boost/noncopyable.hpp>
+#include <functional>
+#include <memory>
 
 namespace dev {
 namespace eth
@@ -71,27 +74,27 @@ public:
 	void appendConstStateVariableAccessor(const VariableDeclaration& _varDecl);
 
 private:
-	virtual bool visit(Conditional const& _condition) override;
-	virtual bool visit(Assignment const& _assignment) override;
-	virtual bool visit(TupleExpression const& _tuple) override;
-	virtual bool visit(UnaryOperation const& _unaryOperation) override;
-	virtual bool visit(BinaryOperation const& _binaryOperation) override;
-	virtual bool visit(FunctionCall const& _functionCall) override;
-	virtual bool visit(NewExpression const& _newExpression) override;
-	virtual bool visit(MemberAccess const& _memberAccess) override;
-	virtual bool visit(IndexAccess const& _indexAccess) override;
-	virtual void endVisit(Identifier const& _identifier) override;
-	virtual void endVisit(Literal const& _literal) override;
+	bool visit(Conditional const& _condition) override;
+	bool visit(Assignment const& _assignment) override;
+	bool visit(TupleExpression const& _tuple) override;
+	bool visit(UnaryOperation const& _unaryOperation) override;
+	bool visit(BinaryOperation const& _binaryOperation) override;
+	bool visit(FunctionCall const& _functionCall) override;
+	bool visit(NewExpression const& _newExpression) override;
+	bool visit(MemberAccess const& _memberAccess) override;
+	bool visit(IndexAccess const& _indexAccess) override;
+	void endVisit(Identifier const& _identifier) override;
+	void endVisit(Literal const& _literal) override;
 
 	///@{
 	///@name Append code for various operator types
 	void appendAndOrOperatorCode(BinaryOperation const& _binaryOperation);
-	void appendCompareOperatorCode(Token::Value _operator, Type const& _type);
-	void appendOrdinaryBinaryOperatorCode(Token::Value _operator, Type const& _type);
+	void appendCompareOperatorCode(Token _operator, Type const& _type);
+	void appendOrdinaryBinaryOperatorCode(Token _operator, Type const& _type);
 
-	void appendArithmeticOperatorCode(Token::Value _operator, Type const& _type);
-	void appendBitOperatorCode(Token::Value _operator);
-	void appendShiftOperatorCode(Token::Value _operator, Type const& _valueType, Type const& _shiftAmountType);
+	void appendArithmeticOperatorCode(Token _operator, Type const& _type);
+	void appendBitOperatorCode(Token _operator);
+	void appendShiftOperatorCode(Token _operator, Type const& _valueType, Type const& _shiftAmountType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
@@ -119,7 +122,7 @@ private:
 
 	/// @returns true if the operator applied to the given type requires a cleanup prior to the
 	/// operation.
-	static bool cleanupNeededForOp(Type::Category _type, Token::Value _op);
+	static bool cleanupNeededForOp(Type::Category _type, Token _op);
 
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();

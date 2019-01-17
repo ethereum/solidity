@@ -21,15 +21,18 @@
  */
 
 #include <libsolidity/codegen/ArrayUtils.h>
-#include <libevmasm/Instruction.h>
+
+#include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-#include <libsolidity/ast/Types.h>
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/codegen/LValue.h>
+
+#include <libevmasm/Instruction.h>
+#include <liblangutil/Exceptions.h>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace solidity;
 
 void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const
@@ -1108,8 +1111,6 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 		m_context << endTag;
 		break;
 	}
-	default:
-		solAssert(false, "");
 	}
 }
 

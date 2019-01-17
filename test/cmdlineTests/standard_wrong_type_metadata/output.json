@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"\"settings.metadata\" must be an object","message":"\"settings.metadata\" must be an object","severity":"error","type":"JSONError"}]}

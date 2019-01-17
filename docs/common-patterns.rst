@@ -13,11 +13,11 @@ Withdrawal from Contracts
 The recommended method of sending funds after an effect
 is using the withdrawal pattern. Although the most intuitive
 method of sending Ether, as a result of an effect, is a
-direct ``send`` call, this is not recommended as it
+direct ``transfer`` call, this is not recommended as it
 introduces a potential security risk. You may read
 more about this on the :ref:`security_considerations` page.
 
-This is an example of the withdrawal pattern in practice in
+The following is an example of the withdrawal pattern in practice in
 a contract where the goal is to send the most money to the
 contract in order to become the "richest", inspired by
 `King of the Ether <https://www.kingoftheether.com/>`_.
@@ -28,7 +28,7 @@ become the new richest.
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity ^0.5.0;
 
     contract WithdrawalContract {
         address public richest;
@@ -65,10 +65,10 @@ This is as opposed to the more intuitive sending pattern:
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity ^0.5.0;
 
     contract SendContract {
-        address public richest;
+        address payable public richest;
         uint public mostSent;
 
         constructor() public payable {
@@ -130,7 +130,7 @@ restrictions highly readable.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -282,7 +282,7 @@ function finishes.
 
 ::
 
-    pragma solidity ^0.4.22;
+    pragma solidity >=0.4.22 <0.6.0;
 
     contract StateMachine {
         enum Stages {

@@ -27,8 +27,14 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 #include <set>
+#include <vector>
+
+namespace yul
+{
+	struct AsmAnalysisInfo;
+	struct Identifier;
+}
 
 namespace dev
 {
@@ -40,7 +46,7 @@ using TypePointer = std::shared_ptr<Type const>;
 
 struct ASTAnnotation
 {
-	virtual ~ASTAnnotation() {}
+	virtual ~ASTAnnotation() = default;
 };
 
 struct DocTag
@@ -51,7 +57,7 @@ struct DocTag
 
 struct DocumentedAnnotation
 {
-	virtual ~DocumentedAnnotation() {}
+	virtual ~DocumentedAnnotation() = default;
 	/// Mapping docstring tag name -> content.
 	std::multimap<std::string, DocTag> docTags;
 };
@@ -120,12 +126,6 @@ struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
 {
 };
 
-namespace assembly
-{
-	struct AsmAnalysisInfo;
-	struct Identifier;
-}
-
 struct InlineAssemblyAnnotation: StatementAnnotation
 {
 	struct ExternalIdentifierInfo
@@ -137,9 +137,9 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	};
 
 	/// Mapping containing resolved references to external identifiers and their value size
-	std::map<assembly::Identifier const*, ExternalIdentifierInfo> externalReferences;
+	std::map<yul::Identifier const*, ExternalIdentifierInfo> externalReferences;
 	/// Information generated during analysis phase.
-	std::shared_ptr<assembly::AsmAnalysisInfo> analysisInfo;
+	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 };
 
 struct ReturnAnnotation: StatementAnnotation

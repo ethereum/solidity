@@ -24,7 +24,6 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-
 #include <libdevcore/Whiskers.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -49,7 +48,7 @@ string ABIFunctions::tupleEncoder(
 	if (_encodeAsLibraryTypes)
 		functionName += "_library";
 
-	return createFunction(functionName, [&]() {
+	return createExternallyUsedFunction(functionName, [&]() {
 		solAssert(!_givenTypes.empty(), "");
 
 		// Note that the values are in reverse due to the difference in calling semantics.
@@ -113,7 +112,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 
 	solAssert(!_types.empty(), "");
 
-	return createFunction(functionName, [&]() {
+	return createExternallyUsedFunction(functionName, [&]() {
 		TypePointers decodingTypes;
 		for (auto const& t: _types)
 			decodingTypes.emplace_back(t->decodingType());
@@ -141,8 +140,8 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 			vector<string> valueNamesLocal;
 			for (size_t j = 0; j < sizeOnStack; j++)
 			{
-				valueNamesLocal.push_back("value" + to_string(stackPos));
-				valueReturnParams.push_back("value" + to_string(stackPos));
+				valueNamesLocal.emplace_back("value" + to_string(stackPos));
+				valueReturnParams.emplace_back("value" + to_string(stackPos));
 				stackPos++;
 			}
 			bool dynamic = decodingTypes[i]->isDynamicallyEncoded();
@@ -176,13 +175,13 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 	});
 }
 
-string ABIFunctions::requestedFunctions()
+pair<string, set<string>> ABIFunctions::requestedFunctions()
 {
 	string result;
 	for (auto const& f: m_requestedFunctions)
 		result += f.second;
 	m_requestedFunctions.clear();
-	return result;
+	return make_pair(result, std::move(m_externallyUsedFunctions));
 }
 
 string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
@@ -242,8 +241,14 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			break;
 		}
 		case Type::Category::Contract:
-			templ("body", "cleaned := " + cleanupFunction(AddressType()) + "(value)");
+		{
+			AddressType addressType(dynamic_cast<ContractType const&>(_type).isPayable() ?
+				StateMutability::Payable :
+				StateMutability::NonPayable
+			);
+			templ("body", "cleaned := " + cleanupFunction(addressType) + "(value)");
 			break;
+		}
 		case Type::Category::Enum:
 		{
 			size_t members = dynamic_cast<EnumType const&>(_type).numberOfMembers();
@@ -552,7 +557,7 @@ string ABIFunctions::abiEncodingFunction(
 			// special case: convert storage reference type to value type - this is only
 			// possible for library calls where we just forward the storage reference
 			solAssert(_encodeAsLibraryTypes, "");
-			solAssert(to == IntegerType(256), "");
+			solAssert(to == IntegerType::uint256(), "");
 			templ("cleanupConvert", "value");
 		}
 		else
@@ -1689,6 +1694,13 @@ string ABIFunctions::createFunction(string const& _name, function<string ()> con
 		m_requestedFunctions[_name] = fun;
 	}
 	return _name;
+}
+
+string ABIFunctions::createExternallyUsedFunction(string const& _name, function<string ()> const& _creator)
+{
+	string name = createFunction(_name, _creator);
+	m_externallyUsedFunctions.insert(name);
+	return name;
 }
 
 size_t ABIFunctions::headSize(TypePointers const& _targetTypes)

@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/analysis/SemVerHandler.h>
+
 #include <functional>
 
 using namespace std;
@@ -106,18 +107,22 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 			}
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
 			cmp = -1;
-		if (prefix == Token::Assign)
+
+		switch (prefix)
+		{
+		case Token::Assign:
 			return cmp == 0;
-		else if (prefix == Token::LessThan)
+		case Token::LessThan:
 			return cmp < 0;
-		else if (prefix == Token::LessThanOrEqual)
+		case Token::LessThanOrEqual:
 			return cmp <= 0;
-		else if (prefix == Token::GreaterThan)
+		case Token::GreaterThan:
 			return cmp > 0;
-		else if (prefix == Token::GreaterThanOrEqual)
+		case Token::GreaterThanOrEqual:
 			return cmp >= 0;
-		else
+		default:
 			solAssert(false, "Invalid SemVer expression");
+		}
 		return false;
 	}
 }
@@ -195,22 +200,23 @@ void SemVerMatchExpressionParser::parseMatchExpression()
 SemVerMatchExpression::MatchComponent SemVerMatchExpressionParser::parseMatchComponent()
 {
 	SemVerMatchExpression::MatchComponent component;
-	Token::Value token = currentToken();
-	if (
-		token == Token::BitXor ||
-		token == Token::BitNot ||
-		token == Token::LessThan ||
-		token == Token::LessThanOrEqual||
-		token == Token::GreaterThan ||
-		token == Token::GreaterThanOrEqual ||
-		token == Token::Assign
-	)
+	Token token = currentToken();
+
+	switch (token)
 	{
+	case Token::BitXor:
+	case Token::BitNot:
+	case Token::LessThan:
+	case Token::LessThanOrEqual:
+	case Token::GreaterThan:
+	case Token::GreaterThanOrEqual:
+	case Token::Assign:
 		component.prefix = token;
 		nextToken();
-	}
-	else
+		break;
+	default:
 		component.prefix = Token::Assign;
+	}
 
 	component.levelsPresent = 0;
 	while (component.levelsPresent < 3)
@@ -275,7 +281,7 @@ char SemVerMatchExpressionParser::nextChar()
 	return currentChar();
 }
 
-Token::Value SemVerMatchExpressionParser::currentToken() const
+Token SemVerMatchExpressionParser::currentToken() const
 {
 	if (m_pos < m_tokens.size())
 		return m_tokens[m_pos];

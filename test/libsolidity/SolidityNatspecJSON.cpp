@@ -24,8 +24,10 @@
 #include <string>
 #include <libdevcore/JSON.h>
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 #include <libdevcore/Exceptions.h>
+
+using namespace langutil;
 
 namespace dev
 {
@@ -37,8 +39,6 @@ namespace test
 class DocumentationChecker
 {
 public:
-	DocumentationChecker(): m_compilerStack() {}
-
 	void checkNatspec(
 		std::string const& _code,
 		std::string const& _contractName,

@@ -21,14 +21,17 @@
  */
 
 #include <libsolidity/analysis/ReferencesResolver.h>
-#include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
-#include <libsolidity/inlineasm/AsmAnalysis.h>
-#include <libsolidity/inlineasm/AsmAnalysisInfo.h>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <libsolidity/ast/AST.h>
+
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmData.h>
+#include <libyul/backends/evm/EVMDialect.h>
+
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Exceptions.h>
 
 #include <libdevcore/StringUtils.h>
 
@@ -36,9 +39,12 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace langutil;
 
+namespace dev
+{
+namespace solidity
+{
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
 {
@@ -112,7 +118,28 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 
 bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 {
-	_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
+	if (!_typeName.annotation().type)
+	{
+		_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
+		if (_typeName.stateMutability().is_initialized())
+		{
+			// for non-address types this was already caught by the parser
+			solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
+			switch(*_typeName.stateMutability())
+			{
+				case StateMutability::Payable:
+				case StateMutability::NonPayable:
+					_typeName.annotation().type = make_shared<AddressType>(*_typeName.stateMutability());
+					break;
+				default:
+					m_errorReporter.typeError(
+						_typeName.location(),
+						"Address types can only be payable or non-payable."
+					);
+					break;
+			}
+		}
+	}
 	return true;
 }
 
@@ -225,6 +252,8 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric.get());
 		if (!lengthType || !lengthType->mobileType())
 			fatalTypeError(length->location(), "Invalid array length, expected integer literal or constant expression.");
+		else if (lengthType->isZero())
+			fatalTypeError(length->location(), "Array with zero length specified.");
 		else if (lengthType->isFractional())
 			fatalTypeError(length->location(), "Array with fractional length specified.");
 		else if (lengthType->isNegative())
@@ -246,18 +275,18 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// external references.
 	ErrorList errors;
 	ErrorReporter errorsIgnored(errors);
-	julia::ExternalIdentifierAccess::Resolver resolver =
-	[&](assembly::Identifier const& _identifier, julia::IdentifierContext, bool _crossesFunctionBoundary) {
-		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name);
-		bool isSlot = boost::algorithm::ends_with(_identifier.name, "_slot");
-		bool isOffset = boost::algorithm::ends_with(_identifier.name, "_offset");
+	yul::ExternalIdentifierAccess::Resolver resolver =
+	[&](yul::Identifier const& _identifier, yul::IdentifierContext, bool _crossesFunctionBoundary) {
+		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
+		bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
+		bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
 		if (isSlot || isOffset)
 		{
 			// special mode to access storage variables
 			if (!declarations.empty())
 				// the special identifier exists itself, we should not allow that.
 				return size_t(-1);
-			string realName = _identifier.name.substr(0, _identifier.name.size() - (
+			string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
 				isSlot ?
 				string("_slot").size() :
 				string("_offset").size()
@@ -288,9 +317,16 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 
 	// Will be re-generated later with correct information
 	// We use the latest EVM version because we will re-run it anyway.
-	assembly::AsmAnalysisInfo analysisInfo;
+	yul::AsmAnalysisInfo analysisInfo;
 	boost::optional<Error::Type> errorTypeForLoose = Error::Type::SyntaxError;
-	assembly::AsmAnalyzer(analysisInfo, errorsIgnored, EVMVersion(), errorTypeForLoose, assembly::AsmFlavour::Loose, resolver).analyze(_inlineAssembly.operations());
+	yul::AsmAnalyzer(
+		analysisInfo,
+		errorsIgnored,
+		EVMVersion(),
+		errorTypeForLoose,
+		yul::EVMDialect::looseAssemblyForEVM(),
+		resolver
+	).analyze(_inlineAssembly.operations());
 	return false;
 }
 
@@ -430,4 +466,7 @@ void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, 
 {
 	m_errorOccurred = true;
 	m_errorReporter.fatalDeclarationError(_location, _description);
+}
+
+}
 }

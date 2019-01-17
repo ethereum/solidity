@@ -34,7 +34,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
+using namespace langutil;
 
 bool ExpressionClasses::Expression::operator<(ExpressionClasses::Expression const& _other) const
 {
@@ -184,6 +184,7 @@ string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
 ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr)
 {
 	static Rules rules;
+	assertThrow(rules.isInitialized(), OptimizerException, "Rule list not properly initialized.");
 
 	if (
 		!_expr.item ||

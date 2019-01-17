@@ -19,8 +19,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/FormattedScope.h>
-#include <test/libsolidity/TestCase.h>
-#include <libsolidity/interface/Exceptions.h>
+#include <test/TestCase.h>
+#include <liblangutil/Exceptions.h>
 
 #include <iosfwd>
 #include <string>
@@ -57,23 +57,25 @@ public:
 	{ return std::unique_ptr<TestCase>(new SyntaxTest(_filename)); }
 	SyntaxTest(std::string const& _filename);
 
-	virtual bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
-	virtual void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
-	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override
+	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override
 	{
 		if (!m_errorList.empty())
 			printErrorList(_stream, m_errorList, _linePrefix, false);
 	}
 
 	static std::string errorMessage(Exception const& _e);
-private:
+protected:
 	static void printErrorList(
 		std::ostream& _stream,
 		std::vector<SyntaxTestError> const& _errors,
 		std::string const& _linePrefix,
 		bool const _formatted = false
 	);
+
+	virtual bool printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false);
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 

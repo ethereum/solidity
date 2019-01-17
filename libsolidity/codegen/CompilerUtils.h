@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/codegen/CompilerContext.h>
 
 namespace dev {
 namespace solidity {
@@ -69,7 +69,7 @@ public:
 	/// @returns the number of bytes consumed in memory.
 	unsigned loadFromMemory(
 		unsigned _offset,
-		Type const& _type = IntegerType(256),
+		Type const& _type = IntegerType::uint256(),
 		bool _fromCalldata = false,
 		bool _padToWords = false
 	);
@@ -260,7 +260,7 @@ public:
 	/// Stack post: <shifted_value>
 	void rightShiftNumberOnStack(unsigned _bits);
 
-	/// Appends code that computes tha Keccak-256 hash of the topmost stack element of 32 byte type.
+	/// Appends code that computes the Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
 	/// Bytes we need to the start of call data.

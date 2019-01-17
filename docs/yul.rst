@@ -44,7 +44,7 @@ and ``mod`` are available either natively or as functions and computes exponenti
             switch exponent
             case 0:u256 { result := 1:u256 }
             case 1:u256 { result := base }
-            default:
+            default
             {
                 result := power(mul(base, base), div(exponent, 2:u256))
                 switch mod(exponent, 2:u256)
@@ -83,6 +83,7 @@ Grammar::
         FunctionDefinition |
         VariableDeclaration |
         Assignment |
+        If |
         Expression |
         Switch |
         ForLoop |
@@ -99,9 +100,11 @@ Grammar::
     If =
         'if' Expression Block
     Switch =
-        'switch' Expression Case* ( 'default' Block )?
+        'switch' Expression ( Case+ Default? | Default )
     Case =
         'case' Literal Block
+    Default =
+        'default' Block
     ForLoop =
         'for' Block Expression Block Block
     BreakContinue =
@@ -127,9 +130,10 @@ Restrictions on the Grammar
 ---------------------------
 
 Switches must have at least one case (including the default case).
-If all possible values of the expression is covered, the default case should
-not be allowed (i.e. a switch with a ``bool`` expression and having both a
-true and false case should not allow a default case).
+If all possible values of the expression are covered, a default case should
+not be allowed (i.e. a switch with a ``bool`` expression that has both a
+true and a false case should not allow a default case). All case values need to
+have the same type.
 
 Every expression evaluates to zero or more values. Identifiers and Literals
 evaluate to exactly
@@ -168,7 +172,7 @@ As an exception, identifiers defined in the "init" part of the for-loop
 (the first block) are visible in all other parts of the for-loop
 (but not outside of the loop).
 Identifiers declared in the other parts of the for loop respect the regular
-syntatical scoping rules.
+syntactical scoping rules.
 The parameters and return parameters of functions are visible in the
 function body and their names cannot overlap.
 
@@ -366,10 +370,10 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | gtu256(x:u256, y:u256) -> z:bool            | true if x > y, false otherwise                                  |
 +---------------------------------------------+-----------------------------------------------------------------+
-| sltu256(x:s256, y:s256) -> z:bool           | true if x < y, false otherwise                                  |
+| lts256(x:s256, y:s256) -> z:bool            | true if x < y, false otherwise                                  |
 |                                             | (for signed numbers in two's complement)                        |
 +---------------------------------------------+-----------------------------------------------------------------+
-| sgtu256(x:s256, y:s256) -> z:bool           | true if x > y, false otherwise                                  |
+| gts256(x:s256, y:s256) -> z:bool            | true if x > y, false otherwise                                  |
 |                                             | (for signed numbers in two's complement)                        |
 +---------------------------------------------+-----------------------------------------------------------------+
 | equ256(x:u256, y:u256) -> z:bool            | true if x == y, false otherwise                                 |
@@ -388,7 +392,7 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | shru256(x:u256, y:u256) -> z:u256           | logical right shift of x by y                                   |
 +---------------------------------------------+-----------------------------------------------------------------+
-| saru256(x:u256, y:u256) -> z:u256           | arithmetic right shift of x by y                                |
+| sars256(x:s256, y:u256) -> z:u256           | arithmetic right shift of x by y                                |
 +---------------------------------------------+-----------------------------------------------------------------+
 | byte(n:u256, x:u256) -> v:u256              | nth byte of x, where the most significant byte is the 0th byte  |
 |                                             | Cannot this be just replaced by and256(shr256(n, x), 0xff) and  |
@@ -412,8 +416,14 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | *Execution control*                                                                                           |
 +---------------------------------------------+-----------------------------------------------------------------+
-| create(v:u256, p:u256, s:u256)              | create new contract with code mem[p..(p+s)) and send v wei      |
+| create(v:u256, p:u256, n:u256)              | create new contract with code mem[p..(p+n)) and send v wei      |
 |                                             | and return the new address                                      |
++---------------------------------------------+-----------------------------------------------------------------+
+| create2(v:u256, p:u256, n:u256, s:u256)     | create new contract with code mem[p...(p+n)) at address         |
+|                                             | keccak256(0xff . this . s . keccak256(mem[p...(p+n)))           |
+|                                             | and send v wei and return the new address, where ``0xff`` is a  |
+|                                             | 8 byte value, ``this`` is the current contract's address        |
+|                                             | as a 20 byte value and ``s`` is a big-endian 256-bit value      |
 +---------------------------------------------+-----------------------------------------------------------------+
 | call(g:u256, a:u256, v:u256, in:u256,       | call contract at address a with input mem[in..(in+insize))      |
 | insize:u256, out:u256,                      | providing g gas and v wei and output area                       |
@@ -490,6 +500,8 @@ The following functions must be available:
 +---------------------------------------------+-----------------------------------------------------------------+
 | extcodecopy(a:u256, t:u256, f:u256, s:u256) | like codecopy(t, f, s) but take code at address a               |
 +---------------------------------------------+-----------------------------------------------------------------+
+| extcodehash(a:u256)                         | code hash of address a                                          |
++---------------------------------------------+-----------------------------------------------------------------+
 | *Others*                                                                                                      |
 +---------------------------------------------+-----------------------------------------------------------------+
 | discard(unused:bool)                        | discard value                                                   |
@@ -503,6 +515,16 @@ The following functions must be available:
 | x4:u64) -> (x:u256)                         |                                                                 |
 +---------------------------------------------+-----------------------------------------------------------------+
 | keccak256(p:u256, s:u256) -> v:u256         | keccak(mem[p...(p+s)))                                          |
++---------------------------------------------+-----------------------------------------------------------------+
+| *Object access*                             |                                                                 |
++---------------------------------------------+-----------------------------------------------------------------+
+| datasize(name:string) -> size:u256          | size of the data object in bytes, name has to be string literal |
++---------------------------------------------+-----------------------------------------------------------------+
+| dataoffset(name:string) -> offset:u256      | offset of the data object inside the data area in bytes,        |
+|                                             | name has to be string literal                                   |
++---------------------------------------------+-----------------------------------------------------------------+
+| datacopy(dst:u256, src:u256, len:u256)      | copy len bytes from the data area starting at offset src bytes  |
+|                                             | to memory at position dst                                       |
 +---------------------------------------------+-----------------------------------------------------------------+
 
 Backends
@@ -529,12 +551,18 @@ TBD
 Specification of Yul Object
 ===========================
 
+Yul objects are used to group named code and data sections.
+The functions ``datasize``, ``dataoffset`` and ``datacopy``
+can be used to access these sections from within code.
+Hex strings can be used to specify data in hex encoding,
+regular strings in native encoding. For code,
+``datacopy`` will access its assembled binary representation.
+
 Grammar::
 
-    TopLevelObject = 'object' '{' Code? ( Object | Data )* '}'
-    Object = 'object' StringLiteral '{' Code? ( Object | Data )* '}'
+    Object = 'object' StringLiteral '{' Code ( Object | Data )* '}'
     Code = 'code' Block
-    Data = 'data' StringLiteral HexLiteral
+    Data = 'data' StringLiteral ( HexLiteral | StringLiteral )
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 
@@ -547,14 +575,28 @@ An example Yul Object is shown below:
     // Code consists of a single object. A single "code" node is the code of the object.
     // Every (other) named object or data section is serialized and
     // made accessible to the special built-in functions datacopy / dataoffset / datasize
-    object {
+    // Access to nested objects can be performed by joining the names using ``.``.
+    // The current object and sub-objects and data items inside the current object
+    // are in scope without nested access.
+    object "Contract1" {
         code {
-            let size = datasize("runtime")
+            // first create "runtime.Contract2"
+            let size = datasize("runtime.Contract2")
             let offset = allocate(size)
             // This will turn into a memory->memory copy for eWASM and
             // a codecopy for EVM
-            datacopy(dataoffset("runtime"), offset, size)
-            // this is a constructor and the runtime code is returned
+            datacopy(offset, dataoffset("runtime.Contract2"), size)
+            // constructor parameter is a single number 0x1234
+            mstore(add(offset, size), 0x1234)
+            create(offset, add(size, 32))
+
+            // now return the runtime object (this is
+            // constructor code)
+            size := datasize("runtime")
+            offset := allocate(size)
+            // This will turn into a memory->memory copy for eWASM and
+            // a codecopy for EVM
+            datacopy(offset, dataoffset("runtime"), size)
             return(offset, size)
         }
 
@@ -568,7 +610,7 @@ An example Yul Object is shown below:
                 let offset = allocate(size)
                 // This will turn into a memory->memory copy for eWASM and
                 // a codecopy for EVM
-                datacopy(dataoffset("Contract2"), offset, size)
+                datacopy(offset, dataoffset("Contract2"), size)
                 // constructor parameter is a single number 0x1234
                 mstore(add(offset, size), 0x1234)
                 create(offset, add(size, 32))

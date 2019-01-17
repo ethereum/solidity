@@ -22,11 +22,11 @@
 
 #pragma once
 
-#include <ostream>
-#include <functional>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libevmasm/Assembly.h>
+#include <functional>
+#include <ostream>
 
 namespace dev {
 namespace solidity {
@@ -38,8 +38,9 @@ namespace solidity {
 class ContractCompiler: private ASTConstVisitor
 {
 public:
-	explicit ContractCompiler(ContractCompiler* _runtimeCompiler, CompilerContext& _context, bool _optimise):
+	explicit ContractCompiler(ContractCompiler* _runtimeCompiler, CompilerContext& _context, bool _optimise, size_t _optimise_runs = 200):
 		m_optimise(_optimise),
+		m_optimise_runs(_optimise_runs),
 		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
 	{
@@ -81,6 +82,14 @@ private:
 	/// This is done by inserting a specific push constant as the first instruction
 	/// whose data will be modified in memory at deploy time.
 	void appendDelegatecallCheck();
+	/// Appends the function selector. Is called recursively to create a binary search tree.
+	/// @a _runs the number of intended executions of the contract to tune the split point.
+	void appendInternalSelector(
+		std::map<FixedHash<4>, eth::AssemblyItem const> const& _entryPoints,
+		std::vector<FixedHash<4>> const& _ids,
+		eth::AssemblyItem const& _notFoundTag,
+		size_t _runs
+	);
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	void appendCallValueCheck();
 	void appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary);
@@ -88,22 +97,22 @@ private:
 	void registerStateVariables(ContractDefinition const& _contract);
 	void initializeStateVariables(ContractDefinition const& _contract);
 
-	virtual bool visit(VariableDeclaration const& _variableDeclaration) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
-	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
-	virtual bool visit(IfStatement const& _ifStatement) override;
-	virtual bool visit(WhileStatement const& _whileStatement) override;
-	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual bool visit(Continue const& _continueStatement) override;
-	virtual bool visit(Break const& _breakStatement) override;
-	virtual bool visit(Return const& _return) override;
-	virtual bool visit(Throw const& _throw) override;
-	virtual bool visit(EmitStatement const& _emit) override;
-	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
-	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
-	virtual bool visit(PlaceholderStatement const&) override;
-	virtual bool visit(Block const& _block) override;
-	virtual void endVisit(Block const& _block) override;
+	bool visit(VariableDeclaration const& _variableDeclaration) override;
+	bool visit(FunctionDefinition const& _function) override;
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(IfStatement const& _ifStatement) override;
+	bool visit(WhileStatement const& _whileStatement) override;
+	bool visit(ForStatement const& _forStatement) override;
+	bool visit(Continue const& _continueStatement) override;
+	bool visit(Break const& _breakStatement) override;
+	bool visit(Return const& _return) override;
+	bool visit(Throw const& _throw) override;
+	bool visit(EmitStatement const& _emit) override;
+	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
+	bool visit(ExpressionStatement const& _expressionStatement) override;
+	bool visit(PlaceholderStatement const&) override;
+	bool visit(Block const& _block) override;
+	void endVisit(Block const& _block) override;
 
 	/// Repeatedly visits all function which are referenced but which are not compiled yet.
 	void appendMissingFunctions();
@@ -122,6 +131,7 @@ private:
 	void storeStackHeight(ASTNode const* _node);
 
 	bool const m_optimise;
+	size_t const m_optimise_runs = 200;
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;

@@ -225,6 +225,71 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_CHECK(containsAtMostWarnings(result));
 }
 
+BOOST_AUTO_TEST_CASE(optimizer_enabled_not_boolean)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"optimizer": {
+				"enabled": "wrong"
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "The \"enabled\" setting must be a boolean."));
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_runs_not_a_number)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"optimizer": {
+				"enabled": true,
+				"runs": "not a number"
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_runs_not_an_unsigned_number)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"optimizer": {
+				"enabled": true,
+				"runs": -1
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+}
+
 BOOST_AUTO_TEST_CASE(basic_compilation)
 {
 	char const* input = R"(
@@ -268,11 +333,11 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x80)\n  "
 		"callvalue\n    /* \"--CODEGEN--\":8:17   */\n  dup1\n    "
 		"/* \"--CODEGEN--\":5:7   */\n  iszero\n  tag_1\n  jumpi\n    "
-		"/* \"--CODEGEN--\":30:31   */\n  0x0\n    /* \"--CODEGEN--\":27:28   */\n  "
+		"/* \"--CODEGEN--\":30:31   */\n  0x00\n    /* \"--CODEGEN--\":27:28   */\n  "
 		"dup1\n    /* \"--CODEGEN--\":20:32   */\n  revert\n    /* \"--CODEGEN--\":5:7   */\n"
 		"tag_1:\n    /* \"fileA\":0:14  contract A { } */\n  pop\n  dataSize(sub_0)\n  dup1\n  "
-		"dataOffset(sub_0)\n  0x0\n  codecopy\n  0x0\n  return\nstop\n\nsub_0: assembly {\n        "
-		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      0x0\n      "
+		"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n        "
+		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      0x00\n      "
 		"dup1\n      revert\n\n    auxdata: 0xa165627a7a72305820"
 	) == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
@@ -640,7 +705,7 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_entry)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "library entry is not a JSON object."));
+	BOOST_CHECK(containsError(result, "JSONError", "Library entry is not a JSON object."));
 }
 
 BOOST_AUTO_TEST_CASE(libraries_invalid_hex)

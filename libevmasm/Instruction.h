@@ -82,6 +82,7 @@ enum class Instruction: uint8_t
 	EXTCODECOPY,		///< copy external code (from another contract)
 	RETURNDATASIZE = 0x3d,	///< get size of return data buffer
 	RETURNDATACOPY = 0x3e,	///< copy return data in current environment to memory
+	EXTCODEHASH = 0x3f,	///< get external code hash (from another contract)
 
 	BLOCKHASH = 0x40,	///< get hash of most recent complete block
 	COINBASE,			///< get the block's coinbase address
@@ -192,8 +193,8 @@ enum class Instruction: uint8_t
 	CALLCODE,			///< message-call with another account's code only
 	RETURN,				///< halt execution returning output data
 	DELEGATECALL,		///< like CALLCODE but keeps caller's value and sender
+	CREATE2 = 0xf5,		///< create new account with associated code at address `sha3(0xff + sender + salt + init code) % 2**160`
 	STATICCALL = 0xfa,	///< like CALL but disallow state modifications
-	CREATE2 = 0xfb,		///< create new account with associated code at address `sha3(sender + salt + sha3(init code)) % 2**160`
 
 	REVERT = 0xfd,		///< halt execution, revert state and return output data
 	INVALID = 0xfe,		///< invalid instruction for expressing runtime errors (e.g., division-by-zero)
@@ -218,22 +219,34 @@ inline bool isSwapInstruction(Instruction _inst)
 	return Instruction::SWAP1 <= _inst && _inst <= Instruction::SWAP16;
 }
 
+/// @returns true if the instruction is a LOG
+inline bool isLogInstruction(Instruction _inst)
+{
+	return Instruction::LOG0 <= _inst && _inst <= Instruction::LOG4;
+}
+
 /// @returns the number of PUSH Instruction _inst
 inline unsigned getPushNumber(Instruction _inst)
 {
-	return (byte)_inst - unsigned(Instruction::PUSH1) + 1;
+	return (uint8_t)_inst - unsigned(Instruction::PUSH1) + 1;
 }
 
 /// @returns the number of DUP Instruction _inst
 inline unsigned getDupNumber(Instruction _inst)
 {
-	return (byte)_inst - unsigned(Instruction::DUP1) + 1;
+	return (uint8_t)_inst - unsigned(Instruction::DUP1) + 1;
 }
 
 /// @returns the number of SWAP Instruction _inst
 inline unsigned getSwapNumber(Instruction _inst)
 {
-	return (byte)_inst - unsigned(Instruction::SWAP1) + 1;
+	return (uint8_t)_inst - unsigned(Instruction::SWAP1) + 1;
+}
+
+/// @returns the number of LOG Instruction _inst
+inline unsigned getLogNumber(Instruction _inst)
+{
+	return (uint8_t)_inst - unsigned(Instruction::LOG0);
 }
 
 /// @returns the PUSH<_number> instruction

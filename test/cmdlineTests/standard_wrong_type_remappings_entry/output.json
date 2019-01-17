@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"\"settings.remappings\" must be an array of strings","message":"\"settings.remappings\" must be an array of strings","severity":"error","type":"JSONError"}]}

@@ -19,7 +19,7 @@
 
 #include <libdevcore/SwarmHash.h>
 
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 using namespace std;
 using namespace dev;

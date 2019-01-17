@@ -48,4 +48,11 @@ bool jsonParseStrict(std::string const& _input, Json::Value& _json, std::string*
 /// \return \c true if the document was successfully parsed, \c false if an error occurred.
 bool jsonParse(std::string const& _input, Json::Value& _json, std::string* _errs = nullptr);
 
+/// Parse a JSON string (@a _input) and writes resulting JSON object to (@a _json)
+/// \param _input file containing JSON input
+/// \param _json [out] resulting JSON object
+/// \param _errs [out] Formatted error messages
+/// \return \c true if the document was successfully parsed, \c false if an error occurred.
+bool jsonParseFile(std::string const& _fileName, Json::Value& _json, std::string* _errs = nullptr);
+
 }

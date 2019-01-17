@@ -34,6 +34,11 @@
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/KnownState.h>
 
+namespace langutil
+{
+struct SourceLocation;
+}
+
 namespace dev
 {
 namespace eth
@@ -137,10 +142,10 @@ private:
 	bool removeStackTopIfPossible();
 
 	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack position.
-	void appendDup(int _fromPosition, SourceLocation const& _location);
+	void appendDup(int _fromPosition, langutil::SourceLocation const& _location);
 	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack position.
 	/// @note this might also remove the last item if it exactly the same swap instruction.
-	void appendOrRemoveSwap(int _fromPosition, SourceLocation const& _location);
+	void appendOrRemoveSwap(int _fromPosition, langutil::SourceLocation const& _location);
 	/// Appends the given assembly item.
 	void appendItem(AssemblyItem const& _item);
 

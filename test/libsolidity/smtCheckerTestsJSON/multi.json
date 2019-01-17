@@ -1,0 +1,11 @@
+{
+	"auxiliaryInput":
+	{
+		"smtlib2responses":
+		{
+			"0x47826ec8b83cfec30171b34f944aed6c33ecd12f02b9ad522ca45317c9bd5f45": "sat\n((|EVALEXPR_0| 1))",
+			"0x734c058efe9d6ec224de3cf2bdfa6c936a1c9c159c040c128d631145b2fed195": "unsat\n",
+			"0xa0c072acdbe5181dd56cbad8960cb5bb0b9e97fd598cfd895467bd73bbcca028": "sat\n((|EVALEXPR_0| 0))"
+		}
+	}
+}

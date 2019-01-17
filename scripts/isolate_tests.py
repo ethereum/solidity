@@ -56,9 +56,10 @@ def extract_docs_cases(path):
         if re.search(r'^    [ ]*(pragma solidity|contract |library |interface )', test, re.MULTILINE)
     ]
 
-def write_cases(tests):
+def write_cases(f, tests):
+    cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
-        open('test_%s.sol' % hashlib.sha256(test).hexdigest(), 'wb').write(test)
+        open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(), cleaned_filename), 'wb').write(test)
 
 
 def extract_and_write(f, path):
@@ -69,7 +70,7 @@ def extract_and_write(f, path):
                 cases = [open(path, 'r').read()]
             else:
                 cases = extract_test_cases(path)
-        write_cases(cases)
+        write_cases(f, cases)
 
 if __name__ == '__main__':
     path = sys.argv[1]

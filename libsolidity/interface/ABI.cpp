@@ -19,6 +19,7 @@
  */
 
 #include <libsolidity/interface/ABI.h>
+
 #include <libsolidity/ast/AST.h>
 
 using namespace std;

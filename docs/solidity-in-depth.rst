@@ -4,7 +4,7 @@ Solidity in Depth
 
 This section should provide you with all you need to know about Solidity.
 If something is missing here, please contact us on
-`Gitter <https://gitter.im/ethereum/solidity>`_ or make a pull request on
+`Gitter <https://gitter.im/ethereum/solidity>`_ or create a pull request on
 `Github <https://github.com/ethereum/solidity/pulls>`_.
 
 .. toctree::
@@ -18,3 +18,4 @@ If something is missing here, please contact us on
    contracts.rst
    assembly.rst
    miscellaneous.rst
+   050-breaking-changes.rst

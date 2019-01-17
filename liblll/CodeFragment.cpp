@@ -45,6 +45,10 @@ using namespace dev::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
 {
+	// NOTE: add this as a safeguard in case the user didn't issue an
+	// explicit stop at the end of the sequence
+	m_asm.append(Instruction::STOP);
+
 	if (_cs.usedAlloc && _cs.vars.size() && !m_finalised)
 	{
 		m_finalised = true;
@@ -232,7 +236,12 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++)
-					m_asm.append(CodeFragment(i, _s, m_readFile, true).m_asm);
+				{
+					auto fragment = CodeFragment(i, _s, m_readFile, true).m_asm;
+					if ((m_asm.deposit() + fragment.deposit()) < 0)
+						error<IncorrectParameterCount>("The assembly instruction resulted in stack underflow");
+					m_asm.append(fragment);
+				}
 		}
 		else if (us == "INCLUDE")
 		{
@@ -250,6 +259,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		}
 		else if (us == "SET")
 		{
+			// TODO: move this to be a stack variable (and not a memory variable)
 			if (_t.size() != 3)
 				error<IncorrectParameterCount>(us);
 			int c = 0;
@@ -259,12 +269,50 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.append((u256)varAddress(firstAsString(), true));
 			m_asm.append(Instruction::MSTORE);
 		}
+		else if (us == "UNSET")
+		{
+			// TODO: this doesn't actually free up anything, since it is a memory variable (see "SET")
+			if (_t.size() != 2)
+				error<IncorrectParameterCount>();
+			auto it = _s.vars.find(firstAsString());
+			if (it != _s.vars.end())
+				_s.vars.erase(it);
+		}
 		else if (us == "GET")
 		{
 			if (_t.size() != 2)
 				error<IncorrectParameterCount>(us);
 			m_asm.append((u256)varAddress(firstAsString()));
 			m_asm.append(Instruction::MLOAD);
+		}
+		else if (us == "WITH")
+		{
+			if (_t.size() != 4)
+				error<IncorrectParameterCount>();
+			string key = firstAsString();
+			if (_s.vars.find(key) != _s.vars.end())
+				error<InvalidName>(string("Symbol already used: ") + key);
+
+			// Create variable
+			// TODO: move this to be a stack variable (and not a memory variable)
+			size_t c = 0;
+			for (auto const& i: _t)
+				if (c++ == 2)
+					m_asm.append(CodeFragment(i, _s, m_readFile, false).m_asm);
+			m_asm.append((u256)varAddress(key, true));
+			m_asm.append(Instruction::MSTORE);
+
+			// Insert sub with variable access, but new state
+			CompilerState ns = _s;
+			c = 0;
+			for (auto const& i: _t)
+				if (c++ == 3)
+					m_asm.append(CodeFragment(i, _s, m_readFile, false).m_asm);
+
+			// Remove variable
+			auto it = _s.vars.find(key);
+			if (it != _s.vars.end())
+				_s.vars.erase(it);
 		}
 		else if (us == "REF")
 			m_asm.append((u256)varAddress(firstAsString()));
@@ -305,7 +353,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 							if (j.tag() || j.which() != sp::utree_type::symbol_type)
 								error<InvalidMacroArgs>();
 							auto sr = j.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
-							args.push_back(string(sr.begin(), sr.end()));
+							args.emplace_back(sr.begin(), sr.end());
 						}
 				else if (ii == 3)
 				{
@@ -348,7 +396,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				else if (i.which() == sp::utree_type::string_type)
 				{
 					auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
-					data.insert(data.end(), (byte const *)sr.begin(), (byte const*)sr.end());
+					data.insert(data.end(), (uint8_t const *)sr.begin(), (uint8_t const*)sr.end());
 				}
 				else if (i.which() == sp::utree_type::any_type)
 				{
@@ -416,9 +464,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			if (c++)
 			{
 				if (us == "LLL" && c == 1)
-					code.push_back(CodeFragment(i, ns, m_readFile));
+					code.emplace_back(i, ns, m_readFile);
 				else
-					code.push_back(CodeFragment(i, _s, m_readFile));
+					code.emplace_back(i, _s, m_readFile);
 			}
 		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(us); };
 		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(us); };

@@ -13,9 +13,9 @@ The Contract Application Binary Interface (ABI) is the standard way to interact 
 from outside the blockchain and for contract-to-contract interaction. Data is encoded according to its type,
 as described in this specification.  The encoding is not self describing and thus requires a schema in order to decode.
 
-We assume the interface functions of a contract are strongly typed, known at compilation time and static. No introspection mechanism will be provided. We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
+We assume the interface functions of a contract are strongly typed, known at compilation time and static. We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
-This specification does not address contracts whose interface is dynamic or otherwise known only at run-time. Should these cases become important they can be adequately handled as facilities built within the Ethereum ecosystem.
+This specification does not address contracts whose interface is dynamic or otherwise known only at run-time.
 
 .. _abi_function_selector:
 
@@ -23,12 +23,12 @@ Function Selector
 =================
 
 The first four bytes of the call data for a function call specifies the function to be called. It is the
-first (left, high-order in big-endian) four bytes of the Keccak (SHA-3) hash of the signature of the function. The signature is defined as the canonical expression of the basic prototype, i.e.
+first (left, high-order in big-endian) four bytes of the Keccak-256 (SHA-3) hash of the signature of the function. The signature is defined as the canonical expression of the basic prototype without data location specifier, i.e.
 the function name with the parenthesised list of parameter types. Parameter types are split by a single comma - no spaces are used.
 
 .. note::
     The return type of a function is not part of this signature. In :ref:`Solidity's function overloading <overload-function>` return types are not considered. The reason is to keep function call resolution context-independent.
-    The JSON description of the ABI however contains both inputs and outputs. See (the :ref:`JSON ABI <abi_json>`)
+    The :ref:`JSON description of the ABI<abi_json>` however contains both inputs and outputs.
 
 Argument Encoding
 =================
@@ -78,20 +78,42 @@ Types can be combined to a tuple by enclosing them inside parentheses, separated
 
 It is possible to form tuples of tuples, arrays of tuples and so on.  It is also possible to form zero-tuples (where ``n == 0``).
 
-.. note::
-    Solidity supports all the types presented above with the same names with the exception of tuples. The ABI tuple type is utilised for encoding Solidity ``structs``.
+Mapping Solidity to ABI types
+-----------------------------
 
-Formal Specification of the Encoding
-====================================
+Solidity supports all the types presented above with the same names with the
+exception of tuples. On the other hand, some Solidity types are not supported
+by the ABI.  The following table shows on the left column Solidity types that
+are not part of the ABI, and on the right column the ABI types that represent
+them.
 
-We will now formally specify the encoding, such that it will have the following
-properties, which are especially useful if some arguments are nested arrays:
++-------------------------------+-----------------------------------------------------------------------------+
+|      Solidity                 |                                           ABI                               |
++===============================+=============================================================================+
+|:ref:`address payable<address>`|``address``                                                                  |
++-------------------------------+-----------------------------------------------------------------------------+
+|:ref:`contract<contracts>`     |``address``                                                                  |
++-------------------------------+-----------------------------------------------------------------------------+
+|:ref:`enum<enums>`             |smallest ``uint`` type that is large enough to hold all values               |
+|                               |                                                                             |
+|                               |For example, an ``enum`` of 255 values or less is mapped to ``uint8`` and    |
+|                               |an ``enum`` of 256 values is mapped to ``uint16``.                           |
++-------------------------------+-----------------------------------------------------------------------------+
+|:ref:`struct<structs>`         |``tuple``                                                                    |
++-------------------------------+-----------------------------------------------------------------------------+
 
-Properties:
+Design Criteria for the Encoding
+================================
+
+The encoding is designed to have the following properties, which are especially useful if some arguments are nested arrays:
 
   1. The number of reads necessary to access a value is at most the depth of the value inside the argument array structure, i.e. four reads are needed to retrieve ``a_i[k][l][r]``. In a previous version of the ABI, the number of reads scaled linearly with the total number of dynamic parameters in the worst case.
 
-  2. The data of a variable or array element is not interleaved with other data and it is relocatable, i.e. it only uses relative "addresses"
+  2. The data of a variable or array element is not interleaved with other data and it is relocatable, i.e. it only uses relative "addresses".
+
+
+Formal Specification of the Encoding
+====================================
 
 We distinguish static and dynamic types. Static types are encoded in-place and dynamic types are encoded at a separately allocated location after the current block.
 
@@ -190,7 +212,7 @@ Given the contract:
 
 ::
 
-    pragma solidity ^0.4.16;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract Foo {
       function bar(bytes3[2] memory) public pure {}
@@ -383,6 +405,8 @@ Offset ``f`` points to the start of the content of the array ``[[1, 2], [3]]`` w
 
 Offset ``g`` points to the start of the content of the array ``["one", "two", "three"]`` which is line 10 (320 bytes); thus ``g = 0x0000000000000000000000000000000000000000000000000000000000000140``.
 
+.. _abi_events:
+
 Events
 ======
 
@@ -416,8 +440,8 @@ A function description is a JSON object with the fields:
   * ``components``: used for tuple types (more below).
 
 - ``outputs``: an array of objects similar to ``inputs``, can be omitted if function doesn't return anything;
-- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` (function does not accept ether) and ``payable`` (function accepts ether);
-- ``payable``: ``true`` if function accepts ether, ``false`` otherwise;
+- ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` (function does not accept Ether) and ``payable`` (function accepts Ether);
+- ``payable``: ``true`` if function accepts Ether, ``false`` otherwise;
 - ``constant``: ``true`` if function is either ``pure`` or ``view``, ``false`` otherwise.
 
 ``type`` can be omitted, defaulting to ``"function"``, likewise ``payable`` and ``constant`` can be omitted, both defaulting to ``false``.
@@ -428,7 +452,7 @@ Constructor and fallback function never have ``name`` or ``outputs``. Fallback f
     The fields ``constant`` and ``payable`` are deprecated and will be removed in the future. Instead, the ``stateMutability`` field can be used to determine the same properties.
 
 .. note::
-    Sending non-zero ether to non-payable function will revert the transaction.
+    Sending non-zero Ether to non-payable function will revert the transaction.
 
 An event description is a JSON object with fairly similar fields:
 
@@ -447,7 +471,7 @@ For example,
 
 ::
 
-    pragma solidity >0.4.24;
+    pragma solidity ^0.5.0;
 
     contract Test {
       constructor() public { b = hex"12345678901234567890123456789012"; }
@@ -494,7 +518,7 @@ As an example, the code
 
 ::
 
-    pragma solidity ^0.4.19;
+    pragma solidity >=0.4.19 <0.6.0;
     pragma experimental ABIEncoderV2;
 
     contract Test {
@@ -566,6 +590,17 @@ would result in the JSON:
 
 .. _abi_packed_mode:
 
+Strict Encoding Mode
+====================
+
+Strict encoding mode is the mode that leads to exactly the same encoding as defined in the formal specification above.
+This means offsets have to be as small as possible while still not creating overlaps in the data areas and thus no gaps are
+allowed.
+
+Usually, ABI decoders are written in a straightforward way just following offset pointers, but some decoders
+might enforce strict mode. The Solidity ABI decoder currently does not enforce strict mode, but the encoder
+always creates data in strict mode.
+
 Non-standard Packed Mode
 ========================
 
@@ -574,7 +609,9 @@ Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode whe
 - types shorter than 32 bytes are neither zero padded nor sign extended and
 - dynamic types are encoded in-place and without the length.
 
-As an example encoding ``int8, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in:
+This packed mode is mainly used for indexed event parameters.
+
+As an example, the encoding of ``int8(-1), bytes1(0x42), uint16(0x2424), string("Hello, world!")`` results in:
 
 .. code-block:: none
 
@@ -584,12 +621,18 @@ As an example encoding ``int8, bytes1, uint16, string`` with values ``-1, 0x42, 
           ^^^^                           uint16(0x2424)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
 
-More specifically, each statically-sized type takes as many bytes as its range has
-and dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
-their length field. This means that the encoding is ambiguous as soon as there are two
-dynamically-sized elements.
+More specifically:
+ - Each value type takes as many bytes as its range has.
+ - The encoding of a struct or fixed-size array is the concatenation of the
+   encoding of its members/elements without any separator or padding.
+ - Mapping members of structs are ignored as usual.
+ - Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
+   their length field.
+
+In general, the encoding is ambiguous as soon as there are two dynamically-sized elements,
+because of the missing length field.
 
 If padding is needed, explicit type conversions can be used: ``abi.encodePacked(uint16(0x12)) == hex"0012"``.
 
 Since packed encoding is not used when calling functions, there is no special support
-for prepending a function selector.
+for prepending a function selector. Since the encoding is ambiguous, there is no decoding function.

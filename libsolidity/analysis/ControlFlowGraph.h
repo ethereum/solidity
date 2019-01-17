@@ -19,7 +19,8 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <map>
 #include <memory>
@@ -31,25 +32,57 @@ namespace dev
 namespace solidity
 {
 
-/** Basic Control Flow Block.
- * Basic block of control flow. Consists of a set of (unordered) AST nodes
- * for which control flow is always linear. A basic control flow block
- * encompasses at most one scope. Reverts are considered to break the control
- * flow.
- * @todo Handle function calls correctly. So far function calls are not considered
- * to change the control flow.
- */
-struct ControlFlowBlock
+/** Occurrence of a variable in a block of control flow.
+  * Stores the declaration of the referenced variable, the
+  * kind of the occurrence and possibly the node at which
+  * it occurred.
+  */
+class VariableOccurrence
 {
-	/// All variable declarations inside this control flow block.
-	std::vector<VariableDeclaration const*> variableDeclarations;
-	/// All expressions inside this control flow block (this includes all subexpressions!).
-	std::vector<Expression const*> expressions;
-	/// All inline assembly statements inside in this control flow block.
-	std::vector<InlineAssembly const*> inlineAssemblyStatements;
-	/// If control flow returns in this node, the return statement is stored in returnStatement,
-	/// otherwise returnStatement is nullptr.
-	Return const* returnStatement = nullptr;
+public:
+	enum class Kind
+	{
+		Declaration,
+		Access,
+		Return,
+		Assignment,
+		InlineAssembly
+	};
+	VariableOccurrence(VariableDeclaration const& _declaration, Kind _kind, ASTNode const* _occurrence):
+		m_declaration(_declaration), m_occurrenceKind(_kind), m_occurrence(_occurrence)
+	{
+	}
+
+	/// Defines a deterministic order on variable occurrences.
+	bool operator<(VariableOccurrence const& _rhs) const
+	{
+		if (m_occurrence && _rhs.m_occurrence)
+		{
+			if (m_occurrence->id() < _rhs.m_occurrence->id()) return true;
+			if (_rhs.m_occurrence->id() < m_occurrence->id()) return false;
+		}
+		else if (_rhs.m_occurrence)
+			return true;
+		else if (m_occurrence)
+			return false;
+
+		using KindCompareType = std::underlying_type<VariableOccurrence::Kind>::type;
+		return
+			std::make_pair(m_declaration.id(), static_cast<KindCompareType>(m_occurrenceKind)) <
+			std::make_pair(_rhs.m_declaration.id(), static_cast<KindCompareType>(_rhs.m_occurrenceKind))
+		;
+	}
+
+	VariableDeclaration const& declaration() const { return m_declaration; }
+	Kind kind() const { return m_occurrenceKind; };
+	ASTNode const* occurrence() const { return m_occurrence; }
+private:
+	/// Declaration of the occurring variable.
+	VariableDeclaration const& m_declaration;
+	/// Kind of occurrence.
+	Kind m_occurrenceKind = Kind::Access;
+	/// AST node at which the variable occurred, if available (may be nullptr).
+	ASTNode const* m_occurrence = nullptr;
 };
 
 /** Node of the Control Flow Graph.
@@ -64,14 +97,17 @@ struct CFGNode
 	/// Exit nodes. All CFG nodes to which control flow may continue after this node.
 	std::vector<CFGNode*> exits;
 
-	/// Control flow in the node.
-	ControlFlowBlock block;
+	/// Variable occurrences in the node.
+	std::vector<VariableOccurrence> variableOccurrences;
+	// Source location of this control flow block.
+	langutil::SourceLocation location;
 };
 
 /** Describes the control flow of a function. */
 struct FunctionFlow
 {
-	virtual ~FunctionFlow() {}
+	virtual ~FunctionFlow() = default;
+
 	/// Entry node. Control flow of the function starts here.
 	/// This node is empty and does not have any entries.
 	CFGNode* entry = nullptr;
@@ -85,28 +121,14 @@ struct FunctionFlow
 	CFGNode* revert = nullptr;
 };
 
-/** Describes the control flow of a modifier.
- * Every placeholder breaks the control flow. The node preceding the
- * placeholder is assigned placeholderEntry as exit and the node
- * following the placeholder is assigned placeholderExit as entry.
- */
-struct ModifierFlow: FunctionFlow
-{
-	/// Control flow leading towards a placeholder exit in placeholderEntry.
-	CFGNode* placeholderEntry = nullptr;
-	/// Control flow coming from a placeholder enter from placeholderExit.
-	CFGNode* placeholderExit = nullptr;
-};
-
 class CFG: private ASTConstVisitor
 {
 public:
-	explicit CFG(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	explicit CFG(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool constructFlow(ASTNode const& _astRoot);
 
-	virtual bool visit(ModifierDefinition const& _modifier) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
+	bool visit(FunctionDefinition const& _function) override;
 
 	FunctionFlow const& functionFlow(FunctionDefinition const& _function) const;
 
@@ -118,22 +140,8 @@ public:
 		std::vector<std::unique_ptr<CFGNode>> m_nodes;
 	};
 private:
-	/// Initially the control flow for all functions *ignoring* modifiers and for
-	/// all modifiers is constructed. Afterwards the control flow of functions
-	/// is adjusted by applying all modifiers.
-	void applyModifiers();
 
-	/// Creates a copy of the modifier flow @a _modifierFlow, while replacing the
-	/// placeholder entry and exit with the function entry and exit, as well as
-	/// replacing the modifier revert node with the function's revert node.
-	/// The resulting control flow is the new function flow with the modifier applied.
-	/// @a _functionFlow is updated in-place.
-	void applyModifierFlowToFunctionFlow(
-		ModifierFlow const& _modifierFlow,
-		FunctionFlow* _functionFlow
-	);
-
-	ErrorReporter& m_errorReporter;
+	langutil::ErrorReporter& m_errorReporter;
 
 	/// Node container.
 	/// All nodes allocated during the construction of the control flow graph
@@ -141,7 +149,6 @@ private:
 	NodeContainer m_nodeContainer;
 
 	std::map<FunctionDefinition const*, std::unique_ptr<FunctionFlow>> m_functionControlFlow;
-	std::map<ModifierDefinition const*, std::unique_ptr<ModifierFlow>> m_modifierControlFlow;
 };
 
 }

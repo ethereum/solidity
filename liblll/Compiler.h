@@ -23,7 +23,7 @@
 
 #include <libdevcore/Common.h>
 
-#include <libsolidity/interface/EVMVersion.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <string>
 #include <vector>

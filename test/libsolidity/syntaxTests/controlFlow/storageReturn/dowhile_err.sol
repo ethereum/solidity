@@ -45,8 +45,12 @@ contract C {
     }
 }
 // ----
-// TypeError: (87-98): This variable is of storage pointer type and might be returned without assignment and could be used uninitialized. Assign the variable (potentially from itself) to fix this error.
-// TypeError: (223-234): This variable is of storage pointer type and might be returned without assignment and could be used uninitialized. Assign the variable (potentially from itself) to fix this error.
-// TypeError: (440-451): This variable is of storage pointer type and might be returned without assignment and could be used uninitialized. Assign the variable (potentially from itself) to fix this error.
-// TypeError: (654-665): This variable is of storage pointer type and might be returned without assignment and could be used uninitialized. Assign the variable (potentially from itself) to fix this error.
-// TypeError: (871-882): This variable is of storage pointer type and might be returned without assignment and could be used uninitialized. Assign the variable (potentially from itself) to fix this error.
+// TypeError: (87-98): This variable is of storage pointer type and can be returned without prior assignment.
+// Warning: (146-151): Unreachable code.
+// Warning: (169-174): Unreachable code.
+// TypeError: (223-234): This variable is of storage pointer type and can be returned without prior assignment.
+// Warning: (316-321): Unreachable code.
+// TypeError: (440-451): This variable is of storage pointer type and can be returned without prior assignment.
+// TypeError: (654-665): This variable is of storage pointer type and can be returned without prior assignment.
+// TypeError: (871-882): This variable is of storage pointer type and can be returned without prior assignment.
+// Warning: (933-938): Unreachable code.

@@ -21,13 +21,12 @@
  */
 
 #include <libsolidity/ast/AST.h>
+
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
-
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
-
 #include <algorithm>
 #include <functional>
 
@@ -198,7 +197,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 				{
 					signaturesSeen.insert(functionSignature);
 					FixedHash<4> hash(dev::keccak256(functionSignature));
-					m_interfaceFunctionList->push_back(make_pair(hash, fun));
+					m_interfaceFunctionList->emplace_back(hash, fun);
 				}
 			}
 		}
@@ -311,8 +310,6 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 			return make_shared<FunctionType>(*this, _internal);
 		case Declaration::Visibility::External:
 			return {};
-		default:
-			solAssert(false, "visibility() should return a Visibility");
 		}
 	}
 	else
@@ -327,8 +324,6 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 		case Declaration::Visibility::Public:
 		case Declaration::Visibility::External:
 			return make_shared<FunctionType>(*this, _internal);
-		default:
-			solAssert(false, "visibility() should return a Visibility");
 		}
 	}
 
@@ -568,8 +563,6 @@ FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 	case Declaration::Visibility::Public:
 	case Declaration::Visibility::External:
 		return make_shared<FunctionType>(*this);
-	default:
-		solAssert(false, "visibility() should not return a Visibility");
 	}
 
 	// To make the compiler happy
@@ -639,6 +632,11 @@ IdentifierAnnotation& Identifier::annotation() const
 	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
 }
 
+ASTString Literal::valueWithoutUnderscores() const
+{
+	return boost::erase_all_copy(value(), "_");
+}
+
 bool Literal::isHexNumber() const
 {
 	if (token() != Token::Number)
@@ -654,20 +652,20 @@ bool Literal::looksLikeAddress() const
 	if (!isHexNumber())
 		return false;
 
-	return abs(int(value().length()) - 42) <= 1;
+	return abs(int(valueWithoutUnderscores().length()) - 42) <= 1;
 }
 
 bool Literal::passesAddressChecksum() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
-	return dev::passesAddressChecksum(value(), true);
+	return dev::passesAddressChecksum(valueWithoutUnderscores(), true);
 }
 
 string Literal::getChecksummedAddress() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
 	/// Pad literal to be a proper hex address.
-	string address = value().substr(2);
+	string address = valueWithoutUnderscores().substr(2);
 	if (address.length() > 40)
 		return string();
 	address.insert(address.begin(), 40 - address.size(), '0');

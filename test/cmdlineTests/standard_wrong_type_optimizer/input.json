@@ -1,0 +1,18 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "pragma solidity >=0.0; contract C { function f() public pure {} }"
+		}
+	},
+	"settings":
+	{
+		"optimizer": 1,
+		"evmVersion": "byzantium",
+		"metadata": {
+			"useLiteralContent": true
+		}
+	}
+}

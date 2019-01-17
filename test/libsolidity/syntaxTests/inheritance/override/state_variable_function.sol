@@ -6,3 +6,4 @@ contract C is A {
 }
 // ----
 // DeclarationError: (50-85): Identifier already declared.
+// TypeError: (50-85): Redeclaring an already implemented function as abstract

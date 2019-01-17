@@ -160,8 +160,7 @@ struct CommutativeSwap: SimplePeepholeOptimizerMethod<CommutativeSwap, 2>
 	{
 		// Remove SWAP1 if following instruction is commutative
 		if (
-			_swap.type() == Operation &&
-			_swap.instruction() == Instruction::SWAP1 &&
+			_swap == Instruction::SWAP1 &&
 			SemanticInformation::isCommutativeOperation(_op)
 		)
 		{
@@ -177,7 +176,7 @@ struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison, 2>
 {
 	static bool applySimple(AssemblyItem const& _swap, AssemblyItem const& _op, std::back_insert_iterator<AssemblyItems> _out)
 	{
-		map<Instruction, Instruction> swappableOps{
+		static map<Instruction, Instruction> const swappableOps{
 			{ Instruction::LT, Instruction::GT },
 			{ Instruction::GT, Instruction::LT },
 			{ Instruction::SLT, Instruction::SGT },
@@ -185,8 +184,7 @@ struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison, 2>
 		};
 
 		if (
-			_swap.type() == Operation &&
-			_swap.instruction() == Instruction::SWAP1 &&
+			_swap == Instruction::SWAP1 &&
 			_op.type() == Operation &&
 			swappableOps.count(_op.instruction())
 		)

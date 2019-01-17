@@ -147,7 +147,7 @@
 					"documentation" : "Some comment on fn.",
 					"id" : 14,
 					"implemented" : true,
-					"isConstructor" : false,
+					"kind" : "function",
 					"modifiers" : [],
 					"name" : "fn",
 					"nodeType" : "FunctionDefinition",

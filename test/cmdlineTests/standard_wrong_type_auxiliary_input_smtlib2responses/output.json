@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"\"auxiliaryInput.smtlib2responses\" must be an object.","message":"\"auxiliaryInput.smtlib2responses\" must be an object.","severity":"error","type":"JSONError"}]}

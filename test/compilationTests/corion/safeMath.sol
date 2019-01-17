@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity >=0.0;
 
 contract safeMath {
     function safeAdd(uint256 a, uint256 b) internal returns(uint256) {

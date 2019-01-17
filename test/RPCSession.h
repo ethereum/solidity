@@ -136,9 +136,6 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-	unsigned m_maxMiningTime = 6000000; // 600 seconds
-	unsigned m_sleepTime = 10; // 10 milliseconds
-	unsigned m_successfulMineRuns = 0;
 	bool m_receiptHasStatusField = false;
 
 	std::vector<std::string> m_accounts;

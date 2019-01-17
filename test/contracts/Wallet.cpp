@@ -56,7 +56,7 @@ static char const* walletCode = R"DELIMITER(
 // some number (specified in constructor) of the set of owners (specified in the constructor, modifiable) before the
 // interior is executed.
 
-pragma solidity ^0.4.0;
+pragma solidity >=0.4.0 <0.6.0;
 
 contract multiowned {
 
@@ -375,7 +375,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	}
 
 	// destroys the contract sending everything to `_to`.
-	function kill(address _to) onlymanyowners(keccak256(msg.data)) external {
+	function kill(address payable _to) onlymanyowners(keccak256(msg.data)) external {
 		selfdestruct(_to);
 	}
 

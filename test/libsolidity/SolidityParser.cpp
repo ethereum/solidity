@@ -22,13 +22,14 @@
 
 #include <string>
 #include <memory>
-#include <libsolidity/parsing/Scanner.h>
+#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/interface/ErrorReporter.h>
+#include <liblangutil/ErrorReporter.h>
 #include <test/Options.h>
 #include <test/libsolidity/ErrorCheck.h>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -42,7 +43,7 @@ namespace
 ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors)
 {
 	ErrorReporter errorReporter(_errors);
-	ASTPointer<SourceUnit> sourceUnit = Parser(errorReporter).parse(std::make_shared<Scanner>(CharStream(_source)));
+	ASTPointer<SourceUnit> sourceUnit = Parser(errorReporter).parse(std::make_shared<Scanner>(CharStream(_source, "")));
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
@@ -111,6 +112,23 @@ while(0)
 
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
+
+BOOST_AUTO_TEST_CASE(unsatisfied_version)
+{
+	char const* text = R"(
+		pragma solidity ^99.99.0;
+	)";
+	CHECK_PARSE_ERROR(text, "Source file requires different compiler version");
+}
+
+BOOST_AUTO_TEST_CASE(unsatisfied_version_followed_by_invalid_syntax)
+{
+	char const* text = R"(
+		pragma solidity ^99.99.0;
+		this is surely invalid
+	)";
+	CHECK_PARSE_ERROR(text, "Source file requires different compiler version");
+}
 
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 {

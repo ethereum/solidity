@@ -22,10 +22,11 @@
 
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/AST.h>
-#include <libdevcore/SHA3.h>
+#include <libdevcore/Keccak256.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -157,9 +158,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(7, 1)).identifier(), "t_rational_7_by_1");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(200, 77)).identifier(), "t_rational_200_by_77");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(2 * 200, 2 * 77)).identifier(), "t_rational_200_by_77");
-	BOOST_CHECK_EQUAL(RationalNumberType(rational(-2 * 200, -2 * 77)).identifier(), "t_rational_200_by_77");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(-2 * 200, 2 * 77)).identifier(), "t_rational_minus_200_by_77");
-	BOOST_CHECK_EQUAL(RationalNumberType(rational(2 * 200, -2 * 77)).identifier(), "t_rational_minus_200_by_77");
 	BOOST_CHECK_EQUAL(
 		StringLiteralType(Literal(SourceLocation{}, Token::StringLiteral, make_shared<string>("abc - def"))).identifier(),
 		 "t_stringliteral_196a9142ee0d40e274a6482393c762b16dd8315713207365e1e13d8d85b74fc4"

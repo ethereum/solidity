@@ -22,12 +22,14 @@
  */
 
 #include <libsolidity/analysis/DocStringAnalyser.h>
+
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/interface/ErrorReporter.h>
 #include <libsolidity/parsing/DocStringParser.h>
+#include <liblangutil/ErrorReporter.h>
 
 using namespace std;
 using namespace dev;
+using namespace langutil;
 using namespace dev::solidity;
 
 bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)

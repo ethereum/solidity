@@ -53,7 +53,7 @@ static char const* registrarCode = R"DELIMITER(
 // @authors:
 //   Gav Wood <g@ethdev.com>
 
-pragma solidity ^0.4.0;
+pragma solidity >=0.4.0 <0.6.0;
 
 contract Registrar {
 	event Changed(string indexed name);
@@ -81,7 +81,7 @@ contract FixedFeeRegistrar is Registrar {
 			emit Changed(_name);
 		}
 	}
-	function disown(string memory _name, address _refund) onlyrecordowner(_name) public {
+	function disown(string memory _name, address payable _refund) onlyrecordowner(_name) public {
 		delete m_recordData[uint(keccak256(bytes(_name))) / 8];
 		if (!_refund.send(c_fee))
 			revert();

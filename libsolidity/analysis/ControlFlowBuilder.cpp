@@ -18,11 +18,15 @@
 #include <libsolidity/analysis/ControlFlowBuilder.h>
 
 using namespace dev;
+using namespace langutil;
 using namespace solidity;
 using namespace std;
 
 ControlFlowBuilder::ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow):
-	m_nodeContainer(_nodeContainer), m_currentFunctionFlow(_functionFlow), m_currentNode(_functionFlow.entry)
+	m_nodeContainer(_nodeContainer),
+	m_currentNode(_functionFlow.entry),
+	m_returnNode(_functionFlow.exit),
+	m_revertNode(_functionFlow.revert)
 {
 }
 
@@ -37,26 +41,8 @@ unique_ptr<FunctionFlow> ControlFlowBuilder::createFunctionFlow(
 	functionFlow->revert = _nodeContainer.newNode();
 	ControlFlowBuilder builder(_nodeContainer, *functionFlow);
 	builder.appendControlFlow(_function);
-	connect(builder.m_currentNode, functionFlow->exit);
+
 	return functionFlow;
-}
-
-
-unique_ptr<ModifierFlow> ControlFlowBuilder::createModifierFlow(
-	CFG::NodeContainer& _nodeContainer,
-	ModifierDefinition const& _modifier
-)
-{
-	auto modifierFlow = unique_ptr<ModifierFlow>(new ModifierFlow());
-	modifierFlow->entry = _nodeContainer.newNode();
-	modifierFlow->exit = _nodeContainer.newNode();
-	modifierFlow->revert = _nodeContainer.newNode();
-	modifierFlow->placeholderEntry = _nodeContainer.newNode();
-	modifierFlow->placeholderExit = _nodeContainer.newNode();
-	ControlFlowBuilder builder(_nodeContainer, *modifierFlow);
-	builder.appendControlFlow(_modifier);
-	connect(builder.m_currentNode, modifierFlow->exit);
-	return modifierFlow;
 }
 
 bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
@@ -68,6 +54,7 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 		case Token::Or:
 		case Token::And:
 		{
+			visitNode(_operation);
 			appendControlFlow(_operation.leftExpression());
 
 			auto nodes = splitFlow<2>();
@@ -77,14 +64,14 @@ bool ControlFlowBuilder::visit(BinaryOperation const& _operation)
 			return false;
 		}
 		default:
-			break;
+			return ASTConstVisitor::visit(_operation);
 	}
-	return ASTConstVisitor::visit(_operation);
 }
 
 bool ControlFlowBuilder::visit(Conditional const& _conditional)
 {
 	solAssert(!!m_currentNode, "");
+	visitNode(_conditional);
 
 	_conditional.condition().accept(*this);
 
@@ -101,6 +88,7 @@ bool ControlFlowBuilder::visit(Conditional const& _conditional)
 bool ControlFlowBuilder::visit(IfStatement const& _ifStatement)
 {
 	solAssert(!!m_currentNode, "");
+	visitNode(_ifStatement);
 
 	_ifStatement.condition().accept(*this);
 
@@ -121,6 +109,7 @@ bool ControlFlowBuilder::visit(IfStatement const& _ifStatement)
 bool ControlFlowBuilder::visit(ForStatement const& _forStatement)
 {
 	solAssert(!!m_currentNode, "");
+	visitNode(_forStatement);
 
 	if (_forStatement.initializationExpression())
 		_forStatement.initializationExpression()->accept(*this);
@@ -154,6 +143,7 @@ bool ControlFlowBuilder::visit(ForStatement const& _forStatement)
 bool ControlFlowBuilder::visit(WhileStatement const& _whileStatement)
 {
 	solAssert(!!m_currentNode, "");
+	visitNode(_whileStatement);
 
 	if (_whileStatement.isDoWhile())
 	{
@@ -198,83 +188,46 @@ bool ControlFlowBuilder::visit(WhileStatement const& _whileStatement)
 	return false;
 }
 
-bool ControlFlowBuilder::visit(Break const&)
+bool ControlFlowBuilder::visit(Break const& _break)
 {
 	solAssert(!!m_currentNode, "");
 	solAssert(!!m_breakJump, "");
+	visitNode(_break);
 	connect(m_currentNode, m_breakJump);
 	m_currentNode = newLabel();
 	return false;
 }
 
-bool ControlFlowBuilder::visit(Continue const&)
+bool ControlFlowBuilder::visit(Continue const& _continue)
 {
 	solAssert(!!m_currentNode, "");
 	solAssert(!!m_continueJump, "");
+	visitNode(_continue);
 	connect(m_currentNode, m_continueJump);
 	m_currentNode = newLabel();
 	return false;
 }
 
-bool ControlFlowBuilder::visit(Throw const&)
+bool ControlFlowBuilder::visit(Throw const& _throw)
 {
 	solAssert(!!m_currentNode, "");
-	solAssert(!!m_currentFunctionFlow.revert, "");
-	connect(m_currentNode, m_currentFunctionFlow.revert);
+	solAssert(!!m_revertNode, "");
+	visitNode(_throw);
+	connect(m_currentNode, m_revertNode);
 	m_currentNode = newLabel();
 	return false;
 }
-
-bool ControlFlowBuilder::visit(Block const&)
-{
-	solAssert(!!m_currentNode, "");
-	createLabelHere();
-	return true;
-}
-
-void ControlFlowBuilder::endVisit(Block const&)
-{
-	solAssert(!!m_currentNode, "");
-	createLabelHere();
-}
-
-bool ControlFlowBuilder::visit(Return const& _return)
-{
-	solAssert(!!m_currentNode, "");
-	solAssert(!!m_currentFunctionFlow.exit, "");
-	solAssert(!m_currentNode->block.returnStatement, "");
-	m_currentNode->block.returnStatement = &_return;
-	connect(m_currentNode, m_currentFunctionFlow.exit);
-	m_currentNode = newLabel();
-	return true;
-}
-
 
 bool ControlFlowBuilder::visit(PlaceholderStatement const&)
 {
 	solAssert(!!m_currentNode, "");
-	auto modifierFlow = dynamic_cast<ModifierFlow const*>(&m_currentFunctionFlow);
-	solAssert(!!modifierFlow, "");
+	solAssert(!!m_placeholderEntry, "");
+	solAssert(!!m_placeholderExit, "");
 
-	connect(m_currentNode, modifierFlow->placeholderEntry);
-
+	connect(m_currentNode, m_placeholderEntry);
 	m_currentNode = newLabel();
-
-	connect(modifierFlow->placeholderExit, m_currentNode);
+	connect(m_placeholderExit, m_currentNode);
 	return false;
-}
-
-bool ControlFlowBuilder::visitNode(ASTNode const& node)
-{
-	solAssert(!!m_currentNode, "");
-	if (auto const* expression = dynamic_cast<Expression const*>(&node))
-		m_currentNode->block.expressions.emplace_back(expression);
-	else if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(&node))
-		m_currentNode->block.variableDeclarations.emplace_back(variableDeclaration);
-	else if (auto const* assembly = dynamic_cast<InlineAssembly const*>(&node))
-		m_currentNode->block.inlineAssemblyStatements.emplace_back(assembly);
-
-	return true;
 }
 
 bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
@@ -286,19 +239,21 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 		switch (functionType->kind())
 		{
 			case FunctionType::Kind::Revert:
-				solAssert(!!m_currentFunctionFlow.revert, "");
+				solAssert(!!m_revertNode, "");
+				visitNode(_functionCall);
 				_functionCall.expression().accept(*this);
 				ASTNode::listAccept(_functionCall.arguments(), *this);
-				connect(m_currentNode, m_currentFunctionFlow.revert);
+				connect(m_currentNode, m_revertNode);
 				m_currentNode = newLabel();
 				return false;
 			case FunctionType::Kind::Require:
 			case FunctionType::Kind::Assert:
 			{
-				solAssert(!!m_currentFunctionFlow.revert, "");
+				solAssert(!!m_revertNode, "");
+				visitNode(_functionCall);
 				_functionCall.expression().accept(*this);
 				ASTNode::listAccept(_functionCall.arguments(), *this);
-				connect(m_currentNode, m_currentFunctionFlow.revert);
+				connect(m_currentNode, m_revertNode);
 				auto nextNode = newLabel();
 				connect(m_currentNode, nextNode);
 				m_currentNode = nextNode;
@@ -308,6 +263,194 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 				break;
 		}
 	return ASTConstVisitor::visit(_functionCall);
+}
+
+bool ControlFlowBuilder::visit(ModifierInvocation const& _modifierInvocation)
+{
+	if (auto arguments = _modifierInvocation.arguments())
+		for (auto& argument: *arguments)
+			appendControlFlow(*argument);
+
+	auto modifierDefinition = dynamic_cast<ModifierDefinition const*>(
+		_modifierInvocation.name()->annotation().referencedDeclaration
+	);
+	if (!modifierDefinition) return false;
+	solAssert(!!modifierDefinition, "");
+	solAssert(!!m_returnNode, "");
+
+	m_placeholderEntry = newLabel();
+	m_placeholderExit = newLabel();
+
+	appendControlFlow(*modifierDefinition);
+	connect(m_currentNode, m_returnNode);
+
+	m_currentNode = m_placeholderEntry;
+	m_returnNode = m_placeholderExit;
+
+	m_placeholderEntry = nullptr;
+	m_placeholderExit = nullptr;
+
+	return false;
+}
+
+bool ControlFlowBuilder::visit(FunctionDefinition const& _functionDefinition)
+{
+	for (auto const& parameter: _functionDefinition.parameters())
+		appendControlFlow(*parameter);
+
+	for (auto const& returnParameter: _functionDefinition.returnParameters())
+	{
+		appendControlFlow(*returnParameter);
+		m_returnNode->variableOccurrences.emplace_back(
+			*returnParameter,
+			VariableOccurrence::Kind::Return,
+			nullptr
+		);
+
+	}
+
+	for (auto const& modifier: _functionDefinition.modifiers())
+		appendControlFlow(*modifier);
+
+	appendControlFlow(_functionDefinition.body());
+
+	connect(m_currentNode, m_returnNode);
+	m_currentNode = nullptr;
+
+	return false;
+}
+
+bool ControlFlowBuilder::visit(Return const& _return)
+{
+	solAssert(!!m_currentNode, "");
+	solAssert(!!m_returnNode, "");
+	visitNode(_return);
+	if (_return.expression())
+	{
+		appendControlFlow(*_return.expression());
+		// Returns with return expression are considered to be assignments to the return parameters.
+		for (auto returnParameter: _return.annotation().functionReturnParameters->parameters())
+			m_currentNode->variableOccurrences.emplace_back(
+				*returnParameter,
+				VariableOccurrence::Kind::Assignment,
+				&_return
+			);
+	}
+	connect(m_currentNode, m_returnNode);
+	m_currentNode = newLabel();
+	return false;
+}
+
+bool ControlFlowBuilder::visit(FunctionTypeName const& _functionTypeName)
+{
+	visitNode(_functionTypeName);
+	// Do not visit the parameters and return values of a function type name.
+	// We do not want to consider them as variable declarations for the control flow graph.
+	return false;
+}
+
+bool ControlFlowBuilder::visit(InlineAssembly const& _inlineAssembly)
+{
+	solAssert(!!m_currentNode, "");
+	visitNode(_inlineAssembly);
+	for (auto const& ref: _inlineAssembly.annotation().externalReferences)
+	{
+		if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(ref.second.declaration))
+			m_currentNode->variableOccurrences.emplace_back(
+				*variableDeclaration,
+				VariableOccurrence::Kind::InlineAssembly,
+				&_inlineAssembly
+			);
+	}
+	return true;
+}
+
+bool ControlFlowBuilder::visit(VariableDeclaration const& _variableDeclaration)
+{
+	solAssert(!!m_currentNode, "");
+	visitNode(_variableDeclaration);
+
+	m_currentNode->variableOccurrences.emplace_back(
+		_variableDeclaration,
+		VariableOccurrence::Kind::Declaration,
+		nullptr
+	);
+
+	// Handle declaration with immediate assignment.
+	if (_variableDeclaration.value())
+		m_currentNode->variableOccurrences.emplace_back(
+			_variableDeclaration,
+			VariableOccurrence::Kind::Assignment,
+			_variableDeclaration.value().get()
+		);
+	// Function arguments are considered to be immediately assigned as well (they are "externally assigned").
+	else if (_variableDeclaration.isCallableParameter() && !_variableDeclaration.isReturnParameter())
+		m_currentNode->variableOccurrences.emplace_back(
+			_variableDeclaration,
+			VariableOccurrence::Kind::Assignment,
+			nullptr
+		);
+	return true;
+}
+
+bool ControlFlowBuilder::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
+{
+	solAssert(!!m_currentNode, "");
+	visitNode(_variableDeclarationStatement);
+
+	for (auto const& var: _variableDeclarationStatement.declarations())
+		if (var)
+			var->accept(*this);
+	if (_variableDeclarationStatement.initialValue())
+	{
+		_variableDeclarationStatement.initialValue()->accept(*this);
+		for (size_t i = 0; i < _variableDeclarationStatement.declarations().size(); i++)
+			if (auto const& var = _variableDeclarationStatement.declarations()[i])
+			{
+				auto expression = _variableDeclarationStatement.initialValue();
+				if (auto tupleExpression = dynamic_cast<TupleExpression const*>(expression))
+					if (tupleExpression->components().size() > 1)
+					{
+						solAssert(tupleExpression->components().size() > i, "");
+						expression = tupleExpression->components()[i].get();
+					}
+				while (auto tupleExpression = dynamic_cast<TupleExpression const*>(expression))
+					if (tupleExpression->components().size() == 1)
+						expression = tupleExpression->components().front().get();
+					else
+						break;
+				m_currentNode->variableOccurrences.emplace_back(
+					*var,
+					VariableOccurrence::Kind::Assignment,
+					expression
+				);
+			}
+	}
+	return false;
+}
+
+bool ControlFlowBuilder::visit(Identifier const& _identifier)
+{
+	solAssert(!!m_currentNode, "");
+	visitNode(_identifier);
+
+	if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+		m_currentNode->variableOccurrences.emplace_back(
+			*variableDeclaration,
+			static_cast<Expression const&>(_identifier).annotation().lValueRequested ?
+			VariableOccurrence::Kind::Assignment :
+			VariableOccurrence::Kind::Access,
+			&_identifier
+		);
+
+	return true;
+}
+
+bool ControlFlowBuilder::visitNode(ASTNode const& _node)
+{
+	solAssert(!!m_currentNode, "");
+	m_currentNode->location = langutil::SourceLocation::smallestCovering(m_currentNode->location, _node.location());
+	return true;
 }
 
 void ControlFlowBuilder::appendControlFlow(ASTNode const& _node)

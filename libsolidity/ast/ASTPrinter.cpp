@@ -21,13 +21,13 @@
  */
 
 #include <libsolidity/ast/ASTPrinter.h>
-#include <libsolidity/ast/AST.h>
 
+#include <libsolidity/ast/AST.h>
+#include <boost/algorithm/string/join.hpp>
 #include <json/json.h>
 
-#include <boost/algorithm/string/join.hpp>
-
 using namespace std;
+using namespace langutil;
 
 namespace dev
 {
@@ -289,7 +289,7 @@ bool ASTPrinter::visit(Conditional const& _node)
 
 bool ASTPrinter::visit(Assignment const& _node)
 {
-	writeLine(string("Assignment using operator ") + Token::toString(_node.assignmentOperator()));
+	writeLine(string("Assignment using operator ") + TokenTraits::toString(_node.assignmentOperator()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -306,7 +306,7 @@ bool ASTPrinter::visit(TupleExpression const& _node)
 bool ASTPrinter::visit(UnaryOperation const& _node)
 {
 	writeLine(string("UnaryOperation (") + (_node.isPrefixOperation() ? "prefix" : "postfix") +
-			  ") " + Token::toString(_node.getOperator()));
+			  ") " + TokenTraits::toString(_node.getOperator()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -314,7 +314,7 @@ bool ASTPrinter::visit(UnaryOperation const& _node)
 
 bool ASTPrinter::visit(BinaryOperation const& _node)
 {
-	writeLine(string("BinaryOperation using operator ") + Token::toString(_node.getOperator()));
+	writeLine(string("BinaryOperation using operator ") + TokenTraits::toString(_node.getOperator()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -370,7 +370,7 @@ bool ASTPrinter::visit(ElementaryTypeNameExpression const& _node)
 
 bool ASTPrinter::visit(Literal const& _node)
 {
-	char const* tokenString = Token::toString(_node.token());
+	char const* tokenString = TokenTraits::toString(_node.token());
 	if (!tokenString)
 		tokenString = "[no token]";
 	writeLine(string("Literal, token: ") + tokenString + " value: " + _node.value());
