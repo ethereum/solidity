@@ -14234,6 +14234,113 @@ BOOST_AUTO_TEST_CASE(base_access_to_function_type_variables)
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
 }
 
+BOOST_AUTO_TEST_CASE(code_access)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function lengths() public pure returns (bool) {
+				uint crLen = type(D).creationCode.length;
+				uint runLen = type(D).runtimeCode.length;
+				require(runLen < crLen);
+				require(crLen >= 0x20);
+				require(runLen >= 0x20);
+				return true;
+			}
+			function creation() public pure returns (bytes memory) {
+				return type(D).creationCode;
+			}
+			function runtime() public pure returns (bytes memory) {
+				return type(D).runtimeCode;
+			}
+			function runtimeAllocCheck() public pure returns (bytes memory) {
+				uint[] memory a = new uint[](2);
+				bytes memory c = type(D).runtimeCode;
+				uint[] memory b = new uint[](2);
+				a[0] = 0x1111;
+				a[1] = 0x2222;
+				b[0] = 0x3333;
+				b[1] = 0x4444;
+				return c;
+			}
+		}
+		contract D {
+			function f() public pure returns (uint) { return 7; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("lengths()"), encodeArgs(true));
+	bytes codeCreation = callContractFunction("creation()");
+	bytes codeRuntime1 = callContractFunction("runtime()");
+	bytes codeRuntime2 = callContractFunction("runtimeAllocCheck()");
+	ABI_CHECK(codeRuntime1, codeRuntime2);
+}
+
+BOOST_AUTO_TEST_CASE(code_access_create)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function test() public returns (uint) {
+				bytes memory c = type(D).creationCode;
+				D d;
+				assembly {
+					d := create(0, add(c, 0x20), mload(c))
+				}
+				return d.f();
+			}
+		}
+		contract D {
+			uint x;
+			constructor() public { x = 7; }
+			function f() public view returns (uint) { return x; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(7));
+}
+
+BOOST_AUTO_TEST_CASE(code_access_content)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function testRuntime() public returns (bool) {
+				D d = new D();
+				bytes32 runtimeHash = keccak256(type(D).runtimeCode);
+				bytes32 otherHash;
+				uint size;
+				assembly {
+					size := extcodesize(d)
+					extcodecopy(d, mload(0x40), 0, size)
+					otherHash := keccak256(mload(0x40), size)
+				}
+				require(size == type(D).runtimeCode.length);
+				require(runtimeHash == otherHash);
+				return true;
+			}
+			function testCreation() public returns (bool) {
+				D d = new D();
+				bytes32 creationHash = keccak256(type(D).creationCode);
+				require(creationHash == d.x());
+				return true;
+			}
+		}
+		contract D {
+			bytes32 public x;
+			constructor() public {
+				bytes32 codeHash;
+				assembly {
+					let size := codesize()
+					codecopy(mload(0x40), 0, size)
+					codeHash := keccak256(mload(0x40), size)
+				}
+				x = codeHash;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("testRuntime()"), encodeArgs(true));
+	ABI_CHECK(callContractFunction("testCreation()"), encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

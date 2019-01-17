@@ -199,6 +199,38 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 	return components;
 }
 
+TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(FunctionCall const& _functionCall)
+{
+	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
+	if (arguments.size() != 1)
+	{
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"This function takes one argument, but " +
+			toString(arguments.size()) +
+			" were provided."
+		);
+		return {};
+	}
+	TypePointer firstArgType = type(*arguments.front());
+	if (
+		firstArgType->category() != Type::Category::TypeType ||
+		dynamic_cast<TypeType const&>(*firstArgType).actualType()->category() != TypeType::Category::Contract
+	)
+	{
+		m_errorReporter.typeError(
+			arguments.front()->location(),
+			"Invalid type for argument in function call. "
+			"Contract type required, but " +
+			type(*arguments.front())->toString(true) +
+			" provided."
+		);
+		return {};
+	}
+
+	return {MagicType::metaType(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
+}
+
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 {
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
@@ -1831,6 +1863,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			returnTypes = functionType->returnParameterTypes();
 			break;
 		}
+		case FunctionType::Kind::MetaType:
+			returnTypes = typeCheckMetaTypeFunctionAndRetrieveReturnType(_functionCall);
+			break;
 		default:
 		{
 			typeCheckFunctionCall(_functionCall, functionType);
@@ -2071,8 +2106,24 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType.get()))
+	{
 		if (magicType->kind() == MagicType::Kind::ABI)
 			annotation.isPure = true;
+		else if (magicType->kind() == MagicType::Kind::MetaType && (
+			memberName == "creationCode" || memberName == "runtimeCode"
+		))
+		{
+			annotation.isPure = true;
+			m_scope->annotation().contractDependencies.insert(
+				&dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition()
+			);
+			if (contractDependenciesAreCyclic(*m_scope))
+				m_errorReporter.typeError(
+					_memberAccess.location(),
+					"Circular reference for contract code access."
+				);
+		}
+	}
 
 	return false;
 }

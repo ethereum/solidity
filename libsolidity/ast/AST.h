@@ -408,6 +408,10 @@ public:
 	FunctionDefinition const* constructor() const;
 	/// @returns true iff the constructor of this contract is public (or non-existing).
 	bool constructorIsPublic() const;
+	/// @returns true iff the contract can be deployed, i.e. is not abstract and has a
+	/// public constructor.
+	/// Should only be called after the type checker has run.
+	bool canBeDeployed() const;
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 

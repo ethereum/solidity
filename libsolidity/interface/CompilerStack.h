@@ -293,10 +293,12 @@ private:
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;
 
-	/// Compile a single contract and put the result in @a _compiledContracts.
+	/// Compile a single contract.
+	/// @param _otherCompilers provides access to compilers of other contracts, to get
+	///                        their bytecode if needed. Only filled after they have been compiled.
 	void compileContract(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
+		std::map<ContractDefinition const*, std::shared_ptr<Compiler const>>& _otherCompilers
 	);
 
 	/// Links all the known library addresses in the available objects. Any unknown
