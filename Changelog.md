@@ -14,6 +14,7 @@ Bugfixes:
 
 
 Build System:
+ * Emscripten: Upgrade to emscripten 1.38.8 on travis and circleci.
 
 
 ### 0.5.2 (2018-12-19)

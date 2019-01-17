@@ -34,7 +34,7 @@ version: 2
 jobs:
   build_emscripten:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.37.21-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
     environment:
       TERM: xterm
     steps:
