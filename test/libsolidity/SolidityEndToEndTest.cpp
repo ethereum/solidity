@@ -13454,11 +13454,43 @@ BOOST_AUTO_TEST_CASE(abi_encode_v2)
 	ABI_CHECK(callContractFunction("f4()"), encodeArgs(0x20, 0x160, 1, 0x80, 0xc0, 2, 3, "abc", 7, 0x40, 2, 2, 3));
 }
 
-
 BOOST_AUTO_TEST_CASE(abi_encodePacked)
 {
 	char const* sourceCode = R"(
 		contract C {
+			function f0() public pure returns (bytes memory) {
+				return abi.encodePacked();
+			}
+			function f1() public pure returns (bytes memory) {
+				return abi.encodePacked(uint8(1), uint8(2));
+			}
+			function f2() public pure returns (bytes memory) {
+				string memory x = "abc";
+				return abi.encodePacked(uint8(1), x, uint8(2));
+			}
+			function f3() public pure returns (bytes memory r) {
+				// test that memory is properly allocated
+				string memory x = "abc";
+				r = abi.encodePacked(uint8(1), x, uint8(2));
+				bytes memory y = "def";
+				require(y[0] == "d");
+				y[0] = "e";
+				require(y[0] == "e");
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 0));
+	ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 2, "\x01\x02"));
+	ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+	ABI_CHECK(callContractFunction("f3()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodePacked_v2)
+{
+	char const* sourceCode = R"(
+		contract C {
+			pragma experimental ABIEncoderV2;
 			function f0() public pure returns (bytes memory) {
 				return abi.encodePacked();
 			}

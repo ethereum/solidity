@@ -70,6 +70,11 @@ public:
 		bool _encodeAsLibraryTypes = false
 	);
 
+	std::string tupleEncoderPacked(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes
+	);
+
 	/// @returns name of an assembly function to ABI-decode values of @a _types
 	/// into memory. If @a _fromMemory is true, decodes from memory instead of
 	/// from calldata.
@@ -87,6 +92,8 @@ public:
 	std::pair<std::string, std::set<std::string>> requestedFunctions();
 
 private:
+	enum class Packed { PADDED, PACKED };
+
 	/// @returns the name of the cleanup function for the given type and
 	/// adds its implementation to the requested functions.
 	/// @param _revertOnFailure if true, causes revert on invalid data,
@@ -116,7 +123,8 @@ private:
 		Type const& _givenType,
 		Type const& _targetType,
 		bool _encodeAsLibraryTypes,
-		bool _fromStack
+		bool _fromStack,
+		Packed _packed = Packed::PADDED
 	);
 	/// Part of @a abiEncodingFunction for array target type and given calldata array.
 	std::string abiEncodingFunctionCalldataArray(
@@ -157,7 +165,8 @@ private:
 	std::string abiEncodingFunctionStringLiteral(
 		Type const& _givenType,
 		Type const& _targetType,
-		bool _encodeAsLibraryTypes
+		bool _encodeAsLibraryTypes,
+		Packed _packed = Packed::PADDED
 	);
 
 	std::string abiEncodingFunctionFunctionType(
@@ -196,6 +205,10 @@ private:
 	/// or memory to memory.
 	/// Pads with zeros and might write more than exactly length.
 	std::string copyToMemoryFunction(bool _fromCalldata);
+
+	/// @returns the name of a function that takes a (cleaned) value of the given type and left-aligns
+	/// it, usually for use in packed encoding.
+	std::string leftAlignFunction(Type const& _type);
 
 	std::string shiftLeftFunction(size_t _numBits);
 	std::string shiftRightFunction(size_t _numBits);

@@ -348,11 +348,15 @@ void CompilerUtils::encodeToMemory(
 
 	if (_givenTypes.empty())
 		return;
-	else if (_padToWordBoundaries && !_copyDynamicDataInPlace && encoderV2)
+	else if (encoderV2)
 	{
+		bool packed = !_padToWordBoundaries;
+		solAssert(packed == _copyDynamicDataInPlace, "Only support packed and in-place encoding at the same time.");
+		if (packed)
+			solAssert(!_encodeAsLibraryTypes, "Packed encoding for library types not supported.");
 		// Use the new Yul-based encoding function
 		auto stackHeightBefore = m_context.stackHeight();
-		abiEncodeV2(_givenTypes, targetTypes, _encodeAsLibraryTypes);
+		abiEncodeV2(_givenTypes, targetTypes, _encodeAsLibraryTypes, packed);
 		solAssert(stackHeightBefore - m_context.stackHeight() == sizeOnStack(_givenTypes), "");
 		return;
 	}
@@ -466,7 +470,8 @@ void CompilerUtils::encodeToMemory(
 void CompilerUtils::abiEncodeV2(
 	TypePointers const& _givenTypes,
 	TypePointers const& _targetTypes,
-	bool _encodeAsLibraryTypes
+	bool _encodeAsLibraryTypes,
+	bool _packedEncoding
 )
 {
 	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
@@ -474,7 +479,11 @@ void CompilerUtils::abiEncodeV2(
 	auto ret = m_context.pushNewTag();
 	moveIntoStack(sizeOnStack(_givenTypes) + 1);
 
-	string encoderName = m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
+	solAssert(!(_packedEncoding && _encodeAsLibraryTypes), "Packed encoding cannot be combined with library encoding.");
+	string encoderName =
+		_packedEncoding ?
+		m_context.abiFunctions().tupleEncoderPacked(_givenTypes, _targetTypes) :
+		m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
 	m_context.appendJumpTo(m_context.namedTag(encoderName));
 	m_context.adjustStackOffset(-int(sizeOnStack(_givenTypes)) - 1);
 	m_context << ret.tag();
