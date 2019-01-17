@@ -98,7 +98,8 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			# Abort if linking results in any undefined symbols
 			# Note: this is on by default in the CMake Emscripten module which we aren't using
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ERROR_ON_UNDEFINED_SYMBOLS=1")
-			add_definitions(-DETH_EMSCRIPTEN=1)
+			# Disallow deprecated emscripten build options.
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s STRICT=1")
 		endif()
 	endif()
 
