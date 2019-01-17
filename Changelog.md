@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * TypeChecker: Return type error if fixed point encoding is attempted instead of throwing ``UnimplementedFeatureError``.
  * Yul: Check that arguments to ``dataoffset`` and ``datasize`` are literals at parse time and properly take this into account in the optimizer.
  * Yul: Parse number literals for detecting duplicate switch cases.
  * Yul: Require switch cases to have the same type.
