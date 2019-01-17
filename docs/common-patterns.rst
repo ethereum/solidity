@@ -117,7 +117,7 @@ to read the data, so will everyone else.
 
 You can restrict read access to your contract's state
 by **other contracts**. That is actually the default
-unless you declare make your state variables ``public``.
+unless you declare your state variables ``public``.
 
 Furthermore, you can restrict who can make modifications
 to your contract's state or call your contract's
