@@ -494,7 +494,7 @@ string ABIFunctions::abiEncodingFunction(
 	bool _fromStack
 )
 {
-	TypePointer toInterface = _to.fullEncodingType(_encodeAsLibraryTypes, true, false);
+	TypePointer toInterface = _to.fullEncodingType(_encodeAsLibraryTypes, true);
 	solUnimplementedAssert(toInterface, "Encoding type \"" + _to.toString() + "\" not yet implemented.");
 	Type const& to = *toInterface;
 
@@ -904,7 +904,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			solAssert(member.type, "");
 			if (!member.type->canLiveOutsideStorage())
 				continue;
-			TypePointer memberTypeTo = member.type->fullEncodingType(_encodeAsLibraryTypes, true, false);
+			TypePointer memberTypeTo = member.type->fullEncodingType(_encodeAsLibraryTypes, true);
 			solUnimplementedAssert(memberTypeTo, "Encoding type \"" + member.type->toString() + "\" not yet implemented.");
 			auto memberTypeFrom = _from.memberType(member.name);
 			solAssert(memberTypeFrom, "");

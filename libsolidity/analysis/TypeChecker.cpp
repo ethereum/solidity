@@ -183,7 +183,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 				!actualType->dataStoredIn(DataLocation::Storage),
 				""
 			);
-			if (!actualType->fullEncodingType(false, _abiEncoderV2, false))
+			if (!actualType->fullEncodingType(false, _abiEncoderV2))
 				m_errorReporter.typeError(
 					typeArgument->location(),
 					"Decoding type " + actualType->toString(false) + " not supported."
@@ -1501,7 +1501,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 			}
 		}
 
-		if (!argType->fullEncodingType(false, abiEncoderV2, !_functionType->padArguments()))
+		if (!argType->fullEncodingType(false, abiEncoderV2))
 			m_errorReporter.typeError(
 				arguments[i]->location(),
 				"This type cannot be encoded."
