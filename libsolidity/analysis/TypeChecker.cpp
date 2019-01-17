@@ -204,7 +204,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
-	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+	if (m_scope->isInterface())
 		m_errorReporter.typeError(_inheritance.location(), "Interfaces cannot inherit.");
 
 	if (base->isLibrary())
@@ -212,7 +212,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes;
-	if (base->contractKind() != ContractDefinition::ContractKind::Interface)
+	if (!base->isInterface())
 		// Interfaces do not have constructors, so there are zero parameters.
 		parameterTypes = ContractType(*base).newExpressionType()->parameterTypes();
 
@@ -325,7 +325,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 				"This type is only supported in the new experimental ABI encoder. "
 				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 			);
-
 		var->accept(*this);
 	}
 	set<Declaration const*> modifiers;
@@ -346,7 +345,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else
 			modifiers.insert(decl);
 	}
-	if (m_scope->contractKind() == ContractDefinition::ContractKind::Interface)
+	if (m_scope->isInterface())
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
@@ -375,7 +374,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// * a function's input/output parameters,
 	// * or inside of a struct definition.
 	if (
-		m_scope->contractKind() == ContractDefinition::ContractKind::Interface
+		m_scope->isInterface()
 		&& !_variable.isCallableParameter()
 		&& !m_insideStruct
 	)
@@ -1862,7 +1861,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 
 		if (!contract)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
-		if (contract->contractKind() == ContractDefinition::ContractKind::Interface)
+		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->annotation().unimplementedFunctions.empty())
 		{

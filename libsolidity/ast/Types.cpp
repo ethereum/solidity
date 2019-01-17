@@ -2525,7 +2525,7 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 	strings parameterNames;
 	StateMutability stateMutability = StateMutability::NonPayable;
 
-	solAssert(_contract.contractKind() != ContractDefinition::ContractKind::Interface, "");
+	solAssert(!_contract.isInterface(), "");
 
 	if (constructor)
 	{
