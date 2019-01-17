@@ -130,7 +130,8 @@ private:
 	std::string abiEncodingFunctionCalldataArray(
 		Type const& _givenType,
 		Type const& _targetType,
-		bool _encodeAsLibraryTypes
+		bool _encodeAsLibraryTypes,
+		Packed _packed
 	);
 	/// Part of @a abiEncodingFunction for array target type and given memory array or
 	/// a given storage array with one item per slot.

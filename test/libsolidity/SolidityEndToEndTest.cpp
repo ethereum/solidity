@@ -13481,6 +13481,9 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked)
 				string memory x = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
 				return abi.encodePacked(uint16(0x0701), x, uint16(0x1201));
 			}
+			function f_calldata() public pure returns (bytes memory) {
+				return abi.encodePacked(uint8(0x01), msg.data, uint8(0x02));
+			}
 		}
 	)";
 	for (auto v2: {false, true})
@@ -13495,6 +13498,7 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked)
 			2 + 26 + 26 + 2,
 			"\x07\x01" "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" "\x12\x01"
 		));
+		ABI_CHECK(callContractFunction("f_calldata()"), encodeArgs(0x20, 6, "\x01" "\xa5\xbf\xa1\xee" "\x02"));
 	}
 }
 

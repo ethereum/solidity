@@ -566,7 +566,7 @@ string ABIFunctions::abiEncodingFunction(
 		solAssert(to.dataStoredIn(DataLocation::Memory), "");
 		ArrayType const& fromArray = dynamic_cast<ArrayType const&>(_from);
 		if (fromArray.location() == DataLocation::CallData)
-			return abiEncodingFunctionCalldataArray(fromArray, *toArray, _encodeAsLibraryTypes); // TODO
+			return abiEncodingFunctionCalldataArray(fromArray, *toArray, _encodeAsLibraryTypes, _packed);
 		else if (!fromArray.isByteArray() && (
 				fromArray.location() == DataLocation::Memory ||
 				fromArray.baseType()->storageBytes() > 16
@@ -640,7 +640,8 @@ string ABIFunctions::abiEncodingFunction(
 string ABIFunctions::abiEncodingFunctionCalldataArray(
 	Type const& _from,
 	Type const& _to,
-	bool _encodeAsLibraryTypes
+	bool _encodeAsLibraryTypes,
+	Packed _packed
 )
 {
 	solAssert(_to.isDynamicallySized(), "");
@@ -659,6 +660,7 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 
 	string functionName =
 		"abi_encode_" +
+		string(_packed == Packed::PACKED ? "packed_" : "") +
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
@@ -672,15 +674,15 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 			function <functionName>(start, length, pos) -> end {
 				<storeLength> // might update pos
 				<copyFun>(start, pos, length)
-				end := add(pos, <roundUpFun>(length))
+				end := add(pos, <roundUpLength>)
 			}
 		)");
-		templ("storeLength", _to.isDynamicallySized() ? "mstore(pos, length) pos := add(pos, 0x20)" : "");
+		templ("storeLength", _to.isDynamicallySized() && _packed == Packed::PADDED ? "mstore(pos, length) pos := add(pos, 0x20)" : "");
 		templ("functionName", functionName);
 		templ("readableTypeNameFrom", _from.toString(true));
 		templ("readableTypeNameTo", _to.toString(true));
 		templ("copyFun", copyToMemoryFunction(true));
-		templ("roundUpFun", roundUpFunction());
+		templ("roundUpLength", _packed == Packed::PADDED ? roundUpFunction() + "(length)" : "length");
 		return templ.render();
 	});
 }
