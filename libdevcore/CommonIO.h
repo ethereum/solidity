@@ -50,10 +50,6 @@ std::string toString(_T const& _t)
 	return o.str();
 }
 
-/// Partial implementation of boost::filesystem::weakly_canonical (available in boost>=1.60).
-/// Should be replaced by the boost implementation as soon as support for boost<1.60 can be dropped.
-boost::filesystem::path weaklyCanonicalFilesystemPath(boost::filesystem::path const &_path);
-
 /// @returns the absolute path corresponding to @a _path relative to @a _reference.
 std::string absolutePath(std::string const& _path, std::string const& _reference);
 

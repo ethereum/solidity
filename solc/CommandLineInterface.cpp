@@ -731,7 +731,7 @@ bool CommandLineInterface::processInput()
 		try
 		{
 			auto path = boost::filesystem::path(_path);
-			auto canonicalPath = weaklyCanonicalFilesystemPath(path);
+			auto canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
