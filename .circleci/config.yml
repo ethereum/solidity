@@ -56,16 +56,15 @@ jobs:
           paths:
             - boost_1_68_0
       - store_artifacts:
-          path: build/libsolc/soljson.js
+          path: build/libsolc/
           destination: soljson.js
       - run: mkdir -p workspace
-      - run: cp build/libsolc/soljson.js workspace/soljson.js
+      - run: cp build/libsolc/soljson.* workspace
       - run: scripts/get_version.sh > workspace/version.txt
       - persist_to_workspace:
           root: workspace
           paths:
-            - soljson.js
-            - version.txt
+            - "*"
   test_emscripten_solcjs:
     docker:
       - image: circleci/node:10

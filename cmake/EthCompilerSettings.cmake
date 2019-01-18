@@ -103,8 +103,8 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			# Export the Emscripten-generated auxiliary methods which are needed by solc-js.
 			# Which methods of libsolc itself are exported is specified in libsolc/CMakeLists.txt.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap','addFunction','removeFunction','Pointer_stringify','lengthBytesUTF8','_malloc','stringToUTF8','setValue']")
-			# Do not build as a WebAssembly target - we need an asm.js output.
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=0")
+			# Set binaryen method to native WebAssembly with fallback to asmjs.
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s BINARYEN_METHOD='native-wasm,asmjs'")
 		endif()
 	endif()
 
