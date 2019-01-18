@@ -44,7 +44,7 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(bigint(_a) % bigint(_b));
 }
 
-// This part of simplificationRuleList below was split out to prevent
+// simplificationRuleList below was split up into parts to prevent
 // stack overflows in the JavaScript optimizer for emscripten builds
 // that affected certain browser versions.
 template <class Pattern>
@@ -52,8 +52,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 	Pattern A,
 	Pattern B,
 	Pattern C,
-	Pattern X,
-	Pattern Y
+	Pattern,
+	Pattern
 )
 {
 	return std::vector<SimplificationRule<Pattern>> {
@@ -96,8 +96,20 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 			if (A.d() > 255)
 				return u256(0);
 			return B.d() >> unsigned(A.d());
-		}, false},
+		}, false}
+	};
+}
 
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
+	Pattern,
+	Pattern,
+	Pattern,
+	Pattern X,
+	Pattern
+)
+{
+	return std::vector<SimplificationRule<Pattern>> {
 		// invariants involving known constants
 		{{Instruction::ADD, {X, 0}}, [=]{ return X; }, false},
 		{{Instruction::ADD, {0, X}}, [=]{ return X; }, false},
@@ -128,7 +140,19 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
 		{{Instruction::EQ, {0, X}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
+	};
+}
 
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart3(
+	Pattern,
+	Pattern,
+	Pattern,
+	Pattern X,
+	Pattern
+)
+{
+	return std::vector<SimplificationRule<Pattern>> {
 		// operations involving an expression and itself
 		{{Instruction::AND, {X, X}}, [=]{ return X; }, true},
 		{{Instruction::OR, {X, X}}, [=]{ return X; }, true},
@@ -139,8 +163,20 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		{{Instruction::SLT, {X, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::GT, {X, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::SGT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::MOD, {X, X}}, [=]{ return u256(0); }, true},
+		{{Instruction::MOD, {X, X}}, [=]{ return u256(0); }, true}
+	};
+}
 
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
+	Pattern,
+	Pattern,
+	Pattern,
+	Pattern X,
+	Pattern Y
+)
+{
+	return std::vector<SimplificationRule<Pattern>> {
 		// logical instruction combinations
 		{{Instruction::NOT, {{Instruction::NOT, {X}}}}, [=]{ return X; }, false},
 		{{Instruction::XOR, {X, {Instruction::XOR, {X, Y}}}}, [=]{ return Y; }, true},
@@ -163,16 +199,13 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 }
 
 
-// This part of simplificationRuleList below was split out to prevent
-// stack overflows in the JavaScript optimizer for emscripten builds
-// that affected certain browser versions.
 template <class Pattern>
-std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
-	Pattern A,
-	Pattern B,
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
+	Pattern,
+	Pattern,
 	Pattern,
 	Pattern X,
-	Pattern Y
+	Pattern
 )
 {
 	std::vector<SimplificationRule<Pattern>> rules;
@@ -207,7 +240,19 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 			false
 		});
 	}
+	return rules;
+}
 
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart6(
+	Pattern,
+	Pattern,
+	Pattern,
+	Pattern X,
+	Pattern Y
+)
+{
+	std::vector<SimplificationRule<Pattern>> rules;
 	// Double negation of opcodes with boolean result
 	for (auto const& op: std::vector<Instruction>{
 		Instruction::EQ,
@@ -234,6 +279,19 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		false
 	});
 
+	return rules;
+}
+
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
+	Pattern A,
+	Pattern B,
+	Pattern,
+	Pattern X,
+	Pattern Y
+)
+{
+	std::vector<SimplificationRule<Pattern>> rules;
 	// Associative operations
 	for (auto const& opFun: std::vector<std::pair<Instruction,std::function<u256(u256 const&,u256 const&)>>>{
 		{Instruction::ADD, std::plus<u256>()},
@@ -273,6 +331,20 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 			}};
 		}
 	}
+
+	return rules;
+}
+
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
+	Pattern A,
+	Pattern,
+	Pattern,
+	Pattern X,
+	Pattern Y
+)
+{
+	std::vector<SimplificationRule<Pattern>> rules;
 
 	// move constants across subtractions
 	rules += std::vector<SimplificationRule<Pattern>>{
@@ -322,6 +394,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	std::vector<SimplificationRule<Pattern>> rules;
 	rules += simplificationRuleListPart1(A, B, C, X, Y);
 	rules += simplificationRuleListPart2(A, B, C, X, Y);
+	rules += simplificationRuleListPart3(A, B, C, X, Y);
+	rules += simplificationRuleListPart4(A, B, C, X, Y);
+	rules += simplificationRuleListPart5(A, B, C, X, Y);
+	rules += simplificationRuleListPart6(A, B, C, X, Y);
+	rules += simplificationRuleListPart7(A, B, C, X, Y);
+	rules += simplificationRuleListPart8(A, B, C, X, Y);
 	return rules;
 }
 

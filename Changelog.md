@@ -9,6 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Emscripten: Split simplification rule initialization up further to work around issues with soljson.js in some browsers.
  * TypeChecker: Return type error if fixed point encoding is attempted instead of throwing ``UnimplementedFeatureError``.
  * Yul: Check that arguments to ``dataoffset`` and ``datasize`` are literals at parse time and properly take this into account in the optimizer.
  * Yul: Parse number literals for detecting duplicate switch cases.
