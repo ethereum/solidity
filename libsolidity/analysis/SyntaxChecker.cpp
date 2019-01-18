@@ -262,7 +262,7 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 
 bool SyntaxChecker::visit(ContractDefinition const& _contract)
 {
-	m_isInterface = _contract.contractKind() == ContractDefinition::ContractKind::Interface;
+	m_isInterface = _contract.isInterface();
 
 	ASTString const& contractName = _contract.name();
 	for (FunctionDefinition const* function: _contract.definedFunctions())
