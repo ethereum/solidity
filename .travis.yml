@@ -114,7 +114,7 @@ matrix:
           before_install:
               - nvm install 8
               - nvm use 8
-              - docker pull trzeci/emscripten:sdk-tag-1.38.8-64bit
+              - docker pull trzeci/emscripten:sdk-tag-1.38.22-64bit
           env:
               - SOLC_EMSCRIPTEN=On
               - SOLC_INSTALL_DEPS_TRAVIS=Off
