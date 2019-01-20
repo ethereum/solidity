@@ -39,6 +39,11 @@ Operators:
 * Shift operators: ``<<`` (left shift), ``>>`` (right shift)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
 
+.. warning::
+
+  Integers in Solidity are restricted to a certain range. For example, with ``uint32``, this is ``0`` up to ``2**32 - 1``.
+  If the result of some operation on those numbers does not fit inside this range, it is truncated. These truncations can have
+  serious consequences that you should :ref:`be aware of and mitigate against<underflow-overflow>`.
 
 Comparisons
 ^^^^^^^^^^^
