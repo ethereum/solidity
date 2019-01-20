@@ -35,8 +35,8 @@ using namespace boost;
 using namespace boost::algorithm;
 using namespace boost::unit_test;
 
-SemanticTest::SemanticTest(string const& _filename):
-	SolidityExecutionFramework(ipcPath)
+SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath):
+	SolidityExecutionFramework(_ipcPath)
 {
 	ifstream file(_filename);
 	if (!file)
@@ -158,5 +158,3 @@ void SemanticTest::printFunctionCallTest(
 		_stream << " # " << _test.call.expectations.comment;
 	_stream << endl;
 }
-
-string SemanticTest::ipcPath;

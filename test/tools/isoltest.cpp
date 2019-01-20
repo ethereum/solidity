@@ -63,8 +63,9 @@ public:
 		TestCase::TestCaseCreator _testCaseCreator,
 		string const& _name,
 		fs::path const& _path,
+		string const& _ipcPath,
 		bool _formatted
-	): m_testCaseCreator(_testCaseCreator), m_formatted(_formatted), m_name(_name), m_path(_path)
+	): m_testCaseCreator(_testCaseCreator), m_name(_name), m_path(_path), m_ipcPath(_ipcPath), m_formatted(_formatted)
 	{}
 
 	enum class Result
@@ -80,6 +81,7 @@ public:
 		TestCase::TestCaseCreator _testCaseCreator,
 		fs::path const& _basepath,
 		fs::path const& _path,
+		string const& _ipcPath,
 		bool const _formatted
 	);
 
@@ -95,9 +97,10 @@ private:
 	Request handleResponse(bool const _exception);
 
 	TestCase::TestCaseCreator m_testCaseCreator;
-	bool const m_formatted = false;
 	string const m_name;
 	fs::path const m_path;
+	string m_ipcPath;
+	bool const m_formatted = false;
 	unique_ptr<TestCase> m_test;
 	static bool m_exitRequested;
 };
@@ -114,7 +117,7 @@ TestTool::Result TestTool::process()
 
 	try
 	{
-		m_test = m_testCaseCreator(m_path.string());
+		m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath});
 		success = m_test->run(outputMessages, "  ", m_formatted);
 	}
 	catch(boost::exception const& _e)
@@ -201,6 +204,7 @@ TestStats TestTool::processPath(
 	TestCase::TestCaseCreator _testCaseCreator,
 	fs::path const& _basepath,
 	fs::path const& _path,
+	string const& _ipcPath,
 	bool const _formatted
 )
 {
@@ -232,7 +236,7 @@ TestStats TestTool::processPath(
 		else
 		{
 			++testCount;
-			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _formatted);
+			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _ipcPath, _formatted);
 			auto result = testTool.process();
 
 			switch(result)
@@ -293,6 +297,7 @@ boost::optional<TestStats> runTestSuite(
 	string const& _name,
 	fs::path const& _basePath,
 	fs::path const& _subdirectory,
+	string const& _ipcPath,
 	TestCase::TestCaseCreator _testCaseCreator,
 	bool _formatted
 )
@@ -305,7 +310,7 @@ boost::optional<TestStats> runTestSuite(
 		return {};
 	}
 
-	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _formatted);
+	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _ipcPath, _formatted);
 
 	cout << endl << _name << " Test Summary: ";
 	FormattedScope(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
@@ -380,7 +385,6 @@ Allowed options)",
 				fs::exists(ipcPath),
 				"Invalid ipc path specified."
 			);
-			SemanticTest::ipcPath = ipcPath;
 		}
 
 		if (arguments.count("no-smt"))
@@ -408,7 +412,7 @@ Allowed options)",
 		if (ts.smt && disableSMT)
 			continue;
 
-		if (auto stats = runTestSuite(ts.title, testPath / ts.path, ts.subpath, ts.testCaseCreator, formatted))
+		if (auto stats = runTestSuite(ts.title, testPath / ts.path, ts.subpath, ipcPath, ts.testCaseCreator, formatted))
 			global_stats += *stats;
 		else
 			return 1;

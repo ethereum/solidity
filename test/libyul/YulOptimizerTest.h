@@ -41,9 +41,9 @@ namespace test
 class YulOptimizerTest: public dev::solidity::test::TestCase
 {
 public:
-	static std::unique_ptr<TestCase> create(std::string const& _filename)
+	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::unique_ptr<TestCase>(new YulOptimizerTest(_filename));
+		return std::unique_ptr<TestCase>(new YulOptimizerTest(_config.filename));
 	}
 
 	explicit YulOptimizerTest(std::string const& _filename);

@@ -39,16 +39,15 @@ using Expectation = ExpectationParser::FunctionCallExpectations;
 class SemanticTest: public SolidityExecutionFramework, public TestCase
 {
 public:
-	static std::unique_ptr<TestCase> create(std::string const& _filename)
-	{ return std::unique_ptr<TestCase>(new SemanticTest(_filename)); }
-	SemanticTest(std::string const& _filename);
+	static std::unique_ptr<TestCase> create(Config const& _options)
+	{ return std::unique_ptr<TestCase>(new SemanticTest(_options.filename, _options.ipcPath)); }
+
+	explicit SemanticTest(std::string const& _filename, std::string const& _ipcPath);
 
 	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 	void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix = "") const override;
 	bool allowsUpdate() const override { return false; }
-
-	static std::string ipcPath;
 
 private:
 	struct FunctionCallTest
