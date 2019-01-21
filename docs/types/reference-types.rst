@@ -132,7 +132,7 @@ The numeric index becomes a required parameter for the getter.
 Allocating Memory Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can use the ``new`` keyword to create arrays with a runtime-dependent length in memory.
+You must use the ``new`` keyword to create arrays with a runtime-dependent length in memory.
 As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g. by assigning to
 the ``.length`` member). You either have to calculate the required size in advance
 or create a new memory array and copy every element.
