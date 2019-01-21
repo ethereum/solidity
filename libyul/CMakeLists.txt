@@ -110,5 +110,7 @@ add_library(yul
 	optimiser/UnusedPruner.h
 	optimiser/VarDeclInitializer.cpp
 	optimiser/VarDeclInitializer.h
+	optimiser/VarNameCleaner.cpp
+	optimiser/VarNameCleaner.h
 )
 target_link_libraries(yul PUBLIC evmasm devcore langutil)

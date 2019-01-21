@@ -19,10 +19,10 @@
 // ----
 // fullSuite
 // {
-//     let allocate__19 := 0x40
-//     mstore(allocate__19, add(mload(allocate__19), 0x20))
-//     let allocate_p_33_37 := mload(allocate__19)
-//     mstore(allocate__19, add(allocate_p_33_37, allocate__19))
-//     mstore(add(allocate_p_33_37, 96), 2)
-//     mstore(allocate__19, 0x20)
+//     let allocate := 0x40
+//     mstore(allocate, add(mload(allocate), 0x20))
+//     let allocate_p := mload(allocate)
+//     mstore(allocate, add(allocate_p, allocate))
+//     mstore(add(allocate_p, 96), 2)
+//     mstore(allocate, 0x20)
 // }

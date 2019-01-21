@@ -51,6 +51,7 @@
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
+#include <libyul/optimiser/VarNameCleaner.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -128,7 +129,7 @@ public:
 				disambiguated = true;
 			}
 			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
-			cout << "  (e)xpr inline/(i)nline/(s)implify/(u)nusedprune/ss(a) transform/" << endl;
+			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
 			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/? " << endl;
 			cout << "  stack com(p)ressor? " << endl;
@@ -150,6 +151,9 @@ public:
 				break;
 			case 'd':
 				(VarDeclInitializer{})(*m_ast);
+				break;
+			case 'l':
+				VarNameCleaner{*m_ast, *m_dialect}(*m_ast);
 				break;
 			case 'x':
 				ExpressionSplitter{*m_dialect, *m_nameDispenser}(*m_ast);
