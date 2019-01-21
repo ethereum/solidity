@@ -9,5 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning: (99-107): Assertion checker does not yet implement this type of function call.
 // Warning: (141-144): Assertion checker does not support recursive function calls.
