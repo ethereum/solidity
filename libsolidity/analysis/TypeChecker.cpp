@@ -359,6 +359,16 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	};
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
+		TypePointer baseType = type(*var);
+		while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
+			baseType = arrayType->baseType();
+
+		if (
+			!m_scope->isInterface() &&
+			baseType->category() == Type::Category::Struct &&
+			baseType->dataStoredIn(DataLocation::CallData)
+		)
+			m_errorReporter.typeError(var->location(), "Calldata structs are not yet supported.");
 		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}
