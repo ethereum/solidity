@@ -87,6 +87,23 @@ public:
 	std::pair<std::string, std::set<std::string>> requestedFunctions();
 
 private:
+	struct EncodingOptions
+	{
+		/// Pad/signextend value types and bytes/string to multiples of  32 bytes.
+		bool padded = true;
+		/// Store arrays and structs in place without "data pointer" and do not store the length.
+		bool dynamicInplace = false;
+		/// Only for external function types: The value is a pair of address / function id instead
+		/// of a memory pointer to the compression representation.
+		bool encodeFunctionFromStack = false;
+		/// Encode storage pointers as storage pointers (we are targeting a library call).
+		bool encodeAsLibraryTypes = false;
+
+		/// @returns a string to uniquely identify the encoding options for the encoding
+		/// function name. Skips everything that has its default value.
+		std::string toFunctionNameSuffix() const;
+	};
+
 	/// @returns the name of the cleanup function for the given type and
 	/// adds its implementation to the requested functions.
 	/// @param _revertOnFailure if true, causes revert on invalid data,
@@ -115,40 +132,39 @@ private:
 	std::string abiEncodingFunction(
 		Type const& _givenType,
 		Type const& _targetType,
-		bool _encodeAsLibraryTypes,
-		bool _fromStack
+		EncodingOptions const& _options
 	);
 	/// Part of @a abiEncodingFunction for array target type and given calldata array.
 	std::string abiEncodingFunctionCalldataArray(
 		Type const& _givenType,
 		Type const& _targetType,
-		bool _encodeAsLibraryTypes
+		EncodingOptions const& _options
 	);
 	/// Part of @a abiEncodingFunction for array target type and given memory array or
 	/// a given storage array with one item per slot.
 	std::string abiEncodingFunctionSimpleArray(
 		ArrayType const& _givenType,
 		ArrayType const& _targetType,
-		bool _encodeAsLibraryTypes
+		EncodingOptions const& _options
 	);
 	std::string abiEncodingFunctionMemoryByteArray(
 		ArrayType const& _givenType,
 		ArrayType const& _targetType,
-		bool _encodeAsLibraryTypes
+		EncodingOptions const& _options
 	);
 	/// Part of @a abiEncodingFunction for array target type and given storage array
 	/// where multiple items are packed into the same storage slot.
 	std::string abiEncodingFunctionCompactStorageArray(
 		ArrayType const& _givenType,
 		ArrayType const& _targetType,
-		bool _encodeAsLibraryTypes
+		EncodingOptions const& _options
 	);
 
 	/// Part of @a abiEncodingFunction for struct types.
 	std::string abiEncodingFunctionStruct(
 		StructType const& _givenType,
 		StructType const& _targetType,
-		bool _encodeAsLibraryTypes
+		EncodingOptions const& _options
 	);
 
 	// @returns the name of the ABI encoding function with the given type
@@ -157,14 +173,13 @@ private:
 	std::string abiEncodingFunctionStringLiteral(
 		Type const& _givenType,
 		Type const& _targetType,
-		bool _encodeAsLibraryTypes
+		EncodingOptions const& _options
 	);
 
 	std::string abiEncodingFunctionFunctionType(
 		FunctionType const& _from,
 		Type const& _to,
-		bool _encodeAsLibraryTypes,
-		bool _fromStack
+		EncodingOptions const& _options
 	);
 
 	/// @returns the name of the ABI decoding function for the given type
