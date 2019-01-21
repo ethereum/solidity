@@ -33,10 +33,20 @@ namespace test
 class ExpectationParser
 {
 public:
+	struct ByteFormat
+	{
+		enum Type {
+			UnsignedDec,
+			SignedDec
+		};
+		Type type;
+	};
+
 	struct FunctionCallExpectations
 	{
 		std::string raw;
 		bytes rawBytes;
+		ByteFormat format;
 		bool status = true;
 		std::string output;
 		std::string comment;
@@ -46,6 +56,7 @@ public:
 	{
 		std::string raw;
 		bytes rawBytes;
+		ByteFormat format;
 		std::string comment;
 	};
 
@@ -57,8 +68,8 @@ public:
 		u256 value;
 	};
 
-	static std::string bytesToString(bytes const& _bytes);
-	static bytes stringToBytes(std::string _string);
+	static std::string bytesToString(bytes const& _bytes, ByteFormat const& _format);
+	static std::pair<bytes, ByteFormat> stringToBytes(std::string _string);
 
 	ExpectationParser(std::istream& _stream): m_scanner(_stream) {}
 

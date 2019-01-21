@@ -55,22 +55,45 @@ namespace
 	}
 }
 
-string ExpectationParser::bytesToString(bytes const& _bytes)
+string ExpectationParser::bytesToString(bytes const& _bytes, ExpectationParser::ByteFormat const& _format)
 {
-	stringstream resultStream;
 	// TODO: Convert from compact big endian if padded
-	resultStream << fromBigEndian<u256>(_bytes);
+	bytes byteRange{_bytes};
+	stringstream resultStream;
+	switch(_format.type)
+	{
+		case ExpectationParser::ByteFormat::SignedDec:
+			if (*_bytes.begin() & 0x80)
+			{
+				for (auto& v: byteRange)
+					v ^= 0xFF;
+				resultStream << "-" << fromBigEndian<u256>(byteRange) + 1;
+			}
+			else
+				resultStream << fromBigEndian<u256>(byteRange);
+			break;
+		case ExpectationParser::ByteFormat::UnsignedDec:
+			resultStream << fromBigEndian<u256>(byteRange);
+			break;
+	}
 	return resultStream.str();
 }
 
-bytes ExpectationParser::stringToBytes(std::string _string)
+pair<bytes, ExpectationParser::ByteFormat> ExpectationParser::stringToBytes(std::string _string)
 {
 	bytes result;
+	ByteFormat format;
 	auto it = _string.begin();
 	while (it != _string.end())
 	{
 		if (isdigit(*it) || (*it == '-' && (it + 1) != _string.end() && isdigit(*(it + 1))))
 		{
+			format.type = ExpectationParser::ByteFormat::UnsignedDec;
+
+			bool isNegative = (*it == '-');
+			if (isNegative)
+				format.type = ExpectationParser::ByteFormat::SignedDec;
+
 			auto valueBegin = it;
 			while (it != _string.end() && !isspace(*it) && *it != ',')
 				++it;
@@ -92,7 +115,7 @@ bytes ExpectationParser::stringToBytes(std::string _string)
 			expect(it, _string.end(), ',');
 		skipWhitespace(it, _string.end());
 	}
-	return result;
+	return make_pair(result, format);
 }
 
 vector<ExpectationParser::FunctionCall> ExpectationParser::parseFunctionCalls()
@@ -150,7 +173,10 @@ ExpectationParser::FunctionCallArgs ExpectationParser::parseFunctionCallArgument
 			while (!m_scanner.eol() && m_scanner.current() != '#')
 				m_scanner.advance();
 			arguments.raw = string(argumentBegin, m_scanner.position());
-			arguments.rawBytes = stringToBytes(arguments.raw);
+
+			auto bytesFormat = stringToBytes(arguments.raw);
+			arguments.rawBytes = bytesFormat.first;
+			arguments.format = bytesFormat.second;
 		}
 
 		if (!m_scanner.eol())
@@ -178,7 +204,11 @@ ExpectationParser::FunctionCallExpectations ExpectationParser::parseFunctionCall
 			m_scanner.advance();
 
 		result.raw = string(expectedResultBegin, m_scanner.position());
-		result.rawBytes = stringToBytes(result.raw);
+
+		auto bytesFormat = stringToBytes(result.raw);
+		result.rawBytes = bytesFormat.first;
+		result.format = bytesFormat.second;
+
 		result.status = true;
 
 		if (!m_scanner.eol())

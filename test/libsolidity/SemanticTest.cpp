@@ -69,7 +69,7 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _
 
 		string resultOutput;
 		if (m_transactionSuccessful)
-			resultOutput = "-> " + ExpectationParser::bytesToString(output);
+			resultOutput = "-> " + ExpectationParser::bytesToString(output, test.call.expectations.format);
 		else
 			resultOutput = "REVERT";
 

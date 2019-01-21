@@ -57,8 +57,8 @@ private:
 		std::string output;
 		bool matchesExpectation() const
 		{
-			auto expectedBytes = ExpectationParser::stringToBytes(call.expectations.raw);
-			return status == call.expectations.status && rawBytes == expectedBytes;
+			auto expectedByteFormat = ExpectationParser::stringToBytes(call.expectations.raw);
+			return status == call.expectations.status && rawBytes == expectedByteFormat.first;
 		}
 		void reset()
 		{
