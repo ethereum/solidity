@@ -34,14 +34,14 @@ version: 2
 jobs:
   build_emscripten:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.38.8-64bit
+      - image: trzeci/emscripten:sdk-tag-1.38.22-64bit
     environment:
       TERM: xterm
     steps:
       - checkout
       - restore_cache:
           name: Restore Boost build
-          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
+          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/build_emscripten.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
       - run:
           name: Bootstrap Boost
           command: |
