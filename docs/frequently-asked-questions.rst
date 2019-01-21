@@ -54,13 +54,6 @@ Yes, you can use ``abi.encodePacked``::
         }
     }
 
-What happens if you send ether along with a function call to a contract?
-========================================================================
-
-It gets added to the total balance of the contract, just like when you send ether when creating a contract.
-You can only send ether along to a function that has the ``payable`` modifier,
-otherwise an exception is thrown.
-
 ******************
 Advanced Questions
 ******************

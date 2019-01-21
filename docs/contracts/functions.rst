@@ -236,9 +236,9 @@ functions match the given function identifier (or if no data was supplied at
 all).
 
 Furthermore, this function is executed whenever the contract receives plain
-Ether (without data). Additionally, in order to receive Ether, the fallback function
+Ether (without data). To receive Ether and add it to the total balance of the contract, the fallback function
 must be marked ``payable``. If no such function exists, the contract cannot receive
-Ether through regular transactions.
+Ether through regular transactions and throws an exception.
 
 In the worst case, the fallback function can only rely on 2300 gas being
 available (for example when `send` or `transfer` is used), leaving little
