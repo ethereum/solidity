@@ -96,36 +96,6 @@ In this example::
         }
     }
 
-Can a contract pass an array (static size) or string or ``bytes`` (dynamic size) to another contract?
-=====================================================================================================
-
-Sure. Take care that if you cross the memory / storage boundary,
-independent copies will be created::
-
-    pragma solidity >=0.4.16 <0.6.0;
-
-    contract C {
-        uint[20] x;
-
-        function f() public {
-            g(x);
-            h(x);
-        }
-
-        function g(uint[20] memory y) internal pure {
-            y[2] = 3;
-        }
-
-        function h(uint[20] storage y) internal {
-            y[3] = 4;
-        }
-    }
-
-The call to ``g(x)`` will not have an effect on ``x`` because it needs
-to create an independent copy of the storage value in memory.
-On the other hand, ``h(x)`` successfully modifies ``x`` because only
-a reference and not a copy is passed.
-
 What does the following strange check do in the Custom Token contract?
 ======================================================================
 
