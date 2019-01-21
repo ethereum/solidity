@@ -39,14 +39,19 @@ string ABIFunctions::tupleEncoder(
 	bool _encodeAsLibraryTypes
 )
 {
+	EncodingOptions options;
+	options.encodeAsLibraryTypes = _encodeAsLibraryTypes;
+	options.encodeFunctionFromStack = true;
+	options.padded = true;
+	options.dynamicInplace = false;
+
 	string functionName = string("abi_encode_tuple_");
 	for (auto const& t: _givenTypes)
 		functionName += t->identifier() + "_";
 	functionName += "_to_";
 	for (auto const& t: _targetTypes)
 		functionName += t->identifier() + "_";
-	if (_encodeAsLibraryTypes)
-		functionName += "_library";
+	functionName += options.toFunctionNameSuffix();
 
 	return createExternallyUsedFunction(functionName, [&]() {
 		solAssert(!_givenTypes.empty(), "");
@@ -90,7 +95,7 @@ string ABIFunctions::tupleEncoder(
 			);
 			elementTempl("values", valueNames);
 			elementTempl("pos", to_string(headPos));
-			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], _encodeAsLibraryTypes, true));
+			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
 			encodeElements += elementTempl.render();
 			headPos += dynamic ? 0x20 : _targetTypes[i]->calldataEncodedSize();
 		}
@@ -182,6 +187,20 @@ pair<string, set<string>> ABIFunctions::requestedFunctions()
 		result += f.second;
 	m_requestedFunctions.clear();
 	return make_pair(result, std::move(m_externallyUsedFunctions));
+}
+
+string ABIFunctions::EncodingOptions::toFunctionNameSuffix() const
+{
+	string suffix;
+	if (!padded)
+		suffix += "_nonPadded";
+	if (dynamicInplace)
+		suffix += "_inplace";
+	if (encodeFunctionFromStack)
+		suffix += "_fromStack";
+	if (encodeAsLibraryTypes)
+		suffix += "_library";
+	return suffix;
 }
 
 string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
@@ -490,32 +509,31 @@ string ABIFunctions::splitExternalFunctionIdFunction()
 string ABIFunctions::abiEncodingFunction(
 	Type const& _from,
 	Type const& _to,
-	bool _encodeAsLibraryTypes,
-	bool _fromStack
+	EncodingOptions const& _options
 )
 {
-	TypePointer toInterface = _to.fullEncodingType(_encodeAsLibraryTypes, true, false);
+	TypePointer toInterface = _to.fullEncodingType(_options.encodeAsLibraryTypes, true, false);
 	solUnimplementedAssert(toInterface, "Encoding type \"" + _to.toString() + "\" not yet implemented.");
 	Type const& to = *toInterface;
 
 	if (_from.category() == Type::Category::StringLiteral)
-		return abiEncodingFunctionStringLiteral(_from, to, _encodeAsLibraryTypes);
+		return abiEncodingFunctionStringLiteral(_from, to, _options);
 	else if (auto toArray = dynamic_cast<ArrayType const*>(&to))
 	{
 		solAssert(_from.category() == Type::Category::Array, "");
 		solAssert(to.dataStoredIn(DataLocation::Memory), "");
 		ArrayType const& fromArray = dynamic_cast<ArrayType const&>(_from);
 		if (fromArray.location() == DataLocation::CallData)
-			return abiEncodingFunctionCalldataArray(fromArray, *toArray, _encodeAsLibraryTypes);
+			return abiEncodingFunctionCalldataArray(fromArray, *toArray, _options);
 		else if (!fromArray.isByteArray() && (
 				fromArray.location() == DataLocation::Memory ||
 				fromArray.baseType()->storageBytes() > 16
 		))
-			return abiEncodingFunctionSimpleArray(fromArray, *toArray, _encodeAsLibraryTypes);
+			return abiEncodingFunctionSimpleArray(fromArray, *toArray, _options);
 		else if (fromArray.location() == DataLocation::Memory)
-			return abiEncodingFunctionMemoryByteArray(fromArray, *toArray, _encodeAsLibraryTypes);
+			return abiEncodingFunctionMemoryByteArray(fromArray, *toArray, _options);
 		else if (fromArray.location() == DataLocation::Storage)
-			return abiEncodingFunctionCompactStorageArray(fromArray, *toArray, _encodeAsLibraryTypes);
+			return abiEncodingFunctionCompactStorageArray(fromArray, *toArray, _options);
 		else
 			solAssert(false, "");
 	}
@@ -523,14 +541,13 @@ string ABIFunctions::abiEncodingFunction(
 	{
 		StructType const* fromStruct = dynamic_cast<StructType const*>(&_from);
 		solAssert(fromStruct, "");
-		return abiEncodingFunctionStruct(*fromStruct, *toStruct, _encodeAsLibraryTypes);
+		return abiEncodingFunctionStruct(*fromStruct, *toStruct, _options);
 	}
 	else if (_from.category() == Type::Category::Function)
 		return abiEncodingFunctionFunctionType(
 			dynamic_cast<FunctionType const&>(_from),
 			to,
-			_encodeAsLibraryTypes,
-			_fromStack
+			_options
 		);
 
 	solAssert(_from.sizeOnStack() == 1, "");
@@ -541,7 +558,7 @@ string ABIFunctions::abiEncodingFunction(
 		_from.identifier() +
 		"_to_" +
 		to.identifier() +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 	return createFunction(functionName, [&]() {
 		solAssert(!to.isDynamicallyEncoded(), "");
 
@@ -556,7 +573,7 @@ string ABIFunctions::abiEncodingFunction(
 		{
 			// special case: convert storage reference type to value type - this is only
 			// possible for library calls where we just forward the storage reference
-			solAssert(_encodeAsLibraryTypes, "");
+			solAssert(_options.encodeAsLibraryTypes, "");
 			solAssert(to == IntegerType::uint256(), "");
 			templ("cleanupConvert", "value");
 		}
@@ -574,7 +591,7 @@ string ABIFunctions::abiEncodingFunction(
 string ABIFunctions::abiEncodingFunctionCalldataArray(
 	Type const& _from,
 	Type const& _to,
-	bool _encodeAsLibraryTypes
+	EncodingOptions const& _options
 )
 {
 	solAssert(_to.isDynamicallySized(), "");
@@ -596,7 +613,7 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 	return createFunction(functionName, [&]() {
 		solUnimplementedAssert(fromArrayType.isByteArray(), "Only byte arrays can be encoded from calldata currently.");
 		// TODO if this is not a byte array, we might just copy byte-by-byte anyway,
@@ -622,7 +639,7 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 string ABIFunctions::abiEncodingFunctionSimpleArray(
 	ArrayType const& _from,
 	ArrayType const& _to,
-	bool _encodeAsLibraryTypes
+	EncodingOptions const& _options
 )
 {
 	string functionName =
@@ -630,7 +647,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 
 	solAssert(_from.isDynamicallySized() == _to.isDynamicallySized(), "");
 	solAssert(_from.length() == _to.length(), "");
@@ -691,11 +708,13 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 			templ("storeLength", "");
 		templ("dataAreaFun", arrayDataAreaFunction(_from));
 		templ("elementEncodedSize", toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize()));
+
+		EncodingOptions subOptions(_options);
+		subOptions.encodeFunctionFromStack = false;
 		templ("encodeToMemoryFun", abiEncodingFunction(
 			*_from.baseType(),
 			*_to.baseType(),
-			_encodeAsLibraryTypes,
-			false
+			subOptions
 		));
 		templ("arrayElementAccess", inMemory ? "mload(srcPtr)" : _from.baseType()->isValueType() ? "sload(srcPtr)" : "srcPtr" );
 		templ("nextArrayElement", nextArrayElementFunction(_from));
@@ -706,7 +725,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 string ABIFunctions::abiEncodingFunctionMemoryByteArray(
 	ArrayType const& _from,
 	ArrayType const& _to,
-	bool _encodeAsLibraryTypes
+	EncodingOptions const& _options
 )
 {
 	string functionName =
@@ -714,7 +733,7 @@ string ABIFunctions::abiEncodingFunctionMemoryByteArray(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 
 	solAssert(_from.isDynamicallySized() == _to.isDynamicallySized(), "");
 	solAssert(_from.length() == _to.length(), "");
@@ -742,7 +761,7 @@ string ABIFunctions::abiEncodingFunctionMemoryByteArray(
 string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 	ArrayType const& _from,
 	ArrayType const& _to,
-	bool _encodeAsLibraryTypes
+	EncodingOptions const& _options
 )
 {
 	string functionName =
@@ -750,7 +769,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 
 	solAssert(_from.isDynamicallySized() == _to.isDynamicallySized(), "");
 	solAssert(_from.length() == _to.length(), "");
@@ -840,11 +859,13 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("itemsPerSlot", to_string(itemsPerSlot));
 			string elementEncodedSize = toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize());
 			templ("elementEncodedSize", elementEncodedSize);
+
+			EncodingOptions subOptions(_options);
+			subOptions.encodeFunctionFromStack = false;
 			string encodeToMemoryFun = abiEncodingFunction(
 				*_from.baseType(),
 				*_to.baseType(),
-				_encodeAsLibraryTypes,
-				false
+				subOptions
 			);
 			templ("encodeToMemoryFun", encodeToMemoryFun);
 			std::vector<std::map<std::string, std::string>> items(itemsPerSlot);
@@ -859,7 +880,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 string ABIFunctions::abiEncodingFunctionStruct(
 	StructType const& _from,
 	StructType const& _to,
-	bool _encodeAsLibraryTypes
+	EncodingOptions const& _options
 )
 {
 	string functionName =
@@ -867,7 +888,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 
 	solUnimplementedAssert(!_from.dataStoredIn(DataLocation::CallData), "Encoding struct from calldata is not yet supported.");
 	solAssert(&_from.structDefinition() == &_to.structDefinition(), "");
@@ -904,7 +925,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			solAssert(member.type, "");
 			if (!member.type->canLiveOutsideStorage())
 				continue;
-			TypePointer memberTypeTo = member.type->fullEncodingType(_encodeAsLibraryTypes, true, false);
+			TypePointer memberTypeTo = member.type->fullEncodingType(_options.encodeAsLibraryTypes, true, false);
 			solUnimplementedAssert(memberTypeTo, "Encoding type \"" + member.type->toString() + "\" not yet implemented.");
 			auto memberTypeFrom = _from.memberType(member.name);
 			solAssert(memberTypeFrom, "");
@@ -958,7 +979,10 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			}
 			memberTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
 			encodingOffset += dynamicMember ? 0x20 : memberTypeTo->calldataEncodedSize();
-			memberTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, _encodeAsLibraryTypes, false));
+
+			EncodingOptions subOptions(_options);
+			subOptions.encodeFunctionFromStack = false;
+			memberTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, subOptions));
 
 			members.push_back({});
 			members.back()["encode"] = memberTempl.render();
@@ -973,7 +997,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 string ABIFunctions::abiEncodingFunctionStringLiteral(
 	Type const& _from,
 	Type const& _to,
-	bool _encodeAsLibraryTypes
+	EncodingOptions const& _options
 )
 {
 	solAssert(_from.category() == Type::Category::StringLiteral, "");
@@ -983,7 +1007,7 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 	return createFunction(functionName, [&]() {
 		auto const& strType = dynamic_cast<StringLiteralType const&>(_from);
 		string const& value = strType.value();
@@ -1034,8 +1058,7 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 string ABIFunctions::abiEncodingFunctionFunctionType(
 	FunctionType const& _from,
 	Type const& _to,
-	bool _encodeAsLibraryTypes,
-	bool _fromStack
+	EncodingOptions const& _options
 )
 {
 	solAssert(_from.kind() == FunctionType::Kind::External, "");
@@ -1046,10 +1069,9 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 		_from.identifier() +
 		"_to_" +
 		_to.identifier() +
-		(_fromStack ? "_fromStack" : "") +
-		(_encodeAsLibraryTypes ? "_library" : "");
+		_options.toFunctionNameSuffix();
 
-	if (_fromStack)
+	if (_options.encodeFunctionFromStack)
 		return createFunction(functionName, [&]() {
 			return Whiskers(R"(
 				function <functionName>(addr, function_id, pos) {
@@ -1716,3 +1738,4 @@ size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
 
 	return headSize;
 }
+
