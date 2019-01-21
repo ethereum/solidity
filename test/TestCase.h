@@ -59,8 +59,6 @@ public:
 	/// Each line of output is prefixed with @arg _linePrefix.
 	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const = 0;
 
-	virtual bool allowsUpdate() const { return true; }
-
 	static bool isTestFilename(boost::filesystem::path const& _filename);
 
 protected:

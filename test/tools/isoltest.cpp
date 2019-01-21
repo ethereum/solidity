@@ -161,10 +161,7 @@ TestTool::Request TestTool::handleResponse(bool const _exception)
 	if (_exception)
 		cout << "(e)dit/(s)kip/(q)uit? ";
 	else
-		if (m_test->allowsUpdate())
-			cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
-		else
-			cout << "(e)dit/(s)kip/(q)uit? ";
+		cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
 	cout.flush();
 
 	while (true)

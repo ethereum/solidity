@@ -107,10 +107,13 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 		_stream << _linePrefix << line << endl;
 }
 
-void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
+void SemanticTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
 {
-	solAssert(_stream, "");
-	solUnimplemented("Printing update expectations not implemented.");
+	for (auto const& test: m_tests)
+	{
+		printFunctionCall(_stream, test.call, _linePrefix);
+		printFunctionCallTest(_stream, test, false, _linePrefix);
+	}
 }
 
 
