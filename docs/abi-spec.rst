@@ -611,15 +611,15 @@ Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode whe
 
 This packed mode is mainly used for indexed event parameters.
 
-As an example, the encoding of ``int8(-1), bytes1(0x42), uint16(0x2424), string("Hello, world!")`` results in:
+As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("Hello, world!")`` results in:
 
 .. code-block:: none
 
-    0xff42242448656c6c6f2c20776f726c6421
-      ^^                                 int8(-1)
-        ^^                               bytes1(0x42)
-          ^^^^                           uint16(0x2424)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
+    0xffff42000348656c6c6f2c20776f726c6421
+      ^^^^                                 int16(-1)
+          ^^                               bytes1(0x42)
+            ^^^^                           uint16(0x03)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
 
 More specifically:
  - Each value type takes as many bytes as its range has.
