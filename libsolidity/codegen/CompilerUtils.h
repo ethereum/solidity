@@ -186,6 +186,11 @@ public:
 	/// Stack post:
 	void memoryCopy();
 
+	/// Stores the given string in memory.
+	/// Stack pre: mempos
+	/// Stack post:
+	void storeStringData(bytesConstRef _data);
+
 	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
 	/// external function type <address><function identifier> into two stack slots:
 	/// address (right aligned), function identifier (right aligned)
@@ -284,11 +289,6 @@ public:
 private:
 	/// Address of the precompiled identity contract.
 	static unsigned const identityContractAddress;
-
-	/// Stores the given string in memory.
-	/// Stack pre: mempos
-	/// Stack post:
-	void storeStringData(bytesConstRef _data);
 
 	/// Appends code that cleans higher-order bits for integer types.
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);

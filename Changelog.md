@@ -1,6 +1,7 @@
 ### 0.5.5 (unreleased)
 
 Language Features:
+ * Meta programming: Provide access to the name of contracts via ``type(C).name``.
 
 
 Compiler Features:

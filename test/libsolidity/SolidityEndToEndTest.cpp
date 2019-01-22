@@ -15113,6 +15113,55 @@ BOOST_AUTO_TEST_CASE(code_access_content)
 	ABI_CHECK(callContractFunction("testCreation()"), encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(contract_name)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string public nameAccessor = type(C).name;
+			string public constant constantNameAccessor = type(C).name;
+
+			function name() public pure returns (string memory) {
+				return type(C).name;
+			}
+		}
+		contract D is C {
+			function name() public pure returns (string memory) {
+				return type(D).name;
+			}
+			function name2() public pure returns (string memory) {
+				return type(C).name;
+			}
+		}
+		contract ThisIsAVeryLongContractNameExceeding256bits {
+			string public nameAccessor = type(ThisIsAVeryLongContractNameExceeding256bits).name;
+			string public constant constantNameAccessor = type(ThisIsAVeryLongContractNameExceeding256bits).name;
+
+			function name() public pure returns (string memory) {
+				return type(ThisIsAVeryLongContractNameExceeding256bits).name;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode, 0, "C");
+	bytes argsC = encodeArgs(u256(0x20), u256(1), "C");
+	ABI_CHECK(callContractFunction("name()"), argsC);
+	ABI_CHECK(callContractFunction("nameAccessor()"), argsC);
+	ABI_CHECK(callContractFunction("constantNameAccessor()"), argsC);
+
+	compileAndRun(sourceCode, 0, "D");
+	bytes argsD = encodeArgs(u256(0x20), u256(1), "D");
+	ABI_CHECK(callContractFunction("name()"), argsD);
+	ABI_CHECK(callContractFunction("name2()"), argsC);
+
+	string longName = "ThisIsAVeryLongContractNameExceeding256bits";
+	compileAndRun(sourceCode, 0, longName);
+	bytes argsLong = encodeArgs(u256(0x20), u256(longName.length()), longName);
+	ABI_CHECK(callContractFunction("name()"), argsLong);
+	ABI_CHECK(callContractFunction("nameAccessor()"), argsLong);
+	ABI_CHECK(callContractFunction("constantNameAccessor()"), argsLong);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

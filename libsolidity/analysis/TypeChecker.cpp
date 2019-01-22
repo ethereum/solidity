@@ -2154,6 +2154,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					"Circular reference for contract code access."
 				);
 		}
+		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "name")
+			annotation.isPure = true;
 	}
 
 	return false;
