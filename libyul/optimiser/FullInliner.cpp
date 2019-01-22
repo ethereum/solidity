@@ -23,7 +23,7 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/Utilities.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/Exceptions.h>
@@ -80,9 +80,9 @@ void FullInliner::run()
 	}
 }
 
-void FullInliner::updateCodeSize(FunctionDefinition& fun)
+void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
 {
-	m_functionSizes[fun.name] = CodeSize::codeSize(fun.body);
+	m_functionSizes[_fun.name] = CodeSize::codeSize(_fun.body);
 }
 
 void FullInliner::handleBlock(YulString _currentFunctionName, Block& _block)
@@ -100,8 +100,13 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (!calledFunction)
 		return false;
 
+	// Inline really, really tiny functions
+	size_t size = m_functionSizes.at(calledFunction->name);
+	if (size <= 1)
+		return true;
+
 	// Do not inline into already big functions.
-	if (m_functionSizes.at(_callSite) > 100)
+	if (m_functionSizes.at(_callSite) > 45)
 		return false;
 
 	if (m_singleUse.count(calledFunction->name))
@@ -119,8 +124,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 			break;
 		}
 
-	size_t size = m_functionSizes.at(calledFunction->name);
-	return (size < 10 || (constantArg && size < 30));
+	return (size < 6 || (constantArg && size < 12));
 }
 
 void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _callSite)
@@ -177,9 +181,9 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
 		if (_value)
-			varDecl.value = make_shared<Expression>(std::move(*_value));
+			varDecl.value = make_unique<Expression>(std::move(*_value));
 		else
-			varDecl.value = make_shared<Expression>(zero);
+			varDecl.value = make_unique<Expression>(zero);
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
@@ -198,7 +202,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 				newStatements.emplace_back(Assignment{
 					_assignment.location,
 					{_assignment.variableNames[i]},
-					make_shared<Expression>(Identifier{
+					make_unique<Expression>(Identifier{
 						_assignment.location,
 						variableReplacements.at(function->returnVariables[i].name)
 					})
@@ -210,7 +214,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 				newStatements.emplace_back(VariableDeclaration{
 					_varDecl.location,
 					{std::move(_varDecl.variables[i])},
-					make_shared<Expression>(Identifier{
+					make_unique<Expression>(Identifier{
 						_varDecl.location,
 						variableReplacements.at(function->returnVariables[i].name)
 					})
@@ -228,10 +232,10 @@ Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)
 	return ASTCopier::operator()(_varDecl);
 }
 
-Statement BodyCopier::operator()(FunctionDefinition const& _funDef)
+Statement BodyCopier::operator()(FunctionDefinition const&)
 {
 	assertThrow(false, OptimizerException, "Function hoisting has to be done before function inlining.");
-	return _funDef;
+	return {};
 }
 
 YulString BodyCopier::translateIdentifier(YulString _name)

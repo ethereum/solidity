@@ -26,13 +26,11 @@
 // fullInliner
 // {
 //     {
-//         {
-//             let f_x := 100
-//             mstore(0, f_x)
-//             mstore(7, h())
-//             g(10)
-//             mstore(1, f_x)
-//         }
+//         let f_x := 100
+//         mstore(0, f_x)
+//         mstore(7, h())
+//         g(10)
+//         mstore(1, f_x)
 //     }
 //     function f(x)
 //     {

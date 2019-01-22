@@ -394,6 +394,7 @@ public:
 	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> const& interfaceEvents() const;
+	bool isInterface() const { return m_contractKind == ContractKind::Interface; }
 	bool isLibrary() const { return m_contractKind == ContractKind::Library; }
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
@@ -408,6 +409,10 @@ public:
 	FunctionDefinition const* constructor() const;
 	/// @returns true iff the constructor of this contract is public (or non-existing).
 	bool constructorIsPublic() const;
+	/// @returns true iff the contract can be deployed, i.e. is not abstract and has a
+	/// public constructor.
+	/// Should only be called after the type checker has run.
+	bool canBeDeployed() const;
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 

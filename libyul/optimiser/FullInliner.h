@@ -91,7 +91,7 @@ public:
 	void tentativelyUpdateCodeSize(YulString _function, YulString _callSite);
 
 private:
-	void updateCodeSize(FunctionDefinition& fun);
+	void updateCodeSize(FunctionDefinition const& _fun);
 	void handleBlock(YulString _currentFunctionName, Block& _block);
 
 	/// The AST to be modified. The root block itself will not be modified, because

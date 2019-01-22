@@ -24,6 +24,7 @@
 #include <libyul/AsmScopeFiller.h>
 #include <libyul/AsmScope.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/Utilities.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -299,11 +300,14 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	bool success = true;
 	size_t parameters = 0;
 	size_t returns = 0;
+	bool needsLiteralArguments = false;
 	if (BuiltinFunction const* f = m_dialect->builtin(_funCall.functionName.name))
 	{
 		// TODO: compare types, too
 		parameters = f->parameters.size();
 		returns = f->returns.size();
+		if (f->literalArguments)
+			needsLiteralArguments = true;
 	}
 	else if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
 		[&](Scope::Variable const&)
@@ -347,8 +351,15 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
+	{
 		if (!expectExpression(arg))
 			success = false;
+		else if (needsLiteralArguments && arg.type() != typeid(Literal))
+			m_errorReporter.typeError(
+				_funCall.functionName.location,
+				"Function expects direct literals as arguments."
+			);
+	}
 	// Use argument size instead of parameter count to avoid misleading errors.
 	m_stackHeight += int(returns) - int(_funCall.arguments.size());
 	m_info.stackHeightInfo[&_funCall] = m_stackHeight;
@@ -380,7 +391,29 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	if (!expectExpression(*_switch.expression))
 		success = false;
 
-	set<tuple<LiteralKind, YulString>> cases;
+	if (m_dialect->flavour == AsmFlavour::Yul)
+	{
+		YulString caseType;
+		bool mismatchingTypes = false;
+		for (auto const& _case: _switch.cases)
+			if (_case.value)
+			{
+				if (caseType.empty())
+					caseType = _case.value->type;
+				else if (caseType != _case.value->type)
+				{
+					mismatchingTypes = true;
+					break;
+				}
+			}
+		if (mismatchingTypes)
+			m_errorReporter.typeError(
+				_switch.location,
+				"Switch cases have non-matching types."
+			);
+	}
+
+	set<Literal const*, Less<Literal*>> cases;
 	for (auto const& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -394,12 +427,11 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 			m_stackHeight--;
 
 			/// Note: the parser ensures there is only one default case
-			auto val = make_tuple(_case.value->kind, _case.value->value);
-			if (!cases.insert(val).second)
+			if (!cases.insert(_case.value.get()).second)
 			{
 				m_errorReporter.declarationError(
 					_case.location,
-					"Duplicate case defined"
+					"Duplicate case defined."
 				);
 				success = false;
 			}

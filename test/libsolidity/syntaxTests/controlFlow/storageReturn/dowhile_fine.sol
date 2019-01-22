@@ -29,3 +29,4 @@ contract C {
     }
 }
 // ----
+// Warning: (567-572): Unreachable code.

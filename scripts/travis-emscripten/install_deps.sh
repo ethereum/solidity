@@ -30,15 +30,15 @@
 set -ev
 
 echo -en 'travis_fold:start:installing_dependencies\\r'
-test -e boost_1_67_0 -a -e boost_1_67_0/boost || (
-rm -rf boost_1_67_0
+test -e boost_1_68_0 -a -e boost_1_68_0/boost || (
+rm -rf boost_1_68_0
 rm -f boost.tar.xz
-wget -q 'https://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz/download'\
+wget -q 'https://sourceforge.net/projects/boost/files/boost/1.68.0/boost_1_68_0.tar.gz/download'\
  -O boost.tar.xz
-test "$(shasum boost.tar.xz)" = "77e73c9fd7bf85b14067767b9e8fdc39b49ee0f2  boost.tar.xz"
+test "$(shasum boost.tar.xz)" = "a78cf6ebb111a48385dd0c135e145a6819a8c856  boost.tar.xz"
 tar -xzf boost.tar.xz
 rm boost.tar.xz
-cd boost_1_67_0
+cd boost_1_68_0
 ./bootstrap.sh
 wget -q 'https://raw.githubusercontent.com/tee3/boost-build-emscripten/master/emscripten.jam'
 test "$(shasum emscripten.jam)" = "a7e13fc2c1e53b0e079ef440622f879aa6da3049  emscripten.jam"

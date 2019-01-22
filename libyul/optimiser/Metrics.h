@@ -30,6 +30,13 @@ namespace yul
  * More specifically, the number of AST nodes.
  * Ignores function definitions while traversing the AST.
  * If you want to know the size of a function, you have to invoke this on its body.
+ *
+ * As an exception, the following AST elements have a cost of zero:
+ *  - expression statement (only the expression inside has a cost)
+ *  - block (only the statements inside have a cost)
+ *  - variable references
+ *  - variable declarations (only the right hand side has a cost)
+ *  - assignments (only the value has a cost)
  */
 class CodeSize: public ASTWalker
 {
@@ -39,11 +46,49 @@ public:
 	static size_t codeSize(Block const& _block);
 
 private:
+	CodeSize() {}
+
 	void visit(Statement const& _statement) override;
 	void visit(Expression const& _expression) override;
 
 private:
 	size_t m_size = 0;
+};
+
+/**
+ * Very rough cost that takes the size and execution cost of code into account.
+ * The cost per AST element is one, except for literals where it is the byte size.
+ * Function calls cost 50. Instructions cost 0 for 3 or less gas (same as DUP),
+ * 2 for up to 10 and 50 otherwise.
+ */
+class CodeCost: public ASTWalker
+{
+public:
+	static size_t codeCost(Expression const& _expression);
+
+private:
+	void operator()(FunctionCall const& _funCall) override;
+	void operator()(FunctionalInstruction const& _instr) override;
+	void operator()(Literal const& _literal) override;
+	void visit(Statement const& _statement) override;
+	void visit(Expression const& _expression) override;
+
+private:
+	size_t m_cost = 0;
+};
+
+/**
+ * Counts the number of assignments to every variable.
+ * Only works after running the Disambiguator.
+ */
+class AssignmentCounter: public ASTWalker
+{
+public:
+	using ASTWalker::operator();
+	void operator()(Assignment const& _assignment) override;
+	std::size_t assignmentCount(YulString _name) const;
+private:
+	std::map<YulString, size_t> m_assignmentCounters;
 };
 
 }

@@ -61,7 +61,14 @@ m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{
 	make_shared<MagicVariableDeclaration>("sha256", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("sha3", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
 	make_shared<MagicVariableDeclaration>("suicide", make_shared<FunctionType>(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
-	make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::Transaction))
+	make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::Transaction)),
+	make_shared<MagicVariableDeclaration>("type", make_shared<FunctionType>(
+		strings{"address"} /* accepts any contract type, handled by the type checker */,
+		strings{} /* returns a MagicType, handled by the type checker */,
+		FunctionType::Kind::MetaType,
+		false,
+		StateMutability::Pure
+	)),
 })
 {
 }

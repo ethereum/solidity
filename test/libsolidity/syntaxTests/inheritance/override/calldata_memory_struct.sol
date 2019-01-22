@@ -15,3 +15,7 @@ contract B is A {
 }
 // ----
 // Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
+// TypeError: (102-112): Calldata structs are not yet supported.
+// TypeError: (146-156): Calldata structs are not yet supported.
+// TypeError: (198-208): Calldata structs are not yet supported.
+// TypeError: (250-260): Calldata structs are not yet supported.

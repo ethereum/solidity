@@ -263,6 +263,13 @@ public:
 	/// Appends code that computes the Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
+	/// Apppends code that copies the code of the given contract to memory.
+	/// Stack pre: Memory position
+	/// Stack post: Updated memory position
+	/// @param creation if true, copies creation code, if false copies runtime code.
+	/// @note the contract has to be compiled already, so beware of cyclic dependencies!
+	void copyContractCodeToMemory(ContractDefinition const& contract, bool _creationCode);
+
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
 	static const unsigned dataStartOffset;

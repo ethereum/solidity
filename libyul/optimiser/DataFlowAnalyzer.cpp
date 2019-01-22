@@ -51,8 +51,10 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 	for (auto const& var: _varDecl.variables)
 		names.emplace(var.name);
 	m_variableScopes.back().variables += names;
+
 	if (_varDecl.value)
 		visit(*_varDecl.value);
+
 	handleAssignment(names, _varDecl.value.get());
 }
 
@@ -142,7 +144,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	clearValues(_variables);
 
-	MovableChecker movableChecker;
+	MovableChecker movableChecker{m_dialect};
 	if (_value)
 		movableChecker.visit(*_value);
 	else

@@ -471,7 +471,7 @@ For example,
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract Test {
       constructor() public { b = hex"12345678901234567890123456789012"; }
@@ -597,7 +597,7 @@ Strict encoding mode is the mode that leads to exactly the same encoding as defi
 This means offsets have to be as small as possible while still not creating overlaps in the data areas and thus no gaps are
 allowed.
 
-Usually, ABI decoders are written in a straigthforward way just following offset pointers, but some decoders
+Usually, ABI decoders are written in a straightforward way just following offset pointers, but some decoders
 might enforce strict mode. The Solidity ABI decoder currently does not enforce strict mode, but the encoder
 always creates data in strict mode.
 
@@ -609,22 +609,30 @@ Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode whe
 - types shorter than 32 bytes are neither zero padded nor sign extended and
 - dynamic types are encoded in-place and without the length.
 
-As an example encoding ``int8, bytes1, uint16, string`` with values ``-1, 0x42, 0x2424, "Hello, world!"`` results in:
+This packed mode is mainly used for indexed event parameters.
+
+As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("Hello, world!")`` results in:
 
 .. code-block:: none
 
-    0xff42242448656c6c6f2c20776f726c6421
-      ^^                                 int8(-1)
-        ^^                               bytes1(0x42)
-          ^^^^                           uint16(0x2424)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
+    0xffff42000348656c6c6f2c20776f726c6421
+      ^^^^                                 int16(-1)
+          ^^                               bytes1(0x42)
+            ^^^^                           uint16(0x03)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
 
-More specifically, each statically-sized type takes as many bytes as its range has
-and dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
-their length field. This means that the encoding is ambiguous as soon as there are two
-dynamically-sized elements.
+More specifically:
+ - Each value type takes as many bytes as its range has.
+ - The encoding of a struct or fixed-size array is the concatenation of the
+   encoding of its members/elements without any separator or padding.
+ - Mapping members of structs are ignored as usual.
+ - Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
+   their length field.
+
+In general, the encoding is ambiguous as soon as there are two dynamically-sized elements,
+because of the missing length field.
 
 If padding is needed, explicit type conversions can be used: ``abi.encodePacked(uint16(0x12)) == hex"0012"``.
 
 Since packed encoding is not used when calling functions, there is no special support
-for prepending a function selector.
+for prepending a function selector. Since the encoding is ambiguous, there is no decoding function.

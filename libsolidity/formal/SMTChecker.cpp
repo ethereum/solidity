@@ -386,12 +386,18 @@ void SMTChecker::endVisit(BinaryOperation const& _op)
 void SMTChecker::endVisit(FunctionCall const& _funCall)
 {
 	solAssert(_funCall.annotation().kind != FunctionCallKind::Unset, "");
-	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+	if (_funCall.annotation().kind == FunctionCallKind::StructConstructorCall)
 	{
 		m_errorReporter.warning(
 			_funCall.location(),
 			"Assertion checker does not yet implement this expression."
 		);
+		return;
+	}
+
+	if (_funCall.annotation().kind == FunctionCallKind::TypeConversion)
+	{
+		visitTypeConversion(_funCall);
 		return;
 	}
 
@@ -411,6 +417,10 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		break;
 	case FunctionType::Kind::Internal:
 		inlineFunctionCall(_funCall);
+		break;
+	case FunctionType::Kind::External:
+		resetStateVariables();
+		resetStorageReferences();
 		break;
 	case FunctionType::Kind::KECCAK256:
 	case FunctionType::Kind::ECRecover:
@@ -568,6 +578,43 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 				_identifier.location(),
 				"Assertion checker does not yet support the type of this variable."
 			);
+	}
+}
+
+void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
+{
+	solAssert(_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
+	solAssert(_funCall.arguments().size() == 1, "");
+	auto argument = _funCall.arguments().at(0);
+	unsigned argSize = argument->annotation().type->storageBytes();
+	unsigned castSize = _funCall.annotation().type->storageBytes();
+	if (argSize == castSize)
+		defineExpr(_funCall, expr(*argument));
+	else
+	{
+		createExpr(_funCall);
+		setUnknownValue(*m_expressions.at(&_funCall));
+		auto const& funCallCategory = _funCall.annotation().type->category();
+		// TODO: truncating and bytesX needs a different approach because of right padding.
+		if (funCallCategory == Type::Category::Integer || funCallCategory == Type::Category::Address)
+		{
+			if (argSize < castSize)
+				defineExpr(_funCall, expr(*argument));
+			else
+			{
+				auto const& intType = dynamic_cast<IntegerType const&>(*m_expressions.at(&_funCall)->type());
+				defineExpr(_funCall, smt::Expression::ite(
+					expr(*argument) >= minValue(intType) && expr(*argument) <= maxValue(intType),
+					expr(*argument),
+					expr(_funCall)
+				));
+			}
+		}
+
+		m_errorReporter.warning(
+			_funCall.location(),
+			"Type conversion is not yet fully supported and might yield false positives."
+		);
 	}
 }
 
@@ -1151,25 +1198,35 @@ void SMTChecker::removeLocalVariables()
 	}
 }
 
+void SMTChecker::resetVariable(VariableDeclaration const& _variable)
+{
+	newValue(_variable);
+	setUnknownValue(_variable);
+}
+
 void SMTChecker::resetStateVariables()
 {
-	for (auto const& variable: m_variables)
-	{
-		if (variable.first->isStateVariable())
-		{
-			newValue(*variable.first);
-			setUnknownValue(*variable.first);
-		}
-	}
+	resetVariables([&](VariableDeclaration const& _variable) { return _variable.isStateVariable(); });
+}
+
+void SMTChecker::resetStorageReferences()
+{
+	resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
 }
 
 void SMTChecker::resetVariables(vector<VariableDeclaration const*> _variables)
 {
 	for (auto const* decl: _variables)
+		resetVariable(*decl);
+}
+
+void SMTChecker::resetVariables(function<bool(VariableDeclaration const&)> const& _filter)
+{
+	for_each(begin(m_variables), end(m_variables), [&](auto _variable)
 	{
-		newValue(*decl);
-		setUnknownValue(*decl);
-	}
+		if (_filter(*_variable.first))
+			this->resetVariable(*_variable.first);
+	});
 }
 
 void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)

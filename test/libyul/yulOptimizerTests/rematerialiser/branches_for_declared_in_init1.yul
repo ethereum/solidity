@@ -1,6 +1,6 @@
 {
     let b := 0
-    for { let a := 1 pop(a) } a { pop(a) } {
+    for { let a := caller() pop(a) } a { pop(a) } {
         b := 1 pop(a)
     }
 }
@@ -9,15 +9,15 @@
 // {
 //     let b := 0
 //     for {
-//         let a := 1
-//         pop(1)
+//         let a := caller()
+//         pop(caller())
 //     }
-//     1
+//     caller()
 //     {
-//         pop(1)
+//         pop(caller())
 //     }
 //     {
 //         b := 1
-//         pop(1)
+//         pop(caller())
 //     }
 // }

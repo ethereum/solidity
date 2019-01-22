@@ -2525,7 +2525,7 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 	strings parameterNames;
 	StateMutability stateMutability = StateMutability::NonPayable;
 
-	solAssert(_contract.contractKind() != ContractDefinition::ContractKind::Interface, "");
+	solAssert(!_contract.isInterface(), "");
 
 	if (constructor)
 	{
@@ -2626,6 +2626,7 @@ string FunctionType::richIdentifier() const
 	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
 	case Kind::ABIDecode: id += "abidecode"; break;
+	case Kind::MetaType: id += "metatype"; break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
 	id += identifierList(m_parameterTypes) + "returns" + identifierList(m_returnParameterTypes);
@@ -3037,7 +3038,8 @@ bool FunctionType::isPure() const
 		m_kind == Kind::ABIEncodePacked ||
 		m_kind == Kind::ABIEncodeWithSelector ||
 		m_kind == Kind::ABIEncodeWithSignature ||
-		m_kind == Kind::ABIDecode;
+		m_kind == Kind::ABIDecode ||
+		m_kind == Kind::MetaType;
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -3305,6 +3307,14 @@ string ModuleType::toString(bool) const
 	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
 }
 
+shared_ptr<MagicType> MagicType::metaType(TypePointer _type)
+{
+	solAssert(_type && _type->category() == Type::Category::Contract, "Only contracts supported for now.");
+	auto t = make_shared<MagicType>(Kind::MetaType);
+	t->m_typeArgument = std::move(_type);
+	return t;
+}
+
 string MagicType::richIdentifier() const
 {
 	switch (m_kind)
@@ -3317,6 +3327,9 @@ string MagicType::richIdentifier() const
 		return "t_magic_transaction";
 	case Kind::ABI:
 		return "t_magic_abi";
+	case Kind::MetaType:
+		solAssert(m_typeArgument, "");
+		return "t_magic_meta_type_" + m_typeArgument->richIdentifier();
 	}
 	return "";
 }
@@ -3403,12 +3416,27 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 				StateMutability::Pure
 			)}
 		});
-	default:
-		solAssert(false, "Unknown kind of magic.");
+	case Kind::MetaType:
+	{
+		solAssert(
+			m_typeArgument && m_typeArgument->category() == Type::Category::Contract,
+			"Only contracts supported for now"
+		);
+		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_typeArgument).contractDefinition();
+		if (contract.canBeDeployed())
+			return MemberList::MemberMap({
+				{"creationCode", std::make_shared<ArrayType>(DataLocation::Memory)},
+				{"runtimeCode", std::make_shared<ArrayType>(DataLocation::Memory)}
+			});
+		else
+			return {};
 	}
+	}
+	solAssert(false, "Unknown kind of magic.");
+	return {};
 }
 
-string MagicType::toString(bool) const
+string MagicType::toString(bool _short) const
 {
 	switch (m_kind)
 	{
@@ -3420,7 +3448,17 @@ string MagicType::toString(bool) const
 		return "tx";
 	case Kind::ABI:
 		return "abi";
-	default:
-		solAssert(false, "Unknown kind of magic.");
+	case Kind::MetaType:
+		solAssert(m_typeArgument, "");
+		return "type(" + m_typeArgument->toString(_short) + ")";
 	}
+	solAssert(false, "Unknown kind of magic.");
+	return {};
+}
+
+TypePointer MagicType::typeArgument() const
+{
+	solAssert(m_kind == Kind::MetaType, "");
+	solAssert(m_typeArgument, "");
+	return m_typeArgument;
 }

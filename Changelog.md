@@ -1,3 +1,28 @@
+### 0.5.3 (2019-01-22)
+
+Language Features:
+ * Provide access to creation and runtime code of contracts via ``type(C).creationCode`` / ``type(C).runtimeCode``.
+
+
+Compiler Features:
+ * Control Flow Graph: Warn about unreachable code.
+ * SMTChecker: Support basic typecasts without truncation.
+ * SMTChecker: Support external function calls and erase all knowledge regarding storage variables and references.
+
+
+Bugfixes:
+ * Emscripten: Split simplification rule initialization up further to work around issues with soljson.js in some browsers.
+ * Type Checker: Disallow calldata structs until implemented.
+ * Type Checker: Return type error if fixed point encoding is attempted instead of throwing ``UnimplementedFeatureError``.
+ * Yul: Check that arguments to ``dataoffset`` and ``datasize`` are literals at parse time and properly take this into account in the optimizer.
+ * Yul: Parse number literals for detecting duplicate switch cases.
+ * Yul: Require switch cases to have the same type.
+
+
+Build System:
+ * Emscripten: Upgrade to emscripten 1.38.8 on travis and circleci.
+
+
 ### 0.5.2 (2018-12-19)
 
 Language Features:

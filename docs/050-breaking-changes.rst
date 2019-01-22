@@ -171,7 +171,7 @@ Command Line and JSON Interfaces
   the first 36 hex characters of the keccak256 hash of the fully qualified
   library name, surrounded by ``$...$``. Previously,
   just the fully qualified library name was used.
-  This recudes the chances of collisions, especially when long paths are used.
+  This reduces the chances of collisions, especially when long paths are used.
   Binary files now also contain a list of mappings from these placeholders
   to the fully qualified names.
 
@@ -308,7 +308,7 @@ This will no longer compile with Solidity v0.5.0. However, you can define a comp
 
 ::
 
-   pragma solidity >0.4.99 <0.6.0;
+   pragma solidity ^0.5.0;
    interface OldContract {
       function someOldFunction(uint8 a) external;
       function anotherOldFunction() external returns (bool);
@@ -325,7 +325,7 @@ Given the interface defined above, you can now easily use the already deployed p
 
 ::
 
-   pragma solidity >0.4.99 <0.6.0;
+   pragma solidity ^0.5.0;
 
    interface OldContract {
       function someOldFunction(uint8 a) external;
@@ -345,7 +345,7 @@ commandline compiler for linking):
 
 ::
 
-   pragma solidity >0.4.99 <0.6.0;
+   pragma solidity ^0.5.0;
 
    library OldLibrary {
       function someFunction(uint8 a) public returns(bool);
@@ -430,7 +430,7 @@ New version:
 
 ::
 
-   pragma solidity >0.4.99 <0.6.0;
+   pragma solidity ^0.5.0;
 
    contract OtherContract {
       uint x;

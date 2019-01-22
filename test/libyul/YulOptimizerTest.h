@@ -30,6 +30,7 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 struct Block;
+struct Dialect;
 }
 
 namespace yul
@@ -64,6 +65,7 @@ private:
 	std::string m_optimizerStep;
 	std::string m_expectation;
 
+	std::shared_ptr<Dialect> m_dialect;
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;

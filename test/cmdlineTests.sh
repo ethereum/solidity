@@ -28,14 +28,14 @@
 
 set -e
 
+## GLOBAL VARIABLES
+
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
-echo $REPO_ROOT
 SOLC="$REPO_ROOT/build/solc/solc"
 
 FULLARGS="--optimize --ignore-missing --combined-json abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
 
-echo "Checking that the bug list is up to date..."
-"$REPO_ROOT"/scripts/update_bugs_by_version.py
+## FUNCTIONS
 
 if [ "$CIRCLECI" ]
 then
@@ -93,24 +93,10 @@ function compileFull()
     fi
 }
 
-printTask "Testing unknown options..."
-(
-    set +e
-    output=$("$SOLC" --allow=test 2>&1)
-    failed=$?
-    set -e
-
-    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ] ; then
-	echo "Passed"
-    else
-	printError "Incorrect response to unknown options: $STDERR"
-	exit 1
-    fi
-)
-
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
 # An failure is expected.
-test_solc_behaviour() {
+function test_solc_behaviour()
+{
     local filename="${1}"
     local solc_args="${2}"
     local solc_stdin="${3}"
@@ -122,7 +108,8 @@ test_solc_behaviour() {
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
     set +e
-    if [[ "$solc_stdin" = "" ]]; then
+    if [[ "$solc_stdin" = "" ]]
+    then
         "$SOLC" "${filename}" ${solc_args} 1>$stdout_path 2>$stderr_path
     else
         "$SOLC" "${filename}" ${solc_args} <$solc_stdin 1>$stdout_path 2>$stderr_path
@@ -130,7 +117,8 @@ test_solc_behaviour() {
     exitCode=$?
     set -e
 
-    if [[ "$solc_args" == *"--standard-json"* ]]; then
+    if [[ "$solc_args" == *"--standard-json"* ]]
+    then
         sed -i -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
     else
@@ -138,34 +126,84 @@ test_solc_behaviour() {
         sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
     fi
 
-    if [[ $exitCode -ne "$exit_code_expected" ]]; then
+    if [[ $exitCode -ne "$exit_code_expected" ]]
+    then
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
         rm -f $stdout_path $stderr_path
         exit 1
     fi
 
-    if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]; then
+    if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]
+    then
         printError "Incorrect output on stdout received. Expected:"
         echo -e "${stdout_expected}"
 
         printError "But got:"
         cat $stdout_path
+        printError "When running $SOLC ${filename} ${solc_args} <$solc_stdin"
+
         rm -f $stdout_path $stderr_path
         exit 1
     fi
 
-    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]; then
+    if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]
+    then
         printError "Incorrect output on stderr received. Expected:"
         echo -e "${stderr_expected}"
 
         printError "But got:"
         cat $stderr_path
+        printError "When running $SOLC ${filename} ${solc_args} <$solc_stdin"
+
         rm -f $stdout_path $stderr_path
         exit 1
     fi
 
     rm -f $stdout_path $stderr_path
 }
+
+
+function test_solc_assembly_output()
+{
+    local input="${1}"
+    local expected="${2}"
+    local solc_args="${3}"
+
+    local expected_object="object \"object\" { code "${expected}" }"
+
+    output=$(echo "${input}" | "$SOLC" - ${solc_args} 2>/dev/null)
+    empty=$(echo $output | sed -ne '/'"${expected_object}"'/p')
+    if [ -z "$empty" ]
+    then
+        printError "Incorrect assembly output. Expected: "
+        echo -e ${expected}
+        printError "with arguments ${solc_args}, but got:"
+        echo "${output}"
+        exit 1
+    fi
+}
+
+## RUN
+
+echo "Checking that the bug list is up to date..."
+"$REPO_ROOT"/scripts/update_bugs_by_version.py
+
+printTask "Testing unknown options..."
+(
+    set +e
+    output=$("$SOLC" --allow=test 2>&1)
+    failed=$?
+    set -e
+
+    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ]
+    then
+        echo "Passed"
+    else
+        printError "Incorrect response to unknown options: $STDERR"
+        exit 1
+    fi
+)
+
 
 printTask "Testing passing files that are not found..."
 test_solc_behaviour "file_not_found.sol" "" "" "" 1 "\"file_not_found.sol\" is not found."
@@ -177,48 +215,40 @@ printTask "Testing passing empty remappings..."
 test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "Invalid remapping: \"=/some/remapping/target\"."
 test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"."
 
-printTask "Running standard JSON commandline tests..."
-(
-cd "$REPO_ROOT"/test/cmdlineTests/
-for file in *.json
-do
-    args="--standard-json"
-    stdin="$REPO_ROOT/test/cmdlineTests/$file"
-    stdout=$(cat $file.stdout 2>/dev/null || true)
-    exitCode=$(cat $file.exit 2>/dev/null || true)
-    err=$(cat $file.err 2>/dev/null || true)
-    printTask " - $file"
-    test_solc_behaviour "" "$args" "$stdin" "$stdout" "$exitCode" "$err"
-done
-)
-
 printTask "Running general commandline tests..."
 (
-cd "$REPO_ROOT"/test/cmdlineTests/
-for file in *.sol
-do
-    args=$(cat $file.args 2>/dev/null || true)
-    stdout=$(cat $file.stdout 2>/dev/null || true)
-    exitCode=$(cat $file.exit 2>/dev/null || true)
-    err=$(cat $file.err 2>/dev/null || true)
-    printTask " - $file"
-    test_solc_behaviour "$file" "$args" "" "$stdout" "$exitCode" "$err"
-done
+    cd "$REPO_ROOT"/test/cmdlineTests/
+    for tdir in */
+    do
+        if [ -e "${tdir}/input.json" ]
+        then
+            inputFile=""
+            stdin="${tdir}/input.json"
+            stdout=$(cat ${tdir}/output.json 2>/dev/null || true)
+            args="--standard-json "$(cat ${tdir}/args 2>/dev/null || true)
+        else
+            inputFile="${tdir}input.sol"
+            stdin=""
+            stdout=$(cat ${tdir}/output 2>/dev/null || true)
+            args=$(cat ${tdir}/args 2>/dev/null || true)
+        fi
+        exitCode=$(cat ${tdir}/exit 2>/dev/null || true)
+        err=$(cat ${tdir}/err 2>/dev/null || true)
+        printTask " - ${tdir}"
+        test_solc_behaviour "$inputFile" "$args" "$stdin" "$stdout" "$exitCode" "$err"
+    done
 )
 
 printTask "Compiling various other contracts and libraries..."
 (
-cd "$REPO_ROOT"/test/compilationTests/
-for dir in *
-do
-    if [ "$dir" != "README.md" ]
-    then
+    cd "$REPO_ROOT"/test/compilationTests/
+    for dir in */
+    do
         echo " - $dir"
         cd "$dir"
         compileFull -w *.sol */*.sol
         cd ..
-    fi
-done
+    done
 )
 
 printTask "Compiling all examples from the documentation..."
@@ -293,25 +323,6 @@ SOLTMPDIR=$(mktemp -d)
 )
 rm -rf "$SOLTMPDIR"
 
-test_solc_assembly_output() {
-    local input="${1}"
-    local expected="${2}"
-    local solc_args="${3}"
-
-    local expected_object="object \"object\" { code "${expected}" }"
-
-    output=$(echo "${input}" | "$SOLC" - ${solc_args} 2>/dev/null)
-    empty=$(echo $output | sed -ne '/'"${expected_object}"'/p')
-    if [ -z "$empty" ]
-    then
-        printError "Incorrect assembly output. Expected: "
-        echo -e ${expected}
-        printError "with arguments ${solc_args}, but got:"
-        echo "${output}"
-        exit 1
-    fi
-}
-
 printTask "Testing assemble, yul, strict-assembly and optimize..."
 (
     echo '{}' | "$SOLC" - --assemble &>/dev/null
@@ -342,7 +353,8 @@ SOLTMPDIR=$(mktemp -d)
     set -e
 
     # This should fail
-    if [[ !("$output" =~ "No input files given") || ($result == 0) ]] ; then
+    if [[ !("$output" =~ "No input files given") || ($result == 0) ]]
+    then
         printError "Incorrect response to empty input arg list: $STDERR"
         exit 1
     fi
@@ -353,7 +365,8 @@ SOLTMPDIR=$(mktemp -d)
     set -e
 
     # The contract should be compiled
-    if [[ "$result" != 0 ]] ; then
+    if [[ "$result" != 0 ]]
+    then
         exit 1
     fi
 
@@ -361,7 +374,8 @@ SOLTMPDIR=$(mktemp -d)
     set +e
     output=$(echo '' | "$SOLC" --ast - 2>/dev/null)
     set -e
-    if [[ $? != 0 ]] ; then
+    if [[ $? != 0 ]]
+    then
         exit 1
     fi
 )
@@ -379,14 +393,16 @@ SOLTMPDIR=$(mktemp -d)
     do
         set +e
         "$REPO_ROOT"/build/test/tools/solfuzzer --quiet < "$f"
-        if [ $? -ne 0 ]; then
+        if [ $? -ne 0 ]
+        then
             printError "Fuzzer failed on:"
             cat "$f"
             exit 1
         fi
 
         "$REPO_ROOT"/build/test/tools/solfuzzer --without-optimizer --quiet < "$f"
-        if [ $? -ne 0 ]; then
+        if [ $? -ne 0 ]
+        then
             printError "Fuzzer (without optimizer) failed on:"
             cat "$f"
             exit 1
@@ -395,4 +411,5 @@ SOLTMPDIR=$(mktemp -d)
     done
 )
 rm -rf "$SOLTMPDIR"
+
 echo "Commandline tests successful."

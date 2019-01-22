@@ -72,6 +72,7 @@ private:
 		size_t _params,
 		size_t _returns,
 		bool _movable,
+		bool _literalArguments,
 		std::function<void(FunctionCall const&, AbstractAssembly&, std::function<void()>)> _generateCode
 	);
 

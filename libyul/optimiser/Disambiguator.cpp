@@ -23,6 +23,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmScope.h>
+#include <libyul/Dialect.h>
 
 using namespace std;
 using namespace dev;
@@ -31,7 +32,7 @@ using namespace dev::solidity;
 
 YulString Disambiguator::translateIdentifier(YulString _originalName)
 {
-	if ((m_externallyUsedIdentifiers.count(_originalName)))
+	if (m_dialect.builtin(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
 		return _originalName;
 
 	assertThrow(!m_scopes.empty() && m_scopes.back(), OptimizerException, "");

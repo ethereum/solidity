@@ -1551,6 +1551,12 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
+	case Token::Type:
+		// Inside expressions "type" is the name of a special, globally-available function.
+		nodeFactory.markEndPosition();
+		m_scanner->next();
+		expression = nodeFactory.createNode<Identifier>(make_shared<ASTString>("type"));
+		break;
 	case Token::LParen:
 	case Token::LBrack:
 	{

@@ -1,5 +1,5 @@
 {
-    let a := 1
+    let a := caller()
     for { pop(a) } a { pop(a) } {
         pop(a)
     }
@@ -7,15 +7,15 @@
 // ----
 // rematerialiser
 // {
-//     let a := 1
+//     let a := caller()
 //     for {
-//         pop(1)
+//         pop(caller())
 //     }
-//     1
+//     caller()
 //     {
-//         pop(1)
+//         pop(caller())
 //     }
 //     {
-//         pop(1)
+//         pop(caller())
 //     }
 // }

@@ -103,11 +103,11 @@ Block and Transaction Properties
     values will be zero.
 
 .. note::
-    The function ``blockhash`` was previously known as ``block.blockhash``. It was deprecated in
+    The function ``blockhash`` was previously known as ``block.blockhash``, which was deprecated in
     version 0.4.22 and removed in version 0.5.0.
 
 .. note::
-    The function ``gasleft`` was previously known as ``msg.gas``. It was deprecated in
+    The function ``gasleft`` was previously known as ``msg.gas``, which was deprecated in
     version 0.4.21 and removed in version 0.5.0.
 
 .. index:: abi, encoding, packed
@@ -200,6 +200,10 @@ Members of Address Types
 For more information, see the section on :ref:`address`.
 
 .. warning::
+    You should avoid using ``.call()`` whenever possible when executing another contract function as it bypasses type checking,
+    function existence check, and argument packing.
+
+.. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
@@ -240,3 +244,33 @@ Furthermore, all functions of the current contract are callable directly includi
 .. note::
     Prior to version 0.5.0, there was a function called ``suicide`` with the same
     semantics as ``selfdestruct``.
+
+.. index:: type, creationCode, runtimeCode
+
+.. _meta-type:
+
+Type Information
+----------------
+
+The expression ``type(X)`` can be used to retrieve information about the
+type ``X``. Currently, there is limited support for this feature, but
+it might be expanded in the future. The following properties are
+available for a conract type ``C``:
+
+``type(C).creationCode``:
+    Memory byte array that contains the creation bytecode of the contract.
+    This can be used in inline assembly to build custom creation routines,
+    especially by using the ``create2`` opcode.
+    This property can **not** be accessed in the contract itself or any
+    derived contract. It causes the bytecode to be included in the bytecode
+    of the call site and thus circular references like that are not possible.
+
+``type(C).runtimeCode``:
+    Memory byte array that contains the runtime bytecode of the contract.
+    This is the code that is usually deployed by the constructor of ``C``.
+    If ``C`` has a constructor that uses inline assembly, this might be
+    different from the actually deployed bytecode. Also note that libraries
+    modify their runtime bytecode at time of deployment to guard against
+    regular calls.
+    The same restrictions as with ``.creationCode`` also apply for this
+    property.

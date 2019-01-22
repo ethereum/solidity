@@ -138,6 +138,11 @@ bool ContractDefinition::constructorIsPublic() const
 	return !f || f->isPublic();
 }
 
+bool ContractDefinition::canBeDeployed() const
+{
+	return constructorIsPublic() && annotation().unimplementedFunctions.empty();
+}
+
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
 {
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)

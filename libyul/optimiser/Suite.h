@@ -29,6 +29,7 @@ namespace yul
 {
 
 struct AsmAnalysisInfo;
+struct Dialect;
 
 /**
  * Optimiser suite that combines all steps and also provides the settings for the heuristics
@@ -37,9 +38,9 @@ class OptimiserSuite
 {
 public:
 	static void run(
+		Dialect const& _dialect,
 		Block& _ast,
 		AsmAnalysisInfo const& _analysisInfo,
-
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
 };

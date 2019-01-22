@@ -90,10 +90,10 @@ function(prepare_package_source NAME VERSION URL)
 endfunction()
 
 set(INSTALL_DIR "${ROOT_DIR}/install")
-set(SERVER "https://github.com/ethereum/cpp-dependencies/releases/download/vc140/")
+set(SERVER "https://github.com/ethereum/cpp-dependencies/releases/download/vs2017/")
 
 function(download_and_install PACKAGE_NAME)
   download_and_unpack("${SERVER}${PACKAGE_NAME}.tar.gz" ${INSTALL_DIR})
 endfunction(download_and_install)
 
-download_and_install("boost-1.61")
+download_and_install("boost-1.67.0")

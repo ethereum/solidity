@@ -39,25 +39,12 @@
 
 #include <libdevcore/vector_ref.h>
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif // defined(__GNUC__)
-
-// See https://github.com/ethereum/libweb3core/commit/90680a8c25bfb48b24371b4abcacde56c181517c
-// See https://svn.boost.org/trac/boost/ticket/11328
-// Bob comment - perhaps we should just HARD FAIL here with Boost-1.58.00?
-// It is quite old now, and requiring end-users to use a newer Boost release is probably not unreasonable.
 #include <boost/version.hpp>
-#if (BOOST_VERSION == 105800)
-	#include "boost_multiprecision_number_compare_bug_workaround.hpp"
-#endif // (BOOST_VERSION == 105800)
+#if (BOOST_VERSION < 106500)
+#error "Unsupported Boost version. At least 1.65 required."
+#endif
 
 #include <boost/multiprecision/cpp_int.hpp>
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif // defined(__GNUC__)
 
 #include <map>
 #include <vector>

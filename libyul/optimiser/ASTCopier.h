@@ -93,10 +93,11 @@ protected:
 	std::vector<T> translateVector(std::vector<T> const& _values);
 
 	template <typename T>
-	std::shared_ptr<T> translate(std::shared_ptr<T> const& _v)
+	std::unique_ptr<T> translate(std::unique_ptr<T> const& _v)
 	{
-		return _v ? std::make_shared<T>(translate(*_v)) : nullptr;
+		return _v ? std::make_unique<T>(translate(*_v)) : nullptr;
 	}
+
 	Block translate(Block const& _block);
 	Case translate(Case const& _case);
 	Identifier translate(Identifier const& _identifier);

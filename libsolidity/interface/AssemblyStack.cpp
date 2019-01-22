@@ -134,7 +134,7 @@ void AssemblyStack::optimize(yul::Object& _object)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<yul::Object*>(subNode.get()))
 			optimize(*subObject);
-	yul::OptimiserSuite::run(*_object.code, *_object.analysisInfo);
+	yul::OptimiserSuite::run(*languageToDialect(m_language), *_object.code, *_object.analysisInfo);
 }
 
 MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) const

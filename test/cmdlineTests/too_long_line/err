@@ -1,0 +1,6 @@
+too_long_line/input.sol:1:1: Warning: Source file does not specify required compiler version!
+contract C {
+^ (Relevant source part starts here and spans across multiple lines).
+too_long_line/input.sol:2:164: Error: Identifier not found or not unique.
+ ... ffffffffffffffffffffffffffffffffff(announcementType Type, string Announcement, string  ...
+                                        ^--------------^

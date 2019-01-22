@@ -16,8 +16,8 @@
 */
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/Utilities.h>
 #include <libyul/AsmData.h>
+#include <libyul/Utilities.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Visitor.h>
 
@@ -51,7 +51,11 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch, ForLoop> const visitor(
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (_ifStmt.body.statements.empty())
-				return {{makePopExpressionStatement(_ifStmt.location, std::move(*_ifStmt.condition))}};
+			{
+				OptionalStatements s = vector<Statement>{};
+				s->emplace_back(makePopExpressionStatement(_ifStmt.location, std::move(*_ifStmt.condition)));
+				return s;
+			}
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
 			else if (expressionAlwaysFalse(*_ifStmt.condition))
@@ -64,18 +68,24 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				auto& switchCase = _switchStmt.cases.front();
 				auto loc = locationOf(*_switchStmt.expression);
 				if (switchCase.value)
-					return {{If{
+				{
+					OptionalStatements s = vector<Statement>{};
+					s->emplace_back(If{
 						std::move(_switchStmt.location),
-						make_shared<Expression>(FunctionalInstruction{
+						make_unique<Expression>(FunctionalInstruction{
 								std::move(loc),
 								solidity::Instruction::EQ,
 								{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
-						}), std::move(switchCase.body)}}};
+						}), std::move(switchCase.body)});
+					return s;
+				}
 				else
-					return {{
-						makePopExpressionStatement(loc, std::move(*_switchStmt.expression)),
-						std::move(switchCase.body)
-					}};
+				{
+					OptionalStatements s = vector<Statement>{};
+					s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
+					s->emplace_back(std::move(switchCase.body));
+					return s;
+				}
 			}
 			else
 				return {};

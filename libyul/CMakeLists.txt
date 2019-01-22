@@ -20,6 +20,8 @@ add_library(yul
 	Object.h
 	ObjectParser.cpp
 	ObjectParser.h
+	Utilities.cpp
+	Utilities.h
 	YulString.h
 	backends/evm/AbstractAssembly.h
 	backends/evm/EVMAssembly.cpp
@@ -42,6 +44,10 @@ add_library(yul
 	optimiser/DataFlowAnalyzer.h
 	optimiser/Disambiguator.cpp
 	optimiser/Disambiguator.h
+	optimiser/EquivalentFunctionDetector.cpp
+	optimiser/EquivalentFunctionDetector.h
+	optimiser/EquivalentFunctionCombiner.cpp
+	optimiser/EquivalentFunctionCombiner.h
 	optimiser/ExpressionInliner.cpp
 	optimiser/ExpressionInliner.h
 	optimiser/ExpressionJoiner.cpp
@@ -68,10 +74,14 @@ add_library(yul
 	optimiser/NameCollector.h
 	optimiser/NameDispenser.cpp
 	optimiser/NameDispenser.h
+	optimiser/OptimizerUtilities.cpp
+	optimiser/OptimizerUtilities.h
 	optimiser/RedundantAssignEliminator.cpp
 	optimiser/RedundantAssignEliminator.h
 	optimiser/Rematerialiser.cpp
 	optimiser/Rematerialiser.h
+	optimiser/SSAReverser.cpp
+	optimiser/SSAReverser.h
 	optimiser/SSATransform.cpp
 	optimiser/SSATransform.h
 	optimiser/SSAValueTracker.cpp
@@ -90,8 +100,6 @@ add_library(yul
 	optimiser/SyntacticalEquality.h
 	optimiser/UnusedPruner.cpp
 	optimiser/UnusedPruner.h
-	optimiser/Utilities.cpp
-	optimiser/Utilities.h
 	optimiser/VarDeclInitializer.cpp
 	optimiser/VarDeclInitializer.h
 )

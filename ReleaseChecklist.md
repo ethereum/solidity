@@ -4,13 +4,15 @@ Checklist for making a release:
  - [ ] Check that all issues and pull requests from the Github project to be released are merged to ``develop``.
  - [ ] Create a commit in ``develop`` that updates the ``Changelog`` to include a release date (run ``./scripts/tests.sh`` to update the bug list). Sort the changelog entries alphabetically and correct any errors you notice.
  - [ ] Create a pull request and wait for the tests, merge it.
- - [ ] Create a pull request from ``develop`` to ``release``, wait for the tests, then merge it.
- - [ ] Make a final check that there are no platform-dependency issues in the ``solc-test-bytecode`` repository.
- - [ ] Wait for the tests for the commit on ``release``, create a release in Github, creating the tag.
  - [ ] Thank voluntary contributors in the Github release page (use ``git shortlog -s -n -e origin/release..origin/develop``).
+ - [ ] Create a pull request from ``develop`` to ``release``, wait for the tests, then merge it.
+ - [ ] Make a final check that there are no platform-dependency issues in the ``solidity-test-bytecode`` repository.
+ - [ ] Wait for the tests for the commit on ``release``, create a release in Github, creating the tag.
  - [ ] Wait for the CI runs on the tag itself (they should push artifacts onto the Github release page).
+ - [ ] Run ``scripts/create_source_tarball.sh`` while being on the tag to create the source tarball.
+ - [ ] Upload the source tarball (in the upload directory) to the release page.
  - [ ] Run ``scripts/release_ppa.sh release`` to create the PPA release (you need the relevant openssl key).
- - [ ] Once the ``~ethereum/ubuntu/ethereum-static`` PPA build is finished and published for all platforms (make sure not to do this earlier), copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty`` while selecting ``Copy existing binaries``.
+ - [ ] Once the ``~ethereum/ubuntu/ethereum-static`` PPA build is finished and published for all platforms (make sure not to do this earlier), copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty`` and ``Xenial`` while selecting ``Copy existing binaries``.
  - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems, run ``./scripts/docker_deploy_manual.sh release``).
  - [ ] Update the homebrew realease in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb (version and hash)
  - [ ] Update the default version on readthedocs.

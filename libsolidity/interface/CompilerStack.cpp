@@ -343,12 +343,12 @@ bool CompilerStack::compile()
 			return false;
 
 	// Only compile contracts individually which have been requested.
-	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
+	map<ContractDefinition const*, shared_ptr<Compiler const>> otherCompilers;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
 				if (isRequestedContract(*contract))
-					compileContract(*contract, compiledContracts);
+					compileContract(*contract, otherCompilers);
 	m_stackState = CompilationSuccessful;
 	this->link();
 	return true;
@@ -795,19 +795,15 @@ bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& featu
 
 void CompilerStack::compileContract(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
+	map<ContractDefinition const*, shared_ptr<Compiler const>>& _otherCompilers
 )
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
 
-	if (
-		_compiledContracts.count(&_contract) ||
-		!_contract.annotation().unimplementedFunctions.empty() ||
-		!_contract.constructorIsPublic()
-	)
+	if (_otherCompilers.count(&_contract) || !_contract.canBeDeployed())
 		return;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
-		compileContract(*dependency, _compiledContracts);
+		compileContract(*dependency, _otherCompilers);
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
@@ -825,7 +821,7 @@ void CompilerStack::compileContract(
 	try
 	{
 		// Run optimiser and compile the contract.
-		compiler->compileContract(_contract, _compiledContracts, cborEncodedMetadata);
+		compiler->compileContract(_contract, _otherCompilers, cborEncodedMetadata);
 	}
 	catch(eth::OptimizerException const&)
 	{
@@ -852,7 +848,7 @@ void CompilerStack::compileContract(
 		solAssert(false, "Assembly exception for deployed bytecode");
 	}
 
-	_compiledContracts[compiledContract.contract] = &compiler->assembly();
+	_otherCompilers[compiledContract.contract] = compiler;
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const

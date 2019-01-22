@@ -1,0 +1,62 @@
+{
+    // This is an abi decode function with the SSA transform applied once.
+    // This test is supposed to verify that the SSA transform is correctly reversed by the full suite.
+    function abi_decode_t_bytes_calldata_ptr(offset_12, end_13) -> arrayPos_14, length_15
+    {
+        if iszero(slt(add(offset_12, 0x1f), end_13))
+        {
+            revert(0, 0)
+        }
+        let length_15_1 := calldataload(offset_12)
+        length_15 := length_15_1
+        if gt(length_15_1, 0xffffffffffffffff)
+        {
+            revert(0, 0)
+        }
+        let arrayPos_14_2 := add(offset_12, 0x20)
+        arrayPos_14 := arrayPos_14_2
+        if gt(add(arrayPos_14_2, mul(length_15_1, 0x1)), end_13)
+        {
+            revert(0, 0)
+        }
+    }
+
+    // prevent inlining
+    let a,b := abi_decode_t_bytes_calldata_ptr(mload(0),mload(1))
+    a,b := abi_decode_t_bytes_calldata_ptr(a,b)
+    a,b := abi_decode_t_bytes_calldata_ptr(a,b)
+    a,b := abi_decode_t_bytes_calldata_ptr(a,b)
+    a,b := abi_decode_t_bytes_calldata_ptr(a,b)
+    a,b := abi_decode_t_bytes_calldata_ptr(a,b)
+    a,b := abi_decode_t_bytes_calldata_ptr(a,b)
+    mstore(a,b)
+}
+// ----
+// fullSuite
+// {
+//     let a, b := abi_decode_t_bytes_calldata_ptr(mload(0), mload(1))
+//     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
+//     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
+//     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
+//     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
+//     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
+//     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
+//     mstore(a, b)
+//     function abi_decode_t_bytes_calldata_ptr(offset_12, end_13) -> arrayPos_14, length_15
+//     {
+//         if iszero(slt(add(offset_12, 0x1f), end_13))
+//         {
+//             revert(0, 0)
+//         }
+//         length_15 := calldataload(offset_12)
+//         if gt(length_15, 0xffffffffffffffff)
+//         {
+//             revert(0, 0)
+//         }
+//         arrayPos_14 := add(offset_12, 0x20)
+//         if gt(add(add(offset_12, length_15), 0x20), end_13)
+//         {
+//             revert(0, 0)
+//         }
+//     }
+// }

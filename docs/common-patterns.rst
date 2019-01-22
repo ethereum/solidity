@@ -28,7 +28,7 @@ become the new richest.
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract WithdrawalContract {
         address public richest;
@@ -65,7 +65,7 @@ This is as opposed to the more intuitive sending pattern:
 
 ::
 
-    pragma solidity >0.4.99 <0.6.0;
+    pragma solidity ^0.5.0;
 
     contract SendContract {
         address payable public richest;
@@ -117,7 +117,7 @@ to read the data, so will everyone else.
 
 You can restrict read access to your contract's state
 by **other contracts**. That is actually the default
-unless you declare make your state variables ``public``.
+unless you declare your state variables ``public``.
 
 Furthermore, you can restrict who can make modifications
 to your contract's state or call your contract's
