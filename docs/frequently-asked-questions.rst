@@ -16,44 +16,6 @@ Enums are not supported by the ABI, they are just supported by Solidity.
 You have to do the mapping yourself for now, we might provide some help
 later.
 
-What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
-==================================================================================================
-
-There are some string utility functions at `stringUtils.sol <https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol>`_
-which will be extended in the future. In addition, Arachnid has written `solidity-stringutils <https://github.com/Arachnid/solidity-stringutils>`_.
-
-For now, if you want to modify a string (even when you only want to know its length),
-you should always convert it to a ``bytes`` first::
-
-    pragma solidity >=0.4.0 <0.6.0;
-
-    contract C {
-        string s;
-
-        function append(byte c) public {
-            bytes(s).push(c);
-        }
-
-        function set(uint i, byte c) public {
-            bytes(s)[i] = c;
-        }
-    }
-
-
-Can I concatenate two strings?
-==============================
-
-Yes, you can use ``abi.encodePacked``::
-
-    pragma solidity >=0.4.0 <0.6.0;
-
-    library ConcatHelper {
-        function concat(bytes memory a, bytes memory b)
-                internal pure returns (bytes memory) {
-            return abi.encodePacked(a, b);
-        }
-    }
-
 ******************
 Advanced Questions
 ******************
