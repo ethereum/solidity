@@ -904,6 +904,8 @@ string ABIFunctions::abiEncodingFunctionStruct(
 				<#members>
 				{
 					// <memberName>
+					<preprocess>
+					let memberValue := <retrieveValue>
 					<encode>
 				}
 				</members>
@@ -932,20 +934,10 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			bool dynamicMember = memberTypeTo->isDynamicallyEncoded();
 			if (dynamicMember)
 				solAssert(dynamic, "");
-			Whiskers memberTempl(R"(
-				<preprocess>
-				let memberValue := <retrieveValue>
-				)" + (
-					dynamicMember ?
-					string(R"(
-						mstore(add(pos, <encodingOffset>), sub(tail, pos))
-						tail := <abiEncode>(memberValue, tail)
-					)") :
-					string(R"(
-						<abiEncode>(memberValue, add(pos, <encodingOffset>))
-					)")
-				)
-			);
+
+			members.push_back({});
+			members.back()["preprocess"] = "";
+
 			if (fromStorage)
 			{
 				solAssert(memberTypeFrom->isValueType() == memberTypeTo->isValueType(), "");
@@ -956,36 +948,42 @@ string ABIFunctions::abiEncodingFunctionStruct(
 				{
 					if (storageSlotOffset != previousSlotOffset)
 					{
-						memberTempl("preprocess", "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))");
+						members.back()["preprocess"] = "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))";
 						previousSlotOffset = storageSlotOffset;
 					}
-					else
-						memberTempl("preprocess", "");
-					memberTempl("retrieveValue", shiftRightFunction(intraSlotOffset * 8) + "(slotValue)");
+					members.back()["retrieveValue"] = shiftRightFunction(intraSlotOffset * 8) + "(slotValue)";
 				}
 				else
 				{
 					solAssert(memberTypeFrom->dataStoredIn(DataLocation::Storage), "");
 					solAssert(intraSlotOffset == 0, "");
-					memberTempl("preprocess", "");
-					memberTempl("retrieveValue", "add(value, " + toCompactHexWithPrefix(storageSlotOffset) + ")");
+					members.back()["retrieveValue"] = "add(value, " + toCompactHexWithPrefix(storageSlotOffset) + ")";
 				}
 			}
 			else
 			{
-				memberTempl("preprocess", "");
 				string sourceOffset = toCompactHexWithPrefix(_from.memoryOffsetOfMember(member.name));
-				memberTempl("retrieveValue", "mload(add(value, " + sourceOffset + "))");
+				members.back()["retrieveValue"] = "mload(add(value, " + sourceOffset + "))";
 			}
-			memberTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
+
+			Whiskers encodeTempl(
+				dynamicMember ?
+				string(R"(
+					mstore(add(pos, <encodingOffset>), sub(tail, pos))
+					tail := <abiEncode>(memberValue, tail)
+				)") :
+				string(R"(
+					<abiEncode>(memberValue, add(pos, <encodingOffset>))
+				)")
+			);
+			encodeTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
 			encodingOffset += dynamicMember ? 0x20 : memberTypeTo->calldataEncodedSize();
 
 			EncodingOptions subOptions(_options);
 			subOptions.encodeFunctionFromStack = false;
-			memberTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, subOptions));
+			encodeTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, subOptions));
 
-			members.push_back({});
-			members.back()["encode"] = memberTempl.render();
+			members.back()["encode"] = encodeTempl.render();
 			members.back()["memberName"] = member.name;
 		}
 		templ("members", members);
