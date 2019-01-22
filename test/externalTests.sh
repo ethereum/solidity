@@ -55,13 +55,13 @@ function test_truffle
       cd "$DIR"
       echo "Current commit hash: `git rev-parse HEAD`"
       npm install
-      # Replace solc package by master
+      # Replace solc package by v0.5.0
       for d in node_modules node_modules/truffle/node_modules
       do
       (
         cd $d
         rm -rf solc
-        git clone --depth 1 https://github.com/ethereum/solc-js.git solc
+        git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
         cp "$SOLJSON" solc/
       )
       done
