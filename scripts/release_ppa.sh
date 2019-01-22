@@ -53,7 +53,7 @@ packagename=solc
 
 static_build_distribution=cosmic
 
-DISTRIBUTIONS="bionic cosmic"
+DISTRIBUTIONS="bionic cosmic disco"
 
 if [ branch != develop ]
 then
