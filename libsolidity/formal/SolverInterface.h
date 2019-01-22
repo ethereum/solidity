@@ -141,6 +141,7 @@ public:
 			{"-", 2},
 			{"*", 2},
 			{"/", 2},
+			{"mod", 2},
 			{"select", 2},
 			{"store", 3}
 		};
@@ -245,6 +246,10 @@ public:
 	friend Expression operator/(Expression _a, Expression _b)
 	{
 		return Expression("/", std::move(_a), std::move(_b), Kind::Int);
+	}
+	friend Expression operator%(Expression _a, Expression _b)
+	{
+		return Expression("mod", std::move(_a), std::move(_b), Kind::Int);
 	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
