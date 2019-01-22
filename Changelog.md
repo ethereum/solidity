@@ -1,4 +1,4 @@
-### 0.5.3 (unreleased)
+### 0.5.3 (2019-01-22)
 
 Language Features:
  * Provide access to creation and runtime code of contracts via ``type(C).creationCode`` / ``type(C).runtimeCode``.
