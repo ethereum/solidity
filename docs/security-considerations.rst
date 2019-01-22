@@ -223,7 +223,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 
 If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet, instead of the owner address. But by checking ``tx.origin``, it gets the original address that kicked off the transaction, which is still the owner address. The attack wallet instantly drains all your funds.
 
-
+.. _underflow-overflow:
 
 Two's Complement / Underflows / Overflows
 =========================================
@@ -241,8 +241,10 @@ more special edge cases for signed numbers.
 Try to use ``require`` to limit the size of inputs to a reasonable range and use the
 :ref:`SMT checker<smt_checker>` to find potential overflows, or
 use a library like
-`SafeMath<https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol>`
+`SafeMath <https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol>`_
 if you want all overflows to cause a revert.
+
+Code such as ``require((balanceOf[_to] + _value) >= balanceOf[_to])`` can also help you check if values are what you expect.
 
 Minor Details
 =============
