@@ -55,6 +55,11 @@ char const* solidity_version() SOLC_NOEXCEPT;
 /// The pointer returned must not be freed by the caller.
 char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) SOLC_NOEXCEPT;
 
+/// Frees up any allocated memory.
+///
+/// NOTE: the pointer returned by solidity_compile is invalid after calling this!
+void solidity_free() SOLC_NOEXCEPT;
+
 #ifdef __cplusplus
 }
 #endif

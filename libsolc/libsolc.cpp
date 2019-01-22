@@ -98,4 +98,8 @@ extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _
 	s_outputBuffer = compile(_input, _readCallback);
 	return s_outputBuffer.c_str();
 }
+extern void solidity_free() noexcept
+{
+	s_outputBuffer.clear();
+}
 }
