@@ -19,8 +19,8 @@ If you only want to compile a single file, you run it as ``solc --bin sourceFile
 Before you deploy your contract, activate the optimizer when compiling using ``solc --optimize --bin sourceFile.sol``.
 By default, the optimizer will optimize the contract assuming it is called 200 times across its lifetime.
 If you want the initial contract deployment to be cheaper and the later function executions to be more expensive,
-set it to ``--runs=1``. If you expect many transactions and do not care for higher deployment cost and
-output size, set ``--runs`` to a high number.
+set it to ``--optimize-runs=1``. If you expect many transactions and do not care for higher deployment cost and
+output size, set ``--optimize-runs`` to a high number.
 
 The commandline compiler will automatically read imported files from the filesystem, but
 it is also possible to provide path redirects using ``prefix=path`` in the following way:
