@@ -298,6 +298,8 @@ boost::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
 
 boost::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
+	if (_input.isObject() && _input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
+		return formatFatalError("JSONError", "\"settings.metadata.useLiteralContent\" must be Boolean");
 	static set<string> keys{"useLiteralContent"};
 	return checkKeys(_input, keys, "settings.metadata");
 }
