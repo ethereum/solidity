@@ -30,6 +30,8 @@
 
 #include <libevmasm/Assembly.h>
 
+#include <libdevcore/Keccak256.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <functional>
@@ -13478,13 +13480,332 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked)
 				y[0] = "e";
 				require(y[0] == "e");
 			}
+			function f4() public pure returns (bytes memory) {
+				string memory x = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
+				return abi.encodePacked(uint16(0x0701), x, uint16(0x1201));
+			}
+			function f_literal() public pure returns (bytes memory) {
+				return abi.encodePacked(uint8(0x01), "abc", uint8(0x02));
+			}
+			function f_calldata() public pure returns (bytes memory) {
+				return abi.encodePacked(uint8(0x01), msg.data, uint8(0x02));
+			}
+		}
+	)";
+	for (auto v2: {false, true})
+	{
+		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 0));
+		ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 2, "\x01\x02"));
+		ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+		ABI_CHECK(callContractFunction("f3()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+		ABI_CHECK(callContractFunction("f4()"), encodeArgs(
+			0x20,
+			2 + 26 + 26 + 2,
+			"\x07\x01" "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" "\x12\x01"
+		));
+		ABI_CHECK(callContractFunction("f_literal()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+		ABI_CHECK(callContractFunction("f_calldata()"), encodeArgs(0x20, 6, "\x01" "\xa5\xbf\xa1\xee" "\x02"));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodePacked_from_storage)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint24[9] small_fixed;
+			int24[9] small_fixed_signed;
+			uint24[] small_dyn;
+			uint248[5] large_fixed;
+			uint248[] large_dyn;
+			bytes bytes_storage;
+			function sf() public returns (bytes memory) {
+				small_fixed[0] = 0xfffff1;
+				small_fixed[2] = 0xfffff2;
+				small_fixed[5] = 0xfffff3;
+				small_fixed[8] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), small_fixed, uint8(0x02));
+			}
+			function sd() public returns (bytes memory) {
+				small_dyn.length = 9;
+				small_dyn[0] = 0xfffff1;
+				small_dyn[2] = 0xfffff2;
+				small_dyn[5] = 0xfffff3;
+				small_dyn[8] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), small_dyn, uint8(0x02));
+			}
+			function sfs() public returns (bytes memory) {
+				small_fixed_signed[0] = -2;
+				small_fixed_signed[2] = 0xffff2;
+				small_fixed_signed[5] = -200;
+				small_fixed_signed[8] = 0xffff4;
+				return abi.encodePacked(uint8(0x01), small_fixed_signed, uint8(0x02));
+			}
+			function lf() public returns (bytes memory) {
+				large_fixed[0] = 2**248-1;
+				large_fixed[1] = 0xfffff2;
+				large_fixed[2] = 2**248-2;
+				large_fixed[4] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), large_fixed, uint8(0x02));
+			}
+			function ld() public returns (bytes memory) {
+				large_dyn.length = 5;
+				large_dyn[0] = 2**248-1;
+				large_dyn[1] = 0xfffff2;
+				large_dyn[2] = 2**248-2;
+				large_dyn[4] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), large_dyn, uint8(0x02));
+			}
+			function bytes_short() public returns (bytes memory) {
+				bytes_storage = "abcd";
+				return abi.encodePacked(uint8(0x01), bytes_storage, uint8(0x02));
+			}
+			function bytes_long() public returns (bytes memory) {
+				bytes_storage = "0123456789012345678901234567890123456789";
+				return abi.encodePacked(uint8(0x01), bytes_storage, uint8(0x02));
+			}
+		}
+	)";
+	for (auto v2: {false, true})
+	{
+		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		bytes payload = encodeArgs(0xfffff1, 0, 0xfffff2, 0, 0, 0xfffff3, 0, 0, 0xfffff4);
+		bytes encoded = encodeArgs(0x20, 0x122, "\x01" + asString(payload) + "\x02");
+		ABI_CHECK(callContractFunction("sf()"), encoded);
+		ABI_CHECK(callContractFunction("sd()"), encoded);
+		ABI_CHECK(callContractFunction("sfs()"), encodeArgs(0x20, 0x122, "\x01" + asString(encodeArgs(
+			u256(-2), 0, 0xffff2, 0, 0, u256(-200), 0, 0, 0xffff4
+		)) + "\x02"));
+		payload = encodeArgs(
+			u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+			0xfffff2,
+			u256("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"),
+			0,
+			0xfffff4
+		);
+		ABI_CHECK(callContractFunction("lf()"), encodeArgs(0x20, 5 * 32 + 2, "\x01" + asString(encodeArgs(payload)) + "\x02"));
+		ABI_CHECK(callContractFunction("ld()"), encodeArgs(0x20, 5 * 32 + 2, "\x01" + asString(encodeArgs(payload)) + "\x02"));
+		ABI_CHECK(callContractFunction("bytes_short()"), encodeArgs(0x20, 6, "\x01" "abcd\x02"));
+		ABI_CHECK(
+			callContractFunction("bytes_long()"),
+			encodeArgs(0x20, 42, "\x01" "0123456789012345678901234567890123456789\x02")
+		);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodePacked_from_memory)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function sf() public pure returns (bytes memory) {
+				uint24[9] memory small_fixed;
+				small_fixed[0] = 0xfffff1;
+				small_fixed[2] = 0xfffff2;
+				small_fixed[5] = 0xfffff3;
+				small_fixed[8] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), small_fixed, uint8(0x02));
+			}
+			function sd() public pure returns (bytes memory) {
+				uint24[] memory small_dyn = new uint24[](9);
+				small_dyn[0] = 0xfffff1;
+				small_dyn[2] = 0xfffff2;
+				small_dyn[5] = 0xfffff3;
+				small_dyn[8] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), small_dyn, uint8(0x02));
+			}
+			function sfs() public pure returns (bytes memory) {
+				int24[9] memory small_fixed_signed;
+				small_fixed_signed[0] = -2;
+				small_fixed_signed[2] = 0xffff2;
+				small_fixed_signed[5] = -200;
+				small_fixed_signed[8] = 0xffff4;
+				return abi.encodePacked(uint8(0x01), small_fixed_signed, uint8(0x02));
+			}
+			function lf() public pure returns (bytes memory) {
+				uint248[5] memory large_fixed;
+				large_fixed[0] = 2**248-1;
+				large_fixed[1] = 0xfffff2;
+				large_fixed[2] = 2**248-2;
+				large_fixed[4] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), large_fixed, uint8(0x02));
+			}
+			function ld() public pure returns (bytes memory) {
+				uint248[] memory large_dyn = new uint248[](5);
+				large_dyn[0] = 2**248-1;
+				large_dyn[1] = 0xfffff2;
+				large_dyn[2] = 2**248-2;
+				large_dyn[4] = 0xfffff4;
+				return abi.encodePacked(uint8(0x01), large_dyn, uint8(0x02));
+			}
+		}
+	)";
+	for (auto v2: {false, true})
+	{
+		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		bytes payload = encodeArgs(0xfffff1, 0, 0xfffff2, 0, 0, 0xfffff3, 0, 0, 0xfffff4);
+		bytes encoded = encodeArgs(0x20, 0x122, "\x01" + asString(payload) + "\x02");
+		ABI_CHECK(callContractFunction("sf()"), encoded);
+		ABI_CHECK(callContractFunction("sd()"), encoded);
+		ABI_CHECK(callContractFunction("sfs()"), encodeArgs(0x20, 0x122, "\x01" + asString(encodeArgs(
+			u256(-2), 0, 0xffff2, 0, 0, u256(-200), 0, 0, 0xffff4
+		)) + "\x02"));
+		payload = encodeArgs(
+			u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+			0xfffff2,
+			u256("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"),
+			0,
+			0xfffff4
+		);
+		ABI_CHECK(callContractFunction("lf()"), encodeArgs(0x20, 5 * 32 + 2, "\x01" + asString(encodeArgs(payload)) + "\x02"));
+		ABI_CHECK(callContractFunction("ld()"), encodeArgs(0x20, 5 * 32 + 2, "\x01" + asString(encodeArgs(payload)) + "\x02"));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodePacked_functionPtr)
+{
+	char const* sourceCode = R"(
+		contract C {
+			C other = C(0x1112131400000000000011121314000000000087);
+			function testDirect() public view returns (bytes memory) {
+				return abi.encodePacked(uint8(8), other.f, uint8(2));
+			}
+			function testFixedArray() public view returns (bytes memory) {
+				function () external pure returns (bytes memory)[1] memory x;
+				x[0] = other.f;
+				return abi.encodePacked(uint8(8), x, uint8(2));
+			}
+			function testDynamicArray() public view returns (bytes memory) {
+				function () external pure returns (bytes memory)[] memory x = new function() external pure returns (bytes memory)[](1);
+				x[0] = other.f;
+				return abi.encodePacked(uint8(8), x, uint8(2));
+			}
+			function f() public pure returns (bytes memory) {}
+		}
+	)";
+	for (auto v2: {false, true})
+	{
+		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		string directEncoding = asString(fromHex("08" "1112131400000000000011121314000000000087" "26121ff0" "02"));
+		ABI_CHECK(callContractFunction("testDirect()"), encodeArgs(0x20, directEncoding.size(), directEncoding));
+		string arrayEncoding = asString(fromHex("08" "1112131400000000000011121314000000000087" "26121ff0" "0000000000000000" "02"));
+		ABI_CHECK(callContractFunction("testFixedArray()"), encodeArgs(0x20, arrayEncoding.size(), arrayEncoding));
+		ABI_CHECK(callContractFunction("testDynamicArray()"), encodeArgs(0x20, arrayEncoding.size(), arrayEncoding));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodePackedV2_structs)
+{
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			struct S {
+				uint8 a;
+				int16 b;
+				uint8[2] c;
+				int16[] d;
+			}
+			S s;
+			event E(S indexed);
+			constructor() public {
+				s.a = 0x12;
+				s.b = -7;
+				s.c[0] = 2;
+				s.c[1] = 3;
+				s.d.length = 2;
+				s.d[0] = -7;
+				s.d[1] = -8;
+			}
+			function testStorage() public returns (bytes memory) {
+				emit E(s);
+				return abi.encodePacked(uint8(0x33), s, uint8(0x44));
+			}
+			function testMemory() public returns (bytes memory) {
+				S memory m = s;
+				emit E(m);
+				return abi.encodePacked(uint8(0x33), m, uint8(0x44));
+			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 0));
-	ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 2, "\x01\x02"));
-	ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
-	ABI_CHECK(callContractFunction("f3()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
+	bytes structEnc = encodeArgs(int(0x12), u256(-7), int(2), int(3), u256(-7), u256(-8));
+	string encoding = "\x33" + asString(structEnc) + "\x44";
+	ABI_CHECK(callContractFunction("testStorage()"), encodeArgs(0x20, encoding.size(), encoding));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("E((uint8,int16,uint8[2],int16[]))")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::keccak256(asString(structEnc)));
+	ABI_CHECK(callContractFunction("testMemory()"), encodeArgs(0x20, encoding.size(), encoding));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("E((uint8,int16,uint8[2],int16[]))")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::keccak256(asString(structEnc)));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodePackedV2_nestedArray)
+{
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			struct S {
+				uint8 a;
+				int16 b;
+			}
+			event E(S[2][][3] indexed);
+			function testNestedArrays() public returns (bytes memory) {
+				S[2][][3] memory x;
+				x[1] = new S[2][](2);
+				x[1][0][0].a = 1;
+				x[1][0][0].b = 2;
+				x[1][0][1].a = 3;
+				x[1][1][1].b = 4;
+				emit E(x);
+				return abi.encodePacked(uint8(0x33), x, uint8(0x44));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	bytes structEnc = encodeArgs(1, 2, 3, 0, 0, 0, 0, 4);
+	string encoding = "\x33" + asString(structEnc) + "\x44";
+	ABI_CHECK(callContractFunction("testNestedArrays()"), encodeArgs(0x20, encoding.size(), encoding));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("E((uint8,int16)[2][][3])")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::keccak256(asString(structEnc)));
+}
+
+BOOST_AUTO_TEST_CASE(abi_encodePackedV2_arrayOfStrings)
+{
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			string[] x;
+			event E(string[] indexed);
+			constructor() public {
+				x.length = 2;
+				x[0] = "abc";
+				x[1] = "0123456789012345678901234567890123456789";
+			}
+			function testStorage() public returns (bytes memory) {
+				emit E(x);
+				return abi.encodePacked(uint8(0x33), x, uint8(0x44));
+			}
+			function testMemory() public returns (bytes memory) {
+				string[] memory y = x;
+				emit E(y);
+				return abi.encodePacked(uint8(0x33), y, uint8(0x44));
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	bytes arrayEncoding = encodeArgs("abc", "0123456789012345678901234567890123456789");
+	// This pads to multiple of 32 bytes
+	string encoding = "\x33" + asString(arrayEncoding) + "\x44";
+	BOOST_CHECK_EQUAL(encoding.size(), 2 + 32 * 3);
+	ABI_CHECK(callContractFunction("testStorage()"), encodeArgs(0x20, encoding.size(), encoding));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("E(string[])")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::keccak256(asString(arrayEncoding)));
+	ABI_CHECK(callContractFunction("testMemory()"), encodeArgs(0x20, encoding.size(), encoding));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("E(string[])")));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::keccak256(asString(arrayEncoding)));
 }
 
 BOOST_AUTO_TEST_CASE(abi_encode_with_selector)
