@@ -334,4 +334,11 @@ bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _com
 	return std::equal(std::begin(_lhs), std::end(_lhs), std::begin(_rhs), std::end(_rhs), std::forward<Compare>(_compare));
 }
 
+inline std::string findAnyOf(std::string const& _haystack, std::vector<std::string> const& _needles)
+{
+	for (std::string const& needle: _needles)
+		if (_haystack.find(needle) != std::string::npos)
+			return needle;
+	return "";
+}
 }
