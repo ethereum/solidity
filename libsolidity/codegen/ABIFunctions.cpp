@@ -107,6 +107,74 @@ string ABIFunctions::tupleEncoder(
 	});
 }
 
+string ABIFunctions::tupleEncoderPacked(
+	TypePointers const& _givenTypes,
+	TypePointers const& _targetTypes
+)
+{
+	EncodingOptions options;
+	options.encodeAsLibraryTypes = false;
+	options.encodeFunctionFromStack = true;
+	options.padded = false;
+	options.dynamicInplace = true;
+
+	string functionName = string("abi_encode_tuple_packed_");
+	for (auto const& t: _givenTypes)
+		functionName += t->identifier() + "_";
+	functionName += "_to_";
+	for (auto const& t: _targetTypes)
+		functionName += t->identifier() + "_";
+	functionName += options.toFunctionNameSuffix();
+
+	return createExternallyUsedFunction(functionName, [&]() {
+		solAssert(!_givenTypes.empty(), "");
+
+		// Note that the values are in reverse due to the difference in calling semantics.
+		Whiskers templ(R"(
+			function <functionName>(pos <valueParams>) -> end {
+				<encodeElements>
+				end := pos
+			}
+		)");
+		templ("functionName", functionName);
+		string valueParams;
+		string encodeElements;
+		size_t stackPos = 0;
+		for (size_t i = 0; i < _givenTypes.size(); ++i)
+		{
+			solAssert(_givenTypes[i], "");
+			solAssert(_targetTypes[i], "");
+			size_t sizeOnStack = _givenTypes[i]->sizeOnStack();
+			string valueNames = "";
+			for (size_t j = 0; j < sizeOnStack; j++)
+			{
+				valueNames += "value" + to_string(stackPos) + ", ";
+				valueParams = ", value" + to_string(stackPos) + valueParams;
+				stackPos++;
+			}
+			bool dynamic = _targetTypes[i]->isDynamicallyEncoded();
+			Whiskers elementTempl(
+				dynamic ?
+				string(R"(
+					pos := <abiEncode>(<values> pos)
+				)") :
+				string(R"(
+					<abiEncode>(<values> pos)
+					pos := add(pos, <calldataEncodedSize>)
+				)")
+			);
+			elementTempl("values", valueNames);
+			if (!dynamic)
+				elementTempl("calldataEncodedSize", to_string(_targetTypes[i]->calldataEncodedSize(false)));
+			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
+			encodeElements += elementTempl.render();
+		}
+		templ("valueParams", valueParams);
+		templ("encodeElements", encodeElements);
+
+		return templ.render();
+	});
+}
 string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 {
 	string functionName = string("abi_decode_tuple_");

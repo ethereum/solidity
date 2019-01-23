@@ -60,15 +60,25 @@ public:
 	/// The values represent stack slots. If a type occupies more or less than one
 	/// stack slot, it takes exactly that number of values.
 	/// Returns a pointer to the end of the area written in memory.
-	/// Does not allocate memory (does not change the memory head pointer), but writes
+	/// Does not allocate memory (does not change the free memory pointer), but writes
 	/// to memory starting at $headStart and an unrestricted amount after that.
-	/// Assigns the end of encoded memory either to $value0 or (if that is not present)
-	/// to $headStart.
 	std::string tupleEncoder(
 		TypePointers const& _givenTypes,
 		TypePointers const& _targetTypes,
 		bool _encodeAsLibraryTypes = false
 	);
+
+	/// @returns name of an assembly function to encode values of @a _givenTypes
+	/// with packed encoding into memory, converting the types to @a _targetTypes on the fly.
+	/// Parameters are: <memPos> <value_n> ... <value_1>, i.e.
+	/// the layout on the stack is <value_1> ... <value_n> <memPos> with
+	/// the top of the stack on the right.
+	/// The values represent stack slots. If a type occupies more or less than one
+	/// stack slot, it takes exactly that number of values.
+	/// Returns a pointer to the end of the area written in memory.
+	/// Does not allocate memory (does not change the free memory pointer), but writes
+	/// to memory starting at memPos and an unrestricted amount after that.
+	std::string tupleEncoderPacked(TypePointers const& _givenTypes, TypePointers const& _targetTypes);
 
 	/// @returns name of an assembly function to ABI-decode values of @a _types
 	/// into memory. If @a _fromMemory is true, decodes from memory instead of
