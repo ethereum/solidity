@@ -53,7 +53,14 @@ packagename=solc
 
 static_build_distribution=cosmic
 
-for distribution in bionic cosmic STATIC
+DISTRIBUTIONS="bionic cosmic disco"
+
+if [ branch != develop ]
+then
+    DISTRIBUTIONS="$DISTRIBUTIONS STATIC"
+fi
+
+for distribution in $DISTRIBUTIONS
 do
 cd /tmp/
 rm -rf $distribution
@@ -96,7 +103,7 @@ commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-
 echo "$commithash" > commit_hash.txt
 if [ $branch = develop ]
 then
-    debversion="$version-develop-$commitdate-$commithash"
+    debversion="$version~develop-$commitdate-$commithash"
 else
     debversion="$version"
     echo -n > prerelease.txt # proper release
