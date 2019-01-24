@@ -12,5 +12,3 @@ contract C {
 }
 // ----
 // Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
-// TypeError: (191-192): This type cannot be encoded.
-// TypeError: (194-195): This type cannot be encoded.
