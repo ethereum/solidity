@@ -1,5 +1,9 @@
 ### 0.5.4 (unreleased)
 
+Bugfixes:
+ * Type system: Properly report packed encoded size for arrays and structs (mostly unused until now).
+
+
 
 Language Features:
 

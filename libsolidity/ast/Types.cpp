@@ -1716,8 +1716,10 @@ bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 {
 	if (isDynamicallySized())
 		return 32;
-	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(_padded));
-	size = ((size + 31) / 32) * 32;
+	// Array elements are always padded.
+	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(true));
+	if (_padded)
+		size = ((size + 31) / 32) * 32;
 	return size;
 }
 
@@ -2034,7 +2036,7 @@ bool StructType::operator==(Type const& _other) const
 	return ReferenceType::operator==(other) && other.m_struct == m_struct;
 }
 
-unsigned StructType::calldataEncodedSize(bool _padded) const
+unsigned StructType::calldataEncodedSize(bool) const
 {
 	unsigned size = 0;
 	for (auto const& member: members(nullptr))
@@ -2042,7 +2044,8 @@ unsigned StructType::calldataEncodedSize(bool _padded) const
 			return 0;
 		else
 		{
-			unsigned memberSize = member.type->calldataEncodedSize(_padded);
+			// Struct members are always padded.
+			unsigned memberSize = member.type->calldataEncodedSize(true);
 			if (memberSize == 0)
 				return 0;
 			size += memberSize;
