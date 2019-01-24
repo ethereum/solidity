@@ -97,7 +97,7 @@ void OptimiserSuite::run(
 		ExpressionJoiner::run(ast);
 		ExpressionJoiner::run(ast);
 		ExpressionInliner(_dialect, ast).run();
-		UnusedPruner::runUntilStabilised(_dialect, ast);
+		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 		ExpressionSplitter{_dialect, dispenser}(ast);
 		SSATransform::run(ast, dispenser);
@@ -124,11 +124,11 @@ void OptimiserSuite::run(
 	}
 	ExpressionJoiner::run(ast);
 	Rematerialiser::run(_dialect, ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 	SSAReverser::run(ast);
 	CommonSubexpressionEliminator{_dialect}(ast);
@@ -136,7 +136,7 @@ void OptimiserSuite::run(
 
 	ExpressionJoiner::run(ast);
 	Rematerialiser::run(_dialect, ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 	_ast = std::move(ast);
 }
