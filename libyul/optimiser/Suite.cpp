@@ -74,6 +74,7 @@ void OptimiserSuite::run(
 
 	// None of the above can make stack problems worse.
 
+	// TODO all name dispensers need to have access to the reserved identifiers!
 	NameDispenser dispenser{*_dialect, ast};
 
 	for (size_t i = 0; i < 4; i++)

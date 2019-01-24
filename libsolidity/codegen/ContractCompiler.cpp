@@ -712,6 +712,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			_assembly.appendInstruction(Instruction::POP);
 		}
 	};
+	// TODO add optimizer!
 	solAssert(_inlineAssembly.annotation().analysisInfo, "");
 	CodeGenerator::assemble(
 		_inlineAssembly.operations(),
