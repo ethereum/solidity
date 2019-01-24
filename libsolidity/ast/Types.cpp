@@ -415,7 +415,7 @@ MemberList const& Type::members(ContractDefinition const* _currentScope) const
 	return *m_members[_currentScope];
 }
 
-TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _packed) const
+TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) const
 {
 	TypePointer encodingType = mobileType();
 	if (encodingType)
@@ -423,7 +423,7 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _p
 	if (encodingType)
 		encodingType = encodingType->encodingType();
 	// Structs are fine in the following circumstances:
-	// - ABIv2 without packed encoding or,
+	// - ABIv2 or,
 	// - storage struct for a library
 	if (_inLibraryCall && encodingType->dataStoredIn(DataLocation::Storage))
 		return encodingType;
@@ -431,7 +431,7 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _p
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
 		baseType = arrayType->baseType();
 	if (dynamic_cast<StructType const*>(baseType.get()))
-		if (!_encoderV2 || _packed)
+		if (!_encoderV2)
 			return TypePointer();
 	return encodingType;
 }
