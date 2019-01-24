@@ -79,8 +79,8 @@ void OptimiserSuite::run(
 		RedundantAssignEliminator::run(_dialect, ast);
 		RedundantAssignEliminator::run(_dialect, ast);
 
-		CommonSubexpressionEliminator{_dialect}(ast);
 		ExpressionSimplifier::run(_dialect, ast);
+		CommonSubexpressionEliminator{_dialect}(ast);
 		StructuralSimplifier{_dialect}(ast);
 		(BlockFlattener{})(ast);
 		SSATransform::run(ast, dispenser);
@@ -108,6 +108,7 @@ void OptimiserSuite::run(
 		(FunctionGrouper{})(ast);
 		EquivalentFunctionCombiner::run(ast);
 		FullInliner{ast, dispenser}.run();
+		(BlockFlattener{})(ast);
 
 		SSATransform::run(ast, dispenser);
 		RedundantAssignEliminator::run(_dialect, ast);
