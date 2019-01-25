@@ -1,8 +1,8 @@
 ### 0.5.4 (unreleased)
 
 Bugfixes:
+ * Parser: Disallow empty import statements.
  * Type system: Properly report packed encoded size for arrays and structs (mostly unused until now).
-
 
 
 Language Features:

@@ -221,6 +221,8 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 			fatalParserError("Expected import path.");
 		path = getLiteralAndAdvance();
 	}
+	if (path->empty())
+		fatalParserError("Import path cannot be empty.");
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
