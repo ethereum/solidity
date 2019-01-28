@@ -86,6 +86,9 @@ public:
 	/// Returns the assembly items.
 	AssemblyItems const& items() const { return m_items; }
 
+	/// Returns the mutable assembly items. Use with care!
+	AssemblyItems& items() { return m_items; }
+
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
