@@ -4,18 +4,6 @@ Frequently Asked Questions
 
 This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 
-
-***************
-Basic Questions
-***************
-
-If I return an ``enum``, I only get integer values in web3.js. How to get the named values?
-===========================================================================================
-
-Enums are not supported by the ABI, they are just supported by Solidity.
-You have to do the mapping yourself for now, we might provide some help
-later.
-
 ******************
 Advanced Questions
 ******************
