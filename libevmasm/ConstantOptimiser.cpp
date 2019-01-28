@@ -134,11 +134,6 @@ bigint LiteralMethod::gasNeeded() const
 	);
 }
 
-CodeCopyMethod::CodeCopyMethod(Params const& _params, u256 const& _value):
-	ConstantOptimisationMethod(_params, _value)
-{
-}
-
 bigint CodeCopyMethod::gasNeeded() const
 {
 	return combineGas(

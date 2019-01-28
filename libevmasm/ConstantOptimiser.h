@@ -119,7 +119,8 @@ public:
 class CodeCopyMethod: public ConstantOptimisationMethod
 {
 public:
-	explicit CodeCopyMethod(Params const& _params, u256 const& _value);
+	explicit CodeCopyMethod(Params const& _params, u256 const& _value):
+		ConstantOptimisationMethod(_params, _value) {}
 	bigint gasNeeded() const override;
 	AssemblyItems execute(Assembly& _assembly) const override;
 
