@@ -681,6 +681,8 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 	for (auto const& node: _ast.nodes())
 		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 		{
+			solAssert(!import->path().empty(), "Import path cannot be empty.");
+
 			string importPath = dev::absolutePath(import->path(), _sourcePath);
 			// The current value of `path` is the absolute path as seen from this source file.
 			// We first have to apply remappings before we can store the actual absolute path
