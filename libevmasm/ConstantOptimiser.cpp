@@ -129,7 +129,7 @@ bigint LiteralMethod::gasNeeded() const
 	return combineGas(
 		simpleRunGas({Instruction::PUSH1}),
 		// PUSHX plus data
-		(m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas) + dataGas(),
+		(m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas) + dataGas(toCompactBigEndian(m_value, 1)),
 		0
 	);
 }

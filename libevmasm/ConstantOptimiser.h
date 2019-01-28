@@ -79,8 +79,6 @@ protected:
 	static bigint simpleRunGas(AssemblyItems const& _items);
 	/// @returns the gas needed to store the given data literally
 	bigint dataGas(bytes const& _data) const;
-	/// @returns the gas needed to store the value literally
-	bigint dataGas() const { return dataGas(toCompactBigEndian(m_value, 1)); }
 	static size_t bytesRequired(AssemblyItems const& _items);
 	/// @returns the combined estimated gas usage taking @a m_params into account.
 	bigint combineGas(
