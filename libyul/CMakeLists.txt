@@ -32,6 +32,8 @@ add_library(yul
 	backends/evm/EVMDialect.h
 	backends/evm/EVMObjectCompiler.cpp
 	backends/evm/EVMObjectCompiler.h
+	backends/evm/NoOutputAssembly.h
+	backends/evm/NoOutputAssembly.cpp
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
