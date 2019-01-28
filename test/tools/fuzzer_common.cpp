@@ -95,12 +95,14 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 	for (bool isCreation: {false, true})
 		for (unsigned runs: {1, 2, 3, 20, 40, 100, 200, 400, 1000})
 		{
+			// Make a copy here so that each time we start with the original state.
+			Assembly tmp = assembly;
 			ConstantOptimisationMethod::optimiseConstants(
 					isCreation,
 					runs,
 					EVMVersion{},
 					assembly,
-					const_cast<AssemblyItems &>(assembly.items())
+					const_cast<AssemblyItems &>(tmp.items())
 			);
 		}
 }
