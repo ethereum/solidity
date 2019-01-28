@@ -637,20 +637,36 @@ BOOST_AUTO_TEST_CASE(optimise_constant_to_codecopy)
 			uint a;
 			function f() public returns (uint) {
 				a = 1;
+				assembly {
+					// make scratch space dirty
+					mstore(0, 0x4242424242424242424242424242424242424242424242424242424242424242)
+				}
 				// This cannot be represented well with the `CalculateMethod`,
 				// hence the decision will be between `LiteralMethod` and `CopyMethod`.
 				return 0x1234123412431234123412412342112341234124312341234124;
 			}
 			function g() public returns (uint) {
 				a = 2;
+				assembly {
+					// make scratch space dirty
+					mstore(0, 0x4242424242424242424242424242424242424242424242424242424242424242)
+				}
 				return 0x1234123412431234123412412342112341234124312341234124;
 			}
 			function h() public returns (uint) {
 				a = 3;
+				assembly {
+					// make scratch space dirty
+					mstore(0, 0x4242424242424242424242424242424242424242424242424242424242424242)
+				}
 				return 0x1234123412431234123412412342112341234124312341234124;
 			}
 			function i() public returns (uint) {
 				a = 4;
+				assembly {
+					// make scratch space dirty
+					mstore(0, 0x4242424242424242424242424242424242424242424242424242424242424242)
+				}
 				return 0x1234123412431234123412412342112341234124312341234124;
 			}
 		}

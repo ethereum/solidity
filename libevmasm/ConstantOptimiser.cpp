@@ -144,16 +144,22 @@ bigint CodeCopyMethod::gasNeeded() const
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
 		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
 		// Data gas for data itself
-		dataGas(toBigEndian(m_value))
+		dataGas(toCompactBigEndian(m_value, 1))
 	);
 }
 
 AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 {
-	bytes data = toBigEndian(m_value);
-	assertThrow(data.size() == 32, OptimizerException, "Invalid number encoding.");
+	bytes data = toCompactBigEndian(m_value, 1);
+	assertThrow(data.size() >= 1 && data.size() <= 32, OptimizerException, "Invalid number encoding.");
 	AssemblyItems actualCopyRoutine = copyRoutine();
 	actualCopyRoutine[4] = _assembly.newData(data);
+	if (data.size() != 32)
+	{
+		// Update sizes for short encodings.
+		actualCopyRoutine[3] = u256(data.size());
+		actualCopyRoutine[5] = u256(32 - data.size());
+	}
 	return actualCopyRoutine;
 }
 
@@ -169,9 +175,9 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 		Instruction::MLOAD,
 
 		// codecopy(0, <offset>, 32)
-		u256(32),
+		u256(32), // replaced above in actualCopyRoutine[3]
 		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[4]
-		Instruction::DUP4,
+		Instruction::DUP4, // replaced above in actualCopyRoutine[5]
 		Instruction::CODECOPY,
 
 		// mload(0)

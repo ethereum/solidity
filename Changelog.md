@@ -15,6 +15,7 @@ Compiler Features:
  * Assembler: Encode the compiler version in the deployed bytecode.
  * Yul Optimizer: Simplify single-run ``for`` loops to ``if`` statements.
  * Optimizer: Add rules for multiplication and division by left-shifted one.
+ * Optimizer: Take shortest representation for store-as-data option in the constant optimizer.
 
 
 Bugfixes:
