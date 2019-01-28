@@ -101,7 +101,7 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 					isCreation,
 					runs,
 					EVMVersion{},
-					assembly,
+					tmp,
 					const_cast<AssemblyItems &>(tmp.items())
 			);
 		}
