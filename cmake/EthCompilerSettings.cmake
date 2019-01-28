@@ -74,7 +74,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			# into errors, which makes sense.
 			# http://stackoverflow.com/questions/21617158/how-to-silence-unused-command-line-argument-error-with-clang-without-disabling-i
 			add_compile_options(-Qunused-arguments)
-
 		elseif(EMSCRIPTEN)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0")
 			# Leave only exported symbols as public and aggressively remove others
