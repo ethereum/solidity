@@ -14275,6 +14275,25 @@ BOOST_AUTO_TEST_CASE(code_access)
 	ABI_CHECK(codeRuntime1, codeRuntime2);
 }
 
+BOOST_AUTO_TEST_CASE(code_access_padding)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function diff() public pure returns (uint remainder) {
+				bytes memory a = type(D).creationCode;
+				bytes memory b = type(D).runtimeCode;
+				assembly { remainder := mod(sub(b, a), 0x20) }
+			}
+		}
+		contract D {
+			function f() public pure returns (uint) { return 7; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// This checks that the allocation function pads to multiples of 32 bytes
+	ABI_CHECK(callContractFunction("diff()"), encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_CASE(code_access_create)
 {
 	char const* sourceCode = R"(

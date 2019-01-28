@@ -1348,7 +1348,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context.appendInlineAssembly(
 				Whiskers(R"({
 					mstore(start, sub(end, add(start, 0x20)))
-					mstore(<free>, end)
+					mstore(<free>, and(add(end, 31), not(31)))
 				})")("free", to_string(CompilerUtils::freeMemoryPointer)).render(),
 				{"start", "end"}
 			);
