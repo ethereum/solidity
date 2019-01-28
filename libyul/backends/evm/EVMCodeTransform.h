@@ -40,6 +40,8 @@ namespace yul
 struct AsmAnalysisInfo;
 class EVMAssembly;
 
+struct StackTooDeepError: virtual YulException {};
+
 struct CodeTransformContext
 {
 	std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
@@ -85,6 +87,10 @@ class CodeTransform: public boost::static_visitor<>
 public:
 	/// Create the code transformer.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
+	/// As a side-effect of its construction, translates the Yul code and appends it to the
+	/// given assembly.
+	/// Throws StackTooDeepError if a variable is not accessible or if a function has too
+	/// many parameters.
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
@@ -172,7 +178,7 @@ private:
 	/// Determines the stack height difference to the given variables. Throws
 	/// if it is not yet in scope or the height difference is too large. Returns
 	/// the (positive) stack height difference otherwise.
-	int variableHeightDiff(Scope::Variable const& _var, bool _forSwap) const;
+	int variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap) const;
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
