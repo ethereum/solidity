@@ -54,7 +54,8 @@ public:
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
-	std::vector<std::string> unhandledQueries() override { return m_solvers.at(0)->unhandledQueries(); }
+	std::vector<std::string> unhandledQueries() override;
+	unsigned solvers() override { return m_solvers.size(); }
 private:
 	static bool solverAnswered(CheckResult result);
 

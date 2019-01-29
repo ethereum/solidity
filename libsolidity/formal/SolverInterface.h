@@ -305,6 +305,9 @@ public:
 	/// @returns a list of queries that the system was not able to respond to.
 	virtual std::vector<std::string> unhandledQueries() { return {}; }
 
+	/// @returns how many SMT solvers this interface has.
+	virtual unsigned solvers() { return 1; }
+
 protected:
 	// SMT query timeout in milliseconds.
 	static int const queryTimeout = 10000;

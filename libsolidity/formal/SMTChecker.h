@@ -23,6 +23,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
+#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 
 #include <string>
@@ -215,6 +216,8 @@ private:
 	std::shared_ptr<VariableUsage> m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
+	// True if the "No SMT solver available" warning was already created.
+	bool m_noSolverWarning = false;
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
@@ -225,7 +228,13 @@ private:
 	/// Used to retrieve models.
 	std::set<Expression const*> m_uninterpretedTerms;
 	std::vector<smt::Expression> m_pathConditions;
-	langutil::ErrorReporter& m_errorReporter;
+	/// ErrorReporter that comes from CompilerStack.
+	langutil::ErrorReporter& m_errorReporterReference;
+	/// Local SMTChecker ErrorReporter.
+	/// This is necessary to show the "No SMT solver available"
+	/// warning before the others in case it's needed.
+	langutil::ErrorReporter m_errorReporter;
+	langutil::ErrorList m_smtErrors;
 	std::shared_ptr<langutil::Scanner> m_scanner;
 
 	/// Stores the current path of function calls.

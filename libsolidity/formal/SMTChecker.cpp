@@ -34,7 +34,8 @@ using namespace dev::solidity;
 
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
 	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
-	m_errorReporter(_errorReporter)
+	m_errorReporterReference(_errorReporter),
+	m_errorReporter(m_smtErrors)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (!_smtlib2Responses.empty())
@@ -53,6 +54,25 @@ void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _
 	m_scanner = _scanner;
 	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		_source.accept(*this);
+
+	solAssert(m_interface->solvers() > 0, "");
+	// If this check is true, Z3 and CVC4 are not available
+	// and the query answers were not provided, since SMTPortfolio
+	// guarantees that SmtLib2Interface is the first solver.
+	if (!m_interface->unhandledQueries().empty() && m_interface->solvers() == 1)
+	{
+		if (!m_noSolverWarning)
+		{
+			m_noSolverWarning = true;
+			m_errorReporterReference.warning(
+				SourceLocation(),
+				"SMTChecker analysis was not possible since no integrated SMT solver (Z3 or CVC4) was found."
+			);
+		}
+	}
+	else
+		m_errorReporterReference.append(m_errorReporter.errors());
+	m_errorReporter.clear();
 }
 
 bool SMTChecker::visit(ContractDefinition const& _contract)

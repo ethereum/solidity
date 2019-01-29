@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <libdevcore/CommonData.h>
+
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 
@@ -39,6 +41,11 @@ public:
 		m_errorList(_errorReporter.m_errorList) { }
 
 	ErrorReporter& operator=(ErrorReporter const& _errorReporter);
+
+	void append(ErrorList const& _errorList)
+	{
+		m_errorList += _errorList;
+	}
 
 	void warning(std::string const& _description);
 
