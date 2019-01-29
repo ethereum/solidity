@@ -22,7 +22,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-void FuzzerUtil::runCompiler(string _input, bool _quiet)
+void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 {
 	if (!_quiet)
 		cout << "Input JSON: " << _input << endl;
