@@ -50,7 +50,7 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 			Assignment const& assignment = boost::get<Assignment>(bodyStatement);
 			if (assignment.variableNames.size() == 1 && assignment.variableNames.front().name == retVariable)
 			{
-				// FIXME: use code size metric here
+				// TODO: use code size metric here
 
 				// We cannot overwrite previous settings, because this function definition
 				// would not be valid here if we were searching inside a functionally inlinable

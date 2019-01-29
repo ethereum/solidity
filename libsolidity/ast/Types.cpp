@@ -3027,8 +3027,8 @@ u256 FunctionType::externalIdentifier() const
 
 bool FunctionType::isPure() const
 {
-	// FIXME: replace this with m_stateMutability == StateMutability::Pure once
-	//        the callgraph analyzer is in place
+	// TODO: replace this with m_stateMutability == StateMutability::Pure once
+	//       the callgraph analyzer is in place
 	return
 		m_kind == Kind::KECCAK256 ||
 		m_kind == Kind::ECRecover ||
