@@ -19,11 +19,16 @@
  */
 
 #include <test/tools/fuzzer_common.h>
+
+#include <libdevcore/CommonIO.h>
+
 #include <boost/program_options.hpp>
+
+#include <string>
+#include <iostream>
 
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
 
 namespace po = boost::program_options;
 

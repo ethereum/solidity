@@ -15,16 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libdevcore/CommonIO.h>
-#include <libevmasm/Assembly.h>
-#include <libsolc/libsolc.h>
-#include <libevmasm/ConstantOptimiser.h>
-
-#include <libdevcore/JSON.h>
-
 #include <string>
-#include <sstream>
-#include <iostream>
 
 struct FuzzerUtil
 {
