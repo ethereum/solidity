@@ -22,9 +22,13 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-void FuzzerUtil::runCompiler(string _input)
+void FuzzerUtil::runCompiler(string _input, bool _quiet)
 {
+	if (!_quiet)
+		cout << "Input JSON: " << _input << endl;
 	string outputString(solidity_compile(_input.c_str(), nullptr));
+	if (!_quiet)
+		cout << "Output JSON: " << outputString << endl;
 	Json::Value output;
 	if (!jsonParseStrict(outputString, output))
 	{
@@ -66,7 +70,7 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize, bool _quiet)
 	// Enable all Contract-level outputs.
 	config["settings"]["outputSelection"]["*"]["*"][0] = "*";
 
-	runCompiler(jsonCompactPrint(config));
+	runCompiler(jsonCompactPrint(config), _quiet);
 }
 
 void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
@@ -112,5 +116,5 @@ void FuzzerUtil::testStandardCompiler(string const& _input, bool _quiet)
 	if (!_quiet)
 		cout << "Testing compiler via JSON interface." << endl;
 
-	runCompiler(_input);
+	runCompiler(_input, _quiet);
 }
