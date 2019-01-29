@@ -473,7 +473,7 @@ eth::LinkerObject const& CompilerStack::runtimeObject(string const& _contractNam
 	return contract(_contractName).runtimeObject;
 }
 
-/// FIXME: cache this string
+/// TODO: cache this string
 string CompilerStack::assemblyString(string const& _contractName, StringMap _sourceCodes) const
 {
 	if (m_stackState != CompilationSuccessful)
@@ -486,7 +486,7 @@ string CompilerStack::assemblyString(string const& _contractName, StringMap _sou
 		return string();
 }
 
-/// FIXME: cache the JSON
+/// TODO: cache the JSON
 Json::Value CompilerStack::assemblyJSON(string const& _contractName, StringMap _sourceCodes) const
 {
 	if (m_stackState != CompilationSuccessful)
