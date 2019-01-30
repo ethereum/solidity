@@ -15,21 +15,12 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libdevcore/CommonIO.h>
-#include <libevmasm/Assembly.h>
-#include <libsolc/libsolc.h>
-#include <libevmasm/ConstantOptimiser.h>
-
-#include <libdevcore/JSON.h>
-
 #include <string>
-#include <sstream>
-#include <iostream>
 
 struct FuzzerUtil
 {
-	static void runCompiler(std::string _input);
-	static void testCompiler(std::string const& _input, bool _optimize, bool quiet);
+	static void runCompiler(std::string const& _input, bool _quiet);
+	static void testCompiler(std::string const& _input, bool _optimize, bool _quiet);
 	static void testConstantOptimizer(std::string const& _input, bool _quiet);
 	static void testStandardCompiler(std::string const& _input, bool _quiet);
 };
