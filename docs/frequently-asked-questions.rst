@@ -8,14 +8,6 @@ This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 Advanced Questions
 ******************
 
-Get return value from non-constant function from another contract
-=================================================================
-
-The key point is that the calling contract needs to know about the function it intends to call.
-
-See `ping.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_ping.sol>`_
-and `pong.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/45_pong.sol>`_.
-
 How do I initialize a contract with only a specific amount of wei?
 ==================================================================
 
