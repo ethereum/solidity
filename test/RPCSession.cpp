@@ -324,7 +324,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	Json::Value result;
 	string errorMsg;
 	if (!jsonParseStrict(reply, result, &errorMsg))
-		BOOST_REQUIRE_MESSAGE(false, errorMsg);
+		BOOST_FAIL("Failed to parse JSON-RPC response: " + errorMsg);
 
 	if (!result.isMember("id") || !result["id"].isUInt())
 		BOOST_FAIL("Badly formatted JSON-RPC response (missing or non-integer \"id\")");
