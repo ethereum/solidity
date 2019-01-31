@@ -47,14 +47,13 @@ class ConstantOptimisationMethod
 {
 public:
 	/// Tries to optimised how constants are represented in the source code and modifies
-	/// @a _assembly and its @a _items.
+	/// @a _assembly.
 	/// @returns zero if no optimisations could be performed.
 	static unsigned optimiseConstants(
 		bool _isCreation,
 		size_t _runs,
 		solidity::EVMVersion _evmVersion,
-		Assembly& _assembly,
-		AssemblyItems& _items
+		Assembly& _assembly
 	);
 
 	struct Params

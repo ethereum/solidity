@@ -496,8 +496,7 @@ map<u256, u256> Assembly::optimiseInternal(
 			_settings.isCreation,
 			_settings.isCreation ? 1 : _settings.expectedExecutionsPerDeployment,
 			_settings.evmVersion,
-			*this,
-			m_items
+			*this
 		);
 
 	return tagReplacements;
