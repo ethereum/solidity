@@ -20,7 +20,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 
-#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm/find_first_of.hpp>
 #include <boost/range/irange.hpp>
 
 using namespace std;
