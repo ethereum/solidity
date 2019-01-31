@@ -769,21 +769,24 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap) const
+int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
 {
 	solAssert(m_context->variableStackHeights.count(&_var), "");
 	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
 	solAssert(heightDiff > (_forSwap ? 1 : 0), "Negative stack difference for variable.");
 	int limit = _forSwap ? 17 : 16;
 	if (heightDiff > limit)
-		// throw exception with variable name and height diff
-		BOOST_THROW_EXCEPTION(StackTooDeepError(_varName, heightDiff - limit) << errinfo_comment(
+	{
+		m_stackErrors.emplace_back(_varName, heightDiff - limit);
+		m_stackErrors.back() << errinfo_comment(
 			"Variable " +
 			_varName.str() +
 			" is " +
 			to_string(heightDiff - limit) +
 			" slot(s) too deep inside the stack."
-		));
+		);
+		BOOST_THROW_EXCEPTION(m_stackErrors.back());
+	}
 	return heightDiff;
 }
 

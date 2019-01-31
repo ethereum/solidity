@@ -190,6 +190,35 @@ BOOST_AUTO_TEST_CASE(nested)
 	BOOST_CHECK_EQUAL(out, "h: 9 ");
 }
 
+BOOST_AUTO_TEST_CASE(also_in_outer_block)
+{
+	string out = check(R"({
+			let x := 0
+			let r1 := 0
+			let r2 := 0
+			let r3 := 0
+			let r4 := 0
+			let r5 := 0
+			let r6 := 0
+			let r7 := 0
+			let r8 := 0
+			let r9 := 0
+			let r10 := 0
+			let r11 := 0
+			let r12 := 0
+			let r13 := 0
+			let r14 := 0
+			let r15 := 0
+			let r16 := 0
+			let r17 := 0
+			let r18 := 0
+			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
+			function g(s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19) -> w, v {
+			}
+	})");
+	BOOST_CHECK_EQUAL(out, ": 9 ");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
