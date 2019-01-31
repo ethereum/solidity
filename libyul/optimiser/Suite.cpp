@@ -50,7 +50,7 @@ using namespace dev;
 using namespace yul;
 
 void OptimiserSuite::run(
-	Dialect const& _dialect,
+	shared_ptr<Dialect> const& _dialect,
 	Block& _ast,
 	AsmAnalysisInfo const& _analysisInfo,
 	set<YulString> const& _externallyUsedIdentifiers
@@ -58,52 +58,52 @@ void OptimiserSuite::run(
 {
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 
-	Block ast = boost::get<Block>(Disambiguator(_dialect, _analysisInfo, reservedIdentifiers)(_ast));
+	Block ast = boost::get<Block>(Disambiguator(*_dialect, _analysisInfo, reservedIdentifiers)(_ast));
 
 	(VarDeclInitializer{})(ast);
 	(FunctionHoister{})(ast);
 	(BlockFlattener{})(ast);
 	(FunctionGrouper{})(ast);
 	EquivalentFunctionCombiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 	(ForLoopInitRewriter{})(ast);
 	(BlockFlattener{})(ast);
-	StructuralSimplifier{_dialect}(ast);
+	StructuralSimplifier{*_dialect}(ast);
 
-	NameDispenser dispenser{_dialect, ast};
+	NameDispenser dispenser{*_dialect, ast};
 
 	for (size_t i = 0; i < 4; i++)
 	{
-		ExpressionSplitter{_dialect, dispenser}(ast);
+		ExpressionSplitter{*_dialect, dispenser}(ast);
 		SSATransform::run(ast, dispenser);
-		RedundantAssignEliminator::run(_dialect, ast);
-		RedundantAssignEliminator::run(_dialect, ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
 
-		ExpressionSimplifier::run(_dialect, ast);
-		CommonSubexpressionEliminator{_dialect}(ast);
-		StructuralSimplifier{_dialect}(ast);
+		ExpressionSimplifier::run(*_dialect, ast);
+		CommonSubexpressionEliminator{*_dialect}(ast);
+		StructuralSimplifier{*_dialect}(ast);
 		(BlockFlattener{})(ast);
 		SSATransform::run(ast, dispenser);
-		RedundantAssignEliminator::run(_dialect, ast);
-		RedundantAssignEliminator::run(_dialect, ast);
-		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-		CommonSubexpressionEliminator{_dialect}(ast);
-		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+		CommonSubexpressionEliminator{*_dialect}(ast);
+		UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
 		SSAReverser::run(ast);
-		CommonSubexpressionEliminator{_dialect}(ast);
-		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+		CommonSubexpressionEliminator{*_dialect}(ast);
+		UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
 		ExpressionJoiner::run(ast);
 		ExpressionJoiner::run(ast);
-		ExpressionInliner(_dialect, ast).run();
-		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+		ExpressionInliner(*_dialect, ast).run();
+		UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
-		ExpressionSplitter{_dialect, dispenser}(ast);
+		ExpressionSplitter{*_dialect, dispenser}(ast);
 		SSATransform::run(ast, dispenser);
-		RedundantAssignEliminator::run(_dialect, ast);
-		RedundantAssignEliminator::run(_dialect, ast);
-		CommonSubexpressionEliminator{_dialect}(ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		CommonSubexpressionEliminator{*_dialect}(ast);
 
 		(FunctionGrouper{})(ast);
 		EquivalentFunctionCombiner::run(ast);
@@ -111,33 +111,33 @@ void OptimiserSuite::run(
 		(BlockFlattener{})(ast);
 
 		SSATransform::run(ast, dispenser);
-		RedundantAssignEliminator::run(_dialect, ast);
-		RedundantAssignEliminator::run(_dialect, ast);
-		ExpressionSimplifier::run(_dialect, ast);
-		StructuralSimplifier{_dialect}(ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		ExpressionSimplifier::run(*_dialect, ast);
+		StructuralSimplifier{*_dialect}(ast);
 		(BlockFlattener{})(ast);
-		CommonSubexpressionEliminator{_dialect}(ast);
+		CommonSubexpressionEliminator{*_dialect}(ast);
 		SSATransform::run(ast, dispenser);
-		RedundantAssignEliminator::run(_dialect, ast);
-		RedundantAssignEliminator::run(_dialect, ast);
-		UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-		CommonSubexpressionEliminator{_dialect}(ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		RedundantAssignEliminator::run(*_dialect, ast);
+		UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+		CommonSubexpressionEliminator{*_dialect}(ast);
 	}
 	ExpressionJoiner::run(ast);
-	Rematerialiser::run(_dialect, ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+	Rematerialiser::run(*_dialect, ast);
+	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
 	SSAReverser::run(ast);
-	CommonSubexpressionEliminator{_dialect}(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+	CommonSubexpressionEliminator{*_dialect}(ast);
+	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
 	ExpressionJoiner::run(ast);
-	Rematerialiser::run(_dialect, ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+	Rematerialiser::run(*_dialect, ast);
+	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
 	_ast = std::move(ast);
 }

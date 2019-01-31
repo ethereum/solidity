@@ -242,7 +242,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "fullSuite")
-		OptimiserSuite::run(*m_dialect, *m_ast, *m_analysisInfo);
+		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo);
 	else
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
