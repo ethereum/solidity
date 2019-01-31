@@ -66,6 +66,7 @@ jobs:
           paths:
             - soljson.js
             - version.txt
+
   test_emscripten_solcjs:
     docker:
       - image: circleci/node:10
@@ -84,6 +85,7 @@ jobs:
           name: Test solcjs
           command: |
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+
   test_emscripten_external:
     docker:
       - image: circleci/node:10
@@ -102,6 +104,7 @@ jobs:
           name: External tests
           command: |
             test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
+
   build_x86_linux:
     docker:
       - image: buildpack-deps:bionic
@@ -123,6 +126,24 @@ jobs:
           root: build
           paths:
             - "*"
+
+  build_x86_linux_cxx17:
+    docker:
+      - image: buildpack-deps:bionic
+    environment:
+      TERM: xterm
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            # Note: do not include cvc4 here, it is not C++17 compatible.
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
 
   build_x86_archlinux:
     docker:
@@ -350,6 +371,7 @@ workflows:
           requires:
             - build_emscripten
       - build_x86_linux: *build_on_tags
+      - build_x86_linux_cxx17: *build_on_tags
       - build_x86_clang7: *build_on_tags
       - build_x86_mac: *build_on_tags
       - test_x86_linux:
