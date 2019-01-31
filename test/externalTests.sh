@@ -95,3 +95,5 @@ test_truffle Zeppelin https://github.com/OpenZeppelin/openzeppelin-solidity.git 
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
 
 test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development
+
+test_truffle AragonOS https://github.com/aragon/aragonOS.git dev
