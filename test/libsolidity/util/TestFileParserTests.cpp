@@ -57,44 +57,93 @@ BOOST_AUTO_TEST_CASE(simple_call_succees)
 	char const* source = R"(
 		// f(uint256, uint256): 1, 1
 		// ->
+		// # This call should not return a value, but still succeed. #
 	)";
-
 	auto const calls = parse(source);
 	BOOST_CHECK_EQUAL(calls.size(), 1);
 
 	auto call = calls.at(0);
-	ABI_CHECK(call.arguments.rawBytes, toBigEndian(u256{1}) + toBigEndian(u256{1}));
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::MultiLine);
 	BOOST_CHECK_EQUAL(call.signature, "f(uint256,uint256)");
+	ABI_CHECK(call.arguments.rawBytes(), toBigEndian(u256{1}) + toBigEndian(u256{1}));
+	ABI_CHECK(call.expectations.rawBytes(), bytes{});
+}
+
+BOOST_AUTO_TEST_CASE(simple_single_line_call_success)
+{
+	char const* source = R"(
+		// f(uint256): 1 -> # Does not expect a value. #
+		// f(uint256): 1 -> 1 # Expect return value. #
+	)";
+	auto const calls = parse(source);
+	BOOST_CHECK_EQUAL(calls.size(), 2);
+
+	auto call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.signature, "f(uint256)");
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::SingleLine);
+	ABI_CHECK(call.arguments.rawBytes(), toBigEndian(u256{1}));
+	ABI_CHECK(call.expectations.rawBytes(), bytes{});
+
+	call = calls.at(1);
+	BOOST_CHECK_EQUAL(call.signature, "f(uint256)");
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::SingleLine);
+	ABI_CHECK(call.arguments.rawBytes(), toBigEndian(u256{1}));
+	ABI_CHECK(call.expectations.rawBytes(), toBigEndian(u256{1}));
+}
+
+BOOST_AUTO_TEST_CASE(non_existent_call_revert_single_line)
+{
+	char const* source = R"(
+		// i_am_not_there() -> FAILURE
+	)";
+	auto const calls = parse(source);
+	BOOST_CHECK_EQUAL(calls.size(), 1);
+
+	auto const& call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::SingleLine);
+	BOOST_CHECK_EQUAL(call.signature, "i_am_not_there()");
+	BOOST_CHECK_EQUAL(call.expectations.failure, true);
+	BOOST_CHECK_EQUAL(call.expectations.parameters.at(0).abiType.type, ABIType::Failure);
+	ABI_CHECK(call.expectations.rawBytes(), bytes{});
 }
 
 BOOST_AUTO_TEST_CASE(non_existent_call_revert)
 {
 	char const* source = R"(
 		// i_am_not_there()
-		// -> FAILURE
+		// -> FAILURE # This is can be either REVERT or a different EVM failure #
 	)";
 	auto const calls = parse(source);
 	BOOST_CHECK_EQUAL(calls.size(), 1);
 
 	auto const& call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::MultiLine);
 	BOOST_CHECK_EQUAL(call.signature, "i_am_not_there()");
-	BOOST_CHECK_EQUAL(call.expectations.status, false);
+	BOOST_CHECK_EQUAL(call.expectations.parameters.at(0).abiType.type, ABIType::Failure);
+	ABI_CHECK(call.expectations.rawBytes(), bytes{});
+	BOOST_CHECK_EQUAL(call.expectations.failure, true);
 }
 
 BOOST_AUTO_TEST_CASE(call_comments)
 {
 	char const* source = R"(
-		// f() # This is a comment #
-		// -> 1 # This is another comment #
+		// f() # Parameter comment # -> 1 # Expectation comment #
+		// f() # Parameter comment #
+		// -> 1 # Expectation comment #
 	)";
 	auto const calls = parse(source);
-	BOOST_CHECK_EQUAL(calls.size(), 1);
+	BOOST_CHECK_EQUAL(calls.size(), 2);
 
-	auto const& call = calls.at(0);
-	BOOST_CHECK_EQUAL(call.signature, "f()");
-	BOOST_CHECK_EQUAL(call.arguments.comment, " This is a comment ");
-	BOOST_CHECK_EQUAL(call.expectations.comment, " This is another comment ");
-	ABI_CHECK(call.expectations.rawBytes, toBigEndian(u256{1}));
+	BOOST_CHECK_EQUAL(calls.at(0).displayMode, FunctionCall::DisplayMode::SingleLine);
+	BOOST_CHECK_EQUAL(calls.at(1).displayMode, FunctionCall::DisplayMode::MultiLine);
+
+	for (auto const& call: calls)
+	{
+		BOOST_CHECK_EQUAL(call.signature, "f()");
+		BOOST_CHECK_EQUAL(call.arguments.comment, " Parameter comment ");
+		BOOST_CHECK_EQUAL(call.expectations.comment, " Expectation comment ");
+		ABI_CHECK(call.expectations.rawBytes(), toBigEndian(u256{1}));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments)
@@ -107,10 +156,44 @@ BOOST_AUTO_TEST_CASE(call_arguments)
 	BOOST_CHECK_EQUAL(calls.size(), 1);
 
 	auto const& call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::MultiLine);
 	BOOST_CHECK_EQUAL(call.signature, "f(uint256)");
 	BOOST_CHECK_EQUAL(call.value, u256{314});
-	ABI_CHECK(call.arguments.rawBytes, toBigEndian(u256{5}));
-	ABI_CHECK(call.expectations.rawBytes, toBigEndian(u256{4}));
+	BOOST_CHECK_EQUAL(call.expectations.failure, false);
+	ABI_CHECK(call.arguments.rawBytes(), toBigEndian(u256{5}));
+	ABI_CHECK(call.expectations.rawBytes(), toBigEndian(u256{4}));
+}
+
+BOOST_AUTO_TEST_CASE(call_expectations_empty_single_line)
+{
+	char const* source = R"(
+		// _exp_() ->
+	)";
+	auto const calls = parse(source);
+	BOOST_CHECK_EQUAL(calls.size(), 1);
+
+	auto call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::SingleLine);
+	BOOST_CHECK_EQUAL(call.signature, "_exp_()");
+	ABI_CHECK(call.arguments.rawBytes(), bytes{});
+	ABI_CHECK(call.expectations.rawBytes(), bytes{});
+}
+
+BOOST_AUTO_TEST_CASE(call_expectations_empty_multiline)
+{
+	char const* source = R"(
+		// _exp_()
+		// ->
+		// # This call should not return a value, but still succeed. #
+	)";
+	auto const calls = parse(source);
+	BOOST_CHECK_EQUAL(calls.size(), 1);
+
+	auto call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::MultiLine);
+	BOOST_CHECK_EQUAL(call.signature, "_exp_()");
+	ABI_CHECK(call.arguments.rawBytes(), bytes{});
+	ABI_CHECK(call.expectations.rawBytes(), bytes{});
 }
 
 BOOST_AUTO_TEST_CASE(call_expectations_missing)
@@ -130,8 +213,7 @@ BOOST_AUTO_TEST_CASE(call_ether_value_expectations_missing)
 BOOST_AUTO_TEST_CASE(call_arguments_invalid)
 {
 	char const* source = R"(
-		// f(uint256): abc
-		// -> 1
+		// f(uint256): abc -> 1
 	)";
 	BOOST_CHECK_THROW(parse(source), langutil::Error);
 }
@@ -139,8 +221,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_invalid)
 BOOST_AUTO_TEST_CASE(call_ether_value_invalid)
 {
 	char const* source = R"(
-		// f(uint256), abc : 1
-		// -> 1
+		// f(uint256), abc : 1 -> 1
 	)";
 	BOOST_CHECK_THROW(parse(source), langutil::Error);
 }
@@ -148,8 +229,7 @@ BOOST_AUTO_TEST_CASE(call_ether_value_invalid)
 BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
 {
 	char const* source = R"(
-		// f(uint256), 2 btc : 1
-		// -> 1
+		// f(uint256), 2 btc : 1 -> 1
 	)";
 	BOOST_CHECK_THROW(parse(source), langutil::Error);
 }
@@ -157,46 +237,79 @@ BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
 BOOST_AUTO_TEST_CASE(call_arguments_mismatch)
 {
 	char const* source = R"(
-		// f(uint256, uint256): 1 # This only throws at runtime #
+		// f(uint256):
+		// 1, 2
+		// # This only throws at runtime #
 		// -> 1
 	)";
 	auto const calls = parse(source);
 	BOOST_CHECK_EQUAL(calls.size(), 1);
 
 	auto const& call = calls.at(0);
-	BOOST_CHECK_EQUAL(call.signature, "f(uint256,uint256)");
-	ABI_CHECK(call.arguments.rawBytes, toBigEndian(u256{1}));
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::MultiLine);
+	BOOST_CHECK_EQUAL(call.signature, "f(uint256)");
+	ABI_CHECK(call.arguments.rawBytes(), toBigEndian(u256{1}) + toBigEndian(u256{2}));
+	BOOST_CHECK_EQUAL(call.expectations.failure, false);
 }
 
 BOOST_AUTO_TEST_CASE(call_multiple_arguments)
 {
 	char const* source = R"(
-		// test(uint256, uint256): 1, 2
-		// -> 1, 1
+		// test(uint256, uint256):
+		// 1,
+		// 2
+		// -> 1,
+		// 1
 	)";
 	auto const calls = parse(source);
 	BOOST_CHECK_EQUAL(calls.size(), 1);
 
 	auto const& call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::MultiLine);
 	BOOST_CHECK_EQUAL(call.signature, "test(uint256,uint256)");
-	ABI_CHECK(call.arguments.rawBytes, toBigEndian(u256{1}) + toBigEndian(u256{2}));
+	ABI_CHECK(call.arguments.rawBytes(), toBigEndian(u256{1}) + toBigEndian(u256{2}));
+	BOOST_CHECK_EQUAL(call.expectations.failure, false);
 }
 
 BOOST_AUTO_TEST_CASE(call_multiple_arguments_mixed_format)
 {
 	char const* source = R"(
-		// test(uint256, uint256),314 ether: 1, -2
+		// test(uint256, uint256), 314 ether:
+		// 1, -2
 		// -> -1, 2
 	)";
 	auto const calls = parse(source);
 	BOOST_CHECK_EQUAL(calls.size(), 1);
 
 	auto const& call = calls.at(0);
+	BOOST_CHECK_EQUAL(call.displayMode, FunctionCall::DisplayMode::MultiLine);
 	BOOST_CHECK_EQUAL(call.signature, "test(uint256,uint256)");
 	BOOST_CHECK_EQUAL(call.value, u256{314});
-	ABI_CHECK(call.arguments.rawBytes, toBigEndian(u256{1}) + toBigEndian(u256{-2}));
-	ABI_CHECK(call.expectations.rawBytes, toBigEndian(u256{-1}) + toBigEndian(u256{2}));
+	ABI_CHECK(call.arguments.rawBytes(), toBigEndian(u256{1}) + toBigEndian(u256{-2}));
+	BOOST_CHECK_EQUAL(call.expectations.failure, false);
+	ABI_CHECK(call.expectations.rawBytes(), toBigEndian(u256{-1}) + toBigEndian(u256{2}));
 }
+
+BOOST_AUTO_TEST_CASE(call_arguments_colon)
+{
+	char const* source = R"(
+		// h256():
+		// -> 1
+	)";
+	BOOST_CHECK_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_newline_colon)
+{
+	char const* source = R"(
+		// h256()
+		// :
+		// -> 1
+	)";
+	BOOST_CHECK_THROW(parse(source), langutil::Error);
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

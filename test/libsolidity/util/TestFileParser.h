@@ -19,6 +19,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <iosfwd>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -53,7 +54,7 @@ namespace test
 	T(Arrow, "->", 0)              \
 	T(Newline, "//", 0)            \
 	/* Literals & identifier */    \
-	T(Comment, "comment", 0)       \
+	T(Comment, "#", 0)             \
 	T(Number, "number", 0)         \
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
@@ -61,7 +62,6 @@ namespace test
 	K(UInt, "uint256", 0)          \
 	/* special keywords */         \
 	K(Failure, "FAILURE", 0)       \
-
 
 enum class SoltToken : unsigned int {
 #define T(name, string, precedence) name,
@@ -82,16 +82,47 @@ struct ABIType
 	enum Type {
 		UnsignedDec,
 		SignedDec,
-		Invalid
+		Failure,
+		None
 	};
-	ABIType(): type(ABIType::Invalid), size(0) { }
+	ABIType(): type(ABIType::None), size(0) { }
 	ABIType(Type _type, size_t _size): type(_type), size(_size) { }
 
 	Type type;
 	size_t size;
 };
 
-using ABITypeList = std::vector<ABIType>;
+/**
+ * Helper that can hold format information retrieved
+ * while scanning through a parameter list in sol_t.
+ */
+struct FormatInfo
+{
+	bool newline;
+};
+
+/**
+ * Parameter abstraction used for the encoding and decoding
+ * function parameter lists and expectation lists.
+ * A parameter list is usually a comma-separated list of literals.
+ * It should not be possible to call create a parameter holding
+ * an identifier, but if so, the ABI type would be invalid.
+ */
+struct Parameter
+{
+	/// ABI encoded `bytes` of parsed expectations. This `bytes`
+	/// is compared to the actual result of a function call
+	/// and is taken into account while validating it.
+	bytes rawBytes;
+	/// Types that were used to encode `rawBytes`. Expectations
+	/// are usually comma separated literals. Their type is auto-
+	/// detected and retained in order to format them later on.
+	ABIType abiType;
+	/// Format info attached to the parameter. It handles newlines given
+	/// in the declaration of it.
+	FormatInfo format;
+};
+using ParameterList = std::vector<Parameter>;
 
 /**
  * Represents the expected result of a function call after it has been executed. This may be a single
@@ -102,20 +133,24 @@ using ABITypeList = std::vector<ABIType>;
  */
 struct FunctionCallExpectations
 {
-	/// ABI encoded `bytes` of parsed expectations. This `bytes`
-	/// is compared to the actual result of a function call
-	/// and is taken into account while validating it.
-	bytes rawBytes;
-	/// Types that were used to encode `rawBytes`. Expectations
-	/// are usually comma seperated literals. Their type is auto-
-	/// detected and retained in order to format them later on.
-	ABITypeList formats;
+	/// Representation of the comma-separated (or empty) list of expectation parameters given
+	/// to a function call.
+	ParameterList parameters;
 	/// Expected status of the transaction. It can be either
 	/// a REVERT or a different EVM failure (e.g. out-of-gas).
-	bool status = true;
+	bool failure = true;
 	/// A Comment that can be attached to the expectations,
 	/// that is retained and can be displayed.
 	std::string comment;
+	/// ABI encoded `bytes` of parsed parameters. This `bytes`
+	/// passed to the function call.
+	bytes rawBytes() const
+	{
+		bytes raw;
+		for (auto const& param: parameters)
+			raw += param.rawBytes;
+		return raw;
+	}
 };
 
 /**
@@ -126,16 +161,22 @@ struct FunctionCallExpectations
  */
 struct FunctionCallArgs
 {
-	/// ABI encoded `bytes` of parsed parameters. This `bytes`
-	/// passed to the function call.
-	bytes rawBytes;
 	/// Types that were used to encode `rawBytes`. Parameters
-	/// are usually comma seperated literals. Their type is auto-
+	/// are usually comma separated literals. Their type is auto-
 	/// detected and retained in order to format them later on.
-	ABITypeList formats;
+	ParameterList parameters;
 	/// A Comment that can be attached to the expectations,
 	/// that is retained and can be displayed.
 	std::string comment;
+	/// ABI encoded `bytes` of parsed parameters. This `bytes`
+	/// passed to the function call.
+	bytes rawBytes() const
+	{
+		bytes raw;
+		for (auto const& param: parameters)
+			raw += param.rawBytes;
+		return raw;
+	}
 };
 
 /**
@@ -156,6 +197,16 @@ struct FunctionCall
 	/// They are checked against the actual results and their
 	/// `bytes` representation, as well as the transaction status.
 	FunctionCallExpectations expectations;
+	/// single / multi-line mode will be detected as follows:
+	/// every newline (//) in source results in a function call
+	/// that has its display mode set to multi-mode. Function and
+	/// result parameter lists are an exception: a single parameter
+	/// stores a format information that contains a newline definition.
+	enum DisplayMode {
+		SingleLine,
+		MultiLine
+	};
+	DisplayMode displayMode = DisplayMode::SingleLine;
 };
 
 /**
@@ -196,6 +247,7 @@ private:
 	{
 	public:
 		/// Constructor that takes an input stream \param _stream to operate on.
+		/// It reads all lines into one single line, keeping the newlines.
 		Scanner(std::istream& _stream) { readStream(_stream); }
 
 		/// Reads input stream into a single line and resets the current iterator.
@@ -253,19 +305,34 @@ private:
 	/// Parses the expected result of a function call execution.
 	FunctionCallExpectations parseFunctionCallExpectations();
 
+	/// Parses the next parameter in a comma separated list.
+	/// Takes a newly parsed, and type-annotated `bytes` argument,
+	/// appends it to the internal `bytes` buffer of the parameter. It can also
+	/// store newlines found in the source, that are needed to
+	/// format input and output of the interactive update.
+	Parameter parseParameter();
+
 	/// Parses and converts the current literal to its byte representation and
 	/// preserves the chosen ABI type. Based on that type information, the driver of
 	/// this parser can format arguments, expectations and results. Supported types:
-	/// - unsigned and signed decimal number literals
-	/// Throws a ParserError if data is encoded incorrectly or
+	/// - unsigned and signed decimal number literals.
+	/// Returns invalid ABI type for empty literal. This is needed in order
+	/// to detect empty expectations. Throws a ParserError if data is encoded incorrectly or
 	/// if data type is not supported.
 	std::pair<bytes, ABIType> parseABITypeLiteral();
+
+	/// Accepts a newline `//` and returns DisplayMode::MultiLine
+	/// if found, DisplayMode::SingleLine otherwise.
+	FunctionCall::DisplayMode parseNewline();
+
+	/// Parses a comment
+	std::string parseComment();
 
 	/// Parses the current number literal.
 	std::string parseNumber();
 
 	/// Tries to convert \param _literal to `uint256` and throws if
-	/// if conversion failed.
+	/// conversion fails.
 	u256 convertNumber(std::string const& _literal);
 
 	/// A scanner instance
