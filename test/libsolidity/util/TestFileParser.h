@@ -59,7 +59,6 @@ namespace test
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
-	K(UInt, "uint256", 0)          \
 	/* special keywords */         \
 	K(Failure, "FAILURE", 0)       \
 
@@ -75,7 +74,9 @@ enum class SoltToken : unsigned int {
  * retrieved while parsing a test. This information is used
  * for the conversion of human-readable function arguments and
  * return values to `bytes` and vice-versa.
- * Defaults to an invalid 0-byte representation.
+ * Defaults to None, a 0-byte representation. 0-bytes
+ * can also be interpreted as Failure, which means
+ * either a REVERT or another EVM failure.
  */
 struct ABIType
 {
@@ -85,11 +86,8 @@ struct ABIType
 		Failure,
 		None
 	};
-	ABIType(): type(ABIType::None), size(0) { }
-	ABIType(Type _type, size_t _size): type(_type), size(_size) { }
-
-	Type type;
-	size_t size;
+	Type type = ABIType::None;
+	size_t size = 0;
 };
 
 /**
@@ -102,17 +100,19 @@ struct FormatInfo
 };
 
 /**
- * Parameter abstraction used for the encoding and decoding
- * function parameter lists and expectation lists.
+ * Parameter abstraction used for the encoding and decoding of
+ * function parameter and expectation / return value lists.
  * A parameter list is usually a comma-separated list of literals.
  * It should not be possible to call create a parameter holding
  * an identifier, but if so, the ABI type would be invalid.
  */
 struct Parameter
 {
-	/// ABI encoded `bytes` of parsed expectations. This `bytes`
-	/// is compared to the actual result of a function call
-	/// and is taken into account while validating it.
+	/// ABI encoded / decoded `bytes` of values.
+	/// These `bytes` are used to pass values to function calls
+	/// and also to store expected return vales. These are
+	/// compared to the actual result of a function call
+	/// and used for validating it.
 	bytes rawBytes;
 	/// Types that were used to encode `rawBytes`. Expectations
 	/// are usually comma separated literals. Their type is auto-
@@ -133,21 +133,22 @@ using ParameterList = std::vector<Parameter>;
  */
 struct FunctionCallExpectations
 {
-	/// Representation of the comma-separated (or empty) list of expectation parameters given
-	/// to a function call.
-	ParameterList parameters;
+	/// Representation of the comma-separated (or empty) list of expectated result values
+	/// attached to the function call object. It is checked against the actual result of
+	/// a function call when used in test framework.
+	ParameterList result;
 	/// Expected status of the transaction. It can be either
 	/// a REVERT or a different EVM failure (e.g. out-of-gas).
 	bool failure = true;
 	/// A Comment that can be attached to the expectations,
 	/// that is retained and can be displayed.
 	std::string comment;
-	/// ABI encoded `bytes` of parsed parameters. This `bytes`
-	/// passed to the function call.
+	/// ABI encoded `bytes` of parsed expected return values. It is checked
+	/// against the actual result of a function call when used in test framework.
 	bytes rawBytes() const
 	{
 		bytes raw;
-		for (auto const& param: parameters)
+		for (auto const& param: result)
 			raw += param.rawBytes;
 		return raw;
 	}
@@ -168,7 +169,7 @@ struct FunctionCallArgs
 	/// A Comment that can be attached to the expectations,
 	/// that is retained and can be displayed.
 	std::string comment;
-	/// ABI encoded `bytes` of parsed parameters. This `bytes`
+	/// ABI encoded `bytes` of parsed parameters. These `bytes`
 	/// passed to the function call.
 	bytes rawBytes() const
 	{
@@ -257,8 +258,6 @@ private:
 		void scanNextToken();
 
 		SoltToken currentToken() { return m_currentToken.first; }
-		SoltToken peekToken() { return m_nextToken.first; }
-
 		std::string currentLiteral() { return m_currentToken.second; }
 
 		std::string scanComment();
@@ -283,7 +282,6 @@ private:
 		std::string m_currentLiteral;
 
 		TokenDesc m_currentToken;
-		TokenDesc m_nextToken;
 	};
 
 	bool accept(SoltToken _token, bool const _expect = false);
@@ -320,10 +318,6 @@ private:
 	/// to detect empty expectations. Throws a ParserError if data is encoded incorrectly or
 	/// if data type is not supported.
 	std::pair<bytes, ABIType> parseABITypeLiteral();
-
-	/// Accepts a newline `//` and returns DisplayMode::MultiLine
-	/// if found, DisplayMode::SingleLine otherwise.
-	FunctionCall::DisplayMode parseNewline();
 
 	/// Parses a comment
 	std::string parseComment();

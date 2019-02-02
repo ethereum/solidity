@@ -34,21 +34,13 @@ using namespace std;
 
 namespace
 {
-	bool isDecimalDigit(char c)
-	{
-		return '0' <= c && c <= '9';
-	}
-	bool isWhiteSpace(char c)
-	{
-		return c == ' ' || c == '\n' || c == '\t' || c == '\r';
-	}
 	bool isIdentifierStart(char c)
 	{
 		return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 	}
 	bool isIdentifierPart(char c)
 	{
-		return isIdentifierStart(c) || isDecimalDigit(c);
+		return isIdentifierStart(c) || isdigit(c);
 	}
 }
 
@@ -57,33 +49,41 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 	vector<FunctionCall> calls;
 	if (!accept(SoltToken::EOS))
 	{
-		// TODO: check initial token state
-		expect(SoltToken::Unknown);
+		assert(m_scanner.currentToken() == SoltToken::Unknown);
+		m_scanner.scanNextToken();
+
 		while (!accept(SoltToken::EOS))
 		{
 			if (!accept(SoltToken::Whitespace))
 			{
 				FunctionCall call;
 
-				expect(SoltToken::Newline);
-				call.signature = parseFunctionSignature();
+				/// If this is not the first call in the test,
+				/// the last call to parseParameter could have eaten the
+				/// new line already. This could only be fixed with a one
+				/// token lookahead that checks parseParameter
+				/// if the next token is an identifier.
+				if (calls.empty())
+					expect(SoltToken::Newline);
+				else
+					accept(SoltToken::Newline, true);
 
+				call.signature = parseFunctionSignature();
 				if (accept(SoltToken::Comma, true))
 					call.value = parseFunctionCallValue();
 				if (accept(SoltToken::Colon, true))
 					call.arguments = parseFunctionCallArguments();
 
-				call.displayMode = parseNewline();
+				if (accept(SoltToken::Newline, true))
+					call.displayMode = FunctionCall::DisplayMode::MultiLine;
+
 				call.arguments.comment = parseComment();
 
 				if (accept(SoltToken::Newline, true))
 					call.displayMode = FunctionCall::DisplayMode::MultiLine;
+
 				expect(SoltToken::Arrow);
-
 				call.expectations = parseFunctionCallExpectations();
-
-				if (accept(SoltToken::Newline, false))
-					call.displayMode = parseNewline();
 				call.expectations.comment = parseComment();
 
 				calls.emplace_back(std::move(call));
@@ -121,12 +121,12 @@ bool TestFileParser::accept(SoltToken _token, bool const _expect)
 bool TestFileParser::expect(SoltToken _token, bool const _advance)
 {
 	if (m_scanner.currentToken() != _token)
-		throw Error
-			(Error::Type::ParserError,
-					"Unexpected " + formatToken(m_scanner.currentToken()) + ": \"" +
-					m_scanner.currentLiteral() + "\". " +
-					"Expected \"" + formatToken(_token) + "\"."
-					);
+		throw Error(
+			Error::Type::ParserError,
+			"Unexpected " + formatToken(m_scanner.currentToken()) + ": \"" +
+			m_scanner.currentLiteral() + "\". " +
+			"Expected \"" + formatToken(_token) + "\"."
+			);
 	if (_advance)
 		m_scanner.scanNextToken();
 	return true;
@@ -143,13 +143,13 @@ string TestFileParser::parseFunctionSignature()
 	while (!accept(SoltToken::RParen))
 	{
 		signature += m_scanner.currentLiteral();
-		expect(SoltToken::UInt);
+		expect(SoltToken::Identifier);
 		while (accept(SoltToken::Comma))
 		{
 			signature += m_scanner.currentLiteral();
 			expect(SoltToken::Comma);
 			signature += m_scanner.currentLiteral();
-			expect(SoltToken::UInt);
+			expect(SoltToken::Identifier);
 		}
 	}
 	signature += formatToken(SoltToken::RParen);
@@ -184,15 +184,18 @@ FunctionCallExpectations TestFileParser::parseFunctionCallExpectations()
 
 	auto param = parseParameter();
 	if (param.abiType.type == ABIType::None)
+	{
+		expectations.failure = false;
 		return expectations;
-	expectations.parameters.emplace_back(param);
+	}
+	expectations.result.emplace_back(param);
 
 	while (accept(SoltToken::Comma, true))
-		expectations.parameters.emplace_back(parseParameter());
+		expectations.result.emplace_back(parseParameter());
 
 	/// We have always one virtual parameter in the parameter list.
 	/// If its type is FAILURE, the expected result is also a REVERT etc.
-	if (expectations.parameters.at(0).abiType.type != ABIType::Failure)
+	if (expectations.result.at(0).abiType.type != ABIType::Failure)
 		expectations.failure = false;
 	return expectations;
 }
@@ -212,8 +215,9 @@ pair<bytes, ABIType> TestFileParser::parseABITypeLiteral()
 {
 	try
 	{
-		u256 number;
-		ABIType abiType;
+		u256 number{0};
+		ABIType abiType{ABIType::None, 0};
+
 		if (accept(SoltToken::Sub))
 		{
 			abiType = ABIType{ABIType::SignedDec, 32};
@@ -227,7 +231,7 @@ pair<bytes, ABIType> TestFileParser::parseABITypeLiteral()
 				abiType = ABIType{ABIType::UnsignedDec, 32};
 				number = convertNumber(parseNumber());
 			}
-			if (accept(SoltToken::Failure, true))
+			else if (accept(SoltToken::Failure, true))
 			{
 				abiType = ABIType{ABIType::Failure, 0};
 				return make_pair(bytes{}, abiType);
@@ -239,13 +243,6 @@ pair<bytes, ABIType> TestFileParser::parseABITypeLiteral()
 	{
 		throw Error(Error::Type::ParserError, "Number encoding invalid.");
 	}
-}
-
-solidity::test::FunctionCall::DisplayMode TestFileParser::parseNewline()
-{
-	if (accept(SoltToken::Newline, true))
-		return FunctionCall::DisplayMode::MultiLine;
-	return FunctionCall::DisplayMode::SingleLine;
 }
 
 string TestFileParser::parseComment()
@@ -286,7 +283,6 @@ void TestFileParser::Scanner::scanNextToken()
 {
 	auto detectToken = [](std::string const& _literal = "") -> TokenDesc {
 		if (_literal == "ether") return TokenDesc{SoltToken::Ether, _literal};
-		if (_literal == "uint256") return TokenDesc{SoltToken::UInt, _literal};
 		if (_literal == "FAILURE") return TokenDesc{SoltToken::Failure, _literal};
 		return TokenDesc{SoltToken::Identifier, _literal};
 	};
@@ -336,9 +332,9 @@ void TestFileParser::Scanner::scanNextToken()
 				TokenDesc detectedToken = detectToken(scanIdentifierOrKeyword());
 				token = selectToken(detectedToken.first, detectedToken.second);
 			}
-			else if (isDecimalDigit(current()))
+			else if (isdigit(current()))
 				token = selectToken(SoltToken::Number, scanNumber());
-			else if (isWhiteSpace(current()))
+			else if (isspace(current()))
 				token = selectToken(SoltToken::Whitespace);
 			else if (isEndOfLine())
 				token = selectToken(SoltToken::EOS);
@@ -348,8 +344,6 @@ void TestFileParser::Scanner::scanNextToken()
 		}
 	}
 	while (token.first == SoltToken::Whitespace);
-
-	m_nextToken = token;
 	m_currentToken = token;
 }
 
@@ -382,7 +376,7 @@ string TestFileParser::Scanner::scanNumber()
 {
 	string number;
 	number += current();
-	while (isDecimalDigit(peek()))
+	while (isdigit(peek()))
 	{
 		advance();
 		number += current();
