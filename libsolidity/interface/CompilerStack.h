@@ -117,43 +117,39 @@ public:
 	static boost::optional<Remapping> parseRemapping(std::string const& _remapping);
 
 	/// Sets path remappings.
+	/// Must be set before parsing.
 	void setRemappings(std::vector<Remapping> const& _remappings);
 
 	/// Sets library addresses. Addresses are cleared iff @a _libraries is missing.
-	/// Will not take effect before running compile.
-	void setLibraries(std::map<std::string, h160> const& _libraries = std::map<std::string, h160>{})
-	{
-		m_libraries = _libraries;
-	}
+	/// Must be set before parsing.
+	void setLibraries(std::map<std::string, h160> const& _libraries = std::map<std::string, h160>{});
 
 	/// Changes the optimiser settings.
-	/// Will not take effect before running compile.
-	void setOptimiserSettings(bool _optimize, unsigned _runs = 200)
-	{
-		m_optimize = _optimize;
-		m_optimizeRuns = _runs;
-	}
+	/// Must be set before parsing.
+	void setOptimiserSettings(bool _optimize, unsigned _runs = 200);
 
 	/// Set the EVM version used before running compile.
 	/// When called without an argument it will revert to the default version.
+	/// Must be set before parsing.
 	void setEVMVersion(langutil::EVMVersion _version = langutil::EVMVersion{});
 
 	/// Sets the list of requested contract names. If empty, no filtering is performed and every contract
 	/// found in the supplied sources is compiled. Names are cleared iff @a _contractNames is missing.
-	void setRequestedContractNames(std::set<std::string> const& _contractNames = std::set<std::string>{})
-	{
+	void setRequestedContractNames(std::set<std::string> const& _contractNames = std::set<std::string>{}) {
 		m_requestedContractNames = _contractNames;
 	}
 
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
-	void useMetadataLiteralSources(bool _metadataLiteralSources) { m_metadataLiteralSources = _metadataLiteralSources; }
+	/// Must be set before parsing.
+	void useMetadataLiteralSources(bool _metadataLiteralSources);
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
 	bool addSource(std::string const& _name, std::string const& _content, bool _isLibrary = false);
 
 	/// Adds a response to an SMTLib2 query (identified by the hash of the query input).
-	void addSMTLib2Response(h256 const& _hash, std::string const& _response) { m_smtlib2Responses[_hash] = _response; }
+	/// Must be set before parsing.
+	void addSMTLib2Response(h256 const& _hash, std::string const& _response);
 
 	/// Parses all source units that were added
 	/// @returns false on error.
