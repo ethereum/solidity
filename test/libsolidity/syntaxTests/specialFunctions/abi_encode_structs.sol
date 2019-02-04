@@ -13,5 +13,5 @@ contract C {
 // ----
 // TypeError: (131-132): This type cannot be encoded.
 // TypeError: (134-135): This type cannot be encoded.
-// TypeError: (200-201): This type cannot be encoded.
-// TypeError: (203-204): This type cannot be encoded.
+// TypeError: (200-201): Type not supported in packed mode.
+// TypeError: (203-204): Type not supported in packed mode.

@@ -12,3 +12,5 @@ contract C {
 }
 // ----
 // Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
+// TypeError: (191-192): Type not supported in packed mode.
+// TypeError: (194-195): Type not supported in packed mode.
