@@ -192,7 +192,8 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	bool atTopOfStack = true;
 	for (int varIndex = numVariables - 1; varIndex >= 0; --varIndex)
 	{
-		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(_varDecl.variables[varIndex].name));
+		YulString varName = _varDecl.variables[varIndex].name;
+		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(varName));
 		m_context->variableStackHeights[&var] = height + varIndex;
 		if (!m_allowStackOpt)
 			continue;
@@ -217,7 +218,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			m_unusedStackSlots.erase(m_unusedStackSlots.begin());
 			m_context->variableStackHeights[&var] = slot;
 			m_assembly.setSourceLocation(_varDecl.location);
-			if (int heightDiff = variableHeightDiff(var, true))
+			if (int heightDiff = variableHeightDiff(var, varName, true))
 				m_assembly.appendInstruction(solidity::swapInstruction(heightDiff - 1));
 			m_assembly.appendInstruction(solidity::Instruction::POP);
 			--m_stackAdjustment;
@@ -353,7 +354,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 		{
 			// TODO: opportunity for optimization: Do not DUP if this is the last reference
 			// to the top most element of the stack
-			if (int heightDiff = variableHeightDiff(_var, false))
+			if (int heightDiff = variableHeightDiff(_var, _identifier.name, false))
 				m_assembly.appendInstruction(solidity::dupInstruction(heightDiff));
 			else
 				// Store something to balance the stack
@@ -542,7 +543,14 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		for (size_t i = 0; i < _function.returnVariables.size(); ++i)
 			stackLayout.push_back(i); // Move return values down, but keep order.
 
-		solAssert(stackLayout.size() <= 17, "Stack too deep");
+		if (stackLayout.size() > 17)
+			BOOST_THROW_EXCEPTION(StackTooDeepError() << errinfo_comment(
+				"The function " +
+				_function.name.str() +
+				" has " +
+				to_string(stackLayout.size() - 17) +
+				" parameters or return variables too many to fit the stack size."
+			));
 		while (!stackLayout.empty() && stackLayout.back() != int(stackLayout.size() - 1))
 			if (stackLayout.back() < 0)
 			{
@@ -711,7 +719,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	if (auto var = m_scope->lookup(_variableName.name))
 	{
 		Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
-		if (int heightDiff = variableHeightDiff(_var, true))
+		if (int heightDiff = variableHeightDiff(_var, _variableName.name, true))
 			m_assembly.appendInstruction(solidity::swapInstruction(heightDiff - 1));
 		m_assembly.appendInstruction(solidity::Instruction::POP);
 		decreaseReference(_variableName.name, _var);
@@ -726,19 +734,21 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-int CodeTransform::variableHeightDiff(Scope::Variable const& _var, bool _forSwap) const
+int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap) const
 {
 	solAssert(m_context->variableStackHeights.count(&_var), "");
 	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
-	if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
-	{
-		solUnimplemented(
-			"Variable inaccessible, too deep inside stack (" + to_string(heightDiff) + ")"
-		);
-		return 0;
-	}
-	else
-		return heightDiff;
+	solAssert(heightDiff > (_forSwap ? 1 : 0), "Negative stack difference for variable.");
+	int limit = _forSwap ? 17 : 16;
+	if (heightDiff > limit)
+		BOOST_THROW_EXCEPTION(StackTooDeepError() << errinfo_comment(
+			"Variable " +
+			_varName.str() +
+			" is " +
+			to_string(heightDiff - limit) +
+			" slot(s) too deep inside the stack."
+		));
+	return heightDiff;
 }
 
 void CodeTransform::expectDeposit(int _deposit, int _oldHeight) const

@@ -184,14 +184,25 @@ void CodeGenerator::assemble(
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	CodeTransform(
-		assemblyAdapter,
-		_analysisInfo,
-		_parsedData,
-		*EVMDialect::strictAssemblyForEVM(),
-		_optimize,
-		false,
-		_identifierAccess,
-		_useNamedLabelsForFunctions
-	)(_parsedData);
+	try
+	{
+		CodeTransform(
+			assemblyAdapter,
+			_analysisInfo,
+			_parsedData,
+			*EVMDialect::strictAssemblyForEVM(),
+			_optimize,
+			false,
+			_identifierAccess,
+			_useNamedLabelsForFunctions
+		)(_parsedData);
+	}
+	catch (StackTooDeepError const& _e)
+	{
+		BOOST_THROW_EXCEPTION(
+			InternalCompilerError() << errinfo_comment(
+				"Stack too deep when compiling inline assembly" +
+				(_e.comment() ? ": " + *_e.comment() : ".")
+			));
+	}
 }
