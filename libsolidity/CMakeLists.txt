@@ -102,7 +102,7 @@ set(sources
 	parsing/Token.h
 )
 
-find_package(Z3 QUIET)
+find_package(Z3 4.6.0)
 if (${Z3_FOUND})
   add_definitions(-DHAVE_Z3)
   message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
