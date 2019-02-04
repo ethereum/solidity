@@ -37,6 +37,7 @@
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -169,6 +170,10 @@ void OptimiserSuite::run(
 	ExpressionJoiner::run(ast);
 	Rematerialiser::run(*_dialect, ast);
 	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+
+	(FunctionGrouper{})(ast);
+	StackCompressor::run(_dialect, ast);
+	(BlockFlattener{})(ast);
 
 	_ast = std::move(ast);
 }
