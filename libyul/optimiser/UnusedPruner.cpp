@@ -35,10 +35,15 @@ using namespace yul;
 UnusedPruner::UnusedPruner(Dialect const& _dialect, Block& _ast, set<YulString> const& _externallyUsedFunctions):
 	m_dialect(_dialect)
 {
-	ReferencesCounter counter;
-	counter(_ast);
+	m_references = ReferencesCounter::countReferences(_ast);
+	for (auto const& f: _externallyUsedFunctions)
+		++m_references[f];
+}
 
-	m_references = counter.references();
+UnusedPruner::UnusedPruner(Dialect const& _dialect, FunctionDefinition& _function, set<YulString> const& _externallyUsedFunctions):
+	m_dialect(_dialect)
+{
+	m_references = ReferencesCounter::countReferences(_function);
 	for (auto const& f: _externallyUsedFunctions)
 		++m_references[f];
 }
@@ -111,6 +116,21 @@ void UnusedPruner::runUntilStabilised(
 	{
 		UnusedPruner pruner(_dialect, _ast, _externallyUsedFunctions);
 		pruner(_ast);
+		if (!pruner.shouldRunAgain())
+			return;
+	}
+}
+
+void UnusedPruner::runUntilStabilised(
+	Dialect const& _dialect,
+	FunctionDefinition& _function,
+	set<YulString> const& _externallyUsedFunctions
+)
+{
+	while (true)
+	{
+		UnusedPruner pruner(_dialect, _function, _externallyUsedFunctions);
+		pruner(_function);
 		if (!pruner.shouldRunAgain())
 			return;
 	}

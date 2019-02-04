@@ -60,6 +60,13 @@ map<YulString, size_t> ReferencesCounter::countReferences(Block const& _block)
 	return counter.references();
 }
 
+map<YulString, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
+{
+	ReferencesCounter counter;
+	counter(_function);
+	return counter.references();
+}
+
 map<YulString, size_t> ReferencesCounter::countReferences(Expression const& _expression)
 {
 	ReferencesCounter counter;
