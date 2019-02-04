@@ -129,7 +129,7 @@ jobs:
 
   build_x86_linux_cxx17:
     docker:
-      - image: buildpack-deps:bionic
+      - image: buildpack-deps:disco
     environment:
       TERM: xterm
       CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake
@@ -139,8 +139,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            # Note: do not include cvc4 here, it is not C++17 compatible.
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
             ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
