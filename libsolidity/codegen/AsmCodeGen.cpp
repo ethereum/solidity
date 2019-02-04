@@ -184,18 +184,20 @@ void CodeGenerator::assemble(
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
+	shared_ptr<EVMDialect> dialect = EVMDialect::strictAssemblyForEVM();
+	CodeTransform transform(
+		assemblyAdapter,
+		_analysisInfo,
+		_parsedData,
+		*dialect,
+		_optimize,
+		false,
+		_identifierAccess,
+		_useNamedLabelsForFunctions
+	);
 	try
 	{
-		CodeTransform(
-			assemblyAdapter,
-			_analysisInfo,
-			_parsedData,
-			*EVMDialect::strictAssemblyForEVM(),
-			_optimize,
-			false,
-			_identifierAccess,
-			_useNamedLabelsForFunctions
-		)(_parsedData);
+		transform(_parsedData);
 	}
 	catch (StackTooDeepError const& _e)
 	{
@@ -205,4 +207,5 @@ void CodeGenerator::assemble(
 				(_e.comment() ? ": " + *_e.comment() : ".")
 			));
 	}
+	solAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
 }
