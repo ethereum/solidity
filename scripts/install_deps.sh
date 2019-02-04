@@ -162,7 +162,7 @@ case $(uname -s) in
                 # See https://pkgs.alpinelinux.org/
 
                 apk update
-                apk add boost-dev build-base cmake git
+                apk add boost-dev boost-static build-base cmake git
 
                 ;;
 
