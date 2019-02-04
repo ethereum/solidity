@@ -97,7 +97,7 @@ void SSATransform::operator()(Block& _block)
 					varDecl.value
 				));
 				v.emplace_back(move(varDecl));
-				return v;
+				return std::move(v);
 			}
 			else if (_s.type() == typeid(Assignment))
 			{
@@ -115,7 +115,7 @@ void SSATransform::operator()(Block& _block)
 					assignment.value
 				));
 				v.emplace_back(move(assignment));
-				return v;
+				return std::move(v);
 			}
 			else
 				visit(_s);
