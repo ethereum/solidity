@@ -254,7 +254,7 @@
 //     hashCommitments(validateJo_notes, validateJo_n)
 //     let validateJo_b := add(0x300, mul(validateJo_n, validateJo__6))
 //     let validateJo_i := 0
-//     let validateJo_i_1306 := validateJo_i
+//     let validateJo_i_1218 := validateJo_i
 //     for {
 //     }
 //     lt(validateJo_i, validateJo_n)
@@ -263,10 +263,10 @@
 //     }
 //     {
 //         let validateJo__34 := 0x20
-//         let validateJo__351 := add(validateJo__10, mul(validateJo_i, 0xc0))
-//         let validateJo_noteIndex := add(validateJo__351, 0x24)
-//         let validateJo_k := validateJo_i_1306
-//         let validateJo_a := calldataload(add(validateJo__351, 0x44))
+//         let validateJo__329 := add(validateJo__10, mul(validateJo_i, 0xc0))
+//         let validateJo_noteIndex := add(validateJo__329, 0x24)
+//         let validateJo_k := validateJo_i_1218
+//         let validateJo_a := calldataload(add(validateJo__329, 0x44))
 //         let validateJo_c := validateJo_challenge
 //         let validateJo__39 := add(validateJo_i, 0x01)
 //         switch eq(validateJo__39, validateJo_n)
@@ -284,30 +284,30 @@
 //         switch gt(validateJo__39, validateJo_m)
 //         case 1 {
 //             validateJo_kn := addmod(validateJo_kn, sub(validateJo_gen_order, validateJo_k), validateJo_gen_order)
-//             let validateJo_x := mod(mload(validateJo_i_1306), validateJo_gen_order)
+//             let validateJo_x := mod(mload(validateJo_i_1218), validateJo_gen_order)
 //             validateJo_k := mulmod(validateJo_k, validateJo_x, validateJo_gen_order)
 //             validateJo_a := mulmod(validateJo_a, validateJo_x, validateJo_gen_order)
 //             validateJo_c := mulmod(validateJo_challenge, validateJo_x, validateJo_gen_order)
-//             mstore(validateJo_i_1306, keccak256(validateJo_i_1306, validateJo__34))
+//             mstore(validateJo_i_1218, keccak256(validateJo_i_1218, validateJo__34))
 //         }
 //         case 0 {
 //             validateJo_kn := addmod(validateJo_kn, validateJo_k, validateJo_gen_order)
 //         }
 //         let validateJo__52 := 0x40
-//         calldatacopy(0xe0, add(validateJo__351, 164), validateJo__52)
-//         calldatacopy(validateJo__34, add(validateJo__351, 100), validateJo__52)
+//         calldatacopy(0xe0, add(validateJo__329, 164), validateJo__52)
+//         calldatacopy(validateJo__34, add(validateJo__329, 100), validateJo__52)
 //         let validateJo__61 := 0x120
 //         mstore(validateJo__61, sub(validateJo_gen_order, validateJo_c))
 //         let validateJo__62 := 0x60
 //         mstore(validateJo__62, validateJo_k)
 //         mstore(0xc0, validateJo_a)
 //         let validateJo__65 := 0x1a0
-//         let validateJo_result := call(gas(), 7, validateJo_i_1306, 0xe0, validateJo__62, validateJo__65, validateJo__52)
-//         let validateJo_result_303 := and(validateJo_result, call(gas(), 7, validateJo_i_1306, validateJo__34, validateJo__62, validateJo__61, validateJo__52))
+//         let validateJo_result := call(gas(), 7, validateJo_i_1218, 0xe0, validateJo__62, validateJo__65, validateJo__52)
+//         let validateJo_result_303 := and(validateJo_result, call(gas(), 7, validateJo_i_1218, validateJo__34, validateJo__62, validateJo__61, validateJo__52))
 //         let validateJo__80 := 0x160
-//         let validateJo_result_304 := and(validateJo_result_303, call(gas(), 7, validateJo_i_1306, validateJo__6, validateJo__62, validateJo__80, validateJo__52))
-//         let validateJo_result_305 := and(validateJo_result_304, call(gas(), 6, validateJo_i_1306, validateJo__61, validateJo__6, validateJo__80, validateJo__52))
-//         validateJo_result := and(validateJo_result_305, call(gas(), 6, validateJo_i_1306, validateJo__80, validateJo__6, validateJo_b, validateJo__52))
+//         let validateJo_result_304 := and(validateJo_result_303, call(gas(), 7, validateJo_i_1218, validateJo__6, validateJo__62, validateJo__80, validateJo__52))
+//         let validateJo_result_305 := and(validateJo_result_304, call(gas(), 6, validateJo_i_1218, validateJo__61, validateJo__6, validateJo__80, validateJo__52))
+//         validateJo_result := and(validateJo_result_305, call(gas(), 6, validateJo_i_1218, validateJo__80, validateJo__6, validateJo_b, validateJo__52))
 //         if eq(validateJo_i, validateJo_m)
 //         {
 //             mstore(0x260, mload(validateJo__34))
@@ -319,14 +319,14 @@
 //         {
 //             mstore(validateJo__62, validateJo_c)
 //             let validateJo__120 := 0x220
-//             let validateJo_result_307 := and(validateJo_result, call(gas(), 7, validateJo_i_1306, validateJo__34, validateJo__62, validateJo__120, validateJo__52))
-//             let validateJo_result_308 := and(validateJo_result_307, call(gas(), 6, validateJo_i_1306, validateJo__120, validateJo__6, 0x260, validateJo__52))
-//             validateJo_result := and(validateJo_result_308, call(gas(), 6, validateJo_i_1306, validateJo__65, validateJo__6, 0x1e0, validateJo__52))
+//             let validateJo_result_307 := and(validateJo_result, call(gas(), 7, validateJo_i_1218, validateJo__34, validateJo__62, validateJo__120, validateJo__52))
+//             let validateJo_result_308 := and(validateJo_result_307, call(gas(), 6, validateJo_i_1218, validateJo__120, validateJo__6, 0x260, validateJo__52))
+//             validateJo_result := and(validateJo_result_308, call(gas(), 6, validateJo_i_1218, validateJo__65, validateJo__6, 0x1e0, validateJo__52))
 //         }
 //         if iszero(validateJo_result)
 //         {
-//             mstore(validateJo_i_1306, 400)
-//             revert(validateJo_i_1306, validateJo__34)
+//             mstore(validateJo_i_1218, 400)
+//             revert(validateJo_i_1218, validateJo__34)
 //         }
 //         validateJo_b := add(validateJo_b, validateJo__52)
 //     }
@@ -336,13 +336,13 @@
 //     }
 //     if iszero(eq(mod(keccak256(validateJo__24, add(validateJo_b, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd60)), validateJo_gen_order), validateJo_challenge))
 //     {
-//         mstore(validateJo_i_1306, 404)
-//         revert(validateJo_i_1306, 0x20)
+//         mstore(validateJo_i_1218, 404)
+//         revert(validateJo_i_1218, 0x20)
 //     }
-//     mstore(validateJo_i_1306, 0x01)
-//     return(validateJo_i_1306, 0x20)
-//     mstore(validateJo_i_1306, 404)
-//     revert(validateJo_i_1306, 0x20)
+//     mstore(validateJo_i_1218, 0x01)
+//     return(validateJo_i_1218, 0x20)
+//     mstore(validateJo_i_1218, 404)
+//     revert(validateJo_i_1218, 0x20)
 //     function validatePairing(t2)
 //     {
 //         let t2_x_1 := calldataload(t2)
