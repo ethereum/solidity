@@ -8,6 +8,14 @@ To help oss-fuzz do this, we (as project maintainers) need to provide the follow
 
 - test harnesses: C/C++ tests that define the `LLVMFuzzerTestOneInput` API. This determines what is to be fuzz tested.
 - build infrastructure: (c)make targets per fuzzing binary. Fuzzing requires coverage and memory instrumentation of the code to be fuzzed.
+- configuration files: These are files with the `.options` extension that are parsed by oss-fuzz. The only option that we use currently is the `dictionary` option that asks the fuzzing engines behind oss-fuzz to use the specified dictionary. The specified dictionary happens to be `solidity.dict.`
+
+`solidity.dict` contains Solidity-specific syntactical tokens that are more likely to guide the fuzzer towards generating parseable and varied Solidity input.
+
+To be consistent and aid better evaluation of the utility of the fuzzing dictionary, we stick to the following rules-of-thumb:
+  - Full tokens such as `block.number` are preceded and followed by a whitespace
+  - Incomplete tokens including function calls such as `msg.sender.send()` are abbreviated `.send(` to provide some leeway to the fuzzer to sythesize variants such as `address(this).send()`
+  - Language keywords are suffixed by a whitespace with the exception of those that end a line of code such as `break;` and `continue;`
 
 ## What is libFuzzingEngine.a?
 
