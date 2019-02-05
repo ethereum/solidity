@@ -31,6 +31,17 @@ namespace dev
 namespace test
 {
 
+bytes bytecodeSansMetadata(bytes const& _bytecode)
+{
+	unsigned size = _bytecode.size();
+	if (size < 5)
+		return bytes{};
+	size_t metadataSize = (_bytecode[size - 2] << 8) + _bytecode[size - 1];
+	if (metadataSize != 0x29 || size < (metadataSize + 2))
+		return bytes{};
+	return bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
+}
+
 string bytecodeSansMetadata(string const& _bytecode)
 {
 	/// The metadata hash takes up 43 bytes (or 86 characters in hex)

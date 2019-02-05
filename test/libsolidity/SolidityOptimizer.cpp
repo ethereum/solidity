@@ -20,6 +20,7 @@
  * Tests for the Solidity optimizer.
  */
 
+#include <test/Metadata.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 #include <libevmasm/Instruction.h>
@@ -105,11 +106,8 @@ public:
 	/// into account.
 	size_t numInstructions(bytes const& _bytecode, boost::optional<Instruction> _which = boost::optional<Instruction>{})
 	{
-		BOOST_REQUIRE(_bytecode.size() > 5);
-		size_t metadataSize = (_bytecode[_bytecode.size() - 2] << 8) + _bytecode[_bytecode.size() - 1];
-		BOOST_REQUIRE_MESSAGE(metadataSize == 0x29, "Invalid metadata size");
-		BOOST_REQUIRE(_bytecode.size() >= metadataSize + 2);
-		bytes realCode = bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
+		bytes realCode = bytecodeSansMetadata(_bytecode);
+		BOOST_REQUIRE_MESSAGE(!realCode.empty(), "Invalid or missing metadata in bytecode.");
 		size_t instructions = 0;
 		solidity::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
 			if (!_which || *_which == _instr)
