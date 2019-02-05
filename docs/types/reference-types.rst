@@ -106,7 +106,7 @@ Array elements can be of any type, including mapping or struct. The general
 restrictions for types apply, in that mappings can only be stored in the
 ``storage`` data location and publicly-visible functions need parameters that are :ref:`ABI types <ABI>`.
 
-It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
+It is possible to mark state variable arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index becomes a required parameter for the getter.
 
 Accessing an array past its end causes a failing assertion. You can use the ``.push()`` method to append a new element at the end or assign to the ``.length`` :ref:`member <array-members>` to change the size (see below for caveats).
@@ -119,10 +119,9 @@ Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is si
 but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
 length or index access.
 
-While Solidity does not have string manipulation functions, you can use
-this implicit conversion for equivalent functionality. For example to compare
-two strings ``keccak256(abi.encode(s1)) == keccak256(abi.encode(s2))``, or to
-concatenate two strings already encoded with ``abi.encodePacked(s1, s2);``.
+Solidity does not have string manipulation functions, but there are
+third-party string libraries. You can also compare two strings by their keccak256-hash using
+``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and concatenate two strings using ``abi.encodePacked(s1, s2)``.
 
 You should use ``bytes`` over ``byte[]`` because it is cheaper, since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
 use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
