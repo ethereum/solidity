@@ -418,10 +418,22 @@ In effect, a log entry using this ABI is described as:
 
 - ``address``: the address of the contract (intrinsically provided by Ethereum);
 - ``topics[0]``: ``keccak(EVENT_NAME+"("+EVENT_ARGS.map(canonical_type_of).join(",")+")")`` (``canonical_type_of`` is a function that simply returns the canonical type of a given argument, e.g. for ``uint indexed foo``, it would return ``uint256``). If the event is declared as ``anonymous`` the ``topics[0]`` is not generated;
-- ``topics[n]``: ``EVENT_INDEXED_ARGS[n - 1]`` (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are indexed);
-- ``data``: ``abi_serialise(EVENT_NON_INDEXED_ARGS)`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are not indexed, ``abi_serialise`` is the ABI serialisation function used for returning a series of typed values from a function, as described above).
+- ``topics[n]``: ``abi_encode(EVENT_INDEXED_ARGS[n - 1])`` (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are indexed);
+- ``data``: ABI encoding of ``EVENT_NON_INDEXED_ARGS`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that are not indexed, ``abi_encode`` is the ABI encoding function used for returning a series of typed values from a function, as described above).
 
-For all fixed-length Solidity types, the ``EVENT_INDEXED_ARGS`` array contains the 32-byte encoded value directly. However, for *types of dynamic length*, which include ``string``, ``bytes``, and arrays, ``EVENT_INDEXED_ARGS`` will contain the *Keccak hash* of the packed encoded value (see :ref:`abi_packed_mode`), rather than the encoded value directly. This allows applications to efficiently query for values of dynamic-length types (by setting the hash of the encoded value as the topic), but leaves applications unable to decode indexed values they have not queried for. For dynamic-length types, application developers face a trade-off between fast search for predetermined values (if the argument is indexed) and legibility of arbitrary values (which requires that the arguments not be indexed). Developers may overcome this tradeoff and achieve both efficient search and arbitrary legibility by defining events with two arguments — one indexed, one not — intended to hold the same value.
+For all types of length at most 32 bytes, the ``EVENT_INDEXED_ARGS`` array contains
+the value directly, padded or sign-extended (for signed integers) to 32 bytes, just as for regular ABI encoding.
+However, for all "complex" types or types of dynamic length, including all arrays, ``string``, ``bytes`` and structs,
+``EVENT_INDEXED_ARGS`` will contain the *Keccak hash* of a special in-place encoded value
+(see :ref:`indexed_event_encoding`), rather than the encoded value directly.
+This allows applications to efficiently query for values of dynamic-length types
+(by setting the hash of the encoded value as the topic), but leaves applications unable
+to decode indexed values they have not queried for. For dynamic-length types,
+application developers face a trade-off between fast search for predetermined values
+(if the argument is indexed) and legibility of arbitrary values (which requires that
+the arguments not be indexed). Developers may overcome this tradeoff and achieve both
+efficient search and arbitrary legibility by defining events with two arguments — one
+indexed, one not — intended to hold the same value.
 
 .. _abi_json:
 
@@ -608,8 +620,9 @@ Through ``abi.encodePacked()``, Solidity supports a non-standard packed mode whe
 
 - types shorter than 32 bytes are neither zero padded nor sign extended and
 - dynamic types are encoded in-place and without the length.
+- array elements are padded, but still encoded in-place
 
-This packed mode is mainly used for indexed event parameters.
+Furthermore, structs as well as nested arrays are not supported.
 
 As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("Hello, world!")`` results in:
 
@@ -622,12 +635,18 @@ As an example, the encoding of ``int16(-1), bytes1(0x42), uint16(0x03), string("
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ string("Hello, world!") without a length field
 
 More specifically:
- - Each value type takes as many bytes as its range has.
- - The encoding of a struct or fixed-size array is the concatenation of the
-   encoding of its members/elements without any separator or padding.
- - Mapping members of structs are ignored as usual.
- - Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded without
-   their length field.
+ - During the encoding, everything is encoded in-place. This means that there is
+   no distinction between head and tail, as in the ABI encoding, and the length
+   of an array is not encoded.
+ - The direct arguments of ``abi.encodePacked`` are encoded without padding,
+   as long as they are not arrays (or ``string`` or ``bytes``).
+ - The encoding of an array is the concatenation of the
+   encoding of its elements **with** padding.
+ - Dynamically-sized types like ``string``, ``bytes`` or ``uint[]`` are encoded
+   without their length field.
+ - The encoding of ``string`` or ``bytes`` does not apply padding at the end
+   unless it is part of an array or struct (then it is padded to a multiple of
+   32 bytes).
 
 In general, the encoding is ambiguous as soon as there are two dynamically-sized elements,
 because of the missing length field.
@@ -636,3 +655,39 @@ If padding is needed, explicit type conversions can be used: ``abi.encodePacked(
 
 Since packed encoding is not used when calling functions, there is no special support
 for prepending a function selector. Since the encoding is ambiguous, there is no decoding function.
+
+.. warning::
+
+  If you use ``keccak256(abi.encodePacked(a, b))`` and both ``a`` and ``b`` are dynamic types,
+  it is easy to craft collisions in the hash value by moving parts of ``a`` into ``b`` and
+  vice-versa. More specifically, ``abi.encodePacked("a", "bc") == abi.encodePacked("ab", "c")``.
+  If you use ``abi.encodePacked`` for signatures, authentication or data integrity, make
+  sure to always use the same types and check that at most one of them is dynamic.
+  Unless there is a compelling reason, ``abi.encode`` should be preferred.
+
+
+.. _indexed_event_encoding:
+
+Encoding of Indexed Event Parameters
+====================================
+
+Indexed event parameters that are not value types, i.e. arrays and structs are not
+stored directly but instead a keccak256-hash of an encoding is stored. This encoding
+is defined as follows:
+
+ - the encoding of a ``bytes`` and ``string`` value is just the string contents
+   without any padding or length prefix.
+ - the encoding of a struct is the concatenation of the encoding of its members,
+   always padded to a multiple of 32 bytes (even ``bytes`` and ``string``).
+ - the encoding of an array (both dynamically- and statically-sized) is
+   the concatenation of the encoding of its elements, always padded to a multiple
+   of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
+
+In the above, as usual, a negative number is padded by sign extension and not zero padded.
+``bytesNN`` types are padded on the right while ``uintNN`` / ``intNN`` are padded on the left.
+
+.. warning::
+
+    The encoding of a struct is ambiguous if it contains more than one dynamically-sized
+    array. Because of that, always re-check the event data and do not rely on the search result
+    based on the indexed parameters alone.
