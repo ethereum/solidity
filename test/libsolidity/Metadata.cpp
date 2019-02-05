@@ -54,11 +54,10 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
 	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
-	BOOST_REQUIRE(bytecode.size() >= 2);
-	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
-	BOOST_REQUIRE(metadataCBORSize < bytecode.size() - 2);
+	bytes cborMetadata = dev::test::onlyMetadata(bytecode);
+	BOOST_REQUIRE(!cborMetadata.empty());
 	bytes expectation = bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} + hash;
-	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
+	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), cborMetadata.begin()));
 }
 
 BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
@@ -81,14 +80,13 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
 	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
-	BOOST_REQUIRE(bytecode.size() >= 2);
-	size_t metadataCBORSize = (size_t(bytecode.end()[-2]) << 8) + size_t(bytecode.end()[-1]);
-	BOOST_REQUIRE(metadataCBORSize < bytecode.size() - 2);
+	bytes cborMetadata = dev::test::onlyMetadata(bytecode);
+	BOOST_REQUIRE(!cborMetadata.empty());
 	bytes expectation =
 		bytes{0xa2, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
 		hash +
 		bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
-	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), bytecode.end() - metadataCBORSize - 2));
+	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), cborMetadata.begin()));
 }
 
 BOOST_AUTO_TEST_CASE(metadata_relevant_sources)

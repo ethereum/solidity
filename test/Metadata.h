@@ -27,6 +27,9 @@ namespace dev
 namespace test
 {
 
+/// Returns only the CBOR metadata.
+bytes onlyMetadata(bytes const& _bytecode);
+
 /// Returns the bytecode with the metadata hash stripped out.
 bytes bytecodeSansMetadata(bytes const& _bytecode);
 

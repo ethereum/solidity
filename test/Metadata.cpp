@@ -31,7 +31,7 @@ namespace dev
 namespace test
 {
 
-bytes bytecodeSansMetadata(bytes const& _bytecode)
+bytes onlyMetadata(bytes const& _bytecode)
 {
 	unsigned size = _bytecode.size();
 	if (size < 5)
@@ -42,6 +42,14 @@ bytes bytecodeSansMetadata(bytes const& _bytecode)
 	// Sanity check: assume the first byte is a fixed-size CBOR array with either 1 or 2 entries
 	unsigned char firstByte = _bytecode[size - metadataSize - 2];
 	if (firstByte != 0xa1 && firstByte != 0xa2)
+		return bytes{};
+	return bytes(_bytecode.end() - metadataSize - 2, _bytecode.end() - 2);
+}
+
+bytes bytecodeSansMetadata(bytes const& _bytecode)
+{
+	unsigned metadataSize = onlyMetadata(_bytecode).size();
+	if (metadataSize == 0)
 		return bytes{};
 	return bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
 }
