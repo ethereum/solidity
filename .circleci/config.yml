@@ -163,11 +163,6 @@ jobs:
             ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
-      - store_artifacts: *solc_artifact
-      - persist_to_workspace:
-          root: build
-          paths:
-            - "*"
 
   build_x86_mac:
     macos:
