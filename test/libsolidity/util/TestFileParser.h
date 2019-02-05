@@ -33,7 +33,7 @@ namespace test
 {
 
 /**
- * All SOLT (or SOLTest) tokens.
+ * All soltest tokens.
  */
 #define SOLT_TOKEN_LIST(T, K)      \
 	T(Unknown, "unknown", 0)       \
@@ -62,12 +62,30 @@ namespace test
 	/* special keywords */         \
 	K(Failure, "FAILURE", 0)       \
 
-enum class SoltToken : unsigned int {
-#define T(name, string, precedence) name,
-	SOLT_TOKEN_LIST(T, T)
-	NUM_TOKENS
-#undef T
-};
+namespace soltest
+{
+	enum class Token : unsigned int {
+	#define T(name, string, precedence) name,
+		SOLT_TOKEN_LIST(T, T)
+		NUM_TOKENS
+	#undef T
+	};
+
+	/// Prints a friendly string representation of \param _token.
+	inline std::string formatToken(Token _token)
+	{
+		switch (_token)
+		{
+	#define T(name, string, precedence) case Token::name: return string;
+			SOLT_TOKEN_LIST(T, T)
+	#undef T
+			default: // Token::NUM_TOKENS:
+				return "";
+		}
+	}
+}
+
+
 
 /**
  * The purpose of the ABI type is the storage of type information
@@ -92,7 +110,7 @@ struct ABIType
 
 /**
  * Helper that can hold format information retrieved
- * while scanning through a parameter list in sol_t.
+ * while scanning through a parameter list in soltest.
  */
 struct FormatInfo
 {
@@ -133,7 +151,7 @@ using ParameterList = std::vector<Parameter>;
  */
 struct FunctionCallExpectations
 {
-	/// Representation of the comma-separated (or empty) list of expectated result values
+	/// Representation of the comma-separated (or empty) list of expected result values
 	/// attached to the function call object. It is checked against the actual result of
 	/// a function call when used in test framework.
 	ParameterList result;
@@ -237,10 +255,8 @@ public:
 	/// of its arguments or expected results.
 	std::vector<FunctionCall> parseFunctionCalls();
 
-	/// Prints a friendly string representation of \param _token.
-	static std::string formatToken(SoltToken _token);
-
 private:
+	using Token = soltest::Token;
 	/**
 	 * Token scanner that is used internally to abstract away character traversal.
 	 */
@@ -257,7 +273,7 @@ private:
 		/// Reads character stream and creates token.
 		void scanNextToken();
 
-		SoltToken currentToken() { return m_currentToken.first; }
+		soltest::Token currentToken() { return m_currentToken.first; }
 		std::string currentLiteral() { return m_currentToken.second; }
 
 		std::string scanComment();
@@ -265,7 +281,7 @@ private:
 		std::string scanNumber();
 
 	private:
-		using TokenDesc = std::pair<SoltToken, std::string>;
+		using TokenDesc = std::pair<Token, std::string>;
 
 		/// Advances current position in the input stream.
 		void advance() { ++m_char; }
@@ -284,8 +300,8 @@ private:
 		TokenDesc m_currentToken;
 	};
 
-	bool accept(SoltToken _token, bool const _expect = false);
-	bool expect(SoltToken _token, bool const _advance = true);
+	bool accept(soltest::Token _token, bool const _expect = false);
+	bool expect(soltest::Token _token, bool const _advance = true);
 
 	/// Parses a function call signature in the form of f(uint256, ...).
 	std::string parseFunctionSignature();
@@ -319,7 +335,12 @@ private:
 	/// if data type is not supported.
 	std::pair<bytes, ABIType> parseABITypeLiteral();
 
-	/// Parses a comment
+	/// Recursively parses an identifier or a tuple definition that contains identifiers
+	/// and / or parentheses like `((uint, uint), (uint, (uint, uint)), uint)`.
+	std::string parseIdentifierOrTuple();
+
+	/// Parses a comment that is defined like this:
+	/// # A nice comment. #
 	std::string parseComment();
 
 	/// Parses the current number literal.

@@ -31,6 +31,7 @@ using namespace langutil;
 using namespace solidity;
 using namespace dev::solidity::test;
 using namespace std;
+using namespace soltest;
 
 namespace
 {
@@ -47,14 +48,14 @@ namespace
 vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 {
 	vector<FunctionCall> calls;
-	if (!accept(SoltToken::EOS))
+	if (!accept(Token::EOS))
 	{
-		assert(m_scanner.currentToken() == SoltToken::Unknown);
+		assert(m_scanner.currentToken() == Token::Unknown);
 		m_scanner.scanNextToken();
 
-		while (!accept(SoltToken::EOS))
+		while (!accept(Token::EOS))
 		{
-			if (!accept(SoltToken::Whitespace))
+			if (!accept(Token::Whitespace))
 			{
 				FunctionCall call;
 
@@ -64,63 +65,47 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 				/// token lookahead that checks parseParameter
 				/// if the next token is an identifier.
 				if (calls.empty())
-					expect(SoltToken::Newline);
+					expect(Token::Newline);
 				else
-					accept(SoltToken::Newline, true);
+					accept(Token::Newline, true);
 
 				call.signature = parseFunctionSignature();
-				if (accept(SoltToken::Comma, true))
+				if (accept(Token::Comma, true))
 					call.value = parseFunctionCallValue();
-				if (accept(SoltToken::Colon, true))
+				if (accept(Token::Colon, true))
 					call.arguments = parseFunctionCallArguments();
 
-				if (accept(SoltToken::Newline, true))
+				if (accept(Token::Newline, true))
 					call.displayMode = FunctionCall::DisplayMode::MultiLine;
 
 				call.arguments.comment = parseComment();
 
-				if (accept(SoltToken::Newline, true))
+				if (accept(Token::Newline, true))
 					call.displayMode = FunctionCall::DisplayMode::MultiLine;
 
-				expect(SoltToken::Arrow);
+				expect(Token::Arrow);
 				call.expectations = parseFunctionCallExpectations();
 				call.expectations.comment = parseComment();
 
 				calls.emplace_back(std::move(call));
 			}
-			else
-				m_scanner.scanNextToken();
 		}
 	}
 	return calls;
 }
 
-string TestFileParser::formatToken(SoltToken _token)
-{
-	switch (_token)
-	{
-#define T(name, string, precedence) case SoltToken::name: return string;
-		SOLT_TOKEN_LIST(T, T)
-#undef T
-		default: // Token::NUM_TOKENS:
-			return "";
-	}
-}
-
-bool TestFileParser::accept(SoltToken _token, bool const _expect)
-{
-	if (m_scanner.currentToken() == _token)
-	{
-		if (_expect)
-			expect(_token);
-		return true;
-	}
-	return false;
-}
-
-bool TestFileParser::expect(SoltToken _token, bool const _advance)
+bool TestFileParser::accept(soltest::Token _token, bool const _expect)
 {
 	if (m_scanner.currentToken() != _token)
+		return false;
+	if (_expect)
+		return expect(_token);
+	return true;
+}
+
+bool TestFileParser::expect(soltest::Token _token, bool const _advance)
+{
+	if (m_scanner.currentToken() != _token || m_scanner.currentToken() == Token::Invalid)
 		throw Error(
 			Error::Type::ParserError,
 			"Unexpected " + formatToken(m_scanner.currentToken()) + ": \"" +
@@ -135,32 +120,35 @@ bool TestFileParser::expect(SoltToken _token, bool const _advance)
 string TestFileParser::parseFunctionSignature()
 {
 	string signature = m_scanner.currentLiteral();
-	expect(SoltToken::Identifier);
+	expect(Token::Identifier);
 
-	signature += formatToken(SoltToken::LParen);
-	expect(SoltToken::LParen);
+	signature += formatToken(Token::LParen);
+	expect(Token::LParen);
 
-	while (!accept(SoltToken::RParen))
+	string parameters;
+	if (!accept(Token::RParen, false))
+		parameters = parseIdentifierOrTuple();
+
+	while (accept(Token::Comma))
 	{
-		signature += m_scanner.currentLiteral();
-		expect(SoltToken::Identifier);
-		while (accept(SoltToken::Comma))
-		{
-			signature += m_scanner.currentLiteral();
-			expect(SoltToken::Comma);
-			signature += m_scanner.currentLiteral();
-			expect(SoltToken::Identifier);
-		}
+		parameters += formatToken(Token::Comma);
+		expect(Token::Comma);
+		parameters += parseIdentifierOrTuple();
 	}
-	signature += formatToken(SoltToken::RParen);
-	expect(SoltToken::RParen);
+	if (accept(Token::Arrow, true))
+		throw Error(Error::Type::ParserError, "Invalid signature detected: " + signature);
+
+	signature += parameters;
+
+	expect(Token::RParen);
+	signature += formatToken(Token::RParen);
 	return signature;
 }
 
 u256 TestFileParser::parseFunctionCallValue()
 {
 	u256 value = convertNumber(parseNumber());
-	expect(SoltToken::Ether);
+	expect(Token::Ether);
 	return value;
 }
 
@@ -173,7 +161,7 @@ FunctionCallArgs TestFileParser::parseFunctionCallArguments()
 		throw Error(Error::Type::ParserError, "No argument provided.");
 	arguments.parameters.emplace_back(param);
 
-	while (accept(SoltToken::Comma, true))
+	while (accept(Token::Comma, true))
 		arguments.parameters.emplace_back(parseParameter());
 	return arguments;
 }
@@ -190,7 +178,7 @@ FunctionCallExpectations TestFileParser::parseFunctionCallExpectations()
 	}
 	expectations.result.emplace_back(param);
 
-	while (accept(SoltToken::Comma, true))
+	while (accept(Token::Comma, true))
 		expectations.result.emplace_back(parseParameter());
 
 	/// We have always one virtual parameter in the parameter list.
@@ -203,7 +191,7 @@ FunctionCallExpectations TestFileParser::parseFunctionCallExpectations()
 Parameter TestFileParser::parseParameter()
 {
 	Parameter parameter;
-	if (accept(SoltToken::Newline, true))
+	if (accept(Token::Newline, true))
 		parameter.format.newline = true;
 	auto literal = parseABITypeLiteral();
 	parameter.rawBytes = literal.first;
@@ -218,20 +206,20 @@ pair<bytes, ABIType> TestFileParser::parseABITypeLiteral()
 		u256 number{0};
 		ABIType abiType{ABIType::None, 0};
 
-		if (accept(SoltToken::Sub))
+		if (accept(Token::Sub))
 		{
 			abiType = ABIType{ABIType::SignedDec, 32};
-			expect(SoltToken::Sub);
+			expect(Token::Sub);
 			number = convertNumber(parseNumber()) * -1;
 		}
 		else
 		{
-			if (accept(SoltToken::Number))
+			if (accept(Token::Number))
 			{
 				abiType = ABIType{ABIType::UnsignedDec, 32};
 				number = convertNumber(parseNumber());
 			}
-			else if (accept(SoltToken::Failure, true))
+			else if (accept(Token::Failure, true))
 			{
 				abiType = ABIType{ABIType::Failure, 0};
 				return make_pair(bytes{}, abiType);
@@ -245,10 +233,35 @@ pair<bytes, ABIType> TestFileParser::parseABITypeLiteral()
 	}
 }
 
+string TestFileParser::parseIdentifierOrTuple()
+{
+	string identOrTuple;
+
+	if (accept(Token::Identifier))
+	{
+		identOrTuple = m_scanner.currentLiteral();
+		expect(Token::Identifier);
+		return identOrTuple;
+	}
+	expect(Token::LParen);
+	identOrTuple += formatToken(Token::LParen);
+	identOrTuple += parseIdentifierOrTuple();
+
+	while (accept(Token::Comma))
+	{
+		identOrTuple += formatToken(Token::Comma);
+		expect(Token::Comma);
+		identOrTuple += parseIdentifierOrTuple();
+	}
+	expect(Token::RParen);
+	identOrTuple += formatToken(Token::RParen);
+	return identOrTuple;
+}
+
 string TestFileParser::parseComment()
 {
 	string comment = m_scanner.currentLiteral();
-	if (accept(SoltToken::Comment, true))
+	if (accept(Token::Comment, true))
 		return comment;
 	return string{};
 }
@@ -256,7 +269,7 @@ string TestFileParser::parseComment()
 string TestFileParser::parseNumber()
 {
 	string literal = m_scanner.currentLiteral();
-	expect(SoltToken::Number);
+	expect(Token::Number);
 	return literal;
 }
 
@@ -281,18 +294,21 @@ void TestFileParser::Scanner::readStream(istream& _stream)
 
 void TestFileParser::Scanner::scanNextToken()
 {
-	auto detectToken = [](std::string const& _literal = "") -> TokenDesc {
-		if (_literal == "ether") return TokenDesc{SoltToken::Ether, _literal};
-		if (_literal == "FAILURE") return TokenDesc{SoltToken::Failure, _literal};
-		return TokenDesc{SoltToken::Identifier, _literal};
+	// Make code coverage happy.
+	assert(formatToken(Token::NUM_TOKENS) == "");
+
+	auto detectKeyword = [](std::string const& _literal = "") -> TokenDesc {
+		if (_literal == "ether") return TokenDesc{Token::Ether, _literal};
+		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
+		return TokenDesc{Token::Identifier, _literal};
 	};
 
-	auto selectToken = [this](SoltToken _token, std::string const& _literal = "") -> TokenDesc {
+	auto selectToken = [this](Token _token, std::string const& _literal = "") -> TokenDesc {
 		advance();
 		return make_pair(_token, !_literal.empty() ? _literal : formatToken(_token));
 	};
 
-	TokenDesc token = make_pair(SoltToken::Unknown, "");
+	TokenDesc token = make_pair(Token::Unknown, "");
 	do
 	{
 		switch(current())
@@ -300,50 +316,50 @@ void TestFileParser::Scanner::scanNextToken()
 		case '/':
 			advance();
 			if (current() == '/')
-				token = selectToken(SoltToken::Newline);
+				token = selectToken(Token::Newline);
+			else
+				token = selectToken(Token::Invalid);
 			break;
 		case '-':
 			if (peek() == '>')
 			{
 				advance();
-				token = selectToken(SoltToken::Arrow);
+				token = selectToken(Token::Arrow);
 			}
 			else
-				token = selectToken(SoltToken::Sub);
+				token = selectToken(Token::Sub);
 			break;
 		case ':':
-			token = selectToken(SoltToken::Colon);
+			token = selectToken(Token::Colon);
 			break;
 		case '#':
-			token = selectToken(SoltToken::Comment, scanComment());
+			token = selectToken(Token::Comment, scanComment());
 			break;
 		case ',':
-			token = selectToken(SoltToken::Comma);
+			token = selectToken(Token::Comma);
 			break;
 		case '(':
-			token = selectToken(SoltToken::LParen);
+			token = selectToken(Token::LParen);
 			break;
 		case ')':
-			token = selectToken(SoltToken::RParen);
+			token = selectToken(Token::RParen);
 			break;
 		default:
 			if (isIdentifierStart(current()))
 			{
-				TokenDesc detectedToken = detectToken(scanIdentifierOrKeyword());
+				TokenDesc detectedToken = detectKeyword(scanIdentifierOrKeyword());
 				token = selectToken(detectedToken.first, detectedToken.second);
 			}
 			else if (isdigit(current()))
-				token = selectToken(SoltToken::Number, scanNumber());
+				token = selectToken(Token::Number, scanNumber());
 			else if (isspace(current()))
-				token = selectToken(SoltToken::Whitespace);
+				token = selectToken(Token::Whitespace);
 			else if (isEndOfLine())
-				token = selectToken(SoltToken::EOS);
-			else
-				token = selectToken(SoltToken::Invalid);
+				token = selectToken(Token::EOS);
 			break;
 		}
 	}
-	while (token.first == SoltToken::Whitespace);
+	while (token.first == Token::Whitespace);
 	m_currentToken = token;
 }
 
