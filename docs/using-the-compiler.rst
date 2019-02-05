@@ -248,7 +248,9 @@ Input Description
             "*": [
               "metadata", "evm.bytecode" // Enable the metadata and bytecode outputs of every single contract.
               , "evm.bytecode.sourceMap" // Enable the source map output of every single contract.
-              , "ast" // Enable the AST output of every single file.
+            ],
+            "": [
+              "ast" // Enable the AST output of every single file.
             ]
           },
           // Enable the abi and opcodes output of MyContract defined in file def.
