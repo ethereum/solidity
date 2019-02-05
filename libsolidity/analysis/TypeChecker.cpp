@@ -334,10 +334,17 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
 		if (type(var)->category() == Type::Category::Mapping)
 		{
-			if (!type(var)->dataStoredIn(DataLocation::Storage))
-				m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\"." );
-			else if (!isLibraryFunction && _function.isPublic())
-				m_errorReporter.typeError(var.location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+			if (var.referenceLocation() != VariableDeclaration::Location::Storage)
+			{
+				if (!isLibraryFunction && _function.isPublic())
+					m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\" and thus only be parameters or return variables for internal or library functions.");
+				else
+					m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\"." );
+			}
+			else
+			{
+				solAssert(isLibraryFunction || !_function.isPublic(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+			}
 		}
 		else
 		{
