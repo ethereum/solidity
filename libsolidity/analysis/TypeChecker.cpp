@@ -2205,15 +2205,22 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			resultType = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, typeType.actualType()));
 		else
 		{
-			expectType(*index, IntegerType::uint256());
-			if (auto length = dynamic_cast<RationalNumberType const*>(type(*index).get()))
-				resultType = make_shared<TypeType>(make_shared<ArrayType>(
-					DataLocation::Memory,
-					typeType.actualType(),
-					length->literalValue(nullptr)
-				));
+			u256 length = 1;
+			if (expectType(*index, IntegerType::uint256()))
+			{
+				if (auto indexValue = dynamic_cast<RationalNumberType const*>(type(*index).get()))
+					length = indexValue->literalValue(nullptr);
+				else
+					m_errorReporter.fatalTypeError(index->location(), "Integer constant expected.");
+			}
 			else
-				m_errorReporter.fatalTypeError(index->location(), "Integer constant expected.");
+				solAssert(m_errorReporter.hasErrors(), "Expected errors as expectType returned false");
+
+			resultType = make_shared<TypeType>(make_shared<ArrayType>(
+				DataLocation::Memory,
+				typeType.actualType(),
+				length
+			));
 		}
 		break;
 	}
