@@ -37,7 +37,11 @@ bytes bytecodeSansMetadata(bytes const& _bytecode)
 	if (size < 5)
 		return bytes{};
 	size_t metadataSize = (_bytecode[size - 2] << 8) + _bytecode[size - 1];
-	if (metadataSize != 0x29 || size < (metadataSize + 2))
+	if (size < (metadataSize + 2))
+		return bytes{};
+	// Sanity check: assume the first byte is a fixed-size CBOR array with either 1 or 2 entries
+	unsigned char firstByte = _bytecode[size - metadataSize - 2];
+	if (firstByte != 0xa1 && firstByte != 0xa2)
 		return bytes{};
 	return bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
 }
