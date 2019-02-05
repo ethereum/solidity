@@ -22,6 +22,7 @@
 #include <string>
 #include <iostream>
 #include <libdevcore/JSON.h>
+#include <test/Metadata.h>
 
 using namespace std;
 
