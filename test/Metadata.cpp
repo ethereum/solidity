@@ -44,19 +44,7 @@ bytes bytecodeSansMetadata(bytes const& _bytecode)
 
 string bytecodeSansMetadata(string const& _bytecode)
 {
-	/// The metadata hash takes up 43 bytes (or 86 characters in hex)
-	/// /a165627a7a72305820([0-9a-f]{64})0029$/
-
-	if (_bytecode.size() < 88)
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 4, 4) != "0029")
-		return _bytecode;
-
-	if (_bytecode.substr(_bytecode.size() - 86, 18) != "a165627a7a72305820")
-		return _bytecode;
-
-	return _bytecode.substr(0, _bytecode.size() - 86);
+	return toHex(bytecodeSansMetadata(fromHex(_bytecode, WhenError::Throw)));
 }
 
 bool isValidMetadata(string const& _metadata)
