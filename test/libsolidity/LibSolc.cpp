@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(with_callback)
 		"language": "Solidity",
 		"sources": {
 			"fileA": {
-				"content": "import \"found.sol\"; contract A { }"
+				"content": "import \"found.sol\"; import \"notfound.sol\"; contract A { }"
 			}
 		}
 	}
@@ -149,10 +149,15 @@ BOOST_AUTO_TEST_CASE(with_callback)
 				*o_contents = strdup(content.c_str());
 				*o_error = nullptr;
 			}
-			else
+			else if (string(_path) == "missing.sol")
 			{
 				static string errorMsg{"Missing file."};
 				*o_error = strdup(errorMsg.c_str());
+				*o_contents = nullptr;
+			}
+			else
+			{
+				*o_error = nullptr;
 				*o_contents = nullptr;
 			}
 		}
@@ -163,6 +168,9 @@ BOOST_AUTO_TEST_CASE(with_callback)
 
 	// This ensures that "found.sol" was properly loaded which triggered the second import statement.
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));
+
+	// This should be placed due to the missing "notfound.sol" which sets both pointers to null.
+	BOOST_CHECK(containsError(result, "ParserError", "Source \"notfound.sol\" not found: File not found."));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
