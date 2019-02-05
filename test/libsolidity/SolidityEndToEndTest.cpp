@@ -8013,6 +8013,248 @@ BOOST_AUTO_TEST_CASE(struct_named_constructor)
 	ABI_CHECK(callContractFunction("s()"), encodeArgs(u256(1), true));
 }
 
+BOOST_AUTO_TEST_CASE(calldata_struct)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint256 a; uint256 b; }
+			function f(S calldata s) external pure returns (uint256 a, uint256 b) {
+			    a = s.a;
+			    b = s.b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256))", encodeArgs(u256(42), u256(23))), encodeArgs(u256(42), u256(23)));
+}
+
+BOOST_AUTO_TEST_CASE(calldata_struct_and_ints)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint256 a; uint256 b; }
+			function f(uint256 a, S calldata s, uint256 b) external pure returns (uint256, uint256, uint256, uint256) {
+			    return (a, s.a, s.b, b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f(uint256,(uint256,uint256),uint256)", encodeArgs(u256(1), u256(2), u256(3), u256(4))), encodeArgs(u256(1), u256(2), u256(3), u256(4)));
+}
+
+
+BOOST_AUTO_TEST_CASE(calldata_structs)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S1 { uint256 a; uint256 b; }
+			struct S2 { uint256 a; }
+			function f(S1 calldata s1, S2 calldata s2, S1 calldata s3)
+			    external pure returns (uint256 a, uint256 b, uint256 c, uint256 d, uint256 e) {
+			    a = s1.a;
+			    b = s1.b;
+			    c = s2.a;
+			    d = s3.a;
+			    e = s3.b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256),(uint256),(uint256,uint256))", encodeArgs(u256(1), u256(2), u256(3), u256(4), u256(5))), encodeArgs(u256(1), u256(2), u256(3), u256(4), u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(calldata_struct_array_member)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint256 a; uint256[2] b; uint256 c; }
+			function f(S calldata s) external pure returns (uint256 a, uint256 b0, uint256 b1, uint256 c) {
+			    a = s.a;
+			    b0 = s.b[0];
+			    b1 = s.b[1];
+			    c = s.c;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256[2],uint256))", encodeArgs(u256(42), u256(1), u256(2), u256(23))), encodeArgs(u256(42), u256(1), u256(2), u256(23)));
+}
+
+BOOST_AUTO_TEST_CASE(calldata_array_of_struct)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint256 a; uint256 b; }
+			function f(S[] calldata s) external pure returns (uint256 l, uint256 a, uint256 b, uint256 c, uint256 d) {
+			    l = s.length;
+			    a = s[0].a;
+			    b = s[0].b;
+			    c = s[1].a;
+			    d = s[1].b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256)[])", encodeArgs(u256(0x20), u256(2), u256(1), u256(2), u256(3), u256(4))), encodeArgs(u256(2), u256(1), u256(2), u256(3), u256(4)));
+}
+
+BOOST_AUTO_TEST_CASE(calldata_array_of_struct_to_memory)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint256 a; uint256 b; }
+			function f(S[] calldata s) external pure returns (uint256 l, uint256 a, uint256 b, uint256 c, uint256 d) {
+			    S[] memory m = s;
+			    l = m.length;
+			    a = m[0].a;
+			    b = m[0].b;
+			    c = m[1].a;
+			    d = m[1].b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256)[])", encodeArgs(u256(0x20), u256(2), u256(1), u256(2), u256(3), u256(4))), encodeArgs(u256(2), u256(1), u256(2), u256(3), u256(4)));
+}
+
+
+BOOST_AUTO_TEST_CASE(calldata_struct_to_memory)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint256 a; uint256 b; }
+			function f(S calldata s) external pure returns (uint256, uint256) {
+			    S memory m = s;
+			    return (m.a, m.b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256))", encodeArgs(u256(42), u256(23))), encodeArgs(u256(42), u256(23)));
+}
+
+BOOST_AUTO_TEST_CASE(nested_calldata_struct)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S1 { uint256 a; uint256 b; }
+			struct S2 { uint256 a; uint256 b; S1 s; uint256 c; }
+			function f(S2 calldata s) external pure returns (uint256 a, uint256 b, uint256 sa, uint256 sb, uint256 c) {
+			    return (s.a, s.b, s.s.a, s.s.b, s.c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256,(uint256,uint256),uint256))", encodeArgs(u256(1), u256(2), u256(3), u256(4), u256(5))), encodeArgs(u256(1), u256(2), u256(3), u256(4), u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(nested_calldata_struct_to_memory)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S1 { uint256 a; uint256 b; }
+			struct S2 { uint256 a; uint256 b; S1 s; uint256 c; }
+			function f(S2 calldata s) external pure returns (uint256 a, uint256 b, uint256 sa, uint256 sb, uint256 c) {
+			    S2 memory m = s;
+			    return (m.a, m.b, m.s.a, m.s.b, m.c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	ABI_CHECK(callContractFunction("f((uint256,uint256,(uint256,uint256),uint256))", encodeArgs(u256(1), u256(2), u256(3), u256(4), u256(5))), encodeArgs(u256(1), u256(2), u256(3), u256(4), u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(calldata_struct_short)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint256 a; uint256 b; }
+			function f(S calldata) external pure returns (uint256) {
+			    return msg.data.length;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	// double check that the valid case goes through
+	ABI_CHECK(callContractFunction("f((uint256,uint256))", u256(1), u256(2)), encodeArgs(0x44));
+
+	ABI_CHECK(callContractFunctionNoEncoding("f((uint256,uint256))", bytes(63,0)), encodeArgs());
+	ABI_CHECK(callContractFunctionNoEncoding("f((uint256,uint256))", bytes(33,0)), encodeArgs());
+	ABI_CHECK(callContractFunctionNoEncoding("f((uint256,uint256))", bytes(32,0)), encodeArgs());
+	ABI_CHECK(callContractFunctionNoEncoding("f((uint256,uint256))", bytes(31,0)), encodeArgs());
+	ABI_CHECK(callContractFunctionNoEncoding("f((uint256,uint256))", bytes()), encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(calldata_struct_cleaning)
+{
+	char const* sourceCode = R"(
+	    pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { uint8 a; bytes1 b; }
+			function f(S calldata s) external pure returns (uint256 a, bytes32 b) {
+			    uint8 tmp1 = s.a;
+			    bytes1 tmp2 = s.b;
+				assembly {
+					a := tmp1
+					b := tmp2
+				}
+
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+    // double check that the valid case goes through
+	ABI_CHECK(callContractFunction("f((uint8,bytes1))", u256(0x12), bytes{0x34} + bytes(31,0)), encodeArgs(0x12, bytes{0x34} + bytes(31,0)));
+	ABI_CHECK(callContractFunction("f((uint8,bytes1))", u256(0x1234), bytes{0x56, 0x78} + bytes(30,0)), encodeArgs(0x34, bytes{0x56} + bytes(31,0)));
+	ABI_CHECK(callContractFunction("f((uint8,bytes1))", u256(-1), u256(-1)), encodeArgs(0xFF, bytes{0xFF} + bytes(31,0)));
+}
+
+BOOST_AUTO_TEST_CASE(calldata_struct_function_type)
+{
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		contract C {
+			struct S { function (uint) external returns (uint) fn; }
+			function f(S calldata s) external returns (uint256) {
+				return s.fn(42);
+			}
+			function g(uint256 a) external returns (uint256) {
+			    return a * 3;
+			}
+			function h(uint256 a) external returns (uint256) {
+			    return 23;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	bytes fn_C_g = m_contractAddress.asBytes() + FixedHash<4>(dev::keccak256("g(uint256)")).asBytes() + bytes(8,0);
+	bytes fn_C_h = m_contractAddress.asBytes() + FixedHash<4>(dev::keccak256("h(uint256)")).asBytes() + bytes(8,0);
+	ABI_CHECK(callContractFunctionNoEncoding("f((function))", fn_C_g), encodeArgs(42 * 3));
+	ABI_CHECK(callContractFunctionNoEncoding("f((function))", fn_C_h), encodeArgs(23));
+}
+
 BOOST_AUTO_TEST_CASE(literal_strings)
 {
 	char const* sourceCode = R"(

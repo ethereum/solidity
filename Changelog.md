@@ -9,6 +9,7 @@ Bugfixes:
 
 
 Language Features:
+ * Allow calldata structs without dynamically encoded members with ABIEncoderV2.
 
 
 Compiler Features:
