@@ -56,6 +56,9 @@ public:
 		Assembly& _assembly
 	);
 
+protected:
+	/// This is the public API for the optimiser methods, but it doesn't need to be exposed to the caller.
+
 	struct Params
 	{
 		bool isCreation; ///< Whether this is called during contract creation or runtime.
