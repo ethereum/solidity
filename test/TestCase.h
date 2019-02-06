@@ -30,6 +30,14 @@ namespace solidity
 namespace test
 {
 
+#define soltestAssert(CONDITION, DESCRIPTION) \
+	do \
+	{ \
+		if (!(CONDITION)) \
+			BOOST_THROW_EXCEPTION(runtime_error(DESCRIPTION)); \
+	} \
+	while (false)
+
 /** Common superclass of SyntaxTest and SemanticsTest. */
 class TestCase
 {

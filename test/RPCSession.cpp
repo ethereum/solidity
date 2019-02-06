@@ -139,9 +139,16 @@ string IPCSocket::sendRequest(string const& _req)
 
 RPCSession& RPCSession::instance(const string& _path)
 {
-	static RPCSession session(_path);
-	BOOST_REQUIRE_EQUAL(session.m_ipcSocket.path(), _path);
-	return session;
+	try
+	{
+		static RPCSession session(_path);
+		BOOST_REQUIRE_EQUAL(session.m_ipcSocket.path(), _path);
+		return session;
+	}
+	catch (std::exception const&)
+	{
+		BOOST_THROW_EXCEPTION(std::runtime_error("Error creating RPC session for socket: " + _path));
+	}
 }
 
 string RPCSession::eth_getCode(string const& _address, string const& _blockNumber)

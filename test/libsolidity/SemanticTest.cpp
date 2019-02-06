@@ -28,30 +28,33 @@
 using namespace dev;
 using namespace solidity;
 using namespace dev::solidity::test;
-using namespace dev::solidity::test::formatting;
+using namespace dev::formatting;
 using namespace std;
-namespace fs = boost::filesystem;
 using namespace boost;
 using namespace boost::algorithm;
 using namespace boost::unit_test;
+namespace fs = boost::filesystem;
 
 namespace
 {
-	using ParamList = dev::solidity::test::ParameterList;
-	using FunctionCallTest = dev::solidity::test::SemanticTest::FunctionCallTest;
+	using FunctionCallTest = SemanticTest::FunctionCallTest;
 	using FunctionCall = dev::solidity::test::FunctionCall;
+	using ParamList = dev::solidity::test::ParameterList;
 
-	string formatBytes(bytes const& _bytes, ParamList const& _params, bool const _formatInvalid = false)
+
+	string formatBytes(bytes const& _bytes, ParamList const& _params)
 	{
 		stringstream resultStream;
 		if (_bytes.empty())
-			resultStream.str();
+			return {};
 		auto it = _bytes.begin();
 		for (auto const& param: _params)
 		{
-			bytes byteRange{it, it + param.abiType.size};
-			// FIXME Check range
-			// TODO Check range
+			long offset = static_cast<long>(param.abiType.size);
+			auto offsetIter = it + offset;
+			soltestAssert(offsetIter <= _bytes.end(), "Byte range can not be extended past the end of given bytes.");
+
+			bytes byteRange{it, offsetIter};
 			switch (param.abiType.type)
 			{
 			case ABIType::SignedDec:
@@ -71,21 +74,28 @@ namespace
 					resultStream << fromBigEndian<u256>(byteRange);
 				break;
 			case ABIType::Failure:
-				// If expectations are empty, the encoding type is invalid.
-				// In order to still print the actual result even if
-				// empty expectations were detected, it must be forced.
-				if (_formatInvalid)
-					resultStream << fromBigEndian<u256>(byteRange);
 				break;
 			case ABIType::None:
-				// If expectations are empty, the encoding type is NONE.
-				if (_formatInvalid)
-					resultStream << fromBigEndian<u256>(byteRange);
 				break;
 			}
-			it += param.abiType.size;
+			it += offset;
 			if (it != _bytes.end() && !(param.abiType.type == ABIType::None))
 				resultStream << ", ";
+		}
+		soltestAssert(it == _bytes.end(), "Parameter encoding too short for the given byte range.");
+		return resultStream.str();
+	}
+
+	string formatRawArguments(ParamList const& _params, string const& _linePrefix = "")
+	{
+		stringstream resultStream;
+		for (auto const& param: _params)
+		{
+			if (param.format.newline)
+				resultStream << endl << _linePrefix << "//";
+			resultStream << " " << param.rawString;
+			if (&param != &_params.back())
+				resultStream << ",";
 		}
 		return resultStream.str();
 	}
@@ -94,41 +104,86 @@ namespace
 		FunctionCallTest const& _test,
 		string const& _linePrefix = "",
 		bool const _renderResult = false,
-		bool const _higlight = false
+		bool const _highlight = false
 	)
 	{
+		using namespace soltest;
+		using Token = soltest::Token;
+
 		stringstream _stream;
 		FunctionCall call = _test.call;
-		bool hightlight = !_test.matchesExpectation() && _higlight;
+		bool highlight = !_test.matchesExpectation() && _highlight;
 
 		auto formatOutput = [&](bool const _singleLine)
 		{
-			_stream << _linePrefix << "// " << call.signature;
+			string ws = " ";
+			string arrow = formatToken(Token::Arrow);
+			string colon = formatToken(Token::Colon);
+			string comma = formatToken(Token::Comma);
+			string comment = formatToken(Token::Comment);
+			string ether = formatToken(Token::Ether);
+			string newline = formatToken(Token::Newline);
+			string failure = formatToken(Token::Failure);
+
+			/// Prints the function signature. This is the same independent from the display-mode.
+			_stream << _linePrefix << newline << ws << call.signature;
 			if (call.value > u256(0))
-				_stream << TestFileParser::formatToken(SoltToken::Comma)
-						<< call.value << " "
-						<< TestFileParser::formatToken(SoltToken::Ether);
+				_stream << comma << ws << call.value << ws << ether;
 			if (!call.arguments.rawBytes().empty())
-				_stream << ": "
-						<< formatBytes(call.arguments.rawBytes(), call.arguments.parameters);
-			if (!_singleLine)
-				_stream << endl << _linePrefix << "// ";
+			{
+				string output = formatRawArguments(call.arguments.parameters, _linePrefix);
+				_stream << colon << output;
+			}
+
+			/// Prints comments on the function parameters and the arrow taking
+			/// the display-mode into account.
 			if (_singleLine)
-				_stream << " ";
-			_stream << "-> ";
-			if (!_singleLine)
-				_stream << endl << _linePrefix << "// ";
-			if (hightlight)
-				_stream << formatting::RED_BACKGROUND;
-			bytes output;
-			if (_renderResult)
-				output = call.expectations.rawBytes();
+			{
+				if (!call.arguments.comment.empty())
+					_stream << ws << comment << call.arguments.comment << comment;
+				_stream << ws << arrow << ws;
+			}
 			else
-				output = _test.rawBytes;
-			if (!output.empty())
-				_stream << formatBytes(output, call.expectations.result);
-			if (hightlight)
-				_stream << formatting::RESET;
+			{
+				_stream << endl << _linePrefix << newline << ws;
+				if (!call.arguments.comment.empty())
+				{
+					 _stream << comment << call.arguments.comment << comment;
+					 _stream << endl << _linePrefix << newline << ws;
+				}
+				_stream << arrow << ws;
+			}
+
+			/// Print either the expected output or the actual result output
+			string result;
+			if (!_renderResult)
+			{
+				bytes output = call.expectations.rawBytes();
+				bool const isFailure = call.expectations.failure;
+				result = isFailure ? failure : formatBytes(output, call.expectations.result);
+			}
+			else
+			{
+				bytes output = _test.rawBytes;
+				bool const isFailure = _test.failure;
+				result = isFailure ? failure : formatBytes(output, call.expectations.result);
+			}
+			AnsiColorized(_stream, highlight, {RED_BACKGROUND}) << result;
+
+			/// Print comments on expectations taking the display-mode into account.
+			if (_singleLine)
+			{
+				if (!call.expectations.comment.empty())
+					_stream << ws << comment << call.expectations.comment << comment;
+			}
+			else
+			{
+				if (!call.expectations.comment.empty())
+				{
+					_stream << endl << _linePrefix << newline << ws;
+					_stream << comment << call.expectations.comment << comment;
+				}
+			}
 		};
 
 		if (call.displayMode == FunctionCall::DisplayMode::SingleLine)
@@ -145,8 +200,7 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath):
 	SolidityExecutionFramework(_ipcPath)
 {
 	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
+	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
 	file.exceptions(ios::badbit);
 
 	m_source = parseSource(file);
@@ -155,8 +209,7 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath):
 
 bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	if (!deploy("", 0, bytes()))
-		BOOST_THROW_EXCEPTION(runtime_error("Failed to deploy contract."));
+	soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
 
 	bool success = true;
 	for (auto& test: m_tests)
@@ -179,15 +232,15 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _
 
 	if (!success)
 	{
-		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
 		for (auto const& test: m_tests)
-			_stream << formatFunctionCallTest(test, _linePrefix, false, true);
+			_stream << formatFunctionCallTest(test, _linePrefix, false, true & _formatted);
 
-		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
 		for (auto const& test: m_tests)
-			_stream << formatFunctionCallTest(test, _linePrefix, true, true);
+			_stream << formatFunctionCallTest(test, _linePrefix, true, true & _formatted);
 
-		FormattedScope(_stream, _formatted, {BOLD, RED}) << _linePrefix
+		AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix
 			<< "Attention: Updates on the test will apply the detected format displayed." << endl;
 		return false;
 	}
@@ -202,10 +255,10 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 		_stream << _linePrefix << line << endl;
 }
 
-void SemanticTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
+void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
 	for (auto const& test: m_tests)
-		_stream << formatFunctionCallTest(test, _linePrefix, false, false);
+		_stream << formatFunctionCallTest(test, "", true, false);
 }
 
 void SemanticTest::parseExpectations(istream& _stream)

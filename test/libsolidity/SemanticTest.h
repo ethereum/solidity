@@ -15,11 +15,11 @@
 #pragma once
 
 #include <test/libsolidity/util/TestFileParser.h>
-#include <test/libsolidity/FormattedScope.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
+#include <libdevcore/AnsiColorized.h>
 
 #include <iosfwd>
 #include <string>
