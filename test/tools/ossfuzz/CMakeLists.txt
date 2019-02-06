@@ -5,6 +5,8 @@ add_dependencies(ossfuzz
         solc_noopt_ossfuzz
         const_opt_ossfuzz
         strictasm_diff_ossfuzz
+        strictasm_opt_ossfuzz
+        strictasm_assembly_ossfuzz
         )
 
 add_custom_target(ossfuzz_proto)
@@ -22,6 +24,12 @@ target_link_libraries(const_opt_ossfuzz PRIVATE libsolc evmasm FuzzingEngine.a)
 
 add_executable(strictasm_diff_ossfuzz strictasm_diff_ossfuzz.cpp yulFuzzerCommon.cpp)
 target_link_libraries(strictasm_diff_ossfuzz PRIVATE libsolc evmasm yulInterpreter FuzzingEngine.a)
+
+add_executable(strictasm_opt_ossfuzz strictasm_opt_ossfuzz.cpp)
+target_link_libraries(strictasm_opt_ossfuzz PRIVATE yul FuzzingEngine.a)
+
+add_executable(strictasm_assembly_ossfuzz strictasm_assembly_ossfuzz.cpp)
+target_link_libraries(strictasm_assembly_ossfuzz PRIVATE yul FuzzingEngine.a)
 
 add_executable(yul_proto_ossfuzz yulProtoFuzzer.cpp protoToYul.cpp yulProto.pb.cc)
 target_include_directories(yul_proto_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
