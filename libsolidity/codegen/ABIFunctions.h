@@ -231,6 +231,11 @@ private:
 	/// Only works for memory arrays and storage arrays that store one item per slot.
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
+	/// @returns the name of a function used during encoding that stores the length
+	/// if the array is dynamically sized. It returns the new encoding position.
+	/// If the array is not dynamically sized, does nothing and just returns the position again.
+	std::string arrayStoreLengthForEncodingFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that allocates memory.
 	/// Modifies the "free memory pointer"
 	/// Arguments: size

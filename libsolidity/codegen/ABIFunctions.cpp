@@ -621,12 +621,12 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 		Whiskers templ(R"(
 			// <readableTypeNameFrom> -> <readableTypeNameTo>
 			function <functionName>(start, length, pos) -> end {
-				<storeLength> // might update pos
+				pos := <storeLength>(pos, length)
 				<copyFun>(start, pos, length)
 				end := add(pos, <roundUpFun>(length))
 			}
 		)");
-		templ("storeLength", _to.isDynamicallySized() ? "mstore(pos, length) pos := add(pos, 0x20)" : "");
+		templ("storeLength", arrayStoreLengthForEncodingFunction(toArrayType));
 		templ("functionName", functionName);
 		templ("readableTypeNameFrom", _from.toString(true));
 		templ("readableTypeNameTo", _to.toString(true));
@@ -665,7 +665,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) <return> {
 					let length := <lengthFun>(value)
-					<storeLength> // might update pos
+					pos := <storeLength>(pos, length)
 					let headStart := pos
 					let tail := add(pos, mul(length, 0x20))
 					let srcPtr := <dataAreaFun>(value)
@@ -684,7 +684,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) <return> {
 					let length := <lengthFun>(value)
-					<storeLength> // might update pos
+					pos := <storeLength>(pos, length)
 					let srcPtr := <dataAreaFun>(value)
 					for { let i := 0 } lt(i, length) { i := add(i, 1) }
 					{
@@ -702,10 +702,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		templ("return", dynamic ? " -> end " : "");
 		templ("assignEnd", dynamic ? "end := pos" : "");
 		templ("lengthFun", arrayLengthFunction(_from));
-		if (_to.isDynamicallySized())
-			templ("storeLength", "mstore(pos, length) pos := add(pos, 0x20)");
-		else
-			templ("storeLength", "");
+		templ("storeLength", arrayStoreLengthForEncodingFunction(_to));
 		templ("dataAreaFun", arrayDataAreaFunction(_from));
 		templ("elementEncodedSize", toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize()));
 
@@ -828,7 +825,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 					// <readableTypeNameFrom> -> <readableTypeNameTo>
 					function <functionName>(value, pos) <return> {
 						let length := <lengthFun>(value)
-						<storeLength> // might update pos
+						pos := <storeLength>(pos, length)
 						let originalPos := pos
 						let srcPtr := <dataArea>(value)
 						for { let i := 0 } lt(i, length) { i := add(i, <itemsPerSlot>) }
@@ -851,10 +848,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("return", dynamic ? " -> end " : "");
 			templ("assignEnd", dynamic ? "end := pos" : "");
 			templ("lengthFun", arrayLengthFunction(_from));
-			if (_to.isDynamicallySized())
-				templ("storeLength", "mstore(pos, length) pos := add(pos, 0x20)");
-			else
-				templ("storeLength", "");
+			templ("storeLength", arrayStoreLengthForEncodingFunction(_to));
 			templ("dataArea", arrayDataAreaFunction(_from));
 			templ("itemsPerSlot", to_string(itemsPerSlot));
 			string elementEncodedSize = toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize());
@@ -1683,6 +1677,30 @@ string ABIFunctions::nextArrayElementFunction(ArrayType const& _type)
 			.render();
 		else
 			solAssert(false, "");
+	});
+}
+
+string ABIFunctions::arrayStoreLengthForEncodingFunction(ArrayType const& _type)
+{
+	string functionName = "array_storeLengthForEncoding_" + _type.identifier();
+	return createFunction(functionName, [&]() {
+		if (_type.isDynamicallySized())
+			return Whiskers(R"(
+				function <functionName>(pos, length) -> updated_pos {
+					mstore(pos, length)
+					updated_pos := add(pos, 0x20)
+				}
+			)")
+			("functionName", functionName)
+			.render();
+		else
+			return Whiskers(R"(
+				function <functionName>(pos, length) -> updated_pos {
+					updated_pos := pos
+				}
+			)")
+			("functionName", functionName)
+			.render();
 	});
 }
 
