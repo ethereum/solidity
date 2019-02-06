@@ -70,7 +70,7 @@ cd $distribution
 if [ $distribution = STATIC ]
 then
     pparepo=ethereum-static
-    Z3DEPENDENCY=""
+    SMTDEPENDENCY=""
     CMAKE_OPTIONS="-DSOLC_LINK_STATIC=On"
 else
     if [ "$branch" = develop ]
@@ -79,7 +79,7 @@ else
     else
         pparepo=ethereum
     fi
-    Z3DEPENDENCY="libz3-dev,
+    SMTDEPENDENCY="libcvc4-dev,
                "
     CMAKE_OPTIONS=""
 fi
@@ -127,7 +127,7 @@ Source: solc
 Section: science
 Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
-Build-Depends: ${Z3DEPENDENCY}debhelper (>= 9.0.0),
+Build-Depends: ${SMTDEPENDENCY}debhelper (>= 9.0.0),
                cmake,
                g++,
                git,
