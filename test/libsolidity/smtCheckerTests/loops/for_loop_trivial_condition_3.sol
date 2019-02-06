@@ -16,3 +16,5 @@ contract C {
 // ----
 // Warning: (115-121): Unused local variable.
 // Warning: (356-370): Assertion violation happens here
+// Warning: (285-290): Underflow (resulting value less than 0) happens here
+// Warning: (285-290): Overflow (resulting value larger than 2**256 - 1) happens here

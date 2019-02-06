@@ -21,7 +21,6 @@
 #include <libsolidity/formal/VariableUsage.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
-#include <liblangutil/ErrorReporter.h>
 #include <libdevcore/StringUtils.h>
 
 #include <boost/range/adaptor/map.hpp>
@@ -109,6 +108,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		m_expressions.clear();
 		m_globalContext.clear();
 		m_uninterpretedTerms.clear();
+		m_overflowTargets.clear();
 		resetStateVariables();
 		initializeLocalVariables(_function);
 		m_loopExecutionHappened = false;
@@ -126,7 +126,10 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	// Otherwise we remove any local variables from the context and
 	// keep the state variables.
 	if (isRootFunction())
+	{
+		checkUnderOverflow();
 		removeLocalVariables();
+	}
 	m_functionPath.pop_back();
 }
 
@@ -316,21 +319,56 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 		defineExpr(_tuple, expr(*_tuple.components()[0]));
 }
 
-void SMTChecker::checkUnderOverflow(smt::Expression _value, IntegerType const& _type, SourceLocation const& _location)
+void SMTChecker::addOverflowTarget(
+	OverflowTarget::Type _type,
+	TypePointer _intType,
+	smt::Expression _value,
+	SourceLocation const& _location
+)
 {
-	checkCondition(
-		_value < minValue(_type),
-		_location,
-		"Underflow (resulting value less than " + formatNumberReadable(_type.minValue()) + ")",
-		"<result>",
-		&_value
+	m_overflowTargets.emplace_back(
+		_type,
+		std::move(_intType),
+		std::move(_value),
+		currentPathConditions(),
+		_location
 	);
+}
+
+void SMTChecker::checkUnderOverflow()
+{
+	for (auto& target: m_overflowTargets)
+	{
+		if (target.type != OverflowTarget::Type::Overflow)
+			checkUnderflow(target);
+		if (target.type != OverflowTarget::Type::Underflow)
+			checkOverflow(target);
+	}
+}
+
+void SMTChecker::checkUnderflow(OverflowTarget& _target)
+{
+	solAssert(_target.type != OverflowTarget::Type::Overflow, "");
+	auto intType = dynamic_cast<IntegerType const*>(_target.intType.get());
 	checkCondition(
-		_value > maxValue(_type),
-		_location,
-		"Overflow (resulting value larger than " + formatNumberReadable(_type.maxValue()) + ")",
+		_target.path && _target.value < minValue(*intType),
+		_target.location,
+		"Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")",
 		"<result>",
-		&_value
+		&_target.value
+	);
+}
+
+void SMTChecker::checkOverflow(OverflowTarget& _target)
+{
+	solAssert(_target.type != OverflowTarget::Type::Underflow, "");
+	auto intType = dynamic_cast<IntegerType const*>(_target.intType.get());
+	checkCondition(
+		_target.path && _target.value > maxValue(*intType),
+		_target.location,
+		"Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")",
+		"<result>",
+		&_target.value
 	);
 }
 
@@ -376,8 +414,13 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	case Token::Sub: // -
 	{
 		defineExpr(_op, 0 - expr(_op.subExpression()));
-		if (auto intType = dynamic_cast<IntegerType const*>(_op.annotation().type.get()))
-			checkUnderOverflow(expr(_op), *intType, _op.location());
+		if (dynamic_cast<IntegerType const*>(_op.annotation().type.get()))
+			addOverflowTarget(
+				OverflowTarget::Type::All,
+				_op.annotation().type,
+				expr(_op),
+				_op.location()
+			);
 		break;
 	}
 	default:
@@ -853,9 +896,28 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 			m_interface->addAssertion(right != 0);
 		}
 
-		checkUnderOverflow(value, intType, _op.location());
+		addOverflowTarget(
+			OverflowTarget::Type::All,
+			_op.annotation().commonType,
+			value,
+			_op.location()
+		);
 
-		defineExpr(_op, value);
+		smt::Expression intValueRange = (0 - minValue(intType)) + maxValue(intType) + 1;
+		defineExpr(_op, smt::Expression::ite(
+			value > maxValue(intType) || value < minValue(intType),
+			value % intValueRange,
+			value
+		));
+		if (intType.isSigned())
+		{
+			defineExpr(_op, smt::Expression::ite(
+				expr(_op) > maxValue(intType),
+				expr(_op) - intValueRange,
+				expr(_op)
+			));
+		}
+
 		break;
 	}
 	default:
@@ -944,10 +1006,10 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, Expression con
 void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location)
 {
 	TypePointer type = _variable.type();
-	if (auto const* intType = dynamic_cast<IntegerType const*>(type.get()))
-		checkUnderOverflow(_value, *intType, _location);
+	if (dynamic_cast<IntegerType const*>(type.get()))
+		addOverflowTarget(OverflowTarget::Type::All, type,	_value,	_location);
 	else if (dynamic_cast<AddressType const*>(type.get()))
-		checkUnderOverflow(_value, IntegerType(160), _location);
+		addOverflowTarget(OverflowTarget::Type::All, make_shared<IntegerType>(160), _value, _location);
 	else if (dynamic_cast<MappingType const*>(type.get()))
 		arrayAssignment();
 	m_interface->addAssertion(newValue(_variable) == _value);
