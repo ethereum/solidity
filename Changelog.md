@@ -20,6 +20,7 @@ Bugfixes:
 
 Build System:
  * Add support for continuous fuzzing via Google oss-fuzz
+ * Ubuntu PPA Packages: Use CVC4 as SMT solver instead of Z3
 
 
 ### 0.5.3 (2019-01-22)
