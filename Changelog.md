@@ -4,6 +4,7 @@ Bugfixes:
  * Code generator: Defensively pad allocation of creationCode and runtimeCode to multiples of 32 bytes.
  * Parser: Disallow empty import statements.
  * Type Checker: Dissallow mappings with data locations other than 'storage'
+ * Type Checker: Fix internal error when a struct array index does not fit into a uint256.
  * Type system: Properly report packed encoded size for arrays and structs (mostly unused until now).
 
 
