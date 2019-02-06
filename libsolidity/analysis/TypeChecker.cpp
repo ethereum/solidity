@@ -946,7 +946,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			if (!var.annotation().type)
 			{
 				if (valueComponentType->category() == Type::Category::RationalNumber)
-					m_errorReporter.fatalTypeError(
+					m_errorReporter.typeError(
 						_statement.initialValue()->location(),
 						"Invalid rational " +
 						valueComponentType->toString() +
@@ -985,7 +985,8 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 					solAssert(dynamic_cast<FixedPointType const*>(var.annotation().type.get()), "Unknown type.");
 			}
 
-			var.accept(*this);
+			if (var.annotation().type)
+				var.accept(*this);
 		}
 		else
 		{
