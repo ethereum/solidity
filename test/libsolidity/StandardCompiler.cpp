@@ -23,8 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libdevcore/JSON.h>
-
-#include "../Metadata.h"
+#include <test/Metadata.h>
 
 using namespace std;
 using namespace dev::eth;

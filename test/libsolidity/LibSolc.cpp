@@ -25,9 +25,6 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolc/libsolc.h>
 
-#include <test/Metadata.h>
-#include <test/Options.h>
-
 using namespace std;
 
 namespace dev
