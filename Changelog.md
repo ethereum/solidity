@@ -23,6 +23,7 @@ Build System:
  * Add support for continuous fuzzing via Google oss-fuzz
  * SMT: If using Z3, require version 4.6.0 or newer.
  * Ubuntu PPA Packages: Use CVC4 as SMT solver instead of Z3
+ * Soltest: Add parser that is used in the file-based unit test environment.
 
 
 ### 0.5.3 (2019-01-22)
