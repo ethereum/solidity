@@ -53,7 +53,7 @@ string ABIFunctions::tupleEncoder(
 		functionName += t->identifier() + "_";
 	functionName += options.toFunctionNameSuffix();
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createExternallyUsedFunction(functionName, [=]() {
 		solAssert(!_givenTypes.empty(), "");
 
 		// Note that the values are in reverse due to the difference in calling semantics.
@@ -117,7 +117,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 
 	solAssert(!_types.empty(), "");
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createExternallyUsedFunction(functionName, [=]() {
 		TypePointers decodingTypes;
 		for (auto const& t: _types)
 			decodingTypes.emplace_back(t->decodingType());
