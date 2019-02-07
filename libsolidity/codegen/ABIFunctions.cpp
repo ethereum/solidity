@@ -569,7 +569,7 @@ string ABIFunctions::abiEncodingFunction(
 		)");
 		templ("functionName", functionName);
 
-		if (_from.dataStoredIn(DataLocation::Storage) && to.isValueType())
+		if (_from.dataStoredIn(DataLocation::Storage))
 		{
 			// special case: convert storage reference type to value type - this is only
 			// possible for library calls where we just forward the storage reference
