@@ -87,5 +87,4 @@ Contents
    common-patterns.rst
    bugs.rst
    contributing.rst
-   frequently-asked-questions.rst
    lll.rst
