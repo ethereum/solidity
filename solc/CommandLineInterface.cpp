@@ -60,9 +60,14 @@
 #else // unix
 	#include <unistd.h>
 #endif
+
 #include <string>
 #include <iostream>
 #include <fstream>
+
+#if !defined(STDERR_FILENO)
+	#define STDERR_FILENO 2
+#endif
 
 using namespace std;
 using namespace langutil;
