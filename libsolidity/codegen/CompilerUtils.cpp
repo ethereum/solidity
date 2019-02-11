@@ -918,8 +918,7 @@ void CompilerUtils::convertType(
 		auto& targetType = dynamic_cast<StructType const&>(_targetType);
 		auto& typeOnStack = dynamic_cast<StructType const&>(_typeOnStack);
 		solAssert(
-			targetType.location() != DataLocation::CallData &&
-			typeOnStack.location() != DataLocation::CallData
+			targetType.location() != DataLocation::CallData
 		, "");
 		switch (targetType.location())
 		{
@@ -933,9 +932,9 @@ void CompilerUtils::convertType(
 			break;
 		case DataLocation::Memory:
 			// Copy the array to a free position in memory, unless it is already in memory.
-			if (typeOnStack.location() != DataLocation::Memory)
+			switch (typeOnStack.location())
 			{
-				solAssert(typeOnStack.location() == DataLocation::Storage, "");
+			case DataLocation::Storage:
 				// stack: <source ref>
 				m_context << typeOnStack.memorySize();
 				allocateMemory();
@@ -955,6 +954,19 @@ void CompilerUtils::convertType(
 					storeInMemoryDynamic(*targetMemberType, true);
 				}
 				m_context << Instruction::POP << Instruction::POP;
+				break;
+			case DataLocation::CallData:
+			{
+				solUnimplementedAssert(!typeOnStack.isDynamicallyEncoded(), "");
+				m_context << Instruction::DUP1;
+				m_context << Instruction::CALLDATASIZE;
+				m_context << Instruction::SUB;
+				abiDecode({targetType.shared_from_this()}, false);
+				break;
+			}
+			case DataLocation::Memory:
+				// nothing to do
+				break;
 			}
 			break;
 		case DataLocation::CallData:

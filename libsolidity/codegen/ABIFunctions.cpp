@@ -1246,7 +1246,16 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 			return abiDecodingFunctionArray(*arrayType, _fromMemory);
 	}
 	else if (auto const* structType = dynamic_cast<StructType const*>(decodingType.get()))
-		return abiDecodingFunctionStruct(*structType, _fromMemory);
+	{
+		if (structType->dataStoredIn(DataLocation::CallData))
+		{
+			solAssert(!_fromMemory, "");
+			solUnimplementedAssert(!structType->isDynamicallyEncoded(), "Dynamically encoded calldata structs are not yet implemented.");
+			return abiDecodingFunctionCalldataStruct(*structType);
+		}
+		else
+			return abiDecodingFunctionStruct(*structType, _fromMemory);
+	}
 	else if (auto const* functionType = dynamic_cast<FunctionType const*>(decodingType.get()))
 		return abiDecodingFunctionFunctionType(*functionType, _fromMemory, _forUseOnStack);
 	else
@@ -1423,14 +1432,36 @@ string ABIFunctions::abiDecodingFunctionByteArray(ArrayType const& _type, bool _
 	});
 }
 
+string ABIFunctions::abiDecodingFunctionCalldataStruct(StructType const& _type)
+{
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	solAssert(_type.calldataEncodedSize(true) != 0, "");
+	string functionName =
+		"abi_decode_" +
+		_type.identifier();
+
+	return createFunction(functionName, [&]() {
+		Whiskers w{R"(
+				// <readableTypeName>
+				function <functionName>(offset, end) -> value {
+					if slt(sub(end, offset), <minimumSize>) { revert(0, 0) }
+					value := offset
+				}
+		)"};
+		w("functionName", functionName);
+		w("readableTypeName", _type.toString(true));
+		w("minimumSize", to_string(_type.calldataEncodedSize(true)));
+		return w.render();
+	});
+}
+
 string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fromMemory)
 {
+	solAssert(!_type.dataStoredIn(DataLocation::CallData), "");
 	string functionName =
 		"abi_decode_" +
 		_type.identifier() +
 		(_fromMemory ? "_fromMemory" : "");
-
-	solUnimplementedAssert(!_type.dataStoredIn(DataLocation::CallData), "");
 
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(

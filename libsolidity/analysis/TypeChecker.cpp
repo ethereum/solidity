@@ -371,10 +371,12 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 		if (
 			!m_scope->isInterface() &&
-			baseType->category() == Type::Category::Struct &&
 			baseType->dataStoredIn(DataLocation::CallData)
 		)
-			m_errorReporter.typeError(var->location(), "Calldata structs are not yet supported.");
+			if (auto const* structType = dynamic_cast<StructType const*>(baseType.get()))
+				if (structType->isDynamicallyEncoded())
+					m_errorReporter.typeError(var->location(), "Dynamically encoded calldata structs are not yet supported.");
+
 		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}
@@ -2085,8 +2087,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
 			);
 
-	if (exprType->category() == Type::Category::Struct)
-		annotation.isLValue = true;
+	if (auto const* structType = dynamic_cast<StructType const*>(exprType.get()))
+		annotation.isLValue = !structType->dataStoredIn(DataLocation::CallData);
 	else if (exprType->category() == Type::Category::Array)
 	{
 		auto const& arrayType(dynamic_cast<ArrayType const&>(*exprType));

@@ -852,6 +852,7 @@ public:
 
 	std::pair<u256, unsigned> const& storageOffsetsOfMember(std::string const& _name) const;
 	u256 memoryOffsetOfMember(std::string const& _name) const;
+	unsigned calldataOffsetOfMember(std::string const& _name) const;
 
 	StructDefinition const& structDefinition() const { return m_struct; }
 

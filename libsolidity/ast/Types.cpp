@@ -2053,6 +2053,24 @@ unsigned StructType::calldataEncodedSize(bool) const
 	return size;
 }
 
+unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
+{
+	unsigned offset = 0;
+	for (auto const& member: members(nullptr))
+	{
+		solAssert(member.type->canLiveOutsideStorage(), "");
+		if (member.name == _member)
+			return offset;
+		{
+			// Struct members are always padded.
+			unsigned memberSize = member.type->calldataEncodedSize(true);
+			solAssert(memberSize != 0, "");
+			offset += memberSize;
+		}
+	}
+	solAssert(false, "Struct member not found.");
+}
+
 bool StructType::isDynamicallyEncoded() const
 {
 	solAssert(!recursive(), "");
