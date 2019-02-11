@@ -1012,8 +1012,8 @@ public:
 	): FunctionType(
 		parseElementaryTypeVector(_parameterTypes),
 		parseElementaryTypeVector(_returnParameterTypes),
-		strings(),
-		strings(),
+		strings(_parameterTypes.size(), ""),
+		strings(_returnParameterTypes.size(), ""),
 		_kind,
 		_arbitraryParameters,
 		_stateMutability
@@ -1050,6 +1050,14 @@ public:
 		m_bound(_bound),
 		m_declaration(_declaration)
 	{
+		solAssert(
+			m_parameterNames.size() == m_parameterTypes.size(),
+			"Parameter names list must match parameter types list!"
+		);
+		solAssert(
+			m_returnParameterNames.size() == m_returnParameterTypes.size(),
+			"Return parameter names list must match return parameter types list!"
+		);
 		solAssert(
 			!m_bound || !m_parameterTypes.empty(),
 			"Attempted construction of bound function without self type"

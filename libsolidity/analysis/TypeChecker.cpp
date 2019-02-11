@@ -1225,9 +1225,9 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
 
 				if (_tuple.isInlineArray())
-					solAssert(!!types[i], "Inline array cannot have empty components");
-				if (_tuple.isInlineArray())
 				{
+					solAssert(!!types[i], "Inline array cannot have empty components");
+
 					if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
 						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid mobile type.");
 
@@ -1677,17 +1677,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	{
 		auto const& parameterNames = _functionType->parameterNames();
 
-		// Check for expected number of named arguments
-		if (parameterNames.size() != argumentNames.size())
-		{
-			m_errorReporter.typeError(
-				_functionCall.location(),
-				parameterNames.size() > argumentNames.size() ?
-				"Some argument names are missing." :
-				"Too many arguments."
-			);
-			return;
-		}
+		solAssert(
+			parameterNames.size() == argumentNames.size(),
+			"Unexpected parameter length mismatch!"
+		);
 
 		// Check for duplicate argument names
 		{
@@ -1971,8 +1964,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		_newExpression.annotation().type = make_shared<FunctionType>(
 			TypePointers{make_shared<IntegerType>(256)},
 			TypePointers{type},
-			strings(),
-			strings(),
+			strings(1, ""),
+			strings(1, ""),
 			FunctionType::Kind::ObjectCreation,
 			false,
 			StateMutability::Pure
