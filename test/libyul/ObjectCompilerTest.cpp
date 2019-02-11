@@ -17,7 +17,7 @@
 
 #include <test/libyul/ObjectCompilerTest.h>
 
-#include <test/libsolidity/FormattedScope.h>
+#include <libdevcore/AnsiColorized.h>
 
 #include <libsolidity/interface/AssemblyStack.h>
 
@@ -67,7 +67,7 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 	AssemblyStack stack(EVMVersion(), AssemblyStack::Language::StrictAssembly);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, stack.errors());
 		return false;
 	}
@@ -91,9 +91,9 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 	if (m_expectation != m_obtainedResult)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
 		printIndented(_stream, m_expectation, nextIndentLevel);
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
 		return false;
 	}
