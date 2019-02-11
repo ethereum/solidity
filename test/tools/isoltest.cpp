@@ -16,6 +16,7 @@
 */
 
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/AnsiColorized.h>
 
 #include <test/Common.h>
 #include <test/libsolidity/AnalysisFramework.h>
@@ -38,7 +39,7 @@
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
-using namespace dev::solidity::test::formatting;
+using namespace dev::formatting;
 using namespace std;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -110,7 +111,7 @@ TestTool::Result TestTool::process()
 	bool success;
 	std::stringstream outputMessages;
 
-	(FormattedScope(cout, m_formatted, {BOLD}) << m_name << ": ").flush();
+	(AnsiColorized(cout, m_formatted, {BOLD}) << m_name << ": ").flush();
 
 	try
 	{
@@ -119,33 +120,33 @@ TestTool::Result TestTool::process()
 	}
 	catch(boost::exception const& _e)
 	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
 			"Exception during syntax test: " << boost::diagnostic_information(_e) << endl;
 		return Result::Exception;
 	}
 	catch (std::exception const& _e)
 	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
 			"Exception during syntax test: " << _e.what() << endl;
 		return Result::Exception;
 	}
 	catch (...)
 	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) <<
+		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
 			"Unknown exception during syntax test." << endl;
 		return Result::Exception;
 	}
 
 	if (success)
 	{
-		FormattedScope(cout, m_formatted, {BOLD, GREEN}) << "OK" << endl;
+		AnsiColorized(cout, m_formatted, {BOLD, GREEN}) << "OK" << endl;
 		return Result::Success;
 	}
 	else
 	{
-		FormattedScope(cout, m_formatted, {BOLD, RED}) << "FAIL" << endl;
+		AnsiColorized(cout, m_formatted, {BOLD, RED}) << "FAIL" << endl;
 
-		FormattedScope(cout, m_formatted, {BOLD, CYAN}) << "  Contract:" << endl;
+		AnsiColorized(cout, m_formatted, {BOLD, CYAN}) << "  Contract:" << endl;
 		m_test->printSource(cout, "    ", m_formatted);
 
 		cout << endl << outputMessages.str() << endl;
@@ -305,7 +306,7 @@ boost::optional<TestStats> runTestSuite(
 	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _formatted);
 
 	cout << endl << _name << " Test Summary: ";
-	FormattedScope(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
+	AnsiColorized(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
 		stats.successCount <<
 		"/" <<
 		stats.testCount;
@@ -389,7 +390,7 @@ Allowed options)",
 	}
 
 	cout << endl << "Summary: ";
-	FormattedScope(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
+	AnsiColorized(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
 		 global_stats.successCount << "/" << global_stats.testCount;
 	cout << " tests successful." << endl;
 

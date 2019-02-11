@@ -28,10 +28,10 @@
 #include <stdexcept>
 #include <sstream>
 
-using namespace dev;
-using namespace solidity;
 using namespace dev::solidity::test;
-using namespace dev::solidity::test::formatting;
+using namespace dev::solidity;
+using namespace dev::formatting;
+using namespace dev;
 using namespace std;
 using namespace boost::unit_test;
 

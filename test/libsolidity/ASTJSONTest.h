@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <test/libsolidity/FormattedScope.h>
+#include <libdevcore/AnsiColorized.h>
 #include <test/TestCase.h>
 
 #include <iosfwd>
