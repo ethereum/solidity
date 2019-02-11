@@ -42,6 +42,7 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
+#include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmPrinter.h>
@@ -241,8 +242,15 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 	}
+	else if (m_optimizerStep == "stackCompressor")
+	{
+		disambiguate();
+		(FunctionGrouper{})(*m_ast);
+		StackCompressor::run(m_dialect, *m_ast);
+		(BlockFlattener{})(*m_ast);
+	}
 	else if (m_optimizerStep == "fullSuite")
-		OptimiserSuite::run(*m_dialect, *m_ast, *m_analysisInfo);
+		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo);
 	else
 	{
 		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;

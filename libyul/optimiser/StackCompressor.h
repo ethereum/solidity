@@ -15,34 +15,33 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Optimiser suite that combines all steps and also provides the settings for the heuristics.
+ * Optimisation stage that aggressively rematerializes certain variables ina a function to free
+ * space on the stack until it is compilable.
  */
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
-#include <libyul/YulString.h>
-
-#include <set>
+#include <memory>
 
 namespace yul
 {
 
-struct AsmAnalysisInfo;
 struct Dialect;
+struct Block;
+struct FunctionDefinition;
 
 /**
- * Optimiser suite that combines all steps and also provides the settings for the heuristics
+ * Optimisation stage that aggressively rematerializes certain variables in a function to free
+ * space on the stack until it is compilable.
+ *
+ * Prerequisite: Disambiguator, Function Grouper
  */
-class OptimiserSuite
+class StackCompressor
 {
 public:
-	static void run(
-		std::shared_ptr<Dialect> const& _dialect,
-		Block& _ast,
-		AsmAnalysisInfo const& _analysisInfo,
-		std::set<YulString> const& _externallyUsedIdentifiers = {}
-	);
+	/// Try to remove local variables until the AST is compilable.
+	/// @returns true if it was successful.
+	static bool run(std::shared_ptr<Dialect> const& _dialect, Block& _ast);
 };
 
 }

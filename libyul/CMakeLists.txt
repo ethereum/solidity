@@ -94,6 +94,8 @@ add_library(yul
 	optimiser/Semantics.h
 	optimiser/SimplificationRules.cpp
 	optimiser/SimplificationRules.h
+	optimiser/StackCompressor.cpp
+	optimiser/StackCompressor.h
 	optimiser/StructuralSimplifier.cpp
 	optimiser/StructuralSimplifier.h
 	optimiser/Substitution.cpp
