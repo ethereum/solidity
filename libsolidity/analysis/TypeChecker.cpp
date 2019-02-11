@@ -48,9 +48,9 @@ using namespace dev::solidity;
 namespace
 {
 
-bool typeSupportedByOldABIEncoder(Type const& _type)
+bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
 {
-	if (_type.dataStoredIn(DataLocation::Storage))
+	if (_isLibraryCall && _type.dataStoredIn(DataLocation::Storage))
 		return true;
 	if (_type.category() == Type::Category::Struct)
 		return false;
@@ -58,7 +58,7 @@ bool typeSupportedByOldABIEncoder(Type const& _type)
 	{
 		auto const& arrayType = dynamic_cast<ArrayType const&>(_type);
 		auto base = arrayType.baseType();
-		if (!typeSupportedByOldABIEncoder(*base) || (base->category() == Type::Category::Array && base->isDynamicallySized()))
+		if (!typeSupportedByOldABIEncoder(*base, _isLibraryCall) || (base->category() == Type::Category::Array && base->isDynamicallySized()))
 			return false;
 	}
 	return true;
@@ -355,7 +355,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (
 			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(var))
+			!typeSupportedByOldABIEncoder(*type(var), isLibraryFunction)
 		)
 			m_errorReporter.typeError(
 				var.location(),
@@ -475,7 +475,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		{
 			vector<string> unsupportedTypes;
 			for (auto const& param: getter.parameterTypes() + getter.returnParameterTypes())
-				if (!typeSupportedByOldABIEncoder(*param))
+				if (!typeSupportedByOldABIEncoder(*param, false /* isLibrary */))
 					unsupportedTypes.emplace_back(param->toString());
 			if (!unsupportedTypes.empty())
 				m_errorReporter.typeError(_variable.location(),
@@ -578,24 +578,14 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	for (ASTPointer<VariableDeclaration> const& var: _eventDef.parameters())
 	{
 		if (var->isIndexed())
-		{
 			numIndexed++;
-			if (
-				_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-				dynamic_cast<ReferenceType const*>(type(*var).get())
-			)
-				m_errorReporter.typeError(
-					var->location(),
-					"Indexed reference types cannot yet be used with ABIEncoderV2."
-				);
-		}
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
 			m_errorReporter.typeError(var->location(), "Internal or recursive type is not allowed as event parameter type.");
 		if (
 			!_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(*var))
+			!typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */)
 		)
 			m_errorReporter.typeError(
 				var->location(),
@@ -1558,6 +1548,15 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 				);
 				continue;
 			}
+		}
+
+		if (isPacked && !typeSupportedByOldABIEncoder(*argType, false /* isLibrary */))
+		{
+			m_errorReporter.typeError(
+				arguments[i]->location(),
+				"Type not supported in packed mode."
+			);
+			continue;
 		}
 
 		if (!argType->fullEncodingType(false, abiEncoderV2, !_functionType->padArguments()))

@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (156-157): This type cannot be encoded.
-// TypeError: (159-160): This type cannot be encoded.
+// TypeError: (156-157): Type not supported in packed mode.
+// TypeError: (159-160): Type not supported in packed mode.

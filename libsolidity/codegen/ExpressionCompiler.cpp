@@ -731,6 +731,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			arguments.front()->accept(*this);
 			utils().fetchFreeMemoryPointer();
+			solAssert(function.parameterTypes().front()->isValueType(), "");
 			utils().packedEncode(
 				{arguments.front()->annotation().type},
 				{function.parameterTypes().front()}
@@ -744,28 +745,32 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().accept(*this);
 			auto const& event = dynamic_cast<EventDefinition const&>(function.declaration());
 			unsigned numIndexed = 0;
+			TypePointers paramTypes = function.parameterTypes();
 			// All indexed arguments go to the stack
 			for (unsigned arg = arguments.size(); arg > 0; --arg)
 				if (event.parameters()[arg - 1]->isIndexed())
 				{
 					++numIndexed;
 					arguments[arg - 1]->accept(*this);
-					if (auto const& arrayType = dynamic_pointer_cast<ArrayType const>(function.parameterTypes()[arg - 1]))
+					if (auto const& referenceType = dynamic_pointer_cast<ReferenceType const>(paramTypes[arg - 1]))
 					{
 						utils().fetchFreeMemoryPointer();
 						utils().packedEncode(
 							{arguments[arg - 1]->annotation().type},
-							{arrayType}
+							{referenceType}
 						);
 						utils().toSizeAfterFreeMemoryPointer();
 						m_context << Instruction::KECCAK256;
 					}
 					else
+					{
+						solAssert(paramTypes[arg - 1]->isValueType(), "");
 						utils().convertType(
 							*arguments[arg - 1]->annotation().type,
-							*function.parameterTypes()[arg - 1],
+							*paramTypes[arg - 1],
 							true
 						);
+					}
 				}
 			if (!event.isAnonymous())
 			{
@@ -782,7 +787,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				{
 					arguments[arg]->accept(*this);
 					nonIndexedArgTypes.push_back(arguments[arg]->annotation().type);
-					nonIndexedParamTypes.push_back(function.parameterTypes()[arg]);
+					nonIndexedParamTypes.push_back(paramTypes[arg]);
 				}
 			utils().fetchFreeMemoryPointer();
 			utils().abiEncode(nonIndexedArgTypes, nonIndexedParamTypes);

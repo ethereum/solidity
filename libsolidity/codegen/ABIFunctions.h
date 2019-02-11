@@ -60,15 +60,25 @@ public:
 	/// The values represent stack slots. If a type occupies more or less than one
 	/// stack slot, it takes exactly that number of values.
 	/// Returns a pointer to the end of the area written in memory.
-	/// Does not allocate memory (does not change the memory head pointer), but writes
+	/// Does not allocate memory (does not change the free memory pointer), but writes
 	/// to memory starting at $headStart and an unrestricted amount after that.
-	/// Assigns the end of encoded memory either to $value0 or (if that is not present)
-	/// to $headStart.
 	std::string tupleEncoder(
 		TypePointers const& _givenTypes,
 		TypePointers const& _targetTypes,
 		bool _encodeAsLibraryTypes = false
 	);
+
+	/// @returns name of an assembly function to encode values of @a _givenTypes
+	/// with packed encoding into memory, converting the types to @a _targetTypes on the fly.
+	/// Parameters are: <memPos> <value_n> ... <value_1>, i.e.
+	/// the layout on the stack is <value_1> ... <value_n> <memPos> with
+	/// the top of the stack on the right.
+	/// The values represent stack slots. If a type occupies more or less than one
+	/// stack slot, it takes exactly that number of values.
+	/// Returns a pointer to the end of the area written in memory.
+	/// Does not allocate memory (does not change the free memory pointer), but writes
+	/// to memory starting at memPos and an unrestricted amount after that.
+	std::string tupleEncoderPacked(TypePointers const& _givenTypes, TypePointers const& _targetTypes);
 
 	/// @returns name of an assembly function to ABI-decode values of @a _types
 	/// into memory. If @a _fromMemory is true, decodes from memory instead of
@@ -89,7 +99,9 @@ public:
 private:
 	struct EncodingOptions
 	{
-		/// Pad/signextend value types and bytes/string to multiples of  32 bytes.
+		/// Pad/signextend value types and bytes/string to multiples of 32 bytes.
+		/// If false, data is always left-aligned.
+		/// Note that this is always re-set to true for the elements of arrays and structs.
 		bool padded = true;
 		/// Store arrays and structs in place without "data pointer" and do not store the length.
 		bool dynamicInplace = false;
@@ -130,6 +142,14 @@ private:
 	/// @param _fromStack if false, the input value was just loaded from storage
 	/// or memory and thus might be compacted into a single slot (depending on the type).
 	std::string abiEncodingFunction(
+		Type const& _givenType,
+		Type const& _targetType,
+		EncodingOptions const& _options
+	);
+	/// @returns the name of a function that internally calls `abiEncodingFunction`
+	/// but always returns the updated encoding position, even if the type is
+	/// statically encoded.
+	std::string abiEncodeAndReturnUpdatedPosFunction(
 		Type const& _givenType,
 		Type const& _targetType,
 		EncodingOptions const& _options
@@ -212,6 +232,10 @@ private:
 	/// Pads with zeros and might write more than exactly length.
 	std::string copyToMemoryFunction(bool _fromCalldata);
 
+	/// @returns the name of a function that takes a (cleaned) value of the given value type and
+	/// left-aligns it, usually for use in non-padded encoding.
+	std::string leftAlignFunction(Type const& _type);
+
 	std::string shiftLeftFunction(size_t _numBits);
 	std::string shiftRightFunction(size_t _numBits);
 	/// @returns the name of a function that rounds its input to the next multiple
@@ -232,9 +256,11 @@ private:
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
 	/// @returns the name of a function used during encoding that stores the length
-	/// if the array is dynamically sized. It returns the new encoding position.
-	/// If the array is not dynamically sized, does nothing and just returns the position again.
-	std::string arrayStoreLengthForEncodingFunction(ArrayType const& _type);
+	/// if the array is dynamically sized (and the options do not request in-place encoding).
+	/// It returns the new encoding position.
+	/// If the array is not dynamically sized (or in-place encoding was requested),
+	/// does nothing and just returns the position again.
+	std::string arrayStoreLengthForEncodingFunction(ArrayType const& _type, EncodingOptions const& _options);
 
 	/// @returns the name of a function that allocates memory.
 	/// Modifies the "free memory pointer"

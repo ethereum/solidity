@@ -348,11 +348,15 @@ void CompilerUtils::encodeToMemory(
 
 	if (_givenTypes.empty())
 		return;
-	else if (_padToWordBoundaries && !_copyDynamicDataInPlace && encoderV2)
+	if (encoderV2)
 	{
 		// Use the new Yul-based encoding function
+		solAssert(
+			_padToWordBoundaries != _copyDynamicDataInPlace,
+			"Non-padded and in-place encoding can only be combined."
+		);
 		auto stackHeightBefore = m_context.stackHeight();
-		abiEncodeV2(_givenTypes, targetTypes, _encodeAsLibraryTypes);
+		abiEncodeV2(_givenTypes, targetTypes, _encodeAsLibraryTypes, _padToWordBoundaries);
 		solAssert(stackHeightBefore - m_context.stackHeight() == sizeOnStack(_givenTypes), "");
 		return;
 	}
@@ -466,15 +470,22 @@ void CompilerUtils::encodeToMemory(
 void CompilerUtils::abiEncodeV2(
 	TypePointers const& _givenTypes,
 	TypePointers const& _targetTypes,
-	bool _encodeAsLibraryTypes
+	bool _encodeAsLibraryTypes,
+	bool _padToWordBoundaries
 )
 {
+	if (!_padToWordBoundaries)
+		solAssert(!_encodeAsLibraryTypes, "Library calls cannot be packed.");
+
 	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
 
 	auto ret = m_context.pushNewTag();
 	moveIntoStack(sizeOnStack(_givenTypes) + 1);
 
-	string encoderName = m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes);
+	string encoderName =
+		_padToWordBoundaries ?
+		m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
+		m_context.abiFunctions().tupleEncoderPacked(_givenTypes, _targetTypes);
 	m_context.appendJumpTo(m_context.namedTag(encoderName));
 	m_context.adjustStackOffset(-int(sizeOnStack(_givenTypes)) - 1);
 	m_context << ret.tag();
