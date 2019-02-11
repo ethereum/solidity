@@ -366,6 +366,16 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
 		TypePointer baseType = type(*var);
+		if (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
+		{
+			baseType = arrayType->baseType();
+			if (
+				!m_scope->isInterface() &&
+				baseType->dataStoredIn(DataLocation::CallData) &&
+				baseType->isDynamicallyEncoded()
+			)
+				m_errorReporter.typeError(var->location(), "Calldata arrays with dynamically encoded base types are not yet supported.");
+		}
 		while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
 			baseType = arrayType->baseType();
 
