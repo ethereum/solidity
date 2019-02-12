@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall_value)
 				}
 			}
 		)";
-		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" not found or not visible after argument-dependent lookup");
+		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" is only available for payable functions.");
 	}
 }
 
