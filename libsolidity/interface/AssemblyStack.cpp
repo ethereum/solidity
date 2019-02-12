@@ -84,7 +84,8 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 
 void AssemblyStack::optimize()
 {
-	solAssert(m_language != Language::Assembly, "Optimization requested for loose assembly.");
+	if (m_language != Language::StrictAssembly)
+		solUnimplemented("Optimizer for both loose assembly and Yul is not yet implemented");
 	solAssert(m_analysisSuccessful, "Analysis was not successful.");
 	m_analysisSuccessful = false;
 	optimize(*m_parserResult);
