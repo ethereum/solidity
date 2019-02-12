@@ -91,7 +91,7 @@ You need to use the modifier ``payable`` with the ``info`` function because
 otherwise, the ``.value()`` option would not be available.
 
 .. warning::
-  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call. So in this case, the function is not called.
+  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call. So in this case, the function is not called and the ``value`` and ``gas`` settings are lost.
 
 Function calls cause exceptions if the called contract does not exist (in the
 sense that the account does not contain code) or if the called contract itself
