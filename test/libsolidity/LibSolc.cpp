@@ -25,9 +25,6 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolc/libsolc.h>
 
-#include <test/Metadata.h>
-#include <test/Options.h>
-
 using namespace std;
 
 namespace dev
@@ -40,11 +37,31 @@ namespace test
 namespace
 {
 
-Json::Value compile(string const& _input)
+/// TODO: share this between StandardCompiler.cpp
+/// Helper to match a specific error type and message
+bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
 {
-	string output(solidity_compile(_input.c_str(), nullptr));
+	if (!_compilerResult.isMember("errors"))
+		return false;
+
+	for (auto const& error: _compilerResult["errors"])
+	{
+		BOOST_REQUIRE(error.isObject());
+		BOOST_REQUIRE(error["type"].isString());
+		BOOST_REQUIRE(error["message"].isString());
+		if ((error["type"].asString() == _type) && (error["message"].asString() == _message))
+			return true;
+	}
+
+	return false;
+}
+
+Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
+{
+	string output(solidity_compile(_input.c_str(), _callback));
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
+	solidity_free();
 	return ret;
 }
 
@@ -56,12 +73,14 @@ BOOST_AUTO_TEST_CASE(read_version)
 {
 	string output(solidity_version());
 	BOOST_CHECK(output.find(VersionString) == 0);
+	solidity_free();
 }
 
 BOOST_AUTO_TEST_CASE(read_license)
 {
 	string output(solidity_license());
 	BOOST_CHECK(output.find("GNU GENERAL PUBLIC LICENSE") != string::npos);
+	solidity_free();
 }
 
 BOOST_AUTO_TEST_CASE(standard_compilation)
@@ -84,6 +103,71 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 	// This used to test that it is a member, but we did not actually request any output,
 	// so there should not be a contract member.
 	BOOST_CHECK(!result.isMember("contracts"));
+}
+
+BOOST_AUTO_TEST_CASE(missing_callback)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"fileA": {
+				"content": "import \"missing.sol\"; contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(result.isObject());
+
+	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: File not supplied initially."));
+}
+
+BOOST_AUTO_TEST_CASE(with_callback)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"fileA": {
+				"content": "import \"found.sol\"; import \"notfound.sol\"; contract A { }"
+			}
+		}
+	}
+	)";
+
+	CStyleReadFileCallback callback{
+		[](char const* _path, char** o_contents, char** o_error)
+		{
+			// Caller frees the pointers.
+			if (string(_path) == "found.sol")
+			{
+				static string content{"import \"missing.sol\"; contract B {}"};
+				*o_contents = strdup(content.c_str());
+				*o_error = nullptr;
+			}
+			else if (string(_path) == "missing.sol")
+			{
+				static string errorMsg{"Missing file."};
+				*o_error = strdup(errorMsg.c_str());
+				*o_contents = nullptr;
+			}
+			else
+			{
+				*o_error = nullptr;
+				*o_contents = nullptr;
+			}
+		}
+	};
+
+	Json::Value result = compile(input, callback);
+	BOOST_CHECK(result.isObject());
+
+	// This ensures that "found.sol" was properly loaded which triggered the second import statement.
+	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));
+
+	// This should be placed due to the missing "notfound.sol" which sets both pointers to null.
+	BOOST_CHECK(containsError(result, "ParserError", "Source \"notfound.sol\" not found: File not found."));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

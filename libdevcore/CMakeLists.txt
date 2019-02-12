@@ -1,5 +1,6 @@
 set(sources
 	Algorithms.h
+	AnsiColorized.h
 	Assertions.h
 	Common.h
 	CommonData.cpp

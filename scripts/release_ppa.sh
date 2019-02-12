@@ -53,7 +53,14 @@ packagename=solc
 
 static_build_distribution=cosmic
 
-for distribution in bionic cosmic STATIC
+DISTRIBUTIONS="bionic cosmic disco"
+
+if [ branch != develop ]
+then
+    DISTRIBUTIONS="$DISTRIBUTIONS STATIC"
+fi
+
+for distribution in $DISTRIBUTIONS
 do
 cd /tmp/
 rm -rf $distribution
@@ -63,7 +70,7 @@ cd $distribution
 if [ $distribution = STATIC ]
 then
     pparepo=ethereum-static
-    Z3DEPENDENCY=""
+    SMTDEPENDENCY=""
     CMAKE_OPTIONS="-DSOLC_LINK_STATIC=On"
 else
     if [ "$branch" = develop ]
@@ -72,7 +79,7 @@ else
     else
         pparepo=ethereum
     fi
-    Z3DEPENDENCY="libz3-dev,
+    SMTDEPENDENCY="libcvc4-dev,
                "
     CMAKE_OPTIONS=""
 fi
@@ -96,7 +103,7 @@ commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-
 echo "$commithash" > commit_hash.txt
 if [ $branch = develop ]
 then
-    debversion="$version-develop-$commitdate-$commithash"
+    debversion="$version~develop-$commitdate-$commithash"
 else
     debversion="$version"
     echo -n > prerelease.txt # proper release
@@ -120,7 +127,7 @@ Source: solc
 Section: science
 Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
-Build-Depends: ${Z3DEPENDENCY}debhelper (>= 9.0.0),
+Build-Depends: ${SMTDEPENDENCY}debhelper (>= 9.0.0),
                cmake,
                g++,
                git,

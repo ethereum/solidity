@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TypePointer keccak256fun = make_shared<FunctionType>(strings{}, strings{}, FunctionType::Kind::KECCAK256);
 	BOOST_CHECK_EQUAL(keccak256fun->identifier(), "t_function_keccak256_nonpayable$__$returns$__$");
 
-	FunctionType metaFun(TypePointers{keccak256fun}, TypePointers{s.type()});
+	FunctionType metaFun(TypePointers{keccak256fun}, TypePointers{s.type()}, strings{""}, strings{""});
 	BOOST_CHECK_EQUAL(metaFun.identifier(), "t_function_internal_nonpayable$_t_function_keccak256_nonpayable$__$returns$__$_$returns$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$");
 
 	TypePointer m = make_shared<MappingType>(Type::fromElementaryTypeName("bytes32"), s.type());
@@ -217,6 +217,30 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(MagicType(MagicType::Kind::Transaction).identifier(), "t_magic_transaction");
 
 	BOOST_CHECK_EQUAL(InaccessibleDynamicType().identifier(), "t_inaccessible");
+}
+
+BOOST_AUTO_TEST_CASE(encoded_sizes)
+{
+	BOOST_CHECK_EQUAL(IntegerType(16).calldataEncodedSize(true), 32);
+	BOOST_CHECK_EQUAL(IntegerType(16).calldataEncodedSize(false), 2);
+
+	BOOST_CHECK_EQUAL(FixedBytesType(16).calldataEncodedSize(true), 32);
+	BOOST_CHECK_EQUAL(FixedBytesType(16).calldataEncodedSize(false), 16);
+
+	BOOST_CHECK_EQUAL(BoolType().calldataEncodedSize(true), 32);
+	BOOST_CHECK_EQUAL(BoolType().calldataEncodedSize(false), 1);
+
+	shared_ptr<ArrayType> uint24Array = make_shared<ArrayType>(
+		DataLocation::Memory,
+		make_shared<IntegerType>(24),
+		9
+	);
+	BOOST_CHECK_EQUAL(uint24Array->calldataEncodedSize(true), 9 * 32);
+	BOOST_CHECK_EQUAL(uint24Array->calldataEncodedSize(false), 9 * 32);
+
+	ArrayType twoDimArray(DataLocation::Memory, uint24Array, 3);
+	BOOST_CHECK_EQUAL(twoDimArray.calldataEncodedSize(true),  9 * 3 * 32);
+	BOOST_CHECK_EQUAL(twoDimArray.calldataEncodedSize(false), 9 * 3 * 32);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

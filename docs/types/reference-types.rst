@@ -106,12 +106,22 @@ Array elements can be of any type, including mapping or struct. The general
 restrictions for types apply, in that mappings can only be stored in the
 ``storage`` data location and publicly-visible functions need parameters that are :ref:`ABI types <ABI>`.
 
+It is possible to mark state variable arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
+The numeric index becomes a required parameter for the getter.
+
 Accessing an array past its end causes a failing assertion. You can use the ``.push()`` method to append a new element at the end or assign to the ``.length`` :ref:`member <array-members>` to change the size (see below for caveats).
 method or increase the ``.length`` :ref:`member <array-members>` to add elements.
+
+``bytes`` and ``strings`` as Arrays
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
 but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
 length or index access.
+
+Solidity does not have string manipulation functions, but there are
+third-party string libraries. You can also compare two strings by their keccak256-hash using
+``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and concatenate two strings using ``abi.encodePacked(s1, s2)``.
 
 You should use ``bytes`` over ``byte[]`` because it is cheaper, since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
 use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
@@ -123,9 +133,6 @@ always use one of the value types ``bytes1`` to ``bytes32`` because they are muc
     ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the UTF-8 representation,
     and not the individual characters.
-
-It is possible to mark arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
-The numeric index becomes a required parameter for the getter.
 
 .. index:: ! array;allocating, new
 

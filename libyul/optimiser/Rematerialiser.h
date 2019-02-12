@@ -38,15 +38,34 @@ namespace yul
 class Rematerialiser: public DataFlowAnalyzer
 {
 public:
-	static void run(Dialect const& _dialect, Block& _ast);
+	static void run(
+		Dialect const& _dialect,
+		Block& _ast,
+		std::set<YulString> _varsToAlwaysRematerialize = {}
+	);
+	static void run(
+		Dialect const& _dialect,
+		FunctionDefinition& _function,
+		std::set<YulString> _varsToAlwaysRematerialize = {}
+	);
 
 protected:
-	Rematerialiser(Dialect const& _dialect, Block& _ast);
+	Rematerialiser(
+		Dialect const& _dialect,
+		Block& _ast,
+		std::set<YulString> _varsToAlwaysRematerialize = {}
+	);
+	Rematerialiser(
+		Dialect const& _dialect,
+		FunctionDefinition& _function,
+		std::set<YulString> _varsToAlwaysRematerialize = {}
+	);
 
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;
 
 	std::map<YulString, size_t> m_referenceCounts;
+	std::set<YulString> m_varsToAlwaysRematerialize;
 };
 
 }

@@ -46,6 +46,11 @@ public:
 		Block& _ast,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
+	UnusedPruner(
+		Dialect const& _dialect,
+		FunctionDefinition& _function,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	);
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
@@ -57,6 +62,14 @@ public:
 	static void runUntilStabilised(
 		Dialect const& _dialect,
 		Block& _ast,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	);
+
+	// Run the pruner until the code does not change anymore.
+	// Only run on the given function.
+	static void runUntilStabilised(
+		Dialect const& _dialect,
+		FunctionDefinition& _functionDefinition,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 

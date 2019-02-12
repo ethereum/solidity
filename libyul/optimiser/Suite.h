@@ -38,7 +38,7 @@ class OptimiserSuite
 {
 public:
 	static void run(
-		Dialect const& _dialect,
+		std::shared_ptr<Dialect> const& _dialect,
 		Block& _ast,
 		AsmAnalysisInfo const& _analysisInfo,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}

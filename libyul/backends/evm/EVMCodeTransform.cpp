@@ -192,7 +192,8 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	bool atTopOfStack = true;
 	for (int varIndex = numVariables - 1; varIndex >= 0; --varIndex)
 	{
-		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(_varDecl.variables[varIndex].name));
+		YulString varName = _varDecl.variables[varIndex].name;
+		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(varName));
 		m_context->variableStackHeights[&var] = height + varIndex;
 		if (!m_allowStackOpt)
 			continue;
@@ -217,13 +218,25 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			m_unusedStackSlots.erase(m_unusedStackSlots.begin());
 			m_context->variableStackHeights[&var] = slot;
 			m_assembly.setSourceLocation(_varDecl.location);
-			if (int heightDiff = variableHeightDiff(var, true))
+			if (int heightDiff = variableHeightDiff(var, varName, true))
 				m_assembly.appendInstruction(solidity::swapInstruction(heightDiff - 1));
 			m_assembly.appendInstruction(solidity::Instruction::POP);
 			--m_stackAdjustment;
 		}
 	}
 	checkStackHeight(&_varDecl);
+}
+
+void CodeTransform::stackError(StackTooDeepError _error, int _targetStackHeight)
+{
+	m_assembly.appendInstruction(solidity::Instruction::INVALID);
+	// Correct the stack.
+	while (m_assembly.stackHeight() > _targetStackHeight)
+		m_assembly.appendInstruction(solidity::Instruction::POP);
+	while (m_assembly.stackHeight() < _targetStackHeight)
+		m_assembly.appendConstant(u256(0));
+	// Store error.
+	m_stackErrors.emplace_back(std::move(_error));
 }
 
 void CodeTransform::operator()(Assignment const& _assignment)
@@ -353,7 +366,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 		{
 			// TODO: opportunity for optimization: Do not DUP if this is the last reference
 			// to the top most element of the stack
-			if (int heightDiff = variableHeightDiff(_var, false))
+			if (int heightDiff = variableHeightDiff(_var, _identifier.name, false))
 				m_assembly.appendInstruction(solidity::dupInstruction(heightDiff));
 			else
 				// Store something to balance the stack
@@ -512,18 +525,32 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendConstant(u256(0));
 	}
 
-	CodeTransform(
-		m_assembly,
-		m_info,
-		_function.body,
-		m_allowStackOpt,
-		m_dialect,
-		m_evm15,
-		m_identifierAccess,
-		m_useNamedLabelsForFunctions,
-		localStackAdjustment,
-		m_context
-	)(_function.body);
+	try
+	{
+		CodeTransform(
+			m_assembly,
+			m_info,
+			_function.body,
+			m_allowStackOpt,
+			m_dialect,
+			m_evm15,
+			m_identifierAccess,
+			m_useNamedLabelsForFunctions,
+			localStackAdjustment,
+			m_context
+		)(_function.body);
+	}
+	catch (StackTooDeepError const& _error)
+	{
+		// This exception will be re-thrown after the end of the surrounding block.
+		// It enables us to see which functions compiled successfully and which did not.
+		// Even if we emit actual code, add an illegal instruction to make sure that tests
+		// will catch it.
+		StackTooDeepError error(_error);
+		if (error.functionName.empty())
+			error.functionName = _function.name;
+		stackError(error, height);
+	}
 
 	{
 		// The stack layout here is:
@@ -542,22 +569,35 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		for (size_t i = 0; i < _function.returnVariables.size(); ++i)
 			stackLayout.push_back(i); // Move return values down, but keep order.
 
-		solAssert(stackLayout.size() <= 17, "Stack too deep");
-		while (!stackLayout.empty() && stackLayout.back() != int(stackLayout.size() - 1))
-			if (stackLayout.back() < 0)
-			{
-				m_assembly.appendInstruction(solidity::Instruction::POP);
-				stackLayout.pop_back();
-			}
-			else
-			{
-				m_assembly.appendInstruction(swapInstruction(stackLayout.size() - stackLayout.back() - 1));
-				swap(stackLayout[stackLayout.back()], stackLayout.back());
-			}
-		for (int i = 0; size_t(i) < stackLayout.size(); ++i)
-			solAssert(i == stackLayout[i], "Error reshuffling stack.");
+		if (stackLayout.size() > 17)
+		{
+			StackTooDeepError error(_function.name, YulString{}, stackLayout.size() - 17);
+			error << errinfo_comment(
+				"The function " +
+				_function.name.str() +
+				" has " +
+				to_string(stackLayout.size() - 17) +
+				" parameters or return variables too many to fit the stack size."
+			);
+			stackError(error, m_assembly.stackHeight() - _function.parameters.size());
+		}
+		else
+		{
+			while (!stackLayout.empty() && stackLayout.back() != int(stackLayout.size() - 1))
+				if (stackLayout.back() < 0)
+				{
+					m_assembly.appendInstruction(solidity::Instruction::POP);
+					stackLayout.pop_back();
+				}
+				else
+				{
+					m_assembly.appendInstruction(swapInstruction(stackLayout.size() - stackLayout.back() - 1));
+					swap(stackLayout[stackLayout.back()], stackLayout.back());
+				}
+			for (int i = 0; size_t(i) < stackLayout.size(); ++i)
+				solAssert(i == stackLayout[i], "Error reshuffling stack.");
+		}
 	}
-
 	if (m_evm15)
 		m_assembly.appendReturnsub(_function.returnVariables.size(), stackHeightBefore);
 	else
@@ -615,6 +655,9 @@ void CodeTransform::operator()(Block const& _block)
 
 	finalizeBlock(_block, blockStartStackHeight);
 	m_scope = originalScope;
+
+	if (!m_stackErrors.empty())
+		BOOST_THROW_EXCEPTION(m_stackErrors.front());
 }
 
 AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
@@ -711,7 +754,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	if (auto var = m_scope->lookup(_variableName.name))
 	{
 		Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
-		if (int heightDiff = variableHeightDiff(_var, true))
+		if (int heightDiff = variableHeightDiff(_var, _variableName.name, true))
 			m_assembly.appendInstruction(solidity::swapInstruction(heightDiff - 1));
 		m_assembly.appendInstruction(solidity::Instruction::POP);
 		decreaseReference(_variableName.name, _var);
@@ -726,19 +769,25 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-int CodeTransform::variableHeightDiff(Scope::Variable const& _var, bool _forSwap) const
+int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
 {
 	solAssert(m_context->variableStackHeights.count(&_var), "");
 	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
-	if (heightDiff <= (_forSwap ? 1 : 0) || heightDiff > (_forSwap ? 17 : 16))
+	solAssert(heightDiff > (_forSwap ? 1 : 0), "Negative stack difference for variable.");
+	int limit = _forSwap ? 17 : 16;
+	if (heightDiff > limit)
 	{
-		solUnimplemented(
-			"Variable inaccessible, too deep inside stack (" + to_string(heightDiff) + ")"
+		m_stackErrors.emplace_back(_varName, heightDiff - limit);
+		m_stackErrors.back() << errinfo_comment(
+			"Variable " +
+			_varName.str() +
+			" is " +
+			to_string(heightDiff - limit) +
+			" slot(s) too deep inside the stack."
 		);
-		return 0;
+		BOOST_THROW_EXCEPTION(m_stackErrors.back());
 	}
-	else
-		return heightDiff;
+	return heightDiff;
 }
 
 void CodeTransform::expectDeposit(int _deposit, int _oldHeight) const

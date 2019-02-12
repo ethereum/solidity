@@ -13,6 +13,8 @@ add_library(yul
 	AsmScope.h
 	AsmScopeFiller.cpp
 	AsmScopeFiller.h
+	CompilabilityChecker.cpp
+	CompilabilityChecker.h
 	Dialect.cpp
 	Dialect.h
 	Exceptions.h
@@ -32,6 +34,8 @@ add_library(yul
 	backends/evm/EVMDialect.h
 	backends/evm/EVMObjectCompiler.cpp
 	backends/evm/EVMObjectCompiler.h
+	backends/evm/NoOutputAssembly.h
+	backends/evm/NoOutputAssembly.cpp
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
@@ -90,6 +94,8 @@ add_library(yul
 	optimiser/Semantics.h
 	optimiser/SimplificationRules.cpp
 	optimiser/SimplificationRules.h
+	optimiser/StackCompressor.cpp
+	optimiser/StackCompressor.h
 	optimiser/StructuralSimplifier.cpp
 	optimiser/StructuralSimplifier.h
 	optimiser/Substitution.cpp

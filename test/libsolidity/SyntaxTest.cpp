@@ -24,11 +24,11 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace dev;
 using namespace langutil;
-using namespace solidity;
+using namespace dev::solidity;
 using namespace dev::solidity::test;
-using namespace dev::solidity::test::formatting;
+using namespace dev::formatting;
+using namespace dev;
 using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
@@ -100,9 +100,9 @@ bool SyntaxTest::printExpectationAndError(ostream& _stream, string const& _lineP
 	if (m_expectations != m_errorList)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
-		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
 		printErrorList(_stream, m_expectations, nextIndentLevel, _formatted);
-		FormattedScope(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
 		return false;
 	}
@@ -127,7 +127,7 @@ void SyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool c
 					if (isWarning)
 					{
 						if (sourceFormatting[i] == formatting::RESET)
-							sourceFormatting[i] = formatting::ORANGE_BACKGROUND;
+							sourceFormatting[i] = formatting::ORANGE_BACKGROUND_256;
 					}
 					else
 						sourceFormatting[i] = formatting::RED_BACKGROUND;
@@ -166,12 +166,12 @@ void SyntaxTest::printErrorList(
 )
 {
 	if (_errorList.empty())
-		FormattedScope(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
 	else
 		for (auto const& error: _errorList)
 		{
 			{
-				FormattedScope scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
+				AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
 				_stream << _linePrefix;
 				_stream << error.type << ": ";
 			}

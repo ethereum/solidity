@@ -47,15 +47,17 @@ class ConstantOptimisationMethod
 {
 public:
 	/// Tries to optimised how constants are represented in the source code and modifies
-	/// @a _assembly and its @a _items.
+	/// @a _assembly.
 	/// @returns zero if no optimisations could be performed.
 	static unsigned optimiseConstants(
 		bool _isCreation,
 		size_t _runs,
 		solidity::EVMVersion _evmVersion,
-		Assembly& _assembly,
-		AssemblyItems& _items
+		Assembly& _assembly
 	);
+
+protected:
+	/// This is the public API for the optimiser methods, but it doesn't need to be exposed to the caller.
 
 	struct Params
 	{
@@ -79,8 +81,6 @@ protected:
 	static bigint simpleRunGas(AssemblyItems const& _items);
 	/// @returns the gas needed to store the given data literally
 	bigint dataGas(bytes const& _data) const;
-	/// @returns the gas needed to store the value literally
-	bigint dataGas() const { return dataGas(toCompactBigEndian(m_value, 1)); }
 	static size_t bytesRequired(AssemblyItems const& _items);
 	/// @returns the combined estimated gas usage taking @a m_params into account.
 	bigint combineGas(
@@ -119,7 +119,8 @@ public:
 class CodeCopyMethod: public ConstantOptimisationMethod
 {
 public:
-	explicit CodeCopyMethod(Params const& _params, u256 const& _value);
+	explicit CodeCopyMethod(Params const& _params, u256 const& _value):
+		ConstantOptimisationMethod(_params, _value) {}
 	bigint gasNeeded() const override;
 	AssemblyItems execute(Assembly& _assembly) const override;
 

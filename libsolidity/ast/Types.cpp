@@ -415,7 +415,7 @@ MemberList const& Type::members(ContractDefinition const* _currentScope) const
 	return *m_members[_currentScope];
 }
 
-TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _packed) const
+TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) const
 {
 	TypePointer encodingType = mobileType();
 	if (encodingType)
@@ -423,7 +423,7 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _p
 	if (encodingType)
 		encodingType = encodingType->encodingType();
 	// Structs are fine in the following circumstances:
-	// - ABIv2 without packed encoding or,
+	// - ABIv2 or,
 	// - storage struct for a library
 	if (_inLibraryCall && encodingType->dataStoredIn(DataLocation::Storage))
 		return encodingType;
@@ -431,7 +431,7 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _p
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
 		baseType = arrayType->baseType();
 	if (dynamic_cast<StructType const*>(baseType.get()))
-		if (!_encoderV2 || _packed)
+		if (!_encoderV2)
 			return TypePointer();
 	return encodingType;
 }
@@ -1716,8 +1716,10 @@ bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 {
 	if (isDynamicallySized())
 		return 32;
-	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(_padded));
-	size = ((size + 31) / 32) * 32;
+	// Array elements are always padded.
+	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(true));
+	if (_padded)
+		size = ((size + 31) / 32) * 32;
 	return size;
 }
 
@@ -1834,8 +1836,8 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 			members.emplace_back("pop", make_shared<FunctionType>(
 				TypePointers{},
 				TypePointers{},
-				strings{string()},
-				strings{string()},
+				strings{},
+				strings{},
 				FunctionType::Kind::ArrayPop
 			));
 		}
@@ -2034,7 +2036,7 @@ bool StructType::operator==(Type const& _other) const
 	return ReferenceType::operator==(other) && other.m_struct == m_struct;
 }
 
-unsigned StructType::calldataEncodedSize(bool _padded) const
+unsigned StructType::calldataEncodedSize(bool) const
 {
 	unsigned size = 0;
 	for (auto const& member: members(nullptr))
@@ -2042,12 +2044,31 @@ unsigned StructType::calldataEncodedSize(bool _padded) const
 			return 0;
 		else
 		{
-			unsigned memberSize = member.type->calldataEncodedSize(_padded);
+			// Struct members are always padded.
+			unsigned memberSize = member.type->calldataEncodedSize(true);
 			if (memberSize == 0)
 				return 0;
 			size += memberSize;
 		}
 	return size;
+}
+
+unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
+{
+	unsigned offset = 0;
+	for (auto const& member: members(nullptr))
+	{
+		solAssert(member.type->canLiveOutsideStorage(), "");
+		if (member.name == _member)
+			return offset;
+		{
+			// Struct members are always padded.
+			unsigned memberSize = member.type->calldataEncodedSize(true);
+			solAssert(memberSize != 0, "");
+			offset += memberSize;
+		}
+	}
+	solAssert(false, "Struct member not found.");
 }
 
 bool StructType::isDynamicallyEncoded() const
@@ -2188,7 +2209,7 @@ FunctionTypePointer StructType::constructorType() const
 		paramTypes,
 		TypePointers{copyForLocation(DataLocation::Memory, false)},
 		paramNames,
-		strings(),
+		strings(1, ""),
 		FunctionType::Kind::Internal
 	);
 }
@@ -2420,6 +2441,16 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 		m_returnParameterNames.push_back(var->name());
 		m_returnParameterTypes.push_back(var->annotation().type);
 	}
+
+	solAssert(
+		m_parameterNames.size() == m_parameterTypes.size(),
+		"Parameter names list must match parameter types list!"
+	);
+
+	solAssert(
+		m_returnParameterNames.size() == m_returnParameterTypes.size(),
+		"Return parameter names list must match return parameter types list!"
+	);
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
@@ -2476,6 +2507,15 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 		));
 		m_returnParameterNames.emplace_back("");
 	}
+
+	solAssert(
+			m_parameterNames.size() == m_parameterTypes.size(),
+			"Parameter names list must match parameter types list!"
+			);
+	solAssert(
+			m_returnParameterNames.size() == m_returnParameterTypes.size(),
+			"Return parameter names list must match return parameter types list!"
+			);
 }
 
 FunctionType::FunctionType(EventDefinition const& _event):
@@ -2488,9 +2528,20 @@ FunctionType::FunctionType(EventDefinition const& _event):
 		m_parameterNames.push_back(var->name());
 		m_parameterTypes.push_back(var->annotation().type);
 	}
+
+	solAssert(
+			m_parameterNames.size() == m_parameterTypes.size(),
+			"Parameter names list must match parameter types list!"
+			);
+	solAssert(
+			m_returnParameterNames.size() == m_returnParameterTypes.size(),
+			"Return parameter names list must match return parameter types list!"
+			);
 }
 
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
+	m_parameterNames(_typeName.parameterTypes().size(), ""),
+	m_returnParameterNames(_typeName.returnParameterTypes().size(), ""),
 	m_kind(_typeName.visibility() == VariableDeclaration::Visibility::External ? Kind::External : Kind::Internal),
 	m_stateMutability(_typeName.stateMutability())
 {
@@ -2516,6 +2567,15 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 			);
 		m_returnParameterTypes.push_back(t->annotation().type);
 	}
+
+	solAssert(
+			m_parameterNames.size() == m_parameterTypes.size(),
+			"Parameter names list must match parameter types list!"
+			);
+	solAssert(
+			m_returnParameterNames.size() == m_returnParameterTypes.size(),
+			"Return parameter names list must match return parameter types list!"
+			);
 }
 
 FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _contract)
@@ -2853,8 +2913,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					make_shared<FunctionType>(
 						parseElementaryTypeVector({"uint"}),
 						TypePointers{copyAndSetGasOrValue(false, true)},
-						strings(),
-						strings(),
+						strings(1, ""),
+						strings(1, ""),
 						Kind::SetValue,
 						false,
 						StateMutability::NonPayable,
@@ -2870,8 +2930,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 				make_shared<FunctionType>(
 					parseElementaryTypeVector({"uint"}),
 					TypePointers{copyAndSetGasOrValue(true, false)},
-					strings(),
-					strings(),
+					strings(1, ""),
+					strings(1, ""),
 					Kind::SetGas,
 					false,
 					StateMutability::NonPayable,
@@ -3024,8 +3084,8 @@ u256 FunctionType::externalIdentifier() const
 
 bool FunctionType::isPure() const
 {
-	// FIXME: replace this with m_stateMutability == StateMutability::Pure once
-	//        the callgraph analyzer is in place
+	// TODO: replace this with m_stateMutability == StateMutability::Pure once
+	//       the callgraph analyzer is in place
 	return
 		m_kind == Kind::KECCAK256 ||
 		m_kind == Kind::ECRecover ||
@@ -3374,7 +3434,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 				TypePointers(),
 				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
 				strings{},
-				strings{},
+				strings{1, ""},
 				FunctionType::Kind::ABIEncode,
 				true,
 				StateMutability::Pure
@@ -3383,7 +3443,7 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 				TypePointers(),
 				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
 				strings{},
-				strings{},
+				strings{1, ""},
 				FunctionType::Kind::ABIEncodePacked,
 				true,
 				StateMutability::Pure
@@ -3391,8 +3451,8 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 			{"encodeWithSelector", make_shared<FunctionType>(
 				TypePointers{make_shared<FixedBytesType>(4)},
 				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
-				strings{},
-				strings{},
+				strings{1, ""},
+				strings{1, ""},
 				FunctionType::Kind::ABIEncodeWithSelector,
 				true,
 				StateMutability::Pure
@@ -3400,8 +3460,8 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 			{"encodeWithSignature", make_shared<FunctionType>(
 				TypePointers{make_shared<ArrayType>(DataLocation::Memory, true)},
 				TypePointers{make_shared<ArrayType>(DataLocation::Memory)},
-				strings{},
-				strings{},
+				strings{1, ""},
+				strings{1, ""},
 				FunctionType::Kind::ABIEncodeWithSignature,
 				true,
 				StateMutability::Pure

@@ -336,9 +336,11 @@ void CompilerContext::appendInlineAssembly(
 	identifierAccess.resolve = [&](
 		yul::Identifier const& _identifier,
 		yul::IdentifierContext,
-		bool
-	)
+		bool _insideFunction
+	) -> size_t
 	{
+		if (_insideFunction)
+			return size_t(-1);
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
 		return it == _localVariables.end() ? size_t(-1) : 1;
 	};

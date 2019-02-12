@@ -129,6 +129,15 @@ pair<CheckResult, vector<string>> SMTPortfolio::check(vector<Expression> const& 
 	return make_pair(lastResult, finalValues);
 }
 
+vector<string> SMTPortfolio::unhandledQueries()
+{
+	// This code assumes that the constructor guarantees that
+	// SmtLib2Interface is in position 0.
+	solAssert(!m_solvers.empty(), "");
+	solAssert(dynamic_cast<smt::SMTLib2Interface*>(m_solvers.at(0).get()), "");
+	return m_solvers.at(0)->unhandledQueries();
+}
+
 bool SMTPortfolio::solverAnswered(CheckResult result)
 {
 	return result == CheckResult::SATISFIABLE || result == CheckResult::UNSATISFIABLE;

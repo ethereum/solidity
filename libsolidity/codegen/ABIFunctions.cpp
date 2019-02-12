@@ -107,6 +107,74 @@ string ABIFunctions::tupleEncoder(
 	});
 }
 
+string ABIFunctions::tupleEncoderPacked(
+	TypePointers const& _givenTypes,
+	TypePointers const& _targetTypes
+)
+{
+	EncodingOptions options;
+	options.encodeAsLibraryTypes = false;
+	options.encodeFunctionFromStack = true;
+	options.padded = false;
+	options.dynamicInplace = true;
+
+	string functionName = string("abi_encode_tuple_packed_");
+	for (auto const& t: _givenTypes)
+		functionName += t->identifier() + "_";
+	functionName += "_to_";
+	for (auto const& t: _targetTypes)
+		functionName += t->identifier() + "_";
+	functionName += options.toFunctionNameSuffix();
+
+	return createExternallyUsedFunction(functionName, [&]() {
+		solAssert(!_givenTypes.empty(), "");
+
+		// Note that the values are in reverse due to the difference in calling semantics.
+		Whiskers templ(R"(
+			function <functionName>(pos <valueParams>) -> end {
+				<encodeElements>
+				end := pos
+			}
+		)");
+		templ("functionName", functionName);
+		string valueParams;
+		string encodeElements;
+		size_t stackPos = 0;
+		for (size_t i = 0; i < _givenTypes.size(); ++i)
+		{
+			solAssert(_givenTypes[i], "");
+			solAssert(_targetTypes[i], "");
+			size_t sizeOnStack = _givenTypes[i]->sizeOnStack();
+			string valueNames = "";
+			for (size_t j = 0; j < sizeOnStack; j++)
+			{
+				valueNames += "value" + to_string(stackPos) + ", ";
+				valueParams = ", value" + to_string(stackPos) + valueParams;
+				stackPos++;
+			}
+			bool dynamic = _targetTypes[i]->isDynamicallyEncoded();
+			Whiskers elementTempl(
+				dynamic ?
+				string(R"(
+					pos := <abiEncode>(<values> pos)
+				)") :
+				string(R"(
+					<abiEncode>(<values> pos)
+					pos := add(pos, <calldataEncodedSize>)
+				)")
+			);
+			elementTempl("values", valueNames);
+			if (!dynamic)
+				elementTempl("calldataEncodedSize", to_string(_targetTypes[i]->calldataEncodedSize(false)));
+			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
+			encodeElements += elementTempl.render();
+		}
+		templ("valueParams", valueParams);
+		templ("encodeElements", encodeElements);
+
+		return templ.render();
+	});
+}
 string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 {
 	string functionName = string("abi_decode_tuple_");
@@ -216,7 +284,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 		switch (_type.category())
 		{
 		case Type::Category::Address:
-			templ("body", "cleaned := " + cleanupFunction(IntegerType(160)) + "(value)");
+			templ("body", "cleaned := " + cleanupFunction(IntegerType(160), _revertOnFailure) + "(value)");
 			break;
 		case Type::Category::Integer:
 		{
@@ -265,7 +333,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 				StateMutability::Payable :
 				StateMutability::NonPayable
 			);
-			templ("body", "cleaned := " + cleanupFunction(addressType) + "(value)");
+			templ("body", "cleaned := " + cleanupFunction(addressType, _revertOnFailure) + "(value)");
 			break;
 		}
 		case Type::Category::Enum:
@@ -341,7 +409,7 @@ string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 				solAssert(_from.mobileType(), "");
 				body =
 					Whiskers("converted := <cleanEnum>(<cleanInt>(value))")
-					("cleanEnum", cleanupFunction(_to, false))
+					("cleanEnum", cleanupFunction(_to))
 					// "mobileType()" returns integer type for rational
 					("cleanInt", cleanupFunction(*_from.mobileType()))
 					.render();
@@ -569,22 +637,68 @@ string ABIFunctions::abiEncodingFunction(
 		)");
 		templ("functionName", functionName);
 
-		if (_from.dataStoredIn(DataLocation::Storage) && to.isValueType())
+		if (_from.dataStoredIn(DataLocation::Storage))
 		{
 			// special case: convert storage reference type to value type - this is only
 			// possible for library calls where we just forward the storage reference
 			solAssert(_options.encodeAsLibraryTypes, "");
+			solAssert(_options.padded && !_options.dynamicInplace, "Non-padded / inplace encoding for library call requested.");
 			solAssert(to == IntegerType::uint256(), "");
 			templ("cleanupConvert", "value");
 		}
 		else
 		{
+			string cleanupConvert;
 			if (_from == to)
-				templ("cleanupConvert", cleanupFunction(_from) + "(value)");
+				cleanupConvert = cleanupFunction(_from) + "(value)";
 			else
-				templ("cleanupConvert", conversionFunction(_from, to) + "(value)");
+				cleanupConvert = conversionFunction(_from, to) + "(value)";
+			if (!_options.padded)
+				cleanupConvert = leftAlignFunction(to) + "(" + cleanupConvert + ")";
+			templ("cleanupConvert", cleanupConvert);
 		}
 		return templ.render();
+	});
+}
+
+string ABIFunctions::abiEncodeAndReturnUpdatedPosFunction(
+	Type const& _givenType,
+	Type const& _targetType,
+	ABIFunctions::EncodingOptions const& _options
+)
+{
+	string functionName =
+		"abi_encodeUpdatedPos_" +
+		_givenType.identifier() +
+		"_to_" +
+		_targetType.identifier() +
+		_options.toFunctionNameSuffix();
+	return createFunction(functionName, [&]() {
+		string encoder = abiEncodingFunction(_givenType, _targetType, _options);
+		if (_targetType.isDynamicallyEncoded())
+			return Whiskers(R"(
+				function <functionName>(value, pos) -> updatedPos {
+					updatedPos := <encode>(value, pos)
+				}
+			)")
+			("functionName", functionName)
+			("encode", encoder)
+			.render();
+		else
+		{
+			unsigned encodedSize = _targetType.calldataEncodedSize(_options.padded);
+			solAssert(encodedSize != 0, "Invalid encoded size.");
+			return Whiskers(R"(
+				function <functionName>(value, pos) -> updatedPos {
+					<encode>(value, pos)
+					updatedPos := add(pos, <encodedSize>)
+				}
+			)")
+			("functionName", functionName)
+			("encode", encoder)
+			("encodedSize", toCompactHexWithPrefix(encodedSize))
+			.render();
+		}
 	});
 }
 
@@ -621,17 +735,17 @@ string ABIFunctions::abiEncodingFunctionCalldataArray(
 		Whiskers templ(R"(
 			// <readableTypeNameFrom> -> <readableTypeNameTo>
 			function <functionName>(start, length, pos) -> end {
-				<storeLength> // might update pos
+				pos := <storeLength>(pos, length)
 				<copyFun>(start, pos, length)
-				end := add(pos, <roundUpFun>(length))
+				end := add(pos, <lengthPadded>)
 			}
 		)");
-		templ("storeLength", _to.isDynamicallySized() ? "mstore(pos, length) pos := add(pos, 0x20)" : "");
+		templ("storeLength", arrayStoreLengthForEncodingFunction(toArrayType, _options));
 		templ("functionName", functionName);
 		templ("readableTypeNameFrom", _from.toString(true));
 		templ("readableTypeNameTo", _to.toString(true));
 		templ("copyFun", copyToMemoryFunction(true));
-		templ("roundUpFun", roundUpFunction());
+		templ("lengthPadded", _options.padded ? roundUpFunction() + "(length)" : "length");
 		return templ.render();
 	});
 }
@@ -659,13 +773,14 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		bool dynamic = _to.isDynamicallyEncoded();
 		bool dynamicBase = _to.baseType()->isDynamicallyEncoded();
 		bool inMemory = _from.dataStoredIn(DataLocation::Memory);
+		bool const usesTail = dynamicBase && !_options.dynamicInplace;
 		Whiskers templ(
-			dynamicBase ?
+			usesTail ?
 			R"(
 				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) <return> {
 					let length := <lengthFun>(value)
-					<storeLength> // might update pos
+					pos := <storeLength>(pos, length)
 					let headStart := pos
 					let tail := add(pos, mul(length, 0x20))
 					let srcPtr := <dataAreaFun>(value)
@@ -684,13 +799,12 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) <return> {
 					let length := <lengthFun>(value)
-					<storeLength> // might update pos
+					pos := <storeLength>(pos, length)
 					let srcPtr := <dataAreaFun>(value)
 					for { let i := 0 } lt(i, length) { i := add(i, 1) }
 					{
-						<encodeToMemoryFun>(<arrayElementAccess>, pos)
+						pos := <encodeToMemoryFun>(<arrayElementAccess>, pos)
 						srcPtr := <nextArrayElement>(srcPtr)
-						pos := add(pos, <elementEncodedSize>)
 					}
 					<assignEnd>
 				}
@@ -702,20 +816,13 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		templ("return", dynamic ? " -> end " : "");
 		templ("assignEnd", dynamic ? "end := pos" : "");
 		templ("lengthFun", arrayLengthFunction(_from));
-		if (_to.isDynamicallySized())
-			templ("storeLength", "mstore(pos, length) pos := add(pos, 0x20)");
-		else
-			templ("storeLength", "");
+		templ("storeLength", arrayStoreLengthForEncodingFunction(_to, _options));
 		templ("dataAreaFun", arrayDataAreaFunction(_from));
-		templ("elementEncodedSize", toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize()));
 
 		EncodingOptions subOptions(_options);
 		subOptions.encodeFunctionFromStack = false;
-		templ("encodeToMemoryFun", abiEncodingFunction(
-			*_from.baseType(),
-			*_to.baseType(),
-			subOptions
-		));
+		subOptions.padded = true;
+		templ("encodeToMemoryFun", abiEncodeAndReturnUpdatedPosFunction(*_from.baseType(), *_to.baseType(), subOptions));
 		templ("arrayElementAccess", inMemory ? "mload(srcPtr)" : _from.baseType()->isValueType() ? "sload(srcPtr)" : "srcPtr" );
 		templ("nextArrayElement", nextArrayElementFunction(_from));
 		return templ.render();
@@ -745,15 +852,16 @@ string ABIFunctions::abiEncodingFunctionMemoryByteArray(
 		Whiskers templ(R"(
 			function <functionName>(value, pos) -> end {
 				let length := <lengthFun>(value)
-				mstore(pos, length)
-				<copyFun>(add(value, 0x20), add(pos, 0x20), length)
-				end := add(add(pos, 0x20), <roundUpFun>(length))
+				pos := <storeLength>(pos, length)
+				<copyFun>(add(value, 0x20), pos, length)
+				end := add(pos, <lengthPadded>)
 			}
 		)");
 		templ("functionName", functionName);
 		templ("lengthFun", arrayLengthFunction(_from));
+		templ("storeLength", arrayStoreLengthForEncodingFunction(_to, _options));
 		templ("copyFun", copyToMemoryFunction(false));
-		templ("roundUpFun", roundUpFunction());
+		templ("lengthPadded", _options.padded ? roundUpFunction() + "(length)" : "length");
 		return templ.render();
 	});
 }
@@ -787,28 +895,30 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 					case 0 {
 						// short byte array
 						let length := and(div(slotValue, 2), 0x7f)
-						mstore(pos, length)
-						mstore(add(pos, 0x20), and(slotValue, not(0xff)))
-						ret := add(pos, 0x40)
+						pos := <storeLength>(pos, length)
+						mstore(pos, and(slotValue, not(0xff)))
+						ret := add(pos, <lengthPaddedShort>)
 					}
 					case 1 {
 						// long byte array
 						let length := div(slotValue, 2)
-						mstore(pos, length)
-						pos := add(pos, 0x20)
+						pos := <storeLength>(pos, length)
 						let dataPos := <arrayDataSlot>(value)
 						let i := 0
 						for { } lt(i, length) { i := add(i, 0x20) } {
 							mstore(add(pos, i), sload(dataPos))
 							dataPos := add(dataPos, 1)
 						}
-						ret := add(pos, i)
+						ret := add(pos, <lengthPaddedLong>)
 					}
 				}
 			)");
 			templ("functionName", functionName);
 			templ("readableTypeNameFrom", _from.toString(true));
 			templ("readableTypeNameTo", _to.toString(true));
+			templ("storeLength", arrayStoreLengthForEncodingFunction(_to, _options));
+			templ("lengthPaddedShort", _options.padded ? "0x20" : "length");
+			templ("lengthPaddedLong", _options.padded ? "i" : "length");
 			templ("arrayDataSlot", arrayDataAreaFunction(_from));
 			return templ.render();
 		}
@@ -822,13 +932,13 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			size_t storageBytes = _from.baseType()->storageBytes();
 			size_t itemsPerSlot = 32 / storageBytes;
 			// This always writes full slot contents to memory, which might be
-			// more than desired, i.e. it writes beyond the end of memory.
+			// more than desired, i.e. it always writes beyond the end of memory.
 			Whiskers templ(
 				R"(
 					// <readableTypeNameFrom> -> <readableTypeNameTo>
 					function <functionName>(value, pos) <return> {
 						let length := <lengthFun>(value)
-						<storeLength> // might update pos
+						pos := <storeLength>(pos, length)
 						let originalPos := pos
 						let srcPtr := <dataArea>(value)
 						for { let i := 0 } lt(i, length) { i := add(i, <itemsPerSlot>) }
@@ -851,17 +961,16 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("return", dynamic ? " -> end " : "");
 			templ("assignEnd", dynamic ? "end := pos" : "");
 			templ("lengthFun", arrayLengthFunction(_from));
-			if (_to.isDynamicallySized())
-				templ("storeLength", "mstore(pos, length) pos := add(pos, 0x20)");
-			else
-				templ("storeLength", "");
+			templ("storeLength", arrayStoreLengthForEncodingFunction(_to, _options));
 			templ("dataArea", arrayDataAreaFunction(_from));
 			templ("itemsPerSlot", to_string(itemsPerSlot));
+			// We use padded size because array elements are always padded.
 			string elementEncodedSize = toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize());
 			templ("elementEncodedSize", elementEncodedSize);
 
 			EncodingOptions subOptions(_options);
 			subOptions.encodeFunctionFromStack = false;
+			subOptions.padded = true;
 			string encodeToMemoryFun = abiEncodingFunction(
 				*_from.baseType(),
 				*_to.baseType(),
@@ -904,6 +1013,8 @@ string ABIFunctions::abiEncodingFunctionStruct(
 				<#members>
 				{
 					// <memberName>
+					<preprocess>
+					let memberValue := <retrieveValue>
 					<encode>
 				}
 				</members>
@@ -914,7 +1025,12 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		templ("readableTypeNameFrom", _from.toString(true));
 		templ("readableTypeNameTo", _to.toString(true));
 		templ("return", dynamic ? " -> end " : "");
-		templ("assignEnd", dynamic ? "end := tail" : "");
+		if (dynamic && _options.dynamicInplace)
+			templ("assignEnd", "end := pos");
+		else if (dynamic && !_options.dynamicInplace)
+			templ("assignEnd", "end := tail");
+		else
+			templ("assignEnd", "");
 		// to avoid multiple loads from the same slot for subsequent members
 		templ("init", fromStorage ? "let slotValue := 0" : "");
 		u256 previousSlotOffset(-1);
@@ -932,20 +1048,10 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			bool dynamicMember = memberTypeTo->isDynamicallyEncoded();
 			if (dynamicMember)
 				solAssert(dynamic, "");
-			Whiskers memberTempl(R"(
-				<preprocess>
-				let memberValue := <retrieveValue>
-				)" + (
-					dynamicMember ?
-					string(R"(
-						mstore(add(pos, <encodingOffset>), sub(tail, pos))
-						tail := <abiEncode>(memberValue, tail)
-					)") :
-					string(R"(
-						<abiEncode>(memberValue, add(pos, <encodingOffset>))
-					)")
-				)
-			);
+
+			members.push_back({});
+			members.back()["preprocess"] = "";
+
 			if (fromStorage)
 			{
 				solAssert(memberTypeFrom->isValueType() == memberTypeTo->isValueType(), "");
@@ -956,39 +1062,56 @@ string ABIFunctions::abiEncodingFunctionStruct(
 				{
 					if (storageSlotOffset != previousSlotOffset)
 					{
-						memberTempl("preprocess", "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))");
+						members.back()["preprocess"] = "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))";
 						previousSlotOffset = storageSlotOffset;
 					}
-					else
-						memberTempl("preprocess", "");
-					memberTempl("retrieveValue", shiftRightFunction(intraSlotOffset * 8) + "(slotValue)");
+					members.back()["retrieveValue"] = shiftRightFunction(intraSlotOffset * 8) + "(slotValue)";
 				}
 				else
 				{
 					solAssert(memberTypeFrom->dataStoredIn(DataLocation::Storage), "");
 					solAssert(intraSlotOffset == 0, "");
-					memberTempl("preprocess", "");
-					memberTempl("retrieveValue", "add(value, " + toCompactHexWithPrefix(storageSlotOffset) + ")");
+					members.back()["retrieveValue"] = "add(value, " + toCompactHexWithPrefix(storageSlotOffset) + ")";
 				}
 			}
 			else
 			{
-				memberTempl("preprocess", "");
 				string sourceOffset = toCompactHexWithPrefix(_from.memoryOffsetOfMember(member.name));
-				memberTempl("retrieveValue", "mload(add(value, " + sourceOffset + "))");
+				members.back()["retrieveValue"] = "mload(add(value, " + sourceOffset + "))";
 			}
-			memberTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
-			encodingOffset += dynamicMember ? 0x20 : memberTypeTo->calldataEncodedSize();
 
 			EncodingOptions subOptions(_options);
 			subOptions.encodeFunctionFromStack = false;
-			memberTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, subOptions));
+			// Like with arrays, struct members are always padded.
+			subOptions.padded = true;
 
-			members.push_back({});
-			members.back()["encode"] = memberTempl.render();
+			string encode;
+			if (_options.dynamicInplace)
+				encode = Whiskers{"pos := <encode>(memberValue, pos)"}
+					("encode", abiEncodeAndReturnUpdatedPosFunction(*memberTypeFrom, *memberTypeTo, subOptions))
+					 .render();
+			else
+			{
+				Whiskers encodeTempl(
+					dynamicMember ?
+					string(R"(
+						mstore(add(pos, <encodingOffset>), sub(tail, pos))
+						tail := <abiEncode>(memberValue, tail)
+					)") :
+					"<abiEncode>(memberValue, add(pos, <encodingOffset>))"
+				);
+				encodeTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
+				encodingOffset += dynamicMember ? 0x20 : memberTypeTo->calldataEncodedSize();
+				encodeTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, subOptions));
+				encode = encodeTempl.render();
+			}
+			members.back()["encode"] = encode;
+
 			members.back()["memberName"] = member.name;
 		}
 		templ("members", members);
+		if (_options.dynamicInplace)
+			solAssert(encodingOffset == 0, "In-place encoding should enforce zero head size.");
 		templ("headSize", toCompactHexWithPrefix(encodingOffset));
 		return templ.render();
 	});
@@ -1015,9 +1138,10 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 
 		if (_to.isDynamicallySized())
 		{
+			solAssert(_to.category() == Type::Category::Array, "");
 			Whiskers templ(R"(
 				function <functionName>(pos) -> end {
-					mstore(pos, <length>)
+					pos := <storeLength>(pos, <length>)
 					<#word>
 						mstore(add(pos, <offset>), <wordValue>)
 					</word>
@@ -1028,12 +1152,17 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 
 			// TODO this can make use of CODECOPY for large strings once we have that in Yul
 			size_t words = (value.size() + 31) / 32;
-			templ("overallSize", to_string(32 + words * 32));
 			templ("length", to_string(value.size()));
+			templ("storeLength", arrayStoreLengthForEncodingFunction(dynamic_cast<ArrayType const&>(_to), _options));
+			if (_options.padded)
+				templ("overallSize", to_string(words * 32));
+			else
+				templ("overallSize", to_string(value.size()));
+
 			vector<map<string, string>> wordParams(words);
 			for (size_t i = 0; i < words; ++i)
 			{
-				wordParams[i]["offset"] = to_string(32 + i * 32);
+				wordParams[i]["offset"] = to_string(i * 32);
 				wordParams[i]["wordValue"] = "0x" + h256(value.substr(32 * i, 32), h256::AlignLeft).hex();
 			}
 			templ("word", wordParams);
@@ -1117,7 +1246,16 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 			return abiDecodingFunctionArray(*arrayType, _fromMemory);
 	}
 	else if (auto const* structType = dynamic_cast<StructType const*>(decodingType.get()))
-		return abiDecodingFunctionStruct(*structType, _fromMemory);
+	{
+		if (structType->dataStoredIn(DataLocation::CallData))
+		{
+			solAssert(!_fromMemory, "");
+			solUnimplementedAssert(!structType->isDynamicallyEncoded(), "Dynamically encoded calldata structs are not yet implemented.");
+			return abiDecodingFunctionCalldataStruct(*structType);
+		}
+		else
+			return abiDecodingFunctionStruct(*structType, _fromMemory);
+	}
 	else if (auto const* functionType = dynamic_cast<FunctionType const*>(decodingType.get()))
 		return abiDecodingFunctionFunctionType(*functionType, _fromMemory, _forUseOnStack);
 	else
@@ -1294,14 +1432,36 @@ string ABIFunctions::abiDecodingFunctionByteArray(ArrayType const& _type, bool _
 	});
 }
 
+string ABIFunctions::abiDecodingFunctionCalldataStruct(StructType const& _type)
+{
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	solAssert(_type.calldataEncodedSize(true) != 0, "");
+	string functionName =
+		"abi_decode_" +
+		_type.identifier();
+
+	return createFunction(functionName, [&]() {
+		Whiskers w{R"(
+				// <readableTypeName>
+				function <functionName>(offset, end) -> value {
+					if slt(sub(end, offset), <minimumSize>) { revert(0, 0) }
+					value := offset
+				}
+		)"};
+		w("functionName", functionName);
+		w("readableTypeName", _type.toString(true));
+		w("minimumSize", to_string(_type.calldataEncodedSize(true)));
+		return w.render();
+	});
+}
+
 string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fromMemory)
 {
+	solAssert(!_type.dataStoredIn(DataLocation::CallData), "");
 	string functionName =
 		"abi_decode_" +
 		_type.identifier() +
 		(_fromMemory ? "_fromMemory" : "");
-
-	solUnimplementedAssert(!_type.dataStoredIn(DataLocation::CallData), "");
 
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(
@@ -1432,6 +1592,66 @@ string ABIFunctions::copyToMemoryFunction(bool _fromCalldata)
 			("functionName", functionName)
 			.render();
 		}
+	});
+}
+
+string ABIFunctions::leftAlignFunction(Type const& _type)
+{
+	string functionName = string("leftAlign_") + _type.identifier();
+	return createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			function <functionName>(value) -> aligned {
+				<body>
+			}
+		)");
+		templ("functionName", functionName);
+		switch (_type.category())
+		{
+		case Type::Category::Address:
+			templ("body", "aligned := " + leftAlignFunction(IntegerType(160)) + "(value)");
+			break;
+		case Type::Category::Integer:
+		{
+			IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+			if (type.numBits() == 256)
+				templ("body", "aligned := value");
+			else
+				templ("body", "aligned := " + shiftLeftFunction(256 - type.numBits()) + "(value)");
+			break;
+		}
+		case Type::Category::RationalNumber:
+			solAssert(false, "Left align requested for rational number.");
+			break;
+		case Type::Category::Bool:
+			templ("body", "aligned := " + leftAlignFunction(IntegerType(8)) + "(value)");
+			break;
+		case Type::Category::FixedPoint:
+			solUnimplemented("Fixed point types not implemented.");
+			break;
+		case Type::Category::Array:
+		case Type::Category::Struct:
+			solAssert(false, "Left align requested for non-value type.");
+			break;
+		case Type::Category::FixedBytes:
+			templ("body", "aligned := value");
+			break;
+		case Type::Category::Contract:
+			templ("body", "aligned := " + leftAlignFunction(AddressType::address()) + "(value)");
+			break;
+		case Type::Category::Enum:
+		{
+			unsigned storageBytes = dynamic_cast<EnumType const&>(_type).storageBytes();
+			templ("body", "aligned := " + leftAlignFunction(IntegerType(8 * storageBytes)) + "(value)");
+			break;
+		}
+		case Type::Category::InaccessibleDynamic:
+			solAssert(false, "Left align requested for inaccessible dynamic type.");
+			break;
+		default:
+			solAssert(false, "Left align of type " + _type.identifier() + " requested.");
+		}
+
+		return templ.render();
 	});
 }
 
@@ -1685,6 +1905,30 @@ string ABIFunctions::nextArrayElementFunction(ArrayType const& _type)
 			.render();
 		else
 			solAssert(false, "");
+	});
+}
+
+string ABIFunctions::arrayStoreLengthForEncodingFunction(ArrayType const& _type, EncodingOptions const& _options)
+{
+	string functionName = "array_storeLengthForEncoding_" + _type.identifier() + _options.toFunctionNameSuffix();
+	return createFunction(functionName, [&]() {
+		if (_type.isDynamicallySized() && !_options.dynamicInplace)
+			return Whiskers(R"(
+				function <functionName>(pos, length) -> updated_pos {
+					mstore(pos, length)
+					updated_pos := add(pos, 0x20)
+				}
+			)")
+			("functionName", functionName)
+			.render();
+		else
+			return Whiskers(R"(
+				function <functionName>(pos, length) -> updated_pos {
+					updated_pos := pos
+				}
+			)")
+			("functionName", functionName)
+			.render();
 	});
 }
 

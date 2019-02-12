@@ -159,7 +159,8 @@ public:
 	void abiEncodeV2(
 		TypePointers const& _givenTypes,
 		TypePointers const& _targetTypes,
-		bool _encodeAsLibraryTypes = false
+		bool _encodeAsLibraryTypes = false,
+		bool _padToWordBoundaries = true
 	);
 
 	/// Decodes data from ABI encoding into internal encoding. If @a _fromMemory is set to true,

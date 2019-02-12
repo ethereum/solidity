@@ -48,9 +48,9 @@ using namespace dev::solidity;
 namespace
 {
 
-bool typeSupportedByOldABIEncoder(Type const& _type)
+bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
 {
-	if (_type.dataStoredIn(DataLocation::Storage))
+	if (_isLibraryCall && _type.dataStoredIn(DataLocation::Storage))
 		return true;
 	if (_type.category() == Type::Category::Struct)
 		return false;
@@ -58,7 +58,7 @@ bool typeSupportedByOldABIEncoder(Type const& _type)
 	{
 		auto const& arrayType = dynamic_cast<ArrayType const&>(_type);
 		auto base = arrayType.baseType();
-		if (!typeSupportedByOldABIEncoder(*base) || (base->category() == Type::Category::Array && base->isDynamicallySized()))
+		if (!typeSupportedByOldABIEncoder(*base, _isLibraryCall) || (base->category() == Type::Category::Array && base->isDynamicallySized()))
 			return false;
 	}
 	return true;
@@ -287,8 +287,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 bool TypeChecker::visit(StructDefinition const& _struct)
 {
 	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
-		if (!type(*member)->canBeStored())
-			m_errorReporter.typeError(member->location(), "Type cannot be used in struct.");
+		solAssert(type(*member)->canBeStored(), "Type cannot be used in struct.");
 
 	// Check recursion, fatal error if detected.
 	auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t _depth)
@@ -334,10 +333,17 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
 		if (type(var)->category() == Type::Category::Mapping)
 		{
-			if (!type(var)->dataStoredIn(DataLocation::Storage))
-				m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\"." );
-			else if (!isLibraryFunction && _function.isPublic())
-				m_errorReporter.typeError(var.location(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+			if (var.referenceLocation() != VariableDeclaration::Location::Storage)
+			{
+				if (!isLibraryFunction && _function.isPublic())
+					m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\" and thus only be parameters or return variables for internal or library functions.");
+				else
+					m_errorReporter.typeError(var.location(), "Mapping types can only have a data location of \"storage\"." );
+			}
+			else
+			{
+				solAssert(isLibraryFunction || !_function.isPublic(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
+			}
 		}
 		else
 		{
@@ -349,7 +355,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (
 			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(var))
+			!typeSupportedByOldABIEncoder(*type(var), isLibraryFunction)
 		)
 			m_errorReporter.typeError(
 				var.location(),
@@ -360,15 +366,27 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
 		TypePointer baseType = type(*var);
+		if (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
+		{
+			baseType = arrayType->baseType();
+			if (
+				!m_scope->isInterface() &&
+				baseType->dataStoredIn(DataLocation::CallData) &&
+				baseType->isDynamicallyEncoded()
+			)
+				m_errorReporter.typeError(var->location(), "Calldata arrays with dynamically encoded base types are not yet supported.");
+		}
 		while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
 			baseType = arrayType->baseType();
 
 		if (
 			!m_scope->isInterface() &&
-			baseType->category() == Type::Category::Struct &&
 			baseType->dataStoredIn(DataLocation::CallData)
 		)
-			m_errorReporter.typeError(var->location(), "Calldata structs are not yet supported.");
+			if (auto const* structType = dynamic_cast<StructType const*>(baseType.get()))
+				if (structType->isDynamicallyEncoded())
+					m_errorReporter.typeError(var->location(), "Dynamically encoded calldata structs are not yet supported.");
+
 		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}
@@ -469,7 +487,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		{
 			vector<string> unsupportedTypes;
 			for (auto const& param: getter.parameterTypes() + getter.returnParameterTypes())
-				if (!typeSupportedByOldABIEncoder(*param))
+				if (!typeSupportedByOldABIEncoder(*param, false /* isLibrary */))
 					unsupportedTypes.emplace_back(param->toString());
 			if (!unsupportedTypes.empty())
 				m_errorReporter.typeError(_variable.location(),
@@ -572,24 +590,14 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	for (ASTPointer<VariableDeclaration> const& var: _eventDef.parameters())
 	{
 		if (var->isIndexed())
-		{
 			numIndexed++;
-			if (
-				_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-				dynamic_cast<ReferenceType const*>(type(*var).get())
-			)
-				m_errorReporter.typeError(
-					var->location(),
-					"Indexed reference types cannot yet be used with ABIEncoderV2."
-				);
-		}
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
 			m_errorReporter.typeError(var->location(), "Internal or recursive type is not allowed as event parameter type.");
 		if (
 			!_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(*var))
+			!typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */)
 		)
 			m_errorReporter.typeError(
 				var->location(),
@@ -608,8 +616,7 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
 	if (fun.kind() == FunctionType::Kind::External)
-		if (!fun.canBeUsedExternally(false))
-			m_errorReporter.typeError(_funType.location(), "External function type uses internal types.");
+		solAssert(fun.canBeUsedExternally(false), "External function type uses internal types.");
 }
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
@@ -880,8 +887,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			if (ref->dataStoredIn(DataLocation::Storage))
 			{
 				string errorText{"Uninitialized storage pointer."};
-				if (varDecl.referenceLocation() == VariableDeclaration::Location::Unspecified)
-					errorText += " Did you mean '<type> memory " + varDecl.name() + "'?";
+				solAssert(varDecl.referenceLocation() != VariableDeclaration::Location::Unspecified, "Expected a specified location at this point");
 				solAssert(m_scope, "");
 				m_errorReporter.declarationError(varDecl.location(), errorText);
 			}
@@ -949,10 +955,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 					solAssert(false, "");
 			}
 			else if (*var.annotation().type == TupleType())
-				m_errorReporter.typeError(
-					var.location(),
-					"Cannot declare variable with void (empty tuple) type."
-				);
+				solAssert(false, "Cannot declare variable with void (empty tuple) type.");
 			else if (valueComponentType->category() == Type::Category::RationalNumber)
 			{
 				string typeName = var.annotation().type->toString(true);
@@ -1067,25 +1070,39 @@ bool TypeChecker::visit(Conditional const& _conditional)
 
 	TypePointer trueType = type(_conditional.trueExpression())->mobileType();
 	TypePointer falseType = type(_conditional.falseExpression())->mobileType();
-	if (!trueType)
-		m_errorReporter.fatalTypeError(_conditional.trueExpression().location(), "Invalid mobile type.");
-	if (!falseType)
-		m_errorReporter.fatalTypeError(_conditional.falseExpression().location(), "Invalid mobile type.");
 
-	TypePointer commonType = Type::commonType(trueType, falseType);
-	if (!commonType)
-	{
-		m_errorReporter.typeError(
-				_conditional.location(),
-				"True expression's type " +
-				trueType->toString() +
-				" doesn't match false expression's type " +
-				falseType->toString() +
-				"."
-		);
-		// even we can't find a common type, we have to set a type here,
-		// otherwise the upper statement will not be able to check the type.
+	TypePointer commonType;
+
+	if (!trueType)
+		m_errorReporter.typeError(_conditional.trueExpression().location(), "Invalid mobile type in true expression.");
+	else
 		commonType = trueType;
+
+	if (!falseType)
+		m_errorReporter.typeError(_conditional.falseExpression().location(), "Invalid mobile type in false expression.");
+	else
+		commonType = falseType;
+
+	if (!trueType && !falseType)
+		BOOST_THROW_EXCEPTION(FatalError());
+	else if (trueType && falseType)
+	{
+		commonType = Type::commonType(trueType, falseType);
+
+		if (!commonType)
+		{
+			m_errorReporter.typeError(
+					_conditional.location(),
+					"True expression's type " +
+					trueType->toString() +
+					" doesn't match false expression's type " +
+					falseType->toString() +
+					"."
+					);
+			// even we can't find a common type, we have to set a type here,
+			// otherwise the upper statement will not be able to check the type.
+			commonType = trueType;
+		}
 	}
 
 	_conditional.annotation().type = commonType;
@@ -1234,9 +1251,9 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
 
 				if (_tuple.isInlineArray())
-					solAssert(!!types[i], "Inline array cannot have empty components");
-				if (_tuple.isInlineArray())
 				{
+					solAssert(!!types[i], "Inline array cannot have empty components");
+
 					if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
 						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid mobile type.");
 
@@ -1559,6 +1576,15 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 			}
 		}
 
+		if (isPacked && !typeSupportedByOldABIEncoder(*argType, false /* isLibrary */))
+		{
+			m_errorReporter.typeError(
+				arguments[i]->location(),
+				"Type not supported in packed mode."
+			);
+			continue;
+		}
+
 		if (!argType->fullEncodingType(false, abiEncoderV2, !_functionType->padArguments()))
 			m_errorReporter.typeError(
 				arguments[i]->location(),
@@ -1677,17 +1703,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	{
 		auto const& parameterNames = _functionType->parameterNames();
 
-		// Check for expected number of named arguments
-		if (parameterNames.size() != argumentNames.size())
-		{
-			m_errorReporter.typeError(
-				_functionCall.location(),
-				parameterNames.size() > argumentNames.size() ?
-				"Some argument names are missing." :
-				"Too many arguments."
-			);
-			return;
-		}
+		solAssert(
+			parameterNames.size() == argumentNames.size(),
+			"Unexpected parameter length mismatch!"
+		);
 
 		// Check for duplicate argument names
 		{
@@ -1971,8 +1990,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		_newExpression.annotation().type = make_shared<FunctionType>(
 			TypePointers{make_shared<IntegerType>(256)},
 			TypePointers{type},
-			strings(),
-			strings(),
+			strings(1, ""),
+			strings(1, ""),
 			FunctionType::Kind::ObjectCreation,
 			false,
 			StateMutability::Pure
@@ -2078,8 +2097,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
 			);
 
-	if (exprType->category() == Type::Category::Struct)
-		annotation.isLValue = true;
+	if (auto const* structType = dynamic_cast<StructType const*>(exprType.get()))
+		annotation.isLValue = !structType->dataStoredIn(DataLocation::CallData);
 	else if (exprType->category() == Type::Category::Array)
 	{
 		auto const& arrayType(dynamic_cast<ArrayType const&>(*exprType));
@@ -2198,15 +2217,22 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			resultType = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, typeType.actualType()));
 		else
 		{
-			expectType(*index, IntegerType::uint256());
-			if (auto length = dynamic_cast<RationalNumberType const*>(type(*index).get()))
-				resultType = make_shared<TypeType>(make_shared<ArrayType>(
-					DataLocation::Memory,
-					typeType.actualType(),
-					length->literalValue(nullptr)
-				));
+			u256 length = 1;
+			if (expectType(*index, IntegerType::uint256()))
+			{
+				if (auto indexValue = dynamic_cast<RationalNumberType const*>(type(*index).get()))
+					length = indexValue->literalValue(nullptr);
+				else
+					m_errorReporter.fatalTypeError(index->location(), "Integer constant expected.");
+			}
 			else
-				m_errorReporter.fatalTypeError(index->location(), "Integer constant expected.");
+				solAssert(m_errorReporter.hasErrors(), "Expected errors as expectType returned false");
+
+			resultType = make_shared<TypeType>(make_shared<ArrayType>(
+				DataLocation::Memory,
+				typeType.actualType(),
+				length
+			));
 		}
 		break;
 	}

@@ -17,8 +17,6 @@
 
 #include <test/libyul/YulOptimizerTest.h>
 
-#include <test/libsolidity/FormattedScope.h>
-
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -42,6 +40,7 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
+#include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmPrinter.h>
@@ -51,6 +50,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
+
+#include <libdevcore/AnsiColorized.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
@@ -241,11 +242,18 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 	}
+	else if (m_optimizerStep == "stackCompressor")
+	{
+		disambiguate();
+		(FunctionGrouper{})(*m_ast);
+		StackCompressor::run(m_dialect, *m_ast);
+		(BlockFlattener{})(*m_ast);
+	}
 	else if (m_optimizerStep == "fullSuite")
-		OptimiserSuite::run(*m_dialect, *m_ast, *m_analysisInfo);
+		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo);
 	else
 	{
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
 		return false;
 	}
 
@@ -254,10 +262,10 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	if (m_expectation != m_obtainedResult)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
 		// TODO could compute a simple diff with highlighted lines
 		printIndented(_stream, m_expectation, nextIndentLevel);
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
 		return false;
 	}
@@ -291,7 +299,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	m_ast = yul::Parser(errorReporter, m_dialect).parse(scanner, false);
 	if (!m_ast || !errorReporter.errors().empty())
 	{
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, errorReporter.errors());
 		return false;
 	}
@@ -305,7 +313,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	);
 	if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 	{
-		FormattedScope(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error analyzing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error analyzing source." << endl;
 		printErrors(_stream, errorReporter.errors());
 		return false;
 	}

@@ -66,6 +66,7 @@ jobs:
           paths:
             - soljson.js
             - version.txt
+
   test_emscripten_solcjs:
     docker:
       - image: circleci/node:10
@@ -84,6 +85,7 @@ jobs:
           name: Test solcjs
           command: |
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+
   test_emscripten_external:
     docker:
       - image: circleci/node:10
@@ -102,6 +104,7 @@ jobs:
           name: External tests
           command: |
             test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
+
   build_x86_linux:
     docker:
       - image: buildpack-deps:bionic
@@ -114,7 +117,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
             ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
@@ -123,6 +126,23 @@ jobs:
           root: build
           paths:
             - "*"
+
+  build_x86_linux_cxx17:
+    docker:
+      - image: buildpack-deps:disco
+    environment:
+      TERM: xterm
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build
 
   build_x86_archlinux:
     docker:
@@ -145,21 +165,21 @@ jobs:
             - test/soltest
             - test/tools/solfuzzer
 
-  build_x86_clang7:
+  build_x86_clang7_asan:
     docker:
       - image: buildpack-deps:cosmic
     environment:
       TERM: xterm
       CC: /usr/bin/clang-7
       CXX: /usr/bin/clang++-7
-      CMAKE_OPTIONS: -DLLL=ON
+      CMAKE_OPTIONS: -DSANITIZE=address -DCMAKE_BUILD_TYPE=Debug
     steps:
       - checkout
       - run:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libz3-dev
+            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
             ./scripts/install_obsolete_jsoncpp_1_7_4.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build
@@ -167,7 +187,9 @@ jobs:
       - persist_to_workspace:
           root: build
           paths:
-            - "*"
+            - solc/solc
+            - test/soltest
+            - test/tools/solfuzzer
 
   build_x86_mac:
     macos:
@@ -249,7 +271,7 @@ jobs:
           name: Install dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install libz3-dev libleveldb1v5 python-pip
+            apt-get -qy install libcvc4-dev libleveldb1v5 python-pip
             pip install codecov
       - run: mkdir -p test_results
       - run:
@@ -262,6 +284,36 @@ jobs:
       - run:
           name: Coverage of all
           command: codecov --flags all --gcov-root build
+      - store_test_results:
+          path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
+
+  test_x86_clang7_asan:
+    docker:
+      - image: buildpack-deps:cosmic
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install llvm-7-dev libcvc4-dev libleveldb1v5 python-pip
+            # This is needed to resolve the symbols. Since we're using clang7 in the build, we must use the appropriate symbolizer.
+            update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
+      - run: mkdir -p test_results
+      - run:
+          name: Run tests with ASAN
+          command: |
+            ulimit -a
+            # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
+            ulimit -s 16384
+            build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
       - store_test_results:
           path: test_results/
       - store_artifacts:
@@ -350,12 +402,19 @@ workflows:
           requires:
             - build_emscripten
       - build_x86_linux: *build_on_tags
-      - build_x86_clang7: *build_on_tags
+      - build_x86_linux_cxx17: *build_on_tags
+      - build_x86_clang7_asan: *build_on_tags
       - build_x86_mac: *build_on_tags
       - test_x86_linux:
           <<: *build_on_tags
           requires:
             - build_x86_linux
+      - test_x86_clang7_asan:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build_x86_clang7_asan
       - test_x86_mac:
           <<: *build_on_tags
           requires:

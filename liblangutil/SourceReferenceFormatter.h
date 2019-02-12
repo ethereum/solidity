@@ -44,11 +44,14 @@ public:
 		m_stream(_stream)
 	{}
 
+	virtual ~SourceReferenceFormatter() = default;
+
 	/// Prints source location if it is given.
-	void printSourceLocation(SourceLocation const* _location);
-	void printSourceLocation(SourceReference const& _ref);
-	void printExceptionInformation(dev::Exception const& _error, std::string const& _category);
-	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
+	virtual void printSourceLocation(SourceReference const& _ref);
+	virtual void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
+
+	virtual void printSourceLocation(SourceLocation const* _location);
+	virtual void printExceptionInformation(dev::Exception const& _error, std::string const& _category);
 
 	static std::string formatExceptionInformation(
 		dev::Exception const& _exception,
@@ -62,7 +65,7 @@ public:
 		return errorOutput.str();
 	}
 
-private:
+protected:
 	/// Prints source name if location is given.
 	void printSourceName(SourceReference const& _ref);
 

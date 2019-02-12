@@ -10,7 +10,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.5.3")
+set(PROJECT_VERSION "0.5.4")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 option(LLL "Build LLL" OFF)

@@ -3,6 +3,7 @@ macro(configure_project)
 
 	# features
 	eth_default_option(COVERAGE OFF)
+	eth_default_option(OSSFUZZ OFF)
 
 	# components
 	eth_default_option(TESTS ON)

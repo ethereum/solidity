@@ -141,6 +141,7 @@ public:
 			{"-", 2},
 			{"*", 2},
 			{"/", 2},
+			{"mod", 2},
 			{"select", 2},
 			{"store", 3}
 		};
@@ -246,6 +247,10 @@ public:
 	{
 		return Expression("/", std::move(_a), std::move(_b), Kind::Int);
 	}
+	friend Expression operator%(Expression _a, Expression _b)
+	{
+		return Expression("mod", std::move(_a), std::move(_b), Kind::Int);
+	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
 		solAssert(
@@ -304,6 +309,9 @@ public:
 
 	/// @returns a list of queries that the system was not able to respond to.
 	virtual std::vector<std::string> unhandledQueries() { return {}; }
+
+	/// @returns how many SMT solvers this interface has.
+	virtual unsigned solvers() { return 1; }
 
 protected:
 	// SMT query timeout in milliseconds.

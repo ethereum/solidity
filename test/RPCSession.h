@@ -57,7 +57,10 @@ class IPCSocket: public boost::noncopyable
 public:
 	explicit IPCSocket(std::string const& _path);
 	std::string sendRequest(std::string const& _req);
-	~IPCSocket() { close(m_socket); }
+	~IPCSocket() {
+		shutdown(m_socket, SHUT_RDWR);
+		close(m_socket);
+	}
 
 	std::string const& path() const { return m_path; }
 

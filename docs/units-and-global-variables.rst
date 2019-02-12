@@ -117,7 +117,7 @@ ABI Encoding and Decoding Functions
 
 - ``abi.decode(bytes memory encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
 - ``abi.encode(...) returns (bytes memory)``: ABI-encodes the given arguments
-- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments
+- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments. Note that packed encoding can be ambiguous!
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
 
@@ -255,7 +255,7 @@ Type Information
 The expression ``type(X)`` can be used to retrieve information about the
 type ``X``. Currently, there is limited support for this feature, but
 it might be expanded in the future. The following properties are
-available for a conract type ``C``:
+available for a contract type ``C``:
 
 ``type(C).creationCode``:
     Memory byte array that contains the creation bytecode of the contract.

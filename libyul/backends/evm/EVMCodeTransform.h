@@ -40,6 +40,17 @@ namespace yul
 struct AsmAnalysisInfo;
 class EVMAssembly;
 
+struct StackTooDeepError: virtual YulException
+{
+	StackTooDeepError(YulString _variable, int _depth): variable(_variable), depth(_depth) {}
+	StackTooDeepError(YulString _functionName, YulString _variable, int _depth):
+		functionName(_functionName), variable(_variable), depth(_depth)
+	{}
+	YulString functionName;
+	YulString variable;
+	int depth;
+};
+
 struct CodeTransformContext
 {
 	std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
@@ -85,6 +96,10 @@ class CodeTransform: public boost::static_visitor<>
 public:
 	/// Create the code transformer.
 	/// @param _identifierAccess used to resolve identifiers external to the inline assembly
+	/// As a side-effect of its construction, translates the Yul code and appends it to the
+	/// given assembly.
+	/// Throws StackTooDeepError if a variable is not accessible or if a function has too
+	/// many parameters.
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
@@ -108,6 +123,8 @@ public:
 	)
 	{
 	}
+
+	std::vector<StackTooDeepError> const& stackErrors() const { return m_stackErrors; }
 
 protected:
 	using Context = CodeTransformContext;
@@ -172,11 +189,15 @@ private:
 	/// Determines the stack height difference to the given variables. Throws
 	/// if it is not yet in scope or the height difference is too large. Returns
 	/// the (positive) stack height difference otherwise.
-	int variableHeightDiff(Scope::Variable const& _var, bool _forSwap) const;
+	int variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
 	void checkStackHeight(void const* _astElement) const;
+
+	/// Stores the stack error in the list of errors, appends an invalid opcode
+	/// and corrects the stack height to the target stack height.
+	void stackError(StackTooDeepError _error, int _targetStackSize);
 
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
@@ -198,6 +219,8 @@ private:
 	/// statement level in the scope where the variable was defined.
 	std::set<Scope::Variable const*> m_variablesScheduledForDeletion;
 	std::set<int> m_unusedStackSlots;
+
+	std::vector<StackTooDeepError> m_stackErrors;
 };
 
 }

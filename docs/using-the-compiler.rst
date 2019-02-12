@@ -19,8 +19,8 @@ If you only want to compile a single file, you run it as ``solc --bin sourceFile
 Before you deploy your contract, activate the optimizer when compiling using ``solc --optimize --bin sourceFile.sol``.
 By default, the optimizer will optimize the contract assuming it is called 200 times across its lifetime.
 If you want the initial contract deployment to be cheaper and the later function executions to be more expensive,
-set it to ``--runs=1``. If you expect many transactions and do not care for higher deployment cost and
-output size, set ``--runs`` to a high number.
+set it to ``--optimize-runs=1``. If you expect many transactions and do not care for higher deployment cost and
+output size, set ``--optimize-runs`` to a high number.
 
 The commandline compiler will automatically read imported files from the filesystem, but
 it is also possible to provide path redirects using ``prefix=path`` in the following way:
@@ -140,9 +140,9 @@ Input Description
 
     {
       // Required: Source code language, such as "Solidity", "Vyper", "lll", "assembly", etc.
-      language: "Solidity",
+      "language": "Solidity",
       // Required
-      sources:
+      "sources":
       {
         // The keys here are the "global" names of the source files,
         // imports can use other files via remappings (see below).
@@ -155,13 +155,16 @@ Input Description
           // URL(s) should be imported in this order and the result checked against the
           // keccak256 hash (if available). If the hash doesn't match or none of the
           // URL(s) result in success, an error should be raised.
+          // Using the commandline interface only filesystem paths are supported.
+          // With the JavaScript interface the URL will be passed to the user-supplied
+          // read callback, so any URL supported by the callback can be used.
           "urls":
           [
             "bzzr://56ab...",
             "ipfs://Qma...",
+            "/tmp/path/to/file.sol"
             // If files are used, their directories should be added to the command line via
             // `--allow-paths <path>`.
-            "file:///tmp/path/to/file.sol"
           ]
         },
         "mortal":
@@ -173,26 +176,26 @@ Input Description
         }
       },
       // Optional
-      settings:
+      "settings":
       {
         // Optional: Sorted list of remappings
-        remappings: [ ":g/dir" ],
+        "remappings": [ ":g/dir" ],
         // Optional: Optimizer settings
-        optimizer: {
+        "optimizer": {
           // disabled by default
-          enabled: true,
+          "enabled": true,
           // Optimize for how many times you intend to run the code.
           // Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage.
-          runs: 200
+          "runs": 200
         },
-        evmVersion: "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium or constantinople
+        "evmVersion": "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium or constantinople
         // Metadata settings (optional)
-        metadata: {
+        "metadata": {
           // Use only literal content and not URLs (false by default)
-          useLiteralContent: true
+          "useLiteralContent": true
         },
         // Addresses of the libraries. If not all libraries are given here, it can result in unlinked objects whose output data is different.
-        libraries: {
+        "libraries": {
           // The top level key is the the name of the source file where the library is used.
           // If remappings are used, this source file should match the global path after remappings were applied.
           // If this key is an empty string, that refers to a global level.
@@ -240,22 +243,19 @@ Input Description
         // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
         //
-        outputSelection: {
-          // Enable the metadata and bytecode outputs of every single contract.
+        "outputSelection": {
           "*": {
-            "*": [ "metadata", "evm.bytecode" ]
+            "*": [
+              "metadata", "evm.bytecode" // Enable the metadata and bytecode outputs of every single contract.
+              , "evm.bytecode.sourceMap" // Enable the source map output of every single contract.
+            ],
+            "": [
+              "ast" // Enable the AST output of every single file.
+            ]
           },
           // Enable the abi and opcodes output of MyContract defined in file def.
           "def": {
             "MyContract": [ "abi", "evm.bytecode.opcodes" ]
-          },
-          // Enable the source map output of every single contract.
-          "*": {
-            "*": [ "evm.bytecode.sourceMap" ]
-          },
-          // Enable the legacy AST output of every single file.
-          "*": {
-            "": [ "legacyAST" ]
           }
         }
       }
@@ -269,106 +269,106 @@ Output Description
 
     {
       // Optional: not present if no errors/warnings were encountered
-      errors: [
+      "errors": [
         {
           // Optional: Location within the source file.
-          sourceLocation: {
-            file: "sourceFile.sol",
-            start: 0,
-            end: 100
+          "sourceLocation": {
+            "file": "sourceFile.sol",
+            "start": 0,
+            "end": 100
           ],
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc.
           // See below for complete list of types.
-          type: "TypeError",
+          "type": "TypeError",
           // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
-          component: "general",
+          "component": "general",
           // Mandatory ("error" or "warning")
-          severity: "error",
+          "severity": "error",
           // Mandatory
-          message: "Invalid keyword"
+          "message": "Invalid keyword"
           // Optional: the message formatted with source location
-          formattedMessage: "sourceFile.sol:100: Invalid keyword"
+          "formattedMessage": "sourceFile.sol:100: Invalid keyword"
         }
       ],
       // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
-      sources: {
+      "sources": {
         "sourceFile.sol": {
           // Identifier of the source (used in source maps)
-          id: 1,
+          "id": 1,
           // The AST object
-          ast: {},
+          "ast": {},
           // The legacy AST object
-          legacyAST: {}
+          "legacyAST": {}
         }
       },
       // This contains the contract-level outputs. It can be limited/filtered by the outputSelection settings.
-      contracts: {
+      "contracts": {
         "sourceFile.sol": {
           // If the language used has no contract names, this field should equal to an empty string.
           "ContractName": {
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
             // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
-            abi: [],
+            "abi": [],
             // See the Metadata Output documentation (serialised JSON string)
-            metadata: "{...}",
+            "metadata": "{...}",
             // User documentation (natspec)
-            userdoc: {},
+            "userdoc": {},
             // Developer documentation (natspec)
-            devdoc: {},
+            "devdoc": {},
             // Intermediate representation (string)
-            ir: "",
+            "ir": "",
             // EVM-related outputs
-            evm: {
+            "evm": {
               // Assembly (string)
-              assembly: "",
+              "assembly": "",
               // Old-style assembly (object)
-              legacyAssembly: {},
+              "legacyAssembly": {},
               // Bytecode and related details.
-              bytecode: {
+              "bytecode": {
                 // The bytecode as a hex string.
-                object: "00fe",
+                "object": "00fe",
                 // Opcodes list (string)
-                opcodes: "",
+                "opcodes": "",
                 // The source mapping as a string. See the source mapping definition.
-                sourceMap: "",
+                "sourceMap": "",
                 // If given, this is an unlinked object.
-                linkReferences: {
+                "linkReferences": {
                   "libraryFile.sol": {
                     // Byte offsets into the bytecode. Linking replaces the 20 bytes located there.
                     "Library1": [
-                      { start: 0, length: 20 },
-                      { start: 200, length: 20 }
+                      { "start": 0, "length": 20 },
+                      { "start": 200, "length": 20 }
                     ]
                   }
                 }
               },
               // The same layout as above.
-              deployedBytecode: { },
+              "deployedBytecode": { },
               // The list of function hashes
-              methodIdentifiers: {
+              "methodIdentifiers": {
                 "delegate(address)": "5c19a95c"
               },
               // Function gas estimates
-              gasEstimates: {
-                creation: {
-                  codeDepositCost: "420000",
-                  executionCost: "infinite",
-                  totalCost: "infinite"
+              "gasEstimates": {
+                "creation": {
+                  "codeDepositCost": "420000",
+                  "executionCost": "infinite",
+                  "totalCost": "infinite"
                 },
-                external: {
+                "external": {
                   "delegate(address)": "25000"
                 },
-                internal: {
+                "internal": {
                   "heavyLifting()": "infinite"
                 }
               }
             },
             // eWASM related outputs
-            ewasm: {
+            "ewasm": {
               // S-expressions format
-              wast: "",
+              "wast": "",
               // Binary format (hex string)
-              wasm: ""
+              "wasm": ""
             }
           }
         }
