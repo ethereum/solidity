@@ -1,32 +1,30 @@
-### 0.5.4 (unreleased)
-
-Bugfixes:
- * Code generator: Defensively pad allocation of creationCode and runtimeCode to multiples of 32 bytes.
- * Parser: Disallow empty import statements.
- * Type Checker: Dissallow mappings with data locations other than 'storage'
- * Type Checker: Fix internal error when a struct array index does not fit into a uint256.
- * Type system: Properly report packed encoded size for arrays and structs (mostly unused until now).
- * Commandline interface: Allow yul optimizer only for strict assembly.
-
+### 0.5.4 (2019-02-12)
 
 Language Features:
  * Allow calldata structs without dynamically encoded members with ABIEncoderV2.
 
 
 Compiler Features:
- * Implement packed encoding for ABIEncoderV2.
+ * ABIEncoderV2: Implement packed encoding.
  * C API (``libsolc`` / raw ``soljson.js``): Introduce ``solidity_free`` method which releases all internal buffers to save memory.
- * Commandline interface: Adds new option ``--new-reporter`` for improved diagnostics formatting
+ * Commandline Interface: Adds new option ``--new-reporter`` for improved diagnostics formatting
    along with ``--color`` and ``--no-color`` for colorized output to be forced (or explicitly disabled).
 
+
 Bugfixes:
+ * Code Generator: Defensively pad allocation of creationCode and runtimeCode to multiples of 32 bytes.
+ * Commandline Interface: Allow yul optimizer only for strict assembly.
+ * Parser: Disallow empty import statements.
+ * Type Checker: Disallow mappings with data locations other than ``storage``.
+ * Type Checker: Fix internal error when a struct array index does not fit into a uint256.
+ * Type System: Properly report packed encoded size for arrays and structs (mostly unused until now).
 
 
 Build System:
  * Add support for continuous fuzzing via Google oss-fuzz
  * SMT: If using Z3, require version 4.6.0 or newer.
- * Ubuntu PPA Packages: Use CVC4 as SMT solver instead of Z3
  * Soltest: Add parser that is used in the file-based unit test environment.
+ * Ubuntu PPA Packages: Use CVC4 as SMT solver instead of Z3
 
 
 ### 0.5.3 (2019-01-22)
