@@ -3746,17 +3746,22 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 			event Deposit();
 			event Deposit(address _addr);
 			event Deposit(address _addr, uint _amount);
+			event Deposit(address _addr, bool _flag);
 			function deposit() public returns (uint) {
 				emit Deposit();
 				return 1;
 			}
 			function deposit(address _addr) public returns (uint) {
 				emit Deposit(_addr);
-				return 1;
+				return 2;
 			}
 			function deposit(address _addr, uint _amount) public returns (uint) {
 				emit Deposit(_addr, _amount);
-				return 1;
+				return 3;
+			}
+			function deposit(address _addr, bool _flag) public returns (uint) {
+				emit Deposit(_addr, _flag);
+				return 4;
 			}
 		}
 	)";
@@ -3770,19 +3775,26 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
 
-	ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(1)));
+	ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(2)));
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
 
-	ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(1)));
+	ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(3)));
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, 100));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
+
+	ABI_CHECK(callContractFunction("deposit(address,bool)", c_loggedAddress, false), encodeArgs(u256(4)));
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, false));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bool)")));
 }
 
 BOOST_AUTO_TEST_CASE(events_with_same_name_inherited_emit)
