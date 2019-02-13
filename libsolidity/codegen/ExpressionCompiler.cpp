@@ -1967,12 +1967,17 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// If the function takes arbitrary parameters or is a bare call, copy dynamic length data in place.
 	// Move arguments to memory, will not update the free memory pointer (but will update the memory
 	// pointer on the stack).
+	bool encodeInPlace = _functionType.takesArbitraryParameters() || _functionType.isBareCall();
+	if (_functionType.kind() == FunctionType::Kind::ECRecover)
+		// This would be the only combination of padding and in-place encoding,
+		// but all parameters of ecrecover are value types anyway.
+		encodeInPlace = false;
 	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
 	utils().encodeToMemory(
 		argumentTypes,
 		parameterTypes,
 		_functionType.padArguments(),
-		_functionType.takesArbitraryParameters() || _functionType.isBareCall(),
+		encodeInPlace,
 		encodeForLibraryCall
 	);
 
