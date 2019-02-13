@@ -2090,12 +2090,11 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	annotation.type = possibleMembers.front().type;
 
 	if (auto funType = dynamic_cast<FunctionType const*>(annotation.type.get()))
-		if (funType->bound() && !exprType->isImplicitlyConvertibleTo(*funType->selfType()))
-			m_errorReporter.typeError(
-				_memberAccess.location(),
-				"Function \"" + memberName + "\" cannot be called on an object of type " +
-				exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
-			);
+		solAssert(
+			!funType->bound() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
+			"Function \"" + memberName + "\" cannot be called on an object of type " +
+			exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
+		);
 
 	if (auto const* structType = dynamic_cast<StructType const*>(exprType.get()))
 		annotation.isLValue = !structType->dataStoredIn(DataLocation::CallData);
