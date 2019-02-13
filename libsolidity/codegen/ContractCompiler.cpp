@@ -21,14 +21,16 @@
  */
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/codegen/AsmCodeGen.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
+#include <libyul/backends/evm/AsmCodeGen.h>
+
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
+
 #include <liblangutil/ErrorReporter.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -713,7 +715,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 	solAssert(_inlineAssembly.annotation().analysisInfo, "");
-	CodeGenerator::assemble(
+	yul::CodeGenerator::assemble(
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
 		*m_context.assemblyPtr(),

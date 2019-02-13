@@ -18,7 +18,7 @@
  * Adaptor between the abstract assembly and eth assembly.
  */
 
-#include <libsolidity/codegen/AsmCodeGen.h>
+#include <libyul/backends/evm/AsmCodeGen.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -41,7 +41,6 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace yul;
-using namespace dev::solidity;
 
 EthAssemblyAdapter::EthAssemblyAdapter(eth::Assembly& _assembly):
 	m_assembly(_assembly)
