@@ -17,14 +17,16 @@ fi
 
 FORMATERROR=$(
 (
-git grep -nIE "\<(if|for)\(" -- '*.h' '*.cpp'
-git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp'
+	git grep -nIE "\<(if|for)\(" -- '*.h' '*.cpp' # no space after "if" or "for"
+	git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp' # "{\n" on same line as "if" / "for"
+	git grep -nIE "\(const " -- '*.h' '*.cpp' # const on left side of type
+	git grep -nIE "^ [^*]|[^*] 	|	 [^*]" -- '*.h' '*.cpp' # uses spaces for indentation or mixes spaces and tabs
 ) | egrep -v "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" | egrep -v "^test/"
 )
 
 if [[ "$FORMATERROR" != "" ]]
 then
-	echo "Error: Format error for if/for:" | tee -a $ERROR_LOG
+	echo "Coding style error:" | tee -a $ERROR_LOG
 	echo "$FORMATERROR" | tee -a $ERROR_LOG
 	exit 1
 fi
