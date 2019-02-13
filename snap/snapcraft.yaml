@@ -26,10 +26,24 @@ parts:
     source: .
     source-type: git
     plugin: cmake
-    build-packages: [build-essential, libboost-all-dev, libz3-dev]
+    build-packages: [build-essential, libboost-all-dev]
     stage-packages: [libicu60]
-    prepare: |
+    override-build: |
       if git describe --exact-match --tags 2> /dev/null
       then
         echo -n > ../src/prerelease.txt
       fi
+      snapcraftctl build
+    after: [z3]
+  z3:
+    source: https://github.com/Z3Prover/z3.git
+    source-tag: z3-4.8.4
+    plugin: make
+    build-packages: [python]
+    stage-packages: [libstdc++6]
+    makefile: build/Makefile
+    override-build: |
+      python scripts/mk_make.py
+      cd build
+      make -j -l $(grep -c "^processor" /proc/cpuinfo)
+      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
