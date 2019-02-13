@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"unchecked"
 	};
 
-	for (const auto& keyword: keywords)
+	for (auto const& keyword: keywords)
 	{
 		auto text = std::string("contract ") + keyword + " {}";
 		CHECK_PARSE_ERROR(text.c_str(), string("Expected identifier but got reserved keyword '") + keyword + "'");

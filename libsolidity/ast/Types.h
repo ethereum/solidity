@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -332,8 +332,8 @@ protected:
 class AddressType: public Type
 {
 public:
-    static AddressType& address() { static std::shared_ptr<AddressType> addr(std::make_shared<AddressType>(StateMutability::NonPayable)); return *addr; }
-    static AddressType& addressPayable() { static std::shared_ptr<AddressType> addr(std::make_shared<AddressType>(StateMutability::Payable)); return *addr; }
+	static AddressType& address() { static std::shared_ptr<AddressType> addr(std::make_shared<AddressType>(StateMutability::NonPayable)); return *addr; }
+	static AddressType& addressPayable() { static std::shared_ptr<AddressType> addr(std::make_shared<AddressType>(StateMutability::Payable)); return *addr; }
 
 	Category category() const override { return Category::Address; }
 
@@ -707,7 +707,7 @@ public:
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
-	bool operator==(const Type& _other) const override;
+	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	bool isDynamicallyEncoded() const override;
@@ -823,7 +823,7 @@ public:
 	Category category() const override { return Category::Struct; }
 	explicit StructType(StructDefinition const& _struct, DataLocation _location = DataLocation::Storage):
 		ReferenceType(_location), m_struct(_struct) {}
-	BoolResult isImplicitlyConvertibleTo(const Type& _convertTo) const override;
+	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;

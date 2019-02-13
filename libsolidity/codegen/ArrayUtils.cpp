@@ -934,8 +934,11 @@ void ArrayUtils::clearStorageLoop(TypePointer const& _type) const
 			eth::AssemblyItem loopStart = _context.appendJumpToNew();
 			_context << loopStart;
 			// check for loop condition
-			_context << Instruction::DUP1 << Instruction::DUP3
-					   << Instruction::GT << Instruction::ISZERO;
+			_context <<
+				Instruction::DUP1 <<
+				Instruction::DUP3 <<
+				Instruction::GT <<
+				Instruction::ISZERO;
 			eth::AssemblyItem zeroLoopEnd = _context.newTag();
 			_context.appendConditionalJumpTo(zeroLoopEnd);
 			// delete

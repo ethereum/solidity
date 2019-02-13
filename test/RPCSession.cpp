@@ -137,7 +137,7 @@ string IPCSocket::sendRequest(string const& _req)
 #endif
 }
 
-RPCSession& RPCSession::instance(const string& _path)
+RPCSession& RPCSession::instance(string const& _path)
 {
 	static RPCSession session(_path);
 	BOOST_REQUIRE_EQUAL(session.m_ipcSocket.path(), _path);
@@ -358,7 +358,7 @@ string const& RPCSession::accountCreateIfNotExists(size_t _id)
 	return m_accounts[_id];
 }
 
-RPCSession::RPCSession(const string& _path):
+RPCSession::RPCSession(string const& _path):
 	m_ipcSocket(_path)
 {
 	accountCreate();

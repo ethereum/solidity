@@ -32,11 +32,12 @@ namespace dev
 namespace solidity
 {
 
-/** Occurrence of a variable in a block of control flow.
-  * Stores the declaration of the referenced variable, the
-  * kind of the occurrence and possibly the node at which
-  * it occurred.
-  */
+/**
+ * Occurrence of a variable in a block of control flow.
+ * Stores the declaration of the referenced variable, the
+ * kind of the occurrence and possibly the node at which
+ * it occurred.
+ */
 class VariableOccurrence
 {
 public:
@@ -85,11 +86,12 @@ private:
 	ASTNode const* m_occurrence = nullptr;
 };
 
-/** Node of the Control Flow Graph.
-  * The control flow is a directed graph connecting control flow blocks.
-  * An arc between two nodes indicates that the control flow can possibly
-  * move from its start node to its end node during execution.
-  */
+/**
+ * Node of the Control Flow Graph.
+ * The control flow is a directed graph connecting control flow blocks.
+ * An arc between two nodes indicates that the control flow can possibly
+ * move from its start node to its end node during execution.
+ */
 struct CFGNode
 {
 	/// Entry nodes. All CFG nodes from which control flow may move into this node.

@@ -593,7 +593,7 @@ at standard output or in files in the output directory, if specified.
 Imports are automatically read from the filesystem, but it is also possible to
 remap paths using the context:prefix=path syntax.
 Example:
-    solc --bin -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
+solc --bin -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
 
 Allowed options)",
 		po::options_description::m_default_line_length,
@@ -927,14 +927,18 @@ bool CommandLineInterface::processInput()
 	}
 	catch (InternalCompilerError const& _exception)
 	{
-		serr() << "Internal compiler error during compilation:" << endl
-			 << boost::diagnostic_information(_exception);
+		serr() <<
+			"Internal compiler error during compilation:" <<
+			endl <<
+			boost::diagnostic_information(_exception);
 		return false;
 	}
 	catch (UnimplementedFeatureError const& _exception)
 	{
-		serr() << "Unimplemented feature:" << endl
-			 << boost::diagnostic_information(_exception);
+		serr() <<
+			"Unimplemented feature:" <<
+			endl <<
+			boost::diagnostic_information(_exception);
 		return false;
 	}
 	catch (Error const& _error)
@@ -1177,7 +1181,7 @@ bool CommandLineInterface::link()
 		for (auto const& library: m_libraries)
 			boost::algorithm::erase_all(src.second, "\n" + libraryPlaceholderHint(library.first));
 		while (!src.second.empty() && *prev(src.second.end()) == '\n')
-			   src.second.resize(src.second.size() - 1);
+			src.second.resize(src.second.size() - 1);
 	}
 	return true;
 }

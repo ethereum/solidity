@@ -1310,8 +1310,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			utils().leftShiftNumberOnStack(224);
 		}
 		else
-			solAssert(!!_memberAccess.expression().annotation().type->memberType(member),
-				 "Invalid member access to function.");
+			solAssert(
+				!!_memberAccess.expression().annotation().type->memberType(member),
+				"Invalid member access to function."
+			);
 		break;
 	case Type::Category::Magic:
 		// we can ignore the kind of magic and only look at the name of the member
@@ -2083,7 +2085,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 						mstore(v, returndatasize())
 						returndatacopy(add(v, 0x20), 0, returndatasize())
 					}
-			    })", {"v"});
+				})", {"v"});
 			}
 			else
 				utils().pushZeroPointer();

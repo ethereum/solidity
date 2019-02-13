@@ -71,8 +71,8 @@ static const uint64_t RC[24] = \
 #define REPEAT24(e) REPEAT6(e e e e)
 #define REPEAT5(e) e e e e e
 #define FOR5(v, s, e) \
-  v = 0;            \
-  REPEAT5(e; v += s;)
+	v = 0;            \
+	REPEAT5(e; v += s;)
 
 /*** Keccak-f[1600] ***/
 static inline void keccakf(void* state) {
@@ -84,25 +84,25 @@ static inline void keccakf(void* state) {
 		uint8_t x, y;
 		// Theta
 		FOR5(x, 1,
-			 b[x] = 0;
-			 FOR5(y, 5,
-				  b[x] ^= a[x + y]; ))
+			b[x] = 0;
+			FOR5(y, 5,
+				b[x] ^= a[x + y]; ))
 		FOR5(x, 1,
-			 FOR5(y, 5,
-				  a[y + x] ^= b[(x + 4) % 5] ^ rol(b[(x + 1) % 5], 1); ))
+			FOR5(y, 5,
+				a[y + x] ^= b[(x + 4) % 5] ^ rol(b[(x + 1) % 5], 1); ))
 		// Rho and pi
 		uint64_t t = a[1];
 		x = 0;
 		REPEAT24(b[0] = a[pi[x]];
-				 a[pi[x]] = rol(t, rho[x]);
-				 t = b[0];
-				 x++; )
+				a[pi[x]] = rol(t, rho[x]);
+				t = b[0];
+				x++; )
 		// Chi
 		FOR5(y,
-		   5,
-		   FOR5(x, 1,
+			5,
+			FOR5(x, 1,
 				b[x] = a[y + x];)
-		   FOR5(x, 1,
+			FOR5(x, 1,
 				a[y + x] = b[x] ^ ((~b[(x + 1) % 5]) & b[(x + 2) % 5]); ))
 		// Iota
 		a[0] ^= RC[i];
@@ -115,19 +115,19 @@ static inline void keccakf(void* state) {
 
 #define _(S) do { S } while (0)
 #define FOR(i, ST, L, S) \
-  _(for (size_t i = 0; i < L; i += ST) { S; })
+	_(for (size_t i = 0; i < L; i += ST) { S; })
 #define mkapply_ds(NAME, S)                                          \
-  static inline void NAME(uint8_t* dst,                              \
-						  const uint8_t* src,                        \
-						  size_t len) {                              \
-	FOR(i, 1, len, S);                                               \
-  }
+	static inline void NAME(uint8_t* dst,                              \
+							const uint8_t* src,                        \
+							size_t len) {                              \
+		FOR(i, 1, len, S);                                               \
+	}
 #define mkapply_sd(NAME, S)                                          \
-  static inline void NAME(const uint8_t* src,                        \
-						  uint8_t* dst,                              \
-						  size_t len) {                              \
-	FOR(i, 1, len, S);                                               \
-  }
+	static inline void NAME(uint8_t const* src,                        \
+							uint8_t* dst,                              \
+							size_t len) {                              \
+		FOR(i, 1, len, S);                                               \
+	}
 
 mkapply_ds(xorin, dst[i] ^= src[i])  // xorin
 mkapply_sd(setout, dst[i] = src[i])  // setout
@@ -137,12 +137,12 @@ mkapply_sd(setout, dst[i] = src[i])  // setout
 
 // Fold P*F over the full blocks of an input.
 #define foldP(I, L, F) \
-  while (L >= rate) {  \
-	F(a, I, rate);     \
-	P(a);              \
-	I += rate;         \
-	L -= rate;         \
-  }
+	while (L >= rate) {  \
+		F(a, I, rate);     \
+		P(a);              \
+		I += rate;         \
+		L -= rate;         \
+	}
 
 /** The sponge-based hash construction. **/
 inline void hash(

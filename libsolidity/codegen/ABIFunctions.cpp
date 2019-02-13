@@ -1089,7 +1089,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			if (_options.dynamicInplace)
 				encode = Whiskers{"pos := <encode>(memberValue, pos)"}
 					("encode", abiEncodeAndReturnUpdatedPosFunction(*memberTypeFrom, *memberTypeTo, subOptions))
-					 .render();
+					.render();
 			else
 			{
 				Whiskers encodeTempl(
@@ -1262,7 +1262,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		return abiDecodingFunctionValueType(_type, _fromMemory);
 }
 
-string ABIFunctions::abiDecodingFunctionValueType(const Type& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromMemory)
 {
 	TypePointer decodingType = _type.decodingType();
 	solAssert(decodingType, "");

@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -496,8 +496,8 @@ BoolResult AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
 		return (m_stateMutability >= StateMutability::Payable) || !contractType->isPayable();
 	return isImplicitlyConvertibleTo(_convertTo) ||
-		   _convertTo.category() == Category::Integer ||
-		   (_convertTo.category() == Category::FixedBytes && 160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8);
+		_convertTo.category() == Category::Integer ||
+		(_convertTo.category() == Category::FixedBytes && 160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8);
 }
 
 string AddressType::toString(bool) const
@@ -1380,7 +1380,7 @@ string StringLiteralType::richIdentifier() const
 	return "t_stringliteral_" + toHex(keccak256(m_value).asBytes());
 }
 
-bool StringLiteralType::operator==(const Type& _other) const
+bool StringLiteralType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
@@ -1463,7 +1463,7 @@ TypeResult FixedBytesType::binaryOperatorResult(Token _operator, TypePointer con
 	return TypePointer();
 }
 
-MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) const
+MemberList::MemberMap FixedBytesType::nativeMembers(ContractDefinition const*) const
 {
 	return MemberList::MemberMap{MemberList::Member{"length", make_shared<IntegerType>(8)}};
 }
@@ -1611,7 +1611,7 @@ string ReferenceType::identifierLocationSuffix() const
 	return id;
 }
 
-BoolResult ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+BoolResult ArrayType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() != category())
 		return false;
@@ -1651,7 +1651,7 @@ BoolResult ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	}
 }
 
-BoolResult ArrayType::isExplicitlyConvertibleTo(const Type& _convertTo) const
+BoolResult ArrayType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (isImplicitlyConvertibleTo(_convertTo))
 		return true;
@@ -1707,8 +1707,8 @@ bool ArrayType::operator==(Type const& _other) const
 bool ArrayType::validForCalldata() const
 {
 	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType().get()))
-        if (!arrayBaseType->validForCalldata())
-            return false;
+		if (!arrayBaseType->validForCalldata())
+			return false;
 	return unlimitedCalldataEncodedSize(true) <= numeric_limits<unsigned>::max();
 }
 
@@ -2010,7 +2010,7 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 	return variablesAndOffsets;
 }
 
-BoolResult StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+BoolResult StructType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() != category())
 		return false;
@@ -3298,7 +3298,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 	return members;
 }
 
-ModifierType::ModifierType(const ModifierDefinition& _modifier)
+ModifierType::ModifierType(ModifierDefinition const& _modifier)
 {
 	TypePointers params;
 	params.reserve(_modifier.parameters().size());
@@ -3327,8 +3327,12 @@ bool ModifierType::operator==(Type const& _other) const
 		return false;
 	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
 
-	if (!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(),
-			   other.m_parameterTypes.cbegin(), typeCompare))
+	if (!equal(
+		m_parameterTypes.cbegin(),
+		m_parameterTypes.cend(),
+		other.m_parameterTypes.cbegin(),
+		typeCompare
+	))
 		return false;
 	return true;
 }
