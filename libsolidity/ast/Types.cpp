@@ -1380,7 +1380,7 @@ string StringLiteralType::richIdentifier() const
 	return "t_stringliteral_" + toHex(keccak256(m_value).asBytes());
 }
 
-bool StringLiteralType::operator==(const Type& _other) const
+bool StringLiteralType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
@@ -1463,7 +1463,7 @@ TypeResult FixedBytesType::binaryOperatorResult(Token _operator, TypePointer con
 	return TypePointer();
 }
 
-MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) const
+MemberList::MemberMap FixedBytesType::nativeMembers(ContractDefinition const*) const
 {
 	return MemberList::MemberMap{MemberList::Member{"length", make_shared<IntegerType>(8)}};
 }
@@ -1611,7 +1611,7 @@ string ReferenceType::identifierLocationSuffix() const
 	return id;
 }
 
-BoolResult ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+BoolResult ArrayType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() != category())
 		return false;
@@ -1651,7 +1651,7 @@ BoolResult ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	}
 }
 
-BoolResult ArrayType::isExplicitlyConvertibleTo(const Type& _convertTo) const
+BoolResult ArrayType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (isImplicitlyConvertibleTo(_convertTo))
 		return true;
@@ -2010,7 +2010,7 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 	return variablesAndOffsets;
 }
 
-BoolResult StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+BoolResult StructType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() != category())
 		return false;
@@ -3298,7 +3298,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 	return members;
 }
 
-ModifierType::ModifierType(const ModifierDefinition& _modifier)
+ModifierType::ModifierType(ModifierDefinition const& _modifier)
 {
 	TypePointers params;
 	params.reserve(_modifier.parameters().size());

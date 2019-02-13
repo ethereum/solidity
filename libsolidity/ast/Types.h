@@ -707,7 +707,7 @@ public:
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
-	bool operator==(const Type& _other) const override;
+	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	bool isDynamicallyEncoded() const override;
@@ -823,7 +823,7 @@ public:
 	Category category() const override { return Category::Struct; }
 	explicit StructType(StructDefinition const& _struct, DataLocation _location = DataLocation::Storage):
 		ReferenceType(_location), m_struct(_struct) {}
-	BoolResult isImplicitlyConvertibleTo(const Type& _convertTo) const override;
+	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;

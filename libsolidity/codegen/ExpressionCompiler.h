@@ -71,7 +71,7 @@ public:
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
 
 	/// Appends code for a Constant State Variable accessor function
-	void appendConstStateVariableAccessor(const VariableDeclaration& _varDecl);
+	void appendConstStateVariableAccessor(VariableDeclaration const& _varDecl);
 
 private:
 	bool visit(Conditional const& _condition) override;

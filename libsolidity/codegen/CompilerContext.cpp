@@ -265,7 +265,7 @@ unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 	return m_asm->deposit() - _offset - 1;
 }
 
-pair<u256, unsigned> CompilerContext::storageLocationOfVariable(const Declaration& _declaration) const
+pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration const& _declaration) const
 {
 	auto it = m_stateVariables.find(&_declaration);
 	solAssert(it != m_stateVariables.end(), "Variable not found in storage.");

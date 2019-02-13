@@ -267,7 +267,7 @@ private:
 		std::vector<ContractDefinition const*>::const_iterator _searchStart
 	);
 	/// @returns an iterator to the contract directly above the given contract.
-	std::vector<ContractDefinition const*>::const_iterator superContract(const ContractDefinition &_contract) const;
+	std::vector<ContractDefinition const*>::const_iterator superContract(ContractDefinition const& _contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
@@ -291,7 +291,7 @@ private:
 		Declaration const* nextFunctionToCompile() const;
 		/// Informs the queue that we are about to compile the given function, i.e. removes
 		/// the function from the queue of functions to compile.
-		void startFunction(const Declaration &_function);
+		void startFunction(Declaration const& _function);
 
 		/// Labels pointing to the entry points of functions.
 		std::map<Declaration const*, eth::AssemblyItem> m_entryLabels;

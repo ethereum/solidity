@@ -123,7 +123,7 @@ static inline void keccakf(void* state) {
 	FOR(i, 1, len, S);                                               \
   }
 #define mkapply_sd(NAME, S)                                          \
-  static inline void NAME(const uint8_t* src,                        \
+  static inline void NAME(uint8_t const* src,                        \
 						  uint8_t* dst,                              \
 						  size_t len) {                              \
 	FOR(i, 1, len, S);                                               \
