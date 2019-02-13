@@ -638,6 +638,7 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	solAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
 	// Similarly we assume bitwise shifting and create2 go together.
 	solAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
+	solAssert(m_dialect->flavour != AsmFlavour::Yul, "");
 
 	if (_instr == solidity::Instruction::EXTCODEHASH)
 		m_errorReporter.warning(
@@ -678,19 +679,24 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 			m_evmVersion.name() +
 			"\", where it will be interpreted as an invalid instruction."
 		);
-
-	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
+	else if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 	{
-		if (m_dialect->flavour != AsmFlavour::Loose)
-			solAssert(m_errorTypeForLoose && *m_errorTypeForLoose != Error::Type::Warning, "");
-
-		m_errorReporter.error(
-			m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
-			_location,
-			"Jump instructions and labels are low-level EVM features that can lead to "
-			"incorrect stack access. Because of that they are discouraged. "
-			"Please consider using \"switch\", \"if\" or \"for\" statements instead."
-		);
+		if (m_dialect->flavour == AsmFlavour::Loose)
+			m_errorReporter.error(
+				m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
+				_location,
+				"Jump instructions and labels are low-level EVM features that can lead to "
+				"incorrect stack access. Because of that they are discouraged. "
+				"Please consider using \"switch\", \"if\" or \"for\" statements instead."
+			);
+		else
+			m_errorReporter.error(
+				Error::Type::SyntaxError,
+				_location,
+				"Jump instructions and labels are low-level EVM features that can lead to "
+				"incorrect stack access. Because of that they are disallowed in strict assembly. "
+				"Use functions, \"switch\", \"if\" or \"for\" statements instead."
+			);
 	}
 }
 
