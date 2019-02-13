@@ -80,8 +80,6 @@ set(sources
 	formal/VariableUsage.h
 	interface/ABI.cpp
 	interface/ABI.h
-	interface/AssemblyStack.cpp
-	interface/AssemblyStack.h
 	interface/CompilerStack.cpp
 	interface/CompilerStack.h
 	interface/GasEstimator.cpp

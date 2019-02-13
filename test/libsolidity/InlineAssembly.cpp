@@ -22,11 +22,15 @@
 
 #include <test/Options.h>
 
-#include <libsolidity/interface/AssemblyStack.h>
+#include <test/libsolidity/ErrorCheck.h>
+
+#include <libsolidity/ast/AST.h>
+
+#include <libyul/AssemblyStack.h>
+
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
-#include <libsolidity/ast/AST.h>
-#include <test/libsolidity/ErrorCheck.h>
+
 #include <libevmasm/Assembly.h>
 
 #include <boost/optional.hpp>
@@ -37,6 +41,7 @@
 
 using namespace std;
 using namespace langutil;
+using namespace yul;
 
 namespace dev
 {

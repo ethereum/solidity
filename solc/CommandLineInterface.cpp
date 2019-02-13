@@ -20,27 +20,29 @@
  * @date 2014
  * Solidity command line interface.
  */
-#include "CommandLineInterface.h"
+#include <solc/CommandLineInterface.h>
 
 #include "solidity/BuildInfo.h"
 #include "license.h"
 
 #include <libsolidity/interface/Version.h>
-#include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTPrinter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <liblangutil/Exceptions.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
-#include <liblangutil/SourceReferenceFormatter.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <libsolidity/interface/GasEstimator.h>
-#include <libsolidity/interface/AssemblyStack.h>
+
+#include <libyul/AssemblyStack.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
+
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/Scanner.h>
+#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
@@ -841,8 +843,8 @@ bool CommandLineInterface::processInput()
 	{
 		// switch to assembly mode
 		m_onlyAssemble = true;
-		using Input = AssemblyStack::Language;
-		using Machine = AssemblyStack::Machine;
+		using Input = yul::AssemblyStack::Language;
+		using Machine = yul::AssemblyStack::Machine;
 		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		bool optimize = m_args.count(g_argOptimize);
@@ -1216,16 +1218,16 @@ string CommandLineInterface::objectWithLinkRefsHex(eth::LinkerObject const& _obj
 }
 
 bool CommandLineInterface::assemble(
-	AssemblyStack::Language _language,
-	AssemblyStack::Machine _targetMachine,
+	yul::AssemblyStack::Language _language,
+	yul::AssemblyStack::Machine _targetMachine,
 	bool _optimize
 )
 {
 	bool successful = true;
-	map<string, AssemblyStack> assemblyStacks;
+	map<string, yul::AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto& stack = assemblyStacks[src.first] = AssemblyStack(m_evmVersion, _language);
+		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(m_evmVersion, _language);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
@@ -1272,16 +1274,16 @@ bool CommandLineInterface::assemble(
 	for (auto const& src: m_sourceCodes)
 	{
 		string machine =
-			_targetMachine == AssemblyStack::Machine::EVM ? "EVM" :
-			_targetMachine == AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
+			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
+			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
 			"eWasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
-		AssemblyStack& stack = assemblyStacks[src.first];
+		yul::AssemblyStack& stack = assemblyStacks[src.first];
 
 		sout() << endl << "Pretty printed source:" << endl;
 		sout() << stack.print() << endl;
 
-		MachineAssemblyObject object;
+		yul::MachineAssemblyObject object;
 		try
 		{
 			object = stack.assemble(_targetMachine);

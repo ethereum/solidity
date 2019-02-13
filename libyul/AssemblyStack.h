@@ -36,19 +36,15 @@ namespace langutil
 {
 class Scanner;
 }
+
 namespace yul
 {
 class AbstractAssembly;
-}
 
-namespace dev
-{
-namespace solidity
-{
 
 struct MachineAssemblyObject
 {
-	std::shared_ptr<eth::LinkerObject> bytecode;
+	std::shared_ptr<dev::eth::LinkerObject> bytecode;
 	std::string assembly;
 };
 
@@ -62,7 +58,7 @@ public:
 	enum class Language { Yul, Assembly, StrictAssembly };
 	enum class Machine { EVM, EVM15, eWasm };
 
-	explicit AssemblyStack(EVMVersion _evmVersion = EVMVersion(), Language _language = Language::Assembly):
+	explicit AssemblyStack(dev::solidity::EVMVersion _evmVersion = dev::solidity::EVMVersion(), Language _language = Language::Assembly):
 		m_language(_language), m_evmVersion(_evmVersion), m_errorReporter(m_errors)
 	{}
 
@@ -95,7 +91,7 @@ private:
 	void optimize(yul::Object& _object);
 
 	Language m_language = Language::Assembly;
-	EVMVersion m_evmVersion;
+	dev::solidity::EVMVersion m_evmVersion;
 
 	std::shared_ptr<langutil::Scanner> m_scanner;
 
@@ -105,5 +101,4 @@ private:
 	langutil::ErrorReporter m_errorReporter;
 };
 
-}
 }

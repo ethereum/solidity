@@ -13,6 +13,8 @@ add_library(yul
 	AsmScope.h
 	AsmScopeFiller.cpp
 	AsmScopeFiller.h
+	AssemblyStack.h
+	AssemblyStack.cpp
 	CompilabilityChecker.cpp
 	CompilabilityChecker.h
 	Dialect.cpp
