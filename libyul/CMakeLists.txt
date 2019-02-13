@@ -26,6 +26,8 @@ add_library(yul
 	Utilities.h
 	YulString.h
 	backends/evm/AbstractAssembly.h
+	backends/evm/AsmCodeGen.h
+	backends/evm/AsmCodeGen.cpp
 	backends/evm/EVMAssembly.cpp
 	backends/evm/EVMAssembly.h
 	backends/evm/EVMCodeTransform.cpp
