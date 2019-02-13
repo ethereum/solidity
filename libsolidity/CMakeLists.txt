@@ -51,8 +51,6 @@ set(sources
 	codegen/ABIFunctions.h
 	codegen/ArrayUtils.cpp
 	codegen/ArrayUtils.h
-	codegen/AsmCodeGen.cpp
-	codegen/AsmCodeGen.h
 	codegen/Compiler.cpp
 	codegen/Compiler.h
 	codegen/CompilerContext.cpp

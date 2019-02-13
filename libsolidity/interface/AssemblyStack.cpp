@@ -22,7 +22,6 @@
 
 #include <libsolidity/interface/AssemblyStack.h>
 
-#include <libsolidity/codegen/AsmCodeGen.h>
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
 
@@ -30,6 +29,7 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/backends/evm/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMAssembly.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -151,7 +151,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 	{
 		MachineAssemblyObject object;
 		eth::Assembly assembly;
-		EthAssemblyAdapter adapter(assembly);
+		yul::EthAssemblyAdapter adapter(assembly);
 		compileEVM(adapter, false, _optimize);
 		object.bytecode = make_shared<eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();

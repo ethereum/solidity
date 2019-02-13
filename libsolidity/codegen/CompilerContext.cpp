@@ -23,7 +23,6 @@
 #include <libsolidity/codegen/CompilerContext.h>
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/codegen/AsmCodeGen.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/interface/Version.h>
@@ -31,6 +30,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/backends/evm/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/YulString.h>
 
@@ -407,7 +407,7 @@ void CompilerContext::appendInlineAssembly(
 	}
 
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
-	CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
+	yul::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, identifierAccess, _system);
 
 	// Reset the source location to the one of the node (instead of the CODEGEN source location)
 	updateSourceLocation();
