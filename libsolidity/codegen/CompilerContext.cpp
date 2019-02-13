@@ -129,8 +129,10 @@ void CompilerContext::appendMissingLowLevelFunctions()
 	}
 }
 
-void CompilerContext::addVariable(VariableDeclaration const& _declaration,
-								  unsigned _offsetToCurrent)
+void CompilerContext::addVariable(
+	VariableDeclaration const& _declaration,
+	unsigned _offsetToCurrent
+)
 {
 	solAssert(m_asm->deposit() >= 0 && unsigned(m_asm->deposit()) >= _offsetToCurrent, "");
 	unsigned sizeOnStack = _declaration.annotation().type->sizeOnStack();

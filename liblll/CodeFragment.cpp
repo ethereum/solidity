@@ -649,22 +649,22 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 
 			auto end = m_asm.newTag();
 			m_asm.append(Instruction::MSIZE); // Result will be original top of memory
-			m_asm.append(code[0].m_asm, 1);	  // The alloc argument N
+			m_asm.append(code[0].m_asm, 1);   // The alloc argument N
 			m_asm.append(Instruction::DUP1);
 			m_asm.append(Instruction::ISZERO);// (alloc 0) does not change MSIZE
 			m_asm.appendJumpI(end);
 			m_asm.append(u256(1));
 			m_asm.append(Instruction::DUP2);  // Copy N
-			m_asm.append(Instruction::SUB);	  // N-1
+			m_asm.append(Instruction::SUB);   // N-1
 			m_asm.append(u256(0x1f));         // Bit mask
-			m_asm.append(Instruction::NOT);	  // Invert
-			m_asm.append(Instruction::AND);	  // Align N-1 on 32 byte boundary
+			m_asm.append(Instruction::NOT);   // Invert
+			m_asm.append(Instruction::AND);   // Align N-1 on 32 byte boundary
 			m_asm.append(Instruction::MSIZE); // MSIZE is cheap
 			m_asm.append(Instruction::ADD);
 			m_asm.append(Instruction::MLOAD); // Updates MSIZE
-			m_asm.append(Instruction::POP);	  // Discard the result of the MLOAD
+			m_asm.append(Instruction::POP);   // Discard the result of the MLOAD
 			m_asm.append(end);
-			m_asm.append(Instruction::POP);	  // Discard duplicate N
+			m_asm.append(Instruction::POP);   // Discard duplicate N
 
 			_s.usedAlloc = true;
 		}

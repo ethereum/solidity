@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -496,8 +496,8 @@ BoolResult AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
 		return (m_stateMutability >= StateMutability::Payable) || !contractType->isPayable();
 	return isImplicitlyConvertibleTo(_convertTo) ||
-		   _convertTo.category() == Category::Integer ||
-		   (_convertTo.category() == Category::FixedBytes && 160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8);
+		_convertTo.category() == Category::Integer ||
+		(_convertTo.category() == Category::FixedBytes && 160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8);
 }
 
 string AddressType::toString(bool) const
@@ -1707,8 +1707,8 @@ bool ArrayType::operator==(Type const& _other) const
 bool ArrayType::validForCalldata() const
 {
 	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType().get()))
-        if (!arrayBaseType->validForCalldata())
-            return false;
+		if (!arrayBaseType->validForCalldata())
+			return false;
 	return unlimitedCalldataEncodedSize(true) <= numeric_limits<unsigned>::max();
 }
 
@@ -3327,8 +3327,12 @@ bool ModifierType::operator==(Type const& _other) const
 		return false;
 	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
 
-	if (!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(),
-			   other.m_parameterTypes.cbegin(), typeCompare))
+	if (!equal(
+		m_parameterTypes.cbegin(),
+		m_parameterTypes.cend(),
+		other.m_parameterTypes.cbegin(),
+		typeCompare
+	))
 		return false;
 	return true;
 }

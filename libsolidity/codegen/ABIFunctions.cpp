@@ -1089,7 +1089,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			if (_options.dynamicInplace)
 				encode = Whiskers{"pos := <encode>(memberValue, pos)"}
 					("encode", abiEncodeAndReturnUpdatedPosFunction(*memberTypeFrom, *memberTypeTo, subOptions))
-					 .render();
+					.render();
 			else
 			{
 				Whiskers encodeTempl(

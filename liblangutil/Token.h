@@ -287,7 +287,7 @@ namespace TokenTraits
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
 	constexpr bool isCommutativeOp(Token op) { return op == Token::BitOr || op == Token::BitXor || op == Token::BitAnd ||
-		 op == Token::Add || op == Token::Mul || op == Token::Equal || op == Token::NotEqual; }
+		op == Token::Add || op == Token::Mul || op == Token::Equal || op == Token::NotEqual; }
 	constexpr bool isArithmeticOp(Token op) { return Token::Add <= op && op <= Token::Exp; }
 	constexpr bool isCompareOp(Token op) { return Token::Equal <= op && op <= Token::GreaterThanOrEqual; }
 
