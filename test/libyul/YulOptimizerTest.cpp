@@ -46,6 +46,7 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
+#include <libyul/AssemblyStack.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -97,9 +98,6 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 
 bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	yul::AsmPrinter printer{m_yul};
-	shared_ptr<Block> ast;
-	shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 	if (!parse(_stream, _linePrefix, _formatted))
 		return false;
 
@@ -257,7 +255,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		return false;
 	}
 
-	m_obtainedResult = m_optimizerStep + "\n" + printer(*m_ast) + "\n";
+	m_obtainedResult = m_optimizerStep + "\n" + AsmPrinter{m_yul}(*m_ast) + "\n";
 
 	if (m_expectation != m_obtainedResult)
 	{
@@ -292,31 +290,19 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	m_dialect = m_yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVMObjects();
-	ErrorList errors;
-	ErrorReporter errorReporter(errors);
-	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source, ""));
-	m_ast = yul::Parser(errorReporter, m_dialect).parse(scanner, false);
-	if (!m_ast || !errorReporter.errors().empty())
+	AssemblyStack stack(
+		dev::test::Options::get().evmVersion(),
+		m_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly
+	);
+	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, errorReporter.errors());
+		printErrors(_stream, stack.errors());
 		return false;
 	}
-	m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-	yul::AsmAnalyzer analyzer(
-		*m_analysisInfo,
-		errorReporter,
-		dev::test::Options::get().evmVersion(),
-		boost::none,
-		m_dialect
-	);
-	if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
-	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error analyzing source." << endl;
-		printErrors(_stream, errorReporter.errors());
-		return false;
-	}
+	m_dialect = m_yul ? Dialect::yul() : EVMDialect::strictAssemblyForEVMObjects();
+	m_ast = stack.parserResult()->code;
+	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;
 }
 

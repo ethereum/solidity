@@ -178,3 +178,11 @@ string AssemblyStack::print() const
 	solAssert(m_parserResult->code, "");
 	return m_parserResult->toString(m_language == Language::Yul) + "\n";
 }
+
+shared_ptr<Object> AssemblyStack::parserResult() const
+{
+	solAssert(m_analysisSuccessful, "Analysis was not successful.");
+	solAssert(m_parserResult, "");
+	solAssert(m_parserResult->code, "");
+	return m_parserResult;
+}

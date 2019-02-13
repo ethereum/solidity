@@ -82,6 +82,9 @@ public:
 	/// Pretty-print the input after having parsed it.
 	std::string print() const;
 
+	/// Return the parsed and analyzed object.
+	std::shared_ptr<Object> parserResult() const;
+
 private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
