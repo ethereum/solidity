@@ -90,7 +90,7 @@ The option ``--no-smt`` disables the tests that require ``libz3`` and
 ``--no-ipc`` disables those that require ``aleth``.
 
 If you want to run the ipc tests (that test the semantics of the generated code),
-you need to install `aleth <https://github.com/ethereum/aleth/releases/download/v1.5.0-alpha.7/aleth-1.5.0-alpha.7-linux-x86_64.tar.gz>`_ and run it in testing mode: ``aleth --db memorydb --test -d /tmp/testeth``.
+you need to install `aleth <https://github.com/ethereum/aleth/releases/download/v1.5.2/aleth-1.5.2-linux-x86_64.tar.gz>`_ and run it in testing mode: ``aleth --db memorydb --test -d /tmp/testeth``.
 
 To run the actual tests, use: ``./scripts/soltest.sh --ipcpath /tmp/testeth/geth.ipc``.
 
