@@ -653,7 +653,7 @@ void CompilerUtils::convertType(
 	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
 	if (chopSignBitsPending)
 	{
-		const IntegerType& targetIntegerType = dynamic_cast<const IntegerType &>(_targetType);
+		const IntegerType& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
 		chopSignBitsPending = targetIntegerType.isSigned();
 	}
 

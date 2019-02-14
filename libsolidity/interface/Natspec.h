@@ -59,7 +59,7 @@ private:
 	/// @param _tags docTags that are used.
 	/// @return      A JSON representation
 	///              of the contract's developer documentation
-	static Json::Value devDocumentation(std::multimap<std::string, DocTag> const &_tags);
+	static Json::Value devDocumentation(std::multimap<std::string, DocTag> const& _tags);
 };
 
 } //solidity NS
