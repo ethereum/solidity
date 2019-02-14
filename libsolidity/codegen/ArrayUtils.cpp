@@ -623,7 +623,7 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 	m_context << Instruction::SWAP1 << Instruction::DUP2 << Instruction::ADD
 		<< Instruction::SWAP1;
 	// stack: data_pos_end data_pos
-	if (_type.isByteArray() || _type.baseType()->storageBytes() < 32)
+	if (_type.storageStride() < 32)
 		clearStorageLoop(make_shared<IntegerType>(256));
 	else
 		clearStorageLoop(_type.baseType());
@@ -769,7 +769,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 			// stack: ref new_length data_pos new_size delete_end
 			_context << Instruction::SWAP2 << Instruction::ADD;
 			// stack: ref new_length delete_end delete_start
-			if (_type.isByteArray() || _type.baseType()->storageBytes() < 32)
+			if (_type.storageStride() < 32)
 				ArrayUtils(_context).clearStorageLoop(make_shared<IntegerType>(256));
 			else
 				ArrayUtils(_context).clearStorageLoop(_type.baseType());
