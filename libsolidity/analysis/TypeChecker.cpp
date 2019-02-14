@@ -2051,18 +2051,15 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			errorMsg.pop_back();
 			errorMsg +=	" - did you forget the \"payable\" modifier?";
 		}
-		else if (exprType->category() == Type::Category::Function)
+		else if (auto const& funType = dynamic_pointer_cast<FunctionType const>(exprType))
 		{
-			if (auto const& funType = dynamic_pointer_cast<FunctionType const>(exprType))
-			{
-				auto const& t = funType->returnParameterTypes();
-				if (t.size() == 1)
-					if (
-						t.front()->category() == Type::Category::Contract ||
-						t.front()->category() == Type::Category::Struct
-					)
-						errorMsg += " Did you intend to call the function?";
-			}
+			auto const& t = funType->returnParameterTypes();
+			if (t.size() == 1)
+				if (
+					t.front()->category() == Type::Category::Contract ||
+					t.front()->category() == Type::Category::Struct
+				)
+					errorMsg += " Did you intend to call the function?";
 		}
 		else if (exprType->category() == Type::Category::Contract)
 		{
