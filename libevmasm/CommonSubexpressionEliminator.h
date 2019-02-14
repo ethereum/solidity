@@ -149,7 +149,7 @@ private:
 	/// Appends the given assembly item.
 	void appendItem(AssemblyItem const& _item);
 
-	static const int c_invalidPosition = -0x7fffffff;
+	static int const c_invalidPosition = -0x7fffffff;
 
 	AssemblyItems m_generatedItems;
 	/// Current height of the stack relative to the start.

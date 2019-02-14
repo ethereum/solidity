@@ -20,6 +20,7 @@ FORMATERROR=$(
 	git grep -nIE "\<(if|for)\(" -- '*.h' '*.cpp' # no space after "if" or "for"
 	git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp' # "{\n" on same line as "if" / "for"
 	git grep -nIE "[,\(<]\s*const " -- '*.h' '*.cpp' # const on left side of type
+	git grep -nIE "^\s*(static)?\s*const " -- '*.h' '*.cpp' # const on left side of type (beginning of line)
 	git grep -nIE "^ [^*]|[^*] 	|	 [^*]" -- '*.h' '*.cpp' # uses spaces for indentation or mixes spaces and tabs
 	git grep -nIE "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
 	# right-aligned reference pointer star (needs to exclude return and comments)
