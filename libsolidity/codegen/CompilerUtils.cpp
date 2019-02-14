@@ -243,7 +243,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 							gt(add(array_data_start, mul(array_length, <item_size>)), input_end)
 						) { revert(0, 0) }
 					})");
-					templ("item_size", to_string(arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true)));
+					templ("item_size", to_string(arrayType.calldataStride()));
 					m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr"});
 					// stack: v1 v2 ... v(k-1) input_end base_offset current_offset v(k)
 					moveIntoStack(3);
@@ -279,11 +279,10 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 					// stack: input_end base_offset next_pointer array_length data_pointer
 					m_context << Instruction::SWAP2;
 					// stack: input_end base_offset data_pointer array_length next_pointer
-					unsigned itemSize = arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true);
 					m_context.appendInlineAssembly(R"({
 						if or(
 							gt(array_length, 0x100000000),
-							gt(add(data_ptr, mul(array_length, )" + to_string(itemSize) + R"()), input_end)
+							gt(add(data_ptr, mul(array_length, )" + to_string(arrayType.calldataStride()) + R"()), input_end)
 						) { revert(0, 0) }
 					})", {"input_end", "base_offset", "data_ptr", "array_length", "next_ptr"});
 				}
@@ -517,7 +516,7 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 			codecopy(memptr, codesize(), size)
 			memptr := add(memptr, size)
 		})");
-		templ("element_size", to_string(_type.isByteArray() ? 1 : _type.baseType()->memoryHeadSize()));
+		templ("element_size", to_string(_type.memoryStride()));
 		m_context.appendInlineAssembly(templ.render(), {"length", "memptr"});
 	}
 	else

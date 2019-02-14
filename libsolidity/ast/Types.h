@@ -736,6 +736,13 @@ public:
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
+	/// The offset to advance in calldata to move from one array element to the next.
+	unsigned calldataStride() const { return isByteArray() ? 1 : m_baseType->calldataEncodedSize(); }
+	/// The offset to advance in memory to move from one array element to the next.
+	unsigned memoryStride() const { return isByteArray() ? 1 : m_baseType->memoryHeadSize(); }
+	/// The offset to advance in storage to move from one array element to the next.
+	unsigned storageStride() const { return isByteArray() ? 1 : m_baseType->storageBytes(); }
+
 private:
 	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
