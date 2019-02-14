@@ -1371,7 +1371,7 @@ void SMTChecker::createExpr(Expression const& _e)
 void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
-	solAssert(isSupportedType(*_e.annotation().type), "Equality operator applied to type that is not fully supported");
+	solAssert(smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_interface->addAssertion(expr(_e) == _value);
 }
 
