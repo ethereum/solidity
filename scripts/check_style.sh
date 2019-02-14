@@ -24,8 +24,8 @@ FORMATERROR=$(
 	git grep -nIE "^ [^*]|[^*] 	|	 [^*]" -- '*.h' '*.cpp' # uses spaces for indentation or mixes spaces and tabs
 	git grep -nIE "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
 	# right-aligned reference pointer star (needs to exclude return and comments)
-	git grep -nIE "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v "return [*]" | egrep -v "^* [*]" | egrep -v "^*//.*"
-) | egrep -v "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" | egrep -v "^test/"
+	git grep -nIE "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v -e "return [*]" -e "^* [*]" -e "^*//.*"
+) | egrep -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/"
 )
 
 if [[ "$FORMATERROR" != "" ]]
