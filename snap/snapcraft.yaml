@@ -26,7 +26,7 @@ parts:
     source: .
     source-type: git
     plugin: cmake
-    build-packages: [build-essential, libboost-all-dev]
+    build-packages: [build-essential, libboost-all-dev, libcvc4-dev]
     stage-packages: [libicu60]
     override-build: |
       if git describe --exact-match --tags 2> /dev/null
