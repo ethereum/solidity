@@ -119,8 +119,8 @@ private:
 	unsigned m_errorCount = 0;
 	unsigned m_warningCount = 0;
 
-	const unsigned c_maxWarningsAllowed = 256;
-	const unsigned c_maxErrorsAllowed = 256;
+	unsigned const c_maxWarningsAllowed = 256;
+	unsigned const c_maxErrorsAllowed = 256;
 };
 
 }

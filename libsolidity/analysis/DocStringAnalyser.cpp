@@ -42,7 +42,7 @@ bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 
 bool DocStringAnalyser::visit(ContractDefinition const& _contract)
 {
-	static const set<string> validTags = set<string>{"author", "title", "dev", "notice"};
+	static set<string> const validTags = set<string>{"author", "title", "dev", "notice"};
 	parseDocStrings(_contract, _contract.annotation(), validTags, "contracts");
 
 	return true;
@@ -99,7 +99,7 @@ void DocStringAnalyser::handleConstructor(
 	DocumentedAnnotation& _annotation
 )
 {
-	static const set<string> validTags = set<string>{"author", "dev", "notice", "param"};
+	static set<string> const validTags = set<string>{"author", "dev", "notice", "param"};
 	parseDocStrings(_node, _annotation, validTags, "constructor");
 	checkParameters(_callable, _annotation);
 }
@@ -110,7 +110,7 @@ void DocStringAnalyser::handleCallable(
 	DocumentedAnnotation& _annotation
 )
 {
-	static const set<string> validTags = set<string>{"author", "dev", "notice", "return", "param"};
+	static set<string> const validTags = set<string>{"author", "dev", "notice", "return", "param"};
 	parseDocStrings(_node, _annotation, validTags, "functions");
 	checkParameters(_callable, _annotation);
 }

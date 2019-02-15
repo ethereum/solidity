@@ -240,7 +240,7 @@ bool contains(T const& _t, V const& _v)
 /// place at the end, but already visited elements might be invalidated.
 /// If nothing is replaced, no copy is performed.
 template <typename T, typename F>
-void iterateReplacing(std::vector<T>& _vector, const F& _f)
+void iterateReplacing(std::vector<T>& _vector, F const& _f)
 {
 	// Concept: _f must be Callable, must accept param T&, must return optional<vector<T>>
 	bool useModified = false;

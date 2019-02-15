@@ -65,7 +65,7 @@ private:
 	ReadCallback m_readFile;
 };
 
-static const CodeFragment NullCodeFragment;
+static CodeFragment const NullCodeFragment;
 
 }
 }

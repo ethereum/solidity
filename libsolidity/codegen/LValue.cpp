@@ -473,7 +473,7 @@ void StorageByteArrayElement::setToZero(SourceLocation const&, bool _removeRefer
 	m_context << Instruction::SWAP1 << Instruction::SSTORE;
 }
 
-StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const ArrayType& _arrayType):
+StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, ArrayType const& _arrayType):
 	LValue(_compilerContext, _arrayType.memberType("length").get()),
 	m_arrayType(_arrayType)
 {

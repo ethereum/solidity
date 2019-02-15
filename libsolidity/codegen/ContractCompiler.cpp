@@ -355,7 +355,7 @@ bool hasPayableFunctions(ContractDefinition const& _contract)
 void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
 	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
-	map<FixedHash<4>, const eth::AssemblyItem> callDataUnpackerEntryPoints;
+	map<FixedHash<4>, eth::AssemblyItem const> callDataUnpackerEntryPoints;
 
 	if (_contract.isLibrary())
 	{

@@ -37,11 +37,11 @@ namespace dev
 namespace solidity
 {
 
-const unsigned CompilerUtils::dataStartOffset = 4;
-const size_t CompilerUtils::freeMemoryPointer = 64;
-const size_t CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
-const size_t CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
-const unsigned CompilerUtils::identityContractAddress = 4;
+unsigned const CompilerUtils::dataStartOffset = 4;
+size_t const CompilerUtils::freeMemoryPointer = 64;
+size_t const CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
+size_t const CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
+unsigned const CompilerUtils::identityContractAddress = 4;
 
 static_assert(CompilerUtils::freeMemoryPointer >= 64, "Free memory pointer must not overlap with scratch area.");
 static_assert(CompilerUtils::zeroPointer >= CompilerUtils::freeMemoryPointer + 32, "Zero pointer must not overlap with free memory pointer.");
@@ -652,7 +652,7 @@ void CompilerUtils::convertType(
 	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
 	if (chopSignBitsPending)
 	{
-		const IntegerType& targetIntegerType = dynamic_cast<const IntegerType &>(_targetType);
+		IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
 		chopSignBitsPending = targetIntegerType.isSigned();
 	}
 

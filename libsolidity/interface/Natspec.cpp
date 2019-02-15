@@ -118,7 +118,7 @@ string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& 
 	return value;
 }
 
-Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const &_tags)
+Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const& _tags)
 {
 	Json::Value json(Json::objectValue);
 	auto dev = extractDoc(_tags, "dev");

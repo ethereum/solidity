@@ -273,18 +273,18 @@ public:
 
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
-	static const unsigned dataStartOffset;
+	static unsigned const dataStartOffset;
 
 	/// Position of the free-memory-pointer in memory;
-	static const size_t freeMemoryPointer;
+	static size_t const freeMemoryPointer;
 	/// Position of the memory slot that is always zero.
-	static const size_t zeroPointer;
+	static size_t const zeroPointer;
 	/// Starting offset for memory available to the user (aka the contract).
-	static const size_t generalPurposeMemoryStart;
+	static size_t const generalPurposeMemoryStart;
 
 private:
 	/// Address of the precompiled identity contract.
-	static const unsigned identityContractAddress;
+	static unsigned const identityContractAddress;
 
 	/// Stores the given string in memory.
 	/// Stack pre: mempos

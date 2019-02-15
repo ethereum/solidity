@@ -143,7 +143,7 @@ static Token keywordByName(string const& _name)
 	// and keywords to be put inside the keywords variable.
 #define KEYWORD(name, string, precedence) {string, Token::name},
 #define TOKEN(name, string, precedence)
-	static const map<string, Token> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
+	static map<string, Token> const keywords({TOKEN_LIST(TOKEN, KEYWORD)});
 #undef KEYWORD
 #undef TOKEN
 	auto it = keywords.find(_name);
