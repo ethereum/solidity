@@ -139,13 +139,19 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 			toString(arguments.size()) +
 			" were provided."
 		);
-	if (arguments.size() >= 1 && !type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType::bytesMemory()))
+
+	BoolResult details(false);
+	if (
+		arguments.size() >= 1 &&
+		!(details= type(*arguments.front())->isImplicitlyConvertibleTo(ArrayType::bytesMemory()))
+	)
 		m_errorReporter.typeError(
 			arguments.front()->location(),
-			"Invalid type for argument in function call. "
+			{"Invalid type for argument in function call. "
 			"Invalid implicit conversion from " +
 			type(*arguments.front())->toString() +
-			" to bytes memory requested."
+			" to bytes memory requested.",
+			details.message()}
 		);
 
 	if (arguments.size() < 2)
@@ -262,16 +268,20 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 			);
 		}
 		for (size_t i = 0; i < std::min(arguments->size(), parameterTypes.size()); ++i)
-			if (!type(*(*arguments)[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
+		{
+			BoolResult result(false);
+			if (!(result = type(*(*arguments)[i])->isImplicitlyConvertibleTo(*parameterTypes[i])))
 				m_errorReporter.typeError(
 					(*arguments)[i]->location(),
-					"Invalid type for argument in constructor call. "
+					{"Invalid type for argument in constructor call. "
 					"Invalid implicit conversion from " +
 					type(*(*arguments)[i])->toString() +
 					" to " +
 					parameterTypes[i]->toString() +
-					" requested."
+					" requested.",
+					result.message()}
 				);
+		}
 	}
 }
 
@@ -571,16 +581,20 @@ void TypeChecker::visitManually(
 		return;
 	}
 	for (size_t i = 0; i < arguments.size(); ++i)
-		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*type(*(*parameters)[i])))
+	{
+		BoolResult result(false);
+		if (!(result = type(*arguments[i])->isImplicitlyConvertibleTo(*type(*(*parameters)[i]))))
 			m_errorReporter.typeError(
 				arguments[i]->location(),
-				"Invalid type for argument in modifier invocation. "
+				{"Invalid type for argument in modifier invocation. "
 				"Invalid implicit conversion from " +
 				type(*arguments[i])->toString() +
 				" to " +
 				type(*(*parameters)[i])->toString() +
-				" requested."
+				" requested.",
+				result.message()}
 			);
+	}
 }
 
 bool TypeChecker::visit(EventDefinition const& _eventDef)
@@ -770,31 +784,33 @@ void TypeChecker::endVisit(Return const& _return)
 		returnTypes.push_back(type(*var));
 	if (auto tupleType = dynamic_cast<TupleType const*>(type(*_return.expression()).get()))
 	{
+		BoolResult result(false);
 		if (tupleType->components().size() != params->parameters().size())
 			m_errorReporter.typeError(_return.location(), "Different number of arguments in return statement than in returns declaration.");
-		else if (!tupleType->isImplicitlyConvertibleTo(TupleType(returnTypes)))
+		else if (!(result = tupleType->isImplicitlyConvertibleTo(TupleType(returnTypes))))
 			m_errorReporter.typeError(
 				_return.expression()->location(),
-				"Return argument type " +
+				{"Return argument type " +
 				type(*_return.expression())->toString() +
 				" is not implicitly convertible to expected type " +
-				TupleType(returnTypes).toString(false) +
-				"."
+				TupleType(returnTypes).toString(false) + ".",
+				result.message()}
 			);
 	}
 	else if (params->parameters().size() != 1)
 		m_errorReporter.typeError(_return.location(), "Different number of arguments in return statement than in returns declaration.");
 	else
 	{
+		BoolResult result(false);
 		TypePointer const& expected = type(*params->parameters().front());
-		if (!type(*_return.expression())->isImplicitlyConvertibleTo(*expected))
+		if (!(result = type(*_return.expression())->isImplicitlyConvertibleTo(*expected)))
 			m_errorReporter.typeError(
 				_return.expression()->location(),
-				"Return argument type " +
+				{"Return argument type " +
 				type(*_return.expression())->toString() +
 				" is not implicitly convertible to expected type (type of first return variable) " +
-				expected->toString() +
-				"."
+				expected->toString() + ".",
+				result.message()}
 			);
 	}
 }
@@ -986,7 +1002,8 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		else
 		{
 			var.accept(*this);
-			if (!valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type))
+			BoolResult result(false);
+			if (!(result = valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type)))
 			{
 				auto errorMsg = "Type " +
 					valueComponentType->toString() +
@@ -1013,7 +1030,10 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 						);
 				}
 				else
-					m_errorReporter.typeError(_statement.location(), errorMsg + ".");
+					m_errorReporter.typeError(
+						_statement.location(),
+						{errorMsg + ".", result.message()}
+					);
 			}
 		}
 	}

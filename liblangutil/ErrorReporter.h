@@ -87,6 +87,11 @@ public:
 
 	void typeError(SourceLocation const& _location, std::string const& _description);
 
+	void typeError(
+		SourceLocation const& _location,
+		std::initializer_list<std::string const> const& _descriptions
+	);
+
 	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
 	void docstringParsingError(std::string const& _description);

@@ -198,6 +198,30 @@ void ErrorReporter::typeError(SourceLocation const& _location, SecondarySourceLo
 	);
 }
 
+void ErrorReporter::typeError(SourceLocation const& _location, std::initializer_list<std::string const> const& _descriptions)
+{
+	std::string errorStr;
+
+	auto const ItFirst = _descriptions.begin();
+	auto const ItEnd = _descriptions.end();
+
+	for (auto it = ItFirst; it != ItEnd; )
+	{
+		errorStr += *it;
+		it++;
+
+		if (it != _descriptions.end() && it->length())
+			errorStr += " ";
+	}
+
+	error(
+		Error::Type::TypeError,
+		_location,
+		errorStr
+	);
+
+}
+
 void ErrorReporter::typeError(SourceLocation const& _location, string const& _description)
 {
 	error(
