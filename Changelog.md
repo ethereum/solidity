@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Yul: Properly detect name clashes with functions before their declaration.
 
 
 Build System:

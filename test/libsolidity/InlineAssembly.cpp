@@ -428,7 +428,31 @@ BOOST_AUTO_TEST_CASE(opcode_for_function_args)
 
 BOOST_AUTO_TEST_CASE(name_clashes)
 {
-	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Function name g already taken in this scope");
+	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Variable name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_subscope)
+{
+	CHECK_PARSE_ERROR("{ function g() { function g() {} } }", DeclarationError, "Function name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_subscope_reverse)
+{
+	CHECK_PARSE_ERROR("{ { function g() {} } function g() { } }", DeclarationError, "Function name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope)
+{
+	CHECK_PARSE_ERROR("{ function g() { let g := 0 } }", DeclarationError, "Variable name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope_reverse)
+{
+	CHECK_PARSE_ERROR("{ { let g := 0 } function g() { } }", DeclarationError, "Variable name g already taken in this scope");
+}
+BOOST_AUTO_TEST_CASE(functions_in_parallel_scopes)
+{
+	BOOST_CHECK(successParse("{ { function g() {} } { function g() {} } }"));
 }
 
 BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
