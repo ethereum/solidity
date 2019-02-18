@@ -9037,9 +9037,13 @@ BOOST_AUTO_TEST_CASE(using_library_mappings_external)
 				}
 			}
 		)";
-	compileAndRun(libSourceCode, 0, "Lib");
-	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(2), u256(0), u256(84), u256(46), u256(0), u256(198)));
+	for (auto v2: {false, true})
+	{
+		string prefix = v2 ? "pragma experimental ABIEncoderV2;\n" : "";
+		compileAndRun(prefix + libSourceCode, 0, "Lib");
+		compileAndRun(prefix + sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(2), u256(0), u256(84), u256(46), u256(0), u256(198)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(using_library_mappings_return)
