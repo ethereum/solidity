@@ -50,6 +50,9 @@ u256 exp256(u256 _base, u256 _exponent)
 	return result;
 }
 
+/// Reads 32 bytes from @a _data at position @a _offset bytes while
+/// interpreting @a _data to be padded with an infinite number of zero
+/// bytes beyond its end.
 u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 {
 	if (_offset >= _data.size())
@@ -70,6 +73,10 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 	}
 }
 
+/// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
+/// @a _target at offset @a _targetOffset. Behaves as if @a _source would
+/// continue with an infinite sequence of zero bytes beyond its end.
+/// Asserts the target is large enough to hold the copied segment.
 void copyZeroExtended(
 	bytes& _target, bytes const& _source,
 	size_t _targetOffset, size_t _sourceOffset, size_t _size
@@ -137,11 +144,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::XOR:
 		return arg[0] ^ arg[1];
 	case Instruction::BYTE:
-		return arg[0] >= 32 ? 0 : (arg[1] >> unsigned(8 * (31 - (arg[0] & 0xff)))) & 0xff;
+		return arg[0] >= 32 ? 0 : (arg[1] >> unsigned(8 * (31 - arg[0]))) & 0xff;
 	case Instruction::SHL:
-		return arg[0] > 255 ? 0 : (arg[1] << unsigned(arg[0] & 0xff));
+		return arg[0] > 255 ? 0 : (arg[1] << unsigned(arg[0]));
 	case Instruction::SHR:
-		return arg[0] > 255 ? 0 : (arg[1] >> unsigned(arg[0] & 0xff));
+		return arg[0] > 255 ? 0 : (arg[1] >> unsigned(arg[0]));
 	case Instruction::SAR:
 	{
 		static u256 const hibit = u256(1) << 255;
@@ -149,7 +156,7 @@ u256 EVMInstructionInterpreter::eval(
 			return arg[1] & hibit ? u256(-1) : 0;
 		else
 		{
-			unsigned amount = unsigned(arg[0] & 0xff);
+			unsigned amount = unsigned(arg[0]);
 			u256 v = arg[1] >> amount;
 			if (arg[1] & hibit)
 				v |= u256(-1) << (256 - amount);
@@ -165,7 +172,7 @@ u256 EVMInstructionInterpreter::eval(
 			return arg[0];
 		else
 		{
-			unsigned testBit = unsigned(arg[0] & 0xff) * 8 + 7;
+			unsigned testBit = unsigned(arg[0]) * 8 + 7;
 			u256 ret = arg[1];
 			u256 mask = ((u256(1) << testBit) - 1);
 			if (boost::multiprecision::bit_test(ret, testBit))

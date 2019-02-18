@@ -3,7 +3,6 @@ set(sources
 	EVMInstructionInterpreter.cpp
 	Interpreter.h
 	Interpreter.cpp
-
 )
 
 add_library(yulInterpreter ${sources})

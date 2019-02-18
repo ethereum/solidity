@@ -45,19 +45,20 @@ struct InterpreterState;
  * Interprets EVM instructions based on the current state and logs instructions with
  * side-effects.
  *
- * Since this is mainly meant to be used for testing, it is focused on a single
- * contract only, does not do any gas counting and differs from the correct
- * implementation in the following ways:
+ * Since this is mainly meant to be used for differential fuzz testing, it is focused
+ * on a single contract only, does not do any gas counting and differs from the correct
+ * implementation in many ways:
  *
  * - If memory access to a "large" memory position is performed, a deterministic
- *    value is returned. Data that is stored in a "large" memory position is not
- *    retained.
+ *   value is returned. Data that is stored in a "large" memory position is not
+ *   retained.
  * - The blockhash instruction returns a fixed value if the argument is in range.
  * - Extcodesize returns a deterministic value depending on the address.
  * - Extcodecopy copies a deterministic value depending on the address.
  * - And many other things
- * - TODO
  *
+ * The main focus is that the generated execution trace is the same for equivalent executions
+ * and likely to be different for non-eqivalent executions.
  */
 class EVMInstructionInterpreter
 {
