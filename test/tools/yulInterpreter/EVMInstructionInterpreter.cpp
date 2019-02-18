@@ -353,10 +353,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
 		throw InterpreterTerminated();
+	case Instruction::POP:
+		break;
 	// --------------- invalid in strict assembly ---------------
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
-	case Instruction::POP:
 	case Instruction::JUMPDEST:
 	case Instruction::PUSH1:
 	case Instruction::PUSH2:
