@@ -216,7 +216,6 @@ public:
 	/// @returns number of bytes used by this type when encoded for CALL. If it is a dynamic type,
 	/// returns the size of the pointer (usually 32). Returns 0 if the type cannot be encoded
 	/// in calldata.
-	/// @note: This should actually not be called on types, where isDynamicallyEncoded returns true.
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
 	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
 	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
