@@ -140,6 +140,8 @@ namespace langutil
 	T(Dec, "--", 0)                                                    \
 	K(Delete, "delete", 0)                                             \
 	\
+	/* Inline Assembly Operators */                                    \
+	T(AssemblyAssign, ":=", 2)                                         \
 	/* Keywords */                                                     \
 	K(Anonymous, "anonymous", 0)                                       \
 	K(As, "as", 0)                                                     \

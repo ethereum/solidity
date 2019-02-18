@@ -59,6 +59,32 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
+BOOST_AUTO_TEST_CASE(assembly_assign)
+{
+	Scanner scanner(CharStream("let a := 1", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Let);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssemblyAssign);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "1");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(assembly_multiple_assign)
+{
+	Scanner scanner(CharStream("let a, b, c := 1", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Let);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Comma);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Comma);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssemblyAssign);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "1");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
 BOOST_AUTO_TEST_CASE(string_escapes)
 {
 	Scanner scanner(CharStream("  { \"a\\x61\"", ""));

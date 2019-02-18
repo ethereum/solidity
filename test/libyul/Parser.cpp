@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(tokens_as_identifers)
 
 BOOST_AUTO_TEST_CASE(lacking_types)
 {
-	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected identifier but got '='");
+	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected ':' but got ':='");
 	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected ':' but got '}'");
 	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected ':' but got ')'");
 	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected ':' but got '{'");
@@ -271,8 +271,8 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
-	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} 123:u256, x := f() }", ParserError, "Label name / variable name must precede \",\" (multiple assignment).");
-	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} x, 123:u256 := f() }", ParserError, "Variable name expected in multiple assignment.");
+	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} 123:u256, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
+	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} x, 123:u256 := f() }", ParserError, "Variable name must precede \":=\" in assignment.");
 
 	/// NOTE: Travis hiccups if not having a variable
 	char const* text = R"(
@@ -333,6 +333,7 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Cannot assign to builtin function \"builtin\".", dialect);
+	CHECK_ERROR_DIALECT("{ function g() -> a,b  {} builtin, builtin2 := g() }", ParserError, "Cannot assign to builtin function \"builtin\".", dialect);
 }
 
 BOOST_AUTO_TEST_CASE(builtins_analysis)
