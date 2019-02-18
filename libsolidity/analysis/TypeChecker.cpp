@@ -2046,20 +2046,24 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		}
 		string errorMsg = "Member \"" + memberName + "\" not found or not visible "
 				"after argument-dependent lookup in " + exprType->toString() + ".";
-		if (memberName == "value")
-		{
-			errorMsg.pop_back();
-			errorMsg +=	" - did you forget the \"payable\" modifier?";
-		}
-		else if (auto const& funType = dynamic_pointer_cast<FunctionType const>(exprType))
+
+		if (auto const& funType = dynamic_pointer_cast<FunctionType const>(exprType))
 		{
 			auto const& t = funType->returnParameterTypes();
-			if (t.size() == 1)
-				if (
-					t.front()->category() == Type::Category::Contract ||
-					t.front()->category() == Type::Category::Struct
-				)
-					errorMsg += " Did you intend to call the function?";
+
+			if (memberName == "value")
+			{
+				if (funType->kind() == FunctionType::Kind::Creation)
+					errorMsg = "Constructor for " + t.front()->toString() + " must be payable for member \"value\" to be available.";
+				else
+					errorMsg = "Member \"value\" is only available for payable functions.";
+			}
+			else if (
+				t.size() == 1 &&
+				(t.front()->category() == Type::Category::Struct ||
+				t.front()->category() == Type::Category::Contract)
+			)
+				errorMsg += " Did you intend to call the function?";
 		}
 		else if (exprType->category() == Type::Category::Contract)
 		{
