@@ -2051,20 +2051,18 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			errorMsg.pop_back();
 			errorMsg +=	" - did you forget the \"payable\" modifier?";
 		}
-		else if (exprType->category() == Type::Category::Function)
+		else if (auto const& funType = dynamic_pointer_cast<FunctionType const>(exprType))
 		{
-			if (auto const& funType = dynamic_pointer_cast<FunctionType const>(exprType))
-			{
-				auto const& t = funType->returnParameterTypes();
-				if (t.size() == 1)
-					if (
-						t.front()->category() == Type::Category::Contract ||
-						t.front()->category() == Type::Category::Struct
-					)
-						errorMsg += " Did you intend to call the function?";
-			}
+			auto const& t = funType->returnParameterTypes();
+			if (t.size() == 1)
+				if (
+					t.front()->category() == Type::Category::Contract ||
+					t.front()->category() == Type::Category::Struct
+				)
+					errorMsg += " Did you intend to call the function?";
 		}
-		if (exprType->category() == Type::Category::Contract)
+		else if (exprType->category() == Type::Category::Contract)
+		{
 			for (auto const& addressMember: AddressType::addressPayable().nativeMembers(nullptr))
 				if (addressMember.name == memberName)
 				{
@@ -2073,6 +2071,21 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					errorMsg += " Use \"address(" + varName + ")." + memberName + "\" to access this address member.";
 					break;
 				}
+		}
+		else if (auto addressType = dynamic_cast<AddressType const*>(exprType.get()))
+		{
+			// Trigger error when using send or transfer with a non-payable fallback function.
+			if (memberName == "send" || memberName == "transfer")
+			{
+				solAssert(
+					addressType->stateMutability() != StateMutability::Payable,
+					"Expected address not-payable as members were not found"
+				);
+
+				errorMsg = "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->toString() + "\".";
+			}
+		}
+
 		m_errorReporter.fatalTypeError(
 			_memberAccess.location(),
 			errorMsg
@@ -2113,26 +2126,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	{
 		if (ContractType const* contractType = dynamic_cast<decltype(contractType)>(typeType->actualType().get()))
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
-	}
-
-	if (exprType->category() == Type::Category::Contract)
-	{
-		// Warn about using send or transfer with a non-payable fallback function.
-		if (auto callType = dynamic_cast<FunctionType const*>(type(_memberAccess).get()))
-		{
-			auto kind = callType->kind();
-			auto contractType = dynamic_cast<ContractType const*>(exprType.get());
-			solAssert(!!contractType, "Should be contract type.");
-
-			if (
-				(kind == FunctionType::Kind::Send || kind == FunctionType::Kind::Transfer) &&
-				!contractType->isPayable()
-			)
-				m_errorReporter.typeError(
-					_memberAccess.location(),
-					"Value transfer to a contract without a payable fallback function."
-				);
-		}
 	}
 
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
