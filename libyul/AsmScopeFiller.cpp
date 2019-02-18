@@ -150,9 +150,16 @@ bool ScopeFiller::operator()(Block const& _block)
 	scope(&_block).superScope = m_currentScope;
 	m_currentScope = &scope(&_block);
 
+	// First visit all functions to make them create
+	// an entry in the scope according to their visibility.
 	for (auto const& s: _block.statements)
-		if (!boost::apply_visitor(*this, s))
-			success = false;
+		if (s.type() == typeid(FunctionDefinition))
+			if (!boost::apply_visitor(*this, s))
+				success = false;
+	for (auto const& s: _block.statements)
+		if (s.type() != typeid(FunctionDefinition))
+			if (!boost::apply_visitor(*this, s))
+				success = false;
 
 	m_currentScope = m_currentScope->superScope;
 	return success;
