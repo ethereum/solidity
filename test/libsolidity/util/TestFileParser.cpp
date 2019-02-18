@@ -85,6 +85,8 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 
 				expect(Token::Arrow);
 				call.expectations = parseFunctionCallExpectations();
+
+				accept(Token::Newline, true);
 				call.expectations.comment = parseComment();
 
 				calls.emplace_back(std::move(call));
@@ -194,38 +196,45 @@ Parameter TestFileParser::parseParameter()
 	if (accept(Token::Newline, true))
 		parameter.format.newline = true;
 	auto literal = parseABITypeLiteral();
-	parameter.rawBytes = literal.first;
-	parameter.abiType = literal.second;
+	parameter.rawBytes = get<0>(literal);
+	parameter.abiType = get<1>(literal);
+	parameter.rawString = get<2>(literal);
 	return parameter;
 }
 
-pair<bytes, ABIType> TestFileParser::parseABITypeLiteral()
+tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 {
 	try
 	{
 		u256 number{0};
 		ABIType abiType{ABIType::None, 0};
+		string rawString;
 
 		if (accept(Token::Sub))
 		{
 			abiType = ABIType{ABIType::SignedDec, 32};
 			expect(Token::Sub);
-			number = convertNumber(parseNumber()) * -1;
+			rawString += formatToken(Token::Sub);
+			string parsed = parseNumber();
+			rawString += parsed;
+			number = convertNumber(parsed) * -1;
 		}
 		else
 		{
 			if (accept(Token::Number))
 			{
 				abiType = ABIType{ABIType::UnsignedDec, 32};
-				number = convertNumber(parseNumber());
+				string parsed = parseNumber();
+				rawString += parsed;
+				number = convertNumber(parsed);
 			}
 			else if (accept(Token::Failure, true))
 			{
 				abiType = ABIType{ABIType::Failure, 0};
-				return make_pair(bytes{}, abiType);
+				return make_tuple(bytes{}, abiType, rawString);
 			}
 		}
-		return make_pair(toBigEndian(number), abiType);
+		return make_tuple(toBigEndian(number), abiType, rawString);
 	}
 	catch (std::exception const&)
 	{

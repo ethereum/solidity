@@ -64,8 +64,9 @@ public:
 		TestCase::TestCaseCreator _testCaseCreator,
 		string const& _name,
 		fs::path const& _path,
+		string const& _ipcPath,
 		bool _formatted
-	): m_testCaseCreator(_testCaseCreator), m_formatted(_formatted), m_name(_name), m_path(_path)
+	): m_testCaseCreator(_testCaseCreator), m_name(_name), m_path(_path), m_ipcPath(_ipcPath), m_formatted(_formatted)
 	{}
 
 	enum class Result
@@ -81,6 +82,7 @@ public:
 		TestCase::TestCaseCreator _testCaseCreator,
 		fs::path const& _basepath,
 		fs::path const& _path,
+		string const& _ipcPath,
 		bool const _formatted
 	);
 
@@ -96,9 +98,10 @@ private:
 	Request handleResponse(bool const _exception);
 
 	TestCase::TestCaseCreator m_testCaseCreator;
-	bool const m_formatted = false;
 	string const m_name;
 	fs::path const m_path;
+	string m_ipcPath;
+	bool const m_formatted = false;
 	unique_ptr<TestCase> m_test;
 	static bool m_exitRequested;
 };
@@ -115,25 +118,25 @@ TestTool::Result TestTool::process()
 
 	try
 	{
-		m_test = m_testCaseCreator(m_path.string());
+		m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath});
 		success = m_test->run(outputMessages, "  ", m_formatted);
 	}
 	catch(boost::exception const& _e)
 	{
 		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
-			"Exception during syntax test: " << boost::diagnostic_information(_e) << endl;
+			"Exception during test: " << boost::diagnostic_information(_e) << endl;
 		return Result::Exception;
 	}
 	catch (std::exception const& _e)
 	{
 		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
-			"Exception during syntax test: " << _e.what() << endl;
+			"Exception during test: " << _e.what() << endl;
 		return Result::Exception;
 	}
 	catch (...)
 	{
 		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
-			"Unknown exception during syntax test." << endl;
+			"Unknown exception during test." << endl;
 		return Result::Exception;
 	}
 
@@ -199,6 +202,7 @@ TestStats TestTool::processPath(
 	TestCase::TestCaseCreator _testCaseCreator,
 	fs::path const& _basepath,
 	fs::path const& _path,
+	string const& _ipcPath,
 	bool const _formatted
 )
 {
@@ -230,7 +234,7 @@ TestStats TestTool::processPath(
 		else
 		{
 			++testCount;
-			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _formatted);
+			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _ipcPath, _formatted);
 			auto result = testTool.process();
 
 			switch(result)
@@ -291,6 +295,7 @@ boost::optional<TestStats> runTestSuite(
 	string const& _name,
 	fs::path const& _basePath,
 	fs::path const& _subdirectory,
+	string const& _ipcPath,
 	TestCase::TestCaseCreator _testCaseCreator,
 	bool _formatted
 )
@@ -303,7 +308,7 @@ boost::optional<TestStats> runTestSuite(
 		return {};
 	}
 
-	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _formatted);
+	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _ipcPath, _formatted);
 
 	cout << endl << _name << " Test Summary: ";
 	AnsiColorized(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
@@ -327,11 +332,13 @@ int main(int argc, char *argv[])
 		TestTool::editor = "/usr/bin/editor";
 
 	fs::path testPath;
+	string ipcPath;
+	bool disableIPC = false;
 	bool disableSMT = false;
 	bool formatted = true;
 	po::options_description options(
 		R"(isoltest, tool for interactively managing test contracts.
-Usage: isoltest [Options] --testpath path
+Usage: isoltest [Options] --ipcpath ipcpath
 Interactively validates test contracts.
 
 Allowed options)",
@@ -340,6 +347,8 @@ Allowed options)",
 	options.add_options()
 		("help", "Show this help screen.")
 		("testpath", po::value<fs::path>(&testPath), "path to test files")
+		("ipcpath", po::value<string>(&ipcPath), "path to ipc socket")
+		("no-ipc", "disable semantic tests")
 		("no-smt", "disable SMT checker")
 		("no-color", "don't use colors")
 		("editor", po::value<string>(&TestTool::editor), "editor for opening contracts");
@@ -362,8 +371,23 @@ Allowed options)",
 
 		po::notify(arguments);
 
+		if (arguments.count("no-ipc"))
+			disableIPC = true;
+		else
+		{
+			solAssert(
+				!ipcPath.empty(),
+				"No ipc path specified. The --ipcpath argument is required, unless --no-ipc is used."
+			);
+			solAssert(
+				fs::exists(ipcPath),
+				"Invalid ipc path specified."
+			);
+		}
+
 		if (arguments.count("no-smt"))
 			disableSMT = true;
+
 	}
 	catch (std::exception const& _exception)
 	{
@@ -380,10 +404,13 @@ Allowed options)",
 	// Interactive tests are added in InteractiveTests.h
 	for (auto const& ts: g_interactiveTestsuites)
 	{
+		if (ts.ipc && disableIPC)
+			continue;
+
 		if (ts.smt && disableSMT)
 			continue;
 
-		if (auto stats = runTestSuite(ts.title, testPath / ts.path, ts.subpath, ts.testCaseCreator, formatted))
+		if (auto stats = runTestSuite(ts.title, testPath / ts.path, ts.subpath, ipcPath, ts.testCaseCreator, formatted))
 			global_stats += *stats;
 		else
 			return 1;

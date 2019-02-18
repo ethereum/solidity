@@ -56,7 +56,8 @@ void testFunctionCall(
 		bytes _expectations = bytes{},
 		u256 _value = 0,
 		string _argumentComment = "",
-		string _expectationComment = ""
+		string _expectationComment = "",
+		vector<string> _rawArguments = vector<string>{}
 )
 {
 	BOOST_REQUIRE_EQUAL(_call.expectations.failure, _failure);
@@ -67,6 +68,17 @@ void testFunctionCall(
 	BOOST_REQUIRE_EQUAL(_call.value, _value);
 	BOOST_REQUIRE_EQUAL(_call.arguments.comment, _argumentComment);
 	BOOST_REQUIRE_EQUAL(_call.expectations.comment, _expectationComment);
+
+	if (!_rawArguments.empty())
+	{
+		BOOST_REQUIRE_EQUAL(_call.arguments.parameters.size(), _rawArguments.size());
+		size_t index = 0;
+		for (Parameter const& param: _call.arguments.parameters)
+		{
+			BOOST_REQUIRE_EQUAL(param.rawString, _rawArguments[index]);
+			++index;
+		}
+	}
 }
 
 BOOST_AUTO_TEST_SUITE(TestFileParserTest)
@@ -112,11 +124,16 @@ BOOST_AUTO_TEST_CASE(call_arguments_comments_success)
 {
 	char const* source = R"(
 		// f(uint256, uint256): 1, 1
+		// # Comment on the parameters. #
 		// ->
 		// # This call should not return a value, but still succeed. #
+		// f()
+		// # Comment on no parameters. #
+		// -> 1
+		// # This comment should be parsed. #
 	)";
 	auto const calls = parse(source);
-	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	BOOST_REQUIRE_EQUAL(calls.size(), 2);
 	testFunctionCall(
 		calls.at(0),
 		Mode::MultiLine,
@@ -125,8 +142,19 @@ BOOST_AUTO_TEST_CASE(call_arguments_comments_success)
 		fmt::encodeArgs(1, 1),
 		fmt::encodeArgs(),
 		0,
-		"",
+		" Comment on the parameters. ",
 		" This call should not return a value, but still succeed. "
+	);
+	testFunctionCall(
+		calls.at(1),
+		Mode::MultiLine,
+		"f()",
+		false,
+		fmt::encodeArgs(),
+		fmt::encodeArgs(1),
+		0,
+		" Comment on no parameters. ",
+		" This comment should be parsed. "
 	);
 }
 
@@ -383,7 +411,7 @@ BOOST_AUTO_TEST_CASE(call_multiple_arguments_mixed_format)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(call_signature)
+BOOST_AUTO_TEST_CASE(call_signature_valid)
 {
 	char const* source = R"(
 		// f(uint256, uint8, string) -> FAILURE
@@ -393,6 +421,27 @@ BOOST_AUTO_TEST_CASE(call_signature)
 	BOOST_REQUIRE_EQUAL(calls.size(), 2);
 	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256,uint8,string)", true);
 	testFunctionCall(calls.at(1), Mode::SingleLine, "f(invalid,xyz,foo)", true);
+}
+
+BOOST_AUTO_TEST_CASE(call_raw_arguments)
+{
+	char const* source = R"(
+		// f(): 1, -2, -3 ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f()",
+		false,
+		fmt::encodeArgs(1, -2, -3),
+		fmt::encodeArgs(),
+		0,
+		"",
+		"",
+		{"1", "-2", "-3"}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(call_newline_invalid)

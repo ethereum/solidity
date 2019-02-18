@@ -53,6 +53,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
+	explicit ExecutionFramework(std::string const& _ipcPath);
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
