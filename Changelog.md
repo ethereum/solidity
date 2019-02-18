@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Static Analyzer: Warn about expressions with custom types when they have no effect.
 
 
 Bugfixes:

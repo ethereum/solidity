@@ -2320,8 +2320,13 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration))
 		annotation.isPure = annotation.isConstant = variableDeclaration->isConstant();
 	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
+	{
 		if (dynamic_cast<FunctionType const*>(annotation.type.get()))
 			annotation.isPure = true;
+	}
+	else if (dynamic_cast<TypeType const*>(annotation.type.get()))
+		annotation.isPure = true;
+
 
 	// Check for deprecated function names.
 	// The check is done here for the case without an actual function call.
