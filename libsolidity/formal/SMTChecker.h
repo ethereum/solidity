@@ -137,9 +137,33 @@ private:
 		Expression const& _condition,
 		std::string const& _description
 	);
-	/// Checks that the value is in the range given by the type.
-	void checkUnderOverflow(smt::Expression _value, IntegerType const& _Type, langutil::SourceLocation const& _location);
 
+	struct OverflowTarget
+	{
+		enum class Type { Underflow, Overflow, All } type;
+		TypePointer intType;
+		smt::Expression value;
+		smt::Expression path;
+		langutil::SourceLocation const& location;
+
+		OverflowTarget(Type _type, TypePointer _intType, smt::Expression _value, smt::Expression _path, langutil::SourceLocation const& _location):
+			type(_type),
+			intType(_intType),
+			value(_value),
+			path(_path),
+			location(_location)
+		{
+			solAssert(dynamic_cast<IntegerType const*>(intType.get()), "");
+		}
+	};
+
+	/// Checks that the value is in the range given by the type.
+	void checkUnderflow(OverflowTarget& _target);
+	void checkOverflow(OverflowTarget& _target);
+	/// Calls the functions above for all elements in m_overflowTargets accordingly.
+	void checkUnderOverflow();
+	/// Adds an overflow target for lazy check at the end of the function.
+	void addOverflowTarget(OverflowTarget::Type _type, TypePointer _intType, smt::Expression _value, langutil::SourceLocation const& _location);
 
 	std::pair<smt::CheckResult, std::vector<std::string>>
 	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
@@ -244,6 +268,8 @@ private:
 	bool isRootFunction();
 	/// Returns true if _funDef was already visited.
 	bool visitedFunction(FunctionDefinition const* _funDef);
+
+	std::vector<OverflowTarget> m_overflowTargets;
 };
 
 }
