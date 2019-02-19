@@ -24,12 +24,13 @@ namespace dev
 namespace test
 {
 
-/// Tries to find a path that contains the directories "libsolidity/syntaxTests"
+/// First checks the environment variable ETH_TEST_PATH. If empty,
+/// tries to find a path that contains the directories "libsolidity/syntaxTests"
 /// and returns it if found.
 /// The routine searches in the current directory, and inside the "test" directory
 /// starting from the current directory and up to three levels up.
 /// @returns the path of the first match or an empty path if not found.
-boost::filesystem::path discoverTestPath();
+boost::filesystem::path getTestPath();
 
 }
 }

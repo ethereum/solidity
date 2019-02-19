@@ -26,8 +26,11 @@ namespace dev
 namespace test
 {
 
-boost::filesystem::path discoverTestPath()
+boost::filesystem::path getTestPath()
 {
+	if (auto path = getenv("ETH_TEST_PATH"))
+		return path;
+
 	auto const searchPath =
 	{
 		fs::current_path() / ".." / ".." / ".." / "test",

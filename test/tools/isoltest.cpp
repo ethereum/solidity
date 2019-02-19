@@ -336,6 +336,7 @@ int main(int argc, char *argv[])
 	bool disableIPC = false;
 	bool disableSMT = false;
 	bool formatted = true;
+
 	po::options_description options(
 		R"(isoltest, tool for interactively managing test contracts.
 Usage: isoltest [Options] --ipcpath ipcpath
@@ -344,6 +345,7 @@ Interactively validates test contracts.
 Allowed options)",
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23);
+
 	options.add_options()
 		("help", "Show this help screen.")
 		("testpath", po::value<fs::path>(&testPath), "path to test files")
@@ -396,7 +398,7 @@ Allowed options)",
 	}
 
 	if (testPath.empty())
-		testPath = dev::test::discoverTestPath();
+		testPath = dev::test::getTestPath();
 
 	TestStats global_stats{0, 0};
 

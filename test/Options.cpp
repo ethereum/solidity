@@ -74,11 +74,7 @@ Options::Options()
 			ipcPath = path;
 
 	if (testPath.empty())
-		if (auto path = getenv("ETH_TEST_PATH"))
-			testPath = path;
-
-	if (testPath.empty())
-		testPath = discoverTestPath();
+		testPath = getTestPath();
 }
 
 void Options::validate() const
