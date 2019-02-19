@@ -308,6 +308,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			break;
 		case Type::Category::Array:
 		case Type::Category::Struct:
+		case Type::Category::Mapping:
 			solAssert(_type.dataStoredIn(DataLocation::Storage), "Cleanup requested for non-storage reference type.");
 			templ("body", "cleaned := value");
 			break;
