@@ -246,7 +246,7 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		fatalTypeError(_typeName.baseType().location(), "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
-		TypePointer lengthTypeGeneric = length->annotation().type;
+		TypePointer& lengthTypeGeneric = length->annotation().type;
 		if (!lengthTypeGeneric)
 			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
 		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric.get());
