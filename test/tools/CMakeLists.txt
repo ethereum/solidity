@@ -10,6 +10,7 @@ target_link_libraries(yulopti PRIVATE solidity ${Boost_PROGRAM_OPTIONS_LIBRARIES
 
 add_executable(isoltest
 	isoltest.cpp
+	IsolTestOptions.cpp
 	../Options.cpp
 	../Common.cpp
 	../TestCase.cpp

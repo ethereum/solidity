@@ -14,40 +14,25 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+/** @file IsolTestOptions.h
+ */
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
-
-#include <boost/filesystem/path.hpp>
-#include <boost/program_options.hpp>
-#include <boost/noncopyable.hpp>
+#include <test/Common.h>
 
 namespace dev
 {
-
 namespace test
 {
 
-struct ConfigException : public Exception {};
-
-struct CommonOptions: boost::noncopyable
+struct IsolTestOptions: CommonOptions
 {
-	boost::filesystem::path ipcPath;
-	boost::filesystem::path testPath;
-	bool optimize = false;
-	bool disableIPC = false;
-	bool disableSMT = false;
+	bool formatted = true;
+	bool showHelp = false;
 
-	virtual bool parse(int argc, char const* const* argv);
-	// Throws a ConfigException on error
-	virtual void validate() const;
-
-protected:
-	CommonOptions(std::string caption = "");
-
-	boost::program_options::options_description options;
+	IsolTestOptions(std::string* _editor);
+	bool parse(int _argc, char const* const* _argv) override;
 };
-
 }
 }

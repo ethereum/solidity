@@ -144,7 +144,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			master,
 			options.testPath / ts.path,
 			ts.subpath,
-			options.ipcPath,
+			options.ipcPath.string(),
 			ts.testCaseCreator
 		) > 0, std::string("no ") + ts.title + " tests found");
 	}
