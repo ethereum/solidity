@@ -305,8 +305,7 @@ Contract Types
 
 Every :ref:`contract<contracts>` defines its own type.
 You can implicitly convert contracts to contracts they inherit from.
-Contracts can be explicitly converted to and from all other contract types
-and the ``address`` type.
+Contracts can be explicitly converted to and from the ``address`` type.
 
 Explicit conversion to and from the ``address payable`` type
 is only possible if the contract type has a payable fallback function.
