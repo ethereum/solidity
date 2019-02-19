@@ -14317,12 +14317,17 @@ BOOST_AUTO_TEST_CASE(abi_encode_empty_string)
 			}
 		}
 	)";
+
 	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(
-		0x40, 0xc0,
-		0x60, 0x20, 0x00, 0x00,
-		0x00
-	));
+	if (!dev::test::Options::get().useABIEncoderV2)
+	{
+		// ABI Encoder V2 has slightly different padding, tested below.
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(
+			0x40, 0xc0,
+			0x60, 0x20, 0x00, 0x00,
+			0x00
+		));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(abi_encode_empty_string_v2)

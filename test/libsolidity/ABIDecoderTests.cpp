@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(enums)
 			}
 		}
 	)";
-	bool newDecoder = false;
+	bool newDecoder = dev::test::Options::get().useABIEncoderV2;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("f(uint8)", 0), encodeArgs(u256(0)));
