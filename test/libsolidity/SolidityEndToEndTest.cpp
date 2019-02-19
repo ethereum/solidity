@@ -4440,23 +4440,29 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				}
 			}
 	)**";
-	compileAndRun(sourceCode, 0, "Receiver");
-	u160 const c_receiverAddress = m_contractAddress;
-	compileAndRun(sourceCode, 50, "Sender");
-	u160 const c_senderAddress = m_contractAddress;
-	BOOST_CHECK(m_sender != c_senderAddress); // just for sanity
-	ABI_CHECK(callContractFunctionWithValue("doSend(address)", 11, c_receiverAddress), encodeArgs());
-	ABI_CHECK(callContractFunction("received()"), encodeArgs(u256(23)));
-	ABI_CHECK(callContractFunction("sender()"), encodeArgs(u160(m_sender)));
-	ABI_CHECK(callContractFunction("value()"), encodeArgs(u256(11)));
-	m_contractAddress = c_receiverAddress;
-	ABI_CHECK(callContractFunction("received()"), encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("sender()"), encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("value()"), encodeArgs(u256(0)));
-	BOOST_CHECK(storageEmpty(c_receiverAddress));
-	BOOST_CHECK(!storageEmpty(c_senderAddress));
-	BOOST_CHECK_EQUAL(balanceAt(c_receiverAddress), 0);
-	BOOST_CHECK_EQUAL(balanceAt(c_senderAddress), 50 + 11);
+
+	for (auto v2: {false, true})
+	{
+		string source = (v2 ? "pragma experimental ABIEncoderV2;\n" : "") + string(sourceCode);
+
+		compileAndRun(source, 0, "Receiver");
+		u160 const c_receiverAddress = m_contractAddress;
+		compileAndRun(source, 50, "Sender");
+		u160 const c_senderAddress = m_contractAddress;
+		BOOST_CHECK(m_sender != c_senderAddress); // just for sanity
+		ABI_CHECK(callContractFunctionWithValue("doSend(address)", 11, c_receiverAddress), encodeArgs());
+		ABI_CHECK(callContractFunction("received()"), encodeArgs(u256(23)));
+		ABI_CHECK(callContractFunction("sender()"), encodeArgs(u160(m_sender)));
+		ABI_CHECK(callContractFunction("value()"), encodeArgs(u256(11)));
+		m_contractAddress = c_receiverAddress;
+		ABI_CHECK(callContractFunction("received()"), encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("sender()"), encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("value()"), encodeArgs(u256(0)));
+		BOOST_CHECK(storageEmpty(c_receiverAddress));
+		BOOST_CHECK(!storageEmpty(c_senderAddress));
+		BOOST_CHECK_EQUAL(balanceAt(c_receiverAddress), 0);
+		BOOST_CHECK_EQUAL(balanceAt(c_senderAddress), 50 + 11);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(generic_staticcall)

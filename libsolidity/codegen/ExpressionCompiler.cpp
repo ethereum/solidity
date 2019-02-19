@@ -1967,12 +1967,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// If the function takes arbitrary parameters or is a bare call, copy dynamic length data in place.
 	// Move arguments to memory, will not update the free memory pointer (but will update the memory
 	// pointer on the stack).
+	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
 	utils().encodeToMemory(
 		argumentTypes,
 		parameterTypes,
 		_functionType.padArguments(),
 		_functionType.takesArbitraryParameters() || _functionType.isBareCall(),
-		isDelegateCall
+		encodeForLibraryCall
 	);
 
 	// Stack now:
