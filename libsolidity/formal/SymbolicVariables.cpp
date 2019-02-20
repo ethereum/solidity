@@ -136,3 +136,13 @@ SymbolicMappingVariable::SymbolicMappingVariable(
 {
 	solAssert(isMapping(m_type->category()), "");
 }
+
+SymbolicArrayVariable::SymbolicArrayVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface)
+{
+	solAssert(isArray(m_type->category()), "");
+}
