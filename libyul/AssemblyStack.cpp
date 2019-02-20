@@ -87,6 +87,7 @@ void AssemblyStack::optimize()
 		solUnimplemented("Optimizer for both loose assembly and Yul is not yet implemented");
 	solAssert(m_analysisSuccessful, "Analysis was not successful.");
 	m_analysisSuccessful = false;
+	solAssert(m_parserResult, "");
 	optimize(*m_parserResult);
 	solAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
