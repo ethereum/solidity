@@ -15,6 +15,7 @@ Bugfixes:
  * ABIEncoderV2: Fix internal error related to mappings as library parameters.
  * ABIEncoderV2: Fix invalid signature for events containing structs emitted in libraries.
  * Inline Assembly: Proper error message for missing variables.
+ * Optimizer: Fix internal error related to unused tag removal across assemblies. This never generated any invalid code.
  * SMTChecker: Fixed crash when used with fixed-sized arrays.
  * Yul: Properly detect name clashes with functions before their declaration.
 
