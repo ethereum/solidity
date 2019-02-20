@@ -140,6 +140,10 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
 		{{Instruction::EQ, {0, X}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
+		{{Instruction::SHL, {0, X}}, [=]{ return X; }, false},
+		{{Instruction::SHR, {0, X}}, [=]{ return X; }, false},
+		{{Instruction::SHL, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Instruction::SHR, {X, 0}}, [=]{ return u256(0); }, true},
 	};
 }
 
