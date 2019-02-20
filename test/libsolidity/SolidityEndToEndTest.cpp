@@ -14097,6 +14097,35 @@ BOOST_AUTO_TEST_CASE(abi_encodePackedV2_arrayOfStrings)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[1], dev::keccak256(asString(arrayEncoding)));
 }
 
+BOOST_AUTO_TEST_CASE(event_signature_in_library)
+{
+	// This tests a bug that was present where the "internal signature"
+	// for structs was also used for events.
+	char const* sourceCode = R"(
+		pragma experimental ABIEncoderV2;
+		library L {
+			struct S {
+				uint8 a;
+				int16 b;
+			}
+			event E(S indexed, S);
+			function f() internal {
+				S memory s;
+				emit E(s, s);
+			}
+		}
+		contract C {
+			constructor() public {
+				L.f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("E((uint8,int16),(uint8,int16))")));
+}
+
+
 BOOST_AUTO_TEST_CASE(abi_encode_with_selector)
 {
 	char const* sourceCode = R"(

@@ -3062,7 +3062,8 @@ string FunctionType::externalSignature() const
 		solAssert(false, "Invalid function type for requesting external signature.");
 	}
 
-	bool const inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+	// "inLibrary" is only relevant if this is not an event.
+	bool const inLibrary = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 	FunctionTypePointer external = interfaceFunctionType();
 	solAssert(!!external, "External function type requested.");
 	auto parameterTypes = external->parameterTypes();
