@@ -698,17 +698,26 @@ void SMTChecker::endVisit(Literal const& _literal)
 	solAssert(_literal.annotation().type, "Expected type for AST node");
 	Type const& type = *_literal.annotation().type;
 	if (isNumber(type.category()))
-
 		defineExpr(_literal, smt::Expression(type.literalValue(&_literal)));
 	else if (isBool(type.category()))
 		defineExpr(_literal, smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else
+	{
+		if (type.category() == Type::Category::StringLiteral)
+		{
+			auto stringType = make_shared<ArrayType>(DataLocation::Memory, true);
+			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type.get());
+			solAssert(stringLit, "");
+			auto result = newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
+			m_expressions.emplace(&_literal, result.second);
+		}
 		m_errorReporter.warning(
 			_literal.location(),
 			"Assertion checker does not yet support the type of this literal (" +
 			_literal.annotation().type->toString() +
 			")."
 		);
+	}
 }
 
 void SMTChecker::endVisit(Return const& _return)
@@ -812,6 +821,12 @@ void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
 			expr(_assignment.rightHandSide())
 		);
 		m_interface->addAssertion(newValue(varDecl) == store);
+		// Update the SMT select value after the assignment,
+		// necessary for sound models.
+		defineExpr(indexAccess, smt::Expression::select(
+			m_variables[&varDecl]->currentValue(),
+			expr(*indexAccess.indexExpression())
+		));
 	}
 	else if (dynamic_cast<IndexAccess const*>(&indexAccess.baseExpression()))
 		m_errorReporter.warning(
