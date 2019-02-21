@@ -7,4 +7,3 @@ contract C {
 }
 // ----
 // ParserError: (67-70): Cannot use instruction names for identifier names.
-// ParserError: (71-73): Expected ';' but got ':='

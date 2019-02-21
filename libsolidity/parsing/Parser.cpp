@@ -1043,6 +1043,8 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 
 	yul::Parser asmParser(m_errorReporter, yul::EVMDialect::looseAssemblyForEVM());
 	shared_ptr<yul::Block> block = asmParser.parse(m_scanner, true);
+	if (block == nullptr)
+		BOOST_THROW_EXCEPTION(FatalError());
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<InlineAssembly>(_docString, block);
 }

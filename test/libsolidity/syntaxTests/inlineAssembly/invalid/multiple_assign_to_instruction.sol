@@ -8,4 +8,3 @@ contract C {
 }
 // ----
 // ParserError: (102-105): Cannot use instruction names for identifier names.
-// ParserError: (105-106): Expected ';' but got ','

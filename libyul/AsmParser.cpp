@@ -48,8 +48,7 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	}
 	catch (FatalError const&)
 	{
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+		solAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
 	}
 	return nullptr;
 }

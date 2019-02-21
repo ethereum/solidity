@@ -8,4 +8,3 @@ contract C {
 }
 // ----
 // ParserError: (107-108): Literal, identifier or instruction expected.
-// ParserError: (107-108): Expected primary expression.
