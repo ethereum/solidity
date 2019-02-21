@@ -7,5 +7,5 @@ contract C {
   }
 }
 // ----
-// ParserError: (87-88): Literal, identifier or instruction expected.
-// ParserError: (87-88): Expected primary expression.
+// ParserError: (87-89): Literal, identifier or instruction expected.
+// ParserError: (87-89): Expected primary expression.

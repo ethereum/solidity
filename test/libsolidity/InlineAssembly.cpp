@@ -490,8 +490,8 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Label name / variable name must precede \",\" (multiple assignment).");
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name expected in multiple assignment.");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name must precede \":=\" in assignment.");
 
 	/// NOTE: Travis hiccups if not having a variable
 	char const* text = R"(
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 {
-	CHECK_ASSEMBLE_ERROR("{ gas := 2 }", ParserError, "Label name / variable name must precede \":\"");
+	CHECK_ASSEMBLE_ERROR("{ gas := 2 }", ParserError, "Variable name must precede \":=\"");
 }
 
 BOOST_AUTO_TEST_CASE(revert)

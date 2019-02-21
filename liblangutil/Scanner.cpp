@@ -556,7 +556,12 @@ void Scanner::scanToken()
 				token = Token::Period;
 			break;
 		case ':':
-			token = selectToken(Token::Colon);
+			// : :=
+			advance();
+			if (m_char == '=')
+				token = selectToken(Token::AssemblyAssign);
+			else
+				token = Token::Colon;
 			break;
 		case ';':
 			token = selectToken(Token::Semicolon);
