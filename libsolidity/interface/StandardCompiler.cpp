@@ -292,8 +292,25 @@ boost::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 boost::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
 {
-	static set<string> keys{"enabled", "runs"};
+	static set<string> keys{"details", "enabled", "runs"};
 	return checkKeys(_input, keys, "settings.optimizer");
+}
+
+boost::optional<Json::Value> checkOptimizerDetailsKeys(Json::Value const& _input)
+{
+	static set<string> keys{"peephole", "jumpdestRemover", "orderLiterals", "deduplicate", "cse", "constantOptimizer", "yul", "yulDetails"};
+	return checkKeys(_input, keys, "settings.optimizer.details");
+}
+
+boost::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std::string const& _name, bool& _setting)
+{
+	if (_details.isMember(_name))
+	{
+		if (!_details[_name].isBool())
+			return formatFatalError("JSONError", "\"settings.optimizer.details." + _name + "\" must be Boolean");
+		_setting = _details[_name].asBool();
+	}
+	return {};
 }
 
 boost::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
@@ -350,6 +367,61 @@ boost::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSele
 }
 
 }
+
+boost::optional<Json::Value> StandardCompiler::parseOptimizerSettings(Json::Value const& _jsonInput)
+{
+	if (auto result = checkOptimizerKeys(_jsonInput))
+		return *result;
+
+	OptimiserSettings settings = OptimiserSettings::none();
+
+	if (_jsonInput.isMember("enabled"))
+	{
+		if (!_jsonInput["enabled"].isBool())
+			return formatFatalError("JSONError", "The \"enabled\" setting must be a Boolean.");
+
+		settings = _jsonInput["enabled"].asBool() ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+	}
+
+	if (_jsonInput.isMember("runs"))
+	{
+		if (!_jsonInput["runs"].isUInt())
+			return formatFatalError("JSONError", "The \"runs\" setting must be an unsigned number.");
+		settings.expectedExecutionsPerDeployment = _jsonInput["runs"].asUInt();
+	}
+
+	if (_jsonInput.isMember("details"))
+	{
+		Json::Value const& details = _jsonInput["details"];
+		if (auto result = checkOptimizerDetailsKeys(details))
+			return *result;
+
+		if (auto error = checkOptimizerDetail(details, "peephole", settings.runPeephole))
+			return *error;
+		if (auto error = checkOptimizerDetail(details, "jumpdestRemover", settings.runJumpdestRemover))
+			return *error;
+		if (auto error = checkOptimizerDetail(details, "orderLiterals", settings.runOrderLiterals))
+			return *error;
+		if (auto error = checkOptimizerDetail(details, "deduplicate", settings.runDeduplicate))
+			return *error;
+		if (auto error = checkOptimizerDetail(details, "cse", settings.runCSE))
+			return *error;
+		if (auto error = checkOptimizerDetail(details, "constantOptimizer", settings.runConstantOptimiser))
+			return *error;
+		if (auto error = checkOptimizerDetail(details, "yul", settings.runYulOptimiser))
+			return *error;
+		if (details.isMember("yulDetails"))
+		{
+			if (!_jsonInput["yulDetails"].isObject())
+				return formatFatalError("JSONError", "The \"yulDetails\" optimizer setting has to be a JSON object.");
+			if (!_jsonInput["yulDetails"].getMemberNames().empty())
+				return formatFatalError("JSONError", "The \"yulDetails\" optimizer setting cannot have any settings yet.");
+		}
+	}
+	m_compilerStack.setOptimiserSettings(std::move(settings));
+	return {};
+}
+
 
 Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 {
@@ -512,28 +584,8 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	m_compilerStack.setRemappings(remappings);
 
 	if (settings.isMember("optimizer"))
-	{
-		Json::Value optimizerSettings = settings["optimizer"];
-
-		if (auto result = checkOptimizerKeys(optimizerSettings))
+		if (auto result = parseOptimizerSettings(settings["optimizer"]))
 			return *result;
-
-		if (optimizerSettings.isMember("enabled"))
-		{
-			if (!optimizerSettings["enabled"].isBool())
-				return formatFatalError("JSONError", "The \"enabled\" setting must be a boolean.");
-
-			bool const optimize = optimizerSettings["enabled"].asBool();
-			unsigned optimizeRuns = 200;
-			if (optimizerSettings.isMember("runs"))
-			{
-				if (!optimizerSettings["runs"].isUInt())
-					return formatFatalError("JSONError", "The \"runs\" setting must be an unsigned number.");
-				optimizeRuns = optimizerSettings["runs"].asUInt();
-			}
-			m_compilerStack.setOptimiserSettings(optimize, optimizeRuns);
-		}
-	}
 
 	map<string, h160> libraries;
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value(Json::objectValue));

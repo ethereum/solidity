@@ -191,7 +191,30 @@ Input Description
           "enabled": true,
           // Optimize for how many times you intend to run the code.
           // Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage.
-          "runs": 200
+          "runs": 200,
+          // Switch optimizer components on or off in detail.
+          // The "enabled" switch above provides two defaults which can be
+          // tweaked here. If "details" is given, "enabled" can be omitted.
+          "details": {
+            // The peephole optimizer is always on if no details are given, use details to switch it off.
+            "peephole": true,
+            // The unused jumpdest remover is always on if no details are given, use details to switch it off.
+            "jumpdestRemover": true,
+            // Sometimes re-orders literals in commutative operations.
+            "orderLiterals": false,
+            // Removes duplicate code blocks
+            "deduplicate": false,
+            // Common subexpression elimination, this is the most complicated step but
+            // can also provide the largest gain.
+            "cse": false,
+            // Optimize representation of literal numbers and strings in code.
+            "constantOptimizer": false,
+            // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2.
+            // It can only be activated through the details here.
+            "yul": false,
+            // Future tuning options, currently unused.
+            "yulDetails": {}
+          }
         },
         "evmVersion": "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium or constantinople
         // Metadata settings (optional)
