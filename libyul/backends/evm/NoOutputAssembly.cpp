@@ -141,3 +141,22 @@ AbstractAssembly::SubID NoOutputAssembly::appendData(bytes const&)
 {
 	return 1;
 }
+
+NoOutputEVMDialect::NoOutputEVMDialect(shared_ptr<EVMDialect> const& _copyFrom):
+	EVMDialect(_copyFrom->flavour, _copyFrom->providesObjectAccess())
+{
+	for (auto& fun: m_functions)
+	{
+		size_t parameters = fun.second.parameters.size();
+		size_t returns = fun.second.returns.size();
+		fun.second.generateCode = [=](FunctionCall const&, AbstractAssembly& _asm, std::function<void()> _visitArguments)
+		{
+			_visitArguments();
+			for (size_t i = 0; i < parameters; i++)
+				_asm.appendInstruction(dev::solidity::Instruction::POP);
+
+			for (size_t i = 0; i < returns; i++)
+				_asm.appendConstant(u256(0));
+		};
+	}
+}
