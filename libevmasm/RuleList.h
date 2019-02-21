@@ -305,6 +305,36 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		[=]() { return A.d() >= Pattern::WordSize / 8; }
 	});
 
+	// Replace DIV X, 2^m -> SHR m, X
+	for (size_t i = 1; i < 255; ++i)
+	{
+		rules.push_back({
+			{Instruction::DIV, {X, u256(1) << i}},
+			[=]() -> Pattern { return { Instruction::SHR, {u256(i), X}}; },
+			false
+		});
+	}
+
+	// Replace MUL X, 2^m -> SHL m, X
+	for (size_t i = 1; i < 255; ++i)
+	{
+		rules.push_back({
+			{Instruction::MUL, {X, u256(1) << i}},
+			[=]() -> Pattern { return {Instruction::SHL, {u256(i), X}}; },
+			false
+		});
+	}
+
+	// Replace MUL 2^m, X -> SHL m, X
+	for (size_t i = 1; i < 255; ++i)
+	{
+		rules.push_back({
+			{Instruction::MUL, {u256(1) << i, X}},
+			[=]() -> Pattern { return {Instruction::SHL, {u256(i), X}}; },
+			false
+		});
+	}
+
 	for (auto instr: {
 		Instruction::ADDRESS,
 		Instruction::CALLER,
