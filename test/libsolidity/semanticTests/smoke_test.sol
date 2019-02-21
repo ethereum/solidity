@@ -11,6 +11,9 @@ contract C {
     function x(bytes32 b) public returns (bytes32) {
         return b;
     }
+    function t(bool b) public returns (bool) {
+        return !b;
+    }
 }
 // ----
 // f() -> 1
@@ -19,3 +22,4 @@ contract C {
 // j() -> FAILURE
 // i() # Does not exist. # -> FAILURE # Reverts. #
 // x(bytes32): 0x31 -> 0x31
+// t(bool): true -> false

@@ -60,6 +60,7 @@ namespace test
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
+	K(Boolean, "boolean", 0)       \
 	/* special keywords */         \
 	K(Failure, "FAILURE", 0)       \
 
@@ -103,6 +104,7 @@ struct ABIType
 	{
 		UnsignedDec,
 		SignedDec,
+		Boolean,
 		Hex,
 		Failure,
 		None
@@ -355,6 +357,9 @@ private:
 	/// and / or parentheses like `((uint, uint), (uint, (uint, uint)), uint)`.
 	std::string parseIdentifierOrTuple();
 
+	/// Parses a boolean literal.
+	std::string parseBoolean();
+
 	/// Parses a comment that is defined like this:
 	/// # A nice comment. #
 	std::string parseComment();
@@ -364,6 +369,10 @@ private:
 
 	/// Parses the current hex number literal.
 	std::string parseHexNumber();
+
+	/// Coverts "true" to `true`, "false" to `false` and throws
+	/// otherwise.
+	bool convertBoolean(std::string const& _literal);
 
 	/// Tries to convert \param _literal to right-aligned, padded `u256`
 	/// representation of the decimal number literal.
