@@ -98,13 +98,22 @@ namespace soltest
  */
 struct ABIType
 {
-	enum Type {
+	enum Type
+	{
 		UnsignedDec,
 		SignedDec,
 		Failure,
 		None
 	};
+
+	enum Align
+	{
+		AlignLeft,
+		AlignRight
+	};
+
 	Type type = ABIType::None;
+	Align align = Align::AlignRight;
 	size_t size = 0;
 };
 

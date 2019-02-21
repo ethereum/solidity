@@ -15,6 +15,7 @@
 #pragma once
 
 #include <test/libsolidity/util/TestFileParser.h>
+#include <test/libsolidity/util/TestFunctionCall.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
@@ -42,35 +43,6 @@ namespace test
 class SemanticTest: public SolidityExecutionFramework, public TestCase
 {
 public:
-	/**
-	 * Represents a function call and the result it returned. It stores the call
-	 * representation itself, the actual byte result (if any) and a string representation
-	 * used for the interactive update routine provided by isoltest. It also provides
-	 * functionality to compare the actual result with the expectations attached to the
-	 * call object, as well as a way to reset the result if executed multiple times.
-	 */
-	struct FunctionCallTest
-	{
-		FunctionCall call;
-		bytes rawBytes;
-		std::string output;
-		bool failure = true;
-		/// Compares raw expectations (which are converted to a byte representation before),
-		/// and also the expected transaction status of the function call to the actual test results.
-		bool matchesExpectation() const
-		{
-			return failure == call.expectations.failure && rawBytes == call.expectations.rawBytes();
-		}
-		/// Resets current results in case the function was called and the result
-		/// stored already (e.g. if test case was updated via isoltest).
-		void reset()
-		{
-			failure = true;
-			rawBytes = bytes{};
-			output = std::string{};
-		}
-	};
-
 	static std::unique_ptr<TestCase> create(Config const& _options)
 	{ return std::make_unique<SemanticTest>(_options.filename, _options.ipcPath); }
 
@@ -90,8 +62,9 @@ public:
 	/// Returns true if deployment was successful, false otherwise.
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments);
 
+private:
 	std::string m_source;
-	std::vector<FunctionCallTest> m_tests;
+	std::vector<TestFunctionCall> m_tests;
 };
 
 }
