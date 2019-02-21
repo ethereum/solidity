@@ -24,6 +24,8 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 
+#include <boost/optional.hpp>
+
 namespace dev
 {
 
@@ -54,6 +56,10 @@ public:
 
 private:
 	Json::Value compileInternal(Json::Value const& _input);
+
+	/// Validaes and applies the optimizer settings.
+	/// On error returns the json-formatted error message.
+	boost::optional<Json::Value> parseOptimizerSettings(Json::Value const& _settings);
 
 	CompilerStack m_compilerStack;
 	ReadCallback::Callback m_readFile;
