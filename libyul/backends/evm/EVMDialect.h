@@ -66,7 +66,7 @@ struct EVMDialect: public Dialect
 	/// Sets the current object. Used during code generation.
 	void setCurrentObject(Object const* _object);
 
-private:
+protected:
 	void addFunction(
 		std::string _name,
 		size_t _params,

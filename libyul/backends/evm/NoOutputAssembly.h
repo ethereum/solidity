@@ -22,6 +22,8 @@
 
 #include <libyul/backends/evm/AbstractAssembly.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libevmasm/LinkerObject.h>
 
 #include <map>
@@ -33,6 +35,7 @@ struct SourceLocation;
 
 namespace yul
 {
+
 
 /**
  * Assembly class that just ignores everything and only performs stack counting.
@@ -71,5 +74,15 @@ private:
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	int m_stackHeight = 0;
 };
+
+
+/**
+ * EVM dialect that does not generate any code.
+ */
+struct NoOutputEVMDialect: public EVMDialect
+{
+	explicit NoOutputEVMDialect(std::shared_ptr<EVMDialect> const& _copyFrom);
+};
+
 
 }

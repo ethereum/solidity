@@ -18,6 +18,7 @@ Bugfixes:
  * Optimizer: Fix internal error related to unused tag removal across assemblies. This never generated any invalid code.
  * SMTChecker: Fixed crash when used with fixed-sized arrays.
  * Yul: Properly detect name clashes with functions before their declaration.
+ * Yul: Take builtin functions into account in the compilability checker.
 
 
 Build System:

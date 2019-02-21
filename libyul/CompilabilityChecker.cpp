@@ -40,13 +40,15 @@ std::map<YulString, int> CompilabilityChecker::run(std::shared_ptr<Dialect> _dia
 
 	solAssert(_dialect->flavour == AsmFlavour::Strict, "");
 
-	EVMDialect const& evmDialect = dynamic_cast<EVMDialect const&>(*_dialect);
+	solAssert(dynamic_cast<EVMDialect const*>(_dialect.get()), "");
+	shared_ptr<NoOutputEVMDialect> noOutputDialect = make_shared<NoOutputEVMDialect>(dynamic_pointer_cast<EVMDialect>(_dialect));
 
 	bool optimize = true;
 	yul::AsmAnalysisInfo analysisInfo =
-		yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, EVMVersion(), _ast);
+		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, EVMVersion(), _ast);
+
 	NoOutputAssembly assembly;
-	CodeTransform transform(assembly, analysisInfo, _ast, evmDialect, optimize);
+	CodeTransform transform(assembly, analysisInfo, _ast, *noOutputDialect, optimize);
 	try
 	{
 		transform(_ast);
