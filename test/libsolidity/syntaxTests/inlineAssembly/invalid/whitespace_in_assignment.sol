@@ -7,4 +7,3 @@ contract C {
 }
 // ----
 // ParserError: (69-70): Literal, identifier or instruction expected.
-// ParserError: (69-70): Expected primary expression.

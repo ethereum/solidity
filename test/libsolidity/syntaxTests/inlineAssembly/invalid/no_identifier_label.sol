@@ -7,4 +7,3 @@ contract C {
 }
 // ----
 // ParserError: (70-71): Label name must precede ":".
-// ParserError: (70-71): Expected primary expression.
