@@ -1,5 +1,6 @@
 # Solidity Commons Library (Solidity related sharing bits between libsolidity and libyul)
 set(sources
+	Common.h
 	CharStream.cpp
 	CharStream.h
 	ErrorReporter.cpp
