@@ -144,6 +144,13 @@ string TestFunctionCall::formatBytesParameters(bytes const& _bytes, ParameterLis
 			else
 				resultStream << fromBigEndian<u256>(byteRange);
 			break;
+		case ABIType::Hex:
+			soltestAssert(param.abiType.align == ABIType::AlignLeft, "Hex numbers must be left-aligned.");
+			byteRange.erase(
+				std::remove(byteRange.begin(), byteRange.end(), 0), byteRange.end()
+			);
+			resultStream << toHex(byteRange, HexPrefix::Add);
+			break;
 		case ABIType::Failure:
 			break;
 		case ABIType::None:

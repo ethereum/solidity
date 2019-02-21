@@ -56,6 +56,7 @@ namespace test
 	/* Literals & identifier */    \
 	T(Comment, "#", 0)             \
 	T(Number, "number", 0)         \
+	T(HexNumber, "hex_number", 0)  \
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
@@ -102,10 +103,10 @@ struct ABIType
 	{
 		UnsignedDec,
 		SignedDec,
+		Hex,
 		Failure,
 		None
 	};
-
 	enum Align
 	{
 		AlignLeft,
@@ -113,7 +114,7 @@ struct ABIType
 	};
 
 	Type type = ABIType::None;
-	Align align = Align::AlignRight;
+	Align align = ABIType::AlignRight;
 	size_t size = 0;
 };
 
@@ -290,7 +291,8 @@ private:
 
 		std::string scanComment();
 		std::string scanIdentifierOrKeyword();
-		std::string scanNumber();
+		std::string scanDecimalNumber();
+		std::string scanHexNumber();
 
 	private:
 		using TokenDesc = std::pair<Token, std::string>;
@@ -357,12 +359,20 @@ private:
 	/// # A nice comment. #
 	std::string parseComment();
 
-	/// Parses the current number literal.
-	std::string parseNumber();
+	/// Parses the current decimal number literal.
+	std::string parseDecimalNumber();
 
-	/// Tries to convert \param _literal to `uint256` and throws if
-	/// conversion fails.
+	/// Parses the current hex number literal.
+	std::string parseHexNumber();
+
+	/// Tries to convert \param _literal to right-aligned, padded `u256`
+	/// representation of the decimal number literal.
+	/// Throws if conversion fails.
 	u256 convertNumber(std::string const& _literal);
+
+	/// Tries to convert \param _literal to left-aligned, padded `bytes`
+	/// representation of the hex literal. Throws if conversion fails.
+	bytes convertHexNumber(std::string const& _literal);
 
 	/// A scanner instance
 	Scanner m_scanner;

@@ -8,6 +8,9 @@ contract C {
     function h() public payable returns (uint) {
         return f();
     }
+    function x(bytes32 b) public returns (bytes32) {
+        return b;
+    }
 }
 // ----
 // f() -> 1
@@ -15,3 +18,4 @@ contract C {
 // h(), 1 ether -> 1
 // j() -> FAILURE
 // i() # Does not exist. # -> FAILURE # Reverts. #
+// x(bytes32): 0x31 -> 0x31

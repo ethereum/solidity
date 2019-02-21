@@ -22,7 +22,7 @@ Bugfixes:
 
 
 Build System:
-
+ * Soltest: Add support for left-aligned, padded hex literals.
 
 ### 0.5.4 (2019-02-12)
 
