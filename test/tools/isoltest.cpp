@@ -19,6 +19,7 @@
 #include <libdevcore/AnsiColorized.h>
 
 #include <test/Common.h>
+#include <test/tools/IsolTestOptions.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/InteractiveTests.h>
 
@@ -322,72 +323,18 @@ boost::optional<TestStats> runTestSuite(
 
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char const *argv[])
 {
 	setupTerminal();
 
-	if (getenv("EDITOR"))
-		TestTool::editor = getenv("EDITOR");
-	else if (fs::exists("/usr/bin/editor"))
-		TestTool::editor = "/usr/bin/editor";
+	dev::test::IsolTestOptions options(&TestTool::editor);
 
-	fs::path testPath;
-	string ipcPath;
-	bool disableIPC = false;
-	bool disableSMT = false;
-	bool formatted = true;
-	po::options_description options(
-		R"(isoltest, tool for interactively managing test contracts.
-Usage: isoltest [Options] --ipcpath ipcpath
-Interactively validates test contracts.
-
-Allowed options)",
-		po::options_description::m_default_line_length,
-		po::options_description::m_default_line_length - 23);
-	options.add_options()
-		("help", "Show this help screen.")
-		("testpath", po::value<fs::path>(&testPath), "path to test files")
-		("ipcpath", po::value<string>(&ipcPath), "path to ipc socket")
-		("no-ipc", "disable semantic tests")
-		("no-smt", "disable SMT checker")
-		("no-color", "don't use colors")
-		("editor", po::value<string>(&TestTool::editor), "editor for opening contracts");
-
-	po::variables_map arguments;
 	try
 	{
-		po::command_line_parser cmdLineParser(argc, argv);
-		cmdLineParser.options(options);
-		po::store(cmdLineParser.run(), arguments);
-
-		if (arguments.count("help"))
-		{
-			cout << options << endl;
-			return 0;
-		}
-
-		if (arguments.count("no-color"))
-			formatted = false;
-
-		po::notify(arguments);
-
-		if (arguments.count("no-ipc"))
-			disableIPC = true;
+		if (options.parse(argc, argv))
+			options.validate();
 		else
-		{
-			solAssert(
-				!ipcPath.empty(),
-				"No ipc path specified. The --ipcpath argument is required, unless --no-ipc is used."
-			);
-			solAssert(
-				fs::exists(ipcPath),
-				"Invalid ipc path specified."
-			);
-		}
-
-		if (arguments.count("no-smt"))
-			disableSMT = true;
-
+			return 1;
 	}
 	catch (std::exception const& _exception)
 	{
@@ -395,29 +342,26 @@ Allowed options)",
 		return 1;
 	}
 
-	if (testPath.empty())
-		testPath = dev::test::discoverTestPath();
-
 	TestStats global_stats{0, 0};
 
 	// Actually run the tests.
 	// Interactive tests are added in InteractiveTests.h
 	for (auto const& ts: g_interactiveTestsuites)
 	{
-		if (ts.ipc && disableIPC)
+		if (ts.ipc && options.disableIPC)
 			continue;
 
-		if (ts.smt && disableSMT)
+		if (ts.smt && options.disableSMT)
 			continue;
 
-		if (auto stats = runTestSuite(ts.title, testPath / ts.path, ts.subpath, ipcPath, ts.testCaseCreator, formatted))
+		if (auto stats = runTestSuite(ts.title, options.testPath / ts.path, ts.subpath, options.ipcPath.string(), ts.testCaseCreator, options.formatted))
 			global_stats += *stats;
 		else
 			return 1;
 	}
 
 	cout << endl << "Summary: ";
-	AnsiColorized(cout, formatted, {BOLD, global_stats ? GREEN : RED}) <<
+	AnsiColorized(cout, options.formatted, {BOLD, global_stats ? GREEN : RED}) <<
 		 global_stats.successCount << "/" << global_stats.testCount;
 	cout << " tests successful." << endl;
 
