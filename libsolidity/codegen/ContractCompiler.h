@@ -28,8 +28,10 @@
 #include <functional>
 #include <ostream>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 /**
  * Code generator at the contract level. Can be used to generate code for exactly one contract
@@ -38,9 +40,8 @@ namespace solidity {
 class ContractCompiler: private ASTConstVisitor
 {
 public:
-	explicit ContractCompiler(ContractCompiler* _runtimeCompiler, CompilerContext& _context, bool _optimiseOrderLiterals, size_t _optimiseRuns):
-		m_optimiseOrderLiterals(_optimiseOrderLiterals),
-		m_optimiseRuns(_optimiseRuns),
+	explicit ContractCompiler(ContractCompiler* _runtimeCompiler, CompilerContext& _context, OptimiserSettings _optimiserSettings):
+		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
 	{
@@ -130,8 +131,7 @@ private:
 	/// Sets the stack height for the visited loop.
 	void storeStackHeight(ASTNode const* _node);
 
-	bool const m_optimiseOrderLiterals;
-	size_t const m_optimiseRuns = 200;
+	OptimiserSettings const m_optimiserSettings;
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;
