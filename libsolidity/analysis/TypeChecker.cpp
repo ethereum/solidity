@@ -511,14 +511,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			)
 				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
 		break;
-	case Type::Category::Mapping:
-		if (auto mappingType = dynamic_cast<MappingType const*>(varType.get()))
-			if (
-				mappingType->keyType()->isDynamicallySized() &&
-				_variable.visibility() == Declaration::Visibility::Public
-			)
-				m_errorReporter.typeError(_variable.location(), "Dynamically-sized keys for public mappings are not supported.");
-		break;
 	default:
 		break;
 	}
