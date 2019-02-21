@@ -535,13 +535,6 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
 }
 
-void SMTChecker::eraseArrayKnowledge()
-{
-	for (auto const& var: m_variables)
-		if (var.first->annotation().type->category() == Type::Category::Mapping)
-			newValue(*var.first);
-}
-
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 {
 	FunctionDefinition const* _funDef = nullptr;
@@ -805,7 +798,6 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 void SMTChecker::arrayAssignment()
 {
 	m_arrayAssignmentHappened = true;
-	eraseArrayKnowledge();
 }
 
 void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
@@ -815,6 +807,36 @@ void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
 	{
 		auto const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
 		solAssert(knownVariable(varDecl), "");
+
+		if (varDecl.hasReferenceOrMappingType())
+			resetVariables([&](VariableDeclaration const& _var) {
+				if (_var == varDecl)
+					return false;
+				TypePointer prefix = _var.type();
+				TypePointer originalType = typeWithoutPointer(varDecl.type());
+				while (
+					prefix->category() == Type::Category::Mapping ||
+					prefix->category() == Type::Category::Array
+				)
+				{
+					if (*originalType == *typeWithoutPointer(prefix))
+						return true;
+					if (prefix->category() == Type::Category::Mapping)
+					{
+						auto mapPrefix = dynamic_cast<MappingType const*>(prefix.get());
+						solAssert(mapPrefix, "");
+						prefix = mapPrefix->valueType();
+					}
+					else
+					{
+						auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix.get());
+						solAssert(arrayPrefix, "");
+						prefix = arrayPrefix->baseType();
+					}
+				}
+				return false;
+			});
+
 		smt::Expression store = smt::Expression::store(
 			m_variables[&varDecl]->currentValue(),
 			expr(*indexAccess.indexExpression()),
@@ -1323,6 +1345,13 @@ void SMTChecker::resetVariables(function<bool(VariableDeclaration const&)> const
 		if (_filter(*_variable.first))
 			this->resetVariable(*_variable.first);
 	});
+}
+
+TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
+{
+	if (auto refType = dynamic_cast<ReferenceType const*>(_type.get()))
+		return ReferenceType::copyForLocationIfReference(refType->location(), _type);
+	return _type;
 }
 
 void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
