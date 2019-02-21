@@ -19,6 +19,7 @@ Bugfixes:
  * Inline Assembly: Proper error message for missing variables.
  * Optimizer: Fix internal error related to unused tag removal across assemblies. This never generated any invalid code.
  * SMTChecker: Fixed crash when used with fixed-sized arrays.
+ * TypeChecker: Fix internal error and disallow index access on contracts and libraries.
  * Yul: Properly detect name clashes with functions before their declaration.
  * Yul: Take builtin functions into account in the compilability checker.
 
