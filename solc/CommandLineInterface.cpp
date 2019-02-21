@@ -132,6 +132,7 @@ static string const g_strNatspecUser = "userdoc";
 static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
+static string const g_strOptimizeYul = "optimize-yul";
 static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
 static string const g_strSignatureHashes = "hashes";
@@ -615,6 +616,7 @@ Allowed options)",
 			"Set for how many contract runs to optimize."
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
+		(g_strOptimizeYul.c_str(), "Enable Yul optimizer in Solidity, mostly for ABIEncoderV2.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -847,7 +849,7 @@ bool CommandLineInterface::processInput()
 		using Machine = yul::AssemblyStack::Machine;
 		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
-		bool optimize = m_args.count(g_argOptimize);
+		bool optimize = m_args.count(g_argOptimize) || m_args.count(g_strOptimizeYul);
 		if (m_args.count(g_argMachine))
 		{
 			string machine = m_args[g_argMachine].as<string>();
@@ -901,9 +903,11 @@ bool CommandLineInterface::processInput()
 			m_compiler->setLibraries(m_libraries);
 		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
-		bool optimize = m_args.count(g_argOptimize) > 0;
-		unsigned runs = m_args[g_argOptimizeRuns].as<unsigned>();
-		m_compiler->setOptimiserSettings(optimize, runs);
+
+		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
+		settings.runYulOptimiser = m_args.count(g_strOptimizeYul);
+		m_compiler->setOptimiserSettings(settings);
 
 		bool successful = m_compiler->compile();
 
