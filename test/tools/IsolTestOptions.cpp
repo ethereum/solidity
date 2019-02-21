@@ -52,7 +52,7 @@ IsolTestOptions::IsolTestOptions(std::string* _editor):
 {
 	options.add_options()
 		("help", po::bool_switch(&showHelp), "Show this help screen.")
-		("no-color", po::bool_switch(&formatted), "don't use colors")
+		("no-color", po::bool_switch(&noColor), "don't use colors")
 		("editor", po::value<std::string>(_editor)->default_value(editorPath()), "editor for opening test files");
 
 }

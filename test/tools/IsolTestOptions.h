@@ -28,7 +28,7 @@ namespace test
 
 struct IsolTestOptions: CommonOptions
 {
-	bool formatted = true;
+	bool noColor = false;
 	bool showHelp = false;
 
 	IsolTestOptions(std::string* _editor);
