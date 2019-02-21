@@ -75,6 +75,34 @@ BOOST_AUTO_TEST_CASE(format_signed_singleline)
 	BOOST_REQUIRE_EQUAL(test.format(), "// f(int8): -1 -> -1");
 }
 
+BOOST_AUTO_TEST_CASE(format_hex_singleline)
+{
+	bytes result = fromHex("0x31");
+	bytes expectedBytes = result + bytes(32 - result.size(), 0);
+	ABIType abiType{ABIType::Hex, ABIType::AlignLeft, 32};
+	Parameter param{expectedBytes, "0x31", abiType, FormatInfo{}};
+	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
+	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
+	FunctionCall call{"f(bytes32)", 0, arguments, expectations};
+	TestFunctionCall test{call};
+
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(bytes32): 0x31 -> 0x31");
+}
+
+BOOST_AUTO_TEST_CASE(format_hex_right_align)
+{
+	bytes result = fromHex("0x31");
+	bytes expectedBytes = result + bytes(32 - result.size(), 0);
+	ABIType abiType{ABIType::Hex, ABIType::AlignRight, 32};
+	Parameter param{expectedBytes, "0x31", abiType, FormatInfo{}};
+	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
+	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
+	FunctionCall call{"f(bytes32)", 0, arguments, expectations};
+	TestFunctionCall test{call};
+
+	BOOST_REQUIRE_THROW(test.format(), runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(format_empty_byte_range)
 {
 	bytes expectedBytes;

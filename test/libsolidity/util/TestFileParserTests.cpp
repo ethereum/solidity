@@ -305,6 +305,38 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple)
 	testFunctionCall(calls.at(1), Mode::SingleLine, "f((uint8),uint8)", false);
 }
 
+BOOST_AUTO_TEST_CASE(call_arguments_left_aligned)
+{
+	char const* source = R"(
+		// f(bytes32, bytes32): 0x6161, 0x420000EF -> 1
+		// g(bytes32, bytes32): 0x0616, 0x0042EF00 -> 1
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 2);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(bytes32,bytes32)",
+		false,
+		fmt::encodeArgs(
+			u256("0x6161000000000000000000000000000000000000000000000000000000000000"),
+			u256("0x420000EF00000000000000000000000000000000000000000000000000000000")
+		),
+		fmt::encodeArgs(1)
+	);
+	testFunctionCall(
+		calls.at(1),
+		Mode::SingleLine,
+		"g(bytes32,bytes32)",
+		false,
+		fmt::encodeArgs(
+			u256("0x0616000000000000000000000000000000000000000000000000000000000000"),
+			u256("0x0042EF0000000000000000000000000000000000000000000000000000000000")
+		),
+		fmt::encodeArgs(1)
+	);
+}
+
 BOOST_AUTO_TEST_CASE(call_arguments_tuple_of_tuples)
 {
 	char const* source = R"(
@@ -542,6 +574,14 @@ BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
 {
 	char const* source = R"(
 		// f(uint256), 2 btc : 1 -> 1
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_hex_number_invalid)
+{
+	char const* source = R"(
+		// f(bytes32, bytes32): 0x616, 0x042 -> 1
 	)";
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }

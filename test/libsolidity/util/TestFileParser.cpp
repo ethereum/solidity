@@ -137,7 +137,7 @@ string TestFileParser::parseFunctionSignature()
 
 u256 TestFileParser::parseFunctionCallValue()
 {
-	u256 value = convertNumber(parseNumber());
+	u256 value = convertNumber(parseDecimalNumber());
 	expect(Token::Ether);
 	return value;
 }
@@ -203,16 +203,23 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 			abiType = ABIType{ABIType::SignedDec, ABIType::AlignRight, 32};
 			expect(Token::Sub);
 			rawString += formatToken(Token::Sub);
-			string parsed = parseNumber();
+			string parsed = parseDecimalNumber();
 			rawString += parsed;
 			number = convertNumber(parsed) * -1;
 		}
 		else
 		{
-			if (accept(Token::Number))
+			if (accept(Token::HexNumber))
+			{
+				abiType = ABIType{ABIType::Hex, ABIType::AlignLeft, 32};
+				string parsed = parseHexNumber();
+				rawString += parsed;
+				return make_tuple(convertHexNumber(parsed), abiType, rawString);
+			}
+			else if (accept(Token::Number))
 			{
 				abiType = ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
-				string parsed = parseNumber();
+				string parsed = parseDecimalNumber();
 				rawString += parsed;
 				number = convertNumber(parsed);
 			}
@@ -263,21 +270,49 @@ string TestFileParser::parseComment()
 	return string{};
 }
 
-string TestFileParser::parseNumber()
+string TestFileParser::parseDecimalNumber()
 {
 	string literal = m_scanner.currentLiteral();
 	expect(Token::Number);
 	return literal;
 }
 
+string TestFileParser::parseHexNumber()
+{
+	string literal = m_scanner.currentLiteral();
+	expect(Token::HexNumber);
+	return literal;
+}
+
 u256 TestFileParser::convertNumber(string const& _literal)
 {
-	try {
+	try
+	{
 		return u256{_literal};
 	}
 	catch (std::exception const&)
 	{
 		throw Error(Error::Type::ParserError, "Number encoding invalid.");
+	}
+}
+
+bytes TestFileParser::convertHexNumber(string const& _literal)
+{
+	try
+	{
+		if (_literal.size() % 2)
+		{
+			throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
+		}
+		else
+		{
+			bytes result = fromHex(_literal);
+			return result + bytes(32 - result.size(), 0);
+		}
+	}
+	catch (std::exception const&)
+	{
+		throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
 	}
 }
 
@@ -348,7 +383,16 @@ void TestFileParser::Scanner::scanNextToken()
 				token = selectToken(detectedToken.first, detectedToken.second);
 			}
 			else if (langutil::isDecimalDigit(current()))
-				token = selectToken(Token::Number, scanNumber());
+			{
+				if (current() == '0' && peek() == 'x')
+				{
+					advance();
+					advance();
+					token = selectToken(Token::HexNumber, "0x" + scanHexNumber());
+				}
+				else
+					token = selectToken(Token::Number, scanDecimalNumber());
+			}
 			else if (langutil::isWhiteSpace(current()))
 				token = selectToken(Token::Whitespace);
 			else if (isEndOfLine())
@@ -385,11 +429,23 @@ string TestFileParser::Scanner::scanIdentifierOrKeyword()
 	return identifier;
 }
 
-string TestFileParser::Scanner::scanNumber()
+string TestFileParser::Scanner::scanDecimalNumber()
 {
 	string number;
 	number += current();
 	while (langutil::isDecimalDigit(peek()))
+	{
+		advance();
+		number += current();
+	}
+	return number;
+}
+
+string TestFileParser::Scanner::scanHexNumber()
+{
+	string number;
+	number += current();
+	while (langutil::isHexDigit(peek()))
 	{
 		advance();
 		number += current();
