@@ -190,18 +190,33 @@ for optimize in "" "--optimize"
 do
   for vm in $EVM_VERSIONS
   do
-    printTask "--> Running tests using "$optimize" --evm-version "$vm"..."
-    log=""
-    if [ -n "$log_directory" ]
+    FORCE_ABIV2_RUNS="no"
+    if [[ "$vm" == "constantinople" ]]
     then
-      if [ -n "$optimize" ]
-      then
-        log=--logger=JUNIT,test_suite,$log_directory/opt_$vm.xml $testargs
-      else
-        log=--logger=JUNIT,test_suite,$log_directory/noopt_$vm.xml $testargs_no_opt
-      fi
+      FORCE_ABIV2_RUNS="no yes" # run both in constantinople
     fi
-    "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS  --ipcpath "${WORKDIR}/geth.ipc"
+    for abiv2 in $FORCE_ABIV2_RUNS
+    do
+        force_abiv2_flag=""
+        if [[ "$abiv2" == "yes" ]]
+        then
+            force_abiv2_flag="--abiencoderv2"
+        fi
+        printTask "--> Running tests using "$optimize" --evm-version "$vm" $force_abiv2_flag..."
+
+        log=""
+        if [ -n "$log_directory" ]
+        then
+        if [ -n "$optimize" ]
+        then
+            log=--logger=JUNIT,test_suite,$log_directory/opt_$vm.xml $testargs
+        else
+            log=--logger=JUNIT,test_suite,$log_directory/noopt_$vm.xml $testargs_no_opt
+        fi
+        fi
+
+        "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS $force_abiv2_flag --ipcpath "${WORKDIR}/geth.ipc"
+    done
   done
 done
 

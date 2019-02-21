@@ -55,6 +55,8 @@ Options::Options()
 		}
 		else if (string(suite.argv[i]) == "--optimize")
 			optimize = true;
+		else if (string(suite.argv[i]) == "--abiencoderv2")
+			useABIEncoderV2 = true;
 		else if (string(suite.argv[i]) == "--evm-version")
 		{
 			evmVersionString = i + 1 < suite.argc ? suite.argv[i + 1] : "INVALID";
