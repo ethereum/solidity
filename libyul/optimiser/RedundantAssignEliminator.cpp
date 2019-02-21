@@ -92,6 +92,11 @@ void RedundantAssignEliminator::operator()(Switch const& _switch)
 
 void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
 {
+	std::set<YulString> declaredVariables;
+	std::map<YulString, std::map<Assignment const*, State>> assignments;
+	swap(m_declaredVariables, declaredVariables);
+	swap(m_assignments, assignments);
+
 	(*this)(_functionDefinition.body);
 
 	for (auto const& param: _functionDefinition.parameters)
@@ -104,6 +109,9 @@ void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDe
 		changeUndecidedTo(retParam.name, State::Used);
 		finalize(retParam.name);
 	}
+
+	swap(m_declaredVariables, declaredVariables);
+	swap(m_assignments, assignments);
 }
 
 void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
