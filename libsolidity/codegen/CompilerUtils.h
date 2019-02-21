@@ -84,7 +84,6 @@ public:
 	);
 	/// Stores a 256 bit integer from stack in memory.
 	/// @param _offset offset in memory
-	/// @param _type type of the data on the stack
 	void storeInMemory(unsigned _offset);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that. For reference types, only copies the data pointer. Fails for
