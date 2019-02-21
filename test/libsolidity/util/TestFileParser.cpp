@@ -16,8 +16,8 @@
 */
 
 #include <test/libsolidity/util/TestFileParser.h>
-
 #include <test/Options.h>
+#include <liblangutil/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/optional.hpp>
@@ -32,18 +32,6 @@ using namespace solidity;
 using namespace dev::solidity::test;
 using namespace std;
 using namespace soltest;
-
-namespace
-{
-	bool isIdentifierStart(char c)
-	{
-		return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-	}
-	bool isIdentifierPart(char c)
-	{
-		return isIdentifierStart(c) || isdigit(c);
-	}
-}
 
 vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 {
@@ -354,14 +342,14 @@ void TestFileParser::Scanner::scanNextToken()
 			token = selectToken(Token::RParen);
 			break;
 		default:
-			if (isIdentifierStart(current()))
+			if (langutil::isIdentifierStart(current()))
 			{
 				TokenDesc detectedToken = detectKeyword(scanIdentifierOrKeyword());
 				token = selectToken(detectedToken.first, detectedToken.second);
 			}
-			else if (isdigit(current()))
+			else if (langutil::isDecimalDigit(current()))
 				token = selectToken(Token::Number, scanNumber());
-			else if (isspace(current()))
+			else if (langutil::isWhiteSpace(current()))
 				token = selectToken(Token::Whitespace);
 			else if (isEndOfLine())
 				token = selectToken(Token::EOS);
@@ -389,7 +377,7 @@ string TestFileParser::Scanner::scanIdentifierOrKeyword()
 {
 	string identifier;
 	identifier += current();
-	while (isIdentifierPart(peek()))
+	while (langutil::isIdentifierPart(peek()))
 	{
 		advance();
 		identifier += current();
@@ -401,7 +389,7 @@ string TestFileParser::Scanner::scanNumber()
 {
 	string number;
 	number += current();
-	while (isdigit(peek()))
+	while (langutil::isDecimalDigit(peek()))
 	{
 		advance();
 		number += current();

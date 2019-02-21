@@ -50,6 +50,7 @@
  * Solidity scanner.
  */
 
+#include <liblangutil/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <algorithm>
@@ -60,47 +61,6 @@ using namespace std;
 
 namespace langutil
 {
-
-namespace
-{
-bool isDecimalDigit(char c)
-{
-	return '0' <= c && c <= '9';
-}
-bool isHexDigit(char c)
-{
-	return
-		isDecimalDigit(c) ||
-		('a' <= c && c <= 'f') ||
-		('A' <= c && c <= 'F');
-}
-bool isLineTerminator(char c)
-{
-	return c == '\n';
-}
-bool isWhiteSpace(char c)
-{
-	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
-}
-bool isIdentifierStart(char c)
-{
-	return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-}
-bool isIdentifierPart(char c)
-{
-	return isIdentifierStart(c) || isDecimalDigit(c);
-}
-int hexValue(char c)
-{
-	if (c >= '0' && c <= '9')
-		return c - '0';
-	else if (c >= 'a' && c <= 'f')
-		return c - 'a' + 10;
-	else if (c >= 'A' && c <= 'F')
-		return c - 'A' + 10;
-	else return -1;
-}
-} // end anonymous namespace
 
 std::string to_string(ScannerError _errorCode)
 {
