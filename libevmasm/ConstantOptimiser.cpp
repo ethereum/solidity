@@ -210,7 +210,10 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			AssemblyItems newRoutine;
 			if (lowerPart != 0)
 				newRoutine += findRepresentation(u256(abs(lowerPart)));
-			newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
+			if (m_params.evmVersion.hasBitwiseShifting())
+				newRoutine += AssemblyItems{u256(1), u256(bits), Instruction::SHL};
+			else
+				newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
 			if (upperPart != 1)
 				newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
 			if (lowerPart > 0)
@@ -231,7 +234,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 	}
 }
 
-bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine)
+bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const
 {
 	// This is a tiny EVM that can only evaluate some instructions.
 	vector<u256> stack;
@@ -262,6 +265,24 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 				break;
 			case Instruction::NOT:
 				sp[0] = ~sp[0];
+				break;
+			case Instruction::SHL:
+				assertThrow(
+					m_params.evmVersion.hasBitwiseShifting(),
+					OptimizerException,
+					"Shift generated for invalid EVM version."
+				);
+				assertThrow(sp[0] <= u256(255), OptimizerException, "Invalid shift generated.");
+				sp[-1] = u256(bigint(sp[-1]) << unsigned(sp[0]));
+				break;
+			case Instruction::SHR:
+				assertThrow(
+					m_params.evmVersion.hasBitwiseShifting(),
+					OptimizerException,
+					"Shift generated for invalid EVM version."
+				);
+				assertThrow(sp[0] <= u256(255), OptimizerException, "Invalid shift generated.");
+				sp[-1] = sp[-1] >> unsigned(sp[0]);
 				break;
 			default:
 				return false;
