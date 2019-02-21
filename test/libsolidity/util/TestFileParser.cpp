@@ -195,12 +195,12 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 	try
 	{
 		u256 number{0};
-		ABIType abiType{ABIType::None, 0};
+		ABIType abiType{ABIType::None, ABIType::AlignRight, 0};
 		string rawString;
 
 		if (accept(Token::Sub))
 		{
-			abiType = ABIType{ABIType::SignedDec, 32};
+			abiType = ABIType{ABIType::SignedDec, ABIType::AlignRight, 32};
 			expect(Token::Sub);
 			rawString += formatToken(Token::Sub);
 			string parsed = parseNumber();
@@ -211,14 +211,14 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 		{
 			if (accept(Token::Number))
 			{
-				abiType = ABIType{ABIType::UnsignedDec, 32};
+				abiType = ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
 				string parsed = parseNumber();
 				rawString += parsed;
 				number = convertNumber(parsed);
 			}
 			else if (accept(Token::Failure, true))
 			{
-				abiType = ABIType{ABIType::Failure, 0};
+				abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
 				return make_tuple(bytes{}, abiType, rawString);
 			}
 		}
