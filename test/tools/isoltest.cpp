@@ -354,14 +354,14 @@ int main(int argc, char const *argv[])
 		if (ts.smt && options.disableSMT)
 			continue;
 
-		if (auto stats = runTestSuite(ts.title, options.testPath / ts.path, ts.subpath, options.ipcPath.string(), ts.testCaseCreator, options.formatted))
+		if (auto stats = runTestSuite(ts.title, options.testPath / ts.path, ts.subpath, options.ipcPath.string(), ts.testCaseCreator, !options.noColor))
 			global_stats += *stats;
 		else
 			return 1;
 	}
 
 	cout << endl << "Summary: ";
-	AnsiColorized(cout, options.formatted, {BOLD, global_stats ? GREEN : RED}) <<
+	AnsiColorized(cout, !options.noColor, {BOLD, global_stats ? GREEN : RED}) <<
 		 global_stats.successCount << "/" << global_stats.testCount;
 	cout << " tests successful." << endl;
 
