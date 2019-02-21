@@ -1576,7 +1576,7 @@ private:
 };
 
 /**
- * Index access to an array. Example: a[2]
+ * Index access to an array or mapping. Example: a[2]
  */
 class IndexAccess: public Expression
 {
