@@ -43,14 +43,14 @@ using namespace yul;
 
 namespace
 {
-shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language)
+shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
 {
 	switch (_language)
 	{
 	case AssemblyStack::Language::Assembly:
-		return EVMDialect::looseAssemblyForEVM();
+		return EVMDialect::looseAssemblyForEVM(_version);
 	case AssemblyStack::Language::StrictAssembly:
-		return EVMDialect::strictAssemblyForEVMObjects();
+		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case AssemblyStack::Language::Yul:
 		return Dialect::yul();
 	}
@@ -72,7 +72,7 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source, _sourceName));
-	m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language)).parse(m_scanner, false);
+	m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion)).parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	solAssert(m_parserResult, "");
@@ -103,7 +103,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 {
 	solAssert(_object.code, "");
 	_object.analysisInfo = make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*_object.analysisInfo, m_errorReporter, m_evmVersion, boost::none, languageToDialect(m_language));
+	AsmAnalyzer analyzer(*_object.analysisInfo, m_errorReporter, boost::none, languageToDialect(m_language, m_evmVersion));
 	bool success = analyzer.analyze(*_object.code);
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
@@ -117,11 +117,11 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _o
 	shared_ptr<EVMDialect> dialect;
 
 	if (m_language == Language::Assembly)
-		dialect = EVMDialect::looseAssemblyForEVM();
+		dialect = EVMDialect::looseAssemblyForEVM(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::StrictAssembly)
-		dialect = EVMDialect::strictAssemblyForEVMObjects();
+		dialect = EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::Yul)
-		dialect = EVMDialect::yulForEVM();
+		dialect = EVMDialect::yulForEVM(m_evmVersion);
 	else
 		solAssert(false, "Invalid language.");
 
@@ -135,7 +135,7 @@ void AssemblyStack::optimize(Object& _object)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 			optimize(*subObject);
-	OptimiserSuite::run(languageToDialect(m_language), *_object.code, *_object.analysisInfo);
+	OptimiserSuite::run(languageToDialect(m_language, m_evmVersion), *_object.code, *_object.analysisInfo);
 }
 
 MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) const

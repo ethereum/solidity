@@ -713,9 +713,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
-		m_evmVersion,
 		Error::Type::SyntaxError,
-		yul::EVMDialect::looseAssemblyForEVM(),
+		yul::EVMDialect::looseAssemblyForEVM(m_evmVersion),
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))

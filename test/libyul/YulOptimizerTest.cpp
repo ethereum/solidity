@@ -300,7 +300,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 		printErrors(_stream, stack.errors());
 		return false;
 	}
-	m_dialect = m_yul ? Dialect::yul() : EVMDialect::strictAssemblyForEVMObjects();
+	m_dialect = m_yul ? Dialect::yul() : EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
 	m_ast = stack.parserResult()->code;
 	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;

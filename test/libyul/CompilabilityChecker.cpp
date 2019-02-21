@@ -39,7 +39,7 @@ string check(string const& _input)
 {
 	shared_ptr<Block> ast = yul::test::parse(_input, false).first;
 	BOOST_REQUIRE(ast);
-	map<YulString, int> functions = CompilabilityChecker::run(EVMDialect::strictAssemblyForEVM(), *ast);
+	map<YulString, int> functions = CompilabilityChecker::run(EVMDialect::strictAssemblyForEVM(dev::test::Options::get().evmVersion()), *ast);
 	string out;
 	for (auto const& function: functions)
 		out += function.first.str() + ": " + to_string(function.second) + " ";

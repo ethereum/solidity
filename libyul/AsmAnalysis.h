@@ -28,6 +28,7 @@
 #include <libyul/AsmDataForward.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -57,7 +58,6 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
-		dev::solidity::EVMVersion _evmVersion,
 		boost::optional<langutil::Error::Type> _errorTypeForLoose,
 		std::shared_ptr<Dialect> _dialect,
 		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
@@ -65,16 +65,17 @@ public:
 		m_resolver(_resolver),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
-		m_evmVersion(_evmVersion),
 		m_dialect(std::move(_dialect)),
 		m_errorTypeForLoose(_errorTypeForLoose)
-	{}
+	{
+		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(m_dialect.get()))
+			m_evmVersion = evmDialect->evmVersion();
+	}
 
 	bool analyze(Block const& _block);
 
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(
 		std::shared_ptr<Dialect> _dialect,
-		dev::solidity::EVMVersion _evmVersion,
 		Block const& _ast
 	);
 

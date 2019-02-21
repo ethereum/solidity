@@ -99,7 +99,6 @@ public:
 		AsmAnalyzer analyzer(
 			*m_analysisInfo,
 			errorReporter,
-			EVMVersion::byzantium(),
 			langutil::Error::Type::SyntaxError,
 			m_dialect
 		);
@@ -207,7 +206,7 @@ public:
 private:
 	ErrorList m_errors;
 	shared_ptr<yul::Block> m_ast;
-	shared_ptr<Dialect> m_dialect{EVMDialect::strictAssemblyForEVMObjects()};
+	shared_ptr<Dialect> m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople())};
 	shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	shared_ptr<NameDispenser> m_nameDispenser;
 };

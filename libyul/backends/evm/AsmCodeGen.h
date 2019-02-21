@@ -79,6 +79,7 @@ public:
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		dev::eth::Assembly& _assembly,
+		dev::solidity::EVMVersion _evmVersion,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false,
 		bool _optimize = false

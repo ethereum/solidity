@@ -60,7 +60,6 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	shared_ptr<Dialect> _dialect,
-	EVMVersion _evmVersion,
 	Block const& _ast
 )
 {
@@ -70,7 +69,6 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	bool success = yul::AsmAnalyzer(
 		analysisInfo,
 		errors,
-		_evmVersion,
 		Error::Type::SyntaxError,
 		_dialect
 	).analyze(_ast);

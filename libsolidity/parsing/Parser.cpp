@@ -1041,7 +1041,8 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		m_scanner->next();
 	}
 
-	yul::Parser asmParser(m_errorReporter, yul::EVMDialect::looseAssemblyForEVM());
+	// Using latest EVM Version for now, it will be run again later.
+	yul::Parser asmParser(m_errorReporter, yul::EVMDialect::looseAssemblyForEVM(EVMVersion::constantinople()));
 	shared_ptr<yul::Block> block = asmParser.parse(m_scanner, true);
 	if (block == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());
