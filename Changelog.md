@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * SMTChecker: Support arithmetic compound assignment operators.
+ * Optimizer: Add rule for shifts by constants larger than 255 for Constantinople.
  * Yul: Adds break and continue keywords to for-loop syntax.
 
 

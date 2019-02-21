@@ -1250,6 +1250,48 @@ BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 	});
 }
 
+BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
+{
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(299),
+		Instruction::SHL
+	}, {
+		u256(0)
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(299),
+		Instruction::SHR
+	}, {
+		u256(0)
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHL
+	}, {
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHL
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHR
+	}, {
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHR
+	});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
