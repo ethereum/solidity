@@ -68,7 +68,7 @@ Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssembly
 
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Block ( 'else' Block )?
-WhileStatement = 'while' '(' Expression ')' Statement
+WhileStatement = 'while' '(' Expression ')' Block
 PlaceholderStatement = '_'
 SimpleStatement = VariableDefinition | ExpressionStatement
 ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
