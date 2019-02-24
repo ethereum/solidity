@@ -21,12 +21,12 @@ UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* ) '}'
 
-ModifierDefinition = 'modifier' Identifier ParameterList? Block
+ModifierDefinition = 'modifier' Identifier ParameterList? BlockGeneralAndModifier
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
 FunctionDefinition = 'function' Identifier? ParameterList
                      ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
-                     ( 'returns' ParameterList )? ( ';' | Block )
+                     ( 'returns' ParameterList )? ( ';' | BlockGeneral )
 EventDefinition = 'event' Identifier EventParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
@@ -61,25 +61,38 @@ FunctionTypeName = 'function' FunctionTypeParameterList ( 'internal' | 'external
 StorageLocation = 'memory' | 'storage' | 'calldata'
 StateMutability = 'pure' | 'view' | 'payable'
 
-Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
-            ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
-              Throw | EmitStatement | SimpleStatement ) ';'
+BlockGeneral = '{' StatementGeneral* '}'
+BlockGeneralAndIteration = '{' StatementGeneralAndIteration* '}'
+BlockGeneralAndModifier = '{' StatementGeneralAndModifier* '}'
 
-ExpressionStatement = Expression
-IfStatement = 'if' '(' Expression ')' Block ( 'else' Block )?
-WhileStatement = 'while' '(' Expression ')' Block
-PlaceholderStatement = '_'
+StatementGeneral = IterationStatement | SelectionStatement| BlockGeneral | InlineAssemblyStatement |
+                   ( Return | Throw | EmitStatement | SimpleStatement ) ';'
+StatementGeneralAndIteration =  GeneralStatement | IterationJumpStatement | BlockGeneralAndIteration
+StatementGeneralAndModifier =  GeneralStatement | ModifierJumpStatement | BlockGeneralAndModifier
+
 SimpleStatement = VariableDefinition | ExpressionStatement
-ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Block
+VariableDefinition = (VariableDeclaration | '(' VariableDeclaration (',' VariableDeclaration )* ')' ) ( '=' Expression )?
+ExpressionStatement = Expression
+
 InlineAssemblyStatement = 'assembly' StringLiteral? AssemblyBlock
-DoWhileStatement = 'do' Block 'while' '(' Expression ')'
-Continue = 'continue'
-Break = 'break'
 Return = 'return' Expression?
 Throw = 'throw'
 EmitStatement = 'emit' FunctionCall
-VariableDefinition = (VariableDeclaration | '(' VariableDeclaration (',' VariableDeclaration )* ')' ) ( '=' Expression )?
+
+SelectionStatement = IfStatement
+IfStatement = 'if' '(' Expression ')' StatementGeneral ( 'else' StatementGeneral )?
+
+ModifierJumpStatement = PlaceholderStatement ';'
+PlaceholderStatement = '_'
+
+IterationJumpStatement = Break | Continue ';'
+Break = 'break'
+Continue = 'continue'
+
+IterationStatement = ForStatement | WhileStatement | DoWhileStatement ';'
+ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' StatementGeneralAndIteration
+WhileStatement = 'while' '(' Expression ')' StatementGeneralAndIteration
+DoWhileStatement = 'do' StatementGeneralAndIteration 'while' '(' Expression ')'
 
 // Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression
