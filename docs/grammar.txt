@@ -65,7 +65,7 @@ Block = '{' Statement* '}'
 BlockIterationSpecific = '{' StatementIterationSpecific* '}'
 BlockModifierSpecific = '{' StatementModifierSpecific* '}'
 
-Statement = IterationStatement | SelectionStatement| Block | InlineAssemblyStatement |
+Statement = IterationStatement | SelectionStatement | Block | InlineAssemblyStatement |
             ( Return | Throw | EmitStatement | SimpleStatement ) ';'
 StatementIterationSpecific =  Statement | IterationJumpStatement | BlockIterationSpecific
 StatementModifierSpecific =  Statement | ModifierJumpStatement | BlockModifierSpecific
