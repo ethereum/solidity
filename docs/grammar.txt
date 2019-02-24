@@ -85,7 +85,7 @@ IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 ModifierJumpStatement = PlaceholderStatement ';'
 PlaceholderStatement = '_'
 
-IterationJumpStatement = Break | Continue ';'
+IterationJumpStatement = ( Break | Continue ) ';'
 Break = 'break'
 Continue = 'continue'
 
