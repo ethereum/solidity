@@ -67,8 +67,8 @@ BlockGeneralAndModifier = '{' StatementGeneralAndModifier* '}'
 
 StatementGeneral = IterationStatement | SelectionStatement| BlockGeneral | InlineAssemblyStatement |
                    ( Return | Throw | EmitStatement | SimpleStatement ) ';'
-StatementGeneralAndIteration =  GeneralStatement | IterationJumpStatement | BlockGeneralAndIteration
-StatementGeneralAndModifier =  GeneralStatement | ModifierJumpStatement | BlockGeneralAndModifier
+StatementGeneralAndIteration =  StatementGeneral | IterationJumpStatement | BlockGeneralAndIteration
+StatementGeneralAndModifier =  StatementGeneral | ModifierJumpStatement | BlockGeneralAndModifier
 
 SimpleStatement = VariableDefinition | ExpressionStatement
 VariableDefinition = (VariableDeclaration | '(' VariableDeclaration (',' VariableDeclaration )* ')' ) ( '=' Expression )?
