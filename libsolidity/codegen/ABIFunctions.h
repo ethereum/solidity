@@ -50,7 +50,7 @@ using TypePointers = std::vector<TypePointer>;
 class ABIFunctions
 {
 public:
-	explicit ABIFunctions(EVMVersion _evmVersion = EVMVersion{}) : m_evmVersion(_evmVersion) {}
+	explicit ABIFunctions(langutil::EVMVersion _evmVersion = langutil::EVMVersion{}) : m_evmVersion(_evmVersion) {}
 
 	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes
 	/// into memory, converting the types to @a _targetTypes on the fly.
@@ -286,7 +286,7 @@ private:
 	/// Map from function name to code for a multi-use function.
 	std::map<std::string, std::string> m_requestedFunctions;
 	std::set<std::string> m_externallyUsedFunctions;
-	EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 };
 
 }

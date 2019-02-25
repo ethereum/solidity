@@ -50,7 +50,7 @@ class Compiler;
 class CompilerContext
 {
 public:
-	explicit CompilerContext(EVMVersion _evmVersion = EVMVersion{}, CompilerContext* _runtimeContext = nullptr):
+	explicit CompilerContext(langutil::EVMVersion _evmVersion = langutil::EVMVersion{}, CompilerContext* _runtimeContext = nullptr):
 		m_asm(std::make_shared<eth::Assembly>()),
 		m_evmVersion(_evmVersion),
 		m_runtimeContext(_runtimeContext),
@@ -60,7 +60,7 @@ public:
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
 	}
 
-	EVMVersion const& evmVersion() const { return m_evmVersion; }
+	langutil::EVMVersion const& evmVersion() const { return m_evmVersion; }
 
 	/// Update currently enabled set of experimental features.
 	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features) { m_experimentalFeatures = _features; }
@@ -305,7 +305,7 @@ private:
 
 	eth::AssemblyPointer m_asm;
 	/// Version of the EVM to compile against.
-	EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 	/// Activated experimental features.
 	std::set<ExperimentalFeature> m_experimentalFeatures;
 	/// Other already compiled contracts to be used in contract creation calls.

@@ -25,9 +25,7 @@
 #include <boost/optional.hpp>
 #include <boost/operators.hpp>
 
-namespace dev
-{
-namespace solidity
+namespace langutil
 {
 
 /**
@@ -90,5 +88,4 @@ private:
 };
 
 
-}
 }

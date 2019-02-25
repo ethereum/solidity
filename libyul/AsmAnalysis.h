@@ -121,7 +121,7 @@ private:
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
-	dev::solidity::EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 	std::shared_ptr<Dialect> m_dialect;
 	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
 };

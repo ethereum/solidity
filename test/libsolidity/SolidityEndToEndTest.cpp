@@ -3080,7 +3080,7 @@ BOOST_AUTO_TEST_CASE(gasprice)
 BOOST_AUTO_TEST_CASE(blockhash)
 {
 	// depending on the aleth version, this test only works for pre-constantinople
-	if (Options::get().evmVersion() < EVMVersion::constantinople())
+	if (Options::get().evmVersion() < langutil::EVMVersion::constantinople())
 	{
 		char const* sourceCode = R"(
 			contract C {

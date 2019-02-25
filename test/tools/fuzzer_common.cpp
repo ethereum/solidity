@@ -114,7 +114,7 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 			ConstantOptimisationMethod::optimiseConstants(
 					isCreation,
 					runs,
-					EVMVersion{},
+					langutil::EVMVersion{},
 					tmp
 			);
 		}

@@ -490,7 +490,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 	{
 		if (!settings["evmVersion"].isString())
 			return formatFatalError("JSONError", "evmVersion must be a string.");
-		boost::optional<EVMVersion> version = EVMVersion::fromString(settings["evmVersion"].asString());
+		boost::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].asString());
 		if (!version)
 			return formatFatalError("JSONError", "Invalid EVM version requested.");
 		m_compilerStack.setEVMVersion(*version);
