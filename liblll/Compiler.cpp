@@ -28,7 +28,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::lll;
 
-bytes dev::lll::compileLLL(string const& _src, dev::solidity::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
+bytes dev::lll::compileLLL(string const& _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
 {
 	try
 	{
@@ -66,7 +66,7 @@ bytes dev::lll::compileLLL(string const& _src, dev::solidity::EVMVersion _evmVer
 	return bytes();
 }
 
-std::string dev::lll::compileLLLToAsm(std::string const& _src, EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
+std::string dev::lll::compileLLLToAsm(std::string const& _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
 {
 	try
 	{
