@@ -51,7 +51,9 @@ SimplificationRule<Pattern> const* Rules::findFirstMatch(
 	for (auto const& rule: m_rules[uint8_t(_expr.item->instruction())])
 	{
 		if (rule.pattern.matches(_expr, _classes))
-			return &rule;
+			if (!rule.feasible || rule.feasible())
+				return &rule;
+
 		resetMatchGroups();
 	}
 	return nullptr;
