@@ -134,7 +134,7 @@ int main(int argc, char** argv)
 	}
 	else if (mode == Binary || mode == Hex)
 	{
-		auto bs = compileLLL(src, EVMVersion{}, optimise ? true : false, &errors, readFileAsString);
+		auto bs = compileLLL(src, langutil::EVMVersion{}, optimise ? true : false, &errors, readFileAsString);
 		if (mode == Hex)
 			cout << toHex(bs) << endl;
 		else if (mode == Binary)
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 	}
 	else if (mode == Assembly)
 	{
-		cout << compileLLLToAsm(src, EVMVersion{}, optimise ? true : false, &errors, readFileAsString) << endl;
+		cout << compileLLLToAsm(src, langutil::EVMVersion{}, optimise ? true : false, &errors, readFileAsString) << endl;
 	}
 
 	for (auto const& i: errors)
