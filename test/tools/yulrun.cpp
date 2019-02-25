@@ -1,0 +1,144 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+ * Yul interpreter.
+ */
+
+#include <test/tools/yulInterpreter/Interpreter.h>
+
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/Dialect.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/AssemblyStack.h>
+
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/ErrorReporter.h>
+#include <liblangutil/EVMVersion.h>
+#include <liblangutil/SourceReferenceFormatter.h>
+
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/CommonData.h>
+
+#include <boost/program_options.hpp>
+
+#include <string>
+#include <memory>
+#include <iostream>
+
+using namespace std;
+using namespace langutil;
+using namespace yul;
+using namespace dev;
+using namespace yul::test;
+
+namespace po = boost::program_options;
+
+namespace
+{
+
+void printErrors(ErrorList const& _errors)
+{
+	for (auto const& error: _errors)
+		SourceReferenceFormatter(cout).printExceptionInformation(
+			*error,
+			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
+		);
+}
+
+pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)
+{
+	AssemblyStack stack(dev::solidity::EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	if (stack.parseAndAnalyze("--INPUT--", _source))
+	{
+		yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
+		return make_pair(stack.parserResult()->code, stack.parserResult()->analysisInfo);
+	}
+	else
+	{
+		printErrors(stack.errors());
+		return {};
+	}
+}
+
+void interpret()
+{
+	string source = readStandardInput();
+	shared_ptr<Block> ast;
+	shared_ptr<AsmAnalysisInfo> analysisInfo;
+	tie(ast, analysisInfo) = parse(source);
+	if (!ast || !analysisInfo)
+		return;
+
+	InterpreterState state;
+	state.maxTraceSize = 10000;
+	Interpreter interpreter(state);
+	try
+	{
+		interpreter(*ast);
+	}
+	catch (InterpreterTerminated const&)
+	{
+	}
+
+	cout << "Trace:" << endl;
+	for (auto const& line: interpreter.trace())
+		cout << "  " << line << endl;
+	cout << "Memory dump:" << endl;
+	for (size_t i = 0; i < state.memory.size(); i += 0x20)
+		cout << "  " << std::hex << std::setw(4) << i << ": " << toHex(bytesConstRef(state.memory.data() + i, 0x20).toBytes()) << endl;
+	cout << "Storage dump:" << endl;
+	for (auto const& slot: state.storage)
+		cout << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+}
+
+}
+
+int main(int argc, char** argv)
+{
+	po::options_description options(
+		R"(yulrun, the Yul interpreter.
+Usage: yulrun [Options] < input
+Reads a single source from stdin, runs it and prints a trace of all side-effects.
+
+Allowed options)",
+		po::options_description::m_default_line_length,
+		po::options_description::m_default_line_length - 23);
+	options.add_options()
+		("help", "Show this help screen.");
+
+	po::variables_map arguments;
+	try
+	{
+		po::command_line_parser cmdLineParser(argc, argv);
+		cmdLineParser.options(options);
+		po::store(cmdLineParser.run(), arguments);
+	}
+	catch (po::error const& _exception)
+	{
+		cerr << _exception.what() << endl;
+		return 1;
+	}
+
+	if (arguments.count("help"))
+		cout << options;
+	else
+		interpret();
+
+	return 0;
+}

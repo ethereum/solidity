@@ -2,6 +2,10 @@ if (OSSFUZZ)
     add_subdirectory(ossfuzz)
 endif()
 
+add_subdirectory(yulInterpreter)
+add_executable(yulrun yulrun.cpp)
+target_link_libraries(yulrun PRIVATE yulInterpreter libsolc evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES})
+
 add_executable(solfuzzer afl_fuzzer.cpp fuzzer_common.cpp)
 target_link_libraries(solfuzzer PRIVATE libsolc evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_SYSTEM_LIBRARIES})
 
@@ -26,5 +30,6 @@ add_executable(isoltest
 	../libsolidity/SMTCheckerJSONTest.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/YulOptimizerTest.cpp
+	../libyul/YulInterpreterTest.cpp
 )
-target_link_libraries(isoltest PRIVATE libsolc solidity evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(isoltest PRIVATE libsolc solidity yulInterpreter evmasm ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
