@@ -155,7 +155,7 @@ protected:
 	/// Tries to recursively find a way to compute @a _value.
 	AssemblyItems findRepresentation(u256 const& _value);
 	/// Recomputes the value from the calculated representation and checks for correctness.
-	static bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine);
+	bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const;
 	bigint gasNeeded(AssemblyItems const& _routine) const;
 
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
