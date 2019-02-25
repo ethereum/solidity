@@ -641,7 +641,22 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	solAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 	solAssert(m_dialect->flavour != AsmFlavour::Yul, "");
 
+	auto warningForVM = [=](string const& vmKindMessage) {
+		m_errorReporter.warning(
+			_location,
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name)
+			+ "\" instruction is " +
+			vmKindMessage +
+			" VMs. " +
+			"You are currently compiling for \"" +
+			m_evmVersion.name() +
+			"\", where it will be interpreted as an invalid instruction."
+		);
+	};
+
 	if (_instr == solidity::Instruction::EXTCODEHASH)
+	{
 		m_errorReporter.warning(
 			_location,
 			"The \"" +
@@ -651,35 +666,30 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 			"\" you are currently compiling for. " +
 			"It will be interpreted as an invalid instruction on this VM."
 		);
+	}
 	else if ((
 		_instr == solidity::Instruction::RETURNDATACOPY ||
-		_instr == solidity::Instruction::RETURNDATASIZE ||
-		_instr == solidity::Instruction::STATICCALL
+		_instr == solidity::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
-		m_errorReporter.warning(
-			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is only available for Byzantium-compatible VMs. " +
-			"You are currently compiling for \"" +
-			m_evmVersion.name() +
-			"\", where it will be interpreted as an invalid instruction."
-		);
+	{
+		warningForVM("only available for Byzantium-compatible");
+	}
+	else if (_instr == solidity::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
+	{
+		warningForVM("only available for Byzantium-compatible");
+	}
 	else if ((
 		_instr == solidity::Instruction::SHL ||
 		_instr == solidity::Instruction::SHR ||
-		_instr == solidity::Instruction::SAR ||
-		_instr == solidity::Instruction::CREATE2
+		_instr == solidity::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
-		m_errorReporter.warning(
-			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is only available for Constantinople-compatible VMs. " +
-			"You are currently compiling for \"" +
-			m_evmVersion.name() +
-			"\", where it will be interpreted as an invalid instruction."
-		);
+	{
+		warningForVM("only available for Constantinople-compatible");
+	}
+	else if (_instr == solidity::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
+	{
+		warningForVM("only available for Constantinople-compatible");
+	}
 	else if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 	{
 		if (m_dialect->flavour == AsmFlavour::Loose)
