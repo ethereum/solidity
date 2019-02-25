@@ -414,7 +414,7 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	case Token::Sub: // -
 	{
 		defineExpr(_op, 0 - expr(_op.subExpression()));
-		if (dynamic_cast<IntegerType const*>(_op.annotation().type.get()))
+		if (_op.annotation().type->category() == Type::Category::Integer)
 			addOverflowTarget(
 				OverflowTarget::Type::All,
 				_op.annotation().type,
@@ -625,10 +625,8 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
-	else if (dynamic_cast<FunctionType const*>(_identifier.annotation().type.get()))
-	{
+	else if (_identifier.annotation().type->category() == Type::Category::Function)
 		visitFunctionIdentifier(_identifier);
-	}
 	else if (isSupportedType(_identifier.annotation().type->category()))
 	{
 		if (VariableDeclaration const* decl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
@@ -1006,11 +1004,11 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, Expression con
 void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location)
 {
 	TypePointer type = _variable.type();
-	if (dynamic_cast<IntegerType const*>(type.get()))
+	if (type->category() == Type::Category::Integer)
 		addOverflowTarget(OverflowTarget::Type::All, type,	_value,	_location);
-	else if (dynamic_cast<AddressType const*>(type.get()))
+	else if (type->category() == Type::Category::Address)
 		addOverflowTarget(OverflowTarget::Type::All, make_shared<IntegerType>(160), _value, _location);
-	else if (dynamic_cast<MappingType const*>(type.get()))
+	else if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
 	m_interface->addAssertion(newValue(_variable) == _value);
 }
