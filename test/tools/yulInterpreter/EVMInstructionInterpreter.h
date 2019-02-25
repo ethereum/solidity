@@ -58,7 +58,7 @@ struct InterpreterState;
  * - And many other things
  *
  * The main focus is that the generated execution trace is the same for equivalent executions
- * and likely to be different for non-eqivalent executions.
+ * and likely to be different for non-equivalent executions.
  */
 class EVMInstructionInterpreter
 {
@@ -69,10 +69,10 @@ public:
 	dev::u256 eval(dev::solidity::Instruction _instruction, std::vector<dev::u256> const& _arguments);
 
 private:
-	/// Record a memory read in the trace. Also updaes m_state.msize
+	/// Record a memory read in the trace. Also updates m_state.msize
 	/// @returns true if m_state.memory can be used at that offset.
 	bool logMemoryRead(dev::u256 const& _offset, dev::u256 const& _size = 32);
-	/// Record a memory write in the trace. Also updaes m_state.msize
+	/// Record a memory write in the trace. Also updates m_state.msize
 	/// @returns true if m_state.memory can be used at that offset.
 	bool logMemoryWrite(dev::u256 const& _offset, dev::u256 const& _size = 32, dev::bytes const& _data = {});
 

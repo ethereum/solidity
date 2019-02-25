@@ -132,7 +132,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SLT:
 		return u2s(arg[0]) < u2s(arg[1]) ? 1 : 0;
 	case Instruction::SGT:
-		return u2s(arg[0]) < u2s(arg[1]) ? 1 : 0;
+		return u2s(arg[0]) > u2s(arg[1]) ? 1 : 0;
 	case Instruction::EQ:
 		return arg[0] == arg[1] ? 1 : 0;
 	case Instruction::ISZERO:

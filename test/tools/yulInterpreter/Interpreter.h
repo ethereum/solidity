@@ -30,11 +30,6 @@
 
 #include <map>
 
-namespace dev
-{
-using u120 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<120, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-}
-
 namespace yul
 {
 namespace test
@@ -53,15 +48,15 @@ struct InterpreterState
 	/// This is different than memory.size() because we ignore gas.
 	dev::u256 msize;
 	std::map<dev::h256, dev::h256> storage;
-	dev::u120 address = 0x11111111;
+	dev::u160 address = 0x11111111;
 	dev::u256 balance = 0x22222222;
-	dev::u120 origin = 0x33333333;
-	dev::u120 caller = 0x44444444;
+	dev::u160 origin = 0x33333333;
+	dev::u160 caller = 0x44444444;
 	dev::u256 callvalue = 0x55555555;
 	/// Deployed code
 	dev::bytes code = dev::asBytes("codecodecodecodecode");
 	dev::u256 gasprice = 0x66666666;
-	dev::u120 coinbase = 0x77777777;
+	dev::u160 coinbase = 0x77777777;
 	dev::u256 timestamp = 0x88888888;
 	dev::u256 blockNumber = 1024;
 	dev::u256 difficulty = 0x9999999;
@@ -88,14 +83,14 @@ public:
 		m_functions(std::move(_functions))
 	{}
 
-	virtual void operator()(ExpressionStatement const& _statement) override;
-	virtual void operator()(Assignment const& _assignment) override;
-	virtual void operator()(VariableDeclaration const& _varDecl) override;
-	virtual void operator()(If const& _if) override;
-	virtual void operator()(Switch const& _switch) override;
-	virtual void operator()(FunctionDefinition const&) override;
-	virtual void operator()(ForLoop const&) override;
-	virtual void operator()(Block const& _block) override;
+	void operator()(ExpressionStatement const& _statement) override;
+	void operator()(Assignment const& _assignment) override;
+	void operator()(VariableDeclaration const& _varDecl) override;
+	void operator()(If const& _if) override;
+	void operator()(Switch const& _switch) override;
+	void operator()(FunctionDefinition const&) override;
+	void operator()(ForLoop const&) override;
+	void operator()(Block const& _block) override;
 
 	std::vector<std::string> const& trace() const { return m_state.trace; }
 
@@ -136,10 +131,10 @@ public:
 		m_functions(_functions)
 	{}
 
-	virtual void operator()(Literal const&) override;
-	virtual void operator()(Identifier const&) override;
-	virtual void operator()(FunctionalInstruction const& _instr) override;
-	virtual void operator()(FunctionCall const& _funCall) override;
+	void operator()(Literal const&) override;
+	void operator()(Identifier const&) override;
+	void operator()(FunctionalInstruction const& _instr) override;
+	void operator()(FunctionCall const& _funCall) override;
 
 	/// Asserts that the expression has exactly one value and returns it.
 	dev::u256 value() const;
