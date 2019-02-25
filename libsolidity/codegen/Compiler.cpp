@@ -42,6 +42,8 @@ void Compiler::compileContract(
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.
 	OptimiserSettings creationSettings{m_optimiserSettings};
+	// The creation code will be executed at most once, so we modify the optimizer
+	// settings accordingly.
 	creationSettings.expectedExecutionsPerDeployment = 1;
 	ContractCompiler creationCompiler(&runtimeCompiler, m_context, creationSettings);
 	m_runtimeSub = creationCompiler.compileConstructor(_contract, _otherCompilers);
