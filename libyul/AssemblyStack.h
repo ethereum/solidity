@@ -58,7 +58,7 @@ public:
 	enum class Language { Yul, Assembly, StrictAssembly };
 	enum class Machine { EVM, EVM15, eWasm };
 
-	explicit AssemblyStack(dev::solidity::EVMVersion _evmVersion = dev::solidity::EVMVersion(), Language _language = Language::Assembly):
+	explicit AssemblyStack(langutil::EVMVersion _evmVersion = langutil::EVMVersion(), Language _language = Language::Assembly):
 		m_language(_language), m_evmVersion(_evmVersion), m_errorReporter(m_errors)
 	{}
 
@@ -94,7 +94,7 @@ private:
 	void optimize(yul::Object& _object);
 
 	Language m_language = Language::Assembly;
-	dev::solidity::EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 
 	std::shared_ptr<langutil::Scanner> m_scanner;
 

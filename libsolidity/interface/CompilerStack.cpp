@@ -91,7 +91,7 @@ void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 	m_remappings = _remappings;
 }
 
-void CompilerStack::setEVMVersion(EVMVersion _version)
+void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 {
 	solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
 	m_evmVersion = _version;
@@ -113,7 +113,7 @@ void CompilerStack::reset(bool _keepSources)
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
 	m_libraries.clear();
-	m_evmVersion = EVMVersion();
+	m_evmVersion = langutil::EVMVersion();
 	m_optimize = false;
 	m_optimizeRuns = 200;
 	m_globalContext.reset();

@@ -59,16 +59,16 @@ Options::Options()
 	parse(suite.argc, suite.argv);
 }
 
-dev::solidity::EVMVersion Options::evmVersion() const
+langutil::EVMVersion Options::evmVersion() const
 {
 	if (!evmVersionString.empty())
 	{
 		// We do this check as opposed to in the constructor because the BOOST_REQUIRE
 		// macros cannot yet be used in the constructor.
-		auto version = solidity::EVMVersion::fromString(evmVersionString);
+		auto version = langutil::EVMVersion::fromString(evmVersionString);
 		BOOST_REQUIRE_MESSAGE(version, "Invalid EVM version: " + evmVersionString);
 		return *version;
 	}
 	else
-		return dev::solidity::EVMVersion();
+		return langutil::EVMVersion();
 }

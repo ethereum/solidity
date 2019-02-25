@@ -50,17 +50,17 @@ struct BuiltinFunctionForEVM: BuiltinFunction
  */
 struct EVMDialect: public Dialect
 {
-	EVMDialect(AsmFlavour _flavour, bool _objectAccess, dev::solidity::EVMVersion _evmVersion);
+	EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	static std::shared_ptr<EVMDialect> looseAssemblyForEVM(dev::solidity::EVMVersion _version);
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVM(dev::solidity::EVMVersion _version);
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVMObjects(dev::solidity::EVMVersion _version);
-	static std::shared_ptr<EVMDialect> yulForEVM(dev::solidity::EVMVersion _version);
+	static std::shared_ptr<EVMDialect> looseAssemblyForEVM(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect> strictAssemblyForEVM(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect> strictAssemblyForEVMObjects(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect> yulForEVM(langutil::EVMVersion _version);
 
-	dev::solidity::EVMVersion evmVersion() const { return m_evmVersion; }
+	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
@@ -80,7 +80,7 @@ protected:
 	);
 
 	bool m_objectAccess;
-	dev::solidity::EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 	Object const* m_currentObject = nullptr;
 	/// Mapping from named objects to abstract assembly sub IDs.
 	std::map<YulString, AbstractAssembly::SubID> m_subIDs;

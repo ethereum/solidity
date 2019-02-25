@@ -177,7 +177,7 @@ void CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
-	dev::solidity::EVMVersion _evmVersion,
+	langutil::EVMVersion _evmVersion,
 	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions,
 	bool _optimize

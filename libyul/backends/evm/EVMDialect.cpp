@@ -37,7 +37,7 @@ using namespace yul;
 using namespace dev::solidity;
 
 
-EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, EVMVersion _evmVersion):
+EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion):
 	Dialect{_flavour}, m_objectAccess(_objectAccess), m_evmVersion(_evmVersion)
 {
 	// The EVM instructions will be moved to builtins at some point.
@@ -91,22 +91,22 @@ BuiltinFunctionForEVM const* EVMDialect::builtin(YulString _name) const
 		return nullptr;
 }
 
-shared_ptr<EVMDialect> EVMDialect::looseAssemblyForEVM(EVMVersion _version)
+shared_ptr<EVMDialect> EVMDialect::looseAssemblyForEVM(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Loose, false, _version);
 }
 
-shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVM(EVMVersion _version)
+shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Strict, false, _version);
 }
 
-shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVMObjects(EVMVersion _version)
+shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Strict, true, _version);
 }
 
-shared_ptr<yul::EVMDialect> EVMDialect::yulForEVM(EVMVersion _version)
+shared_ptr<yul::EVMDialect> EVMDialect::yulForEVM(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Yul, false, _version);
 }

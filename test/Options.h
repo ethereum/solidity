@@ -37,7 +37,7 @@ struct Options: CommonOptions
 	bool showMessages = false;
 	bool useABIEncoderV2 = false;
 
-	solidity::EVMVersion evmVersion() const;
+	langutil::EVMVersion evmVersion() const;
 
 	static Options const& get();
 

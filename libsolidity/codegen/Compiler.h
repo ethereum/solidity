@@ -34,7 +34,7 @@ namespace solidity {
 class Compiler
 {
 public:
-	explicit Compiler(EVMVersion _evmVersion = EVMVersion{}, bool _optimize = false, unsigned _runs = 200):
+	explicit Compiler(langutil::EVMVersion _evmVersion = langutil::EVMVersion{}, bool _optimize = false, unsigned _runs = 200):
 		m_optimize(_optimize),
 		m_optimizeRuns(_runs),
 		m_runtimeContext(_evmVersion),

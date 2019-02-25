@@ -107,7 +107,7 @@ public:
 		bool runDeduplicate = false;
 		bool runCSE = false;
 		bool runConstantOptimiser = false;
-		solidity::EVMVersion evmVersion;
+		langutil::EVMVersion evmVersion;
 		/// This specifies an estimate on how often each opcode in this assembly will be executed,
 		/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
 		size_t expectedExecutionsPerDeployment = 200;
@@ -121,7 +121,7 @@ public:
 	/// @a _runs specifes an estimate on how often each opcode in this assembly will be executed,
 	/// i.e. use a small value to optimise for size and a large value to optimise for runtime.
 	/// If @a _enable is not set, will perform some simple peephole optimizations.
-	Assembly& optimise(bool _enable, EVMVersion _evmVersion, bool _isCreation = true, size_t _runs = 200);
+	Assembly& optimise(bool _enable, langutil::EVMVersion _evmVersion, bool _isCreation = true, size_t _runs = 200);
 
 	/// Create a text representation of the assembly.
 	std::string assemblyString(

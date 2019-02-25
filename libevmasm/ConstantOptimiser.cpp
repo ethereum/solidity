@@ -29,7 +29,7 @@ using namespace dev::eth;
 unsigned ConstantOptimisationMethod::optimiseConstants(
 	bool _isCreation,
 	size_t _runs,
-	solidity::EVMVersion _evmVersion,
+	langutil::EVMVersion _evmVersion,
 	Assembly& _assembly
 )
 {

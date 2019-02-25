@@ -136,7 +136,7 @@ public:
 
 	/// Set the EVM version used before running compile.
 	/// When called without an argument it will revert to the default version.
-	void setEVMVersion(EVMVersion _version = EVMVersion{});
+	void setEVMVersion(langutil::EVMVersion _version = langutil::EVMVersion{});
 
 	/// Sets the list of requested contract names. If empty, no filtering is performed and every contract
 	/// found in the supplied sources is compiled. Names are cleared iff @a _contractNames is missing.
@@ -348,7 +348,7 @@ private:
 	ReadCallback::Callback m_readFile;
 	bool m_optimize = false;
 	unsigned m_optimizeRuns = 200;
-	EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 	std::set<std::string> m_requestedContractNames;
 	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
