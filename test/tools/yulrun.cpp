@@ -63,7 +63,7 @@ void printErrors(ErrorList const& _errors)
 
 pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)
 {
-	AssemblyStack stack(dev::solidity::EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(langutil::EVMVersion(), AssemblyStack::Language::StrictAssembly);
 	if (stack.parseAndAnalyze("--INPUT--", _source))
 	{
 		yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
