@@ -209,7 +209,14 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 		}
 		else
 		{
-			if (accept(Token::HexNumber))
+			if (accept(Token::Boolean))
+			{
+				abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
+				string parsed = parseBoolean();
+				rawString += parsed;
+				return make_tuple(toBigEndian(u256{convertBoolean(parsed)}), abiType, rawString);
+			}
+			else if (accept(Token::HexNumber))
 			{
 				abiType = ABIType{ABIType::Hex, ABIType::AlignLeft, 32};
 				string parsed = parseHexNumber();
@@ -262,6 +269,13 @@ string TestFileParser::parseIdentifierOrTuple()
 	return identOrTuple;
 }
 
+string TestFileParser::parseBoolean()
+{
+	string literal = m_scanner.currentLiteral();
+	expect(Token::Boolean);
+	return literal;
+}
+
 string TestFileParser::parseComment()
 {
 	string comment = m_scanner.currentLiteral();
@@ -282,6 +296,16 @@ string TestFileParser::parseHexNumber()
 	string literal = m_scanner.currentLiteral();
 	expect(Token::HexNumber);
 	return literal;
+}
+
+bool TestFileParser::convertBoolean(string const& _literal)
+{
+	if (_literal == "true")
+		return true;
+	else if (_literal == "false")
+		return false;
+	else
+		throw Error(Error::Type::ParserError, "Boolean literal invalid.");
 }
 
 u256 TestFileParser::convertNumber(string const& _literal)
@@ -330,6 +354,8 @@ void TestFileParser::Scanner::scanNextToken()
 	assert(formatToken(Token::NUM_TOKENS) == "");
 
 	auto detectKeyword = [](std::string const& _literal = "") -> TokenDesc {
+		if (_literal == "true") return TokenDesc{Token::Boolean, _literal};
+		if (_literal == "false") return TokenDesc{Token::Boolean, _literal};
 		if (_literal == "ether") return TokenDesc{Token::Ether, _literal};
 		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
 		return TokenDesc{Token::Identifier, _literal};

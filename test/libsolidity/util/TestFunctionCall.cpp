@@ -126,13 +126,6 @@ string TestFunctionCall::formatBytesParameters(bytes const& _bytes, ParameterLis
 		bytes byteRange{it, offsetIter};
 		switch (param.abiType.type)
 		{
-		case ABIType::SignedDec:
-			soltestAssert(param.abiType.align == ABIType::AlignRight, "Signed decimals must be right-aligned.");
-			if (*byteRange.begin() & 0x80)
-				resultStream << u2s(fromBigEndian<u256>(byteRange));
-			else
-				resultStream << fromBigEndian<u256>(byteRange);
-			break;
 		case ABIType::UnsignedDec:
 			// Check if the detected type was wrong and if this could
 			// be signed. If an unsigned was detected in the expectations,
@@ -144,6 +137,23 @@ string TestFunctionCall::formatBytesParameters(bytes const& _bytes, ParameterLis
 			else
 				resultStream << fromBigEndian<u256>(byteRange);
 			break;
+		case ABIType::SignedDec:
+			soltestAssert(param.abiType.align == ABIType::AlignRight, "Signed decimals must be right-aligned.");
+			if (*byteRange.begin() & 0x80)
+				resultStream << u2s(fromBigEndian<u256>(byteRange));
+			else
+				resultStream << fromBigEndian<u256>(byteRange);
+			break;
+		case ABIType::Boolean:
+		{
+			soltestAssert(param.abiType.align == ABIType::AlignRight, "Booleans must be right-aligned.");
+			u256 result = fromBigEndian<u256>(byteRange);
+			if (result == 0)
+				resultStream << "false";
+			else
+				resultStream << "true";
+			break;
+		}
 		case ABIType::Hex:
 			soltestAssert(param.abiType.align == ABIType::AlignLeft, "Hex numbers must be left-aligned.");
 			byteRange.erase(
