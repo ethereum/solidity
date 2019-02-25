@@ -181,7 +181,7 @@ EVM_VERSIONS="homestead byzantium"
 
 if [ "$CIRCLECI" ] || [ -z "$CI" ]
 then
-EVM_VERSIONS+=" constantinople"
+EVM_VERSIONS+=" constantinople petersburg"
 fi
 
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer

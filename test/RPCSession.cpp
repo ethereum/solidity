@@ -248,6 +248,8 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	}
 	if (test::Options::get().evmVersion() >= langutil::EVMVersion::constantinople())
 		forks += "\"constantinopleForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= langutil::EVMVersion::petersburg())
+		forks += "\"constantinopleFixForkBlock\": \"0x00\",\n";
 	static string const c_configString = R"(
 	{
 		"sealEngine": "NoProof",
