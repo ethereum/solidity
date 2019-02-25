@@ -417,10 +417,12 @@ BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
 	)";
 	// This needs special treatment, because the message mentions the EVM version,
 	// so cannot be run via isoltest.
-	CHECK_ALLOW_MULTI(text, (std::vector<std::pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"},
-		{Error::Type::Warning, "The \"extcodehash\" instruction is not supported by the VM version"},
-	}));
+	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
+	});
+	if (!dev::test::Options::get().evmVersion().hasExtCodeHash())
+		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs.")));
+	CHECK_ALLOW_MULTI(text, expectations);
 }
 
 BOOST_AUTO_TEST_CASE(getter_is_memory_type)

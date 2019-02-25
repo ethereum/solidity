@@ -655,19 +655,7 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 		);
 	};
 
-	if (_instr == solidity::Instruction::EXTCODEHASH)
-	{
-		m_errorReporter.warning(
-			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is not supported by the VM version \"" +
-			"" + m_evmVersion.name() +
-			"\" you are currently compiling for. " +
-			"It will be interpreted as an invalid instruction on this VM."
-		);
-	}
-	else if ((
+	if ((
 		_instr == solidity::Instruction::RETURNDATACOPY ||
 		_instr == solidity::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
@@ -687,6 +675,10 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 		warningForVM("only available for Constantinople-compatible");
 	}
 	else if (_instr == solidity::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
+	{
+		warningForVM("only available for Constantinople-compatible");
+	}
+	else if (_instr == solidity::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
 	{
 		warningForVM("only available for Constantinople-compatible");
 	}
