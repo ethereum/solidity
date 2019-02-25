@@ -1,7 +1,6 @@
 add_library(yul
 	AsmAnalysis.cpp
 	AsmAnalysis.h
-	AsmAnalysisInfo.cpp
 	AsmAnalysisInfo.h
 	AsmData.h
 	AsmDataForward.h
@@ -17,7 +16,6 @@ add_library(yul
 	AssemblyStack.cpp
 	CompilabilityChecker.cpp
 	CompilabilityChecker.h
-	Dialect.cpp
 	Dialect.h
 	Exceptions.h
 	Object.cpp
