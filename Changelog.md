@@ -68,6 +68,7 @@ Bugfixes:
 
 Build System:
  * Soltest: Add support for left-aligned, padded hex literals.
+ * Soltest: Add support for left-aligned, unpadded hex string literals.
  * Soltest: Add support for right-aligned, padded boolean literals.
 
 ### 0.5.4 (2019-02-12)
