@@ -45,7 +45,7 @@ std::map<YulString, int> CompilabilityChecker::run(std::shared_ptr<Dialect> _dia
 
 	bool optimize = true;
 	yul::AsmAnalysisInfo analysisInfo =
-		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, EVMVersion(), _ast);
+		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
 
 	NoOutputAssembly assembly;
 	CodeTransform transform(assembly, analysisInfo, _ast, *noOutputDialect, optimize);

@@ -177,13 +177,14 @@ void CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
+	dev::solidity::EVMVersion _evmVersion,
 	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions,
 	bool _optimize
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	shared_ptr<EVMDialect> dialect = EVMDialect::strictAssemblyForEVM();
+	shared_ptr<EVMDialect> dialect = EVMDialect::strictAssemblyForEVM(_evmVersion);
 	CodeTransform transform(
 		assemblyAdapter,
 		_analysisInfo,

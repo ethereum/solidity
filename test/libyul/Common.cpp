@@ -46,7 +46,7 @@ namespace
 {
 shared_ptr<Dialect> defaultDialect(bool _yul)
 {
-	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
+	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(dev::test::Options::get().evmVersion());
 }
 }
 

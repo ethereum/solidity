@@ -61,7 +61,6 @@ bool parse(string const& _source, std::shared_ptr<Dialect> _dialect, ErrorReport
 			return (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
-				dev::test::Options::get().evmVersion(),
 				boost::none,
 				_dialect
 			)).analyze(*parserResult);

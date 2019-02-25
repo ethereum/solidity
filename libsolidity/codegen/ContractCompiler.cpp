@@ -719,6 +719,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
 		*m_context.assemblyPtr(),
+		m_context.evmVersion(),
 		identifierAccess
 	);
 	m_context.setStackOffset(startStackHeight);
