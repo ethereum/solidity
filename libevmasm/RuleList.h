@@ -24,6 +24,8 @@
 #include <vector>
 #include <functional>
 
+#include <boost/multiprecision/detail/min_max.hpp>
+
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SimplificationRule.h>
 
@@ -335,6 +337,20 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 			}};
 		}
 	}
+
+	rules.push_back({
+		// SHL(B, SHL(A, X)) -> SHL(min(A+B, 256), X)
+		{Instruction::SHL, {{B}, {Instruction::SHL, {{A}, {X}}}}},
+		[=]() -> Pattern { return {Instruction::SHL, {std::min(A.d() + B.d(), u256(256)), X}}; },
+		false
+	});
+
+	rules.push_back({
+		// SHR(B, SHR(A, X)) -> SHR(min(A+B, 256), X)
+		{Instruction::SHR, {{B}, {Instruction::SHR, {{A}, {X}}}}},
+		[=]() -> Pattern { return {Instruction::SHR, {std::min(A.d() + B.d(), u256(256)), X}}; },
+		false
+	});
 
 	return rules;
 }
