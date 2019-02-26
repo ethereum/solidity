@@ -44,15 +44,26 @@ function test_truffle
     echo "Running $name tests..."
     DIR=$(mktemp -d)
     (
+      cd "$DIR"
+      git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
+      SOLCVERSION="UNDEFINED"
+
+      cd solc
+      npm install
+      cp "$SOLJSON" soljson.js
+      SOLCVERSION=$(./solcjs --version)
+      cd ..
+      echo "Using solcjs version $SOLCVERSION"
+
       if [ -n "$branch" ]
       then
         echo "Cloning $branch of $repo..."
-        git clone --depth 1 "$repo" -b "$branch" "$DIR"
+        git clone --depth 1 "$repo" -b "$branch" "$DIR/ext"
       else
         echo "Cloning $repo..."
-        git clone --depth 1 "$repo" "$DIR"
+        git clone --depth 1 "$repo" "$DIR/ext"
       fi
-      cd "$DIR"
+      cd ext
       echo "Current commit hash: `git rev-parse HEAD`"
       npm install
       # Replace solc package by v0.5.0
@@ -64,7 +75,7 @@ function test_truffle
           cd $d
           rm -rf solc
           git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
-          cp "$SOLJSON" solc/
+          cp "$SOLJSON" solc/soljson.js
         fi
       )
       done
@@ -73,16 +84,16 @@ function test_truffle
         # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
         find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
       fi
-      assertsol="node_modules/truffle/build/Assert.sol"
-      if [ -f "$assertsol" ]
-      then
-        echo "Replace Truffle's Assert.sol with a known good version"
-        rm "$assertsol"
-        wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
-      fi
-      # Change "compileStandard" to "compile"
+      # Change "compileStandard" to "compile" (needed for pre-5.x Truffle)
       sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
+      # Force usage of correct solidity binary (only works with Truffle 5.x)
+      cat >> truffle*.js <<EOF
+module.exports['compilers'] = {solc: {version: "$DIR/solc"} };
+EOF
+
       npx truffle compile
+      echo "Verify that the correct version ($SOLCVERSION) of the compiler was used to compile the contracts..."
+      grep -e "$SOLCVERSION" -r build/contracts > /dev/null
       npm run test
     )
     rm -rf "$DIR"
