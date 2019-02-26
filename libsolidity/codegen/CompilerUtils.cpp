@@ -656,6 +656,9 @@ void CompilerUtils::convertType(
 		chopSignBitsPending = targetIntegerType.isSigned();
 	}
 
+	if (targetTypeCategory == Type::Category::FixedPoint)
+		solUnimplemented("Not yet implemented - FixedPointType.");
+
 	switch (stackTypeCategory)
 	{
 	case Type::Category::FixedBytes:
