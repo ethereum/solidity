@@ -74,6 +74,7 @@ public:
 	bool hasStaticCall() const { return *this >= byzantium(); }
 	bool hasBitwiseShifting() const { return *this >= constantinople(); }
 	bool hasCreate2() const { return *this >= constantinople(); }
+	bool hasExtCodeHash() const { return *this >= constantinople(); }
 
 	/// Whether we have to retain the costs for the call opcode itself (false),
 	/// or whether we can just forward easily all remaining gas (true).
