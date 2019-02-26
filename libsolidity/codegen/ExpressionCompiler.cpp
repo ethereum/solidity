@@ -106,18 +106,49 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 		{
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
-			solUnimplementedAssert(
-				!paramTypes[i]->isDynamicallySized(),
-				"Accessors for mapping with dynamically-sized keys not yet implemented."
-			);
+
 			// pop offset
 			m_context << Instruction::POP;
-			// move storage offset to memory.
-			utils().storeInMemory(32);
-			// move key to memory.
-			utils().copyToStackTop(paramTypes.size() - i, 1);
-			utils().storeInMemory(0);
-			m_context << u256(64) << u256(0) << Instruction::KECCAK256;
+			if (paramTypes[i]->isDynamicallySized())
+			{
+				solAssert(
+					dynamic_cast<ArrayType const&>(*paramTypes[i]).isByteArray(),
+					"Expected string or byte array for mapping key type"
+				);
+
+				// stack: <keys..> <slot position>
+
+				// copy key[i] to top.
+				utils().copyToStackTop(paramTypes.size() - i + 1, 1);
+
+				m_context.appendInlineAssembly(R"({
+					let key_len := mload(key_ptr)
+					// Temp. use the memory after the array data for the slot
+					// position
+					let post_data_ptr := add(key_ptr, add(key_len, 0x20))
+					let orig_data := mload(post_data_ptr)
+					mstore(post_data_ptr, slot_pos)
+					let hash := keccak256(add(key_ptr, 0x20), add(key_len, 0x20))
+					mstore(post_data_ptr, orig_data)
+					slot_pos := hash
+				})", {"slot_pos", "key_ptr"});
+
+				m_context << Instruction::POP;
+			}
+			else
+			{
+				solAssert(paramTypes[i]->isValueType(), "Expected value type for mapping key");
+
+				// move storage offset to memory.
+				utils().storeInMemory(32);
+
+				// move key to memory.
+				utils().copyToStackTop(paramTypes.size() - i, 1);
+				utils().storeInMemory(0);
+				m_context << u256(64) << u256(0);
+				m_context << Instruction::KECCAK256;
+			}
+
 			// push offset
 			m_context << u256(0);
 			returnType = mappingType->valueType();

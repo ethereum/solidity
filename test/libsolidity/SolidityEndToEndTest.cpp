@@ -51,6 +51,11 @@ namespace test
 
 BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, SolidityExecutionFramework)
 
+int constexpr roundTo32(int _num)
+{
+	return (_num + 31) / 32 * 32;
+}
+
 BOOST_AUTO_TEST_CASE(transaction_status)
 {
 	char const* sourceCode = R"(
@@ -8433,6 +8438,144 @@ BOOST_AUTO_TEST_CASE(string_as_mapping_key)
 			u256(strings[i].size()),
 			strings[i]
 		), encodeArgs(u256(7 + i)));
+}
+
+BOOST_AUTO_TEST_CASE(string_as_public_mapping_key)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			mapping(string => uint) public data;
+			function set(string memory _s, uint _v) public { data[_s] = _v; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	vector<string> strings{
+		"Hello, World!",
+		"Hello,                            World!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111",
+		"",
+		"1"
+	};
+	for (unsigned i = 0; i < strings.size(); i++)
+		ABI_CHECK(callContractFunction(
+			"set(string,uint256)",
+			u256(0x40),
+			u256(7 + i),
+			u256(strings[i].size()),
+			strings[i]
+		), encodeArgs());
+	for (unsigned i = 0; i < strings.size(); i++)
+		ABI_CHECK(callContractFunction(
+			"data(string)",
+			u256(0x20),
+			u256(strings[i].size()),
+			strings[i]
+		), encodeArgs(u256(7 + i)));
+}
+
+BOOST_AUTO_TEST_CASE(nested_string_as_public_mapping_key)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			mapping(string => mapping(string => uint)) public data;
+			function set(string memory _s, string memory _s2, uint _v) public {
+				data[_s][_s2] = _v; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	vector<string> strings{
+		"Hello, World!",
+		"Hello,                            World!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111",
+		"",
+		"1",
+		"last one"
+	};
+	for (unsigned i = 0; i + 1 < strings.size(); i++)
+		ABI_CHECK(callContractFunction(
+			"set(string,string,uint256)",
+			u256(0x60),
+			u256(roundTo32(0x80 + strings[i].size())),
+			u256(7 + i),
+			u256(strings[i].size()),
+			strings[i],
+			u256(strings[i+1].size()),
+			strings[i+1]
+		), encodeArgs());
+	for (unsigned i = 0; i + 1 < strings.size(); i++)
+		ABI_CHECK(callContractFunction(
+			"data(string,string)",
+			u256(0x40),
+			u256(roundTo32(0x60 + strings[i].size())),
+			u256(strings[i].size()),
+			strings[i],
+			u256(strings[i+1].size()),
+			strings[i+1]
+		), encodeArgs(u256(7 + i)));
+}
+
+BOOST_AUTO_TEST_CASE(nested_mixed_string_as_public_mapping_key)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			mapping(string =>
+				mapping(int =>
+					mapping(address =>
+						mapping(bytes => int)))) public data;
+
+			function set(
+				string memory _s1,
+				int _s2,
+				address _s3,
+				bytes memory _s4,
+				int _value
+			) public
+			{
+				data[_s1][_s2][_s3][_s4] = _value;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	struct Index
+	{
+		string s1;
+		int s2;
+		int s3;
+		string s4;
+	};
+
+	vector<Index> data{
+		{ "aabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcbc", 4, 23, "efg" },
+		{ "tiaron", 456, 63245, "908apzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapzapz" },
+		{ "", 2345, 12934, "665i65i65i65i65i65i65i65i65i65i65i65i65i65i65i65i65i65i5iart" },
+		{ "¡¿…", 9781, 8148, "" },
+		{ "ρν♀♀ω₂₃♀", 929608, 303030, "" }
+	};
+
+	for (size_t i = 0; i + 1 < data.size(); i++)
+		ABI_CHECK(callContractFunction(
+			"set(string,int256,address,bytes,int256)",
+			u256(0xA0),
+			u256(data[i].s2),
+			u256(data[i].s3),
+			u256(roundTo32(0xC0 + data[i].s1.size())),
+			u256(i - 3),
+			u256(data[i].s1.size()),
+			data[i].s1,
+			u256(data[i].s4.size()),
+			data[i].s4
+		), encodeArgs());
+	for (size_t i = 0; i + 1 < data.size(); i++)
+		ABI_CHECK(callContractFunction(
+			"data(string,int256,address,bytes)",
+			u256(0x80),
+			u256(data[i].s2),
+			u256(data[i].s3),
+			u256(roundTo32(0xA0 + data[i].s1.size())),
+			u256(data[i].s1.size()),
+			data[i].s1,
+			u256(data[i].s4.size()),
+			data[i].s4
+		), encodeArgs(u256(i - 3)));
 }
 
 BOOST_AUTO_TEST_CASE(accessor_for_state_variable)
