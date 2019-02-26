@@ -776,36 +776,50 @@ BOOST_AUTO_TEST_CASE(keccak256)
 
 BOOST_AUTO_TEST_CASE(returndatasize)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ let r := returndatasize }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatasize_functional)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ let r := returndatasize() }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ 64 32 0 returndatacopy }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy_functional)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(staticcall)
 {
+	if (!dev::test::Options::get().evmVersion().hasStaticCall())
+		return;
 	BOOST_CHECK(successAssemble("{ pop(staticcall(10000, 0x123, 64, 0x10, 128, 0x10)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(create2)
 {
+	if (!dev::test::Options::get().evmVersion().hasCreate2())
+		return;
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(shift)
 {
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
 	BOOST_CHECK(successAssemble("{ pop(shl(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(shr(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(sar(10, 32)) }"));
@@ -815,9 +829,9 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 {
 	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
 		return;
-	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", Warning, "The \"shl\" instruction is only available for Constantinople-compatible VMs.");
-	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", Warning, "The \"shr\" instruction is only available for Constantinople-compatible VMs.");
-	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", Warning, "The \"sar\" instruction is only available for Constantinople-compatible VMs.");
+	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
 BOOST_AUTO_TEST_CASE(jump_warning)
