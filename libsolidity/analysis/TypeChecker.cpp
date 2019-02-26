@@ -2208,6 +2208,8 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	case Type::Category::TypeType:
 	{
 		TypeType const& typeType = dynamic_cast<TypeType const&>(*baseType);
+		if (dynamic_cast<ContractType const*>(typeType.actualType().get()))
+			m_errorReporter.typeError(_access.location(), "Index access for contracts or libraries is not possible.");
 		if (!index)
 			resultType = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, typeType.actualType()));
 		else
