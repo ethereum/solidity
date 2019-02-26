@@ -169,7 +169,7 @@ u256 EVMInstructionInterpreter::eval(
 		return arg[2] == 0 ? 0 : u256((u512(arg[0]) * u512(arg[1])) % arg[2]);
 	case Instruction::SIGNEXTEND:
 		if (arg[0] >= 31)
-			return arg[0];
+			return arg[1];
 		else
 		{
 			unsigned testBit = unsigned(arg[0]) * 8 + 7;
