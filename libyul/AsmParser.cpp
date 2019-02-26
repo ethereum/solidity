@@ -235,7 +235,7 @@ Case Parser::parseCase()
 		_case.value = make_unique<Literal>(boost::get<Literal>(std::move(literal)));
 	}
 	else
-		fatalParserError("Case or default case expected.");
+		solAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
 	_case.location.end = _case.body.location.end;
 	return _case;
