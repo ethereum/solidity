@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"\"Providing yulDetails requires Yul optimizer to be enabled.","message":"\"Providing yulDetails requires Yul optimizer to be enabled.","severity":"error","type":"JSONError"}]}

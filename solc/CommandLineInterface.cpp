@@ -907,6 +907,7 @@ bool CommandLineInterface::processInput()
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
 		settings.runYulOptimiser = m_args.count(g_strOptimizeYul);
+		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		m_compiler->setOptimiserSettings(settings);
 
 		bool successful = m_compiler->compile();

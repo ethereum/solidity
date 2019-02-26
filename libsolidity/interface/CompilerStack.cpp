@@ -993,7 +993,11 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		details["cse"] = m_optimiserSettings.runCSE;
 		details["constantOptimizer"] = m_optimiserSettings.runConstantOptimiser;
 		details["yul"] = m_optimiserSettings.runYulOptimiser;
-		details["yulDetails"] = Json::objectValue;
+		if (m_optimiserSettings.runYulOptimiser)
+		{
+			details["yulDetails"] = Json::objectValue;
+			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
+		}
 
 		meta["settings"]["optimizer"]["details"] = std::move(details);
 	}

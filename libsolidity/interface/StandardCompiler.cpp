@@ -399,12 +399,17 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 			return *error;
 		if (auto error = checkOptimizerDetail(details, "yul", settings.runYulOptimiser))
 			return *error;
+		if (settings.runYulOptimiser)
+			settings.optimizeStackAllocation = true;
 		if (details.isMember("yulDetails"))
 		{
-			if (!_jsonInput["yulDetails"].isObject())
-				return formatFatalError("JSONError", "The \"yulDetails\" optimizer setting has to be a JSON object.");
-			if (!_jsonInput["yulDetails"].getMemberNames().empty())
-				return formatFatalError("JSONError", "The \"yulDetails\" optimizer setting cannot have any settings yet.");
+			if (!settings.runYulOptimiser)
+				return formatFatalError("JSONError", "\"Providing yulDetails requires Yul optimizer to be enabled.");
+
+			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation"}, "settings.optimizer.details.yulDetails"))
+				return *result;
+			if (auto error = checkOptimizerDetail(details["yulDetails"], "stackAllocation", settings.optimizeStackAllocation))
+				return *error;
 		}
 	}
 	return std::move(settings);
