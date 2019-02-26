@@ -17,10 +17,15 @@ Using ``solc --help`` provides you with an explanation of all options. The compi
 If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
 
 Before you deploy your contract, activate the optimizer when compiling using ``solc --optimize --bin sourceFile.sol``.
-By default, the optimizer will optimize the contract assuming it is called 200 times across its lifetime.
+By default, the optimizer will optimize the contract assuming it is called 200 times across its lifetime
+(more specifically, it assumes each opcode is executed around 200 times).
 If you want the initial contract deployment to be cheaper and the later function executions to be more expensive,
 set it to ``--optimize-runs=1``. If you expect many transactions and do not care for higher deployment cost and
 output size, set ``--optimize-runs`` to a high number.
+This parameter has effects on the following (this might change in the future):
+
+ - the size of the binary search in the function dispatch routine
+ - the way constants like large numbers or strings are stored
 
 The commandline compiler will automatically read imported files from the filesystem, but
 it is also possible to provide path redirects using ``prefix=path`` in the following way:
