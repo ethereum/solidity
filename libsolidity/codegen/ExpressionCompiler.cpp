@@ -317,8 +317,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
 
 		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
-		m_context << max(u256(32u), arrayType.memorySize());
-		utils().allocateMemory();
+		utils().allocateMemory(max(u256(32u), arrayType.memorySize()));
 		m_context << Instruction::DUP1;
 
 		for (auto const& component: _tuple.components())
@@ -527,8 +526,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
 
-		m_context << max(u256(32u), structType.memorySize());
-		utils().allocateMemory();
+		utils().allocateMemory(max(u256(32u), structType.memorySize()));
 		m_context << Instruction::DUP1;
 
 		for (unsigned i = 0; i < arguments.size(); ++i)
@@ -1396,8 +1394,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
-			m_context << u256(contract.name().length() + 32);
-			utils().allocateMemory();
+			utils().allocateMemory(contract.name().length() + 32);
 			// store string length
 			m_context << u256(contract.name().length()) << Instruction::DUP2 << Instruction::MSTORE;
 			// adjust pointer

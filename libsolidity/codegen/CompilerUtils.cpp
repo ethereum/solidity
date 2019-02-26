@@ -70,6 +70,13 @@ void CompilerUtils::allocateMemory()
 	storeFreeMemoryPointer();
 }
 
+void CompilerUtils::allocateMemory(u256 const& size)
+{
+	fetchFreeMemoryPointer();
+	m_context << Instruction::DUP1 << size << Instruction::ADD;
+	storeFreeMemoryPointer();
+}
+
 void CompilerUtils::toSizeAfterFreeMemoryPointer()
 {
 	fetchFreeMemoryPointer();
@@ -813,9 +820,8 @@ void CompilerUtils::convertType(
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(_targetType);
 			solAssert(arrayType.isByteArray(), "");
-			u256 storageSize(32 + ((data.size() + 31) / 32) * 32);
-			m_context << storageSize;
-			allocateMemory();
+			unsigned storageSize = 32 + ((data.size() + 31) / 32) * 32;
+			allocateMemory(storageSize);
 			// stack: mempos
 			m_context << Instruction::DUP1 << u256(data.size());
 			storeInMemoryDynamic(IntegerType::uint256());
@@ -938,8 +944,7 @@ void CompilerUtils::convertType(
 			{
 			case DataLocation::Storage:
 				// stack: <source ref>
-				m_context << typeOnStack.memorySize();
-				allocateMemory();
+				allocateMemory(typeOnStack.memorySize());
 				m_context << Instruction::SWAP1 << Instruction::DUP2;
 				// stack: <memory ptr> <source ref> <memory ptr>
 				for (auto const& member: typeOnStack.members(nullptr))
@@ -1103,8 +1108,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		1,
 		[type](CompilerContext& _context) {
 			CompilerUtils utils(_context);
-			_context << u256(max(32u, type->calldataEncodedSize()));
-			utils.allocateMemory();
+			utils.allocateMemory(max(32u, type->calldataEncodedSize()));
 			_context << Instruction::DUP1;
 
 			if (auto structType = dynamic_cast<StructType const*>(type.get()))

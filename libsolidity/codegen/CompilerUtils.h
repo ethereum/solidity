@@ -49,6 +49,10 @@ public:
 	/// Stack pre: <size>
 	/// Stack post: <mem_start>
 	void allocateMemory();
+	/// Allocates a number of bytes in memory as given on the stack.
+	/// Stack pre:
+	/// Stack post: <mem_start>
+	void allocateMemory(u256 const& size);
 	/// Appends code that transforms memptr to (memptr - free_memptr) memptr
 	/// Stack pre: <mem_end>
 	/// Stack post: <size> <mem_start>
