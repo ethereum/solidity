@@ -3490,8 +3490,9 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_typeArgument).contractDefinition();
 		if (contract.canBeDeployed())
 			return MemberList::MemberMap({
-				{"creationCode", std::make_shared<ArrayType>(DataLocation::Memory)},
-				{"runtimeCode", std::make_shared<ArrayType>(DataLocation::Memory)}
+				{"creationCode", make_shared<ArrayType>(DataLocation::Memory)},
+				{"runtimeCode", make_shared<ArrayType>(DataLocation::Memory)},
+				{"name", make_shared<ArrayType>(DataLocation::Memory, true)},
 			});
 		else
 			return {};
