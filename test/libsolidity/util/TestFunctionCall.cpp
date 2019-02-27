@@ -111,7 +111,7 @@ string TestFunctionCall::format(string const& _linePrefix, bool const _renderRes
 	return _stream.str();
 }
 
-string TestFunctionCall::formatBytesParameters(bytes const& _bytes, ParameterList const& _params) const
+string TestFunctionCall::formatBytesParameters(bytes const& _bytes, dev::solidity::test::ParameterList const& _params) const
 {
 	stringstream resultStream;
 	if (_bytes.empty())
@@ -174,7 +174,7 @@ string TestFunctionCall::formatBytesParameters(bytes const& _bytes, ParameterLis
 	return resultStream.str();
 }
 
-string TestFunctionCall::formatRawParameters(ParameterList const& _params, std::string const& _linePrefix) const
+string TestFunctionCall::formatRawParameters(dev::solidity::test::ParameterList const& _params, std::string const& _linePrefix) const
 {
 	stringstream resultStream;
 	for (auto const& param: _params)
