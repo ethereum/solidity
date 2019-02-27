@@ -35,7 +35,7 @@ The first line simply tells that the source code is written for
 Solidity version 0.4.0 or anything newer that does not break functionality
 (up to, but not including, version 0.6.0). This is to ensure that the
 contract is not compilable with a new (breaking) compiler version, where it could behave differently.
-So-called pragmas are common instructions for compilers about how to treat the
+:ref:`Pragmas<pragma>` are common instructions for compilers about how to treat the
 source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
 
 A contract in the sense of Solidity is a collection of code (its *functions*) and
