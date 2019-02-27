@@ -22,7 +22,7 @@
 
 #include <libyul/AsmDataForward.h>
 
-#include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/DataFlowAnalyzer.h>
 
 namespace yul
 {
@@ -33,9 +33,12 @@ struct Dialect;
  * The component will work best if the code is in SSA form, but
  * this is not required for correctness.
  *
+ * It tracks the current values of variables using the DataFlowAnalyzer
+ * and takes them into account for replacements.
+ *
  * Prerequisite: Disambiguator.
  */
-class ExpressionSimplifier: public ASTModifier
+class ExpressionSimplifier: public DataFlowAnalyzer
 {
 public:
 	using ASTModifier::operator();
@@ -43,12 +46,7 @@ public:
 
 	static void run(Dialect const& _dialect, Block& _ast);
 private:
-	explicit ExpressionSimplifier(Dialect const& _dialect, std::map<YulString, Expression const*> _ssaValues):
-		m_dialect(_dialect), m_ssaValues(std::move(_ssaValues))
-	{}
-
-	Dialect const& m_dialect;
-	std::map<YulString, Expression const*> m_ssaValues;
+	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 };
 
 }
