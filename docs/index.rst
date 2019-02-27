@@ -83,6 +83,7 @@ Contents
    installing-solidity.rst
    solidity-by-example.rst
    solidity-in-depth.rst
+   natspec-format.rst
    security-considerations.rst
    resources.rst
    using-the-compiler.rst
