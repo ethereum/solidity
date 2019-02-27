@@ -65,7 +65,7 @@ function test_truffle
       fi
       cd ext
       echo "Current commit hash: `git rev-parse HEAD`"
-      npm install
+      npm ci
       # Replace solc package by v0.5.0
       for d in node_modules node_modules/truffle/node_modules
       do
