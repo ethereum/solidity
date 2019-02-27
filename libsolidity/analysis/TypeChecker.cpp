@@ -629,6 +629,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		bool requiresStorage = ref->second.isSlot || ref->second.isOffset;
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
+			solAssert(var->type(), "Expected variable type!");
 			if (var->isConstant())
 			{
 				m_errorReporter.typeError(_identifier.location, "Constant variables not supported by inline assembly.");
@@ -1007,6 +1008,14 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 					m_errorReporter.typeError(_statement.location(), errorMsg + ".");
 			}
 		}
+	}
+
+	if (valueTypes.size() != variables.size())
+	{
+		solAssert(m_errorReporter.hasErrors(), "Should have errors!");
+		for (auto const& var: variables)
+			if (var && !var->annotation().type)
+				BOOST_THROW_EXCEPTION(FatalError());
 	}
 
 	if (autoTypeDeductionNeeded)
