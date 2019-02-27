@@ -326,3 +326,82 @@ escaping and without iterated replacements. An area can be delimited by ``<#name
 by as many concatenations of its contents as there were sets of variables supplied to the template system,
 each time replacing any ``<inner>`` items by their respective value. Top-level variables can also be used
 inside such areas.
+
+.. _documentation-style:
+
+Documentation Style Guide
+=========================
+
+The following are style recommendations specifically for documentation
+contributions to Solidity.
+
+English Language
+----------------
+
+Use English, with British English spelling preferred, unless using project or brand names. Try to reduce the usage of
+local slang and references, making your language as clear to all readers as possible. Below are some references to help:
+
+* `Simplified technical English <https://en.wikipedia.org/wiki/Simplified_Technical_English>`_
+* `International English <https://en.wikipedia.org/wiki/International_English>`_
+* `British English spelling <https://en.oxforddictionaries.com/spelling/british-and-spelling>`_
+
+
+.. note::
+
+    While the official Solidity documentation is written in English, there are community contributed :ref:`translations`
+    in other languages available.
+
+Title Case for Headings
+-----------------------
+
+Use `title case <http://titlecase.com>`_ for headings. This means capitalise all principal words in
+titles, but not articles, conjunctions, and prepositions unless they start the
+title.
+
+For example, the following are all correct:
+
+* Title Case for Headings
+* For Headings Use Title Case
+* Local and State Variable Names
+* Order of Layout
+
+Expand Contractions
+-------------------
+
+Use expanded contractions for words, for example:
+
+* "Do not" instead of "Don't".
+* "Can not" instead of "Can't".
+
+Active and Passive Voice
+------------------------
+
+Active voice is typically recommended for tutorial style documentation as it
+helps the reader understand who or what is performing a task. However, as the
+Solidity documentation is a mixture of tutorials and reference content, passive
+voice is sometimes more applicable.
+
+As a summary:
+
+* Use passive voice for technical reference, for example language definition and internals of the Ethereum VM.
+* Use active voice when describing recommendations on how to apply an aspect of Solidity.
+
+For example, the below is in passive voice as it specifies an aspect of Solidity:
+
+  Functions can be declared ``pure`` in which case they promise not to read
+  from or modify the state.
+
+For example, the below is in active voice as it discusses an application of Solidity:
+
+  When invoking the compiler, you can specify how to discover the first element
+  of a path, and also path prefix remappings.
+
+Common Terms
+------------
+
+* "Function parameters" and "return variables", not input and output parameters.
+
+Code Examples
+-------------
+
+* Ensure that all code examples begin with a ``pragma`` version that spans the largest where the contract code is valid. For example ``pragma solidity >=0.4.0 <0.6.0;``.

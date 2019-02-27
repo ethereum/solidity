@@ -52,6 +52,8 @@ If you have any questions, you can try searching for answers or asking on the
 
 Ideas for improving Solidity or this documentation are always welcome, read our :doc:`contributors guide <contributing>` for more details.
 
+.. _translations:
+
 Translations
 ------------
 
