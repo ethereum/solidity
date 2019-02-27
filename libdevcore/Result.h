@@ -17,7 +17,6 @@
 #pragma once
 
 #include <string>
-#include <iostream>
 
 namespace dev
 {
@@ -31,7 +30,7 @@ namespace dev
 /// Result<bool> check()
 /// {
 ///		if (false)
-///			return Result<bool>("Error message.")
+///			return Result<bool>::err("Error message.")
 ///		return true;
 /// }
 ///
@@ -40,8 +39,17 @@ template <class ResultType>
 class Result
 {
 public:
-	Result(ResultType _value): Result(_value, std::string{}) { }
-	Result(std::string _message): Result(ResultType{}, std::move(_message)) { }
+	/// Constructs a result with _value and an empty message.
+	/// This is meant to be called with valid results. Please use
+	/// the static err() member function to signal an error.
+	Result(ResultType _value): Result(_value, std::string{}) {}
+
+	/// Constructs a result with a default-constructed value and an
+	/// error message.
+	static Result<ResultType> err(std::string _message)
+	{
+		return Result{ResultType{}, std::move(_message)};
+	}
 
 	/// @{
 	/// @name Wrapper functions

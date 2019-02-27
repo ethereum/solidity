@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(encoded_sizes)
 BOOST_AUTO_TEST_CASE(helper_bool_result)
 {
 	BoolResult r1{true};
-	BoolResult r2{string{"Failure."}};
+	BoolResult r2 = BoolResult::err("Failure.");
 	r1.merge(r2, logical_and<bool>());
 	BOOST_REQUIRE_EQUAL(r1.get(), false);
 	BOOST_REQUIRE_EQUAL(r1.message(), "Failure.");
@@ -264,11 +264,27 @@ BOOST_AUTO_TEST_CASE(helper_bool_result)
 	BOOST_REQUIRE_EQUAL(r5.message(), "");
 
 	BoolResult r7{true};
-	// Attention: this will implicitely convert to bool.
+	// Attention: this will implicitly convert to bool.
 	BoolResult r8{"true"};
 	r7.merge(r8, logical_and<bool>());
 	BOOST_REQUIRE_EQUAL(r7.get(), true);
 	BOOST_REQUIRE_EQUAL(r7.message(), "");
+}
+
+BOOST_AUTO_TEST_CASE(helper_string_result)
+{
+	using StringResult = Result<string>;
+
+	StringResult r1{string{"Success"}};
+	StringResult r2 = StringResult::err("Failure");
+
+	BOOST_REQUIRE_EQUAL(r1.get(), "Success");
+	BOOST_REQUIRE_EQUAL(r2.get(), "");
+
+	r1.merge(r2, [](string const&, string const& _rhs) { return _rhs; });
+
+	BOOST_REQUIRE_EQUAL(r1.get(), "");
+	BOOST_REQUIRE_EQUAL(r1.message(), "Failure");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
