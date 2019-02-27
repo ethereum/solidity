@@ -243,6 +243,34 @@ BOOST_AUTO_TEST_CASE(encoded_sizes)
 	BOOST_CHECK_EQUAL(twoDimArray.calldataEncodedSize(false), 9 * 3 * 32);
 }
 
+BOOST_AUTO_TEST_CASE(helper_bool_result)
+{
+	BoolResult r1{true};
+	BoolResult r2{string{"Failure."}};
+	r1.merge(r2, logical_and<bool>());
+	BOOST_REQUIRE_EQUAL(r1.get(), false);
+	BOOST_REQUIRE_EQUAL(r1.message(), "Failure.");
+
+	BoolResult r3{false};
+	BoolResult r4{true};
+	r3.merge(r4, logical_and<bool>());
+	BOOST_REQUIRE_EQUAL(r3.get(), false);
+	BOOST_REQUIRE_EQUAL(r3.message(), "");
+
+	BoolResult r5{true};
+	BoolResult r6{true};
+	r5.merge(r6, logical_and<bool>());
+	BOOST_REQUIRE_EQUAL(r5.get(), true);
+	BOOST_REQUIRE_EQUAL(r5.message(), "");
+
+	BoolResult r7{true};
+	// Attention: this will implicitely convert to bool.
+	BoolResult r8{"true"};
+	r7.merge(r8, logical_and<bool>());
+	BOOST_REQUIRE_EQUAL(r7.get(), true);
+	BOOST_REQUIRE_EQUAL(r7.message(), "");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

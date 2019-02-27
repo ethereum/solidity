@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 
 namespace dev
 {
@@ -39,8 +40,8 @@ template <class ResultType>
 class Result
 {
 public:
-	Result(ResultType _value): Result(_value, std::string{}) {}
-	Result(std::string _message): Result(ResultType{}, std::move(_message)) {}
+	Result(ResultType _value): Result(_value, std::string{}) { }
+	Result(std::string _message): Result(ResultType{}, std::move(_message)) { }
 
 	/// @{
 	/// @name Wrapper functions
@@ -52,6 +53,16 @@ public:
 
 	/// @returns the error message (can be empty).
 	std::string const& message() const { return m_message; }
+
+	/// Merges _other into this using the _merger
+	/// and appends the error messages. Meant to be called
+	/// with logical operators like logical_and, etc.
+	template<typename F>
+	void merge(Result<ResultType> const& _other, F _merger)
+	{
+		m_value = _merger(m_value, _other.get());
+		m_message += _other.message();
+	}
 
 private:
 	explicit Result(ResultType _value, std::string _message):
