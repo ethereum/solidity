@@ -76,12 +76,11 @@ pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source
 	}
 }
 
-void interpret()
+void interpret(string const& _source)
 {
-	string source = readStandardInput();
 	shared_ptr<Block> ast;
 	shared_ptr<AsmAnalysisInfo> analysisInfo;
-	tie(ast, analysisInfo) = parse(source);
+	tie(ast, analysisInfo) = parse(_source);
 	if (!ast || !analysisInfo)
 		return;
 
@@ -120,13 +119,16 @@ Allowed options)",
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23);
 	options.add_options()
-		("help", "Show this help screen.");
+		("help", "Show this help screen.")
+		("input-file", po::value<vector<string>>(), "input file");
+	po::positional_options_description filesPositions;
+	filesPositions.add("input-file", -1);
 
 	po::variables_map arguments;
 	try
 	{
 		po::command_line_parser cmdLineParser(argc, argv);
-		cmdLineParser.options(options);
+		cmdLineParser.options(options).positional(filesPositions);
 		po::store(cmdLineParser.run(), arguments);
 	}
 	catch (po::error const& _exception)
@@ -138,7 +140,17 @@ Allowed options)",
 	if (arguments.count("help"))
 		cout << options;
 	else
-		interpret();
+	{
+		string input;
+
+		if (arguments.count("input-file"))
+			for (string path: arguments["input-file"].as<vector<string>>())
+				input += readFileAsString(path);
+		else
+			input = readStandardInput();
+
+		interpret(input);
+	}
 
 	return 0;
 }
