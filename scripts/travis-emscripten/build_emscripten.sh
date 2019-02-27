@@ -34,6 +34,12 @@
 
 set -ev
 
+if test -z "$1"; then
+	BUILD_DIR="emscripten_build"
+else
+	BUILD_DIR="$1"
+fi
+
 if ! type git &>/dev/null; then
     # We need git for extracting the commit hash
     apt-get update
@@ -76,8 +82,8 @@ echo -en 'travis_fold:end:install_cmake.sh\\r'
 # Build dependent components and solidity itself
 echo -en 'travis_fold:start:compiling_solidity\\r'
 cd $WORKSPACE
-mkdir -p build
-cd build
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR
 cmake \
   -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchains/emscripten.cmake \
   -DCMAKE_BUILD_TYPE=Release \
@@ -97,9 +103,9 @@ make -j 4
 cd ..
 mkdir -p upload
 # Patch soljson.js to provide backwards-compatibility with older emscripten versions
-echo ";/* backwards compatibility */ Module['Runtime'] = Module;" >> build/libsolc/soljson.js
-cp build/libsolc/soljson.js upload/
-cp build/libsolc/soljson.js ./
+echo ";/* backwards compatibility */ Module['Runtime'] = Module;" >> $BUILD_DIR/libsolc/soljson.js
+cp $BUILD_DIR/libsolc/soljson.js upload/
+cp $BUILD_DIR/libsolc/soljson.js ./
 
 OUTPUT_SIZE=`ls -la soljson.js`
 

@@ -32,6 +32,7 @@ prerelease.txt
 
 # Build directory
 build/
+emscripten_build/
 docs/_build
 docs/utils/__pycache__
 docs/utils/*.pyc

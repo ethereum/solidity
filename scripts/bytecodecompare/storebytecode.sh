@@ -29,6 +29,12 @@ set -e
 
 REPO_ROOT="$(dirname "$0")"/../..
 
+if test -z "$1"; then
+	BUILD_DIR="build"
+else
+	BUILD_DIR="$1"
+fi
+
 echo "Compiling all test contracts into bytecode..."
 TMPDIR=$(mktemp -d)
 (
@@ -43,7 +49,7 @@ TMPDIR=$(mktemp -d)
         # npm install solc
         git clone --depth 1 https://github.com/ethereum/solc-js.git solc-js
         ( cd solc-js; npm install )
-        cp "$REPO_ROOT/build/libsolc/soljson.js" solc-js/
+        cp "$REPO_ROOT/emscripten_build/libsolc/soljson.js" solc-js/
         cat > solc <<EOF
 #!/usr/bin/env node
 var process = require('process')
@@ -93,7 +99,7 @@ EOF
         chmod +x solc
         ./solc *.sol > report.txt
     else
-        $REPO_ROOT/scripts/bytecodecompare/prepare_report.py $REPO_ROOT/build/solc/solc
+        $REPO_ROOT/scripts/bytecodecompare/prepare_report.py $REPO_ROOT/$BUILD_DIR/solc/solc
     fi
 
     if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]
