@@ -695,6 +695,7 @@ void SMTChecker::visitFunctionIdentifier(Identifier const& _identifier)
 
 void SMTChecker::endVisit(Literal const& _literal)
 {
+	solAssert(_literal.annotation().type, "Expected type for AST node");
 	Type const& type = *_literal.annotation().type;
 	if (isNumber(type.category()))
 
