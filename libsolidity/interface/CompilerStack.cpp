@@ -86,6 +86,8 @@ boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string c
 
 void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 {
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set remappings before parsing."));
 	for (auto const& remapping: _remappings)
 		solAssert(!remapping.prefix.empty(), "");
 	m_remappings = _remappings;
@@ -93,8 +95,38 @@ void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 
 void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 {
-	solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set EVM version before parsing."));
 	m_evmVersion = _version;
+}
+
+void CompilerStack::setLibraries(std::map<std::string, h160> const& _libraries)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set libraries before parsing."));
+	m_libraries = _libraries;
+}
+
+void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set optimiser settings before parsing."));
+	m_optimize = _optimize;
+	m_optimizeRuns = _runs;
+}
+
+void CompilerStack::useMetadataLiteralSources(bool _metadataLiteralSources)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set use literal sources before parsing."));
+	m_metadataLiteralSources = _metadataLiteralSources;
+}
+
+void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _response)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must add SMTLib2 responses before parsing."));
+	m_smtlib2Responses[_hash] = _response;
 }
 
 void CompilerStack::reset(bool _keepSources)
