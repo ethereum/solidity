@@ -25,6 +25,7 @@ Bugfixes:
  * TypeChecker: Fix internal error and disallow index access on contracts and libraries.
  * Yul: Properly detect name clashes with functions before their declaration.
  * Yul: Take builtin functions into account in the compilability checker.
+ * Yul Optimizer: Properly take reassignments to variables in sub-expressions into account when replacing in the ExpressionSimplifier.
 
 
 Build System:
