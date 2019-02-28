@@ -52,7 +52,7 @@ class Compiler;
 class CompilerContext
 {
 public:
-	explicit CompilerContext(langutil::EVMVersion _evmVersion = langutil::EVMVersion{}, CompilerContext* _runtimeContext = nullptr):
+	explicit CompilerContext(langutil::EVMVersion _evmVersion, CompilerContext* _runtimeContext = nullptr):
 		m_asm(std::make_shared<eth::Assembly>()),
 		m_evmVersion(_evmVersion),
 		m_runtimeContext(_runtimeContext),

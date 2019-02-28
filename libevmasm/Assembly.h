@@ -122,7 +122,7 @@ public:
 	/// @a _runs specifes an estimate on how often each opcode in this assembly will be executed,
 	/// i.e. use a small value to optimise for size and a large value to optimise for runtime.
 	/// If @a _enable is not set, will perform some simple peephole optimizations.
-	Assembly& optimise(bool _enable, langutil::EVMVersion _evmVersion, bool _isCreation = true, size_t _runs = 200);
+	Assembly& optimise(bool _enable, langutil::EVMVersion _evmVersion, bool _isCreation, size_t _runs);
 
 	/// Create a text representation of the assembly.
 	std::string assemblyString(

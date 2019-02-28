@@ -153,7 +153,7 @@ bytes compileFirstExpression(
 					parametersSize--
 				);
 
-			ExpressionCompiler(context).compile(*extractor.expression());
+			ExpressionCompiler(context, dev::test::Options::get().optimize).compile(*extractor.expression());
 
 			for (vector<string> const& function: _functions)
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(

@@ -55,7 +55,7 @@ class ArrayType;
 class ExpressionCompiler: private ASTConstVisitor
 {
 public:
-	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimiseOrderLiterals = false):
+	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimiseOrderLiterals):
 		m_optimiseOrderLiterals(_optimiseOrderLiterals), m_context(_compilerContext) {}
 
 	/// Compile the given @a _expression and leave its value on the stack.
