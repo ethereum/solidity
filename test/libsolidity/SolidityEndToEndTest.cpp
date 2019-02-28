@@ -3084,37 +3084,33 @@ BOOST_AUTO_TEST_CASE(gasprice)
 
 BOOST_AUTO_TEST_CASE(blockhash)
 {
-	// depending on the aleth version, this test only works for pre-constantinople
-	if (Options::get().evmVersion() < langutil::EVMVersion::constantinople())
-	{
-		char const* sourceCode = R"(
-			contract C {
-				uint256 counter;
-				function g() public returns (bool) { counter++; return true; }
-				function f() public returns (bytes32[] memory r) {
-					r = new bytes32[](259);
-					for (uint i = 0; i < 259; i++)
-						r[i] = blockhash(block.number - 257 + i);
-				}
+	char const* sourceCode = R"(
+		contract C {
+			uint256 counter;
+			function g() public returns (bool) { counter++; return true; }
+			function f() public returns (bytes32[] memory r) {
+				r = new bytes32[](259);
+				for (uint i = 0; i < 259; i++)
+					r[i] = blockhash(block.number - 257 + i);
 			}
-		)";
-		compileAndRun(sourceCode);
-		// generate a sufficient amount of blocks
-		while (blockNumber() < u256(255))
-			ABI_CHECK(callContractFunction("g()"), encodeArgs(true));
+		}
+	)";
+	compileAndRun(sourceCode);
+	// generate a sufficient amount of blocks
+	while (blockNumber() < u256(255))
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(true));
 
-		vector<u256> hashes;
-		// ``blockhash()`` is only valid for the last 256 blocks, otherwise zero
-		hashes.emplace_back(0);
-		for (u256 i = blockNumber() - u256(255); i <= blockNumber(); i++)
-			hashes.emplace_back(blockHash(i));
-		// the current block hash is not yet known at execution time and therefore zero
-		hashes.emplace_back(0);
-		// future block hashes are zero
-		hashes.emplace_back(0);
+	vector<u256> hashes;
+	// ``blockhash()`` is only valid for the last 256 blocks, otherwise zero
+	hashes.emplace_back(0);
+	for (u256 i = blockNumber() - u256(255); i <= blockNumber(); i++)
+		hashes.emplace_back(blockHash(i));
+	// the current block hash is not yet known at execution time and therefore zero
+	hashes.emplace_back(0);
+	// future block hashes are zero
+	hashes.emplace_back(0);
 
-		ABI_CHECK(callContractFunction("f()"), encodeDyn(hashes));
-	}
+	ABI_CHECK(callContractFunction("f()"), encodeDyn(hashes));
 }
 
 BOOST_AUTO_TEST_CASE(value_complex)
