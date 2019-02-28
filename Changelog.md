@@ -12,6 +12,7 @@ Compiler Features:
  * Optimizer: Add rule for shifts with constants for Constantinople.
  * Optimizer: Combine multiple shifts with constant shift-by values into one.
  * Optimizer: Support shifts in the constant optimiser for Constantinople.
+ * Yul Optimizer: Add rule to replace switch statements with const expr. with matching case body
 
 
 Bugfixes:

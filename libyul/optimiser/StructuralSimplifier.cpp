@@ -45,6 +45,26 @@ void StructuralSimplifier::operator()(Block& _block)
 	popScope();
 }
 
+boost::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
+{
+	Expression const* expr = &_expression;
+
+	if (expr->type() == typeid(Identifier))
+	{
+		Identifier const& ident = boost::get<Identifier>(*expr);
+		if (m_value.count(ident.name))
+			expr = m_value.at(ident.name);
+	}
+
+	if (expr && expr->type() == typeid(Literal))
+	{
+		Literal const& literal = boost::get<Literal>(*expr);
+		return valueOfNumberLiteral(literal);
+	}
+
+	return boost::optional<u256>();
+}
+
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
 	using OptionalStatements = boost::optional<vector<Statement>>;
@@ -62,7 +82,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				return {vector<Statement>{}};
 			return {};
 		},
-		[](Switch& _switchStmt) -> OptionalStatements {
+		[&](Switch& _switchStmt) -> OptionalStatements {
 			if (_switchStmt.cases.size() == 1)
 			{
 				auto& switchCase = _switchStmt.cases.front();
@@ -86,6 +106,32 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 					s->emplace_back(std::move(switchCase.body));
 					return s;
 				}
+			}
+			else if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
+			{
+				Block* matchingCaseBlock = nullptr;
+				Case* defaultCase = nullptr;
+
+				for (auto& _case: _switchStmt.cases)
+				{
+					if (_case.value && valueOfNumberLiteral(*_case.value) == constExprVal)
+					{
+						matchingCaseBlock = &_case.body;
+						break;
+					}
+					else if (!_case.value)
+						defaultCase = &_case;
+				}
+
+				if (!matchingCaseBlock && defaultCase)
+					matchingCaseBlock = &defaultCase->body;
+
+				OptionalStatements s = vector<Statement>{};
+
+				if (matchingCaseBlock)
+					s->emplace_back(std::move(*matchingCaseBlock));
+
+				return s;
 			}
 			else
 				return {};
