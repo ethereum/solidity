@@ -167,9 +167,8 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 
 bool CompilerStack::parse()
 {
-	//reset
 	if (m_stackState != SourcesSet)
-		return false;
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call parse only after the SourcesSet state."));
 	m_errorReporter.clear();
 	ASTNode::resetID();
 
@@ -210,8 +209,8 @@ bool CompilerStack::parse()
 
 bool CompilerStack::analyze()
 {
-	if (m_stackState != ParsingSuccessful)
-		return false;
+	if (m_stackState != ParsingSuccessful || m_stackState >= AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call analyze only after parsing was successful."));
 	resolveImports();
 
 	bool noErrors = true;
