@@ -460,10 +460,10 @@ bool EVMInstructionInterpreter::logMemory(bool _write, u256 const& _offset, u256
 	size_t constexpr maxMemSize = 0x20000000;
 
 	logTrace(_write ? "MSTORE_AT_SIZE" : "MLOAD_FROM_SIZE", {_offset, _size}, _data);
-	if (_offset + _size >= _offset)
+
+	if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
 	{
-		u256 newSize = _offset + _size;
-		newSize = (newSize + 0x1f) & ~u256(0x1f);
+		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
 		m_state.msize = max(m_state.msize, newSize);
 		if (newSize < maxMemSize)
 		{
