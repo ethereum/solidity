@@ -28,10 +28,3 @@ contract C {
 // SyntaxError: (360-384): Use of the "var" keyword is disallowed. Use explicit declaration `(uint8 a, string memory b) = ...´ instead.
 // SyntaxError: (394-411): Use of the "var" keyword is disallowed. Use explicit declaration `(uint256 x, , uint256 z) = ...´ instead.
 // TypeError: (421-438): Different number of components on the left hand side (2) than on the right hand side (1).
-// SyntaxError: (421-438): Use of the "var" keyword is disallowed. Type cannot be expressed in syntax.
-// TypeError: (448-464): Different number of components on the left hand side (2) than on the right hand side (1).
-// SyntaxError: (448-464): Use of the "var" keyword is disallowed. Type cannot be expressed in syntax.
-// TypeError: (474-488): Different number of components on the left hand side (2) than on the right hand side (1).
-// SyntaxError: (474-488): Use of the "var" keyword is disallowed. Type cannot be expressed in syntax.
-// TypeError: (498-513): Different number of components on the left hand side (2) than on the right hand side (1).
-// SyntaxError: (498-513): Use of the "var" keyword is disallowed. Type cannot be expressed in syntax.
