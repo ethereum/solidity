@@ -8,8 +8,8 @@
 // fullInliner
 // {
 //     {
-//         let f_a := mload(0)
-//         sstore(f_a, f_a)
+//         let a_3 := mload(0)
+//         sstore(a_3, a_3)
 //     }
 //     function f(a)
 //     {

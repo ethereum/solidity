@@ -8,14 +8,14 @@
 // {
 //     {
 //         let _1 := 7
-//         let f_a := 3
-//         let f_x := 0
-//         f_x := add(f_a, f_a)
-//         let g_b := f_x
-//         let g_c := _1
-//         let g_y := 0
-//         g_y := mul(mload(g_c), f(g_b))
-//         let y_1 := g_y
+//         let a_6 := 3
+//         let x_7 := 0
+//         x_7 := add(a_6, a_6)
+//         let b_8 := x_7
+//         let c_9 := _1
+//         let y_10 := 0
+//         y_10 := mul(mload(c_9), f(b_8))
+//         let y_1 := y_10
 //     }
 //     function f(a) -> x
 //     {
@@ -23,9 +23,9 @@
 //     }
 //     function g(b, c) -> y
 //     {
-//         let f_a_6 := b
-//         let f_x_7 := 0
-//         f_x_7 := add(f_a_6, f_a_6)
-//         y := mul(mload(c), f_x_7)
+//         let a_13 := b
+//         let x_14 := 0
+//         x_14 := add(a_13, a_13)
+//         y := mul(mload(c), x_14)
 //     }
 // }

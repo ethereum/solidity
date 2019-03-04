@@ -39,18 +39,7 @@ NameDispenser::NameDispenser(Dialect const& _dialect, set<YulString> _usedNames)
 {
 }
 
-YulString NameDispenser::newName(YulString _nameHint, YulString _context)
-{
-	// Shortening rules: Use a suffix of _prefix and a prefix of _context.
-	YulString prefix = _nameHint;
-
-	if (!_context.empty())
-		prefix = YulString{_context.str().substr(0, 10) + "_" + prefix.str()};
-
-	return newNameInternal(prefix);
-}
-
-YulString NameDispenser::newNameInternal(YulString _nameHint)
+YulString NameDispenser::newName(YulString _nameHint)
 {
 	YulString name = _nameHint;
 	while (name.empty() || m_usedNames.count(name) || m_dialect.builtin(name))
