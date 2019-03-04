@@ -5,9 +5,9 @@ Pretty printed source:
 object "MyContract" {
     code {
         sstore(0, caller())
-        let _3 := datasize("Runtime")
-        datacopy(0, dataoffset("Runtime"), _3)
-        return(0, _3)
+        let _1 := datasize("Runtime")
+        datacopy(0, dataoffset("Runtime"), _1)
+        return(0, _1)
     }
     object "Runtime" {
         code {

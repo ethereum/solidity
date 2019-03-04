@@ -231,8 +231,8 @@
 // ----
 // fullSuite
 // {
-//     let validateJo__6 := 0x80
-//     mstore(validateJo__6, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
+//     let validateJo := 0x80
+//     mstore(validateJo, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
 //     mstore(0xa0, 8489654445897228341090914135473290831551238522473825886865492707826370766375)
 //     let validateJo_m := calldataload(0x24)
 //     let validateJo_n := calldataload(add(0x04, calldataload(0x04)))
@@ -249,9 +249,9 @@
 //     mstore(0x2e0, validateJo_m)
 //     validateJo_kn := mulmod(sub(validateJo_gen_order, validateJo_kn), validateJo_challenge, validateJo_gen_order)
 //     hashCommitments(add(0x04, calldataload(0x04)), validateJo_n)
-//     let validateJo_b := add(0x300, mul(validateJo_n, validateJo__6))
+//     let validateJo_b := add(0x300, mul(validateJo_n, validateJo))
 //     let validateJo_i := 0
-//     let validateJo_i_1218 := validateJo_i
+//     let validateJo_i_1 := validateJo_i
 //     for {
 //     }
 //     lt(validateJo_i, validateJo_n)
@@ -259,9 +259,9 @@
 //         validateJo_i := add(validateJo_i, 0x01)
 //     }
 //     {
-//         let validateJo__329 := add(calldataload(0x04), mul(validateJo_i, 0xc0))
-//         let validateJo_k := validateJo_i_1218
-//         let validateJo_a := calldataload(add(validateJo__329, 0x44))
+//         let validateJo_1 := add(calldataload(0x04), mul(validateJo_i, 0xc0))
+//         let validateJo_k := validateJo_i_1
+//         let validateJo_a := calldataload(add(validateJo_1, 0x44))
 //         let validateJo_c := validateJo_challenge
 //         switch eq(add(validateJo_i, 0x01), validateJo_n)
 //         case 1 {
@@ -272,52 +272,52 @@
 //             }
 //         }
 //         case 0 {
-//             validateJo_k := calldataload(add(validateJo__329, 0x24))
+//             validateJo_k := calldataload(add(validateJo_1, 0x24))
 //         }
-//         validateCommitment(add(validateJo__329, 0x24), validateJo_k, validateJo_a)
+//         validateCommitment(add(validateJo_1, 0x24), validateJo_k, validateJo_a)
 //         switch gt(add(validateJo_i, 0x01), validateJo_m)
 //         case 1 {
 //             validateJo_kn := addmod(validateJo_kn, sub(validateJo_gen_order, validateJo_k), validateJo_gen_order)
-//             let validateJo_x := mod(mload(validateJo_i_1218), validateJo_gen_order)
+//             let validateJo_x := mod(mload(validateJo_i_1), validateJo_gen_order)
 //             validateJo_k := mulmod(validateJo_k, validateJo_x, validateJo_gen_order)
 //             validateJo_a := mulmod(validateJo_a, validateJo_x, validateJo_gen_order)
 //             validateJo_c := mulmod(validateJo_challenge, validateJo_x, validateJo_gen_order)
-//             mstore(validateJo_i_1218, keccak256(validateJo_i_1218, 0x20))
+//             mstore(validateJo_i_1, keccak256(validateJo_i_1, 0x20))
 //         }
 //         case 0 {
 //             validateJo_kn := addmod(validateJo_kn, validateJo_k, validateJo_gen_order)
 //         }
-//         let validateJo__52 := 0x40
-//         calldatacopy(0xe0, add(validateJo__329, 164), validateJo__52)
-//         calldatacopy(0x20, add(validateJo__329, 100), validateJo__52)
+//         let validateJo_2 := 0x40
+//         calldatacopy(0xe0, add(validateJo_1, 164), validateJo_2)
+//         calldatacopy(0x20, add(validateJo_1, 100), validateJo_2)
 //         mstore(0x120, sub(validateJo_gen_order, validateJo_c))
 //         mstore(0x60, validateJo_k)
 //         mstore(0xc0, validateJo_a)
-//         let validateJo_result := call(gas(), 7, validateJo_i_1218, 0xe0, 0x60, 0x1a0, validateJo__52)
-//         let validateJo_result_303 := and(validateJo_result, call(gas(), 7, validateJo_i_1218, 0x20, 0x60, 0x120, validateJo__52))
-//         let validateJo_result_304 := and(validateJo_result_303, call(gas(), 7, validateJo_i_1218, validateJo__6, 0x60, 0x160, validateJo__52))
-//         let validateJo_result_305 := and(validateJo_result_304, call(gas(), 6, validateJo_i_1218, 0x120, validateJo__6, 0x160, validateJo__52))
-//         validateJo_result := and(validateJo_result_305, call(gas(), 6, validateJo_i_1218, 0x160, validateJo__6, validateJo_b, validateJo__52))
+//         let validateJo_result := call(gas(), 7, validateJo_i_1, 0xe0, 0x60, 0x1a0, validateJo_2)
+//         let validateJo_result_1 := and(validateJo_result, call(gas(), 7, validateJo_i_1, 0x20, 0x60, 0x120, validateJo_2))
+//         let validateJo_result_2 := and(validateJo_result_1, call(gas(), 7, validateJo_i_1, validateJo, 0x60, 0x160, validateJo_2))
+//         let validateJo_result_3 := and(validateJo_result_2, call(gas(), 6, validateJo_i_1, 0x120, validateJo, 0x160, validateJo_2))
+//         validateJo_result := and(validateJo_result_3, call(gas(), 6, validateJo_i_1, 0x160, validateJo, validateJo_b, validateJo_2))
 //         if eq(validateJo_i, validateJo_m)
 //         {
 //             mstore(0x260, mload(0x20))
-//             mstore(0x280, mload(validateJo__52))
+//             mstore(0x280, mload(validateJo_2))
 //             mstore(0x1e0, mload(0xe0))
 //             mstore(0x200, sub(0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47, mload(0x100)))
 //         }
 //         if gt(validateJo_i, validateJo_m)
 //         {
 //             mstore(0x60, validateJo_c)
-//             let validateJo_result_307 := and(validateJo_result, call(gas(), 7, validateJo_i_1218, 0x20, 0x60, 0x220, validateJo__52))
-//             let validateJo_result_308 := and(validateJo_result_307, call(gas(), 6, validateJo_i_1218, 0x220, validateJo__6, 0x260, validateJo__52))
-//             validateJo_result := and(validateJo_result_308, call(gas(), 6, validateJo_i_1218, 0x1a0, validateJo__6, 0x1e0, validateJo__52))
+//             let validateJo_result_4 := and(validateJo_result, call(gas(), 7, validateJo_i_1, 0x20, 0x60, 0x220, validateJo_2))
+//             let validateJo_result_5 := and(validateJo_result_4, call(gas(), 6, validateJo_i_1, 0x220, validateJo, 0x260, validateJo_2))
+//             validateJo_result := and(validateJo_result_5, call(gas(), 6, validateJo_i_1, 0x1a0, validateJo, 0x1e0, validateJo_2))
 //         }
 //         if iszero(validateJo_result)
 //         {
-//             mstore(validateJo_i_1218, 400)
-//             revert(validateJo_i_1218, 0x20)
+//             mstore(validateJo_i_1, 400)
+//             revert(validateJo_i_1, 0x20)
 //         }
-//         validateJo_b := add(validateJo_b, validateJo__52)
+//         validateJo_b := add(validateJo_b, validateJo_2)
 //     }
 //     if lt(validateJo_m, validateJo_n)
 //     {
@@ -325,75 +325,75 @@
 //     }
 //     if iszero(eq(mod(keccak256(0x2a0, add(validateJo_b, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd60)), validateJo_gen_order), validateJo_challenge))
 //     {
-//         mstore(validateJo_i_1218, 404)
-//         revert(validateJo_i_1218, 0x20)
+//         mstore(validateJo_i_1, 404)
+//         revert(validateJo_i_1, 0x20)
 //     }
-//     mstore(validateJo_i_1218, 0x01)
-//     return(validateJo_i_1218, 0x20)
-//     mstore(validateJo_i_1218, 404)
-//     revert(validateJo_i_1218, 0x20)
+//     mstore(validateJo_i_1, 0x01)
+//     return(validateJo_i_1, 0x20)
+//     mstore(validateJo_i_1, 404)
+//     revert(validateJo_i_1, 0x20)
 //     function validatePairing(t2)
 //     {
-//         let t2_x_1 := calldataload(t2)
-//         let _165 := 0x20
-//         let t2_x_2 := calldataload(add(t2, _165))
-//         let t2_y_1 := calldataload(add(t2, 0x40))
-//         let t2_y_2 := calldataload(add(t2, 0x60))
-//         let _171 := 0x90689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b
-//         let _173 := 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
-//         let _175 := 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2
-//         let _177 := 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed
-//         if or(or(or(or(or(or(or(iszero(t2_x_1), iszero(t2_x_2)), iszero(t2_y_1)), iszero(t2_y_2)), eq(t2_x_1, _177)), eq(t2_x_2, _175)), eq(t2_y_1, _173)), eq(t2_y_2, _171))
+//         let t2_x := calldataload(t2)
+//         let _1 := 0x20
+//         let t2_x_1 := calldataload(add(t2, _1))
+//         let t2_y := calldataload(add(t2, 0x40))
+//         let t2_y_1 := calldataload(add(t2, 0x60))
+//         let _2 := 0x90689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b
+//         let _3 := 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
+//         let _4 := 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2
+//         let _5 := 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed
+//         if or(or(or(or(or(or(or(iszero(t2_x), iszero(t2_x_1)), iszero(t2_y)), iszero(t2_y_1)), eq(t2_x, _5)), eq(t2_x_1, _4)), eq(t2_y, _3)), eq(t2_y_1, _2))
 //         {
 //             mstore(0x00, 400)
-//             revert(0x00, _165)
+//             revert(0x00, _1)
 //         }
-//         mstore(_165, mload(0x1e0))
+//         mstore(_1, mload(0x1e0))
 //         mstore(0x40, mload(0x200))
-//         mstore(0x80, _177)
-//         mstore(0x60, _175)
-//         mstore(0xc0, _173)
-//         mstore(0xa0, _171)
+//         mstore(0x80, _5)
+//         mstore(0x60, _4)
+//         mstore(0xc0, _3)
+//         mstore(0xa0, _2)
 //         mstore(0xe0, mload(0x260))
 //         mstore(0x100, mload(0x280))
-//         mstore(0x140, t2_x_1)
-//         mstore(0x120, t2_x_2)
-//         let _216 := 0x180
-//         mstore(_216, t2_y_1)
-//         mstore(0x160, t2_y_2)
-//         let success := call(gas(), 8, 0, _165, _216, _165, _165)
-//         if or(iszero(success), iszero(mload(_165)))
+//         mstore(0x140, t2_x)
+//         mstore(0x120, t2_x_1)
+//         let _6 := 0x180
+//         mstore(_6, t2_y)
+//         mstore(0x160, t2_y_1)
+//         let success := call(gas(), 8, 0, _1, _6, _1, _1)
+//         if or(iszero(success), iszero(mload(_1)))
 //         {
 //             mstore(0, 400)
-//             revert(0, _165)
+//             revert(0, _1)
 //         }
 //     }
-//     function validateCommitment(note, k_1, a_2)
+//     function validateCommitment(note, k, a)
 //     {
-//         let gen_order_3 := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-//         let field_order_4 := 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+//         let gen_order := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+//         let field_order := 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
 //         let gammaX := calldataload(add(note, 0x40))
 //         let gammaY := calldataload(add(note, 0x60))
 //         let sigmaX := calldataload(add(note, 0x80))
 //         let sigmaY := calldataload(add(note, 0xa0))
-//         if iszero(and(and(and(eq(mod(a_2, gen_order_3), a_2), gt(a_2, 1)), and(eq(mod(k_1, gen_order_3), k_1), gt(k_1, 1))), and(eq(addmod(mulmod(mulmod(sigmaX, sigmaX, field_order_4), sigmaX, field_order_4), 3, field_order_4), mulmod(sigmaY, sigmaY, field_order_4)), eq(addmod(mulmod(mulmod(gammaX, gammaX, field_order_4), gammaX, field_order_4), 3, field_order_4), mulmod(gammaY, gammaY, field_order_4)))))
+//         if iszero(and(and(and(eq(mod(a, gen_order), a), gt(a, 1)), and(eq(mod(k, gen_order), k), gt(k, 1))), and(eq(addmod(mulmod(mulmod(sigmaX, sigmaX, field_order), sigmaX, field_order), 3, field_order), mulmod(sigmaY, sigmaY, field_order)), eq(addmod(mulmod(mulmod(gammaX, gammaX, field_order), gammaX, field_order), 3, field_order), mulmod(gammaY, gammaY, field_order)))))
 //         {
 //             mstore(0x00, 400)
 //             revert(0x00, 0x20)
 //         }
 //     }
-//     function hashCommitments(notes_5, n_6)
+//     function hashCommitments(notes, n)
 //     {
-//         let i_7 := 0
+//         let i := 0
 //         for {
 //         }
-//         lt(i_7, n_6)
+//         lt(i, n)
 //         {
-//             i_7 := add(i_7, 0x01)
+//             i := add(i, 0x01)
 //         }
 //         {
-//             calldatacopy(add(0x300, mul(i_7, 0x80)), add(add(notes_5, mul(i_7, 0xc0)), 0x60), 0x80)
+//             calldatacopy(add(0x300, mul(i, 0x80)), add(add(notes, mul(i, 0xc0)), 0x60), 0x80)
 //         }
-//         mstore(0, keccak256(0x300, mul(n_6, 0x80)))
+//         mstore(0, keccak256(0x300, mul(n, 0x80)))
 //     }
 // }
