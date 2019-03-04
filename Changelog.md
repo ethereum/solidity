@@ -13,6 +13,7 @@ Compiler Features:
  * Optimizer: Add new rules with constants including ``LT``, ``GT``, ``AND`` and ``BYTE``.
  * Optimizer: Add rule for shifts with constants for Constantinople.
  * Optimizer: Combine multiple shifts with constant shift-by values into one.
+ * Optimizer: Do not mask with 160-bits after ``CREATE`` and ``CREATE2`` as they are guaranteed to return an address or 0.
  * Optimizer: Support shifts in the constant optimiser for Constantinople.
  * Yul Optimizer: Add rule to replace switch statements with const expr. with matching case body
 
