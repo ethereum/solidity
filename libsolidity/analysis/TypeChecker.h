@@ -63,6 +63,8 @@ public:
 	/// (this can happen for variables with non-explicit types before their types are resolved)
 	TypePointer const& type(VariableDeclaration const& _variable) const;
 
+	static bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall);
+
 private:
 
 	bool visit(ContractDefinition const& _contract) override;
