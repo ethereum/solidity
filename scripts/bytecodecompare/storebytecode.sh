@@ -88,8 +88,12 @@ for (var optimize of [false, true])
             {
                 for (var contractName in result['contracts'][filename])
                 {
-                    console.log(filename + ':' + contractName + ' ' + result['contracts'][filename][contractName].evm.bytecode.object)
-                    console.log(filename + ':' + contractName + ' ' + result['contracts'][filename][contractName].metadata)
+                    var contractData = result['contracts'][filename][contractName];
+                    if (contractData.evm !== undefined && contractData.evm.bytecode !== undefined)
+                        console.log(filename + ':' + contractName + ' ' + contractData.evm.bytecode.object)
+                    else
+                        console.log(filename + ':' + contractName + ' NO BYTECODE')
+                    console.log(filename + ':' + contractName + ' ' + contractData.metadata)
                 }
             }
         }
