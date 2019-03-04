@@ -588,6 +588,7 @@ public:
 	}
 
 	std::vector<ASTPointer<VariableDeclaration>> const& parameters() const { return m_parameters->parameters(); }
+	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	ParameterList const& parameterList() const { return *m_parameters; }
 	ASTPointer<ParameterList> const& returnParameterList() const { return m_returnParameters; }
 
@@ -628,7 +629,6 @@ public:
 	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
-	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 	bool isVisibleInContract() const override
 	{
