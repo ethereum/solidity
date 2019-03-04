@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(optimizer_enabled_not_boolean)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "The \"enabled\" setting must be a boolean."));
+	BOOST_CHECK(containsError(result, "JSONError", "The \"enabled\" setting must be a Boolean."));
 }
 
 BOOST_AUTO_TEST_CASE(optimizer_runs_not_a_number)
@@ -859,6 +859,159 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");
 }
 
+BOOST_AUTO_TEST_CASE(optimizer_settings_default_disabled)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": { "A": [ "metadata" ] }
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["metadata"].isString());
+	Json::Value metadata;
+	BOOST_CHECK(jsonParseStrict(contract["metadata"].asString(), metadata));
+
+	Json::Value const& optimizer = metadata["settings"]["optimizer"];
+	BOOST_CHECK(optimizer.isMember("enabled"));
+	BOOST_CHECK(optimizer["enabled"].asBool() == false);
+	BOOST_CHECK(!optimizer.isMember("details"));
+	BOOST_CHECK(optimizer["runs"].asUInt() == 200);
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_settings_default_enabled)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": { "A": [ "metadata" ] }
+			},
+			"optimizer": { "enabled": true }
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["metadata"].isString());
+	Json::Value metadata;
+	BOOST_CHECK(jsonParseStrict(contract["metadata"].asString(), metadata));
+
+	Json::Value const& optimizer = metadata["settings"]["optimizer"];
+	BOOST_CHECK(optimizer.isMember("enabled"));
+	BOOST_CHECK(optimizer["enabled"].asBool() == true);
+	BOOST_CHECK(!optimizer.isMember("details"));
+	BOOST_CHECK(optimizer["runs"].asUInt() == 200);
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_settings_details_exactly_as_default_disabled)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": { "A": [ "metadata" ] }
+			},
+			"optimizer": { "details": {
+				"constantOptimizer" : false,
+				"cse" : false,
+				"deduplicate" : false,
+				"jumpdestRemover" : true,
+				"orderLiterals" : false,
+				"peephole" : true
+			} }
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["metadata"].isString());
+	Json::Value metadata;
+	BOOST_CHECK(jsonParseStrict(contract["metadata"].asString(), metadata));
+
+	Json::Value const& optimizer = metadata["settings"]["optimizer"];
+	BOOST_CHECK(optimizer.isMember("enabled"));
+	// enabled is switched to false instead!
+	BOOST_CHECK(optimizer["enabled"].asBool() == false);
+	BOOST_CHECK(!optimizer.isMember("details"));
+	BOOST_CHECK(optimizer["runs"].asUInt() == 200);
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"outputSelection": {
+				"fileA": { "A": [ "metadata" ] }
+			},
+			"optimizer": { "runs": 600, "details": {
+				"constantOptimizer" : true,
+				"cse" : false,
+				"deduplicate" : true,
+				"jumpdestRemover" : true,
+				"orderLiterals" : false,
+				"peephole" : true,
+				"yul": true
+			} }
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A { }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["metadata"].isString());
+	Json::Value metadata;
+	BOOST_CHECK(jsonParseStrict(contract["metadata"].asString(), metadata));
+
+	Json::Value const& optimizer = metadata["settings"]["optimizer"];
+	BOOST_CHECK(!optimizer.isMember("enabled"));
+	BOOST_CHECK(optimizer.isMember("details"));
+	BOOST_CHECK(optimizer["details"]["constantOptimizer"].asBool() == true);
+	BOOST_CHECK(optimizer["details"]["cse"].asBool() == false);
+	BOOST_CHECK(optimizer["details"]["deduplicate"].asBool() == true);
+	BOOST_CHECK(optimizer["details"]["jumpdestRemover"].asBool() == true);
+	BOOST_CHECK(optimizer["details"]["orderLiterals"].asBool() == false);
+	BOOST_CHECK(optimizer["details"]["peephole"].asBool() == true);
+	BOOST_CHECK(optimizer["details"]["yulDetails"].isObject());
+	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 8);
+	BOOST_CHECK(optimizer["runs"].asUInt() == 600);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

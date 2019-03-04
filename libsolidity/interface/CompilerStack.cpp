@@ -109,10 +109,16 @@ void CompilerStack::setLibraries(std::map<std::string, h160> const& _libraries)
 
 void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
 {
+	OptimiserSettings settings = _optimize ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+	settings.expectedExecutionsPerDeployment = _runs;
+	setOptimiserSettings(std::move(settings));
+}
+
+void CompilerStack::setOptimiserSettings(OptimiserSettings _settings)
+{
 	if (m_stackState >= ParsingSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set optimiser settings before parsing."));
-	m_optimize = _optimize;
-	m_optimizeRuns = _runs;
+	m_optimiserSettings = std::move(_settings);
 }
 
 void CompilerStack::useMetadataLiteralSources(bool _metadataLiteralSources)
@@ -146,8 +152,7 @@ void CompilerStack::reset(bool _keepSources)
 	m_unhandledSMTLib2Queries.clear();
 	m_libraries.clear();
 	m_evmVersion = langutil::EVMVersion();
-	m_optimize = false;
-	m_optimizeRuns = 200;
+	m_optimiserSettings = OptimiserSettings::minimal();
 	m_globalContext.reset();
 	m_scopes.clear();
 	m_sourceOrder.clear();
@@ -840,7 +845,7 @@ void CompilerStack::compileContract(
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimiserSettings);
 	compiledContract.compiler = compiler;
 
 	string metadata = createMetadata(compiledContract);
@@ -953,8 +958,35 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 			meta["sources"][s.first]["urls"].append("bzzr://" + toHex(s.second.swarmHash().asBytes()));
 		}
 	}
-	meta["settings"]["optimizer"]["enabled"] = m_optimize;
-	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
+
+	static_assert(sizeof(m_optimiserSettings.expectedExecutionsPerDeployment) <= sizeof(Json::LargestUInt), "Invalid word size.");
+	solAssert(static_cast<Json::LargestUInt>(m_optimiserSettings.expectedExecutionsPerDeployment) < std::numeric_limits<Json::LargestUInt>::max(), "");
+	meta["settings"]["optimizer"]["runs"] = Json::Value(Json::LargestUInt(m_optimiserSettings.expectedExecutionsPerDeployment));
+
+	/// Backwards compatibility: If set to one of the default settings, do not provide details.
+	OptimiserSettings settingsWithoutRuns = m_optimiserSettings;
+	// reset to default
+	settingsWithoutRuns.expectedExecutionsPerDeployment = OptimiserSettings::minimal().expectedExecutionsPerDeployment;
+	if (settingsWithoutRuns == OptimiserSettings::minimal())
+		meta["settings"]["optimizer"]["enabled"] = false;
+	else if (settingsWithoutRuns == OptimiserSettings::enabled())
+		meta["settings"]["optimizer"]["enabled"] = true;
+	else
+	{
+		Json::Value details{Json::objectValue};
+
+		details["orderLiterals"] = m_optimiserSettings.runOrderLiterals;
+		details["jumpdestRemover"] = m_optimiserSettings.runJumpdestRemover;
+		details["peephole"] = m_optimiserSettings.runPeephole;
+		details["deduplicate"] = m_optimiserSettings.runDeduplicate;
+		details["cse"] = m_optimiserSettings.runCSE;
+		details["constantOptimizer"] = m_optimiserSettings.runConstantOptimiser;
+		details["yul"] = m_optimiserSettings.runYulOptimiser;
+		details["yulDetails"] = Json::objectValue;
+
+		meta["settings"]["optimizer"]["details"] = std::move(details);
+	}
+
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;

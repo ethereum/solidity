@@ -153,7 +153,7 @@ bytes compileFirstExpression(
 					parametersSize--
 				);
 
-			ExpressionCompiler(context).compile(*extractor.expression());
+			ExpressionCompiler(context, dev::test::Options::get().optimize).compile(*extractor.expression());
 
 			for (vector<string> const& function: _functions)
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(
@@ -282,12 +282,26 @@ BOOST_AUTO_TEST_CASE(comparison)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({uint8_t(Instruction::PUSH1), 0x1, uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::PUSH2), 0x11, 0xaa,
-					   uint8_t(Instruction::PUSH2), 0x10, 0xaa,
-					   uint8_t(Instruction::LT), uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::EQ),
-					   uint8_t(Instruction::ISZERO)});
+	bytes expectation;
+	if (dev::test::Options::get().optimize)
+		expectation = {
+			uint8_t(Instruction::PUSH2), 0x11, 0xaa,
+			uint8_t(Instruction::PUSH2), 0x10, 0xaa,
+			uint8_t(Instruction::LT), uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::PUSH1), 0x1,
+			uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::EQ),
+			uint8_t(Instruction::ISZERO)
+		};
+	else
+		expectation = {
+			uint8_t(Instruction::PUSH1), 0x1, uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::PUSH2), 0x11, 0xaa,
+			uint8_t(Instruction::PUSH2), 0x10, 0xaa,
+			uint8_t(Instruction::LT), uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::EQ),
+			uint8_t(Instruction::ISZERO)
+		};
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -300,23 +314,25 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({uint8_t(Instruction::PUSH1), 0x12, // 8 + 10
-					   uint8_t(Instruction::PUSH1), 0x4,
-					   uint8_t(Instruction::GT),
-					   uint8_t(Instruction::ISZERO), // after this we have 4 <= 8 + 10
-					   uint8_t(Instruction::DUP1),
-					   uint8_t(Instruction::PUSH1), 0x11,
-					   uint8_t(Instruction::JUMPI), // short-circuit if it is true
-					   uint8_t(Instruction::POP),
-					   uint8_t(Instruction::PUSH1), 0x2,
-					   uint8_t(Instruction::PUSH1), 0x9,
-					   uint8_t(Instruction::EQ),
-					   uint8_t(Instruction::ISZERO), // after this we have 9 != 2
-					   uint8_t(Instruction::JUMPDEST),
-					   uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::PUSH1), 0x1, uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::EQ),
-					   uint8_t(Instruction::ISZERO)});
+	bytes expectation{
+		uint8_t(Instruction::PUSH1), 0x12, // 8 + 10
+		uint8_t(Instruction::PUSH1), 0x4,
+		uint8_t(Instruction::GT),
+		uint8_t(Instruction::ISZERO), // after this we have 4 <= 8 + 10
+		uint8_t(Instruction::DUP1),
+		uint8_t(Instruction::PUSH1), 0x11,
+		uint8_t(Instruction::JUMPI), // short-circuit if it is true
+		uint8_t(Instruction::POP),
+		uint8_t(Instruction::PUSH1), 0x2,
+		uint8_t(Instruction::PUSH1), 0x9,
+		uint8_t(Instruction::EQ),
+		uint8_t(Instruction::ISZERO), // after this we have 9 != 2
+		uint8_t(Instruction::JUMPDEST),
+		uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+		uint8_t(Instruction::PUSH1), 0x1, uint8_t(Instruction::ISZERO), uint8_t(Instruction::ISZERO),
+		uint8_t(Instruction::EQ),
+		uint8_t(Instruction::ISZERO)
+	};
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -328,37 +344,76 @@ BOOST_AUTO_TEST_CASE(arithmetic)
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
-	bytes expectation({uint8_t(Instruction::PUSH1), 0x1,
-					   uint8_t(Instruction::PUSH1), 0x2,
-					   uint8_t(Instruction::PUSH1), 0x3,
-					   uint8_t(Instruction::PUSH1), 0x4,
-					   uint8_t(Instruction::PUSH1), 0x5,
-					   uint8_t(Instruction::PUSH1), 0x6,
-					   uint8_t(Instruction::PUSH1), 0x7,
-					   uint8_t(Instruction::PUSH1), 0x8,
-					   uint8_t(Instruction::DUP9),
-					   uint8_t(Instruction::XOR),
-					   uint8_t(Instruction::AND),
-					   uint8_t(Instruction::OR),
-					   uint8_t(Instruction::SUB),
-					   uint8_t(Instruction::ADD),
-					   uint8_t(Instruction::DUP2),
-					   uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::PUSH1), 0x1d,
-					   uint8_t(Instruction::JUMPI),
-					   uint8_t(Instruction::INVALID),
-					   uint8_t(Instruction::JUMPDEST),
-					   uint8_t(Instruction::MOD),
-					   uint8_t(Instruction::DUP2),
-					   uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::ISZERO),
-					   uint8_t(Instruction::PUSH1), 0x26,
-					   uint8_t(Instruction::JUMPI),
-					   uint8_t(Instruction::INVALID),
-					   uint8_t(Instruction::JUMPDEST),
-					   uint8_t(Instruction::DIV),
-					   uint8_t(Instruction::MUL)});
+
+	bytes expectation;
+	if (dev::test::Options::get().optimize)
+		expectation = {
+			uint8_t(Instruction::PUSH1), 0x2,
+			uint8_t(Instruction::PUSH1), 0x3,
+			uint8_t(Instruction::PUSH1), 0x5,
+			uint8_t(Instruction::DUP4),
+			uint8_t(Instruction::PUSH1), 0x8,
+			uint8_t(Instruction::XOR),
+			uint8_t(Instruction::PUSH1), 0x7,
+			uint8_t(Instruction::AND),
+			uint8_t(Instruction::PUSH1), 0x6,
+			uint8_t(Instruction::OR),
+			uint8_t(Instruction::SUB),
+			uint8_t(Instruction::PUSH1), 0x4,
+			uint8_t(Instruction::ADD),
+			uint8_t(Instruction::DUP2),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::PUSH1), 0x1b,
+			uint8_t(Instruction::JUMPI),
+			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::JUMPDEST),
+			uint8_t(Instruction::MOD),
+			uint8_t(Instruction::DUP2),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::PUSH1), 0x24,
+			uint8_t(Instruction::JUMPI),
+			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::JUMPDEST),
+			uint8_t(Instruction::DIV),
+			uint8_t(Instruction::PUSH1), 0x1,
+			uint8_t(Instruction::MUL)
+		};
+	else
+		expectation = {
+			uint8_t(Instruction::PUSH1), 0x1,
+			uint8_t(Instruction::PUSH1), 0x2,
+			uint8_t(Instruction::PUSH1), 0x3,
+			uint8_t(Instruction::PUSH1), 0x4,
+			uint8_t(Instruction::PUSH1), 0x5,
+			uint8_t(Instruction::PUSH1), 0x6,
+			uint8_t(Instruction::PUSH1), 0x7,
+			uint8_t(Instruction::PUSH1), 0x8,
+			uint8_t(Instruction::DUP9),
+			uint8_t(Instruction::XOR),
+			uint8_t(Instruction::AND),
+			uint8_t(Instruction::OR),
+			uint8_t(Instruction::SUB),
+			uint8_t(Instruction::ADD),
+			uint8_t(Instruction::DUP2),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::PUSH1), 0x1d,
+			uint8_t(Instruction::JUMPI),
+			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::JUMPDEST),
+			uint8_t(Instruction::MOD),
+			uint8_t(Instruction::DUP2),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::ISZERO),
+			uint8_t(Instruction::PUSH1), 0x26,
+			uint8_t(Instruction::JUMPI),
+			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::JUMPDEST),
+			uint8_t(Instruction::DIV),
+			uint8_t(Instruction::MUL)
+		};
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -371,13 +426,27 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
 
-	bytes expectation({uint8_t(Instruction::PUSH1), 0x2,
-					   uint8_t(Instruction::DUP2),
-					   uint8_t(Instruction::PUSH1), 0x0,
-					   uint8_t(Instruction::SUB),
-					   uint8_t(Instruction::NOT),
-					   uint8_t(Instruction::EQ),
-					   uint8_t(Instruction::ISZERO)});
+	bytes expectation;
+	if (dev::test::Options::get().optimize)
+		expectation = {
+			uint8_t(Instruction::DUP1),
+			uint8_t(Instruction::PUSH1), 0x0,
+			uint8_t(Instruction::SUB),
+			uint8_t(Instruction::NOT),
+			uint8_t(Instruction::PUSH1), 0x2,
+			uint8_t(Instruction::EQ),
+			uint8_t(Instruction::ISZERO)
+		};
+	else
+		expectation = {
+			uint8_t(Instruction::PUSH1), 0x2,
+			uint8_t(Instruction::DUP2),
+			uint8_t(Instruction::PUSH1), 0x0,
+			uint8_t(Instruction::SUB),
+			uint8_t(Instruction::NOT),
+			uint8_t(Instruction::EQ),
+			uint8_t(Instruction::ISZERO)
+		};
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -391,48 +460,50 @@ BOOST_AUTO_TEST_CASE(unary_inc_dec)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "x"}});
 
 	// Stack: a, x
-	bytes expectation({uint8_t(Instruction::DUP2),
-					   uint8_t(Instruction::DUP1),
-					   uint8_t(Instruction::PUSH1), 0x1,
-					   uint8_t(Instruction::ADD),
-					   // Stack here: a x a (a+1)
-					   uint8_t(Instruction::SWAP3),
-					   uint8_t(Instruction::POP), // first ++
-					   // Stack here: (a+1) x a
-					   uint8_t(Instruction::DUP3),
-					   uint8_t(Instruction::PUSH1), 0x1,
-					   uint8_t(Instruction::ADD),
-					   // Stack here: (a+1) x a (a+2)
-					   uint8_t(Instruction::SWAP3),
-					   uint8_t(Instruction::POP),
-					   // Stack here: (a+2) x a
-					   uint8_t(Instruction::DUP3), // second ++
-					   uint8_t(Instruction::XOR),
-					   // Stack here: (a+2) x a^(a+2)
-					   uint8_t(Instruction::DUP3),
-					   uint8_t(Instruction::DUP1),
-					   uint8_t(Instruction::PUSH1), 0x1,
-					   uint8_t(Instruction::SWAP1),
-					   uint8_t(Instruction::SUB),
-					   // Stack here: (a+2) x a^(a+2) (a+2) (a+1)
-					   uint8_t(Instruction::SWAP4),
-					   uint8_t(Instruction::POP), // first --
-					   uint8_t(Instruction::XOR),
-					   // Stack here: (a+1) x a^(a+2)^(a+2)
-					   uint8_t(Instruction::DUP3),
-					   uint8_t(Instruction::PUSH1), 0x1,
-					   uint8_t(Instruction::SWAP1),
-					   uint8_t(Instruction::SUB),
-					   // Stack here: (a+1) x a^(a+2)^(a+2) a
-					   uint8_t(Instruction::SWAP3),
-					   uint8_t(Instruction::POP), // second ++
-					   // Stack here: a x a^(a+2)^(a+2)
-					   uint8_t(Instruction::DUP3), // will change
-					   uint8_t(Instruction::XOR),
-					   uint8_t(Instruction::SWAP1),
-					   uint8_t(Instruction::POP),
-					   uint8_t(Instruction::DUP1)});
-					   // Stack here: a x a^(a+2)^(a+2)^a
+	bytes expectation{
+		uint8_t(Instruction::DUP2),
+		uint8_t(Instruction::DUP1),
+		uint8_t(Instruction::PUSH1), 0x1,
+		uint8_t(Instruction::ADD),
+		// Stack here: a x a (a+1)
+		uint8_t(Instruction::SWAP3),
+		uint8_t(Instruction::POP), // first ++
+		// Stack here: (a+1) x a
+		uint8_t(Instruction::DUP3),
+		uint8_t(Instruction::PUSH1), 0x1,
+		uint8_t(Instruction::ADD),
+		// Stack here: (a+1) x a (a+2)
+		uint8_t(Instruction::SWAP3),
+		uint8_t(Instruction::POP),
+		// Stack here: (a+2) x a
+		uint8_t(Instruction::DUP3), // second ++
+		uint8_t(Instruction::XOR),
+		// Stack here: (a+2) x a^(a+2)
+		uint8_t(Instruction::DUP3),
+		uint8_t(Instruction::DUP1),
+		uint8_t(Instruction::PUSH1), 0x1,
+		uint8_t(Instruction::SWAP1),
+		uint8_t(Instruction::SUB),
+		// Stack here: (a+2) x a^(a+2) (a+2) (a+1)
+		uint8_t(Instruction::SWAP4),
+		uint8_t(Instruction::POP), // first --
+		uint8_t(Instruction::XOR),
+		// Stack here: (a+1) x a^(a+2)^(a+2)
+		uint8_t(Instruction::DUP3),
+		uint8_t(Instruction::PUSH1), 0x1,
+		uint8_t(Instruction::SWAP1),
+		uint8_t(Instruction::SUB),
+		// Stack here: (a+1) x a^(a+2)^(a+2) a
+		uint8_t(Instruction::SWAP3),
+		uint8_t(Instruction::POP), // second ++
+		// Stack here: a x a^(a+2)^(a+2)
+		uint8_t(Instruction::DUP3), // will change
+		uint8_t(Instruction::XOR),
+		uint8_t(Instruction::SWAP1),
+		uint8_t(Instruction::POP),
+		uint8_t(Instruction::DUP1)
+	};
+	// Stack here: a x a^(a+2)^(a+2)^a
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -446,16 +517,31 @@ BOOST_AUTO_TEST_CASE(assignment)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "b"}});
 
 	// Stack: a, b
-	bytes expectation({uint8_t(Instruction::PUSH1), 0x2,
-					   uint8_t(Instruction::DUP2),
-					   uint8_t(Instruction::DUP4),
-					   uint8_t(Instruction::ADD),
-					   // Stack here: a b 2 a+b
-					   uint8_t(Instruction::SWAP3),
-					   uint8_t(Instruction::POP),
-					   uint8_t(Instruction::DUP3),
-					   // Stack here: a+b b 2 a+b
-					   uint8_t(Instruction::MUL)});
+	bytes expectation;
+	if (dev::test::Options::get().optimize)
+		expectation = {
+			uint8_t(Instruction::DUP1),
+			uint8_t(Instruction::DUP3),
+			uint8_t(Instruction::ADD),
+			uint8_t(Instruction::SWAP2),
+			uint8_t(Instruction::POP),
+			uint8_t(Instruction::DUP2),
+			uint8_t(Instruction::PUSH1), 0x2,
+			uint8_t(Instruction::MUL)
+		};
+	else
+		expectation = {
+			uint8_t(Instruction::PUSH1), 0x2,
+			uint8_t(Instruction::DUP2),
+			uint8_t(Instruction::DUP4),
+			uint8_t(Instruction::ADD),
+			// Stack here: a b 2 a+b
+			uint8_t(Instruction::SWAP3),
+			uint8_t(Instruction::POP),
+			uint8_t(Instruction::DUP3),
+			// Stack here: a+b b 2 a+b
+			uint8_t(Instruction::MUL)
+		};
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
