@@ -12829,14 +12829,16 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
-	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "test123") + bytes(28, 0) : bytes());
-	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
-	ABI_CHECK(callContractFunction("h()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
-	ABI_CHECK(callContractFunction("i()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
-	ABI_CHECK(callContractFunction("j()"), haveReturndata ? encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0): bytes());
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		compileAndRun(sourceCode, 0, "C");
+		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "test123") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("i()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("j()"), encodeArgs(0, 0x40, 0x84) + errorSignature + encodeArgs(0x20, 44, "test1234567890123456789012345678901234567890") + bytes(28, 0));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(require_with_message)
@@ -12901,16 +12903,18 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
-	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-	ABI_CHECK(callContractFunction("f(uint256)", 8), haveReturndata ? encodeArgs(1, 0x40, 0) : bytes());
-	ABI_CHECK(callContractFunction("f(uint256)", 5), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 6, "failed") + bytes(28, 0) : bytes());
-	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(1, 0x40, 0) : bytes());
-	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 18, "only on second run") + bytes(28, 0) : bytes());
-	ABI_CHECK(callContractFunction("h()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0): bytes());
-	ABI_CHECK(callContractFunction("i()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0): bytes());
-	ABI_CHECK(callContractFunction("j()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "msg") + bytes(28, 0): bytes());
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		compileAndRun(sourceCode, 0, "C");
+		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+		ABI_CHECK(callContractFunction("f(uint256)", 8), encodeArgs(1, 0x40, 0));
+		ABI_CHECK(callContractFunction("f(uint256)", 5), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 6, "failed") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(1, 0x40, 0));
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 18, "only on second run") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("h()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("i()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "abc") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("j()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 3, "msg") + bytes(28, 0));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
@@ -12945,11 +12949,13 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
-	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
-	ABI_CHECK(callContractFunction("g()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		compileAndRun(sourceCode, 0, "C");
+		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
@@ -12981,10 +12987,12 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
-	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		compileAndRun(sourceCode, 0, "C");
+		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
@@ -13018,10 +13026,12 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	bool const haveReturndata = dev::test::Options::get().evmVersion().supportsReturndata();
-	bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
-	ABI_CHECK(callContractFunction("f()"), haveReturndata ? encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0) : bytes());
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		compileAndRun(sourceCode, 0, "C");
+		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0, 0x40, 0x64) + errorSignature + encodeArgs(0x20, 7, "message") + bytes(28, 0));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(negative_stack_height)

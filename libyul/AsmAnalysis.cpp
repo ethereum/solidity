@@ -641,17 +641,17 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	solAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 	solAssert(m_dialect->flavour != AsmFlavour::Yul, "");
 
-	auto warningForVM = [=](string const& vmKindMessage) {
-		m_errorReporter.warning(
+	auto errorForVM = [=](string const& vmKindMessage) {
+		m_errorReporter.typeError(
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
 			+ "\" instruction is " +
 			vmKindMessage +
-			" VMs. " +
-			"You are currently compiling for \"" +
+			" VMs " +
+			" (you are currently compiling for \"" +
 			m_evmVersion.name() +
-			"\", where it will be interpreted as an invalid instruction."
+			"\")."
 		);
 	};
 
@@ -660,11 +660,11 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 		_instr == solidity::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
 	{
-		warningForVM("only available for Byzantium-compatible");
+		errorForVM("only available for Byzantium-compatible");
 	}
 	else if (_instr == solidity::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
 	{
-		warningForVM("only available for Byzantium-compatible");
+		errorForVM("only available for Byzantium-compatible");
 	}
 	else if ((
 		_instr == solidity::Instruction::SHL ||
@@ -672,15 +672,15 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 		_instr == solidity::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
 	{
-		warningForVM("only available for Constantinople-compatible");
+		errorForVM("only available for Constantinople-compatible");
 	}
 	else if (_instr == solidity::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
 	{
-		warningForVM("only available for Constantinople-compatible");
+		errorForVM("only available for Constantinople-compatible");
 	}
 	else if (_instr == solidity::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
 	{
-		warningForVM("only available for Constantinople-compatible");
+		errorForVM("only available for Constantinople-compatible");
 	}
 	else if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 	{

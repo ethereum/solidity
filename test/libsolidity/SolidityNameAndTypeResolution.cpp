@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
 	if (!dev::test::Options::get().evmVersion().supportsReturndata())
-		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible VMs.")));
+		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible VMs")));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
 	if (!dev::test::Options::get().evmVersion().hasCreate2())
-		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"create2\" instruction is only available for Constantinople-compatible VMs.")));
+		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"create2\" instruction is only available for Constantinople-compatible VMs")));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
 	if (!dev::test::Options::get().evmVersion().hasExtCodeHash())
-		expectations.emplace_back(make_pair(Error::Type::Warning, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs.")));
+		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs")));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
