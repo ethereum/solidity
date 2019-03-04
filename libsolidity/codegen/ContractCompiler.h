@@ -44,7 +44,6 @@ public:
 		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
 	{
-		m_context = CompilerContext(_context.evmVersion(), _runtimeCompiler ? &_runtimeCompiler->m_context : nullptr);
 	}
 
 	void compileContract(
