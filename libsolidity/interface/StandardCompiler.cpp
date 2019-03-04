@@ -193,6 +193,7 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	// This does not inculde "evm.methodIdentifiers" on purpose!
 	static vector<string> const outputsThatRequireBinaries{
 		"*",
+		"ir", "irOptimized",
 		"evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes",
 		"evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences",
 		"evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap",
@@ -207,6 +208,23 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 					return true;
 	return false;
 }
+
+/// @returns true if any Yul IR was requested. Note that as an exception, '*' does not
+/// yet match "ir" or "irOptimized"
+bool isIRRequested(Json::Value const& _outputSelection)
+{
+	if (!_outputSelection.isObject())
+		return false;
+
+	for (auto const& fileRequests: _outputSelection)
+		for (auto const& requests: fileRequests)
+			for (auto const& request: requests)
+				if (request == "ir" || request == "irOptimized")
+					return true;
+
+	return false;
+}
+
 
 Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 {
@@ -657,9 +675,13 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
 
+	bool const irRequested = isIRRequested(_inputsAndSettings.outputSelection);
+
+	compilerStack.enableIRGeneration(irRequested);
+
 	Json::Value errors = std::move(_inputsAndSettings.errors);
 
-	bool const binariesRequested = isBinaryRequested(_inputsAndSettings.outputSelection);
+	bool const binariesRequested = irRequested || isBinaryRequested(_inputsAndSettings.outputSelection);
 
 	try
 	{
@@ -799,9 +821,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "devdoc"))
 			contractData["devdoc"] = compilerStack.natspecDev(contractName);
 
+		// IR
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ir"))
+			contractData["ir"] = compilerStack.yulIR(contractName);
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized"))
+			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
+
 		// EVM
 		Json::Value evmData(Json::objectValue);
-		// @TODO: add ir
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly"))
 			evmData["assembly"] = compilerStack.assemblyString(contractName, sourceList);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly"))
