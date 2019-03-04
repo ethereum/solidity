@@ -201,7 +201,6 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	// This does not inculde "evm.methodIdentifiers" on purpose!
 	static vector<string> const outputsThatRequireBinaries{
 		"*",
-		"metadata", // This is only generated at the end of compilation, but could be generated earlier.
 		"evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes",
 		"evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences",
 		"evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap",
@@ -777,7 +776,7 @@ Json::Value StandardCompiler::compileInternal(Json::Value const& _input)
 		Json::Value contractData(Json::objectValue);
 		if (isArtifactRequested(outputSelection, file, name, "abi"))
 			contractData["abi"] = m_compilerStack.contractABI(contractName);
-		if (compilationSuccess && isArtifactRequested(outputSelection, file, name, "metadata"))
+		if (isArtifactRequested(outputSelection, file, name, "metadata"))
 			contractData["metadata"] = m_compilerStack.metadata(contractName);
 		if (isArtifactRequested(outputSelection, file, name, "userdoc"))
 			contractData["userdoc"] = m_compilerStack.natspecUser(contractName);

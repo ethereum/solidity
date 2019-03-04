@@ -10,6 +10,7 @@ Compiler Features:
  * Inline Assembly: Consider ``extcodehash`` as part of Constantinople.
  * Inline Assembly: Instructions unavailable to the currently configured EVM are errors now.
  * SMTChecker: Do not report underflow/overflow if they always revert. This removes false positives when using ``SafeMath``.
+ * Standard JSON Interface: Allow retrieving metadata without triggering compilation.
  * Static Analyzer: Warn about expressions with custom types when they have no effect.
  * Optimizer: Add new rules with constants including ``LT``, ``GT``, ``AND`` and ``BYTE``.
  * Optimizer: Add rule for shifts with constants for Constantinople.
