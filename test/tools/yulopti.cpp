@@ -206,7 +206,7 @@ public:
 private:
 	ErrorList m_errors;
 	shared_ptr<yul::Block> m_ast;
-	shared_ptr<Dialect> m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion::petersburg())};
+	shared_ptr<Dialect> m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
 	shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	shared_ptr<NameDispenser> m_nameDispenser;
 };

@@ -112,7 +112,7 @@ at each version. Backward compatibility is not guaranteed between each version.
    - All gas sent by default for external calls, previously a certain amount had to be retained.
 - ``spuriousDragon``
    - Gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
-- ``byzantium`` (**default**)
+- ``byzantium``
    - Opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
    - The ``staticcall`` opcode is used when calling non-library view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
    - It is possible to access dynamic data returned from function calls.
@@ -120,7 +120,7 @@ at each version. Backward compatibility is not guaranteed between each version.
 - ``constantinople``
    - Opcodes ``create2`, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
    - Shifting operators use shifting opcodes and thus need less gas.
-- ``petersburg``
+- ``petersburg`` (**default**)
    - The compiler behaves the same way as with constantinople.
 
 
