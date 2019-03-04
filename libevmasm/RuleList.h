@@ -87,12 +87,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 				return B.d();
 			unsigned testBit = unsigned(A.d()) * 8 + 7;
 			u256 mask = (u256(1) << testBit) - 1;
-			return u256(boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask);
+			return boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask;
 		}, false},
 		{{Instruction::SHL, {A, B}}, [=]{
 			if (A.d() > 255)
 				return u256(0);
-			return u256(bigint(B.d()) << unsigned(A.d()));
+			return bigintShiftLeftWorkaround(B.d(), unsigned(A.d()));
 		}, false},
 		{{Instruction::SHR, {A, B}}, [=]{
 			if (A.d() > 255)

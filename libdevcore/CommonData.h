@@ -140,6 +140,12 @@ inline bytes toCompactBigEndian(uint8_t _val, unsigned _min = 0)
 	return (_min || _val) ? bytes{ _val } : bytes{};
 }
 
+/// Workarounds shift left bug in boost <1.65.1.
+template <class S> S bigintShiftLeftWorkaround(S const& _a, unsigned _b)
+{
+	return (S)(bigint(_a) << _b);
+}
+
 /// Convenience function for conversion of a u256 to hex
 inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
 {
