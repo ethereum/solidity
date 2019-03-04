@@ -108,18 +108,21 @@ at each version. Backward compatibility is not guaranteed between each version.
 
 - ``homestead`` (oldest version)
 - ``tangerineWhistle``
-   - gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
-   - all gas sent by default for external calls, previously a certain amount had to be retained.
+   - Gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
+   - All gas sent by default for external calls, previously a certain amount had to be retained.
 - ``spuriousDragon``
-   - gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
+   - Gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
 - ``byzantium`` (**default**)
-   - opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
-   - the ``staticcall`` opcode is used when calling non-library view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
-   - it is possible to access dynamic data returned from function calls.
+   - Opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
+   - The ``staticcall`` opcode is used when calling non-library view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
+   - It is possible to access dynamic data returned from function calls.
    - ``revert`` opcode introduced, which means that ``revert()`` will not waste gas.
-- ``constantinople`` (still in progress)
-   - opcodes ``shl``, ``shr`` and ``sar`` are available in assembly.
-   - shifting operators use shifting opcodes and thus need less gas.
+- ``constantinople``
+   - Opcodes ``create2`, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
+   - Shifting operators use shifting opcodes and thus need less gas.
+- ``petersburg``
+   - The compiler behaves the same way as with constantinople.
+
 
 .. _compiler-api:
 
@@ -217,7 +220,7 @@ Input Description
             "yulDetails": {}
           }
         },
-        "evmVersion": "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium or constantinople
+        "evmVersion": "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium, constantinople or petersburg
         // Metadata settings (optional)
         "metadata": {
           // Use only literal content and not URLs (false by default)

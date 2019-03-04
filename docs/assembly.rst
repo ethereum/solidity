@@ -162,7 +162,6 @@ Note that the order of arguments can be seen to be reversed in non-functional st
 Opcodes marked with ``-`` do not push an item onto the stack (do not return a result),
 those marked with ``*`` are special and all others push exactly one item onto the stack (their "return value").
 Opcodes marked with ``F``, ``H``, ``B`` or ``C`` are present since Frontier, Homestead, Byzantium or Constantinople, respectively.
-Constantinople is still in planning and all instructions marked as such will result in an invalid instruction exception.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
 but not including position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
