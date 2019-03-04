@@ -108,7 +108,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 	Pattern,
 	Pattern,
 	Pattern X,
-	Pattern
+	Pattern Y
 )
 {
 	return std::vector<SimplificationRule<Pattern>> {
@@ -146,6 +146,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{{Instruction::SHR, {0, X}}, [=]{ return X; }, false},
 		{{Instruction::SHL, {X, 0}}, [=]{ return u256(0); }, true},
 		{{Instruction::SHR, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Instruction::LT, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Instruction::GT, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}; }, false},
+		{{Instruction::GT, {X, ~u256(0)}}, [=]{ return u256(0); }, true},
+		{{Instruction::GT, {0, X}}, [=]{ return u256(0); }, true},
+		{{Instruction::AND, {{Instruction::BYTE, {X, Y}}, {u256(0xff)}}}, [=]() -> Pattern { return {Instruction::BYTE, {X, Y}}; }, false},
+		{{Instruction::BYTE, {X, 31}}, [=]() -> Pattern { return {Instruction::AND, {X, u256(0xff)}}; }, false}
 	};
 }
 
@@ -231,7 +237,9 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		Instruction::ADDRESS,
 		Instruction::CALLER,
 		Instruction::ORIGIN,
-		Instruction::COINBASE
+		Instruction::COINBASE,
+		Instruction::CREATE,
+		Instruction::CREATE2
 	})
 	{
 		u256 const mask = (u256(1) << 160) - 1;
