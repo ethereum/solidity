@@ -105,4 +105,6 @@ test_truffle Zeppelin https://github.com/OpenZeppelin/openzeppelin-solidity.git 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
 
-test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development
+# Disabled temporarily because it is incompatible with petersburg EVM and
+# there is no easy way to set the EVM version in truffle pre 5.0.
+#test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development
