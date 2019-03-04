@@ -118,6 +118,12 @@ bool ErrorReporter::checkForExcessiveErrors(Error::Type _type)
 	return false;
 }
 
+void ErrorReporter::fatalError(Error::Type _type, SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, string const& _description)
+{
+	error(_type, _location, _secondaryLocation, _description);
+	BOOST_THROW_EXCEPTION(FatalError());
+}
+
 void ErrorReporter::fatalError(Error::Type _type, SourceLocation const& _location, string const& _description)
 {
 	error(_type, _location, _description);
@@ -207,6 +213,15 @@ void ErrorReporter::typeError(SourceLocation const& _location, string const& _de
 	);
 }
 
+void ErrorReporter::fatalTypeError(SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, string const& _description)
+{
+	fatalError(
+		Error::Type::TypeError,
+		_location,
+		_secondaryLocation,
+		_description
+	);
+}
 
 void ErrorReporter::fatalTypeError(SourceLocation const& _location, string const& _description)
 {
