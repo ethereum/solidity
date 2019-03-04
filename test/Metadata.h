@@ -20,6 +20,10 @@
  */
 
 #include <libdevcore/CommonData.h>
+
+#include <boost/optional.hpp>
+
+#include <map>
 #include <string>
 
 namespace dev
@@ -36,6 +40,15 @@ bytes bytecodeSansMetadata(bytes const& _bytecode);
 /// Returns the bytecode with the metadata hash stripped out.
 /// Throws exception on invalid hex string.
 std::string bytecodeSansMetadata(std::string const& _bytecode);
+
+/// Parse CBOR metadata into a map. Expects the input CBOR to be a
+/// fixed length map, with each key being a string. The values
+/// are parsed as follows:
+/// - strings into strings
+/// - bytes into hex strings
+/// - booleans into "true"/"false" strings
+/// - everything else is invalid
+boost::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const& _metadata);
 
 /// Expects a serialised metadata JSON and returns true if the
 /// content is valid metadata.
