@@ -69,7 +69,6 @@ void VariableReferenceCounter::operator()(ForLoop const& _forLoop)
 	m_scope = originalScope;
 }
 
-
 void VariableReferenceCounter::operator()(Block const& _block)
 {
 	Scope* originalScope = m_scope;
@@ -91,7 +90,6 @@ void VariableReferenceCounter::increaseRefIfFound(YulString _variableName)
 		[=](Scope::Function const&) { }
 	));
 }
-
 
 CodeTransform::CodeTransform(
 	AbstractAssembly& _assembly,
@@ -605,11 +603,9 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 
 	visitStatements(_forLoop.pre.statements);
 
-	// TODO: When we implement break and continue, the labels and the stack heights at that point
-	// have to be stored in a stack.
 	AbstractAssembly::LabelID loopStart = m_assembly.newLabelId();
-	AbstractAssembly::LabelID loopEnd = m_assembly.newLabelId();
 	AbstractAssembly::LabelID postPart = m_assembly.newLabelId();
+	AbstractAssembly::LabelID loopEnd = m_assembly.newLabelId();
 
 	m_assembly.setSourceLocation(_forLoop.location);
 	m_assembly.appendLabel(loopStart);
@@ -619,6 +615,8 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	m_assembly.appendInstruction(solidity::Instruction::ISZERO);
 	m_assembly.appendJumpToIf(loopEnd);
 
+	int const stackHeightBody = m_assembly.stackHeight();
+	m_context->forLoopStack.emplace(Context::ForLoopLabels{ {postPart, stackHeightBody}, {loopEnd, stackHeightBody} });
 	(*this)(_forLoop.body);
 
 	m_assembly.setSourceLocation(_forLoop.location);
@@ -631,7 +629,19 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	m_assembly.appendLabel(loopEnd);
 
 	finalizeBlock(_forLoop.pre, stackStartHeight);
+	m_context->forLoopStack.pop();
 	m_scope = originalScope;
+	checkStackHeight(&_forLoop);
+}
+
+void CodeTransform::operator()(Break const&)
+{
+	yulAssert(false, "Code generation for break statement in Yul is not implemented yet.");
+}
+
+void CodeTransform::operator()(Continue const&)
+{
+	yulAssert(false, "Code generation for continue statement in Yul is not implemented yet.");
 }
 
 void CodeTransform::operator()(Block const& _block)

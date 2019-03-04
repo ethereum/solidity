@@ -149,6 +149,16 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 	join(zeroRuns);
 }
 
+void RedundantAssignEliminator::operator()(Break const&)
+{
+	yulAssert(false, "Not implemented yet.");
+}
+
+void RedundantAssignEliminator::operator()(Continue const&)
+{
+	yulAssert(false, "Not implemented yet.");
+}
+
 void RedundantAssignEliminator::operator()(Block const& _block)
 {
 	// This will set all variables that are declared in this

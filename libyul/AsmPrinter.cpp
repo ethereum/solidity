@@ -224,6 +224,16 @@ string AsmPrinter::operator()(ForLoop const& _forLoop) const
 	return out;
 }
 
+string AsmPrinter::operator()(Break const&) const
+{
+	return "break";
+}
+
+string AsmPrinter::operator()(Continue const&) const
+{
+	return "continue";
+}
+
 string AsmPrinter::operator()(Block const& _block) const
 {
 	if (_block.statements.empty())

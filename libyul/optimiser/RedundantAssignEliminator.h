@@ -112,6 +112,8 @@ public:
 	void operator()(Switch const& _switch) override;
 	void operator()(FunctionDefinition const&) override;
 	void operator()(ForLoop const&) override;
+	void operator()(Break const&) override;
+	void operator()(Continue const&) override;
 	void operator()(Block const& _block) override;
 
 	static void run(Dialect const& _dialect, Block& _ast);
