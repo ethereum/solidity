@@ -79,7 +79,7 @@ Statement Parser::parseStatement()
 	case Token::If:
 	{
 		If _if = createWithLocation<If>();
-		m_scanner->next();
+		advance();
 		_if.condition = make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
 		return Statement{move(_if)};
@@ -87,15 +87,15 @@ Statement Parser::parseStatement()
 	case Token::Switch:
 	{
 		Switch _switch = createWithLocation<Switch>();
-		m_scanner->next();
+		advance();
 		_switch.expression = make_unique<Expression>(parseExpression());
-		while (m_scanner->currentToken() == Token::Case)
+		while (currentToken() == Token::Case)
 			_switch.cases.emplace_back(parseCase());
-		if (m_scanner->currentToken() == Token::Default)
+		if (currentToken() == Token::Default)
 			_switch.cases.emplace_back(parseCase());
-		if (m_scanner->currentToken() == Token::Default)
+		if (currentToken() == Token::Default)
 			fatalParserError("Only one default case allowed.");
-		else if (m_scanner->currentToken() == Token::Case)
+		else if (currentToken() == Token::Case)
 			fatalParserError("Case not allowed after default case.");
 		if (_switch.cases.empty())
 			fatalParserError("Switch statement without any cases.");
@@ -224,11 +224,11 @@ Case Parser::parseCase()
 {
 	RecursionGuard recursionGuard(*this);
 	Case _case = createWithLocation<Case>();
-	if (m_scanner->currentToken() == Token::Default)
-		m_scanner->next();
-	else if (m_scanner->currentToken() == Token::Case)
+	if (currentToken() == Token::Default)
+		advance();
+	else if (currentToken() == Token::Case)
 	{
-		m_scanner->next();
+		advance();
 		ElementaryOperation literal = parseElementaryOperation();
 		if (literal.type() != typeid(Literal))
 			fatalParserError("Literal expected.");
