@@ -269,6 +269,9 @@ type ``X``. Currently, there is limited support for this feature, but
 it might be expanded in the future. The following properties are
 available for a contract type ``C``:
 
+``type(C).name``:
+    The name of the contract.
+
 ``type(C).creationCode``:
     Memory byte array that contains the creation bytecode of the contract.
     This can be used in inline assembly to build custom creation routines,
