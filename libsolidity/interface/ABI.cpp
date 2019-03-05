@@ -26,12 +26,31 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+namespace
+{
+bool anyDataStoredInStorage(TypePointers const& _pointers)
+{
+	for (TypePointer const& pointer: _pointers)
+		if (pointer->dataStoredIn(DataLocation::Storage))
+			return true;
+
+	return false;
+}
+}
+
 Json::Value ABI::generate(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
 
 	for (auto it: _contractDef.interfaceFunctions())
 	{
+		if (
+			_contractDef.isLibrary() &&
+			(it.second->stateMutability() > StateMutability::View ||
+			anyDataStoredInStorage(it.second->parameterTypes() + it.second->returnParameterTypes()))
+		)
+			continue;
+
 		auto externalFunctionType = it.second->interfaceFunctionType();
 		solAssert(!!externalFunctionType, "");
 		Json::Value method;
