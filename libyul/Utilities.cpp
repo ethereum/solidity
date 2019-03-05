@@ -24,6 +24,7 @@
 #include <libyul/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
+#include <libdevcore/FixedHash.h>
 
 using namespace std;
 using namespace dev;
@@ -32,9 +33,45 @@ using namespace yul;
 u256 yul::valueOfNumberLiteral(Literal const& _literal)
 {
 	assertThrow(_literal.kind == LiteralKind::Number, OptimizerException, "");
+
 	std::string const& literalString = _literal.value.str();
 	assertThrow(isValidDecimal(literalString) || isValidHex(literalString), OptimizerException, "");
 	return u256(literalString);
+}
+
+u256 yul::valueOfStringLiteral(Literal const& _literal)
+{
+	yulAssert(_literal.kind == LiteralKind::String, "Expected string literal!");
+	yulAssert(_literal.value.str().size() <= 32, "Literal string too long!");
+
+	return u256(h256(_literal.value.str(), h256::FromBinary, h256::AlignLeft));
+}
+
+u256 yul::valueOfBoolLiteral(Literal const& _literal)
+{
+	yulAssert(_literal.kind == LiteralKind::Boolean, "Expected bool literal!");
+
+	if (_literal.value == "true"_yulstring)
+		return u256(1);
+	else if (_literal.value == "false"_yulstring)
+		return u256(0);
+
+	yulAssert(false, "Unexpected bool literal value!");
+}
+
+u256 yul::valueOfLiteral(Literal const& _literal)
+{
+	switch(_literal.kind)
+	{
+		case LiteralKind::Number:
+			return valueOfNumberLiteral(_literal);
+		case LiteralKind::Boolean:
+			return valueOfBoolLiteral(_literal);
+		case LiteralKind::String:
+			return valueOfStringLiteral(_literal);
+		default:
+			yulAssert(false, "Unexpected literal kind!");
+	}
 }
 
 template<>

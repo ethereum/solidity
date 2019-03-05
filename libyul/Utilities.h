@@ -27,6 +27,9 @@ namespace yul
 {
 
 dev::u256 valueOfNumberLiteral(Literal const& _literal);
+dev::u256 valueOfStringLiteral(Literal const& _literal);
+dev::u256 valueOfBoolLiteral(Literal const& _literal);
+dev::u256 valueOfLiteral(Literal const& _literal);
 
 /**
  * Linear order on Yul AST nodes.

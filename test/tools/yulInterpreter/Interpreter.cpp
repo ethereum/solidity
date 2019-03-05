@@ -155,20 +155,7 @@ void ExpressionEvaluator::operator()(Literal const& _literal)
 	static YulString const trueString("true");
 	static YulString const falseString("false");
 
-	switch (_literal.kind)
-	{
-	case LiteralKind::Boolean:
-		solAssert(_literal.value == trueString || _literal.value == falseString, "");
-		setValue(_literal.value == trueString ? 1 : 0);
-		break;
-	case LiteralKind::Number:
-		setValue(valueOfNumberLiteral(_literal));
-		break;
-	case LiteralKind::String:
-		solAssert(_literal.value.str().size() <= 32, "");
-		setValue(u256(h256(_literal.value.str(), h256::FromBinary, h256::AlignLeft)));
-		break;
-	}
+	setValue(valueOfLiteral(_literal));
 }
 
 void ExpressionEvaluator::operator()(Identifier const& _identifier)
