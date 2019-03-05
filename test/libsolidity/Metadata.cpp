@@ -25,12 +25,26 @@
 #include <libdevcore/SwarmHash.h>
 #include <libdevcore/JSON.h>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
 {
 namespace test
 {
+
+namespace
+{
+map<string, string> requireParsedCBORMetadata(bytes const& _bytecode)
+{
+	bytes cborMetadata = dev::test::onlyMetadata(_bytecode);
+	BOOST_REQUIRE(!cborMetadata.empty());
+	boost::optional<map<string, string>> tmp = dev::test::parseCBORMetadata(cborMetadata);
+	BOOST_REQUIRE(tmp);
+	return *tmp;
+}
+}
 
 BOOST_AUTO_TEST_SUITE(Metadata)
 
@@ -54,10 +68,10 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
 	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
-	bytes cborMetadata = dev::test::onlyMetadata(bytecode);
-	BOOST_REQUIRE(!cborMetadata.empty());
-	bytes expectation = bytes{0xa1, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} + hash;
-	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), cborMetadata.begin()));
+	auto const cborMetadata = requireParsedCBORMetadata(bytecode);
+	BOOST_CHECK(cborMetadata.size() == 1);
+	BOOST_CHECK(cborMetadata.count("bzzr0") == 1);
+	BOOST_CHECK(cborMetadata.at("bzzr0") == toHex(hash));
 }
 
 BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
@@ -80,13 +94,12 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 	BOOST_CHECK(dev::test::isValidMetadata(metadata));
 	bytes hash = dev::swarmHash(metadata).asBytes();
 	BOOST_REQUIRE(hash.size() == 32);
-	bytes cborMetadata = dev::test::onlyMetadata(bytecode);
-	BOOST_REQUIRE(!cborMetadata.empty());
-	bytes expectation =
-		bytes{0xa2, 0x65, 'b', 'z', 'z', 'r', '0', 0x58, 0x20} +
-		hash +
-		bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
-	BOOST_CHECK(std::equal(expectation.begin(), expectation.end(), cborMetadata.begin()));
+	auto const cborMetadata = requireParsedCBORMetadata(bytecode);
+	BOOST_CHECK(cborMetadata.size() == 2);
+	BOOST_CHECK(cborMetadata.count("bzzr0") == 1);
+	BOOST_CHECK(cborMetadata.at("bzzr0") == toHex(hash));
+	BOOST_CHECK(cborMetadata.count("experimental") == 1);
+	BOOST_CHECK(cborMetadata.at("experimental") == "true");
 }
 
 BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
