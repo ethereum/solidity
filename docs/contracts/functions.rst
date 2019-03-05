@@ -23,7 +23,7 @@ unused parameters can be omitted.
 For example, if you want your contract to accept one kind of external call
 with two integers, you would use something like::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract Simple {
         uint sum;
@@ -55,7 +55,7 @@ Function return variables are declared with the same syntax after the
 For example, suppose you want to return two results: the sum and the product of
 two integers passed as function parameters, then you use something like::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -78,7 +78,7 @@ or you can provide return values
 (either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
 statement::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -140,7 +140,7 @@ The following statements are considered modifying the state:
 
 ::
 
-    pragma solidity ^0.5.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract C {
         function f(uint a, uint b) public view returns (uint) {
@@ -185,7 +185,7 @@ In addition to the list of state modifying statements explained above, the follo
 
 ::
 
-    pragma solidity ^0.5.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract C {
         function f(uint a, uint b) public pure returns (uint) {
@@ -279,7 +279,7 @@ Like any function, the fallback function can execute complex operations as long 
 
 ::
 
-    pragma solidity ^0.5.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract Test {
         // This function is called for all messages sent to
@@ -330,7 +330,7 @@ The following example shows overloading of the function
 
 ::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract A {
         function f(uint _in) public pure returns (uint out) {
@@ -348,7 +348,7 @@ externally visible functions differ by their Solidity types but not by their ext
 
 ::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     // This will not compile
     contract A {
@@ -381,7 +381,7 @@ candidate, resolution fails.
 
 ::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract A {
         function f(uint8 _in) public pure returns (uint8 out) {

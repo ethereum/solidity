@@ -53,7 +53,7 @@ return parameter list for functions.
 
 ::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract C {
         function f(uint a) private pure returns (uint b) { return a + 1; }
@@ -67,7 +67,7 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
 
 ::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract C {
         uint private data;
@@ -111,7 +111,7 @@ when they are declared.
 
 ::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract C {
         uint public data = 42;
@@ -131,7 +131,7 @@ it evaluates to a state variable.  If it is accessed externally
 
 ::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract C {
         uint public data;
@@ -150,7 +150,7 @@ to write a function, for example:
 
 ::
 
-  pragma solidity >=0.4.0 <0.6.0;
+  pragma solidity >=0.4.0 <0.7.0;
 
   contract arrayExample {
     // public state variable
@@ -176,7 +176,7 @@ The next example is more complex:
 
 ::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract Complex {
         struct Data {

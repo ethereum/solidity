@@ -26,7 +26,7 @@ value types and strings.
 
 ::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract C {
         uint constant x = 32**22 + 8;

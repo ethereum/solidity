@@ -34,7 +34,7 @@ each ``_KeyType``, recursively. For example with a mapping:
 
 ::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract MappingExample {
         mapping(address => uint) public balances;

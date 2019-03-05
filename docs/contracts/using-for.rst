@@ -31,7 +31,7 @@ available without having to add further code.
 Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     // This is the same code as before, just without comments
     library Set {
@@ -81,7 +81,7 @@ Let us rewrite the set example from the
 
 It is also possible to extend elementary types in that way::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     library Search {
         function indexOf(uint[] storage self, uint value)

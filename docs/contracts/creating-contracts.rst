@@ -33,7 +33,7 @@ This means that cyclic creation dependencies are impossible.
 
 ::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract OwnedToken {
         // `TokenCreator` is a contract type that is defined below.
