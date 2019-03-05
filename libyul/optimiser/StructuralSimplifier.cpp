@@ -21,6 +21,9 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Visitor.h>
 
+#include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace yul;
@@ -137,8 +140,23 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 
 				return s;
 			}
-			else
-				return {};
+
+			// Remove cases with empty body if no default case exists
+			auto const defaultCase = boost::find_if(
+				cases,
+				[](Case const& _case) { return !_case.value; });
+
+			if (
+				(defaultCase != cases.end() &&
+				defaultCase->body.statements.empty()) ||
+				defaultCase == cases.end()
+			)
+				boost::remove_erase_if(
+					cases,
+					[](Case const& _case) { return _case.body.statements.empty(); }
+				);
+
+			return {};
 		},
 		[&](ForLoop& _forLoop) -> OptionalStatements {
 			if (expressionAlwaysFalse(*_forLoop.condition))
