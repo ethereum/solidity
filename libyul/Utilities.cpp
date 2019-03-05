@@ -32,10 +32,10 @@ using namespace yul;
 
 u256 yul::valueOfNumberLiteral(Literal const& _literal)
 {
-	assertThrow(_literal.kind == LiteralKind::Number, OptimizerException, "");
+	yulAssert(_literal.kind == LiteralKind::Number, "Expected number literal!");
 
 	std::string const& literalString = _literal.value.str();
-	assertThrow(isValidDecimal(literalString) || isValidHex(literalString), OptimizerException, "");
+	yulAssert(isValidDecimal(literalString) || isValidHex(literalString), "Invalid number literal!");
 	return u256(literalString);
 }
 
