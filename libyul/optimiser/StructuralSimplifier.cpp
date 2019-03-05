@@ -83,9 +83,11 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			return {};
 		},
 		[&](Switch& _switchStmt) -> OptionalStatements {
-			if (_switchStmt.cases.size() == 1)
+			auto& cases = _switchStmt.cases;
+
+			if (cases.size() == 1)
 			{
-				auto& switchCase = _switchStmt.cases.front();
+				auto& switchCase = cases.front();
 				auto loc = locationOf(*_switchStmt.expression);
 				if (switchCase.value)
 				{
@@ -112,7 +114,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				Block* matchingCaseBlock = nullptr;
 				Case* defaultCase = nullptr;
 
-				for (auto& _case: _switchStmt.cases)
+				for (auto& _case: cases)
 				{
 					if (_case.value && valueOfLiteral(*_case.value) == constExprVal)
 					{
