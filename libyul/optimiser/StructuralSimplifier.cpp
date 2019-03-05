@@ -109,6 +109,8 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 					return s;
 				}
 			}
+			// Replace the whole switch with the resulting case body if arg. is
+			// a constant
 			else if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
 			{
 				Block* matchingCaseBlock = nullptr;
