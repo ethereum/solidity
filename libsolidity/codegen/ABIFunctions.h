@@ -22,7 +22,9 @@
 
 #pragma once
 
-#include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
+#include <libsolidity/codegen/YulUtilFunctions.h>
+
 #include <liblangutil/EVMVersion.h>
 
 #include <functional>
@@ -30,8 +32,10 @@
 #include <set>
 #include <vector>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 class Type;
 class ArrayType;
@@ -40,17 +44,25 @@ class FunctionType;
 using TypePointer = std::shared_ptr<Type const>;
 using TypePointers = std::vector<TypePointer>;
 
-///
-/// Class to generate encoding and decoding functions. Also maintains a collection
-/// of "functions to be generated" in order to avoid generating the same function
-/// multiple times.
-///
-/// Make sure to include the result of ``requestedFunctions()`` to a block that
-/// is visible from the code that was generated here, or use named labels.
+/**
+ * Class to generate encoding and decoding functions. Also maintains a collection
+ * of "functions to be generated" in order to avoid generating the same function
+ * multiple times.
+ *
+ * Make sure to include the result of ``requestedFunctions()`` to a block that
+ * is visible from the code that was generated here, or use named labels.
+ */
 class ABIFunctions
 {
 public:
-	explicit ABIFunctions(langutil::EVMVersion _evmVersion = langutil::EVMVersion{}) : m_evmVersion(_evmVersion) {}
+	explicit ABIFunctions(
+		langutil::EVMVersion _evmVersion,
+		std::shared_ptr<MultiUseYulFunctionCollector> _functionCollector = std::make_shared<MultiUseYulFunctionCollector>()
+	):
+		m_evmVersion(_evmVersion),
+		m_functionCollector(std::move(_functionCollector)),
+		m_utils(_evmVersion, m_functionCollector)
+	{}
 
 	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes
 	/// into memory, converting the types to @a _targetTypes on the fly.
@@ -128,14 +140,6 @@ private:
 	std::string conversionFunction(Type const& _from, Type const& _to);
 
 	std::string cleanupCombinedExternalFunctionIdFunction();
-
-	/// @returns a function that combines the address and selector to a single value
-	/// for use in the ABI.
-	std::string combineExternalFunctionIdFunction();
-
-	/// @returns a function that splits the address and selector from a single value
-	/// for use in the ABI.
-	std::string splitExternalFunctionIdFunction();
 
 	/// @returns the name of the ABI encoding function with the given type
 	/// and queues the generation of the function to the requested functions.
@@ -229,46 +233,12 @@ private:
 	/// Part of @a abiDecodingFunction for array types.
 	std::string abiDecodingFunctionFunctionType(FunctionType const& _type, bool _fromMemory, bool _forUseOnStack);
 
-	/// @returns a function that copies raw bytes of dynamic length from calldata
-	/// or memory to memory.
-	/// Pads with zeros and might write more than exactly length.
-	std::string copyToMemoryFunction(bool _fromCalldata);
-
-	/// @returns the name of a function that takes a (cleaned) value of the given value type and
-	/// left-aligns it, usually for use in non-padded encoding.
-	std::string leftAlignFunction(Type const& _type);
-
-	std::string shiftLeftFunction(size_t _numBits);
-	std::string shiftRightFunction(size_t _numBits);
-	/// @returns the name of a function that rounds its input to the next multiple
-	/// of 32 or the input if it is a multiple of 32.
-	std::string roundUpFunction();
-
-	std::string arrayLengthFunction(ArrayType const& _type);
-	/// @returns the name of a function that computes the number of bytes required
-	/// to store an array in memory given its length (internally encoded, not ABI encoded).
-	/// The function reverts for too large lengths.
-	std::string arrayAllocationSizeFunction(ArrayType const& _type);
-	/// @returns the name of a function that converts a storage slot number
-	/// or a memory pointer to the slot number / memory pointer for the data position of an array
-	/// which is stored in that slot / memory area.
-	std::string arrayDataAreaFunction(ArrayType const& _type);
-	/// @returns the name of a function that advances an array data pointer to the next element.
-	/// Only works for memory arrays and storage arrays that store one item per slot.
-	std::string nextArrayElementFunction(ArrayType const& _type);
-
 	/// @returns the name of a function used during encoding that stores the length
 	/// if the array is dynamically sized (and the options do not request in-place encoding).
 	/// It returns the new encoding position.
 	/// If the array is not dynamically sized (or in-place encoding was requested),
 	/// does nothing and just returns the position again.
 	std::string arrayStoreLengthForEncodingFunction(ArrayType const& _type, EncodingOptions const& _options);
-
-	/// @returns the name of a function that allocates memory.
-	/// Modifies the "free memory pointer"
-	/// Arguments: size
-	/// Return value: pointer
-	std::string allocationFunction();
 
 	/// Helper function that uses @a _creator to create a function and add it to
 	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
@@ -283,10 +253,10 @@ private:
 	/// @returns the size of the static part of the encoding of the given types.
 	static size_t headSize(TypePointers const& _targetTypes);
 
-	/// Map from function name to code for a multi-use function.
-	std::map<std::string, std::string> m_requestedFunctions;
-	std::set<std::string> m_externallyUsedFunctions;
 	langutil::EVMVersion m_evmVersion;
+	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
+	std::set<std::string> m_externallyUsedFunctions;
+	YulUtilFunctions m_utils;
 };
 
 }
