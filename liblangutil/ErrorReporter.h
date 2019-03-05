@@ -119,7 +119,8 @@ public:
 	}
 
 private:
-	void error(Error::Type _type,
+	void error(
+		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description = std::string());
@@ -130,7 +131,8 @@ private:
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description = std::string());
 
-	void fatalError(Error::Type _type,
+	void fatalError(
+		Error::Type _type,
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());
 
