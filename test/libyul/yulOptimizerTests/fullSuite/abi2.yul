@@ -1103,17 +1103,17 @@
 //         {
 //             revert(value4, value4)
 //         }
-//         let abi_decode_length := calldataload(_2)
-//         if gt(abi_decode_length, _1)
+//         let length := calldataload(_2)
+//         if gt(length, _1)
 //         {
 //             revert(value4, value4)
 //         }
-//         if gt(add(add(_2, abi_decode_length), 32), dataEnd)
+//         if gt(add(add(_2, length), 32), dataEnd)
 //         {
 //             revert(value4, value4)
 //         }
 //         value2 := add(_2, 32)
-//         value3 := abi_decode_length
+//         value3 := length
 //         let _3 := calldataload(add(headStart, 96))
 //         if iszero(lt(_3, 3))
 //         {

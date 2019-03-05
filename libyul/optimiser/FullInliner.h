@@ -140,11 +140,9 @@ class BodyCopier: public ASTCopier
 public:
 	BodyCopier(
 		NameDispenser& _nameDispenser,
-		YulString _varNamePrefix,
 		std::map<YulString, YulString> const& _variableReplacements
 	):
 		m_nameDispenser(_nameDispenser),
-		m_varNamePrefix(_varNamePrefix),
 		m_variableReplacements(_variableReplacements)
 	{}
 
@@ -156,7 +154,6 @@ public:
 	YulString translateIdentifier(YulString _name) override;
 
 	NameDispenser& m_nameDispenser;
-	YulString m_varNamePrefix;
 	std::map<YulString, YulString> m_variableReplacements;
 };
 

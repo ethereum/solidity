@@ -10,13 +10,13 @@
 // fullInliner
 // {
 //     {
-//         let f_a := mload(0)
-//         let f_x := 0
-//         let f_y := 0
-//         f_x := mul(f_a, f_a)
-//         f_y := add(f_a, f_x)
-//         let r := f_x
-//         mstore(r, f_y)
+//         let a_3 := mload(0)
+//         let x_4 := 0
+//         let y_5 := 0
+//         x_4 := mul(a_3, a_3)
+//         y_5 := add(a_3, x_4)
+//         let r := x_4
+//         mstore(r, y_5)
 //     }
 //     function f(a) -> x, y
 //     {

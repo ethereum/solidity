@@ -14,15 +14,15 @@
 // fullInliner
 // {
 //     {
-//         let f_a := mload(1)
-//         let f_b := 0
-//         let f_x := mload(f_a)
-//         f_b := sload(f_x)
-//         let f_c := 3
-//         mstore(mul(f_a, f_b), mload(f_x))
-//         let f_y := add(f_a, f_x)
-//         sstore(f_y, 10)
-//         let r := f_b
+//         let a_6 := mload(1)
+//         let b_7 := 0
+//         let x_8 := mload(a_6)
+//         b_7 := sload(x_8)
+//         let c_9 := 3
+//         mstore(mul(a_6, b_7), mload(x_8))
+//         let y_12 := add(a_6, x_8)
+//         sstore(y_12, 10)
+//         let r := b_7
 //     }
 //     function f(a) -> b
 //     {

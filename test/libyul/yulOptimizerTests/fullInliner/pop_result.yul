@@ -13,11 +13,11 @@
 // {
 //     {
 //         let _1 := 2
-//         let f_a := 7
-//         let f_x := 0
-//         let f_r := mul(f_a, f_a)
-//         f_x := add(f_r, f_r)
-//         pop(add(f_x, _1))
+//         let a_5 := 7
+//         let x_6 := 0
+//         let r_7 := mul(a_5, a_5)
+//         x_6 := add(r_7, r_7)
+//         pop(add(x_6, _1))
 //     }
 //     function f(a) -> x
 //     {
