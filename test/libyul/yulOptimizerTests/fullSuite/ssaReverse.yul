@@ -42,19 +42,19 @@
 //     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
 //     a, b := abi_decode_t_bytes_calldata_ptr(a, b)
 //     mstore(a, b)
-//     function abi_decode_t_bytes_calldata_ptr(offset_12, end_13) -> arrayPos_14, length_15
+//     function abi_decode_t_bytes_calldata_ptr(offset, end) -> arrayPos, length
 //     {
-//         if iszero(slt(add(offset_12, 0x1f), end_13))
+//         if iszero(slt(add(offset, 0x1f), end))
 //         {
 //             revert(0, 0)
 //         }
-//         length_15 := calldataload(offset_12)
-//         if gt(length_15, 0xffffffffffffffff)
+//         length := calldataload(offset)
+//         if gt(length, 0xffffffffffffffff)
 //         {
 //             revert(0, 0)
 //         }
-//         arrayPos_14 := add(offset_12, 0x20)
-//         if gt(add(add(offset_12, length_15), 0x20), end_13)
+//         arrayPos := add(offset, 0x20)
+//         if gt(add(add(offset, length), 0x20), end)
 //         {
 //             revert(0, 0)
 //         }

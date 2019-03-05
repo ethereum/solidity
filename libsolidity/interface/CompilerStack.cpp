@@ -86,15 +86,53 @@ boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string c
 
 void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 {
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set remappings before parsing."));
 	for (auto const& remapping: _remappings)
 		solAssert(!remapping.prefix.empty(), "");
 	m_remappings = _remappings;
 }
 
-void CompilerStack::setEVMVersion(EVMVersion _version)
+void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 {
-	solAssert(m_stackState < State::ParsingSuccessful, "Set EVM version after parsing.");
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set EVM version before parsing."));
 	m_evmVersion = _version;
+}
+
+void CompilerStack::setLibraries(std::map<std::string, h160> const& _libraries)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set libraries before parsing."));
+	m_libraries = _libraries;
+}
+
+void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
+{
+	OptimiserSettings settings = _optimize ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+	settings.expectedExecutionsPerDeployment = _runs;
+	setOptimiserSettings(std::move(settings));
+}
+
+void CompilerStack::setOptimiserSettings(OptimiserSettings _settings)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set optimiser settings before parsing."));
+	m_optimiserSettings = std::move(_settings);
+}
+
+void CompilerStack::useMetadataLiteralSources(bool _metadataLiteralSources)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set use literal sources before parsing."));
+	m_metadataLiteralSources = _metadataLiteralSources;
+}
+
+void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _response)
+{
+	if (m_stackState >= ParsingSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must add SMTLib2 responses before parsing."));
+	m_smtlib2Responses[_hash] = _response;
 }
 
 void CompilerStack::reset(bool _keepSources)
@@ -113,9 +151,8 @@ void CompilerStack::reset(bool _keepSources)
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
 	m_libraries.clear();
-	m_evmVersion = EVMVersion();
-	m_optimize = false;
-	m_optimizeRuns = 200;
+	m_evmVersion = langutil::EVMVersion();
+	m_optimiserSettings = OptimiserSettings::minimal();
 	m_globalContext.reset();
 	m_scopes.clear();
 	m_sourceOrder.clear();
@@ -135,9 +172,8 @@ bool CompilerStack::addSource(string const& _name, string const& _content, bool 
 
 bool CompilerStack::parse()
 {
-	//reset
 	if (m_stackState != SourcesSet)
-		return false;
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call parse only after the SourcesSet state."));
 	m_errorReporter.clear();
 	ASTNode::resetID();
 
@@ -178,8 +214,8 @@ bool CompilerStack::parse()
 
 bool CompilerStack::analyze()
 {
-	if (m_stackState != ParsingSuccessful)
-		return false;
+	if (m_stackState != ParsingSuccessful || m_stackState >= AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call analyze only after parsing was successful."));
 	resolveImports();
 
 	bool noErrors = true;
@@ -595,10 +631,24 @@ Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
 
 string const& CompilerStack::metadata(string const& _contractName) const
 {
-	if (m_stackState != CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
-	return contract(_contractName).metadata;
+	return metadata(contract(_contractName));
+}
+
+string const& CompilerStack::metadata(Contract const& _contract) const
+{
+	if (m_stackState < AnalysisSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
+
+	solAssert(_contract.contract, "");
+
+	// cache the result
+	if (!_contract.metadata)
+		_contract.metadata.reset(new string(createMetadata(_contract)));
+
+	return *_contract.metadata;
 }
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
@@ -809,14 +859,11 @@ void CompilerStack::compileContract(
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimize, m_optimizeRuns);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimiserSettings);
 	compiledContract.compiler = compiler;
 
-	string metadata = createMetadata(compiledContract);
-	compiledContract.metadata = metadata;
-
 	bytes cborEncodedMetadata = createCBORMetadata(
-		metadata,
+		metadata(compiledContract),
 		!onlySafeExperimentalFeaturesActivated(_contract.sourceUnit().annotation().experimentalFeatures)
 	);
 
@@ -922,8 +969,35 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 			meta["sources"][s.first]["urls"].append("bzzr://" + toHex(s.second.swarmHash().asBytes()));
 		}
 	}
-	meta["settings"]["optimizer"]["enabled"] = m_optimize;
-	meta["settings"]["optimizer"]["runs"] = m_optimizeRuns;
+
+	static_assert(sizeof(m_optimiserSettings.expectedExecutionsPerDeployment) <= sizeof(Json::LargestUInt), "Invalid word size.");
+	solAssert(static_cast<Json::LargestUInt>(m_optimiserSettings.expectedExecutionsPerDeployment) < std::numeric_limits<Json::LargestUInt>::max(), "");
+	meta["settings"]["optimizer"]["runs"] = Json::Value(Json::LargestUInt(m_optimiserSettings.expectedExecutionsPerDeployment));
+
+	/// Backwards compatibility: If set to one of the default settings, do not provide details.
+	OptimiserSettings settingsWithoutRuns = m_optimiserSettings;
+	// reset to default
+	settingsWithoutRuns.expectedExecutionsPerDeployment = OptimiserSettings::minimal().expectedExecutionsPerDeployment;
+	if (settingsWithoutRuns == OptimiserSettings::minimal())
+		meta["settings"]["optimizer"]["enabled"] = false;
+	else if (settingsWithoutRuns == OptimiserSettings::enabled())
+		meta["settings"]["optimizer"]["enabled"] = true;
+	else
+	{
+		Json::Value details{Json::objectValue};
+
+		details["orderLiterals"] = m_optimiserSettings.runOrderLiterals;
+		details["jumpdestRemover"] = m_optimiserSettings.runJumpdestRemover;
+		details["peephole"] = m_optimiserSettings.runPeephole;
+		details["deduplicate"] = m_optimiserSettings.runDeduplicate;
+		details["cse"] = m_optimiserSettings.runCSE;
+		details["constantOptimizer"] = m_optimiserSettings.runConstantOptimiser;
+		details["yul"] = m_optimiserSettings.runYulOptimiser;
+		details["yulDetails"] = Json::objectValue;
+
+		meta["settings"]["optimizer"]["details"] = std::move(details);
+	}
+
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;

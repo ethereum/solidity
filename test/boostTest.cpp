@@ -74,11 +74,13 @@ int registerTests(
 	boost::unit_test::test_suite& _suite,
 	boost::filesystem::path const& _basepath,
 	boost::filesystem::path const& _path,
+	std::string const& _ipcPath,
 	TestCase::TestCaseCreator _testCaseCreator
 )
 {
 	int numTestsAdded = 0;
 	fs::path fullpath = _basepath / _path;
+	TestCase::Config config{fullpath.string(), _ipcPath};
 	if (fs::is_directory(fullpath))
 	{
 		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
@@ -87,7 +89,7 @@ int registerTests(
 			fs::directory_iterator()
 		))
 			if (fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
-				numTestsAdded += registerTests(*sub_suite, _basepath, _path / entry.path().filename(), _testCaseCreator);
+				numTestsAdded += registerTests(*sub_suite, _basepath, _path / entry.path().filename(), _ipcPath, _testCaseCreator);
 		_suite.add(sub_suite);
 	}
 	else
@@ -96,13 +98,13 @@ int registerTests(
 
 		filenames.emplace_back(new string(_path.string()));
 		_suite.add(make_test_case(
-			[fullpath, _testCaseCreator]
+			[config, _testCaseCreator]
 			{
 				BOOST_REQUIRE_NO_THROW({
 					try
 					{
 						stringstream errorStream;
-						if (!_testCaseCreator(fullpath.string())->run(errorStream))
+						if (!_testCaseCreator(config)->run(errorStream))
 							BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
 					}
 					catch (boost::exception const& _e)
@@ -142,6 +144,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			master,
 			options.testPath / ts.path,
 			ts.subpath,
+			options.ipcPath.string(),
 			ts.testCaseCreator
 		) > 0, std::string("no ") + ts.title + " tests found");
 	}

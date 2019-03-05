@@ -1,3 +1,43 @@
+### 0.5.5 (2019-03-05)
+
+Language Features:
+ * Add support for getters of mappings with ``string`` or ``bytes`` key types.
+ * Meta programming: Provide access to the name of contracts via ``type(C).name``.
+
+
+Compiler Features:
+ * Support ``petersburg`` as ``evmVersion`` and set as default.
+ * Inline Assembly: Consider ``extcodehash`` as part of Constantinople.
+ * Inline Assembly: Instructions unavailable to the currently configured EVM are errors now.
+ * SMTChecker: Do not report underflow/overflow if they always revert. This removes false positives when using ``SafeMath``.
+ * Standard JSON Interface: Allow retrieving metadata without triggering bytecode generation.
+ * Static Analyzer: Warn about expressions with custom types when they have no effect.
+ * Optimizer: Add new rules with constants including ``LT``, ``GT``, ``AND`` and ``BYTE``.
+ * Optimizer: Add rule for shifts with constants for Constantinople.
+ * Optimizer: Combine multiple shifts with constant shift-by values into one.
+ * Optimizer: Do not mask with 160-bits after ``CREATE`` and ``CREATE2`` as they are guaranteed to return an address or 0.
+ * Optimizer: Support shifts in the constant optimiser for Constantinople.
+ * Yul Optimizer: Add rule to replace switch statements with literals by matching case body.
+
+
+Bugfixes:
+ * ABIEncoderV2: Fix internal error related to bare delegatecall.
+ * ABIEncoderV2: Fix internal error related to ecrecover.
+ * ABIEncoderV2: Fix internal error related to mappings as library parameters.
+ * ABIEncoderV2: Fix invalid signature for events containing structs emitted in libraries.
+ * Inline Assembly: Proper error message for missing variables.
+ * Optimizer: Fix internal error related to unused tag removal across assemblies. This never generated any invalid code.
+ * SMTChecker: Fix crash related to statically-sized arrays.
+ * TypeChecker: Fix internal error and disallow index access on contracts and libraries.
+ * Yul: Properly detect name clashes with functions before their declaration.
+ * Yul: Take built-in functions into account in the compilability checker.
+ * Yul Optimizer: Properly take reassignments to variables in sub-expressions into account when replacing in the ExpressionSimplifier.
+
+
+Build System:
+ * Soltest: Add support for left-aligned, padded hex literals.
+ * Soltest: Add support for right-aligned, padded boolean literals.
+
 ### 0.5.4 (2019-02-12)
 
 Language Features:

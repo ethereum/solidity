@@ -53,6 +53,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
+	explicit ExecutionFramework(std::string const& _ipcPath);
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
@@ -238,7 +239,7 @@ protected:
 		bytes data;
 	};
 
-	solidity::EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 	unsigned m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_showMessages = false;

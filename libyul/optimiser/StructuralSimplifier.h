@@ -18,6 +18,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libdevcore/Common.h>
 
 namespace yul
 {
@@ -29,6 +30,7 @@ namespace yul
  * - remove if with false condition
  * - turn switch with single case into if
  * - replace switch with only default case with pop(expression) and body
+ * - replace switch with const expr with matching case body
  * - remove for with false condition
  *
  * Prerequisites: Disambiguator
@@ -44,8 +46,9 @@ public:
 	void operator()(Block& _block) override;
 private:
 	void simplify(std::vector<Statement>& _statements);
-	bool expressionAlwaysTrue(Expression const &_expression);
-	bool expressionAlwaysFalse(Expression const &_expression);
+	bool expressionAlwaysTrue(Expression const& _expression);
+	bool expressionAlwaysFalse(Expression const& _expression);
+	boost::optional<dev::u256> hasLiteralValue(Expression const& _expression) const;
 };
 
 }

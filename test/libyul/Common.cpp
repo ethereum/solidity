@@ -29,6 +29,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AssemblyStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/Scanner.h>
@@ -45,7 +46,7 @@ namespace
 {
 shared_ptr<Dialect> defaultDialect(bool _yul)
 {
-	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM();
+	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(dev::test::Options::get().evmVersion());
 }
 }
 
@@ -63,33 +64,13 @@ void yul::test::printErrors(ErrorList const& _errors)
 
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
-	shared_ptr<Dialect> dialect = defaultDialect(_yul);
-	ErrorList errors;
-	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(CharStream(_source, ""));
-	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
-	if (parserResult)
-	{
-		BOOST_REQUIRE(errorReporter.errors().empty());
-		auto analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-		yul::AsmAnalyzer analyzer(
-			*analysisInfo,
-			errorReporter,
-			dev::test::Options::get().evmVersion(),
-			boost::none,
-			dialect
-		);
-		if (analyzer.analyze(*parserResult))
-		{
-			BOOST_REQUIRE(errorReporter.errors().empty());
-			return make_pair(parserResult, analysisInfo);
-		}
-	}
-	printErrors(errors);
-	BOOST_FAIL("Invalid source.");
-
-	// Unreachable.
-	return {};
+	AssemblyStack stack(
+		dev::test::Options::get().evmVersion(),
+		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly
+	);
+	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
+		BOOST_FAIL("Invalid source.");
+	return make_pair(stack.parserResult()->code, stack.parserResult()->analysisInfo);
 }
 
 yul::Block yul::test::disambiguate(string const& _source, bool _yul)

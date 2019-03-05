@@ -52,12 +52,14 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	if (!(ScopeFiller(m_info, m_errorReporter))(_block))
 		return false;
 
-	return (*this)(_block);
+	bool success = (*this)(_block);
+	if (!success)
+		solAssert(m_errorReporter.hasErrors(), "No success but no error.");
+	return success && !m_errorReporter.hasErrors();
 }
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	shared_ptr<Dialect> _dialect,
-	EVMVersion _evmVersion,
 	Block const& _ast
 )
 {
@@ -67,7 +69,6 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	bool success = yul::AsmAnalyzer(
 		analysisInfo,
 		errors,
-		_evmVersion,
 		Error::Type::SyntaxError,
 		_dialect
 	).analyze(_ast);
@@ -638,59 +639,67 @@ void AsmAnalyzer::warnOnInstructions(solidity::Instruction _instr, SourceLocatio
 	solAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
 	// Similarly we assume bitwise shifting and create2 go together.
 	solAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
+	solAssert(m_dialect->flavour != AsmFlavour::Yul, "");
 
-	if (_instr == solidity::Instruction::EXTCODEHASH)
-		m_errorReporter.warning(
+	auto errorForVM = [=](string const& vmKindMessage) {
+		m_errorReporter.typeError(
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is not supported by the VM version \"" +
-			"" + m_evmVersion.name() +
-			"\" you are currently compiling for. " +
-			"It will be interpreted as an invalid instruction on this VM."
-		);
-	else if ((
-		_instr == solidity::Instruction::RETURNDATACOPY ||
-		_instr == solidity::Instruction::RETURNDATASIZE ||
-		_instr == solidity::Instruction::STATICCALL
-	) && !m_evmVersion.supportsReturndata())
-		m_errorReporter.warning(
-			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is only available for Byzantium-compatible VMs. " +
-			"You are currently compiling for \"" +
+			+ "\" instruction is " +
+			vmKindMessage +
+			" VMs " +
+			" (you are currently compiling for \"" +
 			m_evmVersion.name() +
-			"\", where it will be interpreted as an invalid instruction."
+			"\")."
 		);
+	};
+
+	if ((
+		_instr == solidity::Instruction::RETURNDATACOPY ||
+		_instr == solidity::Instruction::RETURNDATASIZE
+	) && !m_evmVersion.supportsReturndata())
+	{
+		errorForVM("only available for Byzantium-compatible");
+	}
+	else if (_instr == solidity::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
+	{
+		errorForVM("only available for Byzantium-compatible");
+	}
 	else if ((
 		_instr == solidity::Instruction::SHL ||
 		_instr == solidity::Instruction::SHR ||
-		_instr == solidity::Instruction::SAR ||
-		_instr == solidity::Instruction::CREATE2
+		_instr == solidity::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
-		m_errorReporter.warning(
-			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is only available for Constantinople-compatible VMs. " +
-			"You are currently compiling for \"" +
-			m_evmVersion.name() +
-			"\", where it will be interpreted as an invalid instruction."
-		);
-
-	if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
 	{
-		if (m_dialect->flavour != AsmFlavour::Loose)
-			solAssert(m_errorTypeForLoose && *m_errorTypeForLoose != Error::Type::Warning, "");
-
-		m_errorReporter.error(
-			m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
-			_location,
-			"Jump instructions and labels are low-level EVM features that can lead to "
-			"incorrect stack access. Because of that they are discouraged. "
-			"Please consider using \"switch\", \"if\" or \"for\" statements instead."
-		);
+		errorForVM("only available for Constantinople-compatible");
+	}
+	else if (_instr == solidity::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
+	{
+		errorForVM("only available for Constantinople-compatible");
+	}
+	else if (_instr == solidity::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
+	{
+		errorForVM("only available for Constantinople-compatible");
+	}
+	else if (_instr == solidity::Instruction::JUMP || _instr == solidity::Instruction::JUMPI || _instr == solidity::Instruction::JUMPDEST)
+	{
+		if (m_dialect->flavour == AsmFlavour::Loose)
+			m_errorReporter.error(
+				m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
+				_location,
+				"Jump instructions and labels are low-level EVM features that can lead to "
+				"incorrect stack access. Because of that they are discouraged. "
+				"Please consider using \"switch\", \"if\" or \"for\" statements instead."
+			);
+		else
+			m_errorReporter.error(
+				Error::Type::SyntaxError,
+				_location,
+				"Jump instructions and labels are low-level EVM features that can lead to "
+				"incorrect stack access. Because of that they are disallowed in strict assembly. "
+				"Use functions, \"switch\", \"if\" or \"for\" statements instead."
+			);
 	}
 }
 

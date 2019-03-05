@@ -31,7 +31,7 @@ namespace dev
 /// Base class for all exceptions.
 struct Exception: virtual std::exception, virtual boost::exception
 {
-	const char* what() const noexcept override;
+	char const* what() const noexcept override;
 
 	/// @returns "FileName:LineNumber" referring to the point where the exception was thrown.
 	std::string lineInfo() const;

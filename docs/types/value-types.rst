@@ -305,8 +305,7 @@ Contract Types
 
 Every :ref:`contract<contracts>` defines its own type.
 You can implicitly convert contracts to contracts they inherit from.
-Contracts can be explicitly converted to and from all other contract types
-and the ``address`` type.
+Contracts can be explicitly converted to and from the ``address`` type.
 
 Explicit conversion to and from the ``address payable`` type
 is only possible if the contract type has a payable fallback function.
@@ -614,14 +613,22 @@ just use ``f``, if you want to use its external form, use ``this.f``.
 
 Members:
 
-Public (or external) functions also have a special member called ``selector``,
-which returns the :ref:`ABI function selector <abi_function_selector>`::
+Public (or external) functions have the following members:
+
+* ``.selector`` returns the :ref:`ABI function selector <abi_function_selector>`
+* ``.gas(uint)`` returns a callable function object which, when called, will send the specified amount of gas to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
+* ``.value(uint)`` returns a callable function object which, when called, will send the specified amount of wei to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
+
+Example that shows how to use the members::
 
     pragma solidity >=0.4.16 <0.6.0;
 
-    contract Selector {
-      function f() public pure returns (bytes4) {
+    contract Example {
+      function f() public payable returns (bytes4) {
         return this.f.selector;
+      }
+      function g() public {
+        this.f.gas(10).value(800)();
       }
     }
 

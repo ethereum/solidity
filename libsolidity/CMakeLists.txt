@@ -51,8 +51,6 @@ set(sources
 	codegen/ABIFunctions.h
 	codegen/ArrayUtils.cpp
 	codegen/ArrayUtils.h
-	codegen/AsmCodeGen.cpp
-	codegen/AsmCodeGen.h
 	codegen/Compiler.cpp
 	codegen/Compiler.h
 	codegen/CompilerContext.cpp
@@ -82,14 +80,13 @@ set(sources
 	formal/VariableUsage.h
 	interface/ABI.cpp
 	interface/ABI.h
-	interface/AssemblyStack.cpp
-	interface/AssemblyStack.h
 	interface/CompilerStack.cpp
 	interface/CompilerStack.h
 	interface/GasEstimator.cpp
 	interface/GasEstimator.h
 	interface/Natspec.cpp
 	interface/Natspec.h
+	interface/OptimiserSettings.h
 	interface/ReadFile.h
 	interface/StandardCompiler.cpp
 	interface/StandardCompiler.h

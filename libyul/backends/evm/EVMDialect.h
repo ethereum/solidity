@@ -23,6 +23,7 @@
 #include <libyul/Dialect.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <map>
 
@@ -49,15 +50,17 @@ struct BuiltinFunctionForEVM: BuiltinFunction
  */
 struct EVMDialect: public Dialect
 {
-	EVMDialect(AsmFlavour _flavour, bool _objectAccess);
+	EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	static std::shared_ptr<EVMDialect> looseAssemblyForEVM();
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVM();
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVMObjects();
-	static std::shared_ptr<EVMDialect> yulForEVM();
+	static std::shared_ptr<EVMDialect> looseAssemblyForEVM(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect> strictAssemblyForEVM(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect> strictAssemblyForEVMObjects(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect> yulForEVM(langutil::EVMVersion _version);
+
+	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
@@ -66,7 +69,7 @@ struct EVMDialect: public Dialect
 	/// Sets the current object. Used during code generation.
 	void setCurrentObject(Object const* _object);
 
-private:
+protected:
 	void addFunction(
 		std::string _name,
 		size_t _params,
@@ -77,6 +80,7 @@ private:
 	);
 
 	bool m_objectAccess;
+	langutil::EVMVersion m_evmVersion;
 	Object const* m_currentObject = nullptr;
 	/// Mapping from named objects to abstract assembly sub IDs.
 	std::map<YulString, AbstractAssembly::SubID> m_subIDs;

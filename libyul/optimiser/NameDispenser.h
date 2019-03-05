@@ -43,14 +43,10 @@ public:
 	/// Initialize the name dispenser with the given used names.
 	explicit NameDispenser(Dialect const& _dialect, std::set<YulString> _usedNames);
 
-	/// @returns a currently unused name that should be similar to _nameHint
-	/// and prefixed by _context if present.
-	/// If the resulting name would be too long, trims the context at the end
-	/// and the name hint at the start.
-	YulString newName(YulString _nameHint, YulString _context = {});
+	/// @returns a currently unused name that should be similar to _nameHint.
+	YulString newName(YulString _nameHint);
 
 private:
-	YulString newNameInternal(YulString _nameHint);
 
 	Dialect const& m_dialect;
 	std::set<YulString> m_usedNames;

@@ -19,7 +19,7 @@
 
 #include <libdevcore/AnsiColorized.h>
 
-#include <libsolidity/interface/AssemblyStack.h>
+#include <libyul/AssemblyStack.h>
 
 #include <libevmasm/Instruction.h>
 

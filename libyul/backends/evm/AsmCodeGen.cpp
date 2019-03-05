@@ -18,7 +18,7 @@
  * Adaptor between the abstract assembly and eth assembly.
  */
 
-#include <libsolidity/codegen/AsmCodeGen.h>
+#include <libyul/backends/evm/AsmCodeGen.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -41,7 +41,6 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace yul;
-using namespace dev::solidity;
 
 EthAssemblyAdapter::EthAssemblyAdapter(eth::Assembly& _assembly):
 	m_assembly(_assembly)
@@ -178,13 +177,14 @@ void CodeGenerator::assemble(
 	Block const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	eth::Assembly& _assembly,
+	langutil::EVMVersion _evmVersion,
 	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions,
 	bool _optimize
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	shared_ptr<EVMDialect> dialect = EVMDialect::strictAssemblyForEVM();
+	shared_ptr<EVMDialect> dialect = EVMDialect::strictAssemblyForEVM(_evmVersion);
 	CodeTransform transform(
 		assemblyAdapter,
 		_analysisInfo,

@@ -308,6 +308,7 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 			break;
 		case Type::Category::Array:
 		case Type::Category::Struct:
+		case Type::Category::Mapping:
 			solAssert(_type.dataStoredIn(DataLocation::Storage), "Cleanup requested for non-storage reference type.");
 			templ("body", "cleaned := value");
 			break;
@@ -1089,7 +1090,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			if (_options.dynamicInplace)
 				encode = Whiskers{"pos := <encode>(memberValue, pos)"}
 					("encode", abiEncodeAndReturnUpdatedPosFunction(*memberTypeFrom, *memberTypeTo, subOptions))
-					 .render();
+					.render();
 			else
 			{
 				Whiskers encodeTempl(
@@ -1262,7 +1263,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		return abiDecodingFunctionValueType(_type, _fromMemory);
 }
 
-string ABIFunctions::abiDecodingFunctionValueType(const Type& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromMemory)
 {
 	TypePointer decodingType = _type.decodingType();
 	solAssert(decodingType, "");

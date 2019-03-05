@@ -94,6 +94,44 @@ BOOST_AUTO_TEST_CASE(division)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+				uint256 c;
+				if (a != 0) {
+					c = a * b;
+					require(c / a == b);
+				}
+				return c;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+	text = R"(
+		contract C {
+			function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+				if (a == 0) {
+					return 0;
+				}
+				uint256 c = a * b;
+				require(c / a == b);
+				return c;
+			}
+		}
+	)";
+	CHECK_WARNING(text, "Division by zero");
+	text = R"(
+		contract C {
+			function div(uint256 a, uint256 b) internal pure returns (uint256) {
+				require(b > 0);
+				uint256 c = a / b;
+				return c;
+			}
+		}
+	)";
+	CHECK_SUCCESS_NO_WARNINGS(text);
+
+
 }
 
 BOOST_AUTO_TEST_CASE(division_truncates_correctly)

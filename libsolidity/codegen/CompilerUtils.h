@@ -49,6 +49,10 @@ public:
 	/// Stack pre: <size>
 	/// Stack post: <mem_start>
 	void allocateMemory();
+	/// Allocates a number of bytes in memory as given on the stack.
+	/// Stack pre:
+	/// Stack post: <mem_start>
+	void allocateMemory(u256 const& size);
 	/// Appends code that transforms memptr to (memptr - free_memptr) memptr
 	/// Stack pre: <mem_end>
 	/// Stack post: <size> <mem_start>
@@ -84,7 +88,6 @@ public:
 	);
 	/// Stores a 256 bit integer from stack in memory.
 	/// @param _offset offset in memory
-	/// @param _type type of the data on the stack
 	void storeInMemory(unsigned _offset);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that. For reference types, only copies the data pointer. Fails for
@@ -187,6 +190,11 @@ public:
 	/// Stack post:
 	void memoryCopy();
 
+	/// Stores the given string in memory.
+	/// Stack pre: mempos
+	/// Stack post:
+	void storeStringData(bytesConstRef _data);
+
 	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
 	/// external function type <address><function identifier> into two stack slots:
 	/// address (right aligned), function identifier (right aligned)
@@ -273,23 +281,18 @@ public:
 
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
-	static const unsigned dataStartOffset;
+	static unsigned const dataStartOffset;
 
 	/// Position of the free-memory-pointer in memory;
-	static const size_t freeMemoryPointer;
+	static size_t const freeMemoryPointer;
 	/// Position of the memory slot that is always zero.
-	static const size_t zeroPointer;
+	static size_t const zeroPointer;
 	/// Starting offset for memory available to the user (aka the contract).
-	static const size_t generalPurposeMemoryStart;
+	static size_t const generalPurposeMemoryStart;
 
 private:
 	/// Address of the precompiled identity contract.
-	static const unsigned identityContractAddress;
-
-	/// Stores the given string in memory.
-	/// Stack pre: mempos
-	/// Stack post:
-	void storeStringData(bytesConstRef _data);
+	static unsigned const identityContractAddress;
 
 	/// Appends code that cleans higher-order bits for integer types.
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);

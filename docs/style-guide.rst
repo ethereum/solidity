@@ -1088,12 +1088,6 @@ Avoiding Naming Collisions
 This convention is suggested when the desired name collides with that of a
 built-in or otherwise reserved name.
 
-
-General Recommendations
-=======================
-
-TODO
-
 .. _natspec:
 
 *******

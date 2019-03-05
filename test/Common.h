@@ -17,19 +17,37 @@
 
 #pragma once
 
+#include <libdevcore/Exceptions.h>
+
 #include <boost/filesystem/path.hpp>
+#include <boost/program_options.hpp>
+#include <boost/noncopyable.hpp>
 
 namespace dev
 {
+
 namespace test
 {
 
-/// Tries to find a path that contains the directories "libsolidity/syntaxTests"
-/// and returns it if found.
-/// The routine searches in the current directory, and inside the "test" directory
-/// starting from the current directory and up to three levels up.
-/// @returns the path of the first match or an empty path if not found.
-boost::filesystem::path discoverTestPath();
+struct ConfigException : public Exception {};
+
+struct CommonOptions: boost::noncopyable
+{
+	boost::filesystem::path ipcPath;
+	boost::filesystem::path testPath;
+	bool optimize = false;
+	bool disableIPC = false;
+	bool disableSMT = false;
+
+	virtual bool parse(int argc, char const* const* argv);
+	// Throws a ConfigException on error
+	virtual void validate() const;
+
+protected:
+	CommonOptions(std::string caption = "");
+
+	boost::program_options::options_description options;
+};
 
 }
 }

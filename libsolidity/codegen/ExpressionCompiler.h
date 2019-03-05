@@ -55,11 +55,8 @@ class ArrayType;
 class ExpressionCompiler: private ASTConstVisitor
 {
 public:
-	/// Appends code for a State Variable accessor function
-	static void appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize = false);
-
-	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimize = false):
-		m_optimize(_optimize), m_context(_compilerContext) {}
+	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimiseOrderLiterals):
+		m_optimiseOrderLiterals(_optimiseOrderLiterals), m_context(_compilerContext) {}
 
 	/// Compile the given @a _expression and leave its value on the stack.
 	void compile(Expression const& _expression);
@@ -71,7 +68,7 @@ public:
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
 
 	/// Appends code for a Constant State Variable accessor function
-	void appendConstStateVariableAccessor(const VariableDeclaration& _varDecl);
+	void appendConstStateVariableAccessor(VariableDeclaration const& _varDecl);
 
 private:
 	bool visit(Conditional const& _condition) override;
@@ -127,7 +124,7 @@ private:
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 
-	bool m_optimize;
+	bool m_optimiseOrderLiterals;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;
 

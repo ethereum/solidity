@@ -86,7 +86,7 @@ void SSAReverser::operator()(Block& _block)
 					identifier->name == varDecl->variables.front().name && (
 						m_assignmentCounter.assignmentCount(varDecl2->variables.front().name) >
 						m_assignmentCounter.assignmentCount(varDecl->variables.front().name)
-				   )
+					)
 				)
 				{
 					vector<Statement> result;

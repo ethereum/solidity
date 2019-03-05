@@ -139,8 +139,8 @@ inline std::string formatNumberReadable(
 		if (len < 24)
 			return str;
 
-		const int initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
-		const int finalChars = 4;
+		int const initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
+		int const finalChars = 4;
 		int numSkipped = len - initialChars - finalChars;
 
 		return str.substr(0, initialChars) +

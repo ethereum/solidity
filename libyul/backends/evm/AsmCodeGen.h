@@ -20,15 +20,10 @@
 
 #pragma once
 
-#include <libyul/AsmAnalysis.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
+#include <libyul/AsmAnalysis.h>
 #include <liblangutil/SourceLocation.h>
 #include <functional>
-
-namespace yul
-{
-struct Block;
-}
 
 namespace dev
 {
@@ -37,18 +32,20 @@ namespace eth
 class Assembly;
 class AssemblyItem;
 }
+}
 
-namespace solidity
+namespace yul
 {
+struct Block;
 
-class EthAssemblyAdapter: public yul::AbstractAssembly
+class EthAssemblyAdapter: public AbstractAssembly
 {
 public:
-	explicit EthAssemblyAdapter(eth::Assembly& _assembly);
+	explicit EthAssemblyAdapter(dev::eth::Assembly& _assembly);
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	int stackHeight() const override;
-	void appendInstruction(solidity::Instruction _instruction) override;
-	void appendConstant(u256 const& _constant) override;
+	void appendInstruction(dev::solidity::Instruction _instruction) override;
+	void appendConstant(dev::u256 const& _constant) override;
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;
 	size_t newLabelId() override;
@@ -67,9 +64,9 @@ public:
 	SubID appendData(dev::bytes const& _data) override;
 
 private:
-	static LabelID assemblyTagToIdentifier(eth::AssemblyItem const& _tag);
+	static LabelID assemblyTagToIdentifier(dev::eth::AssemblyItem const& _tag);
 
-	eth::Assembly& m_assembly;
+	dev::eth::Assembly& m_assembly;
 	std::map<SubID, dev::u256> m_dataHashBySubId;
 	size_t m_nextDataCounter = std::numeric_limits<size_t>::max() / 2;
 };
@@ -79,14 +76,14 @@ class CodeGenerator
 public:
 	/// Performs code generation and appends generated to _assembly.
 	static void assemble(
-		yul::Block const& _parsedData,
-		yul::AsmAnalysisInfo& _analysisInfo,
+		Block const& _parsedData,
+		AsmAnalysisInfo& _analysisInfo,
 		dev::eth::Assembly& _assembly,
-		yul::ExternalIdentifierAccess const& _identifierAccess = yul::ExternalIdentifierAccess(),
+		langutil::EVMVersion _evmVersion,
+		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false,
 		bool _optimize = false
 	);
 };
 
-}
 }

@@ -26,6 +26,9 @@
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
+#include <libdevcore/StringUtils.h>
+
+#include <boost/range/adaptor/filtered.hpp>
 
 namespace langutil
 {
@@ -87,6 +90,19 @@ public:
 
 	void typeError(SourceLocation const& _location, std::string const& _description);
 
+	template <typename... Strings>
+	void typeErrorConcatenateDescriptions(SourceLocation const& _location, Strings const&... _descriptions)
+	{
+		std::initializer_list<std::string> const descs = {_descriptions...};
+		solAssert(descs.size() > 0, "Need error descriptions!");
+
+		auto filterEmpty = boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
+
+		std::string errorStr = dev::joinHumanReadable(descs | filterEmpty);
+
+		error(Error::Type::TypeError, _location, errorStr);
+	}
+
 	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
 	void docstringParsingError(std::string const& _description);
@@ -119,8 +135,8 @@ private:
 	unsigned m_errorCount = 0;
 	unsigned m_warningCount = 0;
 
-	const unsigned c_maxWarningsAllowed = 256;
-	const unsigned c_maxErrorsAllowed = 256;
+	unsigned const c_maxWarningsAllowed = 256;
+	unsigned const c_maxErrorsAllowed = 256;
 };
 
 }

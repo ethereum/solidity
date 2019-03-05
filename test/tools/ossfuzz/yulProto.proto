@@ -1,0 +1,156 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+syntax = "proto2";
+
+// VariableDeclaration =
+//    'let' TypedIdentifierList ( ':=' Expression )?
+// TypedIdentifierList = Identifier ':' TypeName ( ',' Identifier ':' TypeName )*
+// Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
+// IdentifierList = Identifier ( ',' Identifier)*
+// TypeName = Identifier | BuiltinTypeName
+// BuiltinTypeName = 'bool' | [us] ( '8' | '32' | '64' | '128' | '256' )
+message VarDecl {
+  required int32 id = 1;
+  required Expression expr = 3;
+}
+
+message TypedVarDecl {
+  enum TypeName {
+    BOOL = 1;
+    U8 = 2;
+    U32 = 3;
+    U64 = 4;
+    U128 = 5;
+    U256 = 6;
+    S8 = 7;
+    S32 = 8;
+    S64 = 9;
+    S128 = 10;
+    S256 = 11;
+  };
+  required int32 id = 1;
+  required TypeName type = 2;
+  required Expression expr = 3;
+}
+
+message VarRef {
+  required int32 varnum = 1;
+}
+
+message Literal {
+  required int32 val = 1;
+}
+
+message TypedLiteral {
+  enum TypeName {
+    BOOL = 1;
+    U8 = 2;
+    U32 = 3;
+    U64 = 4;
+    U128 = 5;
+    U256 = 6;
+    S8 = 7;
+    S32 = 8;
+    S64 = 9;
+    S128 = 10;
+    S256 = 11;
+  };
+  required int32 val = 1;
+  required TypeName type = 2;
+}
+
+message BinaryOp {
+  enum BOp {
+    ADD = 0;
+    SUB = 1;
+    MUL = 2;
+    DIV = 3;
+    MOD = 4;
+    XOR = 5;
+    AND = 6;
+    OR = 7;
+    EQ = 8;
+    LT = 9;
+    GT = 10;
+  };
+  required BOp op = 1;
+  required Expression left = 2;
+  required Expression right = 3;
+}
+
+message UnaryOp {
+  enum UOp {
+    NOT = 0;
+    MLOAD = 1;
+    SLOAD = 2;
+    ISZERO = 3;
+  }
+  required UOp op = 1;
+  required Expression operand = 2;
+}
+
+message StoreFunc {
+  enum Storage {
+    MSTORE = 0;
+    SSTORE = 1;
+  }
+  required Expression loc = 1;
+  required Expression val = 2;
+  required Storage st = 3;
+}
+
+message Expression {
+  oneof expr_oneof {
+    VarRef varref = 1;
+    Literal cons = 2;
+    BinaryOp binop = 3;
+    UnaryOp unop = 4;
+  }
+}
+
+message AssignmentStatement {
+  required VarRef ref_id = 1;
+  required Expression expr = 2;
+}
+
+message IfStmt {
+  required Expression cond = 1;
+  required Block if_body = 2;
+}
+
+// add for loop
+// TODO: add block and scope for if
+message Statement {
+  oneof stmt_oneof {
+    VarDecl             decl          = 1;
+    AssignmentStatement assignment    = 2;
+    IfStmt              ifstmt        = 3;
+    StoreFunc           storage_func  = 4;
+    Block               blockstmt     = 5;
+  }
+}
+
+message Block {
+  repeated Statement statements = 1;
+}
+
+message Function {
+  required Block statements = 1;
+}
+
+package yul.test.yul_fuzzer;

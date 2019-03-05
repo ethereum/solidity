@@ -390,7 +390,7 @@ Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 
 map<u256, u256> Assembly::optimiseInternal(
 	OptimiserSettings const& _settings,
-	std::set<size_t> const& _tagsReferencedFromOutside
+	std::set<size_t> _tagsReferencedFromOutside
 )
 {
 	// Run optimisation for sub-assemblies.
@@ -436,7 +436,22 @@ map<u256, u256> Assembly::optimiseInternal(
 			BlockDeduplicator dedup{m_items};
 			if (dedup.deduplicate())
 			{
-				tagReplacements.insert(dedup.replacedTags().begin(), dedup.replacedTags().end());
+				for (auto const& replacement: dedup.replacedTags())
+				{
+					assertThrow(
+						replacement.first <= size_t(-1) && replacement.second <= size_t(-1),
+						OptimizerException,
+						"Invalid tag replacement."
+					);
+					assertThrow(
+						!tagReplacements.count(replacement.first),
+						OptimizerException,
+						"Replacement already known."
+					);
+					tagReplacements[replacement.first] = replacement.second;
+					if (_tagsReferencedFromOutside.erase(size_t(replacement.first)))
+						_tagsReferencedFromOutside.insert(size_t(replacement.second));
+				}
 				count++;
 			}
 		}

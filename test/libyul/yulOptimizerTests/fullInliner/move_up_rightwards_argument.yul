@@ -12,13 +12,13 @@
 //         let _2 := mload(5)
 //         let _4 := mload(4)
 //         let _6 := mload(3)
-//         let f_a := mload(2)
-//         let f_b := _6
-//         let f_c := _4
-//         let f_x := 0
-//         f_x := add(f_a, f_b)
-//         f_x := mul(f_x, f_c)
-//         let _10 := add(f_x, _2)
+//         let a_13 := mload(2)
+//         let b_14 := _6
+//         let c_15 := _4
+//         let x_16 := 0
+//         x_16 := add(a_13, b_14)
+//         x_16 := mul(x_16, c_15)
+//         let _10 := add(x_16, _2)
 //         let y := add(mload(1), _10)
 //     }
 //     function f(a, b, c) -> x

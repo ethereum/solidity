@@ -20,13 +20,11 @@
 
 #include <test/Options.h>
 
-#include <libsolidity/interface/AssemblyStack.h>
+#include <libyul/AssemblyStack.h>
 #include <libevmasm/Instruction.h>
 
 using namespace std;
 
-namespace dev
-{
 namespace yul
 {
 namespace test
@@ -36,9 +34,9 @@ namespace
 {
 string assemble(string const& _input)
 {
-	solidity::AssemblyStack asmStack;
+	AssemblyStack asmStack;
 	BOOST_REQUIRE_MESSAGE(asmStack.parseAndAnalyze("", _input), "Source did not parse: " + _input);
-	return solidity::disassemble(asmStack.assemble(solidity::AssemblyStack::Machine::EVM, true).bytecode->bytecode);
+	return dev::solidity::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM, true).bytecode->bytecode);
 }
 }
 
@@ -348,6 +346,5 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function_with_gaps)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }
 }

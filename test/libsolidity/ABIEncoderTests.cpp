@@ -164,10 +164,13 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		}
 	)";
 
-	compileAndRun(sourceCode);
-	callContractFunction("f()");
-	// The old encoder does not clean array elements.
-	REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256("0xfffffffe"), u256("0xffffffff"), u256("0x100000000")));
+	if (!dev::test::Options::get().useABIEncoderV2)
+	{
+		compileAndRun(sourceCode);
+		callContractFunction("f()");
+		// The old encoder does not clean array elements.
+		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256("0xfffffffe"), u256("0xffffffff"), u256("0x100000000")));
+	}
 
 	compileAndRun(NewEncoderPragma + sourceCode);
 	callContractFunction("f()");
@@ -444,6 +447,7 @@ BOOST_AUTO_TEST_CASE(structs)
 		);
 		BOOST_CHECK(callContractFunction("f()") == encoded);
 		REQUIRE_LOG_DATA(encoded);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
 	)
 }
 

@@ -14,16 +14,25 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * Yul dialect.
+/** @file IsolTestOptions.h
  */
 
-#include <libyul/Dialect.h>
+#pragma once
 
-#include <libyul/Object.h>
-#include <libyul/backends/evm/AbstractAssembly.h>
+#include <test/Common.h>
 
-#include <map>
+namespace dev
+{
+namespace test
+{
 
-using namespace yul;
-using namespace std;
+struct IsolTestOptions: CommonOptions
+{
+	bool noColor = false;
+	bool showHelp = false;
+
+	IsolTestOptions(std::string* _editor);
+	bool parse(int _argc, char const* const* _argv) override;
+};
+}
+}

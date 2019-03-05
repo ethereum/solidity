@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -246,7 +246,7 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		fatalTypeError(_typeName.baseType().location(), "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
-		TypePointer lengthTypeGeneric = length->annotation().type;
+		TypePointer& lengthTypeGeneric = length->annotation().type;
 		if (!lengthTypeGeneric)
 			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
 		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric.get());
@@ -298,11 +298,13 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 			}
 			declarations = m_resolver.nameFromCurrentScope(realName);
 		}
-		if (declarations.size() != 1)
+		if (declarations.size() > 1)
 		{
 			declarationError(_identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
 			return size_t(-1);
 		}
+		else if (declarations.size() == 0)
+			return size_t(-1);
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 			if (var->isLocalVariable() && _crossesFunctionBoundary)
 			{
@@ -322,9 +324,8 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	yul::AsmAnalyzer(
 		analysisInfo,
 		errorsIgnored,
-		EVMVersion(),
 		errorTypeForLoose,
-		yul::EVMDialect::looseAssemblyForEVM(),
+		yul::EVMDialect::looseAssemblyForEVM(EVMVersion{}),
 		resolver
 	).analyze(_inlineAssembly.operations());
 	return false;

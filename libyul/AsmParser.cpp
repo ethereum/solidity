@@ -48,8 +48,7 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	}
 	catch (FatalError const&)
 	{
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+		solAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
 	}
 	return nullptr;
 }
@@ -80,7 +79,7 @@ Statement Parser::parseStatement()
 	case Token::If:
 	{
 		If _if = createWithLocation<If>();
-		m_scanner->next();
+		advance();
 		_if.condition = make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
 		return Statement{move(_if)};
@@ -88,15 +87,15 @@ Statement Parser::parseStatement()
 	case Token::Switch:
 	{
 		Switch _switch = createWithLocation<Switch>();
-		m_scanner->next();
+		advance();
 		_switch.expression = make_unique<Expression>(parseExpression());
-		while (m_scanner->currentToken() == Token::Case)
+		while (currentToken() == Token::Case)
 			_switch.cases.emplace_back(parseCase());
-		if (m_scanner->currentToken() == Token::Default)
+		if (currentToken() == Token::Default)
 			_switch.cases.emplace_back(parseCase());
-		if (m_scanner->currentToken() == Token::Default)
+		if (currentToken() == Token::Default)
 			fatalParserError("Only one default case allowed.");
-		else if (m_scanner->currentToken() == Token::Case)
+		else if (currentToken() == Token::Case)
 			fatalParserError("Case not allowed after default case.");
 		if (_switch.cases.empty())
 			fatalParserError("Switch statement without any cases.");
@@ -138,63 +137,66 @@ Statement Parser::parseStatement()
 		return ExpressionStatement{locationOf(expr), expr};
 	}
 	case Token::Comma:
+	case Token::AssemblyAssign:
 	{
-		// if a comma follows, a multiple assignment is assumed
+		std::vector<Identifier> variableNames;
 
-		if (elementary.type() != typeid(Identifier))
-			fatalParserError("Label name / variable name must precede \",\" (multiple assignment).");
-		Identifier const& identifier = boost::get<Identifier>(elementary);
-
-		Assignment assignment = createWithLocation<Assignment>(identifier.location);
-		assignment.variableNames.emplace_back(identifier);
-
-		do
+		while (true)
 		{
-			expectToken(Token::Comma);
-			elementary = parseElementaryOperation();
 			if (elementary.type() != typeid(Identifier))
-				fatalParserError("Variable name expected in multiple assignment.");
-			assignment.variableNames.emplace_back(boost::get<Identifier>(elementary));
-		}
-		while (currentToken() == Token::Comma);
+			{
+				auto const token = currentToken() == Token::Comma ? "," : ":=";
 
-		expectToken(Token::Colon);
-		expectToken(Token::Assign);
+				fatalParserError(
+					std::string("Variable name must precede \"") +
+					token +
+					"\"" +
+					(currentToken() == Token::Comma ? " in multiple assignment." : " in assignment.")
+				);
+			}
+
+			auto const& identifier = boost::get<Identifier>(elementary);
+
+			if (m_dialect->builtin(identifier.name))
+				fatalParserError("Cannot assign to builtin function \"" + identifier.name.str() + "\".");
+
+			variableNames.emplace_back(identifier);
+
+			if (currentToken() != Token::Comma)
+				break;
+
+			expectToken(Token::Comma);
+
+			elementary = parseElementaryOperation();
+		}
+
+		Assignment assignment =
+			createWithLocation<Assignment>(boost::get<Identifier>(elementary).location);
+		assignment.variableNames = std::move(variableNames);
+
+		expectToken(Token::AssemblyAssign);
 
 		assignment.value.reset(new Expression(parseExpression()));
 		assignment.location.end = locationOf(*assignment.value).end;
+
 		return Statement{std::move(assignment)};
 	}
 	case Token::Colon:
 	{
 		if (elementary.type() != typeid(Identifier))
-			fatalParserError("Label name / variable name must precede \":\".");
+			fatalParserError("Label name must precede \":\".");
+
 		Identifier const& identifier = boost::get<Identifier>(elementary);
+
 		advance();
-		// identifier:=: should be parsed as identifier: =: (i.e. a label),
-		// while identifier:= (being followed by a non-colon) as identifier := (assignment).
-		if (currentToken() == Token::Assign && peekNextToken() != Token::Colon)
-		{
-			Assignment assignment = createWithLocation<Assignment>(identifier.location);
-			if (m_dialect->builtin(identifier.name))
-				fatalParserError("Cannot assign to builtin function \"" + identifier.name.str() + "\".");
-			else if (m_dialect->flavour != AsmFlavour::Yul && instructions().count(identifier.name.str()))
-				fatalParserError("Cannot use instruction names for identifier names.");
-			advance();
-			assignment.variableNames.emplace_back(identifier);
-			assignment.value.reset(new Expression(parseExpression()));
-			assignment.location.end = locationOf(*assignment.value).end;
-			return Statement{std::move(assignment)};
-		}
-		else
-		{
-			// label
-			if (m_dialect->flavour != AsmFlavour::Loose)
-				fatalParserError("Labels are not supported.");
-			Label label = createWithLocation<Label>(identifier.location);
-			label.name = identifier.name;
-			return label;
-		}
+
+		// label
+		if (m_dialect->flavour != AsmFlavour::Loose)
+			fatalParserError("Labels are not supported.");
+
+		Label label = createWithLocation<Label>(identifier.location);
+		label.name = identifier.name;
+		return label;
 	}
 	default:
 		if (m_dialect->flavour != AsmFlavour::Loose)
@@ -222,18 +224,18 @@ Case Parser::parseCase()
 {
 	RecursionGuard recursionGuard(*this);
 	Case _case = createWithLocation<Case>();
-	if (m_scanner->currentToken() == Token::Default)
-		m_scanner->next();
-	else if (m_scanner->currentToken() == Token::Case)
+	if (currentToken() == Token::Default)
+		advance();
+	else if (currentToken() == Token::Case)
 	{
-		m_scanner->next();
+		advance();
 		ElementaryOperation literal = parseElementaryOperation();
 		if (literal.type() != typeid(Literal))
 			fatalParserError("Literal expected.");
 		_case.value = make_unique<Literal>(boost::get<Literal>(std::move(literal)));
 	}
 	else
-		fatalParserError("Case or default case expected.");
+		solAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
 	_case.location.end = _case.body.location.end;
 	return _case;
@@ -439,10 +441,9 @@ VariableDeclaration Parser::parseVariableDeclaration()
 		else
 			break;
 	}
-	if (currentToken() == Token::Colon)
+	if (currentToken() == Token::AssemblyAssign)
 	{
-		expectToken(Token::Colon);
-		expectToken(Token::Assign);
+		expectToken(Token::AssemblyAssign);
 		varDecl.value = make_unique<Expression>(parseExpression());
 		varDecl.location.end = locationOf(*varDecl.value).end;
 	}

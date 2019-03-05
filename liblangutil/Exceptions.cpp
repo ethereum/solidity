@@ -57,7 +57,7 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 		*this << errinfo_comment(_description);
 }
 
-Error::Error(Error::Type _type, const std::string& _description, const SourceLocation& _location):
+Error::Error(Error::Type _type, std::string const& _description, SourceLocation const& _location):
 	Error(_type)
 {
 	if (!_location.isEmpty())

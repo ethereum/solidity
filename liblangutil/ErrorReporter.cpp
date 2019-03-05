@@ -134,7 +134,7 @@ void ErrorReporter::clear()
 	m_errorList.clear();
 }
 
-void ErrorReporter::declarationError(SourceLocation const& _location, SecondarySourceLocation const&_secondaryLocation, string const& _description)
+void ErrorReporter::declarationError(SourceLocation const& _location, SecondarySourceLocation const& _secondaryLocation, string const& _description)
 {
 	error(
 		Error::Type::DeclarationError,

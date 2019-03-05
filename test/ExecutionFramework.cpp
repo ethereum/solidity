@@ -40,7 +40,7 @@ h256 const EmptyTrie("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5
 
 string getIPCSocketPath()
 {
-	string ipcPath = dev::test::Options::get().ipcPath;
+	string ipcPath = dev::test::Options::get().ipcPath.string();
 	if (ipcPath.empty())
 		BOOST_FAIL("ERROR: ipcPath not set! (use --ipcpath <path> or the environment variable ETH_TEST_IPC)");
 
@@ -49,8 +49,13 @@ string getIPCSocketPath()
 
 }
 
-ExecutionFramework::ExecutionFramework() :
-	m_rpc(RPCSession::instance(getIPCSocketPath())),
+ExecutionFramework::ExecutionFramework():
+	ExecutionFramework(getIPCSocketPath())
+{
+}
+
+ExecutionFramework::ExecutionFramework(string const& _ipcPath):
+	m_rpc(RPCSession::instance(_ipcPath)),
 	m_evmVersion(dev::test::Options::get().evmVersion()),
 	m_optimize(dev::test::Options::get().optimize),
 	m_showMessages(dev::test::Options::get().showMessages),

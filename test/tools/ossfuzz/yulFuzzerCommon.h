@@ -14,13 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * Information generated during analyzer part of inline assembly.
- */
+#include <test/tools/yulInterpreter/Interpreter.h>
 
-#include <libyul/AsmAnalysisInfo.h>
-
-#include <libyul/AsmScope.h>
-
-#include <ostream>
-
+namespace yul
+{
+namespace test
+{
+namespace yul_fuzzer
+{
+struct yulFuzzerUtil
+{
+	static void interpret(std::ostream& _os, std::shared_ptr<yul::Block> _ast);
+};
+}
+}
+}

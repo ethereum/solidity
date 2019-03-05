@@ -43,6 +43,7 @@ class SolidityExecutionFramework: public dev::test::ExecutionFramework
 
 public:
 	SolidityExecutionFramework();
+	SolidityExecutionFramework(std::string const& _ipcPath);
 
 	virtual bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -64,7 +65,10 @@ public:
 	)
 	{
 		// Silence compiler version warning
-		std::string sourceCode = "pragma solidity >=0.0;\n" + _sourceCode;
+		std::string sourceCode = "pragma solidity >=0.0;\n";
+		if (dev::test::Options::get().useABIEncoderV2 && _sourceCode.find("pragma experimental ABIEncoderV2;") == std::string::npos)
+			sourceCode += "pragma experimental ABIEncoderV2;\n";
+		sourceCode += _sourceCode;
 		m_compiler.reset(false);
 		m_compiler.addSource("", sourceCode);
 		m_compiler.setLibraries(_libraryAddresses);

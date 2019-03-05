@@ -14,17 +14,16 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TestHelper.h
- */
 
 #pragma once
 
 #include <liblangutil/EVMVersion.h>
+#include <test/Common.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include <boost/version.hpp>
-#include <boost/noncopyable.hpp>
 
 #include <functional>
 
@@ -33,17 +32,12 @@ namespace dev
 namespace test
 {
 
-struct Options: boost::noncopyable
+struct Options: CommonOptions
 {
-	std::string ipcPath;
-	boost::filesystem::path testPath;
 	bool showMessages = false;
-	bool optimize = false;
-	bool disableIPC = false;
-	bool disableSMT = false;
+	bool useABIEncoderV2 = false;
 
-	void validate() const;
-	solidity::EVMVersion evmVersion() const;
+	langutil::EVMVersion evmVersion() const;
 
 	static Options const& get();
 

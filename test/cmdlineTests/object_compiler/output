@@ -1,0 +1,65 @@
+
+======= object_compiler/input.sol (EVM) =======
+
+Pretty printed source:
+object "MyContract" {
+    code {
+        sstore(0, caller())
+        let _1 := datasize("Runtime")
+        datacopy(0, dataoffset("Runtime"), _1)
+        return(0, _1)
+    }
+    object "Runtime" {
+        code {
+            mstore(0, sload(0))
+            return(0, 0x20)
+        }
+    }
+}
+
+
+Binary representation:
+33600055600b806012600039806000f350fe60005460005260206000f3
+
+Text representation:
+    /* "object_compiler/input.sol":128:136   */
+  caller
+    /* "object_compiler/input.sol":125:126   */
+  0x00
+    /* "object_compiler/input.sol":118:137   */
+  sstore
+  dataSize(sub_0)
+    /* "object_compiler/input.sol":240:259   */
+  dup1
+  dataOffset(sub_0)
+    /* "object_compiler/input.sol":125:126   */
+  0x00
+    /* "object_compiler/input.sol":205:260   */
+  codecopy
+    /* "object_compiler/input.sol":275:294   */
+  dup1
+    /* "object_compiler/input.sol":125:126   */
+  0x00
+    /* "object_compiler/input.sol":265:295   */
+  return
+    /* "object_compiler/input.sol":29:299   */
+  pop
+stop
+
+sub_0: assembly {
+        /* "object_compiler/input.sol":397:398   */
+      0x00
+        /* "object_compiler/input.sol":391:399   */
+      sload
+        /* "object_compiler/input.sol":397:398   */
+      0x00
+        /* "object_compiler/input.sol":381:400   */
+      mstore
+        /* "object_compiler/input.sol":417:421   */
+      0x20
+        /* "object_compiler/input.sol":397:398   */
+      0x00
+        /* "object_compiler/input.sol":407:422   */
+      return
+}
+

@@ -140,6 +140,12 @@ inline bytes toCompactBigEndian(uint8_t _val, unsigned _min = 0)
 	return (_min || _val) ? bytes{ _val } : bytes{};
 }
 
+/// Workarounds shift left bug in boost <1.65.1.
+template <class S> S bigintShiftLeftWorkaround(S const& _a, unsigned _b)
+{
+	return (S)(bigint(_a) << _b);
+}
+
 /// Convenience function for conversion of a u256 to hex
 inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
 {
@@ -175,9 +181,6 @@ inline std::string toCompactHexWithPrefix(u256 val)
 
 // Algorithms for string and string-like collections.
 
-/// Escapes a string into the C-string representation.
-/// @p _all if true will escape all characters, not just the unprintable ones.
-std::string escaped(std::string const& _s, bool _all = true);
 /// Determine bytes required to encode the given integer value. @returns 0 if @a _i is zero.
 template <class T>
 inline unsigned bytesRequired(T _i)
@@ -240,7 +243,7 @@ bool contains(T const& _t, V const& _v)
 /// place at the end, but already visited elements might be invalidated.
 /// If nothing is replaced, no copy is performed.
 template <typename T, typename F>
-void iterateReplacing(std::vector<T>& _vector, const F& _f)
+void iterateReplacing(std::vector<T>& _vector, F const& _f)
 {
 	// Concept: _f must be Callable, must accept param T&, must return optional<vector<T>>
 	bool useModified = false;

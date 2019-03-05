@@ -29,7 +29,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-const std::map<std::string, Instruction> dev::solidity::c_instructions =
+std::map<std::string, Instruction> const dev::solidity::c_instructions =
 {
 	{ "STOP", Instruction::STOP },
 	{ "ADD", Instruction::ADD },
@@ -173,7 +173,7 @@ const std::map<std::string, Instruction> dev::solidity::c_instructions =
 	{ "SELFDESTRUCT", Instruction::SELFDESTRUCT }
 };
 
-static const std::map<Instruction, InstructionInfo> c_instructionInfo =
+static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 { //												Add, Args, Ret, SideEffects, GasPriceTier
 	{ Instruction::STOP,		{ "STOP",			0, 0, 0, true,  Tier::Zero } },
 	{ Instruction::ADD,			{ "ADD",			0, 2, 1, false, Tier::VeryLow } },

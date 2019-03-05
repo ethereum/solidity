@@ -8,19 +8,19 @@
 // fullInliner
 // {
 //     {
-//         let f_a := calldataload(0)
-//         let f_b := 0
-//         let f_c := 0
-//         f_b := sload(mload(f_a))
-//         f_c := 3
-//         let b3 := f_b
-//         let f_a_2 := f_c
-//         let f_b_3 := 0
-//         let f_c_4 := 0
-//         f_b_3 := sload(mload(f_a_2))
-//         f_c_4 := 3
-//         let b4 := f_b_3
-//         let c4 := f_c_4
+//         let a_2 := calldataload(0)
+//         let b_3 := 0
+//         let c_4 := 0
+//         b_3 := sload(mload(a_2))
+//         c_4 := 3
+//         let b3 := b_3
+//         let a_6 := c_4
+//         let b_7 := 0
+//         let c_8 := 0
+//         b_7 := sload(mload(a_6))
+//         c_8 := 3
+//         let b4 := b_7
+//         let c4 := c_8
 //     }
 //     function f(a) -> b, c
 //     {

@@ -28,10 +28,13 @@
 
 #include <boost/test/framework.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 using namespace std;
 using namespace dev::test;
 namespace fs = boost::filesystem;
+namespace po = boost::program_options;
+
 
 Options const& Options::get()
 {
@@ -39,69 +42,33 @@ Options const& Options::get()
 	return instance;
 }
 
+
 Options::Options()
 {
 	auto const& suite = boost::unit_test::framework::master_test_suite();
-	for (auto i = 0; i < suite.argc; i++)
-		if (string(suite.argv[i]) == "--ipcpath" && i + 1 < suite.argc)
-		{
-			ipcPath = suite.argv[i + 1];
-			i++;
-		}
-		else if (string(suite.argv[i]) == "--testpath" && i + 1 < suite.argc)
-		{
-			testPath = suite.argv[i + 1];
-			i++;
-		}
-		else if (string(suite.argv[i]) == "--optimize")
-			optimize = true;
-		else if (string(suite.argv[i]) == "--evm-version")
-		{
-			evmVersionString = i + 1 < suite.argc ? suite.argv[i + 1] : "INVALID";
-			++i;
-		}
-		else if (string(suite.argv[i]) == "--show-messages")
-			showMessages = true;
-		else if (string(suite.argv[i]) == "--no-ipc")
-			disableIPC = true;
-		else if (string(suite.argv[i]) == "--no-smt")
-			disableSMT = true;
 
-	if (!disableIPC && ipcPath.empty())
-		if (auto path = getenv("ETH_TEST_IPC"))
-			ipcPath = path;
+	if (suite.argc == 0)
+		return;
 
-	if (testPath.empty())
-		if (auto path = getenv("ETH_TEST_PATH"))
-			testPath = path;
+	options.add_options()
+		("optimize", po::bool_switch(&optimize), "enables optimization")
+		("abiencoderv2", po::bool_switch(&useABIEncoderV2), "enables abi encoder v2")
+		("evm-version", po::value(&evmVersionString), "which evm version to use")
+		("show-messages", po::bool_switch(&showMessages), "enables message output");
 
-	if (testPath.empty())
-		testPath = discoverTestPath();
+	parse(suite.argc, suite.argv);
 }
 
-void Options::validate() const
-{
-	solAssert(
-		!dev::test::Options::get().testPath.empty(),
-		"No test path specified. The --testpath argument is required."
-	);
-	if (!disableIPC)
-		solAssert(
-			!dev::test::Options::get().ipcPath.empty(),
-			"No ipc path specified. The --ipcpath argument is required, unless --no-ipc is used."
-		);
-}
-
-dev::solidity::EVMVersion Options::evmVersion() const
+langutil::EVMVersion Options::evmVersion() const
 {
 	if (!evmVersionString.empty())
 	{
 		// We do this check as opposed to in the constructor because the BOOST_REQUIRE
 		// macros cannot yet be used in the constructor.
-		auto version = solidity::EVMVersion::fromString(evmVersionString);
+		auto version = langutil::EVMVersion::fromString(evmVersionString);
 		BOOST_REQUIRE_MESSAGE(version, "Invalid EVM version: " + evmVersionString);
 		return *version;
 	}
 	else
-		return dev::solidity::EVMVersion();
+		return langutil::EVMVersion();
 }
