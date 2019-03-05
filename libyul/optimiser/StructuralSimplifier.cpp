@@ -59,7 +59,7 @@ boost::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression cons
 	if (expr && expr->type() == typeid(Literal))
 	{
 		Literal const& literal = boost::get<Literal>(*expr);
-		return valueOfNumberLiteral(literal);
+		return valueOfLiteral(literal);
 	}
 
 	return boost::optional<u256>();
@@ -114,7 +114,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 
 				for (auto& _case: _switchStmt.cases)
 				{
-					if (_case.value && valueOfNumberLiteral(*_case.value) == constExprVal)
+					if (_case.value && valueOfLiteral(*_case.value) == constExprVal)
 					{
 						matchingCaseBlock = &_case.body;
 						break;

@@ -23,6 +23,7 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
+#include <libyul/Utilities.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -396,20 +397,8 @@ void CodeTransform::operator()(Identifier const& _identifier)
 void CodeTransform::operator()(Literal const& _literal)
 {
 	m_assembly.setSourceLocation(_literal.location);
-	if (_literal.kind == LiteralKind::Number)
-		m_assembly.appendConstant(u256(_literal.value.str()));
-	else if (_literal.kind == LiteralKind::Boolean)
-	{
-		if (_literal.value == "true"_yulstring)
-			m_assembly.appendConstant(u256(1));
-		else
-			m_assembly.appendConstant(u256(0));
-	}
-	else
-	{
-		solAssert(_literal.value.str().size() <= 32, "");
-		m_assembly.appendConstant(u256(h256(_literal.value.str(), h256::FromBinary, h256::AlignLeft)));
-	}
+	m_assembly.appendConstant(valueOfLiteral(_literal));
+
 	checkStackHeight(&_literal);
 }
 
