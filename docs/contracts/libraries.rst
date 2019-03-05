@@ -47,7 +47,7 @@ more advanced example to implement a set).
 
 ::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     library Set {
       // We define a new struct datatype that will be used to
@@ -121,7 +121,7 @@ custom types without the overhead of external function calls:
 
 ::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     library BigInt {
         struct bigint {

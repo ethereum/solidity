@@ -8,7 +8,7 @@ Abstract Contracts
 
 Contracts are marked as abstract when at least one of their functions lacks an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract Feline {
         function utterance() public returns (bytes32);
@@ -16,7 +16,7 @@ Contracts are marked as abstract when at least one of their functions lacks an i
 
 Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract Feline {
         function utterance() public returns (bytes32);

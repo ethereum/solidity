@@ -404,4 +404,4 @@ Common Terms
 Code Examples
 -------------
 
-* Ensure that all code examples begin with a ``pragma`` version that spans the largest where the contract code is valid. For example ``pragma solidity >=0.4.0 <0.6.0;``.
+* Ensure that all code examples begin with a ``pragma`` version that spans the largest where the contract code is valid. For example ``pragma solidity >=0.4.0 <0.7.0;``.

@@ -30,7 +30,7 @@ activate themselves.
 
 ::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -194,7 +194,7 @@ high or low invalid bids.
 
 ::
 
-    pragma solidity >0.4.23 <0.6.0;
+    pragma solidity >0.4.23 <0.7.0;
 
     contract BlindAuction {
         struct Bid {
