@@ -38,14 +38,15 @@
  - [ ] Update the version and the hash (``sha256sum solidity_x.x.x.tar.gz``) in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb
 
 ### Documentation
- - [ ] Update the default version on readthedocs.
+ - [ ] Build the new version on https://readthedocs.org/projects/solidity/ (select `latest` on the bottom of the page and click `BUILD`)
+ - [ ] In the admin panel, select `Versions` in the menu and set the default version to the released one.
 
 ### Release solc-js
  - [ ] Increment the version number, create a pull request for that, merge it after tests succeeded.
  - [ ] Run ``npm publish`` in the updated ``solc-js`` repository.
- - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
- - [ ] Merge ``release`` back into ``develop``.
 
 ### Post-release
+ - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
+ - [ ] Merge ``release`` back into ``develop``.
  - [ ] Announce on Twitter and Reddit.
  - [ ] Lean back, wait for bug reports and repeat from step 1 :)
