@@ -22,11 +22,13 @@
 #include <libdevcore/Visitor.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
-#include <boost/range/algorithm/find_if.hpp>
+#include <boost/algorithm/cxx11/any_of.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+using OptionalStatements = boost::optional<vector<Statement>>;
 
 namespace {
 
@@ -39,6 +41,84 @@ ExpressionStatement makePopExpressionStatement(langutil::SourceLocation const& _
 	}};
 }
 
+void removeEmptyDefaultFromSwitch(Switch& _switchStmt)
+{
+	boost::remove_erase_if(
+		_switchStmt.cases,
+		[](Case const& _case) { return !_case.value && _case.body.statements.empty(); }
+	);
+}
+
+void removeEmptyCasesFromSwitch(Switch& _switchStmt)
+{
+	bool hasDefault = boost::algorithm::any_of(
+		_switchStmt.cases,
+		[](Case const& _case) { return !_case.value; }
+	);
+
+	if (hasDefault)
+		return;
+
+	boost::remove_erase_if(
+		_switchStmt.cases,
+		[](Case const& _case) { return _case.body.statements.empty(); }
+	);
+}
+
+OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _constExprVal)
+{
+	Block* matchingCaseBlock = nullptr;
+	Case* defaultCase = nullptr;
+
+	for (auto& _case: _switchStmt.cases)
+	{
+		if (_case.value && valueOfLiteral(*_case.value) == _constExprVal)
+		{
+			matchingCaseBlock = &_case.body;
+			break;
+		}
+		else if (!_case.value)
+			defaultCase = &_case;
+	}
+
+	if (!matchingCaseBlock && defaultCase)
+		matchingCaseBlock = &defaultCase->body;
+
+	OptionalStatements s = vector<Statement>{};
+
+	if (matchingCaseBlock)
+		s->emplace_back(std::move(*matchingCaseBlock));
+
+	return s;
+}
+
+OptionalStatements reduceSingleCaseSwitch(Switch& _switchStmt)
+{
+	yulAssert(_switchStmt.cases.size() == 1, "Expected only one case!");
+
+	auto& switchCase = _switchStmt.cases.front();
+	auto loc = locationOf(*_switchStmt.expression);
+	if (switchCase.value)
+	{
+		OptionalStatements s = vector<Statement>{};
+		s->emplace_back(If{
+				std::move(_switchStmt.location),
+				make_unique<Expression>(FunctionalInstruction{
+						std::move(loc),
+						solidity::Instruction::EQ,
+						{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
+						}), std::move(switchCase.body)});
+		return s;
+	}
+	else
+	{
+		OptionalStatements s = vector<Statement>{};
+		s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
+		s->emplace_back(std::move(switchCase.body));
+		return s;
+	}
+}
+
 }
 
 void StructuralSimplifier::operator()(Block& _block)
@@ -46,6 +126,19 @@ void StructuralSimplifier::operator()(Block& _block)
 	pushScope(false);
 	simplify(_block.statements);
 	popScope();
+}
+
+OptionalStatements StructuralSimplifier::reduceNoCaseSwitch(Switch& _switchStmt) const
+{
+	yulAssert(_switchStmt.cases.empty(), "Expected no case!");
+
+	auto loc = locationOf(*_switchStmt.expression);
+
+	OptionalStatements s = vector<Statement>{};
+
+	s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
+
+	return s;
 }
 
 boost::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
@@ -70,7 +163,6 @@ boost::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression cons
 
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
-	using OptionalStatements = boost::optional<vector<Statement>>;
 	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch, ForLoop> const visitor(
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (_ifStmt.body.statements.empty())
@@ -86,75 +178,15 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			return {};
 		},
 		[&](Switch& _switchStmt) -> OptionalStatements {
-			auto& cases = _switchStmt.cases;
+			removeEmptyDefaultFromSwitch(_switchStmt);
+			removeEmptyCasesFromSwitch(_switchStmt);
 
-			if (cases.size() == 1)
-			{
-				auto& switchCase = cases.front();
-				auto loc = locationOf(*_switchStmt.expression);
-				if (switchCase.value)
-				{
-					OptionalStatements s = vector<Statement>{};
-					s->emplace_back(If{
-						std::move(_switchStmt.location),
-						make_unique<Expression>(FunctionalInstruction{
-								std::move(loc),
-								solidity::Instruction::EQ,
-								{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
-						}), std::move(switchCase.body)});
-					return s;
-				}
-				else
-				{
-					OptionalStatements s = vector<Statement>{};
-					s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
-					s->emplace_back(std::move(switchCase.body));
-					return s;
-				}
-			}
-			// Replace the whole switch with the resulting case body if arg. is
-			// a constant
+			if (_switchStmt.cases.empty())
+				return reduceNoCaseSwitch(_switchStmt);
+			else if (_switchStmt.cases.size() == 1)
+				return reduceSingleCaseSwitch(_switchStmt);
 			else if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
-			{
-				Block* matchingCaseBlock = nullptr;
-				Case* defaultCase = nullptr;
-
-				for (auto& _case: cases)
-				{
-					if (_case.value && valueOfLiteral(*_case.value) == constExprVal)
-					{
-						matchingCaseBlock = &_case.body;
-						break;
-					}
-					else if (!_case.value)
-						defaultCase = &_case;
-				}
-
-				if (!matchingCaseBlock && defaultCase)
-					matchingCaseBlock = &defaultCase->body;
-
-				OptionalStatements s = vector<Statement>{};
-
-				if (matchingCaseBlock)
-					s->emplace_back(std::move(*matchingCaseBlock));
-
-				return s;
-			}
-
-			// Remove cases with empty body if no default case exists
-			auto const defaultCase = boost::find_if(
-				cases,
-				[](Case const& _case) { return !_case.value; });
-
-			if (
-				(defaultCase != cases.end() &&
-				defaultCase->body.statements.empty()) ||
-				defaultCase == cases.end()
-			)
-				boost::remove_erase_if(
-					cases,
-					[](Case const& _case) { return _case.body.statements.empty(); }
-				);
+				return replaceConstArgSwitch(_switchStmt, constExprVal.get());
 
 			return {};
 		},
