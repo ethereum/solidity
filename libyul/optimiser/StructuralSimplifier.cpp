@@ -21,6 +21,9 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Visitor.h>
 
+#include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace yul;
@@ -83,9 +86,11 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			return {};
 		},
 		[&](Switch& _switchStmt) -> OptionalStatements {
-			if (_switchStmt.cases.size() == 1)
+			auto& cases = _switchStmt.cases;
+
+			if (cases.size() == 1)
 			{
-				auto& switchCase = _switchStmt.cases.front();
+				auto& switchCase = cases.front();
 				auto loc = locationOf(*_switchStmt.expression);
 				if (switchCase.value)
 				{
@@ -107,12 +112,14 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 					return s;
 				}
 			}
+			// Replace the whole switch with the resulting case body if arg. is
+			// a constant
 			else if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
 			{
 				Block* matchingCaseBlock = nullptr;
 				Case* defaultCase = nullptr;
 
-				for (auto& _case: _switchStmt.cases)
+				for (auto& _case: cases)
 				{
 					if (_case.value && valueOfLiteral(*_case.value) == constExprVal)
 					{
@@ -133,8 +140,23 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 
 				return s;
 			}
-			else
-				return {};
+
+			// Remove cases with empty body if no default case exists
+			auto const defaultCase = boost::find_if(
+				cases,
+				[](Case const& _case) { return !_case.value; });
+
+			if (
+				(defaultCase != cases.end() &&
+				defaultCase->body.statements.empty()) ||
+				defaultCase == cases.end()
+			)
+				boost::remove_erase_if(
+					cases,
+					[](Case const& _case) { return _case.body.statements.empty(); }
+				);
+
+			return {};
 		},
 		[&](ForLoop& _forLoop) -> OptionalStatements {
 			if (expressionAlwaysFalse(*_forLoop.condition))
