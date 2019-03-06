@@ -153,5 +153,18 @@ public:
 	);
 };
 
+/**
+ * Specialization of SymbolicVariable for Array
+ */
+class SymbolicArrayVariable: public SymbolicVariable
+{
+public:
+	SymbolicArrayVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+};
+
 }
 }

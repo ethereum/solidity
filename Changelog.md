@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Support one-dimensional arrays.
 
 
 Bugfixes:

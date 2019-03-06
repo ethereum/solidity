@@ -103,8 +103,6 @@ private:
 	void arrayAssignment();
 	/// Handles assignment to SMT array index.
 	void arrayIndexAssignment(Assignment const& _assignment);
-	/// Erases information about SMT arrays.
-	void eraseArrayKnowledge();
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -177,6 +175,9 @@ private:
 	void resetStorageReferences();
 	void resetVariables(std::vector<VariableDeclaration const*> _variables);
 	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
+	/// @returns the type without storage pointer information if it has it.
+	TypePointer typeWithoutPointer(TypePointer const& _type);
+
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
