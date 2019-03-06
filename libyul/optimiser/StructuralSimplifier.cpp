@@ -104,10 +104,12 @@ OptionalStatements reduceSingleCaseSwitch(Switch& _switchStmt)
 		s->emplace_back(If{
 				std::move(_switchStmt.location),
 				make_unique<Expression>(FunctionalInstruction{
-						std::move(loc),
-						solidity::Instruction::EQ,
-						{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
-						}), std::move(switchCase.body)});
+					std::move(loc),
+					solidity::Instruction::EQ,
+					{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
+				}),
+				std::move(switchCase.body)
+		});
 		return s;
 	}
 	else
@@ -202,10 +204,11 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
-			visit(_stmt);
 			OptionalStatements result = boost::apply_visitor(visitor, _stmt);
 			if (result)
 				simplify(*result);
+			else
+				visit(_stmt);
 			return result;
 		}
 	);
