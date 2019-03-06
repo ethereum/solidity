@@ -5,6 +5,9 @@ Language Features:
 
 Compiler Features:
  * SMTChecker: Support one-dimensional arrays.
+ * Yul Optimizer: Add rule to remove empty default switch cases
+ * Yul Optimizer: Add rule to remove empty cases if no default exists
+ * Yul Optimizer: Add rule to replace a switch with no cases with pop(expression)
 
 
 Bugfixes:
