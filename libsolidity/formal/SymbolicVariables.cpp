@@ -146,3 +146,13 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 {
 	solAssert(isArray(m_type->category()), "");
 }
+
+SymbolicEnumVariable::SymbolicEnumVariable(
+	TypePointer _type,
+	string const& _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(move(_type), _uniqueName, _interface)
+{
+	solAssert(isEnum(m_type->category()), "");
+}

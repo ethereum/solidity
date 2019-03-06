@@ -9,6 +9,4 @@ contract C
 // ----
 // Warning: (117-133): Assertion checker does not yet support this expression.
 // Warning: (137-153): Assertion checker does not yet support this expression.
-// Warning: (117-133): Internal error: Expression undefined for SMT solver.
-// Warning: (137-153): Internal error: Expression undefined for SMT solver.
 // Warning: (110-154): Assertion violation happens here

@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Support enums without typecast.
  * SMTChecker: Support one-dimensional arrays.
  * Yul Optimizer: Add rule to remove empty default switch cases
  * Yul Optimizer: Add rule to remove empty cases if no default exists
