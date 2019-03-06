@@ -203,7 +203,7 @@ public:
 	}
 
 	template<typename Range>
-	bytes encodeArray(bool _dynamicallySized, bool _dynamicallyEncoded, Range const& _elements)
+	static bytes encodeArray(bool _dynamicallySized, bool _dynamicallyEncoded, Range const& _elements)
 	{
 		bytes result;
 		if (_dynamicallySized)

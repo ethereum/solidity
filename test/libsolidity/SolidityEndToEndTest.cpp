@@ -8055,11 +8055,11 @@ BOOST_AUTO_TEST_CASE(struct_named_constructor)
 BOOST_AUTO_TEST_CASE(calldata_array)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			function f(uint[2] calldata s) external pure returns (uint256 a, uint256 b) {
-			    a = s[0];
-			    b = s[1];
+				a = s[0];
+				b = s[1];
 			}
 		}
 	)";
@@ -8071,12 +8071,12 @@ BOOST_AUTO_TEST_CASE(calldata_array)
 BOOST_AUTO_TEST_CASE(calldata_struct)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint256 a; uint256 b; }
 			function f(S calldata s) external pure returns (uint256 a, uint256 b) {
-			    a = s.a;
-			    b = s.b;
+				a = s.a;
+				b = s.b;
 			}
 		}
 	)";
@@ -8088,11 +8088,11 @@ BOOST_AUTO_TEST_CASE(calldata_struct)
 BOOST_AUTO_TEST_CASE(calldata_struct_and_ints)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint256 a; uint256 b; }
 			function f(uint256 a, S calldata s, uint256 b) external pure returns (uint256, uint256, uint256, uint256) {
-			    return (a, s.a, s.b, b);
+				return (a, s.a, s.b, b);
 			}
 		}
 	)";
@@ -8105,17 +8105,17 @@ BOOST_AUTO_TEST_CASE(calldata_struct_and_ints)
 BOOST_AUTO_TEST_CASE(calldata_structs)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S1 { uint256 a; uint256 b; }
 			struct S2 { uint256 a; }
 			function f(S1 calldata s1, S2 calldata s2, S1 calldata s3)
-			    external pure returns (uint256 a, uint256 b, uint256 c, uint256 d, uint256 e) {
-			    a = s1.a;
-			    b = s1.b;
-			    c = s2.a;
-			    d = s3.a;
-			    e = s3.b;
+				external pure returns (uint256 a, uint256 b, uint256 c, uint256 d, uint256 e) {
+				a = s1.a;
+				b = s1.b;
+				c = s2.a;
+				d = s3.a;
+				e = s3.b;
 			}
 		}
 	)";
@@ -8127,14 +8127,14 @@ BOOST_AUTO_TEST_CASE(calldata_structs)
 BOOST_AUTO_TEST_CASE(calldata_struct_array_member)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint256 a; uint256[2] b; uint256 c; }
 			function f(S calldata s) external pure returns (uint256 a, uint256 b0, uint256 b1, uint256 c) {
-			    a = s.a;
-			    b0 = s.b[0];
-			    b1 = s.b[1];
-			    c = s.c;
+				a = s.a;
+				b0 = s.b[0];
+				b1 = s.b[1];
+				c = s.c;
 			}
 		}
 	)";
@@ -8146,15 +8146,15 @@ BOOST_AUTO_TEST_CASE(calldata_struct_array_member)
 BOOST_AUTO_TEST_CASE(calldata_array_of_struct)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint256 a; uint256 b; }
 			function f(S[] calldata s) external pure returns (uint256 l, uint256 a, uint256 b, uint256 c, uint256 d) {
-			    l = s.length;
-			    a = s[0].a;
-			    b = s[0].b;
-			    c = s[1].a;
-			    d = s[1].b;
+				l = s.length;
+				a = s[0].a;
+				b = s[0].b;
+				c = s[1].a;
+				d = s[1].b;
 			}
 		}
 	)";
@@ -8166,16 +8166,16 @@ BOOST_AUTO_TEST_CASE(calldata_array_of_struct)
 BOOST_AUTO_TEST_CASE(calldata_array_of_struct_to_memory)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint256 a; uint256 b; }
 			function f(S[] calldata s) external pure returns (uint256 l, uint256 a, uint256 b, uint256 c, uint256 d) {
-			    S[] memory m = s;
-			    l = m.length;
-			    a = m[0].a;
-			    b = m[0].b;
-			    c = m[1].a;
-			    d = m[1].b;
+				S[] memory m = s;
+				l = m.length;
+				a = m[0].a;
+				b = m[0].b;
+				c = m[1].a;
+				d = m[1].b;
 			}
 		}
 	)";
@@ -8188,12 +8188,12 @@ BOOST_AUTO_TEST_CASE(calldata_array_of_struct_to_memory)
 BOOST_AUTO_TEST_CASE(calldata_struct_to_memory)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint256 a; uint256 b; }
 			function f(S calldata s) external pure returns (uint256, uint256) {
-			    S memory m = s;
-			    return (m.a, m.b);
+				S memory m = s;
+				return (m.a, m.b);
 			}
 		}
 	)";
@@ -8205,12 +8205,12 @@ BOOST_AUTO_TEST_CASE(calldata_struct_to_memory)
 BOOST_AUTO_TEST_CASE(nested_calldata_struct)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S1 { uint256 a; uint256 b; }
 			struct S2 { uint256 a; uint256 b; S1 s; uint256 c; }
 			function f(S2 calldata s) external pure returns (uint256 a, uint256 b, uint256 sa, uint256 sb, uint256 c) {
-			    return (s.a, s.b, s.s.a, s.s.b, s.c);
+				return (s.a, s.b, s.s.a, s.s.b, s.c);
 			}
 		}
 	)";
@@ -8222,13 +8222,13 @@ BOOST_AUTO_TEST_CASE(nested_calldata_struct)
 BOOST_AUTO_TEST_CASE(nested_calldata_struct_to_memory)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S1 { uint256 a; uint256 b; }
 			struct S2 { uint256 a; uint256 b; S1 s; uint256 c; }
 			function f(S2 calldata s) external pure returns (uint256 a, uint256 b, uint256 sa, uint256 sb, uint256 c) {
-			    S2 memory m = s;
-			    return (m.a, m.b, m.s.a, m.s.b, m.c);
+				S2 memory m = s;
+				return (m.a, m.b, m.s.a, m.s.b, m.c);
 			}
 		}
 	)";
@@ -8240,11 +8240,11 @@ BOOST_AUTO_TEST_CASE(nested_calldata_struct_to_memory)
 BOOST_AUTO_TEST_CASE(calldata_struct_short)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint256 a; uint256 b; }
 			function f(S calldata) external pure returns (uint256) {
-			    return msg.data.length;
+				return msg.data.length;
 			}
 		}
 	)";
@@ -8263,12 +8263,12 @@ BOOST_AUTO_TEST_CASE(calldata_struct_short)
 BOOST_AUTO_TEST_CASE(calldata_struct_cleaning)
 {
 	char const* sourceCode = R"(
-	    pragma experimental ABIEncoderV2;
+		pragma experimental ABIEncoderV2;
 		contract C {
 			struct S { uint8 a; bytes1 b; }
 			function f(S calldata s) external pure returns (uint256 a, bytes32 b) {
-			    uint8 tmp1 = s.a;
-			    bytes1 tmp2 = s.b;
+				uint8 tmp1 = s.a;
+				bytes1 tmp2 = s.b;
 				assembly {
 					a := tmp1
 					b := tmp2
@@ -8279,7 +8279,7 @@ BOOST_AUTO_TEST_CASE(calldata_struct_cleaning)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
-    // double check that the valid case goes through
+	// double check that the valid case goes through
 	ABI_CHECK(callContractFunction("f((uint8,bytes1))", u256(0x12), bytes{0x34} + bytes(31,0)), encodeArgs(0x12, bytes{0x34} + bytes(31,0)));
 	ABI_CHECK(callContractFunction("f((uint8,bytes1))", u256(0x1234), bytes{0x56, 0x78} + bytes(30,0)), encodeArgs(0x34, bytes{0x56} + bytes(31,0)));
 	ABI_CHECK(callContractFunction("f((uint8,bytes1))", u256(-1), u256(-1)), encodeArgs(0xFF, bytes{0xFF} + bytes(31,0)));
@@ -8295,10 +8295,10 @@ BOOST_AUTO_TEST_CASE(calldata_struct_function_type)
 				return s.fn(42);
 			}
 			function g(uint256 a) external returns (uint256) {
-			    return a * 3;
+				return a * 3;
 			}
 			function h(uint256 a) external returns (uint256) {
-			    return 23;
+				return 23;
 			}
 		}
 	)";
@@ -8331,29 +8331,29 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_bytes)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
-    bytes bytes010203 = bytes{1,2,3}+bytes(29,0);
-    bytes bytes040506 = bytes{4,5,6}+bytes(29,0);
-    bytes bytes0102 = bytes{1,2}+bytes(30,0);
+	bytes bytes010203 = bytes{1,2,3}+bytes(29,0);
+	bytes bytes040506 = bytes{4,5,6}+bytes(29,0);
+	bytes bytes0102 = bytes{1,2}+bytes(30,0);
 	ABI_CHECK(
-	    callContractFunction("f1(bytes[1])", 0x20, 0x20, 3, bytes010203),
-	    encodeArgs(3, 1, 2, 3)
+		callContractFunction("f1(bytes[1])", 0x20, 0x20, 3, bytes010203),
+		encodeArgs(3, 1, 2, 3)
 	);
 	ABI_CHECK(
-	    callContractFunction("f2(bytes[1],bytes[1])", 0x40, 0xA0, 0x20, 3, bytes010203, 0x20, 2, bytes0102),
-	    encodeArgs(3, 1, 2, 3, 2, 1, 2)
+		callContractFunction("f2(bytes[1],bytes[1])", 0x40, 0xA0, 0x20, 3, bytes010203, 0x20, 2, bytes0102),
+		encodeArgs(3, 1, 2, 3, 2, 1, 2)
 	);
 	ABI_CHECK(
-	    callContractFunction("g1(bytes[2])", 0x20, 0x40, 0x80, 3, bytes010203, 3, bytes040506),
-	    encodeArgs(3, 1, 2, 3, 3, 4, 5, 6)
+		callContractFunction("g1(bytes[2])", 0x20, 0x40, 0x80, 3, bytes010203, 3, bytes040506),
+		encodeArgs(3, 1, 2, 3, 3, 4, 5, 6)
 	);
 	// same offset for both arrays
 	ABI_CHECK(
-	    callContractFunction("g1(bytes[2])", 0x20, 0x40, 0x40, 3, bytes010203),
-	    encodeArgs(3, 1, 2, 3, 3, 1, 2, 3)
+		callContractFunction("g1(bytes[2])", 0x20, 0x40, 0x40, 3, bytes010203),
+		encodeArgs(3, 1, 2, 3, 3, 1, 2, 3)
 	);
 	ABI_CHECK(
-	    callContractFunction("g2(bytes[])", 0x20, 2, 0x40, 0x80, 2, bytes0102, 3, bytes040506),
-	    encodeArgs(2, 2, 1, 2, 3, 4, 5, 6)
+		callContractFunction("g2(bytes[])", 0x20, 2, 0x40, 0x80, 2, bytes0102, 3, bytes040506),
+		encodeArgs(2, 2, 1, 2, 3, 4, 5, 6)
 	);
 }
 
@@ -8363,16 +8363,16 @@ BOOST_AUTO_TEST_CASE(calldata_dynamic_array_to_memory)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			function f(uint256[][] calldata a) external returns (uint, uint256[] memory) {
-			    uint256[] memory m = a[0];
-			    return (a.length, m);
+				uint256[] memory m = a[0];
+				return (a.length, m);
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
 	ABI_CHECK(
-	    callContractFunction("f(uint256[][])", 0x20, 1, 0x20, 2, 23, 42),
-	    encodeArgs(1, 0x40, 2, 23, 42)
+		callContractFunction("f(uint256[][])", 0x20, 1, 0x20, 2, 23, 42),
+		encodeArgs(1, 0x40, 2, 23, 42)
 	);
 }
 
@@ -8382,36 +8382,36 @@ BOOST_AUTO_TEST_CASE(calldata_bytes_array_to_memory)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			function f(bytes[] calldata a) external returns (uint, uint, bytes memory) {
-			    bytes memory m = a[0];
-			    return (a.length, m.length, m);
+				bytes memory m = a[0];
+				return (a.length, m.length, m);
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
 	ABI_CHECK(
-	    callContractFunction("f(bytes[])", 0x20, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
-	    encodeArgs(1, 2, 0x60, 2, bytes{'a','b'} + bytes(30, 0))
+		callContractFunction("f(bytes[])", 0x20, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
+		encodeArgs(1, 2, 0x60, 2, bytes{'a','b'} + bytes(30, 0))
 	);
 
 	ABI_CHECK(
-	    callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, bytes(32, 'x')),
-	    encodeArgs(1, 32, 0x60, 32, bytes(32, 'x'))
+		callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, bytes(32, 'x')),
+		encodeArgs(1, 32, 0x60, 32, bytes(32, 'x'))
 	);
 	bytes x_zero_a = bytes{'x'} + bytes(30, 0) + bytes{'a'};
 	bytes a_zero_x = bytes{'a'} + bytes(30, 0) + bytes{'x'};
 	bytes a_m_x = bytes{'a'} + bytes(30, 'm') + bytes{'x'};
 	ABI_CHECK(
-	    callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, x_zero_a),
-	    encodeArgs(1, 32, 0x60, 32, x_zero_a)
+		callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, x_zero_a),
+		encodeArgs(1, 32, 0x60, 32, x_zero_a)
 	);
 	ABI_CHECK(
-	    callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, a_zero_x),
-	    encodeArgs(1, 32, 0x60, 32, a_zero_x)
+		callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, a_zero_x),
+		encodeArgs(1, 32, 0x60, 32, a_zero_x)
 	);
 	ABI_CHECK(
-	    callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, a_m_x),
-	    encodeArgs(1, 32, 0x60, 32, a_m_x)
+		callContractFunction("f(bytes[])", 0x20, 1, 0x20, 32, a_m_x),
+		encodeArgs(1, 32, 0x60, 32, a_m_x)
 	);
 }
 
@@ -8421,23 +8421,23 @@ BOOST_AUTO_TEST_CASE(calldata_bytes_array_bounds)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			function f(bytes[] calldata a, uint256 i) external returns (uint) {
-			    return uint8(a[0][i]);
+				return uint8(a[0][i]);
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
 	ABI_CHECK(
-	    callContractFunction("f(bytes[],uint256)", 0x40, 0, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
-	    encodeArgs('a')
+		callContractFunction("f(bytes[],uint256)", 0x40, 0, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
+		encodeArgs('a')
 	);
 	ABI_CHECK(
-	    callContractFunction("f(bytes[],uint256)", 0x40, 1, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
-	    encodeArgs('b')
+		callContractFunction("f(bytes[],uint256)", 0x40, 1, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
+		encodeArgs('b')
 	);
 	ABI_CHECK(
-	    callContractFunction("f(bytes[],uint256)", 0x40, 2, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
-	    encodeArgs()
+		callContractFunction("f(bytes[],uint256)", 0x40, 2, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
+		encodeArgs()
 	);
 }
 
@@ -8447,8 +8447,8 @@ BOOST_AUTO_TEST_CASE(calldata_string_array)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			function f(string[] calldata a) external returns (uint, uint, uint, string memory) {
-			    string memory s1 = a[0];
-			    bytes memory m1 = bytes(s1);
+				string memory s1 = a[0];
+				bytes memory m1 = bytes(s1);
 				return (a.length, m1.length, uint8(m1[0]), s1);
 			}
 		}
@@ -8456,136 +8456,136 @@ BOOST_AUTO_TEST_CASE(calldata_string_array)
 	compileAndRun(sourceCode, 0, "C");
 
 	ABI_CHECK(
-	    callContractFunction("f(string[])", 0x20, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
-	    encodeArgs(1, 2, 'a', 0x80, 2, bytes{'a', 'b'} + bytes(30, 0))
+		callContractFunction("f(string[])", 0x20, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
+		encodeArgs(1, 2, 'a', 0x80, 2, bytes{'a', 'b'} + bytes(30, 0))
 	);
 }
 
 BOOST_AUTO_TEST_CASE(calldata_array_two_dimensional)
 {
-    vector<vector<u256>> data {
-        { 0x0A01, 0x0A02, 0x0A03 },
-        { 0x0B01, 0x0B02, 0x0B03, 0x0B04 }
-    };
+	vector<vector<u256>> data {
+		{ 0x0A01, 0x0A02, 0x0A03 },
+		{ 0x0B01, 0x0B02, 0x0B03, 0x0B04 }
+	};
 
-    for (bool outerDynamicallySized: { true, false })
-    {
-        string arrayType = outerDynamicallySized ? "uint256[][]" : "uint256[][2]";
-        string sourceCode = R"(
-            pragma experimental ABIEncoderV2;
-            contract C {
-                function test()" + arrayType + R"( calldata a) external returns (uint256) {
-                    return a.length;
-                }
-                function test()" + arrayType + R"( calldata a, uint256 i) external returns (uint256) {
-                    return a[i].length;
-                }
-                function test()" + arrayType + R"( calldata a, uint256 i, uint256 j) external returns (uint256) {
-                    return a[i][j];
-                }
-            }
-        )";
-        compileAndRun(sourceCode, 0, "C");
+	for (bool outerDynamicallySized: { true, false })
+	{
+		string arrayType = outerDynamicallySized ? "uint256[][]" : "uint256[][2]";
+		string sourceCode = R"(
+			pragma experimental ABIEncoderV2;
+			contract C {
+				function test()" + arrayType + R"( calldata a) external returns (uint256) {
+					return a.length;
+				}
+				function test()" + arrayType + R"( calldata a, uint256 i) external returns (uint256) {
+					return a[i].length;
+				}
+				function test()" + arrayType + R"( calldata a, uint256 i, uint256 j) external returns (uint256) {
+					return a[i][j];
+				}
+			}
+		)";
+		compileAndRun(sourceCode, 0, "C");
 
-        bytes encoding = encodeArray(
-            outerDynamicallySized,
-            true,
-            data | boost::adaptors::transformed([&](vector<u256> const& _values) {
-                return encodeArray(true, false, _values);
-            })
-        );
+		bytes encoding = encodeArray(
+			outerDynamicallySized,
+			true,
+			data | boost::adaptors::transformed([&](vector<u256> const& _values) {
+				return encodeArray(true, false, _values);
+			})
+		);
 
-        ABI_CHECK(callContractFunction("test(" + arrayType + ")", 0x20, encoding), encodeArgs(data.size()));
-        for (size_t i = 0; i < data.size(); i++)
-        {
-            ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, i, encoding), encodeArgs(data[i].size()));
-            for (size_t j = 0; j < data[i].size(); j++)
-                ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j]));
-            // out of bounds access
-            ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), encodeArgs());
-        }
-        // out of bounds access
-        ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), encodeArgs());
-    }
+		ABI_CHECK(callContractFunction("test(" + arrayType + ")", 0x20, encoding), encodeArgs(data.size()));
+		for (size_t i = 0; i < data.size(); i++)
+		{
+			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, i, encoding), encodeArgs(data[i].size()));
+			for (size_t j = 0; j < data[i].size(); j++)
+				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j]));
+			// out of bounds access
+			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), encodeArgs());
+		}
+		// out of bounds access
+		ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), encodeArgs());
+	}
 }
 
 BOOST_AUTO_TEST_CASE(calldata_array_dynamic_three_dimensional)
 {
-    vector<vector<vector<u256>>> data {
-        {
-            { 0x010A01, 0x010A02, 0x010A03 },
-            { 0x010B01, 0x010B02, 0x010B03 }
-        },
-        {
-            { 0x020A01, 0x020A02, 0x020A03 },
-            { 0x020B01, 0x020B02, 0x020B03 }
-        }
-    };
+	vector<vector<vector<u256>>> data {
+		{
+			{ 0x010A01, 0x010A02, 0x010A03 },
+			{ 0x010B01, 0x010B02, 0x010B03 }
+		},
+		{
+			{ 0x020A01, 0x020A02, 0x020A03 },
+			{ 0x020B01, 0x020B02, 0x020B03 }
+		}
+	};
 
-    for (bool outerDynamicallySized: { true, false })
-    for (bool middleDynamicallySized: { true, false })
-    for (bool innerDynamicallySized: { true, false })
-    {
-        // only test dynamically encoded arrays
-        if (!outerDynamicallySized && !middleDynamicallySized && !innerDynamicallySized)
-            continue;
+	for (bool outerDynamicallySized: { true, false })
+	for (bool middleDynamicallySized: { true, false })
+	for (bool innerDynamicallySized: { true, false })
+	{
+		// only test dynamically encoded arrays
+		if (!outerDynamicallySized && !middleDynamicallySized && !innerDynamicallySized)
+			continue;
 
-        string arrayType = "uint256";
-        arrayType += innerDynamicallySized ? "[]" : "[3]";
-        arrayType += middleDynamicallySized ? "[]" : "[2]";
-        arrayType += outerDynamicallySized ? "[]" : "[2]";
+		string arrayType = "uint256";
+		arrayType += innerDynamicallySized ? "[]" : "[3]";
+		arrayType += middleDynamicallySized ? "[]" : "[2]";
+		arrayType += outerDynamicallySized ? "[]" : "[2]";
 
-        string sourceCode = R"(
-            pragma experimental ABIEncoderV2;
-            contract C {
-                function test()" + arrayType + R"( calldata a) external returns (uint256) {
-                    return a.length;
-                }
-                function test()" + arrayType + R"( calldata a, uint256 i) external returns (uint256) {
-                    return a[i].length;
-                }
-                function test()" + arrayType + R"( calldata a, uint256 i, uint256 j) external returns (uint256) {
-                    return a[i][j].length;
-                }
-                function test()" + arrayType + R"( calldata a, uint256 i, uint256 j, uint256 k) external returns (uint256) {
-                    return a[i][j][k];
-                }
-            }
-        )";
-        compileAndRun(sourceCode, 0, "C");
+		string sourceCode = R"(
+			pragma experimental ABIEncoderV2;
+			contract C {
+				function test()" + arrayType + R"( calldata a) external returns (uint256) {
+					return a.length;
+				}
+				function test()" + arrayType + R"( calldata a, uint256 i) external returns (uint256) {
+					return a[i].length;
+				}
+				function test()" + arrayType + R"( calldata a, uint256 i, uint256 j) external returns (uint256) {
+					return a[i][j].length;
+				}
+				function test()" + arrayType + R"( calldata a, uint256 i, uint256 j, uint256 k) external returns (uint256) {
+					return a[i][j][k];
+				}
+			}
+		)";
+		compileAndRun(sourceCode, 0, "C");
 
-        bytes encoding = encodeArray(
-            outerDynamicallySized,
-            middleDynamicallySized || innerDynamicallySized,
-            data | boost::adaptors::transformed([&](auto const& _middleData) {
-                return encodeArray(
-                    middleDynamicallySized,
-                    innerDynamicallySized,
-                    _middleData | boost::adaptors::transformed([&](auto const& _values) {
-                        return encodeArray(innerDynamicallySized, false, _values);
-                    })
-                );
-            })
-        );
+		bytes encoding = encodeArray(
+			outerDynamicallySized,
+			middleDynamicallySized || innerDynamicallySized,
+			data | boost::adaptors::transformed([&](auto const& _middleData) {
+				return encodeArray(
+					middleDynamicallySized,
+					innerDynamicallySized,
+					_middleData | boost::adaptors::transformed([&](auto const& _values) {
+						return encodeArray(innerDynamicallySized, false, _values);
+					})
+				);
+			})
+		);
 
-        ABI_CHECK(callContractFunction("test(" + arrayType + ")", 0x20, encoding), encodeArgs(data.size()));
-        for (size_t i = 0; i < data.size(); i++)
-        {
-            ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, i, encoding), encodeArgs(data[i].size()));
-            for (size_t j = 0; j < data[i].size(); j++)
-            {
-                ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j].size()));
-                for (size_t k = 0; k < data[i][j].size(); k++)
-                    ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, k, encoding), encodeArgs(data[i][j][k]));
-                // out of bounds access
-                ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, data[i][j].size(), encoding), encodeArgs());
-            }
-            // out of bounds access
-            ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), encodeArgs());
-        }
-        // out of bounds access
-        ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), encodeArgs());
-    }
+		ABI_CHECK(callContractFunction("test(" + arrayType + ")", 0x20, encoding), encodeArgs(data.size()));
+		for (size_t i = 0; i < data.size(); i++)
+		{
+			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, i, encoding), encodeArgs(data[i].size()));
+			for (size_t j = 0; j < data[i].size(); j++)
+			{
+				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j].size()));
+				for (size_t k = 0; k < data[i][j].size(); k++)
+					ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, k, encoding), encodeArgs(data[i][j][k]));
+				// out of bounds access
+				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, data[i][j].size(), encoding), encodeArgs());
+			}
+			// out of bounds access
+			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), encodeArgs());
+		}
+		// out of bounds access
+		ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), encodeArgs());
+	}
 }
 
 BOOST_AUTO_TEST_CASE(calldata_array_dynamic_invalid)
@@ -8594,11 +8594,11 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_invalid)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			function f(uint256[][] calldata a) external returns (uint) {
-			    return 42;
+				return 42;
 			}
 			function g(uint256[][] calldata a) external returns (uint) {
-			    a[0];
-			    return 42;
+				a[0];
+				return 42;
 			}
 		}
 	)";
@@ -8622,15 +8622,15 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_invalid_static_middle)
 		pragma experimental ABIEncoderV2;
 		contract C {
 			function f(uint256[][1][] calldata a) external returns (uint) {
-			    return 42;
+				return 42;
 			}
 			function g(uint256[][1][] calldata a) external returns (uint) {
-			    a[0];
-			    return 42;
+				a[0];
+				return 42;
 			}
 			function h(uint256[][1][] calldata a) external returns (uint) {
-			    a[0][0];
-			    return 42;
+				a[0][0];
+				return 42;
 			}
 		}
 	)";
