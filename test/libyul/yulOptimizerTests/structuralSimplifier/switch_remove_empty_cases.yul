@@ -9,8 +9,8 @@
 // structuralSimplifier
 // {
 //     let y := 200
-//     switch y
-//     case 1 {
+//     if eq(1, y)
+//     {
 //         y := 9
 //     }
 // }
