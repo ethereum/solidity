@@ -97,6 +97,53 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	m_context << Instruction::REVERT;
 }
 
+void CompilerUtils::accessCalldataTail(Type const& _type)
+{
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+
+	unsigned int baseEncodedSize = _type.calldataEncodedSize();
+	solAssert(baseEncodedSize > 1, "");
+
+	// returns the absolute offset of the tail in "base_ref"
+	m_context.appendInlineAssembly(Whiskers(R"({
+		let rel_offset_of_tail := calldataload(ptr_to_tail)
+		if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
+		base_ref := add(base_ref, rel_offset_of_tail)
+	})")("neededLength", toCompactHexWithPrefix(baseEncodedSize)).render(), {"base_ref", "ptr_to_tail"});
+	// stack layout: <absolute_offset_of_tail> <garbage>
+
+	if (!_type.isDynamicallySized())
+	{
+		m_context << Instruction::POP;
+		// stack layout: <absolute_offset_of_tail>
+		solAssert(
+			_type.category() == Type::Category::Struct ||
+			_type.category() == Type::Category::Array,
+			"Invalid dynamically encoded base type on tail access."
+		);
+	}
+	else
+	{
+		auto const* arrayType = dynamic_cast<ArrayType const*>(&_type);
+		solAssert(!!arrayType, "Invalid dynamically sized type.");
+		unsigned int calldataStride = arrayType->calldataStride();
+		solAssert(calldataStride > 0, "");
+
+		// returns the absolute offset of the tail in "base_ref"
+		// and the length of the tail in "length"
+		m_context.appendInlineAssembly(
+			Whiskers(R"({
+				length := calldataload(base_ref)
+				base_ref := add(base_ref, 0x20)
+				if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+				if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
+			})")("calldataStride", toCompactHexWithPrefix(calldataStride)).render(),
+			{"base_ref", "length"}
+		);
+		// stack layout: <absolute_offset_of_tail> <length>
+	}
+}
+
 unsigned CompilerUtils::loadFromMemory(
 	unsigned _offset,
 	Type const& _type,
