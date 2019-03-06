@@ -104,6 +104,7 @@ public:
 	}
 
 	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
+	void fatalTypeError(SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
 
 	void docstringParsingError(std::string const& _description);
 
@@ -118,12 +119,20 @@ public:
 	}
 
 private:
-	void error(Error::Type _type,
+	void error(
+		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description = std::string());
 
-	void fatalError(Error::Type _type,
+	void fatalError(
+		Error::Type _type,
+		SourceLocation const& _location,
+		SecondarySourceLocation const& _secondaryLocation,
+		std::string const& _description = std::string());
+
+	void fatalError(
+		Error::Type _type,
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());
 

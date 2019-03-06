@@ -45,10 +45,7 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-namespace
-{
-
-bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
+bool TypeChecker::typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
 {
 	if (_isLibraryCall && _type.dataStoredIn(DataLocation::Storage))
 		return true;
@@ -63,9 +60,6 @@ bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
 	}
 	return true;
 }
-
-}
-
 
 bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
@@ -93,6 +87,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
+
 
 	return false;
 }

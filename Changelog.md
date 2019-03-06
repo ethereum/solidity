@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Type system: Detect if a contract's base uses types that require the experimental abi encoder while the contract still uses the old encoder
 
 
 Build System:
