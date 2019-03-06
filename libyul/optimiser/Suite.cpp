@@ -41,6 +41,7 @@
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/Metrics.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
@@ -80,8 +81,16 @@ void OptimiserSuite::run(
 
 	NameDispenser dispenser{*_dialect, ast};
 
-	for (size_t i = 0; i < 4; i++)
+	size_t codeSize = 0;
+	for (size_t rounds = 0; rounds < 12; ++rounds)
 	{
+		{
+			size_t newSize = CodeSize::codeSizeIncludingFunctions(ast);
+			if (newSize == codeSize)
+				break;
+			codeSize = newSize;
+		}
+
 		{
 			// Turn into SSA and simplify
 			ExpressionSplitter{*_dialect, dispenser}(ast);
