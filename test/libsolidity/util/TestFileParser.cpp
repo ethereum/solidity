@@ -252,6 +252,15 @@ string TestFileParser::parseIdentifierOrTuple()
 	{
 		identOrTuple = m_scanner.currentLiteral();
 		expect(Token::Identifier);
+		while (accept(Token::LBrack))
+		{
+			identOrTuple += formatToken(Token::LBrack);
+			expect(Token::LBrack);
+			if (accept(Token::Number))
+				identOrTuple += parseDecimalNumber();
+			identOrTuple += formatToken(Token::RBrack);
+			expect(Token::RBrack);
+		}
 		return identOrTuple;
 	}
 	expect(Token::LParen);
@@ -401,6 +410,12 @@ void TestFileParser::Scanner::scanNextToken()
 			break;
 		case ')':
 			token = selectToken(Token::RParen);
+			break;
+		case '[':
+			token = selectToken(Token::LBrack);
+			break;
+		case ']':
+			token = selectToken(Token::RBrack);
 			break;
 		default:
 			if (langutil::isIdentifierStart(current()))
