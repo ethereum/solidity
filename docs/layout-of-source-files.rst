@@ -13,11 +13,11 @@ and :ref:`pragma directives<pragma>`.
 Pragmas
 =======
 
-The ``pragma`` keyword can be used to enable certain compiler features
+The ``pragma`` keyword is used to enable certain compiler features
 or checks. A pragma directive is always local to a source file, so
 you have to add the pragma to all your files if you want enable it
 in all of your project. If you :ref:`import<import>` another file, the pragma
-from that file will not automatically apply to the importing file.
+from that file does not automatically apply to the importing file.
 
 .. index:: ! pragma, version
 
@@ -26,34 +26,34 @@ from that file will not automatically apply to the importing file.
 Version Pragma
 --------------
 
-Source files can (and should) be annotated with a so-called version pragma to reject
-being compiled with future compiler versions that might introduce incompatible
-changes. We try to keep such changes to an absolute minimum and especially
-introduce changes in a way that changes in semantics will also require changes
-in the syntax, but this is of course not always possible. Because of that, it is always
+Source files can (and should) be annotated with a version pragma to reject
+compilation with future compiler versions that might introduce incompatible
+changes. We try to keep these to an absolute minimum and
+introduce them in a way that changes in semantics also require changes
+in the syntax, but this is not always possible. Because of this, it is always
 a good idea to read through the changelog at least for releases that contain
-breaking changes, those releases will always have versions of the form
+breaking changes. These releases always have versions of the form
 ``0.x.0`` or ``x.0.0``.
 
 The version pragma is used as follows::
 
   pragma solidity ^0.5.2;
 
-Such a source file will not compile with a compiler earlier than version 0.5.2
-and it will also not work on a compiler starting from version 0.6.0 (this
-second condition is added by using ``^``). The idea behind this is that
-there will be no breaking changes until version ``0.6.0``, so we can always
-be sure that our code will compile the way we intended it to. We do not fix
-the exact version of the compiler, so that bugfix releases are still possible.
+A source file with the line above does not compile with a compiler earlier than version 0.5.2,
+and it also does not work on a compiler starting from version 0.6.0 (this
+second condition is added by using ``^``). This is because
+there will be no breaking changes until version ``0.6.0``, so you can always
+be sure that your code compiles the way you intended. The exact version of the
+compiler is not fixed, so that bugfix releases are still possible.
 
-It is possible to specify much more complex rules for the compiler version,
-the expression follows those used by `npm <https://docs.npmjs.com/misc/semver>`_.
+It is possible to specify more complex rules for the compiler version,
+these follow the same syntax used by `npm <https://docs.npmjs.com/misc/semver>`_.
 
 .. note::
-  Using the version pragma will *not* change the version of the compiler.
-  It will also *not* enable or disable features of the compiler. It will just
-  instruct the compiler to check whether its version matches the one
-  required by the pragma. If it does not match, the compiler will issue
+  Using the version pragma *does not* change the version of the compiler.
+  It also *does not* enable or disable features of the compiler. It just
+  instructs the compiler to check whether its version matches the one
+  required by the pragma. If it does not match, the compiler issues
   an error.
 
 .. index:: ! pragma, experimental
