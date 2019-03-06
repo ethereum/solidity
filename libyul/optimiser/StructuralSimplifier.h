@@ -34,7 +34,7 @@ namespace yul
  * - turn switch with single case into if
  * - replace switch with only default case with pop(expression) and body
  * - replace switch with const expr with matching case body
- * - remove for with false condition
+ * - replace for with false condition by its initialization part
  *
  * Prerequisites: Disambiguator
  *
