@@ -180,6 +180,9 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			return {};
 		},
 		[&](Switch& _switchStmt) -> OptionalStatements {
+			if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
+				return replaceConstArgSwitch(_switchStmt, constExprVal.get());
+
 			removeEmptyDefaultFromSwitch(_switchStmt);
 			removeEmptyCasesFromSwitch(_switchStmt);
 
@@ -187,8 +190,6 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				return reduceNoCaseSwitch(_switchStmt);
 			else if (_switchStmt.cases.size() == 1)
 				return reduceSingleCaseSwitch(_switchStmt);
-			else if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
-				return replaceConstArgSwitch(_switchStmt, constExprVal.get());
 
 			return {};
 		},

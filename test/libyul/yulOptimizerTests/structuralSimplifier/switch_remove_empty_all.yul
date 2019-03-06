@@ -5,7 +5,7 @@
 	case 1 { }
 	default { }
 
-	switch 4
+	switch mload(4)
 	case 0 { }
 	case 1 { }
 	default { }
@@ -15,5 +15,5 @@
 // {
 //     let y := 200
 //     pop(add(y, 4))
-//     pop(4)
+//     pop(mload(4))
 // }
