@@ -54,8 +54,6 @@ string ABIFunctions::tupleEncoder(
 	functionName += options.toFunctionNameSuffix();
 
 	return createExternallyUsedFunction(functionName, [&]() {
-		solAssert(!_givenTypes.empty(), "");
-
 		// Note that the values are in reverse due to the difference in calling semantics.
 		Whiskers templ(R"(
 			function <functionName>(headStart <valueParams>) -> tail {
@@ -183,15 +181,13 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 	if (_fromMemory)
 		functionName += "_fromMemory";
 
-	solAssert(!_types.empty(), "");
-
 	return createExternallyUsedFunction(functionName, [&]() {
 		TypePointers decodingTypes;
 		for (auto const& t: _types)
 			decodingTypes.emplace_back(t->decodingType());
 
 		Whiskers templ(R"(
-			function <functionName>(headStart, dataEnd) -> <valueReturnParams> {
+			function <functionName>(headStart, dataEnd) <arrow> <valueReturnParams> {
 				if slt(sub(dataEnd, headStart), <minimumSize>) { revert(0, 0) }
 				<decodeElements>
 			}
@@ -242,6 +238,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 			headPos += dynamic ? 0x20 : decodingTypes[i]->calldataEncodedSize();
 		}
 		templ("valueReturnParams", boost::algorithm::join(valueReturnParams, ", "));
+		templ("arrow", valueReturnParams.empty() ? "" : "->");
 		templ("decodeElements", decodeElements);
 
 		return templ.render();
