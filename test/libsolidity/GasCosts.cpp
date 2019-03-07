@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	compileAndRun(sourceCode);
 
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
-		CHECK_GAS(134435, 130591, 100);
+		CHECK_GAS(133899, 130591, 100);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
-		CHECK_GAS(151819, 136003, 100);
+		CHECK_GAS(151283, 136003, 100);
 	else
-		CHECK_GAS(127225, 120159, 100);
+		CHECK_GAS(126689, 120159, 100);
 	if (Options::get().evmVersion() >= EVMVersion::byzantium())
 	{
 		callContractFunction("f()");

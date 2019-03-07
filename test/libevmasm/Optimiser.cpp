@@ -969,27 +969,60 @@ BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
 
 BOOST_AUTO_TEST_CASE(peephole_truthy_and)
 {
-  AssemblyItems items{
-    AssemblyItem(Tag, 1),
-    Instruction::BALANCE,
-    u256(0),
-    Instruction::NOT,
-    Instruction::AND,
-    AssemblyItem(PushTag, 1),
-    Instruction::JUMPI
-  };
-  AssemblyItems expectation{
-    AssemblyItem(Tag, 1),
-    Instruction::BALANCE,
-    AssemblyItem(PushTag, 1),
-    Instruction::JUMPI
-  };
-  PeepholeOptimiser peepOpt(items);
-  BOOST_REQUIRE(peepOpt.optimise());
-  BOOST_CHECK_EQUAL_COLLECTIONS(
-    items.begin(), items.end(),
-    expectation.begin(), expectation.end()
-  );
+	AssemblyItems items{
+		AssemblyItem(Tag, 1),
+		Instruction::BALANCE,
+		u256(0),
+		Instruction::NOT,
+		Instruction::AND,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	AssemblyItems expectation{
+		AssemblyItem(Tag, 1),
+		Instruction::BALANCE,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+
+BOOST_AUTO_TEST_CASE(peephole_iszero_iszero_jumpi)
+{
+	AssemblyItems items{
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::CALLDATALOAD,
+		Instruction::ISZERO,
+		Instruction::ISZERO,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI,
+		u256(0),
+		u256(0x20),
+		Instruction::RETURN
+	};
+	AssemblyItems expectation{
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::CALLDATALOAD,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI,
+		u256(0),
+		u256(0x20),
+		Instruction::RETURN
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+	  items.begin(), items.end(),
+	  expectation.begin(), expectation.end()
+	);
 }
 
 BOOST_AUTO_TEST_CASE(jumpdest_removal)
