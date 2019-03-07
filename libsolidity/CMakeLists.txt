@@ -63,6 +63,10 @@ set(sources
 	codegen/ExpressionCompiler.h
 	codegen/LValue.cpp
 	codegen/LValue.h
+	codegen/MultiUseYulFunctionCollector.h
+	codegen/MultiUseYulFunctionCollector.cpp
+	codegen/YulUtilFunctions.h
+	codegen/YulUtilFunctions.cpp
 	formal/SMTChecker.cpp
 	formal/SMTChecker.h
 	formal/SMTLib2Interface.cpp
