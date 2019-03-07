@@ -37,6 +37,8 @@ set(sources
 	ast/AST_accept.h
 	ast/ASTAnnotations.cpp
 	ast/ASTAnnotations.h
+	ast/ASTCopier.cpp
+	ast/ASTCopier.h
 	ast/ASTEnums.h
 	ast/ASTForward.h
 	ast/ASTJsonConverter.cpp
