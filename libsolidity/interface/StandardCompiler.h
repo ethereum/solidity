@@ -25,6 +25,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 
 #include <boost/optional.hpp>
+#include <boost/variant.hpp>
 
 namespace dev
 {
@@ -42,8 +43,8 @@ public:
 	/// Creates a new StandardCompiler.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit StandardCompiler(ReadCallback::Callback const& _readFile = ReadCallback::Callback())
-		: m_compilerStack(_readFile), m_readFile(_readFile)
+	explicit StandardCompiler(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
+		m_readFile(_readFile)
 	{
 	}
 
@@ -55,13 +56,25 @@ public:
 	std::string compile(std::string const& _input) noexcept;
 
 private:
-	/// Validaes and applies the optimizer settings.
-	/// On error returns the json-formatted error message.
-	boost::optional<Json::Value> parseOptimizerSettings(Json::Value const& _settings);
+	struct InputsAndSettings
+	{
+		Json::Value errors;
+		std::map<std::string, std::string> sources;
+		std::map<h256, std::string> smtLib2Responses;
+		langutil::EVMVersion evmVersion;
+		std::vector<CompilerStack::Remapping> remappings;
+		OptimiserSettings optimiserSettings = OptimiserSettings::minimal();
+		std::map<std::string, h160> libraries;
+		bool metadataLiteralSources = false;
+		Json::Value outputSelection;
+	};
 
-	Json::Value compileInternal(Json::Value const& _input);
+	/// Parses the input json (and potentially invokes the read callback) and either returns
+	/// it in condensed form or an error as a json object.
+	boost::variant<InputsAndSettings, Json::Value> parseInput(Json::Value const& _input);
 
-	CompilerStack m_compilerStack;
+	Json::Value compileSolidity(InputsAndSettings _inputsAndSettings);
+
 	ReadCallback::Callback m_readFile;
 };
 
