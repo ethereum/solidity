@@ -23,9 +23,23 @@
 using namespace std;
 using namespace yul::test::yul_fuzzer;
 
+ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, HexNum const& _x)
+{
+	if (_x.hexBytes.size() > 0) {
+		_os << _x.hexBytes();
+	}
+	return _os;
+}
+
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Literal const& _x)
 {
-	return _os << "(" << _x.val() << ")";
+	if (_x.has_intVal())
+		_os << "(" << _x.val() << ")";
+	else if (_x.has_boolVal())
+		_os << "(" << (_x.boolVal() ? "true" : "false") << ")";
+	else if (_x.has_hexVal())
+		_os << "(0x" << _x.hexVal() << ")";
+	return _os;
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, VarRef const& _x)
@@ -83,6 +97,11 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, BinaryOp const& _x)
 		case BinaryOp::GT:
 			_os << "gt(";
 			break;
+		case BinaryOp::SHL:
+			_os << "shl(";
+			break;
+		case BinaryOp::SHR:
+			_os << "shr(";
 	}
 	return _os << _x.left() << "," << _x.right() << ")";
 }
@@ -185,19 +204,45 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, StoreFunc const& _x)
 	return _os;
 }
 
+ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, ForStmt const& _x)
+{
+	_os << "for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } "
+	return _os << _x.for_body();
+}
+
+ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, CaseStmt const& _x)
+{
+	_os << "case " << _x.caseLit() << " ";
+	return _os << _x.caseBlock();
+}
+
+ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, SwitchStmt const& _x)
+{
+	_os << "switch " << _x.switchExpr() << "\n";
+	for (auto const& caseStmt: _x.case_stmt())
+		_os << caseStmt;
+	if (_x.has_defaultBlock())
+		_os << "default " << _x.defaultBlock();
+	return _os;
+}
+
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Statement const& _x)
 {
 	if (_x.has_decl())
-		return _os  << _x.decl();
+		_os  << _x.decl();
 	else if (_x.has_assignment())
-		return _os  << _x.assignment();
+		_os  << _x.assignment();
 	else if (_x.has_ifstmt())
-		return _os  << _x.ifstmt();
+		_os  << _x.ifstmt();
 	else if (_x.has_storage_func())
-		return _os  << _x.storage_func();
+		_os  << _x.storage_func();
 	else if (_x.has_blockstmt())
-		return _os << _x.blockstmt();
-	return _os << "";
+		_os << _x.blockstmt();
+	else if (_x.has_forstmt())
+		_os << _x.forstmt();
+	else if (_x.has_switchstmt)
+		_os << x.switchstmt();
+	return _os;
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Block const& _x)
@@ -209,6 +254,10 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Block const& _x)
 			_os  << st;
 		_os << "}\n";
 
+	}
+	else
+	{
+		_os << "{}\n";
 	}
 	return _os;
 }
