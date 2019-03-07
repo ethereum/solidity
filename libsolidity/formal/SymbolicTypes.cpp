@@ -135,6 +135,8 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 	}
 	else if (isAddress(_type.category()))
 		var = make_shared<SymbolicAddressVariable>(_uniqueName, _solver);
+	else if (isEnum(_type.category()))
+		var = make_shared<SymbolicEnumVariable>(type, _uniqueName, _solver);
 	else if (isRational(_type.category()))
 	{
 		auto rational = dynamic_cast<RationalNumberType const*>(&_type);
@@ -183,12 +185,18 @@ bool dev::solidity::isAddress(Type::Category _category)
 	return _category == Type::Category::Address;
 }
 
+bool dev::solidity::isEnum(Type::Category _category)
+{
+	return _category == Type::Category::Enum;
+}
+
 bool dev::solidity::isNumber(Type::Category _category)
 {
 	return isInteger(_category) ||
 		isRational(_category) ||
 		isFixedBytes(_category) ||
-		isAddress(_category);
+		isAddress(_category) ||
+		isEnum(_category);
 }
 
 bool dev::solidity::isBool(Type::Category _category)
@@ -241,7 +249,14 @@ void dev::solidity::smt::setSymbolicUnknownValue(SymbolicVariable const& _variab
 
 void dev::solidity::smt::setSymbolicUnknownValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface)
 {
-	if (isInteger(_type->category()))
+	if (isEnum(_type->category()))
+	{
+		auto enumType = dynamic_cast<EnumType const*>(_type.get());
+		solAssert(enumType, "");
+		_interface.addAssertion(_expr >= 0);
+		_interface.addAssertion(_expr < enumType->numberOfMembers());
+	}
+	else if (isInteger(_type->category()))
 	{
 		auto intType = dynamic_cast<IntegerType const*>(_type.get());
 		solAssert(intType, "");

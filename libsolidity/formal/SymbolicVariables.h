@@ -166,5 +166,18 @@ public:
 	);
 };
 
+/**
+ * Specialization of SymbolicVariable for Enum
+ */
+class SymbolicEnumVariable: public SymbolicVariable
+{
+public:
+	SymbolicEnumVariable(
+		TypePointer _type,
+		std::string const& _uniqueName,
+		smt::SolverInterface& _interface
+	);
+};
+
 }
 }

@@ -736,9 +736,9 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 
 	auto const& exprType = _memberAccess.expression().annotation().type;
 	solAssert(exprType, "");
+	auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 	if (exprType->category() == Type::Category::Magic)
 	{
-		auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 		string accessedName;
 		if (identifier)
 			accessedName = identifier->name();
@@ -750,12 +750,23 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 		defineGlobalVariable(accessedName + "." + _memberAccess.memberName(), _memberAccess);
 		return false;
 	}
+	else if (exprType->category() == Type::Category::TypeType)
+	{
+		if (identifier && dynamic_cast<EnumDefinition const*>(identifier->annotation().referencedDeclaration))
+		{
+			auto enumType = dynamic_cast<EnumType const*>(accessType.get());
+			solAssert(enumType, "");
+			defineExpr(_memberAccess, enumType->memberValue(_memberAccess.memberName()));
+		}
+		return false;
+	}
 	else
 		m_errorReporter.warning(
 			_memberAccess.location(),
 			"Assertion checker does not yet support this expression."
 		);
 
+	createExpr(_memberAccess);
 	return true;
 }
 
