@@ -25,20 +25,17 @@ using namespace yul::test::yul_fuzzer;
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, HexNum const& _x)
 {
-	if (_x.hexBytes.size() > 0) {
-		_os << _x.hexBytes();
-	}
-	return _os;
+	return _os << _x.hexbytes();
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Literal const& _x)
 {
-	if (_x.has_intVal())
-		_os << "(" << _x.val() << ")";
-	else if (_x.has_boolVal())
-		_os << "(" << (_x.boolVal() ? "true" : "false") << ")";
-	else if (_x.has_hexVal())
-		_os << "(0x" << _x.hexVal() << ")";
+	if (_x.has_intval())
+		_os << "(" << _x.intval() << ")";
+	else if (_x.has_boolval())
+		_os << "(" << (_x.boolval() ? "true" : "false") << ")";
+	else if (_x.has_hexval())
+		_os << "(0x" << _x.hexval() << ")";
 	return _os;
 }
 
@@ -102,6 +99,7 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, BinaryOp const& _x)
 			break;
 		case BinaryOp::SHR:
 			_os << "shr(";
+			break;
 	}
 	return _os << _x.left() << "," << _x.right() << ")";
 }
@@ -206,23 +204,23 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, StoreFunc const& _x)
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, ForStmt const& _x)
 {
-	_os << "for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } "
+	_os << "for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } ";
 	return _os << _x.for_body();
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, CaseStmt const& _x)
 {
-	_os << "case " << _x.caseLit() << " ";
-	return _os << _x.caseBlock();
+	_os << "case " << _x.caselit() << " ";
+	return _os << _x.caseblock();
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, SwitchStmt const& _x)
 {
-	_os << "switch " << _x.switchExpr() << "\n";
+	_os << "switch " << _x.switchexpr() << "\n";
 	for (auto const& caseStmt: _x.case_stmt())
 		_os << caseStmt;
-	if (_x.has_defaultBlock())
-		_os << "default " << _x.defaultBlock();
+	if (_x.has_defaultblock())
+		_os << "default " << _x.defaultblock();
 	return _os;
 }
 
@@ -240,8 +238,8 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Statement const& _x)
 		_os << _x.blockstmt();
 	else if (_x.has_forstmt())
 		_os << _x.forstmt();
-	else if (_x.has_switchstmt)
-		_os << x.switchstmt();
+	else if (_x.has_switchstmt())
+		_os << _x.switchstmt();
 	return _os;
 }
 

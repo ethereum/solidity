@@ -46,14 +46,14 @@ message VarRef {
 }
 
 message HexNum {
-  required bytes hexBytes = 1;
+  required bytes hexbytes = 1;
 }
 
 message Literal {
   oneof literal_oneof {
-    int32 intVal = 1;
-    bool boolVal = 2;
-    HexNum hexVal = 3;
+    int32 intval = 1;
+    bool boolval = 2;
+    HexNum hexval = 3;
   }
 }
 
@@ -141,14 +141,14 @@ message ForStmt {
 }
 
 message CaseStmt {
-  required Literal caseLit = 1;
-  required Block caseBlock = 2;
+  required Literal caselit = 1;
+  required Block caseblock = 2;
 }
 
 message SwitchStmt {
-  required Expression switchExpr = 1;
+  required Expression switchexpr = 1;
   repeated CaseStmt case_stmt = 2;
-  optional Block defaultBlock = 3;
+  optional Block defaultblock = 3;
 }
 
 message Statement {
