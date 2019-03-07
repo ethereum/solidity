@@ -474,6 +474,23 @@ BOOST_AUTO_TEST_CASE(call_signature_array)
 	testFunctionCall(calls.at(2), Mode::SingleLine, "f(uint256[3][][],uint8[9])", false);
 }
 
+BOOST_AUTO_TEST_CASE(call_signature_struct_array)
+{
+	char const* source = R"(
+		// f((uint256)[]) ->
+		// f((uint256)[3]) ->
+		// f((uint256, uint8)[3]) ->
+		// f((uint256)[3][][], (uint8, bool)[9]) ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 4);
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f((uint256)[])", false);
+	testFunctionCall(calls.at(1), Mode::SingleLine, "f((uint256)[3])", false);
+	testFunctionCall(calls.at(2), Mode::SingleLine, "f((uint256,uint8)[3])", false);
+	testFunctionCall(calls.at(3), Mode::SingleLine, "f((uint256)[3][][],(uint8,bool)[9])", false);
+
+}
+
 BOOST_AUTO_TEST_CASE(call_signature_valid)
 {
 	char const* source = R"(

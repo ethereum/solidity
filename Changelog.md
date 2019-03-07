@@ -20,6 +20,7 @@ Bugfixes:
 
 Build System:
  * Soltest: Add support for arrays in function signatures.
+ * Soltest: Add support for struct arrays in function signatures.
 
 
 ### 0.5.5 (2019-03-05)

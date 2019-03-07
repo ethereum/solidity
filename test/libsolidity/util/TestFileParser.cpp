@@ -318,10 +318,8 @@ string TestFileParser::parseIdentifierOrTuple()
 {
 	string identOrTuple;
 
-	if (accept(Token::Identifier))
+	auto parseArrayDimensions = [&]()
 	{
-		identOrTuple = m_scanner.currentLiteral();
-		expect(Token::Identifier);
 		while (accept(Token::LBrack))
 		{
 			identOrTuple += formatToken(Token::LBrack);
@@ -331,6 +329,13 @@ string TestFileParser::parseIdentifierOrTuple()
 			identOrTuple += formatToken(Token::RBrack);
 			expect(Token::RBrack);
 		}
+	};
+
+	if (accept(Token::Identifier))
+	{
+		identOrTuple = m_scanner.currentLiteral();
+		expect(Token::Identifier);
+		parseArrayDimensions();
 		return identOrTuple;
 	}
 	expect(Token::LParen);
@@ -345,6 +350,8 @@ string TestFileParser::parseIdentifierOrTuple()
 	}
 	expect(Token::RParen);
 	identOrTuple += formatToken(Token::RParen);
+
+	parseArrayDimensions();
 	return identOrTuple;
 }
 
