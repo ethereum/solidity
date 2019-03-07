@@ -21,6 +21,8 @@
 #include <libsolidity/formal/VariableUsage.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
+#include <libsolidity/ast/ASTCopier.h>
+
 #include <libdevcore/StringUtils.h>
 
 #include <boost/range/adaptor/map.hpp>
@@ -49,10 +51,12 @@ SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _
 
 void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
 {
-	m_variableUsage = make_shared<VariableUsage>(_source);
+	ASTCopier copier;
+	auto newSource = copier.copy(_source);
+	m_variableUsage = make_shared<VariableUsage>(*newSource);
 	m_scanner = _scanner;
-	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
-		_source.accept(*this);
+	if (newSource->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
+		newSource->accept(*this);
 
 	solAssert(m_interface->solvers() > 0, "");
 	// If this check is true, Z3 and CVC4 are not available
