@@ -91,10 +91,15 @@ function test_truffle
 module.exports['compilers'] = {solc: {version: "$DIR/solc"} };
 EOF
 
-      npx truffle compile
-      echo "Verify that the correct version ($SOLCVERSION) of the compiler was used to compile the contracts..."
-      grep -e "$SOLCVERSION" -r build/contracts > /dev/null
-      npm run test
+      for optimize in "{enabled: false }" "{enabled: true }" "{enabled: true, details: { yul: true } }"
+      do
+        rm -rf build || true
+        echo "module.exports['compilers']['solc']['settings'] = {optimizer: $optimize };" >> truffle*.js
+        npx truffle compile
+        echo "Verify that the correct version ($SOLCVERSION) of the compiler was used to compile the contracts..."
+        grep -e "$SOLCVERSION" -r build/contracts > /dev/null
+        npm run test
+      done
     )
     rm -rf "$DIR"
 }
