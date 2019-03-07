@@ -355,8 +355,16 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (!type(var)->canLiveOutsideStorage() && _function.isPublic())
 				m_errorReporter.typeError(var.location(), "Type is required to live outside storage.");
-			if (_function.isPublic() && !(type(var)->interfaceType(isLibraryFunction).get()))
-				m_errorReporter.fatalTypeError(var.location(), "Internal or recursive type is not allowed for public or external functions.");
+			if (_function.isPublic())
+			{
+				auto iType = type(var)->interfaceType(isLibraryFunction);
+
+				if (!iType.get())
+				{
+					solAssert(!iType.message().empty(), "Expected detailed error message!");
+					m_errorReporter.fatalTypeError(var.location(), iType.message());
+				}
+			}
 		}
 		if (
 			_function.isPublic() &&

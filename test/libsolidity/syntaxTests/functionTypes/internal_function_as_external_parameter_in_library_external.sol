@@ -3,4 +3,4 @@ library L {
     }
 }
 // ----
-// TypeError: (27-67): Internal or recursive type is not allowed for public or external functions.
+// TypeError: (27-67): Internal type is not allowed for public or external functions.

@@ -863,15 +863,9 @@ public:
 	TypePointers memoryMemberTypes() const;
 	/// @returns the set of all members that are removed in the memory version (typically mappings).
 	std::set<std::string> membersMissingInMemory() const;
-
-	/// @returns true if the same struct is used recursively in one of its members. Only
-	/// analyses the "memory" representation, i.e. mappings are ignored in all structs.
-	bool recursive() const;
-
 private:
 	StructDefinition const& m_struct;
-	/// Cache for the recursive() function.
-	mutable boost::optional<bool> m_recursive;
+	// Caches for interfaceType(bool)
 	mutable boost::optional<TypeResult> m_interfaceType;
 	mutable boost::optional<TypeResult> m_interfaceType_library;
 };
@@ -1223,10 +1217,7 @@ public:
 	{
 		return std::make_shared<IntegerType>(256);
 	}
-	TypeResult interfaceType(bool _inLibrary) const override
-	{
-		return _inLibrary ? shared_from_this() : TypePointer();
-	}
+	TypeResult interfaceType(bool _inLibrary) const override;
 	bool dataStoredIn(DataLocation _location) const override { return _location == DataLocation::Storage; }
 	/// Cannot be stored in memory, but just in case.
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
