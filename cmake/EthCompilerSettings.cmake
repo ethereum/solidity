@@ -16,6 +16,8 @@
 
 include(EthCheckCXXCompilerFlag)
 
+set(CMAKE_SKIP_RPATH "ON" CACHE BOOL "" FORCE)
+
 eth_add_cxx_compiler_flag_if_supported(-fstack-protector-strong have_stack_protector_strong_support)
 if(NOT have_stack_protector_strong_support)
 	eth_add_cxx_compiler_flag_if_supported(-fstack-protector)
