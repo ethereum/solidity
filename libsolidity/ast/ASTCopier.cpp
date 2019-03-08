@@ -32,249 +32,38 @@ ASTPointer<SourceUnit> ASTCopier::copy(ASTNode const& _ast)
 	m_substitutions.clear();
 	_ast.accept(*this);
 	solAssert(m_substitutions.count(&_ast), "");
-	return dynamic_pointer_cast<SourceUnit>(m_substitutions.at(&_ast));
+	return dynamic_pointer_cast<SourceUnit>(substitute(&_ast));
 }
 
-void ASTCopier::substitute(ASTNode const& _node, ASTPointer<ASTNode> _new)
+void ASTCopier::applySubstitution(ASTNode const& _node, ASTPointer<ASTNode> _new)
 {
 	solAssert(!m_substitutions.count(&_node), "");
 	m_substitutions[&_node] = _new;
 }
 
-bool ASTCopier::visit(SourceUnit const& /*_node*/)
+ASTPointer<ASTNode> ASTCopier::substitute(ASTNode const* _node)
 {
-	return true;
+	if (!_node)
+		return nullptr;
+	solAssert(m_substitutions.count(_node), "");
+	return m_substitutions[_node];
 }
 
-bool ASTCopier::visit(PragmaDirective const& /*_node*/)
+ASTPointer<ASTString> ASTCopier::documentation(Documented const* _node)
 {
-	return true;
-}
-
-bool ASTCopier::visit(ImportDirective const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ContractDefinition const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(InheritanceSpecifier const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(UsingForDirective const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(StructDefinition const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(EnumDefinition const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(EnumValue const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ParameterList const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(FunctionDefinition const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(VariableDeclaration const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ModifierDefinition const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ModifierInvocation const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(EventDefinition const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ElementaryTypeName const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(UserDefinedTypeName const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(FunctionTypeName const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Mapping const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ArrayTypeName const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(InlineAssembly const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Block const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(PlaceholderStatement const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(IfStatement const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(WhileStatement const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ForStatement const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Continue const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Break const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Return const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Throw const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(EmitStatement const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(VariableDeclarationStatement const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ExpressionStatement const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Conditional const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Assignment const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(TupleExpression const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(UnaryOperation const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(BinaryOperation const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(FunctionCall const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(NewExpression const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(MemberAccess const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(IndexAccess const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Identifier const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(ElementaryTypeNameExpression const& /*_node*/)
-{
-	return true;
-}
-
-bool ASTCopier::visit(Literal const& /*_node*/)
-{
-	return true;
+	auto documentation = _node->documentation() ?
+		ASTString(*_node->documentation()) :
+		ASTString{}
+	;
+	return make_shared<ASTString>(documentation);
 }
 
 void ASTCopier::endVisit(SourceUnit const& _sourceUnit)
 {
 	vector<ASTPointer<ASTNode>> nodes;
 	for (auto const& node: _sourceUnit.nodes())
-	{
-		solAssert(m_substitutions.count(node.get()), "");
-		nodes.push_back(m_substitutions.at(node.get()));
-	}
-	substitute(_sourceUnit, make_shared<SourceUnit>(
+		nodes.push_back(substitute(node.get()));
+	applySubstitution(_sourceUnit, make_shared<SourceUnit>(
 		_sourceUnit.location(),
 		nodes
 	));
@@ -288,65 +77,146 @@ void ASTCopier::endVisit(PragmaDirective const& _pragma)
 	vector<ASTString> literals;
 	for (auto const& literal: _pragma.literals())
 		literals.emplace_back(literal);
-	substitute(_pragma, make_shared<PragmaDirective>(
+	applySubstitution(_pragma, make_shared<PragmaDirective>(
 		_pragma.location(),
 		tokens,
 		literals
 	));
 }
 
-void ASTCopier::endVisit(ImportDirective const&)
+void ASTCopier::endVisit(ImportDirective const& _import)
 {
+	vector<pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> symbolAliases;
+	for (auto const& alias: _import.symbolAliases())
+	{
+		ASTString newAlias = alias.second ? *alias.second : ASTString{};
+		symbolAliases.emplace_back(
+			dynamic_pointer_cast<Identifier>(substitute(alias.first.get())),
+			make_shared<ASTString>(newAlias)
+		);
+	}
+	applySubstitution(_import, make_shared<ImportDirective>(
+		_import.location(),
+		make_shared<ASTString>(_import.path()),
+		make_shared<ASTString>(_import.name()),
+		std::move(symbolAliases)
+	));
 }
 
 void ASTCopier::endVisit(ContractDefinition const& _contract)
 {
 	vector<ASTPointer<InheritanceSpecifier>> inheritance;
+	for (auto const& base: _contract.baseContracts())
+		inheritance.push_back(dynamic_pointer_cast<InheritanceSpecifier>(substitute(base.get())));
 	vector<ASTPointer<ASTNode>> subNodes;
-	auto documentation = _contract.documentation() ?
-		ASTString(*_contract.documentation()) :
-		ASTString{}
-	;
-	substitute(_contract, make_shared<ContractDefinition>(
+	for (auto const& subNode: _contract.subNodes())
+		subNodes.push_back(substitute(subNode.get()));
+	applySubstitution(_contract, make_shared<ContractDefinition>(
 		_contract.location(),
 		make_shared<ASTString>(_contract.name()),
-		make_shared<ASTString>(documentation),
+		documentation(&_contract),
 		inheritance,
 		subNodes,
 		_contract.contractKind()
 	));
 }
 
-void ASTCopier::endVisit(InheritanceSpecifier const&)
+void ASTCopier::endVisit(InheritanceSpecifier const& _inheritance)
 {
+	vector<ASTPointer<Expression>> arguments;
+	for (auto const& arg: *_inheritance.arguments())
+		arguments.push_back(dynamic_pointer_cast<Expression>(substitute(arg.get())));
+	applySubstitution(_inheritance, make_shared<InheritanceSpecifier>(
+		_inheritance.location(),
+		dynamic_pointer_cast<UserDefinedTypeName>(substitute(&_inheritance.name())),
+		make_unique<decltype(arguments)>(arguments)
+	));
 }
 
-void ASTCopier::endVisit(UsingForDirective const&)
+void ASTCopier::endVisit(UsingForDirective const& _using)
 {
+	applySubstitution(_using, make_shared<UsingForDirective>(
+		_using.location(),
+		dynamic_pointer_cast<UserDefinedTypeName>(substitute(&_using.libraryName())),
+		dynamic_pointer_cast<TypeName>(substitute(_using.typeName()))
+	));
 }
 
-void ASTCopier::endVisit(StructDefinition const&)
+void ASTCopier::endVisit(StructDefinition const& _struct)
 {
+	vector<ASTPointer<VariableDeclaration>> members;
+	for (auto const& member: _struct.members())
+		members.push_back(dynamic_pointer_cast<VariableDeclaration>(substitute(member.get())));
+	applySubstitution(_struct, make_shared<StructDefinition>(
+		_struct.location(),
+		make_shared<ASTString>(_struct.name()),
+		members
+	));
 }
 
-void ASTCopier::endVisit(EnumDefinition const&)
+void ASTCopier::endVisit(EnumDefinition const& _enum)
 {
+	vector<ASTPointer<EnumValue>> members;
+	for (auto const& member: _enum.members())
+		members.push_back(dynamic_pointer_cast<EnumValue>(substitute(member.get())));
+	applySubstitution(_enum, make_shared<EnumDefinition>(
+		_enum.location(),
+		make_shared<ASTString>(_enum.name()),
+		members
+	));
 }
 
-void ASTCopier::endVisit(EnumValue const&)
+void ASTCopier::endVisit(EnumValue const& _enum)
 {
+	applySubstitution(_enum, make_shared<EnumValue>(
+		_enum.location(),
+		make_shared<ASTString>(_enum.name())
+	));
 }
 
-void ASTCopier::endVisit(ParameterList const&)
+void ASTCopier::endVisit(ParameterList const& _list)
 {
+	vector<ASTPointer<VariableDeclaration>> parameters;
+	for (auto const& param: _list.parameters())
+		parameters.push_back(dynamic_pointer_cast<VariableDeclaration>(substitute(param.get())));
+	applySubstitution(_list, make_shared<ParameterList>(
+		_list.location(),
+		parameters
+	));
 }
 
-void ASTCopier::endVisit(FunctionDefinition const&)
+void ASTCopier::endVisit(FunctionDefinition const& _function)
 {
+	vector<ASTPointer<ModifierInvocation>> modifiers;
+	for (auto const& modifier: _function.modifiers())
+		modifiers.push_back(dynamic_pointer_cast<ModifierInvocation>(substitute(modifier.get())));
+	applySubstitution(_function, make_shared<FunctionDefinition>(
+		_function.location(),
+		make_shared<ASTString>(_function.name()),
+		_function.visibility(),
+		_function.stateMutability(),
+		_function.isConstructor(),
+		documentation(&_function),
+		dynamic_pointer_cast<ParameterList>(substitute(&_function.parameterList())),
+		modifiers,
+		dynamic_pointer_cast<ParameterList>(substitute(_function.returnParameterList().get())),
+		dynamic_pointer_cast<Block>(substitute(&_function.body()))
+	));
 }
 
-void ASTCopier::endVisit(VariableDeclaration const&)
+void ASTCopier::endVisit(VariableDeclaration const& _var)
 {
+	applySubstitution(_var, make_shared<VariableDeclaration>(
+		_var.location(),
+		dynamic_pointer_cast<TypeName>(substitute(_var.typeName())),
+		make_shared<ASTString>(_var.name()),
+		dynamic_pointer_cast<Expression>(substitute(_var.value().get())),
+		_var.visibility(),
+		_var.isStateVariable(),
+		_var.isIndexed(),
+		_var.isConstant(),
+		_var.referenceLocation()
+	));
 }
 
 void ASTCopier::endVisit(ModifierDefinition const&)
@@ -361,16 +231,35 @@ void ASTCopier::endVisit(EventDefinition const&)
 {
 }
 
-void ASTCopier::endVisit(ElementaryTypeName const&)
+void ASTCopier::endVisit(ElementaryTypeName const& _typeName)
 {
+	applySubstitution(_typeName, make_shared<ElementaryTypeName>(
+		_typeName.location(),
+		_typeName.typeName(),
+		_typeName.stateMutability()
+	));
 }
 
-void ASTCopier::endVisit(UserDefinedTypeName const&)
+void ASTCopier::endVisit(UserDefinedTypeName const& _typeName)
 {
+	vector<ASTString> namePath;
+	for (auto const& name: _typeName.namePath())
+		namePath.push_back(name);
+	applySubstitution(_typeName, make_shared<UserDefinedTypeName>(
+		_typeName.location(),
+		namePath
+	));
 }
 
-void ASTCopier::endVisit(FunctionTypeName const&)
+void ASTCopier::endVisit(FunctionTypeName const& _typeName)
 {
+	applySubstitution(_typeName, make_shared<FunctionTypeName>(
+		_typeName.location(),
+		dynamic_pointer_cast<ParameterList>(substitute(_typeName.parameterTypeList().get())),
+		dynamic_pointer_cast<ParameterList>(substitute(_typeName.returnParameterTypeList().get())),
+		_typeName.visibility(),
+		_typeName.stateMutability()
+	));
 }
 
 void ASTCopier::endVisit(Mapping const&)
@@ -385,8 +274,16 @@ void ASTCopier::endVisit(InlineAssembly const&)
 {
 }
 
-void ASTCopier::endVisit(Block const&)
+void ASTCopier::endVisit(Block const& _block)
 {
+	vector<ASTPointer<Statement>> statements;
+	for (auto const& statement: _block.statements())
+		statements.push_back(dynamic_pointer_cast<Statement>(substitute(statement.get())));
+	applySubstitution(_block, make_shared<Block>(
+		_block.location(),
+		documentation(&_block),
+		statements
+	));
 }
 
 void ASTCopier::endVisit(PlaceholderStatement const&)
@@ -425,12 +322,26 @@ void ASTCopier::endVisit(EmitStatement const&)
 {
 }
 
-void ASTCopier::endVisit(VariableDeclarationStatement const&)
+void ASTCopier::endVisit(VariableDeclarationStatement const& _var)
 {
+	vector<ASTPointer<VariableDeclaration>> variables;
+	for (auto const& var: _var.declarations())
+		variables.push_back(dynamic_pointer_cast<VariableDeclaration>(substitute(var.get())));
+	applySubstitution(_var, make_shared<VariableDeclarationStatement>(
+		_var.location(),
+		documentation(&_var),
+		variables,
+		dynamic_pointer_cast<Expression>(substitute(_var.initialValue()))
+	));
 }
 
-void ASTCopier::endVisit(ExpressionStatement const&)
+void ASTCopier::endVisit(ExpressionStatement const& _expr)
 {
+	applySubstitution(_expr, make_shared<ExpressionStatement>(
+		_expr.location(),
+		documentation(&_expr),
+		dynamic_pointer_cast<Expression>(substitute(&_expr.expression()))
+	));
 }
 
 void ASTCopier::endVisit(Conditional const&)
@@ -453,8 +364,20 @@ void ASTCopier::endVisit(BinaryOperation const&)
 {
 }
 
-void ASTCopier::endVisit(FunctionCall const&)
+void ASTCopier::endVisit(FunctionCall const& _function)
 {
+	vector<ASTPointer<Expression>> arguments;
+	for (auto const& arg: _function.arguments())
+		arguments.push_back(dynamic_pointer_cast<Expression>(substitute(arg.get())));
+	vector<ASTPointer<ASTString>> names;
+	for (auto const& name: _function.names())
+		names.push_back(make_shared<ASTString>(*name));
+	applySubstitution(_function, make_shared<FunctionCall>(
+		_function.location(),
+		dynamic_pointer_cast<Expression>(substitute(&_function.expression())),
+		arguments,
+		names
+	));
 }
 
 void ASTCopier::endVisit(NewExpression const&)
@@ -469,8 +392,12 @@ void ASTCopier::endVisit(IndexAccess const&)
 {
 }
 
-void ASTCopier::endVisit(Identifier const&)
+void ASTCopier::endVisit(Identifier const& _identifier)
 {
+	applySubstitution(_identifier, make_shared<Identifier>(
+		_identifier.location(),
+		make_shared<ASTString>(_identifier.name())
+	));
 }
 
 void ASTCopier::endVisit(ElementaryTypeNameExpression const&)
