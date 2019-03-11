@@ -81,4 +81,29 @@ private:
 	std::set<YulString> m_names;
 };
 
+/**
+ * Collects all names from a given continue statement on onwards.
+ *
+ * It makes only sense to be invoked from within a body of an outer for loop, that is,
+ * it will only collect all names from the beginning of the first continue statement
+ * of the outer-most ForLoop.
+ */
+class AssignmentsSinceContinue: public ASTWalker
+{
+public:
+	using ASTWalker::operator();
+	void operator()(ForLoop const& _forLoop) override;
+	void operator()(Continue const&) override;
+	void operator()(Assignment const& _assignment) override;
+	void operator()(FunctionDefinition const& _funDef) override;
+
+	std::set<YulString> const& names() const { return m_names; }
+	bool empty() const noexcept { return m_names.empty(); }
+
+private:
+	size_t m_forLoopDepth = 0;
+	bool m_continueFound = false;
+	std::set<YulString> m_names;
+};
+
 }
