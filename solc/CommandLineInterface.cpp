@@ -1295,7 +1295,7 @@ bool CommandLineInterface::assemble(
 		yul::MachineAssemblyObject object;
 		try
 		{
-			object = stack.assemble(_targetMachine);
+			object = stack.assemble(_targetMachine, _optimize);
 		}
 		catch (Exception const& _exception)
 		{

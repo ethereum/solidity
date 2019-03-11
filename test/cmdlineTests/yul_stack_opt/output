@@ -1,0 +1,202 @@
+
+======= yul_stack_opt/input.sol (EVM) =======
+
+Pretty printed source:
+object "object" {
+    code {
+        let a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, k1, l1, m1, n1, o1, p1 := fun()
+        let a2, b2, c2, d2, e2, f2, g2, h2, i2, j2, k2, l2, m2, n2, o2, p2 := fun()
+        sstore(a1, a2)
+        function fun() -> a3, b3, c3, d3, e3, f3, g3, h3, i3, j3, k3, l3, m3, n3, o3, p3
+        {
+            let a := 1
+            sstore(a, a)
+            sstore(2, a)
+            sstore(3, a)
+            sstore(4, a)
+            sstore(5, a)
+            sstore(6, a)
+            sstore(7, a)
+            sstore(8, a)
+            sstore(9, a)
+            sstore(10, a)
+            sstore(11, a)
+            sstore(12, a)
+            sstore(13, a)
+        }
+    }
+}
+
+
+Binary representation:
+60056032565b505050505050505050505050505050601a6032565b5050505050505050505050505050508082555050609a565b60006000600060006000600060006000600060006000600060006000600060006001808155806002558060035580600455806005558060065580600755806008558060095580600a5580600b5580600c5580600d5550909192939495969798999a9b9c9d9e9f565b
+
+Text representation:
+    /* "yul_stack_opt/input.sol":495:500   */
+  tag_1
+  jump(tag_2)
+tag_1:
+    /* "yul_stack_opt/input.sol":425:500   */
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+    /* "yul_stack_opt/input.sol":572:577   */
+  tag_3
+  jump(tag_2)
+tag_3:
+    /* "yul_stack_opt/input.sol":502:577   */
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+    /* "yul_stack_opt/input.sol":590:592   */
+  dup1
+    /* "yul_stack_opt/input.sol":586:588   */
+  dup3
+    /* "yul_stack_opt/input.sol":579:593   */
+  sstore
+  pop
+  pop
+    /* "yul_stack_opt/input.sol":3:423   */
+  jump(tag_4)
+tag_2:
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+  0x00
+    /* "yul_stack_opt/input.sol":98:99   */
+  0x01
+    /* "yul_stack_opt/input.sol":139:140   */
+  dup1
+    /* "yul_stack_opt/input.sol":136:137   */
+  dup2
+    /* "yul_stack_opt/input.sol":129:141   */
+  sstore
+    /* "yul_stack_opt/input.sol":162:163   */
+  dup1
+    /* "yul_stack_opt/input.sol":151:160   */
+  0x02
+    /* "yul_stack_opt/input.sol":144:164   */
+  sstore
+    /* "yul_stack_opt/input.sol":185:186   */
+  dup1
+    /* "yul_stack_opt/input.sol":174:183   */
+  0x03
+    /* "yul_stack_opt/input.sol":167:187   */
+  sstore
+    /* "yul_stack_opt/input.sol":208:209   */
+  dup1
+    /* "yul_stack_opt/input.sol":197:206   */
+  0x04
+    /* "yul_stack_opt/input.sol":190:210   */
+  sstore
+    /* "yul_stack_opt/input.sol":231:232   */
+  dup1
+    /* "yul_stack_opt/input.sol":220:229   */
+  0x05
+    /* "yul_stack_opt/input.sol":213:233   */
+  sstore
+    /* "yul_stack_opt/input.sol":254:255   */
+  dup1
+    /* "yul_stack_opt/input.sol":243:252   */
+  0x06
+    /* "yul_stack_opt/input.sol":236:256   */
+  sstore
+    /* "yul_stack_opt/input.sol":277:278   */
+  dup1
+    /* "yul_stack_opt/input.sol":266:275   */
+  0x07
+    /* "yul_stack_opt/input.sol":259:279   */
+  sstore
+    /* "yul_stack_opt/input.sol":300:301   */
+  dup1
+    /* "yul_stack_opt/input.sol":289:298   */
+  0x08
+    /* "yul_stack_opt/input.sol":282:302   */
+  sstore
+    /* "yul_stack_opt/input.sol":323:324   */
+  dup1
+    /* "yul_stack_opt/input.sol":312:321   */
+  0x09
+    /* "yul_stack_opt/input.sol":305:325   */
+  sstore
+    /* "yul_stack_opt/input.sol":346:347   */
+  dup1
+    /* "yul_stack_opt/input.sol":335:344   */
+  0x0a
+    /* "yul_stack_opt/input.sol":328:348   */
+  sstore
+    /* "yul_stack_opt/input.sol":370:371   */
+  dup1
+    /* "yul_stack_opt/input.sol":358:368   */
+  0x0b
+    /* "yul_stack_opt/input.sol":351:372   */
+  sstore
+    /* "yul_stack_opt/input.sol":394:395   */
+  dup1
+    /* "yul_stack_opt/input.sol":382:392   */
+  0x0c
+    /* "yul_stack_opt/input.sol":375:396   */
+  sstore
+    /* "yul_stack_opt/input.sol":418:419   */
+  dup1
+    /* "yul_stack_opt/input.sol":406:416   */
+  0x0d
+    /* "yul_stack_opt/input.sol":399:420   */
+  sstore
+  pop
+    /* "yul_stack_opt/input.sol":85:423   */
+  swap1
+  swap2
+  swap3
+  swap4
+  swap5
+  swap6
+  swap7
+  swap8
+  swap9
+  swap10
+  swap11
+  swap12
+  swap13
+  swap14
+  swap15
+  swap16
+  jump
+tag_4:
+

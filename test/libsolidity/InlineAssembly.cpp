@@ -66,8 +66,9 @@ boost::optional<Error> parseAndReturnFirstError(
 	try
 	{
 		success = stack.parseAndAnalyze("", _source);
+		bool const optimize = false;
 		if (success && _assemble)
-			stack.assemble(_machine);
+			stack.assemble(_machine, optimize);
 	}
 	catch (FatalError const&)
 	{

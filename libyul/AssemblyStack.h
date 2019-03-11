@@ -74,7 +74,7 @@ public:
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	/// @param _optimize does not run the optimizer but performs optimized code generation.
-	MachineAssemblyObject assemble(Machine _machine, bool _optimize = false) const;
+	MachineAssemblyObject assemble(Machine _machine, bool _optimize) const;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	langutil::ErrorList const& errors() const { return m_errors; }
