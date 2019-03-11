@@ -1080,6 +1080,75 @@ BOOST_AUTO_TEST_CASE(common_pattern)
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
 }
 
+BOOST_AUTO_TEST_CASE(use_stack_optimization)
+{
+	// NOTE: the contract code here should fail to compile due to "out of stack"
+	// If we enable stack optimization, though, it will compile.
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"optimizer": { "enabled": true, "details": { "yul": true } },
+			"outputSelection": {
+				"fileA": { "A": [ "evm.bytecode.object" ] }
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "contract A {
+					function y() public {
+						assembly {
+							function fun() -> a3, b3, c3, d3, e3, f3, g3, h3, i3, j3, k3, l3, m3, n3, o3, p3
+							{
+								let a := 1
+								let b := 1
+								let z3 := 1
+								sstore(a, b)
+								sstore(add(a, 1), b)
+								sstore(add(a, 2), b)
+								sstore(add(a, 3), b)
+								sstore(add(a, 4), b)
+								sstore(add(a, 5), b)
+								sstore(add(a, 6), b)
+								sstore(add(a, 7), b)
+								sstore(add(a, 8), b)
+								sstore(add(a, 9), b)
+								sstore(add(a, 10), b)
+								sstore(add(a, 11), b)
+								sstore(add(a, 12), b)
+							}
+							let a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, k1, l1, m1, n1, o1, p1 := fun()
+							let a2, b2, c2, d2, e2, f2, g2, h2, i2, j2, k2, l2, m2, n2, o2, p2 := fun()
+							sstore(a1, a2)
+						}
+					}
+				}"
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(jsonParseStrict(input, parsedInput));
+
+	dev::solidity::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_REQUIRE(contract.isObject());
+	BOOST_REQUIRE(contract["evm"]["bytecode"]["object"].isString());
+	BOOST_CHECK(contract["evm"]["bytecode"]["object"].asString().length() > 20);
+
+	// Now disable stack optimizations
+	// results in "stack too deep"
+	parsedInput["settings"]["optimizer"]["details"]["yulDetails"]["stackAllocation"] = false;
+	result = compiler.compile(parsedInput);
+	BOOST_REQUIRE(result["errors"].isArray());
+	BOOST_CHECK(result["errors"][0]["severity"] == "error");
+	BOOST_CHECK(result["errors"][0]["type"] == "InternalCompilerError");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
