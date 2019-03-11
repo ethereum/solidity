@@ -39,7 +39,7 @@ class Parser: public langutil::ParserBase
 {
 public:
 	explicit Parser(langutil::ErrorReporter& _errorReporter, std::shared_ptr<Dialect> _dialect):
-		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
+		ParserBase(_errorReporter), m_dialect(std::move(_dialect)), m_insideForLoopBody{false} {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
@@ -87,6 +87,7 @@ protected:
 
 private:
 	std::shared_ptr<Dialect> m_dialect;
+	bool m_insideForLoopBody;
 };
 
 }

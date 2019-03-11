@@ -130,6 +130,16 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	popScope();
 }
 
+void DataFlowAnalyzer::operator()(Break&)
+{
+	yulAssert(false, "Not implemented yet.");
+}
+
+void DataFlowAnalyzer::operator()(Continue&)
+{
+	yulAssert(false, "Not implemented yet.");
+}
+
 void DataFlowAnalyzer::operator()(Block& _block)
 {
 	size_t numScopes = m_variableScopes.size();

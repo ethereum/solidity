@@ -78,6 +78,10 @@ struct Case { langutil::SourceLocation location; std::unique_ptr<Literal> value;
 /// Switch statement
 struct Switch { langutil::SourceLocation location; std::unique_ptr<Expression> expression; std::vector<Case> cases; };
 struct ForLoop { langutil::SourceLocation location; Block pre; std::unique_ptr<Expression> condition; Block post; Block body; };
+/// Break statement (valid within for loop)
+struct Break { langutil::SourceLocation location; };
+/// Continue statement (valid within for loop)
+struct Continue { langutil::SourceLocation location; };
 
 struct LocationExtractor: boost::static_visitor<langutil::SourceLocation>
 {
