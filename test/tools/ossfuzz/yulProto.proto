@@ -47,7 +47,7 @@ message VarRef {
 
 message Literal {
   oneof literal_oneof {
-    int32 intval = 1;
+    uint64 intval = 1;
     string hexval = 2;
     string strval = 3;
   }
