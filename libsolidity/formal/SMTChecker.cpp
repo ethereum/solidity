@@ -374,6 +374,9 @@ void SMTChecker::checkOverflow(OverflowTarget& _target)
 
 void SMTChecker::endVisit(UnaryOperation const& _op)
 {
+	if (_op.annotation().type->category() == Type::Category::RationalNumber)
+		return;
+
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
@@ -431,8 +434,21 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	}
 }
 
+bool SMTChecker::visit(UnaryOperation const& _op)
+{
+	return !shortcutRationalNumber(_op);
+}
+
+bool SMTChecker::visit(BinaryOperation const& _op)
+{
+	return !shortcutRationalNumber(_op);
+}
+
 void SMTChecker::endVisit(BinaryOperation const& _op)
 {
+	if (_op.annotation().type->category() == Type::Category::RationalNumber)
+		return;
+
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))
@@ -906,6 +922,21 @@ void SMTChecker::defineGlobalFunction(string const& _name, Expression const& _ex
 				"Assertion checker does not yet support the type of this function."
 			);
 	}
+}
+
+bool SMTChecker::shortcutRationalNumber(Expression const& _expr)
+{
+	if (_expr.annotation().type->category() == Type::Category::RationalNumber)
+	{
+		auto rationalType = dynamic_cast<RationalNumberType const*>(_expr.annotation().type.get());
+		solAssert(rationalType, "");
+		if (rationalType->isNegative())
+			defineExpr(_expr, smt::Expression(u2s(rationalType->literalValue(nullptr))));
+		else
+			defineExpr(_expr, smt::Expression(rationalType->literalValue(nullptr)));
+		return true;
+	}
+	return false;
 }
 
 void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
