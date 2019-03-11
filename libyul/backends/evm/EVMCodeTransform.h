@@ -217,6 +217,10 @@ private:
 	/// and corrects the stack height to the target stack height.
 	void stackError(StackTooDeepError _error, int _targetStackSize);
 
+	/// Ensures stack height is down to @p _targetDepth by appending POP instructions to the output assembly.
+	/// Returns the number of POP statements that have been appended.
+	int appendPopUntil(int _targetDepth);
+
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
