@@ -56,7 +56,7 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Literal const& _x)
 			_os << "0x" << createHex(_x.hexval());
 			break;
 		case Literal::kStrval:
-			_os << createAlphaNum(_x.strval());
+			_os << "\"" << createAlphaNum(_x.strval()) << "\"";
 			break;
 		case Literal::LITERAL_ONEOF_NOT_SET:
 			_os << "1";
