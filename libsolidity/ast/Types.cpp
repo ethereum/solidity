@@ -132,7 +132,7 @@ BoolResult fitsIntegerType(bigint const& _value, IntegerType const& _type)
 		return BoolResult{std::string("Cannot implicitly convert signed literal to unsigned type.")};
 
 	if (_type.minValue() > _value || _value > _type.maxValue())
-		return BoolResult{"Literal is too large to fit in " + _type.toString(false)};
+		return BoolResult{"Literal is too large to fit in " + _type.toString(false) + "."};
 
 	return true;
 }
