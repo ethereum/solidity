@@ -98,7 +98,7 @@ public:
 
 		auto filterEmpty = boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
 
-		std::string errorStr = dev::joinHumanReadable(descs | filterEmpty);
+		std::string errorStr = dev::joinHumanReadable(descs | filterEmpty, " ");
 
 		error(Error::Type::TypeError, _location, errorStr);
 	}

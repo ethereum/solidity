@@ -126,9 +126,15 @@ bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
 }
 
 /// Checks whether _value fits into IntegerType _type.
-bool fitsIntegerType(bigint const& _value, IntegerType const& _type)
+BoolResult fitsIntegerType(bigint const& _value, IntegerType const& _type)
 {
-	return (_type.minValue() <= _value) && (_value <= _type.maxValue());
+	if (_value < 0 && !_type.isSigned())
+		return BoolResult{std::string("Cannot implicitly convert signed literal to unsigned type.")};
+
+	if (_type.minValue() > _value || _value > _type.maxValue())
+		return BoolResult{"Literal is too large to fit in " + _type.toString(false)};
+
+	return true;
 }
 
 /// Checks whether _value fits into _bits bits when having 1 bit as the sign bit
@@ -722,7 +728,9 @@ BoolResult FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) con
 	if (_convertTo.category() == category())
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
-		if (convertTo.numBits() < m_totalBits || convertTo.fractionalDigits() < m_fractionalDigits)
+		if (convertTo.fractionalDigits() < m_fractionalDigits)
+			return BoolResult{std::string("Too many fractional digits.")};
+		if (convertTo.numBits() < m_totalBits)
 			return false;
 		else
 			return convertTo.maxIntegerValue() >= maxIntegerValue() && convertTo.minIntegerValue() <= minIntegerValue();
