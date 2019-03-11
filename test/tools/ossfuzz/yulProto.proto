@@ -45,15 +45,11 @@ message VarRef {
   required int32 varnum = 1;
 }
 
-message HexNum {
-  required bytes hexbytes = 1;
-}
-
 message Literal {
   oneof literal_oneof {
     int32 intval = 1;
-    bool boolval = 2;
-    HexNum hexval = 3;
+    string hexval = 2;
+    string strval = 3;
   }
 }
 
