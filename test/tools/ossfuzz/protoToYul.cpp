@@ -43,10 +43,15 @@ const std::string yul::test::yul_fuzzer::createAlphaNum(std::string const& _strB
 {
 	std::string tmp = std::string(_strBytes);
 	if (!tmp.empty())
+	{
 		tmp.erase(std::remove_if(tmp.begin(), tmp.end(),
-		                         [](char c) { return !(std::isalpha(c) || std::isdigit(c)); } ), tmp.end());
+		                         [](char c) { return !(std::isalpha(c) || std::isdigit(c)); }), tmp.end());
+		tmp = tmp.substr(0, 32);
+	}
 	else
+	{
 		tmp = "1";
+	}
 	return tmp;
 }
 
