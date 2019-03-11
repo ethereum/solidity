@@ -4,4 +4,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (52-65): Type int_const 256 is not implicitly convertible to expected type uint8. Literal is too large to fit in uint8
+// TypeError: (52-65): Type int_const 256 is not implicitly convertible to expected type uint8. Literal is too large to fit in uint8.
