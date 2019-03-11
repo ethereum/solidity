@@ -32,7 +32,8 @@ const std::string yul::test::yul_fuzzer::createHex(std::string const& _hexBytes)
 		                         [](char c) { return !std::isxdigit(c); }), tmp.end());
 		tmp = tmp.substr(0, 64);
 	}
-	else
+	// We need this awkward if case because tmp can also be null post erase call above
+	if (tmp.empty())
 	{
 		tmp = "1";
 	}
@@ -48,7 +49,8 @@ const std::string yul::test::yul_fuzzer::createAlphaNum(std::string const& _strB
 		                         [](char c) { return !(std::isalpha(c) || std::isdigit(c)); }), tmp.end());
 		tmp = tmp.substr(0, 32);
 	}
-	else
+	// We need this awkward if case because tmp can also be null post erase call above
+	if (tmp.empty())
 	{
 		tmp = "1";
 	}
