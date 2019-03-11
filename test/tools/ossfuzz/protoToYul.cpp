@@ -29,6 +29,7 @@ const std::string yul::test::yul_fuzzer::createHex(std::string const& _hexBytes)
 	if (!tmp.empty())
 		tmp.erase(std::remove_if(tmp.begin(), tmp.end(),
 		                         [](char c) { return !std::isxdigit(c); } ), tmp.end());
+		tmp = tmp.substr(0, 64);
 	else
 		tmp = "1";
 	return tmp;
