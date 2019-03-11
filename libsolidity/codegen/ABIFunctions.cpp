@@ -1212,7 +1212,6 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		if (structType->dataStoredIn(DataLocation::CallData))
 		{
 			solAssert(!_fromMemory, "");
-			solUnimplementedAssert(!structType->isDynamicallyEncoded(), "Dynamically encoded calldata structs are not yet implemented.");
 			return abiDecodingFunctionCalldataStruct(*structType);
 		}
 		else

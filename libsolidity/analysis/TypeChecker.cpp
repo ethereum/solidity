@@ -371,18 +371,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	};
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
-		TypePointer baseType = type(*var);
-		while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
-			baseType = arrayType->baseType();
-
-		if (
-			!m_scope->isInterface() &&
-			baseType->dataStoredIn(DataLocation::CallData)
-		)
-			if (auto const* structType = dynamic_cast<StructType const*>(baseType.get()))
-				if (structType->isDynamicallyEncoded())
-					m_errorReporter.typeError(var->location(), "Dynamically encoded calldata structs are not yet supported.");
-
 		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}

@@ -1424,20 +1424,28 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		}
 		case DataLocation::CallData:
 		{
-			solUnimplementedAssert(!type.isDynamicallyEncoded(), "");
-			m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
-			// For non-value types the calldata offset is returned directly.
-			if (_memberAccess.annotation().type->isValueType())
+			if (_memberAccess.annotation().type->isDynamicallyEncoded())
 			{
-				solAssert(_memberAccess.annotation().type->calldataEncodedSize(false) > 0, "");
-				CompilerUtils(m_context).loadFromMemoryDynamic(*_memberAccess.annotation().type, true, true, false);
+				m_context << Instruction::DUP1;
+				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
+				CompilerUtils(m_context).accessCalldataTail(*_memberAccess.annotation().type);
 			}
 			else
-				solAssert(
-					_memberAccess.annotation().type->category() == Type::Category::Array ||
-					_memberAccess.annotation().type->category() == Type::Category::Struct,
-					""
-				);
+			{
+				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
+				// For non-value types the calldata offset is returned directly.
+				if (_memberAccess.annotation().type->isValueType())
+				{
+					solAssert(_memberAccess.annotation().type->calldataEncodedSize() > 0, "");
+					CompilerUtils(m_context).loadFromMemoryDynamic(*_memberAccess.annotation().type, true, true, false);
+				}
+				else
+					solAssert(
+						_memberAccess.annotation().type->category() == Type::Category::Array ||
+						_memberAccess.annotation().type->category() == Type::Category::Struct,
+						""
+					);
+			}
 			break;
 		}
 		default:
@@ -1574,47 +1582,8 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				ArrayUtils(m_context).accessIndex(arrayType, true, true);
 				// stack layout: <base_ref> <ptr_to_tail>
 
-				unsigned int baseEncodedSize = arrayType.baseType()->calldataEncodedSize();
-				solAssert(baseEncodedSize > 1, "");
-
-				// returns the absolute offset of the accessed element in "base_ref"
-				m_context.appendInlineAssembly(Whiskers(R"({
-					let rel_offset_of_tail := calldataload(ptr_to_tail)
-					if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
-					base_ref := add(base_ref, rel_offset_of_tail)
-				})")("neededLength", toCompactHexWithPrefix(baseEncodedSize)).render(), {"base_ref", "ptr_to_tail"});
-				// stack layout: <absolute_offset_of_tail> <garbage>
-
-				if (!arrayType.baseType()->isDynamicallySized())
-				{
-					m_context << Instruction::POP;
-					// stack layout: <absolute_offset_of_element>
-					solAssert(
-						arrayType.baseType()->category() == Type::Category::Struct ||
-						arrayType.baseType()->category() == Type::Category::Array,
-						"Invalid dynamically encoded base type on array access."
-					);
-				}
-				else
-				{
-					auto const* baseArrayType = dynamic_cast<ArrayType const*>(arrayType.baseType().get());
-					solAssert(!!baseArrayType, "Invalid dynamically sized type.");
-					unsigned int calldataStride = baseArrayType->calldataStride();
-					solAssert(calldataStride > 0, "");
-
-					// returns the absolute offset of the accessed element in "base_ref"
-					// and the length of the accessed element in "ptr_to_length"
-					m_context.appendInlineAssembly(
-						Whiskers(R"({
-							length := calldataload(base_ref)
-							base_ref := add(base_ref, 0x20)
-							if gt(length, 0xffffffffffffffff) { revert(0, 0) }
-							if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
-						})")("calldataStride", toCompactHexWithPrefix(calldataStride)).render(),
-						{"base_ref", "length"}
-					);
-					// stack layout: <absolute_offset_of_element> <length_of_element>
-				}
+				CompilerUtils(m_context).accessCalldataTail(*arrayType.baseType());
+				// stack layout: <tail_ref> [length]
 			}
 			else
 			{

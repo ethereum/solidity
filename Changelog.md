@@ -2,6 +2,7 @@
 
 Language Features:
  * Allow calldata arrays with dynamically encoded base types with ABIEncoderV2.
+ * Allow dynamically encoded calldata structs with ABIEncoderV2.
 
 
 Compiler Features:
