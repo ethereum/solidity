@@ -16,6 +16,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * JSON ABI: Json description of library ABIs no longer contain functions with internal types like storage structs.
  * SMTChecker: Fix internal compiler error when contract contains too large rational number.
  * Type system: Detect if a contract's base uses types that require the experimental abi encoder while the contract still uses the old encoder
  * Yul Optimizer: Fix visitation order bug for the structural simplifier.
@@ -24,7 +25,6 @@ Bugfixes:
 Build System:
  * Soltest: Add support for arrays in function signatures.
  * Soltest: Add support for struct arrays in function signatures.
-
 
 ### 0.5.5 (2019-03-05)
 
