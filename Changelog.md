@@ -14,6 +14,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix internal compiler error when contract contains too large rational number.
  * Type system: Detect if a contract's base uses types that require the experimental abi encoder while the contract still uses the old encoder
  * Yul Optimizer: Fix visitation order bug for the structural simplifier.
 
