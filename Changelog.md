@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Inline Assembly: Issue error when using ``callvalue()`` inside nonpayable function (in the same way that ``msg.value`` already does).
  * SMTChecker: Show callstack together with model if applicable.
+ * SMTChecker: Support modifiers.
  * Yul Optimizer: Enable stack allocation optimization by default if yul optimizer is active (disable in yulDetails).
 
 
