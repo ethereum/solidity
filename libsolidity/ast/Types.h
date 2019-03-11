@@ -65,6 +65,20 @@ inline rational makeRational(bigint const& _numerator, bigint const& _denominato
 }
 
 enum class DataLocation { Storage, CallData, Memory };
+inline std::string dataLocationToString(DataLocation _location)
+{
+	switch(_location)
+	{
+		case DataLocation::Storage:
+			return "storage";
+		case DataLocation::CallData:
+			return "calldata";
+		case DataLocation::Memory:
+			return "memory";
+		default:
+			solAssert(false, "Invalid data location.");
+	}
+}
 
 
 /**

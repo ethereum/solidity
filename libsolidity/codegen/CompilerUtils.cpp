@@ -1133,7 +1133,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		}
 	}
 	auto const* referenceType = dynamic_cast<ReferenceType const*>(&_type);
-	if (!referenceType || referenceType->location() == DataLocation::Storage)
+	if (!referenceType || referenceType->location() == DataLocation::Storage || referenceType->location() == DataLocation::CallData)
 	{
 		for (size_t i = 0; i < _type.sizeOnStack(); ++i)
 			m_context << u256(0);

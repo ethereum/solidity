@@ -541,8 +541,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 		if (typeName()->annotation().type->category() == Type::Category::Mapping)
 			return set<Location>{ Location::Storage };
 		else
-			//  TODO: add Location::Calldata once implemented for local variables.
-			return set<Location>{ Location::Memory, Location::Storage };
+			return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
 	}
 	else
 		// Struct members etc.

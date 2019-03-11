@@ -2,6 +2,7 @@
 
 Language Features:
  * Allow calldata arrays with dynamically encoded base types with ABIEncoderV2.
+ * Allow local variables of calldata reference type.
  * Allow dynamically encoded calldata structs with ABIEncoderV2.
 
 

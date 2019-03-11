@@ -872,9 +872,9 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 
 		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl).get()))
 		{
-			if (ref->dataStoredIn(DataLocation::Storage))
+			if (ref->dataStoredIn(DataLocation::Storage) || ref->dataStoredIn(DataLocation::CallData))
 			{
-				string errorText{"Uninitialized storage pointer."};
+				string errorText = "Uninitialized " + dataLocationToString(ref->location()) + " pointer.";
 				solAssert(varDecl.referenceLocation() != VariableDeclaration::Location::Unspecified, "Expected a specified location at this point");
 				solAssert(m_scope, "");
 				m_errorReporter.declarationError(varDecl.location(), errorText);
