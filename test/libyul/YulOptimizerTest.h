@@ -59,7 +59,9 @@ private:
 	void disambiguate();
 
 	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
+	static void printErrorsHuman(std::ostream& _stream, langutil::ErrorList const& _errors);
 
+	std::string m_filename;
 	std::string m_source;
 	bool m_yul = false;
 	std::string m_optimizerStep;
@@ -68,6 +70,7 @@ private:
 	std::shared_ptr<Dialect> m_dialect;
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<Block> m_expectationAST;
 	std::string m_obtainedResult;
 };
 

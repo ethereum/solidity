@@ -22,6 +22,8 @@ add_library(yul
 	Object.h
 	ObjectParser.cpp
 	ObjectParser.h
+	StructualEquality.cpp
+	StructualEquality.h
 	Utilities.cpp
 	Utilities.h
 	YulString.h

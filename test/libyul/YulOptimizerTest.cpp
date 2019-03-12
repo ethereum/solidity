@@ -48,8 +48,9 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AssemblyStack.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <libyul/StructualEquality.h>
 
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 
@@ -71,6 +72,7 @@ using namespace std;
 YulOptimizerTest::YulOptimizerTest(string const& _filename)
 {
 	boost::filesystem::path path(_filename);
+	m_filename = boost::filesystem::canonical(path).string();
 
 	if (path.empty() || std::next(path.begin()) == path.end() || std::next(std::next(path.begin())) == path.end())
 		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
@@ -260,14 +262,23 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 
 	m_obtainedResult = m_optimizerStep + "\n" + AsmPrinter{m_yul}(*m_ast) + "\n";
 
-	if (m_expectation != m_obtainedResult)
+	langutil::ErrorList errors;
+	langutil::ErrorReporter reporter{errors};
+	StructualEquality eq{reporter};
+	eq.compare(*m_ast, *m_expectationAST);
+
+	if (errors.size())
 	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
-		// TODO could compute a simple diff with highlighted lines
-		printIndented(_stream, m_expectation, nextIndentLevel);
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
-		printIndented(_stream, m_obtainedResult, nextIndentLevel);
+		printErrorsHuman(_stream, reporter.errors());
+
+		// TODO: use flag to either show structural errors (above) or the old version (below)
+		// m_expectation = m_optimizerStep + "\n" + AsmPrinter{m_yul}(*m_expectationAST) + "\n";
+		// string nextIndentLevel = _linePrefix + "  ";
+		// AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
+		// printIndented(_stream, m_expectation, nextIndentLevel);
+		// AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
+		// printIndented(_stream, m_obtainedResult, nextIndentLevel);
+
 		return false;
 	}
 	return true;
@@ -297,7 +308,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 		dev::test::Options::get().evmVersion(),
 		m_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly
 	);
-	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
+	if (!stack.parseAndAnalyze(m_filename, m_source) || !stack.errors().empty())
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, stack.errors());
@@ -306,6 +317,20 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	m_dialect = m_yul ? Dialect::yul() : EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
 	m_ast = stack.parserResult()->code;
 	m_analysisInfo = stack.parserResult()->analysisInfo;
+
+	AssemblyStack expectationStack(
+		dev::test::Options::get().evmVersion(),
+		m_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly
+	);
+	if (!expectationStack.parseAndAnalyze("", "//" + m_expectation) || !stack.errors().empty())
+	{
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		printErrors(_stream, expectationStack.errors());
+		//m_expectation = m_optimizerStep + "\n" + AsmPrinter{m_yul}(*m_expectationAST) + "\n";
+		return false;
+	}
+	m_expectationAST = expectationStack.parserResult()->code;
+
 	return true;
 }
 
@@ -318,6 +343,17 @@ void YulOptimizerTest::disambiguate()
 void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
 	SourceReferenceFormatter formatter(_stream);
+
+	for (auto const& error: _errors)
+		formatter.printExceptionInformation(
+			*error,
+			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
+		);
+}
+
+void YulOptimizerTest::printErrorsHuman(ostream& _stream, ErrorList const& _errors)
+{
+	SourceReferenceFormatterHuman formatter(_stream, true);
 
 	for (auto const& error: _errors)
 		formatter.printExceptionInformation(
