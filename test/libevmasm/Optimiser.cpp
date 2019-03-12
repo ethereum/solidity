@@ -238,6 +238,36 @@ BOOST_AUTO_TEST_CASE(cse_associativity2)
 	checkCSE(input, {Instruction::DUP2, Instruction::DUP2, Instruction::ADD, u256(5), Instruction::ADD});
 }
 
+BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
+{
+	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	{
+		AssemblyItems input{
+			Instruction::CALLVALUE,
+			u256(2),
+			Instruction::SHR,
+			u256(-1),
+			Instruction::SHR
+		};
+		checkCSE(input, {u256(0)});
+	}
+}
+
+BOOST_AUTO_TEST_CASE(cse_double_shift_left_overflow)
+{
+	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	{
+		AssemblyItems input{
+			Instruction::DUP1,
+			u256(2),
+			Instruction::SHL,
+			u256(-1),
+			Instruction::SHL
+		};
+		checkCSE(input, {u256(0)});
+	}
+}
+
 BOOST_AUTO_TEST_CASE(cse_storage)
 {
 	AssemblyItems input{

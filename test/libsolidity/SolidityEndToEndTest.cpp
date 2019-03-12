@@ -15109,9 +15109,19 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople_combined)
 					c := shl(0xd0, shl(0x40, a))
 				}
 			}
+			function shl_combined_overflow(uint a) public returns (uint c) {
+				assembly {
+					c := shl(0x01, shl(not(0x00), a))
+				}
+			}
 			function shr_combined_large(uint a) public returns (uint c) {
 				assembly {
 					c := shr(0xd0, shr(0x40, a))
+				}
+			}
+			function shr_combined_overflow(uint a) public returns (uint c) {
+				assembly {
+					c := shr(0x01, shr(not(0x00), a))
 				}
 			}
 			function sar_combined_large(uint a) public returns (uint c) {
@@ -15152,8 +15162,10 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople_combined)
 	BOOST_CHECK(callContractFunction("shl_combined_large(uint256)", u256(0)) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("shl_combined_large(uint256)", u256("0xffff")) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("shl_combined_large(uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("shl_combined_overflow(uint256)", u256(2)) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("shr_combined_large(uint256)", u256(0)) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("shr_combined_large(uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("shr_combined_overflow(uint256)", u256(2)) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("sar_combined_large(uint256)", u256(0)) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("sar_combined_large(uint256)", u256("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("sar_combined_large(uint256)", u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")) == encodeArgs(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")));

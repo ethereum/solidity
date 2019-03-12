@@ -2,6 +2,7 @@
 
 Important Bugfixes:
  * Yul Optimizer: Fix visitation order bug for the structural simplifier.
+ * Optimizer: Fix overflow in optimization rule that simplifies double shift by constant.
 
 Language Features:
  * Allow calldata arrays with dynamically encoded base types with ABIEncoderV2.
