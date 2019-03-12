@@ -54,13 +54,13 @@ public:
 		unsigned const _optimizeRuns = 200
 	)
 	{
-		bool const c_optimize = m_optimize;
-		unsigned const c_optimizeRuns = m_optimizeRuns;
-		m_optimize = _optimize;
-		m_optimizeRuns = _optimizeRuns;
+		OptimiserSettings previousSettings = std::move(m_optimiserSettings);
+		// This uses "none" / "full" while most other test frameworks use
+		// "minimal" / "enabled".
+		m_optimiserSettings = _optimize ? OptimiserSettings::full() : OptimiserSettings::none();
+		m_optimiserSettings.expectedExecutionsPerDeployment = _optimizeRuns;
 		bytes const& ret = compileAndRun(_sourceCode, _value, _contractName);
-		m_optimize = c_optimize;
-		m_optimizeRuns = c_optimizeRuns;
+		m_optimiserSettings = std::move(previousSettings);
 		return ret;
 	}
 
@@ -685,21 +685,19 @@ BOOST_AUTO_TEST_CASE(shift_optimizer_bug)
 	char const* sourceCode = R"(
 		contract C
 		{
-			function f(uint x, uint y, uint z) public returns (uint)
+			function f(uint x) public returns (uint)
 			{
-				return (x << y) << z;
+				return (x << 1) << uint(-1);
 			}
-			function g(uint x, uint y, uint z) public returns (uint)
+			function g(uint x) public returns (uint)
 			{
-				return (x >> y) > z;
+				return (x >> 1) >> uint(-1);
 			}
 		}
 	)";
 	compileBothVersions(sourceCode);
-	compareVersions("f(uint256,uint256,uint256)", 7, u256(-1), 5);
-	compareVersions("g(uint256,uint256,uint256)", 7, u256(-1), 5);
-	compareVersions("f(uint256,uint256,uint256)", 7, 128, 120);
-	compareVersions("g(uint256,uint256,uint256)", 0x71117, 2, 2);
+	compareVersions("f(uint256)", 7);
+	compareVersions("g(uint256)", u256(-1));
 }
 
 

@@ -73,7 +73,7 @@ public:
 		m_compiler.addSource("", sourceCode);
 		m_compiler.setLibraries(_libraryAddresses);
 		m_compiler.setEVMVersion(m_evmVersion);
-		m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
+		m_compiler.setOptimiserSettings(m_optimiserSettings);
 		if (!m_compiler.compile())
 		{
 			langutil::SourceReferenceFormatter formatter(std::cerr);
