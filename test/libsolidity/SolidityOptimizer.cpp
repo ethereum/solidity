@@ -665,6 +665,44 @@ BOOST_AUTO_TEST_CASE(optimise_constant_to_codecopy)
 	BOOST_CHECK_EQUAL(numInstructions(m_optimizedBytecode, Instruction::CODECOPY), 4);
 }
 
+BOOST_AUTO_TEST_CASE(byte_access)
+{
+	char const* sourceCode = R"(
+		contract C
+		{
+			function f(bytes32 x) public returns (byte r)
+			{
+				assembly { r := and(byte(x, 31), 0xff) }
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(bytes32)", u256("0x1223344556677889900112233445566778899001122334455667788990011223"));
+}
+
+BOOST_AUTO_TEST_CASE(shift_optimizer_bug)
+{
+	char const* sourceCode = R"(
+		contract C
+		{
+			function f(uint x, uint y, uint z) public returns (uint)
+			{
+				return (x << y) << z;
+			}
+			function g(uint x, uint y, uint z) public returns (uint)
+			{
+				return (x >> y) > z;
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256,uint256,uint256)", 7, u256(-1), 5);
+	compareVersions("g(uint256,uint256,uint256)", 7, u256(-1), 5);
+	compareVersions("f(uint256,uint256,uint256)", 7, 128, 120);
+	compareVersions("g(uint256,uint256,uint256)", 0x71117, 2, 2);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
