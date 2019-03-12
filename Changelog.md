@@ -1,25 +1,27 @@
 ### 0.5.6 (unreleased)
 
+Important Bugfixes:
+ * Yul Optimizer: Fix visitation order bug for the structural simplifier.
+
 Language Features:
  * Allow calldata arrays with dynamically encoded base types with ABIEncoderV2.
  * Allow dynamically encoded calldata structs with ABIEncoderV2.
 
 
 Compiler Features:
- * Type Checker: Give better error messages for some literal conversions
  * Peephole Optimizer: Remove double ``iszero`` before ``jumpi``.
  * SMTChecker: Support enums without typecast.
  * SMTChecker: Support one-dimensional arrays.
- * Yul Optimizer: Add rule to remove empty default switch cases
- * Yul Optimizer: Add rule to remove empty cases if no default exists
- * Yul Optimizer: Add rule to replace a switch with no cases with pop(expression)
+ * Type Checker: Provide better error messages for some literal conversions.
+ * Yul Optimizer: Add rule to remove empty default switch cases.
+ * Yul Optimizer: Add rule to remove empty cases if no default exists.
+ * Yul Optimizer: Add rule to replace a switch with no cases with ``pop(expression)``.
 
 
 Bugfixes:
- * JSON ABI: Json description of library ABIs no longer contain functions with internal types like storage structs.
+ * JSON ABI: Json description of library ABIs no longer contains functions with internal types like storage structs.
  * SMTChecker: Fix internal compiler error when contract contains too large rational number.
- * Type system: Detect if a contract's base uses types that require the experimental abi encoder while the contract still uses the old encoder
- * Yul Optimizer: Fix visitation order bug for the structural simplifier.
+ * Type system: Detect if a contract's base uses types that require the experimental abi encoder while the contract still uses the old encoder.
 
 
 Build System:
