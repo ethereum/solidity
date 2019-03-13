@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Defensively pad memory for ``type(Contract).name`` to multiples of 32.
 
 
 Build System:
