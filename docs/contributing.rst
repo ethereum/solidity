@@ -404,4 +404,15 @@ Common Terms
 Code Examples
 -------------
 
-* Ensure that all code examples begin with a ``pragma`` version that spans the largest where the contract code is valid. For example ``pragma solidity >=0.4.0 <0.7.0;``.
+A CI process tests all code block formatted code examples that begin with ``pragma solidity``, ``contract``, ``library``
+or ``interface`` using the ``./test/cmdlineTests.sh`` script when you create a PR. If you are adding new code examples,
+ensure they work and pass tests before creating the PR.
+
+Ensure that all code examples begin with a ``pragma`` version that spans the largest where the contract code is valid.
+For example ``pragma solidity >=0.4.0 <0.7.0;``.
+
+Running Documentation Tests
+---------------------------
+
+Make sure your contributions pass our documentation tests by running ``./scripts/docs.sh`` that installs dependencies
+needed for documentation and checks for any problems such as broken links or syntax issues.
