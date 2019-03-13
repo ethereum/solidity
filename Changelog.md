@@ -12,6 +12,7 @@ Bugfixes:
 
 Build System:
  * Install scripts: Fix boost repository URL for CentOS 6.
+ * Soltest: Fix hex string update in soltest.
 
 
 ### 0.5.6 (2019-03-13)
@@ -45,6 +46,7 @@ Bugfixes:
 Build System:
  * Soltest: Add support for arrays in function signatures.
  * Soltest: Add support for struct arrays in function signatures.
+ * Soltest: Add support for left-aligned, unpadded hex string literals.
 
 ### 0.5.5 (2019-03-05)
 
@@ -86,7 +88,6 @@ Bugfixes:
 
 Build System:
  * Soltest: Add support for left-aligned, padded hex literals.
- * Soltest: Add support for left-aligned, unpadded hex string literals.
  * Soltest: Add support for right-aligned, padded boolean literals.
 
 ### 0.5.4 (2019-02-12)
