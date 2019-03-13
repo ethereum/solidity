@@ -59,6 +59,7 @@ void OptimiserSuite::run(
 	shared_ptr<Dialect> const& _dialect,
 	Block& _ast,
 	AsmAnalysisInfo const& _analysisInfo,
+	bool _optimizeStackAllocation,
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {
@@ -185,7 +186,7 @@ void OptimiserSuite::run(
 	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
 	FunctionGrouper{}(ast);
-	StackCompressor::run(_dialect, ast);
+	solAssert(StackCompressor::run(_dialect, ast, _optimizeStackAllocation), "");
 	BlockFlattener{}(ast);
 
 	VarNameCleaner{ast, *_dialect, reservedIdentifiers}(ast);

@@ -41,7 +41,7 @@ class StackCompressor
 public:
 	/// Try to remove local variables until the AST is compilable.
 	/// @returns true if it was successful.
-	static bool run(std::shared_ptr<Dialect> const& _dialect, Block& _ast);
+	static bool run(std::shared_ptr<Dialect> const& _dialect, Block& _ast, bool _optimizeStackAllocation);
 };
 
 }

@@ -39,7 +39,11 @@ namespace yul
 class CompilabilityChecker
 {
 public:
-	static std::map<YulString, int> run(std::shared_ptr<Dialect> _dialect, Block const& _ast);
+	static std::map<YulString, int> run(
+		std::shared_ptr<Dialect> _dialect,
+		Block const& _ast,
+		bool _optimizeStackAllocation
+	);
 };
 
 }

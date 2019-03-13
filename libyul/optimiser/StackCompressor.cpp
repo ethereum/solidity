@@ -74,15 +74,15 @@ void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, siz
 
 }
 
-bool StackCompressor::run(shared_ptr<Dialect> const& _dialect, Block& _ast)
+bool StackCompressor::run(shared_ptr<Dialect> const& _dialect, Block& _ast, bool _optimizeStackAllocation)
 {
 	yulAssert(
 		_ast.statements.size() > 0 && _ast.statements.at(0).type() == typeid(Block),
 		"Need to run the function grouper before the stack compressor."
 	);
-	for (size_t iterations = 0; iterations < 4; iterations++)
+	for (size_t iterations = 0; iterations < 6; iterations++)
 	{
-		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _ast);
+		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _ast, _optimizeStackAllocation);
 		if (stackSurplus.empty())
 			return true;
 
