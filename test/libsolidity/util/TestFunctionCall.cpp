@@ -124,13 +124,21 @@ string TestFunctionCall::formatBytesParameters(bytes const& _bytes, dev::solidit
 	stringstream resultStream;
 	if (_bytes.empty())
 		return {};
+	auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
+	size_t encodingSize = std::accumulate(_params.begin(), _params.end(), size_t{0}, sizeFold);
+
+	soltestAssert(
+		encodingSize == _bytes.size(),
+		"Encoding does not match byte range: the call returned " +
+		to_string(_bytes.size()) + " bytes, but " +
+		to_string(encodingSize) + " bytes were expected."
+	);
+
 	auto it = _bytes.begin();
 	for (auto const& param: _params)
 	{
 		long offset = static_cast<long>(param.abiType.size);
 		auto offsetIter = it + offset;
-		soltestAssert(offsetIter <= _bytes.end(), "Byte range can not be extended past the end of given bytes.");
-
 		bytes byteRange{it, offsetIter};
 		switch (param.abiType.type)
 		{
@@ -176,7 +184,6 @@ string TestFunctionCall::formatBytesParameters(bytes const& _bytes, dev::solidit
 		if (it != _bytes.end() && !(param.abiType.type == ABIType::None))
 			resultStream << ", ";
 	}
-	soltestAssert(it == _bytes.end(), "Parameter encoding too short for the given byte range.");
 	return resultStream.str();
 }
 
