@@ -2621,43 +2621,6 @@ BOOST_AUTO_TEST_CASE(packed_ripemd160)
 	testContractAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
-BOOST_AUTO_TEST_CASE(ecrecover)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function a(bytes32 h, uint8 v, bytes32 r, bytes32 s) public returns (address addr) {
-				return ecrecover(h, v, r, s);
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	u256 h("0x18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c");
-	uint8_t v = 28;
-	u256 r("0x73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75f");
-	u256 s("0xeeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549");
-	u160 addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-	ABI_CHECK(callContractFunction("a(bytes32,uint8,bytes32,bytes32)", h, v, r, s), encodeArgs(addr));
-}
-
-BOOST_AUTO_TEST_CASE(ecrecover_abiV2)
-{
-	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
-		contract test {
-			function a(bytes32 h, uint8 v, bytes32 r, bytes32 s) public returns (address addr) {
-				return ecrecover(h, v, r, s);
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	u256 h("0x18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c");
-	uint8_t v = 28;
-	u256 r("0x73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75f");
-	u256 s("0xeeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549");
-	u160 addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-	ABI_CHECK(callContractFunction("a(bytes32,uint8,bytes32,bytes32)", h, v, r, s), encodeArgs(addr));
-}
-
 BOOST_AUTO_TEST_CASE(inter_contract_calls)
 {
 	char const* sourceCode = R"(
@@ -11412,69 +11375,6 @@ BOOST_AUTO_TEST_CASE(mutex)
 	ABI_CHECK(callContractFunction("setProtected(bool)", false), encodeArgs());
 	ABI_CHECK(callContractFunction("attack()"), encodeArgs(u256(460)));
 	BOOST_CHECK_EQUAL(balanceAt(fund), 460);
-}
-
-BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input)
-{
-	// ecrecover should return zero for malformed input
-	// (v should be 27 or 28, not 1)
-	// Note that the precompile does not return zero but returns nothing.
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (address) {
-				return ecrecover(bytes32(uint(-1)), 1, bytes32(uint(2)), bytes32(uint(3)));
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0)));
-}
-
-BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input_proper)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (address) {
-				return recover(
-					0x77e5189111eb6557e8a637b27ef8fbb15bc61d61c2f00cc48878f3a296e5e0ca,
-					0, // invalid v value
-					0x6944c77849b18048f6abe0db8084b0d0d0689cdddb53d2671c36967b58691ad4,
-					0xef4f06ba4f78319baafd0424365777241af4dfd3da840471b4b4b087b7750d0d,
-					0x000000000000000000000000ca35b7d915458ef540ade6068dfe2f44e8fa733c,
-					0x000000000000000000000000ca35b7d915458ef540ade6068dfe2f44e8fa733c
-				);
-			}
-			function recover(bytes32 hash, uint8 v, bytes32 r, bytes32 s, uint blockExpired, bytes32 salt)
-				public returns (address)
-			{
-				require(hash == keccak256(abi.encodePacked(blockExpired, salt)));
-				return ecrecover(hash, v, r, s);
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0)));
-}
-
-BOOST_AUTO_TEST_CASE(failing_ecrecover_invalid_input_asm)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (address) {
-				assembly {
-					mstore(mload(0x40), 0xca35b7d915458ef540ade6068dfe2f44e8fa733c)
-				}
-				return ecrecover(
-					0x77e5189111eb6557e8a637b27ef8fbb15bc61d61c2f00cc48878f3a296e5e0ca,
-					0, // invalid v value
-					0x6944c77849b18048f6abe0db8084b0d0d0689cdddb53d2671c36967b58691ad4,
-					0xef4f06ba4f78319baafd0424365777241af4dfd3da840471b4b4b087b7750d0d
-				);
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(0)));
 }
 
 BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
