@@ -630,7 +630,9 @@
         "released": "2019-02-12"
     },
     "0.5.5": {
-        "bugs": [],
+        "bugs": [
+            "DoubleShiftSizeOverflow"
+        ],
         "released": "2019-03-05"
     }
 }
