@@ -391,6 +391,30 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		false
 	});
 
+
+	std::function<bool()> feasibilityFunction = [=]() {
+		if (B.d() > 256)
+			return false;
+		unsigned bAsUint = static_cast<unsigned>(B.d());
+		return (A.d() & (u256(-1) >> bAsUint)) == (u256(-1) >> bAsUint);
+	};
+
+	rules.push_back({
+		// AND(A, SHR(B, X)) -> A & ((2^256-1) >> B) == ((2^256-1) >> B)
+		{Instruction::AND, {A, {Instruction::SHR, {B, X}}}},
+		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		false,
+		feasibilityFunction
+	});
+
+	rules.push_back({
+		// AND(SHR(B, X), A) -> ((2^256-1) >> B) & A == ((2^256-1) >> B)
+		{Instruction::AND, {{Instruction::SHR, {B, X}}, A}},
+		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		false,
+		feasibilityFunction
+	});
+
 	return rules;
 }
 
