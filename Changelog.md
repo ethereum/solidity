@@ -11,6 +11,7 @@ Compiler Features:
 
 Bugfixes:
  * Code Generator: Defensively pad memory for ``type(Contract).name`` to multiples of 32.
+ * Yul Optimizer: Properly determine whether a variable can be eliminated during stack compression pass.
 
 
 Build System:
