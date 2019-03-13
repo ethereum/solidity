@@ -336,12 +336,12 @@ The following is the order of precedence for operators, listed in order of evalu
 | *13*       | Logical OR                          | ``||``                                     |
 +------------+-------------------------------------+--------------------------------------------+
 | *14*       | Ternary operator                    | ``<conditional> ? <if-true> : <if-false>`` |
-+------------+-------------------------------------+--------------------------------------------+
-| *15*       | Assignment operators                | ``=``, ``|=``, ``^=``, ``&=``, ``<<=``,    |
++            +-------------------------------------+--------------------------------------------+
+|            | Assignment operators                | ``=``, ``|=``, ``^=``, ``&=``, ``<<=``,    |
 |            |                                     | ``>>=``, ``+=``, ``-=``, ``*=``, ``/=``,   |
 |            |                                     | ``%=``                                     |
 +------------+-------------------------------------+--------------------------------------------+
-| *16*       | Comma operator                      | ``,``                                      |
+| *15*       | Comma operator                      | ``,``                                      |
 +------------+-------------------------------------+--------------------------------------------+
 
 .. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
