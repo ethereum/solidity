@@ -11,6 +11,7 @@ Bugfixes:
 
 
 Build System:
+ * Install scripts: Fix boost repository URL for CentOS 6.
 
 
 ### 0.5.6 (2019-03-13)

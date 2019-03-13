@@ -353,6 +353,7 @@ case $(uname -s) in
 # needed, but some tweaking/improvements can definitely happen
 #------------------------------------------------------------------------------
             CentOS*)
+                echo "Attention: CentOS 7 is currently not supported!";
                 read -p "This script will heavily modify your system in order to allow for compilation of Solidity. Are you sure? [Y/N]" -n 1 -r
                 if [[ $REPLY =~ ^[Yy]$ ]]; then
                     # Make Sure we have the EPEL repos
@@ -376,7 +377,7 @@ case $(uname -s) in
 
                     # Get latest boost thanks to this guy: http://vicendominguez.blogspot.de/2014/04/boost-c-library-rpm-packages-for-centos.html
                     sudo yum -y remove boost-devel
-                    sudo wget http://repo.enetres.net/enetres.repo -O /etc/yum.repos.d/enetres.repo
+                    sudo wget https://bintray.com/vicendominguez/CentOS6/rpm -O /etc/yum.repos.d/bintray-vicendominguez-CentOS6.repo
                     sudo yum install boost-devel
                 else
                     echo "Aborted CentOS Solidity Dependency Installation";
