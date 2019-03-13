@@ -33,6 +33,7 @@
 
 #include <map>
 #include <memory>
+#include <type_traits>
 
 namespace yul
 {
@@ -94,7 +95,30 @@ struct LocationExtractor: boost::static_visitor<langutil::SourceLocation>
 /// Extracts the source location from an inline assembly node.
 template <class T> inline langutil::SourceLocation locationOf(T const& _node)
 {
+#if __cplusplus >= 201703L
+	if constexpr (std::is_same_v<T, Expression> || std::is_same_v<T, Statement>)
+		return boost::apply_visitor(LocationExtractor(), _node);
+	else
+		return _node.location;
+#else
+	return _node.location;
+#endif
+}
+
+#if __cplusplus < 201703L
+/// Extracts the source location from an inline assembly node of type Expression.
+template <>
+inline langutil::SourceLocation locationOf<Expression>(Expression const& _node)
+{
 	return boost::apply_visitor(LocationExtractor(), _node);
 }
+
+/// Extracts the source location from an inline assembly node of type Statement.
+template <>
+inline langutil::SourceLocation locationOf<Statement>(Statement const& _node)
+{
+	return boost::apply_visitor(LocationExtractor(), _node);
+}
+#endif
 
 }
