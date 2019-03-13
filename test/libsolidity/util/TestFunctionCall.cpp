@@ -164,6 +164,9 @@ string TestFunctionCall::formatBytesParameters(bytes const& _bytes, dev::solidit
 		case ABIType::Hex:
 			resultStream << toHex(byteRange, HexPrefix::Add);
 			break;
+		case ABIType::HexString:
+			resultStream << "hex\"" << toHex(byteRange) << "\"";
+			break;
 		case ABIType::Failure:
 			break;
 		case ABIType::None:

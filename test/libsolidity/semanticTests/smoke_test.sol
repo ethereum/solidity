@@ -17,6 +17,9 @@ contract C {
     function k(bytes32 b) public returns (bytes32) {
         return b;
     }
+    function s() public returns (uint256) {
+        return msg.data.length;
+    }
 }
 // ----
 // f() -> 2
@@ -25,3 +28,4 @@ contract C {
 // i() -> FAILURE
 // j(bool): true -> false
 // k(bytes32): 0x31 -> 0x31
+// s(): hex"4200ef" -> 7

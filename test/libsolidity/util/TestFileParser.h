@@ -60,6 +60,7 @@ namespace test
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
+	K(Hex, "hex", 0)               \
 	K(Boolean, "boolean", 0)       \
 	/* special keywords */         \
 	K(Left, "left", 0)             \
@@ -108,6 +109,7 @@ struct ABIType
 		SignedDec,
 		Boolean,
 		Hex,
+		HexString,
 		Failure,
 		None
 	};
@@ -384,6 +386,10 @@ private:
 	/// Tries to convert \param _literal to an unpadded `bytes`
 	/// representation of the hex literal. Throws if conversion fails.
 	bytes convertHexNumber(std::string const& _literal);
+
+	/// Tries to convert \param _literal to left-aligned, unpadded `bytes`
+	/// representation of the hex string literal. Throws if conversion fails.
+	bytes convertHexString(std::string const& _literal);
 
 	/// A scanner instance
 	Scanner m_scanner;
