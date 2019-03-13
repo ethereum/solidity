@@ -1,4 +1,4 @@
-### 0.5.6 (unreleased)
+### 0.5.6 (2019-03-13)
 
 Important Bugfixes:
  * Yul Optimizer: Fix visitation order bug for the structural simplifier.
