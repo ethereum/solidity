@@ -161,6 +161,14 @@ void ASTModifier::operator()(ForLoop& _for)
 	(*this)(_for.body);
 }
 
+void ASTModifier::operator()(Break&)
+{
+}
+
+void ASTModifier::operator()(Continue&)
+{
+}
+
 void ASTModifier::operator()(Block& _block)
 {
 	walkVector(_block.statements);

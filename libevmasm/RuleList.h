@@ -146,10 +146,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{{Instruction::SHR, {0, X}}, [=]{ return X; }, false},
 		{{Instruction::SHL, {X, 0}}, [=]{ return u256(0); }, true},
 		{{Instruction::SHR, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::LT, {X, 0}}, [=]{ return u256(0); }, true},
 		{{Instruction::GT, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}; }, false},
+		{{Instruction::LT, {0, X}}, [=]() -> Pattern { return {Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}; }, false},
 		{{Instruction::GT, {X, ~u256(0)}}, [=]{ return u256(0); }, true},
+		{{Instruction::LT, {~u256(0), X}}, [=]{ return u256(0); }, true},
 		{{Instruction::GT, {0, X}}, [=]{ return u256(0); }, true},
+		{{Instruction::LT, {X, 0}}, [=]{ return u256(0); }, true},
 		{{Instruction::AND, {{Instruction::BYTE, {X, Y}}, {u256(0xff)}}}, [=]() -> Pattern { return {Instruction::BYTE, {X, Y}}; }, false},
 		{{Instruction::BYTE, {X, 31}}, [=]() -> Pattern { return {Instruction::AND, {X, u256(0xff)}}; }, false}
 	};
@@ -349,14 +351,26 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	rules.push_back({
 		// SHL(B, SHL(A, X)) -> SHL(min(A+B, 256), X)
 		{Instruction::SHL, {{B}, {Instruction::SHL, {{A}, {X}}}}},
-		[=]() -> Pattern { return {Instruction::SHL, {std::min(A.d() + B.d(), u256(256)), X}}; },
+		[=]() -> Pattern {
+			bigint sum = bigint(A.d()) + B.d();
+			if (sum >= 256)
+				return {Instruction::AND, {X, u256(0)}};
+			else
+				return {Instruction::SHL, {u256(sum), X}};
+		},
 		false
 	});
 
 	rules.push_back({
 		// SHR(B, SHR(A, X)) -> SHR(min(A+B, 256), X)
 		{Instruction::SHR, {{B}, {Instruction::SHR, {{A}, {X}}}}},
-		[=]() -> Pattern { return {Instruction::SHR, {std::min(A.d() + B.d(), u256(256)), X}}; },
+		[=]() -> Pattern {
+			bigint sum = bigint(A.d()) + B.d();
+			if (sum >= 256)
+				return {Instruction::AND, {X, u256(0)}};
+			else
+				return {Instruction::SHR, {u256(sum), X}};
+		},
 		false
 	});
 

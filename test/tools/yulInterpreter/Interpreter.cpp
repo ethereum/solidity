@@ -105,10 +105,25 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 		visit(statement);
 	while (evaluate(*_forLoop.condition) != 0)
 	{
+		m_state.loopState = LoopState::Default;
 		(*this)(_forLoop.body);
+		if (m_state.loopState == LoopState::Break)
+			break;
+
 		(*this)(_forLoop.post);
 	}
+	m_state.loopState = LoopState::Default;
 	closeScope();
+}
+
+void Interpreter::operator()(Break const&)
+{
+	m_state.loopState = LoopState::Break;
+}
+
+void Interpreter::operator()(Continue const&)
+{
+	m_state.loopState = LoopState::Continue;
 }
 
 void Interpreter::operator()(Block const& _block)
@@ -122,7 +137,14 @@ void Interpreter::operator()(Block const& _block)
 			m_functions[funDef.name] = &funDef;
 			m_scopes.back().insert(funDef.name);
 		}
-	ASTWalker::operator()(_block);
+
+	for (auto const& statement: _block.statements)
+	{
+		visit(statement);
+		if (m_state.loopState != LoopState::Default)
+			break;
+	}
+
 	closeScope();
 }
 
@@ -155,20 +177,7 @@ void ExpressionEvaluator::operator()(Literal const& _literal)
 	static YulString const trueString("true");
 	static YulString const falseString("false");
 
-	switch (_literal.kind)
-	{
-	case LiteralKind::Boolean:
-		solAssert(_literal.value == trueString || _literal.value == falseString, "");
-		setValue(_literal.value == trueString ? 1 : 0);
-		break;
-	case LiteralKind::Number:
-		setValue(valueOfNumberLiteral(_literal));
-		break;
-	case LiteralKind::String:
-		solAssert(_literal.value.str().size() <= 32, "");
-		setValue(u256(h256(_literal.value.str(), h256::FromBinary, h256::AlignLeft)));
-		break;
-	}
+	setValue(valueOfLiteral(_literal));
 }
 
 void ExpressionEvaluator::operator()(Identifier const& _identifier)

@@ -1,3 +1,35 @@
+### 0.5.6 (2019-03-13)
+
+Important Bugfixes:
+ * Yul Optimizer: Fix visitation order bug for the structural simplifier.
+ * Optimizer: Fix overflow in optimization rule that simplifies double shift by constant.
+
+Language Features:
+ * Allow calldata arrays with dynamically encoded base types with ABIEncoderV2.
+ * Allow dynamically encoded calldata structs with ABIEncoderV2.
+
+
+Compiler Features:
+ * Optimizer: Add rules for ``lt``-comparisons with constants.
+ * Peephole Optimizer: Remove double ``iszero`` before ``jumpi``.
+ * SMTChecker: Support enums without typecast.
+ * SMTChecker: Support one-dimensional arrays.
+ * Type Checker: Provide better error messages for some literal conversions.
+ * Yul Optimizer: Add rule to remove empty default switch cases.
+ * Yul Optimizer: Add rule to remove empty cases if no default exists.
+ * Yul Optimizer: Add rule to replace a switch with no cases with ``pop(expression)``.
+
+
+Bugfixes:
+ * JSON ABI: Json description of library ABIs no longer contains functions with internal types like storage structs.
+ * SMTChecker: Fix internal compiler error when contract contains too large rational number.
+ * Type system: Detect if a contract's base uses types that require the experimental abi encoder while the contract still uses the old encoder.
+
+
+Build System:
+ * Soltest: Add support for arrays in function signatures.
+ * Soltest: Add support for struct arrays in function signatures.
+
 ### 0.5.5 (2019-03-05)
 
 Language Features:
@@ -7,10 +39,12 @@ Language Features:
 
 Compiler Features:
  * Support ``petersburg`` as ``evmVersion`` and set as default.
+ * Commandline Interface: Option to activate the experimental yul optimizer using ``-optimize-yul``.
  * Inline Assembly: Consider ``extcodehash`` as part of Constantinople.
  * Inline Assembly: Instructions unavailable to the currently configured EVM are errors now.
  * SMTChecker: Do not report underflow/overflow if they always revert. This removes false positives when using ``SafeMath``.
  * Standard JSON Interface: Allow retrieving metadata without triggering bytecode generation.
+ * Standard JSON Interface: Provide fine-grained control over the optimizer via the settings.
  * Static Analyzer: Warn about expressions with custom types when they have no effect.
  * Optimizer: Add new rules with constants including ``LT``, ``GT``, ``AND`` and ``BYTE``.
  * Optimizer: Add rule for shifts with constants for Constantinople.
@@ -36,6 +70,7 @@ Bugfixes:
 
 Build System:
  * Soltest: Add support for left-aligned, padded hex literals.
+ * Soltest: Add support for left-aligned, unpadded hex string literals.
  * Soltest: Add support for right-aligned, padded boolean literals.
 
 ### 0.5.4 (2019-02-12)

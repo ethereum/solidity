@@ -374,6 +374,9 @@ void SMTChecker::checkOverflow(OverflowTarget& _target)
 
 void SMTChecker::endVisit(UnaryOperation const& _op)
 {
+	if (_op.annotation().type->category() == Type::Category::RationalNumber)
+		return;
+
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
@@ -431,8 +434,21 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	}
 }
 
+bool SMTChecker::visit(UnaryOperation const& _op)
+{
+	return !shortcutRationalNumber(_op);
+}
+
+bool SMTChecker::visit(BinaryOperation const& _op)
+{
+	return !shortcutRationalNumber(_op);
+}
+
 void SMTChecker::endVisit(BinaryOperation const& _op)
 {
+	if (_op.annotation().type->category() == Type::Category::RationalNumber)
+		return;
+
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))
@@ -533,13 +549,6 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 	setUnknownValue(*symbolicVar);
 	if (index > 0)
 		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
-}
-
-void SMTChecker::eraseArrayKnowledge()
-{
-	for (auto const& var: m_variables)
-		if (var.first->annotation().type->category() == Type::Category::Mapping)
-			newValue(*var.first);
 }
 
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
@@ -698,17 +707,26 @@ void SMTChecker::endVisit(Literal const& _literal)
 	solAssert(_literal.annotation().type, "Expected type for AST node");
 	Type const& type = *_literal.annotation().type;
 	if (isNumber(type.category()))
-
 		defineExpr(_literal, smt::Expression(type.literalValue(&_literal)));
 	else if (isBool(type.category()))
 		defineExpr(_literal, smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else
+	{
+		if (type.category() == Type::Category::StringLiteral)
+		{
+			auto stringType = make_shared<ArrayType>(DataLocation::Memory, true);
+			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type.get());
+			solAssert(stringLit, "");
+			auto result = newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
+			m_expressions.emplace(&_literal, result.second);
+		}
 		m_errorReporter.warning(
 			_literal.location(),
 			"Assertion checker does not yet support the type of this literal (" +
 			_literal.annotation().type->toString() +
 			")."
 		);
+	}
 }
 
 void SMTChecker::endVisit(Return const& _return)
@@ -734,9 +752,9 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 
 	auto const& exprType = _memberAccess.expression().annotation().type;
 	solAssert(exprType, "");
+	auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 	if (exprType->category() == Type::Category::Magic)
 	{
-		auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 		string accessedName;
 		if (identifier)
 			accessedName = identifier->name();
@@ -748,12 +766,23 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 		defineGlobalVariable(accessedName + "." + _memberAccess.memberName(), _memberAccess);
 		return false;
 	}
+	else if (exprType->category() == Type::Category::TypeType)
+	{
+		if (identifier && dynamic_cast<EnumDefinition const*>(identifier->annotation().referencedDeclaration))
+		{
+			auto enumType = dynamic_cast<EnumType const*>(accessType.get());
+			solAssert(enumType, "");
+			defineExpr(_memberAccess, enumType->memberValue(_memberAccess.memberName()));
+		}
+		return false;
+	}
 	else
 		m_errorReporter.warning(
 			_memberAccess.location(),
 			"Assertion checker does not yet support this expression."
 		);
 
+	createExpr(_memberAccess);
 	return true;
 }
 
@@ -796,7 +825,6 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 void SMTChecker::arrayAssignment()
 {
 	m_arrayAssignmentHappened = true;
-	eraseArrayKnowledge();
 }
 
 void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
@@ -806,12 +834,48 @@ void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
 	{
 		auto const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
 		solAssert(knownVariable(varDecl), "");
+
+		if (varDecl.hasReferenceOrMappingType())
+			resetVariables([&](VariableDeclaration const& _var) {
+				if (_var == varDecl)
+					return false;
+				TypePointer prefix = _var.type();
+				TypePointer originalType = typeWithoutPointer(varDecl.type());
+				while (
+					prefix->category() == Type::Category::Mapping ||
+					prefix->category() == Type::Category::Array
+				)
+				{
+					if (*originalType == *typeWithoutPointer(prefix))
+						return true;
+					if (prefix->category() == Type::Category::Mapping)
+					{
+						auto mapPrefix = dynamic_cast<MappingType const*>(prefix.get());
+						solAssert(mapPrefix, "");
+						prefix = mapPrefix->valueType();
+					}
+					else
+					{
+						auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix.get());
+						solAssert(arrayPrefix, "");
+						prefix = arrayPrefix->baseType();
+					}
+				}
+				return false;
+			});
+
 		smt::Expression store = smt::Expression::store(
 			m_variables[&varDecl]->currentValue(),
 			expr(*indexAccess.indexExpression()),
 			expr(_assignment.rightHandSide())
 		);
 		m_interface->addAssertion(newValue(varDecl) == store);
+		// Update the SMT select value after the assignment,
+		// necessary for sound models.
+		defineExpr(indexAccess, smt::Expression::select(
+			m_variables[&varDecl]->currentValue(),
+			expr(*indexAccess.indexExpression())
+		));
 	}
 	else if (dynamic_cast<IndexAccess const*>(&indexAccess.baseExpression()))
 		m_errorReporter.warning(
@@ -858,6 +922,21 @@ void SMTChecker::defineGlobalFunction(string const& _name, Expression const& _ex
 				"Assertion checker does not yet support the type of this function."
 			);
 	}
+}
+
+bool SMTChecker::shortcutRationalNumber(Expression const& _expr)
+{
+	if (_expr.annotation().type->category() == Type::Category::RationalNumber)
+	{
+		auto rationalType = dynamic_cast<RationalNumberType const*>(_expr.annotation().type.get());
+		solAssert(rationalType, "");
+		if (rationalType->isNegative())
+			defineExpr(_expr, smt::Expression(u2s(rationalType->literalValue(nullptr))));
+		else
+			defineExpr(_expr, smt::Expression(rationalType->literalValue(nullptr)));
+		return true;
+	}
+	return false;
 }
 
 void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
@@ -1308,6 +1387,13 @@ void SMTChecker::resetVariables(function<bool(VariableDeclaration const&)> const
 		if (_filter(*_variable.first))
 			this->resetVariable(*_variable.first);
 	});
+}
+
+TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
+{
+	if (auto refType = dynamic_cast<ReferenceType const*>(_type.get()))
+		return ReferenceType::copyForLocationIfReference(refType->location(), _type);
+	return _type;
 }
 
 void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)

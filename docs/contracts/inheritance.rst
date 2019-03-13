@@ -23,7 +23,7 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity ^0.5.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -95,7 +95,7 @@ Note that above, we call ``mortal.kill()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -124,7 +124,7 @@ derived override, but this function will bypass
 ``Base1.kill``, basically because it does not even know about
 ``Base1``.  The way around this is to use ``super``::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -188,7 +188,7 @@ equivalent to ``constructor() public {}``. For example:
 
 ::
 
-    pragma solidity ^0.5.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract A {
         uint public a;
@@ -218,7 +218,7 @@ The constructors of all the base contracts will be called following the
 linearization rules explained below. If the base constructors have arguments,
 derived contracts need to specify all of them. This can be done in two ways::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract Base {
         uint x;
@@ -277,7 +277,7 @@ error "Linearization of inheritance graph impossible".
 
 ::
 
-    pragma solidity >=0.4.0 <0.6.0;
+    pragma solidity >=0.4.0 <0.7.0;
 
     contract X {}
     contract A is X {}

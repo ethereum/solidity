@@ -320,6 +320,153 @@ BOOST_AUTO_TEST_CASE(shadowing_builtins_with_alias)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(inheritance_abi_encoder_mismatch_1)
+{
+	CompilerStack c;
+	c.addSource("A.sol", R"(
+		pragma solidity >=0.0;
+		pragma experimental ABIEncoderV2;
+
+		contract A
+		{
+			struct S { uint a; }
+			S public s;
+			function f(S memory _s) returns (S memory,S memory) { }
+		}
+	)");
+
+	c.addSource("B.sol", R"(
+		pragma solidity >=0.0;
+		pragma experimental ABIEncoderV2;
+
+		import "./A.sol";
+		contract B is A { }
+	)");
+
+	c.addSource("C.sol", R"(
+		pragma solidity >=0.0;
+
+		import "./B.sol";
+		contract C is B { }
+	)");
+
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	BOOST_CHECK(!c.compile());
+
+	int typeErrors = 0;
+
+	// Sometimes we get the prerelease warning, sometimes not.
+	for (auto const& e: c.errors())
+	{
+		if (e->type() != langutil::Error::Type::TypeError)
+			continue;
+
+		typeErrors++;
+
+		string const* msg = e->comment();
+		BOOST_REQUIRE(msg);
+		BOOST_CHECK_EQUAL(*msg, std::string("Contract \"C\" does not use the new experimental ABI encoder but wants to inherit from a contract which uses types that require it. Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."));
+	}
+	BOOST_CHECK_EQUAL(typeErrors, 1);
+}
+
+BOOST_AUTO_TEST_CASE(inheritance_abi_encoder_mismatch_2)
+{
+	CompilerStack c;
+	c.addSource("A.sol", R"(
+		pragma solidity >=0.0;
+		pragma experimental ABIEncoderV2;
+
+		contract A
+		{
+			struct S { uint a; }
+			S public s;
+			function f(S memory _s) returns (S memory,S memory) { }
+		}
+	)");
+
+	c.addSource("B.sol", R"(
+		pragma solidity >=0.0;
+
+		import "./A.sol";
+		contract B is A { }
+	)");
+
+	c.addSource("C.sol", R"(
+		pragma solidity >=0.0;
+
+		import "./B.sol";
+		contract C is B { }
+	)");
+
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	BOOST_CHECK(!c.compile());
+
+	int typeErrors = 0;
+
+	// Sometimes we get the prerelease warning, sometimes not.
+	for (auto const& e: c.errors())
+	{
+		if (e->type() != langutil::Error::Type::TypeError)
+			continue;
+
+		typeErrors++;
+
+		string const* msg = e->comment();
+		BOOST_REQUIRE(msg);
+		BOOST_CHECK_EQUAL(*msg, std::string("Contract \"B\" does not use the new experimental ABI encoder but wants to inherit from a contract which uses types that require it. Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."));
+	}
+	BOOST_CHECK_EQUAL(typeErrors, 1);
+}
+
+BOOST_AUTO_TEST_CASE(inheritance_abi_encoder_match)
+{
+	CompilerStack c;
+	c.addSource("A.sol", R"(
+		pragma solidity >=0.0;
+		pragma experimental ABIEncoderV2;
+
+		contract A
+		{
+			struct S { uint a; }
+			S public s;
+			function f(S memory _s) public returns (S memory,S memory) { }
+		}
+	)");
+
+	c.addSource("B.sol", R"(
+		pragma solidity >=0.0;
+		pragma experimental ABIEncoderV2;
+
+		import "./A.sol";
+		contract B is A { }
+	)");
+
+	c.addSource("C.sol", R"(
+		pragma solidity >=0.0;
+		pragma experimental ABIEncoderV2;
+
+		import "./B.sol";
+		contract C is B { }
+	)");
+
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	BOOST_CHECK(c.compile());
+
+	int typeErrors = 0;
+
+	// Sometimes we get the prerelease warning, sometimes not.
+	for (auto const& e: c.errors())
+	{
+		if (e->type() != langutil::Error::Type::TypeError)
+			continue;
+
+		typeErrors++;
+	}
+
+	BOOST_CHECK_EQUAL(typeErrors, 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -55,6 +55,8 @@ public:
 	bool statementEqual(Switch const& _lhs, Switch const& _rhs);
 	bool switchCaseEqual(Case const& _lhs, Case const& _rhs);
 	bool statementEqual(ForLoop const& _lhs, ForLoop const& _rhs);
+	bool statementEqual(Break const&, Break const&) { return true; }
+	bool statementEqual(Continue const&, Continue const&) { return true; }
 	bool statementEqual(Block const& _lhs, Block const& _rhs);
 private:
 	bool statementEqual(Instruction const& _lhs, Instruction const& _rhs);

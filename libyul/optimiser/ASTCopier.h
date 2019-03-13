@@ -58,6 +58,8 @@ public:
 	virtual Statement operator()(Switch const& _switch) = 0;
 	virtual Statement operator()(FunctionDefinition const&) = 0;
 	virtual Statement operator()(ForLoop const&) = 0;
+	virtual Statement operator()(Break const&) = 0;
+	virtual Statement operator()(Continue const&) = 0;
 	virtual Statement operator()(Block const& _block) = 0;
 };
 
@@ -83,6 +85,8 @@ public:
 	Statement operator()(Switch const& _switch) override;
 	Statement operator()(FunctionDefinition const&) override;
 	Statement operator()(ForLoop const&) override;
+	Statement operator()(Break const&) override;
+	Statement operator()(Continue const&) override;
 	Statement operator()(Block const& _block) override;
 
 	virtual Expression translate(Expression const& _expression);

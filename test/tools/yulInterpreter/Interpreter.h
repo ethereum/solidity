@@ -39,6 +39,13 @@ class InterpreterTerminated: dev::Exception
 {
 };
 
+enum class LoopState
+{
+	Default,
+	Continue,
+	Break,
+};
+
 struct InterpreterState
 {
 	dev::bytes calldata;
@@ -65,6 +72,7 @@ struct InterpreterState
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
 	size_t maxTraceSize = 0;
+	LoopState loopState = LoopState::Default;
 };
 
 /**
@@ -90,6 +98,8 @@ public:
 	void operator()(Switch const& _switch) override;
 	void operator()(FunctionDefinition const&) override;
 	void operator()(ForLoop const&) override;
+	void operator()(Break const&) override;
+	void operator()(Continue const&) override;
 	void operator()(Block const& _block) override;
 
 	std::vector<std::string> const& trace() const { return m_state.trace; }

@@ -33,6 +33,45 @@ using namespace dev::solidity::test;
 using namespace std;
 using namespace soltest;
 
+namespace
+{
+	enum class DeclaredAlignment
+	{
+		Left,
+		Right,
+		None,
+	};
+
+	inline bytes alignLeft(bytes _bytes)
+	{
+		return std::move(_bytes) + bytes(32 - _bytes.size(), 0);
+	}
+
+	inline bytes alignRight(bytes _bytes)
+	{
+		return bytes(32 - _bytes.size(), 0) + std::move(_bytes);
+	}
+
+	inline bytes applyAlign(DeclaredAlignment _alignment, ABIType& _abiType, bytes _converted)
+	{
+		if (_alignment != DeclaredAlignment::None)
+			_abiType.alignDeclared = true;
+
+		switch (_alignment)
+		{
+		case DeclaredAlignment::Left:
+			_abiType.align = ABIType::AlignLeft;
+			return alignLeft(std::move(_converted));
+		case DeclaredAlignment::Right:
+			_abiType.align = ABIType::AlignRight;
+			return alignRight(std::move(_converted));
+		default:
+			_abiType.align = ABIType::AlignRight;
+			return alignRight(std::move(_converted));
+		}
+	}
+}
+
 vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 {
 	vector<FunctionCall> calls;
@@ -137,9 +176,16 @@ string TestFileParser::parseFunctionSignature()
 
 u256 TestFileParser::parseFunctionCallValue()
 {
-	u256 value = convertNumber(parseDecimalNumber());
-	expect(Token::Ether);
-	return value;
+	try
+	{
+		u256 value{parseDecimalNumber()};
+		expect(Token::Ether);
+		return value;
+	}
+	catch (std::exception const&)
+	{
+		throw Error(Error::Type::ParserError, "Ether value encoding invalid.");
+	}
 }
 
 FunctionCallArgs TestFileParser::parseFunctionCallArguments()
@@ -192,55 +238,90 @@ Parameter TestFileParser::parseParameter()
 
 tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 {
+	ABIType abiType{ABIType::None, ABIType::AlignNone, 0};
+	DeclaredAlignment alignment{DeclaredAlignment::None};
+	bytes result{toBigEndian(u256{0})};
+	string rawString;
+	bool isSigned = false;
+
+	if (accept(Token::Left, true))
+	{
+		rawString += formatToken(Token::Left);
+		expect(Token::LParen);
+		rawString += formatToken(Token::LParen);
+		alignment = DeclaredAlignment::Left;
+	}
+	if (accept(Token::Right, true))
+	{
+		rawString += formatToken(Token::Right);
+		expect(Token::LParen);
+		rawString += formatToken(Token::LParen);
+		alignment = DeclaredAlignment::Right;
+	}
+
 	try
 	{
-		u256 number{0};
-		ABIType abiType{ABIType::None, ABIType::AlignRight, 0};
-		string rawString;
-
-		if (accept(Token::Sub))
+		if (accept(Token::Sub, true))
 		{
-			abiType = ABIType{ABIType::SignedDec, ABIType::AlignRight, 32};
-			expect(Token::Sub);
 			rawString += formatToken(Token::Sub);
+			isSigned = true;
+		}
+		if (accept(Token::Boolean))
+		{
+			if (isSigned)
+				throw Error(Error::Type::ParserError, "Invalid boolean literal.");
+			abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
+			string parsed = parseBoolean();
+			rawString += parsed;
+			result = applyAlign(alignment, abiType, convertBoolean(parsed));
+		}
+		else if (accept(Token::HexNumber))
+		{
+			if (isSigned)
+				throw Error(Error::Type::ParserError, "Invalid hex number literal.");
+			abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
+			string parsed = parseHexNumber();
+			rawString += parsed;
+			result = applyAlign(alignment, abiType, convertHexNumber(parsed));
+		}
+		else if (accept(Token::Hex, true))
+		{
+			if (isSigned)
+				throw Error(Error::Type::ParserError, "Invalid hex string literal.");
+			if (alignment != DeclaredAlignment::None)
+				throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
+			string parsed = parseHexNumber();
+			rawString += parsed;
+			result = convertHexString(parsed);
+			abiType = ABIType{ABIType::HexString, ABIType::AlignNone, result.size()};
+		}
+		else if (accept(Token::Number))
+		{
+			auto type = isSigned ? ABIType::SignedDec : ABIType::UnsignedDec;
+			abiType = ABIType{type, ABIType::AlignRight, 32};
 			string parsed = parseDecimalNumber();
 			rawString += parsed;
-			number = convertNumber(parsed) * -1;
+			if (isSigned)
+				parsed = "-" + parsed;
+			result = applyAlign(alignment, abiType, convertNumber(parsed));
 		}
-		else
+		else if (accept(Token::Failure, true))
 		{
-			if (accept(Token::Boolean))
-			{
-				abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
-				string parsed = parseBoolean();
-				rawString += parsed;
-				return make_tuple(toBigEndian(u256{convertBoolean(parsed)}), abiType, rawString);
-			}
-			else if (accept(Token::HexNumber))
-			{
-				abiType = ABIType{ABIType::Hex, ABIType::AlignLeft, 32};
-				string parsed = parseHexNumber();
-				rawString += parsed;
-				return make_tuple(convertHexNumber(parsed), abiType, rawString);
-			}
-			else if (accept(Token::Number))
-			{
-				abiType = ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
-				string parsed = parseDecimalNumber();
-				rawString += parsed;
-				number = convertNumber(parsed);
-			}
-			else if (accept(Token::Failure, true))
-			{
-				abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
-				return make_tuple(bytes{}, abiType, rawString);
-			}
+			if (isSigned)
+				throw Error(Error::Type::ParserError, "Invalid failure literal.");
+			abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
+			result = bytes{};
 		}
-		return make_tuple(toBigEndian(number), abiType, rawString);
+		if (alignment != DeclaredAlignment::None)
+		{
+			expect(Token::RParen);
+			rawString += formatToken(Token::RParen);
+		}
+		return make_tuple(result, abiType, rawString);
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Number encoding invalid.");
+		throw Error(Error::Type::ParserError, "Literal encoding invalid.");
 	}
 }
 
@@ -248,10 +329,24 @@ string TestFileParser::parseIdentifierOrTuple()
 {
 	string identOrTuple;
 
+	auto parseArrayDimensions = [&]()
+	{
+		while (accept(Token::LBrack))
+		{
+			identOrTuple += formatToken(Token::LBrack);
+			expect(Token::LBrack);
+			if (accept(Token::Number))
+				identOrTuple += parseDecimalNumber();
+			identOrTuple += formatToken(Token::RBrack);
+			expect(Token::RBrack);
+		}
+	};
+
 	if (accept(Token::Identifier))
 	{
 		identOrTuple = m_scanner.currentLiteral();
 		expect(Token::Identifier);
+		parseArrayDimensions();
 		return identOrTuple;
 	}
 	expect(Token::LParen);
@@ -266,6 +361,8 @@ string TestFileParser::parseIdentifierOrTuple()
 	}
 	expect(Token::RParen);
 	identOrTuple += formatToken(Token::RParen);
+
+	parseArrayDimensions();
 	return identOrTuple;
 }
 
@@ -298,21 +395,21 @@ string TestFileParser::parseHexNumber()
 	return literal;
 }
 
-bool TestFileParser::convertBoolean(string const& _literal)
+bytes TestFileParser::convertBoolean(string const& _literal)
 {
 	if (_literal == "true")
-		return true;
+		return bytes{true};
 	else if (_literal == "false")
-		return false;
+		return bytes{false};
 	else
 		throw Error(Error::Type::ParserError, "Boolean literal invalid.");
 }
 
-u256 TestFileParser::convertNumber(string const& _literal)
+bytes TestFileParser::convertNumber(string const& _literal)
 {
 	try
 	{
-		return u256{_literal};
+		return toCompactBigEndian(u256{_literal});
 	}
 	catch (std::exception const&)
 	{
@@ -330,13 +427,27 @@ bytes TestFileParser::convertHexNumber(string const& _literal)
 		}
 		else
 		{
-			bytes result = fromHex(_literal);
-			return result + bytes(32 - result.size(), 0);
+			return fromHex(_literal);
 		}
 	}
 	catch (std::exception const&)
 	{
 		throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
+	}
+}
+
+bytes TestFileParser::convertHexString(string const& _literal)
+{
+	try
+	{
+		if (_literal.size() % 2)
+			throw Error(Error::Type::ParserError, "Hex string encoding invalid.");
+		else
+			return fromHex(_literal);
+	}
+	catch (std::exception const&)
+	{
+		throw Error(Error::Type::ParserError, "Hex string encoding invalid.");
 	}
 }
 
@@ -350,6 +461,8 @@ void TestFileParser::Scanner::readStream(istream& _stream)
 
 void TestFileParser::Scanner::scanNextToken()
 {
+	using namespace langutil;
+
 	// Make code coverage happy.
 	assert(formatToken(Token::NUM_TOKENS) == "");
 
@@ -357,6 +470,9 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "true") return TokenDesc{Token::Boolean, _literal};
 		if (_literal == "false") return TokenDesc{Token::Boolean, _literal};
 		if (_literal == "ether") return TokenDesc{Token::Ether, _literal};
+		if (_literal == "left") return TokenDesc{Token::Left, _literal};
+		if (_literal == "right") return TokenDesc{Token::Right, _literal};
+		if (_literal == "hex") return TokenDesc{Token::Hex, _literal};
 		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
 		return TokenDesc{Token::Identifier, _literal};
 	};
@@ -402,13 +518,24 @@ void TestFileParser::Scanner::scanNextToken()
 		case ')':
 			token = selectToken(Token::RParen);
 			break;
+		case '[':
+			token = selectToken(Token::LBrack);
+			break;
+		case ']':
+			token = selectToken(Token::RBrack);
+			break;
+		case '\"':
+			advance();
+			token = selectToken(Token::HexNumber, scanHexNumber());
+			advance();
+			break;
 		default:
-			if (langutil::isIdentifierStart(current()))
+			if (isIdentifierStart(current()))
 			{
 				TokenDesc detectedToken = detectKeyword(scanIdentifierOrKeyword());
 				token = selectToken(detectedToken.first, detectedToken.second);
 			}
-			else if (langutil::isDecimalDigit(current()))
+			else if (isDecimalDigit(current()))
 			{
 				if (current() == '0' && peek() == 'x')
 				{
@@ -419,7 +546,7 @@ void TestFileParser::Scanner::scanNextToken()
 				else
 					token = selectToken(Token::Number, scanDecimalNumber());
 			}
-			else if (langutil::isWhiteSpace(current()))
+			else if (isWhiteSpace(current()))
 				token = selectToken(Token::Whitespace);
 			else if (isEndOfLine())
 				token = selectToken(Token::EOS);

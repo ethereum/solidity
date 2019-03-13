@@ -138,6 +138,15 @@ Statement ASTCopier::operator()(ForLoop const& _forLoop)
 		translate(_forLoop.body)
 	};
 }
+Statement ASTCopier::operator()(Break const& _break)
+{
+	return Break{ _break };
+}
+
+Statement ASTCopier::operator()(Continue const& _continue)
+{
+	return Continue{ _continue };
+}
 
 Statement ASTCopier::operator ()(Block const& _block)
 {

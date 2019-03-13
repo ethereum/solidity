@@ -45,10 +45,7 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-namespace
-{
-
-bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
+bool TypeChecker::typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
 {
 	if (_isLibraryCall && _type.dataStoredIn(DataLocation::Storage))
 		return true;
@@ -63,9 +60,6 @@ bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
 	}
 	return true;
 }
-
-}
-
 
 bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
 {
@@ -93,6 +87,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
+
 
 	return false;
 }
@@ -376,28 +371,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	};
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
-		TypePointer baseType = type(*var);
-		if (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
-		{
-			baseType = arrayType->baseType();
-			if (
-				!m_scope->isInterface() &&
-				baseType->dataStoredIn(DataLocation::CallData) &&
-				baseType->isDynamicallyEncoded()
-			)
-				m_errorReporter.typeError(var->location(), "Calldata arrays with dynamically encoded base types are not yet supported.");
-		}
-		while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType.get()))
-			baseType = arrayType->baseType();
-
-		if (
-			!m_scope->isInterface() &&
-			baseType->dataStoredIn(DataLocation::CallData)
-		)
-			if (auto const* structType = dynamic_cast<StructType const*>(baseType.get()))
-				if (structType->isDynamicallyEncoded())
-					m_errorReporter.typeError(var->location(), "Dynamically encoded calldata structs are not yet supported.");
-
 		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}

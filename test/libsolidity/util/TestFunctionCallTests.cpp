@@ -47,6 +47,43 @@ BOOST_AUTO_TEST_CASE(format_unsigned_singleline)
 	TestFunctionCall test{call};
 
 	BOOST_REQUIRE_EQUAL(test.format(), "// f(uint8): 1 -> 1");
+
+	test.setRawBytes(toBigEndian(u256{2}));
+	test.setFailure(false);
+
+	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(uint8): 1 -> 2");
+}
+
+BOOST_AUTO_TEST_CASE(format_unsigned_singleline_signed_encoding)
+{
+	bytes expectedBytes = toBigEndian(u256{1});
+	ABIType abiType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
+	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
+	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
+	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
+	FunctionCall call{"f(uint8)", 0, arguments, expectations};
+	TestFunctionCall test{call};
+
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(uint8): 1 -> 1");
+
+	test.setRawBytes(toBigEndian(u256{-1}));
+	test.setFailure(false);
+
+	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(uint8): 1 -> -1");
+}
+
+BOOST_AUTO_TEST_CASE(format_unsigned_multiline)
+{
+	bytes expectedBytes = toBigEndian(u256{1});
+	ABIType abiType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
+	Parameter result{expectedBytes, "1", abiType, FormatInfo{}};
+	FunctionCallExpectations expectations{vector<Parameter>{result}, false, string{}};
+	FunctionCallArgs arguments{vector<Parameter>{}, string{}};
+	FunctionCall call{"f(uint8)", 0, arguments, expectations};
+	call.displayMode = FunctionCall::DisplayMode::MultiLine;
+	TestFunctionCall test{call};
+
+	BOOST_REQUIRE_EQUAL(test.format(),	"// f(uint8)\n// -> 1");
 }
 
 BOOST_AUTO_TEST_CASE(format_multiple_unsigned_singleline)
@@ -73,23 +110,14 @@ BOOST_AUTO_TEST_CASE(format_signed_singleline)
 	TestFunctionCall test{call};
 
 	BOOST_REQUIRE_EQUAL(test.format(), "// f(int8): -1 -> -1");
+
+	test.setRawBytes(toBigEndian(u256{-2}));
+	test.setFailure(false);
+
+	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(int8): -1 -> -2");
 }
 
 BOOST_AUTO_TEST_CASE(format_hex_singleline)
-{
-	bytes result = fromHex("0x31");
-	bytes expectedBytes = result + bytes(32 - result.size(), 0);
-	ABIType abiType{ABIType::Hex, ABIType::AlignLeft, 32};
-	Parameter param{expectedBytes, "0x31", abiType, FormatInfo{}};
-	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
-	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(bytes32)", 0, arguments, expectations};
-	TestFunctionCall test{call};
-
-	BOOST_REQUIRE_EQUAL(test.format(), "// f(bytes32): 0x31 -> 0x31");
-}
-
-BOOST_AUTO_TEST_CASE(format_hex_right_align)
 {
 	bytes result = fromHex("0x31");
 	bytes expectedBytes = result + bytes(32 - result.size(), 0);
@@ -100,7 +128,27 @@ BOOST_AUTO_TEST_CASE(format_hex_right_align)
 	FunctionCall call{"f(bytes32)", 0, arguments, expectations};
 	TestFunctionCall test{call};
 
-	BOOST_REQUIRE_THROW(test.format(), runtime_error);
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(bytes32): 0x31 -> 0x31");
+
+	bytes actualResult = fromHex("0x32");
+	bytes actualBytes = actualResult + bytes(32 - actualResult.size(), 0);
+	test.setRawBytes(actualBytes);
+	test.setFailure(false);
+
+	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(bytes32): 0x31 -> 0x3200000000000000000000000000000000000000000000000000000000000000");
+}
+
+BOOST_AUTO_TEST_CASE(format_hex_string_singleline)
+{
+	bytes expectedBytes = fromHex("4200ef");
+	ABIType abiType{ABIType::HexString, ABIType::AlignLeft, 3};
+	Parameter param{expectedBytes, "hex\"4200ef\"", abiType, FormatInfo{}};
+	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
+	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
+	FunctionCall call{"f(string)", 0, arguments, expectations};
+	TestFunctionCall test{call};
+
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(string): hex\"4200ef\" -> hex\"4200ef\"");
 }
 
 BOOST_AUTO_TEST_CASE(format_bool_true_singleline)
@@ -114,6 +162,13 @@ BOOST_AUTO_TEST_CASE(format_bool_true_singleline)
 	TestFunctionCall test{call};
 
 	BOOST_REQUIRE_EQUAL(test.format(), "// f(bool): true -> true");
+
+	bytes actualResult = bytes{false};
+	bytes actualBytes = actualResult + bytes(32 - actualResult.size(), 0);
+	test.setRawBytes(actualBytes);
+	test.setFailure(false);
+
+	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(bool): true -> false");
 }
 
 BOOST_AUTO_TEST_CASE(format_bool_false_singleline)
@@ -129,48 +184,79 @@ BOOST_AUTO_TEST_CASE(format_bool_false_singleline)
 	BOOST_REQUIRE_EQUAL(test.format(), "// f(bool): false -> false");
 }
 
-BOOST_AUTO_TEST_CASE(format_bool_left_align_singleline)
+BOOST_AUTO_TEST_CASE(format_bool_left_singleline)
 {
-	bytes expectedBytes = toBigEndian(u256{true});
+	bytes expectedBytes = toBigEndian(u256{false});
 	ABIType abiType{ABIType::Boolean, ABIType::AlignLeft, 32};
-	Parameter param{expectedBytes, "true", abiType, FormatInfo{}};
+	Parameter param{expectedBytes, "left(false)", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
 	FunctionCall call{"f(bool)", 0, arguments, expectations};
 	TestFunctionCall test{call};
 
-	BOOST_REQUIRE_THROW(test.format(), runtime_error);
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(bool): left(false) -> left(false)");
+}
+
+BOOST_AUTO_TEST_CASE(format_hex_number_right_singleline)
+{
+	bytes result = fromHex("0x42");
+	bytes expectedBytes = result + bytes(32 - result.size(), 0);
+	ABIType abiType{ABIType::Hex, ABIType::AlignRight, 32};
+	Parameter param{expectedBytes, "right(0x42)", abiType, FormatInfo{}};
+	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
+	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
+	FunctionCall call{"f(bool)", 0, arguments, expectations};
+	TestFunctionCall test{call};
+
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(bool): right(0x42) -> right(0x42)");
 }
 
 BOOST_AUTO_TEST_CASE(format_empty_byte_range)
 {
 	bytes expectedBytes;
-	ABIType abiType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
+	ABIType abiType{ABIType::None, ABIType::AlignNone, 0};
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{}, string{}};
 	FunctionCall call{"f()", 0, arguments, expectations};
 	TestFunctionCall test{call};
 
-	BOOST_REQUIRE_EQUAL(test.format(), "// f() -> ");
+	BOOST_REQUIRE_EQUAL(test.format(), "// f() -> 1");
+}
+
+BOOST_AUTO_TEST_CASE(format_failure_singleline)
+{
+	bytes expectedBytes = toBigEndian(u256{1});
+	ABIType abiType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
+	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
+	FunctionCallExpectations expectations{vector<Parameter>{}, true, string{}};
+	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
+	FunctionCall call{"f(uint8)", 0, arguments, expectations};
+	TestFunctionCall test{call};
+
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(uint8): 1 -> FAILURE");
 }
 
 BOOST_AUTO_TEST_CASE(format_parameter_encoding_too_short)
 {
 	bytes expectedBytes = toBigEndian(u256{1}) + toBigEndian(u256{1});
-	ABIType abiType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
+	ABIType abiType{ABIType::UnsignedDec, ABIType::AlignRight, 20};
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param, param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param, param}, string{}};
 	FunctionCall call{"f(uint8, uint8)", 0, arguments, expectations};
 	TestFunctionCall test{call};
 
-	BOOST_REQUIRE_THROW(test.format(), runtime_error);
+	bytes resultBytes = toBigEndian(u256{1}) + toBigEndian(u256{2});
+	test.setRawBytes(resultBytes);
+	test.setFailure(false);
+
+	BOOST_REQUIRE_THROW(test.format("", true), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(format_byte_range_too_short)
 {
-	bytes expectedBytes{0};
+	bytes expectedBytes = toBigEndian(u256{1});
 	ABIType abiType{ABIType::UnsignedDec, ABIType::AlignRight, 32};
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param, param}, false, string{}};
@@ -178,7 +264,11 @@ BOOST_AUTO_TEST_CASE(format_byte_range_too_short)
 	FunctionCall call{"f(uint8, uint8)", 0, arguments, expectations};
 	TestFunctionCall test{call};
 
-	BOOST_REQUIRE_THROW(test.format(), runtime_error);
+	bytes resultBytes{0};
+	test.setRawBytes(resultBytes);
+	test.setFailure(false);
+
+	BOOST_REQUIRE_THROW(test.format("", true), runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

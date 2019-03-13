@@ -1424,20 +1424,28 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		}
 		case DataLocation::CallData:
 		{
-			solUnimplementedAssert(!type.isDynamicallyEncoded(), "");
-			m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
-			// For non-value types the calldata offset is returned directly.
-			if (_memberAccess.annotation().type->isValueType())
+			if (_memberAccess.annotation().type->isDynamicallyEncoded())
 			{
-				solAssert(_memberAccess.annotation().type->calldataEncodedSize(false) > 0, "");
-				CompilerUtils(m_context).loadFromMemoryDynamic(*_memberAccess.annotation().type, true, true, false);
+				m_context << Instruction::DUP1;
+				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
+				CompilerUtils(m_context).accessCalldataTail(*_memberAccess.annotation().type);
 			}
 			else
-				solAssert(
-					_memberAccess.annotation().type->category() == Type::Category::Array ||
-					_memberAccess.annotation().type->category() == Type::Category::Struct,
-					""
-				);
+			{
+				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
+				// For non-value types the calldata offset is returned directly.
+				if (_memberAccess.annotation().type->isValueType())
+				{
+					solAssert(_memberAccess.annotation().type->calldataEncodedSize() > 0, "");
+					CompilerUtils(m_context).loadFromMemoryDynamic(*_memberAccess.annotation().type, true, true, false);
+				}
+				else
+					solAssert(
+						_memberAccess.annotation().type->category() == Type::Category::Array ||
+						_memberAccess.annotation().type->category() == Type::Category::Struct,
+						""
+					);
+			}
 			break;
 		}
 		default:
@@ -1551,10 +1559,10 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		_indexAccess.indexExpression()->accept(*this);
 		utils().convertType(*_indexAccess.indexExpression()->annotation().type, IntegerType::uint256(), true);
 		// stack layout: <base_ref> [<length>] <index>
-		ArrayUtils(m_context).accessIndex(arrayType);
 		switch (arrayType.location())
 		{
 		case DataLocation::Storage:
+			ArrayUtils(m_context).accessIndex(arrayType);
 			if (arrayType.isByteArray())
 			{
 				solAssert(!arrayType.isString(), "Index access to string is not allowed.");
@@ -1564,18 +1572,36 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				setLValueToStorageItem(_indexAccess);
 			break;
 		case DataLocation::Memory:
+			ArrayUtils(m_context).accessIndex(arrayType);
 			setLValue<MemoryItem>(_indexAccess, *_indexAccess.annotation().type, !arrayType.isByteArray());
 			break;
 		case DataLocation::CallData:
-			//@todo if we implement this, the value in calldata has to be added to the base offset
-			solUnimplementedAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
-			if (arrayType.baseType()->isValueType())
-				CompilerUtils(m_context).loadFromMemoryDynamic(
-					*arrayType.baseType(),
-					true,
-					!arrayType.isByteArray(),
-					false
-				);
+			if (arrayType.baseType()->isDynamicallyEncoded())
+			{
+				// stack layout: <base_ref> <length> <index>
+				ArrayUtils(m_context).accessIndex(arrayType, true, true);
+				// stack layout: <base_ref> <ptr_to_tail>
+
+				CompilerUtils(m_context).accessCalldataTail(*arrayType.baseType());
+				// stack layout: <tail_ref> [length]
+			}
+			else
+			{
+				ArrayUtils(m_context).accessIndex(arrayType, true);
+				if (arrayType.baseType()->isValueType())
+					CompilerUtils(m_context).loadFromMemoryDynamic(
+						*arrayType.baseType(),
+						true,
+						!arrayType.isByteArray(),
+						false
+					);
+				else
+					solAssert(
+						arrayType.baseType()->category() == Type::Category::Struct ||
+						arrayType.baseType()->category() == Type::Category::Array,
+						"Invalid statically sized non-value base type on array access."
+					);
+			}
 			break;
 		}
 	}

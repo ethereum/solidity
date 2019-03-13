@@ -1030,7 +1030,7 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType, unsigned _stackDept
 	}
 }
 
-void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) const
+void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, bool _keepReference) const
 {
 	/// Stack: reference [length] index
 	DataLocation location = _arrayType.location();
@@ -1050,28 +1050,41 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 		m_context << Instruction::SWAP1 << Instruction::POP;
 
 	// stack: <base_ref> <index>
-	m_context << Instruction::SWAP1;
-	// stack: <index> <base_ref>
 	switch (location)
 	{
 	case DataLocation::Memory:
 	case DataLocation::CallData:
-		if (location == DataLocation::Memory && _arrayType.isDynamicallySized())
-			m_context << u256(32) << Instruction::ADD;
-
 		if (!_arrayType.isByteArray())
 		{
-			m_context << Instruction::SWAP1;
 			if (location == DataLocation::CallData)
-				m_context << _arrayType.baseType()->calldataEncodedSize();
+			{
+				if (_arrayType.baseType()->isDynamicallyEncoded())
+					m_context << u256(0x20);
+				else
+					m_context << _arrayType.baseType()->calldataEncodedSize();
+			}
 			else
 				m_context << u256(_arrayType.memoryHeadSize());
 			m_context << Instruction::MUL;
 		}
+		// stack: <base_ref> <index * size>
+
+		if (location == DataLocation::Memory && _arrayType.isDynamicallySized())
+			m_context << u256(32) << Instruction::ADD;
+
+		if (_keepReference)
+			m_context << Instruction::DUP2;
+
 		m_context << Instruction::ADD;
 		break;
 	case DataLocation::Storage:
 	{
+		if (_keepReference)
+			m_context << Instruction::DUP2;
+		else
+			m_context << Instruction::SWAP1;
+		// stack: [<base_ref>] <index> <base_ref>
+
 		eth::AssemblyItem endTag = m_context.newTag();
 		if (_arrayType.isByteArray())
 		{

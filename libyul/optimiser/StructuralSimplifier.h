@@ -28,10 +28,13 @@ namespace yul
  * - replace if with empty body with pop(condition)
  * - replace if with true condition with its body
  * - remove if with false condition
+ * - remove empty default switch case
+ * - remove empty switch case if no default case exists
+ * - replace switch with no cases with pop(expression)
  * - turn switch with single case into if
  * - replace switch with only default case with pop(expression) and body
  * - replace switch with const expr with matching case body
- * - remove for with false condition
+ * - replace for with false condition by its initialization part
  *
  * Prerequisites: Disambiguator
  *
@@ -49,6 +52,7 @@ private:
 	bool expressionAlwaysTrue(Expression const& _expression);
 	bool expressionAlwaysFalse(Expression const& _expression);
 	boost::optional<dev::u256> hasLiteralValue(Expression const& _expression) const;
+	boost::optional<std::vector<Statement>> reduceNoCaseSwitch(Switch& _switchStmt) const;
 };
 
 }

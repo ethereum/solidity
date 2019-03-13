@@ -59,15 +59,16 @@ This means that, for example ``~int256(0) == int256(-1)``.
 Shifts
 ^^^^^^
 
-The result of a shift operation has the type of the left operand. The
-expression ``x << y`` is equivalent to ``x * 2**y``, and, for positive integers,
-``x >> y`` is equivalent to ``x / 2**y``. For negative ``x``, ``x >> y``
-is equivalent to dividing by a power of ``2`` while rounding down (towards negative infinity).
-Shifting by a negative amount throws a runtime exception.
+The result of a shift operation has the type of the left operand, truncating the result to match the type.
+
+- For positive and negative ``x`` values, ``x << y`` is equivalent to ``x * 2**y``.
+- For positive ``x`` values,  ``x >> y`` is equivalent to ``x / 2**y``.
+- For negative ``x`` values, ``x >> y`` is equivalent to ``(x + 1) / 2**y - 1`` (which is the same as dividing ``x`` by ``2**y`` while rounding down towards negative infinity).
+- In all cases, shifting by a negative ``y`` throws a runtime exception.
 
 .. warning::
     Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
-    i.e. right shifts used rounding towards zero instead of rounding towards negative infinity.
+    i.e., right shifts used rounding up (towards zero) instead of rounding down (towards negative infinity).
 
 Addition, Subtraction and Multiplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -517,7 +518,7 @@ subsequent unsigned integer values starting from ``0``.
 
 ::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -621,7 +622,7 @@ Public (or external) functions have the following members:
 
 Example that shows how to use the members::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract Example {
       function f() public payable returns (bytes4) {
@@ -634,7 +635,7 @@ Example that shows how to use the members::
 
 Example that shows how to use internal function types::
 
-    pragma solidity >=0.4.16 <0.6.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     library ArrayUtils {
       // internal functions can be used in internal library functions because
@@ -685,7 +686,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract Oracle {
       struct Request {

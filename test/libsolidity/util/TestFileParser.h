@@ -60,8 +60,11 @@ namespace test
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
+	K(Hex, "hex", 0)               \
 	K(Boolean, "boolean", 0)       \
 	/* special keywords */         \
+	K(Left, "left", 0)             \
+	K(Right, "right", 0)           \
 	K(Failure, "FAILURE", 0)       \
 
 namespace soltest
@@ -106,18 +109,20 @@ struct ABIType
 		SignedDec,
 		Boolean,
 		Hex,
+		HexString,
 		Failure,
 		None
 	};
 	enum Align
 	{
 		AlignLeft,
-		AlignRight
+		AlignRight,
+		AlignNone,
 	};
-
 	Type type = ABIType::None;
 	Align align = ABIType::AlignRight;
 	size_t size = 0;
+	bool alignDeclared = false;
 };
 
 /**
@@ -370,18 +375,21 @@ private:
 	/// Parses the current hex number literal.
 	std::string parseHexNumber();
 
-	/// Coverts "true" to `true`, "false" to `false` and throws
-	/// otherwise.
-	bool convertBoolean(std::string const& _literal);
+	/// Tries to convert \param _literal to an unpadded `bytes`
+	/// representation of the boolean number literal. Throws if conversion fails.
+	bytes convertBoolean(std::string const& _literal);
 
-	/// Tries to convert \param _literal to right-aligned, padded `u256`
-	/// representation of the decimal number literal.
-	/// Throws if conversion fails.
-	u256 convertNumber(std::string const& _literal);
+	/// Tries to convert \param _literal to an unpadded `bytes`
+	/// representation of the decimal number literal. Throws if conversion fails.
+	bytes convertNumber(std::string const& _literal);
 
-	/// Tries to convert \param _literal to left-aligned, padded `bytes`
+	/// Tries to convert \param _literal to an unpadded `bytes`
 	/// representation of the hex literal. Throws if conversion fails.
 	bytes convertHexNumber(std::string const& _literal);
+
+	/// Tries to convert \param _literal to left-aligned, unpadded `bytes`
+	/// representation of the hex string literal. Throws if conversion fails.
+	bytes convertHexString(std::string const& _literal);
 
 	/// A scanner instance
 	Scanner m_scanner;

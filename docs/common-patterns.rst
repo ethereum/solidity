@@ -28,7 +28,7 @@ become the new richest.
 
 ::
 
-    pragma solidity ^0.5.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract WithdrawalContract {
         address public richest;
@@ -65,7 +65,7 @@ This is as opposed to the more intuitive sending pattern:
 
 ::
 
-    pragma solidity ^0.5.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract SendContract {
         address payable public richest;
@@ -130,7 +130,7 @@ restrictions highly readable.
 
 ::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -282,7 +282,7 @@ function finishes.
 
 ::
 
-    pragma solidity >=0.4.22 <0.6.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract StateMachine {
         enum Stages {

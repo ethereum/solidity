@@ -65,6 +65,13 @@ public:
 	/// Stack post:
 	void revertWithStringData(Type const& _argumentType);
 
+	/// Computes the absolute calldata offset of a tail given a base reference and the (absolute)
+	/// offset of the tail pointer. Performs bounds checks. If @a _type is a dynamically sized array it also
+	/// returns the array length on the stack.
+	/// Stack pre: base_ref tail_ptr
+	/// Stack post: tail_ref [length]
+	void accessCalldataTail(Type const& _type);
+
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
 	/// @param _type data type to load

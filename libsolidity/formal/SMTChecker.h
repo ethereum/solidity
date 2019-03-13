@@ -71,7 +71,9 @@ private:
 	void endVisit(VariableDeclarationStatement const& _node) override;
 	void endVisit(Assignment const& _node) override;
 	void endVisit(TupleExpression const& _node) override;
+	bool visit(UnaryOperation const& _node) override;
 	void endVisit(UnaryOperation const& _node) override;
+	bool visit(BinaryOperation const& _node) override;
 	void endVisit(BinaryOperation const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Identifier const& _node) override;
@@ -80,6 +82,9 @@ private:
 	bool visit(MemberAccess const& _node) override;
 	void endVisit(IndexAccess const& _node) override;
 
+	/// Do not visit subtree if node is a RationalNumber.
+	/// Symbolic _expr is the rational literal.
+	bool shortcutRationalNumber(Expression const& _expr);
 	void arithmeticOperation(BinaryOperation const& _op);
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
@@ -103,8 +108,6 @@ private:
 	void arrayAssignment();
 	/// Handles assignment to SMT array index.
 	void arrayIndexAssignment(Assignment const& _assignment);
-	/// Erases information about SMT arrays.
-	void eraseArrayKnowledge();
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -177,6 +180,9 @@ private:
 	void resetStorageReferences();
 	void resetVariables(std::vector<VariableDeclaration const*> _variables);
 	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
+	/// @returns the type without storage pointer information if it has it.
+	TypePointer typeWithoutPointer(TypePointer const& _type);
+
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.

@@ -1,6 +1,6 @@
 contract C {
     function f() public returns (uint) {
-        return 1;
+        return 2;
     }
     function g(uint x, uint y) public returns (uint) {
         return x - y;
@@ -8,18 +8,24 @@ contract C {
     function h() public payable returns (uint) {
         return f();
     }
-    function x(bytes32 b) public returns (bytes32) {
+    function i(bytes32 b) public returns (bytes32) {
         return b;
     }
-    function t(bool b) public returns (bool) {
+    function j(bool b) public returns (bool) {
         return !b;
+    }
+    function k(bytes32 b) public returns (bytes32) {
+        return b;
+    }
+    function s() public returns (uint256) {
+        return msg.data.length;
     }
 }
 // ----
-// f() -> 1
+// f() -> 2
 // g(uint256,uint256): 1, -2 -> 3
-// h(), 1 ether -> 1
-// j() -> FAILURE
-// i() # Does not exist. # -> FAILURE # Reverts. #
-// x(bytes32): 0x31 -> 0x31
-// t(bool): true -> false
+// h(), 1 ether -> 2
+// i() -> FAILURE
+// j(bool): true -> false
+// k(bytes32): 0x31 -> 0x31
+// s(): hex"4200ef" -> 7
