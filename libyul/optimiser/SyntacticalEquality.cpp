@@ -49,7 +49,7 @@ bool SyntacticallyEqual::operator()(Statement const& _lhs, Statement const& _rhs
 bool SyntacticallyEqual::expressionEqual(FunctionalInstruction const& _lhs, FunctionalInstruction const& _rhs)
 {
 	return
-		_lhs.instruction == _rhs.instruction &&
+		check(_lhs, _rhs, _lhs.instruction == _rhs.instruction) &&
 		containerEqual(_lhs.arguments, _rhs.arguments, [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool {
 			return (*this)(_lhsExpr, _rhsExpr);
 		});
@@ -68,24 +68,29 @@ bool SyntacticallyEqual::expressionEqual(Identifier const& _lhs, Identifier cons
 {
 	auto lhsIt = m_identifiersLHS.find(_lhs.name);
 	auto rhsIt = m_identifiersRHS.find(_rhs.name);
-	return
+	return check(
+		_lhs, _rhs,
 		(lhsIt == m_identifiersLHS.end() && rhsIt == m_identifiersRHS.end() && _lhs.name == _rhs.name) ||
-		(lhsIt != m_identifiersLHS.end() && rhsIt != m_identifiersRHS.end() && lhsIt->second == rhsIt->second);
+		(lhsIt != m_identifiersLHS.end() && rhsIt != m_identifiersRHS.end() && lhsIt->second == rhsIt->second)
+	);
 }
+
 bool SyntacticallyEqual::expressionEqual(Literal const& _lhs, Literal const& _rhs)
 {
-	if (_lhs.kind != _rhs.kind || _lhs.type != _rhs.type)
+	if (!check(_lhs, _rhs, _lhs.kind == _rhs.kind && _lhs.type == _rhs.type))
 		return false;
+
 	if (_lhs.kind == LiteralKind::Number)
-		return valueOfNumberLiteral(_lhs) == valueOfNumberLiteral(_rhs);
+		return check(_lhs, _rhs, valueOfNumberLiteral(_lhs) == valueOfNumberLiteral(_rhs));
 	else
-		return _lhs.value == _rhs.value;
+		return check(_lhs, _rhs, _lhs.value == _rhs.value);
 }
 
 bool SyntacticallyEqual::statementEqual(ExpressionStatement const& _lhs, ExpressionStatement const& _rhs)
 {
 	return (*this)(_lhs.expression, _rhs.expression);
 }
+
 bool SyntacticallyEqual::statementEqual(Assignment const& _lhs, Assignment const& _rhs)
 {
 	return containerEqual(

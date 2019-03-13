@@ -23,12 +23,15 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/YulString.h>
 
+#include <boost/variant.hpp>
+
+#include <functional>
 #include <map>
 #include <type_traits>
+#include <utility>
 
 namespace yul
 {
-
 
 /**
  * Component that can compare ASTs for equality on a syntactic basis.
@@ -39,6 +42,23 @@ namespace yul
 class SyntacticallyEqual
 {
 public:
+	using FailReportArgs = boost::variant<
+		std::pair<Expression, Expression>,
+		std::pair<Statement, Statement>
+	>;
+	using FailReporter = std::function<void(FailReportArgs)>;
+
+	FailReporter m_report;
+
+	template <typename Node>
+	bool check(Node const& a, Node const& b, bool result)
+	{
+		if (!result)
+			m_report(std::make_pair(a, b));
+
+		return result;
+	}
+
 	bool operator()(Expression const& _lhs, Expression const& _rhs);
 	bool operator()(Statement const& _lhs, Statement const& _rhs);
 
