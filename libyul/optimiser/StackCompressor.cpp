@@ -39,29 +39,87 @@ using namespace yul;
 namespace
 {
 
+/**
+ * Class that discovers all variables that can be fully eliminated by rematerialization,
+ * and the corresponding approximate costs.
+ */
+class RematCandidateSelector: public DataFlowAnalyzer
+{
+public:
+	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+
+	/// @returns a set of pairs of rematerialisation costs and variable to rematerialise.
+	/// Note that this set is sorted by cost.
+	set<pair<size_t, YulString>> candidates()
+	{
+		set<pair<size_t, YulString>> cand;
+		for (auto const& codeCost: m_expressionCodeCost)
+		{
+			size_t numRef = m_numReferences[codeCost.first];
+			cand.emplace(make_pair(codeCost.second * numRef, codeCost.first));
+		}
+		return cand;
+	}
+
+	using DataFlowAnalyzer::operator();
+	void operator()(VariableDeclaration& _varDecl) override
+	{
+		DataFlowAnalyzer::operator()(_varDecl);
+		if (_varDecl.variables.size() == 1)
+		{
+			YulString varName = _varDecl.variables.front().name;
+			if (m_value.count(varName))
+				m_expressionCodeCost[varName] = CodeCost::codeCost(*m_value[varName]);
+		}
+	}
+
+	void operator()(Assignment& _assignment) override
+	{
+		for (auto const& var: _assignment.variableNames)
+			rematImpossible(var.name);
+		DataFlowAnalyzer::operator()(_assignment);
+	}
+
+	// We use visit(Expression) because operator()(Identifier) would also
+	// get called on left-hand-sides of assignments.
+	void visit(Expression& _e) override
+	{
+		if (_e.type() == typeid(Identifier))
+		{
+			YulString name = boost::get<Identifier>(_e).name;
+			if (m_expressionCodeCost.count(name))
+			{
+				if (!m_value.count(name))
+					rematImpossible(name);
+				else
+					++m_numReferences[name];
+			}
+		}
+		DataFlowAnalyzer::visit(_e);
+	}
+
+	/// Remove the variable from the candidate set.
+	void rematImpossible(YulString _variable)
+	{
+		m_numReferences.erase(_variable);
+		m_expressionCodeCost.erase(_variable);
+	}
+
+	/// Candidate variables and the code cost of their value.
+	map<YulString, size_t> m_expressionCodeCost;
+	/// Number of references to each candidate variable.
+	map<YulString, size_t> m_numReferences;
+};
+
 template <typename ASTNode>
 void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, size_t _numVariables)
 {
-	SSAValueTracker ssaValues;
-	ssaValues(_node);
-
-	map<YulString, size_t> references = ReferencesCounter::countReferences(_node);
-
-	set<pair<size_t, YulString>> rematCosts;
-	for (auto const& ssa: ssaValues.values())
-	{
-		if (!MovableChecker{*_dialect, *ssa.second}.movable())
-			continue;
-		size_t numRef = references[ssa.first];
-		size_t cost = 0;
-		if (numRef > 1)
-			cost = CodeCost::codeCost(*ssa.second) * (numRef - 1);
-		rematCosts.insert(make_pair(cost, ssa.first));
-	}
+	RematCandidateSelector selector{*_dialect};
+	selector(_node);
 
 	// Select at most _numVariables
 	set<YulString> varsToEliminate;
-	for (auto const& costs: rematCosts)
+	for (auto const& costs: selector.candidates())
 	{
 		if (varsToEliminate.size() >= _numVariables)
 			break;
