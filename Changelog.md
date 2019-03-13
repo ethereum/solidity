@@ -10,6 +10,7 @@ Language Features:
 
 
 Compiler Features:
+ * Optimizer: Add rules for ``lt``-comparisons with constants.
  * Peephole Optimizer: Remove double ``iszero`` before ``jumpi``.
  * SMTChecker: Support enums without typecast.
  * SMTChecker: Support one-dimensional arrays.
