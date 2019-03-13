@@ -2,12 +2,12 @@
 ======= gas_test_dispatch_optimize/input.sol:Large =======
 Gas estimation:
 construction:
-   300 + 260400 = 260700
+   300 + 260000 = 260300
 external:
    a():	398
    b(uint256):	1105
    f0(uint256):	334
-   f1(uint256):	40892
+   f1(uint256):	40886
    f2(uint256):	20952
    f3(uint256):	21040
    f4(uint256):	21018
@@ -17,7 +17,7 @@ external:
    f8(uint256):	20820
    f9(uint256):	20842
    g0(uint256):	574
-   g1(uint256):	40604
+   g1(uint256):	40598
    g2(uint256):	20686
    g3(uint256):	20774
    g4(uint256):	20752
@@ -30,11 +30,11 @@ external:
 ======= gas_test_dispatch_optimize/input.sol:Medium =======
 Gas estimation:
 construction:
-   183 + 140800 = 140983
+   183 + 140400 = 140583
 external:
    a():	398
    b(uint256):	863
-   f1(uint256):	40672
+   f1(uint256):	40666
    f2(uint256):	20710
    f3(uint256):	20754
    g0(uint256):	332
@@ -45,9 +45,9 @@ external:
 ======= gas_test_dispatch_optimize/input.sol:Small =======
 Gas estimation:
 construction:
-   111 + 64000 = 64111
+   111 + 63600 = 63711
 external:
    fallback:	118
    a():	376
    b(uint256):	753
-   f1(uint256):	40606
+   f1(uint256):	40600
