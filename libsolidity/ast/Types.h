@@ -797,6 +797,7 @@ public:
 		return _inLibrary ? shared_from_this() : encodingType();
 	}
 
+	/// See documentation of m_super
 	bool isSuper() const { return m_super; }
 
 	// @returns true if and only if the contract has a payable fallback function
@@ -813,8 +814,7 @@ public:
 
 private:
 	ContractDefinition const& m_contract;
-	/// If true, it is the "super" type of the current contract, i.e. it contains only inherited
-	/// members.
+	/// If true, this is a special "super" type of m_contract containing only members that m_contract inherited
 	bool m_super = false;
 	/// Type of the constructor, @see constructorType. Lazily initialized.
 	mutable FunctionTypePointer m_constructorType;
