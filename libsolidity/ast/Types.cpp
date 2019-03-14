@@ -129,10 +129,10 @@ bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
 BoolResult fitsIntegerType(bigint const& _value, IntegerType const& _type)
 {
 	if (_value < 0 && !_type.isSigned())
-		return BoolResult{std::string("Cannot implicitly convert signed literal to unsigned type.")};
+		return BoolResult::err("Cannot implicitly convert signed literal to unsigned type.");
 
 	if (_type.minValue() > _value || _value > _type.maxValue())
-		return BoolResult{"Literal is too large to fit in " + _type.toString(false) + "."};
+		return BoolResult::err("Literal is too large to fit in " + _type.toString(false) + ".");
 
 	return true;
 }
@@ -535,7 +535,7 @@ TypeResult AddressType::unaryOperatorResult(Token _operator) const
 TypeResult AddressType::binaryOperatorResult(Token _operator, TypePointer const& _other) const
 {
 	if (!TokenTraits::isCompareOp(_operator))
-		return TypeResult{"Arithmetic operations on addresses are not supported. Convert to integer first before using them."};
+		return TypeResult::err("Arithmetic operations on addresses are not supported. Convert to integer first before using them.");
 
 	return Type::commonType(shared_from_this(), _other);
 }
@@ -638,7 +638,7 @@ TypeResult IntegerType::unaryOperatorResult(Token _operator) const
 		_operator == Token::Dec || _operator == Token::BitNot)
 		return TypeResult{shared_from_this()};
 	else
-		return TypeResult{""};
+		return TypeResult::err("");
 }
 
 bool IntegerType::operator==(Type const& _other) const
@@ -700,7 +700,7 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, TypePointer const&
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
 	{
 		if (Token::Exp == _operator && intType->isSigned())
-			return TypeResult{"Exponentiation is not allowed for signed integer types."};
+			return TypeResult::err("Exponentiation is not allowed for signed integer types.");
 	}
 	else if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
 		if (Token::Exp == _operator)
@@ -729,7 +729,7 @@ BoolResult FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) con
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
 		if (convertTo.fractionalDigits() < m_fractionalDigits)
-			return BoolResult{std::string("Too many fractional digits.")};
+			return BoolResult::err("Too many fractional digits.");
 		if (convertTo.numBits() < m_totalBits)
 			return false;
 		else
@@ -1145,7 +1145,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, TypePointer
 				uint32_t absExp = bigint(abs(exp)).convert_to<uint32_t>();
 
 				if (!fitsPrecisionExp(abs(m_value.numerator()), absExp) || !fitsPrecisionExp(abs(m_value.denominator()), absExp))
-					return TypeResult{"Precision of rational constants is limited to 4096 bits."};
+					return TypeResult::err("Precision of rational constants is limited to 4096 bits.");
 
 				static auto const optimizedPow = [](bigint const& _base, uint32_t _exponent) -> bigint {
 					if (_base == 1)
@@ -1226,7 +1226,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, TypePointer
 
 		// verify that numerator and denominator fit into 4096 bit after every operation
 		if (value.numerator() != 0 && max(mostSignificantBit(abs(value.numerator())), mostSignificantBit(abs(value.denominator()))) > 4096)
-			return TypeResult{"Precision of rational constants is limited to 4096 bits."};
+			return TypeResult::err("Precision of rational constants is limited to 4096 bits.");
 
 		return TypeResult(make_shared<RationalNumberType>(value));
 	}
