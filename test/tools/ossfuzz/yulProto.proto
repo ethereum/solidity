@@ -17,16 +17,9 @@
 
 syntax = "proto2";
 
-// VariableDeclaration =
-//    'let' TypedIdentifierList ( ':=' Expression )?
-// TypedIdentifierList = Identifier ':' TypeName ( ',' Identifier ':' TypeName )*
-// Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
-// IdentifierList = Identifier ( ',' Identifier)*
-// TypeName = Identifier | BuiltinTypeName
-// BuiltinTypeName = 'bool' | [us] ( '8' | '32' | '64' | '128' | '256' )
 message VarDecl {
   required int32 id = 1;
-  required Expression expr = 3;
+  required Expression expr = 2;
 }
 
 message TypedVarDecl {
@@ -53,7 +46,9 @@ message VarRef {
 }
 
 message Literal {
-  required int32 val = 1;
+  oneof literal_oneof {
+    uint64 intval = 1;
+  }
 }
 
 message TypedLiteral {
@@ -133,8 +128,6 @@ message IfStmt {
   required Block if_body = 2;
 }
 
-// add for loop
-// TODO: add block and scope for if
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl          = 1;
