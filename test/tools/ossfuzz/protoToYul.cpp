@@ -25,7 +25,16 @@ using namespace yul::test::yul_fuzzer;
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Literal const& _x)
 {
-	return _os << "(" << _x.val() << ")";
+	switch (_x.literal_oneof_case())
+	{
+		case Literal::kIntval:
+			_os << _x.intval();
+			break;
+		case Literal::LITERAL_ONEOF_NOT_SET:
+			_os << "1";
+			break;
+	}
+	return _os;
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, VarRef const& _x)
@@ -35,15 +44,25 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, VarRef const& _x)
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Expression const& _x)
 {
-	if (_x.has_varref())
-		return _os  << _x.varref();
-	else if (_x.has_cons())
-		return _os  << _x.cons();
-	else if (_x.has_binop())
-		return _os  << _x.binop();
-	else if (_x.has_unop())
-		return _os  << _x.unop();
-	return _os << "";
+	switch (_x.expr_oneof_case())
+	{
+		case Expression::kVarref:
+			_os  << _x.varref();
+			break;
+		case Expression::kCons:
+			_os  << _x.cons();
+			break;
+		case Expression::kBinop:
+			_os  << _x.binop();
+			break;
+		case Expression::kUnop:
+			_os  << _x.unop();
+			break;
+		case Expression::EXPR_ONEOF_NOT_SET:
+			_os << "1";
+			break;
+	}
+	return _os;
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, BinaryOp const& _x)
@@ -51,47 +70,46 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, BinaryOp const& _x)
 	switch (_x.op())
 	{
 		case BinaryOp::ADD:
-			_os << "add(";
+			_os << "add";
 			break;
 		case BinaryOp::SUB:
-			_os << "sub(";
+			_os << "sub";
 			break;
 		case BinaryOp::MUL:
-			_os << "mul(";
+			_os << "mul";
 			break;
 		case BinaryOp::DIV:
-			_os << "div(";
+			_os << "div";
 			break;
 		case BinaryOp::MOD:
-			_os << "mod(";
+			_os << "mod";
 			break;
 		case BinaryOp::XOR:
-			_os << "xor(";
+			_os << "xor";
 			break;
 		case BinaryOp::AND:
-			_os << "and(";
+			_os << "and";
 			break;
 		case BinaryOp::OR:
-			_os << "or(";
+			_os << "or";
 			break;
 		case BinaryOp::EQ:
-			_os << "eq(";
+			_os << "eq";
 			break;
 		case BinaryOp::LT:
-			_os << "lt(";
+			_os << "lt";
 			break;
 		case BinaryOp::GT:
-			_os << "gt(";
+			_os << "gt";
 			break;
 	}
-	return _os << _x.left() << "," << _x.right() << ")";
+	return _os << "(" << _x.left() << "," << _x.right() << ")";
 }
 
 // New var numbering starts from x_10 until x_16
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, VarDecl const& _x)
 {
-	_os << "let x_" << ((_x.id() % 7) + 10) << " := " << _x.expr() << "\n";
-	return _os;
+	return _os << "let x_" << ((_x.id() % 7) + 10) << " := " << _x.expr() << "\n";
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, TypedVarDecl const& _x)
@@ -141,20 +159,19 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, UnaryOp const& _x)
 	switch (_x.op())
 	{
 		case UnaryOp::NOT:
-			_os << "not(";
+			_os << "not";
 			break;
 		case UnaryOp::MLOAD:
-			_os << "mload(";
+			_os << "mload";
 			break;
 		case UnaryOp::SLOAD:
-			_os << "sload(";
+			_os << "sload";
 			break;
 		case UnaryOp::ISZERO:
-			_os << "iszero(";
+			_os << "iszero";
 			break;
 	}
-	_os  << _x.operand() << ")";
-	return _os;
+	return _os  << "(" << _x.operand() << ")";
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, AssignmentStatement const& _x)
@@ -165,10 +182,10 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, AssignmentStatement con
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, IfStmt const& _x)
 {
 	return _os <<
-	           "if " <<
-	           _x.cond() <<
-	           " " <<
-	           _x.if_body();
+			"if " <<
+			_x.cond() <<
+			" " <<
+			_x.if_body();
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, StoreFunc const& _x)
@@ -187,17 +204,27 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, StoreFunc const& _x)
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Statement const& _x)
 {
-	if (_x.has_decl())
-		return _os  << _x.decl();
-	else if (_x.has_assignment())
-		return _os  << _x.assignment();
-	else if (_x.has_ifstmt())
-		return _os  << _x.ifstmt();
-	else if (_x.has_storage_func())
-		return _os  << _x.storage_func();
-	else if (_x.has_blockstmt())
-		return _os << _x.blockstmt();
-	return _os << "";
+	switch (_x.stmt_oneof_case())
+	{
+		case Statement::kDecl:
+			_os  << _x.decl();
+			break;
+		case Statement::kAssignment:
+			_os  << _x.assignment();
+			break;
+		case Statement::kIfstmt:
+			_os  << _x.ifstmt();
+			break;
+		case Statement::kStorageFunc:
+			_os  << _x.storage_func();
+			break;
+		case Statement::kBlockstmt:
+			_os << _x.blockstmt();
+			break;
+		case Statement::STMT_ONEOF_NOT_SET:
+			break;
+	}
+	return _os;
 }
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Block const& _x)
@@ -208,7 +235,10 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Block const& _x)
 		for (auto const& st: _x.statements())
 			_os  << st;
 		_os << "}\n";
-
+	}
+	else
+	{
+		_os << "{}\n";
 	}
 	return _os;
 }
