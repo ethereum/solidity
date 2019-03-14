@@ -231,11 +231,11 @@
 // ----
 // fullSuite
 // {
-//     let _1 := 0x80
-//     mstore(_1, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
+//     mstore(0x80, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
 //     mstore(0xa0, 8489654445897228341090914135473290831551238522473825886865492707826370766375)
+//     let notes := add(0x04, calldataload(0x04))
 //     let m := calldataload(0x24)
-//     let n := calldataload(add(0x04, calldataload(0x04)))
+//     let n := calldataload(notes)
 //     let gen_order := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
 //     let challenge := mod(calldataload(0x44), gen_order)
 //     if gt(m, n)
@@ -248,8 +248,8 @@
 //     mstore(0x2c0, kn)
 //     mstore(0x2e0, m)
 //     kn := mulmod(sub(gen_order, kn), challenge, gen_order)
-//     hashCommitments(add(0x04, calldataload(0x04)), n)
-//     let b := add(0x300, mul(n, _1))
+//     hashCommitments(notes, n)
+//     let b := add(0x300, mul(n, 0x80))
 //     let i := 0
 //     let i_1 := i
 //     for {
@@ -259,11 +259,13 @@
 //         i := add(i, 0x01)
 //     }
 //     {
-//         let _2 := add(calldataload(0x04), mul(i, 0xc0))
+//         let _1 := add(calldataload(0x04), mul(i, 0xc0))
+//         let noteIndex := add(_1, 0x24)
 //         let k := i_1
-//         let a := calldataload(add(_2, 0x44))
+//         let a := calldataload(add(_1, 0x44))
 //         let c := challenge
-//         switch eq(add(i, 0x01), n)
+//         let _2 := add(i, 0x01)
+//         switch eq(_2, n)
 //         case 1 {
 //             k := kn
 //             if eq(m, n)
@@ -272,10 +274,10 @@
 //             }
 //         }
 //         case 0 {
-//             k := calldataload(add(_2, 0x24))
+//             k := calldataload(noteIndex)
 //         }
-//         validateCommitment(add(_2, 0x24), k, a)
-//         switch gt(add(i, 0x01), m)
+//         validateCommitment(noteIndex, k, a)
+//         switch gt(_2, m)
 //         case 1 {
 //             kn := addmod(kn, sub(gen_order, k), gen_order)
 //             let x := mod(mload(i_1), gen_order)
@@ -288,17 +290,16 @@
 //             kn := addmod(kn, k, gen_order)
 //         }
 //         let _3 := 0x40
-//         calldatacopy(0xe0, add(_2, 164), _3)
-//         calldatacopy(0x20, add(_2, 100), _3)
+//         calldatacopy(0xe0, add(_1, 164), _3)
+//         calldatacopy(0x20, add(_1, 100), _3)
 //         mstore(0x120, sub(gen_order, c))
-//         let _4 := 0x60
-//         mstore(_4, k)
+//         mstore(0x60, k)
 //         mstore(0xc0, a)
-//         let result := call(gas(), 7, i_1, 0xe0, _4, 0x1a0, _3)
-//         let result_1 := and(result, call(gas(), 7, i_1, 0x20, _4, 0x120, _3))
-//         let result_2 := and(result_1, call(gas(), 7, i_1, _1, _4, 0x160, _3))
-//         let result_3 := and(result_2, call(gas(), 6, i_1, 0x120, _1, 0x160, _3))
-//         result := and(result_3, call(gas(), 6, i_1, 0x160, _1, b, _3))
+//         let result := call(gas(), 7, i_1, 0xe0, 0x60, 0x1a0, _3)
+//         let result_1 := and(result, call(gas(), 7, i_1, 0x20, 0x60, 0x120, _3))
+//         let result_2 := and(result_1, call(gas(), 7, i_1, 0x80, 0x60, 0x160, _3))
+//         let result_3 := and(result_2, call(gas(), 6, i_1, 0x120, 0x80, 0x160, _3))
+//         result := and(result_3, call(gas(), 6, i_1, 0x160, 0x80, b, _3))
 //         if eq(i, m)
 //         {
 //             mstore(0x260, mload(0x20))
@@ -308,10 +309,10 @@
 //         }
 //         if gt(i, m)
 //         {
-//             mstore(_4, c)
-//             let result_4 := and(result, call(gas(), 7, i_1, 0x20, _4, 0x220, _3))
-//             let result_5 := and(result_4, call(gas(), 6, i_1, 0x220, _1, 0x260, _3))
-//             result := and(result_5, call(gas(), 6, i_1, 0x1a0, _1, 0x1e0, _3))
+//             mstore(0x60, c)
+//             let result_4 := and(result, call(gas(), 7, i_1, 0x20, 0x60, 0x220, _3))
+//             let result_5 := and(result_4, call(gas(), 6, i_1, 0x220, 0x80, 0x260, _3))
+//             result := and(result_5, call(gas(), 6, i_1, 0x1a0, 0x80, 0x1e0, _3))
 //         }
 //         if iszero(result)
 //         {
