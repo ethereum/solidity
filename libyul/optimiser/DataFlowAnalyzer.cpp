@@ -117,6 +117,9 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	for (auto& statement: _for.pre.statements)
 		visit(statement);
 
+	AssignmentsSinceContinue assignmentsSinceCont;
+	assignmentsSinceCont(_for.body);
+
 	Assignments assignments;
 	assignments(_for.body);
 	assignments(_for.post);
@@ -124,20 +127,11 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 
 	visit(*_for.condition);
 	(*this)(_for.body);
+	clearValues(assignmentsSinceCont.names());
 	(*this)(_for.post);
-
 	clearValues(assignments.names());
+
 	popScope();
-}
-
-void DataFlowAnalyzer::operator()(Break&)
-{
-	yulAssert(false, "Not implemented yet.");
-}
-
-void DataFlowAnalyzer::operator()(Continue&)
-{
-	yulAssert(false, "Not implemented yet.");
 }
 
 void DataFlowAnalyzer::operator()(Block& _block)
