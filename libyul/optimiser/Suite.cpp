@@ -185,8 +185,12 @@ void OptimiserSuite::run(
 	Rematerialiser::run(*_dialect, ast);
 	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 
+	// This is a tuning parameter, but actually just prevents infinite loops.
+	size_t stackCompressorMaxIterations = 16;
 	FunctionGrouper{}(ast);
-	solAssert(StackCompressor::run(_dialect, ast, _optimizeStackAllocation), "");
+	// We ignore the return value because we will get a much better error
+	// message once we perform code generation.
+	StackCompressor::run(_dialect, ast, _optimizeStackAllocation, stackCompressorMaxIterations);
 	BlockFlattener{}(ast);
 
 	VarNameCleaner{ast, *_dialect, reservedIdentifiers}(ast);

@@ -198,7 +198,7 @@ public:
 				SSAReverser::run(*m_ast);
 				break;
 			case 'p':
-				StackCompressor::run(m_dialect, *m_ast, true);
+				StackCompressor::run(m_dialect, *m_ast, true, 16);
 				break;
 			default:
 				cout << "Unknown option." << endl;

@@ -247,7 +247,8 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		(FunctionGrouper{})(*m_ast);
-		StackCompressor::run(m_dialect, *m_ast, true);
+		size_t maxIterations = 16;
+		StackCompressor::run(m_dialect, *m_ast, true, maxIterations);
 		(BlockFlattener{})(*m_ast);
 	}
 	else if (m_optimizerStep == "fullSuite")
