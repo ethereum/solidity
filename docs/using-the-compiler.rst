@@ -216,8 +216,12 @@ Input Description
             // It can only be activated through the details here.
             // This feature is still considered experimental.
             "yul": false,
-            // Future tuning options, currently unused.
-            "yulDetails": {}
+            // Tuning options for the Yul optimizer.
+            "yulDetails": {
+              // Improve allocation of stack slots for variables, can free up stack slots early.
+              // Activated by default if the Yul optimizer is activated.
+              "stackAllocation": true
+            }
           }
         },
         "evmVersion": "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium, constantinople or petersburg

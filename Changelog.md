@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Yul Optimizer: Enable stack allocation optimization by default if yul optimizer is active (disable in yulDetails).
 
 
 Bugfixes:

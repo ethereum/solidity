@@ -1,1 +1,1 @@
-{"errors":[{"component":"general","formattedMessage":"The \"yulDetails\" optimizer setting has to be a JSON object.","message":"The \"yulDetails\" optimizer setting has to be a JSON object.","severity":"error","type":"JSONError"}]}
+{"errors":[{"component":"general","formattedMessage":"\"settings.optimizer.details.yulDetails\" must be an object","message":"\"settings.optimizer.details.yulDetails\" must be an object","severity":"error","type":"JSONError"}]}

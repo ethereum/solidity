@@ -74,7 +74,7 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 	if (m_optimize)
 		stack.optimize();
 
-	MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
+	MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM, m_optimize);
 	solAssert(obj.bytecode, "");
 
 	m_obtainedResult = "Assembly:\n" + obj.assembly;
