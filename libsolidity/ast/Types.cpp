@@ -1871,33 +1871,36 @@ TypePointer ArrayType::decodingType() const
 
 TypePointer ArrayType::interfaceType(bool _inLibrary) const
 {
-	// Note: This has to fulfill canBeUsedExternally(_inLibrary) ==  !!interfaceType(_inLibrary)
+	if (_inLibrary && m_interfaceType_library.is_initialized())
+		return *m_interfaceType_library;
+
+	if (!_inLibrary && m_interfaceType.is_initialized())
+		return *m_interfaceType;
+
+	TypePointer result;
+
 	if (_inLibrary && location() == DataLocation::Storage)
-		return shared_from_this();
-
-	if (m_arrayKind != ArrayKind::Ordinary)
-		return this->copyForLocation(DataLocation::Memory, true);
-	TypePointer baseExt = m_baseType->interfaceType(_inLibrary);
-	if (!baseExt)
-		return TypePointer();
-
-	if (isDynamicallySized())
-		return make_shared<ArrayType>(DataLocation::Memory, baseExt);
-	else
-		return make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
-}
-
-bool ArrayType::canBeUsedExternally(bool _inLibrary) const
-{
-	// Note: This has to fulfill canBeUsedExternally(_inLibrary) ==  !!interfaceType(_inLibrary)
-	if (_inLibrary && location() == DataLocation::Storage)
-		return true;
+		result = shared_from_this();
 	else if (m_arrayKind != ArrayKind::Ordinary)
-		return true;
-	else if (!m_baseType->canBeUsedExternally(_inLibrary))
-		return false;
+		result = this->copyForLocation(DataLocation::Memory, true);
 	else
-		return true;
+	{
+		TypePointer baseExt = m_baseType->interfaceType(_inLibrary);
+
+		if (!baseExt)
+			result = TypePointer();
+		else if (isDynamicallySized())
+			result = make_shared<ArrayType>(DataLocation::Memory, baseExt);
+		else
+			result = make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
+	}
+
+	if (_inLibrary)
+		m_interfaceType_library = result;
+	else
+		m_interfaceType = result;
+
+	return result;
 }
 
 u256 ArrayType::memorySize() const
@@ -2134,22 +2137,18 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 
 TypePointer StructType::interfaceType(bool _inLibrary) const
 {
-	if (!canBeUsedExternally(_inLibrary))
-		return TypePointer();
+	if (_inLibrary && m_interfaceType_library.is_initialized())
+		return *m_interfaceType_library;
 
-	// Has to fulfill canBeUsedExternally(_inLibrary) == !!interfaceType(_inLibrary)
-	if (_inLibrary && location() == DataLocation::Storage)
-		return shared_from_this();
-	else
-		return copyForLocation(DataLocation::Memory, true);
-}
+	if (!_inLibrary && m_interfaceType.is_initialized())
+		return *m_interfaceType;
 
-bool StructType::canBeUsedExternally(bool _inLibrary) const
-{
+	TypePointer result = TypePointer{};
+
 	if (_inLibrary && location() == DataLocation::Storage)
-		return true;
+		result = shared_from_this();
 	else if (recursive())
-		return false;
+		result = TypePointer{};
 	else
 	{
 		// Check that all members have interface types.
@@ -2159,17 +2158,32 @@ bool StructType::canBeUsedExternally(bool _inLibrary) const
 		// Also return false if at least one struct member does not have a type.
 		// This might happen, for example, if the type of the member does not exist,
 		// which is reported as an error.
+		bool allOkay = true;
 		for (auto const& var: m_struct.members())
 		{
 			// If the struct member does not have a type return false.
 			// A TypeError is expected in this case.
 			if (!var->annotation().type)
-				return false;
-			if (!var->annotation().type->canBeUsedExternally(false))
-				return false;
+			{
+				allOkay = false;
+				break;
+			}
+			if (!var->annotation().type->interfaceType(false))
+			{
+				allOkay = false;
+				break;
+			}
 		}
+		if (allOkay)
+			result = copyForLocation(DataLocation::Memory, true);
 	}
-	return true;
+
+	if (_inLibrary)
+		m_interfaceType_library = result;
+	else
+		m_interfaceType = result;
+
+	return result;
 }
 
 TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -2560,7 +2574,7 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 		solAssert(t->annotation().type, "Type not set for parameter.");
 		if (m_kind == Kind::External)
 			solAssert(
-				t->annotation().type->canBeUsedExternally(false),
+				t->annotation().type->interfaceType(false),
 				"Internal type used as parameter for external function."
 			);
 		m_parameterTypes.push_back(t->annotation().type);
@@ -2570,7 +2584,7 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 		solAssert(t->annotation().type, "Type not set for return parameter.");
 		if (m_kind == Kind::External)
 			solAssert(
-				t->annotation().type->canBeUsedExternally(false),
+				t->annotation().type->interfaceType(false),
 				"Internal type used as return parameter for external function."
 			);
 		m_returnParameterTypes.push_back(t->annotation().type);

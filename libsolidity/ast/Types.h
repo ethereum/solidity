@@ -305,9 +305,6 @@ public:
 	/// @param _inLibrary if set, returns types as used in a library, e.g. struct and contract types
 	/// are returned without modification.
 	virtual TypePointer interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
-	/// @returns true iff this type can be passed on via calls (to libraries if _inLibrary is true),
-	/// should be have identical to !!interfaceType(_inLibrary) but might do optimizations.
-	virtual bool canBeUsedExternally(bool _inLibrary) const { return !!interfaceType(_inLibrary); }
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
@@ -720,7 +717,6 @@ public:
 	TypePointer encodingType() const override;
 	TypePointer decodingType() const override;
 	TypePointer interfaceType(bool _inLibrary) const override;
-	bool canBeUsedExternally(bool _inLibrary) const override;
 
 	/// @returns true if this is valid to be stored in calldata
 	bool validForCalldata() const;
@@ -753,6 +749,8 @@ private:
 	TypePointer m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
+	mutable boost::optional<TypePointer> m_interfaceType;
+	mutable boost::optional<TypePointer> m_interfaceType_library;
 };
 
 /**
@@ -845,7 +843,6 @@ public:
 		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : shared_from_this();
 	}
 	TypePointer interfaceType(bool _inLibrary) const override;
-	bool canBeUsedExternally(bool _inLibrary) const override;
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
@@ -875,6 +872,8 @@ private:
 	StructDefinition const& m_struct;
 	/// Cache for the recursive() function.
 	mutable boost::optional<bool> m_recursive;
+	mutable boost::optional<TypePointer> m_interfaceType;
+	mutable boost::optional<TypePointer> m_interfaceType_library;
 };
 
 /**

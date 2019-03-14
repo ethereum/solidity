@@ -599,7 +599,7 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
 	if (fun.kind() == FunctionType::Kind::External)
-		solAssert(fun.canBeUsedExternally(false), "External function type uses internal types.");
+		solAssert(fun.interfaceType(false), "External function type uses internal types.");
 }
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
