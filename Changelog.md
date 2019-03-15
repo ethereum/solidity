@@ -2,6 +2,7 @@
 
 Language Features:
  * Code Generation: Implement copying recursive structs from storage to memory.
+ * ABIEncoderV2: Implement encoding of calldata arrays and structs.
 
 
 Compiler Features:

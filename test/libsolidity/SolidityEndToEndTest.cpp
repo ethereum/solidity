@@ -8447,6 +8447,9 @@ BOOST_AUTO_TEST_CASE(calldata_array_two_dimensional)
 				function test()" + arrayType + R"( calldata a, uint256 i, uint256 j) external returns (uint256) {
 					return a[i][j];
 				}
+				function reenc()" + arrayType + R"( calldata a, uint256 i, uint256 j) external returns (uint256) {
+					return this.test(a, i, j);
+				}
 			}
 		)";
 		compileAndRun(sourceCode, 0, "C");
@@ -8464,7 +8467,10 @@ BOOST_AUTO_TEST_CASE(calldata_array_two_dimensional)
 		{
 			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, i, encoding), encodeArgs(data[i].size()));
 			for (size_t j = 0; j < data[i].size(); j++)
+			{
 				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j]));
+				ABI_CHECK(callContractFunction("reenc(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j]));
+			}
 			// out of bounds access
 			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), encodeArgs());
 		}
@@ -8514,6 +8520,9 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_three_dimensional)
 				function test()" + arrayType + R"( calldata a, uint256 i, uint256 j, uint256 k) external returns (uint256) {
 					return a[i][j][k];
 				}
+				function reenc()" + arrayType + R"( calldata a, uint256 i, uint256 j, uint256 k) external returns (uint256) {
+					return this.test(a, i, j, k);
+				}
 			}
 		)";
 		compileAndRun(sourceCode, 0, "C");
@@ -8540,7 +8549,10 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_three_dimensional)
 			{
 				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j].size()));
 				for (size_t k = 0; k < data[i][j].size(); k++)
+				{
 					ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, k, encoding), encodeArgs(data[i][j][k]));
+					ABI_CHECK(callContractFunction("reenc(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, k, encoding), encodeArgs(data[i][j][k]));
+				}
 				// out of bounds access
 				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, data[i][j].size(), encoding), encodeArgs());
 			}

@@ -265,6 +265,9 @@ private:
 	/// single variable.
 	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
 
+	/// @returns the name of a function that retrieves an element from calldata.
+	std::string calldataAccessFunction(Type const& _type);
+
 	/// @returns the name of a function used during encoding that stores the length
 	/// if the array is dynamically sized (and the options do not request in-place encoding).
 	/// It returns the new encoding position.
