@@ -63,7 +63,6 @@ string ABIFunctions::tupleEncoder(
 		templ("functionName", functionName);
 		size_t const headSize_ = headSize(_targetTypes);
 		templ("headSize", to_string(headSize_));
-		string valueParams;
 		string encodeElements;
 		size_t headPos = 0;
 		size_t stackPos = 0;
@@ -72,13 +71,6 @@ string ABIFunctions::tupleEncoder(
 			solAssert(_givenTypes[i], "");
 			solAssert(_targetTypes[i], "");
 			size_t sizeOnStack = _givenTypes[i]->sizeOnStack();
-			string valueNames = "";
-			for (size_t j = 0; j < sizeOnStack; j++)
-			{
-				valueNames += "value" + to_string(stackPos) + ", ";
-				valueParams = ", value" + to_string(stackPos) + valueParams;
-				stackPos++;
-			}
 			bool dynamic = _targetTypes[i]->isDynamicallyEncoded();
 			Whiskers elementTempl(
 				dynamic ?
@@ -90,14 +82,17 @@ string ABIFunctions::tupleEncoder(
 					<abiEncode>(<values> add(headStart, <pos>))
 				)")
 			);
-			elementTempl("values", valueNames);
+			string values = suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
+			elementTempl("values", values.empty() ? "" : values + ", ");
 			elementTempl("pos", to_string(headPos));
 			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
 			encodeElements += elementTempl.render();
 			headPos += dynamic ? 0x20 : _targetTypes[i]->calldataEncodedSize();
+			stackPos += sizeOnStack;
 		}
 		solAssert(headPos == headSize_, "");
-		templ("valueParams", valueParams);
+		string valueParams = suffixedVariableNameList("value", stackPos, 0);
+		templ("valueParams", valueParams.empty() ? "" : ", " + valueParams);
 		templ("encodeElements", encodeElements);
 
 		return templ.render();
@@ -134,7 +129,6 @@ string ABIFunctions::tupleEncoderPacked(
 			}
 		)");
 		templ("functionName", functionName);
-		string valueParams;
 		string encodeElements;
 		size_t stackPos = 0;
 		for (size_t i = 0; i < _givenTypes.size(); ++i)
@@ -142,13 +136,6 @@ string ABIFunctions::tupleEncoderPacked(
 			solAssert(_givenTypes[i], "");
 			solAssert(_targetTypes[i], "");
 			size_t sizeOnStack = _givenTypes[i]->sizeOnStack();
-			string valueNames = "";
-			for (size_t j = 0; j < sizeOnStack; j++)
-			{
-				valueNames += "value" + to_string(stackPos) + ", ";
-				valueParams = ", value" + to_string(stackPos) + valueParams;
-				stackPos++;
-			}
 			bool dynamic = _targetTypes[i]->isDynamicallyEncoded();
 			Whiskers elementTempl(
 				dynamic ?
@@ -160,13 +147,16 @@ string ABIFunctions::tupleEncoderPacked(
 					pos := add(pos, <calldataEncodedSize>)
 				)")
 			);
-			elementTempl("values", valueNames);
+			string values = suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
+			elementTempl("values", values.empty() ? "" : values + ", ");
 			if (!dynamic)
 				elementTempl("calldataEncodedSize", to_string(_targetTypes[i]->calldataEncodedSize(false)));
 			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
 			encodeElements += elementTempl.render();
+			stackPos += sizeOnStack;
 		}
-		templ("valueParams", valueParams);
+		string valueParams = suffixedVariableNameList("value", stackPos, 0);
+		templ("valueParams", valueParams.empty() ? "" : ", " + valueParams);
 		templ("encodeElements", encodeElements);
 
 		return templ.render();
@@ -636,29 +626,32 @@ string ABIFunctions::abiEncodeAndReturnUpdatedPosFunction(
 		_targetType.identifier() +
 		_options.toFunctionNameSuffix();
 	return createFunction(functionName, [&]() {
+		string values = suffixedVariableNameList("value", 0, numVariablesForType(_givenType, _options));
 		string encoder = abiEncodingFunction(_givenType, _targetType, _options);
 		if (_targetType.isDynamicallyEncoded())
 			return Whiskers(R"(
-				function <functionName>(value, pos) -> updatedPos {
-					updatedPos := <encode>(value, pos)
+				function <functionName>(<values>, pos) -> updatedPos {
+					updatedPos := <encode>(<values>, pos)
 				}
 			)")
 			("functionName", functionName)
 			("encode", encoder)
+			("values", values)
 			.render();
 		else
 		{
 			unsigned encodedSize = _targetType.calldataEncodedSize(_options.padded);
 			solAssert(encodedSize != 0, "Invalid encoded size.");
 			return Whiskers(R"(
-				function <functionName>(value, pos) -> updatedPos {
-					<encode>(value, pos)
+				function <functionName>(<values>, pos) -> updatedPos {
+					<encode>(<values>, pos)
 					updatedPos := add(pos, <encodedSize>)
 				}
 			)")
 			("functionName", functionName)
 			("encode", encoder)
 			("encodedSize", toCompactHexWithPrefix(encodedSize))
+			("values", values)
 			.render();
 		}
 	});
@@ -1566,3 +1559,28 @@ size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
 	return headSize;
 }
 
+string ABIFunctions::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
+{
+	string result;
+	if (_startSuffix < _endSuffix)
+	{
+		result = _baseName + to_string(_startSuffix++);
+		while (_startSuffix < _endSuffix)
+			result += ", " + _baseName + to_string(_startSuffix++);
+	}
+	else if (_endSuffix < _startSuffix)
+	{
+		result = _baseName + to_string(_endSuffix++);
+		while (_endSuffix < _startSuffix)
+			result = _baseName + to_string(_endSuffix++) + ", " + result;
+	}
+	return result;
+}
+
+size_t ABIFunctions::numVariablesForType(Type const& _type, EncodingOptions const& _options)
+{
+	if (_type.category() == Type::Category::Function && !_options.encodeFunctionFromStack)
+		return 1;
+	else
+		return _type.sizeOnStack();
+}
