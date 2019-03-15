@@ -176,7 +176,9 @@ private:
 		EncodingOptions const& _options
 	);
 	/// Part of @a abiEncodingFunction for array target type and given calldata array.
-	std::string abiEncodingFunctionCalldataArray(
+	/// Uses calldatacopy and does not perform cleanup or validation and can therefore only
+	/// be used for byte arrays and arrays with the base type uint256 or bytes32.
+	std::string abiEncodingFunctionCalldataArrayWithoutCleanup(
 		Type const& _givenType,
 		Type const& _targetType,
 		EncodingOptions const& _options
