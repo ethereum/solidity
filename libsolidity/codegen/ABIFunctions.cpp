@@ -1106,11 +1106,9 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		_to.identifier() +
 		_options.toFunctionNameSuffix();
 
-	solUnimplementedAssert(!_from.dataStoredIn(DataLocation::CallData), "Encoding struct from calldata is not yet supported.");
 	solAssert(&_from.structDefinition() == &_to.structDefinition(), "");
 
 	return createFunction(functionName, [&]() {
-		bool fromStorage = _from.location() == DataLocation::Storage;
 		bool dynamic = _to.isDynamicallyEncoded();
 		Whiskers templ(R"(
 			// <readableTypeNameFrom> -> <readableTypeNameTo>
@@ -1121,7 +1119,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 				{
 					// <memberName>
 					<preprocess>
-					let memberValue := <retrieveValue>
+					let <memberValues> := <retrieveValue>
 					<encode>
 				}
 				</members>
@@ -1139,7 +1137,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		else
 			templ("assignEnd", "");
 		// to avoid multiple loads from the same slot for subsequent members
-		templ("init", fromStorage ? "let slotValue := 0" : "");
+		templ("init", _from.dataStoredIn(DataLocation::Storage) ? "let slotValue := 0" : "");
 		u256 previousSlotOffset(-1);
 		u256 encodingOffset = 0;
 		vector<map<string, string>> members;
@@ -1159,32 +1157,41 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			members.push_back({});
 			members.back()["preprocess"] = "";
 
-			if (fromStorage)
+			switch (_from.location())
 			{
-				solAssert(memberTypeFrom->isValueType() == memberTypeTo->isValueType(), "");
-				u256 storageSlotOffset;
-				size_t intraSlotOffset;
-				tie(storageSlotOffset, intraSlotOffset) = _from.storageOffsetsOfMember(member.name);
-				if (memberTypeFrom->isValueType())
+				case DataLocation::Storage:
 				{
-					if (storageSlotOffset != previousSlotOffset)
+					solAssert(memberTypeFrom->isValueType() == memberTypeTo->isValueType(), "");
+					u256 storageSlotOffset;
+					size_t intraSlotOffset;
+					tie(storageSlotOffset, intraSlotOffset) = _from.storageOffsetsOfMember(member.name);
+					if (memberTypeFrom->isValueType())
 					{
-						members.back()["preprocess"] = "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))";
-						previousSlotOffset = storageSlotOffset;
+						if (storageSlotOffset != previousSlotOffset)
+						{
+							members.back()["preprocess"] = "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))";
+							previousSlotOffset = storageSlotOffset;
+						}
+						members.back()["retrieveValue"] = extractFromStorageValue(*memberTypeFrom, intraSlotOffset, false) + "(slotValue)";
 					}
-					members.back()["retrieveValue"] = extractFromStorageValue(*memberTypeFrom, intraSlotOffset, false) + "(slotValue)";
+					else
+					{
+						solAssert(memberTypeFrom->dataStoredIn(DataLocation::Storage), "");
+						solAssert(intraSlotOffset == 0, "");
+						members.back()["retrieveValue"] = "add(value, " + toCompactHexWithPrefix(storageSlotOffset) + ")";
+					}
+					break;
 				}
-				else
+				case DataLocation::Memory:
 				{
-					solAssert(memberTypeFrom->dataStoredIn(DataLocation::Storage), "");
-					solAssert(intraSlotOffset == 0, "");
-					members.back()["retrieveValue"] = "add(value, " + toCompactHexWithPrefix(storageSlotOffset) + ")";
+					string sourceOffset = toCompactHexWithPrefix(_from.memoryOffsetOfMember(member.name));
+					members.back()["retrieveValue"] = "mload(add(value, " + sourceOffset + "))";
+					break;
 				}
-			}
-			else
-			{
-				string sourceOffset = toCompactHexWithPrefix(_from.memoryOffsetOfMember(member.name));
-				members.back()["retrieveValue"] = "mload(add(value, " + sourceOffset + "))";
+				case DataLocation::CallData:
+					solUnimplementedAssert(false, "Encoding struct from calldata is not yet supported.");
+				default:
+					solAssert(false, "");
 			}
 
 			EncodingOptions subOptions(_options);
@@ -1192,10 +1199,14 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			// Like with arrays, struct members are always padded.
 			subOptions.padded = true;
 
+			string memberValues = m_utils.suffixedVariableNameList("memberValue", 0, numVariablesForType(*memberTypeFrom, subOptions));
+			members.back()["memberValues"] = memberValues;
+
 			string encode;
 			if (_options.dynamicInplace)
-				encode = Whiskers{"pos := <encode>(memberValue, pos)"}
+				encode = Whiskers{"pos := <encode>(<memberValues>, pos)"}
 					("encode", abiEncodeAndReturnUpdatedPosFunction(*memberTypeFrom, *memberTypeTo, subOptions))
+					("memberValues", memberValues)
 					.render();
 			else
 			{
@@ -1203,10 +1214,11 @@ string ABIFunctions::abiEncodingFunctionStruct(
 					dynamicMember ?
 					string(R"(
 						mstore(add(pos, <encodingOffset>), sub(tail, pos))
-						tail := <abiEncode>(memberValue, tail)
+						tail := <abiEncode>(<memberValues>, tail)
 					)") :
-					"<abiEncode>(memberValue, add(pos, <encodingOffset>))"
+					"<abiEncode>(<memberValues>, add(pos, <encodingOffset>))"
 				);
+				encodeTempl("memberValues", memberValues);
 				encodeTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
 				encodingOffset += dynamicMember ? 0x20 : memberTypeTo->calldataEncodedSize();
 				encodeTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, subOptions));
