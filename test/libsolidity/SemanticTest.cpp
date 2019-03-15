@@ -36,8 +36,8 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 
-SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath):
-	SolidityExecutionFramework(_ipcPath)
+SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, langutil::EVMVersion const _evmVersion):
+	SolidityExecutionFramework(_ipcPath, _evmVersion)
 {
 	ifstream file(_filename);
 	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");

@@ -54,8 +54,8 @@ class SyntaxTest: AnalysisFramework, public TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
-	{ return std::unique_ptr<TestCase>(new SyntaxTest(_config.filename)); }
-	SyntaxTest(std::string const& _filename);
+	{ return std::unique_ptr<TestCase>(new SyntaxTest(_config.filename, _config.evmVersion)); }
+	SyntaxTest(std::string const& _filename, langutil::EVMVersion const _evmVersion);
 
 	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
@@ -82,6 +82,7 @@ protected:
 	std::string m_source;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
+	langutil::EVMVersion const m_evmVersion;
 };
 
 }

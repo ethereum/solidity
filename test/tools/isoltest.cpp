@@ -47,13 +47,15 @@ namespace fs = boost::filesystem;
 
 struct TestStats
 {
-	int successCount;
-	int testCount;
-	operator bool() const { return successCount == testCount; }
+	int successCount = 0;
+	int testCount = 0;
+	int skippedCount = 0;
+	operator bool() const { return successCount + skippedCount == testCount; }
 	TestStats& operator+=(TestStats const& _other) noexcept
 	{
 		successCount += _other.successCount;
 		testCount += _other.testCount;
+		skippedCount += _other.skippedCount;
 		return *this;
 	}
 };
@@ -66,15 +68,17 @@ public:
 		string const& _name,
 		fs::path const& _path,
 		string const& _ipcPath,
-		bool _formatted
-	): m_testCaseCreator(_testCaseCreator), m_name(_name), m_path(_path), m_ipcPath(_ipcPath), m_formatted(_formatted)
+		bool _formatted,
+		langutil::EVMVersion _evmVersion
+	): m_testCaseCreator(_testCaseCreator), m_name(_name), m_path(_path), m_ipcPath(_ipcPath), m_formatted(_formatted), m_evmVersion(_evmVersion)
 	{}
 
 	enum class Result
 	{
 		Success,
 		Failure,
-		Exception
+		Exception,
+		Skipped
 	};
 
 	Result process();
@@ -84,7 +88,8 @@ public:
 		fs::path const& _basepath,
 		fs::path const& _path,
 		string const& _ipcPath,
-		bool const _formatted
+		bool const _formatted,
+		langutil::EVMVersion const _evmVersion
 	);
 
 	static string editor;
@@ -103,6 +108,7 @@ private:
 	fs::path const m_path;
 	string m_ipcPath;
 	bool const m_formatted = false;
+	langutil::EVMVersion const m_evmVersion;
 	unique_ptr<TestCase> m_test;
 	static bool m_exitRequested;
 };
@@ -119,8 +125,14 @@ TestTool::Result TestTool::process()
 
 	try
 	{
-		m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath});
-		success = m_test->run(outputMessages, "  ", m_formatted);
+		m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath, m_evmVersion});
+		if (m_test->supportedForEVMVersion(m_evmVersion))
+			success = m_test->run(outputMessages, "  ", m_formatted);
+		else
+		{
+			AnsiColorized(cout, m_formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
+			return Result::Skipped;
+		}
 	}
 	catch(boost::exception const& _e)
 	{
@@ -204,13 +216,15 @@ TestStats TestTool::processPath(
 	fs::path const& _basepath,
 	fs::path const& _path,
 	string const& _ipcPath,
-	bool const _formatted
+	bool const _formatted,
+	langutil::EVMVersion const _evmVersion
 )
 {
 	std::queue<fs::path> paths;
 	paths.push(_path);
 	int successCount = 0;
 	int testCount = 0;
+	int skippedCount = 0;
 
 	while (!paths.empty())
 	{
@@ -235,7 +249,7 @@ TestStats TestTool::processPath(
 		else
 		{
 			++testCount;
-			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _ipcPath, _formatted);
+			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _ipcPath, _formatted, _evmVersion);
 			auto result = testTool.process();
 
 			switch(result)
@@ -254,6 +268,7 @@ TestStats TestTool::processPath(
 					break;
 				case Request::Skip:
 					paths.pop();
+					++skippedCount;
 					break;
 				}
 				break;
@@ -261,11 +276,15 @@ TestStats TestTool::processPath(
 				paths.pop();
 				++successCount;
 				break;
+			case Result::Skipped:
+				paths.pop();
+				++skippedCount;
+				break;
 			}
 		}
 	}
 
-	return { successCount, testCount };
+	return { successCount, testCount, skippedCount };
 
 }
 
@@ -298,7 +317,8 @@ boost::optional<TestStats> runTestSuite(
 	fs::path const& _subdirectory,
 	string const& _ipcPath,
 	TestCase::TestCaseCreator _testCaseCreator,
-	bool _formatted
+	bool _formatted,
+	langutil::EVMVersion const _evmVersion
 )
 {
 	fs::path testPath = _basePath / _subdirectory;
@@ -309,14 +329,21 @@ boost::optional<TestStats> runTestSuite(
 		return {};
 	}
 
-	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _ipcPath, _formatted);
+	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _ipcPath, _formatted, _evmVersion);
 
 	cout << endl << _name << " Test Summary: ";
 	AnsiColorized(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
 		stats.successCount <<
 		"/" <<
 		stats.testCount;
-	cout << " tests successful." << endl << endl;
+	cout << " tests successful";
+	if (stats.skippedCount > 0)
+	{
+		cout << " (";
+		AnsiColorized(cout, _formatted, {BOLD, YELLOW}) << stats.skippedCount;
+		cout<< " tests skipped)";
+	}
+	cout << "." << endl << endl;
 
 	return stats;
 }
@@ -354,7 +381,7 @@ int main(int argc, char const *argv[])
 		if (ts.smt && options.disableSMT)
 			continue;
 
-		if (auto stats = runTestSuite(ts.title, options.testPath / ts.path, ts.subpath, options.ipcPath.string(), ts.testCaseCreator, !options.noColor))
+		if (auto stats = runTestSuite(ts.title, options.testPath / ts.path, ts.subpath, options.ipcPath.string(), ts.testCaseCreator, !options.noColor, options.evmVersion()))
 			global_stats += *stats;
 		else
 			return 1;
@@ -363,7 +390,14 @@ int main(int argc, char const *argv[])
 	cout << endl << "Summary: ";
 	AnsiColorized(cout, !options.noColor, {BOLD, global_stats ? GREEN : RED}) <<
 		 global_stats.successCount << "/" << global_stats.testCount;
-	cout << " tests successful." << endl;
+	cout << " tests successful";
+	if (global_stats.skippedCount > 0)
+	{
+		cout << " (";
+		AnsiColorized(cout, !options.noColor, {BOLD, YELLOW}) << global_stats.skippedCount;
+		cout<< " tests skipped)";
+	}
+	cout << "." << endl;
 
 	return global_stats ? 0 : 1;
 }

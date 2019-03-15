@@ -44,9 +44,9 @@ class SemanticTest: public SolidityExecutionFramework, public TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _options)
-	{ return std::make_unique<SemanticTest>(_options.filename, _options.ipcPath); }
+	{ return std::make_unique<SemanticTest>(_options.filename, _options.ipcPath, _options.evmVersion); }
 
-	explicit SemanticTest(std::string const& _filename, std::string const& _ipcPath);
+	explicit SemanticTest(std::string const& _filename, std::string const& _ipcPath, langutil::EVMVersion const _evmVersion);
 
 	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 	void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;

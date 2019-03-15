@@ -35,8 +35,8 @@ using namespace dev;
 using namespace std;
 using namespace boost::unit_test;
 
-SMTCheckerTest::SMTCheckerTest(string const& _filename)
-: SyntaxTest(_filename)
+SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion const _evmVersion)
+: SyntaxTest(_filename, _evmVersion)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));

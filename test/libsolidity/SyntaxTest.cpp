@@ -52,7 +52,7 @@ int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 
 }
 
-SyntaxTest::SyntaxTest(string const& _filename)
+SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion const _evmVersion): m_evmVersion(_evmVersion)
 {
 	ifstream file(_filename);
 	if (!file)
@@ -68,7 +68,7 @@ bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool const _fo
 	string const versionPragma = "pragma solidity >=0.0;\n";
 	m_compiler.reset();
 	m_compiler.addSource("", versionPragma + m_source);
-	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
+	m_compiler.setEVMVersion(m_evmVersion);
 
 	if (m_compiler.parse())
 		m_compiler.analyze();
