@@ -229,6 +229,8 @@ private:
 	void popPathCondition();
 	/// Returns the conjunction of all path conditions or True if empty
 	smt::Expression currentPathConditions();
+	/// Returns the current callstack. Used for models.
+	langutil::SecondarySourceLocation currentCallStack();
 	/// Conjoin the current path conditions with the given parameter and add to the solver
 	void addPathConjoinedExpression(smt::Expression const& _e);
 	/// Add to the solver: the given expression implied by the current path conditions
@@ -269,6 +271,8 @@ private:
 
 	/// Stores the current path of function calls.
 	std::vector<FunctionDefinition const*> m_functionPath;
+	/// Stores the current call/invocation path.
+	std::vector<ASTNode const*> m_callStack;
 	/// Returns true if the current function was not visited by
 	/// a function call.
 	bool isRootFunction();
