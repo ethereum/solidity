@@ -102,6 +102,39 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, BinaryOp const& _x)
 		case BinaryOp::GT:
 			_os << "gt";
 			break;
+		case BinaryOp::SHR:
+			_os << "shr";
+			break;
+		case BinaryOp::SHL:
+			_os << "shl";
+			break;
+		case BinaryOp::SAR:
+			_os << "sar";
+			break;
+		case BinaryOp::SDIV:
+			_os << "sdiv";
+			break;
+		case BinaryOp::SMOD:
+			_os << "smod";
+			break;
+		case BinaryOp::EXP:
+			_os << "exp";
+			break;
+		case BinaryOp::SLT:
+			_os << "slt";
+			break;
+		case BinaryOp::SGT:
+			_os << "sgt";
+			break;
+		case BinaryOp::BYTE:
+			_os << "byte";
+			break;
+		case BinaryOp::SI:
+			_os << "signextend";
+			break;
+		case BinaryOp::KECCAK:
+			_os << "keccak256";
+			break;
 	}
 	return _os << "(" << _x.left() << "," << _x.right() << ")";
 }

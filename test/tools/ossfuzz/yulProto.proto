@@ -82,6 +82,17 @@ message BinaryOp {
     EQ = 8;
     LT = 9;
     GT = 10;
+    SHR = 11;
+    SHL = 12;
+    SAR = 13;
+    SDIV = 14;
+    SMOD = 15;
+    EXP = 16;
+    SLT = 17;
+    SGT = 18;
+    BYTE = 19;
+    SI = 20;
+    KECCAK = 21;
   };
   required BOp op = 1;
   required Expression left = 2;
