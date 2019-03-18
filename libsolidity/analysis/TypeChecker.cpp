@@ -355,7 +355,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (!type(var)->canLiveOutsideStorage() && _function.isPublic())
 				m_errorReporter.typeError(var.location(), "Type is required to live outside storage.");
-			if (_function.isPublic() && !(type(var)->interfaceType(isLibraryFunction)))
+			if (_function.isPublic() && !(type(var)->interfaceType(isLibraryFunction).get()))
 				m_errorReporter.fatalTypeError(var.location(), "Internal or recursive type is not allowed for public or external functions.");
 		}
 		if (
@@ -576,7 +576,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 			numIndexed++;
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(var->location(), "Type is required to live outside storage.");
-		if (!type(*var)->interfaceType(false))
+		if (!type(*var)->interfaceType(false).get())
 			m_errorReporter.typeError(var->location(), "Internal or recursive type is not allowed as event parameter type.");
 		if (
 			!_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
@@ -599,7 +599,7 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
 	if (fun.kind() == FunctionType::Kind::External)
-		solAssert(fun.interfaceType(false), "External function type uses internal types.");
+		solAssert(fun.interfaceType(false).get(), "External function type uses internal types.");
 }
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)

@@ -1869,7 +1869,7 @@ TypePointer ArrayType::decodingType() const
 		return shared_from_this();
 }
 
-TypePointer ArrayType::interfaceType(bool _inLibrary) const
+TypeResult ArrayType::interfaceType(bool _inLibrary) const
 {
 	if (_inLibrary && m_interfaceType_library.is_initialized())
 		return *m_interfaceType_library;
@@ -2135,7 +2135,7 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 	return members;
 }
 
-TypePointer StructType::interfaceType(bool _inLibrary) const
+TypeResult StructType::interfaceType(bool _inLibrary) const
 {
 	if (_inLibrary && m_interfaceType_library.is_initialized())
 		return *m_interfaceType_library;
@@ -2168,7 +2168,7 @@ TypePointer StructType::interfaceType(bool _inLibrary) const
 				allOkay = false;
 				break;
 			}
-			if (!var->annotation().type->interfaceType(false))
+			if (!var->annotation().type->interfaceType(false).get())
 			{
 				allOkay = false;
 				break;
@@ -2204,8 +2204,8 @@ string StructType::signatureInExternalFunction(bool _structsByName) const
 		{
 			solAssert(_t, "Parameter should have external type.");
 			auto t = _t->interfaceType(_structsByName);
-			solAssert(t, "");
-			return t->signatureInExternalFunction(_structsByName);
+			solAssert(t.get(), "");
+			return t.get()->signatureInExternalFunction(_structsByName);
 		});
 		return "(" + boost::algorithm::join(memberTypeStrings, ",") + ")";
 	}
@@ -2574,7 +2574,7 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 		solAssert(t->annotation().type, "Type not set for parameter.");
 		if (m_kind == Kind::External)
 			solAssert(
-				t->annotation().type->interfaceType(false),
+				t->annotation().type->interfaceType(false).get(),
 				"Internal type used as parameter for external function."
 			);
 		m_parameterTypes.push_back(t->annotation().type);
@@ -2584,7 +2584,7 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 		solAssert(t->annotation().type, "Type not set for return parameter.");
 		if (m_kind == Kind::External)
 			solAssert(
-				t->annotation().type->interfaceType(false),
+				t->annotation().type->interfaceType(false).get(),
 				"Internal type used as return parameter for external function."
 			);
 		m_returnParameterTypes.push_back(t->annotation().type);
@@ -2885,14 +2885,14 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 
 	for (auto type: m_parameterTypes)
 	{
-		if (auto ext = type->interfaceType(isLibraryFunction))
+		if (auto ext = type->interfaceType(isLibraryFunction).get())
 			paramTypes.push_back(ext);
 		else
 			return FunctionTypePointer();
 	}
 	for (auto type: m_returnParameterTypes)
 	{
-		if (auto ext = type->interfaceType(isLibraryFunction))
+		if (auto ext = type->interfaceType(isLibraryFunction).get())
 			retParamTypes.push_back(ext);
 		else
 			return FunctionTypePointer();
@@ -2978,7 +2978,7 @@ TypePointer FunctionType::encodingType() const
 		return TypePointer();
 }
 
-TypePointer FunctionType::interfaceType(bool /*_inLibrary*/) const
+TypeResult FunctionType::interfaceType(bool /*_inLibrary*/) const
 {
 	if (m_kind == Kind::External)
 		return shared_from_this();
