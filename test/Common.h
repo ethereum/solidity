@@ -18,6 +18,7 @@
 #pragma once
 
 #include <libdevcore/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
@@ -39,6 +40,8 @@ struct CommonOptions: boost::noncopyable
 	bool disableIPC = false;
 	bool disableSMT = false;
 
+	langutil::EVMVersion evmVersion() const;
+
 	virtual bool parse(int argc, char const* const* argv);
 	// Throws a ConfigException on error
 	virtual void validate() const;
@@ -47,6 +50,9 @@ protected:
 	CommonOptions(std::string caption = "");
 
 	boost::program_options::options_description options;
+
+private:
+	std::string evmVersionString;
 };
 
 }

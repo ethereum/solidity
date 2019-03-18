@@ -37,13 +37,9 @@ struct Options: CommonOptions
 	bool showMessages = false;
 	bool useABIEncoderV2 = false;
 
-	langutil::EVMVersion evmVersion() const;
-
 	static Options const& get();
 
 private:
-	std::string evmVersionString;
-
 	Options();
 };
 

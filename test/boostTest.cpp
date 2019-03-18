@@ -80,7 +80,7 @@ int registerTests(
 {
 	int numTestsAdded = 0;
 	fs::path fullpath = _basepath / _path;
-	TestCase::Config config{fullpath.string(), _ipcPath};
+	TestCase::Config config{fullpath.string(), _ipcPath, dev::test::Options::get().evmVersion()};
 	if (fs::is_directory(fullpath))
 	{
 		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
@@ -104,8 +104,10 @@ int registerTests(
 					try
 					{
 						stringstream errorStream;
-						if (!_testCaseCreator(config)->run(errorStream))
-							BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+						auto testCase = _testCaseCreator(config);
+						if (testCase->supportedForEVMVersion(dev::test::Options::get().evmVersion()))
+							if (!testCase->run(errorStream))
+								BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
 					}
 					catch (boost::exception const& _e)
 					{

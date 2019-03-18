@@ -17,6 +17,7 @@
 
 #include <test/TestCase.h>
 
+#include <boost/algorithm/cxx11/none_of.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -35,16 +36,57 @@ bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 		   !boost::starts_with(_filename.string(), ".");
 }
 
+bool TestCase::supportedForEVMVersion(langutil::EVMVersion _evmVersion) const
+{
+	return boost::algorithm::none_of(m_evmVersionRules, [&](auto const& rule) { return !rule(_evmVersion); });
+}
+
 string TestCase::parseSource(istream& _stream)
 {
 	string source;
 	string line;
-	string const delimiter("// ----");
+	static string const delimiter("// ----");
+	static string const evmVersion("// EVMVersion: ");
+	bool isTop = true;
 	while (getline(_stream, line))
 		if (boost::algorithm::starts_with(line, delimiter))
 			break;
 		else
+		{
+			if (isTop && boost::algorithm::starts_with(line, evmVersion))
+			{
+				string versionString = line.substr(evmVersion.size() + 1);
+				auto version = langutil::EVMVersion::fromString(versionString);
+				if (!version)
+					throw runtime_error("Invalid EVM version: \"" + versionString + "\"");
+				switch (line.at(evmVersion.size()))
+				{
+					case '>':
+						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
+							return version < _version;
+						});
+						break;
+					case '<':
+						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
+							return _version < version;
+						});
+						break;
+					case '=':
+						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
+							return _version == version;
+						});
+						break;
+					case '!':
+						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
+							return !(_version == version);
+						});
+						break;
+				}
+			}
+			else
+				isTop = false;
 			source += line + "\n";
+		}
 	return source;
 }
 

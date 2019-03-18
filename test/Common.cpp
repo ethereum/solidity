@@ -75,6 +75,7 @@ CommonOptions::CommonOptions(std::string _caption):
 	)
 {
 	options.add_options()
+		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(dev::test::testPath()), "path to test files")
 		("ipcpath", po::value<fs::path>(&ipcPath)->default_value(IPCEnvOrDefaultPath()), "path to ipc socket")
 		("no-ipc", po::bool_switch(&disableIPC), "disable semantic tests")
@@ -119,6 +120,20 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 	po::notify(arguments);
 
 	return true;
+}
+
+
+langutil::EVMVersion CommonOptions::evmVersion() const
+{
+	if (!evmVersionString.empty())
+	{
+		auto version = langutil::EVMVersion::fromString(evmVersionString);
+		if (!version)
+			throw std::runtime_error("Invalid EVM version: " + evmVersionString);
+		return *version;
+	}
+	else
+		return langutil::EVMVersion();
 }
 
 }

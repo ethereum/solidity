@@ -53,22 +53,7 @@ Options::Options()
 	options.add_options()
 		("optimize", po::bool_switch(&optimize), "enables optimization")
 		("abiencoderv2", po::bool_switch(&useABIEncoderV2), "enables abi encoder v2")
-		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("show-messages", po::bool_switch(&showMessages), "enables message output");
 
 	parse(suite.argc, suite.argv);
-}
-
-langutil::EVMVersion Options::evmVersion() const
-{
-	if (!evmVersionString.empty())
-	{
-		// We do this check as opposed to in the constructor because the BOOST_REQUIRE
-		// macros cannot yet be used in the constructor.
-		auto version = langutil::EVMVersion::fromString(evmVersionString);
-		BOOST_REQUIRE_MESSAGE(version, "Invalid EVM version: " + evmVersionString);
-		return *version;
-	}
-	else
-		return langutil::EVMVersion();
 }
