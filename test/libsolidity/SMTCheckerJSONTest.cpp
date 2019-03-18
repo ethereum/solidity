@@ -35,7 +35,7 @@ using namespace dev;
 using namespace std;
 using namespace boost::unit_test;
 
-SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion const _evmVersion)
+SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _evmVersion)
 : SyntaxTest(_filename, _evmVersion)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
@@ -49,7 +49,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion con
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid JSON file."));
 }
 
-bool SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+bool SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	StandardCompiler compiler;
 

@@ -17,6 +17,7 @@
 
 #include <test/TestCase.h>
 
+#include <boost/algorithm/cxx11/none_of.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -37,18 +38,15 @@ bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 
 bool TestCase::supportedForEVMVersion(langutil::EVMVersion _evmVersion) const
 {
-	for (auto const& rule: m_evmVersionRules)
-		if (!rule(_evmVersion))
-			return false;
-	return true;
+	return boost::algorithm::none_of(m_evmVersionRules, [&](auto const& rule) { return !rule(_evmVersion); });
 }
 
 string TestCase::parseSource(istream& _stream)
 {
 	string source;
 	string line;
-	string const delimiter("// ----");
-	string const evmVersion("// EVMVersion: ");
+	static string const delimiter("// ----");
+	static string const evmVersion("// EVMVersion: ");
 	bool isTop = true;
 	while (getline(_stream, line))
 		if (boost::algorithm::starts_with(line, delimiter))

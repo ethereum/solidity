@@ -46,10 +46,10 @@ public:
 	static std::unique_ptr<TestCase> create(Config const& _options)
 	{ return std::make_unique<SemanticTest>(_options.filename, _options.ipcPath, _options.evmVersion); }
 
-	explicit SemanticTest(std::string const& _filename, std::string const& _ipcPath, langutil::EVMVersion const _evmVersion);
+	explicit SemanticTest(std::string const& _filename, std::string const& _ipcPath, langutil::EVMVersion _evmVersion);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
-	void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
+	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix = "") const override;
 
 	/// Instantiates a test file parser that parses the additional comment section at the end of

@@ -53,7 +53,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
-	explicit ExecutionFramework(std::string const& _ipcPath, langutil::EVMVersion const _evmVersion);
+	explicit ExecutionFramework(std::string const& _ipcPath, langutil::EVMVersion _evmVersion);
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(

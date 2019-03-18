@@ -54,7 +54,7 @@ ExecutionFramework::ExecutionFramework():
 {
 }
 
-ExecutionFramework::ExecutionFramework(string const& _ipcPath, langutil::EVMVersion const _evmVersion):
+ExecutionFramework::ExecutionFramework(string const& _ipcPath, langutil::EVMVersion _evmVersion):
 	m_rpc(RPCSession::instance(_ipcPath)),
 	m_evmVersion(_evmVersion),
 	m_optimize(dev::test::Options::get().optimize),

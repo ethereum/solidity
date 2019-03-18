@@ -50,7 +50,7 @@ struct TestStats
 	int successCount = 0;
 	int testCount = 0;
 	int skippedCount = 0;
-	operator bool() const { return successCount + skippedCount == testCount; }
+	operator bool() const noexcept { return successCount + skippedCount == testCount; }
 	TestStats& operator+=(TestStats const& _other) noexcept
 	{
 		successCount += _other.successCount;
@@ -88,8 +88,8 @@ public:
 		fs::path const& _basepath,
 		fs::path const& _path,
 		string const& _ipcPath,
-		bool const _formatted,
-		langutil::EVMVersion const _evmVersion
+		bool _formatted,
+		langutil::EVMVersion _evmVersion
 	);
 
 	static string editor;
@@ -101,7 +101,7 @@ private:
 		Quit
 	};
 
-	Request handleResponse(bool const _exception);
+	Request handleResponse(bool _exception);
 
 	TestCase::TestCaseCreator m_testCaseCreator;
 	string const m_name;
@@ -170,7 +170,7 @@ TestTool::Result TestTool::process()
 	}
 }
 
-TestTool::Request TestTool::handleResponse(bool const _exception)
+TestTool::Request TestTool::handleResponse(bool _exception)
 {
 	if (_exception)
 		cout << "(e)dit/(s)kip/(q)uit? ";
@@ -216,8 +216,8 @@ TestStats TestTool::processPath(
 	fs::path const& _basepath,
 	fs::path const& _path,
 	string const& _ipcPath,
-	bool const _formatted,
-	langutil::EVMVersion const _evmVersion
+	bool _formatted,
+	langutil::EVMVersion _evmVersion
 )
 {
 	std::queue<fs::path> paths;
@@ -318,7 +318,7 @@ boost::optional<TestStats> runTestSuite(
 	string const& _ipcPath,
 	TestCase::TestCaseCreator _testCaseCreator,
 	bool _formatted,
-	langutil::EVMVersion const _evmVersion
+	langutil::EVMVersion _evmVersion
 )
 {
 	fs::path testPath = _basePath / _subdirectory;
@@ -395,7 +395,7 @@ int main(int argc, char const *argv[])
 	{
 		cout << " (";
 		AnsiColorized(cout, !options.noColor, {BOLD, YELLOW}) << global_stats.skippedCount;
-		cout<< " tests skipped)";
+		cout << " tests skipped)";
 	}
 	cout << "." << endl;
 
