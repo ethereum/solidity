@@ -68,6 +68,7 @@ public:
 
 	std::string shiftLeftFunction(size_t _numBits);
 	std::string shiftRightFunction(size_t _numBits);
+
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
 	std::string roundUpFunction();
