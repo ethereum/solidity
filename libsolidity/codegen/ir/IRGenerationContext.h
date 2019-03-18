@@ -35,6 +35,7 @@ namespace solidity
 {
 
 class VariableDeclaration;
+class Expression;
 
 /**
  * Class that contains contextual information during IR generation.
@@ -51,12 +52,18 @@ public:
 	std::shared_ptr<MultiUseYulFunctionCollector> functionCollector() const { return m_functions; }
 
 	std::string addLocalVariable(VariableDeclaration const& _varDecl);
+	std::string variableName(VariableDeclaration const& _varDecl);
+	std::string newYulVariable();
+	/// @returns the variable (or comma-separated list of variables) that contain
+	/// the value of the given expression.
+	std::string variable(Expression const& _expression);
 
 private:
 	langutil::EVMVersion m_evmVersion;
 	OptimiserSettings m_optimiserSettings;
 	std::map<VariableDeclaration const*, std::string> m_localVariables;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functions;
+	size_t m_varCounter = 0;
 };
 
 }

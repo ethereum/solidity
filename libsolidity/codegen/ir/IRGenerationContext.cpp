@@ -35,3 +35,24 @@ string IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl
 
 	return m_localVariables[&_varDecl] = "vloc_" + _varDecl.name() + "_" + to_string(_varDecl.id());
 }
+
+string IRGenerationContext::variableName(VariableDeclaration const& _varDecl)
+{
+	solAssert(
+		m_localVariables.count(&_varDecl),
+		"Unknown variable: " + _varDecl.name()
+	);
+	return m_localVariables[&_varDecl];
+}
+
+string IRGenerationContext::newYulVariable()
+{
+	return "_" + to_string(++m_varCounter);
+}
+
+string IRGenerationContext::variable(Expression const& _expression)
+{
+	unsigned size = _expression.annotation().type->sizeOnStack();
+	solUnimplementedAssert(size == 1, "");
+	return "expr_" + to_string(_expression.id());
+}
