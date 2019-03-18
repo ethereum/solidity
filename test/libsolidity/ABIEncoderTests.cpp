@@ -510,6 +510,108 @@ BOOST_AUTO_TEST_CASE(structs2)
 	)
 }
 
+BOOST_AUTO_TEST_CASE(bool_arrays)
+{
+	string sourceCode = R"(
+		contract C {
+			bool[] x;
+			bool[4] y;
+			event E(bool[], bool[4]);
+			function f() public returns (bool[] memory, bool[4] memory) {
+				x.length = 4;
+				x[0] = true;
+				x[1] = false;
+				x[2] = true;
+				x[3] = false;
+				y[0] = true;
+				y[1] = false;
+				y[2] = true;
+				y[3] = false;
+				emit E(x, y);
+				return (x, y); // this copies to memory first
+			}
+		}
+	)";
+
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode, 0, "C");
+		bytes encoded = encodeArgs(
+			0xa0, 1, 0, 1, 0,
+			4, 1, 0, 1, 0
+		);
+		ABI_CHECK(callContractFunction("f()"), encoded);
+		REQUIRE_LOG_DATA(encoded);
+	)
+}
+
+BOOST_AUTO_TEST_CASE(bytes3_arrays)
+{
+	string sourceCode = R"(
+		contract C {
+			bytes3[] x;
+			bytes3[4] y;
+			event E(bytes3[], bytes3[4]);
+			function f() public returns (bytes3[] memory, bytes3[4] memory) {
+				x.length = 4;
+				x[0] = 0x010203;
+				x[1] = 0x00;
+				x[2] = 0x040506;
+				x[3] = 0x00;
+				y[0] = 0x00;
+				y[1] = 0x010203;
+				y[2] = 0x00;
+				y[3] = 0x040506;
+				emit E(x, y);
+				return (x, y); // this copies to memory first
+			}
+		}
+	)";
+
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode, 0, "C");
+		bytes encoded = encodeArgs(
+			0xa0, 0, "\x01\x02\x03", 0, "\x04\x05\x06",
+			4, "\x01\x02\x03", 0, "\x04\x05\x06", 0
+		);
+		ABI_CHECK(callContractFunction("f()"), encoded);
+		REQUIRE_LOG_DATA(encoded);
+	)
+}
+
+BOOST_AUTO_TEST_CASE(packed_structs)
+{
+	string sourceCode = R"(
+		contract C {
+			struct S { bool a; int8 b; function() external g; bytes3 d; int8 e; }
+			S s;
+			event E(S);
+			function store() public {
+				s.a = false;
+				s.b = -5;
+				s.g = this.g;
+				s.d = 0x010203;
+				s.e = -3;
+			}
+			function f() public returns (S memory) {
+				emit E(s);
+				return s; // this copies to memory first
+			}
+			function g() public pure {}
+		}
+	)";
+
+	NEW_ENCODER(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("store()"), bytes{});
+		bytes fun = m_contractAddress.asBytes() + fromHex("0xe2179b8e");
+		bytes encoded = encodeArgs(
+			0, u256(-5), asString(fun), "\x01\x02\x03", u256(-3)
+		);
+		ABI_CHECK(callContractFunction("f()"), encoded);
+		REQUIRE_LOG_DATA(encoded);
+	)
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
