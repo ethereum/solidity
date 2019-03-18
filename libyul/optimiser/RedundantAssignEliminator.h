@@ -25,6 +25,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <map>
+#include <vector>
 
 namespace yul
 {
@@ -171,6 +172,7 @@ private:
 	/// above.
 	/// Will destroy @a _source.
 	static void merge(TrackedAssignments& _target, TrackedAssignments&& _source);
+	static void merge(TrackedAssignments& _target, std::vector<TrackedAssignments>&& _source);
 	void changeUndecidedTo(YulString _variable, State _newState);
 	void finalize(YulString _variable);
 
@@ -178,6 +180,16 @@ private:
 	std::set<YulString> m_declaredVariables;
 	std::set<Assignment const*> m_pendingRemovals;
 	TrackedAssignments m_assignments;
+
+	/// Working data for traversing for-loops.
+	struct ForLoopInfo
+	{
+		/// Tracked assignment states for each break statement.
+		std::vector<TrackedAssignments> pendingBreakStmts;
+		/// Tracked assignment states for each continue statement.
+		std::vector<TrackedAssignments> pendingContinueStmts;
+	};
+	ForLoopInfo m_forLoopInfo;
 };
 
 class AssignmentRemover: public ASTModifier

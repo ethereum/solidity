@@ -133,9 +133,14 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 
 	visit(*_forLoop.condition);
 
+	ForLoopInfo outerForLoopInfo;
+	swap(outerForLoopInfo, m_forLoopInfo);
+
 	TrackedAssignments zeroRuns{m_assignments};
 
 	(*this)(_forLoop.body);
+	merge(m_assignments, move(m_forLoopInfo.pendingContinueStmts));
+	m_forLoopInfo.pendingContinueStmts = {};
 	(*this)(_forLoop.post);
 
 	visit(*_forLoop.condition);
@@ -143,6 +148,8 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 	TrackedAssignments oneRun{m_assignments};
 
 	(*this)(_forLoop.body);
+
+	merge(m_assignments, move(m_forLoopInfo.pendingContinueStmts));
 	(*this)(_forLoop.post);
 
 	visit(*_forLoop.condition);
@@ -150,16 +157,20 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 	// Order does not matter because "max" is commutative and associative.
 	merge(m_assignments, move(oneRun));
 	merge(m_assignments, move(zeroRuns));
+	merge(m_assignments, move(m_forLoopInfo.pendingBreakStmts));
+
+	// Oestore potential outer for-loop states.
+	swap(m_forLoopInfo, outerForLoopInfo);
 }
 
 void RedundantAssignEliminator::operator()(Break const&)
 {
-	yulAssert(false, "Not implemented yet.");
+	m_forLoopInfo.pendingBreakStmts.push_back(m_assignments);
 }
 
 void RedundantAssignEliminator::operator()(Continue const&)
 {
-	yulAssert(false, "Not implemented yet.");
+	m_forLoopInfo.pendingContinueStmts.push_back(m_assignments);
 }
 
 void RedundantAssignEliminator::operator()(Block const& _block)
@@ -216,6 +227,13 @@ void RedundantAssignEliminator::merge(TrackedAssignments& _target, TrackedAssign
 	{
 		return joinMap(_assignmentHere, move(_assignmentThere), State::join);
 	});
+}
+
+void RedundantAssignEliminator::merge(TrackedAssignments& _target, vector<TrackedAssignments>&& _source)
+{
+	for (TrackedAssignments& ts: _source)
+		merge(_target, move(ts));
+	_source.clear();
 }
 
 void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, RedundantAssignEliminator::State _newState)
