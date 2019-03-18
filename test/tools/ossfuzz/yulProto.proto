@@ -139,6 +139,21 @@ message IfStmt {
   required Block if_body = 2;
 }
 
+message ForStmt {
+  required Block for_body = 2;
+}
+
+message CaseStmt {
+  required Literal case_lit = 1;
+  required Block case_block = 2;
+}
+
+message SwitchStmt {
+  required Expression switch_expr = 1;
+  repeated CaseStmt case_stmt = 2;
+  optional Block default_block = 3;
+}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl          = 1;
@@ -146,6 +161,8 @@ message Statement {
     IfStmt              ifstmt        = 3;
     StoreFunc           storage_func  = 4;
     Block               blockstmt     = 5;
+    ForStmt             forstmt       = 6;
+    SwitchStmt          switchstmt    = 7;
   }
 }
 

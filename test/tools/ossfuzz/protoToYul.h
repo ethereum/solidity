@@ -46,6 +46,9 @@ std::ostream& operator<<(std::ostream& _os, StoreFunc const& _x);
 std::ostream& operator<<(std::ostream& _os, Statement const& _x);
 std::ostream& operator<<(std::ostream& _os, Block const& _x);
 std::ostream& operator<<(std::ostream& _os, Function const& _x);
+std::ostream& operator<<(std::ostream& _os, ForStmt const& _x);
+std::ostream& operator<<(std::ostream& _os, CaseStmt const& _x);
+std::ostream& operator<<(std::ostream& _os, SwitchStmt const& _x);
 }
 }
 }
