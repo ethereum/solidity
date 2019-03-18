@@ -192,7 +192,8 @@ struct IdentifierAnnotation: ExpressionAnnotation
 struct MemberAccessAnnotation: ExpressionAnnotation
 {
 	/// Referenced declaration, set at latest during overload resolution stage.
-	Declaration const* referencedDeclaration = nullptr;
+	Declaration const* referencedDeclaration;
+	std::vector<Declaration const*> allReferencedDeclarations = {};
 };
 
 struct BinaryOperationAnnotation: ExpressionAnnotation

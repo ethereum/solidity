@@ -86,7 +86,43 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
 	for (auto const& n: _contract.subNodes())
-		n->accept(*this);
+	{
+		struct MemberAccessVisit: public ASTConstVisitor
+		{
+			bool m_hasMultiple = false;
+
+			bool visit(MemberAccess const& _memberAccess) override
+			{
+				m_hasMultiple =
+					m_hasMultiple ||
+					!_memberAccess.annotation().allReferencedDeclarations.empty();
+
+				cout << "Found multiple?: " << m_hasMultiple << endl;
+				return true;
+			}
+		};
+
+		auto old_err = m_errorReporter.errors();
+		MemberAccessVisit memberVisitor;
+
+		do
+		{
+			m_errorReporter.clear();
+			memberVisitor.m_hasMultiple = false;
+			cout << "loop start " << endl;
+
+			n->accept(*this);
+
+			n->accept(memberVisitor);
+		cout << "multiple: " << memberVisitor.m_hasMultiple << " errors: " << m_errorReporter.hasErrors() << endl;
+		}
+		while (memberVisitor.m_hasMultiple && m_errorReporter.hasErrors());
+		auto new_errs = m_errorReporter.errors();
+		m_errorReporter.clear();
+
+		m_errorReporter.append(old_err);
+		m_errorReporter.append(new_errs);
+	}
 
 
 	return false;
@@ -2096,16 +2132,40 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			errorMsg
 		);
 	}
-	else if (possibleMembers.size() > 1)
+	//else if (possibleMembers.size() > 1)
+
+	bool initiallyEmpty = annotation.allReferencedDeclarations.empty();
+	bool useThisOne = initiallyEmpty;
+
+	for (MemberList::Member const& member: possibleMembers)
+	{
+		cout << "possible declr: " << (member.declaration ? member.declaration->name() : "?")  << endl;
+		if (initiallyEmpty)
+			annotation.allReferencedDeclarations.push_back(member.declaration);
+		if (useThisOne)
+		{
+			cout << "Using declr:" << (member.declaration ? member.declaration->name() : "?")  << endl;
+			annotation.referencedDeclaration = member.declaration;
+			annotation.type = member.type;
+			useThisOne = false;
+		}
+		else if (annotation.referencedDeclaration == member.declaration)
+			useThisOne = true;
+	}
+
+	if (possibleMembers.back().declaration == annotation.referencedDeclaration)
+		annotation.allReferencedDeclarations.clear();
+
+		/*
 		m_errorReporter.fatalTypeError(
 			_memberAccess.location(),
 			"Member \"" + memberName + "\" not unique "
 			"after argument-dependent lookup in " + exprType->toString() +
 			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".")
-		);
+		);*/
 
-	annotation.referencedDeclaration = possibleMembers.front().declaration;
-	annotation.type = possibleMembers.front().type;
+	//annotation.referencedDeclaration = possibleMembers.front().declaration;
+	//annotation.type = possibleMembers.front().type;
 
 	if (auto funType = dynamic_cast<FunctionType const*>(annotation.type.get()))
 		solAssert(
