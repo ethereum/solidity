@@ -1024,29 +1024,96 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	return jsonCompactPrint(meta);
 }
 
+class MetadataCBOREncoder
+{
+public:
+	void pushBytes(string const& key, bytes const& value)
+	{
+		m_entryCount++;
+		pushTextString(key);
+		pushByteString(value);
+	}
+
+	void pushString(string const& key, string const& value)
+	{
+		m_entryCount++;
+		pushTextString(key);
+		pushTextString(value);
+	}
+
+	void pushBool(string const& key, bool value)
+	{
+		m_entryCount++;
+		pushTextString(key);
+		pushBool(value);
+	}
+
+	bytes serialise() const
+	{
+		unsigned size = m_data.size() + 1;
+		solAssert(size <= 0xffff, "Metadata too large.");
+		solAssert(m_entryCount <= 0x1f, "Too many map entries.");
+
+		// CBOR fixed-length map
+		bytes ret{static_cast<unsigned char>(0xa0 + m_entryCount)};
+		// The already encoded key-value pairs
+		ret += m_data;
+		// 16-bit big endian length
+		ret += toCompactBigEndian(size, 2);
+		return ret;
+	}
+
+private:
+	void pushTextString(string const& key)
+	{
+		unsigned length = key.size();
+		if (length < 24)
+		{
+			m_data += bytes{static_cast<unsigned char>(0x60 + length)};
+			m_data += key;
+		}
+		else if (length <= 256)
+		{
+			m_data += bytes{0x78, static_cast<unsigned char>(length)};
+			m_data += key;
+		}
+		else
+			solAssert(false, "Text string too large.");
+	}
+	void pushByteString(bytes const& key)
+	{
+		unsigned length = key.size();
+		if (length < 24)
+		{
+			m_data += bytes{static_cast<unsigned char>(0x40 + length)};
+			m_data += key;
+		}
+		else if (length <= 256)
+		{
+			m_data += bytes{0x58, static_cast<unsigned char>(length)};
+			m_data += key;
+		}
+		else
+			solAssert(false, "Byte string too large.");
+	}
+	void pushBool(bool value)
+	{
+		if (value)
+			m_data += bytes{0xf5};
+		else
+			m_data += bytes{0xf4};
+	}
+	unsigned m_entryCount = 0;
+	bytes m_data;
+};
+
 bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
 {
-	bytes cborEncodedHash =
-		// CBOR-encoding of the key "bzzr0"
-		bytes{0x65, 'b', 'z', 'z', 'r', '0'}+
-		// CBOR-encoding of the hash
-		bytes{0x58, 0x20} + dev::swarmHash(_metadata).asBytes();
-	bytes cborEncodedMetadata;
+	MetadataCBOREncoder encoder;
+	encoder.pushBytes("bzzr0", dev::swarmHash(_metadata).asBytes());
 	if (_experimentalMode)
-		cborEncodedMetadata =
-			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata), "experimental": true}
-			bytes{0xa2} +
-			cborEncodedHash +
-			bytes{0x6c, 'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l', 0xf5};
-	else
-		cborEncodedMetadata =
-			// CBOR-encoding of {"bzzr0": dev::swarmHash(metadata)}
-			bytes{0xa1} +
-			cborEncodedHash;
-	solAssert(cborEncodedMetadata.size() <= 0xffff, "Metadata too large");
-	// 16-bit big endian length
-	cborEncodedMetadata += toCompactBigEndian(cborEncodedMetadata.size(), 2);
-	return cborEncodedMetadata;
+		encoder.pushBool("experimental", true);
+	return encoder.serialise();
 }
 
 string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) const
