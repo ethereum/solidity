@@ -844,6 +844,16 @@ public:
 	}
 	TypeResult interfaceType(bool _inLibrary) const override;
 
+	bool recursive() const
+	{
+		if (m_recursive.is_initialized())
+			return m_recursive.get();
+
+		interfaceType(false);
+
+		return m_recursive.get();
+	}
+
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	std::string canonicalName() const override;
@@ -868,6 +878,7 @@ private:
 	// Caches for interfaceType(bool)
 	mutable boost::optional<TypeResult> m_interfaceType;
 	mutable boost::optional<TypeResult> m_interfaceType_library;
+	mutable boost::optional<bool> m_recursive;
 };
 
 /**

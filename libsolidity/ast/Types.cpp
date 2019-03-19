@@ -2142,8 +2142,9 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 	if (!_inLibrary && m_interfaceType.is_initialized())
 		return *m_interfaceType;
 
-	bool recursion = false;
 	TypeResult result{TypePointer{}};
+
+	m_recursive = false;
 
 	auto visitor = [&](
 		StructDefinition const& _struct,
@@ -2175,7 +2176,7 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 					_cycleDetector.run(innerStruct->structDefinition())
 				)
 				{
-					recursion = true;
+					m_recursive = true;
 					if (_inLibrary && location() == DataLocation::Storage)
 						continue;
 					else
@@ -2195,7 +2196,7 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 		}
 	};
 
-	recursion = recursion || (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
+	m_recursive = m_recursive.get() || (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
 
 	std::string const recursiveErrMsg = "Recursive type not allowed for public or external contract functions.";
 
@@ -2208,13 +2209,13 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 		else
 			m_interfaceType_library = copyForLocation(DataLocation::Memory, true);
 
-		if (recursion)
+		if (m_recursive.get())
 			m_interfaceType = TypeResult::err(recursiveErrMsg);
 
 		return *m_interfaceType_library;
 	}
 
-	if (recursion)
+	if (m_recursive.get())
 		m_interfaceType = TypeResult::err(recursiveErrMsg);
 	else if (!result.message().empty())
 		m_interfaceType = result;
