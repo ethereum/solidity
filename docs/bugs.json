@@ -1,5 +1,16 @@
 [
     {
+        "name": "IncorrectByteInstructionOptimization",
+	"summary": "The optimizer incorrectly handles byte opcodes whose second argument is 31 or a constant expression that evaluates to 31. This can result in unexpected values.",
+        "description": "The optimizer incorrectly handles byte opcodes that use the constant 31 as second argument. This can happen when performing index access on bytesNN types with a compile-time constant value (not index) of 31 or when using the byte opcode in inline assembly.",
+        "introduced": "0.5.5",
+        "fixed": "0.5.7",
+        "severity": "very low",
+        "conditions": {
+            "optimizer": true
+        }
+    },
+    {
         "name": "DoubleShiftSizeOverflow",
         "summary": "Double bitwise shifts by large constants whose sum overflows 256 bits can result in unexpected values.",
         "description": "Nested logical shift operations whose total shift size is 2**256 or more are incorrectly optimized. This only applies to shifts by numbers of bits that are compile-time constant expressions.",

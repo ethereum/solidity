@@ -1,5 +1,8 @@
 ### 0.5.7 (unreleased)
 
+Important Bugfixes:
+ * Optimizer: Fix wrong ordering of arguments in byte optimization rule for constants.
+
 Language Features:
 
 
