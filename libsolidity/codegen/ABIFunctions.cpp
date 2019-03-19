@@ -370,7 +370,7 @@ string ABIFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFu
 
 		if (storageBytes == 32)
 			templ("body", "cleaned := value");
-		else if (_type.category() == Type::Category::Function || _type.category() == Type::Category::FixedBytes)
+		else if (_type.leftAligned())
 			templ("body", "cleaned := " + m_utils.shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
 		else
 			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
@@ -811,8 +811,15 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		subOptions.encodeFunctionFromStack = false;
 		subOptions.padded = true;
 		templ("encodeToMemoryFun", abiEncodeAndReturnUpdatedPosFunction(*_from.baseType(), *_to.baseType(), subOptions));
-		// There is only one element per slot, so sload suffices, no need to use "readFromStorage".
-		templ("arrayElementAccess", inMemory ? "mload(srcPtr)" : _from.baseType()->isValueType() ? "sload(srcPtr)" : "srcPtr" );
+		if (inMemory)
+			templ("arrayElementAccess", "mload(srcPtr)");
+		else if (_from.baseType()->isValueType())
+		{
+			solAssert(_from.dataStoredIn(DataLocation::Storage), "");
+			templ("arrayElementAccess", readFromStorage(*_from.baseType(), 0, false) + "(srcPtr)");
+		}
+		else
+			templ("arrayElementAccess", "srcPtr");
 		templ("nextArrayElement", m_utils.nextArrayElementFunction(_from));
 		return templ.render();
 	});
@@ -920,8 +927,9 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			bool dynamic = _to.isDynamicallyEncoded();
 			size_t storageBytes = _from.baseType()->storageBytes();
 			size_t itemsPerSlot = 32 / storageBytes;
-			// This always writes full slot contents to memory, which might be
-			// more than desired, i.e. it always writes beyond the end of memory.
+			solAssert(itemsPerSlot > 0, "");
+			// The number of elements we need to handle manually after the loop.
+			size_t spill = size_t(_from.length() % itemsPerSlot);
 			Whiskers templ(
 				R"(
 					// <readableTypeNameFrom> -> <readableTypeNameTo>
@@ -930,16 +938,31 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 						pos := <storeLength>(pos, length)
 						let originalPos := pos
 						let srcPtr := <dataArea>(value)
-						for { let i := 0 } lt(i, length) { i := add(i, <itemsPerSlot>) }
-						{
+						let itemCounter := 0
+						if <useLoop> {
+							// Run the loop over all full slots
+							for { } lt(add(itemCounter, sub(<itemsPerSlot>, 1)), length)
+										{ itemCounter := add(itemCounter, <itemsPerSlot>) }
+							{
+								let data := sload(srcPtr)
+								<#items>
+									<encodeToMemoryFun>(<extractFromSlot>(data), pos)
+									pos := add(pos, <elementEncodedSize>)
+								</items>
+								srcPtr := add(srcPtr, 1)
+							}
+						}
+						// Handle the last (not necessarily full) slot specially
+						if <useSpill> {
 							let data := sload(srcPtr)
 							<#items>
-								<encodeToMemoryFun>(<extractFromSlot>(data), pos)
-								pos := add(pos, <elementEncodedSize>)
+								if <inRange> {
+									<encodeToMemoryFun>(<extractFromSlot>(data), pos)
+									pos := add(pos, <elementEncodedSize>)
+									itemCounter := add(itemCounter, 1)
+								}
 							</items>
-							srcPtr := add(srcPtr, 1)
 						}
-						pos := add(originalPos, mul(length, <elementEncodedSize>))
 						<assignEnd>
 					}
 				)"
@@ -952,6 +975,15 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("lengthFun", m_utils.arrayLengthFunction(_from));
 			templ("storeLength", arrayStoreLengthForEncodingFunction(_to, _options));
 			templ("dataArea", m_utils.arrayDataAreaFunction(_from));
+			// We skip the loop for arrays that fit a single slot.
+			if (_from.isDynamicallySized() || _from.length() >= itemsPerSlot)
+				templ("useLoop", "1");
+			else
+				templ("useLoop", "0");
+			if (_from.isDynamicallySized() || spill != 0)
+				templ("useSpill", "1");
+			else
+				templ("useSpill", "0");
 			templ("itemsPerSlot", to_string(itemsPerSlot));
 			// We use padded size because array elements are always padded.
 			string elementEncodedSize = toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize());
@@ -968,7 +1000,15 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("encodeToMemoryFun", encodeToMemoryFun);
 			std::vector<std::map<std::string, std::string>> items(itemsPerSlot);
 			for (size_t i = 0; i < itemsPerSlot; ++i)
+			{
+				if (_from.isDynamicallySized())
+					items[i]["inRange"] = "lt(itemCounter, length)";
+				else if (i < spill)
+					items[i]["inRange"] = "1";
+				else
+					items[i]["inRange"] = "0";
 				items[i]["extractFromSlot"] = extractFromStorageValue(*_from.baseType(), i * storageBytes, false);
+			}
 			templ("items", items);
 			return templ.render();
 		}
