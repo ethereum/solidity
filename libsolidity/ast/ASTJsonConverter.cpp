@@ -144,12 +144,12 @@ Json::Value ASTJsonConverter::typePointerToJson(TypePointer _tp, bool _short)
 	return typeDescriptions;
 
 }
-Json::Value ASTJsonConverter::typePointerToJson(std::shared_ptr<std::vector<TypePointer>> _tps)
+Json::Value ASTJsonConverter::typePointerToJson(boost::optional<FuncCallArguments> const& _tps)
 {
 	if (_tps)
 	{
 		Json::Value arguments(Json::arrayValue);
-		for (auto const& tp: *_tps)
+		for (auto const& tp: _tps->types)
 			appendMove(arguments, typePointerToJson(tp));
 		return arguments;
 	}
@@ -168,7 +168,7 @@ void ASTJsonConverter::appendExpressionAttributes(
 		make_pair("isPure", _annotation.isPure),
 		make_pair("isLValue", _annotation.isLValue),
 		make_pair("lValueRequested", _annotation.lValueRequested),
-		make_pair("argumentTypes", typePointerToJson(_annotation.argumentTypes))
+		make_pair("argumentTypes", typePointerToJson(_annotation.arguments))
 	};
 	_attributes += exprAttributes;
 }
@@ -701,7 +701,7 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration)),
 		make_pair("overloadedDeclarations", overloads),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type)),
-		make_pair("argumentTypes", typePointerToJson(_node.annotation().argumentTypes))
+		make_pair("argumentTypes", typePointerToJson(_node.annotation().arguments))
 	});
 	return false;
 }

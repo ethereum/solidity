@@ -1807,13 +1807,16 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			argumentsArePure = false;
 	}
 
-	// For positional calls only, store argument types
-	if (_functionCall.names().empty())
+	// Store argument types - and names if given - for overload resolution
 	{
-		shared_ptr<TypePointers> argumentTypes = make_shared<TypePointers>();
+		FuncCallArguments funcCallArgs;
+
+		funcCallArgs.names = _functionCall.names();
+
 		for (ASTPointer<Expression const> const& argument: arguments)
-			argumentTypes->push_back(type(*argument));
-		_functionCall.expression().annotation().argumentTypes = move(argumentTypes);
+			funcCallArgs.types.push_back(type(*argument));
+
+		_functionCall.expression().annotation().arguments = std::move(funcCallArgs);
 	}
 
 	_functionCall.expression().accept(*this);
@@ -2010,16 +2013,16 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	ASTString const& memberName = _memberAccess.memberName();
 
 	// Retrieve the types of the arguments if this is used to call a function.
-	auto const& argumentTypes = _memberAccess.annotation().argumentTypes;
+	auto const& arguments = _memberAccess.annotation().arguments;
 	MemberList::MemberMap possibleMembers = exprType->members(m_scope).membersByName(memberName);
 	size_t const initialMemberCount = possibleMembers.size();
-	if (initialMemberCount > 1 && argumentTypes)
+	if (initialMemberCount > 1 && arguments)
 	{
 		// do overload resolution
 		for (auto it = possibleMembers.begin(); it != possibleMembers.end();)
 			if (
 				it->type->category() == Type::Category::Function &&
-				!dynamic_cast<FunctionType const&>(*it->type).canTakeArguments(*argumentTypes, exprType)
+				!dynamic_cast<FunctionType const&>(*it->type).canTakeArguments(*arguments, exprType)
 			)
 				it = possibleMembers.erase(it);
 			else
@@ -2274,7 +2277,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	IdentifierAnnotation& annotation = _identifier.annotation();
 	if (!annotation.referencedDeclaration)
 	{
-		if (!annotation.argumentTypes)
+		if (!annotation.arguments)
 		{
 			// The identifier should be a public state variable shadowing other functions
 			vector<Declaration const*> candidates;
@@ -2303,7 +2306,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			{
 				FunctionTypePointer functionType = declaration->functionType(true);
 				solAssert(!!functionType, "Requested type not present.");
-				if (functionType->canTakeArguments(*annotation.argumentTypes))
+				if (functionType->canTakeArguments(*annotation.arguments))
 					candidates.push_back(declaration);
 			}
 			if (candidates.empty())

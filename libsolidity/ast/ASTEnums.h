@@ -22,6 +22,7 @@
 #pragma once
 
 #include <liblangutil/Exceptions.h>
+#include <libsolidity/ast/ASTForward.h>
 
 #include <string>
 
@@ -49,6 +50,21 @@ inline std::string stateMutabilityToString(StateMutability const& _stateMutabili
 		solAssert(false, "Unknown state mutability.");
 	}
 }
+
+class Type;
+
+/// Container for function call parameter types & names
+struct FuncCallArguments
+{
+	/// Types of arguments
+	std::vector<std::shared_ptr<Type const>> types;
+	/// Names of the arguments if given, otherwise unset
+	std::vector<ASTPointer<ASTString>> names;
+
+	size_t numArguments() const { return types.size(); }
+	size_t numNames() const { return names.size(); }
+	bool hasNamedArguments() const { return !names.empty(); }
+};
 
 }
 }

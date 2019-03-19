@@ -1107,11 +1107,15 @@ public:
 	/// external type.
 	FunctionTypePointer interfaceFunctionType() const;
 
-	/// @returns true if this function can take the given argument types (possibly
+	/// @returns true if this function can take the given arguments (possibly
 	/// after implicit conversion).
 	/// @param _selfType if the function is bound, this has to be supplied and is the type of the
 	/// expression the function is called on.
-	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
+	bool canTakeArguments(
+		FuncCallArguments const& _arguments,
+		TypePointer const& _selfType = TypePointer()
+	) const;
+
 	/// @returns true if the types of parameters are equal (does not check return parameter types)
 	bool hasEqualParameterTypes(FunctionType const& _other) const;
 	/// @returns true iff the return types are equal (does not check parameter types)
