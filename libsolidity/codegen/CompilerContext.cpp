@@ -439,6 +439,10 @@ void CompilerContext::appendInlineAssembly(
 			identifierAccess.resolve
 		).analyze(*parserResult))
 			reportError("Optimizer introduced error into inline assembly.");
+#ifdef SOL_OUTPUT_ASM
+		cout << "After optimizer: " << endl;
+		cout << yul::AsmPrinter()(*parserResult) << endl;
+#endif
 	}
 
 	if (!errorReporter.errors().empty())
