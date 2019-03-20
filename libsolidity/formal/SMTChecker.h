@@ -63,8 +63,10 @@ private:
 	bool visit(ContractDefinition const& _node) override;
 	void endVisit(ContractDefinition const& _node) override;
 	void endVisit(VariableDeclaration const& _node) override;
+	bool visit(ModifierDefinition const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
+	bool visit(PlaceholderStatement const& _node) override;
 	bool visit(IfStatement const& _node) override;
 	bool visit(WhileStatement const& _node) override;
 	bool visit(ForStatement const& _node) override;
@@ -99,6 +101,10 @@ private:
 	/// Creates an uninterpreted function call.
 	void abstractFunctionCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
+
+	/// Encodes a modifier or function body according to the modifier
+	/// visit depth.
+	void visitFunctionOrModifier();
 
 	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
 	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
@@ -174,7 +180,7 @@ private:
 	smt::CheckResult checkSatisfiable();
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
-	void initializeFunctionCallParameters(FunctionDefinition const& _function, std::vector<smt::Expression> const& _callArgs);
+	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
 	void resetVariable(VariableDeclaration const& _variable);
 	void resetStateVariables();
 	void resetStorageReferences();
@@ -231,6 +237,10 @@ private:
 	smt::Expression currentPathConditions();
 	/// Returns the current callstack. Used for models.
 	langutil::SecondarySourceLocation currentCallStack();
+	/// Copies and pops the last called node.
+	ASTNode const* popCallStack();
+	/// Adds @param _node to the callstack.
+	void pushCallStack(ASTNode const* _node);
 	/// Conjoin the current path conditions with the given parameter and add to the solver
 	void addPathConjoinedExpression(smt::Expression const& _e);
 	/// Add to the solver: the given expression implied by the current path conditions
@@ -280,6 +290,12 @@ private:
 	bool visitedFunction(FunctionDefinition const* _funDef);
 
 	std::vector<OverflowTarget> m_overflowTargets;
+
+	/// Depth of visit to modifiers.
+	/// When m_modifierDepth == #modifiers the function can be visited
+	/// when placeholder is visited.
+	/// Needs to be a stack because of function calls.
+	std::vector<int> m_modifierDepthStack;
 };
 
 }
