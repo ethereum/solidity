@@ -169,6 +169,17 @@ bool CompilerStack::addSource(string const& _name, string const& _content)
 	return existed;
 }
 
+void CompilerStack::setSources(StringMap const& _sources)
+{
+	if (m_stackState == SourcesSet)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Cannot change sources once set."));
+	if (m_stackState != Empty)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set sources before parsing."));
+	for (auto const& source: _sources)
+		m_sources[source.first].scanner = make_shared<Scanner>(CharStream(/*content*/source.second, /*name*/source.first));
+	m_stackState = SourcesSet;
+}
+
 bool CompilerStack::parse()
 {
 	if (m_stackState != SourcesSet)
