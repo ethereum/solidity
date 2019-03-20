@@ -247,11 +247,12 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		(FunctionGrouper{})(*m_ast);
-		StackCompressor::run(m_dialect, *m_ast);
+		size_t maxIterations = 16;
+		StackCompressor::run(m_dialect, *m_ast, true, maxIterations);
 		(BlockFlattener{})(*m_ast);
 	}
 	else if (m_optimizerStep == "fullSuite")
-		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo);
+		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo, true);
 	else
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;

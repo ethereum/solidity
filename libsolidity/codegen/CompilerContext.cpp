@@ -428,6 +428,7 @@ void CompilerContext::appendInlineAssembly(
 			yul::EVMDialect::strictAssemblyForEVM(m_evmVersion),
 			*parserResult,
 			analysisInfo,
+			_optimiserSettings.optimizeStackAllocation,
 			externallyUsedIdentifiers
 		);
 		analysisInfo = yul::AsmAnalysisInfo{};

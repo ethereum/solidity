@@ -135,7 +135,10 @@ void AssemblyStack::optimize(Object& _object)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 			optimize(*subObject);
-	OptimiserSuite::run(languageToDialect(m_language, m_evmVersion), *_object.code, *_object.analysisInfo);
+	// TODO: Store this as setting - it should be the same as the flag passed to
+	// ::assemble(...)
+	bool optimizeStackAllocation = false;
+	OptimiserSuite::run(languageToDialect(m_language, m_evmVersion), *_object.code, *_object.analysisInfo, optimizeStackAllocation);
 }
 
 MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) const
