@@ -235,6 +235,31 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, StoreFunc const& _x)
 	return _os;
 }
 
+ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, ForStmt const& _x)
+{
+	_os << "for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } ";
+	return _os << _x.for_body();
+}
+
+ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, CaseStmt const& _x)
+{
+	_os << "case " << _x.case_lit() << " ";
+	return _os << _x.case_block();
+}
+
+ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, SwitchStmt const& _x)
+{
+	if (_x.case_stmt_size() > 0 || _x.has_default_block())
+	{
+		_os << "switch " << _x.switch_expr() << "\n";
+		for (auto const& caseStmt: _x.case_stmt())
+			_os << caseStmt;
+		if (_x.has_default_block())
+			_os << "default " << _x.default_block();
+	}
+	return _os;
+}
+
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Statement const& _x)
 {
 	switch (_x.stmt_oneof_case())
@@ -253,6 +278,12 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Statement const& _x)
 			break;
 		case Statement::kBlockstmt:
 			_os << _x.blockstmt();
+			break;
+		case Statement::kForstmt:
+			_os << _x.forstmt();
+			break;
+		case Statement::kSwitchstmt:
+			_os << _x.switchstmt();
 			break;
 		case Statement::STMT_ONEOF_NOT_SET:
 			break;
