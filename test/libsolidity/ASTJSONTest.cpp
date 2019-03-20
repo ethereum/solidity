@@ -92,13 +92,14 @@ bool ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _f
 {
 	CompilerStack c;
 
+	StringMap sources;
 	map<string, unsigned> sourceIndices;
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
-		c.addSource(m_sources[i].first, m_sources[i].second);
+		sources[m_sources[i].first] = m_sources[i].second;
 		sourceIndices[m_sources[i].first] = i + 1;
 	}
-
+	c.setSources(sources);
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	c.parseAndAnalyze();
 
