@@ -41,7 +41,7 @@ namespace test
 		u256 gasOpt{_gasOpt}; \
 		u256 gasNoOpt{_gasNoOpt}; \
 		u256 tolerance{_tolerance}; \
-		u256 gas = m_optimize ? gasOpt : gasNoOpt; \
+		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
 		u256 diff = gas < m_gasUsed ? m_gasUsed - gas : gas - m_gasUsed; \
 		BOOST_CHECK_MESSAGE( \
 			diff <= tolerance, \
