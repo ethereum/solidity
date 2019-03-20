@@ -65,6 +65,8 @@ public:
 		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
 	}
 
+	SourceLocation const& location() const noexcept { return m_location; }
+
 private:
 	Parser const& m_parser;
 	SourceLocation m_location;
@@ -108,14 +110,15 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 }
 
-void Parser::parsePragmaVersion(vector<Token> const& tokens, vector<string> const& literals)
+void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> const& _tokens, vector<string> const& _literals)
 {
-	SemVerMatchExpressionParser parser(tokens, literals);
+	SemVerMatchExpressionParser parser(_tokens, _literals);
 	auto matchExpression = parser.parse();
 	static SemVerVersion const currentVersion{string(VersionString)};
 	// FIXME: only match for major version incompatibility
 	if (!matchExpression.matches(currentVersion))
-		fatalParserError(
+		m_errorReporter.fatalParserError(
+			_location,
 			"Source file requires different compiler version (current compiler is " +
 			string(VersionString) + " - note that nightly builds are considered to be "
 			"strictly less than the released version"
@@ -154,6 +157,7 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 	if (literals.size() >= 2 && literals[0] == "solidity")
 	{
 		parsePragmaVersion(
+			nodeFactory.location(),
 			vector<Token>(tokens.begin() + 1, tokens.end()),
 			vector<string>(literals.begin() + 1, literals.end())
 		);
