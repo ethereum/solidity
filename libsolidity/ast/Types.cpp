@@ -1878,21 +1878,21 @@ TypeResult ArrayType::interfaceType(bool _inLibrary) const
 		return *m_interfaceType;
 
 	TypeResult result{TypePointer{}};
-	TypeResult baseExt = m_baseType->interfaceType(_inLibrary);
+	TypeResult baseInterfaceType = m_baseType->interfaceType(_inLibrary);
 
-	if (!baseExt.get())
+	if (!baseInterfaceType.get())
 	{
-		solAssert(!baseExt.message().empty(), "Expected detailed error message!");
-		result = baseExt;
+		solAssert(!baseInterfaceType.message().empty(), "Expected detailed error message!");
+		result = baseInterfaceType;
 	}
 	else if (_inLibrary && location() == DataLocation::Storage)
 		result = shared_from_this();
 	else if (m_arrayKind != ArrayKind::Ordinary)
 		result = this->copyForLocation(DataLocation::Memory, true);
 	else if (isDynamicallySized())
-		result = TypePointer{make_shared<ArrayType>(DataLocation::Memory, baseExt)};
+		result = TypePointer{make_shared<ArrayType>(DataLocation::Memory, baseInterfaceType)};
 	else
-		result = TypePointer{make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length)};
+		result = TypePointer{make_shared<ArrayType>(DataLocation::Memory, baseInterfaceType, m_length)};
 
 	if (_inLibrary)
 		m_interfaceType_library = result;
