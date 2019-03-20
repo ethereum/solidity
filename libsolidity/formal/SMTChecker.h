@@ -60,6 +60,8 @@ private:
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.
 
+	/// Visit functions.
+	//@{
 	bool visit(ContractDefinition const& _node) override;
 	void endVisit(ContractDefinition const& _node) override;
 	void endVisit(VariableDeclaration const& _node) override;
@@ -83,18 +85,35 @@ private:
 	void endVisit(Return const& _node) override;
 	bool visit(MemberAccess const& _node) override;
 	void endVisit(IndexAccess const& _node) override;
+	//@}
 
+	/// Specific helper functions that are called by visit functions.
+	//@{
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.
 	bool shortcutRationalNumber(Expression const& _expr);
 	void arithmeticOperation(BinaryOperation const& _op);
+	/// Division expression in the given type. Requires special treatment because
+	/// of rounding for signed division.
+	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
+
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
+
+	void assignment(VariableDeclaration const& _variable, Expression const& _value, langutil::SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, langutil::SourceLocation const& _location);
+
+	/// Handles the side effects of assignment to variable of some SMT array type
+	/// while aliasing is not supported.
+	void arrayAssignment();
+	/// Handles assignment to SMT array index.
+	void arrayIndexAssignment(Assignment const& _assignment);
 
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
 	void visitTypeConversion(FunctionCall const& _funCall);
+
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const& _funCall);
@@ -105,23 +124,10 @@ private:
 	/// Encodes a modifier or function body according to the modifier
 	/// visit depth.
 	void visitFunctionOrModifier();
+	//@}
 
-	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
-	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
-	/// Handles the side effects of assignment
-	/// to variable of some SMT array type
-	/// while aliasing is not supported.
-	void arrayAssignment();
-	/// Handles assignment to SMT array index.
-	void arrayIndexAssignment(Assignment const& _assignment);
-
-	/// Division expression in the given type. Requires special treatment because
-	/// of rounding for signed division.
-	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
-
-	void assignment(VariableDeclaration const& _variable, Expression const& _value, langutil::SourceLocation const& _location);
-	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, langutil::SourceLocation const& _location);
-
+	/// Control flow related helpers.
+	//@{
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
 
@@ -130,7 +136,41 @@ private:
 	/// @returns the variable indices after visiting the branch.
 	VariableIndices visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
 	VariableIndices visitBranch(Statement const& _statement, smt::Expression _condition);
+	/// Given two different branches and the touched variables,
+	/// merge the touched variables into after-branch ite variables
+	/// using the branch condition as guard.
+	void mergeVariables(
+		std::vector<VariableDeclaration const*> const& _variables,
+		smt::Expression const& _condition,
+		VariableIndices const& _indicesEndTrue,
+		VariableIndices const& _indicesEndFalse
+	);
 
+	/// Adds a new path condition
+	void pushPathCondition(smt::Expression const& _e);
+	/// Remove the last path condition
+	void popPathCondition();
+	/// Returns the conjunction of all path conditions or True if empty
+	smt::Expression currentPathConditions();
+	/// Returns the current callstack. Used for models.
+	langutil::SecondarySourceLocation currentCallStack();
+	/// Adds @param _node to the callstack.
+	void pushCallStack(ASTNode const* _node);
+	/// Copies and pops the last called node.
+	ASTNode const* popCallStack();
+	/// Conjoin the current path conditions with the given parameter and add to the solver
+	void addPathConjoinedExpression(smt::Expression const& _e);
+	/// Add to the solver: the given expression implied by the current path conditions
+	void addPathImpliedExpression(smt::Expression const& _e);
+	/// Returns true if the current function was not visited by
+	/// a function call.
+	bool isRootFunction();
+	/// Returns true if _funDef was already visited.
+	bool visitedFunction(FunctionDefinition const* _funDef);
+	//@}
+
+	/// SAT checks.
+	//@{
 	/// Check that a condition can be satisfied.
 	void checkCondition(
 		smt::Expression _condition,
@@ -147,6 +187,14 @@ private:
 		std::string const& _description
 	);
 
+	std::pair<smt::CheckResult, std::vector<std::string>>
+	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
+
+	smt::CheckResult checkSatisfiable();
+	//@}
+
+	/// Overflow.
+	//@{
 	struct OverflowTarget
 	{
 		enum class Type { Underflow, Overflow, All } type;
@@ -166,40 +214,41 @@ private:
 		}
 	};
 
+	/// Calls the functions above for all elements in m_overflowTargets accordingly.
+	void checkUnderOverflow();
 	/// Checks that the value is in the range given by the type.
 	void checkUnderflow(OverflowTarget& _target);
 	void checkOverflow(OverflowTarget& _target);
-	/// Calls the functions above for all elements in m_overflowTargets accordingly.
-	void checkUnderOverflow();
 	/// Adds an overflow target for lazy check at the end of the function.
 	void addOverflowTarget(OverflowTarget::Type _type, TypePointer _intType, smt::Expression _value, langutil::SourceLocation const& _location);
+	//@}
 
-	std::pair<smt::CheckResult, std::vector<std::string>>
-	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
+	/// Handling of program variables.
+	//@{
+	/// Tries to create an uninitialized variable and returns true on success.
+	/// This fails if the type is not supported.
+	bool createVariable(VariableDeclaration const& _varDecl);
+	/// @returns true if _delc is a variable that is known at the current point, i.e.
+	/// has a valid index
+	bool knownVariable(VariableDeclaration const& _decl);
 
-	smt::CheckResult checkSatisfiable();
-
-	void initializeLocalVariables(FunctionDefinition const& _function);
-	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
 	void resetVariable(VariableDeclaration const& _variable);
 	void resetStateVariables();
 	void resetStorageReferences();
 	void resetVariables(std::vector<VariableDeclaration const*> _variables);
 	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
-	/// @returns the type without storage pointer information if it has it.
-	TypePointer typeWithoutPointer(TypePointer const& _type);
+	/// Removes local variables from the context.
+	void removeLocalVariables();
 
-	/// Given two different branches and the touched variables,
-	/// merge the touched variables into after-branch ite variables
-	/// using the branch condition as guard.
-	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
-	/// Tries to create an uninitialized variable and returns true on success.
-	/// This fails if the type is not supported.
-	bool createVariable(VariableDeclaration const& _varDecl);
+	void initializeLocalVariables(FunctionDefinition const& _function);
+	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
 
-	/// @returns true if _delc is a variable that is known at the current point, i.e.
-	/// has a valid index
-	bool knownVariable(VariableDeclaration const& _decl);
+	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
+	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
+	//@}
+
+	/// Handling of symbolic variables.
+	//@{
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
 	smt::Expression currentValue(VariableDeclaration const& _decl);
@@ -217,49 +266,49 @@ private:
 	void setUnknownValue(VariableDeclaration const& decl);
 	void setUnknownValue(SymbolicVariable& _variable);
 
-	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
-	smt::Expression expr(Expression const& _e);
-	/// Creates the expression (value can be arbitrary)
-	void createExpr(Expression const& _e);
-	/// Checks if expression was created
-	bool knownExpr(Expression const& _e) const;
-	/// Creates the expression and sets its value.
-	void defineExpr(Expression const& _e, smt::Expression _value);
-
-	/// Checks if special variable or function was seen.
-	bool knownGlobalSymbol(std::string const& _var) const;
-
-	/// Adds a new path condition
-	void pushPathCondition(smt::Expression const& _e);
-	/// Remove the last path condition
-	void popPathCondition();
-	/// Returns the conjunction of all path conditions or True if empty
-	smt::Expression currentPathConditions();
-	/// Returns the current callstack. Used for models.
-	langutil::SecondarySourceLocation currentCallStack();
-	/// Copies and pops the last called node.
-	ASTNode const* popCallStack();
-	/// Adds @param _node to the callstack.
-	void pushCallStack(ASTNode const* _node);
-	/// Conjoin the current path conditions with the given parameter and add to the solver
-	void addPathConjoinedExpression(smt::Expression const& _e);
-	/// Add to the solver: the given expression implied by the current path conditions
-	void addPathImpliedExpression(smt::Expression const& _e);
-
-	/// Removes local variables from the context.
-	void removeLocalVariables();
-
 	/// Copy the SSA indices of m_variables.
 	VariableIndices copyVariableIndices();
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
+	//@}
 
+	/// Handling of symbolic expressions.
+	//@{
+	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
+	smt::Expression expr(Expression const& _e);
+	/// Creates the expression (value can be arbitrary)
+	void createExpr(Expression const& _e);
+	/// Creates the expression and sets its value.
+	void defineExpr(Expression const& _e, smt::Expression _value);
+	/// Checks if expression was created
+	bool knownExpr(Expression const& _e) const;
+	/// Checks if special variable or function was seen.
+	bool knownGlobalSymbol(std::string const& _var) const;
+	//@}
+
+	/// Misc helpers.
+	//@{
+	/// @returns the type without storage pointer information if it has it.
+	TypePointer typeWithoutPointer(TypePointer const& _type);
+	//@}
+
+	/// Members.
+
+	/// Solving.
+	//@{
 	std::shared_ptr<smt::SolverInterface> m_interface;
-	std::shared_ptr<VariableUsage> m_variableUsage;
+	//@}
+
+	/// Flags that help giving proper warnings to the user.
+	//@{
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
 	// True if the "No SMT solver available" warning was already created.
 	bool m_noSolverWarning = false;
+	//@}
+
+	/// Symbolic expressions.
+	//@{
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
@@ -269,7 +318,10 @@ private:
 	/// These may be direct application of UFs or Array index access.
 	/// Used to retrieve models.
 	std::set<Expression const*> m_uninterpretedTerms;
-	std::vector<smt::Expression> m_pathConditions;
+	//@}
+
+	/// Error/warning reporting.
+	//@{
 	/// ErrorReporter that comes from CompilerStack.
 	langutil::ErrorReporter& m_errorReporterReference;
 	/// Local SMTChecker ErrorReporter.
@@ -278,24 +330,27 @@ private:
 	langutil::ErrorReporter m_errorReporter;
 	langutil::ErrorList m_smtErrors;
 	std::shared_ptr<langutil::Scanner> m_scanner;
+	//@}
 
+	/// Control-flow.
+	//@{
+	std::shared_ptr<VariableUsage> m_variableUsage;
+	std::vector<smt::Expression> m_pathConditions;
 	/// Stores the current path of function calls.
 	std::vector<FunctionDefinition const*> m_functionPath;
 	/// Stores the current call/invocation path.
 	std::vector<ASTNode const*> m_callStack;
-	/// Returns true if the current function was not visited by
-	/// a function call.
-	bool isRootFunction();
-	/// Returns true if _funDef was already visited.
-	bool visitedFunction(FunctionDefinition const* _funDef);
-
-	std::vector<OverflowTarget> m_overflowTargets;
-
 	/// Depth of visit to modifiers.
 	/// When m_modifierDepth == #modifiers the function can be visited
 	/// when placeholder is visited.
 	/// Needs to be a stack because of function calls.
 	std::vector<int> m_modifierDepthStack;
+	//@}
+
+	/// Overflow.
+	//@{
+	std::vector<OverflowTarget> m_overflowTargets;
+	//@}
 };
 
 }
