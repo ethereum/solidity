@@ -51,7 +51,8 @@ SimplificationRule<Pattern> const* SimplificationRules::findFirstMatch(
 	{
 		rules.resetMatchGroups();
 		if (rule.pattern.matches(_expr, _dialect, _ssaValues))
-			return &rule;
+			if (!rule.feasible || rule.feasible())
+				return &rule;
 	}
 	return nullptr;
 }
