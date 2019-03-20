@@ -36,9 +36,10 @@ using namespace langutil;
 using namespace dev;
 using namespace yul::test;
 
-DEFINE_BINARY_PROTO_FUZZER(Function const& _input)
+DEFINE_PROTO_FUZZER(Function const& _input)
 {
-	string yul_source = functionToString(_input);
+	ProtoConverter converter;
+	string yul_source = converter.functionToString(_input);
 	if (yul_source.size() > 600)
 		return;
 

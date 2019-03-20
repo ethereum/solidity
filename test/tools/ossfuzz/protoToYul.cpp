@@ -16,17 +16,14 @@
 */
 
 #include <test/tools/ossfuzz/protoToYul.h>
-
-#include <ostream>
-#include <sstream>
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
 using namespace yul::test::yul_fuzzer;
 
-std::string yul::test::yul_fuzzer::createHex(std::string const& _hexBytes)
+string ProtoConverter::createHex(string const& _hexBytes) const
 {
-	std::string tmp{_hexBytes};
+	string tmp{_hexBytes};
 	if (!tmp.empty())
 	{
 		boost::range::remove_erase_if(tmp, [=](char c) -> bool {
@@ -40,9 +37,9 @@ std::string yul::test::yul_fuzzer::createHex(std::string const& _hexBytes)
 	return tmp;
 }
 
-std::string yul::test::yul_fuzzer::createAlphaNum(std::string const& _strBytes)
+string ProtoConverter::createAlphaNum(string const& _strBytes) const
 {
-	std::string tmp{_strBytes};
+	string tmp{_strBytes};
 	if (!tmp.empty())
 	{
 		boost::range::remove_erase_if(tmp, [=](char c) -> bool {
@@ -53,315 +50,350 @@ std::string yul::test::yul_fuzzer::createAlphaNum(std::string const& _strBytes)
 	return tmp;
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Literal const& _x)
+void ProtoConverter::visit(Literal const& _x)
 {
 	switch (_x.literal_oneof_case())
 	{
 		case Literal::kIntval:
-			_os << _x.intval();
+			m_output << _x.intval();
 			break;
 		case Literal::kHexval:
-			_os << "0x" << createHex(_x.hexval());
+			m_output << "0x" << createHex(_x.hexval());
 			break;
 		case Literal::kStrval:
-			_os << "\"" << createAlphaNum(_x.strval()) << "\"";
+			m_output << "\"" << createAlphaNum(_x.strval()) << "\"";
 			break;
 		case Literal::LITERAL_ONEOF_NOT_SET:
-			_os << "1";
+			m_output << "1";
 			break;
 	}
-	return _os;
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, VarRef const& _x)
+// We only reference x_0...x_9 that are I/O params of hardcoded function "foo"
+void ProtoConverter::visit(VarRef const& _x)
 {
-	return _os  << "x_" << (static_cast<uint32_t>(_x.varnum()) % 10);
+	m_output  << "x_" << (static_cast<uint32_t>(_x.varnum()) % 10);
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Expression const& _x)
+void ProtoConverter::visit(Expression const& _x)
 {
 	switch (_x.expr_oneof_case())
 	{
 		case Expression::kVarref:
-			_os  << _x.varref();
+			visit(_x.varref());
 			break;
 		case Expression::kCons:
-			_os  << _x.cons();
+			visit(_x.cons());
 			break;
 		case Expression::kBinop:
-			_os  << _x.binop();
+			visit(_x.binop());
 			break;
 		case Expression::kUnop:
-			_os  << _x.unop();
+			visit(_x.unop());
 			break;
 		case Expression::EXPR_ONEOF_NOT_SET:
-			_os << "1";
+			m_output << "1";
 			break;
 	}
-	return _os;
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, BinaryOp const& _x)
+void ProtoConverter::visit(BinaryOp const& _x)
 {
 	switch (_x.op())
 	{
 		case BinaryOp::ADD:
-			_os << "add";
+			m_output << "add";
 			break;
 		case BinaryOp::SUB:
-			_os << "sub";
+			m_output << "sub";
 			break;
 		case BinaryOp::MUL:
-			_os << "mul";
+			m_output << "mul";
 			break;
 		case BinaryOp::DIV:
-			_os << "div";
+			m_output << "div";
 			break;
 		case BinaryOp::MOD:
-			_os << "mod";
+			m_output << "mod";
 			break;
 		case BinaryOp::XOR:
-			_os << "xor";
+			m_output << "xor";
 			break;
 		case BinaryOp::AND:
-			_os << "and";
+			m_output << "and";
 			break;
 		case BinaryOp::OR:
-			_os << "or";
+			m_output << "or";
 			break;
 		case BinaryOp::EQ:
-			_os << "eq";
+			m_output << "eq";
 			break;
 		case BinaryOp::LT:
-			_os << "lt";
+			m_output << "lt";
 			break;
 		case BinaryOp::GT:
-			_os << "gt";
+			m_output << "gt";
 			break;
 		case BinaryOp::SHR:
-			_os << "shr";
+			m_output << "shr";
 			break;
 		case BinaryOp::SHL:
-			_os << "shl";
+			m_output << "shl";
 			break;
 		case BinaryOp::SAR:
-			_os << "sar";
+			m_output << "sar";
 			break;
 		case BinaryOp::SDIV:
-			_os << "sdiv";
+			m_output << "sdiv";
 			break;
 		case BinaryOp::SMOD:
-			_os << "smod";
+			m_output << "smod";
 			break;
 		case BinaryOp::EXP:
-			_os << "exp";
+			m_output << "exp";
 			break;
 		case BinaryOp::SLT:
-			_os << "slt";
+			m_output << "slt";
 			break;
 		case BinaryOp::SGT:
-			_os << "sgt";
+			m_output << "sgt";
 			break;
 		case BinaryOp::BYTE:
-			_os << "byte";
+			m_output << "byte";
 			break;
 		case BinaryOp::SI:
-			_os << "signextend";
+			m_output << "signextend";
 			break;
 		case BinaryOp::KECCAK:
-			_os << "keccak256";
+			m_output << "keccak256";
 			break;
 	}
-	return _os << "(" << _x.left() << "," << _x.right() << ")";
+	m_output << "(";
+	visit(_x.left());
+	m_output << ",";
+	visit(_x.right());
+	m_output << ")";
 }
 
 // New var numbering starts from x_10 until x_16
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, VarDecl const& _x)
+void ProtoConverter::visit(VarDecl const& _x)
 {
-	return _os << "let x_" << ((_x.id() % 7) + 10) << " := " << _x.expr() << "\n";
+	m_output << "let x_" << ((_x.id() % 7) + 10) << " := ";
+	visit(_x.expr());
+	m_output << "\n";
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, TypedVarDecl const& _x)
+void ProtoConverter::visit(TypedVarDecl const& _x)
 {
-	_os << "let x_" << ((_x.id() % 7) + 10);
+	m_output << "let x_" << ((_x.id() % 7) + 10);
 	switch (_x.type())
 	{
 		case TypedVarDecl::BOOL:
-			_os << ": bool := " << _x.expr() << " : bool\n";
+			m_output << ": bool := ";
+			visit(_x.expr());
+			m_output << " : bool\n";
 			break;
 		case TypedVarDecl::S8:
-			_os << ": s8 := " << _x.expr() << " : s8\n";
+			m_output << ": s8 := ";
+			visit(_x.expr());
+			m_output << " : s8\n";
 			break;
 		case TypedVarDecl::S32:
-			_os << ": s32 := " << _x.expr() << " : s32\n";
+			m_output << ": s32 := ";
+			visit(_x.expr());
+			m_output << " : s32\n";
 			break;
 		case TypedVarDecl::S64:
-			_os << ": s64 := " << _x.expr() << " : s64\n";
+			m_output << ": s64 := ";
+			visit(_x.expr());
+			m_output << " : s64\n";
 			break;
 		case TypedVarDecl::S128:
-			_os << ": s128 := " << _x.expr() << " : s128\n";
+			m_output << ": s128 := ";
+			visit(_x.expr());
+			m_output << " : s128\n";
 			break;
 		case TypedVarDecl::S256:
-			_os << ": s256 := " << _x.expr() << " : s256\n";
+			m_output << ": s256 := ";
+			visit(_x.expr());
+			m_output << " : s256\n";
 			break;
 		case TypedVarDecl::U8:
-			_os << ": u8 := " << _x.expr() << " : u8\n";
+			m_output << ": u8 := ";
+			visit(_x.expr());
+			m_output << " : u8\n";
 			break;
 		case TypedVarDecl::U32:
-			_os << ": u32 := " << _x.expr() << " : u32\n";
+			m_output << ": u32 := ";
+			visit(_x.expr());
+			m_output << " : u32\n";
 			break;
 		case TypedVarDecl::U64:
-			_os << ": u64 := " << _x.expr() << " : u64\n";
+			m_output << ": u64 := ";
+			visit(_x.expr());
+			m_output << " : u64\n";
 			break;
 		case TypedVarDecl::U128:
-			_os << ": u128 := " << _x.expr() << " : u128\n";
+			m_output << ": u128 := ";
+			visit(_x.expr());
+			m_output << " : u128\n";
 			break;
 		case TypedVarDecl::U256:
-			_os << ": u256 := " << _x.expr() << " : u256\n";
+			m_output << ": u256 := ";
+			visit(_x.expr());
+			m_output << " : u256\n";
 			break;
 	}
-	return _os;
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, UnaryOp const& _x)
+void ProtoConverter::visit(UnaryOp const& _x)
 {
 	switch (_x.op())
 	{
 		case UnaryOp::NOT:
-			_os << "not";
+			m_output << "not";
 			break;
 		case UnaryOp::MLOAD:
-			_os << "mload";
+			m_output << "mload";
 			break;
 		case UnaryOp::SLOAD:
-			_os << "sload";
+			m_output << "sload";
 			break;
 		case UnaryOp::ISZERO:
-			_os << "iszero";
+			m_output << "iszero";
 			break;
 	}
-	return _os  << "(" << _x.operand() << ")";
+	m_output << "(";
+	visit(_x.operand());
+	m_output << ")";
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, AssignmentStatement const& _x)
+void ProtoConverter::visit(AssignmentStatement const& _x)
 {
-	return _os  << _x.ref_id() << " := " << _x.expr() << "\n";
+	visit(_x.ref_id());
+	m_output << " := ";
+	visit(_x.expr());
+	m_output << "\n";
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, IfStmt const& _x)
+void ProtoConverter::visit(IfStmt const& _x)
 {
-	return _os <<
-			"if " <<
-			_x.cond() <<
-			" " <<
-			_x.if_body();
+	m_output << "if ";
+	visit(_x.cond());
+	m_output << " ";
+	visit(_x.if_body());
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, StoreFunc const& _x)
+void ProtoConverter::visit(StoreFunc const& _x)
 {
 	switch (_x.st())
 	{
 		case StoreFunc::MSTORE:
-			_os << "mstore(" << _x.loc() << ", " << _x.val() << ")\n";
+			m_output << "mstore(";
 			break;
 		case StoreFunc::SSTORE:
-			_os << "sstore(" << _x.loc() << ", " << _x.val() << ")\n";
+			m_output << "sstore(";
 			break;
 	}
-	return _os;
+	visit(_x.loc());
+	m_output << ", ";
+	visit(_x.val());
+	m_output << ")\n";
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, ForStmt const& _x)
+void ProtoConverter::visit(ForStmt const& _x)
 {
-	_os << "for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } ";
-	return _os << _x.for_body();
+	m_output << "for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } ";
+	visit(_x.for_body());
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, CaseStmt const& _x)
+void ProtoConverter::visit(CaseStmt const& _x)
 {
-	_os << "case " << _x.case_lit() << " ";
-	return _os << _x.case_block();
+	m_output << "case ";
+	visit(_x.case_lit());
+	m_output << " ";
+	visit(_x.case_block());
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, SwitchStmt const& _x)
+void ProtoConverter::visit(SwitchStmt const& _x)
 {
 	if (_x.case_stmt_size() > 0 || _x.has_default_block())
 	{
-		_os << "switch " << _x.switch_expr() << "\n";
+		m_output << "switch ";
+		visit(_x.switch_expr());
+		m_output << "\n";
 		for (auto const& caseStmt: _x.case_stmt())
-			_os << caseStmt;
+			visit(caseStmt);
 		if (_x.has_default_block())
-			_os << "default " << _x.default_block();
+		{
+			m_output << "default ";
+			visit(_x.default_block());
+		}
 	}
-	return _os;
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Statement const& _x)
+void ProtoConverter::visit(Statement const& _x)
 {
 	switch (_x.stmt_oneof_case())
 	{
 		case Statement::kDecl:
-			_os  << _x.decl();
+			visit(_x.decl());
 			break;
 		case Statement::kAssignment:
-			_os  << _x.assignment();
+			visit(_x.assignment());
 			break;
 		case Statement::kIfstmt:
-			_os  << _x.ifstmt();
+			visit(_x.ifstmt());
 			break;
 		case Statement::kStorageFunc:
-			_os  << _x.storage_func();
+			visit(_x.storage_func());
 			break;
 		case Statement::kBlockstmt:
-			_os << _x.blockstmt();
+			visit(_x.blockstmt());
 			break;
 		case Statement::kForstmt:
-			_os << _x.forstmt();
+			visit(_x.forstmt());
 			break;
 		case Statement::kSwitchstmt:
-			_os << _x.switchstmt();
+			visit(_x.switchstmt());
 			break;
 		case Statement::STMT_ONEOF_NOT_SET:
 			break;
 	}
-	return _os;
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Block const& _x)
+void ProtoConverter::visit(Block const& _x)
 {
 	if (_x.statements_size() > 0)
 	{
-		_os << "{\n";
+		m_output << "{\n";
 		for (auto const& st: _x.statements())
-			_os  << st;
-		_os << "}\n";
+			visit(st);
+		m_output << "}\n";
 	}
 	else
-		_os << "{}\n";
-	return _os;
+		m_output << "{}\n";
 }
 
-ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Function const& _x)
+void ProtoConverter::visit(Function const& _x)
 {
-	_os << "{\n"
-		<< "let a,b := foo(calldataload(0),calldataload(32),calldataload(64),calldataload(96),calldataload(128),"
-		<< "calldataload(160),calldataload(192),calldataload(224))\n"
-		<< "sstore(0, a)\n"
-		<< "sstore(32, b)\n"
-		<< "function foo(x_0, x_1, x_2, x_3, x_4, x_5, x_6, x_7) -> x_8, x_9\n"
-		<< _x.statements()
-		<< "}\n";
-	return _os;
+	m_output << "{\n"
+	    << "let a,b := foo(calldataload(0),calldataload(32),calldataload(64),calldataload(96),calldataload(128),"
+	    << "calldataload(160),calldataload(192),calldataload(224))\n"
+	    << "sstore(0, a)\n"
+	    << "sstore(32, b)\n"
+	    << "function foo(x_0, x_1, x_2, x_3, x_4, x_5, x_6, x_7) -> x_8, x_9\n";
+	visit(_x.statements());
+	m_output << "}\n";
 }
 
-string yul::test::yul_fuzzer::functionToString(Function const& _input)
+string ProtoConverter::functionToString(Function const& _input)
 {
-	ostringstream os;
-	os << _input;
-	return os.str();
+	visit(_input);
+	return m_output.str();
 }
 
-string yul::test::yul_fuzzer::protoToYul(const uint8_t* _data, size_t _size)
+string ProtoConverter::protoToYul(const uint8_t* _data, size_t _size)
 {
 	Function message;
 	if (!message.ParsePartialFromArray(_data, _size))
