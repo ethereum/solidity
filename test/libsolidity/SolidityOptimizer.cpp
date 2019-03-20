@@ -56,7 +56,7 @@ public:
 	{
 		OptimiserSettings previousSettings = std::move(m_optimiserSettings);
 		// This uses "none" / "full" while most other test frameworks use
-		// "minimal" / "enabled".
+		// "minimal" / "standard".
 		m_optimiserSettings = _optimize ? OptimiserSettings::full() : OptimiserSettings::none();
 		m_optimiserSettings.expectedExecutionsPerDeployment = _optimizeRuns;
 		bytes const& ret = compileAndRun(_sourceCode, _value, _contractName);

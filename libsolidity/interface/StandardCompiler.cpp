@@ -369,7 +369,7 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 		if (!_jsonInput["enabled"].isBool())
 			return formatFatalError("JSONError", "The \"enabled\" setting must be a Boolean.");
 
-		settings = _jsonInput["enabled"].asBool() ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+		settings = _jsonInput["enabled"].asBool() ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	}
 
 	if (_jsonInput.isMember("runs"))

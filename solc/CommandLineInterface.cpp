@@ -904,7 +904,7 @@ bool CommandLineInterface::processInput()
 		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 
-		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
 		settings.runYulOptimiser = m_args.count(g_strOptimizeYul);
 		settings.optimizeStackAllocation = settings.runYulOptimiser;
