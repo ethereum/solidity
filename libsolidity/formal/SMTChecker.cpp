@@ -24,6 +24,7 @@
 #include <libdevcore/StringUtils.h>
 
 #include <boost/range/adaptor/map.hpp>
+#include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
@@ -105,6 +106,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 	{
 		m_interface->reset();
 		m_pathConditions.clear();
+		m_callStack.clear();
 		m_expressions.clear();
 		m_globalContext.clear();
 		m_uninterpretedTerms.clear();
@@ -495,7 +497,9 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		visitGasLeft(_funCall);
 		break;
 	case FunctionType::Kind::Internal:
+		m_callStack.push_back(&_funCall);
 		inlineFunctionCall(_funCall);
+		m_callStack.pop_back();
 		break;
 	case FunctionType::Kind::External:
 		resetStateVariables();
@@ -1165,17 +1169,20 @@ void SMTChecker::checkCondition(
 	vector<string> values;
 	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
 
-	string loopComment;
+	string extraComment;
 	if (m_loopExecutionHappened)
-		loopComment =
+		extraComment =
 			"\nNote that some information is erased after the execution of loops.\n"
 			"You can re-introduce information using require().";
 	if (m_arrayAssignmentHappened)
-		loopComment +=
+		extraComment +=
 			"\nNote that array aliasing is not supported,"
 			" therefore all mapping information is erased after"
 			" a mapping local variable/parameter is assigned.\n"
 			"You can re-introduce information using require().";
+
+	SecondarySourceLocation secondaryLocation{};
+	secondaryLocation.append(extraComment, SourceLocation{});
 
 	switch (result)
 	{
@@ -1195,19 +1202,25 @@ void SMTChecker::checkCondition(
 
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
-			m_errorReporter.warning(_location, message.str(), SecondarySourceLocation().append(modelMessage.str(), SourceLocation()).append(loopComment, SourceLocation()));
+			m_errorReporter.warning(
+				_location,
+				message.str(),
+				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
+				.append(currentCallStack())
+				.append(move(secondaryLocation))
+			);
 		}
 		else
 		{
 			message << ".";
-			m_errorReporter.warning(_location, message.str(), SecondarySourceLocation().append(loopComment, SourceLocation()));
+			m_errorReporter.warning(_location, message.str(), secondaryLocation);
 		}
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here.", SecondarySourceLocation().append(loopComment, SourceLocation()));
+		m_errorReporter.warning(_location, _description + " might happen here.", secondaryLocation);
 		break;
 	case smt::CheckResult::CONFLICTING:
 		m_errorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
@@ -1538,6 +1551,17 @@ smt::Expression SMTChecker::currentPathConditions()
 	if (m_pathConditions.empty())
 		return smt::Expression(true);
 	return m_pathConditions.back();
+}
+
+SecondarySourceLocation SMTChecker::currentCallStack()
+{
+	SecondarySourceLocation callStackLocation;
+	if (m_callStack.empty())
+		return callStackLocation;
+	callStackLocation.append("Callstack: ", SourceLocation());
+	for (auto const& call: m_callStack | boost::adaptors::reversed)
+		callStackLocation.append("", call->location());
+	return callStackLocation;
 }
 
 void SMTChecker::addPathConjoinedExpression(smt::Expression const& _e)
