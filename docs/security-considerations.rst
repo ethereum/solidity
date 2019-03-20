@@ -331,6 +331,8 @@ The more people examine a piece of code, the more issues are found.
 Asking people to review your code also helps as a cross-check to find out whether your code
 is easy to understand - a very important criterion for good smart contracts.
 
+.. _formal_verification:
+
 *******************
 Formal Verification
 *******************
@@ -344,3 +346,185 @@ Note that formal verification itself can only help you understand the
 difference between what you did (the specification) and how you did it
 (the actual implementation). You still need to check whether the specification
 is what you wanted and that you did not miss any unintended effects of it.
+
+Solidity implements a formal verification approach based on SMT solving.  The
+SMTChecker module automatically tries to prove that the code satisfies the
+specification given by ``require/assert`` statements. That is, it considers
+``require`` statements as assumptions and tries to prove that the conditions
+inside ``assert`` statements are always true.  If an assertion failure is
+found, a counterexample is given to the user, showing how the assertion can be
+violated.
+
+The SMTChecker also checks automatically for arithmetic underflow/overflow,
+trivial conditions and unreachable code.
+It is currently an experimental feature, therefore in order to use it you need
+to enable it via :ref:`a pragma directive<smt_checker>`.
+
+The SMTChecker traverses the Solidity AST creating and collecting program constraints.
+When it encounters a verification target, an SMT solver is invoked to determine the outcome.
+If a check fails, the SMTChecker provides specific input values that lead to the failure.
+
+For more details on how the SMT encoding works internally, see the paper
+`SMT-based Verification of Solidity Smart Contracts <https://github.com/leonardoalt/text/blob/master/solidity_isola_2018/main.pdf>`_.
+
+Abstraction and False Positives
+===============================
+
+The SMTChecker implements abstractions in an incomplete and sound way: If a bug
+is reported, it might be a false positive introduced by abstractions (due to
+erasing knowledge or using a non-precise type). If it determines that a
+verification target is safe, it is indeed safe, that is, there are no false
+negatives (unless there is a bug in the SMTChecker).
+
+The SMT encoding tries to be as precise as possible, mapping Solidity types
+and expressions to their closest `SMT-LIB <http://smtlib.cs.uiowa.edu/>`_
+representation, as shown in the table below.
+
++-----------------------+--------------+-----------------------------+
+|Solidity type          |SMT sort      |Theories (quantifier-free)   |
++=======================+==============+=============================+
+|Boolean                |Bool          |Bool                         |
++-----------------------+--------------+-----------------------------+
+|intN, uintN, address,  |Integer       |LIA, NIA                     |
+|bytesN, enum           |              |                             |
++-----------------------+--------------+-----------------------------+
+|array, mapping         |Array         |Arrays                       |
++-----------------------+--------------+-----------------------------+
+|other types            |Integer       |LIA                          |
++-----------------------+--------------+-----------------------------+
+
+Types that are not yet supported are abstracted by a single 256-bit unsigned integer,
+where their unsupported operations are ignored.
+
+Function calls to the same contract (or base contracts) are inlined when
+possible, that is, when their implementation is available.
+Calls to functions in other contracts are not inlined even if their code is
+available, since we cannot guarantee that the actual deployed code is the same.
+Complex pure functions are abstracted by an uninterpreted function (UF) over
+the arguments.
+
++-----------------------------------+--------------------------------------+
+|Functions                          |SMT behavior                          |
++===================================+======================================+
+|``assert``                         |Verification target                   |
++-----------------------------------+--------------------------------------+
+|``require``                        |Assumption                            |
++-----------------------------------+--------------------------------------+
+|internal                           |Inline function call                  |
++-----------------------------------+--------------------------------------+
+|external                           |Inline function call                  |
+|                                   |Erase knowledge about state variables |
+|                                   |and local storage references          |
++-----------------------------------+--------------------------------------+
+|``gasleft``, ``blockhash``,        |Abstracted with UF                    |
+|``keccak256``, ``ecrecover``       |                                      |
+|``ripemd160``, ``addmod``,         |                                      |
+|``mulmod``                         |                                      |
++-----------------------------------+--------------------------------------+
+|pure functions without             |Abstracted with UF                    |
+|implementation (external or        |                                      |
+|complex)                           |                                      |
++-----------------------------------+--------------------------------------+
+|external functions without         |Unsupported                           |
+|implementation                     |                                      |
++-----------------------------------+--------------------------------------+
+|others                             |Currently unsupported                 |
++-----------------------------------+--------------------------------------+
+
+Using abstraction means loss of precise knowledge, but in many cases it does
+not mean loss of proving power.
+
+::
+
+   pragma solidity >=0.5.0;
+   pragma experimental SMTChecker;
+
+   contract Recover
+   {
+           function f(
+                   bytes32 hash,
+                   uint8 _v1, uint8 _v2,
+                   bytes32 _r1, bytes32 _r2,
+                   bytes32 _s1, bytes32 _s2
+           ) public pure returns (address) {
+                   address a1 = ecrecover(hash, _v1, _r1, _s1);
+                   require(_v1 == _v2);
+                   require(_r1 == _r2);
+                   require(_s1 == _s2);
+                   address a2 = ecrecover(hash, _v2, _r2, _s2);
+                   assert(a1 == a2);
+                   return a1;
+           }
+   }
+
+In the example above, the SMTChecker is not expressive enough to actually
+compute ``ecrecover``, but by modelling the function calls as uninterpreted
+functions we know that the return value is the same when called on equivalent
+parameters. This is enough to prove that the assertion above is always true.
+
+Abstracting a function call with an UF can be done for functions known to be
+deterministic, and can be easily done for pure functions.  It is however
+difficult to do this with general external functions, since they might depend
+on state variables.
+
+External function calls also imply that any current knowledge that the
+SMTChecker might have regarding mutable state variables needs to be erased to
+guarantee no false negatives, since the called external function might direct
+or indirectly call a function in the analyzed contract that changes state
+variables.
+
+Reference Types and Aliasing
+=============================
+
+Solidity implements aliasing for reference types with the same :ref:`data
+location<data-location>`.
+That means one variable may be modified through a reference to the same data
+area.
+The SMTChecker does not keep track of which references refer to the same data.
+This implies that whenever a local reference or state variable of reference
+type is assigned, all knowledge regarding variables of the same type and data
+location is erased.
+If the type is nested, the knowledge removal also includes all the prefix base
+types.
+
+::
+
+   pragma solidity >=0.5.0;
+   pragma experimental SMTChecker;
+   // This will not compile
+   contract Aliasing
+   {
+      uint[] array;
+      function f(
+         uint[] memory a,
+         uint[] memory b,
+         uint[][] memory c,
+         uint[] storage d
+      ) internal view {
+         require(array[0] == 42);
+         require(a[0] == 2);
+         require(c[0][0] == 2);
+         require(d[0] == 2);
+         b[0] = 1;
+         // Erasing knowledge about memory references should not
+         // erase knowledge about state variables.
+         assert(array[0] == 42);
+         // Fails because `a == b` is possible.
+         assert(a[0] == 2);
+         // Fails because `c[i] == b` is possible.
+         assert(c[0][0] == 2);
+         assert(d[0] == 2);
+         assert(b[0] == 1);
+      }
+   }
+
+After the assignment to ``b[0]``, we need to clear knowledge about ``a`` since
+it has the same type (``uint[]``) and data location (memory).  We also need to
+clear knowledge about ``c``, since its base type is also a ``uint[]`` located
+in memory. This implies that some ``c[i]`` could refer to the same data as
+``b`` or ``a``.
+
+Notice that we do not clear knowledge about ``array`` and ``d`` because they
+are located in storage, even though they also have type ``uint[]``.  However,
+if ``d`` was assigned, we would need to clear knowledge about ``array`` and
+vice-versa.
