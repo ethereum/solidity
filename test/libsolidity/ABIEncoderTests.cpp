@@ -41,7 +41,7 @@ namespace test
 #define REQUIRE_LOG_DATA(DATA) do { \
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1); \
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress); \
-	BOOST_CHECK_EQUAL(toHex(m_logs[0].data), toHex(DATA)); \
+	ABI_CHECK(m_logs[0].data, DATA); \
 } while (false)
 
 BOOST_FIXTURE_TEST_SUITE(ABIEncoderTest, SolidityExecutionFramework)
