@@ -23,7 +23,10 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
+
+#include <boost/optional.hpp>
 
 #include <map>
 #include <memory>
@@ -176,9 +179,10 @@ struct ExpressionAnnotation: ASTAnnotation
 	bool isLValue = false;
 	/// Whether the expression is used in a context where the LValue is actually required.
 	bool lValueRequested = false;
-	/// Types of arguments if the expression is a function that is called - used
-	/// for overload resolution.
-	std::shared_ptr<std::vector<TypePointer>> argumentTypes;
+
+	/// Types and - if given - names of arguments if the expr. is a function
+	/// that is called, used for overload resoultion
+	boost::optional<FuncCallArguments> arguments;
 };
 
 struct IdentifierAnnotation: ExpressionAnnotation

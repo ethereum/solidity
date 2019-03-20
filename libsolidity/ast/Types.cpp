@@ -2986,26 +2986,53 @@ TypePointer FunctionType::interfaceType(bool /*_inLibrary*/) const
 		return TypePointer();
 }
 
-bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePointer const& _selfType) const
+bool FunctionType::canTakeArguments(
+	FuncCallArguments const& _arguments,
+	TypePointer const& _selfType
+) const
 {
 	solAssert(!bound() || _selfType, "");
 	if (bound() && !_selfType->isImplicitlyConvertibleTo(*selfType()))
 		return false;
 	TypePointers paramTypes = parameterTypes();
+	std::vector<std::string> const paramNames = parameterNames();
+
 	if (takesArbitraryParameters())
 		return true;
-	else if (_argumentTypes.size() != paramTypes.size())
+	else if (_arguments.numArguments() != paramTypes.size())
 		return false;
-	else
+	else if (!_arguments.hasNamedArguments())
 		return equal(
-			_argumentTypes.cbegin(),
-			_argumentTypes.cend(),
+			_arguments.types.cbegin(),
+			_arguments.types.cend(),
 			paramTypes.cbegin(),
 			[](TypePointer const& argumentType, TypePointer const& parameterType)
 			{
 				return argumentType->isImplicitlyConvertibleTo(*parameterType);
 			}
 		);
+	else if (paramNames.size() != _arguments.numNames())
+		return false;
+	else
+	{
+		solAssert(_arguments.numArguments() == _arguments.numNames(), "Expected equal sized type & name vectors");
+
+		size_t matchedNames = 0;
+
+		for (auto const& argName: _arguments.names)
+			for (size_t i = 0; i < paramNames.size(); i++)
+				if (*argName == paramNames[i])
+				{
+					matchedNames++;
+					if (!_arguments.types[i]->isImplicitlyConvertibleTo(*paramTypes[i]))
+						return false;
+				}
+
+		if (matchedNames == _arguments.numNames())
+			return true;
+
+		return false;
+	}
 }
 
 bool FunctionType::hasEqualParameterTypes(FunctionType const& _other) const
