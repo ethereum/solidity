@@ -59,7 +59,7 @@ public:
 		bytes bytecode = lll::compileLLL(
 			_sourceCode,
 			dev::test::Options::get().evmVersion(),
-			m_optimiserSettings == solidity::OptimiserSettings::enabled(),
+			m_optimiserSettings == solidity::OptimiserSettings::standard(),
 			&errors
 		);
 		if (!errors.empty())

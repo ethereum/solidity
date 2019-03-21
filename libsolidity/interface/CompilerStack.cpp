@@ -109,7 +109,7 @@ void CompilerStack::setLibraries(std::map<std::string, h160> const& _libraries)
 
 void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
 {
-	OptimiserSettings settings = _optimize ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+	OptimiserSettings settings = _optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	settings.expectedExecutionsPerDeployment = _runs;
 	setOptimiserSettings(std::move(settings));
 }
@@ -978,7 +978,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	settingsWithoutRuns.expectedExecutionsPerDeployment = OptimiserSettings::minimal().expectedExecutionsPerDeployment;
 	if (settingsWithoutRuns == OptimiserSettings::minimal())
 		meta["settings"]["optimizer"]["enabled"] = false;
-	else if (settingsWithoutRuns == OptimiserSettings::enabled())
+	else if (settingsWithoutRuns == OptimiserSettings::standard())
 		meta["settings"]["optimizer"]["enabled"] = true;
 	else
 	{
