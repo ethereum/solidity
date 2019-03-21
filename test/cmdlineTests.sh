@@ -127,6 +127,8 @@ function test_solc_behaviour()
     fi
     # Remove path to cpp file
     sed -i -e 's/^\(Exception while assembling:\).*/\1/' "$stderr_path"
+    # Remove exception class name.
+    sed -i -e 's/^\(Dynamic exception type:\).*/\1/' "$stderr_path"
 
     if [[ $exitCode -ne "$exit_code_expected" ]]
     then
