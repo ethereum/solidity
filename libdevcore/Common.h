@@ -91,6 +91,24 @@ inline u256 s2u(s256 _u)
 		return u256(c_end + _u);
 }
 
+/// @returns the highest bit set in @a. If _v is zero, returns -1.
+inline int highestBitSet(u256 const& _v)
+{
+	if (_v == 0)
+		return -1;
+	else
+		return boost::multiprecision::msb(_v);
+}
+
+/// @returns the lowest bit set in @a. If _v is zero, returns 256
+inline int lowestBitSet(u256 const& _v)
+{
+	if (_v == 0)
+		return 256;
+	else
+		return boost::multiprecision::lsb(_v);
+}
+
 inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 {
 	std::ostringstream ss;

@@ -34,6 +34,7 @@
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
+#include <libyul/optimiser/ValueConstraintBasedSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
@@ -99,6 +100,7 @@ void OptimiserSuite::run(
 			RedundantAssignEliminator::run(*_dialect, ast);
 			RedundantAssignEliminator::run(*_dialect, ast);
 
+			ValueConstraintBasedSimplifier::run(*_dialect, ast);
 			ExpressionSimplifier::run(*_dialect, ast);
 			CommonSubexpressionEliminator{*_dialect}(ast);
 		}
@@ -156,6 +158,9 @@ void OptimiserSuite::run(
 			RedundantAssignEliminator::run(*_dialect, ast);
 			RedundantAssignEliminator::run(*_dialect, ast);
 			ExpressionSimplifier::run(*_dialect, ast);
+			ValueConstraintBasedSimplifier::run(*_dialect, ast);
+			ExpressionSimplifier::run(*_dialect, ast);
+			ValueConstraintBasedSimplifier::run(*_dialect, ast);
 			StructuralSimplifier{*_dialect}(ast);
 			BlockFlattener{}(ast);
 			CommonSubexpressionEliminator{*_dialect}(ast);

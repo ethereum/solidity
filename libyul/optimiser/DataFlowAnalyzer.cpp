@@ -213,6 +213,8 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 			m_referencedBy[ref].erase(name);
 		m_references[name].clear();
 	}
+
+	valuesCleared(_variables);
 }
 
 bool DataFlowAnalyzer::inScope(YulString _variableName) const

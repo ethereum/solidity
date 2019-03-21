@@ -108,6 +108,8 @@ add_library(yul
 	optimiser/SyntacticalEquality.h
 	optimiser/UnusedPruner.cpp
 	optimiser/UnusedPruner.h
+	optimiser/ValueConstraintBasedSimplifier.cpp
+	optimiser/ValueConstraintBasedSimplifier.h
 	optimiser/VarDeclInitializer.cpp
 	optimiser/VarDeclInitializer.h
 	optimiser/VarNameCleaner.cpp

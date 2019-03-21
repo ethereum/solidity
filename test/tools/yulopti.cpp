@@ -43,6 +43,7 @@
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
+#include <libyul/optimiser/ValueConstraintBasedSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
@@ -129,10 +130,10 @@ public:
 				disambiguated = true;
 			}
 			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
-			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
-			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
-			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/? " << endl;
-			cout << "  stack com(p)ressor? " << endl;
+			cout << "  (e)xpr inline/(i)nline/(s)implify/(C)onstraint simplify/varname c(l)eaner/" << endl;
+			cout << "  (u)nusedprune/ss(a) transform/(r)edundant assign elim./re(m)aterializer/" << endl;
+			cout << "  f(o)r-loop-pre-rewriter/s(t)ructural simplifier/equi(v)alent function combiner/" << endl;
+			cout << "  ssa re(V)erser/stack com(p)ressor? " << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -175,6 +176,9 @@ public:
 				break;
 			case 's':
 				ExpressionSimplifier::run(*m_dialect, *m_ast);
+				break;
+			case 'C':
+				ValueConstraintBasedSimplifier::run(*m_dialect, *m_ast);
 				break;
 			case 't':
 				(StructuralSimplifier{*m_dialect})(*m_ast);

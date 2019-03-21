@@ -57,7 +57,7 @@ public:
 
 protected:
 	/// Registers the assignment.
-	void handleAssignment(std::set<YulString> const& _names, Expression* _value);
+	virtual void handleAssignment(std::set<YulString> const& _names, Expression* _value);
 
 	/// Creates a new inner scope.
 	void pushScope(bool _functionScope);
@@ -68,6 +68,10 @@ protected:
 	/// Clears information about the values assigned to the given variables,
 	/// for example at points where control flow is merged.
 	void clearValues(std::set<YulString> _names);
+
+	/// Called whenever the variables given have been cleared, just before
+	/// some of them are assigned new values.
+	virtual void valuesCleared(std::set<YulString> const& /*_names*/) {}
 
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
