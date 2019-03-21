@@ -1,5 +1,5 @@
 Exception while assembling:
-Dynamic exception type: boost::exception_detail::clone_impl<yul::StackTooDeepError>
+Dynamic exception type:
 std::exception::what: Variable a1 is 17 slot(s) too deep inside the stack.
 [dev::tag_comment*] = Variable a1 is 17 slot(s) too deep inside the stack.
 
