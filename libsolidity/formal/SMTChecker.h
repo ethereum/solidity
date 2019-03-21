@@ -154,13 +154,15 @@ private:
 		smt::Expression value;
 		smt::Expression path;
 		langutil::SourceLocation const& location;
+		std::vector<ASTNode const*> callStack;
 
-		OverflowTarget(Type _type, TypePointer _intType, smt::Expression _value, smt::Expression _path, langutil::SourceLocation const& _location):
+		OverflowTarget(Type _type, TypePointer _intType, smt::Expression _value, smt::Expression _path, langutil::SourceLocation const& _location, std::vector<ASTNode const*> _callStack):
 			type(_type),
 			intType(_intType),
 			value(_value),
 			path(_path),
-			location(_location)
+			location(_location),
+			callStack(move(_callStack))
 		{
 			solAssert(dynamic_cast<IntegerType const*>(intType.get()), "");
 		}
