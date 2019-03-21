@@ -791,7 +791,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 
 void SMTChecker::endVisit(Return const& _return)
 {
-	if (knownExpr(*_return.expression()))
+	if (_return.expression() && knownExpr(*_return.expression()))
 	{
 		auto returnParams = m_functionPath.back()->returnParameters();
 		if (returnParams.size() > 1)
