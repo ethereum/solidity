@@ -389,7 +389,8 @@ void SMTChecker::addOverflowTarget(
 		std::move(_intType),
 		std::move(_value),
 		currentPathConditions(),
-		_location
+		_location,
+		m_callStack
 	);
 }
 
@@ -397,10 +398,12 @@ void SMTChecker::checkUnderOverflow()
 {
 	for (auto& target: m_overflowTargets)
 	{
+		swap(m_callStack, target.callStack);
 		if (target.type != OverflowTarget::Type::Overflow)
 			checkUnderflow(target);
 		if (target.type != OverflowTarget::Type::Underflow)
 			checkOverflow(target);
+		swap(m_callStack, target.callStack);
 	}
 }
 
