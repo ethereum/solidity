@@ -19,9 +19,39 @@
 
 #include <ostream>
 #include <sstream>
+#include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
 using namespace yul::test::yul_fuzzer;
+
+std::string yul::test::yul_fuzzer::createHex(std::string const& _hexBytes)
+{
+	std::string tmp{_hexBytes};
+	if (!tmp.empty())
+	{
+		boost::range::remove_erase_if(tmp, [=](char c) -> bool {
+			return !std::isxdigit(c);
+		});
+		tmp = tmp.substr(0, 64);
+	}
+	// We need this awkward if case hex literals cannot be empty.
+	if (tmp.empty())
+		tmp = "1";
+	return tmp;
+}
+
+std::string yul::test::yul_fuzzer::createAlphaNum(std::string const& _strBytes)
+{
+	std::string tmp{_strBytes};
+	if (!tmp.empty())
+	{
+		boost::range::remove_erase_if(tmp, [=](char c) -> bool {
+			return !(std::isalpha(c) || std::isdigit(c));
+		});
+		tmp = tmp.substr(0, 32);
+	}
+	return tmp;
+}
 
 ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Literal const& _x)
 {
@@ -29,6 +59,12 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Literal const& _x)
 	{
 		case Literal::kIntval:
 			_os << _x.intval();
+			break;
+		case Literal::kHexval:
+			_os << "0x" << createHex(_x.hexval());
+			break;
+		case Literal::kStrval:
+			_os << "\"" << createAlphaNum(_x.strval()) << "\"";
 			break;
 		case Literal::LITERAL_ONEOF_NOT_SET:
 			_os << "1";
@@ -301,9 +337,7 @@ ostream& yul::test::yul_fuzzer::operator<<(ostream& _os, Block const& _x)
 		_os << "}\n";
 	}
 	else
-	{
 		_os << "{}\n";
-	}
 	return _os;
 }
 

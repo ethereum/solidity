@@ -31,6 +31,8 @@ class Function;
 
 std::string functionToString(Function const& input);
 std::string protoToYul(uint8_t const* data, size_t size);
+std::string createHex(std::string const& _hexBytes);
+std::string createAlphaNum(std::string const& _strBytes);
 std::ostream& operator<<(std::ostream& _os, BinaryOp const& _x);
 std::ostream& operator<<(std::ostream& _os, Block const& _x);
 std::ostream& operator<<(std::ostream& _os, Literal const& _x);
