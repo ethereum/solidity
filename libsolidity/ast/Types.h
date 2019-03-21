@@ -304,7 +304,7 @@ public:
 	/// If there is no such type, returns an empty shared pointer.
 	/// @param _inLibrary if set, returns types as used in a library, e.g. struct and contract types
 	/// are returned without modification.
-	virtual TypePointer interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
+	virtual TypeResult interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
@@ -355,7 +355,7 @@ public:
 	u256 literalValue(Literal const* _literal) const override;
 
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	StateMutability stateMutability(void) const { return m_stateMutability; }
 
@@ -395,7 +395,7 @@ public:
 	std::string toString(bool _short) const override;
 
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	unsigned numBits() const { return m_bits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
@@ -437,7 +437,7 @@ public:
 	std::string toString(bool _short) const override;
 
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	/// Number of bits used for this type in total.
 	unsigned numBits() const { return m_totalBits; }
@@ -583,7 +583,7 @@ public:
 	std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	unsigned numBytes() const { return m_bytes; }
 
@@ -609,7 +609,7 @@ public:
 	std::string toString(bool) const override { return "bool"; }
 	u256 literalValue(Literal const* _literal) const override;
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 };
 
 /**
@@ -716,7 +716,7 @@ public:
 	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	TypePointer encodingType() const override;
 	TypePointer decodingType() const override;
-	TypePointer interfaceType(bool _inLibrary) const override;
+	TypeResult interfaceType(bool _inLibrary) const override;
 
 	/// @returns true if this is valid to be stored in calldata
 	bool validForCalldata() const;
@@ -749,8 +749,8 @@ private:
 	TypePointer m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
-	mutable boost::optional<TypePointer> m_interfaceType;
-	mutable boost::optional<TypePointer> m_interfaceType_library;
+	mutable boost::optional<TypeResult> m_interfaceType;
+	mutable boost::optional<TypeResult> m_interfaceType_library;
 };
 
 /**
@@ -788,7 +788,7 @@ public:
 			return TypePointer{};
 		return std::make_shared<AddressType>(isPayable() ? StateMutability::Payable : StateMutability::NonPayable);
 	}
-	TypePointer interfaceType(bool _inLibrary) const override
+	TypeResult interfaceType(bool _inLibrary) const override
 	{
 		if (isSuper())
 			return TypePointer{};
@@ -842,7 +842,17 @@ public:
 	{
 		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : shared_from_this();
 	}
-	TypePointer interfaceType(bool _inLibrary) const override;
+	TypeResult interfaceType(bool _inLibrary) const override;
+
+	bool recursive() const
+	{
+		if (m_recursive.is_initialized())
+			return m_recursive.get();
+
+		interfaceType(false);
+
+		return m_recursive.get();
+	}
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
@@ -863,17 +873,12 @@ public:
 	TypePointers memoryMemberTypes() const;
 	/// @returns the set of all members that are removed in the memory version (typically mappings).
 	std::set<std::string> membersMissingInMemory() const;
-
-	/// @returns true if the same struct is used recursively in one of its members. Only
-	/// analyses the "memory" representation, i.e. mappings are ignored in all structs.
-	bool recursive() const;
-
 private:
 	StructDefinition const& m_struct;
-	/// Cache for the recursive() function.
+	// Caches for interfaceType(bool)
+	mutable boost::optional<TypeResult> m_interfaceType;
+	mutable boost::optional<TypeResult> m_interfaceType_library;
 	mutable boost::optional<bool> m_recursive;
-	mutable boost::optional<TypePointer> m_interfaceType;
-	mutable boost::optional<TypePointer> m_interfaceType_library;
 };
 
 /**
@@ -902,7 +907,7 @@ public:
 	{
 		return std::make_shared<IntegerType>(8 * int(storageBytes()));
 	}
-	TypePointer interfaceType(bool _inLibrary) const override
+	TypeResult interfaceType(bool _inLibrary) const override
 	{
 		return _inLibrary ? shared_from_this() : encodingType();
 	}
@@ -1098,7 +1103,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	TypePointer encodingType() const override;
-	TypePointer interfaceType(bool _inLibrary) const override;
+	TypeResult interfaceType(bool _inLibrary) const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
@@ -1223,10 +1228,7 @@ public:
 	{
 		return std::make_shared<IntegerType>(256);
 	}
-	TypePointer interfaceType(bool _inLibrary) const override
-	{
-		return _inLibrary ? shared_from_this() : TypePointer();
-	}
+	TypeResult interfaceType(bool _inLibrary) const override;
 	bool dataStoredIn(DataLocation _location) const override { return _location == DataLocation::Storage; }
 	/// Cannot be stored in memory, but just in case.
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }

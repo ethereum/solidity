@@ -1869,7 +1869,7 @@ TypePointer ArrayType::decodingType() const
 		return shared_from_this();
 }
 
-TypePointer ArrayType::interfaceType(bool _inLibrary) const
+TypeResult ArrayType::interfaceType(bool _inLibrary) const
 {
 	if (_inLibrary && m_interfaceType_library.is_initialized())
 		return *m_interfaceType_library;
@@ -1877,23 +1877,22 @@ TypePointer ArrayType::interfaceType(bool _inLibrary) const
 	if (!_inLibrary && m_interfaceType.is_initialized())
 		return *m_interfaceType;
 
-	TypePointer result;
+	TypeResult result{TypePointer{}};
+	TypeResult baseInterfaceType = m_baseType->interfaceType(_inLibrary);
 
-	if (_inLibrary && location() == DataLocation::Storage)
+	if (!baseInterfaceType.get())
+	{
+		solAssert(!baseInterfaceType.message().empty(), "Expected detailed error message!");
+		result = baseInterfaceType;
+	}
+	else if (_inLibrary && location() == DataLocation::Storage)
 		result = shared_from_this();
 	else if (m_arrayKind != ArrayKind::Ordinary)
 		result = this->copyForLocation(DataLocation::Memory, true);
+	else if (isDynamicallySized())
+		result = TypePointer{make_shared<ArrayType>(DataLocation::Memory, baseInterfaceType)};
 	else
-	{
-		TypePointer baseExt = m_baseType->interfaceType(_inLibrary);
-
-		if (!baseExt)
-			result = TypePointer();
-		else if (isDynamicallySized())
-			result = make_shared<ArrayType>(DataLocation::Memory, baseExt);
-		else
-			result = make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
-	}
+		result = TypePointer{make_shared<ArrayType>(DataLocation::Memory, baseInterfaceType, m_length)};
 
 	if (_inLibrary)
 		m_interfaceType_library = result;
@@ -2084,7 +2083,7 @@ unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
 
 bool StructType::isDynamicallyEncoded() const
 {
-	solAssert(!recursive(), "");
+	solAssert(interfaceType(false).get(), "");
 	for (auto t: memoryMemberTypes())
 	{
 		solAssert(t, "Parameter should have external type.");
@@ -2135,7 +2134,7 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 	return members;
 }
 
-TypePointer StructType::interfaceType(bool _inLibrary) const
+TypeResult StructType::interfaceType(bool _inLibrary) const
 {
 	if (_inLibrary && m_interfaceType_library.is_initialized())
 		return *m_interfaceType_library;
@@ -2143,47 +2142,87 @@ TypePointer StructType::interfaceType(bool _inLibrary) const
 	if (!_inLibrary && m_interfaceType.is_initialized())
 		return *m_interfaceType;
 
-	TypePointer result = TypePointer{};
+	TypeResult result{TypePointer{}};
 
-	if (_inLibrary && location() == DataLocation::Storage)
-		result = shared_from_this();
-	else if (recursive())
-		result = TypePointer{};
-	else
+	m_recursive = false;
+
+	auto visitor = [&](
+		StructDefinition const& _struct,
+		CycleDetector<StructDefinition>& _cycleDetector,
+		size_t /*_depth*/
+	)
 	{
 		// Check that all members have interface types.
-		// We pass "false" to canBeUsedExternally (_inLibrary), because this struct will be
-		// passed by value and thus the encoding does not differ, but it will disallow
-		// mappings.
-		// Also return false if at least one struct member does not have a type.
-		// This might happen, for example, if the type of the member does not exist,
-		// which is reported as an error.
-		bool allOkay = true;
-		for (auto const& var: m_struct.members())
+		// Return an error if at least one struct member does not have a type.
+		// This might happen, for example, if the type of the member does not exist.
+		for (ASTPointer<VariableDeclaration> const& variable: _struct.members())
 		{
 			// If the struct member does not have a type return false.
 			// A TypeError is expected in this case.
-			if (!var->annotation().type)
+			if (!variable->annotation().type)
 			{
-				allOkay = false;
-				break;
+				result = TypeResult::err("Invalid type!");
+				return;
 			}
-			if (!var->annotation().type->interfaceType(false))
+
+			Type const* memberType = variable->annotation().type.get();
+
+			while (dynamic_cast<ArrayType const*>(memberType))
+				memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
+
+			if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
+				if (
+					innerStruct->m_recursive == true ||
+					_cycleDetector.run(innerStruct->structDefinition())
+				)
+				{
+					m_recursive = true;
+					if (_inLibrary && location() == DataLocation::Storage)
+						continue;
+					else
+					{
+						result = TypeResult::err("Recursive structs can only be passed as storage pointers to libraries, not as memory objects to contract functions.");
+						return;
+					}
+				}
+
+			auto iType = memberType->interfaceType(_inLibrary);
+			if (!iType.get())
 			{
-				allOkay = false;
-				break;
+				solAssert(!iType.message().empty(), "Expected detailed error message!");
+				result = iType;
+				return;
 			}
 		}
-		if (allOkay)
-			result = copyForLocation(DataLocation::Memory, true);
-	}
+	};
+
+	m_recursive = m_recursive.get() || (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
+
+	std::string const recursiveErrMsg = "Recursive type not allowed for public or external contract functions.";
 
 	if (_inLibrary)
-		m_interfaceType_library = result;
-	else
-		m_interfaceType = result;
+	{
+		if (!result.message().empty())
+			m_interfaceType_library = result;
+		else if (location() == DataLocation::Storage)
+			m_interfaceType_library = shared_from_this();
+		else
+			m_interfaceType_library = copyForLocation(DataLocation::Memory, true);
 
-	return result;
+		if (m_recursive.get())
+			m_interfaceType = TypeResult::err(recursiveErrMsg);
+
+		return *m_interfaceType_library;
+	}
+
+	if (m_recursive.get())
+		m_interfaceType = TypeResult::err(recursiveErrMsg);
+	else if (!result.message().empty())
+		m_interfaceType = result;
+	else
+		m_interfaceType = copyForLocation(DataLocation::Memory, true);
+
+	return *m_interfaceType;
 }
 
 TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -2204,8 +2243,8 @@ string StructType::signatureInExternalFunction(bool _structsByName) const
 		{
 			solAssert(_t, "Parameter should have external type.");
 			auto t = _t->interfaceType(_structsByName);
-			solAssert(t, "");
-			return t->signatureInExternalFunction(_structsByName);
+			solAssert(t.get(), "");
+			return t.get()->signatureInExternalFunction(_structsByName);
 		});
 		return "(" + boost::algorithm::join(memberTypeStrings, ",") + ")";
 	}
@@ -2271,27 +2310,6 @@ set<string> StructType::membersMissingInMemory() const
 		if (!variable->annotation().type->canLiveOutsideStorage())
 			missing.insert(variable->name());
 	return missing;
-}
-
-bool StructType::recursive() const
-{
-	if (!m_recursive.is_initialized())
-	{
-		auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t /*_depth*/)
-		{
-			for (ASTPointer<VariableDeclaration> const& variable: _struct.members())
-			{
-				Type const* memberType = variable->annotation().type.get();
-				while (dynamic_cast<ArrayType const*>(memberType))
-					memberType = dynamic_cast<ArrayType const*>(memberType)->baseType().get();
-				if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-					if (_cycleDetector.run(innerStruct->structDefinition()))
-						return;
-			}
-		};
-		m_recursive = (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
-	}
-	return *m_recursive;
 }
 
 TypeResult EnumType::unaryOperatorResult(Token _operator) const
@@ -2574,7 +2592,7 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 		solAssert(t->annotation().type, "Type not set for parameter.");
 		if (m_kind == Kind::External)
 			solAssert(
-				t->annotation().type->interfaceType(false),
+				t->annotation().type->interfaceType(false).get(),
 				"Internal type used as parameter for external function."
 			);
 		m_parameterTypes.push_back(t->annotation().type);
@@ -2584,7 +2602,7 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 		solAssert(t->annotation().type, "Type not set for return parameter.");
 		if (m_kind == Kind::External)
 			solAssert(
-				t->annotation().type->interfaceType(false),
+				t->annotation().type->interfaceType(false).get(),
 				"Internal type used as return parameter for external function."
 			);
 		m_returnParameterTypes.push_back(t->annotation().type);
@@ -2885,14 +2903,14 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 
 	for (auto type: m_parameterTypes)
 	{
-		if (auto ext = type->interfaceType(isLibraryFunction))
+		if (auto ext = type->interfaceType(isLibraryFunction).get())
 			paramTypes.push_back(ext);
 		else
 			return FunctionTypePointer();
 	}
 	for (auto type: m_returnParameterTypes)
 	{
-		if (auto ext = type->interfaceType(isLibraryFunction))
+		if (auto ext = type->interfaceType(isLibraryFunction).get())
 			retParamTypes.push_back(ext);
 		else
 			return FunctionTypePointer();
@@ -2978,12 +2996,12 @@ TypePointer FunctionType::encodingType() const
 		return TypePointer();
 }
 
-TypePointer FunctionType::interfaceType(bool /*_inLibrary*/) const
+TypeResult FunctionType::interfaceType(bool /*_inLibrary*/) const
 {
 	if (m_kind == Kind::External)
 		return shared_from_this();
 	else
-		return TypePointer();
+		return TypeResult::err("Internal type is not allowed for public or external functions.");
 }
 
 bool FunctionType::canTakeArguments(
@@ -3275,6 +3293,26 @@ string MappingType::toString(bool _short) const
 string MappingType::canonicalName() const
 {
 	return "mapping(" + keyType()->canonicalName() + " => " + valueType()->canonicalName() + ")";
+}
+
+TypeResult MappingType::interfaceType(bool _inLibrary) const
+{
+	solAssert(keyType()->interfaceType(_inLibrary).get(), "Must be an elementary type!");
+
+	if (_inLibrary)
+	{
+		auto iType = valueType()->interfaceType(_inLibrary);
+
+		if (!iType.get())
+		{
+			solAssert(!iType.message().empty(), "Expected detailed error message!");
+			return iType;
+		}
+	}
+	else
+		return TypeResult::err("Only libraries are allowed to use the mapping type in public or external functions.");
+
+	return shared_from_this();
 }
 
 string TypeType::richIdentifier() const

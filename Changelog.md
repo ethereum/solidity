@@ -13,6 +13,7 @@ Compiler Features:
 
 Bugfixes:
  * Code Generator: Defensively pad memory for ``type(Contract).name`` to multiples of 32.
+ * Type System: Detect and disallow internal function pointers as parameters for public/external library functions, even when they are nested/wrapped in structs, arrays or other types.
  * Yul Optimizer: Properly determine whether a variable can be eliminated during stack compression pass.
 
 
