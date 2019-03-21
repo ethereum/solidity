@@ -631,12 +631,15 @@
     },
     "0.5.5": {
         "bugs": [
+            "IncorrectByteInstructionOptimization",
             "DoubleShiftSizeOverflow"
         ],
         "released": "2019-03-05"
     },
     "0.5.6": {
-        "bugs": [],
+        "bugs": [
+            "IncorrectByteInstructionOptimization"
+        ],
         "released": "2019-03-13"
     }
 }
