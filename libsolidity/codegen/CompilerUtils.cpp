@@ -41,7 +41,6 @@ unsigned const CompilerUtils::dataStartOffset = 4;
 size_t const CompilerUtils::freeMemoryPointer = 64;
 size_t const CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
 size_t const CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
-unsigned const CompilerUtils::identityContractAddress = 4;
 
 static_assert(CompilerUtils::freeMemoryPointer >= 64, "Free memory pointer must not overlap with scratch area.");
 static_assert(CompilerUtils::zeroPointer >= CompilerUtils::freeMemoryPointer + 32, "Zero pointer must not overlap with free memory pointer.");
