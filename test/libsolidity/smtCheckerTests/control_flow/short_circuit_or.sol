@@ -8,7 +8,7 @@ contract c {
 	}
 	function g() public {
 		x = 0;
-		assert((f() > 0) || (f() > 0));
+		bool b = (f() > 0) || (f() > 0);
 		// This assertion should NOT fail.
 		// It currently does because the SMTChecker does not
 		// handle short-circuiting properly and inlines f() twice.
