@@ -874,6 +874,10 @@ bool CommandLineInterface::processInput()
 				endl;
 			return false;
 		}
+		serr() <<
+			"Warning: Yul and its optimizer are still experimental. Please use the output with care." <<
+			endl;
+
 		return assemble(inputLanguage, targetMachine, optimize);
 	}
 	if (m_args.count(g_argLink))

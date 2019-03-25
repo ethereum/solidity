@@ -1,3 +1,4 @@
+Warning: Yul and its optimizer are still experimental. Please use the output with care.
 Exception while assembling:
 Dynamic exception type:
 std::exception::what: Variable a1 is 17 slot(s) too deep inside the stack.
