@@ -867,7 +867,12 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	AssemblyStack stack(_inputsAndSettings.evmVersion, AssemblyStack::Language::StrictAssembly);
 	string const& sourceName = _inputsAndSettings.sources.begin()->first;
 	string const& sourceContents = _inputsAndSettings.sources.begin()->second;
-	if (!stack.parseAndAnalyze(sourceName, sourceContents))
+
+	// Inconsistent state - stop here to receive error reports from users
+	if (!stack.parseAndAnalyze(sourceName, sourceContents) && stack.errors().empty())
+		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
+
+	if (!stack.errors().empty())
 	{
 		Json::Value errors = Json::arrayValue;
 		for (auto const& error: stack.errors())
