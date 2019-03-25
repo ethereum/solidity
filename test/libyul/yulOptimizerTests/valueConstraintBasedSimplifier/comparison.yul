@@ -31,8 +31,8 @@
 // d:
 //     min: 256
 //     max: 271
-//    minB: 0
-//    maxB: 511
+//    minB: 256
+//    maxB: 271
 // e:
 //     min: 0
 //     max: 1
