@@ -180,15 +180,20 @@ ValueConstraint ValueConstraint::valueFromBits(u256 _minBits, u256 _maxBits)
 
 ValueConstraint ValueConstraint::bitsFromValue(u256 _minValue, u256 _maxValue)
 {
-	if (_minValue == _maxValue)
-		return constant(_minValue);
-
-	int highestBit = highestBitSet(_maxValue);
+	// Summary of algorithm: Retain the comon higher order bit prefix between
+	// _minValue and _maxValue and starting from the point of divergence,
+	// set all following _maxBits bits to 1, and all following _minBits bits to 0.
+	// Reasoning: If we count up from _minValue to _maxValue, then the common upper
+	// bits will not change.
+	int divergence = highestBitSet(_minValue ^ _maxValue);
+	u256 lowerBits = u256(-1) >> (255 - divergence);
+	u256 minBits = _minValue & (~lowerBits);
+	u256 maxBits = _maxValue | lowerBits;
 	return ValueConstraint{
 		move(_minValue),
 		move(_maxValue),
-		0,
-		u256(-1) >> (255 - highestBit)
+		move(minBits),
+		move(maxBits)
 	};
 }
 
