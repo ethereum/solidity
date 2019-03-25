@@ -124,6 +124,9 @@ Solidity Tools
 * `EVM Lab <https://github.com/ethereum/evmlab/>`_
     Rich tool package to interact with the EVM. Includes a VM, Etherchain API, and a trace-viewer with gas cost display.
 
+* `Universal Mutator <https://github.com/agroce/universalmutator>`_
+    A tool for mutation generation, with configurable rules and support for Solidity and Vyper.
+
 .. note::
   Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.
 
