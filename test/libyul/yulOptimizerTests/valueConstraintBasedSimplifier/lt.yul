@@ -9,6 +9,8 @@
 }
 // ----
 // valueConstraintBasedSimplifier
+// x:
+//        = 2
 // {
 //     let x := 2
 //     if 1

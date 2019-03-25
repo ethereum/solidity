@@ -5,6 +5,11 @@
 }
 // ----
 // valueConstraintBasedSimplifier
+// x:
+//     min: 0
+//     max: 255
+//    minB: 0
+//    maxB: 255
 // {
 //     let x := and(callvalue(), 0xff)
 //     if 1

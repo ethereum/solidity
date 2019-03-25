@@ -96,7 +96,6 @@ protected:
 
 	void valuesCleared(std::set<YulString> const& _names) override;
 
-private:
 	explicit ValueConstraintBasedSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 
 	std::map<YulString, ValueConstraint> m_variableConstraints;

@@ -17,6 +17,8 @@
 
 #include <test/libyul/YulOptimizerTest.h>
 
+#include <test/libyul/VerboseValueConstraintsSimplifier.h>
+
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -103,6 +105,8 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	if (!parse(_stream, _linePrefix, _formatted))
 		return false;
 
+	string additionalInfo;
+
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
 	else if (m_optimizerStep == "blockFlattener")
@@ -186,7 +190,9 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else if (m_optimizerStep == "valueConstraintBasedSimplifier")
 	{
 		disambiguate();
-		ValueConstraintBasedSimplifier::run(*m_dialect, *m_ast);
+
+		// subclass of ValueConstraintBasedSimplifier that adds reporting
+		VerboseValueConstraintsSimplifier::run(*m_dialect, *m_ast, additionalInfo);
 	}
 	else if (m_optimizerStep == "fullSimplify")
 	{
@@ -265,7 +271,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		return false;
 	}
 
-	m_obtainedResult = m_optimizerStep + "\n" + AsmPrinter{m_yul}(*m_ast) + "\n";
+	m_obtainedResult = m_optimizerStep + "\n" + additionalInfo + AsmPrinter{m_yul}(*m_ast) + "\n";
 
 	if (m_expectation != m_obtainedResult)
 	{
