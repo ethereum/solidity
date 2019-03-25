@@ -135,24 +135,20 @@ void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _respons
 	m_smtlib2Responses[_hash] = _response;
 }
 
-void CompilerStack::reset(bool _keepSources)
+void CompilerStack::reset(bool _keepSettings)
 {
-	if (_keepSources)
-	{
-		m_stackState = SourcesSet;
-		for (auto sourcePair: m_sources)
-			sourcePair.second.reset();
-	}
-	else
-	{
-		m_stackState = Empty;
-		m_sources.clear();
-	}
+	m_stackState = Empty;
+	m_sources.clear();
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
-	m_libraries.clear();
-	m_evmVersion = langutil::EVMVersion();
-	m_optimiserSettings = OptimiserSettings::minimal();
+	if (!_keepSettings)
+	{
+		m_remappings.clear();
+		m_libraries.clear();
+		m_evmVersion = langutil::EVMVersion();
+		m_optimiserSettings = OptimiserSettings::minimal();
+		m_metadataLiteralSources = false;
+	}
 	m_globalContext.reset();
 	m_scopes.clear();
 	m_sourceOrder.clear();
