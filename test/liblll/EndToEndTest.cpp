@@ -1017,10 +1017,10 @@ BOOST_AUTO_TEST_CASE(string_literal)
 {
 	char const* sourceCode = R"(
 		(returnlll
-			(return \"hello\")))
+			(return "hello"))
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFallback() == encodeArgs(u256("68656c6c6f000000000000000000000000000000000000000000000000000000")));
+	BOOST_CHECK(callFallback() == encodeArgs(u256("0x68656c6c6f000000000000000000000000000000000000000000000000000000")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
