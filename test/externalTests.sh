@@ -100,6 +100,20 @@ function replace_libsolc_call
   sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
 }
 
+function find_truffle_config
+{
+  local config_file="truffle.js"
+  local alt_config_file="truffle-config.js"
+
+  if [ ! -f "$config_file" ] && [ ! -f "$alt_config_file" ]; then
+    printError "No matching Truffle config found."
+  fi
+  if [ ! -f "$config_file" ]; then
+    config_file=alt_config_file
+  fi
+  echo "$config_file"
+}
+
 function force_solc_truffle_modules
 {
   # Replace solc package by v0.5.0 and then overwrite with current version.
@@ -185,11 +199,32 @@ DIR=$(mktemp -d)
 rm -rf "$DIR"
 echo "Done."
 
+printTask "Testing GnosisSafe..."
+echo "==========================="
+DIR=$(mktemp -d)
+(
+  setup https://github.com/gnosis/safe-contracts.git development "$DIR"
+
+  npm install
+
+  CONFIG=$(find_truffle_config)
+
+  force_solc_truffle_modules "$SOLJSON"
+  force_solc "$CONFIG" "$DIR"
+
+  for optimize in "{ enabled: false }" "{ enabled: true }" "{ enabled: true, details: { yul: true } }"
+  do
+    clean
+    force_solc_settings "$CONFIG" "$optimize" "petersburg"
+
+    npx truffle compile
+    verify_compiler_version "$SOLCVERSION"
+    npm test
+  done
+)
+rm -rf "$DIR"
+echo "Done."
 echo "All external tests passed."
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
-
-# Disabled temporarily because it is incompatible with petersburg EVM and
-# there is no easy way to set the EVM version in truffle pre 5.0.
-#test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development
