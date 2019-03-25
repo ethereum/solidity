@@ -298,9 +298,6 @@ public:
 	static size_t const generalPurposeMemoryStart;
 
 private:
-	/// Address of the precompiled identity contract.
-	static unsigned const identityContractAddress;
-
 	/// Appends code that cleans higher-order bits for integer types.
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
 
