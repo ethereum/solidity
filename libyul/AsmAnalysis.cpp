@@ -436,7 +436,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 			);
 	}
 
-	set<Literal const*, Less<Literal*>> cases;
+	set<u256> cases;
 	for (auto const& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -450,7 +450,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 			m_stackHeight--;
 
 			/// Note: the parser ensures there is only one default case
-			if (!cases.insert(_case.value.get()).second)
+			if (!cases.insert(valueOfLiteral(*_case.value)).second)
 			{
 				m_errorReporter.declarationError(
 					_case.location,
