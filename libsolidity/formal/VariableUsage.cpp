@@ -17,6 +17,8 @@
 
 #include <libsolidity/formal/VariableUsage.h>
 
+#include <libsolidity/formal/SMTChecker.h>
+
 #include <libsolidity/ast/ASTVisitor.h>
 
 using namespace std;
@@ -27,16 +29,18 @@ VariableUsage::VariableUsage(ASTNode const& _node)
 {
 	auto nodeFun = [&](ASTNode const& n) -> bool
 	{
-		if (Identifier const* identifier = dynamic_cast<decltype(identifier)>(&n))
+		if (auto identifier = dynamic_cast<Identifier const*>(&n))
 		{
 			Declaration const* declaration = identifier->annotation().referencedDeclaration;
 			solAssert(declaration, "");
 			if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-				if (
-					identifier->annotation().lValueRequested &&
-					varDecl->annotation().type->isValueType()
-				)
+				if (identifier->annotation().lValueRequested)
 					m_touchedVariable[&n] = varDecl;
+		}
+		else if (auto funCall = dynamic_cast<FunctionCall const*>(&n))
+		{
+			if (FunctionDefinition const* funDef = SMTChecker::inlinedFunctionCallToDefinition(*funCall))
+				m_children[&n].push_back(funDef);
 		}
 		return true;
 	};
@@ -56,6 +60,7 @@ vector<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const
 		return {};
 
 	set<VariableDeclaration const*> touched;
+	set<ASTNode const*> visitedFunctions;
 	vector<ASTNode const*> toVisit;
 	toVisit.push_back(&_node);
 
@@ -63,10 +68,16 @@ vector<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const
 	{
 		ASTNode const* n = toVisit.back();
 		toVisit.pop_back();
+
+		if (auto funDef = dynamic_cast<FunctionDefinition const*>(n))
+			visitedFunctions.insert(funDef);
+
 		if (m_children.count(n))
 		{
 			solAssert(!m_touchedVariable.count(n), "");
-			toVisit += m_children.at(n);
+			for (auto const& child: m_children.at(n))
+				if (!visitedFunctions.count(child))
+					toVisit.push_back(child);
 		}
 		else
 		{
