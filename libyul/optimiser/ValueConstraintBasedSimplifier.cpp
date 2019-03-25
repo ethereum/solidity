@@ -107,7 +107,7 @@ public:
 		case dev::solidity::Instruction::COINBASE:
 		case dev::solidity::Instruction::CREATE:
 		case dev::solidity::Instruction::CREATE2:
-			return ValueConstraint::bitRange(160, 0);
+			return ValueConstraint::bitRange(159, 0);
 
 		case dev::solidity::Instruction::CALL:
 		case dev::solidity::Instruction::CALLCODE:
@@ -167,17 +167,22 @@ ValueConstraint ValueConstraint::bitRange(size_t _highest, size_t _lowest)
 
 ValueConstraint ValueConstraint::valueFromBits(u256 _minBits, u256 _maxBits)
 {
-	int highestBit = highestBitSet(_maxBits);
+	// If x fulfills the bit restriction, i.e. minb_i <= x_i <= maxb_i,
+	// then by monotonicity sum_i 2^i minb_i <= sum_i 2^i x_i <= sum_i 2^i maxb_i
+	// and thus _minBits and _maxBits are also valid value range constraints.
 	return ValueConstraint{
-		0,
-		u256(-1) >> (255 - highestBit),
-		move(_minBits),
-		move(_maxBits)
+		_minBits,
+		_maxBits,
+		_minBits,
+		_maxBits
 	};
 }
 
 ValueConstraint ValueConstraint::bitsFromValue(u256 _minValue, u256 _maxValue)
 {
+	if (_minValue == _maxValue)
+		return constant(_minValue);
+
 	int highestBit = highestBitSet(_maxValue);
 	return ValueConstraint{
 		move(_minValue),
@@ -225,8 +230,8 @@ ValueConstraint ValueConstraint::operator-(ValueConstraint const& _other)
 		return ValueConstraint{}; // underflow
 	else
 		return bitsFromValue(
-			maxValue - _other.minValue,
-			minValue - _other.maxValue
+			minValue - _other.maxValue,
+			maxValue - _other.minValue
 		);
 }
 
