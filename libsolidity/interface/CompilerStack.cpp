@@ -160,15 +160,6 @@ void CompilerStack::reset(bool _keepSources)
 	m_errorReporter.clear();
 }
 
-bool CompilerStack::addSource(string const& _name, string const& _content)
-{
-	bool existed = m_sources.count(_name) != 0;
-	reset(true);
-	m_sources[_name].scanner = make_shared<Scanner>(CharStream(_content, _name));
-	m_stackState = SourcesSet;
-	return existed;
-}
-
 void CompilerStack::setSources(StringMap const& _sources)
 {
 	if (m_stackState == SourcesSet)

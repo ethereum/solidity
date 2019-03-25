@@ -148,10 +148,6 @@ public:
 	/// Must be set before parsing.
 	void useMetadataLiteralSources(bool _metadataLiteralSources);
 
-	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
-	/// @returns true if a source object by the name already existed and was replaced.
-	bool addSource(std::string const& _name, std::string const& _content);
-
 	/// Sets the sources. Must be set before parsing.
 	void setSources(StringMap const& _sources);
 
