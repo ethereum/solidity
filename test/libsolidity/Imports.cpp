@@ -143,22 +143,46 @@ BOOST_AUTO_TEST_CASE(complex_import)
 	BOOST_CHECK(c.compile());
 }
 
-BOOST_AUTO_TEST_CASE(name_clash_in_import)
+BOOST_AUTO_TEST_CASE(name_clash_in_import_1)
 {
 	CompilerStack c;
 	c.addSource("a", "contract A {} pragma solidity >=0.0;");
 	c.addSource("b", "import \"a\"; contract A {} pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(!c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(name_clash_in_import_2)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {} pragma solidity >=0.0;");
 	c.addSource("b", "import \"a\" as A; contract A {} pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(!c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(name_clash_in_import_3)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {} pragma solidity >=0.0;");
 	c.addSource("b", "import {A as b} from \"a\"; contract b {} pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(!c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(name_clash_in_import_4)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {} pragma solidity >=0.0;");
 	c.addSource("b", "import {A} from \"a\"; contract A {} pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(!c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(name_clash_in_import_5)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {} pragma solidity >=0.0;");
 	c.addSource("b", "import {A} from \"a\"; contract B {} pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
@@ -213,7 +237,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_pres
 	BOOST_CHECK(c.compile());
 }
 
-BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent)
+BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent_1)
 {
 	CompilerStack c;
 	c.setRemappings(vector<CompilerStack::Remapping>{{"a", "x/y/z", "d"}, {"a/b", "x", "e"}});
@@ -223,14 +247,18 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent)
 	c.addSource("e/y/z/z.sol", "contract E {} pragma solidity >=0.0;");
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
-	CompilerStack d;
-	d.setRemappings(vector<CompilerStack::Remapping>{{"a/b", "x", "e"}, {"a", "x/y/z", "d"}});
-	d.addSource("a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;");
-	d.addSource("a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;");
-	d.addSource("d/z.sol", "contract D {} pragma solidity >=0.0;");
-	d.addSource("e/y/z/z.sol", "contract E {} pragma solidity >=0.0;");
-	d.setEVMVersion(dev::test::Options::get().evmVersion());
-	BOOST_CHECK(d.compile());
+}
+
+BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent_2)
+{
+	CompilerStack c;
+	c.setRemappings(vector<CompilerStack::Remapping>{{"a/b", "x", "e"}, {"a", "x/y/z", "d"}});
+	c.addSource("a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;");
+	c.addSource("a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;");
+	c.addSource("d/z.sol", "contract D {} pragma solidity >=0.0;");
+	c.addSource("e/y/z/z.sol", "contract E {} pragma solidity >=0.0;");
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	BOOST_CHECK(c.compile());
 }
 
 BOOST_AUTO_TEST_CASE(shadowing_via_import)
