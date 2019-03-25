@@ -12,8 +12,8 @@
 // a:
 //        = 65535
 // b:
-//     min: 0
-//     max: 0x10 * 2**32 - 1
+//     min: 0x0fFFF00000
+//     max: 0x0fFFF000ff
 //    minB: 0x0fFFF00000
 //    maxB: 0x0fFFF000ff
 // c:
@@ -26,8 +26,8 @@
 //    minB: 0
 //    maxB: 255
 // f:
-//     min: 0
-//     max: 2**256 - 1
+//     min: 0xFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFfff0000Fff00
+//     max: 0xFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFfff0000Fffff
 //    minB: 0xFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFfff0000Fff00
 //    maxB: 0xFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFffffFFFFfff0000Fffff
 // g:
