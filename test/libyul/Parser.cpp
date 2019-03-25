@@ -384,6 +384,12 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 	BOOST_CHECK(successParse("{ switch 0:u256 case 42:u256 {} case 0x42:u256 {} }"));
 }
 
+BOOST_AUTO_TEST_CASE(switch_duplicate_case_different_literal)
+{
+	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case \"\":u256 {} }", DeclarationError, "Duplicate case defined.");
+	BOOST_CHECK(successParse("{ switch 1:u256 case \"1\":u256 {} case \"2\":u256 {} }"));
+}
+
 BOOST_AUTO_TEST_CASE(builtins_parser)
 {
 	struct SimpleDialect: public Dialect
