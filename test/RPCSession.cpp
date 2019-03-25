@@ -166,7 +166,6 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 {
 	TransactionReceipt receipt;
 	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
-	BOOST_REQUIRE(!result.isNull());
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
 	receipt.blockNumber = result["blockNumber"].asString();
@@ -350,6 +349,10 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 
 		BOOST_FAIL("Error on JSON-RPC call: " + result["error"]["message"].asString());
 	}
+
+	if (!result.isMember("result") || result["result"].isNull())
+		BOOST_FAIL("Missing result for JSON-RPC call: " + result.asString());
+
 	return result["result"];
 }
 
