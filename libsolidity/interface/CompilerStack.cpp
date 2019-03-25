@@ -179,6 +179,12 @@ bool CompilerStack::parse()
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
 		m_errorReporter.warning("This is a pre-release compiler version, please do not use it in production.");
 
+	if (m_optimiserSettings.runYulOptimiser)
+		m_errorReporter.warning(
+			"The Yul optimiser is still experimental. "
+			"Do not use it in production unless correctness of generated code is verified with extensive tests."
+		);
+
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
 		sourcesToParse.push_back(s.first);

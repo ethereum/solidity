@@ -1,3 +1,4 @@
+Warning: The Yul optimiser is still experimental. Do not use it in production unless correctness of generated code is verified with extensive tests.
 gas_test_abiv2_optimize_yul/input.sol:2:1: Warning: Experimental features are turned on. Do not use experimental features on live deployments.
 pragma experimental ABIEncoderV2;
 ^-------------------------------^

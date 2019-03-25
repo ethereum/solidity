@@ -996,6 +996,12 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	)";
 	Json::Value result = compile(input);
 	BOOST_CHECK(containsAtMostWarnings(result));
+	BOOST_CHECK(containsError(
+		result,
+		"Warning",
+		"The Yul optimiser is still experimental. "
+		"Do not use it in production unless correctness of generated code is verified with extensive tests."
+	));
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["metadata"].isString());
