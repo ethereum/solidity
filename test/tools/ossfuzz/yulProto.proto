@@ -111,6 +111,17 @@ message UnaryOp {
   required Expression operand = 2;
 }
 
+message TernaryOp {
+  enum TOp {
+    ADDM = 0;
+    MULM = 1;
+  }
+  required TOp op = 1;
+  required Expression arg1 = 2;
+  required Expression arg2 = 3;
+  required Expression arg3 = 4;
+}
+
 message StoreFunc {
   enum Storage {
     MSTORE = 0;

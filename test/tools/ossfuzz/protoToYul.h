@@ -63,6 +63,7 @@ private:
 	void visit(ForStmt const&);
 	void visit(CaseStmt const&);
 	void visit(SwitchStmt const&);
+	void visit(TernaryOp const&);
 	template <class T>
 	void visit(google::protobuf::RepeatedPtrField<T> const& _repeated_field);
 
