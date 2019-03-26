@@ -456,6 +456,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
@@ -479,6 +480,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
@@ -487,6 +489,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
@@ -495,6 +498,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "OneOfTwoConstructorsSkipped"
@@ -503,6 +507,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
             "EventStructWrongData"
         ],
@@ -510,13 +515,16 @@
     },
     "0.4.24": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
             "EventStructWrongData"
         ],
         "released": "2018-05-16"
     },
     "0.4.25": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2PackedStorage"
+        ],
         "released": "2018-09-12"
     },
     "0.4.3": {
@@ -610,27 +618,38 @@
         "released": "2017-01-31"
     },
     "0.5.0": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2PackedStorage"
+        ],
         "released": "2018-11-13"
     },
     "0.5.1": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2PackedStorage"
+        ],
         "released": "2018-12-03"
     },
     "0.5.2": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2PackedStorage"
+        ],
         "released": "2018-12-19"
     },
     "0.5.3": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2PackedStorage"
+        ],
         "released": "2019-01-22"
     },
     "0.5.4": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2PackedStorage"
+        ],
         "released": "2019-02-12"
     },
     "0.5.5": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "IncorrectByteInstructionOptimization",
             "DoubleShiftSizeOverflow"
         ],
@@ -638,6 +657,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "ABIEncoderV2PackedStorage",
             "IncorrectByteInstructionOptimization"
         ],
         "released": "2019-03-13"

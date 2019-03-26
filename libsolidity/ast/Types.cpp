@@ -2842,6 +2842,14 @@ u256 FunctionType::storageSize() const
 		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
+bool FunctionType::leftAligned() const
+{
+	if (m_kind == Kind::External)
+		return true;
+	else
+		solAssert(false, "Alignment property of non-exportable function type requested.");
+}
+
 unsigned FunctionType::storageBytes() const
 {
 	if (m_kind == Kind::External)

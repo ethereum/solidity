@@ -18,14 +18,18 @@
  * Unit tests for Solidity's ABI encoder.
  */
 
-#include <functional>
-#include <string>
-#include <tuple>
-#include <boost/test/unit_test.hpp>
-#include <liblangutil/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 #include <test/libsolidity/ABITestsCommon.h>
+
+#include <liblangutil/Exceptions.h>
+
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/test/unit_test.hpp>
+
+#include <functional>
+#include <string>
+#include <tuple>
 
 using namespace std;
 using namespace std::placeholders;
@@ -507,6 +511,204 @@ BOOST_AUTO_TEST_CASE(structs2)
 			0x21, 2, 0x22,
 			0, 0, 0
 		));
+	)
+}
+
+BOOST_AUTO_TEST_CASE(bool_arrays)
+{
+	string sourceCode = R"(
+		contract C {
+			bool[] x;
+			bool[4] y;
+			event E(bool[], bool[4]);
+			function f() public returns (bool[] memory, bool[4] memory) {
+				x.length = 4;
+				x[0] = true;
+				x[1] = false;
+				x[2] = true;
+				x[3] = false;
+				y[0] = true;
+				y[1] = false;
+				y[2] = true;
+				y[3] = false;
+				emit E(x, y);
+				return (x, y); // this copies to memory first
+			}
+		}
+	)";
+
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode, 0, "C");
+		bytes encoded = encodeArgs(
+			0xa0, 1, 0, 1, 0,
+			4, 1, 0, 1, 0
+		);
+		ABI_CHECK(callContractFunction("f()"), encoded);
+		REQUIRE_LOG_DATA(encoded);
+	)
+}
+
+BOOST_AUTO_TEST_CASE(bool_arrays_split)
+{
+	string sourceCode = R"(
+		contract C {
+			bool[] x;
+			bool[4] y;
+			event E(bool[], bool[4]);
+			function store() public {
+				x.length = 4;
+				x[0] = true;
+				x[1] = false;
+				x[2] = true;
+				x[3] = false;
+				y[0] = true;
+				y[1] = false;
+				y[2] = true;
+				y[3] = false;
+			}
+			function f() public returns (bool[] memory, bool[4] memory) {
+				emit E(x, y);
+				return (x, y); // this copies to memory first
+			}
+		}
+	)";
+
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode, 0, "C");
+		bytes encoded = encodeArgs(
+			0xa0, 1, 0, 1, 0,
+			4, 1, 0, 1, 0
+		);
+		ABI_CHECK(callContractFunction("store()"), bytes{});
+		ABI_CHECK(callContractFunction("f()"), encoded);
+		REQUIRE_LOG_DATA(encoded);
+	)
+}
+
+BOOST_AUTO_TEST_CASE(bytesNN_arrays)
+{
+	// This tests that encoding packed arrays from storage work correctly.
+	string sourceCode = R"(
+		contract C {
+			bytes8[] x;
+			bytesWIDTH[SIZE] y;
+			event E(bytes8[], bytesWIDTH[SIZE]);
+			function store() public {
+				x.length = 2;
+				x[0] = "abc";
+				x[1] = "def";
+				for (uint i = 0; i < y.length; i ++)
+					y[i] = bytesWIDTH(uintUINTWIDTH(i + 1));
+			}
+			function f() public returns (bytes8[] memory, bytesWIDTH[SIZE] memory) {
+				emit E(x, y);
+				return (x, y); // this copies to memory first
+			}
+		}
+	)";
+
+	BOTH_ENCODERS(
+		for (size_t size = 1; size < 15; size++)
+		{
+			for (size_t width: {1, 2, 4, 5, 7, 15, 16, 17, 31, 32})
+			{
+				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
+				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
+				source = boost::algorithm::replace_all_copy(source, "WIDTH", to_string(width));
+				compileAndRun(source, 0, "C");
+				ABI_CHECK(callContractFunction("store()"), bytes{});
+				vector<u256> arr;
+				for (size_t i = 0; i < size; i ++)
+					arr.emplace_back(u256(i + 1) << (8 * (32 - width)));
+				bytes encoded = encodeArgs(
+					0x20 * (1 + size), arr,
+					2, "abc", "def"
+				);
+				ABI_CHECK(callContractFunction("f()"), encoded);
+				REQUIRE_LOG_DATA(encoded);
+			}
+		}
+	)
+}
+
+BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
+{
+	// This tests that encoding packed arrays from storage work correctly.
+	string sourceCode = R"(
+		contract C {
+			bytes8[] x;
+			bytesWIDTH[] y;
+			event E(bytesWIDTH[], bytes8[]);
+			function store() public {
+				x.length = 2;
+				x[0] = "abc";
+				x[1] = "def";
+				for (uint i = 0; i < SIZE; i ++)
+					y.push(bytesWIDTH(uintUINTWIDTH(i + 1)));
+			}
+			function f() public returns (bytesWIDTH[] memory, bytes8[] memory) {
+				emit E(y, x);
+				return (y, x); // this copies to memory first
+			}
+		}
+	)";
+
+	BOTH_ENCODERS(
+		for (size_t size = 0; size < 15; size++)
+		{
+			for (size_t width: {1, 2, 4, 5, 7, 15, 16, 17, 31, 32})
+			{
+				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
+				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
+				source = boost::algorithm::replace_all_copy(source, "WIDTH", to_string(width));
+				compileAndRun(source, 0, "C");
+				ABI_CHECK(callContractFunction("store()"), bytes{});
+				vector<u256> arr;
+				for (size_t i = 0; i < size; i ++)
+					arr.emplace_back(u256(i + 1) << (8 * (32 - width)));
+				bytes encoded = encodeArgs(
+					0x20 * 2, 0x20 * (3 + size),
+					size, arr,
+					2, "abc", "def"
+				);
+				ABI_CHECK(callContractFunction("f()"), encoded);
+				REQUIRE_LOG_DATA(encoded);
+			}
+		}
+	)
+}
+
+BOOST_AUTO_TEST_CASE(packed_structs)
+{
+	string sourceCode = R"(
+		contract C {
+			struct S { bool a; int8 b; function() external g; bytes3 d; int8 e; }
+			S s;
+			event E(S);
+			function store() public {
+				s.a = false;
+				s.b = -5;
+				s.g = this.g;
+				s.d = 0x010203;
+				s.e = -3;
+			}
+			function f() public returns (S memory) {
+				emit E(s);
+				return s; // this copies to memory first
+			}
+			function g() public pure {}
+		}
+	)";
+
+	NEW_ENCODER(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("store()"), bytes{});
+		bytes fun = m_contractAddress.asBytes() + fromHex("0xe2179b8e");
+		bytes encoded = encodeArgs(
+			0, u256(-5), asString(fun), "\x01\x02\x03", u256(-3)
+		);
+		ABI_CHECK(callContractFunction("f()"), encoded);
+		REQUIRE_LOG_DATA(encoded);
 	)
 }
 

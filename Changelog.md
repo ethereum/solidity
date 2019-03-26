@@ -1,6 +1,8 @@
 ### 0.5.7 (unreleased)
 
 Important Bugfixes:
+ * ABIEncoderV2: Fix bugs related to loading short value types from storage when encoding a packed array or struct from storage.
+ * ABIEncoderV2: Fix buffer overflow problem when encoding packed array from storage.
  * Optimizer: Fix wrong ordering of arguments in byte optimization rule for constants.
 
 Language Features:

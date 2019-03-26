@@ -236,6 +236,13 @@ public:
 	/// In order to avoid computation at runtime of whether such moving is necessary, structs and
 	/// array data (not each element) always start a new slot.
 	virtual unsigned storageBytes() const { return 32; }
+	/// Returns true if the type is a value type that is left-aligned on the stack with a size of
+	/// storageBytes() bytes. Returns false if the type is a value type that is right-aligned on
+	/// the stack with a size of storageBytes() bytes. Asserts if it is not a value type or the
+	/// encoding is more complicated.
+	/// Signed integers are not considered "more complicated" even though they need to be
+	/// sign-extended.
+	virtual bool leftAligned() const { solAssert(false, "Alignment property of non-value type requested."); }
 	/// Returns true if the type can be stored in storage.
 	virtual bool canBeStored() const { return true; }
 	/// Returns false if the type cannot live outside the storage, i.e. if it includes some mapping.
@@ -345,6 +352,7 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : 160 / 8; }
 	unsigned storageBytes() const override { return 160 / 8; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
@@ -390,6 +398,7 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_bits / 8; }
 	unsigned storageBytes() const override { return m_bits / 8; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool _short) const override;
@@ -432,6 +441,7 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_totalBits / 8; }
 	unsigned storageBytes() const override { return m_totalBits / 8; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool _short) const override;
@@ -578,6 +588,7 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded) const override { return _padded && m_bytes > 0 ? 32 : m_bytes; }
 	unsigned storageBytes() const override { return m_bytes; }
+	bool leftAligned() const override { return true; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
@@ -604,6 +615,7 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded) const override{ return _padded ? 32 : 1; }
 	unsigned storageBytes() const override { return 1; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool) const override { return "bool"; }
@@ -775,6 +787,7 @@ public:
 		return encodingType()->calldataEncodedSize(_padded);
 	}
 	unsigned storageBytes() const override { solAssert(!isSuper(), ""); return 20; }
+	bool leftAligned() const override { solAssert(!isSuper(), ""); return false; }
 	bool canLiveOutsideStorage() const override { return !isSuper(); }
 	unsigned sizeOnStack() const override { return m_super ? 0 : 1; }
 	bool isValueType() const override { return !isSuper(); }
@@ -897,6 +910,7 @@ public:
 		return encodingType()->calldataEncodedSize(_padded);
 	}
 	unsigned storageBytes() const override;
+	bool leftAligned() const override { return false; }
 	bool canLiveOutsideStorage() const override { return true; }
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
@@ -1096,6 +1110,7 @@ public:
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool canBeStored() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
 	u256 storageSize() const override;
+	bool leftAligned() const override;
 	unsigned storageBytes() const override;
 	bool isValueType() const override { return true; }
 	bool canLiveOutsideStorage() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }

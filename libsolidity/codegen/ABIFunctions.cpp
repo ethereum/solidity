@@ -346,6 +346,39 @@ string ABIFunctions::cleanupFunction(Type const& _type, bool _revertOnFailure)
 	});
 }
 
+string ABIFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes)
+{
+	solAssert(_type.isValueType(), "");
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+
+	string functionName = string("cleanup_from_storage_") + (_splitFunctionTypes ? "split_" : "") + _type.identifier();
+	return createFunction(functionName, [&] {
+		Whiskers templ(R"(
+			function <functionName>(value) -> cleaned {
+				<body>
+			}
+		)");
+		templ("functionName", functionName);
+
+		unsigned storageBytes = _type.storageBytes();
+		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
+			if (type->isSigned() && storageBytes != 32)
+			{
+				templ("body", "cleaned := signextend(" + to_string(storageBytes - 1) + ", value)");
+				return templ.render();
+			}
+
+		if (storageBytes == 32)
+			templ("body", "cleaned := value");
+		else if (_type.leftAligned())
+			templ("body", "cleaned := " + m_utils.shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
+		else
+			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
+
+		return templ.render();
+	});
+}
+
 string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
 {
 	string functionName =
@@ -778,7 +811,15 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		subOptions.encodeFunctionFromStack = false;
 		subOptions.padded = true;
 		templ("encodeToMemoryFun", abiEncodeAndReturnUpdatedPosFunction(*_from.baseType(), *_to.baseType(), subOptions));
-		templ("arrayElementAccess", inMemory ? "mload(srcPtr)" : _from.baseType()->isValueType() ? "sload(srcPtr)" : "srcPtr" );
+		if (inMemory)
+			templ("arrayElementAccess", "mload(srcPtr)");
+		else if (_from.baseType()->isValueType())
+		{
+			solAssert(_from.dataStoredIn(DataLocation::Storage), "");
+			templ("arrayElementAccess", readFromStorage(*_from.baseType(), 0, false) + "(srcPtr)");
+		}
+		else
+			templ("arrayElementAccess", "srcPtr");
 		templ("nextArrayElement", m_utils.nextArrayElementFunction(_from));
 		return templ.render();
 	});
@@ -886,8 +927,9 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			bool dynamic = _to.isDynamicallyEncoded();
 			size_t storageBytes = _from.baseType()->storageBytes();
 			size_t itemsPerSlot = 32 / storageBytes;
-			// This always writes full slot contents to memory, which might be
-			// more than desired, i.e. it always writes beyond the end of memory.
+			solAssert(itemsPerSlot > 0, "");
+			// The number of elements we need to handle manually after the loop.
+			size_t spill = size_t(_from.length() % itemsPerSlot);
 			Whiskers templ(
 				R"(
 					// <readableTypeNameFrom> -> <readableTypeNameTo>
@@ -896,16 +938,31 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 						pos := <storeLength>(pos, length)
 						let originalPos := pos
 						let srcPtr := <dataArea>(value)
-						for { let i := 0 } lt(i, length) { i := add(i, <itemsPerSlot>) }
-						{
+						let itemCounter := 0
+						if <useLoop> {
+							// Run the loop over all full slots
+							for { } lt(add(itemCounter, sub(<itemsPerSlot>, 1)), length)
+										{ itemCounter := add(itemCounter, <itemsPerSlot>) }
+							{
+								let data := sload(srcPtr)
+								<#items>
+									<encodeToMemoryFun>(<extractFromSlot>(data), pos)
+									pos := add(pos, <elementEncodedSize>)
+								</items>
+								srcPtr := add(srcPtr, 1)
+							}
+						}
+						// Handle the last (not necessarily full) slot specially
+						if <useSpill> {
 							let data := sload(srcPtr)
 							<#items>
-								<encodeToMemoryFun>(<shiftRightFun>(data), pos)
-								pos := add(pos, <elementEncodedSize>)
+								if <inRange> {
+									<encodeToMemoryFun>(<extractFromSlot>(data), pos)
+									pos := add(pos, <elementEncodedSize>)
+									itemCounter := add(itemCounter, 1)
+								}
 							</items>
-							srcPtr := add(srcPtr, 1)
 						}
-						pos := add(originalPos, mul(length, <elementEncodedSize>))
 						<assignEnd>
 					}
 				)"
@@ -918,6 +975,15 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("lengthFun", m_utils.arrayLengthFunction(_from));
 			templ("storeLength", arrayStoreLengthForEncodingFunction(_to, _options));
 			templ("dataArea", m_utils.arrayDataAreaFunction(_from));
+			// We skip the loop for arrays that fit a single slot.
+			if (_from.isDynamicallySized() || _from.length() >= itemsPerSlot)
+				templ("useLoop", "1");
+			else
+				templ("useLoop", "0");
+			if (_from.isDynamicallySized() || spill != 0)
+				templ("useSpill", "1");
+			else
+				templ("useSpill", "0");
 			templ("itemsPerSlot", to_string(itemsPerSlot));
 			// We use padded size because array elements are always padded.
 			string elementEncodedSize = toCompactHexWithPrefix(_to.baseType()->calldataEncodedSize());
@@ -934,7 +1000,15 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("encodeToMemoryFun", encodeToMemoryFun);
 			std::vector<std::map<std::string, std::string>> items(itemsPerSlot);
 			for (size_t i = 0; i < itemsPerSlot; ++i)
-				items[i]["shiftRightFun"] = m_utils.shiftRightFunction(i * storageBytes * 8);
+			{
+				if (_from.isDynamicallySized())
+					items[i]["inRange"] = "lt(itemCounter, length)";
+				else if (i < spill)
+					items[i]["inRange"] = "1";
+				else
+					items[i]["inRange"] = "0";
+				items[i]["extractFromSlot"] = extractFromStorageValue(*_from.baseType(), i * storageBytes, false);
+			}
 			templ("items", items);
 			return templ.render();
 		}
@@ -1020,7 +1094,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 						members.back()["preprocess"] = "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))";
 						previousSlotOffset = storageSlotOffset;
 					}
-					members.back()["retrieveValue"] = m_utils.shiftRightFunction(intraSlotOffset * 8) + "(slotValue)";
+					members.back()["retrieveValue"] = extractFromStorageValue(*memberTypeFrom, intraSlotOffset, false) + "(slotValue)";
 				}
 				else
 				{
@@ -1506,6 +1580,52 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 			("cleanExtFun", cleanupCombinedExternalFunctionIdFunction())
 			.render();
 		}
+	});
+}
+
+
+string ABIFunctions::readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+	string functionName =
+		"read_from_storage_" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		"offset_" +
+		to_string(_offset) +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		solAssert(_type.sizeOnStack() == 1, "");
+		return Whiskers(R"(
+			function <functionName>(slot) -> value {
+				value := <extract>(sload(slot))
+			}
+		)")
+		("functionName", functionName)
+		("extract", extractFromStorageValue(_type, _offset, false))
+		.render();
+	});
+}
+
+string ABIFunctions::extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+
+	string functionName =
+		"extract_from_storage_value_" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		"offset_" +
+		to_string(_offset) +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot_value) -> value {
+				value := <cleanupStorage>(<shr>(slot_value))
+			}
+		)")
+		("functionName", functionName)
+		("shr", m_utils.shiftRightFunction(_offset * 8))
+		("cleanupStorage", cleanupFromStorageFunction(_type, false))
+		.render();
 	});
 }
 
