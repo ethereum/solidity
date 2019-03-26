@@ -661,5 +661,9 @@
             "IncorrectByteInstructionOptimization"
         ],
         "released": "2019-03-13"
+    },
+    "0.5.7": {
+        "bugs": [],
+        "released": "2019-03-26"
     }
 }
