@@ -153,6 +153,9 @@ message IfStmt {
 
 message ForStmt {
   required Block for_body = 1;
+  required ForInitBlock for_init = 2;
+  required ForPostBlock for_post = 3;
+  required Expression for_cond = 4;
 }
 
 message CaseStmt {
@@ -168,6 +171,37 @@ message SwitchStmt {
 
 message BreakStmt {}
 message ContinueStmt {}
+
+message ForInitStatement {
+  oneof stmt_oneof {
+    AssignmentStatement assignment    = 1;
+    IfStmt              ifstmt        = 2;
+    StoreFunc           storage_func  = 3;
+    Block               blockstmt     = 4;
+    ForStmt             forstmt       = 5;
+    SwitchStmt          switchstmt    = 6;
+  }
+}
+
+message ForInitBlock {
+  repeated ForInitStatement forinit_stmts = 1;
+}
+
+message ForPostStatement {
+  oneof stmt_oneof {
+    VarDecl             decl          = 1;
+    AssignmentStatement assignment    = 2;
+    IfStmt              ifstmt        = 3;
+    StoreFunc           storage_func  = 4;
+    Block               blockstmt     = 5;
+    ForStmt             forstmt       = 6;
+    SwitchStmt          switchstmt    = 7;
+  }
+}
+
+message ForPostBlock {
+  repeated ForPostStatement forpost_stmts = 1;
+}
 
 message Statement {
   oneof stmt_oneof {

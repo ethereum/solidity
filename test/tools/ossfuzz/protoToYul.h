@@ -41,8 +41,9 @@ public:
 		// The hard-coded function template foo has 10 parameters that are already "live"
 		m_numLiveVars = 10;
 		m_numVarsPerScope.push(m_numLiveVars);
-		m_numNestedForLoops = 0;
-		m_inForScope.push(false);
+		m_inForBodyScope.push(false);
+		m_inForInitScope.push(false);
+		m_inForPostScope.push(false);
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -64,6 +65,10 @@ private:
 	void visit(Statement const&);
 	void visit(Function const&);
 	void visit(ForStmt const&);
+	void visit(ForInitStatement const&);
+	void visit(ForInitBlock const&);
+	void visit(ForPostStatement const&);
+	void visit(ForPostBlock const&);
 	void visit(CaseStmt const&);
 	void visit(SwitchStmt const&);
 	void visit(TernaryOp const&);
@@ -77,9 +82,10 @@ private:
 	std::ostringstream m_output;
 	std::stack<uint8_t> m_numVarsPerScope;
 	int32_t m_numLiveVars;
-	int32_t m_numNestedForLoops;
-	std::stack<bool> m_inForScope;
 	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
+	std::stack<bool> m_inForBodyScope;
+	std::stack<bool> m_inForInitScope;
+	std::stack<bool> m_inForPostScope;
 };
 }
 }

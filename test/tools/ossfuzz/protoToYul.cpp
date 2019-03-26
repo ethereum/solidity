@@ -362,14 +362,105 @@ void ProtoConverter::visit(StoreFunc const& _x)
 
 void ProtoConverter::visit(ForStmt const& _x)
 {
-	std::string loopVarName("i_" + std::to_string(m_numNestedForLoops++));
-	m_output << "for { let " << loopVarName << " := 0 } "
-		<< "lt(" << loopVarName << ", 0x60) "
-		<< "{ " << loopVarName << " := add(" << loopVarName << ", 0x20) } ";
-	m_inForScope.push(true);
+	m_output << "for ";
+	m_inForInitScope.push(true);
+	visit(_x.for_init());
+	m_inForInitScope.pop();
+	visit(_x.for_cond());
+	m_inForPostScope.push(true);
+	visit(_x.for_post());
+	m_inForPostScope.pop();
+	m_inForBodyScope.push(true);
 	visit(_x.for_body());
-	m_inForScope.pop();
-	--m_numNestedForLoops;
+	m_inForBodyScope.pop();
+}
+
+void ProtoConverter::visit(ForInitBlock const& _x)
+{
+	if (_x.forinit_stmts_size() > 0)
+	{
+		// To avoid having to account for scope extension, we disallow for init blocks to have variable declarations
+		// Thus, there is no need to track numLive vars in this scope
+		m_output << "{\n";
+		for (auto const& st: _x.forinit_stmts())
+			visit(st);
+		m_output << "}\n";
+	}
+	else
+		m_output << "{}\n";
+}
+
+void ProtoConverter::visit(ForInitStatement const& _x)
+{
+	switch (_x.stmt_oneof_case())
+	{
+		case ForInitStatement::kAssignment:
+			visit(_x.assignment());
+			break;
+		case ForInitStatement::kIfstmt:
+			visit(_x.ifstmt());
+			break;
+		case ForInitStatement::kStorageFunc:
+			visit(_x.storage_func());
+			break;
+		case ForInitStatement::kBlockstmt:
+			visit(_x.blockstmt());
+			break;
+		case ForInitStatement::kForstmt:
+			visit(_x.forstmt());
+			break;
+		case ForInitStatement::kSwitchstmt:
+			visit(_x.switchstmt());
+			break;
+		case Statement::STMT_ONEOF_NOT_SET:
+			break;
+	}
+}
+
+void ProtoConverter::visit(ForPostBlock const& _x)
+{
+	if (_x.forpost_stmts_size() > 0)
+	{
+		m_numVarsPerScope.push(0);
+		m_output << "{\n";
+		for (auto const& st: _x.forpost_stmts())
+			visit(st);
+		m_output << "}\n";
+		m_numLiveVars -= m_numVarsPerScope.top();
+		m_numVarsPerScope.pop();
+	}
+	else
+		m_output << "{}\n";
+}
+
+void ProtoConverter::visit(ForPostStatement const& _x)
+{
+	switch (_x.stmt_oneof_case())
+	{
+		case Statement::kDecl:
+			visit(_x.decl());
+			break;
+		case Statement::kAssignment:
+			visit(_x.assignment());
+			break;
+		case Statement::kIfstmt:
+			visit(_x.ifstmt());
+			break;
+		case Statement::kStorageFunc:
+			visit(_x.storage_func());
+			break;
+		case Statement::kBlockstmt:
+			visit(_x.blockstmt());
+			break;
+		case Statement::kForstmt:
+			visit(_x.forstmt());
+			break;
+		case Statement::kSwitchstmt:
+			visit(_x.switchstmt());
+			break;
+		case Statement::STMT_ONEOF_NOT_SET:
+			break;
+	}
 }
 
 void ProtoConverter::visit(CaseStmt const& _x)
@@ -433,11 +524,11 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.switchstmt());
 			break;
 		case Statement::kBreakstmt:
-			if (m_inForScope.top())
+			if (m_inForBodyScope.top() && !m_inForInitScope.top() && !m_inForPostScope.top())
 				m_output << "break\n";
 			break;
 		case Statement::kContstmt:
-			if (m_inForScope.top())
+			if (m_inForBodyScope.top() && !m_inForInitScope.top() && !m_inForPostScope.top())
 				m_output << "continue\n";
 			break;
 		case Statement::STMT_ONEOF_NOT_SET:
