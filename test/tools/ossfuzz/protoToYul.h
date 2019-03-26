@@ -69,6 +69,8 @@ private:
 	void visit(TernaryOp const&);
 	void visit(NullaryOp const&);
 	void visit(LogFunc const&);
+	void visit(CopyFunc const&);
+	void visit(ExtCodeCopy const&);
 	template <class T>
 	void visit(google::protobuf::RepeatedPtrField<T> const& _repeated_field);
 

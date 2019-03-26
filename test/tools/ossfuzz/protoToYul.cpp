@@ -307,6 +307,15 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		case UnaryOp::ISZERO:
 			m_output << "iszero";
 			break;
+		case UnaryOp::CALLDATALOAD:
+			m_output << "calldataload";
+			break;
+		case UnaryOp::EXTCODESIZE:
+			m_output << "extcodesize";
+			break;
+		case UnaryOp::EXTCODEHASH:
+			m_output << "extcodehash";
+			break;
 	}
 	m_output << "(";
 	visit(_x.operand());
@@ -346,7 +355,53 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		case NullaryOp::GAS:
 			m_output << "gas()";
 			break;
+		case NullaryOp::CALLDATASIZE:
+			m_output << "calldatasize()";
+			break;
+		case NullaryOp::CODESIZE:
+			m_output << "codesize()";
+			break;
+		case NullaryOp::RETURNDATASIZE:
+			m_output << "returndatasize()";
+			break;
 	}
+}
+
+void ProtoConverter::visit(CopyFunc const& _x)
+{
+	switch (_x.ct())
+	{
+		case CopyFunc::CALLDATA:
+			m_output << "calldatacopy";
+			break;
+		case CopyFunc::CODE:
+			m_output << "codecopy";
+			break;
+		case CopyFunc::RETURNDATA:
+			m_output << "returndatacopy";
+			break;
+	}
+	m_output << "(";
+	visit(_x.target());
+	m_output << ", ";
+	visit(_x.source());
+	m_output << ", ";
+	visit(_x.size());
+	m_output << ")\n";
+}
+
+void ProtoConverter::visit(ExtCodeCopy const& _x)
+{
+	m_output << "extcodecopy";
+	m_output << "(";
+	visit(_x.addr());
+	m_output << ", ";
+	visit(_x.target());
+	m_output << ", ";
+	visit(_x.source());
+	m_output << ", ";
+	visit(_x.size());
+	m_output << ")\n";
 }
 
 void ProtoConverter::visit(LogFunc const& _x)
@@ -534,6 +589,12 @@ void ProtoConverter::visit(Statement const& _x)
 			break;
 		case Statement::kLogFunc:
 			visit(_x.log_func());
+			break;
+		case Statement::kCopyFunc:
+			visit(_x.copy_func());
+			break;
+		case Statement::kExtcodeCopy:
+			visit(_x.extcode_copy());
 			break;
 		case Statement::STMT_ONEOF_NOT_SET:
 			break;
