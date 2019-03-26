@@ -23,7 +23,7 @@ using namespace yul::test::yul_fuzzer;
 void yulFuzzerUtil::interpret(ostream& _os, shared_ptr<yul::Block> _ast)
 {
 	InterpreterState state;
-	state.maxTraceSize = 10000;
+	state.maxTraceSize = 75;
 	Interpreter interpreter(state);
 	try
 	{

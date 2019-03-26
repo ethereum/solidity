@@ -86,6 +86,7 @@ void interpret(string const& _source)
 
 	InterpreterState state;
 	state.maxTraceSize = 10000;
+	state.maxMemSize = 0x20000000;
 	Interpreter interpreter(state);
 	try
 	{
