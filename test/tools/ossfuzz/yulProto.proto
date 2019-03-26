@@ -122,14 +122,41 @@ message TernaryOp {
   required Expression arg3 = 4;
 }
 
+message NullaryOp {
+  enum NOp {
+    PC = 1;
+    MSIZE = 2;
+    GAS = 3;
+  }
+  required NOp op = 1;
+}
+
 message StoreFunc {
   enum Storage {
     MSTORE = 0;
     SSTORE = 1;
+    MSTORE8 = 2;
   }
   required Expression loc = 1;
   required Expression val = 2;
   required Storage st = 3;
+}
+
+message LogFunc {
+  enum NumTopics {
+    ZERO = 0;
+    ONE = 1;
+    TWO = 2;
+    THREE = 3;
+    FOUR = 4;
+  }
+  required Expression pos = 1;
+  required Expression size = 2;
+  required NumTopics num_topics = 3;
+  required Expression t1 = 4;
+  required Expression t2 = 5;
+  required Expression t3 = 6;
+  required Expression t4 = 7;
 }
 
 message Expression {
@@ -138,6 +165,8 @@ message Expression {
     Literal cons = 2;
     BinaryOp binop = 3;
     UnaryOp unop = 4;
+    TernaryOp top = 5;
+    NullaryOp nop = 6;
   }
 }
 
@@ -180,6 +209,7 @@ message Statement {
     SwitchStmt          switchstmt    = 7;
     BreakStmt           breakstmt     = 8;
     ContinueStmt        contstmt      = 9;
+    LogFunc             log_func      = 10;
   }
 }
 
