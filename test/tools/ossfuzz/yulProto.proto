@@ -223,6 +223,36 @@ message SwitchStmt {
 message BreakStmt {}
 message ContinueStmt {}
 
+message StopInvalidStmt {
+  enum Type {
+    STOP = 0;
+    INVALID = 1;
+  }
+  required Type stmt = 1;
+}
+
+message RetRevStmt {
+  enum Type {
+    RETURN = 0;
+    REVERT = 1;
+  }
+  required Type stmt = 1;
+  required Expression pos = 2;
+  required Expression size = 3;
+}
+
+message SelfDestructStmt {
+  required Expression addr = 1;
+}
+
+message TerminatingStmt {
+  oneof term_oneof {
+    StopInvalidStmt   stop_invalid = 1;
+    RetRevStmt        ret_rev = 2;
+    SelfDestructStmt  self_des = 3;
+  }
+}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl          = 1;
@@ -237,6 +267,7 @@ message Statement {
     LogFunc             log_func      = 10;
     CopyFunc            copy_func     = 11;
     ExtCodeCopy         extcode_copy  = 12;
+    TerminatingStmt     terminatestmt = 13;
   }
 }
 
