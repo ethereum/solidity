@@ -8,7 +8,7 @@ contract c {
 	}
 	function g() public returns (bool) {
 		x = 0;
-		bool b = (f() > 0) || (f() > 0);
+		bool b = (f() == 0) && (f() == 0);
 		assert(x == 1);
 		assert(b);
 		return b;
@@ -16,3 +16,4 @@ contract c {
 }
 // ----
 // Warning: (101-106): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (227-236): Assertion violation happens here
