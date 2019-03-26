@@ -536,7 +536,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		StackTooDeepError error(_error);
 		if (error.functionName.empty())
 			error.functionName = _function.name;
-		stackError(error, height);
+		stackError(std::move(error), height);
 	}
 
 	{
@@ -566,7 +566,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 				to_string(stackLayout.size() - 17) +
 				" parameters or return variables too many to fit the stack size."
 			);
-			stackError(error, m_assembly.stackHeight() - _function.parameters.size());
+			stackError(std::move(error), m_assembly.stackHeight() - _function.parameters.size());
 		}
 		else
 		{
