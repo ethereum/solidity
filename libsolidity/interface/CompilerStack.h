@@ -109,10 +109,9 @@ public:
 	/// @returns the current state.
 	State state() const { return m_stackState; }
 
-	/// Resets the compiler to a state where the sources are not parsed or even removed.
-	/// Sets the state to SourcesSet if @a _keepSources is true, otherwise to Empty.
-	/// All settings, with the exception of remappings, are reset.
-	void reset(bool _keepSources = false);
+	/// Resets the compiler to an empty state. Unless @a _keepSettings is set to true,
+	/// all settings are reset as well.
+	void reset(bool _keepSettings = false);
 
 	// Parses a remapping of the format "context:prefix=target".
 	static boost::optional<Remapping> parseRemapping(std::string const& _remapping);
@@ -147,10 +146,6 @@ public:
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
 	void useMetadataLiteralSources(bool _metadataLiteralSources);
-
-	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
-	/// @returns true if a source object by the name already existed and was replaced.
-	bool addSource(std::string const& _name, std::string const& _content);
 
 	/// Sets the sources. Must be set before parsing.
 	void setSources(StringMap const& _sources);
