@@ -72,6 +72,9 @@ struct InterpreterState
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
 	size_t maxTraceSize = 0;
+	/// Memory size limit. Anything beyond this will still work, but it has
+	/// deterministic yet not necessarily consistent behaviour.
+	size_t maxMemSize = 0x200;
 	LoopState loopState = LoopState::Default;
 };
 
