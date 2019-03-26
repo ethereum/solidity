@@ -647,8 +647,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	CompilerStack compilerStack(m_readFile);
 
 	StringMap sourceList = std::move(_inputsAndSettings.sources);
-	for (auto const& source: sourceList)
-		compilerStack.addSource(source.first, source.second);
+	compilerStack.setSources(sourceList);
 	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
 		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
 	compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);

@@ -69,8 +69,8 @@ public:
 		if (dev::test::Options::get().useABIEncoderV2 && _sourceCode.find("pragma experimental ABIEncoderV2;") == std::string::npos)
 			sourceCode += "pragma experimental ABIEncoderV2;\n";
 		sourceCode += _sourceCode;
-		m_compiler.reset(false);
-		m_compiler.addSource("", sourceCode);
+		m_compiler.reset();
+		m_compiler.setSources({{"", sourceCode}});
 		m_compiler.setLibraries(_libraryAddresses);
 		m_compiler.setEVMVersion(m_evmVersion);
 		m_compiler.setOptimiserSettings(m_optimiserSettings);

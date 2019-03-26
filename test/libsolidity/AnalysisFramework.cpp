@@ -48,7 +48,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 )
 {
 	m_compiler.reset();
-	m_compiler.addSource("", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source);
+	m_compiler.setSources({{"", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source}});
 	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
 	if (!m_compiler.parse())
 	{

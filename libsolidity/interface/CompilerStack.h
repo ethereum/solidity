@@ -152,6 +152,9 @@ public:
 	/// @returns true if a source object by the name already existed and was replaced.
 	bool addSource(std::string const& _name, std::string const& _content);
 
+	/// Sets the sources. Must be set before parsing.
+	void setSources(StringMap const& _sources);
+
 	/// Adds a response to an SMTLib2 query (identified by the hash of the query input).
 	/// Must be set before parsing.
 	void addSMTLib2Response(h256 const& _hash, std::string const& _response);

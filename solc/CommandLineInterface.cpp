@@ -901,8 +901,7 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);
-		for (auto const& sourceCode: m_sourceCodes)
-			m_compiler->addSource(sourceCode.first, sourceCode.second);
+		m_compiler->setSources(m_sourceCodes);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
 		m_compiler->setEVMVersion(m_evmVersion);
