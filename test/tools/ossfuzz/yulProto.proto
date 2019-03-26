@@ -17,16 +17,9 @@
 
 syntax = "proto2";
 
-// VariableDeclaration =
-//    'let' TypedIdentifierList ( ':=' Expression )?
-// TypedIdentifierList = Identifier ':' TypeName ( ',' Identifier ':' TypeName )*
-// Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
-// IdentifierList = Identifier ( ',' Identifier)*
-// TypeName = Identifier | BuiltinTypeName
-// BuiltinTypeName = 'bool' | [us] ( '8' | '32' | '64' | '128' | '256' )
 message VarDecl {
   required int32 id = 1;
-  required Expression expr = 3;
+  required Expression expr = 2;
 }
 
 message TypedVarDecl {
@@ -53,7 +46,11 @@ message VarRef {
 }
 
 message Literal {
-  required int32 val = 1;
+  oneof literal_oneof {
+    uint64 intval = 1;
+    string hexval = 2;
+    string strval = 3;
+  }
 }
 
 message TypedLiteral {
@@ -87,6 +84,17 @@ message BinaryOp {
     EQ = 8;
     LT = 9;
     GT = 10;
+    SHR = 11;
+    SHL = 12;
+    SAR = 13;
+    SDIV = 14;
+    SMOD = 15;
+    EXP = 16;
+    SLT = 17;
+    SGT = 18;
+    BYTE = 19;
+    SI = 20;
+    KECCAK = 21;
   };
   required BOp op = 1;
   required Expression left = 2;
@@ -133,8 +141,21 @@ message IfStmt {
   required Block if_body = 2;
 }
 
-// add for loop
-// TODO: add block and scope for if
+message ForStmt {
+  required Block for_body = 2;
+}
+
+message CaseStmt {
+  required Literal case_lit = 1;
+  required Block case_block = 2;
+}
+
+message SwitchStmt {
+  required Expression switch_expr = 1;
+  repeated CaseStmt case_stmt = 2;
+  optional Block default_block = 3;
+}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl          = 1;
@@ -142,6 +163,8 @@ message Statement {
     IfStmt              ifstmt        = 3;
     StoreFunc           storage_func  = 4;
     Block               blockstmt     = 5;
+    ForStmt             forstmt       = 6;
+    SwitchStmt          switchstmt    = 7;
   }
 }
 

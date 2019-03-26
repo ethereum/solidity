@@ -24,6 +24,7 @@
 #include <libdevcore/StringUtils.h>
 
 #include <boost/range/adaptor/map.hpp>
+#include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
@@ -92,19 +93,26 @@ void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
 		assignment(_varDecl, *_varDecl.value(), _varDecl.location());
 }
 
+bool SMTChecker::visit(ModifierDefinition const&)
+{
+	return false;
+}
+
 bool SMTChecker::visit(FunctionDefinition const& _function)
 {
-	if (!_function.modifiers().empty() || _function.isConstructor())
+	if (_function.isConstructor())
 		m_errorReporter.warning(
 			_function.location(),
-			"Assertion checker does not yet support constructors and functions with modifiers."
+			"Assertion checker does not yet support constructors."
 		);
 	m_functionPath.push_back(&_function);
+	m_modifierDepthStack.push_back(-1);
 	// Not visited by a function call
 	if (isRootFunction())
 	{
 		m_interface->reset();
 		m_pathConditions.clear();
+		m_callStack.clear();
 		m_expressions.clear();
 		m_globalContext.clear();
 		m_uninterpretedTerms.clear();
@@ -114,7 +122,54 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		m_loopExecutionHappened = false;
 		m_arrayAssignmentHappened = false;
 	}
+	_function.parameterList().accept(*this);
+	if (_function.returnParameterList())
+		_function.returnParameterList()->accept(*this);
+	visitFunctionOrModifier();
+	return false;
+}
 
+void SMTChecker::visitFunctionOrModifier()
+{
+	solAssert(!m_functionPath.empty(), "");
+	solAssert(!m_modifierDepthStack.empty(), "");
+
+	++m_modifierDepthStack.back();
+	FunctionDefinition const& function = *m_functionPath.back();
+
+	if (m_modifierDepthStack.back() == int(function.modifiers().size()))
+	{
+		if (function.isImplemented())
+			function.body().accept(*this);
+	}
+	else
+	{
+		solAssert(m_modifierDepthStack.back() < int(function.modifiers().size()), "");
+		ASTPointer<ModifierInvocation> const& modifierInvocation = function.modifiers()[m_modifierDepthStack.back()];
+		solAssert(modifierInvocation, "");
+		modifierInvocation->accept(*this);
+		auto const& modifierDef = dynamic_cast<ModifierDefinition const&>(
+			*modifierInvocation->name()->annotation().referencedDeclaration
+		);
+		vector<smt::Expression> modifierArgsExpr;
+		if (modifierInvocation->arguments())
+			for (auto arg: *modifierInvocation->arguments())
+				modifierArgsExpr.push_back(expr(*arg));
+		initializeFunctionCallParameters(modifierDef, modifierArgsExpr);
+		pushCallStack(modifierInvocation.get());
+		modifierDef.body().accept(*this);
+		popCallStack();
+	}
+
+	--m_modifierDepthStack.back();
+}
+
+bool SMTChecker::visit(PlaceholderStatement const&)
+{
+	solAssert(!m_functionPath.empty(), "");
+	ASTNode const* lastCall = popCallStack();
+	visitFunctionOrModifier();
+	pushCallStack(lastCall);
 	return true;
 }
 
@@ -129,8 +184,11 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	{
 		checkUnderOverflow();
 		removeLocalVariables();
+		solAssert(m_callStack.empty(), "");
 	}
 	m_functionPath.pop_back();
+	solAssert(m_modifierDepthStack.back() == -1, "");
+	m_modifierDepthStack.pop_back();
 }
 
 bool SMTChecker::visit(IfStatement const& _node)
@@ -331,7 +389,8 @@ void SMTChecker::addOverflowTarget(
 		std::move(_intType),
 		std::move(_value),
 		currentPathConditions(),
-		_location
+		_location,
+		m_callStack
 	);
 }
 
@@ -339,10 +398,12 @@ void SMTChecker::checkUnderOverflow()
 {
 	for (auto& target: m_overflowTargets)
 	{
+		swap(m_callStack, target.callStack);
 		if (target.type != OverflowTarget::Type::Overflow)
 			checkUnderflow(target);
 		if (target.type != OverflowTarget::Type::Underflow)
 			checkOverflow(target);
+		swap(m_callStack, target.callStack);
 	}
 }
 
@@ -495,7 +556,9 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		visitGasLeft(_funCall);
 		break;
 	case FunctionType::Kind::Internal:
+		pushCallStack(&_funCall);
 		inlineFunctionCall(_funCall);
+		popCallStack();
 		break;
 	case FunctionType::Kind::External:
 		resetStateVariables();
@@ -731,7 +794,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 
 void SMTChecker::endVisit(Return const& _return)
 {
-	if (knownExpr(*_return.expression()))
+	if (_return.expression() && knownExpr(*_return.expression()))
 	{
 		auto returnParams = m_functionPath.back()->returnParameters();
 		if (returnParams.size() > 1)
@@ -1165,17 +1228,20 @@ void SMTChecker::checkCondition(
 	vector<string> values;
 	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
 
-	string loopComment;
+	string extraComment;
 	if (m_loopExecutionHappened)
-		loopComment =
+		extraComment =
 			"\nNote that some information is erased after the execution of loops.\n"
 			"You can re-introduce information using require().";
 	if (m_arrayAssignmentHappened)
-		loopComment +=
+		extraComment +=
 			"\nNote that array aliasing is not supported,"
 			" therefore all mapping information is erased after"
 			" a mapping local variable/parameter is assigned.\n"
 			"You can re-introduce information using require().";
+
+	SecondarySourceLocation secondaryLocation{};
+	secondaryLocation.append(extraComment, SourceLocation{});
 
 	switch (result)
 	{
@@ -1195,19 +1261,25 @@ void SMTChecker::checkCondition(
 
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
-			m_errorReporter.warning(_location, message.str(), SecondarySourceLocation().append(modelMessage.str(), SourceLocation()).append(loopComment, SourceLocation()));
+			m_errorReporter.warning(
+				_location,
+				message.str(),
+				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
+				.append(currentCallStack())
+				.append(move(secondaryLocation))
+			);
 		}
 		else
 		{
 			message << ".";
-			m_errorReporter.warning(_location, message.str(), SecondarySourceLocation().append(loopComment, SourceLocation()));
+			m_errorReporter.warning(_location, message.str(), secondaryLocation);
 		}
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here.", SecondarySourceLocation().append(loopComment, SourceLocation()));
+		m_errorReporter.warning(_location, _description + " might happen here.", secondaryLocation);
 		break;
 	case smt::CheckResult::CONFLICTING:
 		m_errorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
@@ -1248,7 +1320,7 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 		// can't do anything.
 	}
 	else if (positiveResult == smt::CheckResult::UNSATISFIABLE && negatedResult == smt::CheckResult::UNSATISFIABLE)
-		m_errorReporter.warning(_condition.location(), "Condition unreachable.");
+		m_errorReporter.warning(_condition.location(), "Condition unreachable.", currentCallStack());
 	else
 	{
 		string value;
@@ -1263,7 +1335,11 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 			solAssert(negatedResult == smt::CheckResult::SATISFIABLE, "");
 			value = "false";
 		}
-		m_errorReporter.warning(_condition.location(), boost::algorithm::replace_all_copy(_description, "$VALUE", value));
+		m_errorReporter.warning(
+			_condition.location(),
+			boost::algorithm::replace_all_copy(_description, "$VALUE", value),
+			currentCallStack()
+		);
 	}
 }
 
@@ -1303,7 +1379,7 @@ smt::CheckResult SMTChecker::checkSatisfiable()
 	return checkSatisfiableAndGenerateModel({}).first;
 }
 
-void SMTChecker::initializeFunctionCallParameters(FunctionDefinition const& _function, vector<smt::Expression> const& _callArgs)
+void SMTChecker::initializeFunctionCallParameters(CallableDeclaration const& _function, vector<smt::Expression> const& _callArgs)
 {
 	auto const& funParams = _function.parameters();
 	solAssert(funParams.size() == _callArgs.size(), "");
@@ -1538,6 +1614,30 @@ smt::Expression SMTChecker::currentPathConditions()
 	if (m_pathConditions.empty())
 		return smt::Expression(true);
 	return m_pathConditions.back();
+}
+
+SecondarySourceLocation SMTChecker::currentCallStack()
+{
+	SecondarySourceLocation callStackLocation;
+	if (m_callStack.empty())
+		return callStackLocation;
+	callStackLocation.append("Callstack: ", SourceLocation());
+	for (auto const& call: m_callStack | boost::adaptors::reversed)
+		callStackLocation.append("", call->location());
+	return callStackLocation;
+}
+
+ASTNode const* SMTChecker::popCallStack()
+{
+	solAssert(!m_callStack.empty(), "");
+	ASTNode const* lastCalled = m_callStack.back();
+	m_callStack.pop_back();
+	return lastCalled;
+}
+
+void SMTChecker::pushCallStack(ASTNode const* _node)
+{
+	m_callStack.push_back(_node);
 }
 
 void SMTChecker::addPathConjoinedExpression(smt::Expression const& _e)

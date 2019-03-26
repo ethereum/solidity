@@ -150,7 +150,7 @@ public:
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
-	bool addSource(std::string const& _name, std::string const& _content, bool _isLibrary = false);
+	bool addSource(std::string const& _name, std::string const& _content);
 
 	/// Adds a response to an SMTLib2 query (identified by the hash of the query input).
 	/// Must be set before parsing.
@@ -261,7 +261,6 @@ private:
 	{
 		std::shared_ptr<langutil::Scanner> scanner;
 		std::shared_ptr<SourceUnit> ast;
-		bool isLibrary = false;
 		h256 mutable keccak256HashCached;
 		h256 mutable swarmHashCached;
 		void reset() { *this = Source(); }

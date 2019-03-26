@@ -10495,6 +10495,27 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_length_access)
 	ABI_CHECK(callContractFunction("f(bytes32)", "789"), encodeArgs(u256(32), u256(16), u256(8)));
 }
 
+BOOST_AUTO_TEST_CASE(byte_optimization_bug)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint x) public returns (uint a) {
+				assembly {
+					a := byte(x, 31)
+				}
+			}
+			function g(uint x) public returns (uint a) {
+				assembly {
+					a := byte(31, x)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	ABI_CHECK(callContractFunction("f(uint256)", u256(2)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("g(uint256)", u256(2)), encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_write_to_stack)
 {
 	char const* sourceCode = R"(

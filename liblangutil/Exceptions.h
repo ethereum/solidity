@@ -28,6 +28,7 @@
 #include <memory>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
+#include <libdevcore/CommonData.h>
 #include <liblangutil/SourceLocation.h>
 
 namespace langutil
@@ -106,6 +107,11 @@ public:
 	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
 	{
 		infos.emplace_back(_errMsg, _sourceLocation);
+		return *this;
+	}
+	SecondarySourceLocation& append(SecondarySourceLocation&& _other)
+	{
+		infos += std::move(_other.infos);
 		return *this;
 	}
 

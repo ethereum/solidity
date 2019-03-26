@@ -268,6 +268,26 @@ BOOST_AUTO_TEST_CASE(cse_double_shift_left_overflow)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(cse_byte_ordering_bug)
+{
+	AssemblyItems input{
+		u256(31),
+		Instruction::CALLVALUE,
+		Instruction::BYTE
+	};
+	checkCSE(input, {u256(31), Instruction::CALLVALUE, Instruction::BYTE});
+}
+
+BOOST_AUTO_TEST_CASE(cse_byte_ordering_fix)
+{
+	AssemblyItems input{
+		Instruction::CALLVALUE,
+		u256(31),
+		Instruction::BYTE
+	};
+	checkCSE(input, {u256(0xff), Instruction::CALLVALUE, Instruction::AND});
+}
+
 BOOST_AUTO_TEST_CASE(cse_storage)
 {
 	AssemblyItems input{

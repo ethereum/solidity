@@ -100,8 +100,9 @@ class RedundantAssignEliminator: public ASTWalker
 {
 public:
 	explicit RedundantAssignEliminator(Dialect const& _dialect): m_dialect(&_dialect) {}
-	RedundantAssignEliminator(RedundantAssignEliminator const&) = default;
-	RedundantAssignEliminator& operator=(RedundantAssignEliminator const&) = default;
+	RedundantAssignEliminator() = delete;
+	RedundantAssignEliminator(RedundantAssignEliminator const&) = delete;
+	RedundantAssignEliminator& operator=(RedundantAssignEliminator const&) = delete;
 	RedundantAssignEliminator(RedundantAssignEliminator&&) = default;
 	RedundantAssignEliminator& operator=(RedundantAssignEliminator&&) = default;
 
@@ -119,8 +120,6 @@ public:
 	static void run(Dialect const& _dialect, Block& _ast);
 
 private:
-	RedundantAssignEliminator() = default;
-
 	class State
 	{
 	public:
@@ -164,19 +163,21 @@ private:
 		std::set<YulString> m_outerDeclaredVariables;
 	};
 
-	/// Joins the assignment mapping with @a _other according to the rules laid out
+	// TODO check that this does not cause nondeterminism!
+	// This could also be a pseudo-map from state to assignment.
+	using TrackedAssignments = std::map<YulString, std::map<Assignment const*, State>>;
+
+	/// Joins the assignment mapping of @a _source into @a _target according to the rules laid out
 	/// above.
-	/// Will destroy @a _other.
-	void join(RedundantAssignEliminator& _other);
+	/// Will destroy @a _source.
+	static void merge(TrackedAssignments& _target, TrackedAssignments&& _source);
 	void changeUndecidedTo(YulString _variable, State _newState);
 	void finalize(YulString _variable);
 
 	Dialect const* m_dialect;
 	std::set<YulString> m_declaredVariables;
-	// TODO check that this does not cause nondeterminism!
-	// This could also be a pseudo-map from state to assignment.
-	std::map<YulString, std::map<Assignment const*, State>> m_assignments;
-	std::set<Assignment const*> m_assignmentsToRemove;
+	std::set<Assignment const*> m_pendingRemovals;
+	TrackedAssignments m_assignments;
 };
 
 class AssignmentRemover: public ASTModifier

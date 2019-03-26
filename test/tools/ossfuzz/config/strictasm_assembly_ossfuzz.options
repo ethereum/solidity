@@ -1,0 +1,2 @@
+[libfuzzer]
+dict = strict_assembly.dict

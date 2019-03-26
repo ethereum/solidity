@@ -56,7 +56,10 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 		if (m_currentObject->name == dataName)
 			_assembly.appendAssemblySize();
 		else
+		{
+			yulAssert(m_subIDs.count(dataName) != 0, "Could not find assembly object <" + dataName.str() + ">.");
 			_assembly.appendDataSize(m_subIDs.at(dataName));
+		}
 	});
 	addFunction("dataoffset", 1, 1, true, true, [this](
 		FunctionCall const& _call,
@@ -70,7 +73,10 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 		if (m_currentObject->name == dataName)
 			_assembly.appendConstant(0);
 		else
+		{
+			yulAssert(m_subIDs.count(dataName) != 0, "Could not find assembly object <" + dataName.str() + ">.");
 			_assembly.appendDataOffset(m_subIDs.at(dataName));
+		}
 	});
 	addFunction("datacopy", 3, 0, false, false, [](
 		FunctionCall const&,

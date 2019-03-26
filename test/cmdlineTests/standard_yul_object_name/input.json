@@ -1,0 +1,17 @@
+{
+	"language": "Yul",
+	"sources":
+	{
+		"A":
+		{
+			"content": "object \"NamedObject\" { code { let x := dataoffset(\"DataName\") sstore(add(x, 0), 0) } data \"DataName\" \"abc\" object \"OtherObject\" { code { revert(0, 0) } } }"
+		}
+	},
+	"settings":
+	{
+		"outputSelection":
+		{
+			"A": { "NamedObject": ["*"], "": [ "*" ] }
+		}
+	}
+}

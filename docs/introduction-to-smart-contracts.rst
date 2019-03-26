@@ -12,8 +12,8 @@ Let us begin with a basic example that sets the value of a variable and exposes
 it for other contracts to access. It is fine if you do not understand
 everything right now, we will go into more detail later.
 
-Storage
-=======
+Storage Example
+===============
 
 ::
 
@@ -33,7 +33,7 @@ Storage
 
 The first line simply tells that the source code is written for
 Solidity version 0.4.0 or anything newer that does not break functionality
-(up to, but not including, version 0.6.0). This is to ensure that the
+(up to, but not including, version 0.7.0). This is to ensure that the
 contract is not compilable with a new (breaking) compiler version, where it could behave differently.
 :ref:`Pragmas<pragma>` are common instructions for compilers about how to treat the
 source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
@@ -387,8 +387,10 @@ paragraphs.
 Each account has a data area called **storage**, which is persistent between function calls
 and transactions.
 Storage is a key-value store that maps 256-bit words to 256-bit words.
-It is not possible to enumerate storage from within a contract and it is
-comparatively costly to read, and even more to modify storage.
+It is not possible to enumerate storage from within a contract, it is
+comparatively costly to read, and even more to initialise and modify storage. Because of this cost,
+you should minimize what you store in persistent storage to what the contract needs to run.
+Store data like derived calculations, caching, and aggregates outside of the contract.
 A contract can neither read nor write to any storage apart from its own.
 
 The second data area is called **memory**, of which a contract obtains

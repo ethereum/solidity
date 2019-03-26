@@ -153,7 +153,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{{Instruction::GT, {0, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::LT, {X, 0}}, [=]{ return u256(0); }, true},
 		{{Instruction::AND, {{Instruction::BYTE, {X, Y}}, {u256(0xff)}}}, [=]() -> Pattern { return {Instruction::BYTE, {X, Y}}; }, false},
-		{{Instruction::BYTE, {X, 31}}, [=]() -> Pattern { return {Instruction::AND, {X, u256(0xff)}}; }, false}
+		{{Instruction::BYTE, {31, X}}, [=]() -> Pattern { return {Instruction::AND, {X, u256(0xff)}}; }, false}
 	};
 }
 

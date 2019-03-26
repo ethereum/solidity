@@ -10,7 +10,7 @@
 	"settings":
 	{
 		"optimizer": {
-			"details": { "yulDetails": 7 }
+			"details": { "yul": true, "yulDetails": 7 }
 		}
 	}
 }

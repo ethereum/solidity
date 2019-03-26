@@ -73,7 +73,7 @@ private:
 
 	///@{
 	///@name Parsing functions for the AST nodes
-	void parsePragmaVersion(std::vector<Token> const& tokens, std::vector<std::string> const& literals);
+	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
 	ContractDefinition::ContractKind parseContractKind();

@@ -1,3 +1,35 @@
+### 0.5.7 (2019-03-26)
+
+Important Bugfixes:
+ * ABIEncoderV2: Fix bugs related to loading short value types from storage when encoding an array or struct from storage.
+ * ABIEncoderV2: Fix buffer overflow problem when encoding packed array from storage.
+ * Optimizer: Fix wrong ordering of arguments in byte optimization rule for constants.
+
+
+Language Features:
+ * Function calls with named arguments now work with overloaded functions.
+
+
+Compiler Features:
+ * Inline Assembly: Issue error when using ``callvalue()`` inside nonpayable function (in the same way that ``msg.value`` already does).
+ * Standard JSON Interface: Support "Yul" as input language.
+ * SMTChecker: Show callstack together with model if applicable.
+ * SMTChecker: Support modifiers.
+ * Yul Optimizer: Enable stack allocation optimization by default if Yul optimizer is active (disable in ``yulDetails``).
+
+
+Bugfixes:
+ * Code Generator: Defensively pad memory for ``type(Contract).name`` to multiples of 32.
+ * Type System: Detect and disallow internal function pointers as parameters for public/external library functions, even when they are nested/wrapped in structs, arrays or other types.
+ * Yul Optimizer: Properly determine whether a variable can be eliminated during stack compression pass.
+ * Yul / Inline Assembly Parser: Disallow more than one case statement with the same label inside a switch based on the label's integer value.
+
+
+Build System:
+ * Install scripts: Fix boost repository URL for CentOS 6.
+ * Soltest: Fix hex string update in soltest.
+
+
 ### 0.5.6 (2019-03-13)
 
 Important Bugfixes:
@@ -29,6 +61,7 @@ Bugfixes:
 Build System:
  * Soltest: Add support for arrays in function signatures.
  * Soltest: Add support for struct arrays in function signatures.
+ * Soltest: Add support for left-aligned, unpadded hex string literals.
 
 ### 0.5.5 (2019-03-05)
 
@@ -70,7 +103,6 @@ Bugfixes:
 
 Build System:
  * Soltest: Add support for left-aligned, padded hex literals.
- * Soltest: Add support for left-aligned, unpadded hex string literals.
  * Soltest: Add support for right-aligned, padded boolean literals.
 
 ### 0.5.4 (2019-02-12)

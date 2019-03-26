@@ -43,7 +43,7 @@ class SolidityExecutionFramework: public dev::test::ExecutionFramework
 
 public:
 	SolidityExecutionFramework();
-	SolidityExecutionFramework(std::string const& _ipcPath);
+	SolidityExecutionFramework(std::string const& _ipcPath, langutil::EVMVersion _evmVersion);
 
 	virtual bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -73,7 +73,7 @@ public:
 		m_compiler.addSource("", sourceCode);
 		m_compiler.setLibraries(_libraryAddresses);
 		m_compiler.setEVMVersion(m_evmVersion);
-		m_compiler.setOptimiserSettings(m_optimize, m_optimizeRuns);
+		m_compiler.setOptimiserSettings(m_optimiserSettings);
 		if (!m_compiler.compile())
 		{
 			langutil::SourceReferenceFormatter formatter(std::cerr);

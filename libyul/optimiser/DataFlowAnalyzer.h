@@ -53,8 +53,6 @@ public:
 	void operator()(Switch& _switch) override;
 	void operator()(FunctionDefinition&) override;
 	void operator()(ForLoop&) override;
-	void operator()(Break& _continue) override;
-	void operator()(Continue& _continue) override;
 	void operator()(Block& _block) override;
 
 protected:

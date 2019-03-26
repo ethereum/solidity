@@ -874,6 +874,10 @@ bool CommandLineInterface::processInput()
 				endl;
 			return false;
 		}
+		serr() <<
+			"Warning: Yul and its optimizer are still experimental. Please use the output with care." <<
+			endl;
+
 		return assemble(inputLanguage, targetMachine, optimize);
 	}
 	if (m_args.count(g_argLink))
@@ -904,9 +908,10 @@ bool CommandLineInterface::processInput()
 		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 
-		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::enabled() : OptimiserSettings::minimal();
+		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
 		settings.runYulOptimiser = m_args.count(g_strOptimizeYul);
+		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		m_compiler->setOptimiserSettings(settings);
 
 		bool successful = m_compiler->compile();
@@ -1294,7 +1299,7 @@ bool CommandLineInterface::assemble(
 		yul::MachineAssemblyObject object;
 		try
 		{
-			object = stack.assemble(_targetMachine);
+			object = stack.assemble(_targetMachine, _optimize);
 		}
 		catch (Exception const& _exception)
 		{

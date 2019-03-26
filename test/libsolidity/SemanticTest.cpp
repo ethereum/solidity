@@ -36,8 +36,8 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 
-SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath):
-	SolidityExecutionFramework(_ipcPath)
+SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, langutil::EVMVersion _evmVersion):
+	SolidityExecutionFramework(_ipcPath, _evmVersion)
 {
 	ifstream file(_filename);
 	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
@@ -47,7 +47,7 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath):
 	parseExpectations(file);
 }
 
-bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
 
@@ -87,7 +87,7 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool const _
 	return true;
 }
 
-void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
+void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool) const
 {
 	stringstream stream(m_source);
 	string line;

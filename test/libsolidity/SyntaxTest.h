@@ -54,12 +54,12 @@ class SyntaxTest: AnalysisFramework, public TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
-	{ return std::unique_ptr<TestCase>(new SyntaxTest(_config.filename)); }
-	SyntaxTest(std::string const& _filename);
+	{ return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion); }
+	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
-	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
+	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override
 	{
 		if (!m_errorList.empty())
@@ -72,16 +72,17 @@ protected:
 		std::ostream& _stream,
 		std::vector<SyntaxTestError> const& _errors,
 		std::string const& _linePrefix,
-		bool const _formatted = false
+		bool _formatted = false
 	);
 
-	virtual bool printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false);
+	virtual bool printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
 	std::string m_source;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
+	langutil::EVMVersion const m_evmVersion;
 };
 
 }

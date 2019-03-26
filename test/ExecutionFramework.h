@@ -25,6 +25,8 @@
 #include <test/Options.h>
 #include <test/RPCSession.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <liblangutil/EVMVersion.h>
 
 #include <libdevcore/FixedHash.h>
@@ -53,7 +55,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
-	explicit ExecutionFramework(std::string const& _ipcPath);
+	explicit ExecutionFramework(std::string const& _ipcPath, langutil::EVMVersion _evmVersion);
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
@@ -265,8 +267,7 @@ protected:
 	};
 
 	langutil::EVMVersion m_evmVersion;
-	unsigned m_optimizeRuns = 200;
-	bool m_optimize = false;
+	solidity::OptimiserSettings m_optimiserSettings = solidity::OptimiserSettings::minimal();
 	bool m_showMessages = false;
 	bool m_transactionSuccessful = true;
 	Address m_sender;

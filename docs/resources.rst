@@ -27,11 +27,14 @@ Solidity Integrations
     * `Remix <https://remix.ethereum.org/>`_
         Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
-    * `Solium <https://github.com/duaraghav8/Solium/>`_
-        Linter to identify and fix style and security issues in Solidity.
-
     * `Solhint <https://github.com/protofire/solhint>`_
         Solidity linter that provides security, style guide and best practice rules for smart contract validation.
+
+    * `Solidity IDE <https://github.com/System-Glitch/Solidity-IDE>`_
+        Browser-based IDE with integrated compiler, Ganache and local file system support.
+
+    * `Solium <https://github.com/duaraghav8/Solium/>`_
+        Linter to identify and fix style and security issues in Solidity.
 
     * `Superblocks Lab <https://lab.superblocks.com/>`_
         Browser-based IDE. Built-in browser-based VM and Metamask integration (one click deployment to Testnet/Mainnet).
@@ -120,6 +123,9 @@ Solidity Tools
 
 * `EVM Lab <https://github.com/ethereum/evmlab/>`_
     Rich tool package to interact with the EVM. Includes a VM, Etherchain API, and a trace-viewer with gas cost display.
+
+* `Universal Mutator <https://github.com/agroce/universalmutator>`_
+    A tool for mutation generation, with configurable rules and support for Solidity and Vyper.
 
 .. note::
   Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.

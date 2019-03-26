@@ -33,7 +33,11 @@ using namespace yul;
 using namespace dev;
 using namespace dev::solidity;
 
-std::map<YulString, int> CompilabilityChecker::run(std::shared_ptr<Dialect> _dialect, Block const& _ast)
+map<YulString, int> CompilabilityChecker::run(
+	shared_ptr<Dialect> _dialect,
+	Block const& _ast,
+	bool _optimizeStackAllocation
+)
 {
 	if (_dialect->flavour == AsmFlavour::Yul)
 		return {};
@@ -43,12 +47,11 @@ std::map<YulString, int> CompilabilityChecker::run(std::shared_ptr<Dialect> _dia
 	solAssert(dynamic_cast<EVMDialect const*>(_dialect.get()), "");
 	shared_ptr<NoOutputEVMDialect> noOutputDialect = make_shared<NoOutputEVMDialect>(dynamic_pointer_cast<EVMDialect>(_dialect));
 
-	bool optimize = true;
 	yul::AsmAnalysisInfo analysisInfo =
 		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
 
 	NoOutputAssembly assembly;
-	CodeTransform transform(assembly, analysisInfo, _ast, *noOutputDialect, optimize);
+	CodeTransform transform(assembly, analysisInfo, _ast, *noOutputDialect, _optimizeStackAllocation);
 	try
 	{
 		transform(_ast);

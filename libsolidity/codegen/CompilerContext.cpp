@@ -331,7 +331,7 @@ void CompilerContext::appendInlineAssembly(
 	vector<string> const& _localVariables,
 	set<string> const& _externallyUsedFunctions,
 	bool _system,
-	bool _optimise
+	OptimiserSettings const& _optimiserSettings
 )
 {
 	int startStackHeight = stackHeight();
@@ -422,12 +422,13 @@ void CompilerContext::appendInlineAssembly(
 
 	// Several optimizer steps cannot handle externally supplied stack variables,
 	// so we essentially only optimize the ABI functions.
-	if (_optimise && _localVariables.empty())
+	if (_optimiserSettings.runYulOptimiser && _localVariables.empty())
 	{
 		yul::OptimiserSuite::run(
 			yul::EVMDialect::strictAssemblyForEVM(m_evmVersion),
 			*parserResult,
 			analysisInfo,
+			_optimiserSettings.optimizeStackAllocation,
 			externallyUsedIdentifiers
 		);
 		analysisInfo = yul::AsmAnalysisInfo{};
@@ -439,13 +440,25 @@ void CompilerContext::appendInlineAssembly(
 			identifierAccess.resolve
 		).analyze(*parserResult))
 			reportError("Optimizer introduced error into inline assembly.");
+#ifdef SOL_OUTPUT_ASM
+		cout << "After optimizer: " << endl;
+		cout << yul::AsmPrinter()(*parserResult) << endl;
+#endif
 	}
 
 	if (!errorReporter.errors().empty())
 		reportError("Failed to analyze inline assembly block.");
 
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
-	yul::CodeGenerator::assemble(*parserResult, analysisInfo, *m_asm, m_evmVersion, identifierAccess, _system, _optimise);
+	yul::CodeGenerator::assemble(
+		*parserResult,
+		analysisInfo,
+		*m_asm,
+		m_evmVersion,
+		identifierAccess,
+		_system,
+		_optimiserSettings.optimizeStackAllocation
+	);
 
 	// Reset the source location to the one of the node (instead of the CODEGEN source location)
 	updateSourceLocation();

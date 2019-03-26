@@ -180,7 +180,7 @@ void CodeGenerator::assemble(
 	langutil::EVMVersion _evmVersion,
 	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions,
-	bool _optimize
+	bool _optimizeStackAllocation
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
@@ -190,7 +190,7 @@ void CodeGenerator::assemble(
 		_analysisInfo,
 		_parsedData,
 		*dialect,
-		_optimize,
+		_optimizeStackAllocation,
 		false,
 		_identifierAccess,
 		_useNamedLabelsForFunctions

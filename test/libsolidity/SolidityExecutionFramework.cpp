@@ -33,7 +33,7 @@ SolidityExecutionFramework::SolidityExecutionFramework():
 {
 }
 
-SolidityExecutionFramework::SolidityExecutionFramework(std::string const& _ipcPath):
-	ExecutionFramework(_ipcPath)
+SolidityExecutionFramework::SolidityExecutionFramework(std::string const& _ipcPath, langutil::EVMVersion _evmVersion):
+	ExecutionFramework(_ipcPath, _evmVersion)
 {
 }

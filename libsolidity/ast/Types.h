@@ -236,6 +236,13 @@ public:
 	/// In order to avoid computation at runtime of whether such moving is necessary, structs and
 	/// array data (not each element) always start a new slot.
 	virtual unsigned storageBytes() const { return 32; }
+	/// Returns true if the type is a value type that is left-aligned on the stack with a size of
+	/// storageBytes() bytes. Returns false if the type is a value type that is right-aligned on
+	/// the stack with a size of storageBytes() bytes. Asserts if it is not a value type or the
+	/// encoding is more complicated.
+	/// Signed integers are not considered "more complicated" even though they need to be
+	/// sign-extended.
+	virtual bool leftAligned() const { solAssert(false, "Alignment property of non-value type requested."); }
 	/// Returns true if the type can be stored in storage.
 	virtual bool canBeStored() const { return true; }
 	/// Returns false if the type cannot live outside the storage, i.e. if it includes some mapping.
@@ -304,10 +311,7 @@ public:
 	/// If there is no such type, returns an empty shared pointer.
 	/// @param _inLibrary if set, returns types as used in a library, e.g. struct and contract types
 	/// are returned without modification.
-	virtual TypePointer interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
-	/// @returns true iff this type can be passed on via calls (to libraries if _inLibrary is true),
-	/// should be have identical to !!interfaceType(_inLibrary) but might do optimizations.
-	virtual bool canBeUsedExternally(bool _inLibrary) const { return !!interfaceType(_inLibrary); }
+	virtual TypeResult interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
@@ -348,6 +352,7 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : 160 / 8; }
 	unsigned storageBytes() const override { return 160 / 8; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
@@ -358,7 +363,7 @@ public:
 	u256 literalValue(Literal const* _literal) const override;
 
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	StateMutability stateMutability(void) const { return m_stateMutability; }
 
@@ -393,12 +398,13 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_bits / 8; }
 	unsigned storageBytes() const override { return m_bits / 8; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool _short) const override;
 
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	unsigned numBits() const { return m_bits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
@@ -435,12 +441,13 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_totalBits / 8; }
 	unsigned storageBytes() const override { return m_totalBits / 8; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool _short) const override;
 
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	/// Number of bits used for this type in total.
 	unsigned numBits() const { return m_totalBits; }
@@ -581,12 +588,13 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded) const override { return _padded && m_bytes > 0 ? 32 : m_bytes; }
 	unsigned storageBytes() const override { return m_bytes; }
+	bool leftAligned() const override { return true; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 
 	unsigned numBytes() const { return m_bytes; }
 
@@ -607,12 +615,13 @@ public:
 
 	unsigned calldataEncodedSize(bool _padded) const override{ return _padded ? 32 : 1; }
 	unsigned storageBytes() const override { return 1; }
+	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 
 	std::string toString(bool) const override { return "bool"; }
 	u256 literalValue(Literal const* _literal) const override;
 	TypePointer encodingType() const override { return shared_from_this(); }
-	TypePointer interfaceType(bool) const override { return shared_from_this(); }
+	TypeResult interfaceType(bool) const override { return shared_from_this(); }
 };
 
 /**
@@ -719,8 +728,7 @@ public:
 	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	TypePointer encodingType() const override;
 	TypePointer decodingType() const override;
-	TypePointer interfaceType(bool _inLibrary) const override;
-	bool canBeUsedExternally(bool _inLibrary) const override;
+	TypeResult interfaceType(bool _inLibrary) const override;
 
 	/// @returns true if this is valid to be stored in calldata
 	bool validForCalldata() const;
@@ -753,6 +761,8 @@ private:
 	TypePointer m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
+	mutable boost::optional<TypeResult> m_interfaceType;
+	mutable boost::optional<TypeResult> m_interfaceType_library;
 };
 
 /**
@@ -777,6 +787,7 @@ public:
 		return encodingType()->calldataEncodedSize(_padded);
 	}
 	unsigned storageBytes() const override { solAssert(!isSuper(), ""); return 20; }
+	bool leftAligned() const override { solAssert(!isSuper(), ""); return false; }
 	bool canLiveOutsideStorage() const override { return !isSuper(); }
 	unsigned sizeOnStack() const override { return m_super ? 0 : 1; }
 	bool isValueType() const override { return !isSuper(); }
@@ -790,13 +801,14 @@ public:
 			return TypePointer{};
 		return std::make_shared<AddressType>(isPayable() ? StateMutability::Payable : StateMutability::NonPayable);
 	}
-	TypePointer interfaceType(bool _inLibrary) const override
+	TypeResult interfaceType(bool _inLibrary) const override
 	{
 		if (isSuper())
 			return TypePointer{};
 		return _inLibrary ? shared_from_this() : encodingType();
 	}
 
+	/// See documentation of m_super
 	bool isSuper() const { return m_super; }
 
 	// @returns true if and only if the contract has a payable fallback function
@@ -813,8 +825,7 @@ public:
 
 private:
 	ContractDefinition const& m_contract;
-	/// If true, it is the "super" type of the current contract, i.e. it contains only inherited
-	/// members.
+	/// If true, this is a special "super" type of m_contract containing only members that m_contract inherited
 	bool m_super = false;
 	/// Type of the constructor, @see constructorType. Lazily initialized.
 	mutable FunctionTypePointer m_constructorType;
@@ -844,8 +855,17 @@ public:
 	{
 		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : shared_from_this();
 	}
-	TypePointer interfaceType(bool _inLibrary) const override;
-	bool canBeUsedExternally(bool _inLibrary) const override;
+	TypeResult interfaceType(bool _inLibrary) const override;
+
+	bool recursive() const
+	{
+		if (m_recursive.is_initialized())
+			return m_recursive.get();
+
+		interfaceType(false);
+
+		return m_recursive.get();
+	}
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
@@ -866,14 +886,11 @@ public:
 	TypePointers memoryMemberTypes() const;
 	/// @returns the set of all members that are removed in the memory version (typically mappings).
 	std::set<std::string> membersMissingInMemory() const;
-
-	/// @returns true if the same struct is used recursively in one of its members. Only
-	/// analyses the "memory" representation, i.e. mappings are ignored in all structs.
-	bool recursive() const;
-
 private:
 	StructDefinition const& m_struct;
-	/// Cache for the recursive() function.
+	// Caches for interfaceType(bool)
+	mutable boost::optional<TypeResult> m_interfaceType;
+	mutable boost::optional<TypeResult> m_interfaceType_library;
 	mutable boost::optional<bool> m_recursive;
 };
 
@@ -893,6 +910,7 @@ public:
 		return encodingType()->calldataEncodedSize(_padded);
 	}
 	unsigned storageBytes() const override;
+	bool leftAligned() const override { return false; }
 	bool canLiveOutsideStorage() const override { return true; }
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
@@ -903,7 +921,7 @@ public:
 	{
 		return std::make_shared<IntegerType>(8 * int(storageBytes()));
 	}
-	TypePointer interfaceType(bool _inLibrary) const override
+	TypeResult interfaceType(bool _inLibrary) const override
 	{
 		return _inLibrary ? shared_from_this() : encodingType();
 	}
@@ -1092,6 +1110,7 @@ public:
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool canBeStored() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
 	u256 storageSize() const override;
+	bool leftAligned() const override;
 	unsigned storageBytes() const override;
 	bool isValueType() const override { return true; }
 	bool canLiveOutsideStorage() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
@@ -1099,7 +1118,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	TypePointer encodingType() const override;
-	TypePointer interfaceType(bool _inLibrary) const override;
+	TypeResult interfaceType(bool _inLibrary) const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
@@ -1108,11 +1127,15 @@ public:
 	/// external type.
 	FunctionTypePointer interfaceFunctionType() const;
 
-	/// @returns true if this function can take the given argument types (possibly
+	/// @returns true if this function can take the given arguments (possibly
 	/// after implicit conversion).
 	/// @param _selfType if the function is bound, this has to be supplied and is the type of the
 	/// expression the function is called on.
-	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
+	bool canTakeArguments(
+		FuncCallArguments const& _arguments,
+		TypePointer const& _selfType = TypePointer()
+	) const;
+
 	/// @returns true if the types of parameters are equal (does not check return parameter types)
 	bool hasEqualParameterTypes(FunctionType const& _other) const;
 	/// @returns true iff the return types are equal (does not check parameter types)
@@ -1220,10 +1243,7 @@ public:
 	{
 		return std::make_shared<IntegerType>(256);
 	}
-	TypePointer interfaceType(bool _inLibrary) const override
-	{
-		return _inLibrary ? shared_from_this() : TypePointer();
-	}
+	TypeResult interfaceType(bool _inLibrary) const override;
 	bool dataStoredIn(DataLocation _location) const override { return _location == DataLocation::Storage; }
 	/// Cannot be stored in memory, but just in case.
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }

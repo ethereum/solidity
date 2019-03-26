@@ -45,7 +45,7 @@ struct OptimiserSettings
 		return s;
 	}
 	/// Standard optimisations.
-	static OptimiserSettings enabled()
+	static OptimiserSettings standard()
 	{
 		OptimiserSettings s;
 		s.runOrderLiterals = true;
@@ -54,15 +54,17 @@ struct OptimiserSettings
 		s.runDeduplicate = true;
 		s.runCSE = true;
 		s.runConstantOptimiser = true;
-		// The only disabled one
+		// The only disabled ones
+		s.optimizeStackAllocation = false;
 		s.runYulOptimiser = false;
 		s.expectedExecutionsPerDeployment = 200;
 		return s;
 	}
-	/// Standard optimisations plus yul optimiser.
+	/// Standard optimisations plus yul and stack optimiser.
 	static OptimiserSettings full()
 	{
-		OptimiserSettings s = enabled();
+		OptimiserSettings s = standard();
+		s.optimizeStackAllocation = true;
 		s.runYulOptimiser = true;
 		return s;
 	}
@@ -76,6 +78,7 @@ struct OptimiserSettings
 			runDeduplicate == _other.runDeduplicate &&
 			runCSE == _other.runCSE &&
 			runConstantOptimiser == _other.runConstantOptimiser &&
+			optimizeStackAllocation == _other.optimizeStackAllocation &&
 			runYulOptimiser == _other.runYulOptimiser &&
 			expectedExecutionsPerDeployment == _other.expectedExecutionsPerDeployment;
 	}
@@ -94,6 +97,8 @@ struct OptimiserSettings
 	/// Constant optimizer, which tries to find better representations that satisfy the given
 	/// size/cost-trade-off.
 	bool runConstantOptimiser = false;
+	/// Perform more efficient stack allocation for variables during code generation from Yul to bytecode.
+	bool optimizeStackAllocation = false;
 	/// Yul optimiser with default settings. Will only run on certain parts of the code for now.
 	bool runYulOptimiser = false;
 	/// This specifies an estimate on how often each opcode in this assembly will be executed,

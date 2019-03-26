@@ -61,41 +61,44 @@ void RedundantAssignEliminator::operator()(If const& _if)
 {
 	visit(*_if.condition);
 
-	RedundantAssignEliminator branch{*this};
-	branch(_if.body);
+	TrackedAssignments skipBranch{m_assignments};
+	(*this)(_if.body);
 
-	join(branch);
+	merge(m_assignments, move(skipBranch));
 }
 
 void RedundantAssignEliminator::operator()(Switch const& _switch)
 {
 	visit(*_switch.expression);
 
+	TrackedAssignments const preState{m_assignments};
+
 	bool hasDefault = false;
-	vector<RedundantAssignEliminator> branches;
+	vector<TrackedAssignments> branches;
 	for (auto const& c: _switch.cases)
 	{
 		if (!c.value)
 			hasDefault = true;
-		branches.emplace_back(*this);
-		branches.back()(c.body);
+		(*this)(c.body);
+		branches.emplace_back(move(m_assignments));
+		m_assignments = preState;
 	}
 
 	if (hasDefault)
 	{
-		*this = std::move(branches.back());
+		m_assignments = move(branches.back());
 		branches.pop_back();
 	}
 	for (auto& branch: branches)
-		join(branch);
+		merge(m_assignments, move(branch));
 }
 
 void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
 {
-	std::set<YulString> declaredVariables;
-	std::map<YulString, std::map<Assignment const*, State>> assignments;
-	swap(m_declaredVariables, declaredVariables);
-	swap(m_assignments, assignments);
+	std::set<YulString> outerDeclaredVariables;
+	TrackedAssignments outerAssignments;
+	swap(m_declaredVariables, outerDeclaredVariables);
+	swap(m_assignments, outerAssignments);
 
 	(*this)(_functionDefinition.body);
 
@@ -110,8 +113,8 @@ void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDe
 		finalize(retParam.name);
 	}
 
-	swap(m_declaredVariables, declaredVariables);
-	swap(m_assignments, assignments);
+	swap(m_declaredVariables, outerDeclaredVariables);
+	swap(m_assignments, outerAssignments);
 }
 
 void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
@@ -130,14 +133,14 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 
 	visit(*_forLoop.condition);
 
-	RedundantAssignEliminator zeroRuns{*this};
+	TrackedAssignments zeroRuns{m_assignments};
 
 	(*this)(_forLoop.body);
 	(*this)(_forLoop.post);
 
 	visit(*_forLoop.condition);
 
-	RedundantAssignEliminator oneRun{*this};
+	TrackedAssignments oneRun{m_assignments};
 
 	(*this)(_forLoop.body);
 	(*this)(_forLoop.post);
@@ -145,8 +148,8 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 	visit(*_forLoop.condition);
 
 	// Order does not matter because "max" is commutative and associative.
-	join(oneRun);
-	join(zeroRuns);
+	merge(m_assignments, move(oneRun));
+	merge(m_assignments, move(zeroRuns));
 }
 
 void RedundantAssignEliminator::operator()(Break const&)
@@ -173,7 +176,7 @@ void RedundantAssignEliminator::run(Dialect const& _dialect, Block& _ast)
 	RedundantAssignEliminator rae{_dialect};
 	rae(_ast);
 
-	AssignmentRemover remover{rae.m_assignmentsToRemove};
+	AssignmentRemover remover{rae.m_pendingRemovals};
 	remover(_ast);
 }
 
@@ -204,16 +207,14 @@ void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
 	}
 }
 
-void RedundantAssignEliminator::join(RedundantAssignEliminator& _other)
+void RedundantAssignEliminator::merge(TrackedAssignments& _target, TrackedAssignments&& _other)
 {
-	m_assignmentsToRemove.insert(begin(_other.m_assignmentsToRemove), end(_other.m_assignmentsToRemove));
-
-	joinMap(m_assignments, std::move(_other.m_assignments), [](
+	joinMap(_target, move(_other), [](
 		map<Assignment const*, State>& _assignmentHere,
 		map<Assignment const*, State>&& _assignmentThere
 	)
 	{
-		return joinMap(_assignmentHere, std::move(_assignmentThere), State::join);
+		return joinMap(_assignmentHere, move(_assignmentThere), State::join);
 	});
 }
 
@@ -232,7 +233,7 @@ void RedundantAssignEliminator::finalize(YulString _variable)
 		if (assignment.second == State{State::Unused} && MovableChecker{*m_dialect, *assignment.first->value}.movable())
 			// TODO the only point where we actually need this
 			// to be a set is for the for loop
-			m_assignmentsToRemove.insert(assignment.first);
+			m_pendingRemovals.insert(assignment.first);
 	}
 	m_assignments.erase(_variable);
 }

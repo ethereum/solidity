@@ -217,7 +217,7 @@ public:
 		std::vector<std::string> const& _localVariables = std::vector<std::string>(),
 		std::set<std::string> const& _externallyUsedFunctions = std::set<std::string>(),
 		bool _system = false,
-		bool _optimise = false
+		OptimiserSettings const& _optimiserSettings = OptimiserSettings::none()
 	);
 
 	/// Appends arbitrary data to the end of the bytecode.

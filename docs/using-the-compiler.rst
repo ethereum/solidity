@@ -147,7 +147,7 @@ Input Description
 .. code-block:: none
 
     {
-      // Required: Source code language, such as "Solidity", "Vyper", "lll", "assembly", etc.
+      // Required: Source code language. Currently supported are "Solidity" and "Yul".
       "language": "Solidity",
       // Required
       "sources":
@@ -216,8 +216,12 @@ Input Description
             // It can only be activated through the details here.
             // This feature is still considered experimental.
             "yul": false,
-            // Future tuning options, currently unused.
-            "yulDetails": {}
+            // Tuning options for the Yul optimizer.
+            "yulDetails": {
+              // Improve allocation of stack slots for variables, can free up stack slots early.
+              // Activated by default if the Yul optimizer is activated.
+              "stackAllocation": true
+            }
           }
         },
         "evmVersion": "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium, constantinople or petersburg
@@ -259,8 +263,9 @@ Input Description
         //   devdoc - Developer documentation (natspec)
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
-        //   ir - New assembly format before desugaring
-        //   evm.assembly - New assembly format after desugaring
+        //   ir - Yul intermediate representation of the code before optimization
+        //   irOptimized - Intermediate representation after optimization
+        //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list
@@ -269,8 +274,8 @@ Input Description
         //   evm.deployedBytecode* - Deployed bytecode (has the same options as evm.bytecode)
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   ewasm.wast - eWASM S-expressions format (not supported atm)
-        //   ewasm.wasm - eWASM binary format (not supported atm)
+        //   ewasm.wast - eWASM S-expressions format (not supported at the moment)
+        //   ewasm.wasm - eWASM binary format (not supported at the moment)
         //
         // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.

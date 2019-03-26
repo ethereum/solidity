@@ -291,7 +291,7 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 			if (alignment != DeclaredAlignment::None)
 				throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
 			string parsed = parseHexNumber();
-			rawString += parsed;
+			rawString += "hex\"" + parsed + "\"";
 			result = convertHexString(parsed);
 			abiType = ABIType{ABIType::HexString, ABIType::AlignNone, result.size()};
 		}
