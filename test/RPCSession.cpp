@@ -351,7 +351,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	}
 
 	if (!result.isMember("result") || result["result"].isNull())
-		BOOST_FAIL("Missing result for JSON-RPC call: " + result.asString());
+		BOOST_FAIL("Missing result for JSON-RPC call: " + result.toStyledString());
 
 	return result["result"];
 }
