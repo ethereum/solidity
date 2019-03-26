@@ -1,20 +1,21 @@
-### 0.5.7 (unreleased)
+### 0.5.7 (2019-03-26)
 
 Important Bugfixes:
- * ABIEncoderV2: Fix bugs related to loading short value types from storage when encoding a packed array or struct from storage.
+ * ABIEncoderV2: Fix bugs related to loading short value types from storage when encoding an array or struct from storage.
  * ABIEncoderV2: Fix buffer overflow problem when encoding packed array from storage.
  * Optimizer: Fix wrong ordering of arguments in byte optimization rule for constants.
 
+
 Language Features:
+ * Function calls with named arguments now work with overloaded functions.
 
 
 Compiler Features:
- * Function calls with named arguments now work with overloaded functions.
  * Inline Assembly: Issue error when using ``callvalue()`` inside nonpayable function (in the same way that ``msg.value`` already does).
  * Standard JSON Interface: Support "Yul" as input language.
  * SMTChecker: Show callstack together with model if applicable.
  * SMTChecker: Support modifiers.
- * Yul Optimizer: Enable stack allocation optimization by default if yul optimizer is active (disable in yulDetails).
+ * Yul Optimizer: Enable stack allocation optimization by default if Yul optimizer is active (disable in ``yulDetails``).
 
 
 Bugfixes:
