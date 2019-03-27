@@ -18,6 +18,8 @@
 #include <cstdint>
 #include <cstddef>
 #include <string>
+#include <ostream>
+#include <sstream>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
 
@@ -27,30 +29,37 @@ namespace test
 {
 namespace yul_fuzzer
 {
-class Function;
+class ProtoConverter
+{
+public:
+	std::string functionToString(Function const& _input);
+	std::string protoToYul(uint8_t const* _data, size_t _size);
 
-std::string functionToString(Function const& input);
-std::string protoToYul(uint8_t const* data, size_t size);
-std::string createHex(std::string const& _hexBytes);
-std::string createAlphaNum(std::string const& _strBytes);
-std::ostream& operator<<(std::ostream& _os, BinaryOp const& _x);
-std::ostream& operator<<(std::ostream& _os, Block const& _x);
-std::ostream& operator<<(std::ostream& _os, Literal const& _x);
-std::ostream& operator<<(std::ostream& _os, VarRef const& _x);
-std::ostream& operator<<(std::ostream& _os, Expression const& _x);
-std::ostream& operator<<(std::ostream& _os, BinaryOp const& _x);
-std::ostream& operator<<(std::ostream& _os, VarDecl const& _x);
-std::ostream& operator<<(std::ostream& _os, TypedVarDecl const& _x);
-std::ostream& operator<<(std::ostream& _os, UnaryOp const& _x);
-std::ostream& operator<<(std::ostream& _os, AssignmentStatement const& _x);
-std::ostream& operator<<(std::ostream& _os, IfStmt const& _x);
-std::ostream& operator<<(std::ostream& _os, StoreFunc const& _x);
-std::ostream& operator<<(std::ostream& _os, Statement const& _x);
-std::ostream& operator<<(std::ostream& _os, Block const& _x);
-std::ostream& operator<<(std::ostream& _os, Function const& _x);
-std::ostream& operator<<(std::ostream& _os, ForStmt const& _x);
-std::ostream& operator<<(std::ostream& _os, CaseStmt const& _x);
-std::ostream& operator<<(std::ostream& _os, SwitchStmt const& _x);
+private:
+	void visit(BinaryOp const&);
+	void visit(Block const&);
+	void visit(Literal const&);
+	void visit(VarRef const&);
+	void visit(Expression const&);
+	void visit(VarDecl const&);
+	void visit(TypedVarDecl const&);
+	void visit(UnaryOp const&);
+	void visit(AssignmentStatement const&);
+	void visit(IfStmt const&);
+	void visit(StoreFunc const&);
+	void visit(Statement const&);
+	void visit(Function const&);
+	void visit(ForStmt const&);
+	void visit(CaseStmt const&);
+	void visit(SwitchStmt const&);
+	template <class T>
+	void visit(google::protobuf::RepeatedPtrField<T> const& _repeated_field);
+
+	std::string createHex(std::string const& _hexBytes) const;
+	std::string createAlphaNum(std::string const& _strBytes) const;
+
+	std::ostringstream m_output;
+};
 }
 }
 }
