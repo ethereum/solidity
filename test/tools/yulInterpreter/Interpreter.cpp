@@ -128,6 +128,12 @@ void Interpreter::operator()(Continue const&)
 
 void Interpreter::operator()(Block const& _block)
 {
+	m_state.numSteps++;
+	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
+	{
+		m_state.trace.emplace_back("Interpreter execution step limit reached.");
+		throw InterpreterTerminated();
+	}
 	openScope();
 	// Register functions.
 	for (auto const& statement: _block.statements)
