@@ -216,6 +216,8 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 	case Instruction::SSTORE:
 	case Instruction::TRANSFERASSET:
 	case Instruction::SENDASSET:
+	case Instruction::ISDELEGATE:
+	case Instruction::GETDELEGATEINFO:
 		return true;
 	default:
 		return false;
@@ -273,6 +275,8 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::SELFDESTRUCT:
 	case Instruction::SENDASSET:
 	case Instruction::TRANSFERASSET:
+	case Instruction::ISDELEGATE:
+	case Instruction::GETDELEGATEINFO:
 		return true;
 	default:
 		break;

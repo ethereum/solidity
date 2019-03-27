@@ -592,7 +592,9 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"transfer", make_shared<FunctionType>(strings{"uint"}, strings(), FunctionType::Kind::Transfer)},
 			{"balanceOf", make_shared<FunctionType>(strings{ "address" }, strings{ "uint" }, FunctionType::Kind::BalanceOf)},
 			{"transferAsset", make_shared<FunctionType>(strings{ "address","uint" }, strings(), FunctionType::Kind::TransferAsset)},
-			{"sendAsset", make_shared<FunctionType>(strings{ "address","uint" }, strings{ "bool" }, FunctionType::Kind::SendAsset) }
+			{"sendAsset", make_shared<FunctionType>(strings{ "address","uint" }, strings{ "bool" }, FunctionType::Kind::SendAsset) },
+			{"isDelegate", make_shared<FunctionType>(strings{ "address" }, strings{ "bool" }, FunctionType::Kind::IsDelegate) },
+			{"getDelegateInfo", make_shared<FunctionType>(strings{ "address" }, strings{ "uint" }, FunctionType::Kind::GetDelegateInfo) }
 
 		};
 	else
@@ -2482,6 +2484,8 @@ string FunctionType::richIdentifier() const
 	case Kind::Transfer: id += "transfer"; break;
 	case Kind::TransferAsset: id += "transferAsset"; break;
 	case Kind::SendAsset: id += "sendAsset"; break;
+	case Kind::IsDelegate: id += "isDelegate"; break;
+	case Kind::GetDelegateInfo: id += "getDelegateInfo"; break;
 	case Kind::BalanceOf: id += "balanceOf"; break;
 	case Kind::SHA3: id += "sha3"; break;
 	case Kind::Selfdestruct: id += "selfdestruct"; break;
