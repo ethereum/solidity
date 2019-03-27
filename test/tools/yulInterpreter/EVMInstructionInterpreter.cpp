@@ -106,7 +106,7 @@ u256 EVMInstructionInterpreter::eval(
 	switch (_instruction)
 	{
 	case Instruction::STOP:
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	// --------------- arithmetic ---------------
 	case Instruction::ADD:
 		return arg[0] + arg[1];
@@ -342,18 +342,18 @@ u256 EVMInstructionInterpreter::eval(
 		if (logMemoryRead(arg[0], arg[1]))
 			data = bytesConstRef(m_state.memory.data() + size_t(arg[0]), size_t(arg[1])).toBytes();
 		logTrace(_instruction, arg, data);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	}
 	case Instruction::REVERT:
 		logMemoryRead(arg[0], arg[1]);
 		logTrace(_instruction, arg);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	case Instruction::INVALID:
 		logTrace(_instruction);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	case Instruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	case Instruction::POP:
 		break;
 	// --------------- invalid in strict assembly ---------------
@@ -492,6 +492,6 @@ void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, 
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{
 		m_state.trace.emplace_back("Trace size limit reached.");
-		throw InterpreterTerminated();
+		throw TraceLimitReached();
 	}
 }
