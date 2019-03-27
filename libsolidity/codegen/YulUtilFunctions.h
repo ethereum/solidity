@@ -92,6 +92,12 @@ public:
 	/// Return value: pointer
 	std::string allocationFunction();
 
+	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
+	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
+	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
+	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
+	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
+
 private:
 	langutil::EVMVersion m_evmVersion;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
