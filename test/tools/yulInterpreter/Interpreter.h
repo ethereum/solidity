@@ -75,6 +75,8 @@ struct InterpreterState
 	/// Memory size limit. Anything beyond this will still work, but it has
 	/// deterministic yet not necessarily consistent behaviour.
 	size_t maxMemSize = 0x200;
+	size_t maxSteps = 0;
+	size_t numSteps = 0;
 	LoopState loopState = LoopState::Default;
 };
 
