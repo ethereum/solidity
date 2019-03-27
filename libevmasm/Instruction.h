@@ -193,6 +193,8 @@ enum class Instruction: uint8_t
 	SENDASSET,			///< send asset :address.SendAsset(asset,amount) returns (bool)
 	ASSET,				///< msg.asset, get the assetID of a transaction.
 	ASSETVALUE,			///< msg.assetvalue, get the asset value of a transaction. msg.value means the mainchain token, and this assetvalue means user token value specified by msg.asset.
+	ISDELEGATE,			///< is delegate.
+	GETDELEGATEINFO,	///< get.delegate.info, get the information of delegate.
 
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account

@@ -897,6 +897,8 @@ public:
 		BalanceOf,
 		TransferAsset,
 		SendAsset,
+		IsDelegate, /// < is delegate
+		GetDelegateInfo, /// < get information of delegate
 		Transfer, ///< CALL, but without data and throws on error
 		SHA3, ///< SHA3
 		Selfdestruct, ///< SELFDESTRUCT

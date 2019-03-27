@@ -173,7 +173,9 @@ const std::map<std::string, Instruction> dev::solidity::c_instructions =
     {"TRANSFERASSET", Instruction::TRANSFERASSET},
 	{"SENDASSET", Instruction::SENDASSET},
 	{"ASSET", Instruction::ASSET},
-	{"ASSETVALUE", Instruction::ASSETVALUE}
+	{"ASSETVALUE", Instruction::ASSETVALUE},
+	{"ISDELEGATE", Instruction::ISDELEGATE},
+	{"GETDELEGATEINFO", Instruction::GETDELEGATEINFO}
 
 };
 
@@ -322,7 +324,9 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::SELFDESTRUCT,{ "SELFDESTRUCT",	0, 1, 0, true, Tier::Special } },
 	{Instruction::BALANCEOF,	{ "BALANCEOF",		0, 2, 1, true, Tier::Special } },
 	{Instruction::TRANSFERASSET, { "TRANSFERASSET",	0, 3, 1, true, Tier::Special } },
-	{Instruction::SENDASSET, 	{ "SENDASSET",		0, 3, 1, true, Tier::Special } }
+	{Instruction::SENDASSET, 	{ "SENDASSET",		0, 3, 1, true, Tier::Special } },
+	{Instruction::ISDELEGATE, 	{ "ISDELEGATE",		0, 1, 1, true, Tier::Special } },
+	{Instruction::GETDELEGATEINFO, 	{ "GETDELEGATEINFO",		0, 2, 1, true, Tier::Special } }
 };
 
 void dev::solidity::eachInstruction(
