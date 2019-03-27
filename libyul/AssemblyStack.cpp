@@ -34,6 +34,8 @@
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
 
@@ -83,9 +85,13 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 
 void AssemblyStack::optimize()
 {
+	if (!m_optimiserSettings.runYulOptimiser)
+		return;
+
 	if (m_language != Language::StrictAssembly)
 		solUnimplemented("Optimizer for both loose assembly and Yul is not yet implemented");
 	solAssert(m_analysisSuccessful, "Analysis was not successful.");
+
 	m_analysisSuccessful = false;
 	solAssert(m_parserResult, "");
 	optimize(*m_parserResult);
@@ -135,13 +141,15 @@ void AssemblyStack::optimize(Object& _object)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 			optimize(*subObject);
-	// TODO: Store this as setting - it should be the same as the flag passed to
-	// ::assemble(...)
-	bool optimizeStackAllocation = false;
-	OptimiserSuite::run(languageToDialect(m_language, m_evmVersion), *_object.code, *_object.analysisInfo, optimizeStackAllocation);
+	OptimiserSuite::run(
+		languageToDialect(m_language, m_evmVersion),
+		*_object.code,
+		*_object.analysisInfo,
+		m_optimiserSettings.optimizeStackAllocation
+	);
 }
 
-MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) const
+MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 {
 	solAssert(m_analysisSuccessful, "");
 	solAssert(m_parserResult, "");
@@ -155,7 +163,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 		MachineAssemblyObject object;
 		dev::eth::Assembly assembly;
 		EthAssemblyAdapter adapter(assembly);
-		compileEVM(adapter, false, _optimize);
+		compileEVM(adapter, false, m_optimiserSettings.optimizeStackAllocation);
 		object.bytecode = make_shared<dev::eth::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
@@ -164,7 +172,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine, bool _optimize) 
 	{
 		MachineAssemblyObject object;
 		EVMAssembly assembly(true);
-		compileEVM(assembly, true, _optimize);
+		compileEVM(assembly, true, m_optimiserSettings.optimizeStackAllocation);
 		object.bytecode = make_shared<dev::eth::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;

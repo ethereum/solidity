@@ -1239,12 +1239,16 @@ bool CommandLineInterface::assemble(
 	map<string, yul::AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(m_evmVersion, _language);
+		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(
+			m_evmVersion,
+			_language,
+			_optimize ? OptimiserSettings::full() : OptimiserSettings::minimal()
+		);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
 				successful = false;
-			else if (_optimize)
+			else
 				stack.optimize();
 		}
 		catch (Exception const& _exception)
@@ -1298,7 +1302,7 @@ bool CommandLineInterface::assemble(
 		yul::MachineAssemblyObject object;
 		try
 		{
-			object = stack.assemble(_targetMachine, _optimize);
+			object = stack.assemble(_targetMachine);
 		}
 		catch (Exception const& _exception)
 		{

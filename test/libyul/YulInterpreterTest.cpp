@@ -107,7 +107,11 @@ void YulInterpreterTest::printIndented(ostream& _stream, string const& _output, 
 
 bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(dev::test::Options::get().evmVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		dev::test::Options::get().evmVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::none()
+	);
 	if (stack.parseAndAnalyze("", m_source))
 	{
 		m_ast = stack.parserResult()->code;

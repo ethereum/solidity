@@ -52,7 +52,11 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 	}
 
 	// AssemblyStack entry point
-	AssemblyStack stack(langutil::EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		langutil::EVMVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::full()
+	);
 
 	try
 	{

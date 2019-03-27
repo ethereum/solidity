@@ -863,7 +863,11 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	Json::Value output = Json::objectValue;
 
-	AssemblyStack stack(_inputsAndSettings.evmVersion, AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		_inputsAndSettings.evmVersion,
+		AssemblyStack::Language::StrictAssembly,
+		_inputsAndSettings.optimiserSettings
+	);
 	string const& sourceName = _inputsAndSettings.sources.begin()->first;
 	string const& sourceContents = _inputsAndSettings.sources.begin()->second;
 
@@ -899,13 +903,9 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir"))
 		output["contracts"][sourceName][contractName]["ir"] = stack.print();
 
-	if (_inputsAndSettings.optimiserSettings.runYulOptimiser)
-		stack.optimize();
+	stack.optimize();
 
-	MachineAssemblyObject object = stack.assemble(
-		AssemblyStack::Machine::EVM,
-		_inputsAndSettings.optimiserSettings.optimizeStackAllocation
-	);
+	MachineAssemblyObject object = stack.assemble(AssemblyStack::Machine::EVM);
 
 	if (isArtifactRequested(
 		_inputsAndSettings.outputSelection,

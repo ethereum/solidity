@@ -296,7 +296,8 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 {
 	AssemblyStack stack(
 		dev::test::Options::get().evmVersion(),
-		m_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly
+		m_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::none()
 	);
 	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
 	{

@@ -64,17 +64,20 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
 
 bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		EVMVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		m_optimize ? OptimiserSettings::full() : OptimiserSettings::minimal()
+	);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, stack.errors());
 		return false;
 	}
-	if (m_optimize)
-		stack.optimize();
+	stack.optimize();
 
-	MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM, m_optimize);
+	MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
 	solAssert(obj.bytecode, "");
 
 	m_obtainedResult = "Assembly:\n" + obj.assembly;

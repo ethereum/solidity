@@ -34,9 +34,12 @@ namespace
 {
 string assemble(string const& _input)
 {
-	AssemblyStack asmStack;
+	dev::solidity::OptimiserSettings settings = dev::solidity::OptimiserSettings::full();
+	settings.runYulOptimiser = false;
+	settings.optimizeStackAllocation = true;
+	AssemblyStack asmStack(langutil::EVMVersion{}, AssemblyStack::Language::StrictAssembly, settings);
 	BOOST_REQUIRE_MESSAGE(asmStack.parseAndAnalyze("", _input), "Source did not parse: " + _input);
-	return dev::eth::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM, true).bytecode->bytecode);
+	return dev::eth::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM).bytecode->bytecode);
 }
 }
 

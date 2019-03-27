@@ -55,11 +55,18 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	}))
 		return 0;
 
-	AssemblyStack stack(EVMVersion::petersburg(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		EVMVersion::petersburg(),
+		AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::full()
+	);
 	try
 	{
-		if (!stack.parseAndAnalyze("source", input) || !stack.parserResult()->code ||
-			!stack.parserResult()->analysisInfo)
+		if (
+			!stack.parseAndAnalyze("source", input) ||
+			!stack.parserResult()->code ||
+			!stack.parserResult()->analysisInfo
+		)
 			return 0;
 	}
 	catch (Exception const&)
