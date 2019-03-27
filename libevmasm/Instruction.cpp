@@ -326,7 +326,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{Instruction::TRANSFERASSET, { "TRANSFERASSET",	0, 3, 1, true, Tier::Special } },
 	{Instruction::SENDASSET, 	{ "SENDASSET",		0, 3, 1, true, Tier::Special } },
 	{Instruction::ISDELEGATE, 	{ "ISDELEGATE",		0, 1, 1, true, Tier::Special } },
-	{Instruction::GETDELEGATEINFO, 	{ "GETDELEGATEINFO",		0, 2, 1, true, Tier::Special } }
+	{Instruction::GETDELEGATEINFO, 	{ "GETDELEGATEINFO",		0, 1, 1, true, Tier::Special } }
 };
 
 void dev::solidity::eachInstruction(
