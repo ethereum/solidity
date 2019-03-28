@@ -65,7 +65,7 @@ explanatory purposes.
       settings:
       {
         // Required for Solidity: Sorted list of remappings
-        remappings: [ ":g/dir" ],
+        remappings: [ ":g=/dir" ],
         // Optional: Optimizer settings. The fields "enabled" and "runs" are deprecated
         // and are only given for backwards-compatibility.
         optimizer: {
