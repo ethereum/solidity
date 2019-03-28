@@ -25,6 +25,8 @@
 
 #include <libyul/AssemblyStack.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <boost/optional.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
@@ -48,7 +50,8 @@ std::pair<bool, ErrorList> parse(string const& _source)
 	{
 		AssemblyStack asmStack(
 			dev::test::Options::get().evmVersion(),
-			AssemblyStack::Language::StrictAssembly
+			AssemblyStack::Language::StrictAssembly,
+			dev::solidity::OptimiserSettings::none()
 		);
 		bool success = asmStack.parseAndAnalyze("source", _source);
 		return {success, asmStack.errors()};
@@ -242,7 +245,8 @@ BOOST_AUTO_TEST_CASE(to_string)
 	expectation = boost::replace_all_copy(expectation, "\t", "    ");
 	AssemblyStack asmStack(
 		dev::test::Options::get().evmVersion(),
-		AssemblyStack::Language::StrictAssembly
+		AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::none()
 	);
 	BOOST_REQUIRE(asmStack.parseAndAnalyze("source", code));
 	BOOST_CHECK_EQUAL(asmStack.print(), expectation);
