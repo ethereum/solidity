@@ -436,3 +436,20 @@ string YulUtilFunctions::allocationFunction()
 	});
 }
 
+string YulUtilFunctions::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
+{
+	string result;
+	if (_startSuffix < _endSuffix)
+	{
+		result = _baseName + to_string(_startSuffix++);
+		while (_startSuffix < _endSuffix)
+			result += ", " + _baseName + to_string(_startSuffix++);
+	}
+	else if (_endSuffix < _startSuffix)
+	{
+		result = _baseName + to_string(_endSuffix++);
+		while (_endSuffix < _startSuffix)
+			result = _baseName + to_string(_endSuffix++) + ", " + result;
+	}
+	return result;
+}

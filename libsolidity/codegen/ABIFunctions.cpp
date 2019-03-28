@@ -82,7 +82,7 @@ string ABIFunctions::tupleEncoder(
 					<abiEncode>(<values> add(headStart, <pos>))
 				)")
 			);
-			string values = suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
+			string values = m_utils.suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
 			elementTempl("values", values.empty() ? "" : values + ", ");
 			elementTempl("pos", to_string(headPos));
 			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
@@ -91,7 +91,7 @@ string ABIFunctions::tupleEncoder(
 			stackPos += sizeOnStack;
 		}
 		solAssert(headPos == headSize_, "");
-		string valueParams = suffixedVariableNameList("value", stackPos, 0);
+		string valueParams = m_utils.suffixedVariableNameList("value", stackPos, 0);
 		templ("valueParams", valueParams.empty() ? "" : ", " + valueParams);
 		templ("encodeElements", encodeElements);
 
@@ -147,7 +147,7 @@ string ABIFunctions::tupleEncoderPacked(
 					pos := add(pos, <calldataEncodedSize>)
 				)")
 			);
-			string values = suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
+			string values = m_utils.suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
 			elementTempl("values", values.empty() ? "" : values + ", ");
 			if (!dynamic)
 				elementTempl("calldataEncodedSize", to_string(_targetTypes[i]->calldataEncodedSize(false)));
@@ -155,7 +155,7 @@ string ABIFunctions::tupleEncoderPacked(
 			encodeElements += elementTempl.render();
 			stackPos += sizeOnStack;
 		}
-		string valueParams = suffixedVariableNameList("value", stackPos, 0);
+		string valueParams = m_utils.suffixedVariableNameList("value", stackPos, 0);
 		templ("valueParams", valueParams.empty() ? "" : ", " + valueParams);
 		templ("encodeElements", encodeElements);
 
@@ -659,7 +659,7 @@ string ABIFunctions::abiEncodeAndReturnUpdatedPosFunction(
 		_targetType.identifier() +
 		_options.toFunctionNameSuffix();
 	return createFunction(functionName, [&]() {
-		string values = suffixedVariableNameList("value", 0, numVariablesForType(_givenType, _options));
+		string values = m_utils.suffixedVariableNameList("value", 0, numVariablesForType(_givenType, _options));
 		string encoder = abiEncodingFunction(_givenType, _targetType, _options);
 		if (_targetType.isDynamicallyEncoded())
 			return Whiskers(R"(
@@ -1677,24 +1677,6 @@ size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
 	}
 
 	return headSize;
-}
-
-string ABIFunctions::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
-{
-	string result;
-	if (_startSuffix < _endSuffix)
-	{
-		result = _baseName + to_string(_startSuffix++);
-		while (_startSuffix < _endSuffix)
-			result += ", " + _baseName + to_string(_startSuffix++);
-	}
-	else if (_endSuffix < _startSuffix)
-	{
-		result = _baseName + to_string(_endSuffix++);
-		while (_endSuffix < _startSuffix)
-			result = _baseName + to_string(_endSuffix++) + ", " + result;
-	}
-	return result;
 }
 
 size_t ABIFunctions::numVariablesForType(Type const& _type, EncodingOptions const& _options)
