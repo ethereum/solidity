@@ -17,6 +17,14 @@ defaults:
         [ -n "$COVERAGE" -a "$CIRCLE_BRANCH" != release -a -z "$CIRCLE_TAG" ] && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCOVERAGE=ON"
         cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
         make -j4
+  - run_build_ossfuzz: &run_build_ossfuzz
+      name: Build_ossfuzz
+      command: |
+        mkdir -p build
+        cd build
+        /src/LPM/external.protobuf/bin/protoc --proto_path=../test/tools/ossfuzz yulProto.proto --cpp_out=../test/tools/ossfuzz
+        cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
+        make ossfuzz ossfuzz_proto -j4
   - run_tests: &run_tests
       name: Tests
       command: scripts/tests.sh --junit_report test_results
@@ -390,6 +398,27 @@ jobs:
           path: docs/_build/html/
           destination: docs-html
 
+  build_x86_linux_ossfuzz:
+    docker:
+      - image: buildpack-deps:cosmic
+    environment:
+      TERM: xterm
+      CC: /usr/bin/clang-7
+      CXX: /usr/bin/clang++-7
+      CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libbz2-dev ninja-build zlib1g-dev
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            ./scripts/install_lpm.sh
+            ./scripts/install_libfuzzer.sh
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build_ossfuzz
+
 workflows:
   version: 2
   build_all:
@@ -434,6 +463,8 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_x86_archlinux
+      - build_x86_linux_ossfuzz: *build_on_tags
+
   test_nightly:
     triggers:
       - schedule:
