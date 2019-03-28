@@ -26,6 +26,7 @@
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/optional.hpp>
 
 using namespace std;
 using namespace dev;
@@ -333,27 +334,59 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 
 void SMTChecker::endVisit(Assignment const& _assignment)
 {
-	if (_assignment.assignmentOperator() != Token::Assign)
+	static map<Token, Token> const compoundToArithmetic{
+		{Token::AssignAdd, Token::Add},
+		{Token::AssignSub, Token::Sub},
+		{Token::AssignMul, Token::Mul},
+		{Token::AssignDiv, Token::Div}
+	};
+	Token op = _assignment.assignmentOperator();
+	if (op != Token::Assign && !compoundToArithmetic.count(op))
 		m_errorReporter.warning(
 			_assignment.location(),
-			"Assertion checker does not yet implement compound assignment."
+			"Assertion checker does not yet implement this assignment operator."
 		);
 	else if (!isSupportedType(_assignment.annotation().type->category()))
 		m_errorReporter.warning(
 			_assignment.location(),
 			"Assertion checker does not yet implement type " + _assignment.annotation().type->toString()
 		);
-	else if (Identifier const* identifier = dynamic_cast<Identifier const*>(&_assignment.leftHandSide()))
+	else if (
+		dynamic_cast<Identifier const*>(&_assignment.leftHandSide()) ||
+		dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide())
+	)
 	{
-		VariableDeclaration const& decl = dynamic_cast<VariableDeclaration const&>(*identifier->annotation().referencedDeclaration);
-		solAssert(knownVariable(decl), "");
-		assignment(decl, _assignment.rightHandSide(), _assignment.location());
-		defineExpr(_assignment, expr(_assignment.rightHandSide()));
-	}
-	else if (dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide()))
-	{
-		arrayIndexAssignment(_assignment);
-		defineExpr(_assignment, expr(_assignment.rightHandSide()));
+		boost::optional<smt::Expression> leftHandSide;
+		VariableDeclaration const* decl = nullptr;
+		auto identifier = dynamic_cast<Identifier const*>(&_assignment.leftHandSide());
+		if (identifier)
+		{
+			decl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
+			solAssert(decl, "");
+			solAssert(knownVariable(*decl), "");
+			leftHandSide = currentValue(*decl);
+		}
+		else
+			leftHandSide = expr(_assignment.leftHandSide());
+
+		solAssert(leftHandSide, "");
+		smt::Expression rightHandSide =
+			compoundToArithmetic.count(op) ?
+				arithmeticOperation(
+					compoundToArithmetic.at(op),
+					*leftHandSide,
+					expr(_assignment.rightHandSide()),
+					_assignment.annotation().type,
+					_assignment.location()
+				) :
+				expr(_assignment.rightHandSide())
+		;
+		defineExpr(_assignment, rightHandSide);
+
+		if (identifier)
+			assignment(*decl, _assignment, _assignment.location());
+		else
+			arrayIndexAssignment(_assignment, expr(_assignment));
 	}
 	else
 		m_errorReporter.warning(
@@ -878,7 +911,7 @@ void SMTChecker::arrayAssignment()
 	m_arrayAssignmentHappened = true;
 }
 
-void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
+void SMTChecker::arrayIndexAssignment(Assignment const& _assignment, smt::Expression const& _rightHandSide)
 {
 	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_assignment.leftHandSide());
 	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
@@ -918,7 +951,7 @@ void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
 		smt::Expression store = smt::Expression::store(
 			m_variables[&varDecl]->currentValue(),
 			expr(*indexAccess.indexExpression()),
-			expr(_assignment.rightHandSide())
+			_rightHandSide
 		);
 		m_interface->addAssertion(newValue(varDecl) == store);
 		// Update the SMT select value after the assignment,
@@ -999,54 +1032,13 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 	case Token::Mul:
 	case Token::Div:
 	{
-		solAssert(_op.annotation().commonType, "");
-		if (_op.annotation().commonType->category() != Type::Category::Integer)
-		{
-			m_errorReporter.warning(
-				_op.location(),
-				"Assertion checker does not yet implement this operator on non-integer types."
-			);
-			break;
-		}
-		auto const& intType = dynamic_cast<IntegerType const&>(*_op.annotation().commonType);
-		smt::Expression left(expr(_op.leftExpression()));
-		smt::Expression right(expr(_op.rightExpression()));
-		Token op = _op.getOperator();
-		smt::Expression value(
-			op == Token::Add ? left + right :
-			op == Token::Sub ? left - right :
-			op == Token::Div ? division(left, right, intType) :
-			/*op == Token::Mul*/ left * right
-		);
-
-		if (_op.getOperator() == Token::Div)
-		{
-			checkCondition(right == 0, _op.location(), "Division by zero", "<result>", &right);
-			m_interface->addAssertion(right != 0);
-		}
-
-		addOverflowTarget(
-			OverflowTarget::Type::All,
+		defineExpr(_op, arithmeticOperation(
+			_op.getOperator(),
+			expr(_op.leftExpression()),
+			expr(_op.rightExpression()),
 			_op.annotation().commonType,
-			value,
 			_op.location()
-		);
-
-		smt::Expression intValueRange = (0 - minValue(intType)) + maxValue(intType) + 1;
-		defineExpr(_op, smt::Expression::ite(
-			value > maxValue(intType) || value < minValue(intType),
-			value % intValueRange,
-			value
 		));
-		if (intType.isSigned())
-		{
-			defineExpr(_op, smt::Expression::ite(
-				expr(_op) > maxValue(intType),
-				expr(_op) - intValueRange,
-				expr(_op)
-			));
-		}
-
 		break;
 	}
 	default:
@@ -1055,6 +1047,63 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 			"Assertion checker does not yet implement this operator."
 		);
 	}
+}
+
+smt::Expression SMTChecker::arithmeticOperation(
+	Token _op,
+	smt::Expression const& _left,
+	smt::Expression const& _right,
+	TypePointer const& _commonType,
+	langutil::SourceLocation const& _location
+)
+{
+	static set<Token> validOperators{
+		Token::Add,
+		Token::Sub,
+		Token::Mul,
+		Token::Div
+	};
+	solAssert(validOperators.count(_op), "");
+	solAssert(_commonType, "");
+	solAssert(_commonType->category() == Type::Category::Integer, "");
+
+	auto const& intType = dynamic_cast<IntegerType const&>(*_commonType);
+	smt::Expression value(
+		_op == Token::Add ? _left + _right :
+		_op == Token::Sub ? _left - _right :
+		_op == Token::Div ? division(_left, _right, intType) :
+		/*op == Token::Mul*/ _left * _right
+	);
+
+	if (_op == Token::Div)
+	{
+		checkCondition(_right == 0, _location, "Division by zero", "<result>", &_right);
+		m_interface->addAssertion(_right != 0);
+	}
+
+	addOverflowTarget(
+		OverflowTarget::Type::All,
+		_commonType,
+		value,
+		_location
+	);
+
+	smt::Expression intValueRange = (0 - minValue(intType)) + maxValue(intType) + 1;
+	value = smt::Expression::ite(
+		value > maxValue(intType) || value < minValue(intType),
+		value % intValueRange,
+		value
+	);
+	if (intType.isSigned())
+	{
+		value = smt::Expression::ite(
+			value > maxValue(intType),
+			value - intValueRange,
+			value
+		);
+	}
+
+	return value;
 }
 
 void SMTChecker::compareOperation(BinaryOperation const& _op)
@@ -1177,7 +1226,7 @@ void SMTChecker::checkCondition(
 	SourceLocation const& _location,
 	string const& _description,
 	string const& _additionalValueName,
-	smt::Expression* _additionalValue
+	smt::Expression const* _additionalValue
 )
 {
 	m_interface->push();
