@@ -241,7 +241,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 
 void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 {
-	for (auto const& instruction: c_instructions)
+	for (auto const& instruction: dev::eth::c_instructions)
 	{
 		string const instructionName{boost::algorithm::to_lower_copy(instruction.first)};
 		auto declarations = nameFromCurrentScope(instructionName, true);

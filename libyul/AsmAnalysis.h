@@ -109,7 +109,7 @@ private:
 
 	Scope& scope(Block const* _block);
 	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
-	void warnOnInstructions(dev::solidity::Instruction _instr, langutil::SourceLocation const& _location);
+	void warnOnInstructions(dev::eth::Instruction _instr, langutil::SourceLocation const& _location);
 
 	/// Depending on @a m_flavour and @a m_errorTypeForLoose, throws an internal compiler
 	/// exception (if the flavour is not Loose), reports an error/warning

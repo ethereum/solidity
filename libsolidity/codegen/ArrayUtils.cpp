@@ -32,8 +32,9 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::eth;
 using namespace langutil;
-using namespace solidity;
+using namespace dev::solidity;
 
 void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const
 {

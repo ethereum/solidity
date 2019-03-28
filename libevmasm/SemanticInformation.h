@@ -53,13 +53,13 @@ struct SemanticInformation
 	/// @returns true if the instruction can be moved or copied (together with its arguments)
 	/// without altering the semantics. This means it cannot depend on storage or memory,
 	/// cannot have any side-effects, but it can depend on a call-constant state of the blockchain.
-	static bool movable(solidity::Instruction _instruction);
+	static bool movable(Instruction _instruction);
 	/// @returns true if the given instruction modifies memory.
-	static bool invalidatesMemory(solidity::Instruction _instruction);
+	static bool invalidatesMemory(Instruction _instruction);
 	/// @returns true if the given instruction modifies storage (even indirectly).
-	static bool invalidatesStorage(solidity::Instruction _instruction);
-	static bool invalidInPureFunctions(solidity::Instruction _instruction);
-	static bool invalidInViewFunctions(solidity::Instruction _instruction);
+	static bool invalidatesStorage(Instruction _instruction);
+	static bool invalidInPureFunctions(Instruction _instruction);
+	static bool invalidInViewFunctions(Instruction _instruction);
 };
 
 }

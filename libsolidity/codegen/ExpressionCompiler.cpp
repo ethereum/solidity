@@ -39,11 +39,10 @@
 
 using namespace std;
 using namespace langutil;
+using namespace dev;
+using namespace dev::eth;
+using namespace dev::solidity;
 
-namespace dev
-{
-namespace solidity
-{
 
 void ExpressionCompiler::compile(Expression const& _expression)
 {
@@ -2268,7 +2267,4 @@ bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token _op)
 CompilerUtils ExpressionCompiler::utils()
 {
 	return CompilerUtils(m_context);
-}
-
-}
 }

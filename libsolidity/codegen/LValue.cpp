@@ -29,8 +29,9 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::eth;
+using namespace dev::solidity;
 using namespace langutil;
-using namespace solidity;
 
 
 StackVariable::StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):

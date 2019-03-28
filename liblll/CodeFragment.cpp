@@ -41,6 +41,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::eth;
 using namespace dev::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
@@ -66,7 +67,7 @@ bool validAssemblyInstruction(string us)
 	auto it = c_instructions.find(us);
 	return !(
 		it == c_instructions.end() ||
-		solidity::isPushInstruction(it->second)
+		isPushInstruction(it->second)
 	);
 }
 
@@ -76,10 +77,10 @@ bool validFunctionalInstruction(string us)
 	auto it = c_instructions.find(us);
 	return !(
 		it == c_instructions.end() ||
-		solidity::isPushInstruction(it->second) ||
-		solidity::isDupInstruction(it->second) ||
-		solidity::isSwapInstruction(it->second) ||
-		it->second == solidity::Instruction::JUMPDEST
+		isPushInstruction(it->second) ||
+		isDupInstruction(it->second) ||
+		isSwapInstruction(it->second) ||
+		it->second == Instruction::JUMPDEST
 	);
 }
 }

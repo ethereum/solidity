@@ -34,7 +34,6 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace yul;
-using namespace dev::solidity;
 
 shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
@@ -341,17 +340,17 @@ Expression Parser::parseExpression()
 	}
 }
 
-std::map<string, dev::solidity::Instruction> const& Parser::instructions()
+std::map<string, dev::eth::Instruction> const& Parser::instructions()
 {
 	// Allowed instructions, lowercase names.
-	static map<string, dev::solidity::Instruction> s_instructions;
+	static map<string, dev::eth::Instruction> s_instructions;
 	if (s_instructions.empty())
 	{
-		for (auto const& instruction: solidity::c_instructions)
+		for (auto const& instruction: dev::eth::c_instructions)
 		{
 			if (
-				instruction.second == solidity::Instruction::JUMPDEST ||
-				solidity::isPushInstruction(instruction.second)
+				instruction.second == dev::eth::Instruction::JUMPDEST ||
+				dev::eth::isPushInstruction(instruction.second)
 			)
 				continue;
 			string name = instruction.first;
@@ -362,16 +361,16 @@ std::map<string, dev::solidity::Instruction> const& Parser::instructions()
 	return s_instructions;
 }
 
-std::map<dev::solidity::Instruction, string> const& Parser::instructionNames()
+std::map<dev::eth::Instruction, string> const& Parser::instructionNames()
 {
-	static map<dev::solidity::Instruction, string> s_instructionNames;
+	static map<dev::eth::Instruction, string> s_instructionNames;
 	if (s_instructionNames.empty())
 	{
 		for (auto const& instr: instructions())
 			s_instructionNames[instr.second] = instr.first;
 		// set the ambiguous instructions to a clear default
-		s_instructionNames[solidity::Instruction::SELFDESTRUCT] = "selfdestruct";
-		s_instructionNames[solidity::Instruction::KECCAK256] = "keccak256";
+		s_instructionNames[dev::eth::Instruction::SELFDESTRUCT] = "selfdestruct";
+		s_instructionNames[dev::eth::Instruction::KECCAK256] = "keccak256";
 	}
 	return s_instructionNames;
 }
@@ -401,7 +400,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			ret = Identifier{location(), literal};
 		else if (m_dialect->flavour != AsmFlavour::Yul && instructions().count(literal.str()))
 		{
-			dev::solidity::Instruction const& instr = instructions().at(literal.str());
+			dev::eth::Instruction const& instr = instructions().at(literal.str());
 			ret = Instruction{location(), instr};
 		}
 		else
@@ -530,11 +529,11 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 		FunctionalInstruction ret;
 		ret.instruction = instruction.instruction;
 		ret.location = std::move(instruction.location);
-		solidity::Instruction instr = ret.instruction;
-		InstructionInfo instrInfo = instructionInfo(instr);
-		if (solidity::isDupInstruction(instr))
+		dev::eth::Instruction instr = ret.instruction;
+		dev::eth::InstructionInfo instrInfo = instructionInfo(instr);
+		if (dev::eth::isDupInstruction(instr))
 			fatalParserError("DUPi instructions not allowed for functional notation");
-		if (solidity::isSwapInstruction(instr))
+		if (dev::eth::isSwapInstruction(instr))
 			fatalParserError("SWAPi instructions not allowed for functional notation");
 		expectToken(Token::LParen);
 		unsigned args = unsigned(instrInfo.args);

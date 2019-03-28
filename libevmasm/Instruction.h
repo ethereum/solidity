@@ -21,14 +21,14 @@
 
 #pragma once
 
-#include <functional>
+#include <libevmasm/Exceptions.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
-#include "Exceptions.h"
+#include <functional>
 
 namespace dev
 {
-namespace solidity
+namespace eth
 {
 
 DEV_SIMPLE_EXCEPTION(InvalidDeposit);

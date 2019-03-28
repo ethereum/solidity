@@ -24,7 +24,7 @@
 
 namespace dev
 {
-namespace solidity
+namespace eth
 {
 
 /**
