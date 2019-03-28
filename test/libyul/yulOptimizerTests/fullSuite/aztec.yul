@@ -332,8 +332,6 @@
 //     }
 //     mstore(i_1, 0x01)
 //     return(i_1, 0x20)
-//     mstore(i_1, 404)
-//     revert(i_1, 0x20)
 //     function validatePairing(t2)
 //     {
 //         let t2_x := calldataload(t2)

@@ -132,6 +132,22 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	}
 }
 
+bool SemanticInformation::terminatesControlFlow(AssemblyItem const& _item)
+{
+	if (_item.type() != Operation)
+		return false;
+	switch (_item.instruction())
+	{
+	case Instruction::RETURN:
+	case Instruction::SELFDESTRUCT:
+	case Instruction::STOP:
+	case Instruction::INVALID:
+	case Instruction::REVERT:
+		return true;
+	default:
+		return false;
+	}
+}
 
 bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 {

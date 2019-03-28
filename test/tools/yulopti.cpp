@@ -44,6 +44,7 @@
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
+#include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/SSAReverser.h>
@@ -132,7 +133,7 @@ public:
 			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
 			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/? " << endl;
-			cout << "  stack com(p)ressor? " << endl;
+			cout << "  stack com(p)ressor/(D)ead code eliminator/? " << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -181,6 +182,9 @@ public:
 				break;
 			case 'u':
 				UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+				break;
+			case 'D':
+				DeadCodeEliminator{}(*m_ast);
 				break;
 			case 'a':
 				SSATransform::run(*m_ast, *m_nameDispenser);
