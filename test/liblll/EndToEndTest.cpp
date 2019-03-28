@@ -29,6 +29,7 @@
 #include <memory>
 
 using namespace std;
+using namespace dev::test;
 
 namespace dev
 {

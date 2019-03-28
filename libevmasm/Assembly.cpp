@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include "Assembly.h"
+#include <libevmasm/Assembly.h>
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>

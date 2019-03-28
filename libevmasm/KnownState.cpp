@@ -21,10 +21,11 @@
  * Contains knowledge about the state of the virtual machine at a specific instruction.
  */
 
-#include "KnownState.h"
-#include <functional>
-#include <libdevcore/Keccak256.h>
+#include <libevmasm/KnownState.h>
 #include <libevmasm/AssemblyItem.h>
+#include <libdevcore/Keccak256.h>
+
+#include <functional>
 
 using namespace std;
 using namespace dev;

@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include <libdevcore/Common.h>
+#include <boost/filesystem.hpp>
 #include <sstream>
 #include <string>
-#include <boost/filesystem.hpp>
-#include "Common.h"
 
 namespace dev
 {

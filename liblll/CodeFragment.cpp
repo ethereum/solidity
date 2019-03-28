@@ -19,7 +19,11 @@
  * @date 2014
  */
 
-#include "CodeFragment.h"
+#include <liblll/CodeFragment.h>
+#include <liblll/CompilerState.h>
+#include <liblll/Parser.h>
+#include <libevmasm/Instruction.h>
+#include <libdevcore/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -34,10 +38,6 @@
 #pragma GCC diagnostic pop
 #endif // defined(__GNUC__)
 
-#include <libdevcore/CommonIO.h>
-#include <libevmasm/Instruction.h>
-#include "CompilerState.h"
-#include "Parser.h"
 
 using namespace std;
 using namespace dev;
