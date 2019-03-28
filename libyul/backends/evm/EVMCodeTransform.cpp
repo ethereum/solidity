@@ -637,7 +637,7 @@ int CodeTransform::appendPopUntil(int _targetDepth)
 {
 	int const stackDiffAfter = m_assembly.stackHeight() - _targetDepth;
 	for (int i = 0; i < stackDiffAfter; ++i)
-		m_assembly.appendInstruction(solidity::Instruction::POP);
+		m_assembly.appendInstruction(dev::eth::Instruction::POP);
 	return stackDiffAfter;
 }
 
