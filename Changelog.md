@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Support arithmetic compound assignment operators.
  * Yul: Adds break and continue keywords to for-loop syntax.
 
 

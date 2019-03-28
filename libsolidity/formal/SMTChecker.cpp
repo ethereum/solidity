@@ -26,6 +26,7 @@
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/optional.hpp>
 
 using namespace std;
 using namespace dev;
@@ -333,27 +334,59 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 
 void SMTChecker::endVisit(Assignment const& _assignment)
 {
-	if (_assignment.assignmentOperator() != Token::Assign)
+	static map<Token, Token> const compoundToArithmetic{
+		{Token::AssignAdd, Token::Add},
+		{Token::AssignSub, Token::Sub},
+		{Token::AssignMul, Token::Mul},
+		{Token::AssignDiv, Token::Div}
+	};
+	Token op = _assignment.assignmentOperator();
+	if (op != Token::Assign && !compoundToArithmetic.count(op))
 		m_errorReporter.warning(
 			_assignment.location(),
-			"Assertion checker does not yet implement compound assignment."
+			"Assertion checker does not yet implement this assignment operator."
 		);
 	else if (!isSupportedType(_assignment.annotation().type->category()))
 		m_errorReporter.warning(
 			_assignment.location(),
 			"Assertion checker does not yet implement type " + _assignment.annotation().type->toString()
 		);
-	else if (Identifier const* identifier = dynamic_cast<Identifier const*>(&_assignment.leftHandSide()))
+	else if (
+		dynamic_cast<Identifier const*>(&_assignment.leftHandSide()) ||
+		dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide())
+	)
 	{
-		VariableDeclaration const& decl = dynamic_cast<VariableDeclaration const&>(*identifier->annotation().referencedDeclaration);
-		solAssert(knownVariable(decl), "");
-		assignment(decl, _assignment.rightHandSide(), _assignment.location());
-		defineExpr(_assignment, expr(_assignment.rightHandSide()));
-	}
-	else if (dynamic_cast<IndexAccess const*>(&_assignment.leftHandSide()))
-	{
-		arrayIndexAssignment(_assignment);
-		defineExpr(_assignment, expr(_assignment.rightHandSide()));
+		boost::optional<smt::Expression> leftHandSide;
+		VariableDeclaration const* decl = nullptr;
+		auto identifier = dynamic_cast<Identifier const*>(&_assignment.leftHandSide());
+		if (identifier)
+		{
+			decl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
+			solAssert(decl, "");
+			solAssert(knownVariable(*decl), "");
+			leftHandSide = currentValue(*decl);
+		}
+		else
+			leftHandSide = expr(_assignment.leftHandSide());
+
+		solAssert(leftHandSide, "");
+		smt::Expression rightHandSide =
+			compoundToArithmetic.count(op) ?
+				arithmeticOperation(
+					compoundToArithmetic.at(op),
+					*leftHandSide,
+					expr(_assignment.rightHandSide()),
+					_assignment.annotation().type,
+					_assignment.location()
+				) :
+				expr(_assignment.rightHandSide())
+		;
+		defineExpr(_assignment, rightHandSide);
+
+		if (identifier)
+			assignment(*decl, _assignment, _assignment.location());
+		else
+			arrayIndexAssignment(_assignment, expr(_assignment));
 	}
 	else
 		m_errorReporter.warning(
@@ -890,7 +923,7 @@ void SMTChecker::arrayAssignment()
 	m_arrayAssignmentHappened = true;
 }
 
-void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
+void SMTChecker::arrayIndexAssignment(Assignment const& _assignment, smt::Expression const& _rightHandSide)
 {
 	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_assignment.leftHandSide());
 	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
@@ -930,7 +963,7 @@ void SMTChecker::arrayIndexAssignment(Assignment const& _assignment)
 		smt::Expression store = smt::Expression::store(
 			m_variables[&varDecl]->currentValue(),
 			expr(*indexAccess.indexExpression()),
-			expr(_assignment.rightHandSide())
+			_rightHandSide
 		);
 		m_interface->addAssertion(newValue(varDecl) == store);
 		// Update the SMT select value after the assignment,
