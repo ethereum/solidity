@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: SSA control-flow did not take into account state variables that were modified inside inlined functions that were called inside branches.
 
 
 

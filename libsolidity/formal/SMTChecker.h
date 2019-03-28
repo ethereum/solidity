@@ -55,6 +55,10 @@ public:
 	/// the constructor.
 	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
 
+	/// @return the FunctionDefinition of a called function if possible and should inline,
+	/// otherwise nullptr.
+	static FunctionDefinition const* inlinedFunctionCallToDefinition(FunctionCall const& _funCall);
+
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined

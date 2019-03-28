@@ -616,20 +616,8 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 {
-	FunctionDefinition const* _funDef = nullptr;
-	Expression const* _calledExpr = &_funCall.expression();
-
-	if (TupleExpression const* _fun = dynamic_cast<TupleExpression const*>(&_funCall.expression()))
-	{
-		solAssert(_fun->components().size() == 1, "");
-		_calledExpr = _fun->components().at(0).get();
-	}
-
-	if (Identifier const* _fun = dynamic_cast<Identifier const*>(_calledExpr))
-		_funDef = dynamic_cast<FunctionDefinition const*>(_fun->annotation().referencedDeclaration);
-	else if (MemberAccess const* _fun = dynamic_cast<MemberAccess const*>(_calledExpr))
-		_funDef = dynamic_cast<FunctionDefinition const*>(_fun->annotation().referencedDeclaration);
-	else
+	FunctionDefinition const* _funDef = inlinedFunctionCallToDefinition(_funCall);
+	if (!_funDef)
 	{
 		m_errorReporter.warning(
 			_funCall.location(),
@@ -637,7 +625,6 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 		);
 		return;
 	}
-	solAssert(_funDef, "");
 
 	if (visitedFunction(_funDef))
 		m_errorReporter.warning(
@@ -645,14 +632,15 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 			"Assertion checker does not support recursive function calls.",
 			SecondarySourceLocation().append("Starting from function:", _funDef->location())
 		);
-	else if (_funDef && _funDef->isImplemented())
+	else
 	{
 		vector<smt::Expression> funArgs;
-		auto const& funType = dynamic_cast<FunctionType const*>(_calledExpr->annotation().type.get());
+		Expression const* calledExpr = &_funCall.expression();
+		auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type.get());
 		solAssert(funType, "");
 		if (funType->bound())
 		{
-			auto const& boundFunction = dynamic_cast<MemberAccess const*>(_calledExpr);
+			auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 			solAssert(boundFunction, "");
 			funArgs.push_back(expr(boundFunction->expression()));
 		}
@@ -671,13 +659,6 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 			else
 				defineExpr(_funCall, currentValue(*returnParams[0]));
 		}
-	}
-	else
-	{
-		m_errorReporter.warning(
-			_funCall.location(),
-			"Assertion checker does not support calls to functions without implementation."
-		);
 	}
 }
 
@@ -1672,4 +1653,33 @@ void SMTChecker::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
 		m_variables.at(var.first)->index() = var.second;
+}
+
+FunctionDefinition const* SMTChecker::inlinedFunctionCallToDefinition(FunctionCall const& _funCall)
+{
+	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+		return nullptr;
+
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	if (funType.kind() != FunctionType::Kind::Internal)
+		return nullptr;
+
+	FunctionDefinition const* funDef = nullptr;
+	Expression const* calledExpr = &_funCall.expression();
+
+	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(&_funCall.expression()))
+	{
+		solAssert(fun->components().size() == 1, "");
+		calledExpr = fun->components().front().get();
+	}
+
+	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
+		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
+	else if (MemberAccess const* fun = dynamic_cast<MemberAccess const*>(calledExpr))
+		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
+
+	if (funDef && funDef->isImplemented())
+		return funDef;
+
+	return nullptr;
 }
