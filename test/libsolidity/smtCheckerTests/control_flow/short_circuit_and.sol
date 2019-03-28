@@ -8,9 +8,9 @@ contract c {
 	}
 	function g() public returns (bool) {
 		x = 0;
-		bool b = (f() > 0) || (f() > 0);
+		bool b = (f() == 0) && (f() == 0);
 		assert(x == 1);
-		assert(b);
+		assert(!b);
 		return b;
 	}
 }

@@ -200,12 +200,12 @@ bool SMTChecker::visit(IfStatement const& _node)
 	if (isRootFunction())
 		checkBooleanNotConstant(_node.condition(), "Condition is always $VALUE.");
 
-	auto indicesEndTrue = visitBranch(_node.trueStatement(), expr(_node.condition()));
+	auto indicesEndTrue = visitBranch(&_node.trueStatement(), expr(_node.condition()));
 	vector<VariableDeclaration const*> touchedVariables = m_variableUsage->touchedVariables(_node.trueStatement());
 	decltype(indicesEndTrue) indicesEndFalse;
 	if (_node.falseStatement())
 	{
-		indicesEndFalse = visitBranch(*_node.falseStatement(), !expr(_node.condition()));
+		indicesEndFalse = visitBranch(_node.falseStatement(), !expr(_node.condition()));
 		touchedVariables += m_variableUsage->touchedVariables(*_node.falseStatement());
 	}
 	else
@@ -233,7 +233,7 @@ bool SMTChecker::visit(WhileStatement const& _node)
 	decltype(indicesBeforeLoop) indicesAfterLoop;
 	if (_node.isDoWhile())
 	{
-		indicesAfterLoop = visitBranch(_node.body());
+		indicesAfterLoop = visitBranch(&_node.body());
 		// TODO the assertions generated in the body should still be active in the condition
 		_node.condition().accept(*this);
 		if (isRootFunction())
@@ -245,7 +245,7 @@ bool SMTChecker::visit(WhileStatement const& _node)
 		if (isRootFunction())
 			checkBooleanNotConstant(_node.condition(), "While loop condition is always $VALUE.");
 
-		indicesAfterLoop = visitBranch(_node.body(), expr(_node.condition()));
+		indicesAfterLoop = visitBranch(&_node.body(), expr(_node.condition()));
 	}
 
 	// We reset the execution to before the loop
@@ -502,20 +502,27 @@ bool SMTChecker::visit(UnaryOperation const& _op)
 
 bool SMTChecker::visit(BinaryOperation const& _op)
 {
-	return !shortcutRationalNumber(_op);
+	if (shortcutRationalNumber(_op))
+		return false;
+	if (TokenTraits::isBooleanOp(_op.getOperator()))
+	{
+		booleanOperation(_op);
+		return false;
+	}
+	return true;
 }
 
 void SMTChecker::endVisit(BinaryOperation const& _op)
 {
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
+	if (TokenTraits::isBooleanOp(_op.getOperator()))
+		return;
 
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))
 		compareOperation(_op);
-	else if (TokenTraits::isBooleanOp(_op.getOperator()))
-		booleanOperation(_op);
 	else
 		m_errorReporter.warning(
 			_op.location(),
@@ -1095,16 +1102,26 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 	if (_op.annotation().commonType->category() == Type::Category::Bool)
 	{
 		// @TODO check that both of them are not constant
+		_op.leftExpression().accept(*this);
+		auto touchedVariables = m_variableUsage->touchedVariables(_op.leftExpression());
 		if (_op.getOperator() == Token::And)
+		{
+			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), expr(_op.leftExpression()));
+			mergeVariables(touchedVariables, !expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 			defineExpr(_op, expr(_op.leftExpression()) && expr(_op.rightExpression()));
+		}
 		else
+		{
+			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), !expr(_op.leftExpression()));
+			mergeVariables(touchedVariables, expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 			defineExpr(_op, expr(_op.leftExpression()) || expr(_op.rightExpression()));
+		}
 	}
 	else
 		m_errorReporter.warning(
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for boolean operations"
-					);
+		);
 }
 
 smt::Expression SMTChecker::division(smt::Expression _left, smt::Expression _right, IntegerType const& _type)
@@ -1137,17 +1154,17 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 	m_interface->addAssertion(newValue(_variable) == _value);
 }
 
-SMTChecker::VariableIndices SMTChecker::visitBranch(Statement const& _statement, smt::Expression _condition)
+SMTChecker::VariableIndices SMTChecker::visitBranch(ASTNode const* _statement, smt::Expression _condition)
 {
 	return visitBranch(_statement, &_condition);
 }
 
-SMTChecker::VariableIndices SMTChecker::visitBranch(Statement const& _statement, smt::Expression const* _condition)
+SMTChecker::VariableIndices SMTChecker::visitBranch(ASTNode const* _statement, smt::Expression const* _condition)
 {
 	auto indicesBeforeBranch = copyVariableIndices();
 	if (_condition)
 		pushPathCondition(*_condition);
-	_statement.accept(*this);
+	_statement->accept(*this);
 	if (_condition)
 		popPathCondition();
 	auto indicesAfterBranch = copyVariableIndices();
@@ -1456,7 +1473,12 @@ TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
 void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
 {
 	set<VariableDeclaration const*> uniqueVars(_variables.begin(), _variables.end());
-	for (auto const* decl: uniqueVars)
+	mergeVariables(uniqueVars, _condition, _indicesEndTrue, _indicesEndFalse);
+}
+
+void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
+{
+	for (auto const* decl: _variables)
 	{
 		solAssert(_indicesEndTrue.count(decl) && _indicesEndFalse.count(decl), "");
 		int trueIndex = _indicesEndTrue.at(decl);

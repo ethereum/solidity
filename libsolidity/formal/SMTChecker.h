@@ -132,8 +132,8 @@ private:
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
 	/// @returns the variable indices after visiting the branch.
-	VariableIndices visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
-	VariableIndices visitBranch(Statement const& _statement, smt::Expression _condition);
+	VariableIndices visitBranch(ASTNode const* _statement, smt::Expression const* _condition = nullptr);
+	VariableIndices visitBranch(ASTNode const* _statement, smt::Expression _condition);
 
 	/// Check that a condition can be satisfied.
 	void checkCondition(
@@ -199,6 +199,7 @@ private:
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
 	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
+	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
