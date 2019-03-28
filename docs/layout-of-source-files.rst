@@ -89,12 +89,12 @@ It is activated for the Ubuntu PPA releases in most versions,
 but not for solc-js, the Docker images, Windows binaries or the
 statically-built Linux binaries.
 
-If you use
-``pragma experimental SMTChecker;``, then you get additional
-safety warnings which are obtained by querying an SMT solver.
-The component does not yet support all features of the Solidity language
-and likely outputs many warnings. In case it reports unsupported
-features, the analysis may not be fully sound.
+If you use ``pragma experimental SMTChecker;``, then you get additional
+:ref:`safety warnings<formal_verification>` which are obtained by querying an
+SMT solver.
+The component does not yet support all features of the Solidity language and
+likely outputs many warnings. In case it reports unsupported features, the
+analysis may not be fully sound.
 
 .. index:: source file, ! import, module
 
