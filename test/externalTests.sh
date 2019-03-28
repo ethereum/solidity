@@ -28,6 +28,17 @@
 
 set -e
 
+if [ "$CIRCLECI" ]
+then
+    function printTask() { echo ""; echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
+    function printError() { echo ""; echo "$(tput setaf 1)$1$(tput setaf 7)"; }
+    function printLog() { echo "$(tput setaf 3)$1$(tput setaf 7)"; }
+else
+    function printTask() { echo ""; echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+    function printError() { echo ""; echo "$(tput setaf 1)$1$(tput sgr0)"; }
+    function printLog() { echo "$(tput setaf 3)$1$(tput sgr0)"; }
+fi
+
 if [ ! -f "$1" ]
 then
   echo "Usage: $0 <path to soljson.js>"
@@ -35,81 +46,185 @@ then
 fi
 
 SOLJSON="$1"
+SOLCVERSION="UNDEFINED"
 
-function test_truffle
+function setup_solcjs
 {
-    name="$1"
-    repo="$2"
-    branch="$3"
-    echo "Running $name tests..."
-    DIR=$(mktemp -d)
-    (
-      cd "$DIR"
+  printLog "Setting up solc-js..."
+  cd "$1"
+  git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
+
+  cd solc
+  npm install
+  cp "$SOLJSON" soljson.js
+  SOLCVERSION=$(./solcjs --version)
+  cd ..
+  echo "Using solcjs version $SOLCVERSION"
+}
+
+function download_project
+{
+  local repo="$1"
+  local branch="$2"
+  local dir="$3"
+
+  printLog "Cloning $branch of $repo..."
+  git clone --depth 1 "$repo" -b "$branch" "$dir/ext"
+  cd ext
+  echo "Current commit hash: `git rev-parse HEAD`"
+}
+
+function setup
+{
+  local repo="$1"
+  local branch="$2"
+  local dir="$3"
+
+  setup_solcjs "$dir"
+  download_project "$repo" "$branch" "$dir"
+
+  replace_version_pragmas
+}
+
+function replace_version_pragmas
+{
+  # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
+  printLog "Replacing fixed-version pragmas..."
+  find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
+}
+
+function replace_libsolc_call
+{
+  # Change "compileStandard" to "compile" (needed for pre-5.x Truffle)
+  printLog "Replacing libsolc compile call in Truffle..."
+  sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
+}
+
+function find_truffle_config
+{
+  local config_file="truffle.js"
+  local alt_config_file="truffle-config.js"
+
+  if [ ! -f "$config_file" ] && [ ! -f "$alt_config_file" ]; then
+    printError "No matching Truffle config found."
+  fi
+  if [ ! -f "$config_file" ]; then
+    config_file=alt_config_file
+  fi
+  echo "$config_file"
+}
+
+function force_solc_truffle_modules
+{
+  # Replace solc package by v0.5.0 and then overwrite with current version.
+  printLog "Forcing solc version for all Truffle modules..."
+  for d in node_modules node_modules/truffle/node_modules
+  do
+  (
+    if [ -d "$d" ]
+    then
+      cd $d
+      rm -rf solc
       git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
-      SOLCVERSION="UNDEFINED"
+      cp "$1" solc/soljson.js
+    fi
+  )
+  done
+}
 
-      cd solc
-      npm install
-      cp "$SOLJSON" soljson.js
-      SOLCVERSION=$(./solcjs --version)
-      cd ..
-      echo "Using solcjs version $SOLCVERSION"
+function force_solc
+{
+  local config_file="$1"
+  local dir="$2"
 
-      if [ -n "$branch" ]
-      then
-        echo "Cloning $branch of $repo..."
-        git clone --depth 1 "$repo" -b "$branch" "$DIR/ext"
-      else
-        echo "Cloning $repo..."
-        git clone --depth 1 "$repo" "$DIR/ext"
-      fi
-      cd ext
-      echo "Current commit hash: `git rev-parse HEAD`"
-      npm ci
-      # Replace solc package by v0.5.0
-      for d in node_modules node_modules/truffle/node_modules
-      do
-      (
-        if [ -d "$d" ]
-        then
-          cd $d
-          rm -rf solc
-          git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
-          cp "$SOLJSON" solc/soljson.js
-        fi
-      )
-      done
-      if [ "$name" == "Zeppelin" -o "$name" == "Gnosis" ]; then
-        echo "Replaced fixed-version pragmas..."
-        # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
-        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
-      fi
-      # Change "compileStandard" to "compile" (needed for pre-5.x Truffle)
-      sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
-      # Force usage of correct solidity binary (only works with Truffle 5.x)
-      cat >> truffle*.js <<EOF
-module.exports['compilers'] = {solc: {version: "$DIR/solc"} };
+  printLog "Forcing solc version..."
+  cat >> "$config_file" <<EOF
+module.exports['compilers'] = {solc: {version: "$dir/solc"} };
 EOF
+}
 
-      for optimize in "{enabled: false }" "{enabled: true }" "{enabled: true, details: { yul: true } }"
-      do
-        rm -rf build || true
-        echo "module.exports['compilers']['solc']['settings'] = {optimizer: $optimize };" >> truffle*.js
-        npx truffle compile
-        echo "Verify that the correct version ($SOLCVERSION) of the compiler was used to compile the contracts..."
-        grep -e "$SOLCVERSION" -r build/contracts > /dev/null
-        npm run test
-      done
-    )
-    rm -rf "$DIR"
+function force_solc_settings
+{
+  local config_file="$1"
+  local settings="$2"
+  local evmVersion="$3"
+
+  printLog "Forcing solc settings..."
+  echo "Config file: $config_file"
+  echo "Optimizer settings: $settings"
+  echo "EVM version: $evmVersion"
+  echo ""
+
+  echo "module.exports['compilers']['solc']['settings'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
+}
+
+function verify_compiler_version
+{
+  local solc_version="$1"
+
+  printLog "Verify that the correct version ($solc_version) of the compiler was used to compile the contracts..."
+  grep -e "$solc_version" -r build/contracts > /dev/null
+}
+
+function clean
+{
+  rm -rf build || true
 }
 
 # Since Zeppelin 2.1.1 it supports Solidity 0.5.0.
-test_truffle Zeppelin https://github.com/OpenZeppelin/openzeppelin-solidity.git master
+printTask "Testing Zeppelin..."
+echo "==========================="
+DIR=$(mktemp -d)
+(
+  setup https://github.com/OpenZeppelin/openzeppelin-solidity.git master "$DIR"
+
+  npm install
+
+  CONFIG="truffle-config.js"
+
+  replace_libsolc_call
+  force_solc_truffle_modules "$SOLJSON"
+  force_solc "$CONFIG" "$DIR"
+
+  for optimize in "{ enabled: false }" "{ enabled: true }" "{ enabled: true, details: { yul: true } }"
+  do
+    clean
+    force_solc_settings "$CONFIG" "$optimize" "petersburg"
+
+    npx truffle compile
+    verify_compiler_version "$SOLCVERSION"
+    npm run test
+  done
+)
+rm -rf "$DIR"
+echo "Done."
+
+printTask "Testing GnosisSafe..."
+echo "==========================="
+DIR=$(mktemp -d)
+(
+  setup https://github.com/gnosis/safe-contracts.git development "$DIR"
+
+  npm install
+
+  CONFIG=$(find_truffle_config)
+
+  force_solc_truffle_modules "$SOLJSON"
+  force_solc "$CONFIG" "$DIR"
+
+  for optimize in "{ enabled: false }" "{ enabled: true }" "{ enabled: true, details: { yul: true } }"
+  do
+    clean
+    force_solc_settings "$CONFIG" "$optimize" "petersburg"
+
+    npx truffle compile
+    verify_compiler_version "$SOLCVERSION"
+    npm test
+  done
+)
+rm -rf "$DIR"
+echo "Done."
+echo "All external tests passed."
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
-
-# Disabled temporarily because it is incompatible with petersburg EVM and
-# there is no easy way to set the EVM version in truffle pre 5.0.
-#test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development

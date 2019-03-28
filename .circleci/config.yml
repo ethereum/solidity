@@ -421,3 +421,17 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_x86_archlinux
+  test_nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - develop
+    jobs:
+      - build_emscripten: *build_on_tags
+      - test_emscripten_external:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
