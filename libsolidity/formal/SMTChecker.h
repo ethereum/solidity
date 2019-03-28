@@ -88,6 +88,16 @@ private:
 	/// Symbolic _expr is the rational literal.
 	bool shortcutRationalNumber(Expression const& _expr);
 	void arithmeticOperation(BinaryOperation const& _op);
+	/// @returns _op(_left, _right).
+	/// Used by the function above, compound assignments and
+	/// unary increment/decrement.
+	smt::Expression arithmeticOperation(
+		Token _op,
+		smt::Expression const& _left,
+		smt::Expression const& _right,
+		TypePointer const& _commonType,
+		langutil::SourceLocation const& _location
+	);
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
@@ -137,7 +147,7 @@ private:
 		langutil::SourceLocation const& _location,
 		std::string const& _description,
 		std::string const& _additionalValueName = "",
-		smt::Expression* _additionalValue = nullptr
+		smt::Expression const* _additionalValue = nullptr
 	);
 	/// Checks that a boolean condition is not constant. Do not warn if the expression
 	/// is a literal constant.

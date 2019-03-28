@@ -1011,54 +1011,13 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 	case Token::Mul:
 	case Token::Div:
 	{
-		solAssert(_op.annotation().commonType, "");
-		if (_op.annotation().commonType->category() != Type::Category::Integer)
-		{
-			m_errorReporter.warning(
-				_op.location(),
-				"Assertion checker does not yet implement this operator on non-integer types."
-			);
-			break;
-		}
-		auto const& intType = dynamic_cast<IntegerType const&>(*_op.annotation().commonType);
-		smt::Expression left(expr(_op.leftExpression()));
-		smt::Expression right(expr(_op.rightExpression()));
-		Token op = _op.getOperator();
-		smt::Expression value(
-			op == Token::Add ? left + right :
-			op == Token::Sub ? left - right :
-			op == Token::Div ? division(left, right, intType) :
-			/*op == Token::Mul*/ left * right
-		);
-
-		if (_op.getOperator() == Token::Div)
-		{
-			checkCondition(right == 0, _op.location(), "Division by zero", "<result>", &right);
-			m_interface->addAssertion(right != 0);
-		}
-
-		addOverflowTarget(
-			OverflowTarget::Type::All,
+		defineExpr(_op, arithmeticOperation(
+			_op.getOperator(),
+			expr(_op.leftExpression()),
+			expr(_op.rightExpression()),
 			_op.annotation().commonType,
-			value,
 			_op.location()
-		);
-
-		smt::Expression intValueRange = (0 - minValue(intType)) + maxValue(intType) + 1;
-		defineExpr(_op, smt::Expression::ite(
-			value > maxValue(intType) || value < minValue(intType),
-			value % intValueRange,
-			value
 		));
-		if (intType.isSigned())
-		{
-			defineExpr(_op, smt::Expression::ite(
-				expr(_op) > maxValue(intType),
-				expr(_op) - intValueRange,
-				expr(_op)
-			));
-		}
-
 		break;
 	}
 	default:
@@ -1067,6 +1026,63 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 			"Assertion checker does not yet implement this operator."
 		);
 	}
+}
+
+smt::Expression SMTChecker::arithmeticOperation(
+	Token _op,
+	smt::Expression const& _left,
+	smt::Expression const& _right,
+	TypePointer const& _commonType,
+	langutil::SourceLocation const& _location
+)
+{
+	static set<Token> validOperators{
+		Token::Add,
+		Token::Sub,
+		Token::Mul,
+		Token::Div
+	};
+	solAssert(validOperators.count(_op), "");
+	solAssert(_commonType, "");
+	solAssert(_commonType->category() == Type::Category::Integer, "");
+
+	auto const& intType = dynamic_cast<IntegerType const&>(*_commonType);
+	smt::Expression value(
+		_op == Token::Add ? _left + _right :
+		_op == Token::Sub ? _left - _right :
+		_op == Token::Div ? division(_left, _right, intType) :
+		/*op == Token::Mul*/ _left * _right
+	);
+
+	if (_op == Token::Div)
+	{
+		checkCondition(_right == 0, _location, "Division by zero", "<result>", &_right);
+		m_interface->addAssertion(_right != 0);
+	}
+
+	addOverflowTarget(
+		OverflowTarget::Type::All,
+		_commonType,
+		value,
+		_location
+	);
+
+	smt::Expression intValueRange = (0 - minValue(intType)) + maxValue(intType) + 1;
+	value = smt::Expression::ite(
+		value > maxValue(intType) || value < minValue(intType),
+		value % intValueRange,
+		value
+	);
+	if (intType.isSigned())
+	{
+		value = smt::Expression::ite(
+			value > maxValue(intType),
+			value - intValueRange,
+			value
+		);
+	}
+
+	return value;
 }
 
 void SMTChecker::compareOperation(BinaryOperation const& _op)
@@ -1179,7 +1195,7 @@ void SMTChecker::checkCondition(
 	SourceLocation const& _location,
 	string const& _description,
 	string const& _additionalValueName,
-	smt::Expression* _additionalValue
+	smt::Expression const* _additionalValue
 )
 {
 	m_interface->push();
