@@ -633,14 +633,34 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	checkStackHeight(&_forLoop);
 }
 
-void CodeTransform::operator()(Break const&)
+int CodeTransform::appendPopUntil(int _targetDepth)
 {
-	yulAssert(false, "Code generation for break statement in Yul is not implemented yet.");
+	int const stackDiffAfter = m_assembly.stackHeight() - _targetDepth;
+	for (int i = 0; i < stackDiffAfter; ++i)
+		m_assembly.appendInstruction(solidity::Instruction::POP);
+	return stackDiffAfter;
 }
 
-void CodeTransform::operator()(Continue const&)
+void CodeTransform::operator()(Break const& _break)
 {
-	yulAssert(false, "Code generation for continue statement in Yul is not implemented yet.");
+	yulAssert(!m_context->forLoopStack.empty(), "Invalid break-statement. Requires surrounding for-loop in code generation.");
+	m_assembly.setSourceLocation(_break.location);
+
+	Context::JumpInfo const& jump = m_context->forLoopStack.top().done;
+	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
+
+	checkStackHeight(&_break);
+}
+
+void CodeTransform::operator()(Continue const& _continue)
+{
+	yulAssert(!m_context->forLoopStack.empty(), "Invalid continue-statement. Requires surrounding for-loop in code generation.");
+	m_assembly.setSourceLocation(_continue.location);
+
+	Context::JumpInfo const& jump = m_context->forLoopStack.top().post;
+	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
+
+	checkStackHeight(&_continue);
 }
 
 void CodeTransform::operator()(Block const& _block)

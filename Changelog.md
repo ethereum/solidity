@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Yul: Adds break and continue keywords to for-loop syntax.
 
 
 Bugfixes:
