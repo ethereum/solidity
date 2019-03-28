@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "Exceptions.h"
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {

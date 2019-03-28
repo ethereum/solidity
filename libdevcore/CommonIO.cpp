@@ -19,7 +19,11 @@
  * @date 2014
  */
 
-#include "CommonIO.h"
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/Assertions.h>
+
+#include <boost/filesystem.hpp>
+
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
@@ -29,8 +33,6 @@
 #include <unistd.h>
 #include <termios.h>
 #endif
-#include <boost/filesystem.hpp>
-#include "Assertions.h"
 
 using namespace std;
 using namespace dev;
