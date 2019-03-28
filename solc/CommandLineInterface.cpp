@@ -284,11 +284,11 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", dev::eth::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		sout() << "Opcodes: " << endl;
-		sout() << solidity::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
 	}
 }
@@ -1001,7 +1001,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strBinaryRuntime))
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
 		if (requests.count(g_strOpcodes))
-			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->object(contractName).bytecode);
+			contractData[g_strOpcodes] = dev::eth::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm))
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
 		if (requests.count(g_strSrcMap))

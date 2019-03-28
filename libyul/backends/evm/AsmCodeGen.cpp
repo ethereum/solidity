@@ -57,7 +57,7 @@ int EthAssemblyAdapter::stackHeight() const
 	return m_assembly.deposit();
 }
 
-void EthAssemblyAdapter::appendInstruction(solidity::Instruction _instruction)
+void EthAssemblyAdapter::appendInstruction(dev::eth::Instruction _instruction)
 {
 	m_assembly.append(_instruction);
 }
@@ -94,7 +94,7 @@ void EthAssemblyAdapter::appendLinkerSymbol(std::string const& _linkerSymbol)
 
 void EthAssemblyAdapter::appendJump(int _stackDiffAfter)
 {
-	appendInstruction(solidity::Instruction::JUMP);
+	appendInstruction(dev::eth::Instruction::JUMP);
 	m_assembly.adjustDeposit(_stackDiffAfter);
 }
 
@@ -107,7 +107,7 @@ void EthAssemblyAdapter::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
 void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId)
 {
 	appendLabelReference(_labelId);
-	appendInstruction(solidity::Instruction::JUMPI);
+	appendInstruction(dev::eth::Instruction::JUMPI);
 }
 
 void EthAssemblyAdapter::appendBeginsub(LabelID, int)

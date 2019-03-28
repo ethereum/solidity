@@ -85,7 +85,7 @@ void UnusedPruner::operator()(Block& _block)
 					// instead of `pop`.
 					statement = ExpressionStatement{varDecl.location, FunctionalInstruction{
 						varDecl.location,
-						solidity::Instruction::POP,
+						dev::eth::Instruction::POP,
 						{*std::move(varDecl.value)}
 					}};
 			}

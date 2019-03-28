@@ -36,7 +36,7 @@ string assemble(string const& _input)
 {
 	AssemblyStack asmStack;
 	BOOST_REQUIRE_MESSAGE(asmStack.parseAndAnalyze("", _input), "Source did not parse: " + _input);
-	return dev::solidity::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM, true).bytecode->bytecode);
+	return dev::eth::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM, true).bytecode->bytecode);
 }
 }
 

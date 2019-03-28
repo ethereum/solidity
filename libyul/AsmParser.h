@@ -71,8 +71,8 @@ protected:
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
-	static std::map<std::string, dev::solidity::Instruction> const& instructions();
-	static std::map<dev::solidity::Instruction, std::string> const& instructionNames();
+	static std::map<std::string, dev::eth::Instruction> const& instructions();
+	static std::map<dev::eth::Instruction, std::string> const& instructionNames();
 	/// Parses an elementary operation, i.e. a literal, identifier or instruction.
 	/// This will parse instructions even in strict mode as part of the full parser
 	/// for FunctionalInstruction.

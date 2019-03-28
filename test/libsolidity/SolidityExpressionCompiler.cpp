@@ -33,6 +33,7 @@
 #include <test/Options.h>
 
 using namespace std;
+using namespace dev::eth;
 using namespace langutil;
 
 namespace dev

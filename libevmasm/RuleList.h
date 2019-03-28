@@ -21,19 +21,20 @@
 
 #pragma once
 
-#include <vector>
-#include <functional>
-
-#include <boost/multiprecision/detail/min_max.hpp>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SimplificationRule.h>
 
 #include <libdevcore/CommonData.h>
 
+#include <boost/multiprecision/detail/min_max.hpp>
+
+#include <vector>
+#include <functional>
+
 namespace dev
 {
-namespace solidity
+namespace eth
 {
 
 template <class S> S divWorkaround(S const& _a, S const& _b)

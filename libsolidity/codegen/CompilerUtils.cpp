@@ -31,11 +31,9 @@
 
 using namespace std;
 using namespace langutil;
-
-namespace dev
-{
-namespace solidity
-{
+using namespace dev;
+using namespace dev::eth;
+using namespace dev::solidity;
 
 unsigned const CompilerUtils::dataStartOffset = 4;
 size_t const CompilerUtils::freeMemoryPointer = 64;
@@ -1413,7 +1411,4 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 		leftShiftNumberOnStack((32 - numBytes) * 8);
 
 	return numBytes;
-}
-
-}
 }

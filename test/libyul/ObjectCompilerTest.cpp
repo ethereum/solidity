@@ -85,7 +85,7 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 			"Bytecode: " +
 			toHex(obj.bytecode->bytecode) +
 			"\nOpcodes: " +
-			boost::trim_copy(solidity::disassemble(obj.bytecode->bytecode)) +
+			boost::trim_copy(dev::eth::disassemble(obj.bytecode->bytecode)) +
 			"\n";
 
 	if (m_expectation != m_obtainedResult)

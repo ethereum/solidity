@@ -38,7 +38,6 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace yul;
-using namespace dev::solidity;
 
 ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
 	m_info(_info), m_errorReporter(_errorReporter)

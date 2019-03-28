@@ -239,7 +239,7 @@ Json::Value collectEVMObject(eth::LinkerObject const& _object, string const* _so
 {
 	Json::Value output = Json::objectValue;
 	output["object"] = _object.toHex();
-	output["opcodes"] = solidity::disassemble(_object.bytecode);
+	output["opcodes"] = dev::eth::disassemble(_object.bytecode);
 	output["sourceMap"] = _sourceMap ? *_sourceMap : "";
 	output["linkReferences"] = formatLinkReferences(_object.linkReferences);
 	return output;

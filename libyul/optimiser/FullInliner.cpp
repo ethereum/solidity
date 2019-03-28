@@ -37,7 +37,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
 
 FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 	m_ast(_ast), m_nameDispenser(_dispenser)

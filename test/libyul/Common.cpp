@@ -40,7 +40,6 @@
 using namespace std;
 using namespace langutil;
 using namespace yul;
-using namespace dev::solidity;
 
 namespace
 {
