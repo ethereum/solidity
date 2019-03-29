@@ -273,6 +273,10 @@ Command-Line Build
 
 **Be sure to install External Dependencies (see above) before build.**
 
+**If you want to perform a source build, please only use solidity.tar.gz in release page and not the zip provided by github directly.**
+
+.. _release page: https://github.com/ethereum/solidity/releases
+
 Solidity project uses CMake to configure the build.
 You might want to install ccache to speed up repeated builds.
 CMake will pick it up automatically.
