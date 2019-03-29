@@ -53,3 +53,4 @@ CMakeLists.txt.user
 /.vs
 /.cproject
 /.project
+/cmake-build-debug
