@@ -273,7 +273,7 @@ Command-Line Build
 
 **Be sure to install External Dependencies (see above) before build.**
 
-**If you want to perform a source build, please only use solidity.tar.gz in release page and not the zip provided by github directly.**
+**If you want to perform a source build, please only use solidity.tar.gz in `release page`_ and not the zip provided by github directly.**
 
 .. _release page: https://github.com/ethereum/solidity/releases
 
