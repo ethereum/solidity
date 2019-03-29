@@ -64,9 +64,7 @@ def write_cases(f, tests):
     cleaned_filename = f.replace(".", "_").replace(
         "-", "_").replace(" ", "_").lower()
     for test in tests:
-        # print ("t " + test)
-        # cleanedText = test.strip('    ')
-        remainder = re.sub(r'^\s{4,5}', '', test, 0, re.MULTILINE)
+        remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
         open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(),
                                  cleaned_filename), 'wb').write(remainder)
 

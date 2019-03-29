@@ -51,11 +51,6 @@ else
     function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
 fi
 
-function syntaxTest()
-{
- solhint -f table -c ./.solhint.json $1
-}
-
 function compileFull()
 {
     local expected_exit_code=0
@@ -306,7 +301,9 @@ SOLTMPDIR=$(mktemp -d)
     set -e
     cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
-    solhint init-config
+    # Copy config needed for solhint
+    cp "$REPO_ROOT"/test/.solhint.json "$SOLTMPDIR"/.solhint.json
+    cp "$REPO_ROOT"/test/.solhintignore "$SOLTMPDIR"/.solhintignore
 
     for f in *.sol
     do
@@ -319,8 +316,6 @@ SOLTMPDIR=$(mktemp -d)
         echo "$f"
 
         solhint -f table "$SOLTMPDIR/$f"
-
-        # syntaxTest "$SOLTMPDIR/$f"
 
         opts=''
         # We expect errors if explicitly stated, or if imports
