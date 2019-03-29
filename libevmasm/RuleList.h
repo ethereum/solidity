@@ -216,7 +216,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 
 template <class Pattern>
 std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
-	Pattern,
+	Pattern A,
 	Pattern,
 	Pattern,
 	Pattern X,
@@ -235,6 +235,22 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 			false
 		});
 	}
+
+	// Replace SHL >=256, X with 0
+	rules.push_back({
+		{Instruction::SHL, {A, X}},
+		[=]() -> Pattern { return u256(0); },
+		true,
+		[=]() { return A.d() >= 256; }
+	});
+
+	// Replace SHR >=256, X with 0
+	rules.push_back({
+		{Instruction::SHR, {A, X}},
+		[=]() -> Pattern { return u256(0); },
+		true,
+		[=]() { return A.d() >= 256; }
+	});
 
 	for (auto const& op: std::vector<Instruction>{
 		Instruction::ADDRESS,
@@ -373,6 +389,30 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 				return {Instruction::SHR, {u256(sum), X}};
 		},
 		false
+	});
+
+
+	std::function<bool()> feasibilityFunction = [=]() {
+		if (B.d() > 256)
+			return false;
+		unsigned bAsUint = static_cast<unsigned>(B.d());
+		return (A.d() & (u256(-1) >> bAsUint)) == (u256(-1) >> bAsUint);
+	};
+
+	rules.push_back({
+		// AND(A, SHR(B, X)) -> A & ((2^256-1) >> B) == ((2^256-1) >> B)
+		{Instruction::AND, {A, {Instruction::SHR, {B, X}}}},
+		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		false,
+		feasibilityFunction
+	});
+
+	rules.push_back({
+		// AND(SHR(B, X), A) -> ((2^256-1) >> B) & A == ((2^256-1) >> B)
+		{Instruction::AND, {{Instruction::SHR, {B, X}}, A}},
+		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		false,
+		feasibilityFunction
 	});
 
 	return rules;
