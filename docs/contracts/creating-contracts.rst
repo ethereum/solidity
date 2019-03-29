@@ -35,6 +35,7 @@ This means that cyclic creation dependencies are impossible.
 
     pragma solidity >=0.4.22 <0.7.0;
 
+
     contract OwnedToken {
         // `TokenCreator` is a contract type that is defined below.
         // It is fine to reference it as long as it is not used
@@ -86,10 +87,11 @@ This means that cyclic creation dependencies are impossible.
         }
     }
 
+
     contract TokenCreator {
         function createToken(bytes32 name)
-           public
-           returns (OwnedToken tokenAddress)
+            public
+            returns (OwnedToken tokenAddress)
         {
             // Create a new `Token` contract and return its address.
             // From the JavaScript side, the return type is

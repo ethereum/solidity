@@ -214,10 +214,11 @@ Given the contract:
 
     pragma solidity >=0.4.16 <0.7.0;
 
+
     contract Foo {
-      function bar(bytes3[2] memory) public pure {}
-      function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
-      function sam(bytes memory, bool, uint[] memory) public pure {}
+        function bar(bytes3[2] memory) public pure {}
+        function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
+        function sam(bytes memory, bool, uint[] memory) public pure {}
     }
 
 
@@ -485,12 +486,13 @@ For example,
 
     pragma solidity >=0.5.0 <0.7.0;
 
+
     contract Test {
-      constructor() public { b = hex"12345678901234567890123456789012"; }
-      event Event(uint indexed a, bytes32 b);
-      event Event2(uint indexed a, bytes32 b);
-      function foo(uint a) public { emit Event(a, b); }
-      bytes32 b;
+        constructor() public { b = hex"12345678901234567890123456789012"; }
+        event Event(uint indexed a, bytes32 b);
+        event Event2(uint indexed a, bytes32 b);
+        function foo(uint a) public { emit Event(a, b); }
+        bytes32 b;
     }
 
 would result in the JSON:
@@ -533,11 +535,12 @@ As an example, the code
     pragma solidity >=0.4.19 <0.7.0;
     pragma experimental ABIEncoderV2;
 
+
     contract Test {
-      struct S { uint a; uint[] b; T[] c; }
-      struct T { uint x; uint y; }
-      function f(S memory s, T memory t, uint a) public;
-      function g() public returns (S memory s, T memory t, uint a);
+        struct S { uint a; uint[] b; T[] c; }
+        struct T { uint x; uint y; }
+        function f(S memory s, T memory t, uint a) public;
+        function g() public returns (S memory s, T memory t, uint a);
     }
 
 would result in the JSON:
