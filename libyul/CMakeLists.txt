@@ -48,6 +48,8 @@ add_library(yul
 	optimiser/CommonSubexpressionEliminator.h
 	optimiser/DataFlowAnalyzer.cpp
 	optimiser/DataFlowAnalyzer.h
+	optimiser/DeadCodeEliminator.cpp
+	optimiser/DeadCodeEliminator.h
 	optimiser/Disambiguator.cpp
 	optimiser/Disambiguator.h
 	optimiser/EquivalentFunctionDetector.cpp

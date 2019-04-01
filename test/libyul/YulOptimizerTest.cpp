@@ -22,6 +22,7 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -190,6 +191,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		DeadCodeEliminator{}(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 	}
@@ -197,6 +199,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+	}
+	else if (m_optimizerStep == "deadCodeEliminator")
+	{
+		disambiguate();
+		DeadCodeEliminator{}(*m_ast);
 	}
 	else if (m_optimizerStep == "ssaTransform")
 	{
