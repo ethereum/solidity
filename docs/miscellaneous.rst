@@ -19,6 +19,8 @@ For contracts that use inheritance, the ordering of state variables is determine
 C3-linearized order of contracts starting with the most base-ward contract. If allowed
 by the above rules, state variables from different contracts do share the same storage slot.
 
+The elements of structs and arrays are stored after each other, just as if they were given explicitly.
+
 .. warning::
     When using elements that are smaller than 32 bytes, your contract's gas usage may be higher.
     This is because the EVM operates on 32 bytes at a time. Therefore, if the element is smaller
@@ -36,15 +38,13 @@ by the above rules, state variables from different contracts do share the same s
     ``uint128, uint256, uint128``, as the former will only take up two slots of storage whereas the
     latter will take up three.
 
- .. note::
+.. note::
      The layout of state variables in storage is considered to be part of the external interface
      of Solidity due to the fact that storage pointers can be passed to libraries. This means that
      any change to the rules outlined in this section is considered a breaking change
      of the language and due to its critical nature should be considered very carefully before
      being executed.
 
-
-The elements of structs and arrays are stored after each other, just as if they were given explicitly.
 
 Mappings and Dynamic Arrays
 ===========================
