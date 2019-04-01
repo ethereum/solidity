@@ -392,26 +392,9 @@ SOLTMPDIR=$(mktemp -d)
     cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
-    for f in *.sol
-    do
-        set +e
-        "$REPO_ROOT"/build/test/tools/solfuzzer --quiet < "$f"
-        if [ $? -ne 0 ]
-        then
-            printError "Fuzzer failed on:"
-            cat "$f"
-            exit 1
-        fi
 
-        "$REPO_ROOT"/build/test/tools/solfuzzer --without-optimizer --quiet < "$f"
-        if [ $? -ne 0 ]
-        then
-            printError "Fuzzer (without optimizer) failed on:"
-            cat "$f"
-            exit 1
-        fi
-        set -e
-    done
+    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/build/test/tools/solfuzzer --quiet --input-files
+    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/build/test/tools/solfuzzer --without-optimizer --quiet --input-files
 )
 rm -rf "$SOLTMPDIR"
 
