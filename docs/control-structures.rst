@@ -72,7 +72,6 @@ all function arguments have to be copied to memory.
 
 When calling functions of other contracts, you can specify the amount of Wei or gas sent with the call with the special options ``.value()`` and ``.gas()``, respectively. Any Wei you send to the contract is added to the total balance of the contract:
 
-
 ::
 
     pragma solidity >=0.4.0 <0.7.0;
