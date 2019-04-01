@@ -93,6 +93,21 @@ function replace_version_pragmas
   find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
 }
 
+function force_abi_v2
+{
+  # Add "pragma experimental ABIEncoderV2" to all files.
+  printLog "Forcibly enabling ABIEncodreV2..."
+  find contracts test -name '*.sol' -type f -print0 | \
+  while IFS= read -r -d '' file
+  do
+    # Only add the pragma if it is not already there.
+    if grep -q -v 'pragma experimental ABIEncoderV2' "$file"
+    then
+      sed -i -e '1 i pragma experimental ABIEncoderV2;' "$file"
+    fi
+  done
+}
+
 function replace_libsolc_call
 {
   # Change "compileStandard" to "compile" (needed for pre-5.x Truffle)
@@ -194,6 +209,8 @@ DIR=$(mktemp -d)
   do
     clean
     force_solc_settings "$CONFIG" "$optimize" "petersburg"
+    # Force ABIEncoderV2 in the last step. Has to be the last because code is modified.
+    [[ "$optimize" =~ yul ]] && force_abi_v2
 
     npx truffle compile
     verify_compiler_version "$SOLCVERSION"
@@ -220,6 +237,8 @@ DIR=$(mktemp -d)
   do
     clean
     force_solc_settings "$CONFIG" "$optimize" "petersburg"
+    # Force ABIEncoderV2 in the last step. Has to be the last because code is modified.
+    [[ "$optimize" =~ yul ]] && force_abi_v2
 
     npx truffle compile
     verify_compiler_version "$SOLCVERSION"
