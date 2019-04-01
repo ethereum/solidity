@@ -38,7 +38,7 @@ namespace yul
 namespace test
 {
 
-class YulOptimizerTest: public dev::solidity::test::TestCase
+class YulOptimizerTest: public dev::solidity::test::EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)

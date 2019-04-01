@@ -43,7 +43,7 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
 	file.exceptions(ios::badbit);
 
-	m_source = parseSource(file);
+	m_source = parseSourceAndSettings(file);
 	parseExpectations(file);
 }
 

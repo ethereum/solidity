@@ -59,7 +59,7 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
 	file.exceptions(ios::badbit);
 
-	m_source = parseSource(file);
+	m_source = parseSourceAndSettings(file);
 	m_expectations = parseExpectations(file);
 }
 

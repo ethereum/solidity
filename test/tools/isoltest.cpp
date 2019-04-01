@@ -126,7 +126,7 @@ TestTool::Result TestTool::process()
 	try
 	{
 		m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath, m_evmVersion});
-		if (m_test->supportedForEVMVersion(m_evmVersion))
+		if (m_test->validateSettings(m_evmVersion))
 			success = m_test->run(outputMessages, "  ", m_formatted);
 		else
 		{
@@ -164,6 +164,7 @@ TestTool::Result TestTool::process()
 
 		AnsiColorized(cout, m_formatted, {BOLD, CYAN}) << "  Contract:" << endl;
 		m_test->printSource(cout, "    ", m_formatted);
+		m_test->printUpdatedSettings(cout, "    ", m_formatted);
 
 		cout << endl << outputMessages.str() << endl;
 		return Result::Failure;
@@ -193,6 +194,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 				cout << endl;
 				ofstream file(m_path.string(), ios::trunc);
 				m_test->printSource(file);
+				m_test->printUpdatedSettings(file);
 				file << "// ----" << endl;
 				m_test->printUpdatedExpectations(file, "// ");
 				return Request::Rerun;
