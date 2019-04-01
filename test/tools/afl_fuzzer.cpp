@@ -84,18 +84,22 @@ Allowed options)",
 		return 1;
 	}
 
+	if (arguments.count("quiet"))
+		quiet = true;
+
+	if (arguments.count("help"))
+	{
+		cout << options;
+		return 0;
+	}
+
 	string input;
 	if (arguments.count("input-file"))
 		input = readFileAsString(arguments["input-file"].as<string>());
 	else
 		input = readStandardInput();
 
-	if (arguments.count("quiet"))
-		quiet = true;
-
-	if (arguments.count("help"))
-		cout << options;
-	else if (arguments.count("const-opt"))
+	if (arguments.count("const-opt"))
 		FuzzerUtil::testConstantOptimizer(input, quiet);
 	else if (arguments.count("standard-json"))
 		FuzzerUtil::testStandardCompiler(input, quiet);
