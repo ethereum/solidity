@@ -1,8 +1,9 @@
 {
     for { let a := 10 } iszero(eq(a, 0)) { a := add(a, 1) } {}
 }
+// ====
+// step: expressionSimplifier
 // ----
-// expressionSimplifier
 // {
 //     for {
 //         let a := 10

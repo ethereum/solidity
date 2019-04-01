@@ -3,8 +3,9 @@
     a := mload(1)
     mstore(a, 0)
 }
+// ====
+// step: ssaAndBack
 // ----
-// ssaAndBack
 // {
 //     pop(mload(0))
 //     let a_2 := mload(1)

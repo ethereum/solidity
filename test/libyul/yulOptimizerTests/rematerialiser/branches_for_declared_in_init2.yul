@@ -4,8 +4,9 @@
         b := 1 pop(a)
     }
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let b := 0
 //     for {

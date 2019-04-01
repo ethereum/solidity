@@ -1069,8 +1069,9 @@
         result := and(add(value_389, 31), not(31))
     }
 }
+// ====
+// step: fullSuite
 // ----
-// fullSuite
 // {
 //     let _1 := mload(1)
 //     let _2 := mload(0)

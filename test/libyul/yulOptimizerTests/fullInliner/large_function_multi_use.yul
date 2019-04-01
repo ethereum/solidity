@@ -15,8 +15,9 @@
     // This should be inlined because it is a constant as well (zero)
     let s := f(a3)
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     {
 //         let a_1 := mload(2)

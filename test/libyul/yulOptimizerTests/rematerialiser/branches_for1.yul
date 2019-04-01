@@ -4,8 +4,9 @@
         pop(a)
     }
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let a := caller()
 //     for {

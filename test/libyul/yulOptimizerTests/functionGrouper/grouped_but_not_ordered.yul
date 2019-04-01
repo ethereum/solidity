@@ -4,8 +4,9 @@
         let x := 2
     }
 }
+// ====
+// step: functionGrouper
 // ----
-// functionGrouper
 // {
 //     {
 //         {

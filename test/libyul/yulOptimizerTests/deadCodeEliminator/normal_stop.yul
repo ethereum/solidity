@@ -15,8 +15,9 @@
     stop()
 }
 
+// ====
+// step: deadCodeEliminator
 // ----
-// deadCodeEliminator
 // {
 //     let b := 20
 //     for {

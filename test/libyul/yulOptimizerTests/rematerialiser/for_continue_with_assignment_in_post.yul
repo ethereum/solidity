@@ -23,8 +23,9 @@
 	let x := b // does not rematerialize as b may be either origin() or callvalue() (btw: not caller())
 	let y := c // does not rematerialize as c may be either origin() or caller()
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let a
 //     let b

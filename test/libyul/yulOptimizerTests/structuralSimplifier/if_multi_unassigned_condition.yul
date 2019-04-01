@@ -3,8 +3,9 @@
     if x { mstore(0, 0) }
     if y { mstore(0, 0) }
 }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     let x, y
 // }

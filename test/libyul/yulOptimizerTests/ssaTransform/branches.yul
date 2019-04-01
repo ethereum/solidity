@@ -7,8 +7,9 @@
   a := add(a, 1)
   mstore(a, 1)
 }
+// ====
+// step: ssaTransform
 // ----
-// ssaTransform
 // {
 //     let a_1 := 1
 //     let a := a_1

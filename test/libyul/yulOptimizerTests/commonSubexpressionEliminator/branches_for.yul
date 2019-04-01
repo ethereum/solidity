@@ -5,8 +5,9 @@
 	}
 	mstore(1, codesize())
 }
+// ====
+// step: commonSubexpressionEliminator
 // ----
-// commonSubexpressionEliminator
 // {
 //     let a := 1
 //     let b := codesize()

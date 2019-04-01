@@ -5,8 +5,9 @@
 	case 2 { y := 10 }
 	default { }
 }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     let y := 200
 //     switch calldataload(0)

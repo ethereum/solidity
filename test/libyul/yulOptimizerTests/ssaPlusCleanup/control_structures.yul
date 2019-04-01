@@ -9,8 +9,9 @@
         }
     }
 }
+// ====
+// step: ssaPlusCleanup
 // ----
-// ssaPlusCleanup
 // {
 //     function copy(from, to) -> length
 //     {

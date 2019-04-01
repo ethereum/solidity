@@ -6,8 +6,9 @@
     a := mload(4)
     mstore(a, 0)
 }
+// ====
+// step: ssaAndBack
 // ----
-// ssaAndBack
 // {
 //     pop(mload(0))
 //     pop(mload(1))

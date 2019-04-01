@@ -4,8 +4,9 @@
   let a_4312 := 0xdeadbeef
   let _42 := 21718
 }
+// ====
+// step: varNameCleaner
 // ----
-// varNameCleaner
 // {
 //     let a := 1
 //     let a_1 := 2

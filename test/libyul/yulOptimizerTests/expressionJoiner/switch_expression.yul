@@ -14,8 +14,9 @@
 	let z := 3
 	let t := add(z, 9)
 }
+// ====
+// step: expressionJoiner
 // ----
-// expressionJoiner
 // {
 //     switch add(mload(7), sload(mload(3)))
 //     case 3 {

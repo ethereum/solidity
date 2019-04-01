@@ -8,8 +8,9 @@
 	}
 	pop(add(f(7), 2))
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     {
 //         let _1 := 2

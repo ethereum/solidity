@@ -4,8 +4,9 @@
     a := add(a, 1)
   }
 }
+// ====
+// step: forLoopInitRewriter
 // ----
-// forLoopInitRewriter
 // {
 //     let random := 42
 //     let a := 1

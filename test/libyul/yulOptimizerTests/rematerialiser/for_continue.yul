@@ -14,8 +14,9 @@
 	}
 	mstore(a, b)
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let a
 //     let b

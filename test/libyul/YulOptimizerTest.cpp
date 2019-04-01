@@ -78,19 +78,23 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
 
 	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
+	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
 	file.exceptions(ios::badbit);
 
-	string line;
-	while (getline(file, line))
+	m_source = parseSourceAndSettings(file);
+	if (m_settings.count("yul"))
 	{
-		if (boost::algorithm::starts_with(line, "// ----"))
-			break;
-		if (m_source.empty() && boost::algorithm::starts_with(line, "// yul"))
-			m_yul = true;
-		m_source += line + "\n";
+		m_yul = true;
+		m_validatedSettings["yul"] = "true";
+		m_settings.erase("yul");
 	}
+	if (m_settings.count("step"))
+	{
+		m_validatedSettings["step"] = m_settings["step"];
+		m_settings.erase("step");
+	}
+
+	string line;
 	while (getline(file, line))
 		if (boost::algorithm::starts_with(line, "// "))
 			m_expectation += line.substr(3) + "\n";
@@ -266,8 +270,22 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		return false;
 	}
 
-	m_obtainedResult = m_optimizerStep + "\n" + AsmPrinter{m_yul}(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{m_yul}(*m_ast) + "\n";
 
+	bool success = true;
+	if (m_optimizerStep != m_validatedSettings["step"])
+	{
+		string nextIndentLevel = _linePrefix + "  ";
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) <<
+			_linePrefix <<
+			"Invalid optimizer step. Given: \"" <<
+			m_validatedSettings["step"] <<
+			"\", should be: \"" <<
+			m_optimizerStep <<
+			"\"." <<
+			endl;
+		success = false;
+	}
 	if (m_expectation != m_obtainedResult)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
@@ -276,14 +294,20 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		printIndented(_stream, m_expectation, nextIndentLevel);
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return false;
+		success = false;
 	}
-	return true;
+	return success;
 }
 
 void YulOptimizerTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
 {
 	printIndented(_stream, m_source, _linePrefix);
+}
+
+void YulOptimizerTest::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool _formatted)
+{
+	m_validatedSettings["step"] = m_optimizerStep;
+	EVMVersionRestrictedTestCase::printUpdatedSettings(_stream, _linePrefix, _formatted);
 }
 
 void YulOptimizerTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const

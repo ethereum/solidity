@@ -1,6 +1,7 @@
 { if 1 { mstore(0, 0) } }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     mstore(0, 0)
 // }

@@ -4,8 +4,9 @@
     }
     mstore(0, 0)
 }
+// ====
+// step: deadCodeEliminator
 // ----
-// deadCodeEliminator
 // {
 //     {
 //         revert(0, 0)

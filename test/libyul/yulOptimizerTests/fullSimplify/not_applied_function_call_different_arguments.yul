@@ -2,8 +2,9 @@
     function f(a) -> b { }
     mstore(0, sub(f(0), f(1)))
 }
+// ====
+// step: fullSimplify
 // ----
-// fullSimplify
 // {
 //     function f(a) -> b
 //     {

@@ -11,8 +11,9 @@
         x := 3
     }
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
 // {
 //     let x
 //     for {

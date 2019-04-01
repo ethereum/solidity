@@ -23,8 +23,9 @@
         p_1 := add(array, _22)
     }
 }
+// ====
+// step: commonSubexpressionEliminator
 // ----
-// commonSubexpressionEliminator
 // {
 //     let _13 := 0x20
 //     let _14 := allocate(_13)

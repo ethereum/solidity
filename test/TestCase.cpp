@@ -34,7 +34,7 @@ using namespace solidity;
 using namespace dev::solidity::test;
 using namespace std;
 
-void TestCase::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool) const
+void TestCase::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool)
 {
 	if (m_validatedSettings.empty())
 		return;

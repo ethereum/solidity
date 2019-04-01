@@ -6,8 +6,9 @@
 	let r, s := f(mload(0))
 	mstore(r, s)
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     {
 //         let a_3 := mload(0)

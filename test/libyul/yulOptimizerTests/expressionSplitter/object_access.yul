@@ -6,8 +6,9 @@
     // datacopy is fine, though
     datacopy(mload(0), mload(1), mload(2))
 }
+// ====
+// step: expressionSplitter
 // ----
-// expressionSplitter
 // {
 //     let x := dataoffset("abc")
 //     let y := datasize("abc")

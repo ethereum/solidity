@@ -12,8 +12,9 @@
     mstore(add(a, a), a)
     mstore(a, mload(a))
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let b := 2
 //     mstore(2, 2)

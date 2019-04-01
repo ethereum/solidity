@@ -19,8 +19,9 @@
   mstore(17, or(x, not(x)))
   mstore(18, or(not(x), x))
 }
+// ====
+// step: fullSimplify
 // ----
-// fullSimplify
 // {
 //     pop(mload(0))
 //     mstore(1, 0)

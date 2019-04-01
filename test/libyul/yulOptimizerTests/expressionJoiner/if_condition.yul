@@ -10,8 +10,9 @@
 	let z := 3
 	let t := add(z, 9)
 }
+// ====
+// step: expressionJoiner
 // ----
-// expressionJoiner
 // {
 //     if add(mload(7), sload(mload(3)))
 //     {

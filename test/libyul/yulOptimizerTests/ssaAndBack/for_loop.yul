@@ -15,8 +15,9 @@
         b := mload(a)
     }
 }
+// ====
+// step: ssaAndBack
 // ----
-// ssaAndBack
 // {
 //     for {
 //         let a := mload(0)

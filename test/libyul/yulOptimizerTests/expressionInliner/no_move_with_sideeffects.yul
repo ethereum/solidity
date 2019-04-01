@@ -6,8 +6,9 @@
 	function h() -> z { mstore(0, 4) z := mload(0) }
 	let r := f(g(), h())
 }
+// ====
+// step: expressionInliner
 // ----
-// expressionInliner
 // {
 //     function f(a, b) -> x
 //     {
