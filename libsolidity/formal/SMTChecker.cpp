@@ -386,7 +386,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		if (identifier)
 			assignment(*decl, _assignment, _assignment.location());
 		else
-			arrayIndexAssignment(_assignment, expr(_assignment));
+			arrayIndexAssignment(_assignment.leftHandSide(), expr(_assignment));
 	}
 	else
 		m_errorReporter.warning(
@@ -485,21 +485,22 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 
 		solAssert(isInteger(_op.annotation().type->category()), "");
 		solAssert(_op.subExpression().annotation().lValueRequested, "");
-		if (Identifier const* identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
+		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
-			VariableDeclaration const& decl = dynamic_cast<VariableDeclaration const&>(*identifier->annotation().referencedDeclaration);
-			if (knownVariable(decl))
-			{
-				auto innerValue = currentValue(decl);
-				auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
-				assignment(decl, newValue, _op.location());
-				defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			}
-			else
-				m_errorReporter.warning(
-					_op.location(),
-					"Assertion checker does not yet implement such assignments."
-				);
+			auto decl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
+			solAssert(decl, "");
+			solAssert(knownVariable(*decl), "");
+			auto innerValue = currentValue(*decl);
+			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
+			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
+			assignment(*decl, newValue, _op.location());
+		}
+		else if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
+		{
+			auto innerValue = expr(_op.subExpression());
+			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
+			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
+			arrayIndexAssignment(_op.subExpression(), newValue);
 		}
 		else
 			m_errorReporter.warning(
@@ -911,9 +912,9 @@ void SMTChecker::arrayAssignment()
 	m_arrayAssignmentHappened = true;
 }
 
-void SMTChecker::arrayIndexAssignment(Assignment const& _assignment, smt::Expression const& _rightHandSide)
+void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide)
 {
-	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_assignment.leftHandSide());
+	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_expr);
 	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
 	{
 		auto const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
@@ -968,7 +969,7 @@ void SMTChecker::arrayIndexAssignment(Assignment const& _assignment, smt::Expres
 		);
 	else
 		m_errorReporter.warning(
-			_assignment.location(),
+			_expr.location(),
 			"Assertion checker does not yet implement this expression."
 		);
 }

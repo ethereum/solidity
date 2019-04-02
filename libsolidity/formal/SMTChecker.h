@@ -127,7 +127,7 @@ private:
 	/// while aliasing is not supported.
 	void arrayAssignment();
 	/// Handles assignment to SMT array index.
-	void arrayIndexAssignment(Assignment const& _assignment, smt::Expression const& _rightHandSide);
+	void arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
