@@ -86,7 +86,7 @@ jobs:
           command: |
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
-  test_emscripten_external:
+  test_emscripten_external_gnosis:
     docker:
       - image: circleci/node:10
     environment:
@@ -96,14 +96,23 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: Install external tests deps
+          name: External GnosisSafe tests
           command: |
-            node --version
-            npm --version
+            test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+
+  test_emscripten_external_zeppelin:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
-          name: External tests
+          name: External Zeppelin tests
           command: |
-            test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
+            test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
 
   build_x86_linux:
     docker:
@@ -393,7 +402,11 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
-      - test_emscripten_external:
+      - test_emscripten_external_zeppelin:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
+      - test_emscripten_external_gnosis:
           <<: *build_on_tags
           requires:
             - build_emscripten
@@ -431,7 +444,11 @@ workflows:
                 - develop
     jobs:
       - build_emscripten: *build_on_tags
-      - test_emscripten_external:
+      - test_emscripten_external_zeppelin:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
+      - test_emscripten_external_gnosis:
           <<: *build_on_tags
           requires:
             - build_emscripten
