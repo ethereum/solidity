@@ -119,7 +119,7 @@ jobs:
       - image: buildpack-deps:bionic
     environment:
       TERM: xterm
-      COVERAGE: "ON"
+      COVERAGE: "OFF"
     steps:
       - checkout
       - run:
@@ -279,18 +279,11 @@ jobs:
           command: |
             apt-get -qq update
             apt-get -qy install libcvc4-dev libleveldb1v5 python-pip
-            pip install codecov
       - run: mkdir -p test_results
       - run:
           name: Test type checker
           command: build/test/soltest -t 'syntaxTest*' -- --no-ipc --testpath test
-      - run:
-          name: Coverage of type checker
-          command: codecov --flags syntax --gcov-root build
       - run: *run_tests
-      - run:
-          name: Coverage of all
-          command: codecov --flags all --gcov-root build
       - store_test_results:
           path: test_results/
       - store_artifacts:
