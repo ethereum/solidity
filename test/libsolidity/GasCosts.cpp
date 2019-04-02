@@ -72,7 +72,12 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		CHECK_GAS(133899, 130591, 100);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
-		CHECK_GAS(151283, 136003, 100);
+	{
+		if (Options::get().optimizeYul)
+			CHECK_GAS(151283, 128285, 100);
+		else
+			CHECK_GAS(151283, 136003, 100);
+	}
 	else
 		CHECK_GAS(126689, 120159, 100);
 	if (Options::get().evmVersion() >= EVMVersion::byzantium())
@@ -82,7 +87,12 @@ BOOST_AUTO_TEST_CASE(string_storage)
 			CHECK_GAS(21551, 21526, 20);
 		// This is only correct on >=Constantinople.
 		else if (Options::get().useABIEncoderV2)
-			CHECK_GAS(21713, 21635, 20);
+		{
+			if (Options::get().optimizeYul)
+				CHECK_GAS(21713, 21567, 20);
+			else
+				CHECK_GAS(21713, 21635, 20);
+		}
 		else
 			CHECK_GAS(21546, 21526, 20);
 	}

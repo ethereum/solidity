@@ -57,10 +57,14 @@ ExecutionFramework::ExecutionFramework():
 ExecutionFramework::ExecutionFramework(string const& _ipcPath, langutil::EVMVersion _evmVersion):
 	m_rpc(RPCSession::instance(_ipcPath)),
 	m_evmVersion(_evmVersion),
-	m_optimiserSettings(dev::test::Options::get().optimize ? solidity::OptimiserSettings::standard() : solidity::OptimiserSettings::minimal()),
+	m_optimiserSettings(solidity::OptimiserSettings::minimal()),
 	m_showMessages(dev::test::Options::get().showMessages),
 	m_sender(m_rpc.account(0))
 {
+	if (dev::test::Options::get().optimizeYul)
+		m_optimiserSettings = solidity::OptimiserSettings::full();
+	else if (dev::test::Options::get().optimize)
+		m_optimiserSettings = solidity::OptimiserSettings::standard();
 	m_rpc.test_rewindToBlock(0);
 }
 
