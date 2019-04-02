@@ -93,6 +93,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	)");
 
 	resetContext();
+	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	t("CreationObject", creationObjectName(_contract));
 	t("memoryInit", memoryInit());
 	t("constructor", _contract.constructor() ? constructorCode(*_contract.constructor()) : "");
@@ -100,6 +101,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	t("functions", m_context.functionCollector()->requestedFunctions());
 
 	resetContext();
+	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	t("runtimeFunctions", m_context.functionCollector()->requestedFunctions());
@@ -115,7 +117,7 @@ string IRGenerator::generate(Block const& _block)
 
 string IRGenerator::generateFunction(FunctionDefinition const& _function)
 {
-	string functionName = "fun_" + to_string(_function.id()) + "_" + _function.name();
+	string functionName = m_context.functionName(_function);
 	return m_context.functionCollector()->createFunction(functionName, [&]() {
 		Whiskers t("\nfunction <functionName>(<params>) <returns> {\n<body>\n}\n");
 		t("functionName", functionName);
