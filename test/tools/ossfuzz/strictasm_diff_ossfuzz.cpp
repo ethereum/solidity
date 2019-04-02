@@ -56,7 +56,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		return 0;
 
 	AssemblyStack stack(
-		EVMVersion::petersburg(),
+		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
 		dev::solidity::OptimiserSettings::full()
 	);
