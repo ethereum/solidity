@@ -987,25 +987,42 @@ void CompilerUtils::convertType(
 			switch (typeOnStack.location())
 			{
 			case DataLocation::Storage:
-				// stack: <source ref>
-				allocateMemory(typeOnStack.memorySize());
-				m_context << Instruction::SWAP1 << Instruction::DUP2;
-				// stack: <memory ptr> <source ref> <memory ptr>
-				for (auto const& member: typeOnStack.members(nullptr))
-				{
-					if (!member.type->canLiveOutsideStorage())
-						continue;
-					pair<u256, unsigned> const& offsets = typeOnStack.storageOffsetsOfMember(member.name);
-					m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
-					m_context << u256(offsets.second);
-					StorageItem(m_context, *member.type).retrieveValue(SourceLocation(), true);
-					TypePointer targetMemberType = targetType.memberType(member.name);
-					solAssert(!!targetMemberType, "Member not found in target type.");
-					convertType(*member.type, *targetMemberType, true);
-					storeInMemoryDynamic(*targetMemberType, true);
-				}
-				m_context << Instruction::POP << Instruction::POP;
+			{
+				auto conversionImpl = [
+					typeOnStack = dynamic_pointer_cast<StructType const>(_typeOnStack.shared_from_this()),
+					targetType = dynamic_pointer_cast<StructType const>(targetType.shared_from_this())
+				](CompilerContext& _context) {
+					CompilerUtils utils(_context);
+					// stack: <source ref>
+					utils.allocateMemory(typeOnStack->memorySize());
+					_context << Instruction::SWAP1 << Instruction::DUP2;
+					// stack: <memory ptr> <source ref> <memory ptr>
+					for (auto const& member: typeOnStack->members(nullptr))
+					{
+						if (!member.type->canLiveOutsideStorage())
+							continue;
+						pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
+						_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
+						_context << u256(offsets.second);
+						StorageItem(_context, *member.type).retrieveValue(SourceLocation(), true);
+						TypePointer targetMemberType = targetType->memberType(member.name);
+						solAssert(!!targetMemberType, "Member not found in target type.");
+						utils.convertType(*member.type, *targetMemberType, true);
+						utils.storeInMemoryDynamic(*targetMemberType, true);
+					}
+					_context << Instruction::POP << Instruction::POP;
+				};
+				if (typeOnStack.recursive())
+					m_context.callLowLevelFunction(
+						"$convertRecursiveArrayStorageToMemory_" + typeOnStack.identifier() + "_to_" + targetType.identifier(),
+						1,
+						1,
+						conversionImpl
+					);
+				else
+					conversionImpl(m_context);
 				break;
+			}
 			case DataLocation::CallData:
 			{
 				solUnimplementedAssert(!typeOnStack.isDynamicallyEncoded(), "");
