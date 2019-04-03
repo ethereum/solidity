@@ -464,7 +464,8 @@ BOOST_AUTO_TEST_CASE(creation)
 {
 	deployWallet(200);
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(m_sender, h256::AlignRight)) == encodeArgs(true));
-	BOOST_REQUIRE(callContractFunction("isOwner(address)", ~h256(m_sender, h256::AlignRight)) == encodeArgs(false));
+	bool v2 = dev::test::Options::get().useABIEncoderV2;
+	BOOST_REQUIRE(callContractFunction("isOwner(address)", ~h256(m_sender, h256::AlignRight)) == (v2 ? encodeArgs() : encodeArgs(false)));
 }
 
 BOOST_AUTO_TEST_CASE(add_owners)
