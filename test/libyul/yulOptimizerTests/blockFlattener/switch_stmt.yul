@@ -5,8 +5,9 @@
     default { a := 3 { a := 4 } }
     a := 5
 }
+// ====
+// step: blockFlattener
 // ----
-// blockFlattener
 // {
 //     let a := 1
 //     switch calldataload(0)

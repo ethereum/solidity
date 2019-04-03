@@ -1,8 +1,9 @@
 {
 	let datasize_256 := 1
 }
+// ====
+// step: varNameCleaner
 // ----
-// varNameCleaner
 // {
 //     let datasize_1 := 1
 // }

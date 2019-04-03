@@ -10,8 +10,9 @@
 	case 1 { }
 	default { }
 }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     let y := 200
 //     pop(add(y, 4))

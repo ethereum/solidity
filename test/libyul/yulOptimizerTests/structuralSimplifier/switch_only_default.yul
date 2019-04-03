@@ -1,8 +1,9 @@
 {
 	switch mload(0) default { mstore(1, 2) }
 }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     pop(mload(0))
 //     {

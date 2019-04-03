@@ -4,8 +4,9 @@
     a := a_1
     mstore(a_1, 0)
 }
+// ====
+// step: ssaReverser
 // ----
-// ssaReverser
 // {
 //     let a := mload(1)
 //     a := mload(0)

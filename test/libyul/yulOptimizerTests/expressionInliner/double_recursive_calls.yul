@@ -3,8 +3,9 @@
 	function g(b, s) -> y { y := f(b, f(s, s)) }
 	let y := g(calldatasize(), 7)
 }
+// ====
+// step: expressionInliner
 // ----
-// expressionInliner
 // {
 //     function f(a, r) -> x
 //     {

@@ -5,8 +5,9 @@
     let b
     mstore(sub(a, b), 7)
 }
+// ====
+// step: commonSubexpressionEliminator
 // ----
-// commonSubexpressionEliminator
 // {
 //     let a
 //     let b

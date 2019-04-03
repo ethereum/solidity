@@ -9,8 +9,9 @@
         x := f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(2)))))))))))))))))))
     }
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     function f(a) -> b
 //     {

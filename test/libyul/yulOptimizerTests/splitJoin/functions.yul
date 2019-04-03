@@ -8,8 +8,9 @@
         sstore(b, mul(b, 2))
     }
 }
+// ====
+// step: splitJoin
 // ----
-// splitJoin
 // {
 //     let x := f(0)
 //     function f(y) -> r

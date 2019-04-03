@@ -4,8 +4,9 @@
     }
     function f() -> y { y := 8 }
 }
+// ====
+// step: functionGrouper
 // ----
-// functionGrouper
 // {
 //     {
 //         let x := 2

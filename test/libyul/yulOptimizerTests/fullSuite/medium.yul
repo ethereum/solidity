@@ -16,8 +16,9 @@
         for { switch mul(1,2) case 2 { mstore(0x40, 0x20) } } sub(1,1) {} { mstore(0x80, 0x40) }
     }
 }
+// ====
+// step: fullSuite
 // ----
-// fullSuite
 // {
 //     let _1 := 0x40
 //     mstore(_1, add(mload(_1), 0x20))

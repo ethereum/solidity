@@ -4,8 +4,9 @@
   a := 3
   a := 4
 }
+// ====
+// step: ssaTransform
 // ----
-// ssaTransform
 // {
 //     let a_1 := 1
 //     let a := a_1

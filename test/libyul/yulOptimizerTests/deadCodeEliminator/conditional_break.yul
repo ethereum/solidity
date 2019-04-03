@@ -13,8 +13,9 @@
     }
 }
 
+// ====
+// step: deadCodeEliminator
 // ----
-// deadCodeEliminator
 // {
 //     for {
 //         let a := 20

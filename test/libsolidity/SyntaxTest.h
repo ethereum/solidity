@@ -50,7 +50,7 @@ struct SyntaxTestError
 };
 
 
-class SyntaxTest: AnalysisFramework, public TestCase
+class SyntaxTest: AnalysisFramework, public EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)

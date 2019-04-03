@@ -5,8 +5,9 @@
 	let d := add(b, c)
 	sstore(d, 0)
 }
+// ====
+// step: expressionJoiner
 // ----
-// expressionJoiner
 // {
 //     let b := sload(mload(3))
 //     sstore(add(b, mload(7)), 0)

@@ -455,8 +455,9 @@
         converted := cleanup_assert_t_uint160(value)
     }
 }
+// ====
+// step: fullSuite
 // ----
-// fullSuite
 // {
 //     let _1 := 0x20
 //     let _2 := 0

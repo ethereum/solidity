@@ -105,7 +105,7 @@ int registerTests(
 					{
 						stringstream errorStream;
 						auto testCase = _testCaseCreator(config);
-						if (testCase->supportedForEVMVersion(dev::test::Options::get().evmVersion()))
+						if (testCase->validateSettings(dev::test::Options::get().evmVersion()))
 							if (!testCase->run(errorStream))
 								BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
 					}

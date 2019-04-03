@@ -3,8 +3,9 @@
     a := 4
     let b := 1
 }
+// ====
+// step: unusedPruner
 // ----
-// unusedPruner
 // {
 //     let a := 1
 //     a := 4

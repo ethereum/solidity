@@ -8,8 +8,9 @@
 		r := add(a, calldatasize())
 	}
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     {
 //         let _2 := mload(0)

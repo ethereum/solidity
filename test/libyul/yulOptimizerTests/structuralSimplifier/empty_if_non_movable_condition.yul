@@ -1,6 +1,7 @@
 { if mload(0) {} }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     pop(mload(0))
 // }

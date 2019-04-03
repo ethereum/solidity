@@ -2,8 +2,9 @@
     function f(a) -> x { x := add(a, a) }
     let y := f(calldatasize())
 }
+// ====
+// step: expressionInliner
 // ----
-// expressionInliner
 // {
 //     function f(a) -> x
 //     {

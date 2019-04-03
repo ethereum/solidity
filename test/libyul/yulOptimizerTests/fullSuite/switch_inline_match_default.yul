@@ -7,8 +7,9 @@
 		default { y := 10 }
 	}
 }
+// ====
+// step: fullSuite
 // ----
-// fullSuite
 // {
 //     mstore(10, 0)
 // }

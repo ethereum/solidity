@@ -40,7 +40,7 @@ namespace test
  * section from the given file. This comment section should define a set of functions to be called
  * and an expected result they return after being executed.
  */
-class SemanticTest: public SolidityExecutionFramework, public TestCase
+class SemanticTest: public SolidityExecutionFramework, public EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _options)

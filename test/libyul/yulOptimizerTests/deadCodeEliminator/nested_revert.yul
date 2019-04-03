@@ -12,8 +12,9 @@
         y := 10 }
 }
 
+// ====
+// step: deadCodeEliminator
 // ----
-// deadCodeEliminator
 // {
 //     let y := mload(0)
 //     switch y

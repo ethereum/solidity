@@ -8,8 +8,9 @@
 		r := a
 	}
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     {
 //         for {

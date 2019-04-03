@@ -22,8 +22,9 @@
     }
     mstore(x, 0x42)
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
 // {
 //     let x := 1
 //     let y := 1

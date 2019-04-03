@@ -8,8 +8,9 @@
   let r
   r := 4
 }
+// ====
+// step: varDeclInitializer
 // ----
-// varDeclInitializer
 // {
 //     function f() -> x, y
 //     {

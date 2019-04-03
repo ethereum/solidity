@@ -1,4 +1,3 @@
-// yul
 {
     { let a:u256, b:u256 }
     {
@@ -7,8 +6,10 @@
         }
     }
 }
+// ====
+// step: disambiguator
+// yul: true
 // ----
-// disambiguator
 // {
 //     {
 //         let a:u256, b:u256
