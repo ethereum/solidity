@@ -186,6 +186,11 @@ Mathematical and Cryptographic Functions
 
     For further details, read `example usage <https://ethereum.stackexchange.com/q/1777/222>`_.
 
+.. note::
+
+    Since `EIP-2 <http://eips.ethereum.org/EIPS/eip-2#specification>`_, all transaction signatures with an ``s`` value
+    greater than ``secp256k1n/2`` are considered invalid.
+
 .. warning::
 
     If you use ``ecrecover``, be aware that a valid signature can be turned into a different valid signature without requiring
