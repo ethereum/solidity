@@ -62,17 +62,13 @@ void SSATransform::operator()(Block& _block)
 {
 	set<YulString> variablesToClearAtEnd;
 
-	// Creates a new variable (and returns its declaration) with value _value
-	// and replaces _value by a reference to that new variable.
-
-	auto replaceByNew = [&](SourceLocation _loc, YulString _varName, YulString _type, unique_ptr<Expression>& _value) -> VariableDeclaration
+	// Creates a new variable and stores it in the current variable value map.
+	auto newVariable = [&](YulString _varName) -> YulString
 	{
 		YulString newName = m_nameDispenser.newName(_varName);
 		m_currentVariableValues[_varName] = newName;
 		variablesToClearAtEnd.emplace(_varName);
-		unique_ptr<Expression> v = make_unique<Expression>(Identifier{_loc, newName});
-		_value.swap(v);
-		return VariableDeclaration{_loc, {TypedName{_loc, std::move(newName), std::move(_type)}}, std::move(v)};
+		return newName;
 	};
 
 	iterateReplacing(
@@ -84,36 +80,60 @@ void SSATransform::operator()(Block& _block)
 				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
 				if (varDecl.value)
 					visit(*varDecl.value);
-				if (varDecl.variables.size() != 1 || !m_variablesToReplace.count(varDecl.variables.front().name))
+
+				bool needToReplaceSome = false;
+				for (auto const& var: varDecl.variables)
+					if (m_variablesToReplace.count(var.name))
+						needToReplaceSome = true;
+				if (!needToReplaceSome)
 					return {};
-				vector<Statement> v;
+
 				// Replace "let a := v" by "let a_1 := v  let a := a_1"
-				v.emplace_back(replaceByNew(
-					varDecl.location,
-					varDecl.variables.front().name,
-					varDecl.variables.front().type,
-					varDecl.value
-				));
-				v.emplace_back(move(varDecl));
-				return std::move(v);
+				// Replace "let a, b := v" by "let a_1, b_1 := v  let a := a_1 let b := b_2"
+				auto loc = varDecl.location;
+				vector<Statement> statements;
+				statements.emplace_back(VariableDeclaration{loc, {}, std::move(varDecl.value)});
+				TypedNameList newVariables;
+				for (auto const& var: varDecl.variables)
+				{
+					YulString newName = newVariable(var.name);
+					YulString oldName = var.name;
+					newVariables.emplace_back(TypedName{loc, newName, {}});
+					statements.emplace_back(VariableDeclaration{
+						loc,
+						{TypedName{loc, oldName, {}}},
+						make_unique<Expression>(Identifier{loc, newName})
+					});
+				}
+				boost::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
+				return std::move(statements);
 			}
 			else if (_s.type() == typeid(Assignment))
 			{
 				Assignment& assignment = boost::get<Assignment>(_s);
 				visit(*assignment.value);
-				if (assignment.variableNames.size() != 1)
-					return {};
-				assertThrow(m_variablesToReplace.count(assignment.variableNames.front().name), OptimizerException, "");
-				vector<Statement> v;
+				for (auto const& var: assignment.variableNames)
+					assertThrow(m_variablesToReplace.count(var.name), OptimizerException, "");
+
 				// Replace "a := v" by "let a_1 := v  a := v"
-				v.emplace_back(replaceByNew(
-					assignment.location,
-					assignment.variableNames.front().name,
-					{}, // TODO determine type
-					assignment.value
-				));
-				v.emplace_back(move(assignment));
-				return std::move(v);
+				// Replace "a, b := v" by "let a_1, b_1 := v  a := a_1 b := b_2"
+				auto loc = assignment.location;
+				vector<Statement> statements;
+				statements.emplace_back(VariableDeclaration{loc, {}, std::move(assignment.value)});
+				TypedNameList newVariables;
+				for (auto const& var: assignment.variableNames)
+				{
+					YulString newName = newVariable(var.name);
+					YulString oldName = var.name;
+					newVariables.emplace_back(TypedName{loc, newName, {}});
+					statements.emplace_back(Assignment{
+						loc,
+						{Identifier{loc, oldName}},
+						make_unique<Expression>(Identifier{loc, newName})
+					});
+				}
+				boost::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
+				return std::move(statements);
 			}
 			else
 				visit(_s);

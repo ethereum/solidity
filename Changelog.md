@@ -1,5 +1,9 @@
 ### 0.5.8 (unreleased)
 
+Important Bugfixes:
+ * Yul Optimizer: Fix SSA transform for multi-assignments.
+
+
 Language Features:
  * Code Generation: Implement copying recursive structs from storage to memory.
 
