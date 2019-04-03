@@ -21,6 +21,10 @@ and multi-signature wallets.
 
 When deploying contracts, you should use the latest released version of Solidity. This is because breaking changes as well as new features and bug fixes are introduced regularly. We currently use a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
 
+.. warning::
+
+  Solidity recently released the 0.5.x version that introduced a lot of breaking changes. Make sure you read :doc:`the full list <050-breaking-changes>`.
+
 Language Documentation
 ----------------------
 
