@@ -134,8 +134,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
@@ -156,8 +155,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
       - run: *setup_prerelease_commit_hash
       - run: *run_build
 
@@ -196,8 +194,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
@@ -412,8 +409,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libbz2-dev ninja-build zlib1g-dev
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libbz2-dev ninja-build zlib1g-dev libjsoncpp-dev=1.7.4-\*
             ./scripts/install_lpm.sh
             ./scripts/install_libfuzzer.sh
       - run: *setup_prerelease_commit_hash
