@@ -71,8 +71,8 @@ safe_kill() {
 }
 
 cleanup() {
-	# ensure failing commands don't cause termination during cleanup (especially within safe_kill)
-	set +e
+    # ensure failing commands don't cause termination during cleanup (especially within safe_kill)
+    set +e
 
     if [[ "$IPC_ENABLED" = true ]] && [[ -n "${ALETH_PID}" ]]
     then
