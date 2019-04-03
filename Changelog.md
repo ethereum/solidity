@@ -1,6 +1,7 @@
 ### 0.5.8 (unreleased)
 
 Language Features:
+ * Code Generation: Implement copying recursive structs from storage to memory.
 
 
 Compiler Features:
