@@ -31,6 +31,8 @@ set -e
 REPO_ROOT="$(dirname "$0")"/..
 
 WORKDIR=`mktemp -d`
+# Will be printed in case of a test failure
+ALETH_TMP_OUT=`mktemp`
 IPC_ENABLED=true
 ALETH_PID=
 CMDLINE_PID=
@@ -71,8 +73,8 @@ safe_kill() {
 }
 
 cleanup() {
-	# ensure failing commands don't cause termination during cleanup (especially within safe_kill)
-	set +e
+    # ensure failing commands don't cause termination during cleanup (especially within safe_kill)
+    set +e
 
     if [[ "$IPC_ENABLED" = true ]] && [[ -n "${ALETH_PID}" ]]
     then
@@ -85,6 +87,7 @@ cleanup() {
 
     echo "Cleaning up working directory ${WORKDIR} ..."
     rm -rf "$WORKDIR" || true
+    rm $ALETH_TMP_OUT
 }
 trap cleanup INT TERM
 
@@ -149,7 +152,7 @@ function download_aleth()
 # echos the PID
 function run_aleth()
 {
-    $ALETH_PATH --db memorydb --test -d "${WORKDIR}" >/dev/null 2>&1 &
+    $REPO_ROOT/scripts/aleth_with_log.sh $ALETH_PATH $ALETH_TMP_OUT --log-verbosity 3 --db memorydb --test -d "${WORKDIR}" &> /dev/null &
     echo $!
     # Wait until the IPC endpoint is available.
     while [ ! -S "${WORKDIR}/geth.ipc" ] ; do sleep 1; done
@@ -215,7 +218,21 @@ do
         fi
         fi
 
+        set +e
         "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS $force_abiv2_flag --ipcpath "${WORKDIR}/geth.ipc"
+
+        if test "0" -ne "$?"; then
+            if [ -n "$log_directory" ]
+            then
+                # Need to kill aleth first so the log is written
+                safe_kill $ALETH_PID $ALETH_PATH
+                cp $ALETH_TMP_OUT $log_directory/aleth.log
+                printError "Some test failed, wrote aleth.log"
+            fi
+            exit 1
+        fi
+        set -e
+
     done
   done
 done
