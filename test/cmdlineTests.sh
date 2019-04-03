@@ -315,7 +315,8 @@ SOLTMPDIR=$(mktemp -d)
         fi
         echo "$f"
 
-        solhint -f table "$SOLTMPDIR/$f"
+        # Only report errors
+        solhint -q -f table "$SOLTMPDIR/$f"
 
         opts=''
         # We expect errors if explicitly stated, or if imports
