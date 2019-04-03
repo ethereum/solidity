@@ -303,7 +303,6 @@ SOLTMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     # Copy config needed for solhint
     cp "$REPO_ROOT"/test/.solhint.json "$SOLTMPDIR"/.solhint.json
-    cp "$REPO_ROOT"/test/.solhintignore "$SOLTMPDIR"/.solhintignore
 
     for f in *.sol
     do
@@ -316,7 +315,7 @@ SOLTMPDIR=$(mktemp -d)
         echo "$f"
 
         # Only report errors
-        solhint -q -f table "$SOLTMPDIR/$f"
+        solhint -q -f unix "$SOLTMPDIR/$f"
 
         opts=''
         # We expect errors if explicitly stated, or if imports
