@@ -30,10 +30,9 @@ Bugfixes:
    libraries. This affected code generation.
  * Yul: Properly register functions and disallow shadowing between function variables and variables in the outside scope.
 
-
 Build System:
  * Soltest: Add commandline option `--test` / `-t` to isoltest which takes a string that allows filtering unit tests.
-
+ * soltest.sh: allow environment variable ``SOLIDITY_BUILD_DIR`` to specify build folder and add ``--help`` usage.
 
 ### 0.5.7 (2019-03-26)
 
