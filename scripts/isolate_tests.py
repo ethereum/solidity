@@ -12,7 +12,6 @@ import os
 import hashlib
 from os.path import join, isfile
 
-
 def extract_test_cases(path):
     lines = open(path, 'rb').read().splitlines()
 
@@ -21,25 +20,23 @@ def extract_test_cases(path):
     tests = []
 
     for l in lines:
-        if inside:
-            if l.strip().endswith(')' + delimiter + '";'):
-                inside = False
-            else:
-                tests[-1] += l + '\n'
+      if inside:
+        if l.strip().endswith(')' + delimiter + '";'):
+          inside = False
         else:
-            m = re.search(r'R"([^(]*)\($', l.strip())
-            if m:
-                inside = True
-                delimiter = m.group(1)
-                tests += ['']
+          tests[-1] += l + '\n'
+      else:
+        m = re.search(r'R"([^(]*)\($', l.strip())
+        if m:
+          inside = True
+          delimiter = m.group(1)
+          tests += ['']
 
     return tests
 
 # Contract sources are indented by 4 spaces.
 # Look for `pragma solidity`, `contract`, `library` or `interface`
 # and abort a line not indented properly.
-
-
 def extract_docs_cases(path):
     inside = False
     tests = []
@@ -59,32 +56,28 @@ def extract_docs_cases(path):
         if re.search(r'^    [ ]*(pragma solidity|contract |library |interface )', test, re.MULTILINE)
     ]
 
-
 def write_cases(f, tests):
-    cleaned_filename = f.replace(".", "_").replace(
-        "-", "_").replace(" ", "_").lower()
+    cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
         remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
-        open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(),
-                                 cleaned_filename), 'wb').write(remainder)
+        open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(), cleaned_filename), 'wb').write(test)
 
 
 def extract_and_write(f, path):
-    if docs:
-        cases = extract_docs_cases(path)
-    else:
-        if f.endswith('.sol'):
-            cases = [open(path, 'r').read()]
+        if docs:
+            cases = extract_docs_cases(path)
         else:
-            cases = extract_test_cases(path)
-    write_cases(f, cases)
-
+            if f.endswith('.sol'):
+                cases = [open(path, 'r').read()]
+            else:
+                cases = extract_test_cases(path)
+        write_cases(f, cases)
 
 if __name__ == '__main__':
     path = sys.argv[1]
     docs = False
     if len(sys.argv) > 2 and sys.argv[2] == 'docs':
-        docs = True
+      docs = True
 
     if isfile(path):
         extract_and_write(path, path)
