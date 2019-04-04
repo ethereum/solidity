@@ -35,14 +35,16 @@
 // step: fullSuite
 // ----
 // {
-//     let a, b := abi_decode_t_bytes_calldata_ptr(mload(0), mload(1))
-//     let a_1, b_1 := abi_decode_t_bytes_calldata_ptr(a, b)
-//     let a_2, b_2 := abi_decode_t_bytes_calldata_ptr(a_1, b_1)
-//     let a_3, b_3 := abi_decode_t_bytes_calldata_ptr(a_2, b_2)
-//     let a_4, b_4 := abi_decode_t_bytes_calldata_ptr(a_3, b_3)
-//     let a_5, b_5 := abi_decode_t_bytes_calldata_ptr(a_4, b_4)
-//     let a_6, b_6 := abi_decode_t_bytes_calldata_ptr(a_5, b_5)
-//     mstore(a_6, b_6)
+//     {
+//         let a, b := abi_decode_t_bytes_calldata_ptr(mload(0), mload(1))
+//         let a_1, b_1 := abi_decode_t_bytes_calldata_ptr(a, b)
+//         let a_2, b_2 := abi_decode_t_bytes_calldata_ptr(a_1, b_1)
+//         let a_3, b_3 := abi_decode_t_bytes_calldata_ptr(a_2, b_2)
+//         let a_4, b_4 := abi_decode_t_bytes_calldata_ptr(a_3, b_3)
+//         let a_5, b_5 := abi_decode_t_bytes_calldata_ptr(a_4, b_4)
+//         let a_6, b_6 := abi_decode_t_bytes_calldata_ptr(a_5, b_5)
+//         mstore(a_6, b_6)
+//     }
 //     function abi_decode_t_bytes_calldata_ptr(offset, end) -> arrayPos, length
 //     {
 //         if iszero(slt(add(offset, 0x1f), end))
