@@ -7,6 +7,7 @@ Language Features:
 Compiler Features:
  * ABI Decoder: Raise a runtime error on dirty inputs when using the experimental decoder.
  * SMTChecker: Support arithmetic compound assignment operators.
+ * SMTChecker: Support unary increment and decrement for array and mapping access.
  * Optimizer: Add rule for shifts by constants larger than 255 for Constantinople.
  * Optimizer: Add rule to simplify certain ANDs and SHL combinations
  * Yul: Adds break and continue keywords to for-loop syntax.
