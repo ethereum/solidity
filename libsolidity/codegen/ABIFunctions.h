@@ -176,7 +176,9 @@ private:
 		EncodingOptions const& _options
 	);
 	/// Part of @a abiEncodingFunction for array target type and given calldata array.
-	std::string abiEncodingFunctionCalldataArray(
+	/// Uses calldatacopy and does not perform cleanup or validation and can therefore only
+	/// be used for byte arrays and arrays with the base type uint256 or bytes32.
+	std::string abiEncodingFunctionCalldataArrayWithoutCleanup(
 		Type const& _givenType,
 		Type const& _targetType,
 		EncodingOptions const& _options
@@ -262,6 +264,9 @@ private:
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+
+	/// @returns the name of a function that retrieves an element from calldata.
+	std::string calldataAccessFunction(Type const& _type);
 
 	/// @returns the name of a function used during encoding that stores the length
 	/// if the array is dynamically sized (and the options do not request in-place encoding).
