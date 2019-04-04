@@ -69,10 +69,10 @@ void ProtoConverter::visit(Literal const& _x)
 	}
 }
 
-// We only reference x_0...x_9 that are I/O params of hardcoded function "foo"
+// Reference any index in [0, m_numLiveVars-1] or [0, m_numLiveVars)
 void ProtoConverter::visit(VarRef const& _x)
 {
-	m_output  << "x_" << (static_cast<uint32_t>(_x.varnum()) % 10);
+	m_output  << "x_" << (static_cast<uint32_t>(_x.varnum()) % m_numLiveVars);
 }
 
 void ProtoConverter::visit(Expression const& _x)
@@ -175,17 +175,19 @@ void ProtoConverter::visit(BinaryOp const& _x)
 	m_output << ")";
 }
 
-// New var numbering starts from x_10 until x_16
+// New var numbering starts from x_10
 void ProtoConverter::visit(VarDecl const& _x)
 {
-	m_output << "let x_" << ((_x.id() % 7) + 10) << " := ";
+	m_output << "let x_" << m_numLiveVars << " := ";
 	visit(_x.expr());
+	m_numVarsPerScope.top()++;
+	m_numLiveVars++;
 	m_output << "\n";
 }
 
 void ProtoConverter::visit(TypedVarDecl const& _x)
 {
-	m_output << "let x_" << ((_x.id() % 7) + 10);
+	m_output << "let x_" << m_numLiveVars;
 	switch (_x.type())
 	{
 		case TypedVarDecl::BOOL:
@@ -244,6 +246,8 @@ void ProtoConverter::visit(TypedVarDecl const& _x)
 			m_output << " : u256\n";
 			break;
 	}
+	m_numVarsPerScope.top()++;
+	m_numLiveVars++;
 }
 
 void ProtoConverter::visit(UnaryOp const& _x)
@@ -303,8 +307,12 @@ void ProtoConverter::visit(StoreFunc const& _x)
 
 void ProtoConverter::visit(ForStmt const& _x)
 {
-	m_output << "for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } ";
+	std::string loopVarName("i_" + std::to_string(m_numNestedForLoops++));
+	m_output << "for { let " << loopVarName << " := 0 } "
+		<< "lt(" << loopVarName << ", 0x60) "
+		<< "{ " << loopVarName << " := add(" << loopVarName << ", 0x20) } ";
 	visit(_x.for_body());
+	--m_numNestedForLoops;
 }
 
 void ProtoConverter::visit(CaseStmt const& _x)
@@ -366,10 +374,13 @@ void ProtoConverter::visit(Block const& _x)
 {
 	if (_x.statements_size() > 0)
 	{
+		m_numVarsPerScope.push(0);
 		m_output << "{\n";
 		for (auto const& st: _x.statements())
 			visit(st);
 		m_output << "}\n";
+		m_numLiveVars -= m_numVarsPerScope.top();
+		m_numVarsPerScope.pop();
 	}
 	else
 		m_output << "{}\n";

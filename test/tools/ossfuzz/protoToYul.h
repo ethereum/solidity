@@ -20,6 +20,7 @@
 #include <string>
 #include <ostream>
 #include <sstream>
+#include <stack>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
 
@@ -32,6 +33,15 @@ namespace yul_fuzzer
 class ProtoConverter
 {
 public:
+	ProtoConverter()
+	{
+		// The hard-coded function template foo has 10 parameters that are already "live"
+		m_numLiveVars = 10;
+		m_numVarsPerScope.push(m_numLiveVars);
+		m_numNestedForLoops = 0;
+	}
+	ProtoConverter(ProtoConverter const&) = delete;
+	ProtoConverter(ProtoConverter&&) = delete;
 	std::string functionToString(Function const& _input);
 	std::string protoToYul(uint8_t const* _data, size_t _size);
 
@@ -59,6 +69,9 @@ private:
 	std::string createAlphaNum(std::string const& _strBytes) const;
 
 	std::ostringstream m_output;
+	std::stack<uint8_t> m_numVarsPerScope;
+	int32_t m_numLiveVars;
+	int32_t m_numNestedForLoops;
 };
 }
 }

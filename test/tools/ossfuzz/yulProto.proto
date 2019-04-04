@@ -18,8 +18,7 @@
 syntax = "proto2";
 
 message VarDecl {
-  required int32 id = 1;
-  required Expression expr = 2;
+  required Expression expr = 1;
 }
 
 message TypedVarDecl {
