@@ -390,6 +390,12 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case_different_literal)
 	BOOST_CHECK(successParse("{ switch 1:u256 case \"1\":u256 {} case \"2\":u256 {} }"));
 }
 
+BOOST_AUTO_TEST_CASE(function_shadowing_outside_vars)
+{
+	CHECK_ERROR("{ let x:u256 function f() -> x:u256 {} }", DeclarationError, "already taken in this scope");
+	BOOST_CHECK(successParse("{ { let x:u256 } function f() -> x:u256 {} }"));
+}
+
 BOOST_AUTO_TEST_CASE(builtins_parser)
 {
 	struct SimpleDialect: public Dialect
