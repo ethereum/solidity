@@ -125,12 +125,12 @@ Allowed options)",
 			else
 				FuzzerUtil::testCompiler(input, optimize, quiet);
 		}
-		catch (exception const& _exc)
+		catch (...)
 		{
 			retResult = 1;
 
 			if (inputFile.size() == 0)
-				throw _exc;
+				throw;
 
 			cerr << "Fuzzer "
 				<< (optimize ? "" : "(without optimizer) ")
