@@ -121,6 +121,21 @@ bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
 	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2);
 }
 
+boost::optional<TypePointers> transformParametersToExternal(TypePointers const& _parameters, bool _inLibrary)
+{
+	TypePointers transformed;
+
+	for (auto const& type: _parameters)
+	{
+		if (TypePointer ext = type->interfaceType(_inLibrary))
+			transformed.push_back(ext);
+		else
+			return {};
+	}
+
+	return transformed;
+}
+
 }
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
@@ -2669,32 +2684,27 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 {
 	// Note that m_declaration might also be a state variable!
 	solAssert(m_declaration, "Declaration needed to determine interface function type.");
-	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+	bool isLibraryFunction = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 
-	TypePointers paramTypes;
-	TypePointers retParamTypes;
+	boost::optional<TypePointers> paramTypes =
+		transformParametersToExternal(m_parameterTypes, isLibraryFunction);
 
-	for (auto type: m_parameterTypes)
-	{
-		if (auto ext = type->interfaceType(isLibraryFunction))
-			paramTypes.push_back(ext);
-		else
-			return FunctionTypePointer();
-	}
-	for (auto type: m_returnParameterTypes)
-	{
-		if (auto ext = type->interfaceType(isLibraryFunction))
-			retParamTypes.push_back(ext);
-		else
-			return FunctionTypePointer();
-	}
+	if (!paramTypes)
+		return FunctionTypePointer();
+
+	boost::optional<TypePointers> retParamTypes =
+		transformParametersToExternal(m_returnParameterTypes, isLibraryFunction);
+
+	if (!retParamTypes)
+		return FunctionTypePointer();
+
 	auto variable = dynamic_cast<VariableDeclaration const*>(m_declaration);
-	if (variable && retParamTypes.empty())
+	if (variable && retParamTypes.get().empty())
 		return FunctionTypePointer();
 
 	return make_shared<FunctionType>(
-		paramTypes,
-		retParamTypes,
+		*paramTypes,
+		*retParamTypes,
 		m_parameterNames,
 		m_returnParameterNames,
 		m_kind,
@@ -2834,14 +2844,16 @@ string FunctionType::externalSignature() const
 	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
 	solAssert(!m_declaration->name().empty(), "Fallback function has no signature.");
 
-	bool const inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
-	FunctionTypePointer external = interfaceFunctionType();
-	solAssert(!!external, "External function type requested.");
-	auto parameterTypes = external->parameterTypes();
-	auto typeStrings = parameterTypes | boost::adaptors::transformed([&](TypePointer _t) -> string
+	bool const inLibrary = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+
+	boost::optional<TypePointers> extParams = transformParametersToExternal(m_parameterTypes, inLibrary);
+
+	solAssert(extParams, "");
+
+	auto typeStrings = *extParams | boost::adaptors::transformed([&](TypePointer _t) -> string
 	{
-		solAssert(_t, "Parameter should have external type.");
 		string typeName = _t->signatureInExternalFunction(inLibrary);
+
 		if (inLibrary && _t->dataStoredIn(DataLocation::Storage))
 			typeName += " storage";
 		return typeName;
