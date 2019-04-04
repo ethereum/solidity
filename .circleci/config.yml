@@ -28,6 +28,9 @@ defaults:
   - run_tests: &run_tests
       name: Tests
       command: scripts/tests.sh --junit_report test_results
+  - run_regressions: &run_regressions
+      name: Regression tests
+      command: scripts/regressions.py -o test_results
   - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
@@ -37,6 +40,15 @@ defaults:
         - solc/solc
         - test/soltest
         - test/tools/solfuzzer
+  - ossfuzz_artifacts: &ossfuzz_artifacts
+      root: build
+      paths:
+        - test/tools/ossfuzz/solc_opt_ossfuzz
+        - test/tools/ossfuzz/solc_noopt_ossfuzz
+        - test/tools/ossfuzz/const_opt_ossfuzz
+        - test/tools/ossfuzz/strictasm_diff_ossfuzz
+        - test/tools/ossfuzz/yul_proto_ossfuzz
+        - test/tools/ossfuzz/yul_proto_diff_ossfuzz
 
 version: 2
 jobs:
@@ -414,6 +426,31 @@ jobs:
             ./scripts/install_libfuzzer.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
+      - persist_to_workspace: *ossfuzz_artifacts
+
+  test_x86_ossfuzz_regression:
+    docker:
+      - image: buildpack-deps:cosmic
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install libcvc4-dev llvm-7-dev
+            ./scripts/download_ossfuzz_corpus.sh
+            update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
+      - run: mkdir -p test_results
+      - run: *run_regressions
+      - store_test_results:
+          path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
 
 workflows:
   version: 2
@@ -479,3 +516,7 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
+      - test_x86_ossfuzz_regression:
+          <<: *build_on_tags
+          requires:
+            - build_x86_linux_ossfuzz
