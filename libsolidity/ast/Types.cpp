@@ -147,6 +147,21 @@ bool fitsIntoBits(bigint const& _value, unsigned _bits, bool _signed)
 	));
 }
 
+Result<TypePointers> transformParametersToExternal(TypePointers const& _parameters, bool _inLibrary)
+{
+	TypePointers transformed;
+
+	for (auto const& type: _parameters)
+	{
+		if (TypePointer ext = type->interfaceType(_inLibrary).get())
+			transformed.push_back(ext);
+		else
+			return Result<TypePointers>::err("Parameter should have external type.");
+	}
+
+	return transformed;
+}
+
 }
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
@@ -2904,27 +2919,22 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 {
 	// Note that m_declaration might also be a state variable!
 	solAssert(m_declaration, "Declaration needed to determine interface function type.");
-	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+	bool isLibraryFunction = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 
-	TypePointers paramTypes;
-	TypePointers retParamTypes;
+	Result<TypePointers> paramTypes =
+		transformParametersToExternal(m_parameterTypes, isLibraryFunction);
 
-	for (auto type: m_parameterTypes)
-	{
-		if (auto ext = type->interfaceType(isLibraryFunction).get())
-			paramTypes.push_back(ext);
-		else
-			return FunctionTypePointer();
-	}
-	for (auto type: m_returnParameterTypes)
-	{
-		if (auto ext = type->interfaceType(isLibraryFunction).get())
-			retParamTypes.push_back(ext);
-		else
-			return FunctionTypePointer();
-	}
+	if (!paramTypes.message().empty())
+		return FunctionTypePointer();
+
+	Result<TypePointers> retParamTypes =
+		transformParametersToExternal(m_returnParameterTypes, isLibraryFunction);
+
+	if (!retParamTypes.message().empty())
+		return FunctionTypePointer();
+
 	auto variable = dynamic_cast<VariableDeclaration const*>(m_declaration);
-	if (variable && retParamTypes.empty())
+	if (variable && retParamTypes.get().empty())
 		return FunctionTypePointer();
 
 	return make_shared<FunctionType>(
@@ -3139,13 +3149,15 @@ string FunctionType::externalSignature() const
 
 	// "inLibrary" is only relevant if this is not an event.
 	bool const inLibrary = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
-	FunctionTypePointer external = interfaceFunctionType();
-	solAssert(!!external, "External function type requested.");
-	auto parameterTypes = external->parameterTypes();
-	auto typeStrings = parameterTypes | boost::adaptors::transformed([&](TypePointer _t) -> string
+
+	auto extParams = transformParametersToExternal(m_parameterTypes, inLibrary);
+
+	solAssert(extParams.message().empty(), extParams.message());
+
+	auto typeStrings = extParams.get() | boost::adaptors::transformed([&](TypePointer _t) -> string
 	{
-		solAssert(_t, "Parameter should have external type.");
 		string typeName = _t->signatureInExternalFunction(inLibrary);
+
 		if (inLibrary && _t->dataStoredIn(DataLocation::Storage))
 			typeName += " storage";
 		return typeName;
