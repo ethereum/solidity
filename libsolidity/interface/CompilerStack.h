@@ -100,6 +100,7 @@ public:
 	/// and must not emit exceptions.
 	explicit CompilerStack(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
 		m_readFile(_readFile),
+		m_generateIR(false),
 		m_errorList(),
 		m_errorReporter(m_errorList) {}
 
@@ -142,6 +143,9 @@ public:
 	void setRequestedContractNames(std::set<std::string> const& _contractNames = std::set<std::string>{}) {
 		m_requestedContractNames = _contractNames;
 	}
+
+	/// Enable experimental generation of Yul IR code.
+	void enableIRGeneration(bool _enable = true) { m_generateIR = _enable; }
 
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
@@ -201,6 +205,12 @@ public:
 
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+
+	/// @returns the IR representation of a contract.
+	std::string const& yulIR(std::string const& _contractName) const;
+
+	/// @returns the optimized IR representation of a contract.
+	std::string const& yulIROptimized(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName) const;
@@ -273,6 +283,8 @@ private:
 		std::shared_ptr<Compiler> compiler;
 		eth::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		eth::LinkerObject runtimeObject; ///< Runtime object.
+		std::string yulIR; ///< Experimental Yul IR code.
+		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
 		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
@@ -298,6 +310,10 @@ private:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, std::shared_ptr<Compiler const>>& _otherCompilers
 	);
+
+	/// Generate Yul IR for a single contract.
+	/// The IR is stored but otherwise unused.
+	void generateIR(ContractDefinition const& _contract);
 
 	/// Links all the known library addresses in the available objects. Any unknown
 	/// library will still be kept as an unlinked placeholder in the objects.
@@ -351,6 +367,7 @@ private:
 	OptimiserSettings m_optimiserSettings;
 	langutil::EVMVersion m_evmVersion;
 	std::set<std::string> m_requestedContractNames;
+	bool m_generateIR;
 	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"

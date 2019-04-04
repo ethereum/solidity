@@ -46,6 +46,8 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 
+#include <libsolidity/codegen/ir/IRGenerator.h>
+
 #include <libyul/YulString.h>
 
 #include <liblangutil/Scanner.h>
@@ -146,6 +148,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_remappings.clear();
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
+		m_generateIR = false;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
 	}
@@ -387,7 +390,11 @@ bool CompilerStack::compile()
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
 				if (isRequestedContract(*contract))
+				{
 					compileContract(*contract, otherCompilers);
+					if (m_generateIR)
+						generateIR(*contract);
+				}
 	m_stackState = CompilationSuccessful;
 	this->link();
 	return true;
@@ -494,6 +501,22 @@ std::string const CompilerStack::filesystemFriendlyName(string const& _contractN
 	}
 	// If no collision, return the contract's name
 	return matchContract.contract->name();
+}
+
+string const& CompilerStack::yulIR(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	return contract(_contractName).yulIR;
+}
+
+string const& CompilerStack::yulIROptimized(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	return contract(_contractName).yulIROptimized;
 }
 
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -900,6 +923,24 @@ void CompilerStack::compileContract(
 	}
 
 	_otherCompilers[compiledContract.contract] = compiler;
+}
+
+void CompilerStack::generateIR(ContractDefinition const& _contract)
+{
+	solAssert(m_stackState >= AnalysisSuccessful, "");
+
+	if (!_contract.canBeDeployed())
+		return;
+
+	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+	if (!compiledContract.yulIR.empty())
+		return;
+
+	for (auto const* dependency: _contract.annotation().contractDependencies)
+		generateIR(*dependency);
+
+	IRGenerator generator(m_evmVersion, m_optimiserSettings);
+	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract);
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
