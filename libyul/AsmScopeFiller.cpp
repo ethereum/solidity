@@ -170,7 +170,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 	vector<Scope::YulType> returns;
 	for (auto const& _return: _funDef.returnVariables)
 		returns.emplace_back(_return.type.str());
-	if (!m_currentScope->registerFunction(_funDef.name, arguments, returns))
+	if (!m_currentScope->registerFunction(_funDef.name, std::move(arguments), std::move(returns)))
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
