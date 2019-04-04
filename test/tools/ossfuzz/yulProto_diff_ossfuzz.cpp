@@ -72,9 +72,26 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 
 	ostringstream os1;
 	ostringstream os2;
-	yulFuzzerUtil::interpret(os1, stack.parserResult()->code);
+	try
+	{
+		yulFuzzerUtil::interpret(os1, stack.parserResult()->code);
+	}
+	catch (yul::test::StepLimitReached const&)
+	{
+		return;
+	}
+	catch (yul::test::InterpreterTerminatedGeneric const&)
+	{
+	}
+
 	stack.optimize();
-	yulFuzzerUtil::interpret(os2, stack.parserResult()->code);
+	try
+	{
+		yulFuzzerUtil::interpret(os2, stack.parserResult()->code);
+	}
+	catch (yul::test::InterpreterTerminatedGeneric const&)
+	{
+	}
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");

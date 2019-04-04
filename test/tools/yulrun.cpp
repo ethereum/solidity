@@ -96,7 +96,7 @@ void interpret(string const& _source)
 	{
 		interpreter(*ast);
 	}
-	catch (InterpreterTerminated const&)
+	catch (InterpreterTerminatedGeneric const&)
 	{
 	}
 

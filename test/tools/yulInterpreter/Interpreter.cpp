@@ -132,7 +132,7 @@ void Interpreter::operator()(Block const& _block)
 	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
 	{
 		m_state.trace.emplace_back("Interpreter execution step limit reached.");
-		throw InterpreterTerminated();
+		throw StepLimitReached();
 	}
 	openScope();
 	// Register functions.
