@@ -247,6 +247,7 @@ private:
 protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
 	void sendEther(Address const& _to, u256 const& _value);
+	void waitForTransaction(std::string const& _txHash) const;
 	size_t currentTimestamp();
 	size_t blockTimestamp(u256 _number);
 

@@ -6,7 +6,7 @@ shift
 shift
 
 
-$ALETH_PATH $@ &> >(tail -n 10000 &> "$ALETH_TMP_OUT") &
+$ALETH_PATH $@ &> >(tail -n 100000 &> "$ALETH_TMP_OUT") &
 
 PID=$!
 

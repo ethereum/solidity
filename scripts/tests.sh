@@ -152,7 +152,9 @@ function download_aleth()
 # echos the PID
 function run_aleth()
 {
-    $REPO_ROOT/scripts/aleth_with_log.sh $ALETH_PATH $ALETH_TMP_OUT --log-verbosity 3 --db memorydb --test -d "${WORKDIR}" &> /dev/null &
+    # Use this to have aleth log output
+    #$REPO_ROOT/scripts/aleth_with_log.sh $ALETH_PATH $ALETH_TMP_OUT --log-verbosity 3 --db memorydb --test -d "${WORKDIR}" &> /dev/null &
+    $ALETH_PATH --db memorydb --test -d "${WORKDIR}" &> /dev/null &
     echo $!
     # Wait until the IPC endpoint is available.
     while [ ! -S "${WORKDIR}/geth.ipc" ] ; do sleep 1; done
