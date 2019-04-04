@@ -22,6 +22,7 @@ Compiler Features:
 Bugfixes:
  * SMTChecker: Implement Boolean short-circuiting.
  * SMTChecker: SSA control-flow did not take into account state variables that were modified inside inlined functions that were called inside branches.
+ * Yul: Properly register functions and disallow shadowing between function variables and variables in the outside scope.
 
 
 
