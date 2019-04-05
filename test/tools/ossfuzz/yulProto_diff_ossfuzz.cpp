@@ -74,7 +74,10 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 	ostringstream os2;
 	try
 	{
-		yulFuzzerUtil::interpret(os1, stack.parserResult()->code);
+		yulFuzzerUtil::interpret(
+			os1,
+			stack.parserResult()->code
+		);
 	}
 	catch (yul::test::StepLimitReached const&)
 	{
@@ -87,7 +90,10 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 	stack.optimize();
 	try
 	{
-		yulFuzzerUtil::interpret(os2, stack.parserResult()->code);
+		yulFuzzerUtil::interpret(os2,
+			stack.parserResult()->code,
+			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
+		);
 	}
 	catch (yul::test::InterpreterTerminatedGeneric const&)
 	{
