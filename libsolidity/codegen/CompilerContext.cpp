@@ -396,10 +396,7 @@ void CompilerContext::appendInlineAssembly(
 			_assembly + "\n"
 			"------------------ Errors: ----------------\n";
 		for (auto const& error: errorReporter.errors())
-			message += SourceReferenceFormatter::formatExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			message += SourceReferenceFormatter::formatErrorInformation(*error);
 		message += "-------------------------------------------\n";
 
 		solAssert(false, message);

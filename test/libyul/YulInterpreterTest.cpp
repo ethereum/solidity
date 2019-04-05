@@ -159,8 +159,5 @@ void YulInterpreterTest::printErrors(ostream& _stream, ErrorList const& _errors)
 	SourceReferenceFormatter formatter(_stream);
 
 	for (auto const& error: _errors)
-		formatter.printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+		formatter.printErrorInformation(*error);
 }

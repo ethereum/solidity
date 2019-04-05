@@ -50,10 +50,7 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 	{
 		string errorMessage;
 		for (auto const& error: asmStack.errors())
-			errorMessage += langutil::SourceReferenceFormatter::formatExceptionInformation(
-				*error,
-				(error->type() == langutil::Error::Type::Warning) ? "Warning" : "Error"
-			);
+			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(*error);
 		solAssert(false, "Invalid IR generated:\n" + errorMessage + "\n" + ir);
 	}
 	asmStack.optimize();

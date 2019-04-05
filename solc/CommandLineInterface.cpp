@@ -937,10 +937,7 @@ bool CommandLineInterface::processInput()
 		for (auto const& error: m_compiler->errors())
 		{
 			g_hasOutput = true;
-			formatter->printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter->printErrorInformation(*error);
 		}
 
 		if (!successful)
@@ -1294,10 +1291,7 @@ bool CommandLineInterface::assemble(
 		for (auto const& error: stack.errors())
 		{
 			g_hasOutput = true;
-			formatter->printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter->printErrorInformation(*error);
 		}
 		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;

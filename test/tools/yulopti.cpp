@@ -80,10 +80,7 @@ public:
 		SourceReferenceFormatter formatter(cout);
 
 		for (auto const& error: m_errors)
-			formatter.printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter.printErrorInformation(*error);
 	}
 
 	bool parse(string const& _input)

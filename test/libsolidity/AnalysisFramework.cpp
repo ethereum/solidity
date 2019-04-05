@@ -125,10 +125,7 @@ string AnalysisFramework::formatErrors() const
 
 string AnalysisFramework::formatError(Error const& _error) const
 {
-	return SourceReferenceFormatter::formatExceptionInformation(
-			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+	return SourceReferenceFormatter::formatErrorInformation(_error);
 }
 
 ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)
