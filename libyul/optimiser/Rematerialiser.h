@@ -33,7 +33,7 @@ namespace yul
  *  - the variable is referenced at most 5 times and the value is rather cheap
  *    ("cost" of at most 1 like a constant up to 0xff)
  *
- * Prerequisite: Disambiguator
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class Rematerialiser: public DataFlowAnalyzer
 {

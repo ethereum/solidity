@@ -2,10 +2,10 @@
 	let a
 	let b
 	let c
+	let i := 0
+	b := origin()
+	c := origin()
 	for {
-		let i := 0
-		b := origin()
-		c := origin()
 	}
 	lt(i, 10)
 	{
@@ -30,10 +30,10 @@
 //     let a
 //     let b
 //     let c
+//     let i := 0
+//     b := origin()
+//     c := origin()
 //     for {
-//         let i := 0
-//         b := origin()
-//         c := origin()
 //     }
 //     lt(i, 10)
 //     {

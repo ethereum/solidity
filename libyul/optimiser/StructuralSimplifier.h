@@ -36,7 +36,7 @@ namespace yul
  * - replace switch with const expr with matching case body
  * - replace for with false condition by its initialization part
  *
- * Prerequisites: Disambiguator
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  *
  * Important: Can only be used on EVM code.
  */

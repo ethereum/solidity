@@ -39,7 +39,7 @@ struct Dialect;
  *
  * A special zero constant expression is used for the default value of variables.
  *
- * Prerequisite: Disambiguator
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class DataFlowAnalyzer: public ASTModifier
 {

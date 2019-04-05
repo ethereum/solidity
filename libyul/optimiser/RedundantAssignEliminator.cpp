@@ -118,12 +118,9 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 	ForLoopInfo outerForLoopInfo;
 	swap(outerForLoopInfo, m_forLoopInfo);
 
-	set<YulString> outerDeclaredVariables;
-	swap(m_declaredVariables, outerDeclaredVariables);
-
-	// We need to visit the statements directly because of the
-	// scoping rules.
-	walkVector(_forLoop.pre.statements);
+	// If the pre block was not empty,
+	// we would have to deal with more complicated scoping rules.
+	assertThrow(_forLoop.pre.statements.empty(), OptimizerException, "");
 
 	// We just run the loop twice to account for the
 	// back edge.
@@ -155,10 +152,6 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 	merge(m_assignments, move(zeroRuns));
 	merge(m_assignments, move(m_forLoopInfo.pendingBreakStmts));
 	m_forLoopInfo.pendingBreakStmts.clear();
-
-	for (auto const& var: m_declaredVariables)
-		finalize(var, State::Unused);
-	swap(m_declaredVariables, outerDeclaredVariables);
 
 	// Restore potential outer for-loop states.
 	swap(m_forLoopInfo, outerForLoopInfo);
