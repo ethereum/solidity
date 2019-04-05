@@ -343,7 +343,7 @@ printTask "Testing assemble, yul, strict-assembly and optimize..."
     # while it results in empty binary representation with optimizations turned on.
     test_solc_assembly_output "{ let x:u256 := 0:u256 }" "{ let x:u256 := 0:u256 }" "--yul"
     test_solc_assembly_output "{ let x := 0 }" "{ let x := 0 }" "--strict-assembly"
-    test_solc_assembly_output "{ let x := 0 }" "{ }" "--strict-assembly --optimize"
+    test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
 )
 
 

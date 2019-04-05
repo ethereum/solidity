@@ -4,22 +4,22 @@
   y := mload(x)
   let a, b := f(x, y)
   sstore(a, b)
-  function f(t, v) -> x, y {}
+  function f(t, v) -> w, z {}
 }
 // ====
 // step: ssaTransform
 // ----
 // {
-//     let x_2, y_3 := f(1, 2)
-//     let x := x_2
-//     let y := y_3
-//     let x_4 := mload(y_3)
-//     x := x_4
-//     let y_5 := mload(x_4)
-//     y := y_5
-//     let a, b := f(x_4, y_5)
+//     let x_1, y_2 := f(1, 2)
+//     let x := x_1
+//     let y := y_2
+//     let x_3 := mload(y_2)
+//     x := x_3
+//     let y_4 := mload(x_3)
+//     y := y_4
+//     let a, b := f(x_3, y_4)
 //     sstore(a, b)
-//     function f(t, v) -> x_1, y_2
+//     function f(t, v) -> w, z
 //     {
 //     }
 // }

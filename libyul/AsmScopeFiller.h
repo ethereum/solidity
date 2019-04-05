@@ -73,6 +73,7 @@ private:
 		langutil::SourceLocation const& _location,
 		Scope& _scope
 	);
+	bool registerFunction(FunctionDefinition const& _funDef);
 
 	Scope& scope(Block const* _block);
 

@@ -38,7 +38,7 @@ struct Dialect;
  * renumbered by their base name.
  * Function names are not modified.
  *
- * Prerequisites: Disambiguator, FunctionHoister
+ * Prerequisites: Disambiguator, FunctionHoister, FunctionGrouper
  */
 class VarNameCleaner: public ASTModifier
 {

@@ -198,6 +198,7 @@ void OptimiserSuite::run(
 	BlockFlattener{}(ast);
 	DeadCodeEliminator{}(ast);
 
+	FunctionGrouper{}(ast);
 	VarNameCleaner{ast, *_dialect, reservedIdentifiers}(ast);
 	yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, ast);
 

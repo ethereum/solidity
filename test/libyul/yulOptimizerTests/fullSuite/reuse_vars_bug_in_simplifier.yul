@@ -13,5 +13,7 @@
 // step: fullSuite
 // ----
 // {
-//     mstore(1, 1)
+//     {
+//         mstore(1, 1)
+//     }
 // }
