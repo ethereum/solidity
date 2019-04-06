@@ -44,7 +44,7 @@ public:
 	CodeFragment() = default;
 	CodeFragment(sp::utree const& _t, CompilerState& _s, ReadCallback const& _readFile, bool _allowASM = false);
 
-	static CodeFragment compile(std::string const& _src, CompilerState& _s, ReadCallback const& _readFile);
+	static CodeFragment compile(std::string _src, CompilerState& _s, ReadCallback const& _readFile);
 
 	/// Consolidates data and compiles code.
 	eth::Assembly& assembly(CompilerState const& _cs) { finalise(_cs); return m_asm; }
@@ -69,4 +69,3 @@ static CodeFragment const NullCodeFragment;
 
 }
 }
-

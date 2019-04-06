@@ -834,7 +834,7 @@ bool CommandLineInterface::processInput()
 	{
 		string input = dev::readStandardInput();
 		StandardCompiler compiler(fileReader);
-		sout() << compiler.compile(input) << endl;
+		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
 	}
 

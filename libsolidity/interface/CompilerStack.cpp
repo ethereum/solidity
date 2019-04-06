@@ -181,14 +181,14 @@ void CompilerStack::reset(bool _keepSettings)
 	TypeProvider::reset();
 }
 
-void CompilerStack::setSources(StringMap const& _sources)
+void CompilerStack::setSources(StringMap _sources)
 {
 	if (m_stackState == SourcesSet)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Cannot change sources once set."));
 	if (m_stackState != Empty)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set sources before parsing."));
-	for (auto const& source: _sources)
-		m_sources[source.first].scanner = make_shared<Scanner>(CharStream(/*content*/source.second, /*name*/source.first));
+	for (auto source: _sources)
+		m_sources[source.first].scanner = make_shared<Scanner>(CharStream(/*content*/std::move(source.second), /*name*/source.first));
 	m_stackState = SourcesSet;
 }
 
@@ -571,7 +571,7 @@ string CompilerStack::assemblyString(string const& _contractName, StringMap _sou
 }
 
 /// TODO: cache the JSON
-Json::Value CompilerStack::assemblyJSON(string const& _contractName, StringMap _sourceCodes) const
+Json::Value CompilerStack::assemblyJSON(string const& _contractName, StringMap const& _sourceCodes) const
 {
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));

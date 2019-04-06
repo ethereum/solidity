@@ -256,7 +256,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			string contents = m_readFile(fileName);
 			if (contents.empty())
 				error<InvalidName>(std::string("File not found (or empty): ") + fileName);
-			m_asm.append(CodeFragment::compile(contents, _s, m_readFile).m_asm);
+			m_asm.append(CodeFragment::compile(std::move(contents), _s, m_readFile).m_asm);
 		}
 		else if (us == "SET")
 		{
@@ -745,11 +745,11 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 	}
 }
 
-CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s, ReadCallback const& _readFile)
+CodeFragment CodeFragment::compile(string _src, CompilerState& _s, ReadCallback const& _readFile)
 {
 	CodeFragment ret;
 	sp::utree o;
-	parseTreeLLL(_src, o);
+	parseTreeLLL(std::move(_src), o);
 	if (!o.empty())
 		ret = CodeFragment(o, _s, _readFile);
 	_s.treesToKill.push_back(o);
