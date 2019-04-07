@@ -65,4 +65,3 @@ sub_0: assembly {
         /* "object_compiler/input.sol":407:422   */
       return
 }
-
