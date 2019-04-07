@@ -93,6 +93,27 @@ function compileFull()
     fi
 }
 
+function ask_expectation_update()
+{
+    local newExpectation="${1}"
+    local expectationFile="${2}"
+    while true;
+    do
+        set +e
+        read -t10 -p "(u)pdate expectation/(q)uit? "
+        if [ $? -gt 128 ];
+        then
+            echo -e "\nUser input timed out."
+            exit 1
+        fi
+        set -e
+        case $REPLY in
+            u* ) echo "$newExpectation" > $expectationFile ; break;;
+            q* ) exit 1;;
+        esac
+    done
+}
+
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
 # An failure is expected.
 function test_solc_behaviour()
@@ -103,17 +124,22 @@ function test_solc_behaviour()
     local stdout_expected="${4}"
     local exit_code_expected="${5}"
     local stderr_expected="${6}"
+    local stdout_expectation_file="${7}" # the file to write to when user chooses to update stdout expectation
+    local stderr_expectation_file="${8}" # the file to write to when user chooses to update stderr expectation
     local stdout_path=`mktemp`
     local stderr_path=`mktemp`
+
+    trap "rm -f $stdout_path $stderr_path" EXIT
+
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
+    local solc_command="$SOLC ${filename} ${solc_args}"
+    if [[ -n "$solc_stdin"  ]]; then solc_command+=" <$solc_stdin"  ; fi
+    if [[ -n "$stdout_path" ]]; then solc_command+=" 1>$stdout_path"; fi
+    if [[ -n "$stderr_path" ]]; then solc_command+=" 2>$stderr_path"; fi
+
     set +e
-    if [[ "$solc_stdin" = "" ]]
-    then
-        "$SOLC" "${filename}" ${solc_args} 1>$stdout_path 2>$stderr_path
-    else
-        "$SOLC" "${filename}" ${solc_args} <$solc_stdin 1>$stdout_path 2>$stderr_path
-    fi
+    eval "$solc_command"
     exitCode=$?
     set -e
 
@@ -133,37 +159,44 @@ function test_solc_behaviour()
     if [[ $exitCode -ne "$exit_code_expected" ]]
     then
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
-        rm -f $stdout_path $stderr_path
         exit 1
     fi
 
     if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]
     then
         printError "Incorrect output on stdout received. Expected:"
-        echo -e "${stdout_expected}"
+        echo "${stdout_expected}"
 
         printError "But got:"
         cat $stdout_path
-        printError "When running $SOLC ${filename} ${solc_args} <$solc_stdin"
 
-        rm -f $stdout_path $stderr_path
-        exit 1
+        printError "When running $solc_command"
+
+        if [ -n "$stdout_expectation_file" ]
+        then
+            ask_expectation_update "$(cat $stdout_path)" "$stdout_expectation_file"
+        else
+            exit 1
+        fi
     fi
 
     if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]
     then
         printError "Incorrect output on stderr received. Expected:"
-        echo -e "${stderr_expected}"
+        echo "${stderr_expected}"
 
         printError "But got:"
         cat $stderr_path
-        printError "When running $SOLC ${filename} ${solc_args} <$solc_stdin"
 
-        rm -f $stdout_path $stderr_path
-        exit 1
+        printError "When running $solc_command"
+
+        if [ -n "$stderr_expectation_file" ]
+        then
+            ask_expectation_update "$(cat $stderr_path)" "$stderr_expectation_file"
+        else
+            exit 1
+        fi
     fi
-
-    rm -f $stdout_path $stderr_path
 }
 
 
@@ -210,14 +243,14 @@ printTask "Testing unknown options..."
 
 
 printTask "Testing passing files that are not found..."
-test_solc_behaviour "file_not_found.sol" "" "" "" 1 "\"file_not_found.sol\" is not found."
+test_solc_behaviour "file_not_found.sol" "" "" "" 1 "\"file_not_found.sol\" is not found." "" ""
 
 printTask "Testing passing files that are not files..."
-test_solc_behaviour "." "" "" "" 1 "\".\" is not a valid file."
+test_solc_behaviour "." "" "" "" 1 "\".\" is not a valid file." "" ""
 
 printTask "Testing passing empty remappings..."
-test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "Invalid remapping: \"=/some/remapping/target\"."
-test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"."
+test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "Invalid remapping: \"=/some/remapping/target\"." "" ""
+test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"." "" ""
 
 printTask "Running general commandline tests..."
 (
@@ -228,18 +261,28 @@ printTask "Running general commandline tests..."
         then
             inputFile=""
             stdin="${tdir}/input.json"
-            stdout=$(cat ${tdir}/output.json 2>/dev/null || true)
+            stdout="$(cat ${tdir}/output.json 2>/dev/null || true)"
+            stdoutExpectationFile="$(pwd)/${tdir}/output.json"
             args="--standard-json "$(cat ${tdir}/args 2>/dev/null || true)
         else
             inputFile="${tdir}input.sol"
             stdin=""
-            stdout=$(cat ${tdir}/output 2>/dev/null || true)
+            stdout="$(cat ${tdir}/output 2>/dev/null || true)"
+            stdoutExpectationFile="$(pwd)/${tdir}/output"
             args=$(cat ${tdir}/args 2>/dev/null || true)
         fi
         exitCode=$(cat ${tdir}/exit 2>/dev/null || true)
-        err=$(cat ${tdir}/err 2>/dev/null || true)
+        err="$(cat ${tdir}/err 2>/dev/null || true)"
+        stderrExpectationFile="${tdir}/err"
         printTask " - ${tdir}"
-        test_solc_behaviour "$inputFile" "$args" "$stdin" "$stdout" "$exitCode" "$err"
+        test_solc_behaviour "$inputFile" \
+                            "$args" \
+                            "$stdin" \
+                            "$stdout" \
+                            "$exitCode" \
+                            "$err" \
+                            "$stdoutExpectationFile" \
+                            "$stderrExpectationFile"
     done
 )
 
