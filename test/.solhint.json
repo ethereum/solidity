@@ -3,6 +3,8 @@
     "plugins": [],
     "rules": {
         "compiler-fixed": false,
-        "no-inline-assembly": false
+        "no-inline-assembly": false,
+        "func-visibility": false,
+        "state-visibility": false
     }
 }
