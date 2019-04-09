@@ -33,7 +33,7 @@ target_link_libraries(strictasm_assembly_ossfuzz PRIVATE yul FuzzingEngine.a)
 
 add_executable(yul_proto_ossfuzz yulProtoFuzzer.cpp protoToYul.cpp yulProto.pb.cc)
 target_include_directories(yul_proto_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
-target_link_libraries(yul_proto_ossfuzz PRIVATE yul evmasm
+target_link_libraries(yul_proto_ossfuzz PRIVATE yul evmasm solidity
         protobuf-mutator-libfuzzer.a
         protobuf-mutator.a
         protobuf.a

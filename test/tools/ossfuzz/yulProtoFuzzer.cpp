@@ -30,12 +30,10 @@ using namespace yul;
 using namespace yul::test::yul_fuzzer;
 using namespace std;
 
-DEFINE_PROTO_FUZZER(Function const& _input)
+DEFINE_PROTO_FUZZER(Program const& _input)
 {
 	ProtoConverter converter;
-	string yul_source = converter.functionToString(_input);
-	if (yul_source.size() > 600)
-		return;
+	string yul_source = converter.programToString(_input);
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -44,6 +42,9 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 		ofstream of(dump_path);
 		of.write(yul_source.data(), yul_source.size());
 	}
+
+	if (yul_source.size() > 1200)
+		return;
 
 	// AssemblyStack entry point
 	AssemblyStack stack(
