@@ -92,6 +92,27 @@ public:
 	/// Return value: pointer
 	std::string allocationFunction();
 
+	/// @returns the name of the function that converts a value of type @a _from
+	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
+	/// (i.e. "clean"). Asserts on failure.
+	///
+	/// This is used for data being encoded or general type conversions in the code.
+	std::string conversionFunction(Type const& _from, Type const& _to);
+
+	/// @returns the name of the cleanup function for the given type and
+	/// adds its implementation to the requested functions.
+	/// The cleanup function defers to the validator function with "assert"
+	/// if there is no reasonable way to clean a value.
+	std::string cleanupFunction(Type const& _type);
+
+	/// @returns the name of the validator function for the given type and
+	/// adds its implementation to the requested functions.
+	/// @param _revertOnFailure if true, causes revert on invalid data,
+	/// otherwise an assertion failure.
+	///
+	/// This is used for data decoded from external sources.
+	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
+
 	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
 	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
 	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.

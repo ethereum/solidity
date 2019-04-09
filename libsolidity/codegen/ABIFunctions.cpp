@@ -255,143 +255,6 @@ string ABIFunctions::EncodingOptions::toFunctionNameSuffix() const
 	return suffix;
 }
 
-string ABIFunctions::cleanupFunction(Type const& _type)
-{
-	string functionName = string("cleanup_") + _type.identifier();
-	return createFunction(functionName, [&]() {
-		Whiskers templ(R"(
-			function <functionName>(value) -> cleaned {
-				<body>
-			}
-		)");
-		templ("functionName", functionName);
-		switch (_type.category())
-		{
-		case Type::Category::Address:
-			templ("body", "cleaned := " + cleanupFunction(IntegerType(160)) + "(value)");
-			break;
-		case Type::Category::Integer:
-		{
-			IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-			if (type.numBits() == 256)
-				templ("body", "cleaned := value");
-			else if (type.isSigned())
-				templ("body", "cleaned := signextend(" + to_string(type.numBits() / 8 - 1) + ", value)");
-			else
-				templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << type.numBits()) - 1) + ")");
-			break;
-		}
-		case Type::Category::RationalNumber:
-			templ("body", "cleaned := value");
-			break;
-		case Type::Category::Bool:
-			templ("body", "cleaned := iszero(iszero(value))");
-			break;
-		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
-			break;
-		case Type::Category::Function:
-			solAssert(dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External, "");
-			templ("body", "cleaned := " + cleanupFunction(FixedBytesType(24)) + "(value)");
-			break;
-		case Type::Category::Array:
-		case Type::Category::Struct:
-		case Type::Category::Mapping:
-			solAssert(_type.dataStoredIn(DataLocation::Storage), "Cleanup requested for non-storage reference type.");
-			templ("body", "cleaned := value");
-			break;
-		case Type::Category::FixedBytes:
-		{
-			FixedBytesType const& type = dynamic_cast<FixedBytesType const&>(_type);
-			if (type.numBytes() == 32)
-				templ("body", "cleaned := value");
-			else if (type.numBytes() == 0)
-				// This is disallowed in the type system.
-				solAssert(false, "");
-			else
-			{
-				size_t numBits = type.numBytes() * 8;
-				u256 mask = ((u256(1) << numBits) - 1) << (256 - numBits);
-				templ("body", "cleaned := and(value, " + toCompactHexWithPrefix(mask) + ")");
-			}
-			break;
-		}
-		case Type::Category::Contract:
-		{
-			AddressType addressType(dynamic_cast<ContractType const&>(_type).isPayable() ?
-				StateMutability::Payable :
-				StateMutability::NonPayable
-			);
-			templ("body", "cleaned := " + cleanupFunction(addressType) + "(value)");
-			break;
-		}
-		case Type::Category::Enum:
-		{
-			// Out of range enums cannot be truncated unambigiously and therefore it should be an error.
-			templ("body", "cleaned := value " + validatorFunction(_type) + "(value)");
-			break;
-		}
-		case Type::Category::InaccessibleDynamic:
-			templ("body", "cleaned := 0");
-			break;
-		default:
-			solAssert(false, "Cleanup of type " + _type.identifier() + " requested.");
-		}
-
-		return templ.render();
-	});
-}
-
-string ABIFunctions::validatorFunction(Type const& _type, bool _revertOnFailure)
-{
-	string functionName = string("validator_") + (_revertOnFailure ? "revert_" : "assert_") + _type.identifier();
-	return createFunction(functionName, [&]() {
-		Whiskers templ(R"(
-			function <functionName>(value) {
-				if iszero(<condition>) { <failure> }
-			}
-		)");
-		templ("functionName", functionName);
-		if (_revertOnFailure)
-			templ("failure", "revert(0, 0)");
-		else
-			templ("failure", "invalid()");
-
-		switch (_type.category())
-		{
-		case Type::Category::Address:
-		case Type::Category::Integer:
-		case Type::Category::RationalNumber:
-		case Type::Category::Bool:
-		case Type::Category::FixedPoint:
-		case Type::Category::Function:
-		case Type::Category::Array:
-		case Type::Category::Struct:
-		case Type::Category::Mapping:
-		case Type::Category::FixedBytes:
-		case Type::Category::Contract:
-		{
-			templ("condition", "eq(value, " + cleanupFunction(_type) + "(value))");
-			break;
-		}
-		case Type::Category::Enum:
-		{
-			size_t members = dynamic_cast<EnumType const&>(_type).numberOfMembers();
-			solAssert(members > 0, "empty enum should have caused a parser error.");
-			templ("condition", "lt(value, " + to_string(members) + ")");
-			break;
-		}
-		case Type::Category::InaccessibleDynamic:
-			templ("condition", "1");
-			break;
-		default:
-			solAssert(false, "Validation of type " + _type.identifier() + " requested.");
-		}
-
-		return templ.render();
-	});
-}
-
 string ABIFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes)
 {
 	solAssert(_type.isValueType(), "");
@@ -421,171 +284,6 @@ string ABIFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFu
 		else
 			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
 
-		return templ.render();
-	});
-}
-
-string ABIFunctions::conversionFunction(Type const& _from, Type const& _to)
-{
-	string functionName =
-		"convert_" +
-		_from.identifier() +
-		"_to_" +
-		_to.identifier();
-	return createFunction(functionName, [&]() {
-		Whiskers templ(R"(
-			function <functionName>(value) -> converted {
-				<body>
-			}
-		)");
-		templ("functionName", functionName);
-		string body;
-		auto toCategory = _to.category();
-		auto fromCategory = _from.category();
-		switch (fromCategory)
-		{
-		case Type::Category::Address:
-			body =
-				Whiskers("converted := <convert>(value)")
-					("convert", conversionFunction(IntegerType(160), _to))
-					.render();
-			break;
-		case Type::Category::Integer:
-		case Type::Category::RationalNumber:
-		case Type::Category::Contract:
-		{
-			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&_from))
-				solUnimplementedAssert(!rational->isFractional(), "Not yet implemented - FixedPointType.");
-			if (toCategory == Type::Category::FixedBytes)
-			{
-				solAssert(
-					fromCategory == Type::Category::Integer || fromCategory == Type::Category::RationalNumber,
-					"Invalid conversion to FixedBytesType requested."
-				);
-				FixedBytesType const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
-				body =
-					Whiskers("converted := <shiftLeft>(<clean>(value))")
-						("shiftLeft", m_utils.shiftLeftFunction(256 - toBytesType.numBytes() * 8))
-						("clean", cleanupFunction(_from))
-						.render();
-			}
-			else if (toCategory == Type::Category::Enum)
-			{
-				solAssert(_from.mobileType(), "");
-				body =
-					Whiskers("converted := <cleanEnum>(<cleanInt>(value))")
-					("cleanEnum", cleanupFunction(_to))
-					// "mobileType()" returns integer type for rational
-					("cleanInt", cleanupFunction(*_from.mobileType()))
-					.render();
-			}
-			else if (toCategory == Type::Category::FixedPoint)
-				solUnimplemented("Not yet implemented - FixedPointType.");
-			else if (toCategory == Type::Category::Address)
-				body =
-					Whiskers("converted := <convert>(value)")
-						("convert", conversionFunction(_from, IntegerType(160)))
-						.render();
-			else
-			{
-				solAssert(
-					toCategory == Type::Category::Integer ||
-					toCategory == Type::Category::Contract,
-				"");
-				IntegerType const addressType(160);
-				IntegerType const& to =
-					toCategory == Type::Category::Integer ?
-					dynamic_cast<IntegerType const&>(_to) :
-					addressType;
-
-				// Clean according to the "to" type, except if this is
-				// a widening conversion.
-				IntegerType const* cleanupType = &to;
-				if (fromCategory != Type::Category::RationalNumber)
-				{
-					IntegerType const& from =
-						fromCategory == Type::Category::Integer ?
-						dynamic_cast<IntegerType const&>(_from) :
-						addressType;
-					if (to.numBits() > from.numBits())
-						cleanupType = &from;
-				}
-				body =
-					Whiskers("converted := <cleanInt>(value)")
-					("cleanInt", cleanupFunction(*cleanupType))
-					.render();
-			}
-			break;
-		}
-		case Type::Category::Bool:
-		{
-			solAssert(_from == _to, "Invalid conversion for bool.");
-			body =
-				Whiskers("converted := <clean>(value)")
-				("clean", cleanupFunction(_from))
-				.render();
-			break;
-		}
-		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
-			break;
-		case Type::Category::Array:
-			solUnimplementedAssert(false, "Array conversion not implemented.");
-			break;
-		case Type::Category::Struct:
-			solUnimplementedAssert(false, "Struct conversion not implemented.");
-			break;
-		case Type::Category::FixedBytes:
-		{
-			FixedBytesType const& from = dynamic_cast<FixedBytesType const&>(_from);
-			if (toCategory == Type::Category::Integer)
-				body =
-					Whiskers("converted := <convert>(<shift>(value))")
-					("shift", m_utils.shiftRightFunction(256 - from.numBytes() * 8))
-					("convert", conversionFunction(IntegerType(from.numBytes() * 8), _to))
-					.render();
-			else if (toCategory == Type::Category::Address)
-				body =
-					Whiskers("converted := <convert>(value)")
-						("convert", conversionFunction(_from, IntegerType(160)))
-						.render();
-			else
-			{
-				// clear for conversion to longer bytes
-				solAssert(toCategory == Type::Category::FixedBytes, "Invalid type conversion requested.");
-				body =
-					Whiskers("converted := <clean>(value)")
-					("clean", cleanupFunction(from))
-					.render();
-			}
-			break;
-		}
-		case Type::Category::Function:
-		{
-			solAssert(false, "Conversion should not be called for function types.");
-			break;
-		}
-		case Type::Category::Enum:
-		{
-			solAssert(toCategory == Type::Category::Integer || _from == _to, "");
-			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_from);
-			body =
-				Whiskers("converted := <clean>(value)")
-				("clean", cleanupFunction(enumType))
-				.render();
-			break;
-		}
-		case Type::Category::Tuple:
-		{
-			solUnimplementedAssert(false, "Tuple conversion not implemented.");
-			break;
-		}
-		default:
-			solAssert(false, "");
-		}
-
-		solAssert(!body.empty(), _from.canonicalName() + " to " + _to.canonicalName());
-		templ("body", body);
 		return templ.render();
 	});
 }
@@ -678,9 +376,9 @@ string ABIFunctions::abiEncodingFunction(
 		{
 			string cleanupConvert;
 			if (_from == to)
-				cleanupConvert = cleanupFunction(_from) + "(value)";
+				cleanupConvert = m_utils.cleanupFunction(_from) + "(value)";
 			else
-				cleanupConvert = conversionFunction(_from, to) + "(value)";
+				cleanupConvert = m_utils.conversionFunction(_from, to) + "(value)";
 			if (!_options.padded)
 				cleanupConvert = m_utils.leftAlignFunction(to) + "(" + cleanupConvert + ")";
 			templ("cleanupConvert", cleanupConvert);
@@ -1365,7 +1063,7 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 				}
 			)")
 			("functionName", functionName)
-			("cleanExtFun", cleanupFunction(_to))
+			("cleanExtFun", m_utils.cleanupFunction(_to))
 			.render();
 		});
 }
@@ -1431,7 +1129,7 @@ string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromM
 		templ("load", _fromMemory ? "mload" : "calldataload");
 		// Validation should use the type and not decodingType, because e.g.
 		// the decoding type of an enum is a plain int.
-		templ("validator", validatorFunction(_type, true));
+		templ("validator", m_utils.validatorFunction(_type, true));
 		return templ.render();
 	});
 
@@ -1696,7 +1394,7 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 			)")
 			("functionName", functionName)
 			("load", _fromMemory ? "mload" : "calldataload")
-			("validateExtFun", validatorFunction(_type, true))
+			("validateExtFun", m_utils.validatorFunction(_type, true))
 			.render();
 		}
 	});
