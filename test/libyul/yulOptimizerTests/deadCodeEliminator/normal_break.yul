@@ -16,8 +16,8 @@
 // step: deadCodeEliminator
 // ----
 // {
+//     let a := 20
 //     for {
-//         let a := 20
 //     }
 //     lt(a, 40)
 //     {

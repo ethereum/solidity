@@ -207,6 +207,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else if (m_optimizerStep == "deadCodeEliminator")
 	{
 		disambiguate();
+		ForLoopInitRewriter{}(*m_ast);
 		DeadCodeEliminator{}(*m_ast);
 	}
 	else if (m_optimizerStep == "ssaTransform")

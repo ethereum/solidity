@@ -38,6 +38,10 @@ namespace yul
  * Function definitions are retained as they might be called by earlier
  * code and thus are considered reachable.
  *
+ * Because variables declared in a for loop's init block have their scope extended to the loop body,
+ * we require ForLoopInitRewriter to run before this step.
+ *
+ * Prerequisite: ForLoopInitRewriter
  */
 class DeadCodeEliminator: public ASTModifier
 {
