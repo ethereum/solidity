@@ -32,6 +32,7 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
+#include <regex>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -60,17 +61,48 @@ struct TestStats
 	}
 };
 
+class TestFilter
+{
+public:
+	explicit TestFilter(string const& _filter): m_filter(_filter)
+	{
+		string filter{m_filter};
+
+		boost::replace_all(filter, "/", "\\/");
+		boost::replace_all(filter, "*", ".*");
+
+		m_filterExpression = regex{"(" + filter + "(\\.sol|\\.yul))"};
+	}
+
+	bool matches(string const& _name) const
+	{
+		return regex_match(_name, m_filterExpression);
+	}
+
+private:
+	string m_filter;
+	regex m_filterExpression;
+};
+
 class TestTool
 {
 public:
 	TestTool(
 		TestCase::TestCaseCreator _testCaseCreator,
+		string const& _filter,
 		string const& _name,
 		fs::path const& _path,
 		string const& _ipcPath,
 		bool _formatted,
 		langutil::EVMVersion _evmVersion
-	): m_testCaseCreator(_testCaseCreator), m_name(_name), m_path(_path), m_ipcPath(_ipcPath), m_formatted(_formatted), m_evmVersion(_evmVersion)
+	):
+		m_testCaseCreator(_testCaseCreator),
+		m_filter(TestFilter{_filter}),
+		m_name(_name),
+		m_path(_path),
+		m_ipcPath(_ipcPath),
+		m_formatted(_formatted),
+		m_evmVersion(_evmVersion)
 	{}
 
 	enum class Result
@@ -87,6 +119,7 @@ public:
 		TestCase::TestCaseCreator _testCaseCreator,
 		fs::path const& _basepath,
 		fs::path const& _path,
+		string const& _filter,
 		string const& _ipcPath,
 		bool _formatted,
 		langutil::EVMVersion _evmVersion
@@ -104,12 +137,16 @@ private:
 	Request handleResponse(bool _exception);
 
 	TestCase::TestCaseCreator m_testCaseCreator;
+	TestFilter m_filter;
+
 	string const m_name;
 	fs::path const m_path;
-	string m_ipcPath;
+	string const m_ipcPath;
 	bool const m_formatted = false;
 	langutil::EVMVersion const m_evmVersion;
+
 	unique_ptr<TestCase> m_test;
+
 	static bool m_exitRequested;
 };
 
@@ -121,18 +158,23 @@ TestTool::Result TestTool::process()
 	bool success;
 	std::stringstream outputMessages;
 
-	(AnsiColorized(cout, m_formatted, {BOLD}) << m_name << ": ").flush();
-
 	try
 	{
-		m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath, m_evmVersion});
-		if (m_test->validateSettings(m_evmVersion))
-			success = m_test->run(outputMessages, "  ", m_formatted);
-		else
+		if (m_filter.matches(m_name))
 		{
-			AnsiColorized(cout, m_formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
-			return Result::Skipped;
+			(AnsiColorized(cout, m_formatted, {BOLD}) << m_name << ": ").flush();
+
+			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath, m_evmVersion});
+			if (m_test->validateSettings(m_evmVersion))
+				success = m_test->run(outputMessages, "  ", m_formatted);
+			else
+			{
+				AnsiColorized(cout, m_formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
+				return Result::Skipped;
+			}
 		}
+		else
+			return Result::Skipped;
 	}
 	catch(boost::exception const& _e)
 	{
@@ -217,6 +259,7 @@ TestStats TestTool::processPath(
 	TestCase::TestCaseCreator _testCaseCreator,
 	fs::path const& _basepath,
 	fs::path const& _path,
+	string const& _filter,
 	string const& _ipcPath,
 	bool _formatted,
 	langutil::EVMVersion _evmVersion
@@ -251,7 +294,15 @@ TestStats TestTool::processPath(
 		else
 		{
 			++testCount;
-			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _ipcPath, _formatted, _evmVersion);
+			TestTool testTool(
+				_testCaseCreator,
+				_filter,
+				currentPath.generic_string(),
+				fullpath,
+				_ipcPath,
+				_formatted,
+				_evmVersion
+			);
 			auto result = testTool.process();
 
 			switch(result)
@@ -317,6 +368,7 @@ boost::optional<TestStats> runTestSuite(
 	string const& _name,
 	fs::path const& _basePath,
 	fs::path const& _subdirectory,
+	string const& _filter,
 	string const& _ipcPath,
 	TestCase::TestCaseCreator _testCaseCreator,
 	bool _formatted,
@@ -331,22 +383,32 @@ boost::optional<TestStats> runTestSuite(
 		return {};
 	}
 
-	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _ipcPath, _formatted, _evmVersion);
+	TestStats stats = TestTool::processPath(
+		_testCaseCreator,
+		_basePath,
+		_subdirectory,
+		_filter,
+		_ipcPath,
+		_formatted,
+		_evmVersion
+	);
 
-	cout << endl << _name << " Test Summary: ";
-	AnsiColorized(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
-		stats.successCount <<
-		"/" <<
-		stats.testCount;
-	cout << " tests successful";
-	if (stats.skippedCount > 0)
+	if (stats.skippedCount != stats.testCount)
 	{
-		cout << " (";
-		AnsiColorized(cout, _formatted, {BOLD, YELLOW}) << stats.skippedCount;
-		cout<< " tests skipped)";
+		cout << endl << _name << " Test Summary: ";
+		AnsiColorized(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
+			stats.successCount <<
+			"/" <<
+			stats.testCount;
+		cout << " tests successful";
+		if (stats.skippedCount > 0)
+		{
+			cout << " (";
+			AnsiColorized(cout, _formatted, {BOLD, YELLOW}) << stats.skippedCount;
+			cout<< " tests skipped)";
+		}
+		cout << "." << endl << endl;
 	}
-	cout << "." << endl << endl;
-
 	return stats;
 }
 
@@ -372,6 +434,7 @@ int main(int argc, char const *argv[])
 	}
 
 	TestStats global_stats{0, 0};
+	cout << "Running tests..." << endl << endl;
 
 	// Actually run the tests.
 	// Interactive tests are added in InteractiveTests.h
@@ -383,7 +446,17 @@ int main(int argc, char const *argv[])
 		if (ts.smt && options.disableSMT)
 			continue;
 
-		if (auto stats = runTestSuite(ts.title, options.testPath / ts.path, ts.subpath, options.ipcPath.string(), ts.testCaseCreator, !options.noColor, options.evmVersion()))
+		auto stats = runTestSuite(
+			ts.title,
+			options.testPath / ts.path,
+			ts.subpath,
+			options.test,
+			options.ipcPath.string(),
+			ts.testCaseCreator,
+			!options.noColor,
+			options.evmVersion()
+		);
+		if (stats)
 			global_stats += *stats;
 		else
 			return 1;

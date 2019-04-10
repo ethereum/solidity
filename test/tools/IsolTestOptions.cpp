@@ -19,9 +19,14 @@
 */
 
 #include <test/tools/IsolTestOptions.h>
+
+#include <libdevcore/Assertions.h>
+
 #include <boost/filesystem.hpp>
-#include <string>
+
 #include <iostream>
+#include <regex>
+#include <string>
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
@@ -32,7 +37,7 @@ namespace test
 {
 
 auto const description = R"(isoltest, tool for interactively managing test contracts.
-Usage: isoltest [Options] --ipcpath ipcpath
+Usage: isoltest [Options]
 Interactively validates test contracts.
 
 Allowed options)";
@@ -51,10 +56,10 @@ IsolTestOptions::IsolTestOptions(std::string* _editor):
 	CommonOptions(description)
 {
 	options.add_options()
+		("editor", po::value<std::string>(_editor)->default_value(editorPath()), "Path to editor for opening test files.")
 		("help", po::bool_switch(&showHelp), "Show this help screen.")
-		("no-color", po::bool_switch(&noColor), "don't use colors")
-		("editor", po::value<std::string>(_editor)->default_value(editorPath()), "editor for opening test files");
-
+		("no-color", po::bool_switch(&noColor), "Don't use colors.")
+		("test,t", po::value<std::string>(&test)->default_value("*/*"), "Filters which test units to include.");
 }
 
 bool IsolTestOptions::parse(int _argc, char const* const* _argv)
@@ -68,6 +73,16 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 	}
 
 	return res;
+}
+
+void IsolTestOptions::validate() const
+{
+	std::regex filterExpression{"(((\\*+|\\w+|\\w+\\*+)\\/)+(\\*|\\w+\\**))"};
+	assertThrow(
+		regex_match(test, filterExpression),
+		ConfigException,
+		"Invalid test unit filter: " + test
+	);
 }
 
 }
