@@ -238,6 +238,7 @@ GitHub and automatically retrieves the file over the network. You can import
 the iterable mapping as above,  e.g.
 
 ::
+
   import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;
 
 Remix may add other source code providers in the future.
