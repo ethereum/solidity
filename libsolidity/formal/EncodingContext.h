@@ -41,12 +41,24 @@ public:
 	/// Value of `this` address.
 	smt::Expression thisAddress();
 
+	/// @returns the symbolic balance of address `this`.
+	smt::Expression balance();
+	/// @returns the symbolic balance of an address.
+	smt::Expression balance(smt::Expression _address);
+	/// Transfer _value from _from to _to.
+	void transfer(smt::Expression _from, smt::Expression _to, smt::Expression _value);
+
 private:
+	/// Adds _value to _account's balance.
+	void addBalance(smt::Expression _account, smt::Expression _value);
+
 	SolverInterface& m_solver;
 
 	/// Symbolic `this` address.
 	std::unique_ptr<SymbolicAddressVariable> m_thisAddress;
 
+	/// Symbolic balances.
+	std::unique_ptr<SymbolicVariable> m_balances;
 };
 
 }

@@ -28,14 +28,58 @@ EncodingContext::EncodingContext(SolverInterface& _solver):
 	m_solver(_solver),
 	m_thisAddress(make_unique<SymbolicAddressVariable>("this", m_solver))
 {
+	auto sort = make_shared<smt::ArraySort>(
+		make_shared<smt::Sort>(smt::Kind::Int),
+		make_shared<smt::Sort>(smt::Kind::Int)
+	);
+	m_balances = make_unique<SymbolicVariable>(sort, "balances", m_solver);
 }
 
 void EncodingContext::reset()
 {
 	m_thisAddress->increaseIndex();
+	m_balances->increaseIndex();
 }
 
 smt::Expression EncodingContext::thisAddress()
 {
 	return m_thisAddress->currentValue();
+}
+
+smt::Expression EncodingContext::balance()
+{
+	return balance(m_thisAddress->currentValue());
+}
+
+smt::Expression EncodingContext::balance(smt::Expression _address)
+{
+	return smt::Expression::select(m_balances->currentValue(), move(_address));
+}
+
+void EncodingContext::transfer(smt::Expression _from, smt::Expression _to, smt::Expression _value)
+{
+	unsigned indexBefore = m_balances->index();
+	addBalance(_from, 0 - _value);
+	addBalance(_to, move(_value));
+	unsigned indexAfter = m_balances->index();
+	solAssert(indexAfter > indexBefore, "");
+	m_balances->increaseIndex();
+	/// Do not apply the transfer operation if _from == _to.
+	auto newBalances = smt::Expression::ite(
+		move(_from) == move(_to),
+		m_balances->valueAtIndex(indexBefore),
+		m_balances->valueAtIndex(indexAfter)
+	);
+	m_solver.addAssertion(m_balances->currentValue() == newBalances);
+}
+
+void EncodingContext::addBalance(smt::Expression _address, smt::Expression _value)
+{
+	auto newBalances = smt::Expression::store(
+		m_balances->currentValue(),
+		_address,
+		balance(_address) + move(_value)
+	);
+	m_balances->increaseIndex();
+	m_solver.addAssertion(newBalances == m_balances->currentValue());
 }
