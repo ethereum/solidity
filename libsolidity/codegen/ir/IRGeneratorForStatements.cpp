@@ -23,11 +23,60 @@
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
 
+#include <libyul/AsmPrinter.h>
+#include <libyul/AsmData.h>
+#include <libyul/optimiser/ASTCopier.h>
+
 #include <libdevcore/StringUtils.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+
+namespace
+{
+
+struct CopyTranslate: public yul::ASTCopier
+{
+	using ExternalRefsMap = std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo>;
+
+	CopyTranslate(IRGenerationContext& _context, ExternalRefsMap const& _references):
+		m_context(_context), m_references(_references) {}
+
+	using ASTCopier::operator();
+
+	yul::YulString translateIdentifier(yul::YulString _name) override
+	{
+		return yul::YulString{"usr$" + _name.str()};
+	}
+
+	yul::Identifier translate(yul::Identifier const& _identifier) override
+	{
+		if (!m_references.count(&_identifier))
+			return ASTCopier::translate(_identifier);
+
+		auto const& reference = m_references.at(&_identifier);
+		auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+		solUnimplementedAssert(varDecl, "");
+		solUnimplementedAssert(
+			reference.isOffset == false && reference.isSlot == false,
+			""
+		);
+
+		return yul::Identifier{
+			_identifier.location,
+			yul::YulString{m_context.variableName(*varDecl)}
+		};
+	}
+
+private:
+	IRGenerationContext& m_context;
+	ExternalRefsMap const& m_references;
+};
+
+}
+
+
 
 bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDeclStatement)
 {
@@ -176,6 +225,18 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	default:
 		solUnimplemented("");
 	}
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
+{
+	CopyTranslate bodyCopier{m_context, _inlineAsm.annotation().externalReferences};
+
+	yul::Statement modified = bodyCopier(_inlineAsm.operations());
+
+	solAssert(modified.type() == typeid(yul::Block), "");
+
+	m_code << yul::AsmPrinter()(boost::get<yul::Block>(std::move(modified))) << "\n";
 	return false;
 }
 
