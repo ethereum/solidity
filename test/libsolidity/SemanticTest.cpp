@@ -74,6 +74,7 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _format
 
 		test.setFailure(!m_transactionSuccessful);
 		test.setRawBytes(std::move(output));
+		test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
 	}
 
 	if (!success)

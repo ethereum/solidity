@@ -105,13 +105,13 @@ struct ABIType
 {
 	enum Type
 	{
+		None,
+		Failure,
+		Boolean,
 		UnsignedDec,
 		SignedDec,
-		Boolean,
 		Hex,
-		HexString,
-		Failure,
-		None
+		HexString
 	};
 	enum Align
 	{

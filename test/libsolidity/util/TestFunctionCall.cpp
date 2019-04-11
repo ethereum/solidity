@@ -13,7 +13,12 @@
 */
 
 #include <test/libsolidity/util/TestFunctionCall.h>
+
 #include <libdevcore/AnsiColorized.h>
+
+#include <boost/algorithm/string/replace.hpp>
+
+#include <regex>
 #include <stdexcept>
 #include <string>
 
@@ -21,6 +26,40 @@ using namespace dev;
 using namespace solidity;
 using namespace dev::solidity::test;
 using namespace std;
+
+namespace
+{
+
+static regex s_boolType{"(bool)"};
+static regex s_uintType{"(uint\\d*)"};
+static regex s_intType{"(int\\d*)"};
+static regex s_bytesType{"(bytes\\d+)"};
+static regex s_dynBytesType{"(\\bbytes\\b)"};
+
+/// Translates Solidity's ABI types into the internal type representation of
+/// soltest.
+auto contractABITypes(string const& _type) -> vector<ABIType>
+{
+	vector<ABIType> abiTypes;
+	if (regex_match(_type, s_boolType))
+		abiTypes.push_back(ABIType{ABIType::Boolean, ABIType::AlignRight, 32});
+	else if (regex_match(_type, s_uintType))
+		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
+	else if (regex_match(_type, s_intType))
+		abiTypes.push_back(ABIType{ABIType::SignedDec, ABIType::AlignRight, 32});
+	else if (regex_match(_type, s_bytesType))
+		abiTypes.push_back(ABIType{ABIType::Hex, ABIType::AlignRight, 32});
+	else if (regex_match(_type, s_dynBytesType))
+	{
+		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
+		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
+		abiTypes.push_back(ABIType{ABIType::HexString, ABIType::AlignLeft, 32});
+	}
+	else
+		abiTypes.push_back(ABIType{ABIType::None, ABIType::AlignRight, 0});
+	return abiTypes;
+};
+}
 
 string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
@@ -89,6 +128,7 @@ string TestFunctionCall::format(
 			result = isFailure ?
 				failure :
 				formatRawParameters(m_call.expectations.result);
+			AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << result;
 		}
 		else
 		{
@@ -98,9 +138,19 @@ string TestFunctionCall::format(
 				failure :
 				matchesExpectation() ?
 					formatRawParameters(m_call.expectations.result) :
-					formatBytesParameters(_errorReporter, output, m_call.expectations.result);
+					formatBytesParameters(
+						_errorReporter,
+						output,
+						m_call.signature,
+						m_call.expectations.result,
+						highlight
+					);
+
+			if (isFailure)
+				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << result;
+			else
+				stream << result;
 		}
-		AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << result;
 
 		/// Format comments on expectations taking the display-mode into account.
 		if (_singleLine)
@@ -125,88 +175,173 @@ string TestFunctionCall::format(
 string TestFunctionCall::formatBytesParameters(
 	ErrorReporter& _errorReporter,
 	bytes const& _bytes,
-	dev::solidity::test::ParameterList const& _params
+	string const& _signature,
+	dev::solidity::test::ParameterList const& _params,
+	bool _highlight
 ) const
 {
-	stringstream resultStream;
+	using ParameterList = dev::solidity::test::ParameterList;
 
-	if (_bytes.empty())
-		return {};
+	stringstream os;
+	string functionName{_signature.substr(0, _signature.find("("))};
+
 	auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
 	size_t encodingSize = std::accumulate(_params.begin(), _params.end(), size_t{0}, sizeFold);
 
-	if (encodingSize != _bytes.size())
+	/// Infer type from Contract ABI. Used to generate values for
+	/// auto-correction during interactive update routine.
+	ParameterList abiParams;
+	for (auto const& function: m_contractABI)
+		if (function["name"] == functionName)
+			for (auto const& output: function["outputs"])
+			{
+				auto types = contractABITypes(output["type"].asString());
+				for (auto const& type: types)
+					abiParams.push_back(Parameter{bytes(), "", type, FormatInfo{}});
+			}
+
+
+	/// If parameter count does not match, take types defined by ABI, but only
+	/// if the contract ABI is defined (needed for format tests where the actual
+	/// result does not matter).
+	ParameterList preferredParams;
+	if (m_contractABI && (_params.size() != abiParams.size()))
+	{
 		_errorReporter.warning(
 			"Encoding does not match byte range. The call returned " +
 			to_string(_bytes.size()) + " bytes, but " +
 			to_string(encodingSize) + " bytes were expected."
 		);
+		preferredParams = abiParams;
+	}
+	else
+		preferredParams = _params;
 
+	/// If output is empty, do not format anything.
+	if (_bytes.empty())
+		return {};
+
+	/// Format output bytes with the given parameters. ABI type takes precedence if:
+	/// - size of ABI type is greater
+	/// - given expected type does not match and needs to be overridden in order
+	///   to generate a valid output of the parameter
 	auto it = _bytes.begin();
-	for (auto const& param: _params)
+	auto abiParam = abiParams.begin();
+	size_t paramIndex = 1;
+	for (auto const& param: preferredParams)
 	{
-		long offset = static_cast<long>(param.abiType.size);
+		size_t size = param.abiType.size;
+		if (m_contractABI)
+			size = std::max((*abiParam).abiType.size, param.abiType.size);
+
+		long offset = static_cast<long>(size);
 		auto offsetIter = it + offset;
 		bytes byteRange{it, offsetIter};
-		switch (param.abiType.type)
-		{
-		case ABIType::UnsignedDec:
-			// Check if the detected type was wrong and if this could
-			// be signed. If an unsigned was detected in the expectations,
-			// but the actual result returned a signed, it would be formatted
-			// incorrectly.
-			if (*byteRange.begin() & 0x80)
-				resultStream << u2s(fromBigEndian<u256>(byteRange));
-			else
-				resultStream << fromBigEndian<u256>(byteRange);
-			break;
-		case ABIType::SignedDec:
-			if (*byteRange.begin() & 0x80)
-				resultStream << u2s(fromBigEndian<u256>(byteRange));
-			else
-				resultStream << fromBigEndian<u256>(byteRange);
-			break;
-		case ABIType::Boolean:
-		{
-			u256 result = fromBigEndian<u256>(byteRange);
-			if (result == 0)
-				resultStream << "false";
-			else if (result == 1)
-				resultStream << "true";
-			else
-				resultStream << result;
-			break;
-		}
-		case ABIType::Hex:
-			resultStream << toHex(byteRange, HexPrefix::Add);
-			break;
-		case ABIType::HexString:
-			resultStream << "hex\"" << toHex(byteRange) << "\"";
-			break;
-		case ABIType::Failure:
-			break;
-		case ABIType::None:
-			break;
-		}
+
+		/// Override type with ABI type if given one does not match.
+		auto type = param.abiType;
+		if (m_contractABI)
+			if ((*abiParam).abiType.type > param.abiType.type)
+			{
+				type = (*abiParam).abiType;
+				_errorReporter.warning(
+					"Type of parameter " + to_string(paramIndex) +
+					" does not match the one inferred from ABI."
+				);
+			}
+
+		/// Prints obtained result if it does not match the expectation
+		/// and prints the expected result otherwise.
+		/// Highlights parameter only if it does not match.
+		if (byteRange != param.rawBytes)
+			AnsiColorized(
+				os,
+				_highlight,
+				{dev::formatting::RED_BACKGROUND}
+			) << formatBytesRange(byteRange, type);
+		else
+			os << param.rawString;
+
+		if (abiParam != abiParams.end())
+			abiParam++;
+
 		it += offset;
-		if (it != _bytes.end() && !(param.abiType.type == ABIType::None))
-			resultStream << ", ";
+		paramIndex++;
+		if (&param != &preferredParams.back())
+			os << ", ";
 	}
-	return resultStream.str();
+	return os.str();
 }
 
-string TestFunctionCall::formatRawParameters(dev::solidity::test::ParameterList const& _params, std::string const& _linePrefix) const
+string TestFunctionCall::formatBytesRange(
+	bytes const& _bytes,
+	ABIType const& _abiType
+) const
 {
-	stringstream resultStream;
+	stringstream os;
+
+	switch (_abiType.type)
+	{
+	case ABIType::UnsignedDec:
+		// Check if the detected type was wrong and if this could
+		// be signed. If an unsigned was detected in the expectations,
+		// but the actual result returned a signed, it would be formatted
+		// incorrectly.
+		if (*_bytes.begin() & 0x80)
+			os << u2s(fromBigEndian<u256>(_bytes));
+		else
+			os << fromBigEndian<u256>(_bytes);
+		break;
+	case ABIType::SignedDec:
+		if (*_bytes.begin() & 0x80)
+			os << u2s(fromBigEndian<u256>(_bytes));
+		else
+			os << fromBigEndian<u256>(_bytes);
+		break;
+	case ABIType::Boolean:
+	{
+		u256 result = fromBigEndian<u256>(_bytes);
+		if (result == 0)
+			os << "false";
+		else if (result == 1)
+			os << "true";
+		else
+			os << result;
+		break;
+	}
+	case ABIType::Hex:
+	{
+		string hex{toHex(_bytes, HexPrefix::Add)};
+		boost::algorithm::replace_all(hex, "00", "");
+		os << hex;
+		break;
+	}
+	case ABIType::HexString:
+		os << "hex\"" << toHex(_bytes) << "\"";
+		break;
+	case ABIType::Failure:
+		break;
+	case ABIType::None:
+		break;
+	}
+	return os.str();
+}
+
+string TestFunctionCall::formatRawParameters(
+	dev::solidity::test::ParameterList const& _params,
+	std::string const& _linePrefix
+) const
+{
+	stringstream os;
 	for (auto const& param: _params)
 	{
 		if (param.format.newline)
-			resultStream << endl << _linePrefix << "// ";
-		resultStream << param.rawString;
+			os << endl << _linePrefix << "// ";
+		os << param.rawString;
 		if (&param != &_params.back())
-			resultStream << ", ";
+			os << ", ";
 	}
-	return resultStream.str();
+	return os.str();
 }
 
 void TestFunctionCall::reset()
