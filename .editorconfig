@@ -17,3 +17,7 @@ indent_size = 4
 [std/**.sol]
 indent_style = space
 indent_size = 4
+
+[*.{txt,cmake}]
+indent_style = tab
+indent_size = 4

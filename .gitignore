@@ -32,6 +32,7 @@ prerelease.txt
 
 # Build directory
 build/
+build*/
 emscripten_build/
 docs/_build
 docs/utils/__pycache__
@@ -44,6 +45,9 @@ deps/cache
 [._]*.sw[a-p]
 [._]sw[a-p]
 
+# emacs stuff
+*~
+
 # IDE files
 .idea
 .vscode
@@ -53,3 +57,6 @@ CMakeLists.txt.user
 /.vs
 /.cproject
 /.project
+
+# place to put local temporary files
+tmp
