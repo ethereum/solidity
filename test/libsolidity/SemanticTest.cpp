@@ -80,12 +80,19 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _format
 	{
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
 		for (auto const& test: m_tests)
-			_stream << test.format(_linePrefix, false, _formatted) << endl;
+		{
+			ErrorReporter errorReporter;
+			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+			_stream << errorReporter.format(_linePrefix, _formatted);
+		}
 		_stream << endl;
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
 		for (auto const& test: m_tests)
-			_stream << test.format(_linePrefix, true, _formatted) << endl;
-
+		{
+			ErrorReporter errorReporter;
+			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+			_stream << errorReporter.format(_linePrefix, _formatted);
+		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
 			<< "Attention: Updates on the test will apply the detected format displayed." << endl;
 		return false;

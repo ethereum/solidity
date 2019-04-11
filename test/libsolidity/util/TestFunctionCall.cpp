@@ -22,12 +22,18 @@ using namespace solidity;
 using namespace dev::solidity::test;
 using namespace std;
 
-string TestFunctionCall::format(string const& _linePrefix, bool const _renderResult, bool const _highlight) const
+string TestFunctionCall::format(
+	ErrorReporter& _errorReporter,
+	string const& _linePrefix,
+	bool const _renderResult,
+	bool const _highlight
+) const
 {
 	using namespace soltest;
 	using Token = soltest::Token;
 
-	stringstream _stream;
+	stringstream stream;
+
 	bool highlight = !matchesExpectation() && _highlight;
 
 	auto formatOutput = [&](bool const _singleLine)
@@ -42,16 +48,16 @@ string TestFunctionCall::format(string const& _linePrefix, bool const _renderRes
 		string failure = formatToken(Token::Failure);
 
 		/// Formats the function signature. This is the same independent from the display-mode.
-		_stream << _linePrefix << newline << ws << m_call.signature;
+		stream << _linePrefix << newline << ws << m_call.signature;
 		if (m_call.value > u256(0))
-			_stream << comma << ws << m_call.value << ws << ether;
+			stream << comma << ws << m_call.value << ws << ether;
 		if (!m_call.arguments.rawBytes().empty())
 		{
 			string output = formatRawParameters(m_call.arguments.parameters, _linePrefix);
-			_stream << colon;
+			stream << colon;
 			if (_singleLine)
-				_stream << ws;
-			_stream << output;
+				stream << ws;
+			stream << output;
 
 		}
 
@@ -60,18 +66,18 @@ string TestFunctionCall::format(string const& _linePrefix, bool const _renderRes
 		if (_singleLine)
 		{
 			if (!m_call.arguments.comment.empty())
-				_stream << ws << comment << m_call.arguments.comment << comment;
-			_stream << ws << arrow << ws;
+				stream << ws << comment << m_call.arguments.comment << comment;
+			stream << ws << arrow << ws;
 		}
 		else
 		{
-			_stream << endl << _linePrefix << newline << ws;
+			stream << endl << _linePrefix << newline << ws;
 			if (!m_call.arguments.comment.empty())
 			{
-				 _stream << comment << m_call.arguments.comment << comment;
-				 _stream << endl << _linePrefix << newline << ws;
+				 stream << comment << m_call.arguments.comment << comment;
+				 stream << endl << _linePrefix << newline << ws;
 			}
-			_stream << arrow << ws;
+			stream << arrow << ws;
 		}
 
 		/// Format either the expected output or the actual result output
@@ -92,47 +98,49 @@ string TestFunctionCall::format(string const& _linePrefix, bool const _renderRes
 				failure :
 				matchesExpectation() ?
 					formatRawParameters(m_call.expectations.result) :
-					formatBytesParameters(output, m_call.expectations.result);
+					formatBytesParameters(_errorReporter, output, m_call.expectations.result);
 		}
-		AnsiColorized(_stream, highlight, {dev::formatting::RED_BACKGROUND}) << result;
+		AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << result;
 
 		/// Format comments on expectations taking the display-mode into account.
 		if (_singleLine)
 		{
 			if (!m_call.expectations.comment.empty())
-				_stream << ws << comment << m_call.expectations.comment << comment;
+				stream << ws << comment << m_call.expectations.comment << comment;
 		}
 		else
 		{
 			if (!m_call.expectations.comment.empty())
 			{
-				_stream << endl << _linePrefix << newline << ws;
-				_stream << comment << m_call.expectations.comment << comment;
+				stream << endl << _linePrefix << newline << ws;
+				stream << comment << m_call.expectations.comment << comment;
 			}
 		}
 	};
 
-	if (m_call.displayMode == FunctionCall::DisplayMode::SingleLine)
-		formatOutput(true);
-	else
-		formatOutput(false);
-	return _stream.str();
+	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);
+	return stream.str();
 }
 
-string TestFunctionCall::formatBytesParameters(bytes const& _bytes, dev::solidity::test::ParameterList const& _params) const
+string TestFunctionCall::formatBytesParameters(
+	ErrorReporter& _errorReporter,
+	bytes const& _bytes,
+	dev::solidity::test::ParameterList const& _params
+) const
 {
 	stringstream resultStream;
+
 	if (_bytes.empty())
 		return {};
 	auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
 	size_t encodingSize = std::accumulate(_params.begin(), _params.end(), size_t{0}, sizeFold);
 
-	soltestAssert(
-		encodingSize == _bytes.size(),
-		"Encoding does not match byte range: the call returned " +
-		to_string(_bytes.size()) + " bytes, but " +
-		to_string(encodingSize) + " bytes were expected."
-	);
+	if (encodingSize != _bytes.size())
+		_errorReporter.warning(
+			"Encoding does not match byte range. The call returned " +
+			to_string(_bytes.size()) + " bytes, but " +
+			to_string(encodingSize) + " bytes were expected."
+		);
 
 	auto it = _bytes.begin();
 	for (auto const& param: _params)
