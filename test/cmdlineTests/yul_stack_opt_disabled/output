@@ -28,4 +28,3 @@ object "object" {
         sstore(a1, a2)
     }
 }
-
