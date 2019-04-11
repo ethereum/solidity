@@ -71,11 +71,11 @@ void OptimiserSuite::run(
 	VarDeclInitializer{}(ast);
 	FunctionHoister{}(ast);
 	BlockFlattener{}(ast);
+	ForLoopInitRewriter{}(ast);
 	DeadCodeEliminator{}(ast);
 	FunctionGrouper{}(ast);
 	EquivalentFunctionCombiner::run(ast);
 	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
-	ForLoopInitRewriter{}(ast);
 	BlockFlattener{}(ast);
 	StructuralSimplifier{*_dialect}(ast);
 	BlockFlattener{}(ast);
