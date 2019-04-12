@@ -51,8 +51,11 @@ public:
 	std::pair<std::string, std::string> run(ContractDefinition const& _contract);
 
 private:
-	std::string generateIR(ContractDefinition const& _contract);
-	std::string generateIRFunction(FunctionDefinition const& _function);
+	std::string generate(ContractDefinition const& _contract);
+	std::string generate(Block const& _block);
+
+	/// Generates code for and returns the name of the function.
+	std::string generateFunction(FunctionDefinition const& _function);
 
 	std::string constructorCode(FunctionDefinition const& _constructor);
 	std::string deployCode(ContractDefinition const& _contract);

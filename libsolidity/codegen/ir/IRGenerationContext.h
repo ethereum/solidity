@@ -28,13 +28,17 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace dev
 {
 namespace solidity
 {
 
+class ContractDefinition;
 class VariableDeclaration;
+class FunctionDefinition;
+class Expression;
 
 /**
  * Class that contains contextual information during IR generation.
@@ -50,13 +54,33 @@ public:
 
 	std::shared_ptr<MultiUseYulFunctionCollector> functionCollector() const { return m_functions; }
 
+	/// Sets the current inheritance hierarchy from derived to base.
+	void setInheritanceHierarchy(std::vector<ContractDefinition const*> _hierarchy)
+	{
+		m_inheritanceHierarchy = std::move(_hierarchy);
+	}
+
+
 	std::string addLocalVariable(VariableDeclaration const& _varDecl);
+	std::string variableName(VariableDeclaration const& _varDecl);
+	std::string functionName(FunctionDefinition const& _function);
+	FunctionDefinition const& virtualFunction(FunctionDefinition const& _functionDeclaration);
+	std::string virtualFunctionName(FunctionDefinition const& _functionDeclaration);
+
+	std::string newYulVariable();
+	/// @returns the variable (or comma-separated list of variables) that contain
+	/// the value of the given expression.
+	std::string variable(Expression const& _expression);
+
+	std::string internalDispatch(size_t _in, size_t _out);
 
 private:
 	langutil::EVMVersion m_evmVersion;
 	OptimiserSettings m_optimiserSettings;
+	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 	std::map<VariableDeclaration const*, std::string> m_localVariables;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functions;
+	size_t m_varCounter = 0;
 };
 
 }

@@ -73,6 +73,8 @@ public:
 	/// of 32 or the input if it is a multiple of 32.
 	std::string roundUpFunction();
 
+	std::string overflowCheckedUIntAddFunction(size_t _bits);
+
 	std::string arrayLengthFunction(ArrayType const& _type);
 	/// @returns the name of a function that computes the number of bytes required
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).

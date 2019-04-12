@@ -252,6 +252,36 @@ string YulUtilFunctions::roundUpFunction()
 	});
 }
 
+string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
+{
+	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
+	string functionName = "checked_add_uint_" + to_string(_bits);
+	return m_functionCollector->createFunction(functionName, [&]() {
+		if (_bits < 256)
+			return
+				Whiskers(R"(
+				function <functionName>(x, y) -> sum {
+					let mask := <mask>
+					sum := add(and(x, mask), and(y, mask))
+					if and(sum, not(mask)) { revert(0, 0) }
+				}
+				)")
+				("functionName", functionName)
+				("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
+				.render();
+		else
+			return
+				Whiskers(R"(
+				function <functionName>(x, y) -> sum {
+					sum := add(x, y)
+					if lt(sum, x) { revert(0, 0) }
+				}
+				)")
+				("functionName", functionName)
+				.render();
+	});
+}
+
 string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 {
 	string functionName = "array_length_" + _type.identifier();

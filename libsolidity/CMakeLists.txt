@@ -69,6 +69,8 @@ set(sources
 	codegen/YulUtilFunctions.cpp
 	codegen/ir/IRGenerator.cpp
 	codegen/ir/IRGenerator.h
+	codegen/ir/IRGeneratorForStatements.cpp
+	codegen/ir/IRGeneratorForStatements.h
 	codegen/ir/IRGenerationContext.cpp
 	codegen/ir/IRGenerationContext.h
 	formal/SMTChecker.cpp

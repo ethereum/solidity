@@ -22,7 +22,10 @@
 
 #include <libsolidity/codegen/ir/IRGenerator.h>
 
+#include <libsolidity/codegen/ir/IRGeneratorForStatements.h>
+
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 
@@ -43,7 +46,7 @@ using namespace dev::solidity;
 pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 {
 	// TODO Would be nice to pretty-print this while retaining comments.
-	string ir = generateIR(_contract);
+	string ir = generate(_contract);
 
 	yul::AssemblyStack asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
 	if (!asmStack.parseAndAnalyze("", ir))
@@ -69,7 +72,7 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 	return {warning + ir, warning + asmStack.print()};
 }
 
-string IRGenerator::generateIR(ContractDefinition const& _contract)
+string IRGenerator::generate(ContractDefinition const& _contract)
 {
 	Whiskers t(R"(
 		object "<CreationObject>" {
@@ -90,6 +93,7 @@ string IRGenerator::generateIR(ContractDefinition const& _contract)
 	)");
 
 	resetContext();
+	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	t("CreationObject", creationObjectName(_contract));
 	t("memoryInit", memoryInit());
 	t("constructor", _contract.constructor() ? constructorCode(*_contract.constructor()) : "");
@@ -97,17 +101,25 @@ string IRGenerator::generateIR(ContractDefinition const& _contract)
 	t("functions", m_context.functionCollector()->requestedFunctions());
 
 	resetContext();
+	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	t("runtimeFunctions", m_context.functionCollector()->requestedFunctions());
 	return t.render();
 }
 
-string IRGenerator::generateIRFunction(FunctionDefinition const& _function)
+string IRGenerator::generate(Block const& _block)
 {
-	string functionName = "fun_" + to_string(_function.id()) + "_" + _function.name();
+	IRGeneratorForStatements generator(m_context, m_utils);
+	_block.accept(generator);
+	return generator.code();
+}
+
+string IRGenerator::generateFunction(FunctionDefinition const& _function)
+{
+	string functionName = m_context.functionName(_function);
 	return m_context.functionCollector()->createFunction(functionName, [&]() {
-		Whiskers t("function <functionName>(<params>) <returns> {}");
+		Whiskers t("\nfunction <functionName>(<params>) <returns> {\n<body>\n}\n");
 		t("functionName", functionName);
 		string params;
 		for (auto const& varDecl: _function.parameters())
@@ -117,6 +129,7 @@ string IRGenerator::generateIRFunction(FunctionDefinition const& _function)
 		for (auto const& varDecl: _function.returnParameters())
 			retParams += (retParams.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl);
 		t("returns", retParams.empty() ? "" : " -> " + retParams);
+		t("body", generate(_function.body()));
 		return t.render();
 	});
 }
@@ -200,7 +213,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		templ["abiDecode"] = abiFunctions.tupleDecoder(type->parameterTypes());
 		templ["params"] = m_utils.suffixedVariableNameList("param_", 0, paramVars);
 		templ["retParams"] = m_utils.suffixedVariableNameList("ret_", retVars, 0);
-		templ["function"] = generateIRFunction(dynamic_cast<FunctionDefinition const&>(type->declaration()));
+		templ["function"] = generateFunction(dynamic_cast<FunctionDefinition const&>(type->declaration()));
 		templ["allocate"] = m_utils.allocationFunction();
 		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), false);
 		templ["comma"] = retVars == 0 ? "" : ", ";
@@ -211,7 +224,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		string fallbackCode;
 		if (!fallback->isPayable())
 			fallbackCode += callValueCheck();
-		fallbackCode += generateIRFunction(*fallback) + "() stop()";
+		fallbackCode += generateFunction(*fallback) + "() stop()";
 
 		t("fallback", fallbackCode);
 	}
