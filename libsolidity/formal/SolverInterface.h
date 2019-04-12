@@ -297,6 +297,7 @@ public:
 	Expression newVariable(std::string _name, SortPointer _sort)
 	{
 		// Subclasses should do something here
+		solAssert(_sort, "");
 		declareVariable(_name, *_sort);
 		return Expression(std::move(_name), {}, std::move(_sort));
 	}
