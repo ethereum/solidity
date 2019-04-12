@@ -110,9 +110,7 @@ void ParserBase::expectTokenRecoveryDelete(Token _value, bool _advance)
 		parserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) +
 					"; deleting tokens until we find one.");
 
-		for (Token _token = m_scanner->currentToken();
-			 _token != _value || _token == Token::EOS;
-			 _token = m_scanner->next()) ;
+		for (Token _token = m_scanner->currentToken(); _token != _value || _token == Token::EOS;_token = m_scanner->next()) ;
 
 	}
 	if (_advance)
