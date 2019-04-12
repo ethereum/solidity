@@ -83,10 +83,7 @@ public:
 			langutil::SourceReferenceFormatter formatter(std::cerr);
 
 			for (auto const& error: m_compiler.errors())
-				formatter.printExceptionInformation(
-					*error,
-					(error->type() == langutil::Error::Type::Warning) ? "Warning" : "Error"
-				);
+				formatter.printErrorInformation(*error);
 			BOOST_ERROR("Compiling contract failed");
 		}
 		eth::LinkerObject obj;
@@ -104,10 +101,7 @@ public:
 				langutil::SourceReferenceFormatter formatter(std::cerr);
 
 				for (auto const& error: m_compiler.errors())
-					formatter.printExceptionInformation(
-						*error,
-						(error->type() == langutil::Error::Type::Warning) ? "Warning" : "Error"
-					);
+					formatter.printErrorInformation(*error);
 				BOOST_ERROR("Assembly contract failed. IR: " + m_compiler.yulIROptimized({}));
 			}
 			asmStack.optimize();

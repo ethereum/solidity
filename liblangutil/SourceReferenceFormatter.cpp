@@ -70,9 +70,17 @@ void SourceReferenceFormatter::printSourceName(SourceReference const& _ref)
 		m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ": ";
 }
 
-void SourceReferenceFormatter::printExceptionInformation(dev::Exception const& _error, std::string const& _category)
+void SourceReferenceFormatter::printExceptionInformation(dev::Exception const& _exception, std::string const& _category)
 {
-	printExceptionInformation(SourceReferenceExtractor::extract(_error, _category));
+	printExceptionInformation(SourceReferenceExtractor::extract(_exception, _category));
+}
+
+void SourceReferenceFormatter::printErrorInformation(Error const& _error)
+{
+	printExceptionInformation(
+		_error,
+		(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
+	);
 }
 
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
