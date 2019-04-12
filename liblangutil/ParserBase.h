@@ -62,8 +62,13 @@ protected:
 
 	///@{
 	///@name Helper functions
-	/// If current token value is not _value, throw exception otherwise advance token.
+	/// If current token value is not _value, throw exception otherwise advance token
+	//  if _advance is true.
 	void expectToken(Token _value, bool _advance = true);
+
+	/// Like expectToken but if there is an error we will delete tokens until
+	/// we get the expected token or EOS.
+	void expectTokenRecoveryDelete(Token _value, bool _advance = true);
 	Token currentToken() const;
 	Token peekNextToken() const;
 	std::string currentLiteral() const;

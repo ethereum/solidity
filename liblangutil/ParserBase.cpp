@@ -85,6 +85,40 @@ void ParserBase::expectToken(Token _value, bool _advance)
 		m_scanner->next();
 }
 
+void ParserBase::expectTokenRecoveryDelete(Token _value, bool _advance)
+{
+	Token tok = m_scanner->currentToken();
+	if (tok != _value)
+	{
+		auto tokenName = [this](Token _token)
+		{
+			if (_token == Token::Identifier)
+				return string("identifier");
+			else if (_token == Token::EOS)
+				return string("end of source");
+			else if (TokenTraits::isReservedKeyword(_token))
+				return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
+			else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
+			{
+				ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
+				return string("'") + elemTypeName.toString() + "'";
+			}
+			else
+				return string("'") + TokenTraits::friendlyName(_token) + "'";
+		};
+
+		parserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) +
+					"; deleting tokens until we find one.");
+
+		for (Token _token = m_scanner->currentToken();
+			 _token != _value || _token == Token::EOS;
+			 _token = m_scanner->next()) ;
+
+	}
+	if (_advance)
+		m_scanner->next();
+}
+
 void ParserBase::increaseRecursionDepth()
 {
 	m_recursionDepth++;

@@ -959,21 +959,7 @@ ASTPointer<Block> Parser::parseBlock(ASTPointer<ASTString> const& _docString)
 	expectToken(Token::LBrace);
 	vector<ASTPointer<Statement>> statements;
 	while (m_scanner->currentToken() != Token::RBrace)
-	{
-		try
-		{
-			statements.push_back(parseStatement());
-		}
-		catch (FatalError const&)
-		{
-			if (m_errorReporter.errors().empty())
-				throw; // Something is weird here, rather throw again.
-			while (m_scanner->currentToken() != Token::RBrace && m_scanner->currentToken() != Token::Semicolon)
-				m_scanner->next();
-			if (m_scanner->currentToken() == Token::Semicolon)
-				m_scanner->next();
-		}
-	}
+		statements.push_back(parseStatement());
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
 	return nodeFactory.createNode<Block>(_docString, statements);
@@ -1043,7 +1029,7 @@ ASTPointer<Statement> Parser::parseStatement()
 		statement = parseSimpleStatement(docString);
 		break;
 	}
-	expectToken(Token::Semicolon);
+	expectTokenRecoveryDelete(Token::Semicolon);
 	return statement;
 }
 
