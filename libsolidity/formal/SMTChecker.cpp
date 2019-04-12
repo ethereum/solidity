@@ -192,6 +192,15 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	m_modifierDepthStack.pop_back();
 }
 
+bool SMTChecker::visit(InlineAssembly const& _inlineAsm)
+{
+	m_errorReporter.warning(
+		_inlineAsm.location(),
+		"Assertion checker does not support inline assembly."
+	);
+	return false;
+}
+
 bool SMTChecker::visit(IfStatement const& _node)
 {
 	_node.condition().accept(*this);
