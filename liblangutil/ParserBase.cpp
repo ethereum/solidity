@@ -107,11 +107,15 @@ void ParserBase::expectTokenRecoveryDelete(Token _value, bool _advance)
 				return string("'") + TokenTraits::friendlyName(_token) + "'";
 		};
 
-		parserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) +
-					"; deleting tokens until we find one.");
+		Token _token;
+		for (_token = m_scanner->currentToken(); _token != _value && _token != Token::EOS; _token = m_scanner->next()) ;
 
-		for (Token _token = m_scanner->currentToken(); _token != _value || _token == Token::EOS;_token = m_scanner->next()) ;
-
+		if (_token == Token::EOS)
+			fatalParserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) +
+			"; can not find token to synchronize to.");
+		else
+			parserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) +
+			"; deleted tokens to the next expected token.");
 	}
 	if (_advance)
 		m_scanner->next();

@@ -6,4 +6,4 @@ contract Foo {
 	}
 }
 // ----
-// ParserError: (67-75): Expected ';' but got 'constant'
+// ParserError: (85-86): Expected ';' but got 'constant'; deleted tokens to the next expected token.
