@@ -182,7 +182,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	_typeName.annotation().referencedDeclaration = declaration;
 
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
-		_typeName.annotation().type = TypeProvider::structType(*structDef);
+		_typeName.annotation().type = TypeProvider::structType(*structDef, DataLocation::Storage);
 	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))

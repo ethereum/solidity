@@ -173,7 +173,7 @@ public:
 
 	static TypeType const* typeType(Type const* _actualType);
 
-	static StructType const* structType(StructDefinition const& _struct, DataLocation _location = DataLocation::Storage);
+	static StructType const* structType(StructDefinition const& _struct, DataLocation _location);
 
 	static ModifierType const* modifierType(ModifierDefinition const& _modifierDef);
 

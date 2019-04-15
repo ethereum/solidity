@@ -266,7 +266,7 @@ TypeNameAnnotation& TypeName::annotation() const
 
 TypePointer StructDefinition::type() const
 {
-	return TypeProvider::typeType(TypeProvider::structType(*this));
+	return TypeProvider::typeType(TypeProvider::structType(*this, DataLocation::Storage));
 }
 
 TypeDeclarationAnnotation& StructDefinition::annotation() const
