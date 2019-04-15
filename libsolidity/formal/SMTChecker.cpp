@@ -18,7 +18,6 @@
 #include <libsolidity/formal/SMTChecker.h>
 
 #include <libsolidity/formal/SMTPortfolio.h>
-#include <libsolidity/formal/VariableUsage.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libdevcore/StringUtils.h>
@@ -51,7 +50,6 @@ SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _
 
 void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
 {
-	m_variableUsage = make_shared<VariableUsage>(_source);
 	m_scanner = _scanner;
 	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		_source.accept(*this);
@@ -211,17 +209,17 @@ bool SMTChecker::visit(IfStatement const& _node)
 		checkBooleanNotConstant(_node.condition(), "Condition is always $VALUE.");
 
 	auto indicesEndTrue = visitBranch(&_node.trueStatement(), expr(_node.condition()));
-	vector<VariableDeclaration const*> touchedVariables = m_variableUsage->touchedVariables(_node.trueStatement());
+	auto touchedVars = touchedVariables(_node.trueStatement());
 	decltype(indicesEndTrue) indicesEndFalse;
 	if (_node.falseStatement())
 	{
 		indicesEndFalse = visitBranch(_node.falseStatement(), !expr(_node.condition()));
-		touchedVariables += m_variableUsage->touchedVariables(*_node.falseStatement());
+		touchedVars += touchedVariables(*_node.falseStatement());
 	}
 	else
 		indicesEndFalse = copyVariableIndices();
 
-	mergeVariables(touchedVariables, expr(_node.condition()), indicesEndTrue, indicesEndFalse);
+	mergeVariables(touchedVars, expr(_node.condition()), indicesEndTrue, indicesEndFalse);
 
 	return false;
 }
@@ -238,8 +236,8 @@ bool SMTChecker::visit(IfStatement const& _node)
 bool SMTChecker::visit(WhileStatement const& _node)
 {
 	auto indicesBeforeLoop = copyVariableIndices();
-	auto touchedVariables = m_variableUsage->touchedVariables(_node);
-	resetVariables(touchedVariables);
+	auto touchedVars = touchedVariables(_node);
+	resetVariables(touchedVars);
 	decltype(indicesBeforeLoop) indicesAfterLoop;
 	if (_node.isDoWhile())
 	{
@@ -266,7 +264,7 @@ bool SMTChecker::visit(WhileStatement const& _node)
 	if (!_node.isDoWhile())
 		_node.condition().accept(*this);
 
-	mergeVariables(touchedVariables, expr(_node.condition()), indicesAfterLoop, copyVariableIndices());
+	mergeVariables(touchedVars, expr(_node.condition()), indicesAfterLoop, copyVariableIndices());
 
 	m_loopExecutionHappened = true;
 	return false;
@@ -281,17 +279,13 @@ bool SMTChecker::visit(ForStatement const& _node)
 	auto indicesBeforeLoop = copyVariableIndices();
 
 	// Do not reset the init expression part.
-	auto touchedVariables =
-		m_variableUsage->touchedVariables(_node.body());
+	auto touchedVars = touchedVariables(_node.body());
 	if (_node.condition())
-		touchedVariables += m_variableUsage->touchedVariables(*_node.condition());
+		touchedVars += touchedVariables(*_node.condition());
 	if (_node.loopExpression())
-		touchedVariables += m_variableUsage->touchedVariables(*_node.loopExpression());
-	// Remove duplicates
-	std::sort(touchedVariables.begin(), touchedVariables.end());
-	touchedVariables.erase(std::unique(touchedVariables.begin(), touchedVariables.end()), touchedVariables.end());
+		touchedVars += touchedVariables(*_node.loopExpression());
 
-	resetVariables(touchedVariables);
+	resetVariables(touchedVars);
 
 	if (_node.condition())
 	{
@@ -316,7 +310,7 @@ bool SMTChecker::visit(ForStatement const& _node)
 		_node.condition()->accept(*this);
 
 	auto forCondition = _node.condition() ? expr(*_node.condition()) : smt::Expression(true);
-	mergeVariables(touchedVariables, forCondition, indicesAfterLoop, copyVariableIndices());
+	mergeVariables(touchedVars, forCondition, indicesAfterLoop, copyVariableIndices());
 
 	m_loopExecutionHappened = true;
 	return false;
@@ -1162,17 +1156,17 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 	{
 		// @TODO check that both of them are not constant
 		_op.leftExpression().accept(*this);
-		auto touchedVariables = m_variableUsage->touchedVariables(_op.leftExpression());
+		auto touchedVars = touchedVariables(_op.leftExpression());
 		if (_op.getOperator() == Token::And)
 		{
 			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), expr(_op.leftExpression()));
-			mergeVariables(touchedVariables, !expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
+			mergeVariables(touchedVars, !expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 			defineExpr(_op, expr(_op.leftExpression()) && expr(_op.rightExpression()));
 		}
 		else
 		{
 			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), !expr(_op.leftExpression()));
-			mergeVariables(touchedVariables, expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
+			mergeVariables(touchedVars, expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 			defineExpr(_op, expr(_op.leftExpression()) || expr(_op.rightExpression()));
 		}
 	}
@@ -1507,7 +1501,7 @@ void SMTChecker::resetStorageReferences()
 	resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
 }
 
-void SMTChecker::resetVariables(vector<VariableDeclaration const*> _variables)
+void SMTChecker::resetVariables(set<VariableDeclaration const*> const& _variables)
 {
 	for (auto const* decl: _variables)
 		resetVariable(*decl);
@@ -1527,12 +1521,6 @@ TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type.get()))
 		return ReferenceType::copyForLocationIfReference(refType->location(), _type);
 	return _type;
-}
-
-void SMTChecker::mergeVariables(vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
-{
-	set<VariableDeclaration const*> uniqueVars(_variables.begin(), _variables.end());
-	mergeVariables(uniqueVars, _condition, _indicesEndTrue, _indicesEndFalse);
 }
 
 void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
@@ -1763,4 +1751,10 @@ FunctionDefinition const* SMTChecker::inlinedFunctionCallToDefinition(FunctionCa
 		return funDef;
 
 	return nullptr;
+}
+
+set<VariableDeclaration const*> SMTChecker::touchedVariables(ASTNode const& _node)
+{
+	solAssert(!m_functionPath.empty(), "");
+	return m_variableUsage.touchedVariables(_node, m_functionPath);
 }

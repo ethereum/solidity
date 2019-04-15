@@ -19,72 +19,61 @@
 
 #include <libsolidity/formal/SMTChecker.h>
 
-#include <libsolidity/ast/ASTVisitor.h>
+#include <algorithm>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
-VariableUsage::VariableUsage(ASTNode const& _node)
+void VariableUsage::endVisit(Identifier const& _identifier)
 {
-	auto nodeFun = [&](ASTNode const& n) -> bool
-	{
-		if (auto identifier = dynamic_cast<Identifier const*>(&n))
-		{
-			Declaration const* declaration = identifier->annotation().referencedDeclaration;
-			solAssert(declaration, "");
-			if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-				if (identifier->annotation().lValueRequested)
-					m_touchedVariable[&n] = varDecl;
-		}
-		else if (auto funCall = dynamic_cast<FunctionCall const*>(&n))
-		{
-			if (FunctionDefinition const* funDef = SMTChecker::inlinedFunctionCallToDefinition(*funCall))
-				m_children[&n].push_back(funDef);
-		}
-		return true;
-	};
-	auto edgeFun = [&](ASTNode const& _parent, ASTNode const& _child)
-	{
-		if (m_touchedVariable.count(&_child) || m_children.count(&_child))
-			m_children[&_parent].push_back(&_child);
-	};
-
-	ASTReduce reducer(nodeFun, edgeFun);
-	_node.accept(reducer);
+	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
+	solAssert(declaration, "");
+	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
+		if (_identifier.annotation().lValueRequested)
+			m_touchedVariables.insert(varDecl);
 }
 
-vector<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node) const
+void VariableUsage::endVisit(FunctionCall const& _funCall)
 {
-	if (!m_children.count(&_node) && !m_touchedVariable.count(&_node))
-		return {};
+	if (auto const& funDef = SMTChecker::inlinedFunctionCallToDefinition(_funCall))
+		if (find(m_functionPath.begin(), m_functionPath.end(), funDef) == m_functionPath.end())
+			funDef->accept(*this);
+}
 
-	set<VariableDeclaration const*> touched;
-	set<ASTNode const*> visitedFunctions;
-	vector<ASTNode const*> toVisit;
-	toVisit.push_back(&_node);
+bool VariableUsage::visit(FunctionDefinition const& _function)
+{
+	m_functionPath.push_back(&_function);
+	return true;
+}
 
-	while (!toVisit.empty())
-	{
-		ASTNode const* n = toVisit.back();
-		toVisit.pop_back();
+void VariableUsage::endVisit(FunctionDefinition const&)
+{
+	solAssert(!m_functionPath.empty(), "");
+	m_functionPath.pop_back();
+}
 
-		if (auto funDef = dynamic_cast<FunctionDefinition const*>(n))
-			visitedFunctions.insert(funDef);
+void VariableUsage::endVisit(ModifierInvocation const& _modifierInv)
+{
+	auto const& modifierDef = dynamic_cast<ModifierDefinition const*>(_modifierInv.name()->annotation().referencedDeclaration);
+	if (modifierDef)
+		modifierDef->accept(*this);
+}
 
-		if (m_children.count(n))
-		{
-			solAssert(!m_touchedVariable.count(n), "");
-			for (auto const& child: m_children.at(n))
-				if (!visitedFunctions.count(child))
-					toVisit.push_back(child);
-		}
-		else
-		{
-			solAssert(m_touchedVariable.count(n), "");
-			touched.insert(m_touchedVariable.at(n));
-		}
-	}
+void VariableUsage::endVisit(PlaceholderStatement const&)
+{
+	solAssert(!m_functionPath.empty(), "");
+	FunctionDefinition const* function = m_functionPath.back();
+	solAssert(function, "");
+	if (function->isImplemented())
+		function->body().accept(*this);
+}
 
-	return {touched.begin(), touched.end()};
+set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<FunctionDefinition const*> const& _outerCallstack)
+{
+	m_touchedVariables.clear();
+	m_functionPath.clear();
+	m_functionPath += _outerCallstack;
+	_node.accept(*this);
+	return m_touchedVariables;
 }

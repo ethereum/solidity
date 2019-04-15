@@ -20,6 +20,7 @@
 
 #include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicVariables.h>
+#include <libsolidity/formal/VariableUsage.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
@@ -40,8 +41,6 @@ namespace dev
 {
 namespace solidity
 {
-
-class VariableUsage;
 
 class SMTChecker: private ASTConstVisitor
 {
@@ -201,7 +200,7 @@ private:
 	void resetVariable(VariableDeclaration const& _variable);
 	void resetStateVariables();
 	void resetStorageReferences();
-	void resetVariables(std::vector<VariableDeclaration const*> _variables);
+	void resetVariables(std::set<VariableDeclaration const*> const& _variables);
 	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
@@ -209,7 +208,6 @@ private:
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
-	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
@@ -272,8 +270,11 @@ private:
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
 
+	/// @returns variables that are touched in _node's subtree.
+	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node);
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
-	std::shared_ptr<VariableUsage> m_variableUsage;
+	VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
 	// True if the "No SMT solver available" warning was already created.
