@@ -8,4 +8,4 @@ contract C
 	}
 }
 // ----
-// Warning: (76-93): Assertion checker does not support inline assembly.
+// Warning: (76-90): Assertion checker does not support inline assembly.
