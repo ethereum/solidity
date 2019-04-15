@@ -17,25 +17,12 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
-#include <libdevcore/make_array.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace solidity;
-
-template <size_t... N>
-constexpr array<IntegerType, sizeof...(N)> createIntegerTypes(IntegerType::Modifier _modifier, index_sequence<N...>)
-{
-	return make_array<IntegerType>(IntegerType((static_cast<unsigned>(N) + 1) * 8, _modifier)...);
-}
-
-template <size_t... N>
-constexpr array<FixedBytesType, sizeof...(N)> createFixedBytesTypes(index_sequence<N...>)
-{
-	return make_array<FixedBytesType>(FixedBytesType(static_cast<unsigned>(N) + 1)...);
-}
 
 BoolType const TypeProvider::m_boolType{};
 InaccessibleDynamicType const TypeProvider::m_inaccessibleDynamicType{};
@@ -46,9 +33,112 @@ ArrayType const TypeProvider::m_stringMemoryType{DataLocation::Memory, true};
 TupleType const TypeProvider::m_emptyTupleType{};
 AddressType const TypeProvider::m_payableAddressType{StateMutability::Payable};
 AddressType const TypeProvider::m_addressType{StateMutability::NonPayable};
-array<IntegerType, 32> const TypeProvider::m_intM{createIntegerTypes(IntegerType::Modifier::Signed, make_index_sequence<32>{})};
-array<IntegerType, 32> const TypeProvider::m_uintM{createIntegerTypes(IntegerType::Modifier::Unsigned, make_index_sequence<32>{})};
-array<FixedBytesType, 32> const TypeProvider::m_bytesM{createFixedBytesTypes(make_index_sequence<32>{})};
+
+array<IntegerType, 32> const TypeProvider::m_intM{
+	IntegerType{8 * 1, IntegerType::Modifier::Signed},
+	IntegerType{8 * 2, IntegerType::Modifier::Signed},
+	IntegerType{8 * 3, IntegerType::Modifier::Signed},
+	IntegerType{8 * 4, IntegerType::Modifier::Signed},
+	IntegerType{8 * 5, IntegerType::Modifier::Signed},
+	IntegerType{8 * 6, IntegerType::Modifier::Signed},
+	IntegerType{8 * 7, IntegerType::Modifier::Signed},
+	IntegerType{8 * 8, IntegerType::Modifier::Signed},
+	IntegerType{8 * 9, IntegerType::Modifier::Signed},
+	IntegerType{8 * 10, IntegerType::Modifier::Signed},
+	IntegerType{8 * 11, IntegerType::Modifier::Signed},
+	IntegerType{8 * 12, IntegerType::Modifier::Signed},
+	IntegerType{8 * 13, IntegerType::Modifier::Signed},
+	IntegerType{8 * 14, IntegerType::Modifier::Signed},
+	IntegerType{8 * 15, IntegerType::Modifier::Signed},
+	IntegerType{8 * 16, IntegerType::Modifier::Signed},
+	IntegerType{8 * 17, IntegerType::Modifier::Signed},
+	IntegerType{8 * 18, IntegerType::Modifier::Signed},
+	IntegerType{8 * 19, IntegerType::Modifier::Signed},
+	IntegerType{8 * 20, IntegerType::Modifier::Signed},
+	IntegerType{8 * 21, IntegerType::Modifier::Signed},
+	IntegerType{8 * 22, IntegerType::Modifier::Signed},
+	IntegerType{8 * 23, IntegerType::Modifier::Signed},
+	IntegerType{8 * 24, IntegerType::Modifier::Signed},
+	IntegerType{8 * 25, IntegerType::Modifier::Signed},
+	IntegerType{8 * 26, IntegerType::Modifier::Signed},
+	IntegerType{8 * 27, IntegerType::Modifier::Signed},
+	IntegerType{8 * 28, IntegerType::Modifier::Signed},
+	IntegerType{8 * 29, IntegerType::Modifier::Signed},
+	IntegerType{8 * 30, IntegerType::Modifier::Signed},
+	IntegerType{8 * 31, IntegerType::Modifier::Signed},
+	IntegerType{8 * 32, IntegerType::Modifier::Signed}
+};
+
+array<IntegerType, 32> const TypeProvider::m_uintM{
+	IntegerType{8 * 1, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 2, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 3, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 4, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 5, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 6, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 7, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 8, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 9, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 10, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 11, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 12, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 13, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 14, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 15, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 16, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 17, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 18, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 19, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 20, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 21, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 22, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 23, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 24, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 25, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 26, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 27, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 28, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 29, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 30, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 31, IntegerType::Modifier::Unsigned},
+	IntegerType{8 * 32, IntegerType::Modifier::Unsigned}
+};
+
+array<FixedBytesType, 32> const TypeProvider::m_bytesM{
+	FixedBytesType{1},
+	FixedBytesType{2},
+	FixedBytesType{3},
+	FixedBytesType{4},
+	FixedBytesType{5},
+	FixedBytesType{6},
+	FixedBytesType{7},
+	FixedBytesType{8},
+	FixedBytesType{9},
+	FixedBytesType{10},
+	FixedBytesType{11},
+	FixedBytesType{12},
+	FixedBytesType{13},
+	FixedBytesType{14},
+	FixedBytesType{15},
+	FixedBytesType{16},
+	FixedBytesType{17},
+	FixedBytesType{18},
+	FixedBytesType{19},
+	FixedBytesType{20},
+	FixedBytesType{21},
+	FixedBytesType{22},
+	FixedBytesType{23},
+	FixedBytesType{24},
+	FixedBytesType{25},
+	FixedBytesType{26},
+	FixedBytesType{27},
+	FixedBytesType{28},
+	FixedBytesType{29},
+	FixedBytesType{30},
+	FixedBytesType{31},
+	FixedBytesType{32}
+};
+
 array<MagicType, 4> const TypeProvider::m_magicTypes{
 	MagicType{MagicType::Kind::Block},
 	MagicType{MagicType::Kind::Message},

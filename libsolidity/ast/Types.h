@@ -32,7 +32,6 @@
 #include <libdevcore/Result.h>
 
 #include <boost/optional.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/rational.hpp>
 
 #include <map>
@@ -155,9 +154,9 @@ class Type
 public:
 	Type() = default;
 	Type(Type const&) = delete;
-	Type(Type&&) = default;
+	Type(Type&&) = delete;
 	Type& operator=(Type const&) = delete;
-	Type& operator=(Type&&) = default;
+	Type& operator=(Type&&) = delete;
 	virtual ~Type() = default;
 
 	enum class Category
@@ -382,12 +381,6 @@ public:
 
 	Category category() const override { return Category::Integer; }
 
-	IntegerType(IntegerType&&) = default;
-	IntegerType& operator=(IntegerType&&) = default;
-	IntegerType(IntegerType const&) = default;
-	IntegerType& operator=(IntegerType const&) = default;
-	~IntegerType() = default;
-
 	std::string richIdentifier() const override;
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -578,12 +571,6 @@ public:
 
 	Category category() const override { return Category::FixedBytes; }
 
-	FixedBytesType(FixedBytesType const&) = delete;
-	FixedBytesType& operator=(FixedBytesType const&) = delete;
-	FixedBytesType(FixedBytesType&&) = default;
-	FixedBytesType& operator=(FixedBytesType&&) = default;
-	~FixedBytesType() = default;
-
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
@@ -613,8 +600,6 @@ private:
 class BoolType: public Type
 {
 public:
-	BoolType() = default;
-
 	Category category() const override { return Category::Bool; }
 	std::string richIdentifier() const override { return "t_bool"; }
 	TypeResult unaryOperatorResult(Token _operator) const override;
@@ -950,8 +935,6 @@ public:
 	explicit TupleType(std::vector<TypePointer> _types = {}): m_components(std::move(_types)) {}
 
 	Category category() const override { return Category::Tuple; }
-	TupleType(TupleType&&) = default;
-	TupleType& operator=(TupleType&) = default;
 
 	BoolResult isImplicitlyConvertibleTo(Type const& _other) const override;
 	std::string richIdentifier() const override;
@@ -1398,8 +1381,6 @@ private:
 class InaccessibleDynamicType: public Type
 {
 public:
-	InaccessibleDynamicType() = default;
-
 	Category category() const override { return Category::InaccessibleDynamic; }
 
 	std::string richIdentifier() const override { return "t_inaccessible"; }
