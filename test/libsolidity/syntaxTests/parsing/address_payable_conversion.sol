@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (93-94): Expected ';' but got 'payable'; deleted tokens to the next expected token.
+// ParserError: (80-87): Expected ';' but got 'payable'; deleted tokens until offset 116.

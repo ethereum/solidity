@@ -82,10 +82,12 @@ protected:
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description.
 	void parserError(std::string const& _description);
+	void parserError(SourceLocation const& _location, std::string const& _description);
 
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description. Throws the FatalError.
 	void fatalParserError(std::string const& _description);
+	void fatalParserError(SourceLocation const& _location, std::string const& _description);
 
 	std::shared_ptr<Scanner> m_scanner;
 	/// The reference to the list of errors and warning to add errors/warnings during parsing

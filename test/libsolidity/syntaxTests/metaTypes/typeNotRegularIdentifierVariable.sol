@@ -4,4 +4,4 @@ contract Test {
     }
 }
 // ----
-// ParserError: (64-65): Expected ';' but got 'type'; deleted tokens to the next expected token.
+// ParserError: (60-64): Expected ';' but got 'type'; deleted tokens until offset 87.
