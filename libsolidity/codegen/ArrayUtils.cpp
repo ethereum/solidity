@@ -45,7 +45,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack layout: [source_ref] [source length] target_ref (top)
 	solAssert(_targetType.location() == DataLocation::Storage, "");
 
-	TypePointer uint256 = TypeProvider::integerType(256);
+	TypePointer uint256 = TypeProvider::uint256();
 	TypePointer targetBaseType = _targetType.isByteArray() ? uint256 : _targetType.baseType();
 	TypePointer sourceBaseType = _sourceType.isByteArray() ? uint256 : _sourceType.baseType();
 
@@ -585,7 +585,7 @@ void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::ADD << Instruction::SWAP1;
 				if (_type.baseType()->storageBytes() < 32)
-					ArrayUtils(_context).clearStorageLoop(TypeProvider::integerType(256));
+					ArrayUtils(_context).clearStorageLoop(TypeProvider::uint256());
 				else
 					ArrayUtils(_context).clearStorageLoop(_type.baseType());
 				_context << Instruction::POP;
@@ -626,7 +626,7 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 		<< Instruction::SWAP1;
 	// stack: data_pos_end data_pos
 	if (_type.storageStride() < 32)
-		clearStorageLoop(TypeProvider::integerType(256));
+		clearStorageLoop(TypeProvider::uint256());
 	else
 		clearStorageLoop(_type.baseType());
 	// cleanup
@@ -733,7 +733,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::DUP2 << Instruction::ADD << Instruction::SWAP1;
 				// stack: ref new_length current_length first_word data_location_end data_location
-				ArrayUtils(_context).clearStorageLoop(TypeProvider::integerType(256));
+				ArrayUtils(_context).clearStorageLoop(TypeProvider::uint256());
 				_context << Instruction::POP;
 				// stack: ref new_length current_length first_word
 				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
@@ -772,7 +772,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 			_context << Instruction::SWAP2 << Instruction::ADD;
 			// stack: ref new_length delete_end delete_start
 			if (_type.storageStride() < 32)
-				ArrayUtils(_context).clearStorageLoop(TypeProvider::integerType(256));
+				ArrayUtils(_context).clearStorageLoop(TypeProvider::uint256());
 			else
 				ArrayUtils(_context).clearStorageLoop(_type.baseType());
 

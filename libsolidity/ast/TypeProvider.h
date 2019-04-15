@@ -83,7 +83,7 @@ public:
 	static AddressType const* payableAddressType() noexcept { return &m_payableAddressType; }
 	static AddressType const* addressType() noexcept { return &m_addressType; }
 
-	static IntegerType const* integerType(unsigned _bits = 256, IntegerType::Modifier _modifier = IntegerType::Modifier::Unsigned)
+	static IntegerType const* integerType(unsigned _bits, IntegerType::Modifier _modifier)
 	{
 		solAssert((_bits % 8) == 0, "");
 		if (_modifier == IntegerType::Modifier::Unsigned)
@@ -91,6 +91,9 @@ public:
 		else
 			return &m_intM.at(_bits / 8 - 1);
 	}
+	static IntegerType const* uint(unsigned _bits) { return integerType(_bits, IntegerType::Modifier::Unsigned); }
+
+	static IntegerType const* uint256() { return uint(256); }
 
 	static FixedPointType const* fixedPointType(unsigned m, unsigned n, FixedPointType::Modifier _modifier);
 

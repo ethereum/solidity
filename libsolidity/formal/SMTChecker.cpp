@@ -1206,7 +1206,7 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 	if (type->category() == Type::Category::Integer)
 		addOverflowTarget(OverflowTarget::Type::All, type,	_value,	_location);
 	else if (type->category() == Type::Category::Address)
-		addOverflowTarget(OverflowTarget::Type::All, TypeProvider::integerType(160), _value, _location);
+		addOverflowTarget(OverflowTarget::Type::All, TypeProvider::uint(160), _value, _location);
 	else if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
 	m_interface->addAssertion(newValue(_variable) == _value);

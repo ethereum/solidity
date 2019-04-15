@@ -57,7 +57,7 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 		magicVarDecl("log4", TypeProvider::functionType(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log4)),
 		magicVarDecl("msg", TypeProvider::magicType(MagicType::Kind::Message)),
 		magicVarDecl("mulmod", TypeProvider::functionType(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
-		magicVarDecl("now", TypeProvider::integerType(256)),
+		magicVarDecl("now", TypeProvider::uint256()),
 		magicVarDecl("require", TypeProvider::functionType(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
 		magicVarDecl("require", TypeProvider::functionType(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
 		magicVarDecl("revert", TypeProvider::functionType(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),

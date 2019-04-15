@@ -449,7 +449,7 @@ bool AddressType::operator==(Type const& _other) const
 MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) const
 {
 	MemberList::MemberMap members = {
-		{"balance", TypeProvider::integerType(256)},
+		{"balance", TypeProvider::uint256()},
 		{"call", TypeProvider::functionType(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
 		{"callcode", TypeProvider::functionType(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
 		{"delegatecall", TypeProvider::functionType(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false, StateMutability::NonPayable)},
@@ -1358,7 +1358,7 @@ TypeResult FixedBytesType::binaryOperatorResult(Token _operator, Type const* _ot
 
 MemberList::MemberMap FixedBytesType::nativeMembers(ContractDefinition const*) const
 {
-	return MemberList::MemberMap{MemberList::Member{"length", TypeProvider::integerType(8)}};
+	return MemberList::MemberMap{MemberList::Member{"length", TypeProvider::uint(8)}};
 }
 
 string FixedBytesType::richIdentifier() const
@@ -1753,12 +1753,12 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 	MemberList::MemberMap members;
 	if (!isString())
 	{
-		members.emplace_back("length", TypeProvider::integerType(256));
+		members.emplace_back("length", TypeProvider::uint256());
 		if (isDynamicallySized() && location() == DataLocation::Storage)
 		{
 			members.emplace_back("push", TypeProvider::functionType(
 				TypePointers{baseType()},
-				TypePointers{TypeProvider::integerType(256)},
+				TypePointers{TypeProvider::uint256()},
 				strings{string()},
 				strings{string()},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
@@ -1778,7 +1778,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 TypePointer ArrayType::encodingType() const
 {
 	if (location() == DataLocation::Storage)
-		return TypeProvider::integerType(256);
+		return TypeProvider::uint256();
 	else
 		return TypeProvider::withLocation(this, DataLocation::Memory, true);
 }
@@ -1786,7 +1786,7 @@ TypePointer ArrayType::encodingType() const
 TypePointer ArrayType::decodingType() const
 {
 	if (location() == DataLocation::Storage)
-		return TypeProvider::integerType(256);
+		return TypeProvider::uint256();
 	else
 		return this;
 }
@@ -1955,7 +1955,7 @@ Type const* StructType::encodingType() const
 	if (location() != DataLocation::Storage)
 		return this;
 
-	return TypeProvider::integerType(256);
+	return TypeProvider::uint256();
 }
 
 BoolResult StructType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -2252,7 +2252,7 @@ set<string> StructType::membersMissingInMemory() const
 
 TypePointer EnumType::encodingType() const
 {
-	return TypeProvider::integerType(8 * static_cast<int>(storageBytes()));
+	return TypeProvider::uint(8 * storageBytes());
 }
 
 TypeResult EnumType::unaryOperatorResult(Token _operator) const
@@ -2458,7 +2458,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				break;
 			returnType = arrayType->baseType();
 			m_parameterNames.emplace_back("");
-			m_parameterTypes.push_back(TypeProvider::integerType(256));
+			m_parameterTypes.push_back(TypeProvider::uint256());
 		}
 		else
 			break;
@@ -3454,24 +3454,24 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	case Kind::Block:
 		return MemberList::MemberMap({
 			{"coinbase", TypeProvider::payableAddressType()},
-			{"timestamp", TypeProvider::integerType(256)},
+			{"timestamp", TypeProvider::uint256()},
 			{"blockhash", TypeProvider::functionType(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
-			{"difficulty", TypeProvider::integerType(256)},
-			{"number", TypeProvider::integerType(256)},
-			{"gaslimit", TypeProvider::integerType(256)}
+			{"difficulty", TypeProvider::uint256()},
+			{"number", TypeProvider::uint256()},
+			{"gaslimit", TypeProvider::uint256()}
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
 			{"sender", TypeProvider::payableAddressType()},
-			{"gas", TypeProvider::integerType(256)},
-			{"value", TypeProvider::integerType(256)},
+			{"gas", TypeProvider::uint256()},
+			{"value", TypeProvider::uint256()},
 			{"data", TypeProvider::arrayType(DataLocation::CallData)},
 			{"sig", TypeProvider::fixedBytesType(4)}
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
 			{"origin", TypeProvider::payableAddressType()},
-			{"gasprice", TypeProvider::integerType(256)}
+			{"gasprice", TypeProvider::uint256()}
 		});
 	case Kind::ABI:
 		return MemberList::MemberMap({

@@ -120,7 +120,7 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;
-		var = make_shared<SymbolicIntVariable>(TypeProvider::integerType(256), _uniqueName, _solver);
+		var = make_shared<SymbolicIntVariable>(TypeProvider::uint256(), _uniqueName, _solver);
 	}
 	else if (isBool(_type.category()))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _solver);
@@ -143,7 +143,7 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 		auto rational = dynamic_cast<RationalNumberType const*>(&_type);
 		solAssert(rational, "");
 		if (rational->isFractional())
-			var = make_shared<SymbolicIntVariable>(TypeProvider::integerType(256), _uniqueName, _solver);
+			var = make_shared<SymbolicIntVariable>(TypeProvider::uint256(), _uniqueName, _solver);
 		else
 			var = make_shared<SymbolicIntVariable>(type, _uniqueName, _solver);
 	}

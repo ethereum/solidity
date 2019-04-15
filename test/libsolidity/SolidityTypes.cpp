@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(encoded_sizes)
 
 	ArrayType const* uint24Array = TypeProvider::arrayType(
 		DataLocation::Memory,
-		TypeProvider::integerType(24),
+		TypeProvider::uint(24),
 		9
 	);
 	BOOST_CHECK_EQUAL(uint24Array->calldataEncodedSize(true), 9 * 32);

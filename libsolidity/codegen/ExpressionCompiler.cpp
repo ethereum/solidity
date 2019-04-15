@@ -648,7 +648,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().accept(*this);
 
 			arguments.front()->accept(*this);
-			utils().convertType(*arguments.front()->annotation().type, *TypeProvider::integerType(), true);
+			utils().convertType(*arguments.front()->annotation().type, *TypeProvider::uint256(), true);
 			// Note that function is not the original function, but the ".gas" function.
 			// Its values of gasSet and valueSet is equal to the original function's though.
 			unsigned stackDepth = (function.gasSet() ? 1 : 0) + (function.valueSet() ? 1 : 0);
@@ -836,13 +836,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::MulMod:
 		{
 			arguments[2]->accept(*this);
-			utils().convertType(*arguments[2]->annotation().type, *TypeProvider::integerType());
+			utils().convertType(*arguments[2]->annotation().type, *TypeProvider::uint256());
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
 			m_context.appendConditionalInvalid();
 			for (unsigned i = 1; i < 3; i ++)
 			{
 				arguments[2 - i]->accept(*this);
-				utils().convertType(*arguments[2 - i]->annotation().type, *TypeProvider::integerType());
+				utils().convertType(*arguments[2 - i]->annotation().type, *TypeProvider::uint256());
 			}
 			if (function.kind() == FunctionType::Kind::AddMod)
 				m_context << Instruction::ADDMOD;
@@ -928,7 +928,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			// Fetch requested length.
 			arguments[0]->accept(*this);
-			utils().convertType(*arguments[0]->annotation().type, *TypeProvider::integerType());
+			utils().convertType(*arguments[0]->annotation().type, *TypeProvider::uint256());
 
 			// Stack: requested_length
 			utils().fetchFreeMemoryPointer();
@@ -1543,7 +1543,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				TypePointers{keyType}
 			);
 			m_context << Instruction::SWAP1;
-			utils().storeInMemoryDynamic(*TypeProvider::integerType());
+			utils().storeInMemoryDynamic(*TypeProvider::uint256());
 			utils().toSizeAfterFreeMemoryPointer();
 		}
 		else
@@ -1552,7 +1552,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			appendExpressionCopyToMemory(*keyType, *_indexAccess.indexExpression());
 			m_context << Instruction::SWAP1;
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
-			utils().storeInMemoryDynamic(*TypeProvider::integerType());
+			utils().storeInMemoryDynamic(*TypeProvider::uint256());
 			m_context << u256(0);
 		}
 		m_context << Instruction::KECCAK256;
@@ -1565,7 +1565,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 		_indexAccess.indexExpression()->accept(*this);
-		utils().convertType(*_indexAccess.indexExpression()->annotation().type, *TypeProvider::integerType(), true);
+		utils().convertType(*_indexAccess.indexExpression()->annotation().type, *TypeProvider::uint256(), true);
 		// stack layout: <base_ref> [<length>] <index>
 		switch (arrayType.location())
 		{
@@ -1632,7 +1632,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 		_indexAccess.indexExpression()->accept(*this);
-		utils().convertType(*_indexAccess.indexExpression()->annotation().type, *TypeProvider::integerType(), true);
+		utils().convertType(*_indexAccess.indexExpression()->annotation().type, *TypeProvider::uint256(), true);
 		// stack layout: <value> <index>
 		// check out-of-bounds access
 		m_context << u256(fixedBytesType.numBytes());

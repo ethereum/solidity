@@ -1999,7 +1999,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			);
 		type = ReferenceType::copyForLocationIfReference(DataLocation::Memory, type);
 		_newExpression.annotation().type = TypeProvider::functionType(
-			TypePointers{TypeProvider::integerType(256)},
+			TypePointers{TypeProvider::uint256()},
 			TypePointers{type},
 			strings(1, ""),
 			strings(1, ""),
@@ -2195,7 +2195,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		}
 		else
 		{
-			expectType(*index, *TypeProvider::integerType());
+			expectType(*index, *TypeProvider::uint256());
 			if (!m_errorReporter.hasErrors())
 				if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index)))
 				{
@@ -2229,7 +2229,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		else
 		{
 			u256 length = 1;
-			if (expectType(*index, *TypeProvider::integerType()))
+			if (expectType(*index, *TypeProvider::uint256()))
 			{
 				if (auto indexValue = dynamic_cast<RationalNumberType const*>(type(*index)))
 					length = indexValue->literalValue(nullptr);
@@ -2254,7 +2254,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			m_errorReporter.typeError(_access.location(), "Index expression cannot be omitted.");
 		else
 		{
-			if (!expectType(*index, *TypeProvider::integerType()))
+			if (!expectType(*index, *TypeProvider::uint256()))
 				m_errorReporter.fatalTypeError(_access.location(), "Index expression cannot be represented as an unsigned integer.");
 			if (auto integerType = dynamic_cast<RationalNumberType const*>(type(*index)))
 				if (bytesType.numBytes() <= integerType->literalValue(nullptr))

@@ -103,7 +103,7 @@ SymbolicAddressVariable::SymbolicAddressVariable(
 	string _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	SymbolicIntVariable(TypeProvider::integerType(160), move(_uniqueName), _interface)
+	SymbolicIntVariable(TypeProvider::uint(160), move(_uniqueName), _interface)
 {
 }
 
@@ -112,7 +112,7 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 	string _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	SymbolicIntVariable(TypeProvider::integerType(_numBytes * 8), move(_uniqueName), _interface)
+	SymbolicIntVariable(TypeProvider::uint(_numBytes * 8), move(_uniqueName), _interface)
 {
 }
 

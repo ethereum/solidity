@@ -82,7 +82,7 @@ public:
 	/// @returns the number of bytes consumed in memory.
 	unsigned loadFromMemory(
 		unsigned _offset,
-		Type const& _type = *TypeProvider::integerType(),
+		Type const& _type = *TypeProvider::uint256(),
 		bool _fromCalldata = false,
 		bool _padToWords = false
 	);

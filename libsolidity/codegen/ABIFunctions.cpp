@@ -311,7 +311,7 @@ string ABIFunctions::abiEncodingFunction(
 			case DataLocation::CallData:
 				if (
 					fromArray.isByteArray() ||
-					*fromArray.baseType() == *TypeProvider::integerType() ||
+					*fromArray.baseType() == *TypeProvider::uint256() ||
 					*fromArray.baseType() == FixedBytesType(32)
 				)
 					return abiEncodingFunctionCalldataArrayWithoutCleanup(fromArray, *toArray, _options);
@@ -369,7 +369,7 @@ string ABIFunctions::abiEncodingFunction(
 			// possible for library calls where we just forward the storage reference
 			solAssert(_options.encodeAsLibraryTypes, "");
 			solAssert(_options.padded && !_options.dynamicInplace, "Non-padded / inplace encoding for library call requested.");
-			solAssert(to == *TypeProvider::integerType(), "");
+			solAssert(to == *TypeProvider::uint256(), "");
 			templ("cleanupConvert", "value");
 		}
 		else
@@ -445,7 +445,7 @@ string ABIFunctions::abiEncodingFunctionCalldataArrayWithoutCleanup(
 	solAssert(fromArrayType.location() == DataLocation::CallData, "");
 	solAssert(
 		fromArrayType.isByteArray() ||
-		*fromArrayType.baseType() == *TypeProvider::integerType() ||
+		*fromArrayType.baseType() == *TypeProvider::uint256() ||
 		*fromArrayType.baseType() == FixedBytesType(32),
 	"");
 	solAssert(fromArrayType.calldataStride() == toArrayType.memoryStride(), "");
