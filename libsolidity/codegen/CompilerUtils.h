@@ -23,6 +23,8 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerContext.h>
 
 namespace dev {
@@ -80,7 +82,7 @@ public:
 	/// @returns the number of bytes consumed in memory.
 	unsigned loadFromMemory(
 		unsigned _offset,
-		Type const& _type = IntegerType::uint256(),
+		Type const& _type = *TypeProvider::integerType(),
 		bool _fromCalldata = false,
 		bool _padToWords = false
 	);
@@ -264,7 +266,7 @@ public:
 
 	template <class T>
 	static unsigned sizeOnStack(std::vector<T> const& _variables);
-	static unsigned sizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
+	static unsigned sizeOnStack(std::vector<Type const*> const& _variableTypes);
 
 	/// Helper function to shift top value on the stack to the left.
 	/// Stack pre: <value> <shift_by_bits>

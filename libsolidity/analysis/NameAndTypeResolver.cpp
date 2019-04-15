@@ -228,7 +228,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 			uniqueFunctions.end(),
 			[&](Declaration const* d)
 			{
-				shared_ptr<FunctionType const> newFunctionType { d->functionType(false) };
+				FunctionType const* newFunctionType = d->functionType(false);
 				if (!newFunctionType)
 					newFunctionType = d->functionType(true);
 				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);

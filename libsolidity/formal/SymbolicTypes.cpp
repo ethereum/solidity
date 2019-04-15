@@ -17,6 +17,7 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <memory>
 
@@ -115,11 +116,11 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 {
 	bool abstract = false;
 	shared_ptr<SymbolicVariable> var;
-	TypePointer type = _type.shared_from_this();
+	TypePointer type = &_type;
 	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;
-		var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
+		var = make_shared<SymbolicIntVariable>(TypeProvider::integerType(256), _uniqueName, _solver);
 	}
 	else if (isBool(_type.category()))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _solver);
@@ -129,7 +130,7 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 		var = make_shared<SymbolicIntVariable>(type, _uniqueName, _solver);
 	else if (isFixedBytes(_type.category()))
 	{
-		auto fixedBytesType = dynamic_cast<FixedBytesType const*>(type.get());
+		auto fixedBytesType = dynamic_cast<FixedBytesType const*>(type);
 		solAssert(fixedBytesType, "");
 		var = make_shared<SymbolicFixedBytesVariable>(fixedBytesType->numBytes(), _uniqueName, _solver);
 	}
@@ -142,7 +143,7 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 		auto rational = dynamic_cast<RationalNumberType const*>(&_type);
 		solAssert(rational, "");
 		if (rational->isFractional())
-			var = make_shared<SymbolicIntVariable>(make_shared<IntegerType>(256), _uniqueName, _solver);
+			var = make_shared<SymbolicIntVariable>(TypeProvider::integerType(256), _uniqueName, _solver);
 		else
 			var = make_shared<SymbolicIntVariable>(type, _uniqueName, _solver);
 	}
@@ -253,14 +254,14 @@ void dev::solidity::smt::setSymbolicUnknownValue(smt::Expression _expr, TypePoin
 	solAssert(_type, "");
 	if (isEnum(_type->category()))
 	{
-		auto enumType = dynamic_cast<EnumType const*>(_type.get());
+		auto enumType = dynamic_cast<EnumType const*>(_type);
 		solAssert(enumType, "");
 		_interface.addAssertion(_expr >= 0);
 		_interface.addAssertion(_expr < enumType->numberOfMembers());
 	}
 	else if (isInteger(_type->category()))
 	{
-		auto intType = dynamic_cast<IntegerType const*>(_type.get());
+		auto intType = dynamic_cast<IntegerType const*>(_type);
 		solAssert(intType, "");
 		_interface.addAssertion(_expr >= minValue(*intType));
 		_interface.addAssertion(_expr <= maxValue(*intType));

@@ -41,7 +41,7 @@ class Type;
 class ArrayType;
 class StructType;
 class FunctionType;
-using TypePointer = std::shared_ptr<Type const>;
+using TypePointer = Type const*;
 using TypePointers = std::vector<TypePointer>;
 
 /**

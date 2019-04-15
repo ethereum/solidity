@@ -47,6 +47,8 @@ set(sources
 	ast/ExperimentalFeatures.h
 	ast/Types.cpp
 	ast/Types.h
+	ast/TypeProvider.cpp
+	ast/TypeProvider.h
 	codegen/ABIFunctions.cpp
 	codegen/ABIFunctions.h
 	codegen/ArrayUtils.cpp

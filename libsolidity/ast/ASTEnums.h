@@ -57,7 +57,7 @@ class Type;
 struct FuncCallArguments
 {
 	/// Types of arguments
-	std::vector<std::shared_ptr<Type const>> types;
+	std::vector<Type const*> types;
 	/// Names of the arguments if given, otherwise unset
 	std::vector<ASTPointer<ASTString>> names;
 

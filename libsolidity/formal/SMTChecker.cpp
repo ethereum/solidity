@@ -17,6 +17,7 @@
 
 #include <libsolidity/formal/SMTChecker.h>
 
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/formal/SMTPortfolio.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
@@ -447,7 +448,7 @@ void SMTChecker::checkUnderOverflow()
 void SMTChecker::checkUnderflow(OverflowTarget& _target)
 {
 	solAssert(_target.type != OverflowTarget::Type::Overflow, "");
-	auto intType = dynamic_cast<IntegerType const*>(_target.intType.get());
+	auto intType = dynamic_cast<IntegerType const*>(_target.intType);
 	checkCondition(
 		_target.path && _target.value < minValue(*intType),
 		_target.location,
@@ -460,7 +461,7 @@ void SMTChecker::checkUnderflow(OverflowTarget& _target)
 void SMTChecker::checkOverflow(OverflowTarget& _target)
 {
 	solAssert(_target.type != OverflowTarget::Type::Underflow, "");
-	auto intType = dynamic_cast<IntegerType const*>(_target.intType.get());
+	auto intType = dynamic_cast<IntegerType const*>(_target.intType);
 	checkCondition(
 		_target.path && _target.value > maxValue(*intType),
 		_target.location,
@@ -681,7 +682,7 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 	{
 		vector<smt::Expression> funArgs;
 		Expression const* calledExpr = &_funCall.expression();
-		auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type.get());
+		auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
 		solAssert(funType, "");
 		if (funType->bound())
 		{
@@ -803,8 +804,8 @@ void SMTChecker::endVisit(Literal const& _literal)
 	{
 		if (type.category() == Type::Category::StringLiteral)
 		{
-			auto stringType = make_shared<ArrayType>(DataLocation::Memory, true);
-			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type.get());
+			auto stringType = TypeProvider::stringMemoryType();
+			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type);
 			solAssert(stringLit, "");
 			auto result = newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
 			m_expressions.emplace(&_literal, result.second);
@@ -859,7 +860,7 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 	{
 		if (identifier && dynamic_cast<EnumDefinition const*>(identifier->annotation().referencedDeclaration))
 		{
-			auto enumType = dynamic_cast<EnumType const*>(accessType.get());
+			auto enumType = dynamic_cast<EnumType const*>(accessType);
 			solAssert(enumType, "");
 			defineExpr(_memberAccess, enumType->memberValue(_memberAccess.memberName()));
 		}
@@ -939,13 +940,13 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 						return true;
 					if (prefix->category() == Type::Category::Mapping)
 					{
-						auto mapPrefix = dynamic_cast<MappingType const*>(prefix.get());
+						auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
 						solAssert(mapPrefix, "");
 						prefix = mapPrefix->valueType();
 					}
 					else
 					{
-						auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix.get());
+						auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
 						solAssert(arrayPrefix, "");
 						prefix = arrayPrefix->baseType();
 					}
@@ -1017,7 +1018,7 @@ bool SMTChecker::shortcutRationalNumber(Expression const& _expr)
 {
 	if (_expr.annotation().type->category() == Type::Category::RationalNumber)
 	{
-		auto rationalType = dynamic_cast<RationalNumberType const*>(_expr.annotation().type.get());
+		auto rationalType = dynamic_cast<RationalNumberType const*>(_expr.annotation().type);
 		solAssert(rationalType, "");
 		if (rationalType->isNegative())
 			defineExpr(_expr, smt::Expression(u2s(rationalType->literalValue(nullptr))));
@@ -1205,7 +1206,7 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 	if (type->category() == Type::Category::Integer)
 		addOverflowTarget(OverflowTarget::Type::All, type,	_value,	_location);
 	else if (type->category() == Type::Category::Address)
-		addOverflowTarget(OverflowTarget::Type::All, make_shared<IntegerType>(160), _value, _location);
+		addOverflowTarget(OverflowTarget::Type::All, TypeProvider::integerType(160), _value, _location);
 	else if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
 	m_interface->addAssertion(newValue(_variable) == _value);
@@ -1522,7 +1523,7 @@ void SMTChecker::resetVariables(function<bool(VariableDeclaration const&)> const
 
 TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
 {
-	if (auto refType = dynamic_cast<ReferenceType const*>(_type.get()))
+	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
 		return ReferenceType::copyForLocationIfReference(refType->location(), _type);
 	return _type;
 }

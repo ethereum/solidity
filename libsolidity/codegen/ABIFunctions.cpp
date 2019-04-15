@@ -311,7 +311,7 @@ string ABIFunctions::abiEncodingFunction(
 			case DataLocation::CallData:
 				if (
 					fromArray.isByteArray() ||
-					*fromArray.baseType() == IntegerType::uint256() ||
+					*fromArray.baseType() == *TypeProvider::integerType() ||
 					*fromArray.baseType() == FixedBytesType(32)
 				)
 					return abiEncodingFunctionCalldataArrayWithoutCleanup(fromArray, *toArray, _options);
@@ -369,7 +369,7 @@ string ABIFunctions::abiEncodingFunction(
 			// possible for library calls where we just forward the storage reference
 			solAssert(_options.encodeAsLibraryTypes, "");
 			solAssert(_options.padded && !_options.dynamicInplace, "Non-padded / inplace encoding for library call requested.");
-			solAssert(to == IntegerType::uint256(), "");
+			solAssert(to == *TypeProvider::integerType(), "");
 			templ("cleanupConvert", "value");
 		}
 		else
@@ -445,7 +445,7 @@ string ABIFunctions::abiEncodingFunctionCalldataArrayWithoutCleanup(
 	solAssert(fromArrayType.location() == DataLocation::CallData, "");
 	solAssert(
 		fromArrayType.isByteArray() ||
-		*fromArrayType.baseType() == IntegerType::uint256() ||
+		*fromArrayType.baseType() == *TypeProvider::integerType() ||
 		*fromArrayType.baseType() == FixedBytesType(32),
 	"");
 	solAssert(fromArrayType.calldataStride() == toArrayType.memoryStride(), "");
@@ -1077,7 +1077,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 	TypePointer decodingType = _type.decodingType();
 	solAssert(decodingType, "");
 
-	if (auto arrayType = dynamic_cast<ArrayType const*>(decodingType.get()))
+	if (auto arrayType = dynamic_cast<ArrayType const*>(decodingType))
 	{
 		if (arrayType->dataStoredIn(DataLocation::CallData))
 		{
@@ -1089,7 +1089,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		else
 			return abiDecodingFunctionArray(*arrayType, _fromMemory);
 	}
-	else if (auto const* structType = dynamic_cast<StructType const*>(decodingType.get()))
+	else if (auto const* structType = dynamic_cast<StructType const*>(decodingType))
 	{
 		if (structType->dataStoredIn(DataLocation::CallData))
 		{
@@ -1099,7 +1099,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		else
 			return abiDecodingFunctionStruct(*structType, _fromMemory);
 	}
-	else if (auto const* functionType = dynamic_cast<FunctionType const*>(decodingType.get()))
+	else if (auto const* functionType = dynamic_cast<FunctionType const*>(decodingType))
 		return abiDecodingFunctionFunctionType(*functionType, _fromMemory, _forUseOnStack);
 	else
 		return abiDecodingFunctionValueType(_type, _fromMemory);

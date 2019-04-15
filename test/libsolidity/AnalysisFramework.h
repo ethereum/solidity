@@ -35,8 +35,8 @@ namespace solidity
 
 class Type;
 class FunctionType;
-using TypePointer = std::shared_ptr<Type const>;
-using FunctionTypePointer = std::shared_ptr<FunctionType const>;
+using TypePointer = Type const*;
+using FunctionTypePointer = FunctionType const*;
 
 namespace test
 {

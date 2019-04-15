@@ -35,7 +35,7 @@ using namespace langutil;
 
 
 StackVariable::StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
-	LValue(_compilerContext, _declaration.annotation().type.get()),
+	LValue(_compilerContext, _declaration.annotation().type),
 	m_baseStackOffset(m_context.baseStackOffsetOfVariable(_declaration)),
 	m_size(m_dataType->sizeOnStack())
 {
@@ -475,7 +475,7 @@ void StorageByteArrayElement::setToZero(SourceLocation const&, bool _removeRefer
 }
 
 StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, ArrayType const& _arrayType):
-	LValue(_compilerContext, _arrayType.memberType("length").get()),
+	LValue(_compilerContext, _arrayType.memberType("length")),
 	m_arrayType(_arrayType)
 {
 	solAssert(m_arrayType.isDynamicallySized(), "");

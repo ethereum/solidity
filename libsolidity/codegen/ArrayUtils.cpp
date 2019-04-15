@@ -23,6 +23,7 @@
 #include <libsolidity/codegen/ArrayUtils.h>
 
 #include <libsolidity/ast/Types.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
@@ -44,7 +45,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack layout: [source_ref] [source length] target_ref (top)
 	solAssert(_targetType.location() == DataLocation::Storage, "");
 
-	TypePointer uint256 = make_shared<IntegerType>(256);
+	TypePointer uint256 = TypeProvider::integerType(256);
 	TypePointer targetBaseType = _targetType.isByteArray() ? uint256 : _targetType.baseType();
 	TypePointer sourceBaseType = _sourceType.isByteArray() ? uint256 : _sourceType.baseType();
 
@@ -74,8 +75,8 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	}
 
 	// stack: target_ref source_ref source_length
-	TypePointer targetType = _targetType.shared_from_this();
-	TypePointer sourceType = _sourceType.shared_from_this();
+	TypePointer targetType = &_targetType;
+	TypePointer sourceType = &_sourceType;
 	m_context.callLowLevelFunction(
 		"$copyArrayToStorage_" + sourceType->identifier() + "_to_" + targetType->identifier(),
 		3,
@@ -336,7 +337,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			m_context << Instruction::DUP3 << Instruction::DUP5;
 			accessIndex(_sourceType, false);
 			MemoryItem(m_context, *_sourceType.baseType(), true).retrieveValue(SourceLocation(), true);
-			if (auto baseArray = dynamic_cast<ArrayType const*>(_sourceType.baseType().get()))
+			if (auto baseArray = dynamic_cast<ArrayType const*>(_sourceType.baseType()))
 				copyArrayToMemory(*baseArray, _padToWordBoundaries);
 			else
 				utils.storeInMemoryDynamic(*_sourceType.baseType());
@@ -493,7 +494,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			else
 				m_context << Instruction::DUP2 << u256(0);
 			StorageItem(m_context, *_sourceType.baseType()).retrieveValue(SourceLocation(), true);
-			if (auto baseArray = dynamic_cast<ArrayType const*>(_sourceType.baseType().get()))
+			if (auto baseArray = dynamic_cast<ArrayType const*>(_sourceType.baseType()))
 				copyArrayToMemory(*baseArray, _padToWordBoundaries);
 			else
 				utils.storeInMemoryDynamic(*_sourceType.baseType());
@@ -530,7 +531,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 
 void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 {
-	TypePointer type = _typeIn.shared_from_this();
+	TypePointer type = &_typeIn;
 	m_context.callLowLevelFunction(
 		"$clearArray_" + _typeIn.identifier(),
 		2,
@@ -584,7 +585,7 @@ void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::ADD << Instruction::SWAP1;
 				if (_type.baseType()->storageBytes() < 32)
-					ArrayUtils(_context).clearStorageLoop(make_shared<IntegerType>(256));
+					ArrayUtils(_context).clearStorageLoop(TypeProvider::integerType(256));
 				else
 					ArrayUtils(_context).clearStorageLoop(_type.baseType());
 				_context << Instruction::POP;
@@ -625,7 +626,7 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 		<< Instruction::SWAP1;
 	// stack: data_pos_end data_pos
 	if (_type.storageStride() < 32)
-		clearStorageLoop(make_shared<IntegerType>(256));
+		clearStorageLoop(TypeProvider::integerType(256));
 	else
 		clearStorageLoop(_type.baseType());
 	// cleanup
@@ -635,7 +636,7 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 
 void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 {
-	TypePointer type = _typeIn.shared_from_this();
+	TypePointer type = &_typeIn;
 	m_context.callLowLevelFunction(
 		"$resizeDynamicArray_" + _typeIn.identifier(),
 		2,
@@ -732,7 +733,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::DUP2 << Instruction::ADD << Instruction::SWAP1;
 				// stack: ref new_length current_length first_word data_location_end data_location
-				ArrayUtils(_context).clearStorageLoop(make_shared<IntegerType>(256));
+				ArrayUtils(_context).clearStorageLoop(TypeProvider::integerType(256));
 				_context << Instruction::POP;
 				// stack: ref new_length current_length first_word
 				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
@@ -771,7 +772,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 			_context << Instruction::SWAP2 << Instruction::ADD;
 			// stack: ref new_length delete_end delete_start
 			if (_type.storageStride() < 32)
-				ArrayUtils(_context).clearStorageLoop(make_shared<IntegerType>(256));
+				ArrayUtils(_context).clearStorageLoop(TypeProvider::integerType(256));
 			else
 				ArrayUtils(_context).clearStorageLoop(_type.baseType());
 
@@ -911,7 +912,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 	}
 }
 
-void ArrayUtils::clearStorageLoop(TypePointer const& _type) const
+void ArrayUtils::clearStorageLoop(TypePointer _type) const
 {
 	m_context.callLowLevelFunction(
 		"$clearStorageLoop_" + _type->identifier(),
