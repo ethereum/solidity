@@ -3,7 +3,7 @@
 . scripts/report_errors.sh
 
 (
-REPO_ROOT="$(dirname "$0")"/..
+REPO_ROOT=${REPO_ROOT:-"$(dirname "$0")"/..}
 cd $REPO_ROOT
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" | grep -v "test/libsolidity/ASTJSON\|test/compilationTests/zeppelin/LICENSE")
