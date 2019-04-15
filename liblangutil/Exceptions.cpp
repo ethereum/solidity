@@ -37,6 +37,9 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 	case Type::DocstringParsingError:
 		m_typeName = "DocstringParsingError";
 		break;
+	case Type::ParserWarning:
+		m_typeName = "ParserWarning";
+		break;
 	case Type::ParserError:
 		m_typeName = "ParserError";
 		break;

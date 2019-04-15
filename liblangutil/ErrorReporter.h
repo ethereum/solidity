@@ -76,6 +76,8 @@ public:
 
 	void fatalDeclarationError(SourceLocation const& _location, std::string const& _description);
 
+	void parserWarning(SourceLocation const& _location, std::string const& _description);
+
 	void parserError(SourceLocation const& _location, std::string const& _description);
 
 	void fatalParserError(SourceLocation const& _location, std::string const& _description);
@@ -149,4 +151,3 @@ private:
 };
 
 }
-

@@ -1029,7 +1029,7 @@ ASTPointer<Statement> Parser::parseStatement()
 		statement = parseSimpleStatement(docString);
 		break;
 	}
-	expectTokenRecoveryDelete(Token::Semicolon);
+	expectTokenOrConsumeUntil(Token::Semicolon);
 	return statement;
 }
 

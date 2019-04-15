@@ -85,7 +85,7 @@ void ParserBase::expectToken(Token _value, bool _advance)
 		m_scanner->next();
 }
 
-void ParserBase::expectTokenRecoveryDelete(Token _value, bool _advance)
+void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
 {
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
@@ -107,18 +107,20 @@ void ParserBase::expectTokenRecoveryDelete(Token _value, bool _advance)
 				return string("'") + TokenTraits::friendlyName(_token) + "'";
 		};
 
-		Token _token;
-		SourceLocation const& location = SourceLocation{position(), endPosition(), source()};
-		for (_token = m_scanner->currentToken(); _token != _value && _token != Token::EOS; _token = m_scanner->next()) ;
+		SourceLocation const& errLocation = SourceLocation{position(), endPosition(), source()};
+		Token token = m_scanner->currentToken();
+		while (token != _value && token != Token::EOS)
+		    token = m_scanner->next();
 
-		if (_token == Token::EOS)
-			fatalParserError(location,
-							string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) +
-							"; can not find token to synchronize to.");
+		SourceLocation const& location = SourceLocation{errLocation.end, position(), source()};
+		parserError(errLocation,
+					string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) + string("."));
+		if (token == Token::EOS)
+			fatalParserError(location, "Can not find token to synchronize to.");
 		else
-			parserError(location,
-						string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) +
-						"; deleted tokens until offset " + string(std::to_string(position()) + string(".")));
+		{
+			parserWarning(location, "Deleted tokens up to here.");
+	    }
 	}
 	if (_advance)
 		m_scanner->next();
@@ -135,6 +137,11 @@ void ParserBase::decreaseRecursionDepth()
 {
 	solAssert(m_recursionDepth > 0, "");
 	m_recursionDepth--;
+}
+
+void ParserBase::parserWarning(SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.parserWarning(_location, _description);
 }
 
 void ParserBase::parserError(SourceLocation const& _location, string const& _description)
