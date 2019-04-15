@@ -341,7 +341,8 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		{Token::AssignAdd, Token::Add},
 		{Token::AssignSub, Token::Sub},
 		{Token::AssignMul, Token::Mul},
-		{Token::AssignDiv, Token::Div}
+		{Token::AssignDiv, Token::Div},
+		{Token::AssignMod, Token::Mod}
 	};
 	Token op = _assignment.assignmentOperator();
 	if (op != Token::Assign && !compoundToArithmetic.count(op))
@@ -1035,6 +1036,7 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 	case Token::Sub:
 	case Token::Mul:
 	case Token::Div:
+	case Token::Mod:
 	{
 		defineExpr(_op, arithmeticOperation(
 			_op.getOperator(),
@@ -1065,7 +1067,8 @@ smt::Expression SMTChecker::arithmeticOperation(
 		Token::Add,
 		Token::Sub,
 		Token::Mul,
-		Token::Div
+		Token::Div,
+		Token::Mod
 	};
 	solAssert(validOperators.count(_op), "");
 	solAssert(_commonType, "");
@@ -1076,10 +1079,11 @@ smt::Expression SMTChecker::arithmeticOperation(
 		_op == Token::Add ? _left + _right :
 		_op == Token::Sub ? _left - _right :
 		_op == Token::Div ? division(_left, _right, intType) :
-		/*op == Token::Mul*/ _left * _right
+		_op == Token::Mul ? _left * _right :
+		/*_op == Token::Mod*/ _left % _right
 	);
 
-	if (_op == Token::Div)
+	if (_op == Token::Div || _op == Token::Mod)
 	{
 		checkCondition(_right == 0, _location, "Division by zero", "<result>", &_right);
 		m_interface->addAssertion(_right != 0);
