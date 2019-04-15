@@ -110,7 +110,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
 		SourceLocation const& errLocation = SourceLocation{position(), endPosition(), source()};
 		Token token = m_scanner->currentToken();
 		while (token != _value && token != Token::EOS)
-		    token = m_scanner->next();
+			token = m_scanner->next();
 
 		SourceLocation const& location = SourceLocation{errLocation.end, position(), source()};
 		parserError(errLocation,
@@ -120,7 +120,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
 		else
 		{
 			parserWarning(location, "Deleted tokens up to here.");
-	    }
+		}
 	}
 	if (_advance)
 		m_scanner->next();
