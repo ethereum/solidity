@@ -47,6 +47,7 @@ class DeadCodeEliminator: public ASTModifier
 {
 public:
 	using ASTModifier::operator();
+	void operator()(ForLoop& _for) override;
 	void operator()(Block& _block) override;
 };
 

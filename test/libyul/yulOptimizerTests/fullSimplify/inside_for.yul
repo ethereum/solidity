@@ -6,8 +6,8 @@
 // step: fullSimplify
 // ----
 // {
+//     let a := 10
 //     for {
-//         let a := 10
 //     }
 //     iszero(iszero(a))
 //     {
