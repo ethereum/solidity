@@ -90,7 +90,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		auto tokenName = [this](Token _token)
+		auto tokenName = [this](Token _token) -> string
 		{
 			if (_token == Token::Identifier)
 				return string("identifier");
