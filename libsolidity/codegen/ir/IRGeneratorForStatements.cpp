@@ -126,6 +126,11 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 	return false;
 }
 
+bool IRGeneratorForStatements::visit(Return const&)
+{
+	solUnimplemented("Return not yet implemented in yul code generation");
+}
+
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 {
 	solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");

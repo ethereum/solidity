@@ -46,6 +46,7 @@ public:
 
 	bool visit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Assignment const& _assignment) override;
+	bool visit(Return const& _return) override;
 	void endVisit(BinaryOperation const& _binOp) override;
 	bool visit(FunctionCall const& _funCall) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
