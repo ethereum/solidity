@@ -32,6 +32,11 @@ set -e
 
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
 SOLC="$REPO_ROOT/build/solc/solc"
+INTERACTIVE=true
+if ! tty -s || [ "$CI" ]
+then
+    INTERACTIVE=""
+fi
 
 FULLARGS="--optimize --ignore-missing --combined-json abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
 
@@ -95,23 +100,19 @@ function compileFull()
 
 function ask_expectation_update()
 {
-    local newExpectation="${1}"
-    local expectationFile="${2}"
-    while true;
-    do
-        set +e
-        read -t10 -p "(u)pdate expectation/(q)uit? "
-        if [ $? -gt 128 ];
-        then
-            echo -e "\nUser input timed out."
-            exit 1
-        fi
-        set -e
-        case $REPLY in
-            u* ) echo "$newExpectation" > $expectationFile ; break;;
-            q* ) exit 1;;
-        esac
-    done
+    if [ $INTERACTIVE ]
+    then
+        local newExpectation="${1}"
+        local expectationFile="${2}"
+        while true;
+        do
+            read -p "(u)pdate expectation/(q)uit? "
+            case $REPLY in
+                u* ) echo "$newExpectation" > $expectationFile ; break;;
+                q* ) exit 1;;
+            esac
+        done
+    fi
 }
 
 # General helper function for testing SOLC behaviour, based on file name, compile opts, exit code, stdout and stderr.
@@ -165,10 +166,10 @@ function test_solc_behaviour()
     if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]
     then
         printError "Incorrect output on stdout received. Expected:"
-        echo "${stdout_expected}"
+        echo -e "${stdout_expected}"
 
         printError "But got:"
-        cat $stdout_path
+        echo -e "$(cat $stdout_path)"
 
         printError "When running $solc_command"
 
@@ -183,10 +184,10 @@ function test_solc_behaviour()
     if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]
     then
         printError "Incorrect output on stderr received. Expected:"
-        echo "${stderr_expected}"
+        echo -e "${stderr_expected}"
 
         printError "But got:"
-        cat $stderr_path
+        echo -e "$(cat $stderr_path)"
 
         printError "When running $solc_command"
 
