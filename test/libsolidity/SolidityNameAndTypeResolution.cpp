@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(getter_is_memory_type)
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	// Check that the getters return a memory strings, not a storage strings.
-	ContractDefinition const& c = dynamic_cast<ContractDefinition const&>(*m_compiler.ast("").nodes().at(1));
+	ContractDefinition const& c = dynamic_cast<ContractDefinition const&>(*compiler().ast("").nodes().at(1));
 	BOOST_CHECK(c.interfaceFunctions().size() == 2);
 	for (auto const& f: c.interfaceFunctions())
 	{
