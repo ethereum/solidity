@@ -11,6 +11,7 @@ Language Features:
 
 Compiler Features:
  * ABI Decoder: Raise a runtime error on dirty inputs when using the experimental decoder.
+ * Standartd JSON Interface: Metadata settings now re-produce the original 'useLiteralContent' setting from the compilation input.
  * SMTChecker: Support arithmetic compound assignment operators.
  * SMTChecker: Support unary increment and decrement for array and mapping access.
  * SMTChecker: Show unsupported warning for inline assembly blocks.

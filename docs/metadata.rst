@@ -92,7 +92,9 @@ explanatory purposes.
         // Required for Solidity: Addresses for libraries used
         libraries: {
           "MyLib": "0x123123..."
-        }
+        },
+        // Reflects the setting used in the input json, defaults to false
+        "useLiteralContent": false
       },
       // Required: Generated information about the contract.
       output:

@@ -177,6 +177,37 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	BOOST_CHECK(metadata["sources"].isMember("C"));
 }
 
+BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
+{
+	// Check that the metadata contains "useLiteralContent"
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract test {
+		}
+	)";
+
+	auto check = [](char const* _src, bool _check)
+	{
+		CompilerStack compilerStack;
+		compilerStack.setSources({{"", std::string(_src)}});
+		compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
+		compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
+		compilerStack.useMetadataLiteralSources(_check);
+		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+		string metadata_str = compilerStack.metadata("test");
+		Json::Value metadata;
+		jsonParse(metadata_str, metadata);
+		BOOST_CHECK(metadata.isMember("settings"));
+		BOOST_CHECK(metadata["settings"].isMember("useLiteralContent"));
+		BOOST_CHECK(_check == metadata["settings"]["useLiteralContent"].asBool());
+		BOOST_CHECK(dev::test::isValidMetadata(metadata_str));
+
+	};
+
+	check(sourceCode, true);
+	check(sourceCode, false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
