@@ -66,10 +66,10 @@ public:
 	static FixedBytesType const* byteType() { return fixedBytesType(1); }
 	static FixedBytesType const* fixedBytesType(unsigned m) { return m_bytesM.at(m - 1).get(); }
 
-	static ArrayType const* bytesType() noexcept { return &m_bytesStorageType; }
-	static ArrayType const* bytesMemoryType() noexcept { return &m_bytesMemoryType; }
-	static ArrayType const* stringType() noexcept { return &m_stringStorageType; }
-	static ArrayType const* stringMemoryType() noexcept { return &m_stringMemoryType; }
+	static ArrayType const* bytesType();
+	static ArrayType const* bytesMemoryType();
+	static ArrayType const* stringType();
+	static ArrayType const* stringMemoryType();
 
 	/// Constructor for a byte array ("bytes") and string.
 	static ArrayType const* arrayType(DataLocation _location, bool _isString = false);
@@ -199,10 +199,13 @@ private:
 
 	static BoolType const m_boolType;
 	static InaccessibleDynamicType const m_inaccessibleDynamicType;
-	static ArrayType const m_bytesStorageType;
-	static ArrayType const m_bytesMemoryType;
-	static ArrayType const m_stringStorageType;
-	static ArrayType const m_stringMemoryType;
+
+	/// These are lazy-initialized because they depend on `byte` being available.
+	static std::unique_ptr<ArrayType> m_bytesStorageType;
+	static std::unique_ptr<ArrayType> m_bytesMemoryType;
+	static std::unique_ptr<ArrayType> m_stringStorageType;
+	static std::unique_ptr<ArrayType> m_stringMemoryType;
+
 	static TupleType const m_emptyTupleType;
 	static AddressType const m_payableAddressType;
 	static AddressType const m_addressType;

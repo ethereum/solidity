@@ -26,10 +26,14 @@ using namespace solidity;
 
 BoolType const TypeProvider::m_boolType{};
 InaccessibleDynamicType const TypeProvider::m_inaccessibleDynamicType{};
-ArrayType const TypeProvider::m_bytesStorageType{DataLocation::Storage, false};
-ArrayType const TypeProvider::m_bytesMemoryType{DataLocation::Memory, false};
-ArrayType const TypeProvider::m_stringStorageType{DataLocation::Storage, true};
-ArrayType const TypeProvider::m_stringMemoryType{DataLocation::Memory, true};
+
+/// The string and bytes unique_ptrs are initialized when they are first used because
+/// they rely on `byte` being available which we cannot guarantee in the static init context.
+std::unique_ptr<ArrayType> TypeProvider::m_bytesStorageType;
+std::unique_ptr<ArrayType> TypeProvider::m_bytesMemoryType;
+std::unique_ptr<ArrayType> TypeProvider::m_stringStorageType;
+std::unique_ptr<ArrayType> TypeProvider::m_stringMemoryType;
+
 TupleType const TypeProvider::m_emptyTupleType{};
 AddressType const TypeProvider::m_payableAddressType{StateMutability::Payable};
 AddressType const TypeProvider::m_addressType{StateMutability::NonPayable};
@@ -155,7 +159,9 @@ inline void clearCache(Type const& type)
 template <typename T>
 inline void clearCache(unique_ptr<T> const& type)
 {
-	type->clearCache();
+	// Some lazy-initialized types might not exist yet.
+	if (type)
+		type->clearCache();
 }
 
 template <typename Container>
@@ -285,6 +291,34 @@ TypePointer TypeProvider::fromElementaryTypeName(string const& _name)
 		solAssert(nameParts.size() == 1, "Storage location suffix only allowed for reference types");
 		return t;
 	}
+}
+
+ArrayType const* TypeProvider::bytesType()
+{
+	if (!m_bytesStorageType)
+		m_bytesStorageType = make_unique<ArrayType>(DataLocation::Storage, false);
+	return m_bytesStorageType.get();
+}
+
+ArrayType const* TypeProvider::bytesMemoryType()
+{
+	if (!m_bytesMemoryType)
+		m_bytesMemoryType = make_unique<ArrayType>(DataLocation::Memory, false);
+	return m_bytesMemoryType.get();
+}
+
+ArrayType const* TypeProvider::stringType()
+{
+	if (!m_stringStorageType)
+		m_stringStorageType = make_unique<ArrayType>(DataLocation::Storage, true);
+	return m_stringStorageType.get();
+}
+
+ArrayType const* TypeProvider::stringMemoryType()
+{
+	if (!m_stringMemoryType)
+		m_stringMemoryType = make_unique<ArrayType>(DataLocation::Memory, true);
+	return m_stringMemoryType.get();
 }
 
 TypePointer TypeProvider::forLiteral(Literal const& _literal)
