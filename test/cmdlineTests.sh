@@ -122,6 +122,7 @@ function test_solc_behaviour()
     local filename="${1}"
     local solc_args="${2}"
     local solc_stdin="${3}"
+    [ -z "$solc_stdin"  ] && solc_stdin="/dev/stdin"
     local stdout_expected="${4}"
     local exit_code_expected="${5}"
     local stderr_expected="${6}"
@@ -134,13 +135,9 @@ function test_solc_behaviour()
 
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
-    local solc_command="$SOLC ${filename} ${solc_args}"
-    if [[ -n "$solc_stdin"  ]]; then solc_command+=" <$solc_stdin"  ; fi
-    if [[ -n "$stdout_path" ]]; then solc_command+=" 1>$stdout_path"; fi
-    if [[ -n "$stderr_path" ]]; then solc_command+=" 2>$stderr_path"; fi
-
+    local solc_command="$SOLC ${filename} ${solc_args} <$solc_stdin"
     set +e
-    eval "$solc_command"
+    "$SOLC" "${filename}" ${solc_args} <"$solc_stdin" >"$stdout_path" 2>"$stderr_path"
     exitCode=$?
     set -e
 
