@@ -263,13 +263,13 @@ printTask "Running general commandline tests..."
             inputFile=""
             stdin="${tdir}/input.json"
             stdout="$(cat ${tdir}/output.json 2>/dev/null || true)"
-            stdoutExpectationFile="$(pwd)/${tdir}/output.json"
+            stdoutExpectationFile="${tdir}/output.json"
             args="--standard-json "$(cat ${tdir}/args 2>/dev/null || true)
         else
             inputFile="${tdir}input.sol"
             stdin=""
             stdout="$(cat ${tdir}/output 2>/dev/null || true)"
-            stdoutExpectationFile="$(pwd)/${tdir}/output"
+            stdoutExpectationFile="${tdir}/output"
             args=$(cat ${tdir}/args 2>/dev/null || true)
         fi
         exitCode=$(cat ${tdir}/exit 2>/dev/null || true)
@@ -303,8 +303,6 @@ printTask "Compiling all examples from the documentation..."
 SOLTMPDIR=$(mktemp -d)
 (
     set -e
-    cd "$REPO_ROOT"
-    REPO_ROOT=$(pwd) # make it absolute
     cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
     for f in *.sol
@@ -431,8 +429,6 @@ printTask "Testing soljson via the fuzzer..."
 SOLTMPDIR=$(mktemp -d)
 (
     set -e
-    cd "$REPO_ROOT"
-    REPO_ROOT=$(pwd) # make it absolute
     cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
