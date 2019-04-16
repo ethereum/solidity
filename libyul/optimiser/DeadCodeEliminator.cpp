@@ -67,6 +67,12 @@ auto findFirstTerminatingStatement(Block& _block)
 }
 }
 
+void DeadCodeEliminator::operator()(ForLoop& _for)
+{
+	yulAssert(_for.pre.statements.empty(), "DeadCodeEliminator needs ForLoopInitRewriter as a prerequisite.");
+	ASTModifier::operator()(_for);
+}
+
 void DeadCodeEliminator::operator()(Block& _block)
 {
 	auto& statements = _block.statements;
