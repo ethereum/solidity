@@ -236,6 +236,7 @@ void dev::solidity::smt::setSymbolicZeroValue(SymbolicVariable const& _variable,
 
 void dev::solidity::smt::setSymbolicZeroValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface)
 {
+	solAssert(_type, "");
 	if (isInteger(_type->category()))
 		_interface.addAssertion(_expr == 0);
 	else if (isBool(_type->category()))
@@ -249,6 +250,7 @@ void dev::solidity::smt::setSymbolicUnknownValue(SymbolicVariable const& _variab
 
 void dev::solidity::smt::setSymbolicUnknownValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface)
 {
+	solAssert(_type, "");
 	if (isEnum(_type->category()))
 	{
 		auto enumType = dynamic_cast<EnumType const*>(_type.get());
