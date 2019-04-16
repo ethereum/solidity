@@ -34,158 +34,152 @@ TupleType const TypeProvider::m_emptyTupleType{};
 AddressType const TypeProvider::m_payableAddressType{StateMutability::Payable};
 AddressType const TypeProvider::m_addressType{StateMutability::NonPayable};
 
-array<IntegerType, 32> const TypeProvider::m_intM{
-	IntegerType{8 * 1, IntegerType::Modifier::Signed},
-	IntegerType{8 * 2, IntegerType::Modifier::Signed},
-	IntegerType{8 * 3, IntegerType::Modifier::Signed},
-	IntegerType{8 * 4, IntegerType::Modifier::Signed},
-	IntegerType{8 * 5, IntegerType::Modifier::Signed},
-	IntegerType{8 * 6, IntegerType::Modifier::Signed},
-	IntegerType{8 * 7, IntegerType::Modifier::Signed},
-	IntegerType{8 * 8, IntegerType::Modifier::Signed},
-	IntegerType{8 * 9, IntegerType::Modifier::Signed},
-	IntegerType{8 * 10, IntegerType::Modifier::Signed},
-	IntegerType{8 * 11, IntegerType::Modifier::Signed},
-	IntegerType{8 * 12, IntegerType::Modifier::Signed},
-	IntegerType{8 * 13, IntegerType::Modifier::Signed},
-	IntegerType{8 * 14, IntegerType::Modifier::Signed},
-	IntegerType{8 * 15, IntegerType::Modifier::Signed},
-	IntegerType{8 * 16, IntegerType::Modifier::Signed},
-	IntegerType{8 * 17, IntegerType::Modifier::Signed},
-	IntegerType{8 * 18, IntegerType::Modifier::Signed},
-	IntegerType{8 * 19, IntegerType::Modifier::Signed},
-	IntegerType{8 * 20, IntegerType::Modifier::Signed},
-	IntegerType{8 * 21, IntegerType::Modifier::Signed},
-	IntegerType{8 * 22, IntegerType::Modifier::Signed},
-	IntegerType{8 * 23, IntegerType::Modifier::Signed},
-	IntegerType{8 * 24, IntegerType::Modifier::Signed},
-	IntegerType{8 * 25, IntegerType::Modifier::Signed},
-	IntegerType{8 * 26, IntegerType::Modifier::Signed},
-	IntegerType{8 * 27, IntegerType::Modifier::Signed},
-	IntegerType{8 * 28, IntegerType::Modifier::Signed},
-	IntegerType{8 * 29, IntegerType::Modifier::Signed},
-	IntegerType{8 * 30, IntegerType::Modifier::Signed},
-	IntegerType{8 * 31, IntegerType::Modifier::Signed},
-	IntegerType{8 * 32, IntegerType::Modifier::Signed}
-};
+array<unique_ptr<IntegerType>, 32> const TypeProvider::m_intM{{
+	{make_unique<IntegerType>(8 * 1, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 2, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 3, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 4, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 5, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 6, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 7, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 8, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 9, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 10, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 11, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 12, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 13, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 14, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 15, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 16, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 17, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 18, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 19, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 20, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 21, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 22, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 23, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 24, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 25, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 26, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 27, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 28, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 29, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 30, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 31, IntegerType::Modifier::Signed)},
+	{make_unique<IntegerType>(8 * 32, IntegerType::Modifier::Signed)}
+}};
 
-array<IntegerType, 32> const TypeProvider::m_uintM{
-	IntegerType{8 * 1, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 2, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 3, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 4, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 5, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 6, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 7, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 8, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 9, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 10, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 11, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 12, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 13, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 14, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 15, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 16, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 17, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 18, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 19, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 20, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 21, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 22, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 23, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 24, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 25, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 26, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 27, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 28, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 29, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 30, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 31, IntegerType::Modifier::Unsigned},
-	IntegerType{8 * 32, IntegerType::Modifier::Unsigned}
-};
+array<unique_ptr<IntegerType>, 32> const TypeProvider::m_uintM{{
+	{make_unique<IntegerType>(8 * 1, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 2, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 3, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 4, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 5, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 6, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 7, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 8, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 9, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 10, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 11, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 12, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 13, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 14, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 15, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 16, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 17, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 18, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 19, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 20, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 21, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 22, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 23, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 24, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 25, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 26, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 27, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 28, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 29, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 30, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 31, IntegerType::Modifier::Unsigned)},
+	{make_unique<IntegerType>(8 * 32, IntegerType::Modifier::Unsigned)}
+}};
 
-array<FixedBytesType, 32> const TypeProvider::m_bytesM{
-	FixedBytesType{1},
-	FixedBytesType{2},
-	FixedBytesType{3},
-	FixedBytesType{4},
-	FixedBytesType{5},
-	FixedBytesType{6},
-	FixedBytesType{7},
-	FixedBytesType{8},
-	FixedBytesType{9},
-	FixedBytesType{10},
-	FixedBytesType{11},
-	FixedBytesType{12},
-	FixedBytesType{13},
-	FixedBytesType{14},
-	FixedBytesType{15},
-	FixedBytesType{16},
-	FixedBytesType{17},
-	FixedBytesType{18},
-	FixedBytesType{19},
-	FixedBytesType{20},
-	FixedBytesType{21},
-	FixedBytesType{22},
-	FixedBytesType{23},
-	FixedBytesType{24},
-	FixedBytesType{25},
-	FixedBytesType{26},
-	FixedBytesType{27},
-	FixedBytesType{28},
-	FixedBytesType{29},
-	FixedBytesType{30},
-	FixedBytesType{31},
-	FixedBytesType{32}
-};
+array<unique_ptr<FixedBytesType>, 32> const TypeProvider::m_bytesM{{
+	{make_unique<FixedBytesType>(1)},
+	{make_unique<FixedBytesType>(2)},
+	{make_unique<FixedBytesType>(3)},
+	{make_unique<FixedBytesType>(4)},
+	{make_unique<FixedBytesType>(5)},
+	{make_unique<FixedBytesType>(6)},
+	{make_unique<FixedBytesType>(7)},
+	{make_unique<FixedBytesType>(8)},
+	{make_unique<FixedBytesType>(9)},
+	{make_unique<FixedBytesType>(10)},
+	{make_unique<FixedBytesType>(11)},
+	{make_unique<FixedBytesType>(12)},
+	{make_unique<FixedBytesType>(13)},
+	{make_unique<FixedBytesType>(14)},
+	{make_unique<FixedBytesType>(15)},
+	{make_unique<FixedBytesType>(16)},
+	{make_unique<FixedBytesType>(17)},
+	{make_unique<FixedBytesType>(18)},
+	{make_unique<FixedBytesType>(19)},
+	{make_unique<FixedBytesType>(20)},
+	{make_unique<FixedBytesType>(21)},
+	{make_unique<FixedBytesType>(22)},
+	{make_unique<FixedBytesType>(23)},
+	{make_unique<FixedBytesType>(24)},
+	{make_unique<FixedBytesType>(25)},
+	{make_unique<FixedBytesType>(26)},
+	{make_unique<FixedBytesType>(27)},
+	{make_unique<FixedBytesType>(28)},
+	{make_unique<FixedBytesType>(29)},
+	{make_unique<FixedBytesType>(30)},
+	{make_unique<FixedBytesType>(31)},
+	{make_unique<FixedBytesType>(32)}
+}};
 
-array<MagicType, 4> const TypeProvider::m_magicTypes{
-	MagicType{MagicType::Kind::Block},
-	MagicType{MagicType::Kind::Message},
-	MagicType{MagicType::Kind::Transaction},
-	MagicType{MagicType::Kind::ABI}
+array<unique_ptr<MagicType>, 4> const TypeProvider::m_magicTypes{{
+	{make_unique<MagicType>(MagicType::Kind::Block)},
+	{make_unique<MagicType>(MagicType::Kind::Message)},
+	{make_unique<MagicType>(MagicType::Kind::Transaction)},
+	{make_unique<MagicType>(MagicType::Kind::ABI)}
 	// MetaType is stored separately
-};
+}};
 
 inline void clearCache(Type const& type)
 {
 	type.clearCache();
 }
 
-template <typename... Args>
-inline void clearCache(Type const& type, Args&... moreTypes)
+template <typename T>
+inline void clearCache(unique_ptr<T> const& type)
 {
-	clearCache(type);
-	clearCache(moreTypes...);
+	type->clearCache();
 }
 
 template <typename Container>
-inline void clearAllCaches(Container& container)
+inline void clearCaches(Container& container)
 {
-	for_each(begin(container), end(container), [](Type const& t) { t.clearCache(); });
-}
-
-template <typename Container, typename... Args>
-inline void clearAllCaches(Container& types, Args&... more)
-{
-	clearAllCaches(types);
-	clearAllCaches(more...);
+	for (auto const& e: container)
+		clearCache(e);
 }
 
 void TypeProvider::reset()
 {
-	clearCache(
-		m_boolType,
-		m_inaccessibleDynamicType,
-		m_bytesStorageType,
-		m_bytesMemoryType,
-		m_stringStorageType,
-		m_stringMemoryType,
-		m_emptyTupleType,
-		m_payableAddressType,
-		m_addressType
-	);
-	clearAllCaches(instance().m_intM, instance().m_uintM, instance().m_bytesM, instance().m_magicTypes);
+	clearCache(m_boolType);
+	clearCache(m_inaccessibleDynamicType);
+	clearCache(m_bytesStorageType);
+	clearCache(m_bytesMemoryType);
+	clearCache(m_stringStorageType);
+	clearCache(m_stringMemoryType);
+	clearCache(m_emptyTupleType);
+	clearCache(m_payableAddressType);
+	clearCache(m_addressType);
+	clearCaches(instance().m_intM);
+	clearCaches(instance().m_uintM);
+	clearCaches(instance().m_bytesM);
+	clearCaches(instance().m_magicTypes);
 
 	instance().m_generalTypes.clear();
 	instance().m_stringLiteralTypes.clear();
@@ -498,7 +492,7 @@ ModifierType const* TypeProvider::modifierType(ModifierDefinition const& _def)
 MagicType const* TypeProvider::magicType(MagicType::Kind _kind)
 {
 	solAssert(_kind != MagicType::Kind::MetaType, "MetaType is handled separately");
-	return &m_magicTypes.at(static_cast<size_t>(_kind));
+	return m_magicTypes.at(static_cast<size_t>(_kind)).get();
 }
 
 MagicType const* TypeProvider::metaType(Type const* _type)

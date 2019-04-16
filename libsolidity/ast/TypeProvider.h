@@ -64,7 +64,7 @@ public:
 	static BoolType const* boolType() noexcept { return &m_boolType; }
 
 	static FixedBytesType const* byteType() { return fixedBytesType(1); }
-	static FixedBytesType const* fixedBytesType(unsigned m) { return &m_bytesM.at(m - 1); }
+	static FixedBytesType const* fixedBytesType(unsigned m) { return m_bytesM.at(m - 1).get(); }
 
 	static ArrayType const* bytesType() noexcept { return &m_bytesStorageType; }
 	static ArrayType const* bytesMemoryType() noexcept { return &m_bytesMemoryType; }
@@ -87,9 +87,9 @@ public:
 	{
 		solAssert((_bits % 8) == 0, "");
 		if (_modifier == IntegerType::Modifier::Unsigned)
-			return &m_uintM.at(_bits / 8 - 1);
+			return m_uintM.at(_bits / 8 - 1).get();
 		else
-			return &m_intM.at(_bits / 8 - 1);
+			return m_intM.at(_bits / 8 - 1).get();
 	}
 	static IntegerType const* uint(unsigned _bits) { return integerType(_bits, IntegerType::Modifier::Unsigned); }
 
@@ -206,10 +206,10 @@ private:
 	static TupleType const m_emptyTupleType;
 	static AddressType const m_payableAddressType;
 	static AddressType const m_addressType;
-	static std::array<IntegerType, 32> const m_intM;
-	static std::array<IntegerType, 32> const m_uintM;
-	static std::array<FixedBytesType, 32> const m_bytesM;
-	static std::array<MagicType, 4> const m_magicTypes;     ///< MagicType's except MetaType
+	static std::array<std::unique_ptr<IntegerType>, 32> const m_intM;
+	static std::array<std::unique_ptr<IntegerType>, 32> const m_uintM;
+	static std::array<std::unique_ptr<FixedBytesType>, 32> const m_bytesM;
+	static std::array<std::unique_ptr<MagicType>, 4> const m_magicTypes;     ///< MagicType's except MetaType
 
 	std::map<std::pair<unsigned, unsigned>, std::unique_ptr<FixedPointType>> m_ufixedMxN{};
 	std::map<std::pair<unsigned, unsigned>, std::unique_ptr<FixedPointType>> m_fixedMxN{};
