@@ -66,9 +66,9 @@ public:
 	static FixedBytesType const* byteType() { return fixedBytesType(1); }
 	static FixedBytesType const* fixedBytesType(unsigned m) { return m_bytesM.at(m - 1).get(); }
 
-	static ArrayType const* bytesType();
+	static ArrayType const* bytesStorageType();
 	static ArrayType const* bytesMemoryType();
-	static ArrayType const* stringType();
+	static ArrayType const* stringStorageType();
 	static ArrayType const* stringMemoryType();
 
 	/// Constructor for a byte array ("bytes") and string.

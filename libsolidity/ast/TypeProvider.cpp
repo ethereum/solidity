@@ -237,9 +237,9 @@ Type const* TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken const& 
 	case Token::Bool:
 		return boolType();
 	case Token::Bytes:
-		return bytesType();
+		return bytesStorageType();
 	case Token::String:
-		return stringType();
+		return stringStorageType();
 	default:
 		solAssert(
 			false,
@@ -293,7 +293,7 @@ TypePointer TypeProvider::fromElementaryTypeName(string const& _name)
 	}
 }
 
-ArrayType const* TypeProvider::bytesType()
+ArrayType const* TypeProvider::bytesStorageType()
 {
 	if (!m_bytesStorageType)
 		m_bytesStorageType = make_unique<ArrayType>(DataLocation::Storage, false);
@@ -307,7 +307,7 @@ ArrayType const* TypeProvider::bytesMemoryType()
 	return m_bytesMemoryType.get();
 }
 
-ArrayType const* TypeProvider::stringType()
+ArrayType const* TypeProvider::stringStorageType()
 {
 	if (!m_stringStorageType)
 		m_stringStorageType = make_unique<ArrayType>(DataLocation::Storage, true);
@@ -469,14 +469,14 @@ ArrayType const* TypeProvider::arrayType(DataLocation _location, bool _isString)
 	if (_isString)
 	{
 		if (_location == DataLocation::Storage)
-			return stringType();
+			return stringStorageType();
 		if (_location == DataLocation::Memory)
 			return stringMemoryType();
 	}
 	else
 	{
 		if (_location == DataLocation::Storage)
-			return bytesType();
+			return bytesStorageType();
 		if (_location == DataLocation::Memory)
 			return bytesMemoryType();
 	}
