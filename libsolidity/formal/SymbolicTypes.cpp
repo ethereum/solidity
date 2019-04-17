@@ -134,7 +134,7 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 		solAssert(fixedBytesType, "");
 		var = make_shared<SymbolicFixedBytesVariable>(fixedBytesType->numBytes(), _uniqueName, _solver);
 	}
-	else if (isAddress(_type.category()))
+	else if (isAddress(_type.category()) || isContract(_type.category()))
 		var = make_shared<SymbolicAddressVariable>(_uniqueName, _solver);
 	else if (isEnum(_type.category()))
 		var = make_shared<SymbolicEnumVariable>(type, _uniqueName, _solver);
@@ -186,6 +186,11 @@ bool dev::solidity::isAddress(Type::Category _category)
 	return _category == Type::Category::Address;
 }
 
+bool dev::solidity::isContract(Type::Category _category)
+{
+	return _category == Type::Category::Contract;
+}
+
 bool dev::solidity::isEnum(Type::Category _category)
 {
 	return _category == Type::Category::Enum;
@@ -197,6 +202,7 @@ bool dev::solidity::isNumber(Type::Category _category)
 		isRational(_category) ||
 		isFixedBytes(_category) ||
 		isAddress(_category) ||
+		isContract(_category) ||
 		isEnum(_category);
 }
 

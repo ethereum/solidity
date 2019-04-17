@@ -16,6 +16,7 @@ Compiler Features:
  * SMTChecker: Support unary increment and decrement for array and mapping access.
  * SMTChecker: Show unsupported warning for inline assembly blocks.
  * SMTChecker: Support mod.
+ * SMTChecker: Support ``contract`` type.
  * Optimizer: Add rule for shifts by constants larger than 255 for Constantinople.
  * Optimizer: Add rule to simplify certain ANDs and SHL combinations
  * Yul: Adds break and continue keywords to for-loop syntax.

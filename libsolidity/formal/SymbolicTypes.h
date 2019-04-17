@@ -44,6 +44,7 @@ bool isInteger(Type::Category _category);
 bool isRational(Type::Category _category);
 bool isFixedBytes(Type::Category _category);
 bool isAddress(Type::Category _category);
+bool isContract(Type::Category _category);
 bool isEnum(Type::Category _category);
 bool isNumber(Type::Category _category);
 bool isBool(Type::Category _category);

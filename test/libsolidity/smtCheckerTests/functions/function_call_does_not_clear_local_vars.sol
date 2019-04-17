@@ -9,4 +9,5 @@ contract C {
     }
 }
 // ----
+// Warning: (99-103): Assertion checker does not yet support the type of this variable.
 // Warning: (141-144): Assertion checker does not support recursive function calls.
