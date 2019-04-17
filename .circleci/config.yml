@@ -320,12 +320,19 @@ jobs:
             update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
       - run: mkdir -p test_results
       - run:
-          name: Run tests with ASAN
+          name: Run soltest with ASAN
           command: |
             ulimit -a
             # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
             ulimit -s 16384
             build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
+      - run:
+          name: Run commandline tests with ASAN
+          command: |
+            ulimit -a
+            # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
+            ulimit -s 16384
+            test/cmdlineTests.sh
       - store_test_results:
           path: test_results/
       - store_artifacts:
@@ -444,9 +451,7 @@ workflows:
           requires:
             - build_x86_linux
       - test_x86_clang7_asan:
-          filters:
-            branches:
-              only: develop
+          <<: *build_on_tags
           requires:
             - build_x86_clang7_asan
       - test_x86_mac:
