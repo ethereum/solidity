@@ -121,15 +121,24 @@ Encoding of the Metadata Hash in the Bytecode
 
 Because we might support other ways to retrieve the metadata file in the future,
 the mapping ``{"bzzr0": <Swarm hash>}`` is stored
-`CBOR <https://tools.ietf.org/html/rfc7049>`_-encoded. Since the beginning of that
+`CBOR <https://tools.ietf.org/html/rfc7049>`_-encoded. Since the mapping might
+contain more keys (see below) and the beginning of that
 encoding is not easy to find, its length is added in a two-byte big-endian
-encoding. The current version of the Solidity compiler thus adds the following
+encoding. The current version of the Solidity compiler usually adds the following
 to the end of the deployed bytecode::
 
     0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
 
 So in order to retrieve the data, the end of the deployed bytecode can be checked
 to match that pattern and use the Swarm hash to retrieve the file.
+
+.. note::
+  The CBOR mapping can also contain other keys, so it is better to fully
+  decode the data instead of relying on it starting with ``0xa165``.
+  For example, if any experimental features that affect code generation
+  are used, the mapping will also contain ``"experimental": true``.
+  Furthermore, we are planning to add the compiler version to the mapping
+  to ease source-verification and scanning for bugs.
 
 .. note::
   The compiler currently uses the "swarm version 0" hash of the metadata,
