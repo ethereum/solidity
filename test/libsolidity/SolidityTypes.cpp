@@ -40,42 +40,42 @@ BOOST_AUTO_TEST_SUITE(SolidityTypes)
 
 BOOST_AUTO_TEST_CASE(int_types)
 {
-	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Int, 0, 0)) == *TypeProvider::integerType(256, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Int, 0, 0)) == *TypeProvider::integer(256, IntegerType::Modifier::Signed));
 	for (unsigned i = 8; i <= 256; i += 8)
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::IntM, i, 0)) == *TypeProvider::integerType(i, IntegerType::Modifier::Signed));
+		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::IntM, i, 0)) == *TypeProvider::integer(i, IntegerType::Modifier::Signed));
 }
 
 BOOST_AUTO_TEST_CASE(uint_types)
 {
-	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UInt, 0, 0)) == *TypeProvider::integerType(256, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UInt, 0, 0)) == *TypeProvider::integer(256, IntegerType::Modifier::Unsigned));
 	for (unsigned i = 8; i <= 256; i += 8)
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UIntM, i, 0)) == *TypeProvider::integerType(i, IntegerType::Modifier::Unsigned));
+		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UIntM, i, 0)) == *TypeProvider::integer(i, IntegerType::Modifier::Unsigned));
 }
 
 BOOST_AUTO_TEST_CASE(byte_types)
 {
-	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Byte, 0, 0)) == *TypeProvider::fixedBytesType(1));
+	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Byte, 0, 0)) == *TypeProvider::fixedBytes(1));
 	for (unsigned i = 1; i <= 32; i++)
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, i, 0)) == *TypeProvider::fixedBytesType(i));
+		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, i, 0)) == *TypeProvider::fixedBytes(i));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_types)
 {
-	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *TypeProvider::fixedPointType(128, 18, FixedPointType::Modifier::Signed));
+	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *TypeProvider::fixedPoint(128, 18, FixedPointType::Modifier::Signed));
 	for (unsigned i = 8; i <= 256; i += 8)
 	{
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 0)) == *TypeProvider::fixedPointType(i, 0, FixedPointType::Modifier::Signed));
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 2)) == *TypeProvider::fixedPointType(i, 2, FixedPointType::Modifier::Signed));
+		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 0)) == *TypeProvider::fixedPoint(i, 0, FixedPointType::Modifier::Signed));
+		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 2)) == *TypeProvider::fixedPoint(i, 2, FixedPointType::Modifier::Signed));
 	}
 }
 
 BOOST_AUTO_TEST_CASE(ufixed_types)
 {
-	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *TypeProvider::fixedPointType(128, 18, FixedPointType::Modifier::Unsigned));
+	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *TypeProvider::fixedPoint(128, 18, FixedPointType::Modifier::Unsigned));
 	for (unsigned i = 8; i <= 256; i += 8)
 	{
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 0)) == *TypeProvider::fixedPointType(i, 0, FixedPointType::Modifier::Unsigned));
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 2)) == *TypeProvider::fixedPointType(i, 2, FixedPointType::Modifier::Unsigned));
+		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 0)) == *TypeProvider::fixedPoint(i, 0, FixedPointType::Modifier::Unsigned));
+		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 2)) == *TypeProvider::fixedPoint(i, 2, FixedPointType::Modifier::Unsigned));
 	}
 }
 
@@ -99,12 +99,12 @@ BOOST_AUTO_TEST_CASE(storage_layout_mapping)
 {
 	MemberList members(MemberList::MemberMap({
 		{string("first"), TypeProvider::fromElementaryTypeName("uint128")},
-		{string("second"), TypeProvider::mappingType(
+		{string("second"), TypeProvider::mapping(
 			TypeProvider::fromElementaryTypeName("uint8"),
 			TypeProvider::fromElementaryTypeName("uint8")
 		)},
 		{string("third"), TypeProvider::fromElementaryTypeName("uint16")},
-		{string("final"), TypeProvider::mappingType(
+		{string("final"), TypeProvider::mapping(
 			TypeProvider::fromElementaryTypeName("uint8"),
 			TypeProvider::fromElementaryTypeName("uint8")
 		)},
@@ -122,13 +122,13 @@ BOOST_AUTO_TEST_CASE(storage_layout_mapping)
 
 BOOST_AUTO_TEST_CASE(storage_layout_arrays)
 {
-	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytesType(1), 32).storageSize() == 1);
-	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytesType(1), 33).storageSize() == 2);
-	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytesType(2), 31).storageSize() == 2);
-	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytesType(7), 8).storageSize() == 2);
-	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytesType(7), 9).storageSize() == 3);
-	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytesType(31), 9).storageSize() == 9);
-	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytesType(32), 9).storageSize() == 9);
+	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytes(1), 32).storageSize() == 1);
+	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytes(1), 33).storageSize() == 2);
+	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytes(2), 31).storageSize() == 2);
+	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytes(7), 8).storageSize() == 2);
+	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytes(7), 9).storageSize() == 3);
+	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytes(31), 9).storageSize() == 9);
+	BOOST_CHECK(ArrayType(DataLocation::Storage, TypeProvider::fixedBytes(32), 9).storageSize() == 9);
 }
 
 BOOST_AUTO_TEST_CASE(type_identifier_escaping)
@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("string calldata")->identifier(), "t_string_calldata_ptr");
 	ArrayType largeintArray(DataLocation::Memory, TypeProvider::fromElementaryTypeName("int128"), u256("2535301200456458802993406410752"));
 	BOOST_CHECK_EQUAL(largeintArray.identifier(), "t_array$_t_int128_$2535301200456458802993406410752_memory_ptr");
-	TypePointer stringArray = TypeProvider::arrayType(DataLocation::Storage, TypeProvider::fromElementaryTypeName("string"), u256("20"));
-	TypePointer multiArray = TypeProvider::arrayType(DataLocation::Storage, stringArray);
+	TypePointer stringArray = TypeProvider::array(DataLocation::Storage, TypeProvider::fromElementaryTypeName("string"), u256("20"));
+	TypePointer multiArray = TypeProvider::array(DataLocation::Storage, stringArray);
 	BOOST_CHECK_EQUAL(multiArray->identifier(), "t_array$_t_array$_t_string_storage_$20_storage_$dyn_storage_ptr");
 
 	ContractDefinition c(SourceLocation{}, make_shared<string>("MyContract$"), {}, {}, {}, ContractDefinition::ContractKind::Contract);
@@ -195,13 +195,13 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TupleType t({e.type(), s.type(), stringArray, nullptr});
 	BOOST_CHECK_EQUAL(t.identifier(), "t_tuple$_t_type$_t_enum$_Enum_$4_$_$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$_t_array$_t_string_storage_$20_storage_ptr_$__$");
 
-	TypePointer keccak256fun = TypeProvider::functionType(strings{}, strings{}, FunctionType::Kind::KECCAK256);
+	TypePointer keccak256fun = TypeProvider::function(strings{}, strings{}, FunctionType::Kind::KECCAK256);
 	BOOST_CHECK_EQUAL(keccak256fun->identifier(), "t_function_keccak256_nonpayable$__$returns$__$");
 
 	FunctionType metaFun(TypePointers{keccak256fun}, TypePointers{s.type()}, strings{""}, strings{""});
 	BOOST_CHECK_EQUAL(metaFun.identifier(), "t_function_internal_nonpayable$_t_function_keccak256_nonpayable$__$returns$__$_$returns$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$");
 
-	TypePointer m = TypeProvider::mappingType(TypeProvider::fromElementaryTypeName("bytes32"), s.type());
+	TypePointer m = TypeProvider::mapping(TypeProvider::fromElementaryTypeName("bytes32"), s.type());
 	MappingType m2(TypeProvider::fromElementaryTypeName("uint64"), m);
 	BOOST_CHECK_EQUAL(m2.identifier(), "t_mapping$_t_uint64_$_t_mapping$_t_bytes32_$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$_$");
 
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(encoded_sizes)
 	BOOST_CHECK_EQUAL(BoolType().calldataEncodedSize(true), 32);
 	BOOST_CHECK_EQUAL(BoolType().calldataEncodedSize(false), 1);
 
-	ArrayType const* uint24Array = TypeProvider::arrayType(
+	ArrayType const* uint24Array = TypeProvider::array(
 		DataLocation::Memory,
 		TypeProvider::uint(24),
 		9

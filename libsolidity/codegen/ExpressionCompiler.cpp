@@ -732,9 +732,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			// Optimization: If type is bytes or string, then do not encode,
 			// but directly compute keccak256 on memory.
-			if (*argType == *TypeProvider::bytesMemoryType() || *argType == *TypeProvider::stringMemoryType())
+			if (*argType == *TypeProvider::bytesMemory() || *argType == *TypeProvider::stringMemory())
 			{
-				ArrayUtils(m_context).retrieveLength(*TypeProvider::bytesMemoryType());
+				ArrayUtils(m_context).retrieveLength(*TypeProvider::bytesMemory());
 				m_context << Instruction::SWAP1 << u256(0x20) << Instruction::ADD;
 			}
 			else
@@ -875,8 +875,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			TypePointer paramType = function.parameterTypes()[0];
 			ArrayType const* arrayType =
 				function.kind() == FunctionType::Kind::ArrayPush ?
-				TypeProvider::arrayType(DataLocation::Storage, paramType) :
-				TypeProvider::arrayType(DataLocation::Storage);
+				TypeProvider::array(DataLocation::Storage, paramType) :
+				TypeProvider::array(DataLocation::Storage);
 
 			// stack: ArrayReference
 			arguments[0]->accept(*this);
@@ -1062,7 +1062,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					{
 						FixedHash<4> hash(dev::keccak256(stringType->value()));
 						m_context << (u256(FixedHash<4>::Arith(hash)) << (256 - 32));
-						dataOnStack = TypeProvider::fixedBytesType(4);
+						dataOnStack = TypeProvider::fixedBytes(4);
 					}
 					else
 					{
@@ -1073,7 +1073,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						m_context << Instruction::KECCAK256;
 						// stack: <memory pointer> <hash>
 
-						dataOnStack = TypeProvider::fixedBytesType(32);
+						dataOnStack = TypeProvider::fixedBytes(32);
 					}
 				}
 				else
@@ -1115,7 +1115,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().abiDecode(targetTypes, false);
 			else
 			{
-				utils().convertType(*firstArgType, *TypeProvider::bytesMemoryType());
+				utils().convertType(*firstArgType, *TypeProvider::bytesMemory());
 				m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 				m_context << Instruction::SWAP1 << Instruction::MLOAD;
 				// stack now: <mem_pos> <length>
@@ -1289,7 +1289,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				identifier = FunctionType(*function).externalIdentifier();
 			else
 				solAssert(false, "Contract member is neither variable nor function.");
-			utils().convertType(type, type.isPayable() ? *TypeProvider::payableAddressType() : *TypeProvider::addressType(), true);
+			utils().convertType(type, type.isPayable() ? *TypeProvider::payableAddress() : *TypeProvider::address(), true);
 			m_context << identifier;
 		}
 		else
@@ -1307,7 +1307,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
-				*TypeProvider::addressType(),
+				*TypeProvider::address(),
 				true
 			);
 			m_context << Instruction::BALANCE;
@@ -1324,7 +1324,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if ((set<string>{"call", "callcode", "delegatecall", "staticcall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
-				*TypeProvider::addressType(),
+				*TypeProvider::address(),
 				true
 			);
 		else

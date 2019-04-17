@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(blockhash)
 		}
 	)";
 
-	auto blockhashFun = TypeProvider::functionType(strings{"uint256"}, strings{"bytes32"},
+	auto blockhashFun = TypeProvider::function(strings{"uint256"}, strings{"bytes32"},
 		FunctionType::Kind::BlockHash, false, StateMutability::View);
 
 	bytes code = compileFirstExpression(sourceCode, {}, {}, {make_shared<MagicVariableDeclaration>("blockhash", blockhashFun)});
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE(gas_left)
 	)";
 	bytes code = compileFirstExpression(
 		sourceCode, {}, {},
-		{make_shared<MagicVariableDeclaration>("gasleft", TypeProvider::functionType(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
+		{make_shared<MagicVariableDeclaration>("gasleft", TypeProvider::function(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
 	);
 
 	bytes expectation = bytes({uint8_t(Instruction::GAS)});

@@ -142,7 +142,7 @@ BoolResult fitsIntegerType(bigint const& _value, IntegerType const& _type)
 /// if _signed is true.
 bool fitsIntoBits(bigint const& _value, unsigned _bits, bool _signed)
 {
-	return fitsIntegerType(_value, *TypeProvider::integerType(
+	return fitsIntegerType(_value, *TypeProvider::integer(
 		_bits,
 		_signed ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
 	));
@@ -426,7 +426,7 @@ u256 AddressType::literalValue(Literal const* _literal) const
 
 TypeResult AddressType::unaryOperatorResult(Token _operator) const
 {
-	return _operator == Token::Delete ? TypeProvider::emptyTupleType() : nullptr;
+	return _operator == Token::Delete ? TypeProvider::emptyTuple() : nullptr;
 }
 
 
@@ -450,15 +450,15 @@ MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) cons
 {
 	MemberList::MemberMap members = {
 		{"balance", TypeProvider::uint256()},
-		{"call", TypeProvider::functionType(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
-		{"callcode", TypeProvider::functionType(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
-		{"delegatecall", TypeProvider::functionType(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false, StateMutability::NonPayable)},
-		{"staticcall", TypeProvider::functionType(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)}
+		{"call", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
+		{"callcode", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
+		{"delegatecall", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false, StateMutability::NonPayable)},
+		{"staticcall", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareStaticCall, false, StateMutability::View)}
 	};
 	if (m_stateMutability == StateMutability::Payable)
 	{
-		members.emplace_back(MemberList::Member{"send", TypeProvider::functionType(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send, false, StateMutability::NonPayable)});
-		members.emplace_back(MemberList::Member{"transfer", TypeProvider::functionType(strings{"uint"}, strings(), FunctionType::Kind::Transfer, false, StateMutability::NonPayable)});
+		members.emplace_back(MemberList::Member{"send", TypeProvider::function(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send, false, StateMutability::NonPayable)});
+		members.emplace_back(MemberList::Member{"transfer", TypeProvider::function(strings{"uint"}, strings(), FunctionType::Kind::Transfer, false, StateMutability::NonPayable)});
 	}
 	return members;
 }
@@ -530,7 +530,7 @@ TypeResult IntegerType::unaryOperatorResult(Token _operator) const
 {
 	// "delete" is ok for all integer types
 	if (_operator == Token::Delete)
-		return TypeResult{TypeProvider::emptyTupleType()};
+		return TypeResult{TypeProvider::emptyTuple()};
 	// we allow -, ++ and --
 	else if (_operator == Token::Sub || _operator == Token::Inc ||
 		_operator == Token::Dec || _operator == Token::BitNot)
@@ -647,7 +647,7 @@ TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
 	{
 	case Token::Delete:
 		// "delete" is ok for all fixed types
-		return TypeResult{TypeProvider::emptyTupleType()};
+		return TypeResult{TypeProvider::emptyTuple()};
 	case Token::Add:
 	case Token::Sub:
 	case Token::Inc:
@@ -707,7 +707,7 @@ TypeResult FixedPointType::binaryOperatorResult(Token _operator, Type const* _ot
 
 IntegerType const* FixedPointType::asIntegerType() const
 {
-	return TypeProvider::integerType(numBits(), isSigned() ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned);
+	return TypeProvider::integer(numBits(), isSigned() ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned);
 }
 
 tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
@@ -923,7 +923,7 @@ TypeResult RationalNumberType::unaryOperatorResult(Token _operator) const
 	default:
 		return nullptr;
 	}
-	return TypeResult{TypeProvider::rationalNumberType(value)};
+	return TypeResult{TypeProvider::rationalNumber(value)};
 }
 
 TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const* _other) const
@@ -1107,7 +1107,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 		if (value.numerator() != 0 && max(mostSignificantBit(abs(value.numerator())), mostSignificantBit(abs(value.denominator()))) > 4096)
 			return TypeResult::err("Precision of rational constants is limited to 4096 bits.");
 
-		return TypeResult{TypeProvider::rationalNumberType(value)};
+		return TypeResult{TypeProvider::rationalNumber(value)};
 	}
 }
 
@@ -1199,7 +1199,7 @@ IntegerType const* RationalNumberType::integerType() const
 	if (value > u256(-1))
 		return nullptr;
 	else
-		return TypeProvider::integerType(
+		return TypeProvider::integer(
 			max(bytesRequired(value), 1u) * 8,
 			negative ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
 		);
@@ -1237,7 +1237,7 @@ FixedPointType const* RationalNumberType::fixedPointType() const
 	unsigned totalBits = max(bytesRequired(v), 1u) * 8;
 	solAssert(totalBits <= 256, "");
 
-	return TypeProvider::fixedPointType(
+	return TypeProvider::fixedPoint(
 		totalBits, fractionalDigits,
 		negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
 	);
@@ -1292,7 +1292,7 @@ std::string StringLiteralType::toString(bool) const
 
 TypePointer StringLiteralType::mobileType() const
 {
-	return TypeProvider::stringMemoryType();
+	return TypeProvider::stringMemory();
 }
 
 bool StringLiteralType::isValidUTF8() const
@@ -1328,7 +1328,7 @@ TypeResult FixedBytesType::unaryOperatorResult(Token _operator) const
 {
 	// "delete" and "~" is okay for FixedBytesType
 	if (_operator == Token::Delete)
-		return TypeResult{TypeProvider::emptyTupleType()};
+		return TypeResult{TypeProvider::emptyTuple()};
 	else if (_operator == Token::BitNot)
 		return this;
 
@@ -1388,7 +1388,7 @@ u256 BoolType::literalValue(Literal const* _literal) const
 TypeResult BoolType::unaryOperatorResult(Token _operator) const
 {
 	if (_operator == Token::Delete)
-		return TypeProvider::emptyTupleType();
+		return TypeProvider::emptyTuple();
 	else if (_operator == Token::Not)
 		return this;
 	else
@@ -1411,9 +1411,9 @@ Type const* ContractType::encodingType() const
 		return nullptr;
 
 	if (isPayable())
-		return TypeProvider::payableAddressType();
+		return TypeProvider::payableAddress();
 	else
-		return TypeProvider::addressType();
+		return TypeProvider::address();
 }
 
 BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -1451,7 +1451,7 @@ TypeResult ContractType::unaryOperatorResult(Token _operator) const
 	if (isSuper())
 		return nullptr;
 	else if (_operator == Token::Delete)
-		return TypeProvider::emptyTupleType();
+		return TypeProvider::emptyTuple();
 	else
 		return nullptr;
 }
@@ -1472,9 +1472,9 @@ TypeResult ReferenceType::unaryOperatorResult(Token _operator) const
 	case DataLocation::CallData:
 		return nullptr;
 	case DataLocation::Memory:
-		return TypeProvider::emptyTupleType();
+		return TypeProvider::emptyTuple();
 	case DataLocation::Storage:
-		return m_isPointer ? nullptr : TypeProvider::emptyTupleType();
+		return m_isPointer ? nullptr : TypeProvider::emptyTuple();
 	}
 	return nullptr;
 }
@@ -1522,7 +1522,7 @@ string ReferenceType::identifierLocationSuffix() const
 ArrayType::ArrayType(DataLocation _location, bool _isString):
 	ReferenceType(_location),
 	m_arrayKind(_isString ? ArrayKind::String : ArrayKind::Bytes),
-	m_baseType{TypeProvider::byteType()}
+	m_baseType{TypeProvider::byte()}
 {
 }
 
@@ -1749,14 +1749,14 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 		members.emplace_back("length", TypeProvider::uint256());
 		if (isDynamicallySized() && location() == DataLocation::Storage)
 		{
-			members.emplace_back("push", TypeProvider::functionType(
+			members.emplace_back("push", TypeProvider::function(
 				TypePointers{baseType()},
 				TypePointers{TypeProvider::uint256()},
 				strings{string()},
 				strings{string()},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			));
-			members.emplace_back("pop", TypeProvider::functionType(
+			members.emplace_back("pop", TypeProvider::function(
 				TypePointers{},
 				TypePointers{},
 				strings{},
@@ -1805,9 +1805,9 @@ TypeResult ArrayType::interfaceType(bool _inLibrary) const
 	else if (m_arrayKind != ArrayKind::Ordinary)
 		result = TypeProvider::withLocation(this, DataLocation::Memory, true);
 	else if (isDynamicallySized())
-		result = TypeProvider::arrayType(DataLocation::Memory, baseInterfaceType);
+		result = TypeProvider::array(DataLocation::Memory, baseInterfaceType);
 	else
-		result = TypeProvider::arrayType(DataLocation::Memory, baseInterfaceType, m_length);
+		result = TypeProvider::array(DataLocation::Memory, baseInterfaceType, m_length);
 
 	if (_inLibrary)
 		m_interfaceType_library = result;
@@ -1879,7 +1879,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 				if (!function->isVisibleInDerivedContracts() || !function->isImplemented())
 					continue;
 
-				auto functionType = TypeProvider::functionType(*function, true);
+				auto functionType = TypeProvider::function(*function, true);
 				bool functionWithEqualArgumentsFound = false;
 				for (auto const& member: members)
 				{
@@ -2197,7 +2197,7 @@ FunctionTypePointer StructType::constructorType() const
 		paramNames.push_back(member.name);
 		paramTypes.push_back(TypeProvider::withLocationIfReference(DataLocation::Memory, member.type));
 	}
-	return TypeProvider::functionType(
+	return TypeProvider::function(
 		paramTypes,
 		TypePointers{TypeProvider::withLocation(this, DataLocation::Memory, false)},
 		paramNames,
@@ -2250,7 +2250,7 @@ TypePointer EnumType::encodingType() const
 
 TypeResult EnumType::unaryOperatorResult(Token _operator) const
 {
-	return _operator == Token::Delete ? TypeProvider::emptyTupleType() : nullptr;
+	return _operator == Token::Delete ? TypeProvider::emptyTuple() : nullptr;
 }
 
 string EnumType::richIdentifier() const
@@ -2379,7 +2379,7 @@ TypePointer TupleType::mobileType() const
 		else
 			mobiles.push_back(nullptr);
 	}
-	return TypeProvider::tupleType(move(mobiles));
+	return TypeProvider::tuple(move(mobiles));
 }
 
 TypePointer TupleType::closestTemporaryType(Type const* _targetType) const
@@ -2396,7 +2396,7 @@ TypePointer TupleType::closestTemporaryType(Type const* _targetType) const
 			solAssert(tempComponents[i], "");
 		}
 	}
-	return TypeProvider::tupleType(move(tempComponents));
+	return TypeProvider::tuple(move(tempComponents));
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
@@ -2574,9 +2574,9 @@ FunctionTypePointer FunctionType::newExpressionType(ContractDefinition const& _c
 			stateMutability = StateMutability::Payable;
 	}
 
-	return TypeProvider::functionType(
+	return TypeProvider::function(
 		parameters,
-		TypePointers{TypeProvider::contractType(_contract)},
+		TypePointers{TypeProvider::contract(_contract)},
 		parameterNames,
 		strings{""},
 		Kind::Creation,
@@ -2606,7 +2606,7 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 	)
 		for (auto& param: returnParameterTypes)
 			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
-				param = TypeProvider::inaccessibleDynamicType();
+				param = TypeProvider::inaccessibleDynamic();
 
 	return returnParameterTypes;
 }
@@ -2689,7 +2689,7 @@ bool FunctionType::operator==(Type const& _other) const
 
 BoolResult FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_kind == Kind::External && _convertTo == *TypeProvider::addressType())
+	if (m_kind == Kind::External && _convertTo == *TypeProvider::address())
 		return true;
 	return _convertTo.category() == category();
 }
@@ -2722,7 +2722,7 @@ BoolResult FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 TypeResult FunctionType::unaryOperatorResult(Token _operator) const
 {
 	if (_operator == Token::Delete)
-		return TypeResult(TypeProvider::emptyTupleType());
+		return TypeResult(TypeProvider::emptyTuple());
 	return nullptr;
 }
 
@@ -2863,7 +2863,7 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	if (variable && retParamTypes.empty())
 		return FunctionTypePointer();
 
-	return TypeProvider::functionType(
+	return TypeProvider::function(
 		paramTypes,
 		retParamTypes,
 		m_parameterNames,
@@ -2888,13 +2888,13 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
-			members.emplace_back("selector", TypeProvider::fixedBytesType(4));
+			members.emplace_back("selector", TypeProvider::fixedBytes(4));
 		if (m_kind != Kind::BareDelegateCall)
 		{
 			if (isPayable())
 				members.emplace_back(
 					"value",
-					TypeProvider::functionType(
+					TypeProvider::function(
 						parseElementaryTypeVector({"uint"}),
 						TypePointers{copyAndSetGasOrValue(false, true)},
 						strings(1, ""),
@@ -2911,7 +2911,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 		if (m_kind != Kind::Creation)
 			members.emplace_back(
 				"gas",
-				TypeProvider::functionType(
+				TypeProvider::function(
 					parseElementaryTypeVector({"uint"}),
 					TypePointers{copyAndSetGasOrValue(true, false)},
 					strings(1, ""),
@@ -3125,7 +3125,7 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 
 TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) const
 {
-	return TypeProvider::functionType(
+	return TypeProvider::function(
 		m_parameterTypes,
 		m_returnParameterTypes,
 		m_parameterNames,
@@ -3165,7 +3165,7 @@ FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _boun
 			kind = Kind::DelegateCall;
 	}
 
-	return TypeProvider::functionType(
+	return TypeProvider::function(
 		parameterTypes,
 		m_returnParameterTypes,
 		m_parameterNames,
@@ -3218,7 +3218,7 @@ bool FunctionType::padArguments() const
 
 Type const* MappingType::encodingType() const
 {
-	return TypeProvider::integerType(256, IntegerType::Modifier::Unsigned);
+	return TypeProvider::integer(256, IntegerType::Modifier::Unsigned);
 }
 
 string MappingType::richIdentifier() const
@@ -3441,65 +3441,65 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	{
 	case Kind::Block:
 		return MemberList::MemberMap({
-			{"coinbase", TypeProvider::payableAddressType()},
+			{"coinbase", TypeProvider::payableAddress()},
 			{"timestamp", TypeProvider::uint256()},
-			{"blockhash", TypeProvider::functionType(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
+			{"blockhash", TypeProvider::function(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)},
 			{"difficulty", TypeProvider::uint256()},
 			{"number", TypeProvider::uint256()},
 			{"gaslimit", TypeProvider::uint256()}
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", TypeProvider::payableAddressType()},
+			{"sender", TypeProvider::payableAddress()},
 			{"gas", TypeProvider::uint256()},
 			{"value", TypeProvider::uint256()},
-			{"data", TypeProvider::arrayType(DataLocation::CallData)},
-			{"sig", TypeProvider::fixedBytesType(4)}
+			{"data", TypeProvider::array(DataLocation::CallData)},
+			{"sig", TypeProvider::fixedBytes(4)}
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", TypeProvider::payableAddressType()},
+			{"origin", TypeProvider::payableAddress()},
 			{"gasprice", TypeProvider::uint256()}
 		});
 	case Kind::ABI:
 		return MemberList::MemberMap({
-			{"encode", TypeProvider::functionType(
+			{"encode", TypeProvider::function(
 				TypePointers{},
-				TypePointers{TypeProvider::arrayType(DataLocation::Memory)},
+				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{},
 				strings{1, ""},
 				FunctionType::Kind::ABIEncode,
 				true,
 				StateMutability::Pure
 			)},
-			{"encodePacked", TypeProvider::functionType(
+			{"encodePacked", TypeProvider::function(
 				TypePointers{},
-				TypePointers{TypeProvider::arrayType(DataLocation::Memory)},
+				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{},
 				strings{1, ""},
 				FunctionType::Kind::ABIEncodePacked,
 				true,
 				StateMutability::Pure
 			)},
-			{"encodeWithSelector", TypeProvider::functionType(
-				TypePointers{TypeProvider::fixedBytesType(4)},
-				TypePointers{TypeProvider::arrayType(DataLocation::Memory)},
+			{"encodeWithSelector", TypeProvider::function(
+				TypePointers{TypeProvider::fixedBytes(4)},
+				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{1, ""},
 				strings{1, ""},
 				FunctionType::Kind::ABIEncodeWithSelector,
 				true,
 				StateMutability::Pure
 			)},
-			{"encodeWithSignature", TypeProvider::functionType(
-				TypePointers{TypeProvider::arrayType(DataLocation::Memory, true)},
-				TypePointers{TypeProvider::arrayType(DataLocation::Memory)},
+			{"encodeWithSignature", TypeProvider::function(
+				TypePointers{TypeProvider::array(DataLocation::Memory, true)},
+				TypePointers{TypeProvider::array(DataLocation::Memory)},
 				strings{1, ""},
 				strings{1, ""},
 				FunctionType::Kind::ABIEncodeWithSignature,
 				true,
 				StateMutability::Pure
 			)},
-			{"decode", TypeProvider::functionType(
+			{"decode", TypeProvider::function(
 				TypePointers(),
 				TypePointers(),
 				strings{},
@@ -3518,9 +3518,9 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_typeArgument).contractDefinition();
 		if (contract.canBeDeployed())
 			return MemberList::MemberMap({
-				{"creationCode", TypeProvider::arrayType(DataLocation::Memory)},
-				{"runtimeCode", TypeProvider::arrayType(DataLocation::Memory)},
-				{"name", TypeProvider::stringMemoryType()},
+				{"creationCode", TypeProvider::array(DataLocation::Memory)},
+				{"runtimeCode", TypeProvider::array(DataLocation::Memory)},
+				{"name", TypeProvider::stringMemory()},
 			});
 		else
 			return {};
@@ -3559,5 +3559,5 @@ TypePointer MagicType::typeArgument() const
 
 TypePointer InaccessibleDynamicType::decodingType() const
 {
-	return TypeProvider::integerType(256, IntegerType::Modifier::Unsigned);
+	return TypeProvider::integer(256, IntegerType::Modifier::Unsigned);
 }

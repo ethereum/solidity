@@ -245,13 +245,13 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 	{
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
-				registerFunction(*v, TypeProvider::functionType(*v), true);
+				registerFunction(*v, TypeProvider::function(*v), true);
 
 		for (FunctionDefinition const* function: contract->definedFunctions())
 			if (!function->isConstructor())
 				registerFunction(
 					*function,
-					TypeProvider::functionType(*function)->asCallableFunction(false),
+					TypeProvider::function(*function)->asCallableFunction(false),
 					function->isImplemented()
 				);
 	}
@@ -408,7 +408,7 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->isPartOfExternalInterface())
 			{
-				auto functionType = TypeProvider::functionType(*f);
+				auto functionType = TypeProvider::function(*f);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(
@@ -418,7 +418,7 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
 			{
-				auto functionType = TypeProvider::functionType(*v);
+				auto functionType = TypeProvider::function(*v);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(

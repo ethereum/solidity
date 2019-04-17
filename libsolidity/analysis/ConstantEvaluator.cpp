@@ -57,7 +57,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 		setType(
 			_operation,
 			TokenTraits::isCompareOp(_operation.getOperator()) ?
-			TypeProvider::boolType() :
+			TypeProvider::boolean() :
 			commonType
 		);
 	}
