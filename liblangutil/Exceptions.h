@@ -59,7 +59,6 @@ public:
 		DeclarationError,
 		DocstringParsingError,
 		ParserError,
-		ParserWarning,
 		TypeError,
 		SyntaxError,
 		Warning

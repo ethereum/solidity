@@ -3,4 +3,4 @@ contract c {
 }
 // ----
 // ParserError: (52-53): Expected ';' but got '}'.
-// ParserError: (53-56): Can not find token to synchronize to.
+// ParserError: (56-56): Can not find token to synchronize to.

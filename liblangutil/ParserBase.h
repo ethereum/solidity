@@ -79,10 +79,6 @@ protected:
 	void increaseRecursionDepth();
 	void decreaseRecursionDepth();
 
-	/// Creates a @ref ParserWarnning and annotates it with the current position and the
-	/// given @a _description.
-	void parserWarning(SourceLocation const& _location, std::string const& _description);
-
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description.
 	void parserError(std::string const& _description);

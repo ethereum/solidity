@@ -62,7 +62,7 @@ void ParserBase::expectToken(Token _value, bool _advance)
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		auto tokenName = [this](Token _token)
+		auto tokenName = [this](Token _token) -> string
 		{
 			if (_token == Token::Identifier)
 				return string("identifier");
@@ -107,20 +107,12 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
 				return string("'") + TokenTraits::friendlyName(_token) + "'";
 		};
 
-		SourceLocation const& errLocation = SourceLocation{position(), endPosition(), source()};
+		parserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) + string("."));
 		Token token = m_scanner->currentToken();
 		while (token != _value && token != Token::EOS)
 			token = m_scanner->next();
-
-		SourceLocation const& location = SourceLocation{errLocation.end, position(), source()};
-		parserError(errLocation,
-					string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) + string("."));
 		if (token == Token::EOS)
-			fatalParserError(location, "Can not find token to synchronize to.");
-		else
-		{
-			parserWarning(location, "Deleted tokens up to here.");
-		}
+			fatalParserError("Can not find token to synchronize to.");
 	}
 	if (_advance)
 		m_scanner->next();
@@ -139,11 +131,6 @@ void ParserBase::decreaseRecursionDepth()
 	m_recursionDepth--;
 }
 
-void ParserBase::parserWarning(SourceLocation const& _location, string const& _description)
-{
-	m_errorReporter.parserWarning(_location, _description);
-}
-
 void ParserBase::parserError(SourceLocation const& _location, string const& _description)
 {
 	m_errorReporter.parserError(_location, _description);
@@ -157,9 +144,4 @@ void ParserBase::parserError(string const& _description)
 void ParserBase::fatalParserError(string const& _description)
 {
 	m_errorReporter.fatalParserError(SourceLocation{position(), endPosition(), source()}, _description);
-}
-
-void ParserBase::fatalParserError(SourceLocation const& _location, string const& _description)
-{
-	m_errorReporter.fatalParserError(_location, _description);
 }

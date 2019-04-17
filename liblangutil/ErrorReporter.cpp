@@ -167,14 +167,6 @@ void ErrorReporter::fatalDeclarationError(SourceLocation const& _location, std::
 		_description);
 }
 
-void ErrorReporter::parserWarning(SourceLocation const& _location, string const& _description)
-{
-	warning(
-		_location,
-		_description
-	);
-}
-
 void ErrorReporter::parserError(SourceLocation const& _location, string const& _description)
 {
 	error(

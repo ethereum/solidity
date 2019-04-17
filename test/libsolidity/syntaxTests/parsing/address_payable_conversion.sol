@@ -5,4 +5,3 @@ contract C {
 }
 // ----
 //  ParserError: (80-87): Expected ';' but got 'payable'.
-//  Warning: (87-93): Deleted tokens up to here.
