@@ -343,13 +343,13 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
 {
 	// Normalise data location of type.
-	TypePointer type = ReferenceType::copyForLocationIfReference(DataLocation::Storage, &_type);
+	TypePointer type = TypeProvider::withLocationIfReference(DataLocation::Storage, &_type);
 	set<Declaration const*> seenFunctions;
 	MemberList::MemberMap members;
 	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
 		for (UsingForDirective const* ufd: contract->usingForDirectives())
 		{
-			if (ufd->typeName() && *type != *ReferenceType::copyForLocationIfReference(
+			if (ufd->typeName() && *type != *TypeProvider::withLocationIfReference(
 				DataLocation::Storage,
 				ufd->typeName()->annotation().type
 			))
@@ -1479,16 +1479,9 @@ TypeResult ReferenceType::unaryOperatorResult(Token _operator) const
 	return nullptr;
 }
 
-TypePointer ReferenceType::copyForLocationIfReference(DataLocation _location, Type const* _type)
-{
-	if (auto type = dynamic_cast<ReferenceType const*>(_type))
-		return TypeProvider::withLocation(type, _location, false);
-	return _type;
-}
-
 TypePointer ReferenceType::copyForLocationIfReference(Type const* _type) const
 {
-	return copyForLocationIfReference(m_location, _type);
+	return TypeProvider::withLocationIfReference(m_location, _type);
 }
 
 string ReferenceType::stringForReferencePart() const
@@ -2202,7 +2195,7 @@ FunctionTypePointer StructType::constructorType() const
 		if (!member.type->canLiveOutsideStorage())
 			continue;
 		paramNames.push_back(member.name);
-		paramTypes.push_back(copyForLocationIfReference(DataLocation::Memory, member.type));
+		paramTypes.push_back(TypeProvider::withLocationIfReference(DataLocation::Memory, member.type));
 	}
 	return TypeProvider::functionType(
 		paramTypes,

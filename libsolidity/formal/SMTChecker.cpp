@@ -1524,7 +1524,7 @@ void SMTChecker::resetVariables(function<bool(VariableDeclaration const&)> const
 TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
-		return ReferenceType::copyForLocationIfReference(refType->location(), _type);
+		return TypeProvider::withLocationIfReference(refType->location(), _type);
 	return _type;
 }
 

@@ -654,11 +654,6 @@ public:
 		return location() == _other.location() && isPointer() == _other.isPointer();
 	}
 
-	/// @returns a copy of @a _type having the same location as this (and is not a pointer type)
-	/// if _type is a reference type and an unmodified copy of _type otherwise.
-	/// This function is mostly useful to modify inner types appropriately.
-	static Type const* copyForLocationIfReference(DataLocation _location, Type const* _type);
-
 	Type const* withLocation(DataLocation _location, bool _isPointer) const;
 
 protected:

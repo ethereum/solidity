@@ -1997,7 +1997,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 				_newExpression.typeName().location(),
 				"Length has to be placed in parentheses after the array type for new expression."
 			);
-		type = ReferenceType::copyForLocationIfReference(DataLocation::Memory, type);
+		type = TypeProvider::withLocationIfReference(DataLocation::Memory, type);
 		_newExpression.annotation().type = TypeProvider::functionType(
 			TypePointers{TypeProvider::uint256()},
 			TypePointers{type},
@@ -2043,7 +2043,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		if (initialMemberCount == 0)
 		{
 			// Try to see if the member was removed because it is only available for storage types.
-			auto storageType = ReferenceType::copyForLocationIfReference(
+			auto storageType = TypeProvider::withLocationIfReference(
 				DataLocation::Storage,
 				exprType
 			);

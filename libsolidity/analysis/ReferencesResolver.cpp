@@ -231,9 +231,9 @@ void ReferencesResolver::endVisit(Mapping const& _typeName)
 	TypePointer keyType = _typeName.keyType().annotation().type;
 	TypePointer valueType = _typeName.valueType().annotation().type;
 	// Convert key type to memory.
-	keyType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, keyType);
+	keyType = TypeProvider::withLocationIfReference(DataLocation::Memory, keyType);
 	// Convert value type to storage reference.
-	valueType = ReferenceType::copyForLocationIfReference(DataLocation::Storage, valueType);
+	valueType = TypeProvider::withLocationIfReference(DataLocation::Storage, valueType);
 	_typeName.annotation().type = TypeProvider::mappingType(keyType, valueType);
 }
 
