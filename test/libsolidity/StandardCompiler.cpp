@@ -83,10 +83,10 @@ Json::Value getContractResult(Json::Value const& _compilerResult, string const& 
 	return _compilerResult["contracts"][_file][_name];
 }
 
-Json::Value compile(string const& _input)
+Json::Value compile(string _input)
 {
 	StandardCompiler compiler;
-	string output = compiler.compile(_input);
+	string output = compiler.compile(std::move(_input));
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	return ret;

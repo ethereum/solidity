@@ -150,7 +150,7 @@ public:
 	void useMetadataLiteralSources(bool _metadataLiteralSources);
 
 	/// Sets the sources. Must be set before parsing.
-	void setSources(StringMap const& _sources);
+	void setSources(StringMap _sources);
 
 	/// Adds a response to an SMTLib2 query (identified by the hash of the query input).
 	/// Must be set before parsing.
@@ -238,7 +238,7 @@ public:
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	Json::Value assemblyJSON(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
+	Json::Value assemblyJSON(std::string const& _contractName, StringMap const& _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
