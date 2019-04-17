@@ -29,10 +29,10 @@ InaccessibleDynamicType const TypeProvider::m_inaccessibleDynamic{};
 
 /// The string and bytes unique_ptrs are initialized when they are first used because
 /// they rely on `byte` being available which we cannot guarantee in the static init context.
-std::unique_ptr<ArrayType> TypeProvider::m_bytesStorage;
-std::unique_ptr<ArrayType> TypeProvider::m_bytesMemory;
-std::unique_ptr<ArrayType> TypeProvider::m_stringStorage;
-std::unique_ptr<ArrayType> TypeProvider::m_stringMemory;
+unique_ptr<ArrayType> TypeProvider::m_bytesStorage;
+unique_ptr<ArrayType> TypeProvider::m_bytesMemory;
+unique_ptr<ArrayType> TypeProvider::m_stringStorage;
+unique_ptr<ArrayType> TypeProvider::m_stringMemory;
 
 TupleType const TypeProvider::m_emptyTuple{};
 AddressType const TypeProvider::m_payableAddress{StateMutability::Payable};
