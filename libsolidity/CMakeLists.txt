@@ -22,8 +22,6 @@ set(sources
 	analysis/PostTypeChecker.h
 	analysis/ReferencesResolver.cpp
 	analysis/ReferencesResolver.h
-	analysis/SemVerHandler.cpp
-	analysis/SemVerHandler.h
 	analysis/StaticAnalyzer.cpp
 	analysis/StaticAnalyzer.h
 	analysis/SyntaxChecker.cpp
