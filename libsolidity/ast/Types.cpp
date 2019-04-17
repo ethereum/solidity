@@ -1388,7 +1388,7 @@ u256 BoolType::literalValue(Literal const* _literal) const
 TypeResult BoolType::unaryOperatorResult(Token _operator) const
 {
 	if (_operator == Token::Delete)
-		return TypeProvider::emptyTupleType(); // TODO: Lag of understanding.
+		return TypeProvider::emptyTupleType();
 	else if (_operator == Token::Not)
 		return this;
 	else
@@ -1451,7 +1451,7 @@ TypeResult ContractType::unaryOperatorResult(Token _operator) const
 	if (isSuper())
 		return nullptr;
 	else if (_operator == Token::Delete)
-		return TypeProvider::emptyTupleType(); // TODO: Lag of understanding.
+		return TypeProvider::emptyTupleType();
 	else
 		return nullptr;
 }
