@@ -277,6 +277,7 @@ private:
 	VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
+	bool m_externalFunctionCallHappened = false;
 	// True if the "No SMT solver available" warning was already created.
 	bool m_noSolverWarning = false;
 	/// An Expression may have multiple smt::Expression due to
