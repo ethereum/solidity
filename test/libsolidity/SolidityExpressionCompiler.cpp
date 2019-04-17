@@ -28,6 +28,7 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
 #include <test/Options.h>
@@ -597,7 +598,7 @@ BOOST_AUTO_TEST_CASE(blockhash)
 		}
 	)";
 
-	auto blockhashFun = make_shared<FunctionType>(strings{"uint256"}, strings{"bytes32"},
+	auto blockhashFun = TypeProvider::functionType(strings{"uint256"}, strings{"bytes32"},
 		FunctionType::Kind::BlockHash, false, StateMutability::View);
 
 	bytes code = compileFirstExpression(sourceCode, {}, {}, {make_shared<MagicVariableDeclaration>("blockhash", blockhashFun)});
@@ -618,7 +619,7 @@ BOOST_AUTO_TEST_CASE(gas_left)
 	)";
 	bytes code = compileFirstExpression(
 		sourceCode, {}, {},
-		{make_shared<MagicVariableDeclaration>("gasleft", make_shared<FunctionType>(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
+		{make_shared<MagicVariableDeclaration>("gasleft", TypeProvider::functionType(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
 	);
 
 	bytes expectation = bytes({uint8_t(Instruction::GAS)});

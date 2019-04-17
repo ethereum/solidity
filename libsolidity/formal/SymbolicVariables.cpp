@@ -19,6 +19,7 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
 using namespace dev;
@@ -102,7 +103,7 @@ SymbolicAddressVariable::SymbolicAddressVariable(
 	string _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	SymbolicIntVariable(make_shared<IntegerType>(160), move(_uniqueName), _interface)
+	SymbolicIntVariable(TypeProvider::uint(160), move(_uniqueName), _interface)
 {
 }
 
@@ -111,7 +112,7 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 	string _uniqueName,
 	smt::SolverInterface& _interface
 ):
-	SymbolicIntVariable(make_shared<IntegerType>(_numBytes * 8), move(_uniqueName), _interface)
+	SymbolicIntVariable(TypeProvider::uint(_numBytes * 8), move(_uniqueName), _interface)
 {
 }
 

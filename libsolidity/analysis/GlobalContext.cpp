@@ -24,6 +24,7 @@
 #include <libsolidity/analysis/GlobalContext.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <memory>
 
@@ -34,42 +35,50 @@ namespace dev
 namespace solidity
 {
 
-GlobalContext::GlobalContext():
-m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{
-	make_shared<MagicVariableDeclaration>("abi", make_shared<MagicType>(MagicType::Kind::ABI)),
-	make_shared<MagicVariableDeclaration>("addmod", make_shared<FunctionType>(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("assert", make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::Block)),
-	make_shared<MagicVariableDeclaration>("blockhash", make_shared<FunctionType>(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
-	make_shared<MagicVariableDeclaration>("ecrecover", make_shared<FunctionType>(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("gasleft", make_shared<FunctionType>(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
-	make_shared<MagicVariableDeclaration>("keccak256", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("log0", make_shared<FunctionType>(strings{"bytes32"}, strings{}, FunctionType::Kind::Log0)),
-	make_shared<MagicVariableDeclaration>("log1", make_shared<FunctionType>(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log1)),
-	make_shared<MagicVariableDeclaration>("log2", make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log2)),
-	make_shared<MagicVariableDeclaration>("log3", make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log3)),
-	make_shared<MagicVariableDeclaration>("log4", make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log4)),
-	make_shared<MagicVariableDeclaration>("msg", make_shared<MagicType>(MagicType::Kind::Message)),
-	make_shared<MagicVariableDeclaration>("mulmod", make_shared<FunctionType>(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("now", make_shared<IntegerType>(256)),
-	make_shared<MagicVariableDeclaration>("require", make_shared<FunctionType>(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("require", make_shared<FunctionType>(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("revert", make_shared<FunctionType>(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("revert", make_shared<FunctionType>(strings{"string memory"}, strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("ripemd160", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes20"}, FunctionType::Kind::RIPEMD160, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("selfdestruct", make_shared<FunctionType>(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
-	make_shared<MagicVariableDeclaration>("sha256", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("sha3", make_shared<FunctionType>(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
-	make_shared<MagicVariableDeclaration>("suicide", make_shared<FunctionType>(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
-	make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::Transaction)),
-	make_shared<MagicVariableDeclaration>("type", make_shared<FunctionType>(
-		strings{"address"} /* accepts any contract type, handled by the type checker */,
-		strings{} /* returns a MagicType, handled by the type checker */,
-		FunctionType::Kind::MetaType,
-		false,
-		StateMutability::Pure
-	)),
-})
+inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariables()
+{
+	static auto const magicVarDecl = [](string const& _name, Type const* _type) {
+		return make_shared<MagicVariableDeclaration>(_name, _type);
+	};
+
+	return {
+		magicVarDecl("abi", TypeProvider::magicType(MagicType::Kind::ABI)),
+		magicVarDecl("addmod", TypeProvider::functionType(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
+		magicVarDecl("assert", TypeProvider::functionType(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
+		magicVarDecl("block", TypeProvider::magicType(MagicType::Kind::Block)),
+		magicVarDecl("blockhash", TypeProvider::functionType(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
+		magicVarDecl("ecrecover", TypeProvider::functionType(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
+		magicVarDecl("gasleft", TypeProvider::functionType(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
+		magicVarDecl("keccak256", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+		magicVarDecl("log0", TypeProvider::functionType(strings{"bytes32"}, strings{}, FunctionType::Kind::Log0)),
+		magicVarDecl("log1", TypeProvider::functionType(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log1)),
+		magicVarDecl("log2", TypeProvider::functionType(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log2)),
+		magicVarDecl("log3", TypeProvider::functionType(strings{"bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log3)),
+		magicVarDecl("log4", TypeProvider::functionType(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log4)),
+		magicVarDecl("msg", TypeProvider::magicType(MagicType::Kind::Message)),
+		magicVarDecl("mulmod", TypeProvider::functionType(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
+		magicVarDecl("now", TypeProvider::uint256()),
+		magicVarDecl("require", TypeProvider::functionType(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
+		magicVarDecl("require", TypeProvider::functionType(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
+		magicVarDecl("revert", TypeProvider::functionType(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
+		magicVarDecl("revert", TypeProvider::functionType(strings{"string memory"}, strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
+		magicVarDecl("ripemd160", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes20"}, FunctionType::Kind::RIPEMD160, false, StateMutability::Pure)),
+		magicVarDecl("selfdestruct", TypeProvider::functionType(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
+		magicVarDecl("sha256", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
+		magicVarDecl("sha3", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+		magicVarDecl("suicide", TypeProvider::functionType(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
+		magicVarDecl("tx", TypeProvider::magicType(MagicType::Kind::Transaction)),
+		magicVarDecl("type", TypeProvider::functionType(
+			strings{"address"} /* accepts any contract type, handled by the type checker */,
+			strings{} /* returns a MagicType, handled by the type checker */,
+			FunctionType::Kind::MetaType,
+			false,
+			StateMutability::Pure
+		)),
+	};
+}
+
+GlobalContext::GlobalContext(): m_magicVariables{constructMagicVariables()}
 {
 }
 
@@ -90,7 +99,7 @@ vector<Declaration const*> GlobalContext::declarations() const
 MagicVariableDeclaration const* GlobalContext::currentThis() const
 {
 	if (!m_thisPointer[m_currentContract])
-		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("this", make_shared<ContractType>(*m_currentContract));
+		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("this", TypeProvider::contractType(*m_currentContract));
 	return m_thisPointer[m_currentContract].get();
 
 }
@@ -98,7 +107,7 @@ MagicVariableDeclaration const* GlobalContext::currentThis() const
 MagicVariableDeclaration const* GlobalContext::currentSuper() const
 {
 	if (!m_superPointer[m_currentContract])
-		m_superPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("super", make_shared<ContractType>(*m_currentContract, true));
+		m_superPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("super", TypeProvider::contractType(*m_currentContract, true));
 	return m_superPointer[m_currentContract].get();
 }
 

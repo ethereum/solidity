@@ -235,7 +235,7 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 	solAssert(!!m_currentNode, "");
 	solAssert(!!_functionCall.expression().annotation().type, "");
 
-	if (auto functionType = dynamic_pointer_cast<FunctionType const>(_functionCall.expression().annotation().type))
+	if (auto functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type))
 		switch (functionType->kind())
 		{
 			case FunctionType::Kind::Revert:

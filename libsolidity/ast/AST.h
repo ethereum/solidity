@@ -848,8 +848,9 @@ private:
 class MagicVariableDeclaration: public Declaration
 {
 public:
-	MagicVariableDeclaration(ASTString const& _name, std::shared_ptr<Type const> const& _type):
+	MagicVariableDeclaration(ASTString const& _name, Type const* _type):
 		Declaration(SourceLocation(), std::make_shared<ASTString>(_name)), m_type(_type) {}
+
 	void accept(ASTVisitor&) override
 	{
 		solAssert(false, "MagicVariableDeclaration used inside real AST.");
@@ -859,15 +860,15 @@ public:
 		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 
-	FunctionTypePointer functionType(bool) const override
+	FunctionType const* functionType(bool) const override
 	{
 		solAssert(m_type->category() == Type::Category::Function, "");
-		return std::dynamic_pointer_cast<FunctionType const>(m_type);
+		return dynamic_cast<FunctionType const*>(m_type);
 	}
 	TypePointer type() const override { return m_type; }
 
 private:
-	std::shared_ptr<Type const> m_type;
+	Type const* m_type;
 };
 
 /// Types

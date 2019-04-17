@@ -178,7 +178,7 @@ private:
 			location(_location),
 			callStack(move(_callStack))
 		{
-			solAssert(dynamic_cast<IntegerType const*>(intType.get()), "");
+			solAssert(dynamic_cast<IntegerType const*>(intType), "");
 		}
 	};
 

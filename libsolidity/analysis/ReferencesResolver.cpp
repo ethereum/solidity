@@ -24,6 +24,7 @@
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -120,7 +121,7 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 {
 	if (!_typeName.annotation().type)
 	{
-		_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
+		_typeName.annotation().type = TypeProvider::fromElementaryTypeName(_typeName.typeName());
 		if (_typeName.stateMutability().is_initialized())
 		{
 			// for non-address types this was already caught by the parser
@@ -128,8 +129,10 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 			switch(*_typeName.stateMutability())
 			{
 				case StateMutability::Payable:
+					_typeName.annotation().type = TypeProvider::payableAddressType();
+					break;
 				case StateMutability::NonPayable:
-					_typeName.annotation().type = make_shared<AddressType>(*_typeName.stateMutability());
+					_typeName.annotation().type = TypeProvider::addressType();
 					break;
 				default:
 					m_errorReporter.typeError(
@@ -179,14 +182,14 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	_typeName.annotation().referencedDeclaration = declaration;
 
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
-		_typeName.annotation().type = make_shared<StructType>(*structDef);
+		_typeName.annotation().type = TypeProvider::structType(*structDef, DataLocation::Storage);
 	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
-		_typeName.annotation().type = make_shared<EnumType>(*enumDef);
+		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
-		_typeName.annotation().type = make_shared<ContractType>(*contract);
+		_typeName.annotation().type = TypeProvider::contractType(*contract);
 	else
 	{
-		_typeName.annotation().type = make_shared<TupleType>();
+		_typeName.annotation().type = TypeProvider::emptyTupleType();
 		typeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
 	}
 }
@@ -220,7 +223,7 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 			}
 		}
 
-	_typeName.annotation().type = make_shared<FunctionType>(_typeName);
+	_typeName.annotation().type = TypeProvider::functionType(_typeName);
 }
 
 void ReferencesResolver::endVisit(Mapping const& _typeName)
@@ -231,7 +234,7 @@ void ReferencesResolver::endVisit(Mapping const& _typeName)
 	keyType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, keyType);
 	// Convert value type to storage reference.
 	valueType = ReferenceType::copyForLocationIfReference(DataLocation::Storage, valueType);
-	_typeName.annotation().type = make_shared<MappingType>(keyType, valueType);
+	_typeName.annotation().type = TypeProvider::mappingType(keyType, valueType);
 }
 
 void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
@@ -249,7 +252,7 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		TypePointer& lengthTypeGeneric = length->annotation().type;
 		if (!lengthTypeGeneric)
 			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
-		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric.get());
+		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
 		if (!lengthType || !lengthType->mobileType())
 			fatalTypeError(length->location(), "Invalid array length, expected integer literal or constant expression.");
 		else if (lengthType->isZero())
@@ -259,10 +262,10 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		else if (lengthType->isNegative())
 			fatalTypeError(length->location(), "Array with negative length specified.");
 		else
-			_typeName.annotation().type = make_shared<ArrayType>(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
+			_typeName.annotation().type = TypeProvider::arrayType(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
 	}
 	else
-		_typeName.annotation().type = make_shared<ArrayType>(DataLocation::Storage, baseType);
+		_typeName.annotation().type = TypeProvider::arrayType(DataLocation::Storage, baseType);
 }
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
@@ -436,10 +439,10 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		}
 
 	TypePointer type = _variable.typeName()->annotation().type;
-	if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
+	if (auto ref = dynamic_cast<ReferenceType const*>(type))
 	{
 		bool isPointer = !_variable.isStateVariable();
-		type = ref->copyForLocation(typeLoc, isPointer);
+		type = TypeProvider::withLocation(ref, typeLoc, isPointer);
 	}
 
 	_variable.annotation().type = type;

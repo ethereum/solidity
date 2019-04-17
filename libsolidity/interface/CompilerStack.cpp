@@ -38,6 +38,7 @@
 #include <libsolidity/analysis/ViewPureChecker.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/SMTChecker.h>
 #include <libsolidity/interface/ABI.h>
@@ -65,6 +66,26 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
+
+static int g_compilerStackCounts = 0;
+
+CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
+	m_readFile{_readFile},
+	m_generateIR{false},
+	m_errorList{},
+	m_errorReporter{m_errorList}
+{
+	// Because TypeProvider is currently a singleton API, we must ensure that
+	// no more than one entity is actually using it at a time.
+	solAssert(g_compilerStackCounts == 0, "You shall not have another CompilerStack aside me.");
+	++g_compilerStackCounts;
+}
+
+CompilerStack::~CompilerStack()
+{
+	--g_compilerStackCounts;
+	TypeProvider::reset();
+}
 
 boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)
 {
@@ -157,6 +178,7 @@ void CompilerStack::reset(bool _keepSettings)
 	m_sourceOrder.clear();
 	m_contracts.clear();
 	m_errorReporter.clear();
+	TypeProvider::reset();
 }
 
 void CompilerStack::setSources(StringMap const& _sources)

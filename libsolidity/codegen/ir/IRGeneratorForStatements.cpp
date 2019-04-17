@@ -82,7 +82,7 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 {
 	solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
 	solUnimplementedAssert(*_binOp.leftExpression().annotation().type == *_binOp.rightExpression().annotation().type, "");
-	if (IntegerType const* type = dynamic_cast<IntegerType const*>(_binOp.annotation().commonType.get()))
+	if (IntegerType const* type = dynamic_cast<IntegerType const*>(_binOp.annotation().commonType))
 	{
 		solUnimplementedAssert(!type->isSigned(), "");
 		m_code <<
@@ -103,7 +103,7 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 {
 	solUnimplementedAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
-	FunctionTypePointer functionType = dynamic_pointer_cast<FunctionType const>(_functionCall.expression().annotation().type);
+	FunctionTypePointer functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
 
 	TypePointers parameterTypes = functionType->parameterTypes();
 	vector<ASTPointer<Expression const>> const& callArguments = _functionCall.arguments();
