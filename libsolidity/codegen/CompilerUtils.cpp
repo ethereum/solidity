@@ -90,7 +90,7 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	m_context << Instruction::DUP2 << Instruction::MSTORE;
 	m_context << u256(4) << Instruction::ADD;
 	// Stack: <string data> <mem pos of encoding start>
-	abiEncode({&_argumentType}, {TypeProvider::arrayType(DataLocation::Memory, true)});
+	abiEncode({&_argumentType}, {TypeProvider::array(DataLocation::Memory, true)});
 	toSizeAfterFreeMemoryPointer();
 	m_context << Instruction::REVERT;
 }

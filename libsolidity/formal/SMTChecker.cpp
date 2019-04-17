@@ -804,7 +804,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 	{
 		if (type.category() == Type::Category::StringLiteral)
 		{
-			auto stringType = TypeProvider::stringMemoryType();
+			auto stringType = TypeProvider::stringMemory();
 			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type);
 			solAssert(stringLit, "");
 			auto result = newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
@@ -1524,7 +1524,7 @@ void SMTChecker::resetVariables(function<bool(VariableDeclaration const&)> const
 TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
-		return ReferenceType::copyForLocationIfReference(refType->location(), _type);
+		return TypeProvider::withLocationIfReference(refType->location(), _type);
 	return _type;
 }
 

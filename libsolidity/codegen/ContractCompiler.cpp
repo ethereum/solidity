@@ -872,7 +872,7 @@ bool ContractCompiler::visit(Return const& _return)
 
 		TypePointer expectedType;
 		if (expression->annotation().type->category() == Type::Category::Tuple || types.size() != 1)
-			expectedType = TypeProvider::tupleType(move(types));
+			expectedType = TypeProvider::tuple(move(types));
 		else
 			expectedType = types.front();
 		compileExpression(*expression, expectedType);

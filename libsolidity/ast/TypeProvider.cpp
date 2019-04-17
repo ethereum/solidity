@@ -24,19 +24,19 @@ using namespace std;
 using namespace dev;
 using namespace solidity;
 
-BoolType const TypeProvider::m_boolType{};
-InaccessibleDynamicType const TypeProvider::m_inaccessibleDynamicType{};
+BoolType const TypeProvider::m_boolean{};
+InaccessibleDynamicType const TypeProvider::m_inaccessibleDynamic{};
 
 /// The string and bytes unique_ptrs are initialized when they are first used because
 /// they rely on `byte` being available which we cannot guarantee in the static init context.
-std::unique_ptr<ArrayType> TypeProvider::m_bytesStorageType;
-std::unique_ptr<ArrayType> TypeProvider::m_bytesMemoryType;
-std::unique_ptr<ArrayType> TypeProvider::m_stringStorageType;
-std::unique_ptr<ArrayType> TypeProvider::m_stringMemoryType;
+unique_ptr<ArrayType> TypeProvider::m_bytesStorage;
+unique_ptr<ArrayType> TypeProvider::m_bytesMemory;
+unique_ptr<ArrayType> TypeProvider::m_stringStorage;
+unique_ptr<ArrayType> TypeProvider::m_stringMemory;
 
-TupleType const TypeProvider::m_emptyTupleType{};
-AddressType const TypeProvider::m_payableAddressType{StateMutability::Payable};
-AddressType const TypeProvider::m_addressType{StateMutability::NonPayable};
+TupleType const TypeProvider::m_emptyTuple{};
+AddressType const TypeProvider::m_payableAddress{StateMutability::Payable};
+AddressType const TypeProvider::m_address{StateMutability::NonPayable};
 
 array<unique_ptr<IntegerType>, 32> const TypeProvider::m_intM{{
 	{make_unique<IntegerType>(8 * 1, IntegerType::Modifier::Signed)},
@@ -143,7 +143,7 @@ array<unique_ptr<FixedBytesType>, 32> const TypeProvider::m_bytesM{{
 	{make_unique<FixedBytesType>(32)}
 }};
 
-array<unique_ptr<MagicType>, 4> const TypeProvider::m_magicTypes{{
+array<unique_ptr<MagicType>, 4> const TypeProvider::m_magics{{
 	{make_unique<MagicType>(MagicType::Kind::Block)},
 	{make_unique<MagicType>(MagicType::Kind::Message)},
 	{make_unique<MagicType>(MagicType::Kind::Transaction)},
@@ -173,19 +173,19 @@ inline void clearCaches(Container& container)
 
 void TypeProvider::reset()
 {
-	clearCache(m_boolType);
-	clearCache(m_inaccessibleDynamicType);
-	clearCache(m_bytesStorageType);
-	clearCache(m_bytesMemoryType);
-	clearCache(m_stringStorageType);
-	clearCache(m_stringMemoryType);
-	clearCache(m_emptyTupleType);
-	clearCache(m_payableAddressType);
-	clearCache(m_addressType);
+	clearCache(m_boolean);
+	clearCache(m_inaccessibleDynamic);
+	clearCache(m_bytesStorage);
+	clearCache(m_bytesMemory);
+	clearCache(m_stringStorage);
+	clearCache(m_stringMemory);
+	clearCache(m_emptyTuple);
+	clearCache(m_payableAddress);
+	clearCache(m_address);
 	clearCaches(instance().m_intM);
 	clearCaches(instance().m_uintM);
 	clearCaches(instance().m_bytesM);
-	clearCaches(instance().m_magicTypes);
+	clearCaches(instance().m_magics);
 
 	instance().m_generalTypes.clear();
 	instance().m_stringLiteralTypes.clear();
@@ -213,33 +213,33 @@ Type const* TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken const& 
 	switch (_type.token())
 	{
 	case Token::IntM:
-		return integerType(m, IntegerType::Modifier::Signed);
+		return integer(m, IntegerType::Modifier::Signed);
 	case Token::UIntM:
-		return integerType(m, IntegerType::Modifier::Unsigned);
+		return integer(m, IntegerType::Modifier::Unsigned);
 	case Token::Byte:
-		return byteType();
+		return byte();
 	case Token::BytesM:
-		return fixedBytesType(m);
+		return fixedBytes(m);
 	case Token::FixedMxN:
-		return fixedPointType(m, n, FixedPointType::Modifier::Signed);
+		return fixedPoint(m, n, FixedPointType::Modifier::Signed);
 	case Token::UFixedMxN:
-		return fixedPointType(m, n, FixedPointType::Modifier::Unsigned);
+		return fixedPoint(m, n, FixedPointType::Modifier::Unsigned);
 	case Token::Int:
-		return integerType(256, IntegerType::Modifier::Signed);
+		return integer(256, IntegerType::Modifier::Signed);
 	case Token::UInt:
-		return integerType(256, IntegerType::Modifier::Unsigned);
+		return integer(256, IntegerType::Modifier::Unsigned);
 	case Token::Fixed:
-		return fixedPointType(128, 18, FixedPointType::Modifier::Signed);
+		return fixedPoint(128, 18, FixedPointType::Modifier::Signed);
 	case Token::UFixed:
-		return fixedPointType(128, 18, FixedPointType::Modifier::Unsigned);
+		return fixedPoint(128, 18, FixedPointType::Modifier::Unsigned);
 	case Token::Address:
-		return addressType();
+		return address();
 	case Token::Bool:
-		return boolType();
+		return boolean();
 	case Token::Bytes:
-		return bytesStorageType();
+		return bytesStorage();
 	case Token::String:
-		return stringStorageType();
+		return stringStorage();
 	default:
 		solAssert(
 			false,
@@ -280,11 +280,11 @@ TypePointer TypeProvider::fromElementaryTypeName(string const& _name)
 		if (nameParts.size() == 2)
 		{
 			if (nameParts[1] == "payable")
-				return payableAddressType();
+				return payableAddress();
 			else
 				solAssert(false, "Invalid state mutability for address type: " + nameParts[1]);
 		}
-		return addressType();
+		return address();
 	}
 	else
 	{
@@ -293,32 +293,32 @@ TypePointer TypeProvider::fromElementaryTypeName(string const& _name)
 	}
 }
 
-ArrayType const* TypeProvider::bytesStorageType()
+ArrayType const* TypeProvider::bytesStorage()
 {
-	if (!m_bytesStorageType)
-		m_bytesStorageType = make_unique<ArrayType>(DataLocation::Storage, false);
-	return m_bytesStorageType.get();
+	if (!m_bytesStorage)
+		m_bytesStorage = make_unique<ArrayType>(DataLocation::Storage, false);
+	return m_bytesStorage.get();
 }
 
-ArrayType const* TypeProvider::bytesMemoryType()
+ArrayType const* TypeProvider::bytesMemory()
 {
-	if (!m_bytesMemoryType)
-		m_bytesMemoryType = make_unique<ArrayType>(DataLocation::Memory, false);
-	return m_bytesMemoryType.get();
+	if (!m_bytesMemory)
+		m_bytesMemory = make_unique<ArrayType>(DataLocation::Memory, false);
+	return m_bytesMemory.get();
 }
 
-ArrayType const* TypeProvider::stringStorageType()
+ArrayType const* TypeProvider::stringStorage()
 {
-	if (!m_stringStorageType)
-		m_stringStorageType = make_unique<ArrayType>(DataLocation::Storage, true);
-	return m_stringStorageType.get();
+	if (!m_stringStorage)
+		m_stringStorage = make_unique<ArrayType>(DataLocation::Storage, true);
+	return m_stringStorage.get();
 }
 
-ArrayType const* TypeProvider::stringMemoryType()
+ArrayType const* TypeProvider::stringMemory()
 {
-	if (!m_stringMemoryType)
-		m_stringMemoryType = make_unique<ArrayType>(DataLocation::Memory, true);
-	return m_stringMemoryType.get();
+	if (!m_stringMemory)
+		m_stringMemory = make_unique<ArrayType>(DataLocation::Memory, true);
+	return m_stringMemory.get();
 }
 
 TypePointer TypeProvider::forLiteral(Literal const& _literal)
@@ -327,17 +327,17 @@ TypePointer TypeProvider::forLiteral(Literal const& _literal)
 	{
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
-		return boolType();
+		return boolean();
 	case Token::Number:
-		return rationalNumberType(_literal);
+		return rationalNumber(_literal);
 	case Token::StringLiteral:
-		return stringLiteralType(_literal.value());
+		return stringLiteral(_literal.value());
 	default:
 		return nullptr;
 	}
 }
 
-RationalNumberType const* TypeProvider::rationalNumberType(Literal const& _literal)
+RationalNumberType const* TypeProvider::rationalNumber(Literal const& _literal)
 {
 	solAssert(_literal.token() == Token::Number, "");
 	std::tuple<bool, rational> validLiteral = RationalNumberType::isValidLiteral(_literal);
@@ -348,15 +348,15 @@ RationalNumberType const* TypeProvider::rationalNumberType(Literal const& _liter
 		{
 			size_t const digitCount = _literal.valueWithoutUnderscores().length() - 2;
 			if (digitCount % 2 == 0 && (digitCount / 2) <= 32)
-				compatibleBytesType = fixedBytesType(digitCount / 2);
+				compatibleBytesType = fixedBytes(digitCount / 2);
 		}
 
-		return rationalNumberType(std::get<1>(validLiteral), compatibleBytesType);
+		return rationalNumber(std::get<1>(validLiteral), compatibleBytesType);
 	}
 	return nullptr;
 }
 
-StringLiteralType const* TypeProvider::stringLiteralType(string const& literal)
+StringLiteralType const* TypeProvider::stringLiteral(string const& literal)
 {
 	auto i = instance().m_stringLiteralTypes.find(literal);
 	if (i != instance().m_stringLiteralTypes.end())
@@ -365,7 +365,7 @@ StringLiteralType const* TypeProvider::stringLiteralType(string const& literal)
 		return instance().m_stringLiteralTypes.emplace(literal, make_unique<StringLiteralType>(literal)).first->second.get();
 }
 
-FixedPointType const* TypeProvider::fixedPointType(unsigned m, unsigned n, FixedPointType::Modifier _modifier)
+FixedPointType const* TypeProvider::fixedPoint(unsigned m, unsigned n, FixedPointType::Modifier _modifier)
 {
 	auto& map = _modifier == FixedPointType::Modifier::Unsigned ? instance().m_ufixedMxN : instance().m_fixedMxN;
 
@@ -379,10 +379,10 @@ FixedPointType const* TypeProvider::fixedPointType(unsigned m, unsigned n, Fixed
 	).first->second.get();
 }
 
-TupleType const* TypeProvider::tupleType(vector<Type const*> members)
+TupleType const* TypeProvider::tuple(vector<Type const*> members)
 {
 	if (members.empty())
-		return &m_emptyTupleType;
+		return &m_emptyTuple;
 
 	return createAndGet<TupleType>(move(members));
 }
@@ -396,27 +396,27 @@ ReferenceType const* TypeProvider::withLocation(ReferenceType const* _type, Data
 	return static_cast<ReferenceType const*>(instance().m_generalTypes.back().get());
 }
 
-FunctionType const* TypeProvider::functionType(FunctionDefinition const& _function, bool _isInternal)
+FunctionType const* TypeProvider::function(FunctionDefinition const& _function, bool _isInternal)
 {
 	return createAndGet<FunctionType>(_function, _isInternal);
 }
 
-FunctionType const* TypeProvider::functionType(VariableDeclaration const& _varDecl)
+FunctionType const* TypeProvider::function(VariableDeclaration const& _varDecl)
 {
 	return createAndGet<FunctionType>(_varDecl);
 }
 
-FunctionType const* TypeProvider::functionType(EventDefinition const& _def)
+FunctionType const* TypeProvider::function(EventDefinition const& _def)
 {
 	return createAndGet<FunctionType>(_def);
 }
 
-FunctionType const* TypeProvider::functionType(FunctionTypeName const& _typeName)
+FunctionType const* TypeProvider::function(FunctionTypeName const& _typeName)
 {
 	return createAndGet<FunctionType>(_typeName);
 }
 
-FunctionType const* TypeProvider::functionType(
+FunctionType const* TypeProvider::function(
 	strings const& _parameterTypes,
 	strings const& _returnParameterTypes,
 	FunctionType::Kind _kind,
@@ -430,7 +430,7 @@ FunctionType const* TypeProvider::functionType(
 	);
 }
 
-FunctionType const* TypeProvider::functionType(
+FunctionType const* TypeProvider::function(
 	TypePointers const& _parameterTypes,
 	TypePointers const& _returnParameterTypes,
 	strings _parameterNames,
@@ -459,41 +459,41 @@ FunctionType const* TypeProvider::functionType(
 	);
 }
 
-RationalNumberType const* TypeProvider::rationalNumberType(rational const& _value, Type const* _compatibleBytesType)
+RationalNumberType const* TypeProvider::rationalNumber(rational const& _value, Type const* _compatibleBytesType)
 {
 	return createAndGet<RationalNumberType>(_value, _compatibleBytesType);
 }
 
-ArrayType const* TypeProvider::arrayType(DataLocation _location, bool _isString)
+ArrayType const* TypeProvider::array(DataLocation _location, bool _isString)
 {
 	if (_isString)
 	{
 		if (_location == DataLocation::Storage)
-			return stringStorageType();
+			return stringStorage();
 		if (_location == DataLocation::Memory)
-			return stringMemoryType();
+			return stringMemory();
 	}
 	else
 	{
 		if (_location == DataLocation::Storage)
-			return bytesStorageType();
+			return bytesStorage();
 		if (_location == DataLocation::Memory)
-			return bytesMemoryType();
+			return bytesMemory();
 	}
 	return createAndGet<ArrayType>(_location, _isString);
 }
 
-ArrayType const* TypeProvider::arrayType(DataLocation _location, Type const* _baseType)
+ArrayType const* TypeProvider::array(DataLocation _location, Type const* _baseType)
 {
 	return createAndGet<ArrayType>(_location, _baseType);
 }
 
-ArrayType const* TypeProvider::arrayType(DataLocation _location, Type const* _baseType, u256 const& _length)
+ArrayType const* TypeProvider::array(DataLocation _location, Type const* _baseType, u256 const& _length)
 {
 	return createAndGet<ArrayType>(_location, _baseType, _length);
 }
 
-ContractType const* TypeProvider::contractType(ContractDefinition const& _contractDef, bool _isSuper)
+ContractType const* TypeProvider::contract(ContractDefinition const& _contractDef, bool _isSuper)
 {
 	return createAndGet<ContractType>(_contractDef, _isSuper);
 }
@@ -503,7 +503,7 @@ EnumType const* TypeProvider::enumType(EnumDefinition const& _enumDef)
 	return createAndGet<EnumType>(_enumDef);
 }
 
-ModuleType const* TypeProvider::moduleType(SourceUnit const& _source)
+ModuleType const* TypeProvider::module(SourceUnit const& _source)
 {
 	return createAndGet<ModuleType>(_source);
 }
@@ -518,24 +518,24 @@ StructType const* TypeProvider::structType(StructDefinition const& _struct, Data
 	return createAndGet<StructType>(_struct, _location);
 }
 
-ModifierType const* TypeProvider::modifierType(ModifierDefinition const& _def)
+ModifierType const* TypeProvider::modifier(ModifierDefinition const& _def)
 {
 	return createAndGet<ModifierType>(_def);
 }
 
-MagicType const* TypeProvider::magicType(MagicType::Kind _kind)
+MagicType const* TypeProvider::magic(MagicType::Kind _kind)
 {
 	solAssert(_kind != MagicType::Kind::MetaType, "MetaType is handled separately");
-	return m_magicTypes.at(static_cast<size_t>(_kind)).get();
+	return m_magics.at(static_cast<size_t>(_kind)).get();
 }
 
-MagicType const* TypeProvider::metaType(Type const* _type)
+MagicType const* TypeProvider::meta(Type const* _type)
 {
 	solAssert(_type && _type->category() == Type::Category::Contract, "Only contracts supported for now.");
 	return createAndGet<MagicType>(_type);
 }
 
-MappingType const* TypeProvider::mappingType(Type const* _keyType, Type const* _valueType)
+MappingType const* TypeProvider::mapping(Type const* _keyType, Type const* _valueType)
 {
 	return createAndGet<MappingType>(_keyType, _valueType);
 }

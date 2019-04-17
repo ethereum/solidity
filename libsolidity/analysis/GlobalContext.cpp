@@ -42,33 +42,33 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 	};
 
 	return {
-		magicVarDecl("abi", TypeProvider::magicType(MagicType::Kind::ABI)),
-		magicVarDecl("addmod", TypeProvider::functionType(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
-		magicVarDecl("assert", TypeProvider::functionType(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
-		magicVarDecl("block", TypeProvider::magicType(MagicType::Kind::Block)),
-		magicVarDecl("blockhash", TypeProvider::functionType(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
-		magicVarDecl("ecrecover", TypeProvider::functionType(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
-		magicVarDecl("gasleft", TypeProvider::functionType(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
-		magicVarDecl("keccak256", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
-		magicVarDecl("log0", TypeProvider::functionType(strings{"bytes32"}, strings{}, FunctionType::Kind::Log0)),
-		magicVarDecl("log1", TypeProvider::functionType(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log1)),
-		magicVarDecl("log2", TypeProvider::functionType(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log2)),
-		magicVarDecl("log3", TypeProvider::functionType(strings{"bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log3)),
-		magicVarDecl("log4", TypeProvider::functionType(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log4)),
-		magicVarDecl("msg", TypeProvider::magicType(MagicType::Kind::Message)),
-		magicVarDecl("mulmod", TypeProvider::functionType(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
+		magicVarDecl("abi", TypeProvider::magic(MagicType::Kind::ABI)),
+		magicVarDecl("addmod", TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, false, StateMutability::Pure)),
+		magicVarDecl("assert", TypeProvider::function(strings{"bool"}, strings{}, FunctionType::Kind::Assert, false, StateMutability::Pure)),
+		magicVarDecl("block", TypeProvider::magic(MagicType::Kind::Block)),
+		magicVarDecl("blockhash", TypeProvider::function(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, false, StateMutability::View)),
+		magicVarDecl("ecrecover", TypeProvider::function(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
+		magicVarDecl("gasleft", TypeProvider::function(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
+		magicVarDecl("keccak256", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+		magicVarDecl("log0", TypeProvider::function(strings{"bytes32"}, strings{}, FunctionType::Kind::Log0)),
+		magicVarDecl("log1", TypeProvider::function(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log1)),
+		magicVarDecl("log2", TypeProvider::function(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log2)),
+		magicVarDecl("log3", TypeProvider::function(strings{"bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log3)),
+		magicVarDecl("log4", TypeProvider::function(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log4)),
+		magicVarDecl("msg", TypeProvider::magic(MagicType::Kind::Message)),
+		magicVarDecl("mulmod", TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
 		magicVarDecl("now", TypeProvider::uint256()),
-		magicVarDecl("require", TypeProvider::functionType(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
-		magicVarDecl("require", TypeProvider::functionType(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
-		magicVarDecl("revert", TypeProvider::functionType(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
-		magicVarDecl("revert", TypeProvider::functionType(strings{"string memory"}, strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
-		magicVarDecl("ripemd160", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes20"}, FunctionType::Kind::RIPEMD160, false, StateMutability::Pure)),
-		magicVarDecl("selfdestruct", TypeProvider::functionType(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
-		magicVarDecl("sha256", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
-		magicVarDecl("sha3", TypeProvider::functionType(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
-		magicVarDecl("suicide", TypeProvider::functionType(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
-		magicVarDecl("tx", TypeProvider::magicType(MagicType::Kind::Transaction)),
-		magicVarDecl("type", TypeProvider::functionType(
+		magicVarDecl("require", TypeProvider::function(strings{"bool"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
+		magicVarDecl("require", TypeProvider::function(strings{"bool", "string memory"}, strings{}, FunctionType::Kind::Require, false, StateMutability::Pure)),
+		magicVarDecl("revert", TypeProvider::function(strings(), strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
+		magicVarDecl("revert", TypeProvider::function(strings{"string memory"}, strings(), FunctionType::Kind::Revert, false, StateMutability::Pure)),
+		magicVarDecl("ripemd160", TypeProvider::function(strings{"bytes memory"}, strings{"bytes20"}, FunctionType::Kind::RIPEMD160, false, StateMutability::Pure)),
+		magicVarDecl("selfdestruct", TypeProvider::function(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
+		magicVarDecl("sha256", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::SHA256, false, StateMutability::Pure)),
+		magicVarDecl("sha3", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
+		magicVarDecl("suicide", TypeProvider::function(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
+		magicVarDecl("tx", TypeProvider::magic(MagicType::Kind::Transaction)),
+		magicVarDecl("type", TypeProvider::function(
 			strings{"address"} /* accepts any contract type, handled by the type checker */,
 			strings{} /* returns a MagicType, handled by the type checker */,
 			FunctionType::Kind::MetaType,
@@ -99,7 +99,7 @@ vector<Declaration const*> GlobalContext::declarations() const
 MagicVariableDeclaration const* GlobalContext::currentThis() const
 {
 	if (!m_thisPointer[m_currentContract])
-		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("this", TypeProvider::contractType(*m_currentContract));
+		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("this", TypeProvider::contract(*m_currentContract));
 	return m_thisPointer[m_currentContract].get();
 
 }
@@ -107,7 +107,7 @@ MagicVariableDeclaration const* GlobalContext::currentThis() const
 MagicVariableDeclaration const* GlobalContext::currentSuper() const
 {
 	if (!m_superPointer[m_currentContract])
-		m_superPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("super", TypeProvider::contractType(*m_currentContract, true));
+		m_superPointer[m_currentContract] = make_shared<MagicVariableDeclaration>("super", TypeProvider::contract(*m_currentContract, true));
 	return m_superPointer[m_currentContract].get();
 }
 

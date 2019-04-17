@@ -138,7 +138,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 
 	if (arguments.size() >= 1)
 	{
-		BoolResult result = type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesMemoryType());
+		BoolResult result = type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory());
 
 		if (!result)
 			m_errorReporter.typeErrorConcatenateDescriptions(
@@ -180,7 +180,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 			actualType = TypeProvider::withLocationIfReference(DataLocation::Memory, actualType);
 			// We force address payable for address types.
 			if (actualType->category() == Type::Category::Address)
-				actualType = TypeProvider::payableAddressType();
+				actualType = TypeProvider::payableAddress();
 			solAssert(
 				!actualType->dataStoredIn(DataLocation::CallData) &&
 				!actualType->dataStoredIn(DataLocation::Storage),
@@ -196,7 +196,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 		else
 		{
 			m_errorReporter.typeError(typeArgument->location(), "Argument has to be a type name.");
-			components.push_back(TypeProvider::emptyTupleType());
+			components.push_back(TypeProvider::emptyTuple());
 		}
 	}
 	return components;
@@ -231,7 +231,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		return {};
 	}
 
-	return {MagicType::metaType(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
+	return {TypeProvider::meta(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
 }
 
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
@@ -717,7 +717,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 
 bool TypeChecker::visit(IfStatement const& _ifStatement)
 {
-	expectType(_ifStatement.condition(), *TypeProvider::boolType());
+	expectType(_ifStatement.condition(), *TypeProvider::boolean());
 	_ifStatement.trueStatement().accept(*this);
 	if (_ifStatement.falseStatement())
 		_ifStatement.falseStatement()->accept(*this);
@@ -726,7 +726,7 @@ bool TypeChecker::visit(IfStatement const& _ifStatement)
 
 bool TypeChecker::visit(WhileStatement const& _whileStatement)
 {
-	expectType(_whileStatement.condition(), *TypeProvider::boolType());
+	expectType(_whileStatement.condition(), *TypeProvider::boolean());
 	_whileStatement.body().accept(*this);
 	return false;
 }
@@ -736,7 +736,7 @@ bool TypeChecker::visit(ForStatement const& _forStatement)
 	if (_forStatement.initializationExpression())
 		_forStatement.initializationExpression()->accept(*this);
 	if (_forStatement.condition())
-		expectType(*_forStatement.condition(), *TypeProvider::boolType());
+		expectType(*_forStatement.condition(), *TypeProvider::boolean());
 	if (_forStatement.loopExpression())
 		_forStatement.loopExpression()->accept(*this);
 	_forStatement.body().accept(*this);
@@ -951,7 +951,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				else
 					solAssert(false, "");
 			}
-			else if (*var.annotation().type == *TypeProvider::emptyTupleType())
+			else if (*var.annotation().type == *TypeProvider::emptyTuple())
 				solAssert(false, "Cannot declare variable with void (empty tuple) type.");
 			else if (valueComponentType->category() == Type::Category::RationalNumber)
 			{
@@ -1073,7 +1073,7 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 
 bool TypeChecker::visit(Conditional const& _conditional)
 {
-	expectType(_conditional.condition(), *TypeProvider::boolType());
+	expectType(_conditional.condition(), *TypeProvider::boolean());
 
 	_conditional.trueExpression().accept(*this);
 	_conditional.falseExpression().accept(*this);
@@ -1177,7 +1177,7 @@ bool TypeChecker::visit(Assignment const& _assignment)
 				"Compound assignment is not allowed for tuple types."
 			);
 		// Sequenced assignments of tuples is not valid, make the result a "void" type.
-		_assignment.annotation().type = TypeProvider::emptyTupleType();
+		_assignment.annotation().type = TypeProvider::emptyTuple();
 
 		expectType(_assignment.rightHandSide(), *tupleType);
 
@@ -1229,7 +1229,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		if (components.size() == 1)
 			_tuple.annotation().type = type(*components[0]);
 		else
-			_tuple.annotation().type = TypeProvider::tupleType(move(types));
+			_tuple.annotation().type = TypeProvider::tuple(move(types));
 		// If some of the components are not LValues, the error is reported above.
 		_tuple.annotation().isLValue = true;
 	}
@@ -1286,14 +1286,14 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			else if (!inlineArrayType->canLiveOutsideStorage())
 				m_errorReporter.fatalTypeError(_tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
 
-			_tuple.annotation().type = TypeProvider::arrayType(DataLocation::Memory, inlineArrayType, types.size());
+			_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
 		}
 		else
 		{
 			if (components.size() == 1)
 				_tuple.annotation().type = type(*components[0]);
 			else
-				_tuple.annotation().type = TypeProvider::tupleType(move(types));
+				_tuple.annotation().type = TypeProvider::tuple(move(types));
 		}
 
 	}
@@ -1350,7 +1350,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	_operation.annotation().commonType = commonType;
 	_operation.annotation().type =
 		TokenTraits::isCompareOp(_operation.getOperator()) ?
-		TypeProvider::boolType() :
+		TypeProvider::boolean() :
 		commonType;
 	_operation.annotation().isPure =
 		_operation.leftExpression().annotation().isPure &&
@@ -1475,8 +1475,8 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 		}
 		if (resultType->category() == Type::Category::Address)
 		{
-			bool const payable = argType->isExplicitlyConvertibleTo(*TypeProvider::payableAddressType());
-			resultType = payable ? TypeProvider::payableAddressType() : TypeProvider::addressType();
+			bool const payable = argType->isExplicitlyConvertibleTo(*TypeProvider::payableAddress());
+			resultType = payable ? TypeProvider::payableAddress() : TypeProvider::address();
 		}
 	}
 	return resultType;
@@ -1925,7 +1925,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 		funcCallAnno.type = returnTypes.size() == 1 ?
 			move(returnTypes.front()) :
-			TypeProvider::tupleType(move(returnTypes));
+			TypeProvider::tuple(move(returnTypes));
 
 		break;
 	}
@@ -1935,7 +1935,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		// for non-callables, ensure error reported and annotate node to void function
 		solAssert(m_errorReporter.hasErrors(), "");
 		funcCallAnno.kind = FunctionCallKind::FunctionCall;
-		funcCallAnno.type = TypeProvider::emptyTupleType();
+		funcCallAnno.type = TypeProvider::emptyTuple();
 		break;
 	}
 
@@ -1997,8 +1997,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 				_newExpression.typeName().location(),
 				"Length has to be placed in parentheses after the array type for new expression."
 			);
-		type = ReferenceType::copyForLocationIfReference(DataLocation::Memory, type);
-		_newExpression.annotation().type = TypeProvider::functionType(
+		type = TypeProvider::withLocationIfReference(DataLocation::Memory, type);
+		_newExpression.annotation().type = TypeProvider::function(
 			TypePointers{TypeProvider::uint256()},
 			TypePointers{type},
 			strings(1, ""),
@@ -2043,7 +2043,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		if (initialMemberCount == 0)
 		{
 			// Try to see if the member was removed because it is only available for storage types.
-			auto storageType = ReferenceType::copyForLocationIfReference(
+			auto storageType = TypeProvider::withLocationIfReference(
 				DataLocation::Storage,
 				exprType
 			);
@@ -2078,7 +2078,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		}
 		else if (exprType->category() == Type::Category::Contract)
 		{
-			for (auto const& addressMember: TypeProvider::payableAddressType()->nativeMembers(nullptr))
+			for (auto const& addressMember: TypeProvider::payableAddress()->nativeMembers(nullptr))
 				if (addressMember.name == memberName)
 				{
 					Identifier const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());
@@ -2225,7 +2225,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		if (dynamic_cast<ContractType const*>(typeType.actualType()))
 			m_errorReporter.typeError(_access.location(), "Index access for contracts or libraries is not possible.");
 		if (!index)
-			resultType = TypeProvider::typeType(TypeProvider::arrayType(DataLocation::Memory, typeType.actualType()));
+			resultType = TypeProvider::typeType(TypeProvider::array(DataLocation::Memory, typeType.actualType()));
 		else
 		{
 			u256 length = 1;
@@ -2239,7 +2239,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			else
 				solAssert(m_errorReporter.hasErrors(), "Expected errors as expectType returned false");
 
-			resultType = TypeProvider::typeType(TypeProvider::arrayType(
+			resultType = TypeProvider::typeType(TypeProvider::array(
 				DataLocation::Memory,
 				typeType.actualType(),
 				length
@@ -2260,7 +2260,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 				if (bytesType.numBytes() <= integerType->literalValue(nullptr))
 					m_errorReporter.typeError(_access.location(), "Out of bounds array access.");
 		}
-		resultType = TypeProvider::fixedBytesType(1);
+		resultType = TypeProvider::fixedBytes(1);
 		isLValue = false; // @todo this heavily depends on how it is embedded
 		break;
 	}
@@ -2373,7 +2373,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 	if (_literal.looksLikeAddress())
 	{
 		// Assign type here if it even looks like an address. This prevents double errors for invalid addresses
-		_literal.annotation().type = TypeProvider::payableAddressType();
+		_literal.annotation().type = TypeProvider::payableAddress();
 
 		string msg;
 		if (_literal.valueWithoutUnderscores().length() != 42) // "0x" + 40 hex digits

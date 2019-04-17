@@ -145,7 +145,7 @@ string YulUtilFunctions::leftAlignFunction(Type const& _type)
 			templ("body", "aligned := value");
 			break;
 		case Type::Category::Contract:
-			templ("body", "aligned := " + leftAlignFunction(*TypeProvider::addressType()) + "(value)");
+			templ("body", "aligned := " + leftAlignFunction(*TypeProvider::address()) + "(value)");
 			break;
 		case Type::Category::Enum:
 		{

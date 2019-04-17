@@ -129,10 +129,10 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 			switch(*_typeName.stateMutability())
 			{
 				case StateMutability::Payable:
-					_typeName.annotation().type = TypeProvider::payableAddressType();
+					_typeName.annotation().type = TypeProvider::payableAddress();
 					break;
 				case StateMutability::NonPayable:
-					_typeName.annotation().type = TypeProvider::addressType();
+					_typeName.annotation().type = TypeProvider::address();
 					break;
 				default:
 					m_errorReporter.typeError(
@@ -186,10 +186,10 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
-		_typeName.annotation().type = TypeProvider::contractType(*contract);
+		_typeName.annotation().type = TypeProvider::contract(*contract);
 	else
 	{
-		_typeName.annotation().type = TypeProvider::emptyTupleType();
+		_typeName.annotation().type = TypeProvider::emptyTuple();
 		typeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
 	}
 }
@@ -223,7 +223,7 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 			}
 		}
 
-	_typeName.annotation().type = TypeProvider::functionType(_typeName);
+	_typeName.annotation().type = TypeProvider::function(_typeName);
 }
 
 void ReferencesResolver::endVisit(Mapping const& _typeName)
@@ -231,10 +231,10 @@ void ReferencesResolver::endVisit(Mapping const& _typeName)
 	TypePointer keyType = _typeName.keyType().annotation().type;
 	TypePointer valueType = _typeName.valueType().annotation().type;
 	// Convert key type to memory.
-	keyType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, keyType);
+	keyType = TypeProvider::withLocationIfReference(DataLocation::Memory, keyType);
 	// Convert value type to storage reference.
-	valueType = ReferenceType::copyForLocationIfReference(DataLocation::Storage, valueType);
-	_typeName.annotation().type = TypeProvider::mappingType(keyType, valueType);
+	valueType = TypeProvider::withLocationIfReference(DataLocation::Storage, valueType);
+	_typeName.annotation().type = TypeProvider::mapping(keyType, valueType);
 }
 
 void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
@@ -262,10 +262,10 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 		else if (lengthType->isNegative())
 			fatalTypeError(length->location(), "Array with negative length specified.");
 		else
-			_typeName.annotation().type = TypeProvider::arrayType(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
+			_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
 	}
 	else
-		_typeName.annotation().type = TypeProvider::arrayType(DataLocation::Storage, baseType);
+		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType);
 }
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
