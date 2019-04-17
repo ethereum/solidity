@@ -73,6 +73,8 @@ set(sources
 	codegen/ir/IRGeneratorForStatements.h
 	codegen/ir/IRGenerationContext.cpp
 	codegen/ir/IRGenerationContext.h
+	formal/EncodingContext.cpp
+	formal/EncodingContext.h
 	formal/SMTChecker.cpp
 	formal/SMTChecker.h
 	formal/SMTLib2Interface.cpp

@@ -36,7 +36,8 @@ using namespace dev::solidity;
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
 	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
 	m_errorReporterReference(_errorReporter),
-	m_errorReporter(m_smtErrors)
+	m_errorReporter(m_smtErrors),
+	m_context(*m_interface)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (!_smtlib2Responses.empty())
@@ -734,6 +735,11 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 			defineExpr(_identifier, currentValue(*decl));
 		else if (_identifier.name() == "now")
 			defineGlobalVariable(_identifier.name(), _identifier);
+		else if (_identifier.name() == "this")
+		{
+			defineExpr(_identifier, m_context.thisAddress());
+			m_uninterpretedTerms.insert(&_identifier);
+		}
 		else
 			// TODO: handle MagicVariableDeclaration here
 			m_errorReporter.warning(
