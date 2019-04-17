@@ -95,7 +95,7 @@ struct Dialect;
  * This step is usually run right after the SSA transform to complete
  * the generation of the pseudo-SSA.
  *
- * Prerequisite: Disambiguator.
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class RedundantAssignEliminator: public ASTWalker
 {

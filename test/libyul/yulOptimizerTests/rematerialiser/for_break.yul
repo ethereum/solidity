@@ -1,7 +1,8 @@
 {
 	let a
 	let b
-	for {let i := 0} lt(i, 10) {i := add(a, b)} {
+	let i := 0
+	for {} lt(i, 10) {i := add(a, b)} {
 		a := origin()
 		b := origin()
 		b := caller()
@@ -18,8 +19,8 @@
 // {
 //     let a
 //     let b
+//     let i := 0
 //     for {
-//         let i := 0
 //     }
 //     lt(i, 10)
 //     {

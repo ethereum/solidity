@@ -36,7 +36,7 @@ struct Dialect;
  * It tracks the current values of variables using the DataFlowAnalyzer
  * and takes them into account for replacements.
  *
- * Prerequisite: Disambiguator.
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class ExpressionSimplifier: public DataFlowAnalyzer
 {
