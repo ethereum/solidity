@@ -59,7 +59,7 @@ IsolTestOptions::IsolTestOptions(std::string* _editor):
 		("editor", po::value<std::string>(_editor)->default_value(editorPath()), "Path to editor for opening test files.")
 		("help", po::bool_switch(&showHelp), "Show this help screen.")
 		("no-color", po::bool_switch(&noColor), "Don't use colors.")
-		("test,t", po::value<std::string>(&test)->default_value("*/*"), "Filters which test units to include.");
+		("test,t", po::value<std::string>(&testFilter)->default_value("*/*"), "Filters which test units to include.");
 }
 
 bool IsolTestOptions::parse(int _argc, char const* const* _argv)
@@ -77,11 +77,12 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 
 void IsolTestOptions::validate() const
 {
-	std::regex filterExpression{"(((\\*+|\\w+|\\w+\\*+)\\/)+(\\*|\\w+\\**))"};
+	static std::string filterString{"[a-zA-Z1-9_/*]*"};
+	static std::regex filterExpression{filterString};
 	assertThrow(
-		regex_match(test, filterExpression),
+		regex_match(testFilter, filterExpression),
 		ConfigException,
-		"Invalid test unit filter: " + test
+		"Invalid test unit filter - can only contain '" + filterString + ": " + testFilter
 	);
 }
 

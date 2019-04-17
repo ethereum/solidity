@@ -98,7 +98,7 @@ public:
 	):
 		m_testCaseCreator(_testCaseCreator),
 		m_options(_options),
-		m_filter(TestFilter{_options.test}),
+		m_filter(TestFilter{_options.testFilter}),
 		m_path(_path),
 		m_name(_name)
 	{}

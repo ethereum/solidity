@@ -32,7 +32,7 @@ struct IsolTestOptions: CommonOptions
 {
 	bool showHelp = false;
 	bool noColor = false;
-	std::string test = std::string{};
+	std::string testFilter = std::string{};
 
 	IsolTestOptions(std::string* _editor);
 	bool parse(int _argc, char const* const* _argv) override;
