@@ -31,7 +31,7 @@ string ProtoConverter::createHex(string const& _hexBytes) const
 		});
 		tmp = tmp.substr(0, 64);
 	}
-	// We need this awkward if case hex literals cannot be empty.
+	// We need this awkward if case because hex literals cannot be empty.
 	if (tmp.empty())
 		tmp = "1";
 	return tmp;
@@ -48,6 +48,41 @@ string ProtoConverter::createAlphaNum(string const& _strBytes) const
 		tmp = tmp.substr(0, 32);
 	}
 	return tmp;
+}
+
+bool ProtoConverter::isCaseLiteralUnique(Literal const& _x)
+{
+	std::string tmp;
+	bool isUnique = false;
+	bool isEmptyString = false;
+	switch (_x.literal_oneof_case())
+	{
+		case Literal::kIntval:
+			tmp = std::to_string(_x.intval());
+			break;
+		case Literal::kHexval:
+			tmp = "0x" + createHex(_x.hexval());
+			break;
+		case Literal::kStrval:
+			tmp = createAlphaNum(_x.strval());
+			if (tmp.empty())
+			{
+				isEmptyString = true;
+				tmp = std::to_string(0);
+			}
+			else
+				tmp = "\"" + tmp + "\"";
+			break;
+		case Literal::LITERAL_ONEOF_NOT_SET:
+			tmp = std::to_string(1);
+			break;
+	}
+	if (!_x.has_strval() || isEmptyString)
+		isUnique = m_switchLiteralSetPerScope.top().insert(dev::u256(tmp)).second;
+	else
+		isUnique = m_switchLiteralSetPerScope.top().insert(
+				dev::u256(dev::h256(tmp, dev::h256::FromBinary, dev::h256::AlignLeft))).second;
+	return isUnique;
 }
 
 void ProtoConverter::visit(Literal const& _x)
@@ -319,21 +354,31 @@ void ProtoConverter::visit(ForStmt const& _x)
 
 void ProtoConverter::visit(CaseStmt const& _x)
 {
-	m_output << "case ";
-	visit(_x.case_lit());
-	m_output << " ";
-	visit(_x.case_block());
+	// Silently ignore duplicate case literals
+	if (isCaseLiteralUnique(_x.case_lit()))
+	{
+		m_output << "case ";
+		visit(_x.case_lit());
+		m_output << " ";
+		visit(_x.case_block());
+	}
 }
 
 void ProtoConverter::visit(SwitchStmt const& _x)
 {
 	if (_x.case_stmt_size() > 0 || _x.has_default_block())
 	{
+		std::set<dev::u256> s;
+		m_switchLiteralSetPerScope.push(s);
 		m_output << "switch ";
 		visit(_x.switch_expr());
 		m_output << "\n";
+
 		for (auto const& caseStmt: _x.case_stmt())
 			visit(caseStmt);
+
+		m_switchLiteralSetPerScope.pop();
+
 		if (_x.has_default_block())
 		{
 			m_output << "default ";
