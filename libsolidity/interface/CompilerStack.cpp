@@ -1067,6 +1067,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		meta["settings"]["optimizer"]["details"] = std::move(details);
 	}
 
+	meta["settings"]["useLiteralContent"] = m_metadataLiteralSources;
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
