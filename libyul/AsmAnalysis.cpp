@@ -442,15 +442,21 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 		if (_case.value)
 		{
 			int const initialStackHeight = m_stackHeight;
+			bool isCaseValueValid = true;
 			// We cannot use "expectExpression" here because *_case.value is not a
 			// Statement and would be converted to a Statement otherwise.
 			if (!(*this)(*_case.value))
+			{
+				isCaseValueValid = false;
 				success = false;
+			}
 			expectDeposit(1, initialStackHeight, _case.value->location);
 			m_stackHeight--;
 
+			// If the case value is not valid, we should not insert it into cases.
+			yulAssert(isCaseValueValid || m_errorReporter.hasErrors(), "Invalid case value.");
 			/// Note: the parser ensures there is only one default case
-			if (!cases.insert(valueOfLiteral(*_case.value)).second)
+			if (isCaseValueValid && !cases.insert(valueOfLiteral(*_case.value)).second)
 			{
 				m_errorReporter.declarationError(
 					_case.location,
