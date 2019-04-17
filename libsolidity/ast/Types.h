@@ -1346,9 +1346,6 @@ public:
 
 	Category category() const override { return Category::Magic; }
 
-	/// Factory function for meta type
-	static MagicType const* metaType(TypePointer _type);
-
 	TypeResult binaryOperatorResult(Token, Type const*) const override
 	{
 		return nullptr;

@@ -231,7 +231,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		return {};
 	}
 
-	return {MagicType::metaType(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
+	return {TypeProvider::metaType(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
 }
 
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)

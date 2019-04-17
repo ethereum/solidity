@@ -3415,11 +3415,6 @@ string ModuleType::toString(bool) const
 	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
 }
 
-MagicType const* MagicType::metaType(TypePointer _type)
-{
-	return TypeProvider::metaType(_type);
-}
-
 string MagicType::richIdentifier() const
 {
 	switch (m_kind)
