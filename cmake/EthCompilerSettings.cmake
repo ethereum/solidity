@@ -33,10 +33,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Werror)
 
 	# Configuration-specific compiler settings.
-	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
+	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
 	# Additional GCC-specific compiler settings.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
