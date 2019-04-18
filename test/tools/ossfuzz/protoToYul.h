@@ -21,8 +21,11 @@
 #include <ostream>
 #include <sstream>
 #include <stack>
+#include <set>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
+#include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 
 namespace yul
 {
@@ -68,12 +71,14 @@ private:
 
 	std::string createHex(std::string const& _hexBytes) const;
 	std::string createAlphaNum(std::string const& _strBytes) const;
+	bool isCaseLiteralUnique(Literal const&);
 
 	std::ostringstream m_output;
 	std::stack<uint8_t> m_numVarsPerScope;
 	int32_t m_numLiveVars;
 	int32_t m_numNestedForLoops;
 	std::stack<bool> m_inForScope;
+	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
 };
 }
 }
