@@ -104,7 +104,7 @@ protected:
 
 	Block translate(Block const& _block);
 	Case translate(Case const& _case);
-	Identifier translate(Identifier const& _identifier);
+	virtual Identifier translate(Identifier const& _identifier);
 	Literal translate(Literal const& _literal);
 	TypedName translate(TypedName const& _typedName);
 
