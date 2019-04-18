@@ -12,6 +12,8 @@ set(sources
 	ParserBase.h
 	Scanner.cpp
 	Scanner.h
+	SemVerHandler.cpp
+	SemVerHandler.h
 	SourceLocation.h
 	SourceReferenceExtractor.cpp
 	SourceReferenceExtractor.h

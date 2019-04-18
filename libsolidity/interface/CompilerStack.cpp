@@ -31,7 +31,6 @@
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
-#include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/analysis/TypeChecker.h>
@@ -52,6 +51,7 @@
 #include <libyul/YulString.h>
 
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SemVerHandler.h>
 
 #include <libevmasm/Exceptions.h>
 

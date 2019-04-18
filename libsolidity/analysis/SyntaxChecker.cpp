@@ -17,12 +17,12 @@
 
 #include <libsolidity/analysis/SyntaxChecker.h>
 
-#include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libsolidity/interface/Version.h>
 
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/SemVerHandler.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string.hpp>
