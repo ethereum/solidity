@@ -71,6 +71,7 @@ protected:
 	void expectTokenOrConsumeUntil(Token _value, bool _advance = true);
 	Token currentToken() const;
 	Token peekNextToken() const;
+	std::string tokenName(Token _token);
 	std::string currentLiteral() const;
 	Token advance();
 	///@}

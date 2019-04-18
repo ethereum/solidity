@@ -57,29 +57,29 @@ Token ParserBase::advance()
 	return m_scanner->next();
 }
 
+std::string ParserBase::tokenName(Token _token)
+{
+	if (_token == Token::Identifier)
+		return string("identifier");
+	else if (_token == Token::EOS)
+		return string("end of source");
+	else if (TokenTraits::isReservedKeyword(_token))
+		return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
+	else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
+	{
+		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
+		return string("'") + elemTypeName.toString() + "'";
+	}
+	else
+		return string("'") + TokenTraits::friendlyName(_token) + "'";
+};
+
 void ParserBase::expectToken(Token _value, bool _advance)
 {
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		auto tokenName = [this](Token _token) -> string
-		{
-			if (_token == Token::Identifier)
-				return string("identifier");
-			else if (_token == Token::EOS)
-				return string("end of source");
-			else if (TokenTraits::isReservedKeyword(_token))
-				return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
-			else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
-			{
-				ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-				return string("'") + elemTypeName.toString() + "'";
-			}
-			else
-				return string("'") + TokenTraits::friendlyName(_token) + "'";
-		};
-
-		fatalParserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok));
+		fatalParserError(string("Expected ") + ParserBase::tokenName(_value) + string(" but got ") + ParserBase::tokenName(tok));
 	}
 	if (_advance)
 		m_scanner->next();
@@ -90,24 +90,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		auto tokenName = [this](Token _token) -> string
-		{
-			if (_token == Token::Identifier)
-				return string("identifier");
-			else if (_token == Token::EOS)
-				return string("end of source");
-			else if (TokenTraits::isReservedKeyword(_token))
-				return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
-			else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
-			{
-				ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-				return string("'") + elemTypeName.toString() + "'";
-			}
-			else
-				return string("'") + TokenTraits::friendlyName(_token) + "'";
-		};
-
-		parserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok) + string("."));
+		parserError(string("Expected ") + ParserBase::tokenName(_value) + string(" but got ") + ParserBase::tokenName(tok) + string("."));
 		Token token = m_scanner->currentToken();
 		while (token != _value && token != Token::EOS)
 			token = m_scanner->next();
