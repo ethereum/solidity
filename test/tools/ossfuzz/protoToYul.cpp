@@ -311,7 +311,9 @@ void ProtoConverter::visit(ForStmt const& _x)
 	m_output << "for { let " << loopVarName << " := 0 } "
 		<< "lt(" << loopVarName << ", 0x60) "
 		<< "{ " << loopVarName << " := add(" << loopVarName << ", 0x20) } ";
+	m_inForScope.push(true);
 	visit(_x.for_body());
+	m_inForScope.pop();
 	--m_numNestedForLoops;
 }
 
@@ -364,6 +366,14 @@ void ProtoConverter::visit(Statement const& _x)
 			break;
 		case Statement::kSwitchstmt:
 			visit(_x.switchstmt());
+			break;
+		case Statement::kBreakstmt:
+			if (m_inForScope.top())
+				m_output << "break\n";
+			break;
+		case Statement::kContstmt:
+			if (m_inForScope.top())
+				m_output << "continue\n";
 			break;
 		case Statement::STMT_ONEOF_NOT_SET:
 			break;

@@ -141,7 +141,7 @@ message IfStmt {
 }
 
 message ForStmt {
-  required Block for_body = 2;
+  required Block for_body = 1;
 }
 
 message CaseStmt {
@@ -155,6 +155,9 @@ message SwitchStmt {
   optional Block default_block = 3;
 }
 
+message BreakStmt {}
+message ContinueStmt {}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl          = 1;
@@ -164,6 +167,8 @@ message Statement {
     Block               blockstmt     = 5;
     ForStmt             forstmt       = 6;
     SwitchStmt          switchstmt    = 7;
+    BreakStmt           breakstmt     = 8;
+    ContinueStmt        contstmt      = 9;
   }
 }
 

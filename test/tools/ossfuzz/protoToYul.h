@@ -39,6 +39,7 @@ public:
 		m_numLiveVars = 10;
 		m_numVarsPerScope.push(m_numLiveVars);
 		m_numNestedForLoops = 0;
+		m_inForScope.push(false);
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -72,6 +73,7 @@ private:
 	std::stack<uint8_t> m_numVarsPerScope;
 	int32_t m_numLiveVars;
 	int32_t m_numNestedForLoops;
+	std::stack<bool> m_inForScope;
 };
 }
 }
