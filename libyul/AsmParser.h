@@ -32,14 +32,20 @@
 #include <memory>
 #include <vector>
 
+
 namespace yul
 {
 
 class Parser: public langutil::ParserBase
 {
 public:
+	enum class ForLoopComponent
+	{
+		None, ForLoopPre, ForLoopPost, ForLoopBody
+	};
+
 	explicit Parser(langutil::ErrorReporter& _errorReporter, std::shared_ptr<Dialect> _dialect):
-		ParserBase(_errorReporter), m_dialect(std::move(_dialect)), m_insideForLoopBody{false} {}
+		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
@@ -83,11 +89,14 @@ protected:
 	TypedName parseTypedName();
 	YulString expectAsmIdentifier();
 
+	/// Reports an error if we are currently not inside the body part of a for loop.
+	void checkBreakContinuePosition(std::string const& _which);
+
 	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
 	std::shared_ptr<Dialect> m_dialect;
-	bool m_insideForLoopBody;
+	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 };
 
 }
