@@ -121,6 +121,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		initializeLocalVariables(_function);
 		m_loopExecutionHappened = false;
 		m_arrayAssignmentHappened = false;
+		m_externalFunctionCallHappened = false;
 	}
 	_function.parameterList().accept(*this);
 	if (_function.returnParameterList())
@@ -607,6 +608,7 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		popCallStack();
 		break;
 	case FunctionType::Kind::External:
+		m_externalFunctionCallHappened = true;
 		resetStateVariables();
 		resetStorageReferences();
 		break;
@@ -1295,6 +1297,12 @@ void SMTChecker::checkCondition(
 			" therefore all mapping information is erased after"
 			" a mapping local variable/parameter is assigned.\n"
 			"You can re-introduce information using require().";
+	if (m_externalFunctionCallHappened)
+		extraComment +=
+			"\nNote that external function calls are not inlined,"
+			" even if the source code of the function is available."
+			" This is due to the possibility that the actual called contract"
+			" has the same ABI but implements the function differently.";
 
 	SecondarySourceLocation secondaryLocation{};
 	secondaryLocation.append(extraComment, SourceLocation{});
