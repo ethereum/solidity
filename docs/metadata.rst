@@ -165,7 +165,7 @@ Furthermore, the wallet can use the NatSpec user documentation to display a conf
 whenever they interact with the contract, together with requesting
 authorization for the transaction signature.
 
-Additional information about Ethereum Natural Specification (NatSpec) can be found `here <https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format>`_.
+For additional information, read :doc:`Ethereum Natural Language Specification (NatSpec) format <natspec-format>`.
 
 Usage for Source Code Verification
 ==================================
