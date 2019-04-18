@@ -31,6 +31,8 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
+#include <libyul/backends/wasm/WasmDialect.h>
+#include <libyul/backends/wasm/EWasmObjectCompiler.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
 
@@ -55,6 +57,8 @@ shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language, EVMVers
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case AssemblyStack::Language::Yul:
 		return Dialect::yul();
+	case AssemblyStack::Language::EWasm:
+		return make_shared<WasmDialect>();
 	}
 	solAssert(false, "");
 	return Dialect::yul();
@@ -178,7 +182,14 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		return object;
 	}
 	case Machine::eWasm:
-		solUnimplemented("eWasm backend is not yet implemented.");
+	{
+		solAssert(m_language == Language::EWasm, "");
+		shared_ptr<Dialect> dialect = languageToDialect(m_language, EVMVersion{});
+
+		MachineAssemblyObject object;
+		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, *dialect);
+		return object;
+	}
 	}
 	// unreachable
 	return MachineAssemblyObject();

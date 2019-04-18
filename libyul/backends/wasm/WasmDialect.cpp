@@ -23,8 +23,8 @@
 using namespace std;
 using namespace yul;
 
-WasmDialect::WasmDialect(AsmFlavour _flavour):
-	Dialect{_flavour}
+WasmDialect::WasmDialect():
+	Dialect{AsmFlavour::Strict}
 {
 	for (auto const& name: {
 		"i64.add",
@@ -65,7 +65,7 @@ BuiltinFunction const* WasmDialect::builtin(YulString _name) const
 
 void WasmDialect::addFunction(string _name, size_t _params, size_t _returns)
 {
-	YulString name{std::move(_name)};
+	YulString name{move(_name)};
 	BuiltinFunction& f = m_functions[name];
 	f.name = name;
 	f.parameters.resize(_params);

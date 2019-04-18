@@ -15,41 +15,30 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Dialects for Wasm.
+ * Compiler that transforms Yul Objects to EWasm text representation.
  */
 
 #pragma once
 
-#include <libyul/Dialect.h>
-
-#include <map>
+#include <string>
 
 namespace yul
 {
-
-class YulString;
-using Type = YulString;
-struct FunctionCall;
 struct Object;
+struct Dialect;
 
-/**
- * Yul dialect for Wasm as a backend.
- *
- * Builtin functions are a subset of the wasm instructions, always implicitly assuming
- * unsigned 64 bit types.
- *
- * !This is subject to changes!
- */
-struct WasmDialect: public Dialect
+class EWasmObjectCompiler
 {
-	WasmDialect();
+public:
+	static std::string compile(Object& _object, Dialect& _dialect);
+private:
+	EWasmObjectCompiler(Dialect& _dialect):
+		m_dialect(_dialect)
+	{}
 
-	BuiltinFunction const* builtin(YulString _name) const override;
+	std::string run(Object& _object);
 
-protected:
-	void addFunction(std::string _name, size_t _params, size_t _returns);
-
-	std::map<YulString, BuiltinFunction> m_functions;
+	Dialect& m_dialect;
 };
 
 }
