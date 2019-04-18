@@ -20,6 +20,8 @@
 
 #include <libyul/backends/wasm/EWasmCodeTransform.h>
 
+#include <libyul/backends/wasm/EWasmToText.h>
+
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
@@ -43,9 +45,7 @@ string EWasmCodeTransform::run(yul::Block const& _ast)
 		functions.emplace_back(translateFunction(boost::get<yul::FunctionDefinition>(statement)));
 	}
 
-	// TODO translate to text representation
-
-	return {};
+	return EWasmToText{}.run(functions);
 }
 
 wasm::Expression EWasmCodeTransform::operator()(VariableDeclaration const& _varDecl)

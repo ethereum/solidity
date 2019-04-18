@@ -40,6 +40,8 @@ add_library(yul
 	backends/wasm/EWasmCodeTransform.h
 	backends/wasm/EWasmObjectCompiler.cpp
 	backends/wasm/EWasmObjectCompiler.h
+	backends/wasm/EWasmToText.cpp
+	backends/wasm/EWasmToText.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
 	backends/wasm/WasmDialect.cpp
