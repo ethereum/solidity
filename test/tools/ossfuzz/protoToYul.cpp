@@ -307,6 +307,26 @@ void ProtoConverter::visit(UnaryOp const& _x)
 	m_output << ")";
 }
 
+void ProtoConverter::visit(TernaryOp const& _x)
+{
+	switch (_x.op())
+	{
+		case TernaryOp::ADDM:
+			m_output << "addmod";
+			break;
+		case TernaryOp::MULM:
+			m_output << "mulmod";
+			break;
+	}
+	m_output << "(";
+	visit(_x.arg1());
+	m_output << ", ";
+	visit(_x.arg2());
+	m_output << ", ";
+	visit(_x.arg3());
+	m_output << ")";
+}
+
 void ProtoConverter::visit(AssignmentStatement const& _x)
 {
 	visit(_x.ref_id());
