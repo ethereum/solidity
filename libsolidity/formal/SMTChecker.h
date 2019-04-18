@@ -18,6 +18,7 @@
 #pragma once
 
 
+#include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/VariableUsage.h>
@@ -316,6 +317,9 @@ private:
 	/// when placeholder is visited.
 	/// Needs to be a stack because of function calls.
 	std::vector<int> m_modifierDepthStack;
+
+	/// Stores the context of the encoding.
+	smt::EncodingContext m_context;
 };
 
 }
