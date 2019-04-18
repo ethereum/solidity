@@ -479,6 +479,13 @@ VariableDeclaration Parser::parseVariableDeclaration()
 FunctionDefinition Parser::parseFunctionDefinition()
 {
 	RecursionGuard recursionGuard(*this);
+
+	if (m_currentForLoopComponent == ForLoopComponent::ForLoopPre)
+		m_errorReporter.syntaxError(
+			location(),
+			"Functions cannot be defined inside a for-loop init block."
+		);
+
 	ForLoopComponent outerForLoopComponent = m_currentForLoopComponent;
 	m_currentForLoopComponent = ForLoopComponent::None;
 
