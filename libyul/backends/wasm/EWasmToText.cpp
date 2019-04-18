@@ -44,7 +44,7 @@ string EWasmToText::operator()(wasm::Literal const& _literal)
 
 string EWasmToText::operator()(wasm::Identifier const& _identifier)
 {
-	return "(get.local $" + _identifier.name + ")";
+	return "(get_local $" + _identifier.name + ")";
 }
 
 string EWasmToText::operator()(wasm::Label const& _label)
