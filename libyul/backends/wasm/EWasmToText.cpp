@@ -84,7 +84,10 @@ string EWasmToText::operator()(wasm::GlobalAssignment const& _assignment)
 
 string EWasmToText::operator()(wasm::If const& _if)
 {
-	return "(if " + visit(*_if.condition) + " (then\n" + indented(joinTransformed(_if.statements)) + "\n))\n";
+	string text = "(if " + visit(*_if.condition) + " (then\n" + indented(joinTransformed(_if.statements)) + ")";
+	if (_if.elseStatements)
+		text += "(else\n" + indented(joinTransformed(*_if.elseStatements)) + ")";
+	return std::move(text) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::Loop const& _loop)

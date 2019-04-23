@@ -57,7 +57,11 @@ struct BuiltinCall { std::string functionName; std::vector<Expression> arguments
 struct LocalAssignment { std::string variableName; std::unique_ptr<Expression> value; };
 struct GlobalAssignment { std::string variableName; std::unique_ptr<Expression> value; };
 struct Block { std::string labelName; std::vector<Expression> statements; };
-struct If { std::unique_ptr<Expression> condition; std::vector<Expression> statements; };
+struct If {
+	std::unique_ptr<Expression> condition;
+	std::vector<Expression> statements;
+	std::unique_ptr<std::vector<Expression>> elseStatements;
+};
 struct Loop { std::string labelName; std::vector<Expression> statements; };
 struct Break { Label label; };
 struct Continue { Label label; };

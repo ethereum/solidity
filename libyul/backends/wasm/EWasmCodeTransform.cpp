@@ -44,7 +44,10 @@ string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 
 	for (auto const& statement: _ast.statements)
 	{
-		yulAssert(statement.type() == typeid(yul::FunctionDefinition), "");
+		yulAssert(
+			statement.type() == typeid(yul::FunctionDefinition),
+			"Expected only function definitions at the highest level."
+		);
 		functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
 	}
 
@@ -57,19 +60,19 @@ wasm::Expression EWasmCodeTransform::generateMultiAssignment(
 )
 {
 	yulAssert(!_variableNames.empty(), "");
-	wasm::LocalAssignment assignment{std::move(_variableNames.front()), std::move(_firstValue)};
+	wasm::LocalAssignment assignment{move(_variableNames.front()), std::move(_firstValue)};
 
 	if (_variableNames.size() == 1)
 		return move(assignment);
 
 	wasm::Block block;
-	block.statements.emplace_back(std::move(assignment));
+	block.statements.emplace_back(move(assignment));
 	for (size_t i = 1; i < _variableNames.size(); ++i)
 		block.statements.emplace_back(wasm::LocalAssignment{
-			std::move(_variableNames.at(i)),
+			move(_variableNames.at(i)),
 			make_unique<wasm::Expression>(wasm::GlobalVariable{m_globalVariables.at(i - 1).variableName})
 		});
-	return std::move(block);
+	return move(block);
 }
 
 wasm::Expression EWasmCodeTransform::operator()(VariableDeclaration const& _varDecl)
@@ -82,7 +85,7 @@ wasm::Expression EWasmCodeTransform::operator()(VariableDeclaration const& _varD
 	}
 
 	if (_varDecl.value)
-		return generateMultiAssignment(std::move(variableNames), visit(*_varDecl.value));
+		return generateMultiAssignment(move(variableNames), visit(*_varDecl.value));
 	else
 		return wasm::BuiltinCall{"nop", {}};
 }
@@ -92,7 +95,7 @@ wasm::Expression EWasmCodeTransform::operator()(Assignment const& _assignment)
 	vector<string> variableNames;
 	for (auto const& var: _assignment.variableNames)
 		variableNames.emplace_back(var.name.str());
-	return generateMultiAssignment(std::move(variableNames), visit(*_assignment.value));
+	return generateMultiAssignment(move(variableNames), visit(*_assignment.value));
 }
 
 wasm::Expression EWasmCodeTransform::operator()(StackAssignment const&)
@@ -150,13 +153,46 @@ wasm::Expression EWasmCodeTransform::operator()(yul::Instruction const&)
 
 wasm::Expression EWasmCodeTransform::operator()(If const& _if)
 {
-	return wasm::If{visit(*_if.condition), visit(_if.body.statements)};
+	return wasm::If{visit(*_if.condition), visit(_if.body.statements), {}};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Switch const&)
+wasm::Expression EWasmCodeTransform::operator()(Switch const& _switch)
 {
-	solUnimplementedAssert(false, "");
-	return {};
+	wasm::Block block;
+	string condition = m_nameDispenser.newName("condition"_yulstring).str();
+	m_localVariables.emplace_back(wasm::VariableDeclaration{condition});
+	block.statements.emplace_back(wasm::LocalAssignment{condition, visit(*_switch.expression)});
+
+	vector<wasm::Expression>* currentBlock = &block.statements;
+	for (size_t i = 0; i < _switch.cases.size(); ++i)
+	{
+		Case const& c = _switch.cases.at(i);
+		if (c.value)
+		{
+			wasm::BuiltinCall comparison{"i64.eq", {}};
+			comparison.arguments.emplace_back(wasm::LocalVariable{condition});
+			comparison.arguments.emplace_back(visitReturnByValue(*c.value));
+			wasm::If ifStmnt{
+				make_unique<wasm::Expression>(move(comparison)),
+				visit(c.body.statements),
+				{}
+			};
+			vector<wasm::Expression>* nextBlock = nullptr;
+			if (i != _switch.cases.size() - 1)
+			{
+				ifStmnt.elseStatements = make_unique<vector<wasm::Expression>>();
+				nextBlock = ifStmnt.elseStatements.get();
+			}
+			currentBlock->emplace_back(move(ifStmnt));
+			currentBlock = nextBlock;
+		}
+		else
+		{
+			yulAssert(i == _switch.cases.size() - 1, "Default case must be last.");
+			*currentBlock += visit(c.body.statements);
+		}
+	}
+	return move(block);
 }
 
 wasm::Expression EWasmCodeTransform::operator()(FunctionDefinition const&)
