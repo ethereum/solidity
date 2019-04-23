@@ -521,6 +521,7 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
+      - build_x86_linux_ossfuzz: *build_on_tags
       - test_x86_ossfuzz_regression:
           <<: *build_on_tags
           requires:
