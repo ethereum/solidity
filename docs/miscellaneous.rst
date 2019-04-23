@@ -456,3 +456,10 @@ Language Grammar
 
 .. literalinclude:: grammar.txt
    :language: none
+
+**********************
+Error Recovery Grammar
+**********************
+
+.. literalinclude:: error-rules.txt
+   :language: none

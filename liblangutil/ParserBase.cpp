@@ -57,29 +57,49 @@ Token ParserBase::advance()
 	return m_scanner->next();
 }
 
+std::string ParserBase::tokenName(Token _token)
+{
+	if (_token == Token::Identifier)
+		return string("identifier");
+	else if (_token == Token::EOS)
+		return string("end of source");
+	else if (TokenTraits::isReservedKeyword(_token))
+		return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
+	else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
+	{
+		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
+		return string("'") + elemTypeName.toString() + "'";
+	}
+	else
+		return string("'") + TokenTraits::friendlyName(_token) + "'";
+};
+
 void ParserBase::expectToken(Token _value, bool _advance)
 {
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		auto tokenName = [this](Token _token)
-		{
-			if (_token == Token::Identifier)
-				return string("identifier");
-			else if (_token == Token::EOS)
-				return string("end of source");
-			else if (TokenTraits::isReservedKeyword(_token))
-				return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
-			else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
-			{
-				ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-				return string("'") + elemTypeName.toString() + "'";
-			}
-			else
-				return string("'") + TokenTraits::friendlyName(_token) + "'";
-		};
+		fatalParserError(string("Expected ") + ParserBase::tokenName(_value) + string(" but got ") + ParserBase::tokenName(tok));
+	}
+	if (_advance)
+		m_scanner->next();
+}
 
-		fatalParserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok));
+void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
+{
+	Token tok = m_scanner->currentToken();
+	if (tok != _value)
+	{
+		Token token = m_scanner->currentToken();
+		SourceLocation errorLoc = SourceLocation{position(), endPosition(), source()};
+		while (token != _value && token != Token::EOS)
+			token = m_scanner->next();
+		std::string tokenName = ParserBase::tokenName(_value);
+		std::string mess = string("Expected ") + tokenName + string(" but got ") + ParserBase::tokenName(tok) + string(". ");
+		if (token == Token::EOS)
+			parserError(errorLoc, mess + "Cannot find " + tokenName + " to synchronize to.");
+		else
+			parserError(errorLoc, mess + "Skipping to next " + tokenName + ".");
 	}
 	if (_advance)
 		m_scanner->next();
@@ -96,6 +116,11 @@ void ParserBase::decreaseRecursionDepth()
 {
 	solAssert(m_recursionDepth > 0, "");
 	m_recursionDepth--;
+}
+
+void ParserBase::parserError(SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.parserError(_location, _description);
 }
 
 void ParserBase::parserError(string const& _description)
