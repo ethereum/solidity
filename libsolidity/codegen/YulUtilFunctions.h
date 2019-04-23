@@ -21,8 +21,10 @@
 #pragma once
 
 #include <liblangutil/EVMVersion.h>
+#include <liblangutil/Token.h>
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
+#include <libsolidity/ast/AST.h>
 
 #include <memory>
 #include <string>
@@ -121,6 +123,9 @@ public:
 	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
 	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
 
+	// convert operators to Low-level functions
+	static std::string intOperatorToLLFunctionString(langutil::Token, IntegerType const&);
+	static std::map<langutil::Token, std::string> const& operatorToFunctionTable();
 private:
 	langutil::EVMVersion m_evmVersion;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;

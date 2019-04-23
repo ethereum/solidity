@@ -129,16 +129,14 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 {
-	solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
 	solUnimplementedAssert(*_binOp.leftExpression().annotation().type == *_binOp.rightExpression().annotation().type, "");
 	if (IntegerType const* type = dynamic_cast<IntegerType const*>(_binOp.annotation().commonType))
 	{
-		solUnimplementedAssert(!type->isSigned(), "");
 		m_code <<
 			"let " <<
 			m_context.variable(_binOp) <<
 			" := " <<
-			m_utils.overflowCheckedUIntAddFunction(type->numBits()) <<
+			m_utils.intOperatorToLLFunctionString(_binOp.getOperator(), *type) <<
 			"(" <<
 			m_context.variable(_binOp.leftExpression()) <<
 			", " <<

@@ -799,3 +799,25 @@ string YulUtilFunctions::suffixedVariableNameList(string const& _baseName, size_
 	}
 	return result;
 }
+
+std::string YulUtilFunctions::intOperatorToLLFunctionString(langutil::Token token, IntegerType const& type)
+{
+	solUnimplementedAssert(!type.isSigned(), "");
+	std::map<Token, std::string> const& table = YulUtilFunctions::operatorToFunctionTable();
+	solUnimplementedAssert(table.count(token), "operator not implemented from Solidity to Yul.");
+	return table.at(token);
+}
+
+std::map<Token, std::string> const& YulUtilFunctions::operatorToFunctionTable()
+{
+	static std::map<Token, std::string> operator_to_function_table;
+	if(operator_to_function_table.empty())
+	{
+		operator_to_function_table[Token::Add] = "add";
+		operator_to_function_table[Token::Sub] = "sub";
+		operator_to_function_table[Token::Mul] = "mul";
+		operator_to_function_table[Token::Div] = "div";
+		operator_to_function_table[Token::Mod] = "mod";
+	}
+	return operator_to_function_table;
+}
