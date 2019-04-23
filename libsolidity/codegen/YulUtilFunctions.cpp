@@ -810,14 +810,12 @@ std::string YulUtilFunctions::intOperatorToLLFunctionString(langutil::Token toke
 
 std::map<Token, std::string> const& YulUtilFunctions::operatorToFunctionTable()
 {
-	static std::map<Token, std::string> operator_to_function_table;
-	if(operator_to_function_table.empty())
-	{
-		operator_to_function_table[Token::Add] = "add";
-		operator_to_function_table[Token::Sub] = "sub";
-		operator_to_function_table[Token::Mul] = "mul";
-		operator_to_function_table[Token::Div] = "div";
-		operator_to_function_table[Token::Mod] = "mod";
-	}
+	static std::map<Token, std::string> operator_to_function_table({
+		{Token::Add, "add"},
+		{Token::Sub, "sub"},
+		{Token::Mul, "mul"},
+		{Token::Div, "div"},
+		{Token::Mod, "mod"}
+	});
 	return operator_to_function_table;
 }
