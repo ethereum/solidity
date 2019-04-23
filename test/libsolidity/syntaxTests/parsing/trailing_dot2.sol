@@ -5,3 +5,4 @@ contract test {
 }
 // ----
 // ParserError: (76-77): Expected identifier but got ';'
+// ParserError: (78-79): Expected ';' but got '}'

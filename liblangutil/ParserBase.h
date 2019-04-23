@@ -62,10 +62,17 @@ protected:
 
 	///@{
 	///@name Helper functions
-	/// If current token value is not _value, throw exception otherwise advance token.
+	/// If current token value is not _value, throw exception otherwise advance token
+	//  @a if _advance is true.
 	void expectToken(Token _value, bool _advance = true);
+
+	/// Like expectToken but if there is an error we will delete tokens until
+	/// we get the expected token or EOS. If we hit EOS we back up to the error point,
+	/// and throw an exception so that a higher grammar rule has an opportunity to recover.
+	void expectTokenOrConsumeUntil(Token _value, char const *_lhs, bool _advance = true);
 	Token currentToken() const;
 	Token peekNextToken() const;
+	std::string tokenName(Token _token);
 	std::string currentLiteral() const;
 	Token advance();
 	///@}
@@ -77,16 +84,28 @@ protected:
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description.
 	void parserError(std::string const& _description);
+	void parserError(SourceLocation const& _location, std::string const& _description);
+
+
+#ifdef EXTENDED_PARSER_MESSAGES
+	/// Creates a @ref ParserWarning and annotates it with the current position and the
+	/// given @a _description.
+	void parserWarning(std::string const& _description);
+#endif
 
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description. Throws the FatalError.
 	void fatalParserError(std::string const& _description);
+	void fatalParserError(SourceLocation const& _location, std::string const& _description);
 
 	std::shared_ptr<Scanner> m_scanner;
 	/// The reference to the list of errors and warning to add errors/warnings during parsing
 	ErrorReporter& m_errorReporter;
 	/// Current recursion depth during parsing.
 	size_t m_recursionDepth = 0;
+	/// True if we are in parser error recovery. Usually this means we are scanning for a synchronization
+	/// token like ';', or '}', We use this to reduce cascaded error messages.
+	bool m_inParserRecovery = false;
 };
 
 }

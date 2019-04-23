@@ -118,6 +118,9 @@ public:
 		return m_errorCount > 0;
 	}
 
+	// @returns true if error shouldn't be stored
+	bool checkForExcessiveErrors(Error::Type _type);
+
 private:
 	void error(
 		Error::Type _type,
@@ -136,9 +139,6 @@ private:
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());
 
-	// @returns true if error shouldn't be stored
-	bool checkForExcessiveErrors(Error::Type _type);
-
 	ErrorList& m_errorList;
 
 	unsigned m_errorCount = 0;
@@ -149,4 +149,3 @@ private:
 };
 
 }
-
