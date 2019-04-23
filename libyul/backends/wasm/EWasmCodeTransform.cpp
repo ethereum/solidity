@@ -21,6 +21,7 @@
 #include <libyul/backends/wasm/EWasmCodeTransform.h>
 
 #include <libyul/backends/wasm/EWasmToText.h>
+#include <libyul/optimiser/NameCollector.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
@@ -30,50 +31,68 @@
 #include <liblangutil/Exceptions.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
 
-string EWasmCodeTransform::run(yul::Block const& _ast)
+string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 {
+	EWasmCodeTransform transform(_dialect, _ast);
 	vector<wasm::FunctionDefinition> functions;
 
 	for (auto const& statement: _ast.statements)
 	{
 		yulAssert(statement.type() == typeid(yul::FunctionDefinition), "");
-		functions.emplace_back(translateFunction(boost::get<yul::FunctionDefinition>(statement)));
+		functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
 	}
 
-	return EWasmToText{}.run(functions);
+	return EWasmToText{}.run(transform.m_globalVariables, functions);
+}
+
+wasm::Expression EWasmCodeTransform::generateMultiAssignment(
+	vector<string> _variableNames,
+	unique_ptr<wasm::Expression> _firstValue
+)
+{
+	yulAssert(!_variableNames.empty(), "");
+	wasm::LocalAssignment assignment{std::move(_variableNames.front()), std::move(_firstValue)};
+
+	if (_variableNames.size() == 1)
+		return move(assignment);
+
+	wasm::Block block;
+	block.statements.emplace_back(std::move(assignment));
+	for (size_t i = 1; i < _variableNames.size(); ++i)
+		block.statements.emplace_back(wasm::LocalAssignment{
+			std::move(_variableNames.at(i)),
+			make_unique<wasm::Expression>(wasm::GlobalVariable{m_globalVariables.at(i - 1).variableName})
+		});
+	return std::move(block);
 }
 
 wasm::Expression EWasmCodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
+	vector<string> variableNames;
 	for (auto const& var: _varDecl.variables)
-		m_localVariables.emplace_back(wasm::VariableDeclaration{var.name.str()});
+	{
+		variableNames.emplace_back(var.name.str());
+		m_localVariables.emplace_back(wasm::VariableDeclaration{variableNames.back()});
+	}
 
 	if (_varDecl.value)
-	{
-		// TODO otherwise, we have to work with globals.
-		solUnimplementedAssert(_varDecl.variables.size() == 1, "Only single-variable assignments supported.");
-		return wasm::LocalAssignment{
-			_varDecl.variables.front().name.str(),
-			visit(*_varDecl.value)
-		};
-	}
+		return generateMultiAssignment(std::move(variableNames), visit(*_varDecl.value));
 	else
-		// TODO this could be handled better.
 		return wasm::BuiltinCall{"nop", {}};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Assignment const& _assignment)
 {
-	solUnimplementedAssert(_assignment.variableNames.size() == 1, "Only single-variable assignments supported.");
-	return wasm::LocalAssignment{
-		_assignment.variableNames.front().name.str(),
-		visit(*_assignment.value)
-	};
+	vector<string> variableNames;
+	for (auto const& var: _assignment.variableNames)
+		variableNames.emplace_back(var.name.str());
+	return generateMultiAssignment(std::move(variableNames), visit(*_assignment.value));
 }
 
 wasm::Expression EWasmCodeTransform::operator()(StackAssignment const&)
@@ -104,12 +123,16 @@ wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 	if (m_dialect.builtin(_call.functionName.name))
 		return wasm::BuiltinCall{_call.functionName.name.str(), visit(_call.arguments)};
 	else
+		// If this function returns multiple values, then the first one will
+		// be returned in the expression itself and the others in global variables.
+		// The values have to be used right away in an assignment or variable declaration,
+		// so it is handled there.
 		return wasm::FunctionCall{_call.functionName.name.str(), visit(_call.arguments)};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Identifier const& _identifier)
 {
-	return wasm::Identifier{_identifier.name.str()};
+	return wasm::LocalVariable{_identifier.name.str()};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Literal const& _literal)
@@ -121,7 +144,7 @@ wasm::Expression EWasmCodeTransform::operator()(Literal const& _literal)
 
 wasm::Expression EWasmCodeTransform::operator()(yul::Instruction const&)
 {
-	yulAssert(false, "");
+	yulAssert(false, "EVM instruction used for Wasm code generation.");
 	return {};
 }
 
@@ -229,14 +252,31 @@ wasm::FunctionDefinition EWasmCodeTransform::translateFunction(yul::FunctionDefi
 	fun.locals += m_localVariables;
 
 	m_localVariables.clear();
-	yulAssert(_fun.returnVariables.size() <= 1, "");
-	if (_fun.returnVariables.size() == 1)
-		fun.body.emplace_back(wasm::Identifier{_fun.returnVariables.front().name.str()});
+
+	if (!_fun.returnVariables.empty())
+	{
+		// First return variable is returned directly, the others are stored
+		// in globals.
+		allocateGlobals(_fun.returnVariables.size() - 1);
+		for (size_t i = 1; i < _fun.returnVariables.size(); ++i)
+			fun.body.emplace_back(wasm::GlobalAssignment{
+				m_globalVariables.at(i - 1).variableName,
+				make_unique<wasm::Expression>(wasm::LocalVariable{_fun.returnVariables.at(i).name.str()})
+			});
+		fun.body.emplace_back(wasm::LocalVariable{_fun.returnVariables.front().name.str()});
+	}
 	return fun;
 }
 
 string EWasmCodeTransform::newLabel()
 {
-	// TODO this should not clash with other identifiers!
-	return "label_" + to_string(++m_labelCounter);
+	return m_nameDispenser.newName("label_"_yulstring).str();
+}
+
+void EWasmCodeTransform::allocateGlobals(size_t _amount)
+{
+	while (m_globalVariables.size() < _amount)
+		m_globalVariables.emplace_back(wasm::GlobalVariableDeclaration{
+			m_nameDispenser.newName("global_"_yulstring).str()
+		});
 }

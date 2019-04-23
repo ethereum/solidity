@@ -29,9 +29,14 @@
 using namespace std;
 using namespace yul;
 
-string EWasmToText::run(vector<wasm::FunctionDefinition> const& _functions)
+string EWasmToText::run(
+	vector<wasm::GlobalVariableDeclaration> const& _globals,
+	vector<wasm::FunctionDefinition> const& _functions
+)
 {
 	string ret = "(module\n\n";
+	for (auto const& g: _globals)
+		ret += "    (global $" + g.variableName + " (mut i64) (i64.const 0))\n";
 	for (auto const& f: _functions)
 		ret += transform(f) + "\n";
 	return move(ret) + ")\n";
@@ -42,9 +47,14 @@ string EWasmToText::operator()(wasm::Literal const& _literal)
 	return "(i64.const " + to_string(_literal.value) + ")";
 }
 
-string EWasmToText::operator()(wasm::Identifier const& _identifier)
+string EWasmToText::operator()(wasm::LocalVariable const& _identifier)
 {
 	return "(get_local $" + _identifier.name + ")";
+}
+
+string EWasmToText::operator()(wasm::GlobalVariable const& _identifier)
+{
+	return "(get_global $" + _identifier.name + ")";
 }
 
 string EWasmToText::operator()(wasm::Label const& _label)
@@ -65,6 +75,11 @@ string EWasmToText::operator()(wasm::FunctionCall const& _functionCall)
 string EWasmToText::operator()(wasm::LocalAssignment const& _assignment)
 {
 	return "(set_local $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
+}
+
+string EWasmToText::operator()(wasm::GlobalAssignment const& _assignment)
+{
+	return "(set_global $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::If const& _if)

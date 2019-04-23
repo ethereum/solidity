@@ -31,15 +31,20 @@ struct AsmAnalysisInfo;
 class EWasmToText: public boost::static_visitor<std::string>
 {
 public:
-	std::string run(std::vector<wasm::FunctionDefinition> const& _functions);
+	std::string run(
+		std::vector<wasm::GlobalVariableDeclaration> const& _globals,
+		std::vector<wasm::FunctionDefinition> const& _functions
+	);
 
 public:
 	std::string operator()(wasm::Literal const& _literal);
-	std::string operator()(wasm::Identifier const& _identifier);
+	std::string operator()(wasm::LocalVariable const& _identifier);
+	std::string operator()(wasm::GlobalVariable const& _identifier);
 	std::string operator()(wasm::Label const& _label);
 	std::string operator()(wasm::BuiltinCall const& _builinCall);
 	std::string operator()(wasm::FunctionCall const& _functionCall);
 	std::string operator()(wasm::LocalAssignment const& _assignment);
+	std::string operator()(wasm::GlobalAssignment const& _assignment);
 	std::string operator()(wasm::If const& _if);
 	std::string operator()(wasm::Loop const& _loop);
 	std::string operator()(wasm::Break const& _break);

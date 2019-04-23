@@ -30,24 +30,32 @@ namespace wasm
 {
 
 struct Literal;
-struct Identifier;
+struct LocalVariable;
+struct GlobalVariable;
 struct Label;
 struct FunctionCall;
 struct BuiltinCall;
 struct LocalAssignment;
+struct GlobalAssignment;
 struct Block;
 struct If;
 struct Loop;
 struct Break;
 struct Continue;
-using Expression = boost::variant<Literal, Identifier, Label, FunctionCall, BuiltinCall, LocalAssignment, Block, If, Loop, Break, Continue>;
+using Expression = boost::variant<
+	Literal, LocalVariable, GlobalVariable, Label,
+	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
+	Block, If, Loop, Break, Continue
+>;
 
 struct Literal { uint64_t value; };
-struct Identifier { std::string name; };
+struct LocalVariable { std::string name; };
+struct GlobalVariable { std::string name; };
 struct Label { std::string name; };
 struct FunctionCall { std::string functionName; std::vector<Expression> arguments; };
 struct BuiltinCall { std::string functionName; std::vector<Expression> arguments; };
 struct LocalAssignment { std::string variableName; std::unique_ptr<Expression> value; };
+struct GlobalAssignment { std::string variableName; std::unique_ptr<Expression> value; };
 struct Block { std::string labelName; std::vector<Expression> statements; };
 struct If { std::unique_ptr<Expression> condition; std::vector<Expression> statements; };
 struct Loop { std::string labelName; std::vector<Expression> statements; };
@@ -55,6 +63,8 @@ struct Break { Label label; };
 struct Continue { Label label; };
 
 struct VariableDeclaration { std::string variableName; };
+struct GlobalVariableDeclaration { std::string variableName; };
+
 struct FunctionDefinition
 {
 	std::string name;

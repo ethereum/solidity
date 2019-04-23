@@ -46,7 +46,7 @@ string EWasmObjectCompiler::run(Object& _object)
 
 	yulAssert(_object.analysisInfo, "No analysis info.");
 	yulAssert(_object.code, "No code.");
-	ret += EWasmCodeTransform{*_object.analysisInfo, m_dialect}.run(*_object.code);
+	ret += EWasmCodeTransform::run(m_dialect, *_object.code);
 
 	return ret;
 }
