@@ -47,6 +47,7 @@ public:
 	YulString newName(YulString _nameHint);
 
 private:
+	bool illegalName(YulString _name);
 
 	Dialect const& m_dialect;
 	std::set<YulString> m_usedNames;

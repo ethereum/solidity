@@ -18,6 +18,8 @@
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
+#include <libyul/AsmParser.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <algorithm>
 #include <cctype>
 #include <climits>
@@ -93,7 +95,7 @@ void VarNameCleaner::operator()(Identifier& _identifier)
 YulString VarNameCleaner::findCleanName(YulString const& _name) const
 {
 	auto newName = stripSuffix(_name);
-	if (newName != YulString{} && !isUsedName(newName))
+	if (!isUsedName(newName))
 		return newName;
 
 	// create new name with suffix (by finding a free identifier)
@@ -108,7 +110,11 @@ YulString VarNameCleaner::findCleanName(YulString const& _name) const
 
 bool VarNameCleaner::isUsedName(YulString const& _name) const
 {
-	return m_dialect.builtin(_name) || m_usedNames.count(_name);
+	if (_name.empty() || m_dialect.builtin(_name) || m_usedNames.count(_name))
+		return true;
+	if (dynamic_cast<EVMDialect const*>(&m_dialect))
+		return Parser::instructions().count(_name.str());
+	return false;
 }
 
 YulString VarNameCleaner::stripSuffix(YulString const& _name) const

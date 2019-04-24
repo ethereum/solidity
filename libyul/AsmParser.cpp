@@ -53,6 +53,27 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	return nullptr;
 }
 
+std::map<string, dev::eth::Instruction> const& Parser::instructions()
+{
+	// Allowed instructions, lowercase names.
+	static map<string, dev::eth::Instruction> s_instructions;
+	if (s_instructions.empty())
+	{
+		for (auto const& instruction: dev::eth::c_instructions)
+		{
+			if (
+				instruction.second == dev::eth::Instruction::JUMPDEST ||
+				dev::eth::isPushInstruction(instruction.second)
+			)
+				continue;
+			string name = instruction.first;
+			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
+			s_instructions[name] = instruction.second;
+		}
+	}
+	return s_instructions;
+}
+
 Block Parser::parseBlock()
 {
 	RecursionGuard recursionGuard(*this);
@@ -338,27 +359,6 @@ Expression Parser::parseExpression()
 		solAssert(operation.type() == typeid(Literal), "");
 		return boost::get<Literal>(operation);
 	}
-}
-
-std::map<string, dev::eth::Instruction> const& Parser::instructions()
-{
-	// Allowed instructions, lowercase names.
-	static map<string, dev::eth::Instruction> s_instructions;
-	if (s_instructions.empty())
-	{
-		for (auto const& instruction: dev::eth::c_instructions)
-		{
-			if (
-				instruction.second == dev::eth::Instruction::JUMPDEST ||
-				dev::eth::isPushInstruction(instruction.second)
-			)
-				continue;
-			string name = instruction.first;
-			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-			s_instructions[name] = instruction.second;
-		}
-	}
-	return s_instructions;
 }
 
 std::map<dev::eth::Instruction, string> const& Parser::instructionNames()
