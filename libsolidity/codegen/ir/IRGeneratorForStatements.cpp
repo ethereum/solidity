@@ -190,24 +190,39 @@ bool IRGeneratorForStatements::visit(Return const& _return)
 
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 {
-	solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
-	solUnimplementedAssert(*_binOp.leftExpression().annotation().type == *_binOp.rightExpression().annotation().type, "");
-	if (IntegerType const* type = dynamic_cast<IntegerType const*>(_binOp.annotation().commonType))
-	{
-		solUnimplementedAssert(!type->isSigned(), "");
+	solAssert(!!_binOp.annotation().commonType, "");
+	TypePointer commonType = _binOp.annotation().commonType;
+
+	if (_binOp.getOperator() == Token::And || _binOp.getOperator() == Token::Or)
+		// special case: short-circuiting
+		solUnimplementedAssert(false, "");
+	else if (commonType->category() == Type::Category::RationalNumber)
 		m_code <<
 			"let " <<
 			m_context.variable(_binOp) <<
 			" := " <<
-			m_utils.overflowCheckedUIntAddFunction(type->numBits()) <<
-			"(" <<
-			m_context.variable(_binOp.leftExpression()) <<
-			", " <<
-			m_context.variable(_binOp.rightExpression()) <<
-			")\n";
-	}
+			toCompactHexWithPrefix(commonType->literalValue(nullptr)) <<
+			"\n";
 	else
-		solUnimplementedAssert(false, "");
+	{
+		solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
+		if (IntegerType const* type = dynamic_cast<IntegerType const*>(commonType))
+		{
+			solUnimplementedAssert(!type->isSigned(), "");
+			m_code <<
+				"let " <<
+				m_context.variable(_binOp) <<
+				" := " <<
+				m_utils.overflowCheckedUIntAddFunction(type->numBits()) <<
+				"(" <<
+				expressionAsType(_binOp.leftExpression(), *commonType) <<
+				", " <<
+				expressionAsType(_binOp.rightExpression(), *commonType) <<
+				")\n";
+		}
+		else
+			solUnimplementedAssert(false, "");
+	}
 }
 
 bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
