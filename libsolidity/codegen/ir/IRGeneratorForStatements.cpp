@@ -126,9 +126,29 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 	return false;
 }
 
-bool IRGeneratorForStatements::visit(Return const&)
+bool IRGeneratorForStatements::visit(Return const& _return)
 {
-	solUnimplemented("Return not yet implemented in yul code generation");
+	if (Expression const* value = _return.expression())
+	{
+		solAssert(_return.annotation().functionReturnParameters, "Invalid return parameters pointer.");
+		vector<ASTPointer<VariableDeclaration>> const& returnParameters =
+			_return.annotation().functionReturnParameters->parameters();
+		TypePointers types;
+		for (auto const& retVariable: returnParameters)
+			types.push_back(retVariable->annotation().type);
+
+		value->accept(*this);
+
+		// TODO support tuples
+		solUnimplementedAssert(types.size() == 1, "Multi-returns not implemented.");
+		m_code <<
+			m_context.variableName(*returnParameters.front()) <<
+			" := " <<
+			expressionAsType(*value, *types.front()) <<
+			"\n";
+	}
+	m_code << "return_flag := 0\n" << "break\n";
+	return false;
 }
 
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
