@@ -46,6 +46,9 @@ public:
 	/// @returns an empty shared pointer on error.
 	std::shared_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
 
+	/// @returns a map of all EVM instructions available to assembly.
+	static std::map<std::string, dev::eth::Instruction> const& instructions();
+
 protected:
 	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier>;
 
@@ -71,7 +74,6 @@ protected:
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
-	static std::map<std::string, dev::eth::Instruction> const& instructions();
 	static std::map<dev::eth::Instruction, std::string> const& instructionNames();
 	/// Parses an elementary operation, i.e. a literal, identifier or instruction.
 	/// This will parse instructions even in strict mode as part of the full parser
