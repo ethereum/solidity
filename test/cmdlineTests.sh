@@ -36,16 +36,7 @@ SOLC="$REPO_ROOT/build/solc/solc"
 FULLARGS="--optimize --ignore-missing --combined-json abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
 
 ## FUNCTIONS
-
-if [ "$CIRCLECI" ]
-then
-    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
-    function printError() { echo "$(tput setaf 1)$1$(tput setaf 7)"; }
-else
-    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
-    function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
-fi
-
+source "${REPO_ROOT}/scripts/functions.sh"
 
 function compileFull()
 {
@@ -198,7 +189,6 @@ function test_solc_behaviour()
         fi
     fi
 }
-
 
 function test_solc_assembly_output()
 {
