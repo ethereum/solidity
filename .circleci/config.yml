@@ -28,6 +28,11 @@ defaults:
   - run_tests: &run_tests
       name: Tests
       command: scripts/tests.sh --junit_report test_results
+  - run_tests_valgrind:
+      <<: *run_tests
+      name: Tests with Valgrind
+      environment:
+        ENABLE_VALGRIND: yes
   - run_regressions: &run_regressions
       name: Regression tests
       command: scripts/regressions.py -o test_results
@@ -282,7 +287,7 @@ jobs:
           name: Test buglist
           command: ./test/buglistTests.js
 
-  test_x86_linux:
+  test_x86_linux: &test_x86_linux
     docker:
       - image: buildpack-deps:bionic
     environment:
@@ -313,6 +318,11 @@ jobs:
       - store_artifacts:
           path: test_results/
           destination: test_results/
+
+  test_x86_linux_valgrind:
+    <<: *test_x86_linux
+    environment:
+      ENABLE_VALGRIND: yes
 
   test_x86_clang7_asan:
     docker:
@@ -484,6 +494,10 @@ workflows:
       - build_x86_clang7_asan: *build_on_tags
       - build_x86_mac: *build_on_tags
       - test_x86_linux:
+          <<: *build_on_tags
+          requires:
+            - build_x86_linux
+      - test_x86_linux_valgrind:
           <<: *build_on_tags
           requires:
             - build_x86_linux
