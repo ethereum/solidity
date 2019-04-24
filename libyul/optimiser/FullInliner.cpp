@@ -179,8 +179,6 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 
 	m_driver.tentativelyUpdateCodeSize(function->name, m_currentFunction);
 
-	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
-
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
@@ -190,7 +188,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		if (_value)
 			varDecl.value = make_unique<Expression>(std::move(*_value));
 		else
-			varDecl.value = make_unique<Expression>(zero);
+			varDecl.value = make_unique<Expression>(Literal{{}, LiteralKind::Number, YulString{"0"}, {}});
 		newStatements.emplace_back(std::move(varDecl));
 	};
 

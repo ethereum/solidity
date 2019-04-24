@@ -53,6 +53,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	if (yul_source.size() > 1200)
 		return;
 
+	YulStringRepository::reset();
+
 	// AssemblyStack entry point
 	AssemblyStack stack(
 		langutil::EVMVersion(),

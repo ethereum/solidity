@@ -142,7 +142,6 @@ void DataFlowAnalyzer::operator()(Block& _block)
 
 void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expression* _value)
 {
-	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	clearValues(_variables);
 
 	MovableChecker movableChecker{m_dialect};
@@ -150,7 +149,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		movableChecker.visit(*_value);
 	else
 		for (auto const& var: _variables)
-			m_value[var] = &zero;
+			m_value[var] = &m_zero;
 
 	if (_value && _variables.size() == 1)
 	{
