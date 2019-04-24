@@ -1,5 +1,8 @@
 ### 0.4.26 (unreleased)
 
+Important Bugfixes:
+ * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
+
 Bugfixes:
  * General: Split rule list such that JavaScript environments with small stacks can use the compiler.
 
