@@ -117,13 +117,13 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 {
 	ForLoopInfo outerForLoopInfo;
 	swap(outerForLoopInfo, m_forLoopInfo);
+	++m_forLoopNestingDepth;
 
 	// If the pre block was not empty,
 	// we would have to deal with more complicated scoping rules.
 	assertThrow(_forLoop.pre.statements.empty(), OptimizerException, "");
 
-	// We just run the loop twice to account for the
-	// back edge.
+	// We just run the loop twice to account for the back edge.
 	// There need not be more runs because we only have three different states.
 
 	visit(*_forLoop.condition);
@@ -137,24 +137,46 @@ void RedundantAssignEliminator::operator()(ForLoop const& _forLoop)
 
 	visit(*_forLoop.condition);
 
-	TrackedAssignments oneRun{m_assignments};
+	if (m_forLoopNestingDepth < 6)
+	{
+		// Do the second run only for small nesting depths to avoid horrible runtime.
+		TrackedAssignments oneRun{m_assignments};
 
-	(*this)(_forLoop.body);
+		(*this)(_forLoop.body);
 
-	merge(m_assignments, move(m_forLoopInfo.pendingContinueStmts));
-	m_forLoopInfo.pendingContinueStmts.clear();
-	(*this)(_forLoop.post);
+		merge(m_assignments, move(m_forLoopInfo.pendingContinueStmts));
+		m_forLoopInfo.pendingContinueStmts.clear();
+		(*this)(_forLoop.post);
 
-	visit(*_forLoop.condition);
+		visit(*_forLoop.condition);
+		// Order of merging does not matter because "max" is commutative and associative.
+		merge(m_assignments, move(oneRun));
+	}
+	else
+	{
+		// Shortcut to avoid horrible runtime:
+		// Change all assignments that were newly introduced in the for loop to "used".
+		// We do not have to do that with the "break" or "continue" paths, because
+		// they will be joined later anyway.
+		// TODO parallel traversal might be more efficient here.
+		for (auto& var: m_assignments)
+			for (auto& assignment: var.second)
+			{
+				auto zeroIt = zeroRuns.find(var.first);
+				if (zeroIt != zeroRuns.end() && zeroIt->second.count(assignment.first))
+					continue;
+				assignment.second = State::Value::Used;
+			}
+	}
 
-	// Order does not matter because "max" is commutative and associative.
-	merge(m_assignments, move(oneRun));
+	// Order of merging does not matter because "max" is commutative and associative.
 	merge(m_assignments, move(zeroRuns));
 	merge(m_assignments, move(m_forLoopInfo.pendingBreakStmts));
 	m_forLoopInfo.pendingBreakStmts.clear();
 
 	// Restore potential outer for-loop states.
 	swap(m_forLoopInfo, outerForLoopInfo);
+	--m_forLoopNestingDepth;
 }
 
 void RedundantAssignEliminator::operator()(Break const&)

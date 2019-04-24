@@ -82,6 +82,11 @@ struct Dialect;
  * one run and two runs and then combine them at the end.
  * Running at most twice is enough because there are only three different states.
  *
+ * Since this algorithm has exponential runtime in the nesting depth of for loops,
+ * a shortcut is taken at a certain nesting level: We only use the zero- and
+ * once-run of the for loop and change any assignment that was newly introduced
+ * in the for loop from to "used".
+ *
  * For switch statements that have a "default"-case, there is no control-flow
  * part that skips the switch.
  *
@@ -168,6 +173,7 @@ private:
 		std::vector<TrackedAssignments> pendingContinueStmts;
 	};
 	ForLoopInfo m_forLoopInfo;
+	size_t m_forLoopNestingDepth = 0;
 };
 
 class AssignmentRemover: public ASTModifier
