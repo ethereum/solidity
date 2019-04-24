@@ -22,6 +22,7 @@
 
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmData.h>
@@ -123,6 +124,42 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 		"\n";
 	m_code << "let " << m_context.variable(_assignment) << " := " << varName << "\n";
 
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(ForStatement const& _for)
+{
+	m_code << "for {\n";
+	if (_for.initializationExpression())
+		_for.initializationExpression()->accept(*this);
+	m_code << "} return_flag {\n";
+	if (_for.loopExpression())
+		_for.loopExpression()->accept(*this);
+	m_code << "}\n";
+	if (_for.condition())
+	{
+		_for.condition()->accept(*this);
+		m_code <<
+			"if iszero(" <<
+			expressionAsType(*_for.condition(), *TypeProvider::boolean()) <<
+			") { break }\n";
+	}
+	_for.body().accept(*this);
+	m_code << "}\n";
+	// Bubble up the return condition.
+	m_code << "if iszero(return_flag) { break }\n";
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(Continue const&)
+{
+	m_code << "continue\n";
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(Break const&)
+{
+	m_code << "break\n";
 	return false;
 }
 
