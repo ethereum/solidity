@@ -30,6 +30,7 @@ Bugfixes:
  * Type System: Use correct type name for contracts in event parameters when used in
    libraries. This affected code generation.
  * Yul: Properly register functions and disallow shadowing between function variables and variables in the outside scope.
+ * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
 
 Build System:
  * Soltest: Add commandline option `--test` / `-t` to isoltest which takes a string that allows filtering unit tests.

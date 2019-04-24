@@ -1143,6 +1143,14 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 			m_context << m_context.lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
 				_context.appendInvalid();
 			});
+			if (CompilerContext* runCon = m_context.runtimeContext())
+			{
+				leftShiftNumberOnStack(32);
+				m_context << runCon->lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
+					_context.appendInvalid();
+				}).toSubAssemblyTag(m_context.runtimeSub());
+				m_context << Instruction::OR;
+			}
 			return;
 		}
 	}

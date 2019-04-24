@@ -1,5 +1,13 @@
 [
     {
+        "name": "UninitializedFunctionPointerInConstructor",
+        "summary": "Calling uninitialized internal function pointers created in the constructor does not always revert and can cause unexpected behaviour.",
+        "description": "Uninitialized internal function pointers point to a special piece of code that causes a revert when called. Jump target positions are different during construction and after deployment, but the code for setting this special jump target only considered the situation after deployment.",
+        "introduced": "0.4.5",
+        "fixed": "0.5.8",
+        "severity": "very low"
+    },
+    {
         "name": "IncorrectEventSignatureInLibraries",
         "summary": "Contract types used in events in libraries cause an incorrect event signature hash",
         "description": "Instead of using the type `address` in the hashed signature, the actual contract name was used, leading to a wrong hash in the logs.",
