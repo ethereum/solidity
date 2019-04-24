@@ -485,7 +485,9 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 	auto start = std::chrono::steady_clock::now();
 	compileBothVersions(sourceCode);
 	double duration = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-	BOOST_CHECK_MESSAGE(duration < 20, "Compilation of constants took longer than 20 seconds.");
+	std::cout << "\n constant_optimization_early_exit: duration=" << duration << std::endl;
+	if (!getenv("ENABLE_VALGRIND"))
+		BOOST_CHECK_MESSAGE(duration < 20, "Compilation of constants took longer than 20 seconds.");
 	compareVersions("hexEncodeTest(address)", u256(0x123456789));
 }
 
