@@ -38,6 +38,10 @@ using namespace yul;
 shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
 	m_recursionDepth = 0;
+
+	_scanner->supportPeriodInIdentifier(true);
+	ScopeGuard resetScanner([&]{ _scanner->supportPeriodInIdentifier(false); });
+
 	try
 	{
 		m_scanner = _scanner;
@@ -50,6 +54,7 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	{
 		solAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
 	}
+
 	return nullptr;
 }
 
