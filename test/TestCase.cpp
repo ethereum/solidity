@@ -116,19 +116,35 @@ bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVer
 	if (versionString.empty())
 		return true;
 
-	char comparator = versionString.front();
-	versionString = versionString.substr(1);
+	string comparator;
+	size_t versionBegin = 0;
+	for (auto character: versionString)
+		if (!isalpha(character))
+		{
+			comparator += character;
+			versionBegin++;
+		}
+		else
+			break;
+
+	versionString = versionString.substr(versionBegin);
 	boost::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(versionString);
 	if (!version)
 		throw runtime_error("Invalid EVM version: \"" + versionString + "\"");
 
-	switch (comparator)
-	{
-		case '>': return version < _evmVersion;
-		case '<': return _evmVersion < version;
-		case '=': return _evmVersion == version;
-		case '!': return !(_evmVersion == version);
-	}
-	throw runtime_error(string{"Invalid EVM comparator: \""} + comparator + "\"");
+	if (comparator == ">")
+		return _evmVersion > version;
+	else if (comparator == ">=")
+		return _evmVersion >= version;
+	else if (comparator == "<")
+		return _evmVersion < version;
+	else if (comparator == "<=")
+		return _evmVersion <= version;
+	else if (comparator == "=")
+		return _evmVersion == version;
+	else if (comparator == "!")
+		return !(_evmVersion == version);
+	else
+		throw runtime_error("Invalid EVM comparator: \"" + comparator + "\"");
 	return false; // not reached
 }

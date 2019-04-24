@@ -5,7 +5,7 @@
     let d := and(shr(247, calldataload(0)), 0xff)
 }
 // ====
-// EVMVersion: >byzantium
+// EVMVersion: >=constantinople
 // step: expressionSimplifier
 // ----
 // {
