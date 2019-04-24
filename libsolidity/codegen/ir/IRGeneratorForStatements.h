@@ -60,6 +60,7 @@ private:
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
 	std::string expressionAsType(Expression const& _expression, Type const& _to);
+	std::ostream& defineExpression(Expression const& _expression);
 
 	std::ostringstream m_code;
 	IRGenerationContext& m_context;

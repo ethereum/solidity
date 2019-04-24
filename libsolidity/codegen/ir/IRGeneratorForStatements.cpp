@@ -122,7 +122,7 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 		" := " <<
 		expressionAsType(_assignment.rightHandSide(), *lvalue.annotation().type) <<
 		"\n";
-	m_code << "let " << m_context.variable(_assignment) << " := " << varName << "\n";
+	defineExpression(_assignment) << varName << "\n";
 
 	return false;
 }
@@ -197,10 +197,7 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 		// special case: short-circuiting
 		solUnimplementedAssert(false, "");
 	else if (commonType->category() == Type::Category::RationalNumber)
-		m_code <<
-			"let " <<
-			m_context.variable(_binOp) <<
-			" := " <<
+		defineExpression(_binOp) <<
 			toCompactHexWithPrefix(commonType->literalValue(nullptr)) <<
 			"\n";
 	else
@@ -209,10 +206,7 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 		if (IntegerType const* type = dynamic_cast<IntegerType const*>(commonType))
 		{
 			solUnimplementedAssert(!type->isSigned(), "");
-			m_code <<
-				"let " <<
-				m_context.variable(_binOp) <<
-				" := " <<
+			defineExpression(_binOp) <<
 				m_utils.overflowCheckedUIntAddFunction(type->numBits()) <<
 				"(" <<
 				expressionAsType(_binOp.leftExpression(), *commonType) <<
@@ -241,10 +235,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 		solAssert(_functionCall.arguments().size() == 1, "Expected one argument for type conversion");
 		_functionCall.arguments().front()->accept(*this);
 
-		m_code <<
-			"let " <<
-			m_context.variable(_functionCall) <<
-			" := " <<
+		defineExpression(_functionCall) <<
 			expressionAsType(*_functionCall.arguments().front(), *_functionCall.annotation().type) <<
 			"\n";
 
@@ -297,10 +288,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 			if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
 			{
 				// @TODO The function can very well return multiple vars.
-				m_code <<
-					"let " <<
-					m_context.variable(_functionCall) <<
-					" := " <<
+				defineExpression(_functionCall) <<
 					m_context.virtualFunctionName(*functionDef) <<
 					"(" <<
 					joinHumanReadable(args) <<
@@ -313,10 +301,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 
 		// @TODO The function can very well return multiple vars.
 		args = vector<string>{m_context.variable(_functionCall.expression())} + args;
-		m_code <<
-			"let " <<
-			m_context.variable(_functionCall) <<
-			" := " <<
+		defineExpression(_functionCall) <<
 			m_context.internalDispatch(functionType->parameterTypes().size(), functionType->returnParameterTypes().size()) <<
 			"(" <<
 			joinHumanReadable(args) <<
@@ -351,7 +336,7 @@ bool IRGeneratorForStatements::visit(Identifier const& _identifier)
 		value = m_context.variableName(*varDecl);
 	else
 		solUnimplemented("");
-	m_code << "let " << m_context.variable(_identifier) << " := " << value << "\n";
+	defineExpression(_identifier) << value << "\n";
 	return false;
 }
 
@@ -364,7 +349,7 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 	case Type::Category::RationalNumber:
 	case Type::Category::Bool:
 	case Type::Category::Address:
-		m_code << "let " << m_context.variable(_literal) << " := " << toCompactHexWithPrefix(type->literalValue(&_literal)) << "\n";
+		defineExpression(_literal) << toCompactHexWithPrefix(type->literalValue(&_literal)) << "\n";
 		break;
 	case Type::Category::StringLiteral:
 		solUnimplemented("");
@@ -384,4 +369,9 @@ string IRGeneratorForStatements::expressionAsType(Expression const& _expression,
 		return varName;
 	else
 		return m_utils.conversionFunction(from, _to) + "(" + std::move(varName) + ")";
+}
+
+ostream& IRGeneratorForStatements::defineExpression(Expression const& _expression)
+{
+	return m_code << "let " << m_context.variable(_expression) << " := ";
 }
