@@ -380,6 +380,7 @@
     },
     "0.4.10": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -393,6 +394,7 @@
     },
     "0.4.11": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -405,6 +407,7 @@
     },
     "0.4.12": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -416,6 +419,7 @@
     },
     "0.4.13": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -427,6 +431,7 @@
     },
     "0.4.14": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -437,6 +442,7 @@
     },
     "0.4.15": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -446,6 +452,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -455,6 +462,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "EventStructWrongData",
@@ -465,6 +473,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "EventStructWrongData",
@@ -474,6 +483,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
@@ -500,6 +510,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
@@ -510,6 +521,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
@@ -520,6 +532,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
@@ -530,6 +543,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
@@ -539,6 +553,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "ExpExponentCleanup",
@@ -548,6 +563,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
         ],
@@ -584,6 +600,7 @@
     },
     "0.4.5": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -599,6 +616,7 @@
     },
     "0.4.6": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -613,6 +631,7 @@
     },
     "0.4.7": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -626,6 +645,7 @@
     },
     "0.4.8": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -639,6 +659,7 @@
     },
     "0.4.9": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -652,6 +673,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
         ],
@@ -659,6 +681,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
         ],
@@ -666,6 +689,7 @@
     },
     "0.5.2": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
         ],
@@ -673,6 +697,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
         ],
@@ -680,6 +705,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
         ],
@@ -687,6 +713,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "IncorrectByteInstructionOptimization",
@@ -696,6 +723,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
             "IncorrectByteInstructionOptimization"
@@ -704,6 +732,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries"
         ],
         "released": "2019-03-26"
