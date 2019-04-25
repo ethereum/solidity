@@ -13,6 +13,7 @@ DESCRIPTION = """Regressor is a tool to run regression tests in a CI env."""
 
 class regressor():
     _re_sanitizer_log = re.compile(r"""ERROR: (?P<sanitizer>\w+).*""")
+    _error_blacklist = ["AddressSanitizer", "libFuzzer"]
 
     def __init__(self, description, args):
         self._description = description
@@ -50,7 +51,8 @@ class regressor():
     def process_log(self, logfile):
         list = re.findall(self._re_sanitizer_log, open(logfile, 'r').read())
         numSuppressedLeaks = list.count("LeakSanitizer")
-        return "AddressSanitizer" not in list, numSuppressedLeaks
+        rv = any(word in list for word in self._error_blacklist)
+        return not rv, numSuppressedLeaks
 
     def run(self):
         for fuzzer in glob.iglob("{}/*_ossfuzz".format(self._fuzzer_path)):
@@ -58,7 +60,7 @@ class regressor():
             logfile = os.path.join(self._logpath, "{}.log".format(basename))
             corpus_dir = "/tmp/solidity-fuzzing-corpus/{0}_seed_corpus" \
                 .format(basename)
-            cmd = "find {0} -type f | xargs {1}".format(corpus_dir, fuzzer)
+            cmd = "find {0} -type f | xargs -P2 {1}".format(corpus_dir, fuzzer)
             if not self.run_cmd(cmd, logfile=logfile):
                 ret, numLeaks = self.process_log(logfile)
                 if not ret:
