@@ -51,12 +51,21 @@ set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "
 
 bool AsmAnalyzer::analyze(Block const& _block)
 {
-	if (!(ScopeFiller(m_info, m_errorReporter))(_block))
-		return false;
+	bool success = false;
+	try
+	{
+		if (!(ScopeFiller(m_info, m_errorReporter))(_block))
+			return false;
 
-	bool success = (*this)(_block);
-	if (!success)
-		solAssert(m_errorReporter.hasErrors(), "No success but no error.");
+		success = (*this)(_block);
+		if (!success)
+			solAssert(m_errorReporter.hasErrors(), "No success but no error.");
+	}
+	catch (FatalError const&)
+	{
+		// This FatalError con occur if the errorReporter has too many errors.
+		solAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
+	}
 	return success && !m_errorReporter.hasErrors();
 }
 
