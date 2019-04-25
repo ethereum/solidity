@@ -295,6 +295,28 @@ BOOST_AUTO_TEST_CASE(if_statement)
 	BOOST_CHECK(successParse("{ function f() -> x:bool {} if f() { let b:bool := f() } }"));
 }
 
+BOOST_AUTO_TEST_CASE(break_outside_of_for_loop)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	CHECK_ERROR_DIALECT(
+		"{ let x if x { break } }",
+		SyntaxError,
+		"Keyword \"break\" needs to be inside a for-loop body.",
+		dialect
+	);
+}
+
+BOOST_AUTO_TEST_CASE(continue_outside_of_for_loop)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	CHECK_ERROR_DIALECT(
+		"{ let x if x { continue } }",
+		SyntaxError,
+		"Keyword \"continue\" needs to be inside a for-loop body.",
+		dialect
+	);
+}
+
 BOOST_AUTO_TEST_CASE(for_statement)
 {
 	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
@@ -313,8 +335,9 @@ BOOST_AUTO_TEST_CASE(for_statement_break_init)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0 break} iszero(eq(i, 10)) {i := add(i, 1)} {} }",
 		SyntaxError,
-		"Keyword break outside for-loop body is not allowed.",
-		dialect);
+		"Keyword \"break\" in for-loop init block is not allowed.",
+		dialect
+	);
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_break_post)
@@ -323,8 +346,9 @@ BOOST_AUTO_TEST_CASE(for_statement_break_post)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1) break} {} }",
 		SyntaxError,
-		"Keyword break outside for-loop body is not allowed.",
-		dialect);
+		"Keyword \"break\" in for-loop post block is not allowed.",
+		dialect
+	);
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_nested_break)
@@ -333,8 +357,9 @@ BOOST_AUTO_TEST_CASE(for_statement_nested_break)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {} { function f() { break } } }",
 		SyntaxError,
-		"Keyword break outside for-loop body is not allowed.",
-		dialect);
+		"Keyword \"break\" needs to be inside a for-loop body.",
+		dialect
+	);
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_continue)
@@ -349,8 +374,9 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_fail_init)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0 continue} iszero(eq(i, 10)) {i := add(i, 1)} {} }",
 		SyntaxError,
-		"Keyword continue outside for-loop body is not allowed.",
-		dialect);
+		"Keyword \"continue\" in for-loop init block is not allowed.",
+		dialect
+	);
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_continue_fail_post)
@@ -359,8 +385,89 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_fail_post)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1) continue} {} }",
 		SyntaxError,
-		"Keyword continue outside for-loop body is not allowed.",
-		dialect);
+		"Keyword \"continue\" in for-loop post block is not allowed.",
+		dialect
+	);
+}
+
+BOOST_AUTO_TEST_CASE(for_statement_nested_continue)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	CHECK_ERROR_DIALECT(
+		"{ for {let i := 0} iszero(eq(i, 10)) {} { function f() { continue } } }",
+		SyntaxError,
+		"Keyword \"continue\" needs to be inside a for-loop body.",
+		dialect
+	);
+}
+
+BOOST_AUTO_TEST_CASE(for_statement_continue_nested_init_in_body)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	CHECK_ERROR_DIALECT(
+		"{ for {} 1 {} {let x for { continue } x {} {}} }",
+		SyntaxError,
+		"Keyword \"continue\" in for-loop init block is not allowed.",
+		dialect
+	);
+}
+
+BOOST_AUTO_TEST_CASE(for_statement_continue_nested_body_in_init)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	BOOST_CHECK(successParse("{ for {let x for {} x {} { continue }} 1 {} {} }", dialect));
+}
+
+BOOST_AUTO_TEST_CASE(for_statement_break_nested_body_in_init)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	BOOST_CHECK(successParse("{ for {let x for {} x {} { break }} 1 {} {} }", dialect));
+}
+
+BOOST_AUTO_TEST_CASE(for_statement_continue_nested_body_in_post)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	BOOST_CHECK(successParse("{ for {} 1 {let x for {} x {} { continue }} {} }", dialect));
+}
+
+BOOST_AUTO_TEST_CASE(for_statement_break_nested_body_in_post)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	BOOST_CHECK(successParse("{ for {} 1 {let x for {} x {} { break }} {} }", dialect));
+}
+
+BOOST_AUTO_TEST_CASE(function_defined_in_init_block)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	BOOST_CHECK(successParse("{ for { } 1 { function f() {} } {} }", dialect));
+	BOOST_CHECK(successParse("{ for { } 1 {} { function f() {} } }", dialect));
+	CHECK_ERROR_DIALECT(
+		"{ for { function f() {} } 1 {} {} }",
+		SyntaxError,
+		"Functions cannot be defined inside a for-loop init block.",
+		dialect
+	);
+}
+
+BOOST_AUTO_TEST_CASE(function_defined_in_init_nested)
+{
+	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	BOOST_CHECK(successParse(
+		"{ for {"
+			"for { } 1 { function f() {} } {}"
+		"} 1 {} {} }", dialect));
+	CHECK_ERROR_DIALECT(
+		"{ for { for {function foo() {}} 1 {} {} } 1 {} {} }",
+		SyntaxError,
+		"Functions cannot be defined inside a for-loop init block.",
+		dialect
+	);
+	CHECK_ERROR_DIALECT(
+		"{ for {} 1 {for {function foo() {}} 1 {} {} } {} }",
+		SyntaxError,
+		"Functions cannot be defined inside a for-loop init block.",
+		dialect
+	);
 }
 
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
