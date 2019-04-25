@@ -769,7 +769,6 @@ h256 const& CompilerStack::Source::swarmHash() const
 	return swarmHashCached;
 }
 
-
 StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
 {
 	solAssert(m_stackState < ParsingSuccessful, "");
