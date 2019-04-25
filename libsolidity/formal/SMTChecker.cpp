@@ -112,6 +112,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 	if (isRootFunction())
 	{
 		m_interface->reset();
+		m_context.reset();
 		m_pathConditions.clear();
 		m_callStack.clear();
 		m_expressions.clear();
@@ -609,6 +610,12 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		popCallStack();
 		break;
 	case FunctionType::Kind::External:
+	case FunctionType::Kind::DelegateCall:
+	case FunctionType::Kind::BareCall:
+	case FunctionType::Kind::BareCallCode:
+	case FunctionType::Kind::BareDelegateCall:
+	case FunctionType::Kind::BareStaticCall:
+	case FunctionType::Kind::Creation:
 		m_externalFunctionCallHappened = true;
 		resetStateVariables();
 		resetStorageReferences();
@@ -622,6 +629,22 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::MulMod:
 		abstractFunctionCall(_funCall);
 		break;
+	case FunctionType::Kind::Send:
+	case FunctionType::Kind::Transfer:
+	{
+		auto const& memberAccess = dynamic_cast<MemberAccess const&>(_funCall.expression());
+		auto const& address = memberAccess.expression();
+		auto const& value = args.at(0);
+		solAssert(value, "");
+
+		smt::Expression thisBalance = m_context.balance();
+		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), *m_interface);
+		checkCondition(thisBalance < expr(*value), _funCall.location(), "Insufficient funds", "address(this).balance", &thisBalance);
+
+		m_context.transfer(m_context.thisAddress(), expr(address), expr(*value));
+		createExpr(_funCall);
+		break;
+	}
 	default:
 		m_errorReporter.warning(
 			_funCall.location(),
@@ -873,6 +896,17 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 			defineExpr(_memberAccess, enumType->memberValue(_memberAccess.memberName()));
 		}
 		return false;
+	}
+	else if (exprType->category() == Type::Category::Address)
+	{
+		_memberAccess.expression().accept(*this);
+		if (_memberAccess.memberName() == "balance")
+		{
+			defineExpr(_memberAccess, m_context.balance(expr(_memberAccess.expression())));
+			setSymbolicUnknownValue(*m_expressions[&_memberAccess], *m_interface);
+			m_uninterpretedTerms.insert(&_memberAccess);
+			return false;
+		}
 	}
 	else
 		m_errorReporter.warning(
