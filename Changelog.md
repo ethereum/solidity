@@ -2,6 +2,7 @@
 
 Important Bugfixes:
  * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
+ * Type System: Use correct type name for contracts in event parameters when used in libraries. This affected code generation.
 
 Bugfixes:
  * General: Split rule list such that JavaScript environments with small stacks can use the compiler.
