@@ -1,3 +1,9 @@
+### 0.4.26 (unreleased)
+
+Bugfixes:
+ * General: Split rule list such that JavaScript environments with small stacks can use the compiler.
+
+
 ### 0.4.25 (2018-09-12)
 
 Important Bugfixes:
