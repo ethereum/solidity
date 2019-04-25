@@ -149,10 +149,17 @@ void Scanner::reset(shared_ptr<CharStream> _source)
 void Scanner::reset()
 {
 	m_source->reset();
+	m_supportPeriodInIdentifier = false;
 	m_char = m_source->get();
 	skipWhitespace();
-	scanToken();
 	next();
+	next();
+}
+
+void Scanner::supportPeriodInIdentifier(bool _value)
+{
+	m_supportPeriodInIdentifier = _value;
+	rescan();
 }
 
 bool Scanner::scanHexByte(char& o_scannedByte)
@@ -206,6 +213,18 @@ void Scanner::addUnicodeAsUTF8(unsigned codepoint)
 		addLiteralChar(0x80 | ((codepoint >> 6) & 0x3f));
 		addLiteralChar(0x80 | (codepoint & 0x3f));
 	}
+}
+
+void Scanner::rescan()
+{
+	size_t rollbackTo = 0;
+	if (m_skippedComment.literal.empty())
+		rollbackTo = m_currentToken.location.start;
+	else
+		rollbackTo = m_skippedComment.location.start;
+	m_char = m_source->rollback(size_t(m_source->position()) - rollbackTo);
+	next();
+	next();
 }
 
 // Ensure that tokens can be stored in a byte.
@@ -865,7 +884,7 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	while (isIdentifierPart(m_char)) //get full literal
+	while (isIdentifierPart(m_char) || (m_char == '.' && m_supportPeriodInIdentifier))
 		addLiteralCharAndAdvance();
 	literal.complete();
 	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);

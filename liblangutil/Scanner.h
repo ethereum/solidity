@@ -103,6 +103,10 @@ public:
 	/// Resets scanner to the start of input.
 	void reset();
 
+	/// Enables or disables support for period in identifier.
+	/// This re-scans the current token and comment literal and thus invalidates it.
+	void supportPeriodInIdentifier(bool _value);
+
 	/// @returns the next token and advances input
 	Token next();
 
@@ -191,6 +195,8 @@ private:
 
 	bool advance() { m_char = m_source->advanceAndGet(); return !m_source->isPastEndOfInput(); }
 	void rollback(int _amount) { m_char = m_source->rollback(_amount); }
+	/// Rolls back to the start of the current token and re-runs the scanner.
+	void rescan();
 
 	inline Token selectErrorToken(ScannerError _err) { advance(); return setError(_err); }
 	inline Token selectToken(Token _tok) { advance(); return _tok; }
@@ -232,6 +238,8 @@ private:
 	/// Return the current source position.
 	int sourcePos() const { return m_source->position(); }
 	bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
+
+	bool m_supportPeriodInIdentifier = false;
 
 	TokenDesc m_skippedComment;  // desc for current skipped comment
 	TokenDesc m_nextSkippedComment; // desc for next skipped comment

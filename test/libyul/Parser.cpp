@@ -151,6 +151,33 @@ BOOST_AUTO_TEST_CASE(assignment)
 	BOOST_CHECK(successParse("{ let x:u256 := 2:u256 let y:u256 := x }"));
 }
 
+BOOST_AUTO_TEST_CASE(period_in_identifier)
+{
+	BOOST_CHECK(successParse("{ let x.y:u256 := 2:u256 }"));
+}
+
+BOOST_AUTO_TEST_CASE(period_not_as_identifier_start)
+{
+	CHECK_ERROR("{ let .y:u256 }", ParserError, "Expected identifier but got '.'");
+}
+
+BOOST_AUTO_TEST_CASE(period_in_identifier_spaced)
+{
+	CHECK_ERROR("{ let x. y:u256 }", ParserError, "Expected ':' but got identifier");
+	CHECK_ERROR("{ let x .y:u256 }", ParserError, "Expected ':' but got '.'");
+	CHECK_ERROR("{ let x . y:u256 }", ParserError, "Expected ':' but got '.'");
+}
+
+BOOST_AUTO_TEST_CASE(period_in_identifier_start)
+{
+	BOOST_CHECK(successParse("{ x.y(2:u256) function x.y(a:u256) {} }"));
+}
+
+BOOST_AUTO_TEST_CASE(period_in_identifier_start_with_comment)
+{
+	BOOST_CHECK(successParse("/// comment\n{ x.y(2:u256) function x.y(a:u256) {} }"));
+}
+
 BOOST_AUTO_TEST_CASE(vardecl_complex)
 {
 	BOOST_CHECK(successParse("{ function add(a:u256, b:u256) -> c:u256 {} let y:u256 := 2:u256 let x:u256 := add(7:u256, add(6:u256, y)) }"));
