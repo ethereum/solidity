@@ -37,6 +37,11 @@ namespace yul
  *  - variable references
  *  - variable declarations (only the right hand side has a cost)
  *  - assignments (only the value has a cost)
+ *
+ * As another exception, each statement incurs and additional cost of one
+ * per jump/branch. This means if, break and continue statements have a cost of 2,
+ * switch statements have a cost of 1 plus the number of cases times two,
+ * and for loops cost 3.
  */
 class CodeSize: public ASTWalker
 {
