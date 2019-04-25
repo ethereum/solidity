@@ -46,6 +46,7 @@ public:
 
 	bool visit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Assignment const& _assignment) override;
+	bool visit(Return const& _return) override;
 	void endVisit(BinaryOperation const& _binOp) override;
 	bool visit(FunctionCall const& _funCall) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
@@ -53,6 +54,10 @@ public:
 	bool visit(Literal const& _literal) override;
 
 private:
+	/// @returns a Yul expression representing the current value of @a _expression,
+	/// converted to type @a _to if it does not yet have that type.
+	std::string expressionAsType(Expression const& _expression, Type const& _to);
+
 	std::ostringstream m_code;
 	IRGenerationContext& m_context;
 	YulUtilFunctions& m_utils;

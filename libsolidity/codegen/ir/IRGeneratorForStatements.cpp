@@ -90,15 +90,12 @@ bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDec
 
 		expression->accept(*this);
 
-		solUnimplementedAssert(
-			*expression->annotation().type == *_varDeclStatement.declarations().front()->type(),
-			"Type conversion not yet implemented"
-		);
+		VariableDeclaration const& varDecl = *_varDeclStatement.declarations().front();
 		m_code <<
 			"let " <<
-			m_context.variableName(*_varDeclStatement.declarations().front()) <<
+			m_context.variableName(varDecl) <<
 			" := " <<
-			m_context.variable(*expression) <<
+			expressionAsType(*expression, *varDecl.type()) <<
 			"\n";
 	}
 	else
@@ -115,16 +112,23 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 	_assignment.rightHandSide().accept(*this);
 
-//	solUnimplementedAssert(
-//		*_assignment.rightHandSide().annotation().type == *_assignment.leftHandSide().annotation().type,
-//		"Type conversion not yet implemented"
-//	);
 	// TODO proper lvalue handling
-	auto const& identifier = dynamic_cast<Identifier const&>(_assignment.leftHandSide());
-	string varName = m_context.variableName(dynamic_cast<VariableDeclaration const&>(*identifier.annotation().referencedDeclaration));
-	m_code << varName << " := " << m_context.variable(_assignment.rightHandSide()) << "\n";
+	auto const& lvalue = dynamic_cast<Identifier const&>(_assignment.leftHandSide());
+	string varName = m_context.variableName(dynamic_cast<VariableDeclaration const&>(*lvalue.annotation().referencedDeclaration));
+
+	m_code <<
+		varName <<
+		" := " <<
+		expressionAsType(_assignment.rightHandSide(), *lvalue.annotation().type) <<
+		"\n";
 	m_code << "let " << m_context.variable(_assignment) << " := " << varName << "\n";
+
 	return false;
+}
+
+bool IRGeneratorForStatements::visit(Return const&)
+{
+	solUnimplemented("Return not yet implemented in yul code generation");
 }
 
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
@@ -151,8 +155,31 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 
 bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 {
-	solUnimplementedAssert(_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
-	FunctionTypePointer functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
+	solUnimplementedAssert(
+		_functionCall.annotation().kind == FunctionCallKind::FunctionCall ||
+		_functionCall.annotation().kind == FunctionCallKind::TypeConversion,
+		"This type of function call is not yet implemented"
+	);
+
+	TypePointer const funcType = _functionCall.expression().annotation().type;
+
+	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
+	{
+		solAssert(funcType->category() == Type::Category::TypeType, "Expected category to be TypeType");
+		solAssert(_functionCall.arguments().size() == 1, "Expected one argument for type conversion");
+		_functionCall.arguments().front()->accept(*this);
+
+		m_code <<
+			"let " <<
+			m_context.variable(_functionCall) <<
+			" := " <<
+			expressionAsType(*_functionCall.arguments().front(), *_functionCall.annotation().type) <<
+			"\n";
+
+		return false;
+	}
+
+	FunctionTypePointer functionType = dynamic_cast<FunctionType const*>(funcType);
 
 	TypePointers parameterTypes = functionType->parameterTypes();
 	vector<ASTPointer<Expression const>> const& callArguments = _functionCall.arguments();
@@ -185,9 +212,11 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
 			arguments[i]->accept(*this);
-			// TODO convert
-			//utils().convertType(*arguments[i]->annotation().type, *function.parameterTypes()[i]);
-			args.emplace_back(m_context.variable(*arguments[i]));
+
+			if (functionType->takesArbitraryParameters())
+				args.emplace_back(m_context.variable(*arguments[i]));
+			else
+				args.emplace_back(expressionAsType(*arguments[i], *parameterTypes[i]));
 		}
 
 		if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
@@ -272,4 +301,15 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 		solUnimplemented("Only integer, boolean and string literals implemented for now.");
 	}
 	return false;
+}
+
+string IRGeneratorForStatements::expressionAsType(Expression const& _expression, Type const& _to)
+{
+	Type const& from = *_expression.annotation().type;
+	string varName = m_context.variable(_expression);
+
+	if (from == _to)
+		return varName;
+	else
+		return m_utils.conversionFunction(from, _to) + "(" + std::move(varName) + ")";
 }
