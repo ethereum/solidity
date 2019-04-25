@@ -4,6 +4,7 @@ Important Bugfixes:
  * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
 
 Bugfixes:
+ * ABIEncoderV2: Refuse to generate code that is known to be potentially buggy.
  * General: Split rule list such that JavaScript environments with small stacks can use the compiler.
 
 

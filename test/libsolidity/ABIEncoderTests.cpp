@@ -293,34 +293,6 @@ BOOST_AUTO_TEST_CASE(storage_array_dyn)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(storage_array_compact)
-{
-	string sourceCode = R"(
-		contract C {
-			int72[] x;
-			event E(int72[]);
-			function f() public {
-				x.push(-1);
-				x.push(2);
-				x.push(-3);
-				x.push(4);
-				x.push(-5);
-				x.push(6);
-				x.push(-7);
-				x.push(8);
-				E(x);
-			}
-		}
-	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(
-			0x20, 8, u256(-1), 2, u256(-3), 4, u256(-5), 6, u256(-7), 8
-		));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(external_function)
 {
 	string sourceCode = R"(
@@ -409,44 +381,6 @@ BOOST_AUTO_TEST_CASE(function_name_collision)
 		compileAndRun(sourceCode);
 		BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(0)) == encodeArgs(7));
 		BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(1)) == encodeArgs(1));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(structs)
-{
-	string sourceCode = R"(
-		contract C {
-			struct S { uint16 a; uint16 b; T[] sub; uint16 c; }
-			struct T { uint64[2] x; }
-			S s;
-			event e(uint16, S);
-			function f() public returns (uint, S) {
-				uint16 x = 7;
-				s.a = 8;
-				s.b = 9;
-				s.c = 10;
-				s.sub.length = 3;
-				s.sub[0].x[0] = 11;
-				s.sub[1].x[0] = 12;
-				s.sub[2].x[1] = 13;
-				e(x, s);
-				return (x, s);
-			}
-		}
-	)";
-
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C");
-		bytes encoded = encodeArgs(
-			u256(7), 0x40,
-			8, 9, 0x80, 10,
-			3,
-			11, 0,
-			12, 0,
-			0, 13
-		);
-		BOOST_CHECK(callContractFunction("f()") == encoded);
-		REQUIRE_LOG_DATA(encoded);
 	)
 }
 
