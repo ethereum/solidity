@@ -4,6 +4,6 @@ contract C {
     }
 }
 // ====
-// EVMVersion: >byzantium
+// EVMVersion: >=constantinople
 // ----
 // f(uint256): 7 -> 28
