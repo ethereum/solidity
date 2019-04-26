@@ -173,3 +173,26 @@ SymbolicEnumVariable::SymbolicEnumVariable(
 {
 	solAssert(isEnum(m_type->category()), "");
 }
+
+SymbolicTupleVariable::SymbolicTupleVariable(
+	TypePointer _type,
+	string _uniqueName,
+	smt::SolverInterface& _interface
+):
+	SymbolicVariable(move(_type), move(_uniqueName), _interface)
+{
+	solAssert(isTuple(m_type->category()), "");
+}
+
+void SymbolicTupleVariable::addComponents(vector<shared_ptr<SymbolicVariable>> _components)
+{
+	solAssert(m_components.empty(), "");
+	auto const& tupleType = dynamic_cast<TupleType const*>(m_type);
+	solAssert(_components.size() == tupleType->components().size(), "");
+	m_components = move(_components);
+}
+
+shared_ptr<SymbolicVariable> const& SymbolicTupleVariable::at(unsigned _pos)
+{
+	return m_components.at(_pos);
+}

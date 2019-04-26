@@ -187,5 +187,24 @@ public:
 	);
 };
 
+/**
+ * Specialization of SymbolicVariable for Tuple
+ */
+class SymbolicTupleVariable: public SymbolicVariable
+{
+public:
+	SymbolicTupleVariable(
+		TypePointer _type,
+		std::string _uniqueName,
+		smt::SolverInterface& _interface
+	);
+
+	std::shared_ptr<SymbolicVariable> const& at(unsigned _pos);
+	void addComponents(std::vector<std::shared_ptr<SymbolicVariable>> _components);
+
+private:
+	std::vector<std::shared_ptr<SymbolicVariable>> m_components;
+};
+
 }
 }

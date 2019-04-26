@@ -12,5 +12,4 @@ contract C
 }
 // ----
 // Warning: (131-146): Insufficient funds happens here
-// Warning: (131-146): Assertion checker does not yet implement this type.
 // Warning: (195-219): Assertion violation happens here
