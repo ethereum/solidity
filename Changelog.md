@@ -1,6 +1,7 @@
 ### 0.5.9 (unreleased)
 
 Language Features:
+ * Static Analyzer: Disallow libraries calling themselves externally.
 
 
 Compiler Features:
