@@ -51,6 +51,7 @@ bool isBool(Type::Category _category);
 bool isFunction(Type::Category _category);
 bool isMapping(Type::Category _category);
 bool isArray(Type::Category _category);
+bool isTuple(Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,

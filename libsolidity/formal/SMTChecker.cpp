@@ -383,17 +383,41 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 
 void SMTChecker::endVisit(TupleExpression const& _tuple)
 {
-	if (
-		_tuple.isInlineArray() ||
-		_tuple.components().size() != 1 ||
-		!isSupportedType(_tuple.components()[0]->annotation().type->category())
-	)
+	if (_tuple.isInlineArray())
 		m_errorReporter.warning(
 			_tuple.location(),
-			"Assertion checker does not yet implement tuples and inline arrays."
+			"Assertion checker does not yet implement inline arrays."
 		);
+	else if (_tuple.annotation().type->category() == Type::Category::Tuple)
+	{
+		createExpr(_tuple);
+		vector<shared_ptr<SymbolicVariable>> components;
+		for (auto const& component: _tuple.components())
+			if (component)
+			{
+				if (auto varDecl = identifierToVariable(*component))
+					components.push_back(m_variables[varDecl]);
+				else
+				{
+					solAssert(knownExpr(*component), "");
+					components.push_back(m_expressions[component.get()]);
+				}
+			}
+			else
+				components.push_back(nullptr);
+		solAssert(components.size() == _tuple.components().size(), "");
+		auto const& symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[&_tuple]);
+		solAssert(symbTuple, "");
+		symbTuple->setComponents(move(components));
+	}
 	else
-		defineExpr(_tuple, expr(*_tuple.components()[0]));
+	{
+		/// Parenthesized expressions are also TupleExpression regardless their type.
+		auto const& components = _tuple.components();
+		solAssert(components.size() == 1, "");
+		if (isSupportedType(components.front()->annotation().type->category()))
+			defineExpr(_tuple, expr(*components.front()));
+	}
 }
 
 void SMTChecker::addOverflowTarget(
