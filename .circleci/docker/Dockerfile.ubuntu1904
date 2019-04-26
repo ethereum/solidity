@@ -1,0 +1,124 @@
+# vim:syntax=dockerfile
+#------------------------------------------------------------------------------
+# Dockerfile for building and testing Solidity Compiler on CI
+# Target: Ubuntu 19.04 (Disco Dingo)
+# URL: https://hub.docker.com/r/ethereum/solidity-buildpack-deps
+#
+# This file is part of solidity.
+#
+# solidity is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# solidity is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with solidity.  If not, see <http://www.gnu.org/licenses/>
+#
+# (c) 2016-2019 solidity contributors.
+#------------------------------------------------------------------------------
+FROM buildpack-deps:disco
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN set -ex; \
+	apt-get update; \
+	apt-get install -qqy --no-install-recommends \
+		build-essential \
+		software-properties-common \
+		cmake ninja-build clang++-8 \
+		libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev \
+		libboost-program-options-dev \
+		libjsoncpp-dev \
+		llvm-8-dev libcvc4-dev libleveldb1d \
+		; \
+	apt-get install -qy python-pip python-sphinx; \
+	update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-8 1; \
+	pip install codecov; \
+	rm -rf /var/lib/apt/lists/*
+
+# Aleth for end-to-end tests
+ARG ALETH_VERSION="1.6.0"
+ARG ALETH_HASH="7f7004e1563299bc57882e32b32e4a195747dfb6"
+ARG ALETH_URL="https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz"
+RUN set -ex; \
+	wget -q -O /tmp/aleth.tar.gz "${ALETH_URL}"; \
+	test "$(shasum /tmp/aleth.tar.gz)" = "$ALETH_HASH  /tmp/aleth.tar.gz"; \
+	tar -xf /tmp/aleth.tar.gz -C /usr
+
+# Z3
+RUN set -ex; \
+	git clone --depth=1 --branch="Z3-4.8.5" https://github.com/Z3Prover/z3.git /usr/src/z3; \
+	mkdir /usr/src/z3/build; \
+	cd /usr/src/z3/build; \
+	cmake -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="/usr" -G "Ninja" ..; \
+	ninja; \
+	ninja install/strip; \
+	rm -rf /usr/src/z3
+
+# OSSFUZZ: LPM package (do not remove build dirs as solidity compiles/links against that dir)
+RUN set -ex; \
+	mkdir /src; \
+	cd /src; \
+	git clone https://github.com/google/libprotobuf-mutator.git; \
+	cd libprotobuf-mutator; \
+	git checkout d1fe8a7d8ae18f3d454f055eba5213c291986f21; \
+	mkdir ../LPM; \
+	cd ../LPM; \
+	cmake ../libprotobuf-mutator -GNinja -DLIB_PROTO_MUTATOR_DOWNLOAD_PROTOBUF=ON -DLIB_PROTO_MUTATOR_TESTING=OFF -DCMAKE_BUILD_TYPE=Release; \
+	ninja; \
+	cp -vpr external.protobuf/bin/* /usr/bin/; \
+	cp -vpr external.protobuf/include/* /usr/include/; \
+	cp -vpr external.protobuf/lib/* /usr/lib/; \
+	ninja install/strip
+
+# OSSFUZZ: libfuzzer
+RUN set -ex; \
+    cd /var/tmp; \
+    svn co https://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer libfuzzer; \
+    mkdir -p build-libfuzzer; \
+    cd build-libfuzzer; \
+    clang++-8 -O1 -stdlib=libstdc++ -std=c++11 -O2 -fPIC -c ../libfuzzer/*.cpp -I../libfuzzer; \
+    ar r /usr/lib/libFuzzingEngine.a *.o; \
+	rm -rf /var/lib/libfuzzer
+
+# ETHASH
+RUN set -ex; \
+	cd /usr/src; \
+	git clone --branch="v0.4.4" https://github.com/chfast/ethash.git; \
+	cd ethash; \
+	mkdir build; \
+	cd build; \
+	cmake .. -G Ninja -DBUILD_SHARED_LIBS=OFF -DETHASH_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
+	ninja; \
+	ninja install/strip; \
+	rm -rf /usr/src/ethash
+
+# INTX
+RUN set -ex; \
+	cd /usr/src; \
+	git clone --branch="v0.2.0" https://github.com/chfast/intx.git; \
+	cd intx; \
+	mkdir build; \
+	cd build; \
+	cmake .. -G Ninja -DBUILD_SHARED_LIBS=OFF -DINTX_TESTING=OFF -DINTX_BENCHMARKING=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
+	ninja; \
+	ninja install/strip; \
+	rm -rf /usr/src/intx;
+
+# EVMONE
+RUN set -ex; \
+	cd /usr/src; \
+	git clone --branch="v0.1.0" --recurse-submodules https://github.com/chfast/evmone.git; \
+	cd evmone; \
+	mkdir build; \
+	cd build; \
+	cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	ninja; \
+	ninja install/strip; \
+	rm -rf /usr/src/evmone
+
