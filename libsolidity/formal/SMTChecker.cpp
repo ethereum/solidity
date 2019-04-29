@@ -361,13 +361,25 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		);
 	else
 	{
-		auto rightHandSide = compoundOps.count(op) ?
-			compoundAssignment(_assignment) :
-			expr(_assignment.rightHandSide());
-		defineExpr(_assignment, rightHandSide);
+		vector<smt::Expression> rightArguments;
+		auto tuple = dynamic_cast<TupleExpression const*>(&_assignment.rightHandSide());
+		if (tuple && tuple->components().size() > 1)
+			for (auto const& component: tuple->components())
+			{
+				solAssert(component, "");
+				rightArguments.push_back(expr(*component));
+			}
+		else
+		{
+			auto rightHandSide = compoundOps.count(op) ?
+				compoundAssignment(_assignment) :
+				expr(_assignment.rightHandSide());
+			defineExpr(_assignment, rightHandSide);
+			rightArguments.push_back(expr(_assignment));
+		}
 		assignment(
 			_assignment.leftHandSide(),
-			expr(_assignment),
+			rightArguments,
 			_assignment.annotation().type,
 			_assignment.location()
 		);
@@ -383,7 +395,7 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 		);
 	else if (_tuple.annotation().type->category() == Type::Category::Tuple)
 	{
-		defineExpr(_tuple, expr(_tuple));
+		createExpr(_tuple);
 		vector<shared_ptr<SymbolicVariable>> components;
 		for (auto const& component: _tuple.components())
 		{
@@ -1229,7 +1241,7 @@ smt::Expression SMTChecker::division(smt::Expression _left, smt::Expression _rig
 
 void SMTChecker::assignment(
 	Expression const& _left,
-	smt::Expression const& _right,
+	vector<smt::Expression> const& _right,
 	TypePointer const& _type,
 	langutil::SourceLocation const& _location
 )
@@ -1240,9 +1252,23 @@ void SMTChecker::assignment(
 			"Assertion checker does not yet implement type " + _type->toString()
 		);
 	else if (auto varDecl = identifierToVariable(_left))
-		assignment(*varDecl, _right, _location);
+	{
+		solAssert(_right.size() == 1, "");
+		assignment(*varDecl, _right.at(0), _location);
+	}
 	else if (dynamic_cast<IndexAccess const*>(&_left))
-		arrayIndexAssignment(_left, _right);
+	{
+		solAssert(_right.size() == 1, "");
+		arrayIndexAssignment(_left, _right.at(0));
+	}
+	else if (auto tuple = dynamic_cast<TupleExpression const*>(&_left))
+	{
+		auto const& components = tuple->components();
+		solAssert(_right.size() == components.size(), "");
+		for (unsigned i = 0; i < _right.size(); ++i)
+			if (auto component = components.at(i))
+				assignment(*component, {_right.at(i)}, component->annotation().type, component->location());
+	}
 	else
 		m_errorReporter.warning(
 			_location,
