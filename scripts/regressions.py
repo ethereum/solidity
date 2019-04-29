@@ -6,9 +6,29 @@ import os
 import subprocess
 import re
 import glob
+import threading
+import time
 
 DESCRIPTION = """Regressor is a tool to run regression tests in a CI env."""
 
+class PrintDotsThread(object):
+    """Prints a dot every "interval" (default is 300) seconds"""
+
+    def __init__(self, interval=300):
+        self.interval = interval
+
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True
+        thread.start()
+
+    def run(self):
+        """ Runs until the main Python thread exits. """
+        ## Print a newline at the very beginning.
+        print("")
+        while True:
+            # Print dot
+            print(".")
+            time.sleep(self.interval)
 
 class regressor():
     _re_sanitizer_log = re.compile(r"""ERROR: (?P<sanitizer>\w+).*""")
@@ -82,5 +102,6 @@ class regressor():
 
 
 if __name__ == '__main__':
+    dotprinter = PrintDotsThread()
     tool = regressor(DESCRIPTION, sys.argv[1:])
     tool.run()
