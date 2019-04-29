@@ -38,6 +38,8 @@ add_library(yul
 	backends/evm/EVMObjectCompiler.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
+	backends/wasm/WasmDialect.cpp
+	backends/wasm/WasmDialect.h
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
