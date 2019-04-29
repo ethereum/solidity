@@ -2,7 +2,6 @@
 
 from argparse import ArgumentParser
 import sys
-import shutil
 import os
 import subprocess
 import re
@@ -49,7 +48,10 @@ class regressor():
         return True
 
     def process_log(self, logfile):
-        list = re.findall(self._re_sanitizer_log, open(logfile, 'r').read())
+        ## Log may contain non ASCII characters, so we simply stringify them
+        ## since they don't matter for regular expression matching
+        rawtext = str(open(logfile, 'rb').read())
+        list = re.findall(self._re_sanitizer_log, rawtext)
         numSuppressedLeaks = list.count("LeakSanitizer")
         rv = any(word in list for word in self._error_blacklist)
         return not rv, numSuppressedLeaks
