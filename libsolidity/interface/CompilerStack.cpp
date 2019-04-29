@@ -260,7 +260,7 @@ bool CompilerStack::analyze()
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
+		NameAndTypeResolver resolver(*m_globalContext, m_scopes, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (!resolver.registerDeclarations(*source->ast))
 				return false;
@@ -278,11 +278,8 @@ bool CompilerStack::analyze()
 			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 				{
-					m_globalContext->setCurrentContract(*contract);
-					if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
-					if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-					if (!resolver.resolveNamesAndTypes(*contract)) return false;
 
+					if (!resolver.resolveNamesAndTypes(*contract)) return false;
 					// Note that we now reference contracts by their fully qualified names, and
 					// thus contracts can only conflict if declared in the same source file.  This
 					// already causes a double-declaration error elsewhere, so we do not report

@@ -33,6 +33,7 @@ Bugfixes:
  * SMTChecker: SSA control-flow did not take into account state variables that were modified inside inlined functions that were called inside branches.
  * Type System: Use correct type name for contracts in event parameters when used in libraries. This affected code generation.
  * Type System: Allow direct call to base class functions that have overloads.
+ * Type System: Warn about shadowing builtin variables if user variables are named ``this`` or ``super``.
  * Yul: Properly register functions and disallow shadowing between function variables and variables in the outside scope.
 
 
