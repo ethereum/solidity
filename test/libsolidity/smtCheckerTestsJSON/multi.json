@@ -3,8 +3,8 @@
 	{
 		"smtlib2responses":
 		{
-			"0x47a038dd9021ecb218726ea6bf1f75c215a50b1981bae4341e89c9f2b7ac5db7": "sat\n((|EVALEXPR_0| 1))",
-			"0xf057b272f2ceb99a2f714cb132960babdeedfb84ff8ffb96106a58bc0c2060cb": "sat\n((|EVALEXPR_0| 0))",
+			"0x47a038dd9021ecb218726ea6bf1f75c215a50b1981bae4341e89c9f2b7ac5db7": "sat\n((|EVALEXPR_0| 1))\n",
+			"0xf057b272f2ceb99a2f714cb132960babdeedfb84ff8ffb96106a58bc0c2060cb": "sat\n((|EVALEXPR_0| 0))\n",
 			"0xf49b9d0eb7b6d2f2ac9e1604288e52ee1a08cda57058e26d7843ed109ca6d7c9": "unsat\n"
 		}
 	}
