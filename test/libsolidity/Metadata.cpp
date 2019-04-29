@@ -186,22 +186,29 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 		}
 	)";
 
-	auto check = [](char const* _src, bool _check)
+	auto check = [](char const* _src, bool _literal)
 	{
 		CompilerStack compilerStack;
 		compilerStack.setSources({{"", std::string(_src)}});
 		compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
 		compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
-		compilerStack.useMetadataLiteralSources(_check);
+		compilerStack.useMetadataLiteralSources(_literal);
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 		string metadata_str = compilerStack.metadata("test");
 		Json::Value metadata;
 		jsonParse(metadata_str, metadata);
-		BOOST_CHECK(metadata.isMember("settings"));
-		BOOST_CHECK(metadata["settings"].isMember("useLiteralContent"));
-		BOOST_CHECK(_check == metadata["settings"]["useLiteralContent"].asBool());
 		BOOST_CHECK(dev::test::isValidMetadata(metadata_str));
-
+		BOOST_CHECK(metadata.isMember("settings"));
+		if (_literal)
+		{
+			BOOST_CHECK(metadata["settings"].isMember("metadata"));
+			BOOST_CHECK(metadata["settings"]["metadata"].isMember("useLiteralContent"));
+			BOOST_CHECK(metadata["settings"]["metadata"]["useLiteralContent"].asBool());
+		}
+		else
+		{
+			BOOST_CHECK(!metadata["settings"].isMember("metadata"));
+		}
 	};
 
 	check(sourceCode, true);
