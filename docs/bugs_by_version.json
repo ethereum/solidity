@@ -211,7 +211,7 @@
     },
     "0.3.0": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -232,7 +232,7 @@
     },
     "0.3.1": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -252,7 +252,7 @@
     },
     "0.3.2": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -272,7 +272,7 @@
     },
     "0.3.3": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -291,7 +291,7 @@
     },
     "0.3.4": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -310,7 +310,7 @@
     },
     "0.3.5": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -329,7 +329,7 @@
     },
     "0.3.6": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -346,7 +346,7 @@
     },
     "0.4.0": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -363,7 +363,7 @@
     },
     "0.4.1": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -380,8 +380,8 @@
     },
     "0.4.10": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -394,8 +394,8 @@
     },
     "0.4.11": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -407,8 +407,8 @@
     },
     "0.4.12": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -419,8 +419,8 @@
     },
     "0.4.13": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -431,8 +431,8 @@
     },
     "0.4.14": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -442,8 +442,8 @@
     },
     "0.4.15": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector"
@@ -452,8 +452,8 @@
     },
     "0.4.16": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector"
@@ -462,8 +462,8 @@
     },
     "0.4.17": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder",
@@ -473,8 +473,8 @@
     },
     "0.4.18": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
@@ -483,9 +483,9 @@
     },
     "0.4.19": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
-            "ABIEncoderV2PackedStorage",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
+            "ABIEncoderV2PackedStorage_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
@@ -494,7 +494,7 @@
     },
     "0.4.2": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -510,9 +510,9 @@
     },
     "0.4.20": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
-            "ABIEncoderV2PackedStorage",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
+            "ABIEncoderV2PackedStorage_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
@@ -521,9 +521,9 @@
     },
     "0.4.21": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
-            "ABIEncoderV2PackedStorage",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
+            "ABIEncoderV2PackedStorage_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "NestedArrayFunctionCallDecoder"
@@ -532,9 +532,9 @@
     },
     "0.4.22": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
-            "ABIEncoderV2PackedStorage",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
+            "ABIEncoderV2PackedStorage_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData",
             "OneOfTwoConstructorsSkipped"
@@ -543,9 +543,9 @@
     },
     "0.4.23": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
-            "ABIEncoderV2PackedStorage",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
+            "ABIEncoderV2PackedStorage_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData"
         ],
@@ -553,9 +553,9 @@
     },
     "0.4.24": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
-            "ABIEncoderV2PackedStorage",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
+            "ABIEncoderV2PackedStorage_0.4.x",
             "ExpExponentCleanup",
             "EventStructWrongData"
         ],
@@ -563,15 +563,19 @@
     },
     "0.4.25": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
-            "ABIEncoderV2PackedStorage"
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
+            "ABIEncoderV2PackedStorage_0.4.x"
         ],
         "released": "2018-09-12"
     },
+    "0.4.26": {
+        "bugs": [],
+        "released": "2019-04-29"
+    },
     "0.4.3": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -586,7 +590,7 @@
     },
     "0.4.4": {
         "bugs": [
-            "IncorrectEventSignatureInLibraries",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -600,8 +604,8 @@
     },
     "0.4.5": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -616,8 +620,8 @@
     },
     "0.4.6": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -631,8 +635,8 @@
     },
     "0.4.7": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -645,8 +649,8 @@
     },
     "0.4.8": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -659,8 +663,8 @@
     },
     "0.4.9": {
         "bugs": [
-            "UninitializedFunctionPointerInConstructor",
-            "IncorrectEventSignatureInLibraries",
+            "UninitializedFunctionPointerInConstructor_0.4.x",
+            "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
