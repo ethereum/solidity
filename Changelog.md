@@ -5,6 +5,7 @@ Important Bugfixes:
  * Type System: Use correct type name for contracts in event parameters when used in libraries. This affected code generation.
 
 Bugfixes:
+ * ABIEncoderV2: Refuse to generate code that is known to be potentially buggy.
  * General: Split rule list such that JavaScript environments with small stacks can use the compiler.
 
 

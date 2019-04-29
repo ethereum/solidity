@@ -679,6 +679,16 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 			_encodeAsLibraryTypes,
 			false
 		));
+		solAssert(
+			inMemory ||
+			!_from.baseType()->isValueType() ||
+			(
+				_from.baseType()->category() == Type::Category::Integer &&
+				!dynamic_cast<IntegerType const&>(*_from.baseType()).isSigned()
+			) ||
+			_from.baseType()->storageBytes() == 32,
+			"You are using a buggy part of ABIEncoderV2. Please use a newer compiler version or disable ABIEncoderV2."
+		);
 		templ("arrayElementAccess", inMemory ? "mload(srcPtr)" : _from.baseType()->isValueType() ? "sload(srcPtr)" : "srcPtr" );
 		templ("nextArrayElement", nextArrayElementFunction(_from));
 		return templ.render();
@@ -777,6 +787,12 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 		}
 		else
 		{
+			// This function is not always a problem, but it can overwrite other data areas.
+			solAssert(
+				false,
+				"You are using a potentially buggy part of ABIEncoderV2. Please use a newer compiler version or disable ABIEncoderV2."
+			);
+
 			// Multiple items per slot
 			solAssert(_from.baseType()->storageBytes() <= 16, "");
 			solAssert(!_from.baseType()->isDynamicallyEncoded(), "");
@@ -927,6 +943,16 @@ string ABIFunctions::abiEncodingFunctionStruct(
 					}
 					else
 						memberTempl("preprocess", "");
+
+					solAssert(
+						(
+							memberTypeFrom->category() == Type::Category::Integer &&
+							!dynamic_cast<IntegerType const&>(*memberTypeFrom).isSigned()
+						) ||
+						memberTypeFrom->storageBytes() == 32,
+						"You are using a potentially buggy part of ABIEncoderV2. Please use a newer compiler version or disable ABIEncoderV2."
+					);
+
 					memberTempl("retrieveValue", shiftRightFunction(intraSlotOffset * 8) + "(slotValue)");
 				}
 				else
