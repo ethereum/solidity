@@ -466,9 +466,8 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 		solAssert(_op.subExpression().annotation().lValueRequested, "");
 		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
-			auto decl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
+			auto decl = identifierToVariable(*identifier);
 			solAssert(decl, "");
-			solAssert(knownVariable(*decl), "");
 			auto innerValue = currentValue(*decl);
 			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
@@ -725,7 +724,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 		visitFunctionIdentifier(_identifier);
 	else if (isSupportedType(_identifier.annotation().type->category()))
 	{
-		if (VariableDeclaration const* decl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+		if (auto decl = identifierToVariable(_identifier))
 			defineExpr(_identifier, currentValue(*decl));
 		else if (_identifier.name() == "now")
 			defineGlobalVariable(_identifier.name(), _identifier);
@@ -894,9 +893,9 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	shared_ptr<SymbolicVariable> array;
 	if (auto const& id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
 	{
-		auto const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
-		solAssert(knownVariable(varDecl), "");
-		array = m_variables[&varDecl];
+		auto varDecl = identifierToVariable(*id);
+		solAssert(varDecl, "");
+		array = m_variables[varDecl];
 	}
 	else if (auto const& innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
@@ -935,15 +934,15 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_expr);
 	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
 	{
-		auto const& varDecl = dynamic_cast<VariableDeclaration const&>(*id->annotation().referencedDeclaration);
-		solAssert(knownVariable(varDecl), "");
+		auto varDecl = identifierToVariable(*id);
+		solAssert(varDecl, "");
 
-		if (varDecl.hasReferenceOrMappingType())
+		if (varDecl->hasReferenceOrMappingType())
 			resetVariables([&](VariableDeclaration const& _var) {
-				if (_var == varDecl)
+				if (_var == *varDecl)
 					return false;
 				TypePointer prefix = _var.type();
-				TypePointer originalType = typeWithoutPointer(varDecl.type());
+				TypePointer originalType = typeWithoutPointer(varDecl->type());
 				while (
 					prefix->category() == Type::Category::Mapping ||
 					prefix->category() == Type::Category::Array
@@ -968,15 +967,15 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 			});
 
 		smt::Expression store = smt::Expression::store(
-			m_variables[&varDecl]->currentValue(),
+			m_variables[varDecl]->currentValue(),
 			expr(*indexAccess.indexExpression()),
 			_rightHandSide
 		);
-		m_interface->addAssertion(newValue(varDecl) == store);
+		m_interface->addAssertion(newValue(*varDecl) == store);
 		// Update the SMT select value after the assignment,
 		// necessary for sound models.
 		defineExpr(indexAccess, smt::Expression::select(
-			m_variables[&varDecl]->currentValue(),
+			m_variables[varDecl]->currentValue(),
 			expr(*indexAccess.indexExpression())
 		));
 	}
