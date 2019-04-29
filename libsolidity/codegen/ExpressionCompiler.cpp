@@ -1401,7 +1401,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			utils().storeStringData(contract.name());
 		}
-		else if (member == "encode" || member == "decode")
+		else if ((set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{
 			// no-op
 		}
