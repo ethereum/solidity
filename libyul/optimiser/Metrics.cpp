@@ -63,6 +63,16 @@ void CodeSize::visit(Statement const& _statement)
 {
 	if (_statement.type() == typeid(FunctionDefinition) && m_ignoreFunctions)
 		return;
+	else if (
+		_statement.type() == typeid(If) ||
+		_statement.type() == typeid(Break) ||
+		_statement.type() == typeid(Continue)
+	)
+		m_size += 2;
+	else if (_statement.type() == typeid(ForLoop))
+		m_size += 3;
+	else if (_statement.type() == typeid(Switch))
+		m_size += 1 + 2 * boost::get<Switch>(_statement).cases.size();
 	else if (!(
 		_statement.type() == typeid(Block) ||
 		_statement.type() == typeid(ExpressionStatement) ||
