@@ -1,4 +1,4 @@
-### 0.4.26 (unreleased)
+### 0.4.26 (2019-04-29)
 
 Important Bugfixes:
  * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
