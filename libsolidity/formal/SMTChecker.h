@@ -141,7 +141,7 @@ private:
 	/// Will also be used for assignments of tuple components.
 	void assignment(
 		Expression const& _left,
-		smt::Expression const& _right,
+		std::vector<smt::Expression> const& _right,
 		TypePointer const& _type,
 		langutil::SourceLocation const& _location
 	);
