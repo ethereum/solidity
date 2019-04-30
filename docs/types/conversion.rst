@@ -26,11 +26,11 @@ doing, an explicit type conversion is sometimes possible. Note that this may
 give you some unexpected behaviour and allows you to bypass some security
 features of the compiler, so be sure to test that the
 result is what you want! Take the following example where you are converting
-a negative ``int8`` to a ``uint``:
+a negative ``int`` to a ``uint``:
 
 ::
 
-    int8 y = -3;
+    int  y = -3;
     uint x = uint(y);
 
 At the end of this code snippet, ``x`` will have the value ``0xfffff..fd`` (64 hex
