@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/codegen/ir/IRLValue.h>
 
 namespace dev
 {
@@ -42,7 +43,7 @@ public:
 		m_utils(_utils)
 	{}
 
-	std::string code() const { return m_code.str(); }
+	std::string code() const;
 
 	bool visit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Assignment const& _assignment) override;
@@ -62,9 +63,12 @@ private:
 	std::string expressionAsType(Expression const& _expression, Type const& _to);
 	std::ostream& defineExpression(Expression const& _expression);
 
+	void setLValue(Expression const& _expression, std::unique_ptr<IRLValue> _lvalue);
+
 	std::ostringstream m_code;
 	IRGenerationContext& m_context;
 	YulUtilFunctions& m_utils;
+	std::unique_ptr<IRLValue> m_currentLValue;
 };
 
 }

@@ -39,13 +39,22 @@ string IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl
 	return m_localVariables[&_varDecl] = "vloc_" + _varDecl.name() + "_" + to_string(_varDecl.id());
 }
 
-string IRGenerationContext::variableName(VariableDeclaration const& _varDecl)
+string IRGenerationContext::localVariableName(VariableDeclaration const& _varDecl)
 {
 	solAssert(
 		m_localVariables.count(&_varDecl),
 		"Unknown variable: " + _varDecl.name()
 	);
 	return m_localVariables[&_varDecl];
+}
+
+void IRGenerationContext::addStateVariable(
+	VariableDeclaration const& _declaration,
+	u256 _storageOffset,
+	unsigned _byteOffset
+)
+{
+	m_stateVariables[&_declaration] = make_pair(move(_storageOffset), _byteOffset);
 }
 
 string IRGenerationContext::functionName(FunctionDefinition const& _function)
@@ -127,4 +136,9 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		templ("cases", move(functions));
 		return templ.render();
 	});
+}
+
+YulUtilFunctions IRGenerationContext::utils()
+{
+	return YulUtilFunctions(m_evmVersion, m_functions);
 }

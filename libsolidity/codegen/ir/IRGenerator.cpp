@@ -89,15 +89,14 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 		}
 	)");
 
-	resetContext();
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	resetContext(_contract);
 	t("CreationObject", creationObjectName(_contract));
 	t("memoryInit", memoryInit());
 	t("constructor", _contract.constructor() ? constructorCode(*_contract.constructor()) : "");
 	t("deploy", deployCode(_contract));
 	t("functions", m_context.functionCollector()->requestedFunctions());
 
-	resetContext();
+	resetContext(_contract);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
@@ -249,7 +248,7 @@ string IRGenerator::memoryInit()
 		.render();
 }
 
-void IRGenerator::resetContext()
+void IRGenerator::resetContext(ContractDefinition const& _contract)
 {
 	solAssert(
 		m_context.functionCollector()->requestedFunctions().empty(),
@@ -257,4 +256,8 @@ void IRGenerator::resetContext()
 	);
 	m_context = IRGenerationContext(m_evmVersion, m_optimiserSettings);
 	m_utils = YulUtilFunctions(m_evmVersion, m_context.functionCollector());
+
+	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	for (auto const& var: ContractType(_contract).stateVariables())
+		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }
