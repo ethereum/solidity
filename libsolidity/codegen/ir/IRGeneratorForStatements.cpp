@@ -22,6 +22,7 @@
 
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmData.h>
@@ -121,36 +122,101 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 		" := " <<
 		expressionAsType(_assignment.rightHandSide(), *lvalue.annotation().type) <<
 		"\n";
-	m_code << "let " << m_context.variable(_assignment) << " := " << varName << "\n";
+	defineExpression(_assignment) << varName << "\n";
 
 	return false;
 }
 
-bool IRGeneratorForStatements::visit(Return const&)
+bool IRGeneratorForStatements::visit(ForStatement const& _for)
 {
-	solUnimplemented("Return not yet implemented in yul code generation");
+	m_code << "for {\n";
+	if (_for.initializationExpression())
+		_for.initializationExpression()->accept(*this);
+	m_code << "} return_flag {\n";
+	if (_for.loopExpression())
+		_for.loopExpression()->accept(*this);
+	m_code << "}\n";
+	if (_for.condition())
+	{
+		_for.condition()->accept(*this);
+		m_code <<
+			"if iszero(" <<
+			expressionAsType(*_for.condition(), *TypeProvider::boolean()) <<
+			") { break }\n";
+	}
+	_for.body().accept(*this);
+	m_code << "}\n";
+	// Bubble up the return condition.
+	m_code << "if iszero(return_flag) { break }\n";
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(Continue const&)
+{
+	m_code << "continue\n";
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(Break const&)
+{
+	m_code << "break\n";
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(Return const& _return)
+{
+	if (Expression const* value = _return.expression())
+	{
+		solAssert(_return.annotation().functionReturnParameters, "Invalid return parameters pointer.");
+		vector<ASTPointer<VariableDeclaration>> const& returnParameters =
+			_return.annotation().functionReturnParameters->parameters();
+		TypePointers types;
+		for (auto const& retVariable: returnParameters)
+			types.push_back(retVariable->annotation().type);
+
+		value->accept(*this);
+
+		// TODO support tuples
+		solUnimplementedAssert(types.size() == 1, "Multi-returns not implemented.");
+		m_code <<
+			m_context.variableName(*returnParameters.front()) <<
+			" := " <<
+			expressionAsType(*value, *types.front()) <<
+			"\n";
+	}
+	m_code << "return_flag := 0\n" << "break\n";
+	return false;
 }
 
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 {
-	solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
-	solUnimplementedAssert(*_binOp.leftExpression().annotation().type == *_binOp.rightExpression().annotation().type, "");
-	if (IntegerType const* type = dynamic_cast<IntegerType const*>(_binOp.annotation().commonType))
-	{
-		solUnimplementedAssert(!type->isSigned(), "");
-		m_code <<
-			"let " <<
-			m_context.variable(_binOp) <<
-			" := " <<
-			m_utils.overflowCheckedUIntAddFunction(type->numBits()) <<
-			"(" <<
-			m_context.variable(_binOp.leftExpression()) <<
-			", " <<
-			m_context.variable(_binOp.rightExpression()) <<
-			")\n";
-	}
-	else
+	solAssert(!!_binOp.annotation().commonType, "");
+	TypePointer commonType = _binOp.annotation().commonType;
+
+	if (_binOp.getOperator() == Token::And || _binOp.getOperator() == Token::Or)
+		// special case: short-circuiting
 		solUnimplementedAssert(false, "");
+	else if (commonType->category() == Type::Category::RationalNumber)
+		defineExpression(_binOp) <<
+			toCompactHexWithPrefix(commonType->literalValue(nullptr)) <<
+			"\n";
+	else
+	{
+		solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
+		if (IntegerType const* type = dynamic_cast<IntegerType const*>(commonType))
+		{
+			solUnimplementedAssert(!type->isSigned(), "");
+			defineExpression(_binOp) <<
+				m_utils.overflowCheckedUIntAddFunction(type->numBits()) <<
+				"(" <<
+				expressionAsType(_binOp.leftExpression(), *commonType) <<
+				", " <<
+				expressionAsType(_binOp.rightExpression(), *commonType) <<
+				")\n";
+		}
+		else
+			solUnimplementedAssert(false, "");
+	}
 }
 
 bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
@@ -169,10 +235,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 		solAssert(_functionCall.arguments().size() == 1, "Expected one argument for type conversion");
 		_functionCall.arguments().front()->accept(*this);
 
-		m_code <<
-			"let " <<
-			m_context.variable(_functionCall) <<
-			" := " <<
+		defineExpression(_functionCall) <<
 			expressionAsType(*_functionCall.arguments().front(), *_functionCall.annotation().type) <<
 			"\n";
 
@@ -225,10 +288,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 			if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
 			{
 				// @TODO The function can very well return multiple vars.
-				m_code <<
-					"let " <<
-					m_context.variable(_functionCall) <<
-					" := " <<
+				defineExpression(_functionCall) <<
 					m_context.virtualFunctionName(*functionDef) <<
 					"(" <<
 					joinHumanReadable(args) <<
@@ -241,10 +301,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 
 		// @TODO The function can very well return multiple vars.
 		args = vector<string>{m_context.variable(_functionCall.expression())} + args;
-		m_code <<
-			"let " <<
-			m_context.variable(_functionCall) <<
-			" := " <<
+		defineExpression(_functionCall) <<
 			m_context.internalDispatch(functionType->parameterTypes().size(), functionType->returnParameterTypes().size()) <<
 			"(" <<
 			joinHumanReadable(args) <<
@@ -279,7 +336,7 @@ bool IRGeneratorForStatements::visit(Identifier const& _identifier)
 		value = m_context.variableName(*varDecl);
 	else
 		solUnimplemented("");
-	m_code << "let " << m_context.variable(_identifier) << " := " << value << "\n";
+	defineExpression(_identifier) << value << "\n";
 	return false;
 }
 
@@ -292,7 +349,7 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 	case Type::Category::RationalNumber:
 	case Type::Category::Bool:
 	case Type::Category::Address:
-		m_code << "let " << m_context.variable(_literal) << " := " << toCompactHexWithPrefix(type->literalValue(&_literal)) << "\n";
+		defineExpression(_literal) << toCompactHexWithPrefix(type->literalValue(&_literal)) << "\n";
 		break;
 	case Type::Category::StringLiteral:
 		solUnimplemented("");
@@ -312,4 +369,9 @@ string IRGeneratorForStatements::expressionAsType(Expression const& _expression,
 		return varName;
 	else
 		return m_utils.conversionFunction(from, _to) + "(" + std::move(varName) + ")";
+}
+
+ostream& IRGeneratorForStatements::defineExpression(Expression const& _expression)
+{
+	return m_code << "let " << m_context.variable(_expression) << " := ";
 }
