@@ -20,9 +20,11 @@
 
 #include <libsolidity/codegen/ir/IRGeneratorForStatements.h>
 
+#include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/ir/IRLValue.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmPrinter.h>
@@ -30,6 +32,8 @@
 #include <libyul/optimiser/ASTCopier.h>
 
 #include <libdevcore/StringUtils.h>
+#include <libdevcore/Whiskers.h>
+#include <libdevcore/Keccak256.h>
 
 using namespace std;
 using namespace dev;
@@ -302,6 +306,24 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			")\n";
 		break;
 	}
+	case FunctionType::Kind::Assert:
+	case FunctionType::Kind::Require:
+	{
+		solAssert(arguments.size() > 0, "Expected at least one parameter for require/assert");
+		solAssert(arguments.size() <= 2, "Expected no more than two parameters for require/assert");
+
+		string requireOrAssertFunction = m_utils.requireOrAssertFunction(
+			functionType->kind() == FunctionType::Kind::Assert,
+			arguments.size() > 1 ? arguments[1]->annotation().type : nullptr
+		);
+
+		m_code << move(requireOrAssertFunction) << "(" << m_context.variable(*arguments[0]);
+		if (arguments.size() > 1)
+			m_code << ", " << m_context.variable(*arguments[1]);
+		m_code << ")\n";
+
+		break;
+	}
 	default:
 		solUnimplemented("");
 	}
@@ -340,7 +362,7 @@ bool IRGeneratorForStatements::visit(Identifier const& _identifier)
 
 		setLValue(_identifier, move(lvalue));
 	}
-	else
+	else if (!dynamic_cast<MagicVariableDeclaration const*>(declaration))
 		solUnimplemented("");
 	return false;
 }

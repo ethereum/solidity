@@ -104,6 +104,60 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 	});
 }
 
+string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType)
+{
+	string functionName =
+		string(_assert ? "assert_helper" : "require_helper") +
+		(_messageType ? ("_" + _messageType->identifier()) : "");
+
+	solAssert(!_assert || !_messageType, "Asserts can't have messages!");
+
+	return m_functionCollector->createFunction(functionName, [&]() {
+		if (!_messageType)
+			return Whiskers(R"(
+				function <functionName>(condition) {
+					if iszero(condition) { <invalidOrRevert> }
+				}
+			)")
+			("invalidOrRevert", _assert ? "invalid()" : "revert(0, 0)")
+			("functionName", functionName)
+			.render();
+
+
+		solUnimplemented("require() with two parameters is not yet implemented.");
+		// TODO The code below is completely untested as we don't support StringLiterals yet
+		int const hashHeaderSize = 4;
+		int const byteSize = 8;
+		u256 const errorHash =
+			u256(FixedHash<hashHeaderSize>::Arith(
+				FixedHash<hashHeaderSize>(dev::keccak256("Error(string)"))
+			)) << (256 - hashHeaderSize * byteSize);
+
+		string const encodeFunc = ABIFunctions(m_evmVersion, m_functionCollector)
+			.tupleEncoder(
+				{_messageType},
+				{TypeProvider::stringMemory()}
+			);
+
+		return Whiskers(R"(
+			function <functionName>(condition, message) {
+				if iszero(condition) {
+					let fmp := mload(<freeMemPointer>)
+					mstore(fmp, <errorHash>)
+					let end := <abiEncodeFunc>(add(fmp, <hashHeaderSize>), message)
+					revert(fmp, sub(end, fmp))
+				}
+			}
+		)")
+		("functionName", functionName)
+		("freeMemPointer", to_string(CompilerUtils::freeMemoryPointer))
+		("errorHash", errorHash.str())
+		("abiEncodeFunc", encodeFunc)
+		("hashHeaderSize", to_string(hashHeaderSize))
+		.render();
+	});
+}
+
 string YulUtilFunctions::leftAlignFunction(Type const& _type)
 {
 	string functionName = string("leftAlign_") + _type.identifier();
