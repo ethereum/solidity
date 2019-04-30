@@ -19,5 +19,4 @@ contract C
 // EVMVersion: >spuriousDragon
 // ----
 // Warning: (224-240): Unused local variable.
-// Warning: (209-262): Assertion checker does not yet support such variable declarations.
 // Warning: (266-281): Assertion violation happens here

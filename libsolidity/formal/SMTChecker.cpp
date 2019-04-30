@@ -323,12 +323,24 @@ bool SMTChecker::visit(ForStatement const& _node)
 void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 {
 	if (_varDecl.declarations().size() != 1)
-		m_errorReporter.warning(
-			_varDecl.location(),
-			"Assertion checker does not yet support such variable declarations."
-		);
+	{
+		if (auto init = _varDecl.initialValue())
+		{
+			auto const& symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[init]);
+			/// symbTuple != nullptr if it is the return of a non-inlined function call.
+			if (symbTuple)
+			{
+				auto const& components = symbTuple->components();
+				auto const& declarations = _varDecl.declarations();
+				for (unsigned i = 0; i < declarations.size(); ++i)
+					if (declarations.at(i) && knownVariable(*declarations.at(i)))
+						assignment(*declarations.at(i), components.at(i)->currentValue(), declarations.at(i)->location());
+			}
+		}
+	}
 	else if (knownVariable(*_varDecl.declarations()[0]))
 	{
+		solAssert(knownVariable(*_varDecl.declarations()[0]), "");
 		if (_varDecl.initialValue())
 			assignment(*_varDecl.declarations()[0], *_varDecl.initialValue(), _varDecl.location());
 	}
@@ -337,6 +349,7 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 			_varDecl.location(),
 			"Assertion checker does not yet implement such variable declarations."
 		);
+
 }
 
 void SMTChecker::endVisit(Assignment const& _assignment)
