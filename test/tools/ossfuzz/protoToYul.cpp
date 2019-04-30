@@ -126,6 +126,12 @@ void ProtoConverter::visit(Expression const& _x)
 		case Expression::kUnop:
 			visit(_x.unop());
 			break;
+		case Expression::kTop:
+			visit(_x.top());
+			break;
+		case Expression::kNop:
+			visit(_x.nop());
+			break;
 		case Expression::EXPR_ONEOF_NOT_SET:
 			m_output << "1";
 			break;
@@ -327,6 +333,89 @@ void ProtoConverter::visit(TernaryOp const& _x)
 	m_output << ")";
 }
 
+void ProtoConverter::visit(NullaryOp const& _x)
+{
+	switch (_x.op())
+	{
+		case NullaryOp::PC:
+			m_output << "pc()";
+			break;
+		case NullaryOp::MSIZE:
+			m_output << "msize()";
+			break;
+		case NullaryOp::GAS:
+			m_output << "gas()";
+			break;
+	}
+}
+
+void ProtoConverter::visit(LogFunc const& _x)
+{
+	switch (_x.num_topics())
+	{
+		case LogFunc::ZERO:
+			m_output << "log0";
+			m_output << "(";
+			visit(_x.pos());
+			m_output << ", ";
+			visit(_x.size());
+			m_output << ")\n";
+			break;
+		case LogFunc::ONE:
+			m_output << "log1";
+			m_output << "(";
+			visit(_x.pos());
+			m_output << ", ";
+			visit(_x.size());
+			m_output << ", ";
+			visit(_x.t1());
+			m_output << ")\n";
+			break;
+		case LogFunc::TWO:
+			m_output << "log2";
+			m_output << "(";
+			visit(_x.pos());
+			m_output << ", ";
+			visit(_x.size());
+			m_output << ", ";
+			visit(_x.t1());
+			m_output << ", ";
+			visit(_x.t2());
+			m_output << ")\n";
+			break;
+		case LogFunc::THREE:
+			m_output << "log3";
+			m_output << "(";
+			visit(_x.pos());
+			m_output << ", ";
+			visit(_x.size());
+			m_output << ", ";
+			visit(_x.t1());
+			m_output << ", ";
+			visit(_x.t2());
+			m_output << ", ";
+			visit(_x.t3());
+			m_output << ")\n";
+			break;
+		case LogFunc::FOUR:
+			m_output << "log4";
+			m_output << "(";
+			visit(_x.pos());
+			m_output << ", ";
+			visit(_x.size());
+			m_output << ", ";
+			visit(_x.t1());
+			m_output << ", ";
+			visit(_x.t2());
+			m_output << ", ";
+			visit(_x.t3());
+			m_output << ", ";
+			visit(_x.t4());
+			m_output << ")\n";
+			break;
+	}
+}
+
 void ProtoConverter::visit(AssignmentStatement const& _x)
 {
 	visit(_x.ref_id());
@@ -352,6 +441,9 @@ void ProtoConverter::visit(StoreFunc const& _x)
 			break;
 		case StoreFunc::SSTORE:
 			m_output << "sstore(";
+			break;
+		case StoreFunc::MSTORE8:
+			m_output << "mstore8(";
 			break;
 	}
 	visit(_x.loc());
@@ -439,6 +531,9 @@ void ProtoConverter::visit(Statement const& _x)
 		case Statement::kContstmt:
 			if (m_inForScope.top())
 				m_output << "continue\n";
+			break;
+		case Statement::kLogFunc:
+			visit(_x.log_func());
 			break;
 		case Statement::STMT_ONEOF_NOT_SET:
 			break;
