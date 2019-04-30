@@ -23,8 +23,9 @@
 #include <src/libfuzzer/libfuzzer_macro.h>
 
 #include <libyul/AssemblyStack.h>
-#include <liblangutil/EVMVersion.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
@@ -76,7 +77,8 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 	{
 		yulFuzzerUtil::interpret(
 			os1,
-			stack.parserResult()->code
+			stack.parserResult()->code,
+			*EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
 		);
 	}
 	catch (yul::test::StepLimitReached const&)
@@ -90,8 +92,10 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 	stack.optimize();
 	try
 	{
-		yulFuzzerUtil::interpret(os2,
+		yulFuzzerUtil::interpret(
+			os2,
 			stack.parserResult()->code,
+			*EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
 		);
 	}

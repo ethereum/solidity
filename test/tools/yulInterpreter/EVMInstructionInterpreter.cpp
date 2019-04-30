@@ -444,6 +444,29 @@ u256 EVMInstructionInterpreter::eval(
 	return 0;
 }
 
+u256 EVMInstructionInterpreter::evalBuiltin(YulString _name, const std::vector<u256>& _arguments)
+{
+	if (_name == "datasize"_yulstring)
+		return u256(keccak256(h256(_arguments.at(0)))) & 0xfff;
+	else if (_name == "dataoffset"_yulstring)
+		return u256(keccak256(h256(_arguments.at(0) + 2))) & 0xfff;
+	else if (_name == "datacopy"_yulstring)
+	{
+		// This is identical to codecopy.
+		if (logMemoryWrite(_arguments.at(0), _arguments.at(2)))
+			copyZeroExtended(
+				m_state.memory,
+				m_state.code,
+				size_t(_arguments.at(0)),
+				size_t(_arguments.at(1) & size_t(-1)),
+				size_t(_arguments.at(2))
+			);
+	}
+	else
+		yulAssert(false, "Unknown builtin: " + _name.str());
+	return 0;
+}
+
 bool EVMInstructionInterpreter::logMemoryRead(u256 const& _offset, u256 const& _size)
 {
 	return logMemory(false, _offset, _size);

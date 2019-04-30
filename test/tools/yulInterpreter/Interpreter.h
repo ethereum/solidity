@@ -32,6 +32,8 @@
 
 namespace yul
 {
+struct Dialect;
+
 namespace test
 {
 
@@ -100,9 +102,11 @@ class Interpreter: public ASTWalker
 public:
 	Interpreter(
 		InterpreterState& _state,
+		Dialect const& _dialect,
 		std::map<YulString, dev::u256> _variables = {},
 		std::map<YulString, FunctionDefinition const*> _functions = {}
 	):
+		m_dialect(_dialect),
 		m_state(_state),
 		m_variables(std::move(_variables)),
 		m_functions(std::move(_functions))
@@ -133,6 +137,7 @@ private:
 	/// Unregisters variables.
 	void closeScope();
 
+	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.
 	std::map<YulString, dev::u256> m_variables;
@@ -150,10 +155,12 @@ class ExpressionEvaluator: public ASTWalker
 public:
 	ExpressionEvaluator(
 		InterpreterState& _state,
+		Dialect const& _dialect,
 		std::map<YulString, dev::u256> const& _variables,
 		std::map<YulString, FunctionDefinition const*> const& _functions
 	):
 		m_state(_state),
+		m_dialect(_dialect),
 		m_variables(_variables),
 		m_functions(_functions)
 	{}
@@ -176,6 +183,7 @@ private:
 	void evaluateArgs(std::vector<Expression> const& _expr);
 
 	InterpreterState& m_state;
+	Dialect const& m_dialect;
 	/// Values of variables.
 	std::map<YulString, dev::u256> const& m_variables;
 	/// Meanings of functions.
