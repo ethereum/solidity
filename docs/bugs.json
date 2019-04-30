@@ -3,16 +3,32 @@
         "name": "UninitializedFunctionPointerInConstructor",
         "summary": "Calling uninitialized internal function pointers created in the constructor does not always revert and can cause unexpected behaviour.",
         "description": "Uninitialized internal function pointers point to a special piece of code that causes a revert when called. Jump target positions are different during construction and after deployment, but the code for setting this special jump target only considered the situation after deployment.",
-        "introduced": "0.4.5",
+        "introduced": "0.5.0",
         "fixed": "0.5.8",
+        "severity": "very low"
+    },
+    {
+        "name": "UninitializedFunctionPointerInConstructor_0.4.x",
+        "summary": "Calling uninitialized internal function pointers created in the constructor does not always revert and can cause unexpected behaviour.",
+        "description": "Uninitialized internal function pointers point to a special piece of code that causes a revert when called. Jump target positions are different during construction and after deployment, but the code for setting this special jump target only considered the situation after deployment.",
+        "introduced": "0.4.5",
+        "fixed": "0.4.26",
         "severity": "very low"
     },
     {
         "name": "IncorrectEventSignatureInLibraries",
         "summary": "Contract types used in events in libraries cause an incorrect event signature hash",
         "description": "Instead of using the type `address` in the hashed signature, the actual contract name was used, leading to a wrong hash in the logs.",
-        "introduced": "0.3.0",
+        "introduced": "0.5.0",
         "fixed": "0.5.8",
+        "severity": "very low"
+    },
+    {
+        "name": "IncorrectEventSignatureInLibraries_0.4.x",
+        "summary": "Contract types used in events in libraries cause an incorrect event signature hash",
+        "description": "Instead of using the type `address` in the hashed signature, the actual contract name was used, leading to a wrong hash in the logs.",
+        "introduced": "0.3.0",
+        "fixed": "0.4.26",
         "severity": "very low"
     },
     {
@@ -20,8 +36,20 @@
         "summary": "Storage structs and arrays with types shorter than 32 bytes can cause data corruption if encoded directly from storage using the experimental ABIEncoderV2.",
         "description": "Elements of structs and arrays that are shorter than 32 bytes are not properly decoded from storage when encoded directly (i.e. not via a memory type) using ABIEncoderV2. This can cause corruption in the values themselves but can also overwrite other parts of the encoded data.",
         "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
-        "introduced": "0.4.19",
+        "introduced": "0.5.0",
         "fixed": "0.5.7",
+        "severity": "low",
+        "conditions": {
+            "ABIEncoderV2": true
+        }
+    },
+    {
+        "name": "ABIEncoderV2PackedStorage_0.4.x",
+        "summary": "Storage structs and arrays with types shorter than 32 bytes can cause data corruption if encoded directly from storage using the experimental ABIEncoderV2.",
+        "description": "Elements of structs and arrays that are shorter than 32 bytes are not properly decoded from storage when encoded directly (i.e. not via a memory type) using ABIEncoderV2. This can cause corruption in the values themselves but can also overwrite other parts of the encoded data.",
+        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
+        "introduced": "0.4.19",
+        "fixed": "0.4.26",
         "severity": "low",
         "conditions": {
             "ABIEncoderV2": true
