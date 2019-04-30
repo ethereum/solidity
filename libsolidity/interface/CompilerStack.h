@@ -272,9 +272,11 @@ private:
 		std::shared_ptr<SourceUnit> ast;
 		h256 mutable keccak256HashCached;
 		h256 mutable swarmHashCached;
+		std::string mutable ipfsUrlCached;
 		void reset() { *this = Source(); }
 		h256 const& keccak256() const;
 		h256 const& swarmHash() const;
+		std::string const& ipfsUrl() const;
 	};
 
 	/// The state per contract. Filled gradually during compilation.
