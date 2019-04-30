@@ -135,7 +135,18 @@ private:
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value, langutil::SourceLocation const& _location);
+	/// Handles assignments to variables of different types.
 	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, langutil::SourceLocation const& _location);
+	/// Handles assignments between generic expressions.
+	/// Will also be used for assignments of tuple components.
+	void assignment(
+		Expression const& _left,
+		smt::Expression const& _right,
+		TypePointer const& _type,
+		langutil::SourceLocation const& _location
+	);
+	/// Computes the right hand side of a compound assignment.
+	smt::Expression compoundAssignment(Assignment const& _assignment);
 
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
@@ -273,6 +284,9 @@ private:
 
 	/// @returns variables that are touched in _node's subtree.
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node);
+
+	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
+	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	VariableUsage m_variableUsage;
