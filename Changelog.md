@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Support tuples and functions with multiple return values.
 
 
 Bugfixes:
