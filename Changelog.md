@@ -6,7 +6,7 @@ Language Features:
 
 Compiler Features:
  * SMTChecker: Support inherited state variables.
- * SMTChecker: Support tuple assignments.
+ * SMTChecker: Support tuple assignments and function calls with multiple return values.
 
 
 Bugfixes:
