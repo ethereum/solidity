@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix bad cast in base constructor modifier.
 
 
 
