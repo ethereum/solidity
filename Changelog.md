@@ -1,18 +1,20 @@
-### 0.5.8 (unreleased)
+### 0.5.8 (2019-04-30)
 
 Important Bugfixes:
+ * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
  * Yul Optimizer: Fix SSA transform for multi-assignments.
 
 
 Language Features:
- * Code Generation: Implement copying recursive structs from storage to memory.
  * ABIEncoderV2: Implement encoding of calldata arrays and structs.
+ * Code Generation: Implement copying recursive structs from storage to memory.
  * Yul: Disallow function definitions inside for-loop init blocks.
 
 
 Compiler Features:
  * ABI Decoder: Raise a runtime error on dirty inputs when using the experimental decoder.
- * Standartd JSON Interface: Metadata settings now re-produce the original 'useLiteralContent' setting from the compilation input.
+ * Optimizer: Add rule for shifts by constants larger than 255 for Constantinople.
+ * Optimizer: Add rule to simplify certain ANDs and SHL combinations
  * SMTChecker: Support arithmetic compound assignment operators.
  * SMTChecker: Support unary increment and decrement for array and mapping access.
  * SMTChecker: Show unsupported warning for inline assembly blocks.
@@ -20,8 +22,7 @@ Compiler Features:
  * SMTChecker: Support ``contract`` type.
  * SMTChecker: Support ``this`` as address.
  * SMTChecker: Support address members.
- * Optimizer: Add rule for shifts by constants larger than 255 for Constantinople.
- * Optimizer: Add rule to simplify certain ANDs and SHL combinations
+ * Standard JSON Interface: Metadata settings now re-produce the original ``"useLiteralContent"`` setting from the compilation input.
  * Yul: Adds break and continue keywords to for-loop syntax.
  * Yul: Support ``.`` as part of identifiers.
  * Yul Optimizer: Adds steps for detecting and removing of dead code.
@@ -30,15 +31,15 @@ Compiler Features:
 Bugfixes:
  * SMTChecker: Implement Boolean short-circuiting.
  * SMTChecker: SSA control-flow did not take into account state variables that were modified inside inlined functions that were called inside branches.
- * Type System: Use correct type name for contracts in event parameters when used in
-   libraries. This affected code generation.
+ * Type System: Use correct type name for contracts in event parameters when used in libraries. This affected code generation.
  * Type System: Allow direct call to base class functions that have overloads.
  * Yul: Properly register functions and disallow shadowing between function variables and variables in the outside scope.
- * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
+
 
 Build System:
  * Soltest: Add commandline option `--test` / `-t` to isoltest which takes a string that allows filtering unit tests.
  * soltest.sh: allow environment variable ``SOLIDITY_BUILD_DIR`` to specify build folder and add ``--help`` usage.
+
 
 ### 0.5.7 (2019-03-26)
 
