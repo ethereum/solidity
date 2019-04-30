@@ -740,5 +740,9 @@
             "IncorrectEventSignatureInLibraries"
         ],
         "released": "2019-03-26"
+    },
+    "0.5.8": {
+        "bugs": [],
+        "released": "2019-04-30"
     }
 }
