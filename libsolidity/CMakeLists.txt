@@ -22,8 +22,6 @@ set(sources
 	analysis/PostTypeChecker.h
 	analysis/ReferencesResolver.cpp
 	analysis/ReferencesResolver.h
-	analysis/SemVerHandler.cpp
-	analysis/SemVerHandler.h
 	analysis/StaticAnalyzer.cpp
 	analysis/StaticAnalyzer.h
 	analysis/SyntaxChecker.cpp
@@ -47,6 +45,8 @@ set(sources
 	ast/ExperimentalFeatures.h
 	ast/Types.cpp
 	ast/Types.h
+	ast/TypeProvider.cpp
+	ast/TypeProvider.h
 	codegen/ABIFunctions.cpp
 	codegen/ABIFunctions.h
 	codegen/ArrayUtils.cpp
@@ -67,6 +67,14 @@ set(sources
 	codegen/MultiUseYulFunctionCollector.cpp
 	codegen/YulUtilFunctions.h
 	codegen/YulUtilFunctions.cpp
+	codegen/ir/IRGenerator.cpp
+	codegen/ir/IRGenerator.h
+	codegen/ir/IRGeneratorForStatements.cpp
+	codegen/ir/IRGeneratorForStatements.h
+	codegen/ir/IRGenerationContext.cpp
+	codegen/ir/IRGenerationContext.h
+	formal/EncodingContext.cpp
+	formal/EncodingContext.h
 	formal/SMTChecker.cpp
 	formal/SMTChecker.h
 	formal/SMTLib2Interface.cpp

@@ -72,10 +72,10 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = n
 	return readCallback;
 }
 
-string compile(string const& _input, CStyleReadFileCallback _readCallback = nullptr)
+string compile(string _input, CStyleReadFileCallback _readCallback = nullptr)
 {
 	StandardCompiler compiler(wrapReadCallback(_readCallback));
-	return compiler.compile(_input);
+	return compiler.compile(std::move(_input));
 }
 
 }

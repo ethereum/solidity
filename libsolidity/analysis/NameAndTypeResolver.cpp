@@ -228,7 +228,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 			uniqueFunctions.end(),
 			[&](Declaration const* d)
 			{
-				shared_ptr<FunctionType const> newFunctionType { d->functionType(false) };
+				FunctionType const* newFunctionType = d->functionType(false);
 				if (!newFunctionType)
 					newFunctionType = d->functionType(true);
 				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
@@ -241,7 +241,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 
 void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 {
-	for (auto const& instruction: c_instructions)
+	for (auto const& instruction: dev::eth::c_instructions)
 	{
 		string const instructionName{boost::algorithm::to_lower_copy(instruction.first)};
 		auto declarations = nameFromCurrentScope(instructionName, true);

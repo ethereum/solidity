@@ -28,13 +28,13 @@ using namespace std;
 using namespace dev;
 using namespace dev::lll;
 
-bytes dev::lll::compileLLL(string const& _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
+bytes dev::lll::compileLLL(string _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
 {
 	try
 	{
 		CompilerState cs;
 		cs.populateStandard();
-		auto assembly = CodeFragment::compile(_src, cs, _readFile).assembly(cs);
+		auto assembly = CodeFragment::compile(std::move(_src), cs, _readFile).assembly(cs);
 		if (_opt)
 			assembly = assembly.optimise(true, _evmVersion, true, 200);
 		bytes ret = assembly.assemble().bytecode;
@@ -66,13 +66,13 @@ bytes dev::lll::compileLLL(string const& _src, langutil::EVMVersion _evmVersion,
 	return bytes();
 }
 
-std::string dev::lll::compileLLLToAsm(std::string const& _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
+std::string dev::lll::compileLLLToAsm(std::string _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
 {
 	try
 	{
 		CompilerState cs;
 		cs.populateStandard();
-		auto assembly = CodeFragment::compile(_src, cs, _readFile).assembly(cs);
+		auto assembly = CodeFragment::compile(std::move(_src), cs, _readFile).assembly(cs);
 		if (_opt)
 			assembly = assembly.optimise(true, _evmVersion, true, 200);
 		string ret = assembly.assemblyString();
@@ -104,13 +104,13 @@ std::string dev::lll::compileLLLToAsm(std::string const& _src, langutil::EVMVers
 	return string();
 }
 
-string dev::lll::parseLLL(string const& _src)
+string dev::lll::parseLLL(string _src)
 {
 	sp::utree o;
 
 	try
 	{
-		parseTreeLLL(_src, o);
+		parseTreeLLL(std::move(_src), o);
 	}
 	catch (...)
 	{

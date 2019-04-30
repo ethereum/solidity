@@ -40,7 +40,6 @@
 using namespace std;
 using namespace langutil;
 using namespace yul;
-using namespace dev::solidity;
 
 namespace
 {
@@ -55,10 +54,7 @@ void yul::test::printErrors(ErrorList const& _errors)
 	SourceReferenceFormatter formatter(cout);
 
 	for (auto const& error: _errors)
-		formatter.printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+		formatter.printErrorInformation(*error);
 }
 
 
@@ -66,7 +62,10 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 {
 	AssemblyStack stack(
 		dev::test::Options::get().evmVersion(),
-		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly
+		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
+		dev::test::Options::get().optimize ?
+			dev::solidity::OptimiserSettings::standard() :
+			dev::solidity::OptimiserSettings::minimal()
 	);
 	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
 		BOOST_FAIL("Invalid source.");

@@ -20,19 +20,20 @@ using namespace std;
 using namespace yul;
 using namespace yul::test::yul_fuzzer;
 
-void yulFuzzerUtil::interpret(ostream& _os, shared_ptr<yul::Block> _ast)
+void yulFuzzerUtil::interpret(
+	ostream& _os,
+	shared_ptr<yul::Block> _ast,
+	size_t _maxSteps,
+	size_t _maxTraceSize,
+	size_t _maxMemory
+)
 {
 	InterpreterState state;
-	state.maxTraceSize = 10000;
+	state.maxTraceSize = _maxTraceSize;
+	state.maxSteps = _maxSteps;
+	state.maxMemSize = _maxMemory;
 	Interpreter interpreter(state);
-	try
-	{
-		interpreter(*_ast);
-	}
-	catch (InterpreterTerminated const&)
-	{
-	}
-
+	interpreter(*_ast);
 	_os << "Trace:" << endl;
 	for (auto const& line: interpreter.trace())
 		_os << "  " << line << endl;

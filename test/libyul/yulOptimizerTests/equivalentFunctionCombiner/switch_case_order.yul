@@ -4,8 +4,9 @@
   function f(x) { switch x case 0 { mstore(0, 42) } case 1 { mstore(1, 42) } }
   function g(x) { switch x case 1 { mstore(1, 42) } case 0 { mstore(0, 42) } }
 }
+// ====
+// step: equivalentFunctionCombiner
 // ----
-// equivalentFunctionCombiner
 // {
 //     f(0)
 //     f(1)

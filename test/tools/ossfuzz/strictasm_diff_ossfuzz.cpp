@@ -55,11 +55,18 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	}))
 		return 0;
 
-	AssemblyStack stack(EVMVersion::petersburg(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		langutil::EVMVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::full()
+	);
 	try
 	{
-		if (!stack.parseAndAnalyze("source", input) || !stack.parserResult()->code ||
-			!stack.parserResult()->analysisInfo)
+		if (
+			!stack.parseAndAnalyze("source", input) ||
+			!stack.parserResult()->code ||
+			!stack.parserResult()->analysisInfo
+		)
 			return 0;
 	}
 	catch (Exception const&)
@@ -69,9 +76,33 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 	ostringstream os1;
 	ostringstream os2;
-	yulFuzzerUtil::interpret(os1, stack.parserResult()->code);
+	try
+	{
+		yulFuzzerUtil::interpret(
+			os1,
+			stack.parserResult()->code
+		);
+	}
+	catch (yul::test::StepLimitReached const&)
+	{
+		return 0;
+	}
+	catch (yul::test::InterpreterTerminatedGeneric const&)
+	{
+	}
+
 	stack.optimize();
-	yulFuzzerUtil::interpret(os2, stack.parserResult()->code);
+	try
+	{
+		yulFuzzerUtil::interpret(
+			os2,
+			stack.parserResult()->code,
+			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
+		);
+	}
+	catch (yul::test::InterpreterTerminatedGeneric const&)
+	{
+	}
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");

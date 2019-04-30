@@ -4,15 +4,19 @@
 Pretty printed source:
 object "MyContract" {
     code {
-        sstore(0, caller())
-        let _1 := datasize("Runtime")
-        datacopy(0, dataoffset("Runtime"), _1)
-        return(0, _1)
+        {
+            sstore(0, caller())
+            let _1 := datasize("Runtime")
+            datacopy(0, dataoffset("Runtime"), _1)
+            return(0, _1)
+        }
     }
     object "Runtime" {
         code {
-            mstore(0, sload(0))
-            return(0, 0x20)
+            {
+                mstore(0, sload(0))
+                return(0, 0x20)
+            }
         }
     }
 }
@@ -61,4 +65,3 @@ sub_0: assembly {
         /* "object_compiler/input.sol":407:422   */
       return
 }
-

@@ -1,12 +1,14 @@
 {
-	let a := 1 let b := codesize()
+	let a := 1
+	let b := codesize()
 	for { } lt(1, codesize()) { mstore(1, codesize()) a := add(a, codesize()) } {
 		mstore(1, codesize())
 	}
 	mstore(1, codesize())
 }
+// ====
+// step: commonSubexpressionEliminator
 // ----
-// commonSubexpressionEliminator
 // {
 //     let a := 1
 //     let b := codesize()

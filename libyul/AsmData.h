@@ -43,7 +43,7 @@ struct TypedName { langutil::SourceLocation location; YulString name; Type type;
 using TypedNameList = std::vector<TypedName>;
 
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
-struct Instruction { langutil::SourceLocation location; dev::solidity::Instruction instruction; };
+struct Instruction { langutil::SourceLocation location; dev::eth::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
 struct Literal { langutil::SourceLocation location; LiteralKind kind; YulString value; Type type; };
@@ -61,7 +61,7 @@ struct StackAssignment { langutil::SourceLocation location; Identifier variableN
 /// the same amount of items as the number of variables.
 struct Assignment { langutil::SourceLocation location; std::vector<Identifier> variableNames; std::unique_ptr<Expression> value; };
 /// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
-struct FunctionalInstruction { langutil::SourceLocation location; dev::solidity::Instruction instruction; std::vector<Expression> arguments; };
+struct FunctionalInstruction { langutil::SourceLocation location; dev::eth::Instruction instruction; std::vector<Expression> arguments; };
 struct FunctionCall { langutil::SourceLocation location; Identifier functionName; std::vector<Expression> arguments; };
 /// Statement that contains only a single expression
 struct ExpressionStatement { langutil::SourceLocation location; Expression expression; };

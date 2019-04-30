@@ -59,21 +59,21 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
 	file.exceptions(ios::badbit);
 
-	m_source = parseSource(file);
+	m_source = parseSourceAndSettings(file);
 	m_expectations = parseExpectations(file);
 }
 
 bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	string const versionPragma = "pragma solidity >=0.0;\n";
-	m_compiler.reset();
-	m_compiler.addSource("", versionPragma + m_source);
-	m_compiler.setEVMVersion(m_evmVersion);
+	compiler().reset();
+	compiler().setSources({{"", versionPragma + m_source}});
+	compiler().setEVMVersion(m_evmVersion);
 
-	if (m_compiler.parse())
-		m_compiler.analyze();
+	if (compiler().parse())
+		compiler().analyze();
 
-	for (auto const& currentError: filterErrors(m_compiler.errors(), true))
+	for (auto const& currentError: filterErrors(compiler().errors(), true))
 	{
 		int locationStart = -1, locationEnd = -1;
 		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))

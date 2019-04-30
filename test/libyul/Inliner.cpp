@@ -37,7 +37,6 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 using namespace yul::test;
-using namespace dev::solidity;
 
 namespace
 {
@@ -83,8 +82,8 @@ BOOST_AUTO_TEST_CASE(simple_inside_structures)
 		"}"
 	"}"), "g,f");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
+		"function g(a:u256) -> b:u256 { b := a }"
 		"for {"
-			"function g(a:u256) -> b:u256 { b := a }"
 		"} 1:u256 {"
 			"function f() -> x:u256 { x := g(2:u256) }"
 		"}"

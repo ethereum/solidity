@@ -98,10 +98,9 @@ public:
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit CompilerStack(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
-		m_readFile(_readFile),
-		m_errorList(),
-		m_errorReporter(m_errorList) {}
+	explicit CompilerStack(ReadCallback::Callback const& _readFile = ReadCallback::Callback());
+
+	~CompilerStack();
 
 	/// @returns the list of errors that occurred during parsing and type checking.
 	langutil::ErrorList const& errors() const { return m_errorReporter.errors(); }
@@ -109,10 +108,9 @@ public:
 	/// @returns the current state.
 	State state() const { return m_stackState; }
 
-	/// Resets the compiler to a state where the sources are not parsed or even removed.
-	/// Sets the state to SourcesSet if @a _keepSources is true, otherwise to Empty.
-	/// All settings, with the exception of remappings, are reset.
-	void reset(bool _keepSources = false);
+	/// Resets the compiler to an empty state. Unless @a _keepSettings is set to true,
+	/// all settings are reset as well.
+	void reset(bool _keepSettings = false);
 
 	// Parses a remapping of the format "context:prefix=target".
 	static boost::optional<Remapping> parseRemapping(std::string const& _remapping);
@@ -144,13 +142,15 @@ public:
 		m_requestedContractNames = _contractNames;
 	}
 
+	/// Enable experimental generation of Yul IR code.
+	void enableIRGeneration(bool _enable = true) { m_generateIR = _enable; }
+
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
 	void useMetadataLiteralSources(bool _metadataLiteralSources);
 
-	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
-	/// @returns true if a source object by the name already existed and was replaced.
-	bool addSource(std::string const& _name, std::string const& _content);
+	/// Sets the sources. Must be set before parsing.
+	void setSources(StringMap _sources);
 
 	/// Adds a response to an SMTLib2 query (identified by the hash of the query input).
 	/// Must be set before parsing.
@@ -204,6 +204,12 @@ public:
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
+	/// @returns the IR representation of a contract.
+	std::string const& yulIR(std::string const& _contractName) const;
+
+	/// @returns the optimized IR representation of a contract.
+	std::string const& yulIROptimized(std::string const& _contractName) const;
+
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName) const;
 
@@ -232,7 +238,7 @@ public:
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	Json::Value assemblyJSON(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
+	Json::Value assemblyJSON(std::string const& _contractName, StringMap const& _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
@@ -275,6 +281,8 @@ private:
 		std::shared_ptr<Compiler> compiler;
 		eth::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		eth::LinkerObject runtimeObject; ///< Runtime object.
+		std::string yulIR; ///< Experimental Yul IR code.
+		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
 		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
@@ -300,6 +308,10 @@ private:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, std::shared_ptr<Compiler const>>& _otherCompilers
 	);
+
+	/// Generate Yul IR for a single contract.
+	/// The IR is stored but otherwise unused.
+	void generateIR(ContractDefinition const& _contract);
 
 	/// Links all the known library addresses in the available objects. Any unknown
 	/// library will still be kept as an unlinked placeholder in the objects.
@@ -353,6 +365,7 @@ private:
 	OptimiserSettings m_optimiserSettings;
 	langutil::EVMVersion m_evmVersion;
 	std::set<std::string> m_requestedContractNames;
+	bool m_generateIR;
 	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"

@@ -17,9 +17,20 @@ defaults:
         [ -n "$COVERAGE" -a "$CIRCLE_BRANCH" != release -a -z "$CIRCLE_TAG" ] && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCOVERAGE=ON"
         cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
         make -j4
+  - run_build_ossfuzz: &run_build_ossfuzz
+      name: Build_ossfuzz
+      command: |
+        mkdir -p build
+        cd build
+        /src/LPM/external.protobuf/bin/protoc --proto_path=../test/tools/ossfuzz yulProto.proto --cpp_out=../test/tools/ossfuzz
+        cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
+        make ossfuzz ossfuzz_proto -j4
   - run_tests: &run_tests
       name: Tests
       command: scripts/tests.sh --junit_report test_results
+  - run_regressions: &run_regressions
+      name: Regression tests
+      command: scripts/regressions.py -o test_results
   - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
@@ -29,6 +40,15 @@ defaults:
         - solc/solc
         - test/soltest
         - test/tools/solfuzzer
+  - ossfuzz_artifacts: &ossfuzz_artifacts
+      root: build
+      paths:
+        - test/tools/ossfuzz/solc_opt_ossfuzz
+        - test/tools/ossfuzz/solc_noopt_ossfuzz
+        - test/tools/ossfuzz/const_opt_ossfuzz
+        - test/tools/ossfuzz/strictasm_diff_ossfuzz
+        - test/tools/ossfuzz/yul_proto_ossfuzz
+        - test/tools/ossfuzz/yul_proto_diff_ossfuzz
 
 version: 2
 jobs:
@@ -86,7 +106,7 @@ jobs:
           command: |
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
-  test_emscripten_external:
+  test_emscripten_external_gnosis:
     docker:
       - image: circleci/node:10
     environment:
@@ -96,14 +116,23 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: Install external tests deps
+          name: External GnosisSafe tests
           command: |
-            node --version
-            npm --version
+            test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+
+  test_emscripten_external_zeppelin:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
-          name: External tests
+          name: External Zeppelin tests
           command: |
-            test/externalTests.sh /tmp/workspace/soljson.js || test/externalTests.sh /tmp/workspace/soljson.js
+            test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
 
   build_x86_linux:
     docker:
@@ -117,8 +146,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
@@ -139,8 +167,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
       - run: *setup_prerelease_commit_hash
       - run: *run_build
 
@@ -179,8 +206,7 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
       - run: *setup_prerelease_commit_hash
       - run: *run_build
       - store_artifacts: *solc_artifact
@@ -306,12 +332,19 @@ jobs:
             update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
       - run: mkdir -p test_results
       - run:
-          name: Run tests with ASAN
+          name: Run soltest with ASAN
           command: |
             ulimit -a
             # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
             ulimit -s 16384
             build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
+      - run:
+          name: Run commandline tests with ASAN
+          command: |
+            ulimit -a
+            # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
+            ulimit -s 16384
+            test/cmdlineTests.sh
       - store_test_results:
           path: test_results/
       - store_artifacts:
@@ -381,6 +414,51 @@ jobs:
           path: docs/_build/html/
           destination: docs-html
 
+  build_x86_linux_ossfuzz:
+    docker:
+      - image: buildpack-deps:cosmic
+    environment:
+      TERM: xterm
+      CC: /usr/bin/clang-7
+      CXX: /usr/bin/clang++-7
+      CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libbz2-dev ninja-build zlib1g-dev libjsoncpp-dev=1.7.4-\*
+            ./scripts/install_lpm.sh
+            ./scripts/install_libfuzzer.sh
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build_ossfuzz
+      - persist_to_workspace: *ossfuzz_artifacts
+
+  test_x86_ossfuzz_regression:
+    docker:
+      - image: buildpack-deps:cosmic
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get -qq update
+            apt-get -qy install libcvc4-dev llvm-7-dev
+            ./scripts/download_ossfuzz_corpus.sh
+            update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
+      - run: mkdir -p test_results
+      - run: *run_regressions
+      - store_test_results:
+          path: test_results/
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
+
 workflows:
   version: 2
   build_all:
@@ -393,7 +471,11 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
-      - test_emscripten_external:
+      - test_emscripten_external_zeppelin:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
+      - test_emscripten_external_gnosis:
           <<: *build_on_tags
           requires:
             - build_emscripten
@@ -406,9 +488,7 @@ workflows:
           requires:
             - build_x86_linux
       - test_x86_clang7_asan:
-          filters:
-            branches:
-              only: develop
+          <<: *build_on_tags
           requires:
             - build_x86_clang7_asan
       - test_x86_mac:
@@ -421,3 +501,28 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_x86_archlinux
+      - build_x86_linux_ossfuzz: *build_on_tags
+
+  test_nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - develop
+    jobs:
+      - build_emscripten: *build_on_tags
+      - test_emscripten_external_zeppelin:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
+      - test_emscripten_external_gnosis:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
+      - build_x86_linux_ossfuzz: *build_on_tags
+      - test_x86_ossfuzz_regression:
+          <<: *build_on_tags
+          requires:
+            - build_x86_linux_ossfuzz

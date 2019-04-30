@@ -55,15 +55,16 @@ namespace
 void printErrors(ErrorList const& _errors)
 {
 	for (auto const& error: _errors)
-		SourceReferenceFormatter(cout).printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+		SourceReferenceFormatter(cout).printErrorInformation(*error);
 }
 
 pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)
 {
-	AssemblyStack stack(langutil::EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		langutil::EVMVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		solidity::OptimiserSettings::none()
+	);
 	if (stack.parseAndAnalyze("--INPUT--", _source))
 	{
 		yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
@@ -86,12 +87,13 @@ void interpret(string const& _source)
 
 	InterpreterState state;
 	state.maxTraceSize = 10000;
+	state.maxMemSize = 0x20000000;
 	Interpreter interpreter(state);
 	try
 	{
 		interpreter(*ast);
 	}
-	catch (InterpreterTerminated const&)
+	catch (InterpreterTerminatedGeneric const&)
 	{
 	}
 

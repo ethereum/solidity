@@ -25,6 +25,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <map>
+#include <vector>
 
 namespace yul
 {
@@ -81,6 +82,11 @@ struct Dialect;
  * one run and two runs and then combine them at the end.
  * Running at most twice is enough because there are only three different states.
  *
+ * Since this algorithm has exponential runtime in the nesting depth of for loops,
+ * a shortcut is taken at a certain nesting level: We only use the zero- and
+ * once-run of the for loop and change any assignment that was newly introduced
+ * in the for loop from to "used".
+ *
  * For switch statements that have a "default"-case, there is no control-flow
  * part that skips the switch.
  *
@@ -94,7 +100,7 @@ struct Dialect;
  * This step is usually run right after the SSA transform to complete
  * the generation of the pseudo-SSA.
  *
- * Prerequisite: Disambiguator.
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class RedundantAssignEliminator: public ASTWalker
 {
@@ -136,33 +142,6 @@ private:
 		Value m_value = Undecided;
 	};
 
-	/**
-	 * Takes care about storing the list of declared variables and
-	 * sets them to "unused" when it is destroyed.
-	 */
-	class BlockScope
-	{
-	public:
-		explicit BlockScope(RedundantAssignEliminator& _rae): m_rae(_rae)
-		{
-			swap(m_rae.m_declaredVariables, m_outerDeclaredVariables);
-		}
-		~BlockScope()
-		{
-			// This should actually store all declared variables
-			// into a different mapping
-			for (auto const& var: m_rae.m_declaredVariables)
-				m_rae.changeUndecidedTo(var, State::Unused);
-			for (auto const& var: m_rae.m_declaredVariables)
-				m_rae.finalize(var);
-			swap(m_rae.m_declaredVariables, m_outerDeclaredVariables);
-		}
-
-	private:
-		RedundantAssignEliminator& m_rae;
-		std::set<YulString> m_outerDeclaredVariables;
-	};
-
 	// TODO check that this does not cause nondeterminism!
 	// This could also be a pseudo-map from state to assignment.
 	using TrackedAssignments = std::map<YulString, std::map<Assignment const*, State>>;
@@ -171,13 +150,30 @@ private:
 	/// above.
 	/// Will destroy @a _source.
 	static void merge(TrackedAssignments& _target, TrackedAssignments&& _source);
+	static void merge(TrackedAssignments& _target, std::vector<TrackedAssignments>&& _source);
 	void changeUndecidedTo(YulString _variable, State _newState);
-	void finalize(YulString _variable);
+	/// Called when a variable goes out of scope. Sets the state of all still undecided
+	/// assignments to the final state. In this case, this also applies to pending
+	/// break and continue TrackedAssignments.
+	void finalize(YulString _variable, State _finalState);
+	/// Helper function for the above.
+	void finalize(TrackedAssignments& _assignments, YulString _variable, State _finalState);
 
 	Dialect const* m_dialect;
 	std::set<YulString> m_declaredVariables;
 	std::set<Assignment const*> m_pendingRemovals;
 	TrackedAssignments m_assignments;
+
+	/// Working data for traversing for-loops.
+	struct ForLoopInfo
+	{
+		/// Tracked assignment states for each break statement.
+		std::vector<TrackedAssignments> pendingBreakStmts;
+		/// Tracked assignment states for each continue statement.
+		std::vector<TrackedAssignments> pendingContinueStmts;
+	};
+	ForLoopInfo m_forLoopInfo;
+	size_t m_forLoopNestingDepth = 0;
 };
 
 class AssignmentRemover: public ASTModifier

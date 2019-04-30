@@ -5,8 +5,9 @@
     let b := mload(a)
     pop(b)
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let a := 1
 //     pop(1)

@@ -63,6 +63,16 @@ void CodeSize::visit(Statement const& _statement)
 {
 	if (_statement.type() == typeid(FunctionDefinition) && m_ignoreFunctions)
 		return;
+	else if (
+		_statement.type() == typeid(If) ||
+		_statement.type() == typeid(Break) ||
+		_statement.type() == typeid(Continue)
+	)
+		m_size += 2;
+	else if (_statement.type() == typeid(ForLoop))
+		m_size += 3;
+	else if (_statement.type() == typeid(Switch))
+		m_size += 1 + 2 * boost::get<Switch>(_statement).cases.size();
 	else if (!(
 		_statement.type() == typeid(Block) ||
 		_statement.type() == typeid(ExpressionStatement) ||
@@ -99,12 +109,11 @@ void CodeCost::operator()(FunctionCall const& _funCall)
 
 void CodeCost::operator()(FunctionalInstruction const& _instr)
 {
-	using namespace dev::solidity;
 	yulAssert(m_cost >= 1, "Should assign cost one in visit(Expression).");
-	Tier gasPriceTier = instructionInfo(_instr.instruction).gasPriceTier;
-	if (gasPriceTier < Tier::VeryLow)
+	dev::eth::Tier gasPriceTier = dev::eth::instructionInfo(_instr.instruction).gasPriceTier;
+	if (gasPriceTier < dev::eth::Tier::VeryLow)
 		m_cost -= 1;
-	else if (gasPriceTier < Tier::High)
+	else if (gasPriceTier < dev::eth::Tier::High)
 		m_cost += 1;
 	else
 		m_cost += 49;

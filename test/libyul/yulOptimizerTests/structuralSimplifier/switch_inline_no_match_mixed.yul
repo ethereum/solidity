@@ -5,8 +5,9 @@
 	case "" { y := 8 }
 	case 1 { y := 9 }
 }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     let y := 200
 // }

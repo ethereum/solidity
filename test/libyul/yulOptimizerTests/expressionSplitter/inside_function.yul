@@ -5,8 +5,9 @@
 	}
 	sstore(x, f(mload(2), mload(2)))
 }
+// ====
+// step: expressionSplitter
 // ----
-// expressionSplitter
 // {
 //     let _1 := 3
 //     let _2 := 7

@@ -37,7 +37,12 @@ class SymbolicVariable
 public:
 	SymbolicVariable(
 		TypePointer _type,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
+		smt::SolverInterface& _interface
+	);
+	SymbolicVariable(
+		smt::SortPointer _sort,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 
@@ -60,6 +65,9 @@ public:
 protected:
 	std::string uniqueSymbol(unsigned _index) const;
 
+	/// SMT sort.
+	smt::SortPointer m_sort;
+	/// Solidity type, used for size and range in number types.
 	TypePointer m_type;
 	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
@@ -74,7 +82,7 @@ class SymbolicBoolVariable: public SymbolicVariable
 public:
 	SymbolicBoolVariable(
 		TypePointer _type,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 };
@@ -87,7 +95,7 @@ class SymbolicIntVariable: public SymbolicVariable
 public:
 	SymbolicIntVariable(
 		TypePointer _type,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 };
@@ -99,7 +107,7 @@ class SymbolicAddressVariable: public SymbolicIntVariable
 {
 public:
 	SymbolicAddressVariable(
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 };
@@ -112,7 +120,7 @@ class SymbolicFixedBytesVariable: public SymbolicIntVariable
 public:
 	SymbolicFixedBytesVariable(
 		unsigned _numBytes,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 };
@@ -125,7 +133,7 @@ class SymbolicFunctionVariable: public SymbolicVariable
 public:
 	SymbolicFunctionVariable(
 		TypePointer _type,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 
@@ -148,7 +156,7 @@ class SymbolicMappingVariable: public SymbolicVariable
 public:
 	SymbolicMappingVariable(
 		TypePointer _type,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 };
@@ -161,7 +169,7 @@ class SymbolicArrayVariable: public SymbolicVariable
 public:
 	SymbolicArrayVariable(
 		TypePointer _type,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 };
@@ -174,7 +182,7 @@ class SymbolicEnumVariable: public SymbolicVariable
 public:
 	SymbolicEnumVariable(
 		TypePointer _type,
-		std::string const& _uniqueName,
+		std::string _uniqueName,
 		smt::SolverInterface& _interface
 	);
 };

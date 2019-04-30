@@ -190,7 +190,7 @@ bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 
 bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 {
-	if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type.get()))
+	if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type))
 	{
 		if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "gas")
 			m_errorReporter.typeError(
@@ -217,7 +217,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 	}
 
 	if (_memberAccess.memberName() == "callcode")
-		if (auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
+		if (auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
 			if (type->kind() == FunctionType::Kind::BareCallCode)
 				m_errorReporter.typeError(
 					_memberAccess.location(),
@@ -278,7 +278,7 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 		_operation.rightExpression().annotation().isPure &&
 		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod)
 	)
-		if (auto rhs = dynamic_pointer_cast<RationalNumberType const>(
+		if (auto rhs = dynamic_cast<RationalNumberType const*>(
 			ConstantEvaluator(m_errorReporter).evaluate(_operation.rightExpression())
 		))
 			if (rhs->isZero())
@@ -294,13 +294,13 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 {
 	if (_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
 	{
-		auto functionType = dynamic_pointer_cast<FunctionType const>(_functionCall.expression().annotation().type);
+		auto functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
 		solAssert(functionType, "");
 		if (functionType->kind() == FunctionType::Kind::AddMod || functionType->kind() == FunctionType::Kind::MulMod)
 		{
 			solAssert(_functionCall.arguments().size() == 3, "");
 			if (_functionCall.arguments()[2]->annotation().isPure)
-				if (auto lastArg = dynamic_pointer_cast<RationalNumberType const>(
+				if (auto lastArg = dynamic_cast<RationalNumberType const*>(
 					ConstantEvaluator(m_errorReporter).evaluate(*(_functionCall.arguments())[2])
 				))
 					if (lastArg->isZero())

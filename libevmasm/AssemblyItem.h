@@ -21,14 +21,13 @@
 
 #pragma once
 
-#include <iostream>
-#include <sstream>
+#include <libevmasm/Instruction.h>
+#include <libevmasm/Exceptions.h>
+#include <liblangutil/SourceLocation.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
-#include <libevmasm/Instruction.h>
-#include <liblangutil/SourceLocation.h>
-#include "Exceptions.h"
-using namespace dev::solidity;
+#include <iostream>
+#include <sstream>
 
 namespace dev
 {
@@ -59,7 +58,7 @@ public:
 
 	AssemblyItem(u256 _push, langutil::SourceLocation _location = langutil::SourceLocation()):
 		AssemblyItem(Push, std::move(_push), std::move(_location)) { }
-	AssemblyItem(solidity::Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
+	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
 		m_type(Operation),
 		m_instruction(_i),
 		m_location(std::move(_location))

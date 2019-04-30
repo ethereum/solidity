@@ -73,17 +73,19 @@ public:
 	/// of 32 or the input if it is a multiple of 32.
 	std::string roundUpFunction();
 
+	std::string overflowCheckedUIntAddFunction(size_t _bits);
+
 	std::string arrayLengthFunction(ArrayType const& _type);
 	/// @returns the name of a function that computes the number of bytes required
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
 	/// The function reverts for too large lengths.
 	std::string arrayAllocationSizeFunction(ArrayType const& _type);
 	/// @returns the name of a function that converts a storage slot number
-	/// or a memory pointer to the slot number / memory pointer for the data position of an array
-	/// which is stored in that slot / memory area.
+	/// a memory pointer or a calldata pointer to the slot number / memory pointer / calldata pointer
+	/// for the data position of an array which is stored in that slot / memory area / calldata area.
 	std::string arrayDataAreaFunction(ArrayType const& _type);
 	/// @returns the name of a function that advances an array data pointer to the next element.
-	/// Only works for memory arrays and storage arrays that store one item per slot.
+	/// Only works for memory arrays, calldata arrays and storage arrays that store one item per slot.
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that allocates memory.
@@ -91,6 +93,33 @@ public:
 	/// Arguments: size
 	/// Return value: pointer
 	std::string allocationFunction();
+
+	/// @returns the name of the function that converts a value of type @a _from
+	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
+	/// (i.e. "clean"). Asserts on failure.
+	///
+	/// This is used for data being encoded or general type conversions in the code.
+	std::string conversionFunction(Type const& _from, Type const& _to);
+
+	/// @returns the name of the cleanup function for the given type and
+	/// adds its implementation to the requested functions.
+	/// The cleanup function defers to the validator function with "assert"
+	/// if there is no reasonable way to clean a value.
+	std::string cleanupFunction(Type const& _type);
+
+	/// @returns the name of the validator function for the given type and
+	/// adds its implementation to the requested functions.
+	/// @param _revertOnFailure if true, causes revert on invalid data,
+	/// otherwise an assertion failure.
+	///
+	/// This is used for data decoded from external sources.
+	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
+
+	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
+	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
+	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
+	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
+	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
 
 private:
 	langutil::EVMVersion m_evmVersion;

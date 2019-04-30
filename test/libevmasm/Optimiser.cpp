@@ -1180,6 +1180,84 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 	});
 }
 
+BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
+{
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
+
+	for (int i = 1; i < 256; i++)
+	{
+		checkCSE({
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+			Instruction::AND
+		}, {
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+		});
+
+		checkCSE({
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::AND
+		}, {
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+		});
+	}
+
+	// Check that opt. does NOT trigger
+	for (int i = 1; i < 255; i++)
+	{
+		checkCSE({
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			Instruction::AND
+		}, { // Opt. did some reordering
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::AND
+		});
+
+		checkCSE({
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::AND
+		}, { // Opt. did some reordering
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			Instruction::AND
+		});
+	}
+
+	//(x >> (31*8)) & 0xffffffff
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(31*8),
+		Instruction::SHR,
+		u256(0xffffffff),
+		Instruction::AND
+	}, {
+		Instruction::CALLVALUE,
+		u256(31*8),
+		Instruction::SHR
+	});
+}
+
 BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 {
 	vector<Instruction> ops{
@@ -1247,6 +1325,48 @@ BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 		u256("0xffffffffffffffffffffffffffffffffffffffff"),
 		Instruction::CALLVALUE,
 		Instruction::AND
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
+{
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(299),
+		Instruction::SHL
+	}, {
+		u256(0)
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(299),
+		Instruction::SHR
+	}, {
+		u256(0)
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHL
+	}, {
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHL
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHR
+	}, {
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHR
 	});
 }
 

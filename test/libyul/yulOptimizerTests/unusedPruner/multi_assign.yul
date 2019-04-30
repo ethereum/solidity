@@ -4,8 +4,9 @@
     function f() -> x, y { }
     a, b := f()
 }
+// ====
+// step: unusedPruner
 // ----
-// unusedPruner
 // {
 //     let a
 //     let b

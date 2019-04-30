@@ -53,16 +53,15 @@
 #include <liblangutil/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
+#include <boost/optional.hpp>
 #include <algorithm>
 #include <ostream>
 #include <tuple>
 
 using namespace std;
+using namespace langutil;
 
-namespace langutil
-{
-
-std::string to_string(ScannerError _errorCode)
+string langutil::to_string(ScannerError _errorCode)
 {
 	switch (_errorCode)
 	{
@@ -83,15 +82,19 @@ std::string to_string(ScannerError _errorCode)
 	}
 }
 
-std::ostream& operator<<(std::ostream& os, ScannerError _errorCode)
+
+ostream& langutil::operator<<(ostream& os, ScannerError _errorCode)
 {
-	os << to_string(_errorCode);
-	return os;
+	return os << to_string(_errorCode);
 }
+
+namespace langutil
+{
 
 /// Scoped helper for literal recording. Automatically drops the literal
 /// if aborting the scanning before it's complete.
-enum LiteralType {
+enum LiteralType
+{
 	LITERAL_TYPE_STRING,
 	LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
 	LITERAL_TYPE_COMMENT
@@ -100,9 +103,10 @@ enum LiteralType {
 class LiteralScope
 {
 public:
-	explicit LiteralScope(Scanner* _self, enum LiteralType _type): m_type(_type)
-	, m_scanner(_self)
-	, m_complete(false)
+	explicit LiteralScope(Scanner* _self, enum LiteralType _type):
+		m_type(_type),
+		m_scanner(_self),
+		m_complete(false)
 	{
 		if (_type == LITERAL_TYPE_COMMENT)
 			m_scanner->m_nextSkippedComment.literal.clear();
@@ -125,8 +129,9 @@ private:
 	enum LiteralType m_type;
 	Scanner* m_scanner;
 	bool m_complete;
-}; // end of LiteralScope class
+};
 
+}
 
 void Scanner::reset(CharStream _source)
 {
@@ -134,20 +139,27 @@ void Scanner::reset(CharStream _source)
 	reset();
 }
 
-void Scanner::reset(std::shared_ptr<CharStream> _source)
+void Scanner::reset(shared_ptr<CharStream> _source)
 {
 	solAssert(_source.get() != nullptr, "You MUST provide a CharStream when resetting.");
-	m_source = _source;
+	m_source = std::move(_source);
 	reset();
 }
 
 void Scanner::reset()
 {
 	m_source->reset();
+	m_supportPeriodInIdentifier = false;
 	m_char = m_source->get();
 	skipWhitespace();
-	scanToken();
 	next();
+	next();
+}
+
+void Scanner::supportPeriodInIdentifier(bool _value)
+{
+	m_supportPeriodInIdentifier = _value;
+	rescan();
 }
 
 bool Scanner::scanHexByte(char& o_scannedByte)
@@ -168,7 +180,7 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 	return true;
 }
 
-bool Scanner::scanUnicode(unsigned & o_codepoint)
+boost::optional<unsigned> Scanner::scanUnicode()
 {
 	unsigned x = 0;
 	for (int i = 0; i < 4; i++)
@@ -177,13 +189,12 @@ bool Scanner::scanUnicode(unsigned & o_codepoint)
 		if (d < 0)
 		{
 			rollback(i);
-			return false;
+			return {};
 		}
 		x = x * 16 + d;
 		advance();
 	}
-	o_codepoint = x;
-	return true;
+	return x;
 }
 
 // This supports codepoints between 0000 and FFFF.
@@ -202,6 +213,18 @@ void Scanner::addUnicodeAsUTF8(unsigned codepoint)
 		addLiteralChar(0x80 | ((codepoint >> 6) & 0x3f));
 		addLiteralChar(0x80 | (codepoint & 0x3f));
 	}
+}
+
+void Scanner::rescan()
+{
+	size_t rollbackTo = 0;
+	if (m_skippedComment.literal.empty())
+		rollbackTo = m_currentToken.location.start;
+	else
+		rollbackTo = m_skippedComment.location.start;
+	m_char = m_source->rollback(size_t(m_source->position()) - rollbackTo);
+	next();
+	next();
 }
 
 // Ensure that tokens can be stored in a byte.
@@ -664,10 +687,10 @@ bool Scanner::scanEscape()
 		break;
 	case 'u':
 	{
-		unsigned codepoint;
-		if (!scanUnicode(codepoint))
+		if (boost::optional<unsigned> codepoint = scanUnicode())
+			addUnicodeAsUTF8(*codepoint);
+		else
 			return false;
-		addUnicodeAsUTF8(codepoint);
 		return true;
 	}
 	case 'x':
@@ -754,7 +777,8 @@ void Scanner::scanDecimalDigits()
 		return;
 
 	// May continue with decimal digit or underscore for grouping.
-	do addLiteralCharAndAdvance();
+	do
+		addLiteralCharAndAdvance();
 	while (!m_source->isPastEndOfInput() && (isDecimalDigit(m_char) || m_char == '_'));
 
 	// Defer further validation of underscore to SyntaxChecker.
@@ -860,11 +884,8 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	while (isIdentifierPart(m_char)) //get full literal
+	while (isIdentifierPart(m_char) || (m_char == '.' && m_supportPeriodInIdentifier))
 		addLiteralCharAndAdvance();
 	literal.complete();
 	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);
-}
-
-
 }

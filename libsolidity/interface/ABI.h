@@ -32,7 +32,7 @@ namespace solidity
 // Forward declarations
 class ContractDefinition;
 class Type;
-using TypePointer = std::shared_ptr<Type const>;
+using TypePointer = Type const*;
 
 class ABI
 {

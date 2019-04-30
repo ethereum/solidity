@@ -36,9 +36,10 @@ using namespace langutil;
 using namespace dev;
 using namespace yul::test;
 
-DEFINE_BINARY_PROTO_FUZZER(Function const& _input)
+DEFINE_PROTO_FUZZER(Function const& _input)
 {
-	string yul_source = functionToString(_input);
+	ProtoConverter converter;
+	string yul_source = converter.functionToString(_input);
 	if (yul_source.size() > 600)
 		return;
 
@@ -51,7 +52,11 @@ DEFINE_BINARY_PROTO_FUZZER(Function const& _input)
 	}
 
 	// AssemblyStack entry point
-	AssemblyStack stack(langutil::EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		langutil::EVMVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::full()
+	);
 
 	try
 	{
@@ -67,9 +72,32 @@ DEFINE_BINARY_PROTO_FUZZER(Function const& _input)
 
 	ostringstream os1;
 	ostringstream os2;
-	yulFuzzerUtil::interpret(os1, stack.parserResult()->code);
+	try
+	{
+		yulFuzzerUtil::interpret(
+			os1,
+			stack.parserResult()->code
+		);
+	}
+	catch (yul::test::StepLimitReached const&)
+	{
+		return;
+	}
+	catch (yul::test::InterpreterTerminatedGeneric const&)
+	{
+	}
+
 	stack.optimize();
-	yulFuzzerUtil::interpret(os2, stack.parserResult()->code);
+	try
+	{
+		yulFuzzerUtil::interpret(os2,
+			stack.parserResult()->code,
+			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
+		);
+	}
+	catch (yul::test::InterpreterTerminatedGeneric const&)
+	{
+	}
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");

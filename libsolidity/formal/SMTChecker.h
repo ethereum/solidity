@@ -18,8 +18,10 @@
 #pragma once
 
 
+#include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicVariables.h>
+#include <libsolidity/formal/VariableUsage.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
@@ -41,8 +43,6 @@ namespace dev
 namespace solidity
 {
 
-class VariableUsage;
-
 class SMTChecker: private ASTConstVisitor
 {
 public:
@@ -54,6 +54,10 @@ public:
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to
 	/// the constructor.
 	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
+
+	/// @return the FunctionDefinition of a called function if possible and should inline,
+	/// otherwise nullptr.
+	static FunctionDefinition const* inlinedFunctionCallToDefinition(FunctionCall const& _funCall);
 
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
@@ -83,11 +87,22 @@ private:
 	void endVisit(Return const& _node) override;
 	bool visit(MemberAccess const& _node) override;
 	void endVisit(IndexAccess const& _node) override;
+	bool visit(InlineAssembly const& _node) override;
 
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.
 	bool shortcutRationalNumber(Expression const& _expr);
 	void arithmeticOperation(BinaryOperation const& _op);
+	/// @returns _op(_left, _right).
+	/// Used by the function above, compound assignments and
+	/// unary increment/decrement.
+	smt::Expression arithmeticOperation(
+		Token _op,
+		smt::Expression const& _left,
+		smt::Expression const& _right,
+		TypePointer const& _commonType,
+		langutil::SourceLocation const& _location
+	);
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
@@ -113,7 +128,7 @@ private:
 	/// while aliasing is not supported.
 	void arrayAssignment();
 	/// Handles assignment to SMT array index.
-	void arrayIndexAssignment(Assignment const& _assignment);
+	void arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide);
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -128,8 +143,8 @@ private:
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
 	/// @returns the variable indices after visiting the branch.
-	VariableIndices visitBranch(Statement const& _statement, smt::Expression const* _condition = nullptr);
-	VariableIndices visitBranch(Statement const& _statement, smt::Expression _condition);
+	VariableIndices visitBranch(ASTNode const* _statement, smt::Expression const* _condition = nullptr);
+	VariableIndices visitBranch(ASTNode const* _statement, smt::Expression _condition);
 
 	/// Check that a condition can be satisfied.
 	void checkCondition(
@@ -137,7 +152,7 @@ private:
 		langutil::SourceLocation const& _location,
 		std::string const& _description,
 		std::string const& _additionalValueName = "",
-		smt::Expression* _additionalValue = nullptr
+		smt::Expression const* _additionalValue = nullptr
 	);
 	/// Checks that a boolean condition is not constant. Do not warn if the expression
 	/// is a literal constant.
@@ -164,7 +179,7 @@ private:
 			location(_location),
 			callStack(move(_callStack))
 		{
-			solAssert(dynamic_cast<IntegerType const*>(intType.get()), "");
+			solAssert(dynamic_cast<IntegerType const*>(intType), "");
 		}
 	};
 
@@ -186,7 +201,7 @@ private:
 	void resetVariable(VariableDeclaration const& _variable);
 	void resetStateVariables();
 	void resetStorageReferences();
-	void resetVariables(std::vector<VariableDeclaration const*> _variables);
+	void resetVariables(std::set<VariableDeclaration const*> const& _variables);
 	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
@@ -194,7 +209,7 @@ private:
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
-	void mergeVariables(std::vector<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
+	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
@@ -256,10 +271,14 @@ private:
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
 
+	/// @returns variables that are touched in _node's subtree.
+	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node);
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
-	std::shared_ptr<VariableUsage> m_variableUsage;
+	VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
+	bool m_externalFunctionCallHappened = false;
 	// True if the "No SMT solver available" warning was already created.
 	bool m_noSolverWarning = false;
 	/// An Expression may have multiple smt::Expression due to
@@ -267,6 +286,7 @@ private:
 	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_globalContext;
+
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
 	/// These may be direct application of UFs or Array index access.
 	/// Used to retrieve models.
@@ -298,6 +318,9 @@ private:
 	/// when placeholder is visited.
 	/// Needs to be a stack because of function calls.
 	std::vector<int> m_modifierDepthStack;
+
+	/// Stores the context of the encoding.
+	smt::EncodingContext m_context;
 };
 
 }

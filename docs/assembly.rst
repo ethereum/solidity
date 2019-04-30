@@ -42,7 +42,8 @@ Syntax
 ------
 
 Assembly parses comments, literals and identifiers in the same way as Solidity, so you can use the
-usual ``//`` and ``/* */`` comments. Inline assembly is marked by ``assembly { ... }`` and inside
+usual ``//`` and ``/* */`` comments. There is one exception: Identifiers in inline assembly can contain
+``.``. Inline assembly is marked by ``assembly { ... }`` and inside
 these curly braces, you can use the following (see the later sections for more details):
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
@@ -765,7 +766,7 @@ Grammar::
         SubAssembly
     AssemblyExpression = AssemblyCall | Identifier | AssemblyLiteral
     AssemblyLiteral = NumberLiteral | StringLiteral | HexLiteral
-    Identifier = [a-zA-Z_$] [a-zA-Z_0-9]*
+    Identifier = [a-zA-Z_$] [a-zA-Z_0-9.]*
     AssemblyCall = Identifier '(' ( AssemblyExpression ( ',' AssemblyExpression )* )? ')'
     AssemblyLocalDefinition = 'let' IdentifierOrList ( ':=' AssemblyExpression )?
     AssemblyAssignment = IdentifierOrList ':=' AssemblyExpression

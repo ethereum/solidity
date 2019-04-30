@@ -92,20 +92,21 @@ void copyZeroExtended(
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
 u256 EVMInstructionInterpreter::eval(
-	solidity::Instruction _instruction,
+	dev::eth::Instruction _instruction,
 	vector<u256> const& _arguments
 )
 {
-	using dev::solidity::Instruction;
+	using namespace dev::eth;
+	using dev::eth::Instruction;
 
-	auto info = solidity::instructionInfo(_instruction);
+	auto info = instructionInfo(_instruction);
 	yulAssert(size_t(info.args) == _arguments.size(), "");
 
 	auto const& arg = _arguments;
 	switch (_instruction)
 	{
 	case Instruction::STOP:
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	// --------------- arithmetic ---------------
 	case Instruction::ADD:
 		return arg[0] + arg[1];
@@ -341,18 +342,18 @@ u256 EVMInstructionInterpreter::eval(
 		if (logMemoryRead(arg[0], arg[1]))
 			data = bytesConstRef(m_state.memory.data() + size_t(arg[0]), size_t(arg[1])).toBytes();
 		logTrace(_instruction, arg, data);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	}
 	case Instruction::REVERT:
 		logMemoryRead(arg[0], arg[1]);
 		logTrace(_instruction, arg);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	case Instruction::INVALID:
 		logTrace(_instruction);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	case Instruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
-		throw InterpreterTerminated();
+		throw ExplicitlyTerminated();
 	case Instruction::POP:
 		break;
 	// --------------- invalid in strict assembly ---------------
@@ -455,17 +456,13 @@ bool EVMInstructionInterpreter::logMemoryWrite(u256 const& _offset, u256 const& 
 
 bool EVMInstructionInterpreter::logMemory(bool _write, u256 const& _offset, u256 const& _size, bytes const& _data)
 {
-	/// Memory size limit. Anything beyond this will still work, but it has
-	/// deterministic yet not necessarily consistent behaviour.
-	size_t constexpr maxMemSize = 0x20000000;
-
 	logTrace(_write ? "MSTORE_AT_SIZE" : "MLOAD_FROM_SIZE", {_offset, _size}, _data);
 
 	if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
 	{
 		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
 		m_state.msize = max(m_state.msize, newSize);
-		if (newSize < maxMemSize)
+		if (newSize < m_state.maxMemSize)
 		{
 			if (m_state.memory.size() < newSize)
 				m_state.memory.resize(size_t(newSize));
@@ -478,9 +475,9 @@ bool EVMInstructionInterpreter::logMemory(bool _write, u256 const& _offset, u256
 	return false;
 }
 
-void EVMInstructionInterpreter::logTrace(solidity::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(dev::eth::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
-	logTrace(solidity::instructionInfo(_instruction).name, _arguments, _data);
+	logTrace(dev::eth::instructionInfo(_instruction).name, _arguments, _data);
 }
 
 void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
@@ -495,6 +492,6 @@ void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, 
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{
 		m_state.trace.emplace_back("Trace size limit reached.");
-		throw InterpreterTerminated();
+		throw TraceLimitReached();
 	}
 }

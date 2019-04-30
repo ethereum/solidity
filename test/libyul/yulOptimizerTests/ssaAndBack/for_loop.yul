@@ -1,7 +1,7 @@
 {
+    let a := mload(0)
+    let b := mload(1)
     for {
-      let a := mload(0)
-      let b := mload(1)
     }
     lt(mload(a),mload(b))
     {
@@ -15,12 +15,13 @@
         b := mload(a)
     }
 }
+// ====
+// step: ssaAndBack
 // ----
-// ssaAndBack
 // {
+//     let a := mload(0)
+//     let b := mload(1)
 //     for {
-//         let a := mload(0)
-//         let b := mload(1)
 //     }
 //     lt(mload(a), mload(b))
 //     {

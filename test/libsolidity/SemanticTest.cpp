@@ -43,7 +43,13 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
 	file.exceptions(ios::badbit);
 
-	m_source = parseSource(file);
+	m_source = parseSourceAndSettings(file);
+	if (m_settings.count("compileViaYul"))
+	{
+		m_validatedSettings["compileViaYul"] = m_settings["compileViaYul"];
+		m_compileViaYul = true;
+		m_settings.erase("compileViaYul");
+	}
 	parseExpectations(file);
 }
 
@@ -105,7 +111,7 @@ void SemanticTest::parseExpectations(istream& _stream)
 {
 	TestFileParser parser{_stream};
 	auto functionCalls = parser.parseFunctionCalls();
-	move(functionCalls.begin(), functionCalls.end(), back_inserter(m_tests));
+	std::move(functionCalls.begin(), functionCalls.end(), back_inserter(m_tests));
 }
 
 bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments)

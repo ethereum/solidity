@@ -49,7 +49,7 @@ struct BuiltinFunction
 	/// This means the function cannot depend on storage or memory, cannot have any side-effects,
 	/// but it can depend on state that is constant across an EVM-call.
 	bool movable = false;
-	/// If true, can only accept literals as arguments and they cannot be moved to voriables.
+	/// If true, can only accept literals as arguments and they cannot be moved to variables.
 	bool literalArguments = false;
 };
 

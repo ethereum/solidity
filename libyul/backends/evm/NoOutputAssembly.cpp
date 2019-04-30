@@ -30,25 +30,25 @@ using namespace langutil;
 using namespace yul;
 
 
-void NoOutputAssembly::appendInstruction(solidity::Instruction _instr)
+void NoOutputAssembly::appendInstruction(dev::eth::Instruction _instr)
 {
-	m_stackHeight += solidity::instructionInfo(_instr).ret - solidity::instructionInfo(_instr).args;
+	m_stackHeight += instructionInfo(_instr).ret - instructionInfo(_instr).args;
 }
 
 void NoOutputAssembly::appendConstant(u256 const&)
 {
-	appendInstruction(solidity::pushInstruction(1));
+	appendInstruction(dev::eth::pushInstruction(1));
 }
 
 void NoOutputAssembly::appendLabel(LabelID)
 {
-	appendInstruction(solidity::Instruction::JUMPDEST);
+	appendInstruction(dev::eth::Instruction::JUMPDEST);
 }
 
 void NoOutputAssembly::appendLabelReference(LabelID)
 {
 	solAssert(!m_evm15, "Cannot use plain label references in EMV1.5 mode.");
-	appendInstruction(solidity::pushInstruction(1));
+	appendInstruction(dev::eth::pushInstruction(1));
 }
 
 NoOutputAssembly::LabelID NoOutputAssembly::newLabelId()
@@ -69,7 +69,7 @@ void NoOutputAssembly::appendLinkerSymbol(string const&)
 void NoOutputAssembly::appendJump(int _stackDiffAfter)
 {
 	solAssert(!m_evm15, "Plain JUMP used for EVM 1.5");
-	appendInstruction(solidity::Instruction::JUMP);
+	appendInstruction(dev::eth::Instruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
@@ -91,7 +91,7 @@ void NoOutputAssembly::appendJumpToIf(LabelID _labelId)
 	else
 	{
 		appendLabelReference(_labelId);
-		appendInstruction(solidity::Instruction::JUMPI);
+		appendInstruction(dev::eth::Instruction::JUMPI);
 	}
 }
 
@@ -118,7 +118,7 @@ void NoOutputAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 
 void NoOutputAssembly::appendAssemblySize()
 {
-	appendInstruction(solidity::Instruction::PUSH1);
+	appendInstruction(dev::eth::Instruction::PUSH1);
 }
 
 pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly()
@@ -129,12 +129,12 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::cr
 
 void NoOutputAssembly::appendDataOffset(AbstractAssembly::SubID)
 {
-	appendInstruction(solidity::Instruction::PUSH1);
+	appendInstruction(dev::eth::Instruction::PUSH1);
 }
 
 void NoOutputAssembly::appendDataSize(AbstractAssembly::SubID)
 {
-	appendInstruction(solidity::Instruction::PUSH1);
+	appendInstruction(dev::eth::Instruction::PUSH1);
 }
 
 AbstractAssembly::SubID NoOutputAssembly::appendData(bytes const&)
@@ -153,7 +153,7 @@ NoOutputEVMDialect::NoOutputEVMDialect(shared_ptr<EVMDialect> const& _copyFrom):
 		{
 			_visitArguments();
 			for (size_t i = 0; i < parameters; i++)
-				_assembly.appendInstruction(dev::solidity::Instruction::POP);
+				_assembly.appendInstruction(dev::eth::Instruction::POP);
 
 			for (size_t i = 0; i < returns; i++)
 				_assembly.appendConstant(u256(0));

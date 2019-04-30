@@ -4,8 +4,9 @@
   function f() -> b { let a := mload(0) b := a }
   function g() -> a { let b := mload(0) a := b }
 }
+// ====
+// step: equivalentFunctionCombiner
 // ----
-// equivalentFunctionCombiner
 // {
 //     pop(f())
 //     pop(f())

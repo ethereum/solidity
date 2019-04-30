@@ -1,5 +1,6 @@
 {
-	for { let x := f(0) } f(x) { x := f(x) }
+	let x := f(0)
+	for {  } f(x) { x := f(x) }
 	{
 		let t := f(x)
 	}
@@ -8,16 +9,17 @@
 		r := a
 	}
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     {
+//         let a_3 := 0
+//         let r_4 := 0
+//         sstore(a_3, 0)
+//         r_4 := a_3
+//         let x := r_4
 //         for {
-//             let a_3 := 0
-//             let r_4 := 0
-//             sstore(a_3, 0)
-//             r_4 := a_3
-//             let x := r_4
 //         }
 //         f(x)
 //         {

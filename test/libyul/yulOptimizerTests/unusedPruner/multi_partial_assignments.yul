@@ -2,8 +2,9 @@
     let x, y
     x := 1
 }
+// ====
+// step: unusedPruner
 // ----
-// unusedPruner
 // {
 //     let x, y
 //     x := 1

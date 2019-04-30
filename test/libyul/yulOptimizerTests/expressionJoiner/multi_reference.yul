@@ -3,8 +3,9 @@
 	let a := mload(2)
 	let b := add(a, a)
 }
+// ====
+// step: expressionJoiner
 // ----
-// expressionJoiner
 // {
 //     let a := mload(2)
 //     let b := add(a, a)

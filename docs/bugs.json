@@ -1,9 +1,42 @@
 [
     {
+        "name": "UninitializedFunctionPointerInConstructor",
+        "summary": "Calling uninitialized internal function pointers created in the constructor does not always revert and can cause unexpected behaviour.",
+        "description": "Uninitialized internal function pointers point to a special piece of code that causes a revert when called. Jump target positions are different during construction and after deployment, but the code for setting this special jump target only considered the situation after deployment.",
+        "introduced": "0.5.0",
+        "fixed": "0.5.8",
+        "severity": "very low"
+    },
+    {
+        "name": "UninitializedFunctionPointerInConstructor_0.4.x",
+        "summary": "Calling uninitialized internal function pointers created in the constructor does not always revert and can cause unexpected behaviour.",
+        "description": "Uninitialized internal function pointers point to a special piece of code that causes a revert when called. Jump target positions are different during construction and after deployment, but the code for setting this special jump target only considered the situation after deployment.",
+        "introduced": "0.4.5",
+        "fixed": "0.4.26",
+        "severity": "very low"
+    },
+    {
+        "name": "IncorrectEventSignatureInLibraries",
+        "summary": "Contract types used in events in libraries cause an incorrect event signature hash",
+        "description": "Instead of using the type `address` in the hashed signature, the actual contract name was used, leading to a wrong hash in the logs.",
+        "introduced": "0.5.0",
+        "fixed": "0.5.8",
+        "severity": "very low"
+    },
+    {
+        "name": "IncorrectEventSignatureInLibraries_0.4.x",
+        "summary": "Contract types used in events in libraries cause an incorrect event signature hash",
+        "description": "Instead of using the type `address` in the hashed signature, the actual contract name was used, leading to a wrong hash in the logs.",
+        "introduced": "0.3.0",
+        "fixed": "0.4.26",
+        "severity": "very low"
+    },
+    {
         "name": "ABIEncoderV2PackedStorage",
         "summary": "Storage structs and arrays with types shorter than 32 bytes can cause data corruption if encoded directly from storage using the experimental ABIEncoderV2.",
         "description": "Elements of structs and arrays that are shorter than 32 bytes are not properly decoded from storage when encoded directly (i.e. not via a memory type) using ABIEncoderV2. This can cause corruption in the values themselves but can also overwrite other parts of the encoded data.",
-        "introduced": "0.4.19",
+        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
+        "introduced": "0.5.0",
         "fixed": "0.5.7",
         "severity": "low",
         "conditions": {
@@ -11,9 +44,22 @@
         }
     },
     {
+        "name": "ABIEncoderV2PackedStorage_0.4.x",
+        "summary": "Storage structs and arrays with types shorter than 32 bytes can cause data corruption if encoded directly from storage using the experimental ABIEncoderV2.",
+        "description": "Elements of structs and arrays that are shorter than 32 bytes are not properly decoded from storage when encoded directly (i.e. not via a memory type) using ABIEncoderV2. This can cause corruption in the values themselves but can also overwrite other parts of the encoded data.",
+        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
+        "introduced": "0.4.19",
+        "fixed": "0.4.26",
+        "severity": "low",
+        "conditions": {
+            "ABIEncoderV2": true
+        }
+    },
+    {
         "name": "IncorrectByteInstructionOptimization",
-	"summary": "The optimizer incorrectly handles byte opcodes whose second argument is 31 or a constant expression that evaluates to 31. This can result in unexpected values.",
+        "summary": "The optimizer incorrectly handles byte opcodes whose second argument is 31 or a constant expression that evaluates to 31. This can result in unexpected values.",
         "description": "The optimizer incorrectly handles byte opcodes that use the constant 31 as second argument. This can happen when performing index access on bytesNN types with a compile-time constant value (not index) of 31 or when using the byte opcode in inline assembly.",
+        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
         "introduced": "0.5.5",
         "fixed": "0.5.7",
         "severity": "very low",
@@ -25,6 +71,7 @@
         "name": "DoubleShiftSizeOverflow",
         "summary": "Double bitwise shifts by large constants whose sum overflows 256 bits can result in unexpected values.",
         "description": "Nested logical shift operations whose total shift size is 2**256 or more are incorrectly optimized. This only applies to shifts by numbers of bits that are compile-time constant expressions.",
+        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
         "introduced": "0.5.5",
         "fixed": "0.5.6",
         "severity": "low",
@@ -37,6 +84,7 @@
         "name": "ExpExponentCleanup",
         "summary": "Using the ** operator with an exponent of type shorter than 256 bits can result in unexpected values.",
         "description": "Higher order bits in the exponent are not properly cleaned before the EXP opcode is applied if the type of the exponent expression is smaller than 256 bits and not smaller than the type of the base. In that case, the result might be larger than expected if the exponent is assumed to lie within the value range of the type. Literal numbers as exponents are unaffected as are exponents or bases of type uint256.",
+        "link": "https://blog.ethereum.org/2018/09/13/solidity-bugfix-release/",
         "fixed": "0.4.25",
         "severity": "medium/high",
         "check": {"regex-source": "[^/]\\*\\* *[^/0-9 ]"}
@@ -45,6 +93,7 @@
         "name": "EventStructWrongData",
         "summary": "Using structs in events logged wrong data.",
         "description": "If a struct is used in an event, the address of the struct is logged instead of the actual data.",
+        "link": "https://blog.ethereum.org/2018/09/13/solidity-bugfix-release/",
         "introduced": "0.4.17",
         "fixed": "0.4.25",
         "severity": "very low",
@@ -54,6 +103,7 @@
         "name": "NestedArrayFunctionCallDecoder",
         "summary": "Calling functions that return multi-dimensional fixed-size arrays can result in memory corruption.",
         "description": "If Solidity code calls a function that returns a multi-dimensional fixed-size array, array elements are incorrectly interpreted as memory pointers and thus can cause memory corruption if the return values are accessed. Calling functions with multi-dimensional fixed-size arrays is unaffected as is returning fixed-size arrays from function calls. The regular expression only checks if such functions are present, not if they are called, which is required for the contract to be affected.",
+        "link": "https://blog.ethereum.org/2018/09/13/solidity-bugfix-release/",
         "introduced": "0.1.4",
         "fixed": "0.4.22",
         "severity": "medium",

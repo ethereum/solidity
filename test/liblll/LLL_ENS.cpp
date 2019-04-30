@@ -29,6 +29,7 @@
 
 using namespace std;
 using namespace dev::lll;
+using namespace dev::test;
 
 namespace dev
 {

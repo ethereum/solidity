@@ -4,13 +4,15 @@
         mstore(to, length)
         from := add(from, 0x20)
         to := add(to, 0x20)
-        for { let x := 1 } lt(x, length) { x := add(x, 0x20) } {
+        let x := 1
+        for {  } lt(x, length) { x := add(x, 0x20) } {
             mstore(add(to, x), mload(add(from, x)))
         }
     }
 }
+// ====
+// step: ssaPlusCleanup
 // ----
-// ssaPlusCleanup
 // {
 //     function copy(from, to) -> length
 //     {
@@ -19,9 +21,9 @@
 //         mstore(to, length_1)
 //         let from_2 := add(from, 0x20)
 //         let to_3 := add(to, 0x20)
+//         let x_4 := 1
+//         let x := x_4
 //         for {
-//             let x_4 := 1
-//             let x := x_4
 //         }
 //         lt(x, length_1)
 //         {

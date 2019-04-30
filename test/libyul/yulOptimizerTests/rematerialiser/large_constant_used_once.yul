@@ -5,8 +5,9 @@
     let a := 0xffffffffffffffffffffff
     mstore(0, a)
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let a := 0xffffffffffffffffffffff
 //     mstore(0, 0xffffffffffffffffffffff)

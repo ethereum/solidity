@@ -1,6 +1,6 @@
-too_long_line_multiline.sol:2:5: Error: No visibility specified. Did you intend to add "public"?
+too_long_line_multiline/input.sol:2:5: Error: No visibility specified. Did you intend to add "public"?
     function f() returns (byte _b, byte ... _b7, bytes22 _b22, bytes32 _b32)  {
     ^ (Relevant source part starts here and spans across multiple lines).
-too_long_line_multiline.sol:1:1: Warning: Source file does not specify required compiler version!
+too_long_line_multiline/input.sol:1:1: Warning: Source file does not specify required compiler version!
 contract C {
 ^ (Relevant source part starts here and spans across multiple lines).

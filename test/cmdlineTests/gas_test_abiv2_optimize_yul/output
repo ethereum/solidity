@@ -2,7 +2,7 @@
 ======= gas_test_abiv2_optimize_yul/input.sol:C =======
 Gas estimation:
 construction:
-   651 + 617200 = 617851
+   645 + 608800 = 609445
 external:
    a():	429
    b(uint256):	884

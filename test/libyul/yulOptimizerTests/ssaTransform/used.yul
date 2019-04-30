@@ -14,8 +14,9 @@
   a := 4
   mstore(a, 0)
 }
+// ====
+// step: ssaTransform
 // ----
-// ssaTransform
 // {
 //     let a_1 := 1
 //     let a := a_1

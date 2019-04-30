@@ -9,8 +9,9 @@
     }
     mstore(a, b)
 }
+// ====
+// step: ssaAndBack
 // ----
-// ssaAndBack
 // {
 //     let a := mload(0)
 //     let b := mload(1)

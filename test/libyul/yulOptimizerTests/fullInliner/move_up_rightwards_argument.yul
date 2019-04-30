@@ -5,8 +5,9 @@
 	}
 	let y := add(mload(1), add(f(mload(2), mload(3), mload(4)), mload(5)))
 }
+// ====
+// step: fullInliner
 // ----
-// fullInliner
 // {
 //     {
 //         let _2 := mload(5)

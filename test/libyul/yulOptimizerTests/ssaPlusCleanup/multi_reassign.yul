@@ -5,8 +5,9 @@
     a := 4
     mstore(0, a)
 }
+// ====
+// step: ssaPlusCleanup
 // ----
-// ssaPlusCleanup
 // {
 //     let a_1 := 1
 //     let a := a_1

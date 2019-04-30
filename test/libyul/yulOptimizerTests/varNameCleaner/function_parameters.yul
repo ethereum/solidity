@@ -8,8 +8,9 @@
 	}
 	let f_10
 }
+// ====
+// step: varNameCleaner
 // ----
-// varNameCleaner
 // {
 //     let f_1
 //     function f(x) -> x_1, y

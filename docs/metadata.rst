@@ -65,7 +65,7 @@ explanatory purposes.
       settings:
       {
         // Required for Solidity: Sorted list of remappings
-        remappings: [ ":g/dir" ],
+        remappings: [ ":g=/dir" ],
         // Optional: Optimizer settings. The fields "enabled" and "runs" are deprecated
         // and are only given for backwards-compatibility.
         optimizer: {
@@ -84,6 +84,10 @@ explanatory purposes.
             yulDetails: {}
           }
         },
+        metadata: {
+          // Reflects the setting used in the input json, defaults to false
+          useLiteralContent: true
+        }
         // Required for Solidity: File and name of the contract or library this
         // metadata is created for.
         compilationTarget: {
@@ -121,15 +125,24 @@ Encoding of the Metadata Hash in the Bytecode
 
 Because we might support other ways to retrieve the metadata file in the future,
 the mapping ``{"bzzr0": <Swarm hash>}`` is stored
-`CBOR <https://tools.ietf.org/html/rfc7049>`_-encoded. Since the beginning of that
+`CBOR <https://tools.ietf.org/html/rfc7049>`_-encoded. Since the mapping might
+contain more keys (see below) and the beginning of that
 encoding is not easy to find, its length is added in a two-byte big-endian
-encoding. The current version of the Solidity compiler thus adds the following
+encoding. The current version of the Solidity compiler usually adds the following
 to the end of the deployed bytecode::
 
     0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash> 0x00 0x29
 
 So in order to retrieve the data, the end of the deployed bytecode can be checked
 to match that pattern and use the Swarm hash to retrieve the file.
+
+.. note::
+  The CBOR mapping can also contain other keys, so it is better to fully
+  decode the data instead of relying on it starting with ``0xa165``.
+  For example, if any experimental features that affect code generation
+  are used, the mapping will also contain ``"experimental": true``.
+  Furthermore, we are planning to add the compiler version to the mapping
+  to ease source-verification and scanning for bugs.
 
 .. note::
   The compiler currently uses the "swarm version 0" hash of the metadata,
@@ -154,7 +167,7 @@ Furthermore, the wallet can use the NatSpec user documentation to display a conf
 whenever they interact with the contract, together with requesting
 authorization for the transaction signature.
 
-Additional information about Ethereum Natural Specification (NatSpec) can be found `here <https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format>`_.
+For additional information, read :doc:`Ethereum Natural Language Specification (NatSpec) format <natspec-format>`.
 
 Usage for Source Code Verification
 ==================================
@@ -167,3 +180,7 @@ bytecode is compared to the data of the creation transaction or ``CREATE`` opcod
 This automatically verifies the metadata since its hash is part of the bytecode.
 Excess data corresponds to the constructor input data, which should be decoded
 according to the interface and presented to the user.
+
+In the repository [source-verify](https://github.com/ethereum/source-verify)
+([npm package](https://www.npmjs.com/package/source-verify)) you can see
+example code that shows how to use this feature.

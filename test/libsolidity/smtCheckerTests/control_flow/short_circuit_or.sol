@@ -6,15 +6,13 @@ contract c {
 		x = x + 1;
 		return x;
 	}
-	function g() public {
+	function g() public returns (bool) {
 		x = 0;
-		assert((f() > 0) || (f() > 0));
-		// This assertion should NOT fail.
-		// It currently does because the SMTChecker does not
-		// handle short-circuiting properly and inlines f() twice.
+		bool b = (f() > 0) || (f() > 0);
 		assert(x == 1);
+		assert(b);
+		return b;
 	}
 }
 // ----
 // Warning: (101-106): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (344-358): Assertion violation happens here

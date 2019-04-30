@@ -87,6 +87,8 @@ private:
 	{ }
 
 	NameDispenser& m_nameDispenser;
+	/// This is a set of all variables that are assigned to anywhere in the code.
+	/// Variables that are only declared but never re-assigned are not touched.
 	std::set<YulString> const& m_variablesToReplace;
 	std::map<YulString, YulString> m_currentVariableValues;
 };

@@ -91,7 +91,7 @@ Expression ASTCopier::operator()(FunctionalInstruction const& _instruction)
 
 Expression ASTCopier::operator()(Identifier const& _identifier)
 {
-	return Identifier{_identifier.location, translateIdentifier(_identifier.name)};
+	return translate(_identifier);
 }
 
 Expression ASTCopier::operator()(Literal const& _literal)

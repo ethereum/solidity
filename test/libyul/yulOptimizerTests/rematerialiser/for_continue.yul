@@ -1,7 +1,8 @@
 {
 	let a
 	let b
-	for { let i := 0 }
+	let i := 0
+	for {  }
 		lt(i, 10)
 		{ i := add(a, b) } // `b` is always known to be caller() but `a` may be origin() or caller().
 	{
@@ -14,13 +15,14 @@
 	}
 	mstore(a, b)
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let a
 //     let b
+//     let i := 0
 //     for {
-//         let i := 0
 //     }
 //     lt(i, 10)
 //     {

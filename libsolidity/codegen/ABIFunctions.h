@@ -41,7 +41,7 @@ class Type;
 class ArrayType;
 class StructType;
 class FunctionType;
-using TypePointer = std::shared_ptr<Type const>;
+using TypePointer = Type const*;
 using TypePointers = std::vector<TypePointer>;
 
 /**
@@ -128,12 +128,6 @@ private:
 		std::string toFunctionNameSuffix() const;
 	};
 
-	/// @returns the name of the cleanup function for the given type and
-	/// adds its implementation to the requested functions.
-	/// @param _revertOnFailure if true, causes revert on invalid data,
-	/// otherwise an assertion failure.
-	std::string cleanupFunction(Type const& _type, bool _revertOnFailure = false);
-
 	/// Performs cleanup after reading from a potentially compressed storage slot.
 	/// The function does not perform any validation, it just masks or sign-extends
 	/// higher order bytes or left-aligns (in case of bytesNN).
@@ -142,13 +136,6 @@ private:
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes);
-
-	/// @returns the name of the function that converts a value of type @a _from
-	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
-	/// (i.e. "clean"). Asserts on failure.
-	std::string conversionFunction(Type const& _from, Type const& _to);
-
-	std::string cleanupCombinedExternalFunctionIdFunction();
 
 	/// @returns the name of the ABI encoding function with the given type
 	/// and queues the generation of the function to the requested functions.
@@ -168,7 +155,9 @@ private:
 		EncodingOptions const& _options
 	);
 	/// Part of @a abiEncodingFunction for array target type and given calldata array.
-	std::string abiEncodingFunctionCalldataArray(
+	/// Uses calldatacopy and does not perform cleanup or validation and can therefore only
+	/// be used for byte arrays and arrays with the base type uint256 or bytes32.
+	std::string abiEncodingFunctionCalldataArrayWithoutCleanup(
 		Type const& _givenType,
 		Type const& _targetType,
 		EncodingOptions const& _options
@@ -255,6 +244,9 @@ private:
 	/// single variable.
 	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
 
+	/// @returns the name of a function that retrieves an element from calldata.
+	std::string calldataAccessFunction(Type const& _type);
+
 	/// @returns the name of a function used during encoding that stores the length
 	/// if the array is dynamically sized (and the options do not request in-place encoding).
 	/// It returns the new encoding position.
@@ -274,12 +266,6 @@ private:
 
 	/// @returns the size of the static part of the encoding of the given types.
 	static size_t headSize(TypePointers const& _targetTypes);
-
-	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
-	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
-	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
-	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
-	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
 
 	/// @returns the number of variables needed to store a type.
 	/// This is one for almost all types. The exception being dynamically sized calldata arrays or

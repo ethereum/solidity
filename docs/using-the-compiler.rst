@@ -187,7 +187,7 @@ Input Description
       "settings":
       {
         // Optional: Sorted list of remappings
-        "remappings": [ ":g/dir" ],
+        "remappings": [ ":g=/dir" ],
         // Optional: Optimizer settings
         "optimizer": {
           // disabled by default

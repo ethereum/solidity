@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 		}
 	)";
 	CompilerStack compilerStack;
-	compilerStack.addSource("", std::string(sourceCode));
+	compilerStack.setSources({{"", std::string(sourceCode)}});
 	compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 		}
 	)";
 	CompilerStack compilerStack;
-	compilerStack.addSource("", std::string(sourceCode));
+	compilerStack.setSources({{"", std::string(sourceCode)}});
 	compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
@@ -105,20 +105,22 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 {
 	CompilerStack compilerStack;
-	char const* sourceCode = R"(
+	char const* sourceCodeA = R"(
 		pragma solidity >=0.0;
 		contract A {
 			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
-	compilerStack.addSource("A", std::string(sourceCode));
-	sourceCode = R"(
+	char const* sourceCodeB = R"(
 		pragma solidity >=0.0;
 		contract B {
 			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
-	compilerStack.addSource("B", std::string(sourceCode));
+	compilerStack.setSources({
+		{"A", std::string(sourceCodeA)},
+		{"B", std::string(sourceCodeB)},
+	});
 	compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
@@ -135,29 +137,31 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 {
 	CompilerStack compilerStack;
-	char const* sourceCode = R"(
+	char const* sourceCodeA = R"(
 		pragma solidity >=0.0;
 		contract A {
 			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
-	compilerStack.addSource("A", std::string(sourceCode));
-	sourceCode = R"(
+	char const* sourceCodeB = R"(
 		pragma solidity >=0.0;
 		import "./A";
 		contract B is A {
 			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
-	compilerStack.addSource("B", std::string(sourceCode));
-	sourceCode = R"(
+	char const* sourceCodeC = R"(
 		pragma solidity >=0.0;
 		import "./B";
 		contract C is B {
 			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
-	compilerStack.addSource("C", std::string(sourceCode));
+	compilerStack.setSources({
+		{"A", std::string(sourceCodeA)},
+		{"B", std::string(sourceCodeB)},
+		{"C", std::string(sourceCodeC)}
+	});
 	compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
 	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
@@ -171,6 +175,44 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	BOOST_CHECK(metadata["sources"].isMember("A"));
 	BOOST_CHECK(metadata["sources"].isMember("B"));
 	BOOST_CHECK(metadata["sources"].isMember("C"));
+}
+
+BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
+{
+	// Check that the metadata contains "useLiteralContent"
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract test {
+		}
+	)";
+
+	auto check = [](char const* _src, bool _literal)
+	{
+		CompilerStack compilerStack;
+		compilerStack.setSources({{"", std::string(_src)}});
+		compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
+		compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
+		compilerStack.useMetadataLiteralSources(_literal);
+		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+		string metadata_str = compilerStack.metadata("test");
+		Json::Value metadata;
+		jsonParse(metadata_str, metadata);
+		BOOST_CHECK(dev::test::isValidMetadata(metadata_str));
+		BOOST_CHECK(metadata.isMember("settings"));
+		if (_literal)
+		{
+			BOOST_CHECK(metadata["settings"].isMember("metadata"));
+			BOOST_CHECK(metadata["settings"]["metadata"].isMember("useLiteralContent"));
+			BOOST_CHECK(metadata["settings"]["metadata"]["useLiteralContent"].asBool());
+		}
+		else
+		{
+			BOOST_CHECK(!metadata["settings"].isMember("metadata"));
+		}
+	};
+
+	check(sourceCode, true);
+	check(sourceCode, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

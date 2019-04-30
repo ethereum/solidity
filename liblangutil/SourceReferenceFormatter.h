@@ -25,6 +25,7 @@
 #include <ostream>
 #include <sstream>
 #include <functional>
+#include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceExtractor.h>
 
 namespace dev
@@ -51,7 +52,16 @@ public:
 	virtual void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
 
 	virtual void printSourceLocation(SourceLocation const* _location);
-	virtual void printExceptionInformation(dev::Exception const& _error, std::string const& _category);
+	virtual void printExceptionInformation(dev::Exception const& _exception, std::string const& _category);
+	virtual void printErrorInformation(Error const& _error);
+
+	static std::string formatErrorInformation(Error const& _error)
+	{
+		return formatExceptionInformation(
+			_error,
+			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
+		);
+	}
 
 	static std::string formatExceptionInformation(
 		dev::Exception const& _exception,

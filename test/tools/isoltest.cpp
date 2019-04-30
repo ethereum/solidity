@@ -32,6 +32,7 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
+#include <regex>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -44,6 +45,9 @@ using namespace dev::formatting;
 using namespace std;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+
+using TestCreator = TestCase::TestCaseCreator;
+using TestOptions = dev::test::IsolTestOptions;
 
 struct TestStats
 {
@@ -60,17 +64,43 @@ struct TestStats
 	}
 };
 
+class TestFilter
+{
+public:
+	explicit TestFilter(string const& _filter): m_filter(_filter)
+	{
+		string filter{m_filter};
+
+		boost::replace_all(filter, "/", "\\/");
+		boost::replace_all(filter, "*", ".*");
+
+		m_filterExpression = regex{"(" + filter + "(\\.sol|\\.yul))"};
+	}
+
+	bool matches(string const& _name) const
+	{
+		return regex_match(_name, m_filterExpression);
+	}
+
+private:
+	string m_filter;
+	regex m_filterExpression;
+};
+
 class TestTool
 {
 public:
 	TestTool(
-		TestCase::TestCaseCreator _testCaseCreator,
-		string const& _name,
+		TestCreator _testCaseCreator,
+		TestOptions const& _options,
 		fs::path const& _path,
-		string const& _ipcPath,
-		bool _formatted,
-		langutil::EVMVersion _evmVersion
-	): m_testCaseCreator(_testCaseCreator), m_name(_name), m_path(_path), m_ipcPath(_ipcPath), m_formatted(_formatted), m_evmVersion(_evmVersion)
+		string const& _name
+	):
+		m_testCaseCreator(_testCaseCreator),
+		m_options(_options),
+		m_filter(TestFilter{_options.testFilter}),
+		m_path(_path),
+		m_name(_name)
 	{}
 
 	enum class Result
@@ -84,12 +114,10 @@ public:
 	Result process();
 
 	static TestStats processPath(
-		TestCase::TestCaseCreator _testCaseCreator,
+		TestCreator _testCaseCreator,
+		TestOptions const& _options,
 		fs::path const& _basepath,
-		fs::path const& _path,
-		string const& _ipcPath,
-		bool _formatted,
-		langutil::EVMVersion _evmVersion
+		fs::path const& _path
 	);
 
 	static string editor;
@@ -103,13 +131,14 @@ private:
 
 	Request handleResponse(bool _exception);
 
-	TestCase::TestCaseCreator m_testCaseCreator;
-	string const m_name;
+	TestCreator m_testCaseCreator;
+	TestOptions const& m_options;
+	TestFilter m_filter;
 	fs::path const m_path;
-	string m_ipcPath;
-	bool const m_formatted = false;
-	langutil::EVMVersion const m_evmVersion;
+	string const m_name;
+
 	unique_ptr<TestCase> m_test;
+
 	static bool m_exitRequested;
 };
 
@@ -119,51 +148,58 @@ bool TestTool::m_exitRequested = false;
 TestTool::Result TestTool::process()
 {
 	bool success;
+	bool formatted{!m_options.noColor};
 	std::stringstream outputMessages;
-
-	(AnsiColorized(cout, m_formatted, {BOLD}) << m_name << ": ").flush();
 
 	try
 	{
-		m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_ipcPath, m_evmVersion});
-		if (m_test->supportedForEVMVersion(m_evmVersion))
-			success = m_test->run(outputMessages, "  ", m_formatted);
-		else
+		if (m_filter.matches(m_name))
 		{
-			AnsiColorized(cout, m_formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
-			return Result::Skipped;
+			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
+
+			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_options.ipcPath.string(), m_options.evmVersion()});
+			if (m_test->validateSettings(m_options.evmVersion()))
+				success = m_test->run(outputMessages, "  ", formatted);
+			else
+			{
+				AnsiColorized(cout, formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
+				return Result::Skipped;
+			}
 		}
+		else
+			return Result::Skipped;
 	}
 	catch(boost::exception const& _e)
 	{
-		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
+		AnsiColorized(cout, formatted, {BOLD, RED}) <<
 			"Exception during test: " << boost::diagnostic_information(_e) << endl;
 		return Result::Exception;
 	}
 	catch (std::exception const& _e)
 	{
-		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
+		AnsiColorized(cout, formatted, {BOLD, RED}) <<
 			"Exception during test: " << _e.what() << endl;
 		return Result::Exception;
 	}
 	catch (...)
 	{
-		AnsiColorized(cout, m_formatted, {BOLD, RED}) <<
+		AnsiColorized(cout, formatted, {BOLD, RED}) <<
 			"Unknown exception during test." << endl;
 		return Result::Exception;
 	}
 
 	if (success)
 	{
-		AnsiColorized(cout, m_formatted, {BOLD, GREEN}) << "OK" << endl;
+		AnsiColorized(cout, formatted, {BOLD, GREEN}) << "OK" << endl;
 		return Result::Success;
 	}
 	else
 	{
-		AnsiColorized(cout, m_formatted, {BOLD, RED}) << "FAIL" << endl;
+		AnsiColorized(cout, formatted, {BOLD, RED}) << "FAIL" << endl;
 
-		AnsiColorized(cout, m_formatted, {BOLD, CYAN}) << "  Contract:" << endl;
-		m_test->printSource(cout, "    ", m_formatted);
+		AnsiColorized(cout, formatted, {BOLD, CYAN}) << "  Contract:" << endl;
+		m_test->printSource(cout, "    ", formatted);
+		m_test->printUpdatedSettings(cout, "    ", formatted);
 
 		cout << endl << outputMessages.str() << endl;
 		return Result::Failure;
@@ -193,6 +229,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 				cout << endl;
 				ofstream file(m_path.string(), ios::trunc);
 				m_test->printSource(file);
+				m_test->printUpdatedSettings(file);
 				file << "// ----" << endl;
 				m_test->printUpdatedExpectations(file, "// ");
 				return Request::Rerun;
@@ -212,12 +249,10 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 }
 
 TestStats TestTool::processPath(
-	TestCase::TestCaseCreator _testCaseCreator,
+	TestCreator _testCaseCreator,
+	TestOptions const& _options,
 	fs::path const& _basepath,
-	fs::path const& _path,
-	string const& _ipcPath,
-	bool _formatted,
-	langutil::EVMVersion _evmVersion
+	fs::path const& _path
 )
 {
 	std::queue<fs::path> paths;
@@ -249,7 +284,12 @@ TestStats TestTool::processPath(
 		else
 		{
 			++testCount;
-			TestTool testTool(_testCaseCreator, currentPath.string(), fullpath, _ipcPath, _formatted, _evmVersion);
+			TestTool testTool(
+				_testCaseCreator,
+				_options,
+				fullpath,
+				currentPath.string()
+			);
 			auto result = testTool.process();
 
 			switch(result)
@@ -312,16 +352,15 @@ void setupTerminal()
 }
 
 boost::optional<TestStats> runTestSuite(
-	string const& _name,
+	TestCreator _testCaseCreator,
+	TestOptions const& _options,
 	fs::path const& _basePath,
 	fs::path const& _subdirectory,
-	string const& _ipcPath,
-	TestCase::TestCaseCreator _testCaseCreator,
-	bool _formatted,
-	langutil::EVMVersion _evmVersion
+	string const& _name
 )
 {
-	fs::path testPath = _basePath / _subdirectory;
+	fs::path testPath{_basePath / _subdirectory};
+	bool formatted{!_options.noColor};
 
 	if (!fs::exists(testPath) || !fs::is_directory(testPath))
 	{
@@ -329,22 +368,29 @@ boost::optional<TestStats> runTestSuite(
 		return {};
 	}
 
-	TestStats stats = TestTool::processPath(_testCaseCreator, _basePath, _subdirectory, _ipcPath, _formatted, _evmVersion);
+	TestStats stats = TestTool::processPath(
+		_testCaseCreator,
+		_options,
+		_basePath,
+		_subdirectory
+	);
 
-	cout << endl << _name << " Test Summary: ";
-	AnsiColorized(cout, _formatted, {BOLD, stats ? GREEN : RED}) <<
-		stats.successCount <<
-		"/" <<
-		stats.testCount;
-	cout << " tests successful";
-	if (stats.skippedCount > 0)
+	if (stats.skippedCount != stats.testCount)
 	{
-		cout << " (";
-		AnsiColorized(cout, _formatted, {BOLD, YELLOW}) << stats.skippedCount;
-		cout<< " tests skipped)";
+		cout << endl << _name << " Test Summary: ";
+		AnsiColorized(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
+			stats.successCount <<
+			"/" <<
+			stats.testCount;
+		cout << " tests successful";
+		if (stats.skippedCount > 0)
+		{
+			cout << " (";
+			AnsiColorized(cout, formatted, {BOLD, YELLOW}) << stats.skippedCount;
+			cout<< " tests skipped)";
+		}
+		cout << "." << endl << endl;
 	}
-	cout << "." << endl << endl;
-
 	return stats;
 }
 
@@ -370,6 +416,7 @@ int main(int argc, char const *argv[])
 	}
 
 	TestStats global_stats{0, 0};
+	cout << "Running tests..." << endl << endl;
 
 	// Actually run the tests.
 	// Interactive tests are added in InteractiveTests.h
@@ -381,7 +428,14 @@ int main(int argc, char const *argv[])
 		if (ts.smt && options.disableSMT)
 			continue;
 
-		if (auto stats = runTestSuite(ts.title, options.testPath / ts.path, ts.subpath, options.ipcPath.string(), ts.testCaseCreator, !options.noColor, options.evmVersion()))
+		auto stats = runTestSuite(
+			ts.testCaseCreator,
+			options,
+			options.testPath / ts.path,
+			ts.subpath,
+			ts.title
+		);
+		if (stats)
 			global_stats += *stats;
 		else
 			return 1;

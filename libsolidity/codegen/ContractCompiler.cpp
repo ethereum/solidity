@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
@@ -39,6 +40,7 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
+using namespace dev::eth;
 using namespace dev::solidity;
 
 namespace
@@ -870,7 +872,7 @@ bool ContractCompiler::visit(Return const& _return)
 
 		TypePointer expectedType;
 		if (expression->annotation().type->category() == Type::Category::Tuple || types.size() != 1)
-			expectedType = make_shared<TupleType>(types);
+			expectedType = TypeProvider::tuple(move(types));
 		else
 			expectedType = types.front();
 		compileExpression(*expression, expectedType);
@@ -914,7 +916,7 @@ bool ContractCompiler::visit(VariableDeclarationStatement const& _variableDeclar
 		CompilerUtils utils(m_context);
 		compileExpression(*expression);
 		TypePointers valueTypes;
-		if (auto tupleType = dynamic_cast<TupleType const*>(expression->annotation().type.get()))
+		if (auto tupleType = dynamic_cast<TupleType const*>(expression->annotation().type))
 			valueTypes = tupleType->components();
 		else
 			valueTypes = TypePointers{expression->annotation().type};

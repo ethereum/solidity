@@ -18,8 +18,7 @@
 syntax = "proto2";
 
 message VarDecl {
-  required int32 id = 1;
-  required Expression expr = 2;
+  required Expression expr = 1;
 }
 
 message TypedVarDecl {
@@ -112,14 +111,52 @@ message UnaryOp {
   required Expression operand = 2;
 }
 
+message TernaryOp {
+  enum TOp {
+    ADDM = 0;
+    MULM = 1;
+  }
+  required TOp op = 1;
+  required Expression arg1 = 2;
+  required Expression arg2 = 3;
+  required Expression arg3 = 4;
+}
+
+message NullaryOp {
+  enum NOp {
+    PC = 1;
+    MSIZE = 2;
+    GAS = 3;
+  }
+  required NOp op = 1;
+}
+
 message StoreFunc {
   enum Storage {
     MSTORE = 0;
     SSTORE = 1;
+    MSTORE8 = 2;
   }
   required Expression loc = 1;
   required Expression val = 2;
   required Storage st = 3;
+}
+
+message LogFunc {
+  enum NumTopics {
+    ZERO = 0;
+    ONE = 1;
+    TWO = 2;
+    THREE = 3;
+    FOUR = 4;
+  }
+  required Expression pos = 1;
+  required Expression size = 2;
+  required NumTopics num_topics = 3;
+  required Expression t1 = 4;
+  required Expression t2 = 5;
+  required Expression t3 = 6;
+  required Expression t4 = 7;
 }
 
 message Expression {
@@ -128,6 +165,8 @@ message Expression {
     Literal cons = 2;
     BinaryOp binop = 3;
     UnaryOp unop = 4;
+    TernaryOp top = 5;
+    NullaryOp nop = 6;
   }
 }
 
@@ -142,7 +181,7 @@ message IfStmt {
 }
 
 message ForStmt {
-  required Block for_body = 2;
+  required Block for_body = 1;
 }
 
 message CaseStmt {
@@ -156,6 +195,9 @@ message SwitchStmt {
   optional Block default_block = 3;
 }
 
+message BreakStmt {}
+message ContinueStmt {}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl          = 1;
@@ -165,6 +207,9 @@ message Statement {
     Block               blockstmt     = 5;
     ForStmt             forstmt       = 6;
     SwitchStmt          switchstmt    = 7;
+    BreakStmt           breakstmt     = 8;
+    ContinueStmt        contstmt      = 9;
+    LogFunc             log_func      = 10;
   }
 }
 

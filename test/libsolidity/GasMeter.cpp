@@ -46,8 +46,8 @@ class GasMeterTestFramework: public SolidityExecutionFramework
 public:
 	void compile(string const& _sourceCode)
 	{
-		m_compiler.reset(false);
-		m_compiler.addSource("", "pragma solidity >=0.0;\n" + _sourceCode);
+		m_compiler.reset();
+		m_compiler.setSources({{"", "pragma solidity >=0.0;\n" + _sourceCode}});
 		m_compiler.setOptimiserSettings(dev::test::Options::get().optimize);
 		m_compiler.setEVMVersion(m_evmVersion);
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");

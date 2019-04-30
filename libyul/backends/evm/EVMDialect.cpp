@@ -34,8 +34,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
-
 
 EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion):
 	Dialect{_flavour}, m_objectAccess(_objectAccess), m_evmVersion(_evmVersion)
@@ -84,7 +82,7 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 		std::function<void()> _visitArguments
 	) {
 		_visitArguments();
-		_assembly.appendInstruction(solidity::Instruction::CODECOPY);
+		_assembly.appendInstruction(dev::eth::Instruction::CODECOPY);
 	});
 }
 

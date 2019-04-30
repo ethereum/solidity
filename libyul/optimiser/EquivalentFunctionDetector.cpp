@@ -27,7 +27,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace solidity;
 
 void EquivalentFunctionDetector::operator()(FunctionDefinition const& _fun)
 {

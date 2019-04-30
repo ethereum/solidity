@@ -1,4 +1,3 @@
-// yul
 {
     let a:u256
     { }
@@ -8,8 +7,10 @@
         for {} f() {} {}
     }
 }
+// ====
+// step: mainFunction
+// yul: true
 // ----
-// mainFunction
 // {
 //     function main()
 //     {

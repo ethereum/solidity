@@ -3,8 +3,9 @@
 	let a := div(keccak256(0, 0), 0)
 	mstore(0, a)
 }
+// ====
+// step: fullSimplify
 // ----
-// fullSimplify
 // {
 //     let _1 := 0
 //     pop(keccak256(_1, _1))

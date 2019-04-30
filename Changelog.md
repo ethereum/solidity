@@ -1,3 +1,46 @@
+### 0.5.8 (2019-04-30)
+
+Important Bugfixes:
+ * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
+ * Yul Optimizer: Fix SSA transform for multi-assignments.
+
+
+Language Features:
+ * ABIEncoderV2: Implement encoding of calldata arrays and structs.
+ * Code Generation: Implement copying recursive structs from storage to memory.
+ * Yul: Disallow function definitions inside for-loop init blocks.
+
+
+Compiler Features:
+ * ABI Decoder: Raise a runtime error on dirty inputs when using the experimental decoder.
+ * Optimizer: Add rule for shifts by constants larger than 255 for Constantinople.
+ * Optimizer: Add rule to simplify certain ANDs and SHL combinations
+ * SMTChecker: Support arithmetic compound assignment operators.
+ * SMTChecker: Support unary increment and decrement for array and mapping access.
+ * SMTChecker: Show unsupported warning for inline assembly blocks.
+ * SMTChecker: Support mod.
+ * SMTChecker: Support ``contract`` type.
+ * SMTChecker: Support ``this`` as address.
+ * SMTChecker: Support address members.
+ * Standard JSON Interface: Metadata settings now re-produce the original ``"useLiteralContent"`` setting from the compilation input.
+ * Yul: Adds break and continue keywords to for-loop syntax.
+ * Yul: Support ``.`` as part of identifiers.
+ * Yul Optimizer: Adds steps for detecting and removing of dead code.
+
+
+Bugfixes:
+ * SMTChecker: Implement Boolean short-circuiting.
+ * SMTChecker: SSA control-flow did not take into account state variables that were modified inside inlined functions that were called inside branches.
+ * Type System: Use correct type name for contracts in event parameters when used in libraries. This affected code generation.
+ * Type System: Allow direct call to base class functions that have overloads.
+ * Yul: Properly register functions and disallow shadowing between function variables and variables in the outside scope.
+
+
+Build System:
+ * Soltest: Add commandline option `--test` / `-t` to isoltest which takes a string that allows filtering unit tests.
+ * soltest.sh: allow environment variable ``SOLIDITY_BUILD_DIR`` to specify build folder and add ``--help`` usage.
+
+
 ### 0.5.7 (2019-03-26)
 
 Important Bugfixes:
@@ -367,6 +410,20 @@ Bugfixes:
  * Type System: Allow arbitrary exponents for literals with a mantissa of zero.
  * Parser: Fix incorrect source location for nameless parameters.
  * Command Line Interface: Fix internal error when compiling stdin with no content and --ast option.
+
+
+### 0.4.26 (2019-04-29)
+
+Important Bugfixes:
+ * Code Generator: Fix initialization routine of uninitialized internal function pointers in constructor context.
+ * Type System: Use correct type name for contracts in event parameters when used in libraries. This affected code generation.
+
+Bugfixes:
+ * ABIEncoderV2: Refuse to generate code that is known to be potentially buggy.
+ * General: Split rule list such that JavaScript environments with small stacks can use the compiler.
+
+Note: The above changes are not included in 0.5.0, because they were backported.
+
 
 ### 0.4.25 (2018-09-12)
 

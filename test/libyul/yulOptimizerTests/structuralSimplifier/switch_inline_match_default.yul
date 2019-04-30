@@ -5,8 +5,9 @@
 	case 1 { y := 9 }
 	default { y := 10 }
 }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
 // {
 //     let y := 200
 //     {

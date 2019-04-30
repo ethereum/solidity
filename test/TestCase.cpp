@@ -17,76 +17,80 @@
 
 #include <test/TestCase.h>
 
+#include <libdevcore/StringUtils.h>
+
 #include <boost/algorithm/cxx11/none_of.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 #include <stdexcept>
+
+#include <iostream>
 
 using namespace dev;
 using namespace solidity;
 using namespace dev::solidity::test;
 using namespace std;
 
+void TestCase::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool)
+{
+	if (m_validatedSettings.empty())
+		return;
+
+	_stream << _linePrefix << "// ====" << endl;
+	for (auto const& setting: m_validatedSettings)
+		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
+}
+
 bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 {
 	string extension = _filename.extension().string();
 	return (extension == ".sol" || extension == ".yul") &&
 		   !boost::starts_with(_filename.string(), "~") &&
-		   !boost::starts_with(_filename.string(), ".");
+			!boost::starts_with(_filename.string(), ".");
 }
 
-bool TestCase::supportedForEVMVersion(langutil::EVMVersion _evmVersion) const
+bool TestCase::validateSettings(langutil::EVMVersion)
 {
-	return boost::algorithm::none_of(m_evmVersionRules, [&](auto const& rule) { return !rule(_evmVersion); });
+	if (!m_settings.empty())
+		throw runtime_error(
+			"Unknown setting(s): " +
+			joinHumanReadable(m_settings | boost::adaptors::map_keys)
+		);
+	return true;
 }
 
-string TestCase::parseSource(istream& _stream)
+string TestCase::parseSourceAndSettings(istream& _stream)
 {
 	string source;
 	string line;
+	static string const settingsDelimiter("// ====");
 	static string const delimiter("// ----");
-	static string const evmVersion("// EVMVersion: ");
-	bool isTop = true;
+	bool sourcePart = true;
 	while (getline(_stream, line))
+	{
 		if (boost::algorithm::starts_with(line, delimiter))
 			break;
-		else
-		{
-			if (isTop && boost::algorithm::starts_with(line, evmVersion))
-			{
-				string versionString = line.substr(evmVersion.size() + 1);
-				auto version = langutil::EVMVersion::fromString(versionString);
-				if (!version)
-					throw runtime_error("Invalid EVM version: \"" + versionString + "\"");
-				switch (line.at(evmVersion.size()))
-				{
-					case '>':
-						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
-							return version < _version;
-						});
-						break;
-					case '<':
-						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
-							return _version < version;
-						});
-						break;
-					case '=':
-						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
-							return _version == version;
-						});
-						break;
-					case '!':
-						m_evmVersionRules.emplace_back([version](langutil::EVMVersion _version) {
-							return !(_version == version);
-						});
-						break;
-				}
-			}
-			else
-				isTop = false;
+		else if (boost::algorithm::starts_with(line, settingsDelimiter))
+			sourcePart = false;
+		else if (sourcePart)
 			source += line + "\n";
+		else if (boost::algorithm::starts_with(line, "// "))
+		{
+			size_t colon = line.find(':');
+			if (colon == string::npos)
+				throw runtime_error(string("Expected \":\" inside setting."));
+			string key = line.substr(3, colon - 3);
+			string value = line.substr(colon + 1);
+			boost::algorithm::trim(key);
+			boost::algorithm::trim(value);
+			m_settings[key] = value;
 		}
+		else
+			throw runtime_error(string("Expected \"//\" or \"// ---\" to terminate settings and source."));
+	}
 	return source;
 }
 
@@ -95,4 +99,52 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 	if (_it == _end || *_it != _c)
 		throw runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\".");
 	++_it;
+}
+
+bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVersion)
+{
+	if (!m_settings.count("EVMVersion"))
+		return true;
+
+	string versionString = m_settings["EVMVersion"];
+	m_validatedSettings["EVMVersion"] = versionString;
+	m_settings.erase("EVMVersion");
+
+	if (!TestCase::validateSettings(_evmVersion))
+		return false;
+
+	if (versionString.empty())
+		return true;
+
+	string comparator;
+	size_t versionBegin = 0;
+	for (auto character: versionString)
+		if (!isalpha(character))
+		{
+			comparator += character;
+			versionBegin++;
+		}
+		else
+			break;
+
+	versionString = versionString.substr(versionBegin);
+	boost::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(versionString);
+	if (!version)
+		throw runtime_error("Invalid EVM version: \"" + versionString + "\"");
+
+	if (comparator == ">")
+		return _evmVersion > version;
+	else if (comparator == ">=")
+		return _evmVersion >= version;
+	else if (comparator == "<")
+		return _evmVersion < version;
+	else if (comparator == "<=")
+		return _evmVersion <= version;
+	else if (comparator == "=")
+		return _evmVersion == version;
+	else if (comparator == "!")
+		return !(_evmVersion == version);
+	else
+		throw runtime_error("Invalid EVM comparator: \"" + comparator + "\"");
+	return false; // not reached
 }

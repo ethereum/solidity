@@ -6,16 +6,14 @@ Yul
 
 .. index:: ! assembly, ! asm, ! evmasm, ! yul, julia, iulia
 
-Yul (previously also called JULIA or IULIA) is an intermediate language that can
-compile to various different backends
-(EVM 1.0, EVM 1.5 and eWASM are planned).
-Because of that, it is designed to be a usable common denominator of all three
-platforms.
-It can already be used for "inline assembly" inside Solidity and
-future versions of the Solidity compiler will even use Yul as intermediate
-language. It should also be easy to build high-level optimizer stages for Yul.
+Yul (previously also called JULIA or IULIA) is an intermediate language that can be
+compiled to bytecode for different backends.
 
-In its flavour of inline-assembly, Yul can be used as a language setting
+Support for EVM 1.0, EVM 1.5 and eWASM is planned, and it is designed to be a usable common denominator of all three
+platforms. It can already be used for "inline assembly" inside Solidity and future versions of the Solidity compiler
+will use Yul as an intermediate language. Yul is a good target for high-level optimisation stages that can benefit all target platforms equally.
+
+With the "inline assembly" flavour, Yul can be used as a language setting
 for the :ref:`standard-json interface <compiler-api>`:
 
 ::
@@ -29,15 +27,12 @@ for the :ref:`standard-json interface <compiler-api>`:
         }
     }
 
-Furthermore, the commandline interface can be switched to Yul mode
-using ``solc --strict-assembly``.
+And on the command line interface with the ``--strict-assembly`` parameter.
 
-.. note::
+.. warning::
 
-    Note that the flavour used for "inline assembly" does not have types
-    (everything is ``u256``) and the built-in functions are identical
-    to the EVM opcodes. Please resort to the inline assembly documentation
-    for details.
+    Yul is in active development and bytecode generation is fully implemented only for untyped Yul (everything is ``u256``)
+    and with EVM 1.0 as target, :ref:`EVM opcodes <opcodes>` are used as built-in functions.
 
 The core components of Yul are functions, blocks, variables, literals,
 for-loops, if-statements, switch-statements, expressions and assignments to variables.
@@ -128,7 +123,7 @@ Grammar::
         'break' | 'continue'
     FunctionCall =
         Identifier '(' ( Expression ( ',' Expression )* )? ')'
-    Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
+    Identifier = [a-zA-Z_$] [a-zA-Z_$0-9.]*
     IdentifierList = Identifier ( ',' Identifier)*
     TypeName = Identifier | BuiltinTypeName
     BuiltinTypeName = 'bool' | [us] ( '8' | '32' | '64' | '128' | '256' )
@@ -172,6 +167,7 @@ The ``continue`` and ``break`` statements can only be used inside loop bodies
 and have to be in the same function as the loop (or both have to be at the
 top level).
 The condition part of the for-loop has to evaluate to exactly one value.
+Functions cannot be defined inside for loop init blocks.
 
 Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
 

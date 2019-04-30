@@ -53,11 +53,9 @@
 
 using namespace std;
 using namespace langutil;
-
-namespace dev
-{
-namespace solidity
-{
+using namespace dev::eth;
+using namespace dev;
+using namespace dev::solidity;
 
 void CompilerContext::addStateVariable(
 	VariableDeclaration const& _declaration,
@@ -398,10 +396,7 @@ void CompilerContext::appendInlineAssembly(
 			_assembly + "\n"
 			"------------------ Errors: ----------------\n";
 		for (auto const& error: errorReporter.errors())
-			message += SourceReferenceFormatter::formatExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			message += SourceReferenceFormatter::formatErrorInformation(*error);
 		message += "-------------------------------------------\n";
 
 		solAssert(false, message);
@@ -553,7 +548,4 @@ void CompilerContext::FunctionCompilationQueue::startFunction(Declaration const&
 	if (!m_functionsToCompile.empty() && m_functionsToCompile.front() == &_function)
 		m_functionsToCompile.pop();
 	m_alreadyCompiledFunctions.insert(&_function);
-}
-
-}
 }

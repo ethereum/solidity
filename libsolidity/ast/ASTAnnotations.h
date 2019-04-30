@@ -45,7 +45,7 @@ namespace solidity
 {
 
 class Type;
-using TypePointer = std::shared_ptr<Type const>;
+using TypePointer = Type const*;
 
 struct ASTAnnotation
 {
@@ -122,7 +122,7 @@ struct ModifierDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
 struct VariableDeclarationAnnotation: ASTAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
-	TypePointer type;
+	TypePointer type = nullptr;
 };
 
 struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
@@ -155,7 +155,7 @@ struct TypeNameAnnotation: ASTAnnotation
 {
 	/// Type declared by this type name, i.e. type of a variable where this type name is used.
 	/// Set during reference resolution stage.
-	TypePointer type;
+	TypePointer type = nullptr;
 };
 
 struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
@@ -170,7 +170,7 @@ struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
 struct ExpressionAnnotation: ASTAnnotation
 {
 	/// Inferred type of the expression.
-	TypePointer type;
+	TypePointer type = nullptr;
 	/// Whether the expression is a constant variable
 	bool isConstant = false;
 	/// Whether the expression is pure, i.e. compile-time constant.
@@ -203,7 +203,7 @@ struct BinaryOperationAnnotation: ExpressionAnnotation
 {
 	/// The common type that is used for the operation, not necessarily the result type (which
 	/// e.g. for comparisons is bool).
-	TypePointer commonType;
+	TypePointer commonType = nullptr;
 };
 
 enum class FunctionCallKind

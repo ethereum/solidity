@@ -455,65 +455,54 @@
         converted := cleanup_assert_t_uint160(value)
     }
 }
+// ====
+// step: fullSuite
 // ----
-// fullSuite
 // {
-//     let _1 := 0x20
-//     let _2 := 0
-//     let _3 := mload(_2)
-//     let pos := _1
-//     let length := mload(_3)
-//     mstore(_1, length)
-//     pos := 64
-//     let srcPtr := add(_3, _1)
-//     let i := _2
-//     for {
-//     }
-//     lt(i, length)
 //     {
-//         i := add(i, 1)
-//     }
-//     {
-//         let _4 := mload(srcPtr)
-//         let pos_1 := pos
-//         let srcPtr_1 := _4
-//         let i_1 := _2
+//         let _1 := 0x20
+//         let _2 := 0
+//         let _3 := mload(_2)
+//         let pos := _1
+//         let length := mload(_3)
+//         mstore(_1, length)
+//         pos := 64
+//         let srcPtr := add(_3, _1)
+//         let i := _2
 //         for {
 //         }
-//         lt(i_1, 0x3)
+//         lt(i, length)
 //         {
-//             i_1 := add(i_1, 1)
+//             i := add(i, 1)
 //         }
 //         {
-//             mstore(pos_1, and(mload(srcPtr_1), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
-//             srcPtr_1 := add(srcPtr_1, _1)
-//             pos_1 := add(pos_1, _1)
+//             abi_encode_t_array$_t_contract$_C_$55_$3_memory_to_t_array$_t_address_$3_memory_ptr(mload(srcPtr), pos)
+//             srcPtr := add(srcPtr, _1)
+//             pos := add(pos, 0x60)
 //         }
-//         srcPtr := add(srcPtr, _1)
-//         pos := add(pos, 0x60)
+//         let _4 := mload(64)
+//         let _5 := mload(_1)
+//         if slt(sub(_4, _5), 128)
+//         {
+//             revert(_2, _2)
+//         }
+//         let offset := calldataload(add(_5, 64))
+//         let _6 := 0xffffffffffffffff
+//         if gt(offset, _6)
+//         {
+//             revert(_2, _2)
+//         }
+//         let value2 := abi_decode_t_array$_t_uint256_$dyn_memory_ptr(add(_5, offset), _4)
+//         let offset_1 := calldataload(add(_5, 96))
+//         if gt(offset_1, _6)
+//         {
+//             revert(_2, _2)
+//         }
+//         let value3 := abi_decode_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(add(_5, offset_1), _4)
+//         sstore(calldataload(_5), calldataload(add(_5, _1)))
+//         sstore(value2, value3)
+//         sstore(_2, pos)
 //     }
-//     let _5 := mload(64)
-//     let _6 := mload(_1)
-//     if slt(sub(_5, _6), 128)
-//     {
-//         revert(_2, _2)
-//     }
-//     let offset := calldataload(add(_6, 64))
-//     let _7 := 0xffffffffffffffff
-//     if gt(offset, _7)
-//     {
-//         revert(_2, _2)
-//     }
-//     let value2 := abi_decode_t_array$_t_uint256_$dyn_memory_ptr(add(_6, offset), _5)
-//     let offset_1 := calldataload(add(_6, 96))
-//     if gt(offset_1, _7)
-//     {
-//         revert(_2, _2)
-//     }
-//     let value3 := abi_decode_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(add(_6, offset_1), _5)
-//     sstore(calldataload(_6), calldataload(add(_6, _1)))
-//     sstore(value2, value3)
-//     sstore(_2, pos)
 //     function abi_decode_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(offset, end) -> array
 //     {
 //         if iszero(slt(add(offset, 0x1f), end))
@@ -596,6 +585,22 @@
 //             mstore(dst, calldataload(src))
 //             dst := add(dst, _1)
 //             src := add(src, _1)
+//         }
+//     }
+//     function abi_encode_t_array$_t_contract$_C_$55_$3_memory_to_t_array$_t_address_$3_memory_ptr(value, pos)
+//     {
+//         let srcPtr := value
+//         let i := 0
+//         for {
+//         }
+//         lt(i, 0x3)
+//         {
+//             i := add(i, 1)
+//         }
+//         {
+//             mstore(pos, and(mload(srcPtr), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
+//             srcPtr := add(srcPtr, 0x20)
+//             pos := add(pos, 0x20)
 //         }
 //     }
 //     function allocateMemory(size) -> memPtr

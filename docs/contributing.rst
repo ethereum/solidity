@@ -71,15 +71,21 @@ Running the compiler tests
 ==========================
 
 The ``./scripts/tests.sh`` script executes most Solidity tests and
-runs ``aleth`` automatically if it is in the path, but does not download it,
+runs ``aleth`` automatically if it is in the path. The script does not download it,
 so you need to install it first. Please read on for the details.
 
-Solidity includes different types of tests, most of them bundled into the ``soltest``
-application. Some of them require the ``aleth`` client in testing mode, others require ``libz3``.
+Solidity includes different types of tests, most of them bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
+Some of them require the ``aleth`` client in testing mode, others require ``libz3``.
 
 To run a basic set of tests that require neither ``aleth`` nor ``libz3``, run
-``./scripts/soltest.sh --no-ipc --no-smt``. This script runs ``./build/test/soltest``
-internally.
+``./scripts/soltest.sh --no-ipc --no-smt``.
+
+``./build/test/soltest --help`` has extensive help on all of the options available.
+See especially:
+
+- `show_progress (-p) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/show_progress.html>`_ to show test completion,
+- `run_test (-t) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/run_test.html>`_ to run specific tests cases, and
+- `report-level (-r) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/report_level.html>`_ give a more detailed report.
 
 .. note ::
 
@@ -90,7 +96,7 @@ The option ``--no-smt`` disables the tests that require ``libz3`` and
 ``--no-ipc`` disables those that require ``aleth``.
 
 If you want to run the ipc tests (that test the semantics of the generated code),
-you need to install `aleth <https://github.com/ethereum/aleth/releases/download/v1.5.2/aleth-1.5.2-linux-x86_64.tar.gz>`_ and run it in testing mode: ``aleth --db memorydb --test -d /tmp/testeth``.
+you need to install `aleth <https://github.com/ethereum/aleth/releases/download/v1.6.0-rc.1/aleth-1.6.0-rc.1-linux-x86_64.tar.gz>`_ and run it in testing mode: ``aleth --db memorydb --test -d /tmp/testeth``.
 
 To run the actual tests, use: ``./scripts/soltest.sh --ipcpath /tmp/testeth/geth.ipc``.
 

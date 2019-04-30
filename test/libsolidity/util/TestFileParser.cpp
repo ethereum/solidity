@@ -550,6 +550,11 @@ void TestFileParser::Scanner::scanNextToken()
 				token = selectToken(Token::Whitespace);
 			else if (isEndOfLine())
 				token = selectToken(Token::EOS);
+			else
+				throw Error(
+					Error::Type::ParserError,
+					"Unexpected character: '" + string{current()} + "'"
+				);
 			break;
 		}
 	}

@@ -28,7 +28,7 @@
 
 namespace dev
 {
-namespace solidity
+namespace eth
 {
 enum class Instruction: uint8_t;
 }
@@ -66,7 +66,7 @@ public:
 	explicit EVMInstructionInterpreter(InterpreterState& _state):
 		m_state(_state)
 	{}
-	dev::u256 eval(dev::solidity::Instruction _instruction, std::vector<dev::u256> const& _arguments);
+	dev::u256 eval(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments);
 
 private:
 	/// Record a memory read in the trace. Also updates m_state.msize
@@ -78,7 +78,7 @@ private:
 
 	bool logMemory(bool _write, dev::u256 const& _offset, dev::u256 const& _size = 32, dev::bytes const& _data = {});
 
-	void logTrace(dev::solidity::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
+	void logTrace(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,
 	/// with arguments and auxiliary data (if nonempty).
 	void logTrace(std::string const& _pseudoInstruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});

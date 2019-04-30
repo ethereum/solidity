@@ -1,6 +1,7 @@
-// yul
 { }
+// ====
+// step: disambiguator
+// yul: true
 // ----
-// disambiguator
 // {
 // }

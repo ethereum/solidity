@@ -121,6 +121,7 @@ static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
+static string const g_strIR = "ir";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
@@ -166,6 +167,7 @@ static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argYul = g_strYul;
+static string const g_argIR = g_strIR;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -284,12 +286,26 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", dev::eth::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		sout() << "Opcodes: " << endl;
-		sout() << solidity::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
+	}
+}
+
+void CommandLineInterface::handleIR(string const& _contractName)
+{
+	if (m_args.count(g_argIR))
+	{
+		if (m_args.count(g_argOutputDir))
+			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
+		else
+		{
+			sout() << "IR: " << endl;
+			sout() << m_compiler->yulIR(_contractName) << endl;
+		}
 	}
 }
 
@@ -685,6 +701,7 @@ Allowed options)",
 		(g_argBinary.c_str(), "Binary of the contracts in hex.")
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
+		(g_argIR.c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
@@ -817,7 +834,7 @@ bool CommandLineInterface::processInput()
 	{
 		string input = dev::readStandardInput();
 		StandardCompiler compiler(fileReader);
-		sout() << compiler.compile(input) << endl;
+		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
 	}
 
@@ -901,12 +918,13 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);
-		for (auto const& sourceCode: m_sourceCodes)
-			m_compiler->addSource(sourceCode.first, sourceCode.second);
+		m_compiler->setSources(m_sourceCodes);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
 		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
+
+		m_compiler->enableIRGeneration(m_args.count(g_argIR));
 
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -919,10 +937,7 @@ bool CommandLineInterface::processInput()
 		for (auto const& error: m_compiler->errors())
 		{
 			g_hasOutput = true;
-			formatter->printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter->printErrorInformation(*error);
 		}
 
 		if (!successful)
@@ -1002,7 +1017,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strBinaryRuntime))
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
 		if (requests.count(g_strOpcodes))
-			contractData[g_strOpcodes] = solidity::disassemble(m_compiler->object(contractName).bytecode);
+			contractData[g_strOpcodes] = dev::eth::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm))
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
 		if (requests.count(g_strSrcMap))
@@ -1240,12 +1255,16 @@ bool CommandLineInterface::assemble(
 	map<string, yul::AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(m_evmVersion, _language);
+		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(
+			m_evmVersion,
+			_language,
+			_optimize ? OptimiserSettings::full() : OptimiserSettings::minimal()
+		);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
 				successful = false;
-			else if (_optimize)
+			else
 				stack.optimize();
 		}
 		catch (Exception const& _exception)
@@ -1272,10 +1291,7 @@ bool CommandLineInterface::assemble(
 		for (auto const& error: stack.errors())
 		{
 			g_hasOutput = true;
-			formatter->printExceptionInformation(
-				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-			);
+			formatter->printErrorInformation(*error);
 		}
 		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;
@@ -1299,7 +1315,7 @@ bool CommandLineInterface::assemble(
 		yul::MachineAssemblyObject object;
 		try
 		{
-			object = stack.assemble(_targetMachine, _optimize);
+			object = stack.assemble(_targetMachine);
 		}
 		catch (Exception const& _exception)
 		{
@@ -1366,6 +1382,7 @@ void CommandLineInterface::outputCompilationResults()
 			handleGasEstimation(contract);
 
 		handleBytecode(contract);
+		handleIR(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);

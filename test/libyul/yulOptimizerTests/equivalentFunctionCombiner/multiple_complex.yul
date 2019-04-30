@@ -54,8 +54,9 @@
         }
   }
 }
+// ====
+// step: equivalentFunctionCombiner
 // ----
-// equivalentFunctionCombiner
 // {
 //     pop(f(1, 2, 3))
 //     pop(f(4, 5, 6))

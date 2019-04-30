@@ -775,6 +775,14 @@ BOOST_AUTO_TEST_CASE(call_arrow_missing)
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
 
+BOOST_AUTO_TEST_CASE(call_unexpected_character)
+{
+	char const* source = R"(
+		// f() -> ??
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

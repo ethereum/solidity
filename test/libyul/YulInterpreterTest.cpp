@@ -107,7 +107,11 @@ void YulInterpreterTest::printIndented(ostream& _stream, string const& _output, 
 
 bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(dev::test::Options::get().evmVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		dev::test::Options::get().evmVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::none()
+	);
 	if (stack.parseAndAnalyze("", m_source))
 	{
 		m_ast = stack.parserResult()->code;
@@ -126,12 +130,14 @@ string YulInterpreterTest::interpret()
 {
 	InterpreterState state;
 	state.maxTraceSize = 10000;
+	state.maxSteps = 10000;
+	state.maxMemSize = 0x20000000;
 	Interpreter interpreter(state);
 	try
 	{
 		interpreter(*m_ast);
 	}
-	catch (InterpreterTerminated const&)
+	catch (InterpreterTerminatedGeneric const&)
 	{
 	}
 
@@ -153,8 +159,5 @@ void YulInterpreterTest::printErrors(ostream& _stream, ErrorList const& _errors)
 	SourceReferenceFormatter formatter(_stream);
 
 	for (auto const& error: _errors)
-		formatter.printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+		formatter.printErrorInformation(*error);
 }

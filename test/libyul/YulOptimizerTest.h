@@ -38,7 +38,7 @@ namespace yul
 namespace test
 {
 
-class YulOptimizerTest: public dev::solidity::test::TestCase
+class YulOptimizerTest: public dev::solidity::test::EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
@@ -51,6 +51,7 @@ public:
 	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
+	void printUpdatedSettings(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
 private:

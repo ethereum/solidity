@@ -30,7 +30,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
 
 void ExpressionInliner::run()
 {
