@@ -199,7 +199,11 @@ public:
 		smt::SolverInterface& _interface
 	);
 
-	std::shared_ptr<SymbolicVariable> const& at(unsigned _pos);
+	std::vector<std::shared_ptr<SymbolicVariable>> const& components()
+	{
+		return m_components;
+	}
+
 	void addComponents(std::vector<std::shared_ptr<SymbolicVariable>> _components);
 
 private:

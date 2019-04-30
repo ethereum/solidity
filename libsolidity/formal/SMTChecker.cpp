@@ -362,13 +362,13 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 	else
 	{
 		vector<smt::Expression> rightArguments;
-		auto tuple = dynamic_cast<TupleExpression const*>(&_assignment.rightHandSide());
-		if (tuple && tuple->components().size() > 1)
-			for (auto const& component: tuple->components())
-			{
-				solAssert(component, "");
-				rightArguments.push_back(expr(*component));
-			}
+		if (_assignment.rightHandSide().annotation().type->category() == Type::Category::Tuple)
+		{
+			auto const& symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[&_assignment.rightHandSide()]);
+			solAssert(symbTuple, "");
+			for (auto const& component: symbTuple->components())
+				rightArguments.push_back(component->currentValue());
+		}
 		else
 		{
 			auto rightHandSide = compoundOps.count(op) ?
@@ -399,13 +399,18 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 		vector<shared_ptr<SymbolicVariable>> components;
 		for (auto const& component: _tuple.components())
 		{
-			if (auto varDecl = identifierToVariable(*component))
-				components.push_back(m_variables[varDecl]);
-			else
+			if (component)
 			{
-				knownExpr(*component);
-				components.push_back(m_expressions[component.get()]);
+				if (auto varDecl = identifierToVariable(*component))
+					components.push_back(m_variables[varDecl]);
+				else
+				{
+					solAssert(knownExpr(*component), "");
+					components.push_back(m_expressions[component.get()]);
+				}
 			}
+			else
+				components.push_back(nullptr);
 		}
 		solAssert(components.size() == _tuple.components().size(), "");
 		auto const& symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[&_tuple]);
@@ -690,8 +695,8 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 {
-	FunctionDefinition const* _funDef = inlinedFunctionCallToDefinition(_funCall);
-	if (!_funDef)
+	FunctionDefinition const* funDef = inlinedFunctionCallToDefinition(_funCall);
+	if (!funDef)
 	{
 		m_errorReporter.warning(
 			_funCall.location(),
@@ -700,11 +705,11 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 		return;
 	}
 
-	if (visitedFunction(_funDef))
+	if (visitedFunction(funDef))
 		m_errorReporter.warning(
 			_funCall.location(),
 			"Assertion checker does not support recursive function calls.",
-			SecondarySourceLocation().append("Starting from function:", _funDef->location())
+			SecondarySourceLocation().append("Starting from function:", funDef->location())
 		);
 	else
 	{
@@ -712,27 +717,36 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 		Expression const* calledExpr = &_funCall.expression();
 		auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
 		solAssert(funType, "");
+
 		if (funType->bound())
 		{
 			auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 			solAssert(boundFunction, "");
 			funArgs.push_back(expr(boundFunction->expression()));
 		}
+
 		for (auto arg: _funCall.arguments())
 			funArgs.push_back(expr(*arg));
-		initializeFunctionCallParameters(*_funDef, funArgs);
-		_funDef->accept(*this);
-		auto const& returnParams = _funDef->returnParameters();
-		if (_funDef->returnParameters().size())
+		initializeFunctionCallParameters(*funDef, funArgs);
+
+		funDef->accept(*this);
+
+		createExpr(_funCall);
+		auto const& returnParams = funDef->returnParameters();
+		if (returnParams.size() > 1)
 		{
-			if (returnParams.size() > 1)
-				m_errorReporter.warning(
-					_funCall.location(),
-					"Assertion checker does not yet support calls to functions that return more than one value."
-				);
-			else
-				defineExpr(_funCall, currentValue(*returnParams[0]));
+			vector<shared_ptr<SymbolicVariable>> components;
+			for (auto param: returnParams)
+			{
+				solAssert(m_variables[param.get()], "");
+				components.push_back(m_variables[param.get()]);
+			}
+			auto const& symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[&_funCall]);
+			solAssert(symbTuple, "");
+			symbTuple->addComponents(move(components));
 		}
+		else if (returnParams.size() == 1)
+			defineExpr(_funCall, currentValue(*returnParams.front()));
 	}
 }
 
@@ -814,15 +828,11 @@ void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
 void SMTChecker::visitFunctionIdentifier(Identifier const& _identifier)
 {
 	auto const& fType = dynamic_cast<FunctionType const&>(*_identifier.annotation().type);
-	if (fType.returnParameterTypes().size() > 1)
+	if (fType.returnParameterTypes().size() == 1)
 	{
-		m_errorReporter.warning(
-			_identifier.location(),
-			"Assertion checker does not yet support functions with more than one return parameter."
-		);
+		defineGlobalFunction(fType.richIdentifier(), _identifier);
+		m_expressions.emplace(&_identifier, m_globalContext.at(fType.richIdentifier()));
 	}
-	defineGlobalFunction(fType.richIdentifier(), _identifier);
-	m_expressions.emplace(&_identifier, m_globalContext.at(fType.richIdentifier()));
 }
 
 void SMTChecker::endVisit(Literal const& _literal)
@@ -858,12 +868,17 @@ void SMTChecker::endVisit(Return const& _return)
 	{
 		auto returnParams = m_functionPath.back()->returnParameters();
 		if (returnParams.size() > 1)
-			m_errorReporter.warning(
-				_return.location(),
-				"Assertion checker does not yet support more than one return value."
-			);
+		{
+			auto tuple = dynamic_cast<TupleExpression const*>(_return.expression());
+			solAssert(tuple, "");
+			auto const& components = tuple->components();
+			solAssert(components.size() == returnParams.size(), "");
+			for (unsigned i = 0; i < returnParams.size(); ++i)
+				if (components.at(i))
+					m_interface->addAssertion(expr(*components.at(i)) == newValue(*returnParams.at(i)));
+		}
 		else if (returnParams.size() == 1)
-			m_interface->addAssertion(expr(*_return.expression()) == newValue(*returnParams[0]));
+			m_interface->addAssertion(expr(*_return.expression()) == newValue(*returnParams.front()));
 	}
 }
 
@@ -1254,12 +1269,12 @@ void SMTChecker::assignment(
 	else if (auto varDecl = identifierToVariable(_left))
 	{
 		solAssert(_right.size() == 1, "");
-		assignment(*varDecl, _right.at(0), _location);
+		assignment(*varDecl, _right.front(), _location);
 	}
 	else if (dynamic_cast<IndexAccess const*>(&_left))
 	{
 		solAssert(_right.size() == 1, "");
-		arrayIndexAssignment(_left, _right.at(0));
+		arrayIndexAssignment(_left, _right.front());
 	}
 	else if (auto tuple = dynamic_cast<TupleExpression const*>(&_left))
 	{

@@ -191,8 +191,3 @@ void SymbolicTupleVariable::addComponents(vector<shared_ptr<SymbolicVariable>> _
 	solAssert(_components.size() == tupleType->components().size(), "");
 	m_components = move(_components);
 }
-
-shared_ptr<SymbolicVariable> const& SymbolicTupleVariable::at(unsigned _pos)
-{
-	return m_components.at(_pos);
-}
