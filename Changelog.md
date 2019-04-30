@@ -10,6 +10,7 @@ Compiler Features:
 Bugfixes:
  * SMTChecker: Fix bad cast in base constructor modifier.
  * SMTChecker: Fix internal error when visiting state variable inherited from base class.
+ * SMTChecker: Fix internal error in fixed point operations.
 
 
 
