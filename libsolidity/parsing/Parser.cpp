@@ -104,8 +104,8 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 	catch (FatalError const&)
 	{
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+		if (!m_errorReporter.hasErrors() || m_errorReporter.checkForExcessiveErrors(Error::Type::ParserError))
+			throw; // Don't try to handle
 		return nullptr;
 	}
 }
@@ -314,8 +314,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	}
 	catch (FatalError const&)
 	{
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+		if (!m_errorReporter.hasErrors() || m_errorReporter.checkForExcessiveErrors(Error::Type::ParserError))
+			throw; // Don't try to handle
 	}
 	expectTokenOrConsumeUntil(Token::RBrace);
 	return nodeFactory.createNode<ContractDefinition>(
