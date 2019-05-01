@@ -39,6 +39,7 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 struct CompilerError: virtual dev::Exception {};
 struct InternalCompilerError: virtual dev::Exception {};
 struct FatalError: virtual dev::Exception {};
+struct ParserError: virtual dev::Exception {};
 struct UnimplementedFeatureError: virtual dev::Exception {};
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.

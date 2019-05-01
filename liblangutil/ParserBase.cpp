@@ -79,7 +79,7 @@ void ParserBase::expectToken(Token _value, bool _advance)
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		fatalParserError(string("Expected ") + ParserBase::tokenName(_value) + string(" but got ") + ParserBase::tokenName(tok));
+		parserError(string("Expected ") + ParserBase::tokenName(_value) + string(" but got ") + ParserBase::tokenName(tok));
 	}
 	if (_advance)
 		m_scanner->next();
@@ -97,9 +97,9 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, bool _advance)
 		std::string tokenName = ParserBase::tokenName(_value);
 		std::string mess = string("Expected ") + tokenName + string(" but got ") + ParserBase::tokenName(tok) + string(". ");
 		if (token == Token::EOS)
-			parserError(errorLoc, mess + "Cannot find " + tokenName + " to synchronize to.");
+			parserError(errorLoc, mess);
 		else
-			parserError(errorLoc, mess + "Skipping to next " + tokenName + ".");
+			parserError(errorLoc, mess + "Skipped to next " + tokenName + ".");
 	}
 	if (_advance)
 		m_scanner->next();
@@ -118,14 +118,14 @@ void ParserBase::decreaseRecursionDepth()
 	m_recursionDepth--;
 }
 
-void ParserBase::parserError(SourceLocation const& _location, string const& _description)
+void ParserBase::parserError(SourceLocation const& _location, string const& _description, bool _throw_error)
 {
-	m_errorReporter.parserError(_location, _description);
+	m_errorReporter.parserError(_location, _description, _throw_error);
 }
 
-void ParserBase::parserError(string const& _description)
+void ParserBase::parserError(string const& _description, bool _throw_error)
 {
-	m_errorReporter.parserError(SourceLocation{position(), endPosition(), source()}, _description);
+	m_errorReporter.parserError(SourceLocation{position(), endPosition(), source()}, _description, _throw_error);
 }
 
 void ParserBase::fatalParserError(string const& _description)
