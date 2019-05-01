@@ -1,4 +1,5 @@
 // Error1 catches exceptions from below while Error2 doesn't.
 
+SourceUnit = '{' Error1 '}'
 ContractDefinition = '{' Error1 '}'
 Statement = Error2 ';'
