@@ -78,8 +78,10 @@ void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _
 
 bool SMTChecker::visit(ContractDefinition const& _contract)
 {
-	for (auto _var : _contract.stateVariables())
-		createVariable(*_var);
+	for (auto const& contract: _contract.annotation().linearizedBaseContracts)
+		for (auto var : contract->stateVariables())
+			if (*contract == _contract || var->isVisibleInDerivedContracts())
+				createVariable(*var);
 	return true;
 }
 
