@@ -128,15 +128,6 @@ private:
 		std::string toFunctionNameSuffix() const;
 	};
 
-	/// Performs cleanup after reading from a potentially compressed storage slot.
-	/// The function does not perform any validation, it just masks or sign-extends
-	/// higher order bytes or left-aligns (in case of bytesNN).
-	/// The storage cleanup expects the value to be right-aligned with potentially
-	/// dirty higher order bytes.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes);
-
 	/// @returns the name of the ABI encoding function with the given type
 	/// and queues the generation of the function to the requested functions.
 	/// @param _fromStack if false, the input value was just loaded from storage
@@ -230,19 +221,6 @@ private:
 	std::string abiDecodingFunctionStruct(StructType const& _type, bool _fromMemory);
 	/// Part of @a abiDecodingFunction for array types.
 	std::string abiDecodingFunctionFunctionType(FunctionType const& _type, bool _fromMemory, bool _forUseOnStack);
-
-	/// @returns a function that reads a value type from storage.
-	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
-
-	/// @returns a function that extracts a value type from storage slot that has been
-	/// retrieved already.
-	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
 
 	/// @returns the name of a function that retrieves an element from calldata.
 	std::string calldataAccessFunction(Type const& _type);
