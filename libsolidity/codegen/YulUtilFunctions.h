@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace dev
 {
@@ -151,6 +152,8 @@ public:
 	///
 	/// This is used for data decoded from external sources.
 	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
+
+	std::string packedHashFunction(std::vector<Type const*> const& _givenTypes, std::vector<Type const*> const& _targetTypes);
 
 	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
 	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
