@@ -101,13 +101,18 @@ bool SMTChecker::visit(ModifierDefinition const&)
 
 bool SMTChecker::visit(FunctionDefinition const& _function)
 {
+	m_functionPath.push_back(&_function);
+	m_modifierDepthStack.push_back(-1);
+
 	if (_function.isConstructor())
+	{
 		m_errorReporter.warning(
 			_function.location(),
 			"Assertion checker does not yet support constructors."
 		);
-	m_functionPath.push_back(&_function);
-	m_modifierDepthStack.push_back(-1);
+		return false;
+	}
+
 	// Not visited by a function call
 	if (isRootFunction())
 	{
