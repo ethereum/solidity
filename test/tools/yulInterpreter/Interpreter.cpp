@@ -110,6 +110,7 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 		if (m_state.loopState == LoopState::Break)
 			break;
 
+		m_state.loopState = LoopState::Default;
 		(*this)(_forLoop.post);
 	}
 	m_state.loopState = LoopState::Default;
