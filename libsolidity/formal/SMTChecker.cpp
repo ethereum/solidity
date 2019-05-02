@@ -1050,29 +1050,39 @@ bool SMTChecker::shortcutRationalNumber(Expression const& _expr)
 
 void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 {
-	switch (_op.getOperator())
+	auto type = _op.annotation().commonType;
+	solAssert(type, "");
+	if (type->category() == Type::Category::Integer)
 	{
-	case Token::Add:
-	case Token::Sub:
-	case Token::Mul:
-	case Token::Div:
-	case Token::Mod:
-	{
-		defineExpr(_op, arithmeticOperation(
-			_op.getOperator(),
-			expr(_op.leftExpression()),
-			expr(_op.rightExpression()),
-			_op.annotation().commonType,
-			_op.location()
-		));
-		break;
+		switch (_op.getOperator())
+		{
+		case Token::Add:
+		case Token::Sub:
+		case Token::Mul:
+		case Token::Div:
+		case Token::Mod:
+		{
+			defineExpr(_op, arithmeticOperation(
+				_op.getOperator(),
+				expr(_op.leftExpression()),
+				expr(_op.rightExpression()),
+				_op.annotation().commonType,
+				_op.location()
+			));
+			break;
+		}
+		default:
+			m_errorReporter.warning(
+				_op.location(),
+				"Assertion checker does not yet implement this operator."
+			);
+		}
 	}
-	default:
+	else
 		m_errorReporter.warning(
 			_op.location(),
-			"Assertion checker does not yet implement this operator."
+			"Assertion checker does not yet implement this operator for type " + type->richIdentifier() + "."
 		);
-	}
 }
 
 smt::Expression SMTChecker::arithmeticOperation(
