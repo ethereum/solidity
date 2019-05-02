@@ -71,6 +71,10 @@ private:
 	void visit(LogFunc const&);
 	void visit(CopyFunc const&);
 	void visit(ExtCodeCopy const&);
+	void visit(StopInvalidStmt const&);
+	void visit(RetRevStmt const&);
+	void visit(SelfDestructStmt const&);
+	void visit(TerminatingStmt const&);
 	template <class T>
 	void visit(google::protobuf::RepeatedPtrField<T> const& _repeated_field);
 

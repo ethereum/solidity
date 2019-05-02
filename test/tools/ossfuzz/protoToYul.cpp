@@ -554,6 +554,63 @@ void ProtoConverter::visit(SwitchStmt const& _x)
 	}
 }
 
+void ProtoConverter::visit(StopInvalidStmt const& _x)
+{
+	switch (_x.stmt())
+	{
+		case StopInvalidStmt::STOP:
+			m_output << "stop()\n";
+			break;
+		case StopInvalidStmt::INVALID:
+			m_output << "invalid()\n";
+			break;
+	}
+}
+
+void ProtoConverter::visit(RetRevStmt const& _x)
+{
+	switch (_x.stmt())
+	{
+		case RetRevStmt::RETURN:
+			m_output << "return";
+			break;
+		case RetRevStmt::REVERT:
+			m_output << "revert";
+			break;
+	}
+	m_output << "(";
+	visit(_x.pos());
+	m_output << ", ";
+	visit(_x.size());
+	m_output << ")\n";
+}
+
+void ProtoConverter::visit(SelfDestructStmt const& _x)
+{
+	m_output << "selfdestruct";
+	m_output << "(";
+	visit(_x.addr());
+	m_output << ")\n";
+}
+
+void ProtoConverter::visit(TerminatingStmt const& _x)
+{
+	switch (_x.term_oneof_case())
+	{
+		case TerminatingStmt::kStopInvalid:
+			visit(_x.stop_invalid());
+			break;
+		case TerminatingStmt::kRetRev:
+			visit(_x.ret_rev());
+			break;
+		case TerminatingStmt::kSelfDes:
+			visit(_x.self_des());
+			break;
+		case TerminatingStmt::TERM_ONEOF_NOT_SET:
+			break;
+	}
+}
+
 void ProtoConverter::visit(Statement const& _x)
 {
 	switch (_x.stmt_oneof_case())
@@ -595,6 +652,9 @@ void ProtoConverter::visit(Statement const& _x)
 			break;
 		case Statement::kExtcodeCopy:
 			visit(_x.extcode_copy());
+			break;
+		case Statement::kTerminatestmt:
+			visit(_x.terminatestmt());
 			break;
 		case Statement::STMT_ONEOF_NOT_SET:
 			break;
