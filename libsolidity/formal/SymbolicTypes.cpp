@@ -99,7 +99,8 @@ bool dev::solidity::isSupportedType(Type::Category _category)
 	return isNumber(_category) ||
 		isBool(_category) ||
 		isMapping(_category) ||
-		isArray(_category);
+		isArray(_category) ||
+		isTuple(_category);
 }
 
 bool dev::solidity::isSupportedTypeDeclaration(Type::Category _category)
@@ -151,6 +152,8 @@ pair<bool, shared_ptr<SymbolicVariable>> dev::solidity::newSymbolicVariable(
 		var = make_shared<SymbolicMappingVariable>(type, _uniqueName, _solver);
 	else if (isArray(_type.category()))
 		var = make_shared<SymbolicArrayVariable>(type, _uniqueName, _solver);
+	else if (isTuple(_type.category()))
+		var = make_shared<SymbolicTupleVariable>(type, _uniqueName, _solver);
 	else
 		solAssert(false, "");
 	return make_pair(abstract, var);
@@ -224,6 +227,11 @@ bool dev::solidity::isMapping(Type::Category _category)
 bool dev::solidity::isArray(Type::Category _category)
 {
 	return _category == Type::Category::Array;
+}
+
+bool dev::solidity::isTuple(Type::Category _category)
+{
+	return _category == Type::Category::Tuple;
 }
 
 smt::Expression dev::solidity::minValue(IntegerType const& _type)
