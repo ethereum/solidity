@@ -189,6 +189,16 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 	m_code << "return_flag := 0\n" << "break\n";
 }
 
+void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
+{
+	if (_unaryOperation.annotation().type->category() == Type::Category::RationalNumber)
+		defineExpression(_unaryOperation) <<
+			formatNumber(_unaryOperation.annotation().type->literalValue(nullptr)) <<
+			"\n";
+	else
+		solUnimplementedAssert(false, "");
+}
+
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 {
 	solAssert(!!_binOp.annotation().commonType, "");
