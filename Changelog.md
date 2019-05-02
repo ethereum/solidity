@@ -8,6 +8,7 @@ Compiler Features:
  * SMTChecker: Support inherited state variables.
  * SMTChecker: Support tuples and function calls with multiple return values.
  * SMTChecker: Support ``delete``.
+ * SMTChecker: Inline external function calls to ``this``.
  * Assembler: Encode the compiler version in the deployed bytecode.
 
 
