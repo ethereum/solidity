@@ -82,6 +82,13 @@ public:
 		IRGenerationContext& _context,
 		VariableDeclaration const& _varDecl
 	);
+	IRStorageItem(
+		std::ostream& _code,
+		IRGenerationContext& _context,
+		std::string _slot,
+		unsigned _offset,
+		Type const& _type
+	);
 	std::string retrieveValue() const override;
 	void storeValue(std::string const& _value, Type const& _type) const override;
 
