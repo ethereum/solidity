@@ -199,16 +199,23 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 		solUnimplementedAssert(false, "");
 }
 
-void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
+bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	solAssert(!!_binOp.annotation().commonType, "");
 	TypePointer commonType = _binOp.annotation().commonType;
 	langutil::Token op = _binOp.getOperator();
 
 	if (op == Token::And || op == Token::Or)
-		// special case: short-circuiting
-		solUnimplementedAssert(false, "");
-	else if (commonType->category() == Type::Category::RationalNumber)
+	{
+		// This can short-circuit!
+		appendAndOrOperatorCode(_binOp);
+		return false;
+	}
+
+	_binOp.leftExpression().accept(*this);
+	_binOp.rightExpression().accept(*this);
+
+	if (commonType->category() == Type::Category::RationalNumber)
 		defineExpression(_binOp) <<
 			toCompactHexWithPrefix(commonType->literalValue(nullptr)) <<
 			"\n";
@@ -259,6 +266,7 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 		else
 			solUnimplementedAssert(false, "");
 	}
+	return false;
 }
 
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
@@ -427,6 +435,24 @@ string IRGeneratorForStatements::expressionAsType(Expression const& _expression,
 ostream& IRGeneratorForStatements::defineExpression(Expression const& _expression)
 {
 	return m_code << "let " << m_context.variable(_expression) << " := ";
+}
+
+void IRGeneratorForStatements::appendAndOrOperatorCode(BinaryOperation const& _binOp)
+{
+	langutil::Token const op = _binOp.getOperator();
+	solAssert(op == Token::Or || op == Token::And, "");
+
+	_binOp.leftExpression().accept(*this);
+
+	string value = m_context.variable(_binOp);
+	m_code << "let " << value << " := " << m_context.variable(_binOp.leftExpression()) << "\n";
+	if (op == Token::Or)
+		m_code << "if iszero(" << value << ") {\n";
+	else
+		m_code << "if " << value << " {\n";
+	_binOp.rightExpression().accept(*this);
+	m_code << value << " := " + m_context.variable(_binOp.rightExpression()) << "\n";
+	m_code << "}\n";
 }
 
 void IRGeneratorForStatements::setLValue(Expression const& _expression, unique_ptr<IRLValue> _lvalue)
