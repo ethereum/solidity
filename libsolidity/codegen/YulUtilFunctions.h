@@ -155,6 +155,11 @@ public:
 	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
 
 private:
+
+	/// Special case of conversionFunction - handles everything that does not
+	/// use exactly one variable to hold the value.
+	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);
+
 	langutil::EVMVersion m_evmVersion;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
 };

@@ -357,7 +357,6 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 		defineExpression(_literal) << toCompactHexWithPrefix(literalType.literalValue(&_literal)) << "\n";
 		break;
 	case Type::Category::StringLiteral:
-		solUnimplemented("");
 		break; // will be done during conversion
 	default:
 		solUnimplemented("Only integer, boolean and string literals implemented for now.");
@@ -368,12 +367,20 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 string IRGeneratorForStatements::expressionAsType(Expression const& _expression, Type const& _to)
 {
 	Type const& from = type(_expression);
-	string varName = m_context.variable(_expression);
-
-	if (from == _to)
-		return varName;
+	if (from.sizeOnStack() == 0)
+	{
+		solAssert(from != _to, "");
+		return m_utils.conversionFunction(from, _to) + "()";
+	}
 	else
-		return m_utils.conversionFunction(from, _to) + "(" + std::move(varName) + ")";
+	{
+		string varName = m_context.variable(_expression);
+
+		if (from == _to)
+			return varName;
+		else
+			return m_utils.conversionFunction(from, _to) + "(" + std::move(varName) + ")";
+	}
 }
 
 ostream& IRGeneratorForStatements::defineExpression(Expression const& _expression)
