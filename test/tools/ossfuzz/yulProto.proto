@@ -106,6 +106,9 @@ message UnaryOp {
     MLOAD = 1;
     SLOAD = 2;
     ISZERO = 3;
+    CALLDATALOAD = 4;
+    EXTCODESIZE = 5;
+    EXTCODEHASH = 6;
   }
   required UOp op = 1;
   required Expression operand = 2;
@@ -122,11 +125,33 @@ message TernaryOp {
   required Expression arg3 = 4;
 }
 
+message CopyFunc {
+  enum CopyType {
+    CALLDATA = 0;
+    CODE = 1;
+    RETURNDATA = 2;
+  }
+  required CopyType ct = 1;
+  required Expression target = 2;
+  required Expression source = 3;
+  required Expression size = 4;
+}
+
+message ExtCodeCopy {
+  required Expression addr = 1;
+  required Expression target = 2;
+  required Expression source = 3;
+  required Expression size = 4;
+}
+
 message NullaryOp {
   enum NOp {
     PC = 1;
     MSIZE = 2;
     GAS = 3;
+    CALLDATASIZE = 4;
+    CODESIZE = 5;
+    RETURNDATASIZE = 6;
   }
   required NOp op = 1;
 }
@@ -210,6 +235,8 @@ message Statement {
     BreakStmt           breakstmt     = 8;
     ContinueStmt        contstmt      = 9;
     LogFunc             log_func      = 10;
+    CopyFunc            copy_func     = 11;
+    ExtCodeCopy         extcode_copy  = 12;
   }
 }
 
