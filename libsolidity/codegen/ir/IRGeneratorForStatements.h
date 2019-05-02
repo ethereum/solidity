@@ -55,8 +55,9 @@ public:
 	void endVisit(UnaryOperation const& _unaryOperation) override;
 	bool visit(BinaryOperation const& _binOp) override;
 	void endVisit(FunctionCall const& _funCall) override;
+	void endVisit(MemberAccess const& _memberAccess) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
-	bool visit(Identifier const& _identifier) override;
+	void endVisit(Identifier const& _identifier) override;
 	bool visit(Literal const& _literal) override;
 
 private:
