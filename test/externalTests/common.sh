@@ -160,7 +160,7 @@ function force_solc_settings
 function force_abi_v2
 {
     # Add "pragma experimental ABIEncoderV2" to all files.
-    printLog "Forcibly enabling ABIEncodreV2..."
+    printLog "Forcibly enabling ABIEncoderV2..."
     find contracts test -name '*.sol' -type f -print0 | \
     while IFS= read -r -d '' file
     do
