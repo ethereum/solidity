@@ -47,6 +47,7 @@ public:
 
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Assignment const& _assignment) override;
+	bool visit(TupleExpression const& _tuple) override;
 	bool visit(ForStatement const& _forStatement) override;
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;

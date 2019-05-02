@@ -131,6 +131,21 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 	return false;
 }
 
+bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
+{
+	if (_tuple.isInlineArray())
+		solUnimplementedAssert(false, "");
+	else
+	{
+		solUnimplementedAssert(!_tuple.annotation().lValueRequested, "");
+		solUnimplementedAssert(_tuple.components().size() == 1, "");
+		solAssert(_tuple.components().front(), "");
+		_tuple.components().front()->accept(*this);
+		defineExpression(_tuple) << m_context.variable(*_tuple.components().front()) << "\n";
+	}
+	return false;
+}
+
 bool IRGeneratorForStatements::visit(ForStatement const& _for)
 {
 	m_code << "for {\n";
