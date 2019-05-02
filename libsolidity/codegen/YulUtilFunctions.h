@@ -88,6 +88,28 @@ public:
 	/// Only works for memory arrays, calldata arrays and storage arrays that store one item per slot.
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
+	/// @returns a function that reads a value type from storage.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+
+	/// @returns a function that extracts a value type from storage slot that has been
+	/// retrieved already.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+
+	/// Performs cleanup after reading from a potentially compressed storage slot.
+	/// The function does not perform any validation, it just masks or sign-extends
+	/// higher order bytes or left-aligns (in case of bytesNN).
+	/// The storage cleanup expects the value to be right-aligned with potentially
+	/// dirty higher order bytes.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes);
+
 	/// @returns the name of a function that allocates memory.
 	/// Modifies the "free memory pointer"
 	/// Arguments: size

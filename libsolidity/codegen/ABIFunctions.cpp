@@ -255,39 +255,6 @@ string ABIFunctions::EncodingOptions::toFunctionNameSuffix() const
 	return suffix;
 }
 
-string ABIFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes)
-{
-	solAssert(_type.isValueType(), "");
-	solUnimplementedAssert(!_splitFunctionTypes, "");
-
-	string functionName = string("cleanup_from_storage_") + (_splitFunctionTypes ? "split_" : "") + _type.identifier();
-	return createFunction(functionName, [&] {
-		Whiskers templ(R"(
-			function <functionName>(value) -> cleaned {
-				<body>
-			}
-		)");
-		templ("functionName", functionName);
-
-		unsigned storageBytes = _type.storageBytes();
-		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
-			if (type->isSigned() && storageBytes != 32)
-			{
-				templ("body", "cleaned := signextend(" + to_string(storageBytes - 1) + ", value)");
-				return templ.render();
-			}
-
-		if (storageBytes == 32)
-			templ("body", "cleaned := value");
-		else if (_type.leftAligned())
-			templ("body", "cleaned := " + m_utils.shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
-		else
-			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
-
-		return templ.render();
-	});
-}
-
 string ABIFunctions::abiEncodingFunction(
 	Type const& _from,
 	Type const& _to,
@@ -609,7 +576,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 				break;
 			case DataLocation::Storage:
 				if (_from.baseType()->isValueType())
-					templ("arrayElementAccess", readFromStorage(*_from.baseType(), 0, false) + "(srcPtr)");
+					templ("arrayElementAccess", m_utils.readFromStorage(*_from.baseType(), 0, false) + "(srcPtr)");
 				else
 					templ("arrayElementAccess", "srcPtr");
 				break;
@@ -806,7 +773,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 					items[i]["inRange"] = "1";
 				else
 					items[i]["inRange"] = "0";
-				items[i]["extractFromSlot"] = extractFromStorageValue(*_from.baseType(), i * storageBytes, false);
+				items[i]["extractFromSlot"] = m_utils.extractFromStorageValue(*_from.baseType(), i * storageBytes, false);
 			}
 			templ("items", items);
 			return templ.render();
@@ -893,7 +860,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 							members.back()["preprocess"] = "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))";
 							previousSlotOffset = storageSlotOffset;
 						}
-						members.back()["retrieveValue"] = extractFromStorageValue(*memberTypeFrom, intraSlotOffset, false) + "(slotValue)";
+						members.back()["retrieveValue"] = m_utils.extractFromStorageValue(*memberTypeFrom, intraSlotOffset, false) + "(slotValue)";
 					}
 					else
 					{
@@ -1397,51 +1364,6 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 			("validateExtFun", m_utils.validatorFunction(_type, true))
 			.render();
 		}
-	});
-}
-
-string ABIFunctions::readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes)
-{
-	solUnimplementedAssert(!_splitFunctionTypes, "");
-	string functionName =
-		"read_from_storage_" +
-		string(_splitFunctionTypes ? "split_" : "") +
-		"offset_" +
-		to_string(_offset) +
-		_type.identifier();
-	return m_functionCollector->createFunction(functionName, [&] {
-		solAssert(_type.sizeOnStack() == 1, "");
-		return Whiskers(R"(
-			function <functionName>(slot) -> value {
-				value := <extract>(sload(slot))
-			}
-		)")
-		("functionName", functionName)
-		("extract", extractFromStorageValue(_type, _offset, false))
-		.render();
-	});
-}
-
-string ABIFunctions::extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes)
-{
-	solUnimplementedAssert(!_splitFunctionTypes, "");
-
-	string functionName =
-		"extract_from_storage_value_" +
-		string(_splitFunctionTypes ? "split_" : "") +
-		"offset_" +
-		to_string(_offset) +
-		_type.identifier();
-	return m_functionCollector->createFunction(functionName, [&] {
-		return Whiskers(R"(
-			function <functionName>(slot_value) -> value {
-				value := <cleanupStorage>(<shr>(slot_value))
-			}
-		)")
-		("functionName", functionName)
-		("shr", m_utils.shiftRightFunction(_offset * 8))
-		("cleanupStorage", cleanupFromStorageFunction(_type, false))
-		.render();
 	});
 }
 

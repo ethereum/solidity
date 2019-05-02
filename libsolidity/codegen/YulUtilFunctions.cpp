@@ -461,6 +461,86 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 	});
 }
 
+
+string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+	string functionName =
+		"read_from_storage_" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		"offset_" +
+		to_string(_offset) +
+		"_" +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		solAssert(_type.sizeOnStack() == 1, "");
+		return Whiskers(R"(
+			function <functionName>(slot) -> value {
+				value := <extract>(sload(slot))
+			}
+		)")
+		("functionName", functionName)
+		("extract", extractFromStorageValue(_type, _offset, false))
+		.render();
+	});
+}
+
+string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+
+	string functionName =
+		"extract_from_storage_value_" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		"offset_" +
+		to_string(_offset) +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot_value) -> value {
+				value := <cleanupStorage>(<shr>(slot_value))
+			}
+		)")
+		("functionName", functionName)
+		("shr", shiftRightFunction(_offset * 8))
+		("cleanupStorage", cleanupFromStorageFunction(_type, false))
+		.render();
+	});
+}
+
+string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes)
+{
+	solAssert(_type.isValueType(), "");
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+
+	string functionName = string("cleanup_from_storage_") + (_splitFunctionTypes ? "split_" : "") + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		Whiskers templ(R"(
+			function <functionName>(value) -> cleaned {
+				<body>
+			}
+		)");
+		templ("functionName", functionName);
+
+		unsigned storageBytes = _type.storageBytes();
+		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
+			if (type->isSigned() && storageBytes != 32)
+			{
+				templ("body", "cleaned := signextend(" + to_string(storageBytes - 1) + ", value)");
+				return templ.render();
+			}
+
+		if (storageBytes == 32)
+			templ("body", "cleaned := value");
+		else if (_type.leftAligned())
+			templ("body", "cleaned := " + shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
+		else
+			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
+
+		return templ.render();
+	});
+}
+
 string YulUtilFunctions::allocationFunction()
 {
 	string functionName = "allocateMemory";
