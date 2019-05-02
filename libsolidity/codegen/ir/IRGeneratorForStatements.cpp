@@ -86,7 +86,7 @@ string IRGeneratorForStatements::code() const
 	return m_code.str();
 }
 
-bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDeclStatement)
+void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	for (auto const& decl: _varDeclStatement.declarations())
 		if (decl)
@@ -95,8 +95,6 @@ bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDec
 	if (Expression const* expression = _varDeclStatement.initialValue())
 	{
 		solUnimplementedAssert(_varDeclStatement.declarations().size() == 1, "");
-
-		expression->accept(*this);
 
 		VariableDeclaration const& varDecl = *_varDeclStatement.declarations().front();
 		m_code <<
@@ -110,8 +108,6 @@ bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDec
 		for (auto const& decl: _varDeclStatement.declarations())
 			if (decl)
 				m_code << "let " << m_context.localVariableName(*decl) << "\n";
-
-	return false;
 }
 
 bool IRGeneratorForStatements::visit(Assignment const& _assignment)
@@ -171,7 +167,7 @@ bool IRGeneratorForStatements::visit(Break const&)
 	return false;
 }
 
-bool IRGeneratorForStatements::visit(Return const& _return)
+void IRGeneratorForStatements::endVisit(Return const& _return)
 {
 	if (Expression const* value = _return.expression())
 	{
@@ -182,8 +178,6 @@ bool IRGeneratorForStatements::visit(Return const& _return)
 		for (auto const& retVariable: returnParameters)
 			types.push_back(retVariable->annotation().type);
 
-		value->accept(*this);
-
 		// TODO support tuples
 		solUnimplementedAssert(types.size() == 1, "Multi-returns not implemented.");
 		m_code <<
@@ -193,7 +187,6 @@ bool IRGeneratorForStatements::visit(Return const& _return)
 			"\n";
 	}
 	m_code << "return_flag := 0\n" << "break\n";
-	return false;
 }
 
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
@@ -227,7 +220,7 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 	}
 }
 
-bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
+void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
 	solUnimplementedAssert(
 		_functionCall.annotation().kind == FunctionCallKind::FunctionCall ||
@@ -241,13 +234,12 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	{
 		solAssert(funcType->category() == Type::Category::TypeType, "Expected category to be TypeType");
 		solAssert(_functionCall.arguments().size() == 1, "Expected one argument for type conversion");
-		_functionCall.arguments().front()->accept(*this);
 
 		defineExpression(_functionCall) <<
 			expressionAsType(*_functionCall.arguments().front(), *_functionCall.annotation().type) <<
 			"\n";
 
-		return false;
+		return;
 	}
 
 	FunctionTypePointer functionType = dynamic_cast<FunctionType const*>(funcType);
@@ -281,14 +273,10 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	{
 		vector<string> args;
 		for (unsigned i = 0; i < arguments.size(); ++i)
-		{
-			arguments[i]->accept(*this);
-
 			if (functionType->takesArbitraryParameters())
 				args.emplace_back(m_context.variable(*arguments[i]));
 			else
 				args.emplace_back(expressionAsType(*arguments[i], *parameterTypes[i]));
-		}
 
 		if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
 		{
@@ -301,11 +289,9 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 					"(" <<
 					joinHumanReadable(args) <<
 					")\n";
-				return false;
+				return;
 			}
 		}
-
-		_functionCall.expression().accept(*this);
 
 		// @TODO The function can very well return multiple vars.
 		args = vector<string>{m_context.variable(_functionCall.expression())} + args;
@@ -319,7 +305,6 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	default:
 		solUnimplemented("");
 	}
-	return false;
 }
 
 bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)

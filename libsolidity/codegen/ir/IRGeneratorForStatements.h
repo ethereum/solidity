@@ -45,14 +45,14 @@ public:
 
 	std::string code() const;
 
-	bool visit(VariableDeclarationStatement const& _variableDeclaration) override;
+	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Assignment const& _assignment) override;
 	bool visit(ForStatement const& _forStatement) override;
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;
-	bool visit(Return const& _return) override;
+	void endVisit(Return const& _return) override;
 	void endVisit(BinaryOperation const& _binOp) override;
-	bool visit(FunctionCall const& _funCall) override;
+	void endVisit(FunctionCall const& _funCall) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
 	bool visit(Identifier const& _identifier) override;
 	bool visit(Literal const& _literal) override;
