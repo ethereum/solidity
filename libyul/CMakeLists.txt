@@ -40,6 +40,8 @@ add_library(yul
 	backends/evm/NoOutputAssembly.cpp
 	backends/wasm/WasmDialect.cpp
 	backends/wasm/WasmDialect.h
+	backends/wasm/WordSizeTransform.cpp
+	backends/wasm/WordSizeTransform.h
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp

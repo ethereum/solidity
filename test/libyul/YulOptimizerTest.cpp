@@ -45,6 +45,7 @@
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
@@ -263,6 +264,13 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		size_t maxIterations = 16;
 		StackCompressor::run(m_dialect, *m_ast, true, maxIterations);
 		(BlockFlattener{})(*m_ast);
+	}
+	else if (m_optimizerStep == "wordSizeTransform")
+	{
+		disambiguate();
+		NameDispenser nameDispenser{*m_dialect, *m_ast}; // TODO: Support WasmDialect in yulOptimizerTest
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
+		WordSizeTransform::run(*m_ast, nameDispenser);
 	}
 	else if (m_optimizerStep == "fullSuite")
 		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo, true);
