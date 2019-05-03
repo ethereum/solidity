@@ -1,5 +1,6 @@
-// Error1 catches exceptions from below while Error2 doesn't.
+// Error catches exceptions from rules called below it.
 
-SourceUnit = '{' Error1 '}'
-ContractDefinition = '{' Error1 '}'
+SourceUnit = Error $
+Block = '{' Error '}'
+ContractDefinition = '{' Error '}'
 Statement = Error2 ';'

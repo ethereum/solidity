@@ -77,6 +77,7 @@ public:
 	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
 	char advanceAndGet(size_t _chars = 1);
 	char rollback(size_t _amount);
+	char seek(size_t _location);
 
 	void reset() { m_position = 0; }
 

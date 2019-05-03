@@ -73,6 +73,12 @@ char CharStream::rollback(size_t _amount)
 	return get();
 }
 
+char CharStream::seek(size_t _location)
+{
+	m_position = _location;
+	return get();
+}
+
 string CharStream::lineAtPosition(int _position) const
 {
 	// if _position points to \n, it returns the line before the \n
@@ -106,5 +112,3 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 	}
 	return tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
-
-

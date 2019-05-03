@@ -7,7 +7,7 @@ pragma solidity >=0.0.0;
 // Tokens are deleted until the next subsequent semicolon.
 
 contract MetaCoin2 {
-	mapping (address => uint) balances;
+	mapping (address => uint balances;
 
 	event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
@@ -20,13 +20,13 @@ contract MetaCoin2 {
 		if (balances[msg.sender])
 		    return false;
 
-		balances[msg.sender] -= amount;
+		balances[msg.sender] -= // missing RHS
 
 		balances[receiver] += amount;
-		emit Transfer(msg.sender, receiver,);  // missing param or extra ,
+		emit Transfer(msg.sender;  // missing )
 
-		// missing ) in while
-		while (amount < 10) {
+		// missing < in while
+		while (amount 10) {
 			if (amount > 1) break;
 				amount += ;  //
 			continue;

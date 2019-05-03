@@ -156,6 +156,13 @@ void Scanner::reset()
 	next();
 }
 
+void Scanner::seek(size_t _offset)
+{
+	m_char = m_source->seek(_offset);
+	scanToken();
+	next();
+}
+
 void Scanner::supportPeriodInIdentifier(bool _value)
 {
 	m_supportPeriodInIdentifier = _value;

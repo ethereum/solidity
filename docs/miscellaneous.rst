@@ -463,3 +463,14 @@ Error Recovery Grammar
 
 .. literalinclude:: error-rules.txt
    :language: none
+
+Literal strings in the grammar that are missing are inserted if they are not found. For example, in the rule:
+
+::
+
+   IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
+
+
+If tokens '(', ')' are missing, they will be inserted by error recovery. The tokens 'if' and 'else' however will not be.
+The token 'if' cannot be unambiguously inferred as '(' can. At the beginning of a statement, the missing token might be 'while', or 'for'.
+Likewise 'else' is optional so that is not unambiguously inferrable.

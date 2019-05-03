@@ -105,7 +105,13 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	catch (FatalError const&)
 	{
 		if (!m_errorReporter.hasErrors() || m_errorReporter.checkForExcessiveErrors(Error::Type::ParserError))
-			throw; // Don't try to handle
+			throw; // Don't try to recover here.
+		return nullptr;
+	}
+	catch (ParserError const&)
+	{
+		if (!m_errorReporter.hasErrors() || m_errorReporter.checkForExcessiveErrors(Error::Type::ParserError))
+			throw; // Don't try to recover here.
 		return nullptr;
 	}
 }
@@ -315,9 +321,14 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	catch (FatalError const&)
 	{
 		if (!m_errorReporter.hasErrors() || m_errorReporter.checkForExcessiveErrors(Error::Type::ParserError))
-			throw; // Don't try to handle
+			throw; // Don't try to recover here.
+		m_inParserRecovery = true;
 	}
-	expectTokenOrConsumeUntil(Token::RBrace);
+	nodeFactory.markEndPosition();
+	if (m_inParserRecovery)
+		expectTokenOrConsumeUntil(Token::RBrace, "ContractDefinition");
+	else
+		expectToken(Token::RBrace);
 	return nodeFactory.createNode<ContractDefinition>(
 		name,
 		docString,
@@ -968,10 +979,18 @@ ASTPointer<Block> Parser::parseBlock(ASTPointer<ASTString> const& _docString)
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::LBrace);
 	vector<ASTPointer<Statement>> statements;
-	while (m_scanner->currentToken() != Token::RBrace)
-		statements.push_back(parseStatement());
-	nodeFactory.markEndPosition();
-	expectToken(Token::RBrace);
+	try
+	{
+		while (m_scanner->currentToken() != Token::RBrace)
+			statements.push_back(parseStatement());
+		nodeFactory.markEndPosition();
+	}
+	catch (FatalError const&)
+	{
+		if (!m_errorReporter.hasErrors() || m_errorReporter.checkForExcessiveErrors(Error::Type::ParserError))
+			throw; // Don't try to recover here.
+	}
+	expectTokenOrConsumeUntil(Token::RBrace, "Block");
 	return nodeFactory.createNode<Block>(_docString, statements);
 }
 
@@ -979,67 +998,79 @@ ASTPointer<Statement> Parser::parseStatement()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTPointer<ASTString> docString;
-	if (m_scanner->currentCommentLiteral() != "")
-		docString = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 	ASTPointer<Statement> statement;
-	switch (m_scanner->currentToken())
+	try
 	{
-	case Token::If:
-		return parseIfStatement(docString);
-	case Token::While:
-		return parseWhileStatement(docString);
-	case Token::Do:
-		return parseDoWhileStatement(docString);
-	case Token::For:
-		return parseForStatement(docString);
-	case Token::LBrace:
-		return parseBlock(docString);
-		// starting from here, all statements must be terminated by a semicolon
-	case Token::Continue:
-		statement = ASTNodeFactory(*this).createNode<Continue>(docString);
-		m_scanner->next();
-		break;
-	case Token::Break:
-		statement = ASTNodeFactory(*this).createNode<Break>(docString);
-		m_scanner->next();
-		break;
-	case Token::Return:
-	{
-		ASTNodeFactory nodeFactory(*this);
-		ASTPointer<Expression> expression;
-		if (m_scanner->next() != Token::Semicolon)
+		if (m_scanner->currentCommentLiteral() != "")
+			docString = make_shared<ASTString>(m_scanner->currentCommentLiteral());
+		switch (m_scanner->currentToken())
 		{
-			expression = parseExpression();
-			nodeFactory.setEndPositionFromNode(expression);
-		}
-		statement = nodeFactory.createNode<Return>(docString, expression);
-		break;
-	}
-	case Token::Throw:
-	{
-		statement = ASTNodeFactory(*this).createNode<Throw>(docString);
-		m_scanner->next();
-		break;
-	}
-	case Token::Assembly:
-		return parseInlineAssembly(docString);
-	case Token::Emit:
-		statement = parseEmitStatement(docString);
-		break;
-	case Token::Identifier:
-		if (m_insideModifier && m_scanner->currentLiteral() == "_")
-		{
-			statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
+		case Token::If:
+			return parseIfStatement(docString);
+		case Token::While:
+			return parseWhileStatement(docString);
+		case Token::Do:
+			return parseDoWhileStatement(docString);
+		case Token::For:
+			return parseForStatement(docString);
+		case Token::LBrace:
+			return parseBlock(docString);
+			// starting from here, all statements must be terminated by a semicolon
+		case Token::Continue:
+			statement = ASTNodeFactory(*this).createNode<Continue>(docString);
 			m_scanner->next();
-		}
-		else
+			break;
+		case Token::Break:
+			statement = ASTNodeFactory(*this).createNode<Break>(docString);
+			m_scanner->next();
+			break;
+		case Token::Return:
+		{
+			ASTNodeFactory nodeFactory(*this);
+			ASTPointer<Expression> expression;
+			if (m_scanner->next() != Token::Semicolon)
+				{
+					expression = parseExpression();
+					nodeFactory.setEndPositionFromNode(expression);
+				}
+			statement = nodeFactory.createNode<Return>(docString, expression);
+				break;
+			}
+		case Token::Throw:
+			{
+				statement = ASTNodeFactory(*this).createNode<Throw>(docString);
+				m_scanner->next();
+				break;
+			}
+		case Token::Assembly:
+			return parseInlineAssembly(docString);
+		case Token::Emit:
+			statement = parseEmitStatement(docString);
+			break;
+		case Token::Identifier:
+			if (m_insideModifier && m_scanner->currentLiteral() == "_")
+				{
+					statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
+					m_scanner->next();
+				}
+			else
+				statement = parseSimpleStatement(docString);
+			break;
+		default:
 			statement = parseSimpleStatement(docString);
-		break;
-	default:
-		statement = parseSimpleStatement(docString);
-		break;
+			break;
+		}
 	}
-	expectTokenOrConsumeUntil(Token::Semicolon);
+	catch (FatalError const&)
+	{
+		if (!m_errorReporter.hasErrors() || m_errorReporter.checkForExcessiveErrors(Error::Type::ParserError))
+			throw; // Don't try to recover here.
+		m_inParserRecovery = true;
+	}
+	if (m_inParserRecovery)
+		expectTokenOrConsumeUntil(Token::Semicolon, "Statement");
+	else
+		expectToken(Token::Semicolon);
 	return statement;
 }
 

@@ -72,7 +72,7 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, st
 	m_errorList.push_back(err);
 	if (_throwError)
 	{
-		BOOST_THROW_EXCEPTION(ParserError());
+		BOOST_THROW_EXCEPTION(FatalError());
 	}
 }
 
