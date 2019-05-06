@@ -23,7 +23,9 @@
 #include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
 
 #include <libyul/AsmData.h>
+#include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -157,14 +159,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_variables, m_functions);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_variables, m_functions);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -204,9 +206,16 @@ void ExpressionEvaluator::operator()(FunctionalInstruction const& _instr)
 
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
-	solAssert(m_functions.count(_funCall.functionName.name), "");
 	evaluateArgs(_funCall.arguments);
 
+	if (dynamic_cast<EVMDialect const*>(&m_dialect) && m_dialect.builtin(_funCall.functionName.name))
+	{
+		EVMInstructionInterpreter interpreter(m_state);
+		setValue(interpreter.evalBuiltin(_funCall.functionName.name, values()));
+		return;
+	}
+
+	solAssert(m_functions.count(_funCall.functionName.name), "");
 	FunctionDefinition const& fun = *m_functions.at(_funCall.functionName.name);
 	solAssert(m_values.size() == fun.parameters.size(), "");
 	map<YulString, u256> variables;
@@ -217,7 +226,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 
 	// TODO function name lookup could be a little more efficient,
 	// we have to copy the list here.
-	Interpreter interpreter(m_state, variables, m_functions);
+	Interpreter interpreter(m_state, m_dialect, variables, m_functions);
 	interpreter(fun.body);
 
 	m_values.clear();

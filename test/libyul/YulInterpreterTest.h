@@ -30,7 +30,6 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 struct Block;
-struct Dialect;
 }
 
 namespace yul
