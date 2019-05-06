@@ -21,6 +21,7 @@
 #include <libsolidity/codegen/ir/IRGeneratorForStatements.h>
 
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
+#include <libsolidity/codegen/ir/IRLValue.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -66,7 +67,7 @@ struct CopyTranslate: public yul::ASTCopier
 
 		return yul::Identifier{
 			_identifier.location,
-			yul::YulString{m_context.variableName(*varDecl)}
+			yul::YulString{m_context.localVariableName(*varDecl)}
 		};
 	}
 
@@ -78,6 +79,12 @@ private:
 }
 
 
+
+string IRGeneratorForStatements::code() const
+{
+	solAssert(!m_currentLValue, "LValue not reset!");
+	return m_code.str();
+}
 
 bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDeclStatement)
 {
@@ -94,7 +101,7 @@ bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDec
 		VariableDeclaration const& varDecl = *_varDeclStatement.declarations().front();
 		m_code <<
 			"let " <<
-			m_context.variableName(varDecl) <<
+			m_context.localVariableName(varDecl) <<
 			" := " <<
 			expressionAsType(*expression, *varDecl.type()) <<
 			"\n";
@@ -102,7 +109,7 @@ bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDec
 	else
 		for (auto const& decl: _varDeclStatement.declarations())
 			if (decl)
-				m_code << "let " << m_context.variableName(*decl) << "\n";
+				m_code << "let " << m_context.localVariableName(*decl) << "\n";
 
 	return false;
 }
@@ -112,17 +119,18 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 	solUnimplementedAssert(_assignment.assignmentOperator() == Token::Assign, "");
 
 	_assignment.rightHandSide().accept(*this);
+	Type const* intermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
+		_assignment.leftHandSide().annotation().type
+	);
+	string intermediateValue = m_context.newYulVariable();
+	m_code << "let " << intermediateValue << " := " << expressionAsType(_assignment.rightHandSide(), *intermediateType) << "\n";
 
-	// TODO proper lvalue handling
-	auto const& lvalue = dynamic_cast<Identifier const&>(_assignment.leftHandSide());
-	string varName = m_context.variableName(dynamic_cast<VariableDeclaration const&>(*lvalue.annotation().referencedDeclaration));
+	_assignment.leftHandSide().accept(*this);
+	solAssert(!!m_currentLValue, "LValue not retrieved.");
+	m_currentLValue->storeValue(intermediateValue, *intermediateType);
+	m_currentLValue.reset();
 
-	m_code <<
-		varName <<
-		" := " <<
-		expressionAsType(_assignment.rightHandSide(), *lvalue.annotation().type) <<
-		"\n";
-	defineExpression(_assignment) << varName << "\n";
+	defineExpression(_assignment) << intermediateValue << "\n";
 
 	return false;
 }
@@ -179,7 +187,7 @@ bool IRGeneratorForStatements::visit(Return const& _return)
 		// TODO support tuples
 		solUnimplementedAssert(types.size() == 1, "Multi-returns not implemented.");
 		m_code <<
-			m_context.variableName(*returnParameters.front()) <<
+			m_context.localVariableName(*returnParameters.front()) <<
 			" := " <<
 			expressionAsType(*value, *types.front()) <<
 			"\n";
@@ -329,14 +337,26 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 bool IRGeneratorForStatements::visit(Identifier const& _identifier)
 {
 	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
-	string value;
 	if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-		value = to_string(m_context.virtualFunction(*functionDef).id());
+		defineExpression(_identifier) << to_string(m_context.virtualFunction(*functionDef).id()) << "\n";
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-		value = m_context.variableName(*varDecl);
+	{
+		// TODO for the constant case, we have to be careful:
+		// If the value is visited twice, `defineExpression` is called twice on
+		// the same expression.
+		solUnimplementedAssert(!varDecl->isConstant(), "");
+		unique_ptr<IRLValue> lvalue;
+		if (m_context.isLocalVariable(*varDecl))
+			lvalue = make_unique<IRLocalVariable>(m_code, m_context, *varDecl);
+		else if (m_context.isStateVariable(*varDecl))
+			lvalue = make_unique<IRStorageItem>(m_code, m_context, *varDecl);
+		else
+			solAssert(false, "Invalid variable kind.");
+
+		setLValue(_identifier, move(lvalue));
+	}
 	else
 		solUnimplemented("");
-	defineExpression(_identifier) << value << "\n";
 	return false;
 }
 
@@ -374,4 +394,15 @@ string IRGeneratorForStatements::expressionAsType(Expression const& _expression,
 ostream& IRGeneratorForStatements::defineExpression(Expression const& _expression)
 {
 	return m_code << "let " << m_context.variable(_expression) << " := ";
+}
+
+void IRGeneratorForStatements::setLValue(Expression const& _expression, unique_ptr<IRLValue> _lvalue)
+{
+	solAssert(!m_currentLValue, "");
+
+	if (_expression.annotation().lValueRequested)
+		// Do not define the expression, so it cannot be used as value.
+		m_currentLValue = std::move(_lvalue);
+	else
+		defineExpression(_expression) << _lvalue->retrieveValue() << "\n";
 }

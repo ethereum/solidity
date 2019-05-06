@@ -68,7 +68,7 @@ private:
 
 	std::string memoryInit();
 
-	void resetContext();
+	void resetContext(ContractDefinition const& _contract);
 
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;

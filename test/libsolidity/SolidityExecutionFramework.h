@@ -92,7 +92,9 @@ public:
 			yul::AssemblyStack asmStack(
 				m_evmVersion,
 				yul::AssemblyStack::Language::StrictAssembly,
-				m_optimiserSettings
+				// Ignore optimiser settings here because we need Yul optimisation to
+				// get code that does not exhaust the stack.
+				OptimiserSettings::full()
 			);
 			if (!asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(
 				_contractName.empty() ? m_compiler.lastContractName() : _contractName

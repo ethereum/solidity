@@ -237,6 +237,30 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 	}
 }
 
+string YulUtilFunctions::updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes)
+{
+	solAssert(_numBytes <= 32, "");
+	solAssert(_shiftBytes <= 32, "");
+	size_t numBits = _numBytes * 8;
+	size_t shiftBits = _shiftBytes * 8;
+	string functionName = "update_byte_slice_" + to_string(_numBytes) + "_shift_" + to_string(_shiftBytes);
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value, toInsert) -> result {
+				let mask := <mask>
+				toInsert := <shl>(toInsert)
+				value := and(value, not(mask))
+				result := or(value, and(toInsert, mask))
+			}
+			)")
+			("functionName", functionName)
+			("mask", formatNumber(((bigint(1) << numBits) - 1) << shiftBits))
+			("shl", shiftLeftFunction(shiftBits))
+			.render();
+	});
+}
+
 string YulUtilFunctions::roundUpFunction()
 {
 	string functionName = "round_up_to_mul_of_32";
@@ -537,6 +561,26 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 		else
 			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
 
+		return templ.render();
+	});
+}
+
+string YulUtilFunctions::prepareStoreFunction(Type const& _type)
+{
+	solUnimplementedAssert(_type.category() != Type::Category::Function, "");
+
+	string functionName = "prepare_store_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			function <functionName>(value) -> ret {
+				ret := <actualPrepare>
+			}
+		)");
+		templ("functionName", functionName);
+		if (_type.category() == Type::Category::FixedBytes)
+			templ("actualPrepare", shiftRightFunction(256 - 8 * _type.storageBytes()) + "(value)");
+		else
+			templ("actualPrepare", "value");
 		return templ.render();
 	});
 }

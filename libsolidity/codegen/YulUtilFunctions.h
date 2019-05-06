@@ -69,6 +69,11 @@ public:
 	std::string shiftLeftFunction(size_t _numBits);
 	std::string shiftRightFunction(size_t _numBits);
 
+	/// @returns the name of a function f(value, toInsert) -> newValue which replaces the
+	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
+	/// byte) by the _numBytes least significant bytes of `toInsert`.
+	std::string updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes);
+
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
 	std::string roundUpFunction();
@@ -109,6 +114,12 @@ public:
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes);
+
+	/// @returns the name of a function that prepares a value of the given type
+	/// for being stored in storage. This usually includes cleanup and right-alignment
+	/// to fit the number of bytes in storage.
+	/// The resulting value might still have dirty higher order bits.
+	std::string prepareStoreFunction(Type const& _type);
 
 	/// @returns the name of a function that allocates memory.
 	/// Modifies the "free memory pointer"
