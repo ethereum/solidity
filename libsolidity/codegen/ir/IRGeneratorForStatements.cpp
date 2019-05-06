@@ -115,7 +115,7 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 	solUnimplementedAssert(_assignment.assignmentOperator() == Token::Assign, "");
 
 	_assignment.rightHandSide().accept(*this);
-	Type const* intermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
+	Type const* intermediateType = type(_assignment.rightHandSide()).closestTemporaryType(
 		&type(_assignment.leftHandSide())
 	);
 	string intermediateValue = m_context.newYulVariable();
@@ -191,9 +191,9 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 
 void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 {
-	if (_unaryOperation.annotation().type->category() == Type::Category::RationalNumber)
+	if (type(_unaryOperation).category() == Type::Category::RationalNumber)
 		defineExpression(_unaryOperation) <<
-			formatNumber(_unaryOperation.annotation().type->literalValue(nullptr)) <<
+			formatNumber(type(_unaryOperation).literalValue(nullptr)) <<
 			"\n";
 	else
 		solUnimplementedAssert(false, "");
