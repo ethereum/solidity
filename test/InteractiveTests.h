@@ -19,6 +19,7 @@
 
 #include <test/TestCase.h>
 #include <test/libsolidity/ASTJSONTest.h>
+#include <test/libsolidity/GasTest.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/SemanticTest.h>
 #include <test/libsolidity/SMTCheckerJSONTest.h>
@@ -58,7 +59,8 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
 	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
 	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SyntaxTest::create},
-	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerTest::create}
+	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerTest::create},
+	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
 };
 
 }
