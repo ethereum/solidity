@@ -65,6 +65,8 @@ private:
 
 	void setLValue(Expression const& _expression, std::unique_ptr<IRLValue> _lvalue);
 
+	static Type const& type(Expression const& _expression);
+
 	std::ostringstream m_code;
 	IRGenerationContext& m_context;
 	YulUtilFunctions& m_utils;
