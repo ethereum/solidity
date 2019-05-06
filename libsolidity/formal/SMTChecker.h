@@ -173,6 +173,8 @@ private:
 		std::string const& _description
 	);
 
+	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
+
 	struct OverflowTarget
 	{
 		enum class Type { Underflow, Overflow, All } type;
@@ -180,9 +182,9 @@ private:
 		smt::Expression value;
 		smt::Expression path;
 		langutil::SourceLocation const& location;
-		std::vector<ASTNode const*> callStack;
+		std::vector<CallStackEntry> callStack;
 
-		OverflowTarget(Type _type, TypePointer _intType, smt::Expression _value, smt::Expression _path, langutil::SourceLocation const& _location, std::vector<ASTNode const*> _callStack):
+		OverflowTarget(Type _type, TypePointer _intType, smt::Expression _value, smt::Expression _path, langutil::SourceLocation const& _location, std::vector<CallStackEntry> _callStack):
 			type(_type),
 			intType(_intType),
 			value(_value),
@@ -266,9 +268,9 @@ private:
 	/// Returns the current callstack. Used for models.
 	langutil::SecondarySourceLocation currentCallStack();
 	/// Copies and pops the last called node.
-	ASTNode const* popCallStack();
-	/// Adds @param _node to the callstack.
-	void pushCallStack(ASTNode const* _node);
+	CallStackEntry popCallStack();
+	/// Adds (_definition, _node) to the callstack.
+	void pushCallStack(CallStackEntry _entry);
 	/// Conjoin the current path conditions with the given parameter and add to the solver
 	void addPathConjoinedExpression(smt::Expression const& _e);
 	/// Add to the solver: the given expression implied by the current path conditions
@@ -315,10 +317,8 @@ private:
 	langutil::ErrorList m_smtErrors;
 	std::shared_ptr<langutil::Scanner> m_scanner;
 
-	/// Stores the current path of function calls.
-	std::vector<FunctionDefinition const*> m_functionPath;
-	/// Stores the current call/invocation path.
-	std::vector<ASTNode const*> m_callStack;
+	/// Stores the current function/modifier call/invocation path.
+	std::vector<CallStackEntry> m_callStack;
 	/// Returns true if the current function was not visited by
 	/// a function call.
 	bool isRootFunction();
