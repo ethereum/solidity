@@ -42,7 +42,7 @@ u256 exp256(u256 _base, u256 _exponent)
 	u256 result = 1;
 	while (_exponent)
 	{
-		if (static_cast<limb_type>(_exponent) & 1)	// If exponent is odd.
+		if (boost::multiprecision::bit_test(_exponent, 0))
 			result *= _base;
 		_base *= _base;
 		_exponent >>= 1;
