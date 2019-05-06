@@ -418,7 +418,7 @@ jobs:
 
   build_x86_linux_ossfuzz:
     docker:
-      - image: buildpack-deps:cosmic
+      - image: buildpack-deps:bionic
     environment:
       TERM: xterm
       CC: /usr/bin/clang-7
@@ -439,7 +439,7 @@ jobs:
 
   test_x86_ossfuzz_regression:
     docker:
-      - image: buildpack-deps:cosmic
+      - image: buildpack-deps:bionic
     environment:
       TERM: xterm
     steps:
