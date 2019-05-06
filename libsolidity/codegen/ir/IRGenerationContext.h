@@ -83,6 +83,9 @@ public:
 	/// @returns the variable (or comma-separated list of variables) that contain
 	/// the value of the given expression.
 	std::string variable(Expression const& _expression);
+	/// @returns the variable of a multi-variable expression. Variables are numbered
+	/// starting from 1.
+	std::string variablePart(Expression const& _expression, size_t _part);
 
 	std::string internalDispatch(size_t _in, size_t _out);
 

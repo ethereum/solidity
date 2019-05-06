@@ -161,6 +161,10 @@ public:
 
 	std::string packedHashFunction(std::vector<Type const*> const& _givenTypes, std::vector<Type const*> const& _targetTypes);
 
+	/// @returns the name of a function that reverts and uses returndata (if available)
+	/// as reason string.
+	std::string forwardingRevertFunction();
+
 	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
 	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
 	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
