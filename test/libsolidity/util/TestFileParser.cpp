@@ -290,10 +290,21 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 				throw Error(Error::Type::ParserError, "Invalid hex string literal.");
 			if (alignment != DeclaredAlignment::None)
 				throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
-			string parsed = parseHexNumber();
+			string parsed = parseString();
 			rawString += "hex\"" + parsed + "\"";
-			result = convertHexString(parsed);
+			result = convertHexNumber(parsed);
 			abiType = ABIType{ABIType::HexString, ABIType::AlignNone, result.size()};
+		}
+		else if (accept(Token::String))
+		{
+			if (isSigned)
+				throw Error(Error::Type::ParserError, "Invalid string literal.");
+			if (alignment != DeclaredAlignment::None)
+				throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
+			abiType = ABIType{ABIType::String, ABIType::AlignLeft, 32};
+			string parsed = parseString();
+			rawString += "\"" + parsed + "\"";
+			result = applyAlign(DeclaredAlignment::Left, abiType, convertString(parsed));
 		}
 		else if (accept(Token::Number))
 		{
@@ -395,6 +406,13 @@ string TestFileParser::parseHexNumber()
 	return literal;
 }
 
+string TestFileParser::parseString()
+{
+	string literal = m_scanner.currentLiteral();
+	expect(Token::String);
+	return literal;
+}
+
 bytes TestFileParser::convertBoolean(string const& _literal)
 {
 	if (_literal == "true")
@@ -422,13 +440,9 @@ bytes TestFileParser::convertHexNumber(string const& _literal)
 	try
 	{
 		if (_literal.size() % 2)
-		{
 			throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
-		}
 		else
-		{
 			return fromHex(_literal);
-		}
 	}
 	catch (std::exception const&)
 	{
@@ -436,18 +450,15 @@ bytes TestFileParser::convertHexNumber(string const& _literal)
 	}
 }
 
-bytes TestFileParser::convertHexString(string const& _literal)
+bytes TestFileParser::convertString(string const& _literal)
 {
 	try
 	{
-		if (_literal.size() % 2)
-			throw Error(Error::Type::ParserError, "Hex string encoding invalid.");
-		else
-			return fromHex(_literal);
+		return asBytes(_literal);
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Hex string encoding invalid.");
+		throw Error(Error::Type::ParserError, "String encoding invalid.");
 	}
 }
 
@@ -525,9 +536,7 @@ void TestFileParser::Scanner::scanNextToken()
 			token = selectToken(Token::RBrack);
 			break;
 		case '\"':
-			advance();
-			token = selectToken(Token::HexNumber, scanHexNumber());
-			advance();
+			token = selectToken(Token::String, scanString());
 			break;
 		default:
 			if (isIdentifierStart(current()))
@@ -609,4 +618,17 @@ string TestFileParser::Scanner::scanHexNumber()
 		number += current();
 	}
 	return number;
+}
+
+string TestFileParser::Scanner::scanString()
+{
+	string str;
+	advance();
+
+	while (current() != '\"')
+	{
+		str += current();
+		advance();
+	}
+	return str;
 }

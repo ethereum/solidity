@@ -35,6 +35,7 @@ static regex s_uintType{"(uint\\d*)"};
 static regex s_intType{"(int\\d*)"};
 static regex s_bytesType{"(bytes\\d+)"};
 static regex s_dynBytesType{"(\\bbytes\\b)"};
+static regex s_stringType{"(string)"};
 
 /// Translates Solidity's ABI types into the internal type representation of
 /// soltest.
@@ -54,6 +55,12 @@ auto contractABITypes(string const& _type) -> vector<ABIType>
 		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
 		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
 		abiTypes.push_back(ABIType{ABIType::HexString, ABIType::AlignLeft, 32});
+	}
+	else if (regex_match(_type, s_stringType))
+	{
+		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
+		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
+		abiTypes.push_back(ABIType{ABIType::String, ABIType::AlignLeft, 32});
 	}
 	else
 		abiTypes.push_back(ABIType{ABIType::None, ABIType::AlignRight, 0});
@@ -319,6 +326,25 @@ string TestFunctionCall::formatBytesRange(
 	case ABIType::HexString:
 		os << "hex\"" << toHex(_bytes) << "\"";
 		break;
+	case ABIType::String:
+	{
+		os << "\"";
+		bool expectZeros = false;
+		for (auto const& v: _bytes)
+		{
+			if (expectZeros && v != 0)
+				return {};
+			if (v == 0) expectZeros = true;
+			else
+			{
+				if (!isprint(v) || v == '"')
+					return {};
+				os << v;
+			}
+		}
+		os << "\"";
+		break;
+	}
 	case ABIType::Failure:
 		break;
 	case ABIType::None:
