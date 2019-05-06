@@ -13,7 +13,10 @@ contract C {
     function f8(uint[32] memory, string[] memory, uint32, address) public returns (uint[] memory, uint16[] memory) {}
 }
 // ----
-// creation: 1160 + 1119000 = 1120160
+// creation:
+//   codeDepositCost: 1120800
+//   executionCost: 1167
+//   totalCost: 1121967
 // external:
 //   a(): 530
 //   b(uint256): infinite

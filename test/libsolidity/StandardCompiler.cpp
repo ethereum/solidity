@@ -22,6 +22,7 @@
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/StandardCompiler.h>
+#include <libsolidity/interface/Version.h>
 #include <libdevcore/JSON.h>
 #include <test/Metadata.h>
 
@@ -326,7 +327,9 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
-		"6080604052348015600f57600080fd5b50603580601d6000396000f3fe6080604052600080fdfe"
+		string("6080604052348015600f57600080fd5b5060") +
+		(VersionIsRelease ? "3e" : toHex(bytes{uint8_t(60 + VersionStringStrict.size())})) +
+		"80601d6000396000f3fe6080604052600080fdfe"
 	);
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
 	BOOST_CHECK(contract["evm"]["assembly"].asString().find(
@@ -338,12 +341,19 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"tag_1:\n    /* \"fileA\":0:14  contract A { } */\n  pop\n  dataSize(sub_0)\n  dup1\n  "
 		"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n        "
 		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      0x00\n      "
-		"dup1\n      revert\n\n    auxdata: 0xa165627a7a72305820"
+		"dup1\n      revert\n\n    auxdata: 0xa265627a7a72305820"
 	) == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
+	BOOST_CHECK_EQUAL(contract["evm"]["gasEstimates"].size(), 1);
+	BOOST_CHECK(contract["evm"]["gasEstimates"]["creation"].isObject());
+	BOOST_CHECK_EQUAL(contract["evm"]["gasEstimates"]["creation"].size(), 3);
+	BOOST_CHECK(contract["evm"]["gasEstimates"]["creation"]["codeDepositCost"].isString());
+	BOOST_CHECK(contract["evm"]["gasEstimates"]["creation"]["executionCost"].isString());
+	BOOST_CHECK(contract["evm"]["gasEstimates"]["creation"]["totalCost"].isString());
 	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(contract["evm"]["gasEstimates"]),
-		"{\"creation\":{\"codeDepositCost\":\"10600\",\"executionCost\":\"66\",\"totalCost\":\"10666\"}}"
+		u256(contract["evm"]["gasEstimates"]["creation"]["codeDepositCost"].asString()) +
+		u256(contract["evm"]["gasEstimates"]["creation"]["executionCost"].asString()),
+		u256(contract["evm"]["gasEstimates"]["creation"]["totalCost"].asString())
 	);
 	// Lets take the top level `.code` section (the "deployer code"), that should expose most of the features of
 	// the assembly JSON. What we want to check here is Operation, Push, PushTag, PushSub, PushSubSize and Tag.

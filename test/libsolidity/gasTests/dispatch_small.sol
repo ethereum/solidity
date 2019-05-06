@@ -5,7 +5,10 @@ contract Small {
     function () external payable {}
 }
 // ----
-// creation: 129 + 81800 = 81929
+// creation:
+//   codeDepositCost: 83600
+//   executionCost: 135
+//   totalCost: 83735
 // external:
 //   fallback: 118
 //   a(): 383

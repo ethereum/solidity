@@ -23,7 +23,10 @@ contract Large {
     function g0(uint x) public payable returns (uint) { require(x > 10); }
 }
 // ----
-// creation: 670 + 635000 = 635670
+// creation:
+//   codeDepositCost: 636800
+//   executionCost: 670
+//   totalCost: 637470
 // external:
 //   a(): 451
 //   b(uint256): 846
