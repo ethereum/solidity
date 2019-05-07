@@ -20,6 +20,15 @@ contract C {
     function m(bytes memory b) public returns (bytes memory) {
         return b;
     }
+    function n() public returns (string memory) {
+        return "any";
+    }
+    function o() public returns (string memory, string memory) {
+        return ("any", "any");
+    }
+    function p() public returns (string memory, uint, string memory) {
+        return ("any", 42, "any");
+    }
 }
 // ----
 // _() -> FAILURE
@@ -33,3 +42,6 @@ contract C {
 // m(bytes): 32, 32, 0x20 -> 32, 32, 0x20
 // m(bytes): 32, 3, hex"AB33BB" -> 32, 3, left(0xAB33BB)
 // m(bytes): 32, 3, hex"AB33FF" -> 32, 3, hex"ab33ff0000000000000000000000000000000000000000000000000000000000"
+// n() -> 0x20, 3, "any"
+// o() -> 0x40, 0x80, 3, "any", 3, "any"
+// p() -> 0x60, 0x2a, 0xa0, 3, "any", 3, "any"
