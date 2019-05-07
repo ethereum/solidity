@@ -40,7 +40,7 @@ namespace test
 #define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt) \
 	do \
 	{ \
-		u256 bzzr0Cost = GasMeter::dataGas(dev::swarmHash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true); \
+		u256 bzzr0Cost = GasMeter::dataGas(dev::bzzr0Hash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true); \
 		u256 gasOpt{_gasOpt}; \
 		u256 gasNoOpt{_gasNoOpt}; \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \

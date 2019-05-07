@@ -784,7 +784,7 @@ h256 const& CompilerStack::Source::keccak256() const
 h256 const& CompilerStack::Source::swarmHash() const
 {
 	if (swarmHashCached == h256{})
-		swarmHashCached = dev::swarmHash(scanner->source());
+		swarmHashCached = dev::bzzr0Hash(scanner->source());
 	return swarmHashCached;
 }
 
@@ -1232,7 +1232,7 @@ private:
 bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
 {
 	MetadataCBOREncoder encoder;
-	encoder.pushBytes("bzzr0", dev::swarmHash(_metadata).asBytes());
+	encoder.pushBytes("bzzr0", dev::bzzr0Hash(_metadata).asBytes());
 	if (_experimentalMode)
 		encoder.pushBool("experimental", true);
 	if (m_release)
