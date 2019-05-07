@@ -18,6 +18,7 @@
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/Options.h>
 #include <libdevcore/AnsiColorized.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <boost/algorithm/string.hpp>
@@ -27,6 +28,7 @@
 #include <memory>
 #include <stdexcept>
 
+using namespace langutil;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
 using namespace dev::formatting;
@@ -88,7 +90,7 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 	}
 }
 
-bool ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	CompilerStack c;
 
@@ -101,7 +103,15 @@ bool ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _f
 	}
 	c.setSources(sources);
 	c.setEVMVersion(dev::test::Options::get().evmVersion());
-	c.parseAndAnalyze();
+	if (c.parse())
+		c.analyze();
+	else
+	{
+		SourceReferenceFormatterHuman formatter(_stream, _formatted);
+		for (auto const& error: c.errors())
+			formatter.printErrorInformation(*error);
+		return TestResult::FatalError;
+	}
 
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
@@ -169,7 +179,7 @@ bool ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _f
 		resultsMatch = false;
 	}
 
-	return resultsMatch;
+	return resultsMatch ? TestResult::Success : TestResult::Failure;
 }
 
 void ASTJSONTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const

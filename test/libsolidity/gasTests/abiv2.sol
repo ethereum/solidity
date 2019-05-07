@@ -1,4 +1,3 @@
-pragma solidity >=0.0;
 pragma experimental ABIEncoderV2;
 
 contract C {
@@ -13,3 +12,16 @@ contract C {
     function f7(uint[31] memory, string[20] memory, C, address) public returns (bytes[] memory, uint16[] memory) {}
     function f8(uint[32] memory, string[] memory, uint32, address) public returns (uint[] memory, uint16[] memory) {}
 }
+// ----
+// creation: 1160 + 1119000 = 1120160
+// external:
+//   a(): 530
+//   b(uint256): infinite
+//   f1(uint256): infinite
+//   f2(uint256[],string[],uint16,address): infinite
+//   f3(uint16[],string[],uint16,address): infinite
+//   f4(uint32[],string[12],bytes[2][],address): infinite
+//   f5(address[],string[],bytes,address): infinite
+//   f6(uint256[30],string[],uint16,address): infinite
+//   f7(uint256[31],string[20],address,address): infinite
+//   f8(uint256[32],string[],uint32,address): infinite

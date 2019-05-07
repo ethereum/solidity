@@ -53,7 +53,7 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 	parseExpectations(file);
 }
 
-bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
 
@@ -96,9 +96,9 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _format
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
 			<< "Attention: Updates on the test will apply the detected format displayed." << endl;
-		return false;
+		return TestResult::Failure;
 	}
-	return true;
+	return TestResult::Success;
 }
 
 void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool) const

@@ -57,7 +57,7 @@ public:
 	{ return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion); }
 	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
 	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override

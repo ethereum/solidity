@@ -17,11 +17,14 @@
 
 #pragma once
 
-#include <test/libsolidity/SyntaxTest.h>
+#include <test/libsolidity/AnalysisFramework.h>
+#include <test/TestCase.h>
+#include <liblangutil/Exceptions.h>
 
-#include <libdevcore/JSON.h>
-
+#include <iosfwd>
 #include <string>
+#include <vector>
+#include <utility>
 
 namespace dev
 {
@@ -30,22 +33,35 @@ namespace solidity
 namespace test
 {
 
-class SMTCheckerTest: public SyntaxTest
+class GasTest: AnalysisFramework, public TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
-	{
-		return std::make_unique<SMTCheckerTest>(_config.filename, _config.evmVersion);
-	}
-	SMTCheckerTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
+	{ return std::make_unique<GasTest>(_config.filename); }
+	GasTest(std::string const& _filename);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
-private:
-	std::vector<std::string> hashesFromJson(Json::Value const& _jsonObj, std::string const& _auxInput, std::string const& _smtlib);
-	Json::Value buildJson(std::string const& _extra);
+	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool _formatted = false) const override;
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
-	Json::Value m_smtResponses;
+private:
+	void parseExpectations(std::istream& _stream);
+
+	struct CreationCost
+	{
+		u256 executionCost{0};
+		u256 codeDepositCost{0};
+		u256 totalCost{0};
+	};
+
+	bool m_optimise = false;
+	bool m_optimiseYul = false;
+	size_t m_optimiseRuns = 200;
+	std::string m_source;
+	CreationCost m_creationCost;
+	std::map<std::string, std::string> m_externalFunctionCosts;
+	std::map<std::string, std::string> m_internalFunctionCosts;
 };
 
 }

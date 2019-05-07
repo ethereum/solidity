@@ -56,6 +56,8 @@ public:
 		langutil::EVMVersion evmVersion;
 	};
 
+	enum class TestResult { Success, Failure, FatalError };
+
 	using TestCaseCreator = std::unique_ptr<TestCase>(*)(Config const&);
 
 	virtual ~TestCase() = default;
@@ -64,7 +66,7 @@ public:
 	/// Outputs error messages to @arg _stream. Each line of output is prefixed with @arg _linePrefix.
 	/// Optionally, color-coding can be enabled (if @arg _formatted is set to true).
 	/// @returns true, if the test case succeeds, false otherwise
-	virtual bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) = 0;
+	virtual TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) = 0;
 
 	/// Outputs the test contract to @arg _stream.
 	/// Each line of output is prefixed with @arg _linePrefix.

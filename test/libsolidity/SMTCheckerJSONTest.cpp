@@ -49,7 +49,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _ev
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid JSON file."));
 }
 
-bool SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	StandardCompiler compiler;
 
@@ -121,7 +121,7 @@ bool SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _form
 		}
 	}
 
-	return printExpectationAndError(_stream, _linePrefix, _formatted);
+	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
 }
 
 vector<string> SMTCheckerTest::hashesFromJson(Json::Value const& _jsonObj, string const& _auxInput, string const& _smtlib)

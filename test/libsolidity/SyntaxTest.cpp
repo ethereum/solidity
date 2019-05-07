@@ -63,7 +63,7 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 	m_expectations = parseExpectations(file);
 }
 
-bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	string const versionPragma = "pragma solidity >=0.0;\n";
 	compiler().reset();
@@ -92,7 +92,7 @@ bool SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatte
 		});
 	}
 
-	return printExpectationAndError(_stream, _linePrefix, _formatted);
+	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
 }
 
 bool SyntaxTest::printExpectationAndError(ostream& _stream, string const& _linePrefix, bool _formatted)
