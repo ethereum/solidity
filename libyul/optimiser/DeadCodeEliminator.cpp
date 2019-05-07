@@ -71,6 +71,17 @@ void DeadCodeEliminator::operator()(ForLoop& _for)
 {
 	yulAssert(_for.pre.statements.empty(), "DeadCodeEliminator needs ForLoopInitRewriter as a prerequisite.");
 	ASTModifier::operator()(_for);
+	auto bodyTerminatingStmt = findFirstTerminatingStatement(_for.body);
+	if (
+		bodyTerminatingStmt != _for.body.statements.end() &&
+		bodyTerminatingStmt->type() != typeid(Continue)
+	)
+	{
+		_for.post.statements.erase(
+			std::remove_if(_for.post.statements.begin(), _for.post.statements.end(), isRemovableStatement),
+			_for.post.statements.end()
+		);
+	}
 }
 
 void DeadCodeEliminator::operator()(Block& _block)
@@ -79,22 +90,17 @@ void DeadCodeEliminator::operator()(Block& _block)
 
 	auto firstTerminatingStatment = findFirstTerminatingStatement(_block);
 
-	if (
-		firstTerminatingStatment != statements.end() &&
-		firstTerminatingStatment + 1 != statements.end()
-	)
+	if (firstTerminatingStatment != statements.end())
 		statements.erase(
-			std::remove_if(
-				firstTerminatingStatment + 1,
-				statements.end(),
-				[] (Statement const& _s)
-				{
-					return _s.type() != typeid(yul::FunctionDefinition);
-				}
-			),
+			std::remove_if(std::next(firstTerminatingStatment), statements.end(), isRemovableStatement),
 			statements.end()
 		);
 
 	ASTModifier::operator()(_block);
+}
+
+bool DeadCodeEliminator::isRemovableStatement(Statement const& _stmt)
+{
+	return _stmt.type() != typeid(yul::FunctionDefinition);
 }
 

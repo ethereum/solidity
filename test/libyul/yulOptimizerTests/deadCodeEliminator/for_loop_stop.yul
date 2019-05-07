@@ -1,4 +1,5 @@
 {
+    let b := 20
     for {
         let a := 20
     }
@@ -8,8 +9,8 @@
     }
     {
         a := a
-        break
         mstore(0, a)
+        stop()
         a := add(a, 10)
     }
 }
@@ -18,6 +19,7 @@
 // step: deadCodeEliminator
 // ----
 // {
+//     let b := 20
 //     let a := 20
 //     for {
 //     }
@@ -26,6 +28,7 @@
 //     }
 //     {
 //         a := a
-//         break
+//         mstore(0, a)
+//         stop()
 //     }
 // }

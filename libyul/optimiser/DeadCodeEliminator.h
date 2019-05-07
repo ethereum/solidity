@@ -49,6 +49,9 @@ public:
 	using ASTModifier::operator();
 	void operator()(ForLoop& _for) override;
 	void operator()(Block& _block) override;
+private:
+	/// returns false if the statement should not be removed even if it is in dead code region
+	static bool isRemovableStatement(Statement const&);
 };
 
 }
