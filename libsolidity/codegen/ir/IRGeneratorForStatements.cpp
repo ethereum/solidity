@@ -115,7 +115,7 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 	solUnimplementedAssert(_assignment.assignmentOperator() == Token::Assign, "");
 
 	_assignment.rightHandSide().accept(*this);
-	Type const* intermediateType = _assignment.rightHandSide().annotation().type->closestTemporaryType(
+	Type const* intermediateType = type(_assignment.rightHandSide()).closestTemporaryType(
 		&type(_assignment.leftHandSide())
 	);
 	string intermediateValue = m_context.newYulVariable();
@@ -189,18 +189,59 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 	m_code << "return_flag := 0\n" << "break\n";
 }
 
+void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
+{
+	if (type(_unaryOperation).category() == Type::Category::RationalNumber)
+		defineExpression(_unaryOperation) <<
+			formatNumber(type(_unaryOperation).literalValue(nullptr)) <<
+			"\n";
+	else
+		solUnimplementedAssert(false, "");
+}
+
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binOp)
 {
 	solAssert(!!_binOp.annotation().commonType, "");
 	TypePointer commonType = _binOp.annotation().commonType;
+	langutil::Token op = _binOp.getOperator();
 
-	if (_binOp.getOperator() == Token::And || _binOp.getOperator() == Token::Or)
+	if (op == Token::And || op == Token::Or)
 		// special case: short-circuiting
 		solUnimplementedAssert(false, "");
 	else if (commonType->category() == Type::Category::RationalNumber)
 		defineExpression(_binOp) <<
 			toCompactHexWithPrefix(commonType->literalValue(nullptr)) <<
 			"\n";
+	else if (TokenTraits::isCompareOp(op))
+	{
+		solUnimplementedAssert(commonType->category() != Type::Category::Function, "");
+		solAssert(commonType->isValueType(), "");
+		bool isSigned = false;
+		if (auto type = dynamic_cast<IntegerType const*>(commonType))
+			isSigned = type->isSigned();
+
+		string args =
+			expressionAsType(_binOp.leftExpression(), *commonType) +
+			", " +
+			expressionAsType(_binOp.rightExpression(), *commonType);
+
+		string expr;
+		if (op == Token::Equal)
+			expr = "eq(" + move(args) + ")";
+		else if (op == Token::NotEqual)
+			expr = "iszero(eq(" + move(args) + "))";
+		else if (op == Token::GreaterThanOrEqual)
+			expr = "iszero(" + string(isSigned ? "slt(" : "lt(") + move(args) + "))";
+		else if (op == Token::LessThanOrEqual)
+			expr = "iszero(" + string(isSigned ? "sgt(" : "gt(") + move(args) + "))";
+		else if (op == Token::GreaterThan)
+			expr = (isSigned ? "sgt(" : "gt(") + move(args) + ")";
+		else if (op == Token::LessThan)
+			expr = (isSigned ? "slt(" : "lt(") + move(args) + ")";
+		else
+			solAssert(false, "Unknown comparison operator.");
+		defineExpression(_binOp) << expr << "\n";
+	}
 	else
 	{
 		solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
