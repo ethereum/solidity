@@ -67,10 +67,10 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename)
 			m_expectation += line + "\n";
 }
 
-bool YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
-		return false;
+		return TestResult::FatalError;
 
 	m_obtainedResult = interpret();
 
@@ -82,9 +82,9 @@ bool YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool c
 		printIndented(_stream, m_expectation, nextIndentLevel);
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return false;
+		return TestResult::Failure;
 	}
-	return true;
+	return TestResult::Success;
 }
 
 void YulInterpreterTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const

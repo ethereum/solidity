@@ -40,7 +40,7 @@ public:
 	{ return std::make_unique<GasTest>(_config.filename); }
 	GasTest(std::string const& _filename);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
 	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;

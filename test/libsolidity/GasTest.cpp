@@ -158,7 +158,7 @@ void GasTest::printUpdatedExpectations(std::ostream& _stream, std::string const&
 }
 
 
-bool GasTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	string const versionPragma = "pragma solidity >=0.0;\n";
 	compiler().reset();
@@ -174,10 +174,10 @@ bool GasTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 
 	if (!compiler().parseAndAnalyze() || !compiler().compile())
 	{
-		SourceReferenceFormatterHuman formatter(cerr, _formatted);
+		SourceReferenceFormatterHuman formatter(_stream, _formatted);
 		for (auto const& error: compiler().errors())
 			formatter.printErrorInformation(*error);
-		BOOST_THROW_EXCEPTION(runtime_error("Test contract does not compile."));
+		return TestResult::FatalError;
 	}
 
 	Json::Value estimates = compiler().gasEstimates(compiler().lastContractName());
@@ -226,7 +226,7 @@ bool GasTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 		printUpdatedExpectations(_stream, _linePrefix + "  ");
 	}
 
-	return success;
+	return success ? TestResult::Success : TestResult::Failure;
 }
 
 void GasTest::printSource(ostream& _stream, string const& _linePrefix, bool) const

@@ -103,10 +103,10 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 			m_expectation += line + "\n";
 }
 
-bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
-		return false;
+		return TestResult::FatalError;
 
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
@@ -277,12 +277,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	else
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
-		return false;
+		return TestResult::FatalError;
 	}
 
 	m_obtainedResult = AsmPrinter{m_yul}(*m_ast) + "\n";
 
-	bool success = true;
 	if (m_optimizerStep != m_validatedSettings["step"])
 	{
 		string nextIndentLevel = _linePrefix + "  ";
@@ -294,7 +293,7 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 			m_optimizerStep <<
 			"\"." <<
 			endl;
-		success = false;
+		return TestResult::FatalError;
 	}
 	if (m_expectation != m_obtainedResult)
 	{
@@ -304,9 +303,9 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		printIndented(_stream, m_expectation, nextIndentLevel);
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		success = false;
+		return TestResult::Failure;
 	}
-	return success;
+	return TestResult::Success;
 }
 
 void YulOptimizerTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const

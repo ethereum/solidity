@@ -106,8 +106,17 @@ int registerTests(
 						stringstream errorStream;
 						auto testCase = _testCaseCreator(config);
 						if (testCase->validateSettings(dev::test::Options::get().evmVersion()))
-							if (!testCase->run(errorStream))
-								BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+							switch (testCase->run(errorStream))
+							{
+								case TestCase::TestResult::Success:
+									break;
+								case TestCase::TestResult::Failure:
+									BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+									break;
+								case TestCase::TestResult::FatalError:
+									BOOST_ERROR("Fatal error during test.\n" + errorStream.str());
+									break;
+							}
 					}
 					catch (boost::exception const& _e)
 					{
