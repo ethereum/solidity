@@ -260,35 +260,25 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 	// Note that if this is extended with signed shifts,
 	// the opcodes SAR and SDIV behave differently with regards to rounding!
 
-	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned";
-	if (m_evmVersion.hasBitwiseShifting())
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := shr(<numBits>, value)
-				}
-				)")
-				("functionName", functionName)
-				("numBits", to_string(_numBits))
-				.render();
-		});
-	}
-	else
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := div(value, <multiplier>)
-				}
-				)")
-				("functionName", functionName)
-				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-				.render();
-		});
-	}
+	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned_" + m_evmVersion.name();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shr(<numBits>, value)
+				<!hasShifts>
+					div(value, <multiplier>)
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			("numBits", to_string(_numBits))
+			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+			.render();
+	});
 }
 
 string YulUtilFunctions::updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes)
@@ -335,28 +325,23 @@ string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
 	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
 	string functionName = "checked_add_uint_" + to_string(_bits);
 	return m_functionCollector->createFunction(functionName, [&]() {
-		if (_bits < 256)
-			return
-				Whiskers(R"(
-				function <functionName>(x, y) -> sum {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> sum {
+				<?shortType>
 					let mask := <mask>
 					sum := add(and(x, mask), and(y, mask))
 					if and(sum, not(mask)) { revert(0, 0) }
-				}
-				)")
-				("functionName", functionName)
-				("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
-				.render();
-		else
-			return
-				Whiskers(R"(
-				function <functionName>(x, y) -> sum {
+				<!shortType>
 					sum := add(x, y)
 					if lt(sum, x) { revert(0, 0) }
-				}
-				)")
-				("functionName", functionName)
-				.render();
+				</shortType>
+			}
+			)")
+			("shortType", _bits < 256)
+			("functionName", functionName)
+			("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
+			.render();
 	});
 }
 
@@ -366,43 +351,38 @@ string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 	return m_functionCollector->createFunction(functionName, [&]() {
 		Whiskers w(R"(
 			function <functionName>(value) -> length {
-				<body>
+				<?dynamic>
+					<?memory>
+						length := mload(value)
+					</memory>
+					<?storage>
+						length := sload(value)
+						<?byteArray>
+							// Retrieve length both for in-place strings and off-place strings:
+							// Computes (x & (0x100 * (ISZERO (x & 1)) - 1)) / 2
+							// i.e. for short strings (x & 1 == 0) it does (x & 0xff) / 2 and for long strings it
+							// computes (x & (-1)) / 2, which is equivalent to just x / 2.
+							let mask := sub(mul(0x100, iszero(and(length, 1))), 1)
+							length := div(and(length, mask), 2)
+						</byteArray>
+					</storage>
+				<!dynamic>
+					length := <length>
+				</dynamic>
 			}
 		)");
 		w("functionName", functionName);
-		string body;
+		w("dynamic", _type.isDynamicallySized());
 		if (!_type.isDynamicallySized())
-			body = "length := " + toCompactHexWithPrefix(_type.length());
-		else
-		{
-			switch (_type.location())
-			{
-			case DataLocation::CallData:
-				solAssert(false, "called regular array length function on calldata array");
-				break;
-			case DataLocation::Memory:
-				body = "length := mload(value)";
-				break;
-			case DataLocation::Storage:
-				if (_type.isByteArray())
-				{
-					// Retrieve length both for in-place strings and off-place strings:
-					// Computes (x & (0x100 * (ISZERO (x & 1)) - 1)) / 2
-					// i.e. for short strings (x & 1 == 0) it does (x & 0xff) / 2 and for long strings it
-					// computes (x & (-1)) / 2, which is equivalent to just x / 2.
-					body = R"(
-						length := sload(value)
-						let mask := sub(mul(0x100, iszero(and(length, 1))), 1)
-						length := div(and(length, mask), 2)
-					)";
-				}
-				else
-					body = "length := sload(value)";
-				break;
-			}
-		}
-		solAssert(!body.empty(), "");
-		w("body", body);
+			w("length", toCompactHexWithPrefix(_type.length()));
+		w("memory", _type.location() == DataLocation::Memory);
+		w("storage", _type.location() == DataLocation::Storage);
+		w("byteArray", _type.isByteArray());
+		if (_type.isDynamicallySized())
+			solAssert(
+				_type.location() != DataLocation::CallData,
+				"called regular array length function on calldata array"
+			);
 		return w.render();
 	});
 }
@@ -416,20 +396,21 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 			function <functionName>(length) -> size {
 				// Make sure we can allocate memory without overflow
 				if gt(length, 0xffffffffffffffff) { revert(0, 0) }
-				size := <allocationSize>
-				<addLengthSlot>
+				<?byteArray>
+					// round up
+					size := and(add(length, 0x1f), not(0x1f))
+				<!byteArray>
+					size := mul(length, 0x20)
+				</byteArray>
+				<?dynamic>
+					// add length slot
+					size := add(size, 0x20)
+				</dynamic>
 			}
 		)");
 		w("functionName", functionName);
-		if (_type.isByteArray())
-			// Round up
-			w("allocationSize", "and(add(length, 0x1f), not(0x1f))");
-		else
-			w("allocationSize", "mul(length, 0x20)");
-		if (_type.isDynamicallySized())
-			w("addLengthSlot", "size := add(size, 0x20)");
-		else
-			w("addLengthSlot", "");
+		w("byteArray", _type.isByteArray());
+		w("dynamic", _type.isDynamicallySized());
 		return w.render();
 	});
 }
