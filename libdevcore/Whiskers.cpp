@@ -30,64 +30,73 @@
 using namespace std;
 using namespace dev;
 
-Whiskers::Whiskers(string const& _template):
-m_template(_template)
+Whiskers::Whiskers(string _template):
+	m_template(move(_template))
 {
 }
 
-Whiskers& Whiskers::operator ()(string const& _parameter, string const& _value)
+Whiskers& Whiskers::operator()(string _parameter, string _value)
 {
-	assertThrow(
-		m_parameters.count(_parameter) == 0,
-		WhiskersError,
-		_parameter + " already set."
-	);
-	assertThrow(
-		m_listParameters.count(_parameter) == 0,
-		WhiskersError,
-		_parameter + " already set as list parameter."
-	);
-	m_parameters[_parameter] = _value;
-
+	checkParameterUnknown(_parameter);
+	m_parameters[move(_parameter)] = move(_value);
 	return *this;
 }
 
-Whiskers& Whiskers::operator ()(
-	string const& _listParameter,
-	vector<map<string, string>> const& _values
+Whiskers& Whiskers::operator()(string _parameter, bool _value)
+{
+	checkParameterUnknown(_parameter);
+	m_conditions[move(_parameter)] = _value;
+	return *this;
+}
+
+Whiskers& Whiskers::operator()(
+	string _listParameter,
+	vector<map<string, string>> _values
 )
 {
-	assertThrow(
-		m_listParameters.count(_listParameter) == 0,
-		WhiskersError,
-		_listParameter + " already set."
-	);
-	assertThrow(
-		m_parameters.count(_listParameter) == 0,
-		WhiskersError,
-		_listParameter + " already set as value parameter."
-	);
-	m_listParameters[_listParameter] = _values;
-
+	checkParameterUnknown(_listParameter);
+	m_listParameters[move(_listParameter)] = move(_values);
 	return *this;
 }
 
 string Whiskers::render() const
 {
-	return replace(m_template, m_parameters, m_listParameters);
+	return replace(m_template, m_parameters, m_conditions, m_listParameters);
+}
+
+void Whiskers::checkParameterUnknown(string const& _parameter)
+{
+	assertThrow(
+		!m_parameters.count(_parameter),
+		WhiskersError,
+		_parameter + " already set as value parameter."
+	);
+	assertThrow(
+		!m_conditions.count(_parameter),
+		WhiskersError,
+		_parameter + " already set as condition parameter."
+	);
+	assertThrow(
+		!m_listParameters.count(_parameter),
+		WhiskersError,
+		_parameter + " already set as list parameter."
+	);
 }
 
 string Whiskers::replace(
 	string const& _template,
 	StringMap const& _parameters,
+	map<string, bool> const& _conditions,
 	map<string, vector<StringMap>> const& _listParameters
 )
 {
 	using namespace boost;
-	static regex listOrTag("<([^#/>]+)>|<#([^>]+)>(.*?)</\\2>");
+	static regex listOrTag("<([^#/?!>]+)>|<#([^>]+)>(.*?)</\\2>|<\\?([^>]+)>(.*?)(<!\\4>(.*?))?</\\4>");
 	return regex_replace(_template, listOrTag, [&](match_results<string::const_iterator> _match) -> string
 	{
 		string tagName(_match[1]);
+		string listName(_match[2]);
+		string conditionName(_match[4]);
 		if (!tagName.empty())
 		{
 			assertThrow(
@@ -99,19 +108,31 @@ string Whiskers::replace(
 			);
 			return _parameters.at(tagName);
 		}
-		else
+		else if (!listName.empty())
 		{
-			string listName(_match[2]);
 			string templ(_match[3]);
-			assertThrow(!listName.empty(), WhiskersError, "");
 			assertThrow(
 				_listParameters.count(listName),
 				WhiskersError, "List parameter " + listName + " not set."
 			);
 			string replacement;
 			for (auto const& parameters: _listParameters.at(listName))
-				replacement += replace(templ, joinMaps(_parameters, parameters));
+				replacement += replace(templ, joinMaps(_parameters, parameters), _conditions);
 			return replacement;
+		}
+		else
+		{
+			assertThrow(!conditionName.empty(), WhiskersError, "");
+			assertThrow(
+				_conditions.count(conditionName),
+				WhiskersError, "Condition parameter " + conditionName + " not set."
+			);
+			return replace(
+				_conditions.at(conditionName) ? _match[5] : _match[7],
+				_parameters,
+				_conditions,
+				_listParameters
+			);
 		}
 	});
 }
