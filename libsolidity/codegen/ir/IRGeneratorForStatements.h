@@ -47,12 +47,13 @@ public:
 
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Assignment const& _assignment) override;
+	bool visit(TupleExpression const& _tuple) override;
 	bool visit(ForStatement const& _forStatement) override;
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;
 	void endVisit(Return const& _return) override;
 	void endVisit(UnaryOperation const& _unaryOperation) override;
-	void endVisit(BinaryOperation const& _binOp) override;
+	bool visit(BinaryOperation const& _binOp) override;
 	void endVisit(FunctionCall const& _funCall) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
 	bool visit(Identifier const& _identifier) override;
@@ -63,6 +64,8 @@ private:
 	/// converted to type @a _to if it does not yet have that type.
 	std::string expressionAsType(Expression const& _expression, Type const& _to);
 	std::ostream& defineExpression(Expression const& _expression);
+
+	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 
 	void setLValue(Expression const& _expression, std::unique_ptr<IRLValue> _lvalue);
 
