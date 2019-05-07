@@ -606,6 +606,9 @@ string YulUtilFunctions::allocationFunction()
 
 string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 {
+	if (_from.sizeOnStack() != 1 || _to.sizeOnStack() != 1)
+		return conversionFunctionSpecial(_from, _to);
+
 	string functionName =
 		"convert_" +
 		_from.identifier() +
@@ -922,4 +925,70 @@ string YulUtilFunctions::suffixedVariableNameList(string const& _baseName, size_
 			result = _baseName + to_string(_endSuffix++) + ", " + result;
 	}
 	return result;
+}
+
+string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const& _to)
+{
+	string functionName =
+		"convert_" +
+		_from.identifier() +
+		"_to_" +
+		_to.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		solUnimplementedAssert(
+			_from.category() == Type::Category::StringLiteral,
+			"Type conversion " + _from.toString() + " -> " + _to.toString() + " not yet implemented."
+		);
+		string const& data = dynamic_cast<StringLiteralType const&>(_from).value();
+		if (_to.category() == Type::Category::FixedBytes)
+		{
+			unsigned const numBytes = dynamic_cast<FixedBytesType const&>(_to).numBytes();
+			solAssert(data.size() <= 32, "");
+			Whiskers templ(R"(
+				function <functionName>() -> converted {
+					converted := <data>
+				}
+			)");
+			templ("functionName", functionName);
+			templ("data", formatNumber(
+				h256::Arith(h256(data, h256::AlignLeft)) &
+				(~(u256(-1) >> (8 * numBytes)))
+			));
+			return templ.render();
+		}
+		else if (_to.category() == Type::Category::Array)
+		{
+			auto const& arrayType = dynamic_cast<ArrayType const&>(_to);
+			solAssert(arrayType.isByteArray(), "");
+			size_t words = (data.size() + 31) / 32;
+			size_t storageSize = 32 + words * 32;
+
+			Whiskers templ(R"(
+				function <functionName>() -> converted {
+					converted := <allocate>(<storageSize>)
+					mstore(converted, <size>)
+					<#word>
+						mstore(add(converted, <offset>), <wordValue>)
+					</word>
+				}
+			)");
+			templ("functionName", functionName);
+			templ("allocate", allocationFunction());
+			templ("storageSize", to_string(storageSize));
+			templ("size", to_string(data.size()));
+			vector<map<string, string>> wordParams(words);
+			for (size_t i = 0; i < words; ++i)
+			{
+				wordParams[i]["offset"] = to_string(32 + i * 32);
+				wordParams[i]["wordValue"] = "0x" + h256(data.substr(32 * i, 32), h256::AlignLeft).hex();
+			}
+			templ("word", wordParams);
+			return templ.render();
+		}
+		else
+			solAssert(
+				false,
+				"Invalid conversion from string literal to " + _to.toString() + " requested."
+			);
+	});
 }
