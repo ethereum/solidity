@@ -573,7 +573,7 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 	return m_functionCollector->createFunction(functionName, [&] {
 		Whiskers templ(R"(
 			function <functionName>(value) -> cleaned {
-				<body>
+				cleaned := <cleaned>
 			}
 		)");
 		templ("functionName", functionName);
@@ -582,16 +582,16 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
 			if (type->isSigned() && storageBytes != 32)
 			{
-				templ("body", "cleaned := signextend(" + to_string(storageBytes - 1) + ", value)");
+				templ("cleaned", "signextend(" + to_string(storageBytes - 1) + ", value)");
 				return templ.render();
 			}
 
 		if (storageBytes == 32)
-			templ("body", "cleaned := value");
+			templ("cleaned", "value");
 		else if (_type.leftAligned())
-			templ("body", "cleaned := " + shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
+			templ("cleaned", shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
 		else
-			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
+			templ("cleaned", "and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
 
 		return templ.render();
 	});
