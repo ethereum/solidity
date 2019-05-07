@@ -89,6 +89,8 @@ public:
 	/// @returns a new copy of the utility function generator (but using the same function set).
 	YulUtilFunctions utils();
 
+	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
+
 private:
 	langutil::EVMVersion m_evmVersion;
 	OptimiserSettings m_optimiserSettings;
