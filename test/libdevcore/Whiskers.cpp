@@ -55,6 +55,65 @@ BOOST_AUTO_TEST_CASE(tag_unavailable)
 	BOOST_CHECK_THROW(m.render(), WhiskersError);
 }
 
+BOOST_AUTO_TEST_CASE(list_unavailable)
+{
+	string templ = "<#b></b>";
+	Whiskers m(templ);
+	BOOST_CHECK_THROW(m.render(), WhiskersError);
+}
+
+BOOST_AUTO_TEST_CASE(name_type_collision)
+{
+	string templ = "<b><#b></b>";
+	Whiskers m(templ);
+	m("b", "x");
+	BOOST_CHECK_THROW(m("b", vector<map<string, string>>{}), WhiskersError);
+}
+
+BOOST_AUTO_TEST_CASE(conditional)
+{
+	string templ = "<?b>X</b>";
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", true).render(), "X");
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", false).render(), "");
+}
+
+BOOST_AUTO_TEST_CASE(conditional_with_else)
+{
+	string templ = "<?b>X<!b>Y</b>";
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", true).render(), "X");
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", false).render(), "Y");
+}
+
+BOOST_AUTO_TEST_CASE(conditional_plus_params)
+{
+	string templ = " - <?b>_<r><!b>^<t></b> - ";
+	Whiskers m1(templ);
+	m1("b", true);
+	m1("r", "R");
+	m1("t", "T");
+	BOOST_CHECK_EQUAL(m1.render(), " - _R - ");
+
+	Whiskers m2(templ);
+	m2("b", false);
+	m2("r", "R");
+	m2("t", "T");
+	BOOST_CHECK_EQUAL(m2.render(), " - ^T - ");
+}
+
+BOOST_AUTO_TEST_CASE(conditional_plus_list)
+{
+	string templ = " - <?b>_<#l><x></l><!b><#l><y></l></b> - ";
+	Whiskers m(templ);
+	m("b", false);
+	vector<map<string, string>> list(2);
+	list[0]["x"] = "1";
+	list[0]["y"] = "a";
+	list[1]["x"] = "2";
+	list[1]["y"] = "b";
+	m("l", list);
+	BOOST_CHECK_EQUAL(m.render(), " - ab - ");
+}
+
 BOOST_AUTO_TEST_CASE(complicated_replacement)
 {
 	string templ = "a <b> x <complicated> \n <nes<ted>>.";
