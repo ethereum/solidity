@@ -419,64 +419,30 @@ string YulUtilFunctions::arrayDataAreaFunction(ArrayType const& _type)
 {
 	string functionName = "array_dataslot_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
-		switch (_type.location())
-		{
-			case DataLocation::Memory:
-				if (_type.isDynamicallySized())
-					return Whiskers(R"(
-						function <functionName>(memPtr) -> dataPtr {
-							dataPtr := add(memPtr, 0x20)
-						}
-					)")
-					("functionName", functionName)
-					.render();
-				else
-					return Whiskers(R"(
-						function <functionName>(memPtr) -> dataPtr {
-							dataPtr := memPtr
-						}
-					)")
-					("functionName", functionName)
-					.render();
-			case DataLocation::Storage:
-				if (_type.isDynamicallySized())
-				{
-					Whiskers w(R"(
-						function <functionName>(slot) -> dataSlot {
-							mstore(0, slot)
-							dataSlot := keccak256(0, 0x20)
-						}
-					)");
-					w("functionName", functionName);
-					return w.render();
-				}
-				else
-				{
-					Whiskers w(R"(
-						function <functionName>(slot) -> dataSlot {
-							dataSlot := slot
-						}
-					)");
-					w("functionName", functionName);
-					return w.render();
-				}
-			case DataLocation::CallData:
-			{
-				// Calldata arrays are stored as offset of the data area and length
-				// on the stack, so the offset already points to the data area.
-				// This might change, if calldata arrays are stored in a single
-				// stack slot at some point.
-				Whiskers w(R"(
-					function <functionName>(slot) -> dataSlot {
-						dataSlot := slot
-					}
-				)");
-				w("functionName", functionName);
-				return w.render();
+		// No special processing for calldata arrays, because they are stored as
+		// offset of the data area and length on the stack, so the offset already
+		// points to the data area.
+		// This might change, if calldata arrays are stored in a single
+		// stack slot at some point.
+		return Whiskers(R"(
+			function <functionName>(ptr) -> data {
+				data := ptr
+				<?dynamic>
+					<?memory>
+						data := add(ptr, 0x20)
+					</memory>
+					<?storage>
+						mstore(0, ptr)
+						data := keccak256(0, 0x20)
+					</storage>
+				</dynamic>
 			}
-			default:
-				solAssert(false, "");
-		}
+		)")
+		("functionName", functionName)
+		("dynamic", _type.isDynamicallySized())
+		("memory", _type.location() == DataLocation::Memory)
+		("storage", _type.location() == DataLocation::Storage)
+		.render();
 	});
 }
 
@@ -487,36 +453,25 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 		solAssert(_type.baseType()->storageBytes() > 16, "");
 	string functionName = "array_nextElement_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
-		switch (_type.location())
-		{
-			case DataLocation::Memory:
-				return Whiskers(R"(
-					function <functionName>(memPtr) -> nextPtr {
-						nextPtr := add(memPtr, 0x20)
-					}
-				)")
-				("functionName", functionName)
-				.render();
-			case DataLocation::Storage:
-				return Whiskers(R"(
-					function <functionName>(slot) -> nextSlot {
-						nextSlot := add(slot, 1)
-					}
-				)")
-				("functionName", functionName)
-				.render();
-			case DataLocation::CallData:
-				return Whiskers(R"(
-					function <functionName>(calldataPtr) -> nextPtr {
-						nextPtr := add(calldataPtr, <stride>)
-					}
-				)")
-				("stride", toCompactHexWithPrefix(_type.baseType()->isDynamicallyEncoded() ? 32 : _type.baseType()->calldataEncodedSize()))
-				("functionName", functionName)
-				.render();
-			default:
-				solAssert(false, "");
-		}
+		Whiskers templ(R"(
+			function <functionName>(ptr) -> next {
+				next := add(ptr, <advance>)
+			}
+		)");
+		templ("functionName", functionName);
+		if (_type.location() == DataLocation::Memory)
+			templ("advance", "0x20");
+		else if (_type.location() == DataLocation::Storage)
+			templ("advance", "1");
+		else if (_type.location() == DataLocation::CallData)
+			templ("advance", toCompactHexWithPrefix(
+				_type.baseType()->isDynamicallyEncoded() ?
+				32 :
+				_type.baseType()->calldataEncodedSize()
+			));
+		else
+			solAssert(false, "");
+		return templ.render();
 	});
 }
 
