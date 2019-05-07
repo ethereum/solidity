@@ -491,18 +491,6 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
-      - test_emscripten_external_zeppelin:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external_gnosis:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external_colony:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
       - build_x86_linux: *build_on_tags
       - build_x86_linux_cxx17: *build_on_tags
       - build_x86_clang7_asan: *build_on_tags
