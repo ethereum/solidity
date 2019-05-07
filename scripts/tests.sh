@@ -134,9 +134,9 @@ function download_aleth()
         ALETH_PATH="aleth"
     else
         mkdir -p /tmp/test
-        # Any time the hash is updated here, the "Running compiler tests" section should also be updated.
-        ALETH_HASH="8979a9179d5222c89bf9daf7ca73cc115fa2dac2"
-        ALETH_VERSION=1.6.0-rc.1
+        # Any time the hash is updated here, the "Running the compiler tests" section in contributing.rst should also be updated.
+        ALETH_HASH="7f7004e1563299bc57882e32b32e4a195747dfb6"
+        ALETH_VERSION=1.6.0
         wget -q -O /tmp/test/aleth.tar.gz https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz
         test "$(shasum /tmp/test/aleth.tar.gz)" = "$ALETH_HASH  /tmp/test/aleth.tar.gz"
         tar -xf /tmp/test/aleth.tar.gz -C /tmp/test
