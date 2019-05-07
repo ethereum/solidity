@@ -1,7 +1,8 @@
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [GetToken() doesn't indicate success/failure](#gettoken-doesnt-indicate-successfailure)
+- [Introduction](#introduction)
+- [_GetToken()_ doesn't indicate success/failure](#gettoken-doesnt-indicate-successfailure)
 - [Out-of-sync closers](#out-of-sync-closers)
 - [Dual levels of Error verbosity](#dual-levels-of-error-verbosity)
 - [Filtering Cascaded Errors](#filtering-cascaded-errors)
@@ -23,7 +24,7 @@ In
 ```
     function f() public pure {
         address payable;
-		//             ^ identifier expected here
+	//             ^ identifier expected here
     }
 ```
 
@@ -51,7 +52,7 @@ contract Error8 {
 }
 ```
 
-At the point of `a +=` we are looking for a "primary expression" inside a Statement. Statement recovers by looking for a semicolon.
+At the point of `a +=` we are looking for a "primary expression" inside _Statement_. _Statement_ recovers by looking for a semicolon.
 By passing over the other _Block_ boundary in recovery, we are now mismatched in nesting levels.
 
 In effect, with current error recovery the program is seen as:
