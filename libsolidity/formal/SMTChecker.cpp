@@ -546,6 +546,30 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 			);
 		break;
 	}
+	case Token::Delete:
+	{
+		auto const& subExpr = _op.subExpression();
+		if (auto decl = identifierToVariable(subExpr))
+		{
+			newValue(*decl);
+			setZeroValue(*decl);
+		}
+		else
+		{
+			solAssert(knownExpr(subExpr), "");
+			auto const& symbVar = m_expressions[&subExpr];
+			symbVar->increaseIndex();
+			setZeroValue(*symbVar);
+			if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
+				arrayIndexAssignment(_op.subExpression(), symbVar->currentValue());
+			else
+				m_errorReporter.warning(
+					_op.location(),
+					"Assertion checker does not yet implement \"delete\" for this expression."
+				);
+		}
+		break;
+	}
 	default:
 		m_errorReporter.warning(
 			_op.location(),
