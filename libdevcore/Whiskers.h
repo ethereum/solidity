@@ -70,6 +70,8 @@ public:
 	std::string render() const;
 
 private:
+	void checkParameterUnknown(std::string const& _parameter);
+
 	static std::string replace(
 		std::string const& _template,
 		StringMap const& _parameters,

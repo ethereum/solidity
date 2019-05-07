@@ -37,18 +37,8 @@ Whiskers::Whiskers(string _template):
 
 Whiskers& Whiskers::operator()(string _parameter, string _value)
 {
-	assertThrow(
-		m_parameters.count(_parameter) == 0,
-		WhiskersError,
-		_parameter + " already set."
-	);
-	assertThrow(
-		m_listParameters.count(_parameter) == 0,
-		WhiskersError,
-		_parameter + " already set as list parameter."
-	);
+	checkParameterUnknown(_parameter);
 	m_parameters[move(_parameter)] = move(_value);
-
 	return *this;
 }
 
@@ -57,24 +47,28 @@ Whiskers& Whiskers::operator()(
 	vector<map<string, string>> _values
 )
 {
-	assertThrow(
-		m_listParameters.count(_listParameter) == 0,
-		WhiskersError,
-		_listParameter + " already set."
-	);
-	assertThrow(
-		m_parameters.count(_listParameter) == 0,
-		WhiskersError,
-		_listParameter + " already set as value parameter."
-	);
+	checkParameterUnknown(_listParameter);
 	m_listParameters[move(_listParameter)] = move(_values);
-
 	return *this;
 }
 
 string Whiskers::render() const
 {
 	return replace(m_template, m_parameters, m_listParameters);
+}
+
+void Whiskers::checkParameterUnknown(string const& _parameter)
+{
+	assertThrow(
+		!m_parameters.count(_parameter),
+		WhiskersError,
+		_parameter + " already set as value parameter."
+	);
+	assertThrow(
+		!m_listParameters.count(_parameter),
+		WhiskersError,
+		_parameter + " already set as list parameter."
+	);
 }
 
 string Whiskers::replace(
