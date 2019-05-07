@@ -882,6 +882,8 @@ bool CommandLineInterface::processInput()
 				return false;
 			}
 		}
+		if (targetMachine == Machine::eWasm && inputLanguage == Input::StrictAssembly)
+			inputLanguage = Input::EWasm;
 		if (optimize && inputLanguage != Input::StrictAssembly)
 		{
 			serr() <<

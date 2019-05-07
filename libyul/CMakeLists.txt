@@ -36,6 +36,12 @@ add_library(yul
 	backends/evm/EVMDialect.h
 	backends/evm/EVMObjectCompiler.cpp
 	backends/evm/EVMObjectCompiler.h
+	backends/wasm/EWasmCodeTransform.cpp
+	backends/wasm/EWasmCodeTransform.h
+	backends/wasm/EWasmObjectCompiler.cpp
+	backends/wasm/EWasmObjectCompiler.h
+	backends/wasm/EWasmToText.cpp
+	backends/wasm/EWasmToText.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
 	backends/wasm/WasmDialect.cpp
