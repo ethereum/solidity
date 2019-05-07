@@ -30,12 +30,12 @@
 using namespace std;
 using namespace dev;
 
-Whiskers::Whiskers(string const& _template):
-m_template(_template)
+Whiskers::Whiskers(string _template):
+	m_template(move(_template))
 {
 }
 
-Whiskers& Whiskers::operator ()(string const& _parameter, string const& _value)
+Whiskers& Whiskers::operator()(string _parameter, string _value)
 {
 	assertThrow(
 		m_parameters.count(_parameter) == 0,
@@ -47,14 +47,14 @@ Whiskers& Whiskers::operator ()(string const& _parameter, string const& _value)
 		WhiskersError,
 		_parameter + " already set as list parameter."
 	);
-	m_parameters[_parameter] = _value;
+	m_parameters[move(_parameter)] = move(_value);
 
 	return *this;
 }
 
-Whiskers& Whiskers::operator ()(
-	string const& _listParameter,
-	vector<map<string, string>> const& _values
+Whiskers& Whiskers::operator()(
+	string _listParameter,
+	vector<map<string, string>> _values
 )
 {
 	assertThrow(
@@ -67,7 +67,7 @@ Whiskers& Whiskers::operator ()(
 		WhiskersError,
 		_listParameter + " already set as value parameter."
 	);
-	m_listParameters[_listParameter] = _values;
+	m_listParameters[move(_listParameter)] = move(_values);
 
 	return *this;
 }
