@@ -43,6 +43,13 @@ using namespace std;
 using namespace std::placeholders;
 using namespace dev::test;
 
+#define ALSO_VIA_YUL(CODE) \
+{ \
+	{ CODE } \
+	m_compileViaYul = true; \
+	{ CODE } \
+}
+
 namespace dev
 {
 namespace solidity
@@ -92,8 +99,10 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 	char const* sourceCode = R"(
 		contract test { }
 	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()).empty());
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()).empty());
+	)
 }
 
 BOOST_AUTO_TEST_CASE(exp_operator)
