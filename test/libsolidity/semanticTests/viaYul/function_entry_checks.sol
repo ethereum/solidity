@@ -16,7 +16,7 @@ contract C {
     function t(uint) public pure {
     }
 }
-// ===
+// ====
 // compileViaYul: true
 // ----
 // f() -> 0
