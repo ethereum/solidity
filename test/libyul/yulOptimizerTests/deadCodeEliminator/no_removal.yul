@@ -8,8 +8,6 @@
 // step: deadCodeEliminator
 // ----
 // {
-//     {
-//         revert(0, 0)
-//     }
+//     { revert(0, 0) }
 //     mstore(0, 0)
 // }

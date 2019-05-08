@@ -13,7 +13,5 @@
 //         sstore(a_3, a_3)
 //     }
 //     function f(a)
-//     {
-//         sstore(a, a)
-//     }
+//     { sstore(a, a) }
 // }

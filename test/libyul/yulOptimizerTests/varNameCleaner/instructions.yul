@@ -4,6 +4,4 @@
 // ====
 // step: varNameCleaner
 // ----
-// {
-//     let mul_1 := 1
-// }
+// { let mul_1 := 1 }

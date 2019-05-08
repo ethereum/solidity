@@ -14,9 +14,7 @@
 // ----
 // {
 //     function f(a) -> b
-//     {
-//         b := sload(mload(a))
-//     }
+//     { b := sload(mload(a)) }
 //     function g() -> x_1
 //     {
 //         let a_20 := 2

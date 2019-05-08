@@ -5,8 +5,5 @@
 // step: structuralSimplifier
 // ----
 // {
-//     if eq(2, calldataload(0))
-//     {
-//         mstore(0, 0)
-//     }
+//     if eq(2, calldataload(0)) { mstore(0, 0) }
 // }

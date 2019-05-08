@@ -11,9 +11,7 @@
 // ----
 // {
 //     function f(a, b) -> x
-//     {
-//         x := add(b, a)
-//     }
+//     { x := add(b, a) }
 //     function g() -> y
 //     {
 //         y := mload(0)

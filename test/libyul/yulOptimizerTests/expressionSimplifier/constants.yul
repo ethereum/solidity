@@ -2,6 +2,4 @@
 // ====
 // step: expressionSimplifier
 // ----
-// {
-//     let a := 13
-// }
+// { let a := 13 }

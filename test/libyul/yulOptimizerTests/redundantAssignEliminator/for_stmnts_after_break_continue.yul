@@ -28,11 +28,7 @@
 // {
 //     let x := 1
 //     let y := 1
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//     }
+//     for { } calldataload(0) { }
 //     {
 //         y := 9
 //         if callvalue()

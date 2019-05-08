@@ -13,12 +13,7 @@
 // {
 //     let a := caller()
 //     pop(caller())
-//     for {
-//     }
-//     a
-//     {
-//         pop(address())
-//     }
+//     for { } a { pop(address()) }
 //     {
 //         a := address()
 //         let c := address()

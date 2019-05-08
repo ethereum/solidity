@@ -2,6 +2,4 @@
 // ====
 // step: structuralSimplifier
 // ----
-// {
-//     pop(mload(0))
-// }
+// { pop(mload(0)) }

@@ -11,11 +11,7 @@
 //     f()
 //     f()
 //     function f()
-//     {
-//         mstore(1, mload(0))
-//     }
+//     { mstore(1, mload(0)) }
 //     function g()
-//     {
-//         mstore(1, mload(0))
-//     }
+//     { mstore(1, mload(0)) }
 // }

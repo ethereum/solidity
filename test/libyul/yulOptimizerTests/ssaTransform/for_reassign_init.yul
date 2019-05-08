@@ -17,11 +17,7 @@
 //         a := a_2
 //     }
 //     a
-//     {
-//         mstore(0, a)
-//     }
-//     {
-//         mstore(0, a)
-//     }
+//     { mstore(0, a) }
+//     { mstore(0, a) }
 //     mstore(0, a)
 // }

@@ -1076,10 +1076,7 @@
 //     {
 //         let _1 := mload(1)
 //         let _2 := mload(0)
-//         if slt(sub(_1, _2), 64)
-//         {
-//             revert(0, 0)
-//         }
+//         if slt(sub(_1, _2), 64) { revert(0, 0) }
 //         sstore(0, and(calldataload(_2), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
 //         let x0, x1, x2, x3, x4 := abi_decode_tuple_t_addresst_uint256t_bytes_calldata_ptrt_enum$_Operation_$1949(mload(7), mload(8))
 //         sstore(x1, x0)
@@ -1089,39 +1086,21 @@
 //     }
 //     function abi_decode_tuple_t_addresst_uint256t_bytes_calldata_ptrt_enum$_Operation_$1949(headStart, dataEnd) -> value0, value1, value2, value3, value4
 //     {
-//         if slt(sub(dataEnd, headStart), 128)
-//         {
-//             revert(value4, value4)
-//         }
+//         if slt(sub(dataEnd, headStart), 128) { revert(value4, value4) }
 //         value0 := and(calldataload(headStart), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
 //         value1 := calldataload(add(headStart, 32))
 //         let offset := calldataload(add(headStart, 64))
 //         let _1 := 0xffffffffffffffff
-//         if gt(offset, _1)
-//         {
-//             revert(value4, value4)
-//         }
+//         if gt(offset, _1) { revert(value4, value4) }
 //         let _2 := add(headStart, offset)
-//         if iszero(slt(add(_2, 0x1f), dataEnd))
-//         {
-//             revert(value4, value4)
-//         }
+//         if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(value4, value4) }
 //         let length := calldataload(_2)
-//         if gt(length, _1)
-//         {
-//             revert(value4, value4)
-//         }
-//         if gt(add(add(_2, length), 32), dataEnd)
-//         {
-//             revert(value4, value4)
-//         }
+//         if gt(length, _1) { revert(value4, value4) }
+//         if gt(add(add(_2, length), 32), dataEnd) { revert(value4, value4) }
 //         value2 := add(_2, 32)
 //         value3 := length
 //         let _3 := calldataload(add(headStart, 96))
-//         if iszero(lt(_3, 3))
-//         {
-//             revert(value4, value4)
-//         }
+//         if iszero(lt(_3, 3)) { revert(value4, value4) }
 //         value4 := _3
 //     }
 //     function abi_encode_tuple_t_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_$1949_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256__to_t_bytes32_t_address_t_uint256_t_bytes32_t_uint8_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256_(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0) -> tail
@@ -1132,10 +1111,7 @@
 //         mstore(add(headStart, 32), and(value1, _1))
 //         mstore(add(headStart, 64), value2)
 //         mstore(add(headStart, 96), value3)
-//         if iszero(lt(value4, 3))
-//         {
-//             invalid()
-//         }
+//         if iszero(lt(value4, 3)) { invalid() }
 //         mstore(add(headStart, 128), value4)
 //         mstore(add(headStart, 160), value5)
 //         mstore(add(headStart, 192), value6)

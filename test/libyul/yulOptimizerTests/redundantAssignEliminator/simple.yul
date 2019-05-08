@@ -6,6 +6,4 @@
 // ====
 // step: redundantAssignEliminator
 // ----
-// {
-//     let a
-// }
+// { let a }
