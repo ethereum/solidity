@@ -292,17 +292,19 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 	}
 	else
 	{
-		solUnimplementedAssert(_binOp.getOperator() == Token::Add, "");
 		if (IntegerType const* type = dynamic_cast<IntegerType const*>(commonType))
 		{
 			solUnimplementedAssert(!type->isSigned(), "");
-			defineExpression(_binOp) <<
-				m_utils.overflowCheckedUIntAddFunction(type->numBits()) <<
-				"(" <<
-				expressionAsType(_binOp.leftExpression(), *commonType) <<
-				", " <<
-				expressionAsType(_binOp.rightExpression(), *commonType) <<
-				")\n";
+			string left = expressionAsType(_binOp.leftExpression(), *commonType);
+			string right = expressionAsType(_binOp.rightExpression(), *commonType);
+			string fun;
+			if (_binOp.getOperator() == Token::Add)
+				fun = m_utils.overflowCheckedUIntAddFunction(type->numBits());
+			else if (_binOp.getOperator() == Token::Sub)
+				fun = m_utils.overflowCheckedUIntSubFunction();
+			else
+				solUnimplementedAssert(false, "");
+			defineExpression(_binOp) << fun << "(" << left << ", " << right << ")\n";
 		}
 		else
 			solUnimplementedAssert(false, "");

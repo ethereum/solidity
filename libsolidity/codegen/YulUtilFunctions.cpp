@@ -360,6 +360,22 @@ string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
 	});
 }
 
+string YulUtilFunctions::overflowCheckedUIntSubFunction()
+{
+	string functionName = "checked_sub_uint";
+	return m_functionCollector->createFunction(functionName, [&] {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> diff {
+				if lt(x, y) { revert(0, 0) }
+				diff := sub(x, y)
+			}
+			)")
+			("functionName", functionName)
+			.render();
+	});
+}
+
 string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 {
 	string functionName = "array_length_" + _type.identifier();
