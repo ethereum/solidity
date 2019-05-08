@@ -377,10 +377,15 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 			"Assertion checker does not yet implement this assignment operator."
 		);
 	else if (!isSupportedType(_assignment.annotation().type->category()))
+	{
 		m_errorReporter.warning(
 			_assignment.location(),
 			"Assertion checker does not yet implement type " + _assignment.annotation().type->toString()
 		);
+		// Give it a new index anyway to keep the SSA scheme sound.
+		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
+			newValue(*varDecl);
+	}
 	else
 	{
 		vector<smt::Expression> rightArguments;
