@@ -85,6 +85,7 @@ public:
 	std::string roundUpFunction();
 
 	std::string overflowCheckedUIntAddFunction(size_t _bits);
+	std::string overflowCheckedUIntMulFunction(size_t _bits);
 
 	std::string arrayLengthFunction(ArrayType const& _type);
 	/// @returns the name of a function that computes the number of bytes required

@@ -360,6 +360,24 @@ string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
 	});
 }
 
+string YulUtilFunctions::overflowCheckedUIntMulFunction(size_t _bits)
+{
+	solUnimplementedAssert(_bits == 256, "");
+	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
+	string functionName = "checked_mul_uint_" + to_string(_bits);
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> prod {
+				prod := mul(x, y)
+				if iszero(eq(div(prod, x), y)) { revert(0, 0) }
+			}
+			)")
+			("functionName", functionName)
+			.render();
+	});
+}
+
 string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 {
 	string functionName = "array_length_" + _type.identifier();

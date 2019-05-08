@@ -6734,8 +6734,10 @@ BOOST_AUTO_TEST_CASE(derived_overload_base_function_direct)
 			function g() public returns(uint) { return f(1); }
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(2));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(2));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
@@ -6748,9 +6750,11 @@ BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
 			function h() public returns(uint) { return f(1); }
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("g()"), encodeArgs(10));
-	ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("g()"), encodeArgs(10));
+		ABI_CHECK(callContractFunction("h()"), encodeArgs(2));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(super_overload)
@@ -6776,8 +6780,10 @@ BOOST_AUTO_TEST_CASE(gasleft_shadow_resolution)
 			function f() public returns(uint256) { return gasleft(); }
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(bool_conversion)
