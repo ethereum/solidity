@@ -152,27 +152,28 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 	return false;
 }
 
-bool IRGeneratorForStatements::visit(ForStatement const& _for)
+bool IRGeneratorForStatements::visit(ForStatement const& _forStatement)
 {
-	m_code << "for {\n";
-	if (_for.initializationExpression())
-		_for.initializationExpression()->accept(*this);
-	m_code << "} return_flag {\n";
-	if (_for.loopExpression())
-		_for.loopExpression()->accept(*this);
-	m_code << "}\n";
-	if (_for.condition())
-	{
-		_for.condition()->accept(*this);
-		m_code <<
-			"if iszero(" <<
-			expressionAsType(*_for.condition(), *TypeProvider::boolean()) <<
-			") { break }\n";
-	}
-	_for.body().accept(*this);
-	m_code << "}\n";
-	// Bubble up the return condition.
-	m_code << "if iszero(return_flag) { break }\n";
+	generateLoop(
+		_forStatement.body(),
+		_forStatement.condition(),
+		_forStatement.initializationExpression(),
+		_forStatement.loopExpression()
+	);
+
+	return false;
+}
+
+bool IRGeneratorForStatements::visit(WhileStatement const& _whileStatement)
+{
+	generateLoop(
+		_whileStatement.body(),
+		&_whileStatement.condition(),
+		nullptr,
+		nullptr,
+		_whileStatement.isDoWhile()
+	);
+
 	return false;
 }
 
@@ -794,6 +795,54 @@ void IRGeneratorForStatements::setLValue(Expression const& _expression, unique_p
 		m_currentLValue = std::move(_lvalue);
 	else
 		defineExpression(_expression) << _lvalue->retrieveValue() << "\n";
+}
+
+void IRGeneratorForStatements::generateLoop(
+	Statement const& _body,
+	Expression const* _conditionExpression,
+	Statement const*  _initExpression,
+	ExpressionStatement const* _loopExpression,
+	bool _isDoWhile
+)
+{
+	string firstRun;
+
+	if (_isDoWhile)
+	{
+		solAssert(_conditionExpression, "Expected condition for doWhile");
+		firstRun = m_context.newYulVariable();
+		m_code << "let " << firstRun << " := 1\n";
+	}
+
+	m_code << "for {\n";
+	if (_initExpression)
+		_initExpression->accept(*this);
+	m_code << "} return_flag {\n";
+	if (_loopExpression)
+		_loopExpression->accept(*this);
+	m_code << "}\n";
+	m_code << "{\n";
+
+	if (_conditionExpression)
+	{
+		if (_isDoWhile)
+			m_code << "if iszero(" << firstRun << ") {\n";
+
+		_conditionExpression->accept(*this);
+		m_code <<
+			"if iszero(" <<
+			expressionAsType(*_conditionExpression, *TypeProvider::boolean()) <<
+			") { break }\n";
+
+		if (_isDoWhile)
+			m_code << "}\n" << firstRun << " := 0\n";
+	}
+
+	_body.accept(*this);
+
+	m_code << "}\n";
+	// Bubble up the return condition.
+	m_code << "if iszero(return_flag) { break }\n";
 }
 
 Type const& IRGeneratorForStatements::type(Expression const& _expression)

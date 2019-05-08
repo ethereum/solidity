@@ -49,6 +49,7 @@ public:
 	bool visit(Assignment const& _assignment) override;
 	bool visit(TupleExpression const& _tuple) override;
 	bool visit(ForStatement const& _forStatement) override;
+	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;
 	void endVisit(Return const& _return) override;
@@ -70,6 +71,13 @@ private:
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 
 	void setLValue(Expression const& _expression, std::unique_ptr<IRLValue> _lvalue);
+	void generateLoop(
+		Statement const& _body,
+		Expression const* _conditionExpression,
+		Statement const*  _initExpression = nullptr,
+		ExpressionStatement const* _loopExpression = nullptr,
+		bool _isDoWhile = false
+	);
 
 	static Type const& type(Expression const& _expression);
 

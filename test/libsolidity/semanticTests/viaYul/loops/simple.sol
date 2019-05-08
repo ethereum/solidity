@@ -7,34 +7,33 @@ contract C {
     }
     function g() public returns (uint x) {
         x = 1;
-        for (uint a = 0; a < 10; a = a + 1) {
+        uint a = 0;
+        while (a < 10) {
             x = x + x;
-            break;
+            a = a + 1;
         }
     }
     function h() public returns (uint x) {
         x = 1;
-        uint a = 0;
-        for (; a < 10; a = a + 1) {
-            continue;
-            x = x + x;
-        }
-        x = x + a;
+        do {
+            x = x + 1;
+        } while (false);
     }
     function i() public returns (uint x) {
         x = 1;
-        uint a;
-        for (; a < 10; a = a + 1) {
-            return x;
-            x = x + x;
-        }
-        x = x + a;
+        do {
+            x = x + 1;
+        } while (x < 3);
+    }
+    function j() public {
+        for (;;) {break;}
     }
 }
-// ===
+// ====
 // compileViaYul: true
 // ----
 // f() -> 1024
-// g() -> 2
-// h() -> 11
-// i() -> 1
+// g() -> 1024
+// h() -> 2
+// i() -> 3
+// j() ->
