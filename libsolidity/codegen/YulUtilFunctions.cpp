@@ -963,6 +963,37 @@ string YulUtilFunctions::validatorFunction(Type const& _type, bool _revertOnFail
 	});
 }
 
+string YulUtilFunctions::packedHashFunction(
+	vector<Type const*> const& _givenTypes,
+	vector<Type const*> const& _targetTypes
+)
+{
+	string functionName = string("packed_hashed_");
+	for (auto const& t: _givenTypes)
+		functionName += t->identifier() + "_";
+	functionName += "_to_";
+	for (auto const& t: _targetTypes)
+		functionName += t->identifier() + "_";
+	size_t sizeOnStack = 0;
+	for (Type const* t: _givenTypes)
+		sizeOnStack += t->sizeOnStack();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			function <functionName>(<variables>) -> hash {
+				let pos := mload(<freeMemoryPointer>)
+				let end := <packedEncode>(pos <comma> <variables>)
+				hash := keccak256(pos, sub(end, pos))
+			}
+		)");
+		templ("functionName", functionName);
+		templ("variables", suffixedVariableNameList("var_", 1, 1 + sizeOnStack));
+		templ("comma", sizeOnStack > 0 ? "," : "");
+		templ("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer));
+		templ("packedEncode", ABIFunctions(m_evmVersion, m_functionCollector).tupleEncoderPacked(_givenTypes, _targetTypes));
+		return templ.render();
+	});
+}
+
 string YulUtilFunctions::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
 {
 	string result;

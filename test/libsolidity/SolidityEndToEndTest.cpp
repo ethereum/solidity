@@ -3677,17 +3677,19 @@ BOOST_AUTO_TEST_CASE(event_emit)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	u256 value(18);
-	u256 id(0x1234);
-	callContractFunctionWithValue("deposit(bytes32)", value, id);
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256)")));
-	BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(m_sender, h256::AlignRight));
-	BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(id));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		u256 value(18);
+		u256 id(0x1234);
+		callContractFunctionWithValue("deposit(bytes32)", value, id);
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256)")));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(m_sender, h256::AlignRight));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(id));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(event_no_arguments)
@@ -3701,13 +3703,15 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 		}
 	)";
 
-	compileAndRun(sourceCode);
-	callContractFunction("deposit()");
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data.empty());
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		callContractFunction("deposit()");
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK(m_logs[0].data.empty());
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(event_access_through_base_name_emit)
@@ -3758,36 +3762,38 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 			}
 		}
 	)";
-	u160 const c_loggedAddress = m_contractAddress;
+	ALSO_VIA_YUL(
+		u160 const c_loggedAddress = m_contractAddress;
 
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data.empty());
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK(m_logs[0].data.empty());
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
 
-	ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(2)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
+		ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(2)));
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		ABI_CHECK(m_logs[0].data, encodeArgs(c_loggedAddress));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
 
-	ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(3)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, 100));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
+		ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(3)));
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		ABI_CHECK(m_logs[0].data, encodeArgs(c_loggedAddress, 100));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
 
-	ABI_CHECK(callContractFunction("deposit(address,bool)", c_loggedAddress, false), encodeArgs(u256(4)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, false));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bool)")));
+		ABI_CHECK(callContractFunction("deposit(address,bool)", c_loggedAddress, false), encodeArgs(u256(4)));
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		ABI_CHECK(m_logs[0].data, encodeArgs(c_loggedAddress, false));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bool)")));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(events_with_same_name_inherited_emit)
@@ -3817,29 +3823,31 @@ BOOST_AUTO_TEST_CASE(events_with_same_name_inherited_emit)
 			}
 		}
 	)";
-	u160 const c_loggedAddress = m_contractAddress;
+	ALSO_VIA_YUL(
+		u160 const c_loggedAddress = m_contractAddress;
 
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data.empty());
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK(m_logs[0].data.empty());
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit()")));
 
-	ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
+		ABI_CHECK(callContractFunction("deposit(address)", c_loggedAddress), encodeArgs(u256(1)));
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address)")));
 
-	ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(1)));
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(c_loggedAddress, 100));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
+		ABI_CHECK(callContractFunction("deposit(address,uint256)", c_loggedAddress, u256(100)), encodeArgs(u256(1)));
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		ABI_CHECK(m_logs[0].data, encodeArgs(c_loggedAddress, 100));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,uint256)")));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(event_anonymous)
@@ -3852,9 +3860,11 @@ BOOST_AUTO_TEST_CASE(event_anonymous)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	callContractFunction("deposit()");
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 0);
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		callContractFunction("deposit()");
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 0);
+	)
 }
 
 BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
@@ -3867,18 +3877,20 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	u256 value(18);
-	u256 id(0x1234);
-	callContractFunctionWithValue("deposit(bytes32)", value, id);
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs("abc"));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 4);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(m_sender, h256::AlignRight));
-	BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(id));
-	BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(value));
-	BOOST_CHECK_EQUAL(m_logs[0].topics[3], h256(2));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		u256 value(18);
+		u256 id(0x1234);
+		callContractFunctionWithValue("deposit(bytes32)", value, id);
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK(m_logs[0].data == encodeArgs("abc"));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 4);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(m_sender, h256::AlignRight));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(id));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(value));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[3], h256(2));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(event_lots_of_data)
@@ -3891,15 +3903,17 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	u256 value(18);
-	u256 id(0x1234);
-	callContractFunctionWithValue("deposit(bytes32)", value, id);
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs((u160)m_sender, id, value, true));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256,bool)")));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		u256 value(18);
+		u256 id(0x1234);
+		callContractFunctionWithValue("deposit(bytes32)", value, id);
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK(m_logs[0].data == encodeArgs((u160)m_sender, id, value, true));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256,bool)")));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
