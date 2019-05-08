@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_SUITE(Printing)
 
 BOOST_AUTO_TEST_CASE(print_smoke)
 {
-	parsePrintCompare("{\n}");
+	parsePrintCompare("{ }");
 }
 
 BOOST_AUTO_TEST_CASE(print_instructions)
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(print_subblock)
 
 BOOST_AUTO_TEST_CASE(print_functional)
 {
-	parsePrintCompare("{\n    let x := mul(sload(0x12), 7)\n}");
+	parsePrintCompare("{ let x := mul(sload(0x12), 7) }");
 }
 
 BOOST_AUTO_TEST_CASE(print_label)
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(print_assignments)
 
 BOOST_AUTO_TEST_CASE(print_multi_assignments)
 {
-	parsePrintCompare("{\n    function f() -> x, y\n    {\n    }\n    let x, y := f()\n}");
+	parsePrintCompare("{\n    function f() -> x, y\n    { }\n    let x, y := f()\n}");
 }
 
 BOOST_AUTO_TEST_CASE(print_string_literals)
@@ -596,48 +596,45 @@ BOOST_AUTO_TEST_CASE(print_string_literals)
 BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
-	string parsed = "object \"object\" {\n    code {\n        let x := \"\\xe1\\xae\\xac\"\n    }\n}\n";
+	string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
 	AssemblyStack stack(dev::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
 
-	string parsedInner = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
+	string parsedInner = "{ let x := \"\\xe1\\xae\\xac\" }";
 	parsePrintCompare(parsedInner);
 }
 
 BOOST_AUTO_TEST_CASE(print_if)
 {
-	parsePrintCompare("{\n    if 2\n    {\n        pop(mload(0))\n    }\n}");
+	parsePrintCompare("{ if 2 { pop(mload(0)) } }");
 }
 
 BOOST_AUTO_TEST_CASE(print_switch)
 {
-	parsePrintCompare("{\n    switch 42\n    case 1 {\n    }\n    case 2 {\n    }\n    default {\n    }\n}");
+	parsePrintCompare("{\n    switch 42\n    case 1 { }\n    case 2 { }\n    default { }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(print_for)
 {
-	parsePrintCompare("{\n    let ret := 5\n    for {\n        let i := 1\n    }\n    lt(i, 15)\n    {\n        i := add(i, 1)\n    }\n    {\n        ret := mul(ret, i)\n    }\n}");
+	parsePrintCompare("{\n    let ret := 5\n    for { let i := 1 } lt(i, 15) { i := add(i, 1) }\n    { ret := mul(ret, i) }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 {
-	parsePrintCompare("{\n    function f(a, d)\n    {\n        mstore(a, d)\n    }\n    function g(a, d) -> x, y\n    {\n    }\n}");
+	parsePrintCompare("{\n    function f(a, d)\n    { mstore(a, d) }\n    function g(a, d) -> x, y\n    { }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
 	string source = R"({
 	function y()
-	{
-	}
+	{ }
 	function f(a) -> b
-	{
-	}
+	{ }
 	function g(a, b, c)
-	{
-	}
+	{ }
 	g(1, mul(2, address()), f(mul(2, caller())))
 	y()
 })";

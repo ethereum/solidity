@@ -6,6 +6,4 @@
 // ====
 // step: structuralSimplifier
 // ----
-// {
-//     let x, y
-// }
+// { let x, y }

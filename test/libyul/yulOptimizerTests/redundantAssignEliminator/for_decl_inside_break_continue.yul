@@ -23,22 +23,12 @@
 // ----
 // {
 //     let x := 1
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//     }
+//     for { } calldataload(0) { }
 //     {
 //         {
 //             let y := 9
-//             if callvalue()
-//             {
-//                 break
-//             }
-//             if eq(callvalue(), 3)
-//             {
-//                 continue
-//             }
+//             if callvalue() { break }
+//             if eq(callvalue(), 3) { continue }
 //         }
 //     }
 //     mstore(x, 0x42)

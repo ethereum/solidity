@@ -19,9 +19,7 @@
 //         let y_1 := y_10
 //     }
 //     function f(a) -> x
-//     {
-//         x := add(a, a)
-//     }
+//     { x := add(a, a) }
 //     function g(b, c) -> y
 //     {
 //         let a_13 := b

@@ -20,13 +20,7 @@
 //     let x
 //     let y
 //     x := 1
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//     }
-//     {
-//         x := 2
-//     }
+//     for { } calldataload(0) { }
+//     { x := 2 }
 //     mstore(x, 0)
 // }

@@ -6,6 +6,4 @@
 // ====
 // step: unusedPruner
 // ----
-// {
-//     mstore(0, 1)
-// }
+// { mstore(0, 1) }

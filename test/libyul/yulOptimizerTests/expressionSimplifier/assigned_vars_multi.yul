@@ -8,8 +8,7 @@
 // ----
 // {
 //     function f() -> x, z
-//     {
-//     }
+//     { }
 //     let c, d := f()
 //     let y := add(add(d, c), 7)
 // }

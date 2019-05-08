@@ -18,10 +18,7 @@
 //         let r_11 := 0
 //         a_10 := mload(a_10)
 //         r_11 := add(a_10, calldatasize())
-//         if gt(r_11, _2)
-//         {
-//             sstore(0, 2)
-//         }
+//         if gt(r_11, _2) { sstore(0, 2) }
 //     }
 //     function f(a) -> r
 //     {

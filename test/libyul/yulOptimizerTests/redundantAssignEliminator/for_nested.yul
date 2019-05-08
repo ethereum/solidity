@@ -39,22 +39,14 @@
 //     let y := 1
 //     let a := 7
 //     let b := 9
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//     }
+//     for { } calldataload(0) { }
 //     {
 //         y := 9
 //         mstore(a, 7)
 //         if callvalue()
 //         {
 //             x := 2
-//             for {
-//             }
-//             calldataload(1)
-//             {
-//             }
+//             for { } calldataload(1) { }
 //             {
 //                 if eq(x, 3)
 //                 {

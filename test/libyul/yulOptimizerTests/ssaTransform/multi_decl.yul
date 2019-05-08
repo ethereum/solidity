@@ -20,6 +20,5 @@
 //     let a, b := f(x_3, y_4)
 //     sstore(a, b)
 //     function f(t, v) -> w, z
-//     {
-//     }
+//     { }
 // }

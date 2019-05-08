@@ -8,10 +8,7 @@
 // ----
 // {
 //     function main()
-//     {
-//         let a:u256
-//     }
+//     { let a:u256 }
 //     function f()
-//     {
-//     }
+//     { }
 // }

@@ -22,20 +22,12 @@
 //     let a
 //     let b
 //     let i := 0
-//     for {
-//     }
-//     lt(i, 10)
-//     {
-//         i := add(a, caller())
-//     }
+//     for { } lt(i, 10) { i := add(a, caller()) }
 //     {
 //         a := origin()
 //         b := origin()
 //         b := caller()
-//         if callvalue()
-//         {
-//             continue
-//         }
+//         if callvalue() { continue }
 //         a := caller()
 //     }
 //     mstore(a, b)

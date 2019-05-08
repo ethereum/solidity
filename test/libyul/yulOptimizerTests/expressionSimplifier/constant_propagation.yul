@@ -2,6 +2,4 @@
 // ====
 // step: expressionSimplifier
 // ----
-// {
-//     let a := mload(0)
-// }
+// { let a := mload(0) }

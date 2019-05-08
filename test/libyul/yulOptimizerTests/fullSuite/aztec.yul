@@ -254,12 +254,7 @@
 //         let b := add(0x300, mul(n, 0x80))
 //         let i := 0
 //         let i_1 := i
-//         for {
-//         }
-//         lt(i, n)
-//         {
-//             i := add(i, 0x01)
-//         }
+//         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
 //             let _1 := add(calldataload(0x04), mul(i, 0xc0))
 //             let noteIndex := add(_1, 0x24)
@@ -270,14 +265,9 @@
 //             switch eq(_2, n)
 //             case 1 {
 //                 k := kn
-//                 if eq(m, n)
-//                 {
-//                     k := sub(gen_order, kn)
-//                 }
+//                 if eq(m, n) { k := sub(gen_order, kn) }
 //             }
-//             case 0 {
-//                 k := calldataload(noteIndex)
-//             }
+//             case 0 { k := calldataload(noteIndex) }
 //             validateCommitment(noteIndex, k, a)
 //             switch gt(_2, m)
 //             case 1 {
@@ -323,10 +313,7 @@
 //             }
 //             b := add(b, _3)
 //         }
-//         if lt(m, n)
-//         {
-//             validatePairing(0x64)
-//         }
+//         if lt(m, n) { validatePairing(0x64) }
 //         if iszero(eq(mod(keccak256(0x2a0, add(b, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd60)), gen_order), challenge))
 //         {
 //             mstore(i_1, 404)
@@ -388,12 +375,7 @@
 //     function hashCommitments(notes, n)
 //     {
 //         let i := 0
-//         for {
-//         }
-//         lt(i, n)
-//         {
-//             i := add(i, 0x01)
-//         }
+//         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
 //             calldatacopy(add(0x300, mul(i, 0x80)), add(add(notes, mul(i, 0xc0)), 0x60), 0x80)
 //         }

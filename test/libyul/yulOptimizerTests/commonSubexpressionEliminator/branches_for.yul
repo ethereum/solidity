@@ -12,15 +12,12 @@
 // {
 //     let a := 1
 //     let b := codesize()
-//     for {
-//     }
+//     for { }
 //     lt(1, b)
 //     {
 //         mstore(1, b)
 //         a := add(a, b)
 //     }
-//     {
-//         mstore(1, b)
-//     }
+//     { mstore(1, b) }
 //     mstore(1, b)
 // }

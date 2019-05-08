@@ -23,8 +23,7 @@
 //         let to_3 := add(to, 0x20)
 //         let x_4 := 1
 //         let x := x_4
-//         for {
-//         }
+//         for { }
 //         lt(x, length_1)
 //         {
 //             let x_5 := add(x, 0x20)

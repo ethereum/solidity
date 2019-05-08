@@ -20,20 +20,12 @@
 //     let a
 //     let b
 //     let i := 0
-//     for {
-//     }
-//     lt(i, 10)
-//     {
-//         i := add(caller(), caller())
-//     }
+//     for { } lt(i, 10) { i := add(caller(), caller()) }
 //     {
 //         a := origin()
 //         b := origin()
 //         b := caller()
-//         if callvalue()
-//         {
-//             break
-//         }
+//         if callvalue() { break }
 //         a := caller()
 //     }
 //     mstore(a, b)

@@ -18,11 +18,7 @@
 // {
 //     let x
 //     x := 1
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//     }
+//     for { } calldataload(0) { }
 //     {
 //         if callvalue()
 //         {

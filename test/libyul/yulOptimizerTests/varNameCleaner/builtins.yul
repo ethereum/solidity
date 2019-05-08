@@ -4,6 +4,4 @@
 // ====
 // step: varNameCleaner
 // ----
-// {
-//     let datasize_1 := 1
-// }
+// { let datasize_1 := 1 }

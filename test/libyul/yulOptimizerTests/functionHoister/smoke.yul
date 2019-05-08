@@ -3,5 +3,4 @@
 // ====
 // step: functionHoister
 // ----
-// {
-// }
+// { }

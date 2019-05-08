@@ -13,21 +13,13 @@
 //     function f(x)
 //     {
 //         switch x
-//         case 0 {
-//             mstore(0, 42)
-//         }
-//         case 1 {
-//             mstore(1, 42)
-//         }
+//         case 0 { mstore(0, 42) }
+//         case 1 { mstore(1, 42) }
 //     }
 //     function g(x_1)
 //     {
 //         switch x_1
-//         case 1 {
-//             mstore(1, 42)
-//         }
-//         case 0 {
-//             mstore(0, 42)
-//         }
+//         case 1 { mstore(1, 42) }
+//         case 0 { mstore(0, 42) }
 //     }
 // }

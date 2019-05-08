@@ -10,8 +10,5 @@
 // ----
 // {
 //     let y := 200
-//     if eq(1, calldataload(0))
-//     {
-//         y := 9
-//     }
+//     if eq(1, calldataload(0)) { y := 9 }
 // }

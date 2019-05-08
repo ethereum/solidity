@@ -16,12 +16,7 @@
 // ----
 // {
 //     let x
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//         mstore(x, 0x42)
-//     }
+//     for { } calldataload(0) { mstore(x, 0x42) }
 //     {
 //         if callvalue()
 //         {
