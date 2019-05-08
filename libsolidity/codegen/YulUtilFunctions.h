@@ -35,6 +35,7 @@ namespace solidity
 
 class Type;
 class ArrayType;
+class MappingType;
 
 /**
  * Component that can generate various useful Yul functions.
@@ -97,6 +98,11 @@ public:
 	/// @returns the name of a function that advances an array data pointer to the next element.
 	/// Only works for memory arrays, calldata arrays and storage arrays that store one item per slot.
 	std::string nextArrayElementFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that performs index access for mappings.
+	/// @param _mappingType the type of the mapping
+	/// @param _keyType the type of the value provided
+	std::string mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType);
 
 	/// @returns a function that reads a value type from storage.
 	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.

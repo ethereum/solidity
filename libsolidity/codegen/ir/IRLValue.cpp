@@ -60,6 +60,19 @@ IRStorageItem::IRStorageItem(
 	m_offset = offset;
 }
 
+IRStorageItem::IRStorageItem(
+	ostream& _code,
+	IRGenerationContext& _context,
+	string _slot,
+	unsigned _offset,
+	Type const& _type
+):
+	IRLValue(_code, _context, &_type),
+	m_slot(move(_slot)),
+	m_offset(_offset)
+{
+}
+
 string IRStorageItem::retrieveValue() const
 {
 	if (!m_type->isValueType())
