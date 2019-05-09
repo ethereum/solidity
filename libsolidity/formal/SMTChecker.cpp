@@ -1716,7 +1716,11 @@ TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
 
 void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
 {
-	for (auto const* decl: _variables)
+	auto cmp = [] (VariableDeclaration const* var1, VariableDeclaration const* var2) {
+		return var1->id() < var2->id();
+	};
+	set<VariableDeclaration const*, decltype(cmp)> sortedVars(begin(_variables), end(_variables), cmp);
+	for (auto const* decl: sortedVars)
 	{
 		solAssert(_indicesEndTrue.count(decl) && _indicesEndFalse.count(decl), "");
 		int trueIndex = _indicesEndTrue.at(decl);
