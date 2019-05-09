@@ -81,6 +81,5 @@ void NameDisplacer::checkAndReplace(YulString& _name) const
 {
 	if (m_translations.count(_name))
 		_name = m_translations.at(_name);
-	yulAssert(!m_namesToFree.count(_name), "");
 }
 

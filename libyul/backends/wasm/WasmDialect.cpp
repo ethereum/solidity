@@ -52,6 +52,9 @@ WasmDialect::WasmDialect():
 
 	addFunction("drop", 1, 0);
 	addFunction("unreachable", 0, 0);
+
+	addFunction("datasize", 1, 4, true);
+	addFunction("dataoffset", 1, 4, true);
 }
 
 BuiltinFunction const* WasmDialect::builtin(YulString _name) const
@@ -72,7 +75,7 @@ WasmDialect const& WasmDialect::instance()
 	return *dialect;
 }
 
-void WasmDialect::addFunction(string _name, size_t _params, size_t _returns)
+void WasmDialect::addFunction(string _name, size_t _params, size_t _returns, bool _literalArguments)
 {
 	YulString name{move(_name)};
 	BuiltinFunction& f = m_functions[name];
@@ -85,5 +88,5 @@ void WasmDialect::addFunction(string _name, size_t _params, size_t _returns)
 	f.isMSize = false;
 	f.invalidatesStorage = true;
 	f.invalidatesMemory = true;
-	f.literalArguments = false;
+	f.literalArguments = _literalArguments;
 }

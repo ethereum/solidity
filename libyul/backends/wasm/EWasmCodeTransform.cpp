@@ -48,7 +48,8 @@ string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 			statement.type() == typeid(yul::FunctionDefinition),
 			"Expected only function definitions at the highest level."
 		);
-		functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
+		if (statement.type() == typeid(yul::FunctionDefinition))
+			functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
 	}
 
 	return EWasmToText{}.run(transform.m_globalVariables, functions);
@@ -64,6 +65,8 @@ wasm::Expression EWasmCodeTransform::generateMultiAssignment(
 
 	if (_variableNames.size() == 1)
 		return { std::move(assignment) };
+
+	allocateGlobals(_variableNames.size() - 1);
 
 	wasm::Block block;
 	block.statements.emplace_back(move(assignment));
@@ -141,7 +144,7 @@ wasm::Expression EWasmCodeTransform::operator()(Identifier const& _identifier)
 wasm::Expression EWasmCodeTransform::operator()(Literal const& _literal)
 {
 	u256 value = valueOfLiteral(_literal);
-	yulAssert(value <= numeric_limits<uint64_t>::max(), "");
+	yulAssert(value <= numeric_limits<uint64_t>::max(), "Literal too large: " + value.str());
 	return wasm::Literal{uint64_t(value)};
 }
 

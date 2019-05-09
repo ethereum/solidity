@@ -33,6 +33,9 @@ struct Dialect;
 /**
  * Optimiser component that renames identifiers to free up certain names.
  *
+ * Only replaces names that have been defined inside the code. If the code uses
+ * names to be freed but does not define them, they remain unchanged.
+ *
  * Prerequisites: Disambiguator
  */
 class NameDisplacer: public ASTModifier
