@@ -1036,6 +1036,31 @@ string YulUtilFunctions::packedHashFunction(
 	});
 }
 
+string YulUtilFunctions::forwardingRevertFunction()
+{
+	bool forward = m_evmVersion.supportsReturndata();
+	string functionName = "revert_forward_" + to_string(forward);
+	return m_functionCollector->createFunction(functionName, [&]() {
+		if (forward)
+			return Whiskers(R"(
+				function <functionName>() {
+					returndatacopy(0, 0, returndatasize())
+					revert(0, returndatasize())
+				}
+			)")
+			("functionName", functionName)
+			.render();
+		else
+			return Whiskers(R"(
+				function <functionName>() {
+					revert(0, 0)
+				}
+			)")
+			("functionName", functionName)
+			.render();
+	});
+}
+
 string YulUtilFunctions::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
 {
 	string result;

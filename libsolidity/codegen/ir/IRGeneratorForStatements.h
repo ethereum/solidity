@@ -64,10 +64,22 @@ public:
 	bool visit(Literal const& _literal) override;
 
 private:
+	/// Appends code to call an external function with the given arguments.
+	/// All involved expressions have already been visited.
+	void appendExternalFunctionCall(
+		FunctionCall const& _functionCall,
+		std::vector<ASTPointer<Expression const>> const& _arguments
+	);
+
+	std::string fetchFreeMem() const;
+
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
 	std::string expressionAsType(Expression const& _expression, Type const& _to);
 	std::ostream& defineExpression(Expression const& _expression);
+	/// Defines only one of many variables corresponding to an expression.
+	/// We start counting at 1 instead of 0.
+	std::ostream& defineExpressionPart(Expression const& _expression, size_t _part);
 
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 

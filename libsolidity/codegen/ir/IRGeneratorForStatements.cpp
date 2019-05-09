@@ -28,6 +28,8 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
 
+#include <libevmasm/GasMeter.h>
+
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmData.h>
 #include <libyul/optimiser/ASTCopier.h>
@@ -392,6 +394,15 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			")\n";
 		break;
 	}
+	case FunctionType::Kind::External:
+	case FunctionType::Kind::DelegateCall:
+	case FunctionType::Kind::BareCall:
+	case FunctionType::Kind::BareDelegateCall:
+	case FunctionType::Kind::BareStaticCall:
+		appendExternalFunctionCall(_functionCall, arguments);
+		break;
+	case FunctionType::Kind::BareCallCode:
+		solAssert(false, "Callcode has been removed.");
 	case FunctionType::Kind::Event:
 	{
 		auto const& event = dynamic_cast<EventDefinition const&>(functionType->declaration());
@@ -502,9 +513,12 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				identifier = FunctionType(*function).externalIdentifier();
 			else
 				solAssert(false, "Contract member is neither variable nor function.");
-			// TODO here, we need to assign address and function identifier to two variables.
-			// We migt also just combine them into a single variable already....
-			solUnimplementedAssert(false, "");
+
+			defineExpressionPart(_memberAccess, 1) << expressionAsType(
+				_memberAccess.expression(),
+				type.isPayable() ? *TypeProvider::payableAddress() : *TypeProvider::address()
+			) << "\n";
+			defineExpressionPart(_memberAccess, 2) << formatNumber(identifier) << "\n";
 		}
 		else
 			solAssert(false, "Invalid member access in contract");
@@ -763,6 +777,181 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 	return false;
 }
 
+void IRGeneratorForStatements::appendExternalFunctionCall(
+	FunctionCall const& _functionCall,
+	vector<ASTPointer<Expression const>> const& _arguments
+)
+{
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(type(_functionCall.expression()));
+	solAssert(
+		funType.takesArbitraryParameters() ||
+		_arguments.size() == funType.parameterTypes().size(), ""
+	);
+	solUnimplementedAssert(!funType.bound(), "");
+	FunctionType::Kind funKind = funType.kind();
+
+	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
+	solAssert(funKind != FunctionType::Kind::BareCallCode, "Callcode has been removed.");
+
+	bool returnSuccessConditionAndReturndata = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
+	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
+	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (funType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
+
+	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
+	unsigned retSize = 0;
+	bool dynamicReturnSize = false;
+	TypePointers returnTypes;
+	if (!returnSuccessConditionAndReturndata)
+	{
+		if (haveReturndatacopy)
+			returnTypes = funType.returnParameterTypes();
+		else
+			returnTypes = funType.returnParameterTypesWithoutDynamicTypes();
+
+		for (auto const& retType: returnTypes)
+			if (retType->isDynamicallyEncoded())
+			{
+				solAssert(haveReturndatacopy, "");
+				dynamicReturnSize = true;
+				retSize = 0;
+				break;
+			}
+			else if (retType->decodingType())
+				retSize += retType->decodingType()->calldataEncodedSize();
+			else
+				retSize += retType->calldataEncodedSize();
+	}
+
+	TypePointers argumentTypes;
+	string argumentString;
+	for (auto const& arg: _arguments)
+	{
+		argumentTypes.emplace_back(&type(*arg));
+		string var = m_context.variable(*arg);
+		if (!var.empty())
+			argumentString += ", " + move(var);
+	}
+
+	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
+
+	if (!m_context.evmVersion().canOverchargeGasForCall())
+	{
+		// Touch the end of the output area so that we do not pay for memory resize during the call
+		// (which we would have to subtract from the gas left)
+		// We could also just use MLOAD; POP right before the gas calculation, but the optimizer
+		// would remove that, so we use MSTORE here.
+		if (!funType.gasSet() && retSize > 0)
+			m_code << "mstore(add(" << fetchFreeMem() << ", " << to_string(retSize) << "), 0)\n";
+	}
+
+	ABIFunctions abi(m_context.evmVersion(), m_context.functionCollector());
+
+	solUnimplementedAssert(!funType.isBareCall(), "");
+	Whiskers templ(R"(
+		<?checkExistence>
+			if iszero(extcodesize(<address>)) { revert(0, 0) }
+		</checkExistence>
+
+		let <pos> := <freeMem>
+		mstore(<pos>, <shl28>(<funId>))
+		let <end> := <encodeArgs>(add(<pos>, 4) <argumentString>)
+
+		let <result> := <call>(<gas>, <address>, <value>, <pos>, sub(<end>, <pos>), <pos>, <retSize>)
+		if iszero(<result>) { <forwardingRevert> }
+
+		<?dynamicReturnSize>
+			returndatacopy(<pos>, 0, returndatasize())
+		</dynamicReturnSize>
+		<allocate>
+		mstore(<freeMem>, add(<pos>, and(add(<retSize>, 0x1f), not(0x1f))))
+		<?returns> let <retvars> := </returns> <abiDecode>(<pos>, <retSize>)
+	)");
+	templ("pos", m_context.newYulVariable());
+	templ("end", m_context.newYulVariable());
+	templ("result", m_context.newYulVariable());
+	templ("freeMem", fetchFreeMem());
+	templ("shl28", m_utils.shiftLeftFunction(8 * (32 - 4)));
+	templ("funId", m_context.variablePart(_functionCall.expression(), 2));
+
+	// If the function takes arbitrary parameters or is a bare call, copy dynamic length data in place.
+	// Move arguments to memory, will not update the free memory pointer (but will update the memory
+	// pointer on the stack).
+	bool encodeInPlace = funType.takesArbitraryParameters() || funType.isBareCall();
+	if (funType.kind() == FunctionType::Kind::ECRecover)
+		// This would be the only combination of padding and in-place encoding,
+		// but all parameters of ecrecover are value types anyway.
+		encodeInPlace = false;
+	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
+	solUnimplementedAssert(!encodeInPlace, "");
+	solUnimplementedAssert(!funType.padArguments(), "");
+	templ("encodeArgs", abi.tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
+	templ("argumentString", argumentString);
+
+	// Output data will replace input data, unless we have ECRecover (then, output
+	// area will be 32 bytes just before input area).
+	templ("retSize", to_string(retSize));
+	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
+
+	if (isDelegateCall)
+		solAssert(!funType.valueSet(), "Value set for delegatecall");
+	else if (useStaticCall)
+		solAssert(!funType.valueSet(), "Value set for staticcall");
+	else if (funType.valueSet())
+		templ("value", m_context.variablePart(_functionCall.expression(), 4));
+	else
+		templ("value", "0");
+
+	// Check that the target contract exists (has code) for non-low-level calls.
+	bool checkExistence = (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall);
+	templ("checkExistence", checkExistence);
+
+	if (funType.gasSet())
+		templ("gas", m_context.variablePart(_functionCall.expression(), 3));
+	else if (m_context.evmVersion().canOverchargeGasForCall())
+		// Send all gas (requires tangerine whistle EVM)
+		templ("gas", "gas()");
+	else
+	{
+		// send all gas except the amount needed to execute "SUB" and "CALL"
+		// @todo this retains too much gas for now, needs to be fine-tuned.
+		u256 gasNeededByCaller = eth::GasCosts::callGas(m_context.evmVersion()) + 10;
+		if (funType.valueSet())
+			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
+		if (!checkExistence)
+			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
+		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
+	}
+	// Order is important here, STATICCALL might overlap with DELEGATECALL.
+	if (isDelegateCall)
+		templ("call", "delegatecall");
+	else if (useStaticCall)
+		templ("call", "staticcall");
+	else
+		templ("call", "call");
+
+	templ("forwardingRevert", m_utils.forwardingRevertFunction());
+
+	solUnimplementedAssert(!returnSuccessConditionAndReturndata, "");
+	solUnimplementedAssert(funKind != FunctionType::Kind::RIPEMD160, "");
+	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
+
+	templ("dynamicReturnSize", dynamicReturnSize);
+	// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
+	// This ensures it can catch badly formatted input from external calls.
+	if (haveReturndatacopy)
+		templ("returnSize", "returndatasize()");
+	else
+		templ("returnSize", to_string(retSize));
+	templ("abiDecode", abi.tupleDecoder(returnTypes, true));
+	templ("returns", !returnTypes.empty());
+	templ("retVars", m_context.variable(_functionCall));
+}
+
+string IRGeneratorForStatements::fetchFreeMem() const
+{
+	return "mload(" + to_string(CompilerUtils::freeMemoryPointer) + ")";
+}
+
 string IRGeneratorForStatements::expressionAsType(Expression const& _expression, Type const& _to)
 {
 	Type const& from = type(_expression);
@@ -785,6 +974,11 @@ string IRGeneratorForStatements::expressionAsType(Expression const& _expression,
 ostream& IRGeneratorForStatements::defineExpression(Expression const& _expression)
 {
 	return m_code << "let " << m_context.variable(_expression) << " := ";
+}
+
+ostream& IRGeneratorForStatements::defineExpressionPart(Expression const& _expression, size_t _part)
+{
+	return m_code << "let " << m_context.variablePart(_expression, _part) << " := ";
 }
 
 void IRGeneratorForStatements::appendAndOrOperatorCode(BinaryOperation const& _binOp)
