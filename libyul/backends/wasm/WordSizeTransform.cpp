@@ -44,9 +44,14 @@ void WordSizeTransform::operator()(FunctionCall& _fc)
 	rewriteFunctionCallArguments(_fc.arguments);
 }
 
-void WordSizeTransform::operator()(If&)
+void WordSizeTransform::operator()(If& _if)
 {
-	yulAssert(false, "If statement not implemented.");
+	_if.condition = make_unique<Expression>(FunctionCall{
+		locationOf(*_if.condition),
+		Identifier{locationOf(*_if.condition), "or_bool"_yulstring}, // TODO make sure this is not used
+		expandValueToVector(*_if.condition)
+	});
+	(*this)(_if.body);
 }
 
 void WordSizeTransform::operator()(Switch&)
@@ -149,13 +154,8 @@ void WordSizeTransform::rewriteVarDeclList(TypedNameList& _nameList)
 		[&](TypedName const& _n) -> boost::optional<TypedNameList>
 		{
 			TypedNameList ret;
-			yulAssert(m_variableMapping.find(_n.name) == m_variableMapping.end(), "");
-			for (int i = 0; i < 4; i++)
-			{
-				auto newName = m_nameDispenser.newName(_n.name);
-				m_variableMapping[_n.name][i] = newName;
-				ret.push_back(TypedName{_n.location, newName, "u64"_yulstring});
-			}
+			for (auto newName: generateU64IdentifierNames(_n.name))
+				ret.emplace_back(TypedName{_n.location, newName, "u64"_yulstring});
 			return ret;
 		}
 	);
@@ -181,12 +181,7 @@ void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
 		_args,
 		[&](Expression& _e) -> boost::optional<vector<Expression>>
 		{
-			// ExpressionSplitter guarantees arguments to be Identifier or Literal
-			yulAssert(_e.type() == typeid(Identifier) || _e.type() == typeid(Literal), "");
-			vector<Expression> ret;
-			for (auto& v: expandValue(_e))
-				ret.push_back(*v);
-			return ret;
+			return expandValueToVector(_e);
 		}
 	);
 }
@@ -194,14 +189,9 @@ void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
 array<YulString, 4> WordSizeTransform::generateU64IdentifierNames(YulString const& _s)
 {
 	yulAssert(m_variableMapping.find(_s) == m_variableMapping.end(), "");
-	array<YulString, 4> ret;
 	for (int i = 0; i < 4; i++)
-	{
-		auto newName = m_nameDispenser.newName(_s);
-		m_variableMapping[_s][i] = newName;
-		ret[i] = newName;
-	}
-	return ret;
+		m_variableMapping[_s][i] = m_nameDispenser.newName(YulString{_s.str() + "_" + to_string(i)});
+	return m_variableMapping[_s];
 }
 
 array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const& _e)
@@ -233,6 +223,14 @@ array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const
 	}
 	else
 		yulAssert(false, "");
+	return ret;
+}
+
+vector<Expression> WordSizeTransform::expandValueToVector(Expression const& _e)
+{
+	vector<Expression> ret;
+	for (unique_ptr<Expression>& val: expandValue(_e))
+		ret.emplace_back(std::move(*val));
 	return ret;
 }
 

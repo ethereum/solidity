@@ -47,6 +47,12 @@ namespace yul
  * the value of c4 should be
  *	((a1*(2^192) + a2*(2^128) + a3(2^64) + a4) * (b1*(2^192) + b2*(2^128) + b3(2^64) + b4)) & ((1<<64)-1)
  *
+ * The resulting code still uses the EVM builtin functions but assumes that they
+ * take four times the parameters and each of type u64.
+ * In addition, it uses a single other builtin function called `or_bool` that
+ * takes four u64 parameters and is supposed to return the logical disjunction
+ * of them es a u64 value.
+ *
  * Prerequisite: Disambiguator, ExpressionSplitter
  */
 class WordSizeTransform: public ASTModifier
@@ -72,6 +78,7 @@ private:
 
 	std::array<YulString, 4> generateU64IdentifierNames(YulString const& _s);
 	std::array<std::unique_ptr<Expression>, 4> expandValue(Expression const& _e);
+	std::vector<Expression> expandValueToVector(Expression const& _e);
 
 	NameDispenser& m_nameDispenser;
 	/// maps original u256 variable's name to corresponding u64 variables' names

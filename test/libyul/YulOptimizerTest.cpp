@@ -268,7 +268,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "wordSizeTransform")
 	{
 		disambiguate();
-		NameDispenser nameDispenser{*m_dialect, *m_ast}; // TODO: Support WasmDialect in yulOptimizerTest
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
 		WordSizeTransform::run(*m_ast, nameDispenser);
 	}
