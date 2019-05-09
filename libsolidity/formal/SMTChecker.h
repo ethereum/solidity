@@ -115,6 +115,9 @@ private:
 	void inlineFunctionCall(FunctionCall const& _funCall);
 	/// Creates an uninterpreted function call.
 	void abstractFunctionCall(FunctionCall const& _funCall);
+	/// Inlines if the function call is internal or external to `this`.
+	/// Erases knowledge about state variables if external.
+	void internalOrExternalFunctionCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
 
 	/// Encodes a modifier or function body according to the modifier
