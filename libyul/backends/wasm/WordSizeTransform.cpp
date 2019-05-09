@@ -154,13 +154,8 @@ void WordSizeTransform::rewriteVarDeclList(TypedNameList& _nameList)
 		[&](TypedName const& _n) -> boost::optional<TypedNameList>
 		{
 			TypedNameList ret;
-			yulAssert(m_variableMapping.find(_n.name) == m_variableMapping.end(), "");
-			for (int i = 0; i < 4; i++)
-			{
-				auto newName = m_nameDispenser.newName(_n.name);
-				m_variableMapping[_n.name][i] = newName;
-				ret.push_back(TypedName{_n.location, newName, "u64"_yulstring});
-			}
+			for (auto newName: generateU64IdentifierNames(_n.name))
+				ret.emplace_back(TypedName{_n.location, newName, "u64"_yulstring});
 			return ret;
 		}
 	);
@@ -194,14 +189,9 @@ void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
 array<YulString, 4> WordSizeTransform::generateU64IdentifierNames(YulString const& _s)
 {
 	yulAssert(m_variableMapping.find(_s) == m_variableMapping.end(), "");
-	array<YulString, 4> ret;
 	for (int i = 0; i < 4; i++)
-	{
-		auto newName = m_nameDispenser.newName(_s);
-		m_variableMapping[_s][i] = newName;
-		ret[i] = newName;
-	}
-	return ret;
+		m_variableMapping[_s][i] = m_nameDispenser.newName(YulString{_s.str() + "_" + to_string(i)});
+	return m_variableMapping[_s];
 }
 
 array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const& _e)
