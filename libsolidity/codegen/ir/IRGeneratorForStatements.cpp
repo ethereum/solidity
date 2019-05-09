@@ -375,7 +375,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			solAssert(!functionType->bound(), "");
 			if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
 			{
-				// @TODO The function can very well return multiple vars.
 				defineExpression(_functionCall) <<
 					m_context.virtualFunctionName(*functionDef) <<
 					"(" <<
@@ -385,7 +384,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			}
 		}
 
-		// @TODO The function can very well return multiple vars.
 		args = vector<string>{m_context.variable(_functionCall.expression())} + args;
 		defineExpression(_functionCall) <<
 			m_context.internalDispatch(functionType->parameterTypes().size(), functionType->returnParameterTypes().size()) <<
@@ -786,7 +784,10 @@ string IRGeneratorForStatements::expressionAsType(Expression const& _expression,
 
 ostream& IRGeneratorForStatements::defineExpression(Expression const& _expression)
 {
-	return m_code << "let " << m_context.variable(_expression) << " := ";
+	string vars = m_context.variable(_expression);
+	if (!vars.empty())
+		m_code << "let " << move(vars) << " := ";
+	return m_code;
 }
 
 void IRGeneratorForStatements::appendAndOrOperatorCode(BinaryOperation const& _binOp)

@@ -103,8 +103,6 @@ string IRGenerationContext::variable(Expression const& _expression)
 
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 {
-	// TODO can we limit the generated functions to only those visited
-	// in the expression context? What about creation / runtime context?
 	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
 	return m_functions->createFunction(funName, [&]() {
 		Whiskers templ(R"(

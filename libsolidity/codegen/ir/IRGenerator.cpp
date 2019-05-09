@@ -94,12 +94,21 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	t("memoryInit", memoryInit());
 	t("constructor", _contract.constructor() ? constructorCode(*_contract.constructor()) : "");
 	t("deploy", deployCode(_contract));
+	// We generate code for all functions and rely on the optimizer to remove them again
+	// TODO it would probably be better to only generate functions when internalDispatch or
+	// virtualFunctionName is called - same below.
+	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
+		for (auto const* fun: contract->definedFunctions())
+			generateFunction(*fun);
 	t("functions", m_context.functionCollector()->requestedFunctions());
 
 	resetContext(_contract);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
+	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
+		for (auto const* fun: contract->definedFunctions())
+			generateFunction(*fun);
 	t("runtimeFunctions", m_context.functionCollector()->requestedFunctions());
 	return t.render();
 }
