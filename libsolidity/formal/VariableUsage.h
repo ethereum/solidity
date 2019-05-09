@@ -26,6 +26,8 @@ namespace dev
 {
 namespace solidity
 {
+namespace smt
+{
 
 /**
  * This class computes information about which variables are modified in a certain subtree.
@@ -49,5 +51,6 @@ private:
 	CallableDeclaration const* m_lastCall = nullptr;
 };
 
+}
 }
 }

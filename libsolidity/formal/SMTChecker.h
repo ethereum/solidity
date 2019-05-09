@@ -245,10 +245,10 @@ private:
 
 	/// Sets the value of the declaration to zero.
 	void setZeroValue(VariableDeclaration const& _decl);
-	void setZeroValue(SymbolicVariable& _variable);
+	void setZeroValue(smt::SymbolicVariable& _variable);
 	/// Resets the variable to an unknown value (in its range).
 	void setUnknownValue(VariableDeclaration const& decl);
-	void setUnknownValue(SymbolicVariable& _variable);
+	void setUnknownValue(smt::SymbolicVariable& _variable);
 
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
@@ -294,7 +294,7 @@ private:
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
 	std::unique_ptr<smt::SolverInterface> m_interface;
-	VariableUsage m_variableUsage;
+	smt::VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
 	bool m_externalFunctionCallHappened = false;
@@ -302,9 +302,9 @@ private:
 	bool m_noSolverWarning = false;
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
-	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
-	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
-	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_globalContext;
+	std::unordered_map<Expression const*, std::shared_ptr<smt::SymbolicVariable>> m_expressions;
+	std::unordered_map<VariableDeclaration const*, std::shared_ptr<smt::SymbolicVariable>> m_variables;
+	std::unordered_map<std::string, std::shared_ptr<smt::SymbolicVariable>> m_globalContext;
 
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
 	/// These may be direct application of UFs or Array index access.

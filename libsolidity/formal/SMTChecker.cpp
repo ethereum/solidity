@@ -332,7 +332,7 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 	{
 		if (auto init = _varDecl.initialValue())
 		{
-			auto symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[init]);
+			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[init]);
 			/// symbTuple == nullptr if it is the return of a non-inlined function call.
 			if (symbTuple)
 			{
@@ -375,7 +375,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 			_assignment.location(),
 			"Assertion checker does not yet implement this assignment operator."
 		);
-	else if (!isSupportedType(_assignment.annotation().type->category()))
+	else if (!smt::isSupportedType(_assignment.annotation().type->category()))
 	{
 		m_errorReporter.warning(
 			_assignment.location(),
@@ -390,7 +390,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		vector<smt::Expression> rightArguments;
 		if (_assignment.rightHandSide().annotation().type->category() == Type::Category::Tuple)
 		{
-			auto symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[&_assignment.rightHandSide()]);
+			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[&_assignment.rightHandSide()]);
 			solAssert(symbTuple, "");
 			for (auto const& component: symbTuple->components())
 			{
@@ -426,7 +426,7 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 	else if (_tuple.annotation().type->category() == Type::Category::Tuple)
 	{
 		createExpr(_tuple);
-		vector<shared_ptr<SymbolicVariable>> components;
+		vector<shared_ptr<smt::SymbolicVariable>> components;
 		for (auto const& component: _tuple.components())
 			if (component)
 			{
@@ -441,7 +441,7 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 			else
 				components.push_back(nullptr);
 		solAssert(components.size() == _tuple.components().size(), "");
-		auto const& symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[&_tuple]);
+		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[&_tuple]);
 		solAssert(symbTuple, "");
 		symbTuple->setComponents(move(components));
 	}
@@ -450,7 +450,7 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 		/// Parenthesized expressions are also TupleExpression regardless their type.
 		auto const& components = _tuple.components();
 		solAssert(components.size() == 1, "");
-		if (isSupportedType(components.front()->annotation().type->category()))
+		if (smt::isSupportedType(components.front()->annotation().type->category()))
 			defineExpr(_tuple, expr(*components.front()));
 	}
 }
@@ -490,7 +490,7 @@ void SMTChecker::checkUnderflow(OverflowTarget& _target)
 	solAssert(_target.type != OverflowTarget::Type::Overflow, "");
 	auto intType = dynamic_cast<IntegerType const*>(_target.intType);
 	checkCondition(
-		_target.path && _target.value < minValue(*intType),
+		_target.path && _target.value < smt::minValue(*intType),
 		_target.location,
 		"Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")",
 		"<result>",
@@ -503,7 +503,7 @@ void SMTChecker::checkOverflow(OverflowTarget& _target)
 	solAssert(_target.type != OverflowTarget::Type::Underflow, "");
 	auto intType = dynamic_cast<IntegerType const*>(_target.intType);
 	checkCondition(
-		_target.path && _target.value > maxValue(*intType),
+		_target.path && _target.value > smt::maxValue(*intType),
 		_target.location,
 		"Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")",
 		"<result>",
@@ -520,7 +520,7 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	{
 	case Token::Not: // !
 	{
-		solAssert(isBool(_op.annotation().type->category()), "");
+		solAssert(smt::isBool(_op.annotation().type->category()), "");
 		defineExpr(_op, !expr(_op.subExpression()));
 		break;
 	}
@@ -528,7 +528,7 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	case Token::Dec: // -- (pre- or postfix)
 	{
 
-		solAssert(isInteger(_op.annotation().type->category()), "");
+		solAssert(smt::isInteger(_op.annotation().type->category()), "");
 		solAssert(_op.subExpression().annotation().lValueRequested, "");
 		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
@@ -785,13 +785,13 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 		auto const& returnParams = funDef->returnParameters();
 		if (returnParams.size() > 1)
 		{
-			vector<shared_ptr<SymbolicVariable>> components;
+			vector<shared_ptr<smt::SymbolicVariable>> components;
 			for (auto param: returnParams)
 			{
 				solAssert(m_variables[param.get()], "");
 				components.push_back(m_variables[param.get()]);
 			}
-			auto const& symbTuple = dynamic_pointer_cast<SymbolicTupleVariable>(m_expressions[&_funCall]);
+			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[&_funCall]);
 			solAssert(symbTuple, "");
 			symbTuple->setComponents(move(components));
 		}
@@ -837,7 +837,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	}
 	else if (_identifier.annotation().type->category() == Type::Category::Function)
 		visitFunctionIdentifier(_identifier);
-	else if (isSupportedType(_identifier.annotation().type->category()))
+	else if (smt::isSupportedType(_identifier.annotation().type->category()))
 	{
 		if (auto decl = identifierToVariable(_identifier))
 			defineExpr(_identifier, currentValue(*decl));
@@ -880,7 +880,7 @@ void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
 			{
 				auto const& intType = dynamic_cast<IntegerType const&>(*m_expressions.at(&_funCall)->type());
 				defineExpr(_funCall, smt::Expression::ite(
-					expr(*argument) >= minValue(intType) && expr(*argument) <= maxValue(intType),
+					expr(*argument) >= smt::minValue(intType) && expr(*argument) <= smt::maxValue(intType),
 					expr(*argument),
 					expr(_funCall)
 				));
@@ -908,9 +908,9 @@ void SMTChecker::endVisit(Literal const& _literal)
 {
 	solAssert(_literal.annotation().type, "Expected type for AST node");
 	Type const& type = *_literal.annotation().type;
-	if (isNumber(type.category()))
+	if (smt::isNumber(type.category()))
 		defineExpr(_literal, smt::Expression(type.literalValue(&_literal)));
-	else if (isBool(type.category()))
+	else if (smt::isBool(type.category()))
 		defineExpr(_literal, smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else
 	{
@@ -919,7 +919,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 			auto stringType = TypeProvider::stringMemory();
 			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type);
 			solAssert(stringLit, "");
-			auto result = newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
+			auto result = smt::newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
 			m_expressions.emplace(&_literal, result.second);
 		}
 		m_errorReporter.warning(
@@ -1006,7 +1006,7 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 
 void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 {
-	shared_ptr<SymbolicVariable> array;
+	shared_ptr<smt::SymbolicVariable> array;
 	if (auto const& id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
 	{
 		auto varDecl = identifierToVariable(*id);
@@ -1111,7 +1111,7 @@ void SMTChecker::defineGlobalVariable(string const& _name, Expression const& _ex
 {
 	if (!knownGlobalSymbol(_name))
 	{
-		auto result = newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
+		auto result = smt::newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
 		m_globalContext.emplace(_name, result.second);
 		setUnknownValue(*result.second);
 		if (result.first)
@@ -1124,7 +1124,7 @@ void SMTChecker::defineGlobalVariable(string const& _name, Expression const& _ex
 		m_globalContext.at(_name)->increaseIndex();
 	// The default behavior is not to increase the index since
 	// most of the global values stay the same throughout a tx.
-	if (isSupportedType(_expr.annotation().type->category()))
+	if (smt::isSupportedType(_expr.annotation().type->category()))
 		defineExpr(_expr, m_globalContext.at(_name)->currentValue());
 }
 
@@ -1132,7 +1132,7 @@ void SMTChecker::defineGlobalFunction(string const& _name, Expression const& _ex
 {
 	if (!knownGlobalSymbol(_name))
 	{
-		auto result = newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
+		auto result = smt::newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
 		m_globalContext.emplace(_name, result.second);
 		if (result.first)
 			m_errorReporter.warning(
@@ -1235,16 +1235,16 @@ smt::Expression SMTChecker::arithmeticOperation(
 		_location
 	);
 
-	smt::Expression intValueRange = (0 - minValue(intType)) + maxValue(intType) + 1;
+	smt::Expression intValueRange = (0 - smt::minValue(intType)) + smt::maxValue(intType) + 1;
 	value = smt::Expression::ite(
-		value > maxValue(intType) || value < minValue(intType),
+		value > smt::maxValue(intType) || value < smt::minValue(intType),
 		value % intValueRange,
 		value
 	);
 	if (intType.isSigned())
 	{
 		value = smt::Expression::ite(
-			value > maxValue(intType),
+			value > smt::maxValue(intType),
 			value - intValueRange,
 			value
 		);
@@ -1256,13 +1256,13 @@ smt::Expression SMTChecker::arithmeticOperation(
 void SMTChecker::compareOperation(BinaryOperation const& _op)
 {
 	solAssert(_op.annotation().commonType, "");
-	if (isSupportedType(_op.annotation().commonType->category()))
+	if (smt::isSupportedType(_op.annotation().commonType->category()))
 	{
 		smt::Expression left(expr(_op.leftExpression()));
 		smt::Expression right(expr(_op.rightExpression()));
 		Token op = _op.getOperator();
 		shared_ptr<smt::Expression> value;
-		if (isNumber(_op.annotation().commonType->category()))
+		if (smt::isNumber(_op.annotation().commonType->category()))
 		{
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
@@ -1275,7 +1275,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 		}
 		else // Bool
 		{
-			solUnimplementedAssert(isBool(_op.annotation().commonType->category()), "Operation not yet supported");
+			solUnimplementedAssert(smt::isBool(_op.annotation().commonType->category()), "Operation not yet supported");
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
 				/*op == Token::NotEqual*/ (left != right)
@@ -1339,7 +1339,7 @@ void SMTChecker::assignment(
 	langutil::SourceLocation const& _location
 )
 {
-	if (!isSupportedType(_type->category()))
+	if (!smt::isSupportedType(_type->category()))
 		m_errorReporter.warning(
 			_location,
 			"Assertion checker does not yet implement type " + _type->toString()
@@ -1459,7 +1459,7 @@ void SMTChecker::checkCondition(
 			auto const& type = var.second->type();
 			if (
 				type->isValueType() &&
-				smtKind(type->category()) != smt::Kind::Function
+				smt::smtKind(type->category()) != smt::Kind::Function
 			)
 			{
 				expressionsToEvaluate.emplace_back(var.second->currentValue());
@@ -1756,7 +1756,7 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 		return true;
 	auto const& type = _varDecl.type();
 	solAssert(m_variables.count(&_varDecl) == 0, "");
-	auto result = newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *m_interface);
+	auto result = smt::newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *m_interface);
 	m_variables.emplace(&_varDecl, result.second);
 	if (result.first)
 	{
@@ -1798,7 +1798,7 @@ void SMTChecker::setZeroValue(VariableDeclaration const& _decl)
 	setZeroValue(*m_variables.at(&_decl));
 }
 
-void SMTChecker::setZeroValue(SymbolicVariable& _variable)
+void SMTChecker::setZeroValue(smt::SymbolicVariable& _variable)
 {
 	smt::setSymbolicZeroValue(_variable, *m_interface);
 }
@@ -1809,7 +1809,7 @@ void SMTChecker::setUnknownValue(VariableDeclaration const& _decl)
 	setUnknownValue(*m_variables.at(&_decl));
 }
 
-void SMTChecker::setUnknownValue(SymbolicVariable& _variable)
+void SMTChecker::setUnknownValue(smt::SymbolicVariable& _variable)
 {
 	smt::setSymbolicUnknownValue(_variable, *m_interface);
 }
@@ -1841,7 +1841,7 @@ void SMTChecker::createExpr(Expression const& _e)
 		m_expressions.at(&_e)->increaseIndex();
 	else
 	{
-		auto result = newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *m_interface);
+		auto result = smt::newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *m_interface);
 		m_expressions.emplace(&_e, result.second);
 		if (result.first)
 			m_errorReporter.warning(
@@ -1854,7 +1854,7 @@ void SMTChecker::createExpr(Expression const& _e)
 void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
-	solAssert(smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
+	solAssert(smt::smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_interface->addAssertion(expr(_e) == _value);
 }
 
