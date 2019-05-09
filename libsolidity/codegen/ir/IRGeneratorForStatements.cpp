@@ -152,6 +152,25 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 	return false;
 }
 
+bool IRGeneratorForStatements::visit(IfStatement const& _ifStatement)
+{
+	_ifStatement.condition().accept(*this);
+	string condition = expressionAsType(_ifStatement.condition(), *TypeProvider::boolean());
+
+	if (_ifStatement.falseStatement())
+	{
+		m_code << "switch " << condition << "\n" "case 0 {\n";
+		_ifStatement.falseStatement()->accept(*this);
+		m_code << "}\n" "default {\n";
+	}
+	else
+		m_code << "if " << condition << " {\n";
+	_ifStatement.trueStatement().accept(*this);
+	m_code << "}\n";
+
+	return false;
+}
+
 bool IRGeneratorForStatements::visit(ForStatement const& _forStatement)
 {
 	generateLoop(
