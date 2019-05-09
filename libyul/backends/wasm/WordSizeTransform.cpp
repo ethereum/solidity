@@ -44,9 +44,14 @@ void WordSizeTransform::operator()(FunctionCall& _fc)
 	rewriteFunctionCallArguments(_fc.arguments);
 }
 
-void WordSizeTransform::operator()(If&)
+void WordSizeTransform::operator()(If& _if)
 {
-	yulAssert(false, "If statement not implemented.");
+	_if.condition = make_unique<Expression>(FunctionCall{
+		locationOf(*_if.condition),
+		Identifier{locationOf(*_if.condition), "or_bool"_yulstring}, // TODO make sure this is not used
+		expandValueToVector(*_if.condition)
+	});
+	(*this)(_if.body);
 }
 
 void WordSizeTransform::operator()(Switch&)
@@ -181,12 +186,7 @@ void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
 		_args,
 		[&](Expression& _e) -> boost::optional<vector<Expression>>
 		{
-			// ExpressionSplitter guarantees arguments to be Identifier or Literal
-			yulAssert(_e.type() == typeid(Identifier) || _e.type() == typeid(Literal), "");
-			vector<Expression> ret;
-			for (auto& v: expandValue(_e))
-				ret.push_back(*v);
-			return ret;
+			return expandValueToVector(_e);
 		}
 	);
 }
@@ -233,6 +233,14 @@ array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const
 	}
 	else
 		yulAssert(false, "");
+	return ret;
+}
+
+vector<Expression> WordSizeTransform::expandValueToVector(Expression const& _e)
+{
+	vector<Expression> ret;
+	for (unique_ptr<Expression>& val: expandValue(_e))
+		ret.emplace_back(std::move(*val));
 	return ret;
 }
 
