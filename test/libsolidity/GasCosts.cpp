@@ -66,20 +66,21 @@ BOOST_AUTO_TEST_CASE(string_storage)
 			}
 		}
 	)";
+	m_compiler.overwriteReleaseFlag(true);
 	compileAndRun(sourceCode);
 
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
-		CHECK_GAS(133899, 130591, 100);
+		CHECK_GAS(136247, 132939, 100);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
 	{
 		if (Options::get().optimizeYul)
-			CHECK_GAS(151283, 128285, 100);
+			CHECK_GAS(153631, 130633, 100);
 		else
-			CHECK_GAS(151283, 136003, 100);
+			CHECK_GAS(153631, 138351, 100);
 	}
 	else
-		CHECK_GAS(126689, 120159, 100);
+		CHECK_GAS(129037, 122500, 100);
 	if (Options::get().evmVersion() >= EVMVersion::byzantium())
 	{
 		callContractFunction("f()");

@@ -26,7 +26,10 @@ contract Large {
 // optimize: true
 // optimize-runs: 2
 // ----
-// creation: 300 + 260000 = 260300
+// creation:
+//   codeDepositCost: 261800
+//   executionCost: 300
+//   totalCost: 262100
 // external:
 //   a(): 398
 //   b(uint256): 1105

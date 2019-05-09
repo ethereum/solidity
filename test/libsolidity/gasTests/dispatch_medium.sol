@@ -10,7 +10,10 @@ contract Medium {
     function g0(uint x) public payable returns (uint) { require(x > 10); }
 }
 // ----
-// creation: 294 + 251200 = 251494
+// creation:
+//   codeDepositCost: 253000
+//   executionCost: 294
+//   totalCost: 253294
 // external:
 //   a(): 428
 //   b(uint256): 846

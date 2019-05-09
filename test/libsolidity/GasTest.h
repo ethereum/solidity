@@ -48,20 +48,11 @@ public:
 private:
 	void parseExpectations(std::istream& _stream);
 
-	struct CreationCost
-	{
-		u256 executionCost{0};
-		u256 codeDepositCost{0};
-		u256 totalCost{0};
-	};
-
 	bool m_optimise = false;
 	bool m_optimiseYul = false;
 	size_t m_optimiseRuns = 200;
 	std::string m_source;
-	CreationCost m_creationCost;
-	std::map<std::string, std::string> m_externalFunctionCosts;
-	std::map<std::string, std::string> m_internalFunctionCosts;
+	std::map<std::string, std::map<std::string, std::string>> m_expectations;
 };
 
 }
