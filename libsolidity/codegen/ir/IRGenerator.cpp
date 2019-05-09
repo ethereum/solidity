@@ -71,6 +71,8 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 
 string IRGenerator::generate(ContractDefinition const& _contract)
 {
+	solUnimplementedAssert(!_contract.isLibrary(), "Libraries not yet implemented.");
+
 	Whiskers t(R"(
 		object "<CreationObject>" {
 			code {
@@ -90,9 +92,10 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	)");
 
 	resetContext(_contract);
+
 	t("CreationObject", creationObjectName(_contract));
 	t("memoryInit", memoryInit());
-	t("constructor", _contract.constructor() ? constructorCode(*_contract.constructor()) : "");
+	t("constructor", constructorCode(_contract));
 	t("deploy", deployCode(_contract));
 	// We generate code for all functions and rely on the optimizer to remove them again
 	// TODO it would probably be better to only generate functions when internalDispatch or
@@ -146,15 +149,21 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	});
 }
 
-string IRGenerator::constructorCode(FunctionDefinition const& _constructor)
+string IRGenerator::constructorCode(ContractDefinition const& _contract)
 {
-	string out;
-	if (!_constructor.isPayable())
-		out = callValueCheck();
+	// TODO initialize state variables in base to derived order.
+	// TODO base constructors
+	// TODO callValueCheck if there is no constructor.
+	if (FunctionDefinition const* constructor = _contract.constructor())
+	{
+		string out;
+		if (!constructor->isPayable())
+			out = callValueCheck();
+		solUnimplementedAssert(constructor->parameters().empty(), "");
+		return move(out) + m_context.functionName(*constructor) + "()\n";
+	}
 
-	solUnimplemented("Constructors are not yet implemented.");
-
-	return out;
+	return {};
 }
 
 string IRGenerator::deployCode(ContractDefinition const& _contract)
