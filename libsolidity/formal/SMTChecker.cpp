@@ -1020,6 +1020,7 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	}
 	else
 	{
+		createExpr(_indexAccess);
 		m_errorReporter.warning(
 			_indexAccess.location(),
 			"Assertion checker does not yet implement this expression."
@@ -1096,10 +1097,19 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		));
 	}
 	else if (dynamic_cast<IndexAccess const*>(&indexAccess.baseExpression()))
+	{
+		auto identifier = dynamic_cast<Identifier const*>(leftmostBase(indexAccess));
+		if (identifier)
+		{
+			auto varDecl = identifierToVariable(*identifier);
+			newValue(*varDecl);
+		}
+
 		m_errorReporter.warning(
 			indexAccess.location(),
 			"Assertion checker does not yet implement assignments to multi-dimensional mappings or arrays."
 		);
+	}
 	else
 		m_errorReporter.warning(
 			_expr.location(),
@@ -1980,6 +1990,14 @@ FunctionDefinition const* SMTChecker::inlinedFunctionCallToDefinition(FunctionCa
 		return funDef;
 
 	return nullptr;
+}
+
+Expression const* SMTChecker::leftmostBase(IndexAccess const& _indexAccess)
+{
+	Expression const* base = &_indexAccess.baseExpression();
+	while (auto access = dynamic_cast<IndexAccess const*>(base))
+		base = &access->baseExpression();
+	return base;
 }
 
 set<VariableDeclaration const*> SMTChecker::touchedVariables(ASTNode const& _node)

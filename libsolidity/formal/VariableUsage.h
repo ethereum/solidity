@@ -38,11 +38,15 @@ public:
 
 private:
 	void endVisit(Identifier const& _node) override;
+	void endVisit(IndexAccess const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
 	void endVisit(ModifierInvocation const& _node) override;
 	void endVisit(PlaceholderStatement const& _node) override;
+
+	/// Checks whether an identifier should be added to touchedVariables.
+	void checkIdentifier(Identifier const& _identifier);
 
 	std::set<VariableDeclaration const*> m_touchedVariables;
 	std::vector<CallableDeclaration const*> m_callStack;
