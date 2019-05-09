@@ -23,6 +23,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
+#include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -77,7 +78,9 @@ void OptimiserSuite::run(
 	EquivalentFunctionCombiner::run(ast);
 	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
 	BlockFlattener{}(ast);
+	ControlFlowSimplifier{}(ast);
 	StructuralSimplifier{*_dialect}(ast);
+	ControlFlowSimplifier{}(ast);
 	BlockFlattener{}(ast);
 
 	// None of the above can make stack problems worse.
@@ -107,7 +110,9 @@ void OptimiserSuite::run(
 
 		{
 			// still in SSA, perform structural simplification
+			ControlFlowSimplifier{}(ast);
 			StructuralSimplifier{*_dialect}(ast);
+			ControlFlowSimplifier{}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{}(ast);
 			UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
@@ -162,6 +167,7 @@ void OptimiserSuite::run(
 			StructuralSimplifier{*_dialect}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{}(ast);
+			ControlFlowSimplifier{}(ast);
 			CommonSubexpressionEliminator{*_dialect}(ast);
 			SSATransform::run(ast, dispenser);
 			RedundantAssignEliminator::run(*_dialect, ast);
@@ -197,6 +203,7 @@ void OptimiserSuite::run(
 	StackCompressor::run(_dialect, ast, _optimizeStackAllocation, stackCompressorMaxIterations);
 	BlockFlattener{}(ast);
 	DeadCodeEliminator{}(ast);
+	ControlFlowSimplifier{}(ast);
 
 	FunctionGrouper{}(ast);
 	VarNameCleaner{ast, *_dialect, reservedIdentifiers}(ast);

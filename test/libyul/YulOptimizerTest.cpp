@@ -22,6 +22,7 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -233,6 +234,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "structuralSimplifier")
 	{
 		disambiguate();
+		ControlFlowSimplifier{}(*m_ast);
 		StructuralSimplifier{*m_dialect}(*m_ast);
 	}
 	else if (m_optimizerStep == "equivalentFunctionCombiner")

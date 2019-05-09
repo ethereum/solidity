@@ -56,6 +56,8 @@ add_library(yul
 	optimiser/BlockFlattener.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
+	optimiser/ControlFlowSimplifier.cpp
+	optimiser/ControlFlowSimplifier.h
 	optimiser/DataFlowAnalyzer.cpp
 	optimiser/DataFlowAnalyzer.h
 	optimiser/DeadCodeEliminator.cpp
