@@ -47,7 +47,7 @@ smt::SortPointer dev::solidity::smtSort(Type const& _type)
 			// Abstract sort.
 			returnSort = make_shared<smt::Sort>(smt::Kind::Int);
 		else
-			returnSort = smtSort(*returnTypes.at(0));
+			returnSort = smtSort(*returnTypes.front());
 		return make_shared<smt::FunctionSort>(parameterSorts, returnSort);
 	}
 	case smt::Kind::Array:
