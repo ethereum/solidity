@@ -196,7 +196,6 @@ void SMTChecker::endVisit(FunctionDefinition const&)
 	if (m_callStack.empty())
 	{
 		checkUnderOverflow();
-		removeLocalVariables();
 		solAssert(m_callStack.empty(), "");
 	}
 }
