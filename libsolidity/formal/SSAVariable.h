@@ -44,9 +44,7 @@ public:
 
 private:
 	unsigned m_currentIndex;
-	/// The next free index is a shared pointer because we want
-	/// the copy and the copied to share it.
-	std::shared_ptr<unsigned> m_nextFreeIndex;
+	std::unique_ptr<unsigned> m_nextFreeIndex;
 };
 
 }

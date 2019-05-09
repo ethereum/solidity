@@ -28,6 +28,5 @@ SSAVariable::SSAVariable()
 void SSAVariable::resetIndex()
 {
 	m_currentIndex = 0;
-	m_nextFreeIndex.reset (new unsigned);
-	*m_nextFreeIndex = 1;
+	m_nextFreeIndex = make_unique<unsigned>(1);
 }

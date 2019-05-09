@@ -71,7 +71,7 @@ protected:
 	TypePointer m_type;
 	std::string m_uniqueName;
 	smt::SolverInterface& m_interface;
-	std::shared_ptr<SSAVariable> m_ssa;
+	std::unique_ptr<SSAVariable> m_ssa;
 };
 
 /**

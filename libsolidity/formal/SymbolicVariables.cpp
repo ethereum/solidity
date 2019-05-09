@@ -33,7 +33,7 @@ SymbolicVariable::SymbolicVariable(
 	m_type(move(_type)),
 	m_uniqueName(move(_uniqueName)),
 	m_interface(_interface),
-	m_ssa(make_shared<SSAVariable>())
+	m_ssa(make_unique<SSAVariable>())
 {
 	solAssert(m_type, "");
 	m_sort = smtSort(*m_type);
@@ -48,7 +48,7 @@ SymbolicVariable::SymbolicVariable(
 	m_sort(move(_sort)),
 	m_uniqueName(move(_uniqueName)),
 	m_interface(_interface),
-	m_ssa(make_shared<SSAVariable>())
+	m_ssa(make_unique<SSAVariable>())
 {
 	solAssert(m_sort, "");
 }
