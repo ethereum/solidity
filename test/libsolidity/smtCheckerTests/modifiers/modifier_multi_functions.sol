@@ -22,5 +22,4 @@ contract C
 	}
 }
 // ----
-// Warning: (86-93): Condition is always true.
 // Warning: (311-324): Assertion violation happens here

@@ -34,7 +34,7 @@ class VariableUsage: private ASTConstVisitor
 {
 public:
 	/// @param _outerCallstack the current callstack in the callers context.
-	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<FunctionDefinition const*> const& _outerCallstack);
+	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<CallableDeclaration const*> const& _outerCallstack);
 
 private:
 	void endVisit(Identifier const& _node) override;
@@ -45,7 +45,8 @@ private:
 	void endVisit(PlaceholderStatement const& _node) override;
 
 	std::set<VariableDeclaration const*> m_touchedVariables;
-	std::vector<FunctionDefinition const*> m_functionPath;
+	std::vector<CallableDeclaration const*> m_callStack;
+	CallableDeclaration const* m_lastCall = nullptr;
 };
 
 }

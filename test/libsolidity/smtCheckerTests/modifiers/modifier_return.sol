@@ -18,4 +18,3 @@ contract C
 	}
 }
 // ----
-// Warning: (138-144): Condition is always false.
