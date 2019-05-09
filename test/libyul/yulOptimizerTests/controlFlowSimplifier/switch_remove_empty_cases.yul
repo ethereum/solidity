@@ -6,7 +6,7 @@
 	default { }
 }
 // ====
-// step: structuralSimplifier
+// step: controlFlowSimplifier
 // ----
 // {
 //     let y := 200

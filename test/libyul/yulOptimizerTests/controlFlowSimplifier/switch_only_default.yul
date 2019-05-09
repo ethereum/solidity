@@ -2,7 +2,7 @@
 	switch mload(0) default { mstore(1, 2) }
 }
 // ====
-// step: structuralSimplifier
+// step: controlFlowSimplifier
 // ----
 // {
 //     pop(mload(0))

@@ -231,10 +231,14 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
 	}
-	else if (m_optimizerStep == "structuralSimplifier")
+	else if (m_optimizerStep == "controlFlowSimplifier")
 	{
 		disambiguate();
 		ControlFlowSimplifier{}(*m_ast);
+	}
+	else if (m_optimizerStep == "structuralSimplifier")
+	{
+		disambiguate();
 		StructuralSimplifier{*m_dialect}(*m_ast);
 	}
 	else if (m_optimizerStep == "equivalentFunctionCombiner")
