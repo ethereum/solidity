@@ -216,11 +216,8 @@ private:
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
-	void resetVariable(VariableDeclaration const& _variable);
 	void resetStateVariables();
 	void resetStorageReferences();
-	void resetVariables(std::set<VariableDeclaration const*> const& _variables);
-	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
 
@@ -229,29 +226,14 @@ private:
 	/// using the branch condition as guard.
 	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
-	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
 
-	/// @returns true if _delc is a variable that is known at the current point, i.e.
-	/// has a valid index
-	bool knownVariable(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
 	smt::Expression currentValue(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given index. Does not ensure that this index exists.
 	smt::Expression valueAtIndex(VariableDeclaration const& _decl, int _index);
-	/// Allocates a new index for the declaration, updates the current
-	/// index to this value and returns the expression.
-	smt::Expression newValue(VariableDeclaration const& _decl);
-
-	/// Sets the value of the declaration to zero.
-	void setZeroValue(VariableDeclaration const& _decl);
-	void setZeroValue(smt::SymbolicVariable& _variable);
-	/// Resets the variable to an unknown value (in its range).
-	void setUnknownValue(VariableDeclaration const& decl);
-	void setUnknownValue(smt::SymbolicVariable& _variable);
-
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
 	/// Creates the expression (value can be arbitrary)
@@ -281,9 +263,6 @@ private:
 	/// Add to the solver: the given expression implied by the current path conditions
 	void addPathImpliedExpression(smt::Expression const& _e);
 
-	/// Removes local variables from the context.
-	void removeLocalVariables();
-
 	/// Copy the SSA indices of m_variables.
 	VariableIndices copyVariableIndices();
 	/// Resets the variable indices.
@@ -305,7 +284,6 @@ private:
 	/// An Expression may have multiple smt::Expression due to
 	/// repeated calls to the same function.
 	std::unordered_map<Expression const*, std::shared_ptr<smt::SymbolicVariable>> m_expressions;
-	std::unordered_map<VariableDeclaration const*, std::shared_ptr<smt::SymbolicVariable>> m_variables;
 	std::unordered_map<std::string, std::shared_ptr<smt::SymbolicVariable>> m_globalContext;
 
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
