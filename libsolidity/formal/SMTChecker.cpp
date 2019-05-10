@@ -688,7 +688,7 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 	{
 		auto const& memberAccess = dynamic_cast<MemberAccess const&>(_funCall.expression());
 		auto const& address = memberAccess.expression();
-		auto const& value = args.at(0);
+		auto const& value = args.front();
 		solAssert(value, "");
 
 		smt::Expression thisBalance = m_context.balance();
@@ -861,7 +861,7 @@ void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
 {
 	solAssert(_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
 	solAssert(_funCall.arguments().size() == 1, "");
-	auto argument = _funCall.arguments().at(0);
+	auto argument = _funCall.arguments().front();
 	unsigned argSize = argument->annotation().type->storageBytes();
 	unsigned castSize = _funCall.annotation().type->storageBytes();
 	if (argSize == castSize)

@@ -134,8 +134,8 @@ vector<string> SMTPortfolio::unhandledQueries()
 	// This code assumes that the constructor guarantees that
 	// SmtLib2Interface is in position 0.
 	solAssert(!m_solvers.empty(), "");
-	solAssert(dynamic_cast<smt::SMTLib2Interface*>(m_solvers.at(0).get()), "");
-	return m_solvers.at(0)->unhandledQueries();
+	solAssert(dynamic_cast<smt::SMTLib2Interface*>(m_solvers.front().get()), "");
+	return m_solvers.front()->unhandledQueries();
 }
 
 bool SMTPortfolio::solverAnswered(CheckResult result)
