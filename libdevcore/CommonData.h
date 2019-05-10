@@ -346,4 +346,27 @@ inline std::string findAnyOf(std::string const& _haystack, std::vector<std::stri
 			return needle;
 	return "";
 }
+
+
+namespace detail
+{
+template<typename T>
+void variadicEmplaceBack(std::vector<T>&) {}
+template<typename T, typename A, typename... Args>
+void variadicEmplaceBack(std::vector<T>& _vector, A&& _a, Args&&... _args)
+{
+	_vector.emplace_back(std::forward<A>(_a));
+	variadicEmplaceBack(_vector, std::forward<Args>(_args)...);
+}
+}
+
+template<typename T, typename... Args>
+std::vector<T> make_vector(Args&&... _args)
+{
+	std::vector<T> result;
+	result.reserve(sizeof...(_args));
+	detail::variadicEmplaceBack(result, std::forward<Args>(_args)...);
+	return result;
+}
+
 }
