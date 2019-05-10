@@ -33,6 +33,8 @@
 #include <string>
 #include <set>
 #include <functional>
+#include <tuple>
+#include <utility>
 
 /// Operators need to stay in the global namespace.
 
@@ -352,4 +354,64 @@ inline std::string findAnyOf(std::string const& _haystack, std::vector<std::stri
 			return needle;
 	return "";
 }
+
+
+namespace detail {
+template<typename T, typename... Args, std::size_t... I>
+std::enable_if_t<std::is_constructible<T, Args...>::value>
+emplaceFromTuple(
+	std::vector<T>& _vector,
+	std::tuple<Args...> _tuple,
+	std::index_sequence<I...>
+)
+{
+	_vector.emplace_back(std::forward<Args>(std::get<I>(_tuple))...);
+}
+template<typename T, typename... Args, std::size_t... I>
+std::enable_if_t<!std::is_constructible<T, Args...>::value>
+emplaceFromTuple(
+	std::vector<T>& _vector,
+	std::tuple<Args...> _tuple,
+	std::index_sequence<I...>
+)
+{
+	// try aggregate initialization as well
+	_vector.emplace_back(
+		T{std::forward<Args>(std::get<I>(_tuple))...}
+	);
+}
+template<typename T, typename A>
+void emplaceWithTupleForward(std::vector<T>& _vector, A&& _a)
+{
+	_vector.emplace_back(std::forward<A>(_a));
+}
+template<typename T, typename... TupleElems>
+void
+emplaceWithTupleForward(std::vector<T>& _vector, std::tuple<TupleElems...> _t)
+{
+	emplaceFromTuple(
+		_vector,
+		std::move(_t),
+		std::make_index_sequence<sizeof...(TupleElems)>()
+	);
+}
+template<typename T>
+void variadicEmplaceBack(std::vector<T>&) {}
+template<typename T, typename A, typename... Args>
+void variadicEmplaceBack(std::vector<T>& _vector, A&& _a, Args&&... _args)
+{
+	emplaceWithTupleForward(_vector, std::forward<A>(_a));
+	variadicEmplaceBack(_vector, std::forward<Args>(_args)...);
+}
+}
+
+template<typename T, typename... Args>
+std::vector<T> make_vector(Args&&... _args)
+{
+	std::vector<T> result;
+	result.reserve(sizeof...(_args));
+	detail::variadicEmplaceBack(result, std::forward<Args>(_args)...);
+	return result;
+}
+
 }
