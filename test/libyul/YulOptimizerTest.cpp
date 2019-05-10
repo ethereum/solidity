@@ -20,6 +20,7 @@
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
+#include <libyul/optimiser/BlockOutliner.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
@@ -115,6 +116,13 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		BlockFlattener{}(*m_ast);
+	}
+	else if (m_optimizerStep == "blockOutliner")
+	{
+		disambiguate();
+		(FunctionHoister{})(*m_ast);
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
+		BlockOutliner::run(*m_ast, nameDispenser);
 	}
 	else if (m_optimizerStep == "varDeclInitializer")
 		VarDeclInitializer{}(*m_ast);

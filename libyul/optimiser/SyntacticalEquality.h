@@ -39,6 +39,9 @@ namespace yul
 class SyntacticallyEqual
 {
 public:
+	SyntacticallyEqual() = default;
+	SyntacticallyEqual(std::vector<YulString> const& _lhsInit, std::vector<YulString> const& _rhsInit);
+
 	bool operator()(Expression const& _lhs, Expression const& _rhs);
 	bool operator()(Statement const& _lhs, Statement const& _rhs);
 

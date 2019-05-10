@@ -30,6 +30,20 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
+SyntacticallyEqual::SyntacticallyEqual(
+	vector<YulString> const& _lhsInit,
+	vector<YulString> const& _rhsInit
+)
+{
+	yulAssert(_lhsInit.size() == _rhsInit.size(), "");
+	for (size_t i = 0; i < _lhsInit.size(); ++i)
+	{
+		m_identifiersLHS[_lhsInit[i]] = i;
+		m_identifiersRHS[_rhsInit[i]] = i;
+	}
+	m_idsUsed = _lhsInit.size();
+}
+
 bool SyntacticallyEqual::operator()(Expression const& _lhs, Expression const& _rhs)
 {
 	return boost::apply_visitor([this](auto&& _lhsExpr, auto&& _rhsExpr) -> bool {

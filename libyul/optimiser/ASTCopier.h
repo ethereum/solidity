@@ -102,7 +102,7 @@ protected:
 		return _v ? std::make_unique<T>(translate(*_v)) : nullptr;
 	}
 
-	Block translate(Block const& _block);
+	virtual Block translate(Block const& _block);
 	Case translate(Case const& _case);
 	virtual Identifier translate(Identifier const& _identifier);
 	Literal translate(Literal const& _literal);
