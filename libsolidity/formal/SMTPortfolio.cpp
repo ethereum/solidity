@@ -32,42 +32,42 @@ using namespace dev::solidity::smt;
 
 SMTPortfolio::SMTPortfolio(map<h256, string> const& _smtlib2Responses)
 {
-	m_solvers.emplace_back(make_shared<smt::SMTLib2Interface>(_smtlib2Responses));
+	m_solvers.emplace_back(make_unique<smt::SMTLib2Interface>(_smtlib2Responses));
 #ifdef HAVE_Z3
-	m_solvers.emplace_back(make_shared<smt::Z3Interface>());
+	m_solvers.emplace_back(make_unique<smt::Z3Interface>());
 #endif
 #ifdef HAVE_CVC4
-	m_solvers.emplace_back(make_shared<smt::CVC4Interface>());
+	m_solvers.emplace_back(make_unique<smt::CVC4Interface>());
 #endif
 }
 
 void SMTPortfolio::reset()
 {
-	for (auto s : m_solvers)
+	for (auto const& s: m_solvers)
 		s->reset();
 }
 
 void SMTPortfolio::push()
 {
-	for (auto s : m_solvers)
+	for (auto const& s: m_solvers)
 		s->push();
 }
 
 void SMTPortfolio::pop()
 {
-	for (auto s : m_solvers)
+	for (auto const& s: m_solvers)
 		s->pop();
 }
 
 void SMTPortfolio::declareVariable(string const& _name, Sort const& _sort)
 {
-	for (auto s : m_solvers)
+	for (auto const& s: m_solvers)
 		s->declareVariable(_name, _sort);
 }
 
 void SMTPortfolio::addAssertion(Expression const& _expr)
 {
-	for (auto s : m_solvers)
+	for (auto const& s: m_solvers)
 		s->addAssertion(_expr);
 }
 
@@ -105,7 +105,7 @@ pair<CheckResult, vector<string>> SMTPortfolio::check(vector<Expression> const& 
 {
 	CheckResult lastResult = CheckResult::ERROR;
 	vector<string> finalValues;
-	for (auto s : m_solvers)
+	for (auto const& s: m_solvers)
 	{
 		CheckResult result;
 		vector<string> values;

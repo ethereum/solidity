@@ -34,7 +34,7 @@ using namespace langutil;
 using namespace dev::solidity;
 
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
-	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
+	m_interface(make_unique<smt::SMTPortfolio>(_smtlib2Responses)),
 	m_errorReporterReference(_errorReporter),
 	m_errorReporter(m_smtErrors),
 	m_context(*m_interface)
@@ -79,7 +79,7 @@ void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _
 bool SMTChecker::visit(ContractDefinition const& _contract)
 {
 	for (auto const& contract: _contract.annotation().linearizedBaseContracts)
-		for (auto var : contract->stateVariables())
+		for (auto var: contract->stateVariables())
 			if (*contract == _contract || var->isVisibleInDerivedContracts())
 				createVariable(*var);
 	return true;

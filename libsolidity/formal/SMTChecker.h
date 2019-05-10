@@ -293,7 +293,7 @@ private:
 	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
-	std::shared_ptr<smt::SolverInterface> m_interface;
+	std::unique_ptr<smt::SolverInterface> m_interface;
 	VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;

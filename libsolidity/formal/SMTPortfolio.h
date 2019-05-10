@@ -59,7 +59,7 @@ public:
 private:
 	static bool solverAnswered(CheckResult result);
 
-	std::vector<std::shared_ptr<smt::SolverInterface>> m_solvers;
+	std::vector<std::unique_ptr<smt::SolverInterface>> m_solvers;
 };
 
 }
