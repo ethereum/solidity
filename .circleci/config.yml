@@ -136,6 +136,24 @@ jobs:
           command: |
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
 
+  test_emscripten_external_colony:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install test dependencies
+          command: |
+            sudo apt-get -qy install lsof
+      - run:
+          name: External ColonyNetworks tests
+          command: |
+            test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
+
   build_x86_linux:
     docker:
       - image: buildpack-deps:bionic
@@ -473,14 +491,6 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
-      - test_emscripten_external_zeppelin:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external_gnosis:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
       - build_x86_linux: *build_on_tags
       - build_x86_linux_cxx17: *build_on_tags
       - build_x86_clang7_asan: *build_on_tags
@@ -523,8 +533,13 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
+      - test_emscripten_external_colony:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
       - build_x86_linux_ossfuzz: *build_on_tags
       - test_x86_ossfuzz_regression:
           <<: *build_on_tags
           requires:
             - build_x86_linux_ossfuzz
+

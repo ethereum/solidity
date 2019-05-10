@@ -218,7 +218,9 @@ function run_test
         clean
         force_solc_settings "$CONFIG" "$optimize" "petersburg"
         # Force ABIEncoderV2 in the last step. Has to be the last because code is modified.
-        [[ "$optimize" =~ yul ]] && force_abi_v2
+        if [ "$FORCE_ABIv2" = true ]; then
+            [[ "$optimize" =~ yul ]] && force_abi_v2
+        fi
 
         printLog "Running compile function..."
         $compile_fn
