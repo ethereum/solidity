@@ -1,5 +1,6 @@
 if (OSSFUZZ)
     add_subdirectory(ossfuzz)
+    add_subdirectory(gethVMRunner)
 endif()
 
 add_subdirectory(yulInterpreter)
