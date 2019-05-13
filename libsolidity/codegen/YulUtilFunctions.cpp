@@ -123,9 +123,6 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 			("functionName", functionName)
 			.render();
 
-
-		solUnimplemented("require() with two parameters is not yet implemented.");
-		// TODO The code below is completely untested as we don't support StringLiterals yet
 		int const hashHeaderSize = 4;
 		int const byteSize = 8;
 		u256 const errorHash =
@@ -140,20 +137,24 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 			);
 
 		return Whiskers(R"(
-			function <functionName>(condition, message) {
+			function <functionName>(condition <messageVars>) {
 				if iszero(condition) {
 					let fmp := mload(<freeMemPointer>)
 					mstore(fmp, <errorHash>)
-					let end := <abiEncodeFunc>(add(fmp, <hashHeaderSize>), message)
+					let end := <abiEncodeFunc>(add(fmp, <hashHeaderSize>) <messageVars>)
 					revert(fmp, sub(end, fmp))
 				}
 			}
 		)")
 		("functionName", functionName)
 		("freeMemPointer", to_string(CompilerUtils::freeMemoryPointer))
-		("errorHash", errorHash.str())
+		("errorHash", formatNumber(errorHash))
 		("abiEncodeFunc", encodeFunc)
 		("hashHeaderSize", to_string(hashHeaderSize))
+		("messageVars",
+			(_messageType->sizeOnStack() > 0 ? ", " : "") +
+			suffixedVariableNameList("message_", 1, 1 + _messageType->sizeOnStack())
+		)
 		.render();
 	});
 }
@@ -357,6 +358,22 @@ string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
 				)")
 				("functionName", functionName)
 				.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedUIntSubFunction()
+{
+	string functionName = "checked_sub_uint";
+	return m_functionCollector->createFunction(functionName, [&] {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> diff {
+				if lt(x, y) { revert(0, 0) }
+				diff := sub(x, y)
+			}
+			)")
+			("functionName", functionName)
+			.render();
 	});
 }
 

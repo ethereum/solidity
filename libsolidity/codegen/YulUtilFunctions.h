@@ -86,6 +86,10 @@ public:
 
 	std::string overflowCheckedUIntAddFunction(size_t _bits);
 
+	/// @returns computes the difference between two values.
+	/// Assumes the input to be in range for the type.
+	std::string overflowCheckedUIntSubFunction();
+
 	std::string arrayLengthFunction(ArrayType const& _type);
 	/// @returns the name of a function that computes the number of bytes required
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
