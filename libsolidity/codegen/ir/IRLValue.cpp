@@ -31,27 +31,25 @@ using namespace dev;
 using namespace dev::solidity;
 
 IRLocalVariable::IRLocalVariable(
-	ostream& _code,
 	IRGenerationContext& _context,
 	VariableDeclaration const& _varDecl
 ):
-	IRLValue(_code, _context, _varDecl.annotation().type),
+	IRLValue(_context, _varDecl.annotation().type),
 	m_variableName(_context.localVariableName(_varDecl))
 {
 }
 
-void IRLocalVariable::storeValue(string const& _value, Type const& _type) const
+string IRLocalVariable::storeValue(string const& _value, Type const& _type) const
 {
 	solAssert(_type == *m_type, "Storing different types - not necessarily a problem.");
-	m_code << m_variableName << " := " << _value << "\n";
+	return m_variableName + " := " + _value + "\n";
 }
 
 IRStorageItem::IRStorageItem(
-	ostream& _code,
 	IRGenerationContext& _context,
 	VariableDeclaration const& _varDecl
 ):
-	IRLValue(_code, _context, _varDecl.annotation().type)
+	IRLValue(_context, _varDecl.annotation().type)
 {
 	u256 slot;
 	unsigned offset;
@@ -61,13 +59,12 @@ IRStorageItem::IRStorageItem(
 }
 
 IRStorageItem::IRStorageItem(
-	ostream& _code,
 	IRGenerationContext& _context,
 	string _slot,
 	unsigned _offset,
 	Type const& _type
 ):
-	IRLValue(_code, _context, &_type),
+	IRLValue(_context, &_type),
 	m_slot(move(_slot)),
 	m_offset(_offset)
 {
@@ -81,7 +78,7 @@ string IRStorageItem::retrieveValue() const
 	return m_context.utils().readFromStorage(*m_type, m_offset, false) + "(" + m_slot + ")";
 }
 
-void IRStorageItem::storeValue(string const& _value, Type const& _sourceType) const
+string IRStorageItem::storeValue(string const& _value, Type const& _sourceType) const
 {
 	if (m_type->isValueType())
 	{
@@ -91,8 +88,7 @@ void IRStorageItem::storeValue(string const& _value, Type const& _sourceType) co
 
 		solAssert(_sourceType == *m_type, "Different type, but might not be an error.");
 
-		m_code <<
-			Whiskers("sstore(<slot>, <update>(sload(<slot>), <prepare>(<value>)))\n")
+		return Whiskers("sstore(<slot>, <update>(sload(<slot>), <prepare>(<value>)))\n")
 			("slot", m_slot)
 			("update", m_context.utils().updateByteSliceFunction(m_type->storageBytes(), m_offset))
 			("prepare", m_context.utils().prepareStoreFunction(*m_type))
