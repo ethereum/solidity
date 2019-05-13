@@ -32,7 +32,7 @@ struct Dialect;
 
 /**
  * Optimisation stage that removes unused variables and functions and also
- * removes movable expression statements.
+ * removes side-effect-free expression statements.
  *
  * Note that this does not remove circular references.
  *

@@ -75,7 +75,7 @@ void UnusedPruner::operator()(Block& _block)
 			{
 				if (!varDecl.value)
 					statement = Block{std::move(varDecl.location), {}};
-				else if (MovableChecker(m_dialect, *varDecl.value).movable())
+				else if (MovableChecker(m_dialect, *varDecl.value).sideEffectFree())
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.location), {}};
@@ -93,9 +93,8 @@ void UnusedPruner::operator()(Block& _block)
 		else if (statement.type() == typeid(ExpressionStatement))
 		{
 			ExpressionStatement& exprStmt = boost::get<ExpressionStatement>(statement);
-			if (MovableChecker(m_dialect, exprStmt.expression).movable())
+			if (MovableChecker(m_dialect, exprStmt.expression).sideEffectFree())
 			{
-				// pop(x) should be movable!
 				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));
 				statement = Block{std::move(exprStmt.location), {}};
 			}
