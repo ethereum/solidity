@@ -238,8 +238,6 @@ private:
 	smt::Expression expr(Expression const& _e);
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
-	/// Checks if expression was created
-	bool knownExpr(Expression const& _e) const;
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smt::Expression _value);
 
@@ -281,9 +279,7 @@ private:
 	bool m_externalFunctionCallHappened = false;
 	// True if the "No SMT solver available" warning was already created.
 	bool m_noSolverWarning = false;
-	/// An Expression may have multiple smt::Expression due to
-	/// repeated calls to the same function.
-	std::unordered_map<Expression const*, std::shared_ptr<smt::SymbolicVariable>> m_expressions;
+
 	std::unordered_map<std::string, std::shared_ptr<smt::SymbolicVariable>> m_globalContext;
 
 	/// Stores the instances of an Uninterpreted Function applied to arguments.

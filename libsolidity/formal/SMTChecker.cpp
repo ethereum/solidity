@@ -111,7 +111,6 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		m_pathConditions.clear();
 		m_callStack.clear();
 		pushCallStack({&_function, nullptr});
-		m_expressions.clear();
 		m_globalContext.clear();
 		m_uninterpretedTerms.clear();
 		m_overflowTargets.clear();
@@ -332,19 +331,18 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 	{
 		if (auto init = _varDecl.initialValue())
 		{
-			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[init]);
-			/// symbTuple == nullptr if it is the return of a non-inlined function call.
-			if (symbTuple)
-			{
-				auto const& components = symbTuple->components();
-				auto const& declarations = _varDecl.declarations();
+			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(*init));
+			solAssert(symbTuple, "");
+			auto const& components = symbTuple->components();
+			auto const& declarations = _varDecl.declarations();
+			if (components.size() == declarations.size())
 				for (unsigned i = 0; i < declarations.size(); ++i)
-				{
-					solAssert(components.at(i), "");
-					if (declarations.at(i) && m_context.knownVariable(*declarations.at(i)))
+					if (
+						components.at(i) &&
+						declarations.at(i) &&
+						m_context.knownVariable(*declarations.at(i))
+					)
 						assignment(*declarations.at(i), components.at(i)->currentValue(), declarations.at(i)->location());
-				}
-			}
 		}
 	}
 	else if (m_context.knownVariable(*_varDecl.declarations().front()))
@@ -390,7 +388,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		vector<smt::Expression> rightArguments;
 		if (_assignment.rightHandSide().annotation().type->category() == Type::Category::Tuple)
 		{
-			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[&_assignment.rightHandSide()]);
+			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.rightHandSide()));
 			solAssert(symbTuple, "");
 			for (auto const& component: symbTuple->components())
 			{
@@ -434,14 +432,14 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 					components.push_back(m_context.variable(*varDecl));
 				else
 				{
-					solAssert(knownExpr(*component), "");
-					components.push_back(m_expressions[component.get()]);
+					solAssert(m_context.knownExpression(*component), "");
+					components.push_back(m_context.expression(*component));
 				}
 			}
 			else
 				components.push_back(nullptr);
 		solAssert(components.size() == _tuple.components().size(), "");
-		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[&_tuple]);
+		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
 		solAssert(symbTuple, "");
 		symbTuple->setComponents(move(components));
 	}
@@ -575,8 +573,8 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 		}
 		else
 		{
-			solAssert(knownExpr(subExpr), "");
-			auto const& symbVar = m_expressions[&subExpr];
+			solAssert(m_context.knownExpression(subExpr), "");
+			auto const& symbVar = m_context.expression(subExpr);
 			symbVar->increaseIndex();
 			m_context.setZeroValue(*symbVar);
 			if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
@@ -791,7 +789,7 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 				solAssert(m_context.variable(*param), "");
 				components.push_back(m_context.variable(*param));
 			}
-			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[&_funCall]);
+			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
 			solAssert(symbTuple, "");
 			symbTuple->setComponents(move(components));
 		}
@@ -824,7 +822,7 @@ void SMTChecker::abstractFunctionCall(FunctionCall const& _funCall)
 	vector<smt::Expression> smtArguments;
 	for (auto const& arg: _funCall.arguments())
 		smtArguments.push_back(expr(*arg));
-	defineExpr(_funCall, (*m_expressions.at(&_funCall.expression()))(smtArguments));
+	defineExpr(_funCall, (*m_context.expression(_funCall.expression()))(smtArguments));
 	m_uninterpretedTerms.insert(&_funCall);
 	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, *m_interface);
 }
@@ -869,7 +867,7 @@ void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
 	else
 	{
 		createExpr(_funCall);
-		m_context.setUnknownValue(*m_expressions.at(&_funCall));
+		m_context.setUnknownValue(*m_context.expression(_funCall));
 		auto const& funCallCategory = _funCall.annotation().type->category();
 		// TODO: truncating and bytesX needs a different approach because of right padding.
 		if (funCallCategory == Type::Category::Integer || funCallCategory == Type::Category::Address)
@@ -878,7 +876,7 @@ void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
 				defineExpr(_funCall, expr(*argument));
 			else
 			{
-				auto const& intType = dynamic_cast<IntegerType const&>(*m_expressions.at(&_funCall)->type());
+				auto const& intType = dynamic_cast<IntegerType const&>(*m_context.expression(_funCall)->type());
 				defineExpr(_funCall, smt::Expression::ite(
 					expr(*argument) >= smt::minValue(intType) && expr(*argument) <= smt::maxValue(intType),
 					expr(*argument),
@@ -900,7 +898,7 @@ void SMTChecker::visitFunctionIdentifier(Identifier const& _identifier)
 	if (fType.returnParameterTypes().size() == 1)
 	{
 		defineGlobalFunction(fType.richIdentifier(), _identifier);
-		m_expressions.emplace(&_identifier, m_globalContext.at(fType.richIdentifier()));
+		m_context.createExpression(_identifier, m_globalContext.at(fType.richIdentifier()));
 	}
 }
 
@@ -920,7 +918,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type);
 			solAssert(stringLit, "");
 			auto result = smt::newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
-			m_expressions.emplace(&_literal, result.second);
+			m_context.createExpression(_literal, result.second);
 		}
 		m_errorReporter.warning(
 			_literal.location(),
@@ -933,7 +931,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 
 void SMTChecker::endVisit(Return const& _return)
 {
-	if (_return.expression() && knownExpr(*_return.expression()))
+	if (_return.expression() && m_context.knownExpression(*_return.expression()))
 	{
 		auto returnParams = m_callStack.back().first->returnParameters();
 		if (returnParams.size() > 1)
@@ -989,7 +987,7 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 		if (_memberAccess.memberName() == "balance")
 		{
 			defineExpr(_memberAccess, m_context.balance(expr(_memberAccess.expression())));
-			setSymbolicUnknownValue(*m_expressions[&_memberAccess], *m_interface);
+			setSymbolicUnknownValue(*m_context.expression(_memberAccess), *m_interface);
 			m_uninterpretedTerms.insert(&_memberAccess);
 			return false;
 		}
@@ -1015,8 +1013,8 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	}
 	else if (auto const& innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
-		solAssert(knownExpr(*innerAccess), "");
-		array = m_expressions[innerAccess];
+		solAssert(m_context.knownExpression(*innerAccess), "");
+		array = m_context.expression(*innerAccess);
 	}
 	else
 	{
@@ -1757,17 +1755,12 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 
 smt::Expression SMTChecker::expr(Expression const& _e)
 {
-	if (!knownExpr(_e))
+	if (!m_context.knownExpression(_e))
 	{
 		m_errorReporter.warning(_e.location(), "Internal error: Expression undefined for SMT solver." );
 		createExpr(_e);
 	}
-	return m_expressions.at(&_e)->currentValue();
-}
-
-bool SMTChecker::knownExpr(Expression const& _e) const
-{
-	return m_expressions.count(&_e);
+	return m_context.expression(_e)->currentValue();
 }
 
 bool SMTChecker::knownGlobalSymbol(string const& _var) const
@@ -1777,19 +1770,12 @@ bool SMTChecker::knownGlobalSymbol(string const& _var) const
 
 void SMTChecker::createExpr(Expression const& _e)
 {
-	solAssert(_e.annotation().type, "");
-	if (knownExpr(_e))
-		m_expressions.at(&_e)->increaseIndex();
-	else
-	{
-		auto result = smt::newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *m_interface);
-		m_expressions.emplace(&_e, result.second);
-		if (result.first)
-			m_errorReporter.warning(
-				_e.location(),
-				"Assertion checker does not yet implement this type."
-			);
-	}
+	bool abstract = m_context.createExpression(_e);
+	if (abstract)
+		m_errorReporter.warning(
+			_e.location(),
+			"Assertion checker does not yet implement this type."
+		);
 }
 
 void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)

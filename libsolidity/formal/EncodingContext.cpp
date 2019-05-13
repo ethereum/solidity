@@ -37,6 +37,7 @@ EncodingContext::EncodingContext(SolverInterface& _solver):
 void EncodingContext::reset()
 {
 	resetAllVariables();
+	m_expressions.clear();
 	m_thisAddress->increaseIndex();
 	m_balances->increaseIndex();
 }
@@ -116,6 +117,43 @@ void EncodingContext::setUnknownValue(SymbolicVariable& _variable)
 {
 	setSymbolicUnknownValue(_variable, m_solver);
 }
+
+/// Expressions
+
+shared_ptr<SymbolicVariable> EncodingContext::expression(solidity::Expression const& _e)
+{
+	if (!knownExpression(_e))
+		createExpression(_e);
+	return m_expressions.at(&_e);
+}
+
+bool EncodingContext::createExpression(solidity::Expression const& _e, shared_ptr<SymbolicVariable> _symbVar)
+{
+	solAssert(_e.annotation().type, "");
+	if (knownExpression(_e))
+	{
+		expression(_e)->increaseIndex();
+		return false;
+	}
+	else if (_symbVar)
+	{
+		m_expressions.emplace(&_e, _symbVar);
+		return false;
+	}
+	else
+	{
+		auto result = newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), m_solver);
+		m_expressions.emplace(&_e, result.second);
+		return result.first;
+	}
+}
+
+bool EncodingContext::knownExpression(solidity::Expression const& _e) const
+{
+	return m_expressions.count(&_e);
+}
+
+// Blockchain
 
 Expression EncodingContext::thisAddress()
 {
