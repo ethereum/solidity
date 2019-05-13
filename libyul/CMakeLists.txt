@@ -56,6 +56,8 @@ add_library(yul
 	optimiser/BlockDeepener.h
 	optimiser/BlockFlattener.cpp
 	optimiser/BlockFlattener.h
+	optimiser/BlockHasher.cpp
+	optimiser/BlockHasher.h
 	optimiser/BlockClassFinder.cpp
 	optimiser/BlockClassFinder.h
 	optimiser/BlockOutliner.cpp
