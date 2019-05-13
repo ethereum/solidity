@@ -24,6 +24,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+using namespace dev::solidity::smt;
 
 set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<CallableDeclaration const*> const& _outerCallstack)
 {

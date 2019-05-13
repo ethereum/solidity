@@ -23,6 +23,8 @@ namespace dev
 {
 namespace solidity
 {
+namespace smt
+{
 
 /**
  * This class represents the SSA representation of a program variable.
@@ -47,5 +49,6 @@ private:
 	std::unique_ptr<unsigned> m_nextFreeIndex;
 };
 
+}
 }
 }
