@@ -42,7 +42,7 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 	if (!m_objectAccess)
 		return;
 
-	addFunction("datasize", 1, 1, true, true, [this](
+	addFunction("datasize", 1, 1, true, true, true, [this](
 		FunctionCall const& _call,
 		AbstractAssembly& _assembly,
 		std::function<void()>
@@ -59,7 +59,7 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 			_assembly.appendDataSize(m_subIDs.at(dataName));
 		}
 	});
-	addFunction("dataoffset", 1, 1, true, true, [this](
+	addFunction("dataoffset", 1, 1, true, true, true, [this](
 		FunctionCall const& _call,
 		AbstractAssembly& _assembly,
 		std::function<void()>
@@ -76,7 +76,7 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 			_assembly.appendDataOffset(m_subIDs.at(dataName));
 		}
 	});
-	addFunction("datacopy", 3, 0, false, false, [](
+	addFunction("datacopy", 3, 0, false, false, false, [](
 		FunctionCall const&,
 		AbstractAssembly& _assembly,
 		std::function<void()> _visitArguments
@@ -132,6 +132,7 @@ void EVMDialect::addFunction(
 	size_t _params,
 	size_t _returns,
 	bool _movable,
+	bool _sideEffectFree,
 	bool _literalArguments,
 	std::function<void(FunctionCall const&, AbstractAssembly&, std::function<void()>)> _generateCode
 )
@@ -142,6 +143,7 @@ void EVMDialect::addFunction(
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
 	f.movable = _movable;
+	f.sideEffectFree = _sideEffectFree;
 	f.literalArguments = _literalArguments;
 	f.generateCode = std::move(_generateCode);
 }

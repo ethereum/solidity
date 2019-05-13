@@ -51,21 +51,30 @@ void MovableChecker::operator()(Identifier const& _identifier)
 
 void MovableChecker::operator()(FunctionalInstruction const& _instr)
 {
+	ASTWalker::operator()(_instr);
+
 	if (!eth::SemanticInformation::movable(_instr.instruction))
 		m_movable = false;
-	else
-		ASTWalker::operator()(_instr);
+	if (!eth::SemanticInformation::sideEffectFree(_instr.instruction))
+		m_sideEffectFree = false;
 }
 
 void MovableChecker::operator()(FunctionCall const& _functionCall)
 {
+	ASTWalker::operator()(_functionCall);
+
 	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
-		if (f->movable)
-		{
-			ASTWalker::operator()(_functionCall);
-			return;
-		}
-	m_movable = false;
+	{
+		if (!f->movable)
+			m_movable = false;
+		if (!f->sideEffectFree)
+			m_sideEffectFree = false;
+	}
+	else
+	{
+		m_movable = false;
+		m_sideEffectFree = false;
+	}
 }
 
 void MovableChecker::visit(Statement const&)

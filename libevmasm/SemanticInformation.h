@@ -56,6 +56,10 @@ struct SemanticInformation
 	/// without altering the semantics. This means it cannot depend on storage or memory,
 	/// cannot have any side-effects, but it can depend on a call-constant state of the blockchain.
 	static bool movable(Instruction _instruction);
+	/// @returns true if the instruction can be removed without changing the semantics.
+	/// This does not mean that it has to be deterministic or retrieve information from
+	/// somewhere else than purely the values of its arguments.
+	static bool sideEffectFree(Instruction _instruction);
 	/// @returns true if the given instruction modifies memory.
 	static bool invalidatesMemory(Instruction _instruction);
 	/// @returns true if the given instruction modifies storage (even indirectly).
