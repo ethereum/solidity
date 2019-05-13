@@ -41,7 +41,7 @@ namespace yul
  * Because variables declared in a for loop's init block have their scope extended to the loop body,
  * we require ForLoopInitRewriter to run before this step.
  *
- * Prerequisite: ForLoopInitRewriter
+ * Prerequisite: ForLoopInitRewriter, Function Hoister, Function Grouper
  */
 class DeadCodeEliminator: public ASTModifier
 {

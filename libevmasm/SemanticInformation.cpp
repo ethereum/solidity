@@ -136,7 +136,13 @@ bool SemanticInformation::terminatesControlFlow(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	switch (_item.instruction())
+	else
+		return terminatesControlFlow(_item.instruction());
+}
+
+bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
+{
+	switch (_instruction)
 	{
 	case Instruction::RETURN:
 	case Instruction::SELFDESTRUCT:
