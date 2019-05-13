@@ -19,15 +19,7 @@
 // {
 //     let a := mload(0)
 //     switch mload(1)
-//     case 0 {
-//         pop(mload(1))
-//         pop(mload(2))
-//         a := mload(3)
-//     }
-//     default {
-//         pop(mload(4))
-//         pop(mload(5))
-//         a := mload(6)
-//     }
+//     case 0 { a := mload(3) }
+//     default { a := mload(6) }
 //     mstore(a, 0)
 // }
