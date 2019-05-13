@@ -17,35 +17,38 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/DataFlowAnalyzer.h>
-#include <libdevcore/Common.h>
 
 namespace yul
 {
 
 /**
- * Structural simplifier. Performs the following simplification steps:
- * - replace if with true condition with its body
- * - remove if with false condition
+ * Simplifies several control-flow structures:
+ * - replace if with empty body with pop(condition)
+ * - remove empty default switch case
+ * - remove empty switch case if no default case exists
+ * - replace switch with no cases with pop(expression)
+ * - turn switch with single case into if
+ * - replace switch with only default case with pop(expression) and body
  * - replace switch with const expr with matching case body
- * - replace for with false condition by its initialization part
+ * - replace ``for`` with terminating control flow and without other break/continue by ``if``
+ *
+ * None of these operations depend on the data flow. The StructuralSimplifier
+ * performs similar tasks that do depend on data flow.
+ *
+ * The ControlFlowSimplifier does record the presence or absence of ``break``
+ * and ``continue`` statements during its traversal.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  *
- * Important: Can only be used on EVM code.
+ * Important: Introduces EVM opcodes and thus can only be used on EVM code for now.
  */
-class StructuralSimplifier: public DataFlowAnalyzer
+class ControlFlowSimplifier: public ASTModifier
 {
 public:
-	explicit StructuralSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
-
-	using DataFlowAnalyzer::operator();
+	using ASTModifier::operator();
 	void operator()(Block& _block) override;
 private:
 	void simplify(std::vector<Statement>& _statements);
-	bool expressionAlwaysTrue(Expression const& _expression);
-	bool expressionAlwaysFalse(Expression const& _expression);
-	boost::optional<dev::u256> hasLiteralValue(Expression const& _expression) const;
 };
 
 }

@@ -22,6 +22,7 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -229,6 +230,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
+	}
+	else if (m_optimizerStep == "controlFlowSimplifier")
+	{
+		disambiguate();
+		ControlFlowSimplifier{}(*m_ast);
 	}
 	else if (m_optimizerStep == "structuralSimplifier")
 	{

@@ -32,6 +32,7 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
+#include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/optimiser/ExpressionSplitter.h>
@@ -130,7 +131,7 @@ public:
 			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
 			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/? " << endl;
-			cout << "  stack com(p)ressor/(D)ead code eliminator/? " << endl;
+			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/? " << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -176,6 +177,9 @@ public:
 				break;
 			case 't':
 				(StructuralSimplifier{*m_dialect})(*m_ast);
+				break;
+			case 'n':
+				(ControlFlowSimplifier{})(*m_ast);
 				break;
 			case 'u':
 				UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);

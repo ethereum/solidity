@@ -1,6 +1,6 @@
 { let a := mload(0) if a {} }
 // ====
-// step: structuralSimplifier
+// step: controlFlowSimplifier
 // ----
 // {
 //     let a := mload(0)
