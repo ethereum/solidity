@@ -261,35 +261,25 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 	// Note that if this is extended with signed shifts,
 	// the opcodes SAR and SDIV behave differently with regards to rounding!
 
-	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned";
-	if (m_evmVersion.hasBitwiseShifting())
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := shr(<numBits>, value)
-				}
-				)")
-				("functionName", functionName)
-				("numBits", to_string(_numBits))
-				.render();
-		});
-	}
-	else
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := div(value, <multiplier>)
-				}
-				)")
-				("functionName", functionName)
-				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-				.render();
-		});
-	}
+	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned_" + m_evmVersion.name();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shr(<numBits>, value)
+				<!hasShifts>
+					div(value, <multiplier>)
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			("numBits", to_string(_numBits))
+			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+			.render();
+	});
 }
 
 string YulUtilFunctions::updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes)
@@ -336,28 +326,23 @@ string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
 	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
 	string functionName = "checked_add_uint_" + to_string(_bits);
 	return m_functionCollector->createFunction(functionName, [&]() {
-		if (_bits < 256)
-			return
-				Whiskers(R"(
-				function <functionName>(x, y) -> sum {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> sum {
+				<?shortType>
 					let mask := <mask>
 					sum := add(and(x, mask), and(y, mask))
 					if and(sum, not(mask)) { revert(0, 0) }
-				}
-				)")
-				("functionName", functionName)
-				("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
-				.render();
-		else
-			return
-				Whiskers(R"(
-				function <functionName>(x, y) -> sum {
+				<!shortType>
 					sum := add(x, y)
 					if lt(sum, x) { revert(0, 0) }
-				}
-				)")
-				("functionName", functionName)
-				.render();
+				</shortType>
+			}
+			)")
+			("shortType", _bits < 256)
+			("functionName", functionName)
+			("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
+			.render();
 	});
 }
 
@@ -383,43 +368,38 @@ string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 	return m_functionCollector->createFunction(functionName, [&]() {
 		Whiskers w(R"(
 			function <functionName>(value) -> length {
-				<body>
+				<?dynamic>
+					<?memory>
+						length := mload(value)
+					</memory>
+					<?storage>
+						length := sload(value)
+						<?byteArray>
+							// Retrieve length both for in-place strings and off-place strings:
+							// Computes (x & (0x100 * (ISZERO (x & 1)) - 1)) / 2
+							// i.e. for short strings (x & 1 == 0) it does (x & 0xff) / 2 and for long strings it
+							// computes (x & (-1)) / 2, which is equivalent to just x / 2.
+							let mask := sub(mul(0x100, iszero(and(length, 1))), 1)
+							length := div(and(length, mask), 2)
+						</byteArray>
+					</storage>
+				<!dynamic>
+					length := <length>
+				</dynamic>
 			}
 		)");
 		w("functionName", functionName);
-		string body;
+		w("dynamic", _type.isDynamicallySized());
 		if (!_type.isDynamicallySized())
-			body = "length := " + toCompactHexWithPrefix(_type.length());
-		else
-		{
-			switch (_type.location())
-			{
-			case DataLocation::CallData:
-				solAssert(false, "called regular array length function on calldata array");
-				break;
-			case DataLocation::Memory:
-				body = "length := mload(value)";
-				break;
-			case DataLocation::Storage:
-				if (_type.isByteArray())
-				{
-					// Retrieve length both for in-place strings and off-place strings:
-					// Computes (x & (0x100 * (ISZERO (x & 1)) - 1)) / 2
-					// i.e. for short strings (x & 1 == 0) it does (x & 0xff) / 2 and for long strings it
-					// computes (x & (-1)) / 2, which is equivalent to just x / 2.
-					body = R"(
-						length := sload(value)
-						let mask := sub(mul(0x100, iszero(and(length, 1))), 1)
-						length := div(and(length, mask), 2)
-					)";
-				}
-				else
-					body = "length := sload(value)";
-				break;
-			}
-		}
-		solAssert(!body.empty(), "");
-		w("body", body);
+			w("length", toCompactHexWithPrefix(_type.length()));
+		w("memory", _type.location() == DataLocation::Memory);
+		w("storage", _type.location() == DataLocation::Storage);
+		w("byteArray", _type.isByteArray());
+		if (_type.isDynamicallySized())
+			solAssert(
+				_type.location() != DataLocation::CallData,
+				"called regular array length function on calldata array"
+			);
 		return w.render();
 	});
 }
@@ -433,20 +413,21 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 			function <functionName>(length) -> size {
 				// Make sure we can allocate memory without overflow
 				if gt(length, 0xffffffffffffffff) { revert(0, 0) }
-				size := <allocationSize>
-				<addLengthSlot>
+				<?byteArray>
+					// round up
+					size := and(add(length, 0x1f), not(0x1f))
+				<!byteArray>
+					size := mul(length, 0x20)
+				</byteArray>
+				<?dynamic>
+					// add length slot
+					size := add(size, 0x20)
+				</dynamic>
 			}
 		)");
 		w("functionName", functionName);
-		if (_type.isByteArray())
-			// Round up
-			w("allocationSize", "and(add(length, 0x1f), not(0x1f))");
-		else
-			w("allocationSize", "mul(length, 0x20)");
-		if (_type.isDynamicallySized())
-			w("addLengthSlot", "size := add(size, 0x20)");
-		else
-			w("addLengthSlot", "");
+		w("byteArray", _type.isByteArray());
+		w("dynamic", _type.isDynamicallySized());
 		return w.render();
 	});
 }
@@ -455,64 +436,30 @@ string YulUtilFunctions::arrayDataAreaFunction(ArrayType const& _type)
 {
 	string functionName = "array_dataslot_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
-		switch (_type.location())
-		{
-			case DataLocation::Memory:
-				if (_type.isDynamicallySized())
-					return Whiskers(R"(
-						function <functionName>(memPtr) -> dataPtr {
-							dataPtr := add(memPtr, 0x20)
-						}
-					)")
-					("functionName", functionName)
-					.render();
-				else
-					return Whiskers(R"(
-						function <functionName>(memPtr) -> dataPtr {
-							dataPtr := memPtr
-						}
-					)")
-					("functionName", functionName)
-					.render();
-			case DataLocation::Storage:
-				if (_type.isDynamicallySized())
-				{
-					Whiskers w(R"(
-						function <functionName>(slot) -> dataSlot {
-							mstore(0, slot)
-							dataSlot := keccak256(0, 0x20)
-						}
-					)");
-					w("functionName", functionName);
-					return w.render();
-				}
-				else
-				{
-					Whiskers w(R"(
-						function <functionName>(slot) -> dataSlot {
-							dataSlot := slot
-						}
-					)");
-					w("functionName", functionName);
-					return w.render();
-				}
-			case DataLocation::CallData:
-			{
-				// Calldata arrays are stored as offset of the data area and length
-				// on the stack, so the offset already points to the data area.
-				// This might change, if calldata arrays are stored in a single
-				// stack slot at some point.
-				Whiskers w(R"(
-					function <functionName>(slot) -> dataSlot {
-						dataSlot := slot
-					}
-				)");
-				w("functionName", functionName);
-				return w.render();
+		// No special processing for calldata arrays, because they are stored as
+		// offset of the data area and length on the stack, so the offset already
+		// points to the data area.
+		// This might change, if calldata arrays are stored in a single
+		// stack slot at some point.
+		return Whiskers(R"(
+			function <functionName>(ptr) -> data {
+				data := ptr
+				<?dynamic>
+					<?memory>
+						data := add(ptr, 0x20)
+					</memory>
+					<?storage>
+						mstore(0, ptr)
+						data := keccak256(0, 0x20)
+					</storage>
+				</dynamic>
 			}
-			default:
-				solAssert(false, "");
-		}
+		)")
+		("functionName", functionName)
+		("dynamic", _type.isDynamicallySized())
+		("memory", _type.location() == DataLocation::Memory)
+		("storage", _type.location() == DataLocation::Storage)
+		.render();
 	});
 }
 
@@ -523,36 +470,25 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 		solAssert(_type.baseType()->storageBytes() > 16, "");
 	string functionName = "array_nextElement_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
-		switch (_type.location())
-		{
-			case DataLocation::Memory:
-				return Whiskers(R"(
-					function <functionName>(memPtr) -> nextPtr {
-						nextPtr := add(memPtr, 0x20)
-					}
-				)")
-				("functionName", functionName)
-				.render();
-			case DataLocation::Storage:
-				return Whiskers(R"(
-					function <functionName>(slot) -> nextSlot {
-						nextSlot := add(slot, 1)
-					}
-				)")
-				("functionName", functionName)
-				.render();
-			case DataLocation::CallData:
-				return Whiskers(R"(
-					function <functionName>(calldataPtr) -> nextPtr {
-						nextPtr := add(calldataPtr, <stride>)
-					}
-				)")
-				("stride", toCompactHexWithPrefix(_type.baseType()->isDynamicallyEncoded() ? 32 : _type.baseType()->calldataEncodedSize()))
-				("functionName", functionName)
-				.render();
-			default:
-				solAssert(false, "");
-		}
+		Whiskers templ(R"(
+			function <functionName>(ptr) -> next {
+				next := add(ptr, <advance>)
+			}
+		)");
+		templ("functionName", functionName);
+		if (_type.location() == DataLocation::Memory)
+			templ("advance", "0x20");
+		else if (_type.location() == DataLocation::Storage)
+			templ("advance", "1");
+		else if (_type.location() == DataLocation::CallData)
+			templ("advance", toCompactHexWithPrefix(
+				_type.baseType()->isDynamicallyEncoded() ?
+				32 :
+				_type.baseType()->calldataEncodedSize()
+			));
+		else
+			solAssert(false, "");
+		return templ.render();
 	});
 }
 
@@ -654,7 +590,7 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 	return m_functionCollector->createFunction(functionName, [&] {
 		Whiskers templ(R"(
 			function <functionName>(value) -> cleaned {
-				<body>
+				cleaned := <cleaned>
 			}
 		)");
 		templ("functionName", functionName);
@@ -663,16 +599,16 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
 			if (type->isSigned() && storageBytes != 32)
 			{
-				templ("body", "cleaned := signextend(" + to_string(storageBytes - 1) + ", value)");
+				templ("cleaned", "signextend(" + to_string(storageBytes - 1) + ", value)");
 				return templ.render();
 			}
 
 		if (storageBytes == 32)
-			templ("body", "cleaned := value");
+			templ("cleaned", "value");
 		else if (_type.leftAligned())
-			templ("body", "cleaned := " + shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
+			templ("cleaned", shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
 		else
-			templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
+			templ("cleaned", "and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
 
 		return templ.render();
 	});
