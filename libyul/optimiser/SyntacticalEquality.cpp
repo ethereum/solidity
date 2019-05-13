@@ -129,11 +129,8 @@ bool SyntacticallyEqual::statementEqual(If const& _lhs, If const& _rhs)
 
 bool SyntacticallyEqual::statementEqual(Switch const& _lhs, Switch const& _rhs)
 {
-	static auto const sortCasesByValue = [](Case const* _lhsCase, Case const* _rhsCase) -> bool {
-		return Less<Literal*>{}(_lhsCase->value.get(), _rhsCase->value.get());
-	};
-	std::set<Case const*, decltype(sortCasesByValue)> lhsCases(sortCasesByValue);
-	std::set<Case const*, decltype(sortCasesByValue)> rhsCases(sortCasesByValue);
+	std::set<Case const*, SwitchCaseCompareByLiteralValue> lhsCases;
+	std::set<Case const*, SwitchCaseCompareByLiteralValue> rhsCases;
 	for (auto const& lhsCase: _lhs.cases)
 		lhsCases.insert(&lhsCase);
 	for (auto const& rhsCase: _rhs.cases)
