@@ -52,6 +52,8 @@ add_library(yul
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
 	optimiser/ASTWalker.h
+	optimiser/BlockDeepener.cpp
+	optimiser/BlockDeepener.h
 	optimiser/BlockFlattener.cpp
 	optimiser/BlockFlattener.h
 	optimiser/BlockClassFinder.cpp

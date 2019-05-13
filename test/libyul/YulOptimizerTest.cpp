@@ -19,6 +19,7 @@
 
 #include <test/Options.h>
 
+#include <libyul/optimiser/BlockDeepener.h>
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/BlockOutliner.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
@@ -112,6 +113,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
+	else if (m_optimizerStep == "blockDeepener")
+	{
+		disambiguate();
+		BlockDeepener{}(*m_ast);
+	}
 	else if (m_optimizerStep == "blockFlattener")
 	{
 		disambiguate();
