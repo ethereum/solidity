@@ -55,9 +55,11 @@ public:
 	/// the constructor.
 	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
 
-	/// @return the FunctionDefinition of a called function if possible and should inline,
+	/// @returns the FunctionDefinition of a called function if possible and should inline,
 	/// otherwise nullptr.
 	static FunctionDefinition const* inlinedFunctionCallToDefinition(FunctionCall const& _funCall);
+	/// @returns the leftmost identifier in a multi-d IndexAccess.
+	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,

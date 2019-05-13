@@ -25,17 +25,32 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<CallableDeclaration const*> const& _outerCallstack)
+{
+	m_touchedVariables.clear();
+	m_callStack.clear();
+	m_callStack += _outerCallstack;
+	m_lastCall = m_callStack.back();
+	_node.accept(*this);
+	return m_touchedVariables;
+}
+
 void VariableUsage::endVisit(Identifier const& _identifier)
 {
-	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
-	solAssert(declaration, "");
-	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-		if (_identifier.annotation().lValueRequested)
-		{
-			solAssert(m_lastCall, "");
-			if (!varDecl->isLocalVariable() || varDecl->functionOrModifierDefinition() == m_lastCall)
-				m_touchedVariables.insert(varDecl);
-		}
+	if (_identifier.annotation().lValueRequested)
+		checkIdentifier(_identifier);
+}
+
+void VariableUsage::endVisit(IndexAccess const& _indexAccess)
+{
+	if (_indexAccess.annotation().lValueRequested)
+	{
+		/// identifier.annotation().lValueRequested == false, that's why we
+		/// need to check that before.
+		auto identifier = dynamic_cast<Identifier const*>(SMTChecker::leftmostBase(_indexAccess));
+		if (identifier)
+			checkIdentifier(*identifier);
+	}
 }
 
 void VariableUsage::endVisit(FunctionCall const& _funCall)
@@ -75,12 +90,14 @@ void VariableUsage::endVisit(PlaceholderStatement const&)
 		funDef->body().accept(*this);
 }
 
-set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<CallableDeclaration const*> const& _outerCallstack)
+void VariableUsage::checkIdentifier(Identifier const& _identifier)
 {
-	m_touchedVariables.clear();
-	m_callStack.clear();
-	m_callStack += _outerCallstack;
-	m_lastCall = m_callStack.back();
-	_node.accept(*this);
-	return m_touchedVariables;
+	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
+	solAssert(declaration, "");
+	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
+	{
+		solAssert(m_lastCall, "");
+		if (!varDecl->isLocalVariable() || varDecl->functionOrModifierDefinition() == m_lastCall)
+			m_touchedVariables.insert(varDecl);
+	}
 }
