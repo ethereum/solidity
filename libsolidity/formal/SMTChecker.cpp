@@ -87,7 +87,7 @@ bool SMTChecker::visit(ContractDefinition const& _contract)
 
 void SMTChecker::endVisit(ContractDefinition const&)
 {
-	m_variables.clear();
+	m_context.resetAllVariables();
 }
 
 void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
@@ -247,7 +247,7 @@ bool SMTChecker::visit(WhileStatement const& _node)
 {
 	auto indicesBeforeLoop = copyVariableIndices();
 	auto touchedVars = touchedVariables(_node);
-	resetVariables(touchedVars);
+	m_context.resetVariables(touchedVars);
 	decltype(indicesBeforeLoop) indicesAfterLoop;
 	if (_node.isDoWhile())
 	{
@@ -295,7 +295,7 @@ bool SMTChecker::visit(ForStatement const& _node)
 	if (_node.loopExpression())
 		touchedVars += touchedVariables(*_node.loopExpression());
 
-	resetVariables(touchedVars);
+	m_context.resetVariables(touchedVars);
 
 	if (_node.condition())
 	{
@@ -341,13 +341,13 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 				for (unsigned i = 0; i < declarations.size(); ++i)
 				{
 					solAssert(components.at(i), "");
-					if (declarations.at(i) && knownVariable(*declarations.at(i)))
+					if (declarations.at(i) && m_context.knownVariable(*declarations.at(i)))
 						assignment(*declarations.at(i), components.at(i)->currentValue(), declarations.at(i)->location());
 				}
 			}
 		}
 	}
-	else if (knownVariable(*_varDecl.declarations().front()))
+	else if (m_context.knownVariable(*_varDecl.declarations().front()))
 	{
 		if (_varDecl.initialValue())
 			assignment(*_varDecl.declarations().front(), *_varDecl.initialValue(), _varDecl.location());
@@ -383,7 +383,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 		);
 		// Give it a new index anyway to keep the SSA scheme sound.
 		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
-			newValue(*varDecl);
+			m_context.newValue(*varDecl);
 	}
 	else
 	{
@@ -431,7 +431,7 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 			if (component)
 			{
 				if (auto varDecl = identifierToVariable(*component))
-					components.push_back(m_variables[varDecl]);
+					components.push_back(m_context.variable(*varDecl));
 				else
 				{
 					solAssert(knownExpr(*component), "");
@@ -570,15 +570,15 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 		auto const& subExpr = _op.subExpression();
 		if (auto decl = identifierToVariable(subExpr))
 		{
-			newValue(*decl);
-			setZeroValue(*decl);
+			m_context.newValue(*decl);
+			m_context.setZeroValue(*decl);
 		}
 		else
 		{
 			solAssert(knownExpr(subExpr), "");
 			auto const& symbVar = m_expressions[&subExpr];
 			symbVar->increaseIndex();
-			setZeroValue(*symbVar);
+			m_context.setZeroValue(*symbVar);
 			if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
 				arrayIndexAssignment(_op.subExpression(), symbVar->currentValue());
 			else
@@ -735,7 +735,7 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 	auto const& symbolicVar = m_globalContext.at(gasLeft);
 	unsigned index = symbolicVar->index();
 	// We set the current value to unknown anyway to add type constraints.
-	setUnknownValue(*symbolicVar);
+	m_context.setUnknownValue(*symbolicVar);
 	if (index > 0)
 		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
 }
@@ -788,8 +788,8 @@ void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
 			vector<shared_ptr<smt::SymbolicVariable>> components;
 			for (auto param: returnParams)
 			{
-				solAssert(m_variables[param.get()], "");
-				components.push_back(m_variables[param.get()]);
+				solAssert(m_context.variable(*param), "");
+				components.push_back(m_context.variable(*param));
 			}
 			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_expressions[&_funCall]);
 			solAssert(symbTuple, "");
@@ -869,7 +869,7 @@ void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
 	else
 	{
 		createExpr(_funCall);
-		setUnknownValue(*m_expressions.at(&_funCall));
+		m_context.setUnknownValue(*m_expressions.at(&_funCall));
 		auto const& funCallCategory = _funCall.annotation().type->category();
 		// TODO: truncating and bytesX needs a different approach because of right padding.
 		if (funCallCategory == Type::Category::Integer || funCallCategory == Type::Category::Address)
@@ -944,10 +944,10 @@ void SMTChecker::endVisit(Return const& _return)
 			solAssert(components.size() == returnParams.size(), "");
 			for (unsigned i = 0; i < returnParams.size(); ++i)
 				if (components.at(i))
-					m_interface->addAssertion(expr(*components.at(i)) == newValue(*returnParams.at(i)));
+					m_interface->addAssertion(expr(*components.at(i)) == m_context.newValue(*returnParams.at(i)));
 		}
 		else if (returnParams.size() == 1)
-			m_interface->addAssertion(expr(*_return.expression()) == newValue(*returnParams.front()));
+			m_interface->addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
 	}
 }
 
@@ -1011,7 +1011,7 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	{
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
-		array = m_variables[varDecl];
+		array = m_context.variable(*varDecl);
 	}
 	else if (auto const& innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
@@ -1055,7 +1055,7 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		solAssert(varDecl, "");
 
 		if (varDecl->hasReferenceOrMappingType())
-			resetVariables([&](VariableDeclaration const& _var) {
+			m_context.resetVariables([&](VariableDeclaration const& _var) {
 				if (_var == *varDecl)
 					return false;
 				TypePointer prefix = _var.type();
@@ -1084,15 +1084,15 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 			});
 
 		smt::Expression store = smt::Expression::store(
-			m_variables[varDecl]->currentValue(),
+			m_context.variable(*varDecl)->currentValue(),
 			expr(*indexAccess.indexExpression()),
 			_rightHandSide
 		);
-		m_interface->addAssertion(newValue(*varDecl) == store);
+		m_interface->addAssertion(m_context.newValue(*varDecl) == store);
 		// Update the SMT select value after the assignment,
 		// necessary for sound models.
 		defineExpr(indexAccess, smt::Expression::select(
-			m_variables[varDecl]->currentValue(),
+			m_context.variable(*varDecl)->currentValue(),
 			expr(*indexAccess.indexExpression())
 		));
 	}
@@ -1102,7 +1102,7 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		if (identifier)
 		{
 			auto varDecl = identifierToVariable(*identifier);
-			newValue(*varDecl);
+			m_context.newValue(*varDecl);
 		}
 
 		m_errorReporter.warning(
@@ -1123,7 +1123,7 @@ void SMTChecker::defineGlobalVariable(string const& _name, Expression const& _ex
 	{
 		auto result = smt::newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
 		m_globalContext.emplace(_name, result.second);
-		setUnknownValue(*result.second);
+		m_context.setUnknownValue(*result.second);
 		if (result.first)
 			m_errorReporter.warning(
 				_expr.location(),
@@ -1414,7 +1414,7 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 		addOverflowTarget(OverflowTarget::Type::All, TypeProvider::uint(160), _value, _location);
 	else if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
-	m_interface->addAssertion(newValue(_variable) == _value);
+	m_interface->addAssertion(m_context.newValue(_variable) == _value);
 }
 
 SMTChecker::VariableIndices SMTChecker::visitBranch(ASTNode const* _statement, smt::Expression _condition)
@@ -1456,7 +1456,7 @@ void SMTChecker::checkCondition(
 			expressionsToEvaluate.emplace_back(*_additionalValue);
 			expressionNames.push_back(_additionalValueName);
 		}
-		for (auto const& var: m_variables)
+		for (auto const& var: m_context.variables())
 		{
 			if (var.first->type()->isValueType())
 			{
@@ -1653,7 +1653,7 @@ void SMTChecker::initializeFunctionCallParameters(CallableDeclaration const& _fu
 	for (unsigned i = 0; i < funParams.size(); ++i)
 		if (createVariable(*funParams[i]))
 		{
-			m_interface->addAssertion(_callArgs[i] == newValue(*funParams[i]));
+			m_interface->addAssertion(_callArgs[i] == m_context.newValue(*funParams[i]));
 			if (funParams[i]->annotation().type->category() == Type::Category::Mapping)
 				m_arrayAssignmentHappened = true;
 		}
@@ -1661,16 +1661,16 @@ void SMTChecker::initializeFunctionCallParameters(CallableDeclaration const& _fu
 	for (auto const& variable: _function.localVariables())
 		if (createVariable(*variable))
 		{
-			newValue(*variable);
-			setZeroValue(*variable);
+			m_context.newValue(*variable);
+			m_context.setZeroValue(*variable);
 		}
 
 	if (_function.returnParameterList())
 		for (auto const& retParam: _function.returnParameters())
 			if (createVariable(*retParam))
 			{
-				newValue(*retParam);
-				setZeroValue(*retParam);
+				m_context.newValue(*retParam);
+				m_context.setZeroValue(*retParam);
 			}
 }
 
@@ -1678,58 +1678,26 @@ void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)
 {
 	for (auto const& variable: _function.localVariables())
 		if (createVariable(*variable))
-			setZeroValue(*variable);
+			m_context.setZeroValue(*variable);
 
 	for (auto const& param: _function.parameters())
 		if (createVariable(*param))
-			setUnknownValue(*param);
+			m_context.setUnknownValue(*param);
 
 	if (_function.returnParameterList())
 		for (auto const& retParam: _function.returnParameters())
 			if (createVariable(*retParam))
-				setZeroValue(*retParam);
-}
-
-void SMTChecker::removeLocalVariables()
-{
-	for (auto it = m_variables.begin(); it != m_variables.end(); )
-	{
-		if (it->first->isLocalVariable())
-			it = m_variables.erase(it);
-		else
-			++it;
-	}
-}
-
-void SMTChecker::resetVariable(VariableDeclaration const& _variable)
-{
-	newValue(_variable);
-	setUnknownValue(_variable);
+				m_context.setZeroValue(*retParam);
 }
 
 void SMTChecker::resetStateVariables()
 {
-	resetVariables([&](VariableDeclaration const& _variable) { return _variable.isStateVariable(); });
+	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.isStateVariable(); });
 }
 
 void SMTChecker::resetStorageReferences()
 {
-	resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
-}
-
-void SMTChecker::resetVariables(set<VariableDeclaration const*> const& _variables)
-{
-	for (auto const* decl: _variables)
-		resetVariable(*decl);
-}
-
-void SMTChecker::resetVariables(function<bool(VariableDeclaration const&)> const& _filter)
-{
-	for_each(begin(m_variables), end(m_variables), [&](auto _variable)
-	{
-		if (_filter(*_variable.first))
-			this->resetVariable(*_variable.first);
-	});
+	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
 }
 
 TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
@@ -1751,7 +1719,7 @@ void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variable
 		int trueIndex = _indicesEndTrue.at(decl);
 		int falseIndex = _indicesEndFalse.at(decl);
 		solAssert(trueIndex != falseIndex, "");
-		m_interface->addAssertion(newValue(*decl) == smt::Expression::ite(
+		m_interface->addAssertion(m_context.newValue(*decl) == smt::Expression::ite(
 			_condition,
 			valueAtIndex(*decl, trueIndex),
 			valueAtIndex(*decl, falseIndex))
@@ -1759,16 +1727,24 @@ void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variable
 	}
 }
 
+smt::Expression SMTChecker::currentValue(VariableDeclaration const& _decl)
+{
+	solAssert(m_context.knownVariable(_decl), "");
+	return m_context.variable(_decl)->currentValue();
+}
+
+smt::Expression SMTChecker::valueAtIndex(VariableDeclaration const& _decl, int _index)
+{
+	solAssert(m_context.knownVariable(_decl), "");
+	return m_context.variable(_decl)->valueAtIndex(_index);
+}
+
 bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 {
-	// This might be the case for multiple calls to the same function.
-	if (knownVariable(_varDecl))
+	if (m_context.knownVariable(_varDecl))
 		return true;
-	auto const& type = _varDecl.type();
-	solAssert(m_variables.count(&_varDecl) == 0, "");
-	auto result = smt::newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *m_interface);
-	m_variables.emplace(&_varDecl, result.second);
-	if (result.first)
+	bool abstract = m_context.createVariable(_varDecl);
+	if (abstract)
 	{
 		m_errorReporter.warning(
 			_varDecl.location(),
@@ -1777,51 +1753,6 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 		return false;
 	}
 	return true;
-}
-
-bool SMTChecker::knownVariable(VariableDeclaration const& _decl)
-{
-	return m_variables.count(&_decl);
-}
-
-smt::Expression SMTChecker::currentValue(VariableDeclaration const& _decl)
-{
-	solAssert(knownVariable(_decl), "");
-	return m_variables.at(&_decl)->currentValue();
-}
-
-smt::Expression SMTChecker::valueAtIndex(VariableDeclaration const& _decl, int _index)
-{
-	solAssert(knownVariable(_decl), "");
-	return m_variables.at(&_decl)->valueAtIndex(_index);
-}
-
-smt::Expression SMTChecker::newValue(VariableDeclaration const& _decl)
-{
-	solAssert(knownVariable(_decl), "");
-	return m_variables.at(&_decl)->increaseIndex();
-}
-
-void SMTChecker::setZeroValue(VariableDeclaration const& _decl)
-{
-	solAssert(knownVariable(_decl), "");
-	setZeroValue(*m_variables.at(&_decl));
-}
-
-void SMTChecker::setZeroValue(smt::SymbolicVariable& _variable)
-{
-	smt::setSymbolicZeroValue(_variable, *m_interface);
-}
-
-void SMTChecker::setUnknownValue(VariableDeclaration const& _decl)
-{
-	solAssert(knownVariable(_decl), "");
-	setUnknownValue(*m_variables.at(&_decl));
-}
-
-void SMTChecker::setUnknownValue(smt::SymbolicVariable& _variable)
-{
-	smt::setSymbolicUnknownValue(_variable, *m_interface);
 }
 
 smt::Expression SMTChecker::expr(Expression const& _e)
@@ -1938,7 +1869,7 @@ bool SMTChecker::visitedFunction(FunctionDefinition const* _funDef)
 SMTChecker::VariableIndices SMTChecker::copyVariableIndices()
 {
 	VariableIndices indices;
-	for (auto const& var: m_variables)
+	for (auto const& var: m_context.variables())
 		indices.emplace(var.first, var.second->index());
 	return indices;
 }
@@ -1946,7 +1877,7 @@ SMTChecker::VariableIndices SMTChecker::copyVariableIndices()
 void SMTChecker::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
-		m_variables.at(var.first)->index() = var.second;
+		m_context.variable(*var.first)->index() = var.second;
 }
 
 FunctionDefinition const* SMTChecker::inlinedFunctionCallToDefinition(FunctionCall const& _funCall)
@@ -2015,7 +1946,7 @@ VariableDeclaration const* SMTChecker::identifierToVariable(Expression const& _e
 	{
 		if (auto decl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
 		{
-			solAssert(knownVariable(*decl), "");
+			solAssert(m_context.knownVariable(*decl), "");
 			return decl;
 		}
 	}
