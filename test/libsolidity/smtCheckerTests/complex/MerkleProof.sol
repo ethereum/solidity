@@ -36,8 +36,6 @@ library MerkleProof {
 // ----
 // Warning: (755-767): Assertion checker does not yet support this expression.
 // Warning: (988-1032): Assertion checker does not yet implement this type of function call.
-// Warning: (988-1032): Internal error: Expression undefined for SMT solver.
 // Warning: (1175-1219): Assertion checker does not yet implement this type of function call.
-// Warning: (1175-1219): Internal error: Expression undefined for SMT solver.
 // Warning: (755-767): Assertion checker does not yet support this expression.
 // Warning: (769-772): Overflow (resulting value larger than 2**256 - 1) happens here
