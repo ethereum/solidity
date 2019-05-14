@@ -211,11 +211,16 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			if (lowerPart != 0)
 				newRoutine += findRepresentation(u256(abs(lowerPart)));
 			if (m_params.evmVersion.hasBitwiseShifting())
-				newRoutine += AssemblyItems{u256(1), u256(bits), Instruction::SHL};
+			{
+				newRoutine += findRepresentation(upperPart);
+				newRoutine += AssemblyItems{u256(bits), Instruction::SHL};
+			}
 			else
+			{
 				newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
-			if (upperPart != 1)
-				newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
+				if (upperPart != 1)
+					newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
+			}
 			if (lowerPart > 0)
 				newRoutine += AssemblyItems{Instruction::ADD};
 			else if (lowerPart < 0)

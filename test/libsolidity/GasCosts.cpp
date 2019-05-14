@@ -75,12 +75,12 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	else if (Options::get().useABIEncoderV2)
 	{
 		if (Options::get().optimizeYul)
-			CHECK_GAS(153631, 130633, 100);
+			CHECK_GAS(153631, 129829, 100);
 		else
 			CHECK_GAS(153631, 138351, 100);
 	}
 	else
-		CHECK_GAS(129037, 122500, 100);
+		CHECK_GAS(129037, 121703, 100);
 	if (Options::get().evmVersion() >= EVMVersion::byzantium())
 	{
 		callContractFunction("f()");
