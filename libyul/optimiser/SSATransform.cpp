@@ -106,7 +106,7 @@ void SSATransform::operator()(Block& _block)
 					});
 				}
 				boost::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
-				return std::move(statements);
+				return { std::move(statements) };
 			}
 			else if (_s.type() == typeid(Assignment))
 			{
@@ -133,7 +133,7 @@ void SSATransform::operator()(Block& _block)
 					});
 				}
 				boost::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
-				return std::move(statements);
+				return { std::move(statements) };
 			}
 			else
 				visit(_s);
