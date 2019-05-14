@@ -22,6 +22,12 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
+#include <libyul/AsmParser.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/backends/evm/AsmCodeGen.h>
+#include <liblangutil/ErrorReporter.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -182,62 +188,103 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 
 AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 {
-	if (_value < 0x10000)
-		// Very small value, not worth computing
-		return AssemblyItems{_value};
-	else if (dev::bytesRequired(~_value) < dev::bytesRequired(_value))
-		// Negated is shorter to represent
-		return findRepresentation(~_value) + AssemblyItems{Instruction::NOT};
-	else
-	{
-		// Decompose value into a * 2**k + b where abs(b) << 2**k
-		// Is not always better, try literal and decomposition method.
-		AssemblyItems routine{u256(_value)};
-		bigint bestGas = gasNeeded(routine);
-		for (unsigned bits = 255; bits > 8 && m_maxSteps > 0; --bits)
-		{
-			unsigned gapDetector = unsigned((_value >> (bits - 8)) & 0x1ff);
-			if (gapDetector != 0xff && gapDetector != 0x100)
-				continue;
+	string routine = findRepresentationInternal(_value);
+	if (routine.empty())
+		return {};
 
-			u256 powerOfTwo = u256(1) << bits;
-			u256 upperPart = _value >> bits;
-			bigint lowerPart = _value & (powerOfTwo - 1);
-			if ((powerOfTwo - lowerPart) < lowerPart)
-			{
-				lowerPart = lowerPart - powerOfTwo; // make it negative
-				upperPart++;
-			}
-			if (upperPart == 0)
-				continue;
-			if (abs(lowerPart) >= (powerOfTwo >> 8))
-				continue;
+	return yulRoutineToAssemblyItems(routine);
+}
 
-			AssemblyItems newRoutine;
-			if (lowerPart != 0)
-				newRoutine += findRepresentation(u256(abs(lowerPart)));
-			if (m_params.evmVersion.hasBitwiseShifting())
-				newRoutine += AssemblyItems{u256(1), u256(bits), Instruction::SHL};
-			else
-				newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
-			if (upperPart != 1)
-				newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
-			if (lowerPart > 0)
-				newRoutine += AssemblyItems{Instruction::ADD};
-			else if (lowerPart < 0)
-				newRoutine.push_back(Instruction::SUB);
+AssemblyItems ComputeMethod::yulRoutineToAssemblyItems(string _routine)
+{
+	_routine = "{ pop(" + _routine + ") }";
+	langutil::ErrorList errors;
+	langutil::ErrorReporter errorReporter(errors);
+	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_routine, "--CODEGEN--"));
+	auto parserResult = yul::Parser(errorReporter, yul::EVMDialect::strictAssemblyForEVM(m_params.evmVersion)).parse(scanner, false);
+	solAssert(parserResult, "");
+	yul::AsmAnalysisInfo analysisInfo;
+	bool analyzerResult = false;
+	analyzerResult = yul::AsmAnalyzer(
+		analysisInfo,
+		errorReporter,
+		boost::none,
+		yul::EVMDialect::strictAssemblyForEVM(m_params.evmVersion)
+	).analyze(*parserResult);
+	solAssert(analyzerResult, "");
+	solAssert(errorReporter.errors().empty(), "");
 
-			if (m_maxSteps > 0)
-				m_maxSteps--;
-			bigint newGas = gasNeeded(newRoutine);
-			if (newGas < bestGas)
-			{
-				bestGas = move(newGas);
-				routine = move(newRoutine);
-			}
-		}
-		return routine;
-	}
+	Assembly _asm;
+	yul::CodeGenerator::assemble(
+		*parserResult,
+		analysisInfo,
+		_asm,
+		m_params.evmVersion
+	);
+	solAssert(!_asm.items().empty(), "");
+	solAssert(_asm.items().back() == eth::Instruction::POP, "");
+	return {_asm.items().begin(), --_asm.items().end()};
+}
+
+string ComputeMethod::findRepresentationInternal(u256 const& _value)
+{
+	return _value.str();
+//	if (_value < 0x10000)
+//		// Very small value, not worth computing
+//		return AssemblyItems{_value};
+//	else if (dev::bytesRequired(~_value) < dev::bytesRequired(_value))
+//		// Negated is shorter to represent
+//		return findRepresentation(~_value) + AssemblyItems{Instruction::NOT};
+//	else
+//	{
+//		// Decompose value into a * 2**k + b where abs(b) << 2**k
+//		// Is not always better, try literal and decomposition method.
+//		AssemblyItems routine{u256(_value)};
+//		bigint bestGas = gasNeeded(routine);
+//		for (unsigned bits = 255; bits > 8 && m_maxSteps > 0; --bits)
+//		{
+//			unsigned gapDetector = unsigned((_value >> (bits - 8)) & 0x1ff);
+//			if (gapDetector != 0xff && gapDetector != 0x100)
+//				continue;
+
+//			u256 powerOfTwo = u256(1) << bits;
+//			u256 upperPart = _value >> bits;
+//			bigint lowerPart = _value & (powerOfTwo - 1);
+//			if ((powerOfTwo - lowerPart) < lowerPart)
+//			{
+//				lowerPart = lowerPart - powerOfTwo; // make it negative
+//				upperPart++;
+//			}
+//			if (upperPart == 0)
+//				continue;
+//			if (abs(lowerPart) >= (powerOfTwo >> 8))
+//				continue;
+
+//			AssemblyItems newRoutine;
+//			if (lowerPart != 0)
+//				newRoutine += findRepresentation(u256(abs(lowerPart)));
+//			if (m_params.evmVersion.hasBitwiseShifting())
+//				newRoutine += AssemblyItems{u256(1), u256(bits), Instruction::SHL};
+//			else
+//				newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
+//			if (upperPart != 1)
+//				newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
+//			if (lowerPart > 0)
+//				newRoutine += AssemblyItems{Instruction::ADD};
+//			else if (lowerPart < 0)
+//				newRoutine.push_back(Instruction::SUB);
+
+//			if (m_maxSteps > 0)
+//				m_maxSteps--;
+//			bigint newGas = gasNeeded(newRoutine);
+//			if (newGas < bestGas)
+//			{
+//				bestGas = move(newGas);
+//				routine = move(newRoutine);
+//			}
+//		}
+//		return routine;
+//	}
 }
 
 bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const

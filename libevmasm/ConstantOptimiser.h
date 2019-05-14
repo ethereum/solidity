@@ -163,6 +163,8 @@ public:
 protected:
 	/// Tries to recursively find a way to compute @a _value.
 	AssemblyItems findRepresentation(u256 const& _value);
+	AssemblyItems yulRoutineToAssemblyItems(std::string _routine);
+	std::string findRepresentationInternal(u256 const& _value);
 	/// Recomputes the value from the calculated representation and checks for correctness.
 	bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const;
 	bigint gasNeeded(AssemblyItems const& _routine) const;
