@@ -391,6 +391,31 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		false
 	});
 
+	rules.push_back({
+		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
+		{Instruction::MUL, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		[=]() -> Pattern {
+			return {Instruction::SHL, {Y, X}};
+		},
+		false
+	});
+	rules.push_back({
+		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
+		{Instruction::MUL, {{Instruction::SHL, {X, u256(1)}}, Y}},
+		[=]() -> Pattern {
+			return {Instruction::SHL, {X, Y}};
+		},
+		false
+	});
+
+	rules.push_back({
+		// DIV(X, SHL(Y, 1)) -> SHR(Y, X)
+		{Instruction::DIV, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		[=]() -> Pattern {
+			return {Instruction::SHR, {Y, X}};
+		},
+		false
+	});
 
 	std::function<bool()> feasibilityFunction = [=]() {
 		if (B.d() > 256)
