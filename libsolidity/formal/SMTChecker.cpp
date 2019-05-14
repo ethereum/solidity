@@ -700,10 +700,13 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		break;
 	}
 	default:
+	{
+		createExpr(_funCall);
 		m_errorReporter.warning(
 			_funCall.location(),
 			"Assertion checker does not yet implement this type of function call."
 		);
+	}
 	}
 }
 
