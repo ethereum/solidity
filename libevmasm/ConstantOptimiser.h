@@ -57,8 +57,6 @@ public:
 	);
 
 protected:
-	/// This is the public API for the optimiser methods, but it doesn't need to be exposed to the caller.
-
 	struct Params
 	{
 		bool isCreation; ///< Whether this is called during contract creation or runtime.
@@ -66,6 +64,17 @@ protected:
 		size_t multiplicity; ///< Number of times the constant appears in the code.
 		langutil::EVMVersion evmVersion; ///< Version of the EVM
 	};
+
+	/// Computes the replacement for a single constant.
+	/// This can already modify @a _assembly by adding a data item,
+	/// but the return value still has to be inserted.
+	static AssemblyItems optimiseSingleConstant(
+		u256 const& _value,
+		Params const& _params,
+		Assembly& _assembly
+	);
+
+	/// This is the public API for the optimiser methods, but it doesn't need to be exposed to the caller.
 
 	explicit ConstantOptimisationMethod(Params const& _params, u256 const& _value):
 		m_params(_params), m_value(_value) {}

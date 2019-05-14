@@ -44,37 +44,43 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 	map<u256, AssemblyItems> pendingReplacements;
 	for (auto it: pushes)
 	{
-		AssemblyItem const& item = it.first;
-		if (item.data() < 0x100)
-			continue;
+		u256 value = it.first.data();
 		Params params;
 		params.multiplicity = it.second;
 		params.isCreation = _isCreation;
 		params.runs = _runs;
 		params.evmVersion = _evmVersion;
-		LiteralMethod lit(params, item.data());
-		bigint literalGas = lit.gasNeeded();
-		CodeCopyMethod copy(params, item.data());
-		bigint copyGas = copy.gasNeeded();
-		ComputeMethod compute(params, item.data());
-		bigint computeGas = compute.gasNeeded();
-		AssemblyItems replacement;
-		if (copyGas < literalGas && copyGas < computeGas)
-		{
-			replacement = copy.execute(_assembly);
-			optimisations++;
-		}
-		else if (computeGas < literalGas && computeGas <= copyGas)
-		{
-			replacement = compute.execute(_assembly);
-			optimisations++;
-		}
-		if (!replacement.empty())
-			pendingReplacements[item.data()] = replacement;
+		AssemblyItems replacement = optimiseSingleConstant(value, params, _assembly);
+		if (replacement.empty())
+			continue;
+		pendingReplacements[value] = move(replacement);
+		optimisations++;
 	}
 	if (!pendingReplacements.empty())
 		replaceConstants(_items, pendingReplacements);
 	return optimisations;
+}
+
+AssemblyItems ConstantOptimisationMethod::optimiseSingleConstant(
+	u256 const& _value,
+	Params const& _params,
+	Assembly& _assembly
+)
+{
+	if (_value < 0x100)
+		return {};
+
+	LiteralMethod lit(_params, _value);
+	bigint literalGas = lit.gasNeeded();
+	CodeCopyMethod copy(_params, _value);
+	bigint copyGas = copy.gasNeeded();
+	ComputeMethod compute(_params, _value);
+	bigint computeGas = compute.gasNeeded();
+	if (copyGas < literalGas && copyGas < computeGas)
+		return copy.execute(_assembly);
+	else if (computeGas < literalGas && computeGas <= copyGas)
+		return compute.execute(_assembly);
+	return {};
 }
 
 bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
