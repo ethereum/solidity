@@ -20,10 +20,11 @@ Remix
 
 *We recommend Remix for small contracts and for quickly learning Solidity.*
 
-`Access Remix online <https://remix.ethereum.org/>`_, you don't need to install anything.
+`Access Remix online <https://remix.ethereum.org/>`_, you do not need to install anything.
 If you want to use it without connection to the Internet, go to
 https://github.com/ethereum/remix-live/tree/gh-pages and download the ``.zip`` file as
-explained on that page.
+explained on that page. Remix is also a convenient option for testing nightly builds
+without installing multiple Solidity versions.
 
 Further options on this page detail installing commandline Solidity compiler software
 on your computer. Choose a commandline compiler if you are working on a larger contract
