@@ -56,4 +56,34 @@ private:
 	bool m_movable = true;
 };
 
+/**
+ * Helper class to find "irregular" control flow.
+ * This includes termination, break and continue.
+ */
+class TerminationFinder
+{
+public:
+	enum class ControlFlow { FlowOut, Break, Continue, Terminate };
+
+	/// @returns the index of the first statement in the provided sequence
+	/// that is an unconditional ``break``, ``continue`` or a
+	/// call to a terminating builtin function.
+	/// If control flow can continue at the end of the list,
+	/// returns `FlowOut` and ``size_t(-1)``.
+	/// The function might return ``FlowOut`` even though control
+	/// flow cannot actually continue.
+	static std::pair<ControlFlow, size_t> firstUnconditionalControlFlowChange(
+		std::vector<Statement> const& _statements
+	);
+
+	/// @returns the control flow type of the given statement.
+	/// This function could return FlowOut even if control flow never continues.
+	static ControlFlow controlFlowKind(Statement const& _statement);
+
+	/// @returns true if the expression statement is a direct
+	/// call to a builtin terminating function like
+	/// ``stop``, ``revert`` or ``return``.
+	static bool isTerminatingBuiltin(ExpressionStatement const& _exprStmnt);
+};
+
 }

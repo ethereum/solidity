@@ -48,6 +48,7 @@ struct SemanticInformation
 	static bool isJumpInstruction(AssemblyItem const& _item);
 	static bool altersControlFlow(AssemblyItem const& _item);
 	static bool terminatesControlFlow(AssemblyItem const& _item);
+	static bool terminatesControlFlow(Instruction _instruction);
 	/// @returns false if the value put on the stack by _item depends on anything else than
 	/// the information in the current block header, memory, storage or stack.
 	static bool isDeterministic(AssemblyItem const& _item);

@@ -38,7 +38,7 @@ namespace yul
  * The ControlFlowSimplifier does record the presence or absence of ``break``
  * and ``continue`` statements during its traversal.
  *
- * Prerequisite: Disambiguator, ForLoopInitRewriter.
+ * Prerequisite: Disambiguator, FunctionHoister, ForLoopInitRewriter.
  *
  * Important: Introduces EVM opcodes and thus can only be used on EVM code for now.
  */
@@ -46,9 +46,17 @@ class ControlFlowSimplifier: public ASTModifier
 {
 public:
 	using ASTModifier::operator();
+	void operator()(Break&) override { ++m_numBreakStatements; }
+	void operator()(Continue&) override { ++m_numContinueStatements; }
 	void operator()(Block& _block) override;
+
+	void visit(Statement& _st) override;
+
 private:
 	void simplify(std::vector<Statement>& _statements);
+
+	size_t m_numBreakStatements = 0;
+	size_t m_numContinueStatements = 0;
 };
 
 }
