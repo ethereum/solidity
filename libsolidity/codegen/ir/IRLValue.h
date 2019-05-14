@@ -38,23 +38,20 @@ class Type;
 class IRLValue
 {
 protected:
-	IRLValue(std::ostream& _code, IRGenerationContext& _context, Type const* _type = nullptr):
-		m_code(_code),
+	IRLValue(IRGenerationContext& _context, Type const* _type = nullptr):
 		m_context(_context),
 		m_type(_type)
 	{}
 
 public:
 	virtual ~IRLValue() = default;
-	/// @returns an expression to retrieve the value of the lvalue. This might also emit
-	/// code to m_code.
+	/// @returns an expression to retrieve the value of the lvalue.
 	virtual std::string retrieveValue() const = 0;
-	/// Appends code to m_code to store the value of @a _value (should be an identifier)
+	/// Returns code that stores the value of @a _value (should be an identifier)
 	/// of type @a _type in the lvalue. Might perform type conversion.
-	virtual void storeValue(std::string const& _value, Type const& _type) const = 0;
+	virtual std::string storeValue(std::string const& _value, Type const& _type) const = 0;
 
 protected:
-	std::ostream& m_code;
 	IRGenerationContext& m_context;
 	Type const* m_type;
 };
@@ -63,12 +60,11 @@ class IRLocalVariable: public IRLValue
 {
 public:
 	IRLocalVariable(
-		std::ostream& _code,
 		IRGenerationContext& _context,
 		VariableDeclaration const& _varDecl
 	);
 	std::string retrieveValue() const override { return m_variableName; }
-	void storeValue(std::string const& _value, Type const& _type) const override;
+	std::string storeValue(std::string const& _value, Type const& _type) const override;
 
 private:
 	std::string m_variableName;
@@ -78,19 +74,17 @@ class IRStorageItem: public IRLValue
 {
 public:
 	IRStorageItem(
-		std::ostream& _code,
 		IRGenerationContext& _context,
 		VariableDeclaration const& _varDecl
 	);
 	IRStorageItem(
-		std::ostream& _code,
 		IRGenerationContext& _context,
 		std::string _slot,
 		unsigned _offset,
 		Type const& _type
 	);
 	std::string retrieveValue() const override;
-	void storeValue(std::string const& _value, Type const& _type) const override;
+	std::string storeValue(std::string const& _value, Type const& _type) const override;
 
 private:
 	std::string m_slot;
