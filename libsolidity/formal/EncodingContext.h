@@ -88,6 +88,19 @@ public:
 	bool knownExpression(solidity::Expression const& _e) const;
 	//@}
 
+	/// Methods related to global variables and functions.
+	//@{
+	/// Global variables and functions.
+	std::shared_ptr<SymbolicVariable> globalSymbol(std::string const& _name);
+	/// @returns all symbolic variables.
+	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> const& globalSymbols() const { return m_globalContext; }
+	/// Defines a new global variable or function
+	/// and @returns true if type was abstracted.
+	bool createGlobalSymbol(std::string const& _name, solidity::Expression const& _expr);
+	/// Checks if special variable or function was seen.
+	bool knownGlobalSymbol(std::string const& _var) const;
+	//@}
+
 	/// Blockchain related methods.
 	//@{
 	/// Value of `this` address.
@@ -111,6 +124,10 @@ private:
 
 	/// Symbolic expressions.
 	std::unordered_map<solidity::Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
+
+	/// Symbolic representation of global symbols including
+	/// variables and functions.
+	std::unordered_map<std::string, std::shared_ptr<smt::SymbolicVariable>> m_globalContext;
 
 	/// Symbolic `this` address.
 	std::unique_ptr<SymbolicAddressVariable> m_thisAddress;

@@ -38,6 +38,7 @@ void EncodingContext::reset()
 {
 	resetAllVariables();
 	m_expressions.clear();
+	m_globalContext.clear();
 	m_thisAddress->increaseIndex();
 	m_balances->increaseIndex();
 }
@@ -151,6 +152,28 @@ bool EncodingContext::createExpression(solidity::Expression const& _e, shared_pt
 bool EncodingContext::knownExpression(solidity::Expression const& _e) const
 {
 	return m_expressions.count(&_e);
+}
+
+/// Global variables and functions.
+
+shared_ptr<SymbolicVariable> EncodingContext::globalSymbol(string const& _name)
+{
+	solAssert(knownGlobalSymbol(_name), "");
+	return m_globalContext.at(_name);
+}
+
+bool EncodingContext::createGlobalSymbol(string const& _name, solidity::Expression const& _expr)
+{
+	solAssert(!knownGlobalSymbol(_name), "");
+	auto result = newSymbolicVariable(*_expr.annotation().type, _name, m_solver);
+	m_globalContext.emplace(_name, result.second);
+	setUnknownValue(*result.second);
+	return result.first;
+}
+
+bool EncodingContext::knownGlobalSymbol(string const& _var) const
+{
+	return m_globalContext.count(_var);
 }
 
 // Blockchain
