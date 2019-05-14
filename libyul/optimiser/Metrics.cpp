@@ -22,10 +22,13 @@
 
 #include <libyul/AsmData.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Utilities.h>
 
 #include <libevmasm/Instruction.h>
+#include <libevmasm/GasMeter.h>
 
 #include <libdevcore/Visitor.h>
+#include <libdevcore/CommonData.h>
 
 using namespace std;
 using namespace dev;
@@ -149,6 +152,54 @@ void CodeCost::visit(Expression const& _expression)
 {
 	++m_cost;
 	ASTWalker::visit(_expression);
+}
+
+pair<size_t, size_t> GasMeter::gasCosts(
+	Expression const& _expression,
+	langutil::EVMVersion _evmVersion,
+	bool _isCreation
+)
+{
+	GasMeter gm(_evmVersion, _isCreation);
+	gm.visit(_expression);
+	return {gm.m_runGas, gm.m_dataGas};
+}
+
+void GasMeter::operator()(FunctionCall const&)
+{
+	yulAssert(false, "Functions not implemented.");
+}
+
+void GasMeter::operator()(FunctionalInstruction const& _fun)
+{
+	ASTWalker::operator()(_fun);
+	if (_fun.instruction == eth::Instruction::EXP)
+		m_runGas += dev::eth::GasCosts::expGas + dev::eth::GasCosts::expByteGas(m_evmVersion);
+	else
+		m_runGas += dev::eth::GasMeter::runGas(_fun.instruction);
+	m_dataGas += singleByteDataGas();
+}
+
+void GasMeter::operator()(Literal const& _lit)
+{
+	m_runGas += dev::eth::GasMeter::runGas(dev::eth::Instruction::PUSH1);
+	m_dataGas +=
+		singleByteDataGas() +
+		size_t(dev::eth::GasMeter::dataGas(dev::toCompactBigEndian(valueOfLiteral(_lit), 1), m_isCreation));
+}
+
+void GasMeter::operator()(Identifier const&)
+{
+	m_runGas += dev::eth::GasMeter::runGas(dev::eth::Instruction::DUP1);
+	m_dataGas += singleByteDataGas();
+}
+
+size_t GasMeter::singleByteDataGas() const
+{
+	if (m_isCreation)
+		return dev::eth::GasCosts::txDataNonZeroGas;
+	else
+		return dev::eth::GasCosts::createDataGas;
 }
 
 void AssignmentCounter::operator()(Assignment const& _assignment)

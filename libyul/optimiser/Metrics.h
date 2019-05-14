@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <liblangutil/EVMVersion.h>
 
 namespace yul
 {
@@ -84,6 +85,42 @@ private:
 	size_t m_cost = 0;
 };
 
+/**
+ * Gas meter for expressions only involving literals, identifiers and
+ * EVM instructions.
+ *
+ * Assumes that EXP is not used with exponents larger than a single byte.
+ */
+class GasMeter: public ASTWalker
+{
+public:
+	/// @returns the runtime costs and the data cost of
+	/// evaluating the given expression.
+	static std::pair<size_t, size_t> gasCosts(
+		Expression const& _expression,
+		langutil::EVMVersion _evmVersion,
+		bool _isCreation = false
+	);
+
+private:
+	GasMeter(langutil::EVMVersion _evmVersion, bool _isCreation):
+		m_evmVersion(_evmVersion),
+		m_isCreation{_isCreation}
+	{}
+
+	void operator()(FunctionCall const& _funCall) override;
+	void operator()(FunctionalInstruction const& _instr) override;
+	void operator()(Literal const& _literal) override;
+	void operator()(Identifier const& _identifier) override;
+
+private:
+	size_t singleByteDataGas() const;
+
+	langutil::EVMVersion m_evmVersion;
+	bool m_isCreation = false;
+	size_t m_runGas = 0;
+	size_t m_dataGas = 0;
+};
 /**
  * Counts the number of assignments to every variable.
  * Only works after running the Disambiguator.
