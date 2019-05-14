@@ -146,7 +146,7 @@ public:
 	explicit ComputeMethod(Params const& _params, u256 const& _value):
 		ConstantOptimisationMethod(_params, _value)
 	{
-		m_routine = findRepresentation(m_value);
+		m_routine = yulRoutineToAssemblyItems(findRepresentation(m_value));
 		assertThrow(
 			checkRepresentation(m_value, m_routine),
 			OptimizerException,
@@ -161,12 +161,12 @@ public:
 	}
 
 protected:
+	AssemblyItems yulRoutineToAssemblyItems(std::string const& _routine) const;
 	/// Tries to recursively find a way to compute @a _value.
-	AssemblyItems findRepresentation(u256 const& _value);
-	AssemblyItems yulRoutineToAssemblyItems(std::string _routine);
-	std::string findRepresentationInternal(u256 const& _value);
+	std::string findRepresentation(u256 const& _value);
 	/// Recomputes the value from the calculated representation and checks for correctness.
 	bool checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const;
+	bigint gasNeeded(std::string const& _routine) const;
 	bigint gasNeeded(AssemblyItems const& _routine) const;
 
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
