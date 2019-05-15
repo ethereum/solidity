@@ -245,7 +245,7 @@
 //             mstore(0x00, 404)
 //             revert(0x00, 0x20)
 //         }
-//         let kn := calldataload(add(calldatasize(), 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff40))
+//         let kn := calldataload(add(calldatasize(), not(191)))
 //         mstore(0x2a0, caller())
 //         mstore(0x2c0, kn)
 //         mstore(0x2e0, m)
@@ -314,7 +314,7 @@
 //             b := add(b, _3)
 //         }
 //         if lt(m, n) { validatePairing(0x64) }
-//         if iszero(eq(mod(keccak256(0x2a0, add(b, 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd60)), gen_order), challenge))
+//         if iszero(eq(mod(keccak256(0x2a0, add(b, not(671))), gen_order), challenge))
 //         {
 //             mstore(i_1, 404)
 //             revert(i_1, 0x20)

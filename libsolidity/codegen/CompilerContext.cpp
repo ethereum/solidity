@@ -33,6 +33,7 @@
 #include <libyul/backends/evm/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/optimiser/Metrics.h>
 #include <libyul/YulString.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -382,7 +383,8 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, "--CODEGEN--"));
-	auto parserResult = yul::Parser(errorReporter, yul::EVMDialect::strictAssemblyForEVM(m_evmVersion)).parse(scanner, false);
+	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter()(*parserResult) << endl;
 #endif
@@ -409,7 +411,7 @@ void CompilerContext::appendInlineAssembly(
 			analysisInfo,
 			errorReporter,
 			boost::none,
-			yul::EVMDialect::strictAssemblyForEVM(m_evmVersion),
+			dialect,
 			identifierAccess.resolve
 		).analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
@@ -419,8 +421,10 @@ void CompilerContext::appendInlineAssembly(
 	// so we essentially only optimize the ABI functions.
 	if (_optimiserSettings.runYulOptimiser && _localVariables.empty())
 	{
+		bool const isCreation = m_runtimeContext != nullptr;
 		yul::OptimiserSuite::run(
-			yul::EVMDialect::strictAssemblyForEVM(m_evmVersion),
+			dialect,
+			yul::GasMeter(dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment),
 			*parserResult,
 			analysisInfo,
 			_optimiserSettings.optimizeStackAllocation,
@@ -431,7 +435,7 @@ void CompilerContext::appendInlineAssembly(
 			analysisInfo,
 			errorReporter,
 			boost::none,
-			yul::EVMDialect::strictAssemblyForEVM(m_evmVersion),
+			dialect,
 			identifierAccess.resolve
 		).analyze(*parserResult))
 			reportError("Optimizer introduced error into inline assembly.");

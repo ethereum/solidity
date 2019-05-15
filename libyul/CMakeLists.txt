@@ -58,6 +58,8 @@ add_library(yul
 	optimiser/BlockHasher.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
+	optimiser/ConstantOptimiser.cpp
+	optimiser/ConstantOptimiser.h
 	optimiser/ControlFlowSimplifier.cpp
 	optimiser/ControlFlowSimplifier.h
 	optimiser/DataFlowAnalyzer.cpp
