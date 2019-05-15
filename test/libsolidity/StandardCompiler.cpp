@@ -1166,6 +1166,172 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	BOOST_CHECK(result["errors"][0]["type"] == "InternalCompilerError");
 }
 
+BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+			"sources":
+		{
+			"A":
+			{
+				"content": "pragma solidity >=0.0; contract C { function f() public pure {} }"
+			}
+		},
+		"settings":
+		{
+			"outputSelection":
+			{
+				"*": { "C": ["evm.bytecode"] }
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(jsonParseStrict(input, parsedInput));
+
+	dev::solidity::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	BOOST_REQUIRE(result["contracts"].isObject());
+	BOOST_REQUIRE(result["contracts"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["A"].isObject());
+	BOOST_REQUIRE(result["contracts"]["A"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["A"]["C"].isObject());
+	BOOST_REQUIRE(result["contracts"]["A"]["C"]["evm"].isObject());
+	BOOST_REQUIRE(result["contracts"]["A"]["C"]["evm"]["bytecode"].isObject());
+	BOOST_REQUIRE(result["sources"].isObject());
+	BOOST_REQUIRE(result["sources"].size() == 1);
+	BOOST_REQUIRE(result["sources"]["A"].isObject());
+
+}
+
+BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard_colon_source)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources":
+		{
+			":A":
+			{
+				"content": "pragma solidity >=0.0; contract C { function f() public pure {} }"
+			}
+		},
+		"settings":
+		{
+			"outputSelection":
+			{
+				"*": { "C": ["evm.bytecode"] }
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(jsonParseStrict(input, parsedInput));
+
+	dev::solidity::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	BOOST_REQUIRE(result["contracts"].isObject());
+	BOOST_REQUIRE(result["contracts"].size() == 1);
+	BOOST_REQUIRE(result["contracts"][":A"].isObject());
+	BOOST_REQUIRE(result["contracts"][":A"].size() == 1);
+	BOOST_REQUIRE(result["contracts"][":A"]["C"].isObject());
+	BOOST_REQUIRE(result["contracts"][":A"]["C"]["evm"].isObject());
+	BOOST_REQUIRE(result["contracts"][":A"]["C"]["evm"]["bytecode"].isObject());
+	BOOST_REQUIRE(result["sources"].isObject());
+	BOOST_REQUIRE(result["sources"].size() == 1);
+	BOOST_REQUIRE(result["sources"][":A"].isObject());
+}
+
+BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard_empty_source)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources":
+		{
+			"":
+			{
+				"content": "pragma solidity >=0.0; contract C { function f() public pure {} }"
+			}
+		},
+		"settings":
+		{
+			"outputSelection":
+			{
+				"*": { "C": ["evm.bytecode"] }
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(jsonParseStrict(input, parsedInput));
+
+	dev::solidity::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	BOOST_REQUIRE(result["contracts"].isObject());
+	BOOST_REQUIRE(result["contracts"].size() == 1);
+	BOOST_REQUIRE(result["contracts"][""].isObject());
+	BOOST_REQUIRE(result["contracts"][""].size() == 1);
+	BOOST_REQUIRE(result["contracts"][""]["C"].isObject());
+	BOOST_REQUIRE(result["contracts"][""]["C"]["evm"].isObject());
+	BOOST_REQUIRE(result["contracts"][""]["C"]["evm"]["bytecode"].isObject());
+	BOOST_REQUIRE(result["sources"].isObject());
+	BOOST_REQUIRE(result["sources"].size() == 1);
+	BOOST_REQUIRE(result["sources"][""].isObject());
+}
+
+BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard_multiple_sources)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources":
+		{
+			"A":
+			{
+				"content": "pragma solidity >=0.0; contract C { function f() public pure {} }"
+			},
+			"B":
+			{
+				"content": "pragma solidity >=0.0; contract D { function f() public pure {} }"
+			}
+		},
+		"settings":
+		{
+			"outputSelection":
+			{
+				"*": { "D": ["evm.bytecode"] }
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(jsonParseStrict(input, parsedInput));
+
+	dev::solidity::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	BOOST_REQUIRE(result["contracts"].isObject());
+	BOOST_REQUIRE(result["contracts"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["B"].isObject());
+	BOOST_REQUIRE(result["contracts"]["B"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["B"]["D"].isObject());
+	BOOST_REQUIRE(result["contracts"]["B"]["D"]["evm"].isObject());
+	BOOST_REQUIRE(result["contracts"]["B"]["D"]["evm"]["bytecode"].isObject());
+	BOOST_REQUIRE(result["sources"].isObject());
+	BOOST_REQUIRE(result["sources"].size() == 2);
+	BOOST_REQUIRE(result["sources"]["A"].isObject());
+	BOOST_REQUIRE(result["sources"]["B"].isObject());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
