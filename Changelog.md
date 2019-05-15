@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Fix handling of structs of dynamic size as constructor parameters.
  * Optimizer: Add rule to simplify SHL/SHR combinations.
  * SMTChecker: Support inherited state variables.
  * SMTChecker: Support tuples and function calls with multiple return values.

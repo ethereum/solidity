@@ -228,34 +228,21 @@ void ContractCompiler::appendConstructor(FunctionDefinition const& _constructor)
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	if (!_constructor.parameters().empty())
 	{
-		unsigned argumentSize = 0;
-		for (ASTPointer<VariableDeclaration> const& var: _constructor.parameters())
-			if (var->annotation().type->isDynamicallySized())
-			{
-				argumentSize = 0;
-				break;
-			}
-			else
-				argumentSize += var->annotation().type->calldataEncodedSize();
-
 		CompilerUtils(m_context).fetchFreeMemoryPointer();
-		if (argumentSize == 0)
-		{
-			// argument size is dynamic, use CODESIZE to determine it
-			m_context.appendProgramSize(); // program itself
-			// CODESIZE is program plus manually added arguments
-			m_context << Instruction::CODESIZE << Instruction::SUB;
-		}
-		else
-			m_context << u256(argumentSize);
+		// CODESIZE returns the actual size of the code,
+		// which is the size of the generated code (``programSize``)
+		// plus the constructor arguments added to the transaction payload.
+		m_context.appendProgramSize();
+		m_context << Instruction::CODESIZE << Instruction::SUB;
 		// stack: <memptr> <argument size>
 		m_context << Instruction::DUP1;
 		m_context.appendProgramSize();
 		m_context << Instruction::DUP4 << Instruction::CODECOPY;
-		m_context << Instruction::DUP2 << Instruction::ADD;
-		m_context << Instruction::DUP1;
+		// stack: <memptr> <argument size>
+		m_context << Instruction::DUP2 << Instruction::DUP2 << Instruction::ADD;
+		// stack: <memptr> <argument size> <mem end>
 		CompilerUtils(m_context).storeFreeMemoryPointer();
-		// stack: <memptr>
+		// stack: <memptr> <argument size>
 		CompilerUtils(m_context).abiDecode(FunctionType(_constructor).parameterTypes(), true);
 	}
 	_constructor.accept(*this);

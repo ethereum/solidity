@@ -712,6 +712,81 @@ BOOST_AUTO_TEST_CASE(packed_structs)
 	)
 }
 
+
+BOOST_AUTO_TEST_CASE(struct_in_constructor)
+{
+	string sourceCode = R"(
+		contract C {
+			struct S {
+				string a;
+				uint8 b;
+				string c;
+			}
+			S public x;
+			constructor(S memory s) public { x = s; }
+		}
+	)";
+
+	NEW_ENCODER(
+		compileAndRun(sourceCode, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00, 0x00));
+		ABI_CHECK(callContractFunction("x()"), encodeArgs(0x60, 0x03, 0x80, 0x00, 0x00));
+	)
+}
+
+BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
+{
+	string sourceCode = R"(
+		contract C {
+			struct S {
+				string a;
+				uint8 b;
+				string c;
+			}
+			S public x;
+			constructor(S memory s) public { x = s; }
+		}
+
+		contract D {
+			function f() public returns (string memory, uint8, string memory) {
+				C.S memory s;
+				s.a = "abc";
+				s.b = 7;
+				s.c = "def";
+				C c = new C(s);
+				return c.x();
+			}
+		}
+	)";
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		NEW_ENCODER(
+			compileAndRun(sourceCode, 0, "D");
+			ABI_CHECK(callContractFunction("f()"), encodeArgs(0x60, 7, 0xa0, 3, "abc", 3, "def"));
+		)
+	}
+}
+
+BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)
+{
+	string sourceCode = R"(
+		contract C {
+			struct S {
+				string a;
+				uint8 b;
+				string c;
+			}
+			S public x;
+			constructor(S memory s) public { x = s; }
+		}
+	)";
+
+	NEW_ENCODER(
+		BOOST_CHECK(
+			compileAndRunWithoutCheck(sourceCode, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00)).empty()
+		);
+	)
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
