@@ -65,7 +65,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 	{
 		if (&test == &m_tests.front())
 			if (test.call().isConstructor)
-				soltestAssert(deploy("", 0, test.call().arguments.rawBytes()), "Failed to deploy contract with additional constructor arguments.");
+				deploy("", 0, test.call().arguments.rawBytes());
 			else
 				soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
 		else
@@ -73,7 +73,10 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 
 		if (test.call().isConstructor)
 		{
-			test.setFailure(false);
+			if (m_transactionSuccessful == test.call().expectations.failure)
+				success = false;
+
+			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(bytes());
 		}
 		else
