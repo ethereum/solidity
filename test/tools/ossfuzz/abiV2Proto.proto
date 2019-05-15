@@ -1,0 +1,177 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+syntax = "proto2";
+
+// TODO: Emulate higher bit values
+message SignedIntegerValue {
+    required uint32 width = 1;
+    required sint64 value64 = 2;
+    required sint64 value128 = 3;
+    required sint64 value192 = 4;
+    required sint64 value256 = 5;
+}
+
+message UnsignedIntegerValue {
+    required uint32 width = 1;
+    required uint64 value64 = 2;
+    required uint64 value128 = 3;
+    required uint64 value192 = 4;
+    required uint64 value256 = 5;
+}
+
+message SignedIntegerType {
+    required uint32 width = 1;
+    required SignedIntegerValue value = 2;
+}
+
+message UnsignedIntegerType {
+    required uint32 width = 1;
+    required UnsignedIntegerValue value = 2;
+}
+
+message IntegerType {
+    oneof integer_type {
+        SignedIntegerType sint = 1;
+        UnsignedIntegerType uint = 2;
+    }
+}
+
+message FixedByteArrayValue {
+    required uint32 width = 1;
+    required bytes value = 2;
+}
+
+// bytes1, bytes2,..., bytes32
+message FixedByteArrayType {
+    required uint32 width = 1;
+    required FixedByteArrayValue value = 2;
+}
+
+message DynamicByteValue {
+    required bytes value = 1;
+}
+
+message DynamicByteType {
+    required DynamicByteValue value = 1;
+}
+
+message DynamicStringValue {
+    required string value = 1;
+}
+
+message DynamicStringType {
+    required DynamicStringValue value = 1;
+}
+
+message DynamicByteArrayType {
+    oneof dynamic_byte_oneof {
+        DynamicByteType byte = 1;
+        DynamicStringType string = 2;
+    }
+}
+
+message AddressValue {
+    required uint64 value64 = 1;
+    required uint64 value128 = 2;
+    required uint32 value160 = 3;
+}
+
+// TODO: Extract 160 bits from value
+// FIXME: value can contain fewer bits than type
+message AddressType {
+    enum AType {
+        ADDRESS = 1;
+        PAYABLE = 2;
+    }
+    required AType atype = 1;
+    required AddressValue value = 2;
+}
+
+message FixedSizeArrayType {
+    required Type type = 1;
+    required uint32 size = 2;
+}
+
+message StaticType {
+    oneof static_type_oneof {
+        IntegerType integer = 1;
+        FixedByteArrayType fbarray = 2;
+        AddressType address = 3;
+        FixedSizeArrayType fsarray = 4;
+    }
+}
+
+// TODO: Reference existing struct definition
+message StructType {}
+
+message DynamicType {
+    oneof dynamic_type_oneof {
+        StructType structtype = 1;
+        DynamicByteArrayType dynbytearray = 2;
+    }
+}
+
+message Type {
+    oneof type_oneof {
+        StaticType stype = 1;
+        DynamicType dtype = 2;
+    }
+}
+
+// TODO: This must not reference itself either directly or indirectly
+message StructTypeDefinition {
+    repeated Type t = 1;
+}
+
+message VarDecl {
+    required Type type = 1;
+}
+
+message Assignment {
+    required VarDecl var = 1;
+}
+
+message Statement {
+    oneof statement_oneof {
+        VarDecl decl = 1;
+        Assignment assignment = 2;
+        StructTypeDefinition structdef = 3;
+    }
+}
+
+message ContractStatement {
+    oneof contract_stmt_oneof {
+        VarDecl decl = 1;
+        StructTypeDefinition structdef = 2;
+    }
+}
+
+message TestFunction {
+    repeated Statement statements = 1;
+}
+
+message CoderFunction {}
+
+message Program {
+    repeated ContractStatement cstatements = 1;
+    required TestFunction testfunction = 2;
+    required CoderFunction coderfunction = 3;
+    required bytes input = 4;
+}
+
+package dev.test.abiv2fuzzer;
