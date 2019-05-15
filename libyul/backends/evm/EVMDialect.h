@@ -35,13 +35,24 @@ using Type = YulString;
 struct FunctionCall;
 struct Object;
 
+/**
+ * Context used during code generation.
+ */
+struct BuiltinContext
+{
+	Object const* currentObject = nullptr;
+	/// Mapping from named objects to abstract assembly sub IDs.
+	std::map<YulString, AbstractAssembly::SubID> subIDs;
+};
+
 struct BuiltinFunctionForEVM: BuiltinFunction
 {
 	/// Function to generate code for the given function call and append it to the abstract
-	/// assembly. The third parameter is called to visit (and generate code for) the arguments
+	/// assembly. The fourth parameter is called to visit (and generate code for) the arguments
 	/// from right to left.
-	std::function<void(FunctionCall const&, AbstractAssembly&, std::function<void()>)> generateCode;
+	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void()>)> generateCode;
 };
+
 
 /**
  * Yul dialect for EVM as a backend.
@@ -64,11 +75,6 @@ struct EVMDialect: public Dialect
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
-	/// Sets the mapping of current sub assembly IDs. Used during code generation.
-	void setSubIDs(std::map<YulString, AbstractAssembly::SubID> _subIDs);
-	/// Sets the current object. Used during code generation.
-	void setCurrentObject(Object const* _object);
-
 protected:
 	void addFunction(
 		std::string _name,
@@ -77,14 +83,11 @@ protected:
 		bool _movable,
 		bool _sideEffectFree,
 		bool _literalArguments,
-		std::function<void(FunctionCall const&, AbstractAssembly&, std::function<void()>)> _generateCode
+		std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void()>)> _generateCode
 	);
 
 	bool m_objectAccess;
 	langutil::EVMVersion m_evmVersion;
-	Object const* m_currentObject = nullptr;
-	/// Mapping from named objects to abstract assembly sub IDs.
-	std::map<YulString, AbstractAssembly::SubID> m_subIDs;
 	std::map<YulString, BuiltinFunctionForEVM> m_functions;
 };
 

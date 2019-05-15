@@ -37,32 +37,27 @@ void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, EV
 
 void EVMObjectCompiler::run(Object& _object, bool _optimize)
 {
-	map<YulString, AbstractAssembly::SubID> subIDs;
+	BuiltinContext context;
+	context.currentObject = &_object;
 
 	for (auto& subNode: _object.subObjects)
 		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
 			auto subAssemblyAndID = m_assembly.createSubAssembly();
-			subIDs[subObject->name] = subAssemblyAndID.second;
+			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			compile(*subObject, *subAssemblyAndID.first, m_dialect, m_evm15, _optimize);
 		}
 		else
 		{
 			Data const& data = dynamic_cast<Data const&>(*subNode);
-			subIDs[data.name] = m_assembly.appendData(data.data);
+			context.subIDs[data.name] = m_assembly.appendData(data.data);
 		}
-
-	if (m_dialect.providesObjectAccess())
-	{
-		m_dialect.setSubIDs(std::move(subIDs));
-		m_dialect.setCurrentObject(&_object);
-	}
 
 	yulAssert(_object.analysisInfo, "No analysis info.");
 	yulAssert(_object.code, "No code.");
 	// We do not catch and re-throw the stack too deep exception here because it is a YulException,
 	// which should be native to this part of the code.
-	CodeTransform transform{m_assembly, *_object.analysisInfo, *_object.code, m_dialect, _optimize, m_evm15};
+	CodeTransform transform{m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context, _optimize, m_evm15};
 	transform(*_object.code);
 	yulAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
 }

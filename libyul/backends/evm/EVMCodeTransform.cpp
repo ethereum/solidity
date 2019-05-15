@@ -96,6 +96,7 @@ CodeTransform::CodeTransform(
 	Block const& _block,
 	bool _allowStackOpt,
 	EVMDialect const& _dialect,
+	BuiltinContext& _builtinContext,
 	bool _evm15,
 	ExternalIdentifierAccess const& _identifierAccess,
 	bool _useNamedLabelsForFunctions,
@@ -105,6 +106,7 @@ CodeTransform::CodeTransform(
 	m_assembly(_assembly),
 	m_info(_analysisInfo),
 	m_dialect(_dialect),
+	m_builtinContext(_builtinContext),
 	m_allowStackOpt(_allowStackOpt),
 	m_evm15(_evm15),
 	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
@@ -280,7 +282,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 
 	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
-		builtin->generateCode(_call, m_assembly, [&]() {
+		builtin->generateCode(_call, m_assembly, m_builtinContext, [&]() {
 			for (auto const& arg: _call.arguments | boost::adaptors::reversed)
 				visitExpression(arg);
 			m_assembly.setSourceLocation(_call.location);
@@ -519,6 +521,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 			_function.body,
 			m_allowStackOpt,
 			m_dialect,
+			m_builtinContext,
 			m_evm15,
 			m_identifierAccess,
 			m_useNamedLabelsForFunctions,

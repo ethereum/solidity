@@ -45,12 +45,13 @@ map<YulString, int> CompilabilityChecker::run(
 
 	solAssert(dynamic_cast<EVMDialect const*>(_dialect.get()), "");
 	shared_ptr<NoOutputEVMDialect> noOutputDialect = make_shared<NoOutputEVMDialect>(dynamic_pointer_cast<EVMDialect>(_dialect));
+	BuiltinContext builtinContext;
 
 	yul::AsmAnalysisInfo analysisInfo =
 		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
 
 	NoOutputAssembly assembly;
-	CodeTransform transform(assembly, analysisInfo, _ast, *noOutputDialect, _optimizeStackAllocation);
+	CodeTransform transform(assembly, analysisInfo, _ast, *noOutputDialect, builtinContext, _optimizeStackAllocation);
 	try
 	{
 		transform(_ast);

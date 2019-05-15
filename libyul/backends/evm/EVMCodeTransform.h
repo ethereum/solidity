@@ -121,6 +121,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		EVMDialect const& _dialect,
+		BuiltinContext& _builtinContext,
 		bool _allowStackOpt = false,
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
@@ -131,6 +132,7 @@ public:
 		_block,
 		_allowStackOpt,
 		_dialect,
+		_builtinContext,
 		_evm15,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
@@ -151,6 +153,7 @@ protected:
 		Block const& _block,
 		bool _allowStackOpt,
 		EVMDialect const& _dialect,
+		BuiltinContext& _builtinContext,
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
 		bool _useNamedLabelsForFunctions,
@@ -225,6 +228,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
 	EVMDialect const& m_dialect;
+	BuiltinContext& m_builtinContext;
 	bool const m_allowStackOpt = true;
 	bool const m_evm15 = false;
 	bool const m_useNamedLabelsForFunctions = false;
