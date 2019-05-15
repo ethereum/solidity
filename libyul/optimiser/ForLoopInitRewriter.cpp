@@ -38,7 +38,7 @@ void ForLoopInitRewriter::operator()(Block& _block)
 				vector<Statement> rewrite;
 				swap(rewrite, forLoop.pre.statements);
 				rewrite.emplace_back(move(forLoop));
-				return std::move(rewrite);
+				return { std::move(rewrite) };
 			}
 			else
 			{

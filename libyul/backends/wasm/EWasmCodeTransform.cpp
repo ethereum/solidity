@@ -63,7 +63,7 @@ wasm::Expression EWasmCodeTransform::generateMultiAssignment(
 	wasm::LocalAssignment assignment{move(_variableNames.front()), std::move(_firstValue)};
 
 	if (_variableNames.size() == 1)
-		return move(assignment);
+		return { std::move(assignment) };
 
 	wasm::Block block;
 	block.statements.emplace_back(move(assignment));
@@ -72,7 +72,7 @@ wasm::Expression EWasmCodeTransform::generateMultiAssignment(
 			move(_variableNames.at(i)),
 			make_unique<wasm::Expression>(wasm::GlobalVariable{m_globalVariables.at(i - 1).variableName})
 		});
-	return move(block);
+	return { std::move(block) };
 }
 
 wasm::Expression EWasmCodeTransform::operator()(VariableDeclaration const& _varDecl)
@@ -192,7 +192,7 @@ wasm::Expression EWasmCodeTransform::operator()(Switch const& _switch)
 			*currentBlock += visit(c.body.statements);
 		}
 	}
-	return move(block);
+	return { std::move(block) };
 }
 
 wasm::Expression EWasmCodeTransform::operator()(FunctionDefinition const&)
@@ -224,7 +224,7 @@ wasm::Expression EWasmCodeTransform::operator()(ForLoop const& _for)
 
 	wasm::Block breakBlock{breakLabel, {}};
 	breakBlock.statements.emplace_back(move(loop));
-	return move(breakBlock);
+	return { std::move(breakBlock) };
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Break const&)
