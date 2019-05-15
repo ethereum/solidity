@@ -248,6 +248,8 @@ struct FunctionCall
 		MultiLine
 	};
 	DisplayMode displayMode = DisplayMode::SingleLine;
+	/// Marks this function call as the constructor.
+	bool isConstructor = false;
 };
 
 /**

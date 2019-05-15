@@ -116,6 +116,9 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 				accept(Token::Newline, true);
 				call.expectations.comment = parseComment();
 
+				if (call.signature == "constructor()")
+					call.isConstructor = true;
+
 				calls.emplace_back(std::move(call));
 			}
 		}

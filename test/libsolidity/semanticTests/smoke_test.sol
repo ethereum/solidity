@@ -1,4 +1,8 @@
 contract C {
+    uint public state = 0;
+    constructor(uint _state) public {
+        state = _state;
+    }
     function f() payable public returns (uint) {
         return 2;
     }
@@ -31,6 +35,8 @@ contract C {
     }
 }
 // ----
+// constructor(): 3 ->
+// state() -> 3
 // _() -> FAILURE
 // f() -> 2
 // f(), 1 ether -> 2
