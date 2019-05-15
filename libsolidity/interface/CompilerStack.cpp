@@ -56,6 +56,7 @@
 #include <libevmasm/Exceptions.h>
 
 #include <libdevcore/SwarmHash.h>
+#include <libdevcore/IpfsHash.h>
 #include <libdevcore/JSON.h>
 
 #include <json/json.h>
@@ -769,6 +770,13 @@ h256 const& CompilerStack::Source::swarmHash() const
 	return swarmHashCached;
 }
 
+string const& CompilerStack::Source::ipfsUrl() const
+{
+	if (ipfsUrlCached.empty())
+		if (scanner->source().size() < 1024 * 256)
+			ipfsUrlCached = "dweb:/ipfs/" + dev::ipfsHashBase58(scanner->source());
+	return ipfsUrlCached;
+}
 
 StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
 {
@@ -1030,6 +1038,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		{
 			meta["sources"][s.first]["urls"] = Json::arrayValue;
 			meta["sources"][s.first]["urls"].append("bzzr://" + toHex(s.second.swarmHash().asBytes()));
+			meta["sources"][s.first]["urls"].append(s.second.ipfsUrl());
 		}
 	}
 

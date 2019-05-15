@@ -12,10 +12,13 @@ set(sources
 	FixedHash.h
 	IndentedWriter.cpp
 	IndentedWriter.h
+	IpfsHash.cpp
+	IpfsHash.h
 	JSON.cpp
 	JSON.h
 	Keccak256.cpp
 	Keccak256.h
+	picosha2.h
 	Result.h
 	StringUtils.cpp
 	StringUtils.h
