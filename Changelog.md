@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Optimizer: Add rule to simplify SHL/SHR combinations.
  * SMTChecker: Support inherited state variables.
  * SMTChecker: Support tuples and function calls with multiple return values.
  * SMTChecker: Support ``delete``.

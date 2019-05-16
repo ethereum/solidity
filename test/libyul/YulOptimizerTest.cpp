@@ -188,6 +188,8 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
+		ExpressionSimplifier::run(*m_dialect, *m_ast);
+		ExpressionSimplifier::run(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "fullSimplify")
 	{
