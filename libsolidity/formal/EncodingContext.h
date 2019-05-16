@@ -74,6 +74,20 @@ public:
 	void setUnknownValue(SymbolicVariable& _variable);
 	//@}
 
+	/// Methods related to expressions.
+	////@{
+	/// @returns the symbolic representation of an AST node expression.
+	std::shared_ptr<SymbolicVariable> expression(solidity::Expression const& _e);
+	/// @returns all symbolic expressions.
+	std::unordered_map<solidity::Expression const*, std::shared_ptr<SymbolicVariable>> const& expressions() const { return m_expressions; }
+
+	/// Creates the expression (value can be arbitrary).
+	/// @returns true if type is not supported.
+	bool createExpression(solidity::Expression const& _e, std::shared_ptr<SymbolicVariable> _symbExpr = nullptr);
+	/// Checks if expression was created.
+	bool knownExpression(solidity::Expression const& _e) const;
+	//@}
+
 	/// Blockchain related methods.
 	//@{
 	/// Value of `this` address.
@@ -94,6 +108,9 @@ private:
 
 	/// Symbolic variables.
 	std::unordered_map<solidity::VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
+
+	/// Symbolic expressions.
+	std::unordered_map<solidity::Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
 
 	/// Symbolic `this` address.
 	std::unique_ptr<SymbolicAddressVariable> m_thisAddress;
