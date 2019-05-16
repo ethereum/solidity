@@ -69,6 +69,7 @@ public:
 
 protected:
 	dev::solidity::CompilerStack m_compiler;
+	std::string m_asmString;
 	bool m_compileViaYul = false;
 };
 

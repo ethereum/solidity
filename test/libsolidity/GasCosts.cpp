@@ -43,6 +43,7 @@ namespace test
 		u256 tolerance{_tolerance}; \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
 		u256 diff = gas < m_gasUsed ? m_gasUsed - gas : gas - m_gasUsed; \
+		cout << "Used gas: " << m_gasUsed << endl; \
 		BOOST_CHECK_MESSAGE( \
 			diff <= tolerance, \
 			"Gas used: " + \
@@ -75,7 +76,10 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	else if (Options::get().useABIEncoderV2)
 	{
 		if (Options::get().optimizeYul)
-			CHECK_GAS(153631, 129829, 100);
+		{
+			cout << m_asmString << endl;
+			CHECK_GAS(153631, 130633, 100);
+		}
 		else
 			CHECK_GAS(153631, 138351, 100);
 	}
