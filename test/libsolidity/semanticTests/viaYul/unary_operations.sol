@@ -69,6 +69,18 @@ contract C {
 			ret := a
 		}
 	}
+	function negate(int256 a) public pure returns (int256)
+	{
+		return -a;
+	}
+	function negate_s8(int8 a) public pure returns (int8)
+	{
+		return -a;
+	}
+	function negate_s16(int16 a) public pure returns (int16)
+	{
+		return -a;
+	}
 }
 // ====
 // compileViaYul: true
@@ -111,3 +123,14 @@ contract C {
 // bitnot(int256): -100 -> 99
 // bitnot_u8(uint8): 100 -> 155
 // bitnot_s8() -> 99
+// negate(int256): -57896044618658097711785492504343953926634992332820282019728792003956564819968 -> FAILURE
+// negate(int256): -57896044618658097711785492504343953926634992332820282019728792003956564819967 -> 57896044618658097711785492504343953926634992332820282019728792003956564819967
+// negate(int256): 0 -> 0
+// negate(int256): 1 -> -1
+// negate(int256): -1 -> 1
+// negate_s8(int8): -128 -> FAILURE
+// negate_s8(int8): -138 -> FAILURE
+// negate_s8(int8): -127 -> 127
+// negate_s8(int8): 127 -> -127
+// negate_s16(int16): -32768 -> FAILURE
+// negate_s16(int16): -32767 -> 32767

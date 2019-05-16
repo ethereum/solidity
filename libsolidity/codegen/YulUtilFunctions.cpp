@@ -1088,6 +1088,28 @@ std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 	});
 }
 
+string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
+{
+	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+	solAssert(type.isSigned(), "Expected signed type!");
+
+	string const functionName = "negate_" + _type.identifier();
+
+	u256 const minintval = 0 - (u256(1) << (type.numBits() - 1)) + 1;
+
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(_value) -> ret {
+				if slt(_value, <minval>) { revert(0,0) }
+				ret := sub(0, _value)
+			}
+		)")
+			("functionName", functionName)
+			("minval", toCompactHexWithPrefix(minintval))
+			.render();
+		});
+}
+
 string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const& _to)
 {
 	string functionName =

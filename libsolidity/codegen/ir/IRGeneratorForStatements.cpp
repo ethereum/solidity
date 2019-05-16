@@ -265,24 +265,40 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 				) <<
 				"(" <<
 				originalValue <<
-				")\n" <<
-				m_currentLValue->storeValue(modifiedValue, resultType);
+				")\n";
+			m_code << m_currentLValue->storeValue(modifiedValue, resultType);
+			m_currentLValue.reset();
 
 			defineExpression(_unaryOperation) <<
 				(_unaryOperation.isPrefixOperation() ? modifiedValue : originalValue) <<
 				"\n";
-
-			m_code << m_currentLValue->storeValue(modifiedValue, resultType);
-			m_currentLValue.reset();
 		}
 		else if (op == Token::BitNot)
 			appendSimpleUnaryOperation(_unaryOperation, _unaryOperation.subExpression());
+		else if (op == Token::Add)
+			// According to SyntaxChecker...
+			solAssert(false, "Use of unary + is disallowed.");
+		else if (op == Token::Sub)
+		{
+			IntegerType const& intType = *dynamic_cast<IntegerType const*>(&resultType);
+
+			defineExpression(_unaryOperation) <<
+				m_utils.negateNumberCheckedFunction(intType) <<
+				"(" <<
+				m_context.variable(_unaryOperation.subExpression()) <<
+				")\n";
+		}
 		else
 			solUnimplementedAssert(false, "Unary operator not yet implemented");
 	}
 	else if (resultType.category() == Type::Category::Bool)
 	{
-			appendSimpleUnaryOperation(_unaryOperation, _unaryOperation.subExpression());
+		solAssert(
+			_unaryOperation.getOperator() != Token::BitNot,
+			"Bitwise Negation can't be done on bool!"
+		);
+
+		appendSimpleUnaryOperation(_unaryOperation, _unaryOperation.subExpression());
 	}
 	else
 		solUnimplementedAssert(false, "Unary operator not yet implemented");
