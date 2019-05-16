@@ -208,6 +208,27 @@ bool SemanticInformation::movable(Instruction _instruction)
 	return true;
 }
 
+bool SemanticInformation::sideEffectFree(Instruction _instruction)
+{
+	// These are not really functional.
+	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
+
+	InstructionInfo info = instructionInfo(_instruction);
+	switch (_instruction)
+	{
+	// All the instructions that merely read memory are fine
+	// even though they are marked "sideEffects" in Instructions.cpp
+	case Instruction::KECCAK256:
+	case Instruction::MLOAD:
+		return true;
+	default:
+		break;
+	}
+	if (info.sideEffects)
+		return false;
+	return true;
+}
+
 bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 {
 	switch (_instruction)

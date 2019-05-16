@@ -1,6 +1,6 @@
-// div is eliminated, but keccak256 has side-effects.
+// div is eliminated, but create has side-effects.
 {
-	let a := div(keccak256(0, 0), 0)
+	let a := div(create(0, 0, 0), 0)
 	mstore(0, a)
 }
 // ====
@@ -8,6 +8,6 @@
 // ----
 // {
 //     let _1 := 0
-//     pop(keccak256(_1, _1))
+//     pop(create(_1, _1, _1))
 //     mstore(_1, 0)
 // }

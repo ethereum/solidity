@@ -23,7 +23,6 @@
 // step: fullSimplify
 // ----
 // {
-//     pop(mload(0))
 //     mstore(1, 0)
 //     mstore(2, 0)
 //     mstore(3, 0)

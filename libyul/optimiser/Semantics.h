@@ -46,6 +46,8 @@ public:
 	using ASTWalker::visit;
 
 	bool movable() const { return m_movable; }
+	bool sideEffectFree() const { return m_sideEffectFree; }
+
 	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
 
 private:
@@ -54,6 +56,9 @@ private:
 	std::set<YulString> m_variableReferences;
 	/// Is the current expression movable or not.
 	bool m_movable = true;
+	/// Is the current expression side-effect free, i.e. can be removed
+	/// without changing the semantics.
+	bool m_sideEffectFree = true;
 };
 
 /**
