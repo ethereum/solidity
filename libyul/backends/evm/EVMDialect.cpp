@@ -23,11 +23,14 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
 #include <libyul/Object.h>
+#include <libyul/Exceptions.h>
+#include <libyul/AsmParser.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
 
-#include <liblangutil/Exceptions.h>
+#include <libevmasm/SemanticInformation.h>
+#include <libevmasm/Instruction.h>
 
-#include <libyul/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -37,6 +40,31 @@ using namespace yul;
 
 namespace
 {
+pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
+	string const& _name,
+	dev::eth::Instruction _instruction
+)
+{
+	eth::InstructionInfo info = dev::eth::instructionInfo(_instruction);
+	BuiltinFunctionForEVM f;
+	f.name = YulString{_name};
+	f.parameters.resize(info.args);
+	f.returns.resize(info.ret);
+	f.movable = eth::SemanticInformation::movable(_instruction);
+	f.literalArguments = false;
+	f.generateCode = [_instruction](
+		FunctionCall const&,
+		AbstractAssembly& _assembly,
+		BuiltinContext&,
+		std::function<void()> _visitArguments
+	) {
+		_visitArguments();
+		_assembly.appendInstruction(_instruction);
+	};
+
+	return {f.name, move(f)};
+}
+
 pair<YulString, BuiltinFunctionForEVM> createFunction(
 	string _name,
 	size_t _params,
@@ -59,9 +87,17 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	return {name, f};
 }
 
-map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion, bool _objectAccess)
+map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
 	map<YulString, BuiltinFunctionForEVM> builtins;
+	for (auto const& instr: Parser::instructions())
+		if (
+			!dev::eth::isDupInstruction(instr.second) &&
+			!dev::eth::isSwapInstruction(instr.second) &&
+			_evmVersion.hasOpcode(instr.second)
+		)
+			builtins.emplace(createEVMFunction(instr.first, instr.second));
+
 	if (_objectAccess)
 	{
 		builtins.emplace(createFunction("datasize", 1, 1, true, true, true, [](
