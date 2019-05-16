@@ -76,18 +76,8 @@ struct EVMDialect: public Dialect
 	bool providesObjectAccess() const { return m_objectAccess; }
 
 protected:
-	void addFunction(
-		std::string _name,
-		size_t _params,
-		size_t _returns,
-		bool _movable,
-		bool _sideEffectFree,
-		bool _literalArguments,
-		std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void()>)> _generateCode
-	);
-
-	bool m_objectAccess;
-	langutil::EVMVersion m_evmVersion;
+	bool const m_objectAccess;
+	langutil::EVMVersion const m_evmVersion;
 	std::map<YulString, BuiltinFunctionForEVM> m_functions;
 };
 
