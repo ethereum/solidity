@@ -60,25 +60,22 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
 		boost::optional<langutil::Error::Type> _errorTypeForLoose,
-		std::shared_ptr<Dialect const> _dialect,
+		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
 	):
 		m_resolver(_resolver),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
-		m_dialect(std::move(_dialect)),
+		m_dialect(_dialect),
 		m_errorTypeForLoose(_errorTypeForLoose)
 	{
-		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(m_dialect.get()))
+		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			m_evmVersion = evmDialect->evmVersion();
 	}
 
 	bool analyze(Block const& _block);
 
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(
-		std::shared_ptr<Dialect const> _dialect,
-		Block const& _ast
-	);
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Block const& _ast);
 
 	bool operator()(Instruction const&);
 	bool operator()(Literal const& _literal);
@@ -125,7 +122,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
-	std::shared_ptr<Dialect const> m_dialect;
+	Dialect const& m_dialect;
 	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
 	ForLoop const* m_currentForLoop = nullptr;
 };

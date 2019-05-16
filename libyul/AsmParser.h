@@ -44,8 +44,8 @@ public:
 		None, ForLoopPre, ForLoopPost, ForLoopBody
 	};
 
-	explicit Parser(langutil::ErrorReporter& _errorReporter, std::shared_ptr<Dialect const> _dialect):
-		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
+	explicit Parser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
+		ParserBase(_errorReporter), m_dialect(_dialect) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
@@ -97,7 +97,7 @@ protected:
 	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
-	std::shared_ptr<Dialect const> m_dialect;
+	Dialect const& m_dialect;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 };
 

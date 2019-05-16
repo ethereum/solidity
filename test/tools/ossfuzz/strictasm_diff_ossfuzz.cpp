@@ -81,7 +81,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		yulFuzzerUtil::interpret(
 			os1,
 			stack.parserResult()->code,
-			*EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
 		);
 	}
 	catch (yul::test::StepLimitReached const&)
@@ -98,7 +98,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		yulFuzzerUtil::interpret(
 			os2,
 			stack.parserResult()->code,
-			*EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
 		);
 	}

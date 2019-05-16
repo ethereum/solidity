@@ -122,9 +122,9 @@ public:
 				return;
 			if (!disambiguated)
 			{
-				*m_ast = boost::get<yul::Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_ast));
+				*m_ast = boost::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
 				m_analysisInfo.reset();
-				m_nameDispenser = make_shared<NameDispenser>(*m_dialect, *m_ast);
+				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast);
 				disambiguated = true;
 			}
 			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
@@ -146,16 +146,16 @@ public:
 				ForLoopInitRewriter{}(*m_ast);
 				break;
 			case 'c':
-				(CommonSubexpressionEliminator{*m_dialect})(*m_ast);
+				(CommonSubexpressionEliminator{m_dialect})(*m_ast);
 				break;
 			case 'd':
 				(VarDeclInitializer{})(*m_ast);
 				break;
 			case 'l':
-				VarNameCleaner{*m_ast, *m_dialect}(*m_ast);
+				VarNameCleaner{*m_ast, m_dialect}(*m_ast);
 				break;
 			case 'x':
-				ExpressionSplitter{*m_dialect, *m_nameDispenser}(*m_ast);
+				ExpressionSplitter{m_dialect, *m_nameDispenser}(*m_ast);
 				break;
 			case 'j':
 				ExpressionJoiner::run(*m_ast);
@@ -167,22 +167,22 @@ public:
 				(FunctionHoister{})(*m_ast);
 				break;
 			case 'e':
-				ExpressionInliner{*m_dialect, *m_ast}.run();
+				ExpressionInliner{m_dialect, *m_ast}.run();
 				break;
 			case 'i':
 				FullInliner(*m_ast, *m_nameDispenser).run();
 				break;
 			case 's':
-				ExpressionSimplifier::run(*m_dialect, *m_ast);
+				ExpressionSimplifier::run(m_dialect, *m_ast);
 				break;
 			case 't':
-				(StructuralSimplifier{*m_dialect})(*m_ast);
+				(StructuralSimplifier{m_dialect})(*m_ast);
 				break;
 			case 'n':
 				(ControlFlowSimplifier{})(*m_ast);
 				break;
 			case 'u':
-				UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+				UnusedPruner::runUntilStabilised(m_dialect, *m_ast);
 				break;
 			case 'D':
 				DeadCodeEliminator{}(*m_ast);
@@ -191,10 +191,10 @@ public:
 				SSATransform::run(*m_ast, *m_nameDispenser);
 				break;
 			case 'r':
-				RedundantAssignEliminator::run(*m_dialect, *m_ast);
+				RedundantAssignEliminator::run(m_dialect, *m_ast);
 				break;
 			case 'm':
-				Rematerialiser::run(*m_dialect, *m_ast);
+				Rematerialiser::run(m_dialect, *m_ast);
 				break;
 			case 'v':
 				EquivalentFunctionCombiner::run(*m_ast);
@@ -215,7 +215,7 @@ public:
 private:
 	ErrorList m_errors;
 	shared_ptr<yul::Block> m_ast;
-	shared_ptr<Dialect const> m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
+	Dialect const& m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
 	shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	shared_ptr<NameDispenser> m_nameDispenser;
 };

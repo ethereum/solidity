@@ -45,11 +45,8 @@ namespace yul
 class ObjectParser: public langutil::ParserBase
 {
 public:
-	explicit ObjectParser(
-		langutil::ErrorReporter& _errorReporter,
-		std::shared_ptr<Dialect const> _dialect
-	):
-		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
+	explicit ObjectParser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
+		ParserBase(_errorReporter), m_dialect(_dialect) {}
 
 	/// Parses a Yul object.
 	/// Falls back to code-only parsing if the source starts with `{`.
@@ -67,7 +64,7 @@ private:
 	YulString parseUniqueName(Object const* _containingObject);
 	void addNamedSubObject(Object& _container, YulString _name, std::shared_ptr<ObjectNode> _subObject);
 
-	std::shared_ptr<Dialect const> m_dialect;
+	Dialect const& m_dialect;
 };
 
 }

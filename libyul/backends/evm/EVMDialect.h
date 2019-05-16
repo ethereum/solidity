@@ -61,15 +61,16 @@ struct BuiltinFunctionForEVM: BuiltinFunction
  */
 struct EVMDialect: public Dialect
 {
+	/// Constructor, should only be used internally. Use the factory functions below.
 	EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	static std::shared_ptr<EVMDialect const> looseAssemblyForEVM(langutil::EVMVersion _version);
-	static std::shared_ptr<EVMDialect const> strictAssemblyForEVM(langutil::EVMVersion _version);
-	static std::shared_ptr<EVMDialect const> strictAssemblyForEVMObjects(langutil::EVMVersion _version);
-	static std::shared_ptr<EVMDialect const> yulForEVM(langutil::EVMVersion _version);
+	static EVMDialect const& looseAssemblyForEVM(langutil::EVMVersion _version);
+	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
+	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
+	static EVMDialect const& yulForEVM(langutil::EVMVersion _version);
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 

@@ -42,11 +42,17 @@ struct Object;
  */
 struct WasmDialect: public Dialect
 {
-	WasmDialect();
-
 	BuiltinFunction const* builtin(YulString _name) const override;
 
+	static WasmDialect const& instance()
+	{
+		static WasmDialect dialect;
+		return dialect;
+	}
+
 protected:
+	WasmDialect();
+
 	void addFunction(std::string _name, size_t _params, size_t _returns);
 
 	std::map<YulString, BuiltinFunction> m_functions;

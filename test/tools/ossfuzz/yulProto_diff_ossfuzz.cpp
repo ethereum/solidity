@@ -79,7 +79,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		yulFuzzerUtil::interpret(
 			os1,
 			stack.parserResult()->code,
-			*EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
 		);
 	}
 	catch (yul::test::StepLimitReached const&)
@@ -96,7 +96,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		yulFuzzerUtil::interpret(
 			os2,
 			stack.parserResult()->code,
-			*EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
 		);
 	}

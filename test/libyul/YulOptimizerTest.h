@@ -66,7 +66,7 @@ private:
 	std::string m_optimizerStep;
 	std::string m_expectation;
 
-	std::shared_ptr<Dialect const> m_dialect;
+	Dialect const* m_dialect = nullptr;
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;

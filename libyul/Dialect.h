@@ -64,10 +64,10 @@ struct Dialect: boost::noncopyable
 	Dialect(AsmFlavour _flavour): flavour(_flavour) {}
 	virtual ~Dialect() = default;
 
-	static std::shared_ptr<Dialect const> yul()
+	static Dialect const& yul()
 	{
-		// Will have to add builtins later.
-		return std::make_shared<Dialect>(AsmFlavour::Yul);
+		static Dialect yulDialect(AsmFlavour::Yul);
+		return yulDialect;
 	}
 };
 

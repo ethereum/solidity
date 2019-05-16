@@ -184,13 +184,12 @@ void CodeGenerator::assemble(
 )
 {
 	EthAssemblyAdapter assemblyAdapter(_assembly);
-	shared_ptr<EVMDialect const> dialect = EVMDialect::strictAssemblyForEVM(_evmVersion);
 	BuiltinContext builtinContext;
 	CodeTransform transform(
 		assemblyAdapter,
 		_analysisInfo,
 		_parsedData,
-		*dialect,
+		EVMDialect::strictAssemblyForEVM(_evmVersion),
 		builtinContext,
 		_optimizeStackAllocation,
 		false,
