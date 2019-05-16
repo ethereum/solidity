@@ -62,6 +62,7 @@
 #include <json/json.h>
 
 #include <boost/algorithm/string.hpp>
+#include <iostream>
 
 using namespace std;
 using namespace dev;
@@ -694,6 +695,8 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 	// cache the result
 	if (!_contract.metadata)
 		_contract.metadata.reset(new string(createMetadata(_contract)));
+
+	cout << "METADATA INPUT BEGIN FOR CONTRACT (" << _contract.contract->name() << "):" << std::endl << *_contract.metadata << "METADATA INPUT END" << std::endl;
 
 	return *_contract.metadata;
 }
