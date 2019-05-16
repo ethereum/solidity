@@ -25,7 +25,7 @@ in functions, or as parameters for library functions.
 They cannot be used as parameters or return parameters
 of contract functions that are publicly visible.
 
-You can mark variables of mapping type as ``public`` and Solidity creates a
+You can mark state variables of mapping type as ``public`` and Solidity creates a
 :ref:`getter <visibility-and-getters>` for you. The ``_KeyType`` becomes a
 parameter for the getter. If ``_ValueType`` is a value type or a struct,
 the getter returns ``_ValueType``.
