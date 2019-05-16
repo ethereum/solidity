@@ -58,7 +58,7 @@ using namespace dev;
 using namespace yul;
 
 void OptimiserSuite::run(
-	shared_ptr<Dialect> const& _dialect,
+	shared_ptr<Dialect const> const& _dialect,
 	Block& _ast,
 	AsmAnalysisInfo const& _analysisInfo,
 	bool _optimizeStackAllocation,

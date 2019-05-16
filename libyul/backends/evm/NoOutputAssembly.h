@@ -81,7 +81,7 @@ private:
  */
 struct NoOutputEVMDialect: public EVMDialect
 {
-	explicit NoOutputEVMDialect(std::shared_ptr<EVMDialect> const& _copyFrom);
+	explicit NoOutputEVMDialect(std::shared_ptr<EVMDialect const> const& _copyFrom);
 };
 
 

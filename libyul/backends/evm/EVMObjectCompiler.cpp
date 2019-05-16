@@ -29,7 +29,7 @@
 using namespace yul;
 using namespace std;
 
-void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, EVMDialect& _dialect, bool _evm15, bool _optimize)
+void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, EVMDialect const& _dialect, bool _evm15, bool _optimize)
 {
 	EVMObjectCompiler compiler(_assembly, _dialect, _evm15);
 	compiler.run(_object, _optimize);

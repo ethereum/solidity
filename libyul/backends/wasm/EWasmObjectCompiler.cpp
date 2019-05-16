@@ -28,7 +28,7 @@
 using namespace yul;
 using namespace std;
 
-string EWasmObjectCompiler::compile(Object& _object, Dialect& _dialect)
+string EWasmObjectCompiler::compile(Object& _object, Dialect const& _dialect)
 {
 	EWasmObjectCompiler compiler(_dialect);
 	return compiler.run(_object);

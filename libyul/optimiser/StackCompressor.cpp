@@ -112,7 +112,7 @@ public:
 };
 
 template <typename ASTNode>
-void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, size_t _numVariables)
+void eliminateVariables(shared_ptr<Dialect const> const& _dialect, ASTNode& _node, size_t _numVariables)
 {
 	RematCandidateSelector selector{*_dialect};
 	selector(_node);
@@ -133,7 +133,7 @@ void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, siz
 }
 
 bool StackCompressor::run(
-	shared_ptr<Dialect> const& _dialect,
+	shared_ptr<Dialect const> const& _dialect,
 	Block& _ast,
 	bool _optimizeStackAllocation,
 	size_t _maxIterations

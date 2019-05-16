@@ -60,7 +60,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
 		boost::optional<langutil::Error::Type> _errorTypeForLoose,
-		std::shared_ptr<Dialect> _dialect,
+		std::shared_ptr<Dialect const> _dialect,
 		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
 	):
 		m_resolver(_resolver),
@@ -76,7 +76,7 @@ public:
 	bool analyze(Block const& _block);
 
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(
-		std::shared_ptr<Dialect> _dialect,
+		std::shared_ptr<Dialect const> _dialect,
 		Block const& _ast
 	);
 
@@ -125,7 +125,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
-	std::shared_ptr<Dialect> m_dialect;
+	std::shared_ptr<Dialect const> m_dialect;
 	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
 	ForLoop const* m_currentForLoop = nullptr;
 };

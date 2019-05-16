@@ -49,7 +49,7 @@ namespace test
 namespace
 {
 
-bool parse(string const& _source, std::shared_ptr<Dialect> _dialect, ErrorReporter& errorReporter)
+bool parse(string const& _source, std::shared_ptr<Dialect const> _dialect, ErrorReporter& errorReporter)
 {
 	try
 	{
@@ -73,7 +73,7 @@ bool parse(string const& _source, std::shared_ptr<Dialect> _dialect, ErrorReport
 	return false;
 }
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, shared_ptr<Dialect> _dialect, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(string const& _source, shared_ptr<Dialect const> _dialect, bool _allowWarnings = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -98,12 +98,12 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, shared_pt
 	return {};
 }
 
-bool successParse(std::string const& _source, shared_ptr<Dialect> _dialect = Dialect::yul(), bool _allowWarnings = true)
+bool successParse(std::string const& _source, shared_ptr<Dialect const> _dialect = Dialect::yul(), bool _allowWarnings = true)
 {
 	return !parseAndReturnFirstError(_source, _dialect, _allowWarnings);
 }
 
-Error expectError(std::string const& _source, shared_ptr<Dialect> _dialect = Dialect::yul(), bool _allowWarnings = false)
+Error expectError(std::string const& _source, shared_ptr<Dialect const> _dialect = Dialect::yul(), bool _allowWarnings = false)
 {
 
 	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarnings);
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 		BuiltinFunction f;
 	};
 
-	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
+	shared_ptr<Dialect const> dialect = make_shared<SimpleDialect>();
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Cannot assign to builtin function \"builtin\".", dialect);
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), false, false};
 	};
 
-	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
+	shared_ptr<Dialect const> dialect = make_shared<SimpleDialect>();
 	BOOST_CHECK(successParse("{ let a, b, c := builtin(1, 2) }", dialect));
 	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
 	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);

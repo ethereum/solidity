@@ -33,7 +33,7 @@ using namespace yul;
 using namespace dev;
 
 map<YulString, int> CompilabilityChecker::run(
-	shared_ptr<Dialect> _dialect,
+	shared_ptr<Dialect const> _dialect,
 	Block const& _ast,
 	bool _optimizeStackAllocation
 )
@@ -44,7 +44,8 @@ map<YulString, int> CompilabilityChecker::run(
 	solAssert(_dialect->flavour == AsmFlavour::Strict, "");
 
 	solAssert(dynamic_cast<EVMDialect const*>(_dialect.get()), "");
-	shared_ptr<NoOutputEVMDialect> noOutputDialect = make_shared<NoOutputEVMDialect>(dynamic_pointer_cast<EVMDialect>(_dialect));
+	shared_ptr<NoOutputEVMDialect const> noOutputDialect =
+		make_shared<NoOutputEVMDialect>(dynamic_pointer_cast<EVMDialect const>(_dialect));
 	BuiltinContext builtinContext;
 
 	yul::AsmAnalysisInfo analysisInfo =

@@ -30,15 +30,15 @@ struct Dialect;
 class EWasmObjectCompiler
 {
 public:
-	static std::string compile(Object& _object, Dialect& _dialect);
+	static std::string compile(Object& _object, Dialect const& _dialect);
 private:
-	EWasmObjectCompiler(Dialect& _dialect):
+	EWasmObjectCompiler(Dialect const& _dialect):
 		m_dialect(_dialect)
 	{}
 
 	std::string run(Object& _object);
 
-	Dialect& m_dialect;
+	Dialect const& m_dialect;
 };
 
 }

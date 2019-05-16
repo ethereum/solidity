@@ -47,7 +47,7 @@ using namespace yul;
 
 namespace
 {
-shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
+shared_ptr<Dialect const> languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
 {
 	switch (_language)
 	{
@@ -124,7 +124,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 
 void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _optimize) const
 {
-	shared_ptr<EVMDialect> dialect;
+	shared_ptr<EVMDialect const> dialect;
 
 	if (m_language == Language::Assembly)
 		dialect = EVMDialect::looseAssemblyForEVM(m_evmVersion);
@@ -184,7 +184,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	case Machine::eWasm:
 	{
 		solAssert(m_language == Language::EWasm, "");
-		shared_ptr<Dialect> dialect = languageToDialect(m_language, EVMVersion{});
+		shared_ptr<Dialect const> dialect = languageToDialect(m_language, EVMVersion{});
 
 		MachineAssemblyObject object;
 		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, *dialect);

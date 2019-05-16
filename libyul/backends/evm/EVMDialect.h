@@ -66,10 +66,10 @@ struct EVMDialect: public Dialect
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	static std::shared_ptr<EVMDialect> looseAssemblyForEVM(langutil::EVMVersion _version);
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVM(langutil::EVMVersion _version);
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVMObjects(langutil::EVMVersion _version);
-	static std::shared_ptr<EVMDialect> yulForEVM(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect const> looseAssemblyForEVM(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect const> strictAssemblyForEVM(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect const> strictAssemblyForEVMObjects(langutil::EVMVersion _version);
+	static std::shared_ptr<EVMDialect const> yulForEVM(langutil::EVMVersion _version);
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 

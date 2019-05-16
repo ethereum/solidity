@@ -47,7 +47,7 @@ class ObjectParser: public langutil::ParserBase
 public:
 	explicit ObjectParser(
 		langutil::ErrorReporter& _errorReporter,
-		std::shared_ptr<Dialect> _dialect
+		std::shared_ptr<Dialect const> _dialect
 	):
 		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
 
@@ -67,7 +67,7 @@ private:
 	YulString parseUniqueName(Object const* _containingObject);
 	void addNamedSubObject(Object& _container, YulString _name, std::shared_ptr<ObjectNode> _subObject);
 
-	std::shared_ptr<Dialect> m_dialect;
+	std::shared_ptr<Dialect const> m_dialect;
 };
 
 }

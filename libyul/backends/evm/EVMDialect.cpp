@@ -138,22 +138,22 @@ BuiltinFunctionForEVM const* EVMDialect::builtin(YulString _name) const
 		return nullptr;
 }
 
-shared_ptr<EVMDialect> EVMDialect::looseAssemblyForEVM(langutil::EVMVersion _version)
+shared_ptr<EVMDialect const> EVMDialect::looseAssemblyForEVM(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Loose, false, _version);
 }
 
-shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
+shared_ptr<EVMDialect const> EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Strict, false, _version);
 }
 
-shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
+shared_ptr<EVMDialect const> EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Strict, true, _version);
 }
 
-shared_ptr<yul::EVMDialect> EVMDialect::yulForEVM(langutil::EVMVersion _version)
+shared_ptr<EVMDialect const> EVMDialect::yulForEVM(langutil::EVMVersion _version)
 {
 	return make_shared<EVMDialect>(AsmFlavour::Yul, false, _version);
 }

@@ -142,7 +142,7 @@ AbstractAssembly::SubID NoOutputAssembly::appendData(bytes const&)
 	return 1;
 }
 
-NoOutputEVMDialect::NoOutputEVMDialect(shared_ptr<EVMDialect> const& _copyFrom):
+NoOutputEVMDialect::NoOutputEVMDialect(shared_ptr<EVMDialect const> const& _copyFrom):
 	EVMDialect(_copyFrom->flavour, _copyFrom->providesObjectAccess(), _copyFrom->evmVersion())
 {
 	for (auto& fun: m_functions)

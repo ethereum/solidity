@@ -70,7 +70,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 }
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
-	shared_ptr<Dialect> _dialect,
+	shared_ptr<Dialect const> _dialect,
 	Block const& _ast
 )
 {
