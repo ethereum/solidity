@@ -19,6 +19,11 @@ public:
 	SolidityExecutionFramework();
 	SolidityExecutionFramework(langutil::EVMVersion _evmVersion);
 
+	Json::Value getMethodIdentifiers()
+	{
+		return m_compiler.methodIdentifiers(m_compiler.lastContractName());
+	}
+
 	dev::bytes compileContract(
 			std::string const& _sourceCode,
 			std::string const& _contractName = "",

@@ -17,16 +17,34 @@
 
 #include <test/tools/evmoneRunner.h>
 #include <iostream>
+#include <assert.h>
 
 using namespace external::evmone;
 using namespace std;
 
+evmc_host_interface EvmOneVM::interface{
+		{},
+		{},
+		{},
+		{},
+		{},
+		{},
+		{},
+		{},
+		{},
+		[](evmc_context* ctx) { return static_cast<EvmOneVM*>(ctx)->tx_context; },
+		{},
+		{},
+};
+
 void EvmOneVM::execute(evmc_message const& _msg, std::string _runtimeCode)
 {
-	// Release previous result.
-	if (result.release)
-		result.release(&result);
+	evmc_result result = {};
 
-	result = vm->execute(vm, NULL, rev, &_msg, reinterpret_cast<uint8_t const*>(_runtimeCode.data()), _runtimeCode.size());
+	result = vm->execute(vm, this, rev, &_msg, reinterpret_cast<uint8_t const*>(_runtimeCode.data()), _runtimeCode.size());
+	cout << result.status_code << endl;
+	assert(result.status_code == EVMC_SUCCESS);
+	std::string output= reinterpret_cast<const char*>(result.output_data);
+	assert(output == "0000000000000000000000000000000000000000000000000000000000000001");
 	cout << result.output_data << endl;
 }

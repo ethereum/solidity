@@ -24,18 +24,19 @@ namespace external
 {
 namespace evmone
 {
-class EvmOneVM
+class EvmOneVM : public evmc_context
 {
 public:
-	EvmOneVM() : vm{evmc_create_evmone()} {}
+	EvmOneVM() : evmc_context{&interface}, vm{evmc_create_evmone()} {}
 	// Wrapper for evmone::execute. The result will be in the .result field.
 	void execute(evmc_message const& _msg, std::string _runtimeCode);
 
 private:
 	evmc_instance* vm = nullptr;
 	evmc_revision rev = EVMC_PETERSBURG;
-	evmc_result result = {};
 	static evmc_host_interface interface;
+	// TODO: Initialize transaction
+	evmc_tx_context tx_context = {};
 };
 }
 }
