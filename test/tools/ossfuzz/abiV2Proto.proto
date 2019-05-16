@@ -167,11 +167,16 @@ message TestFunction {
 
 message CoderFunction {}
 
-message Program {
+message Constructor {
+
+}
+
+message Contract {
     repeated ContractStatement cstatements = 1;
-    required TestFunction testfunction = 2;
-    required CoderFunction coderfunction = 3;
-    required bytes input = 4;
+    required Constructor constructor = 2;
+    required TestFunction testfunction = 3;
+    required CoderFunction coderfunction = 4;
+    required bytes input = 5;
 }
 
 package dev.test.abiv2fuzzer;

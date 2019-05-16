@@ -51,6 +51,7 @@ target_link_libraries(yul_proto_diff_ossfuzz PRIVATE yul evmasm
 add_executable(abiV2TestGenerator abiV2ProtoFuzzer.cpp abiV2FuzzerCommon.cpp protoToAbiV2.cpp abiV2Proto.pb.cc)
 target_include_directories(abiV2TestGenerator PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
 target_link_libraries(abiV2TestGenerator PRIVATE solidity evmasm
+        evmone evmc-instructions intx ethash
         protobuf-mutator-libfuzzer.a
         protobuf-mutator.a
         protobuf.a
