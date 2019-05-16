@@ -55,7 +55,7 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-	soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
+
 
 	bool success = true;
 	for (auto& test: m_tests)
@@ -63,18 +63,37 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 
 	for (auto& test: m_tests)
 	{
-		bytes output = callContractFunctionWithValueNoEncoding(
-			test.call().signature,
-			test.call().value,
-			test.call().arguments.rawBytes()
-		);
+		if (&test == &m_tests.front())
+			if (test.call().isConstructor)
+				deploy("", 0, test.call().arguments.rawBytes());
+			else
+				soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
+		else
+			soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call.");
 
-		if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
-			success = false;
+		if (test.call().isConstructor)
+		{
+			if (m_transactionSuccessful == test.call().expectations.failure)
+				success = false;
 
-		test.setFailure(!m_transactionSuccessful);
-		test.setRawBytes(std::move(output));
-		test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+			test.setFailure(!m_transactionSuccessful);
+			test.setRawBytes(bytes());
+		}
+		else
+		{
+			bytes output = callContractFunctionWithValueNoEncoding(
+				test.call().signature,
+				test.call().value,
+				test.call().arguments.rawBytes()
+			);
+
+			if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
+				success = false;
+
+			test.setFailure(!m_transactionSuccessful);
+			test.setRawBytes(std::move(output));
+			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+		}
 	}
 
 	if (!success)
