@@ -9771,7 +9771,7 @@ BOOST_AUTO_TEST_CASE(calldata_offset)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "CB", encodeArgs(u256(0x20)));
+	compileAndRun(sourceCode, 0, "CB", encodeArgs(u256(0x20), u256(0x00)));
 	ABI_CHECK(callContractFunction("last()", encodeArgs()), encodeDyn(string("nd")));
 }
 

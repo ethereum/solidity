@@ -452,6 +452,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -462,6 +463,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -473,6 +475,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -483,6 +486,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ABIEncoderV2PackedStorage_0.4.x",
@@ -510,6 +514,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ABIEncoderV2PackedStorage_0.4.x",
@@ -521,6 +526,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ABIEncoderV2PackedStorage_0.4.x",
@@ -532,6 +538,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ABIEncoderV2PackedStorage_0.4.x",
@@ -543,6 +550,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ABIEncoderV2PackedStorage_0.4.x",
@@ -553,6 +561,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ABIEncoderV2PackedStorage_0.4.x",
@@ -563,6 +572,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ABIEncoderV2PackedStorage_0.4.x"
@@ -570,7 +580,9 @@
         "released": "2018-09-12"
     },
     "0.4.26": {
-        "bugs": [],
+        "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2"
+        ],
         "released": "2019-04-29"
     },
     "0.4.3": {
@@ -677,6 +689,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
@@ -685,6 +698,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
@@ -693,6 +707,7 @@
     },
     "0.5.2": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
@@ -701,6 +716,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
@@ -709,6 +725,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage"
@@ -717,6 +734,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
@@ -727,6 +745,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
             "ABIEncoderV2PackedStorage",
@@ -736,13 +755,16 @@
     },
     "0.5.7": {
         "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries"
         ],
         "released": "2019-03-26"
     },
     "0.5.8": {
-        "bugs": [],
+        "bugs": [
+            "DynamicConstructorArgumentsClippedABIV2"
+        ],
         "released": "2019-04-30"
     }
 }
