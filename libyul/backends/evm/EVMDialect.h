@@ -47,6 +47,7 @@ struct BuiltinContext
 
 struct BuiltinFunctionForEVM: BuiltinFunction
 {
+	boost::optional<dev::eth::Instruction> instruction;
 	/// Function to generate code for the given function call and append it to the abstract
 	/// assembly. The fourth parameter is called to visit (and generate code for) the arguments
 	/// from right to left.

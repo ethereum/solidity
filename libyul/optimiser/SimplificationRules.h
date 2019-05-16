@@ -26,6 +26,7 @@
 #include <libyul/AsmData.h>
 
 #include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 
 #include <functional>
 #include <vector>
@@ -55,6 +56,10 @@ public:
 	/// Checks whether the rulelist is non-empty. This is usually enforced
 	/// by the constructor, but we had some issues with static initialization.
 	bool isInitialized() const;
+
+	static boost::optional<std::pair<dev::eth::Instruction, std::vector<Expression> const*>>
+	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
+
 private:
 	void addRules(std::vector<dev::eth::SimplificationRule<Pattern>> const& _rules);
 	void addRule(dev::eth::SimplificationRule<Pattern> const& _rule);

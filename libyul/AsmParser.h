@@ -56,7 +56,7 @@ public:
 	static std::map<std::string, dev::eth::Instruction> const& instructions();
 
 protected:
-	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier>;
+	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier, FunctionCall>;
 
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
@@ -81,9 +81,8 @@ protected:
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
 	static std::map<dev::eth::Instruction, std::string> const& instructionNames();
-	/// Parses an elementary operation, i.e. a literal, identifier or instruction.
-	/// This will parse instructions even in strict mode as part of the full parser
-	/// for FunctionalInstruction.
+	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
+	/// builtin functian call (only the name).
 	ElementaryOperation parseElementaryOperation();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();

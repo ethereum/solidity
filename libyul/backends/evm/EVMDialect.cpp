@@ -51,7 +51,9 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.parameters.resize(info.args);
 	f.returns.resize(info.ret);
 	f.movable = eth::SemanticInformation::movable(_instruction);
+	f.sideEffectFree = eth::SemanticInformation::sideEffectFree(_instruction);
 	f.literalArguments = false;
+	f.instruction = _instruction;
 	f.generateCode = [_instruction](
 		FunctionCall const&,
 		AbstractAssembly& _assembly,
@@ -83,20 +85,22 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	f.movable = _movable;
 	f.literalArguments = _literalArguments;
 	f.sideEffectFree = _sideEffectFree;
+	f.instruction = {};
 	f.generateCode = std::move(_generateCode);
 	return {name, f};
 }
 
-map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
+map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess,  bool _evmOpcodes)
 {
 	map<YulString, BuiltinFunctionForEVM> builtins;
-	for (auto const& instr: Parser::instructions())
-		if (
-			!dev::eth::isDupInstruction(instr.second) &&
-			!dev::eth::isSwapInstruction(instr.second) &&
-			_evmVersion.hasOpcode(instr.second)
-		)
-			builtins.emplace(createEVMFunction(instr.first, instr.second));
+	if (_evmOpcodes)
+		for (auto const& instr: Parser::instructions())
+			if (
+				!dev::eth::isDupInstruction(instr.second) &&
+				!dev::eth::isSwapInstruction(instr.second) &&
+				_evmVersion.hasOpcode(instr.second)
+			)
+				builtins.emplace(createEVMFunction(instr.first, instr.second));
 
 	if (_objectAccess)
 	{
@@ -161,7 +165,7 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 	Dialect{_flavour},
 	m_objectAccess(_objectAccess),
 	m_evmVersion(_evmVersion),
-	m_functions(createBuiltins(_evmVersion, _objectAccess))
+	m_functions(createBuiltins(_evmVersion, _objectAccess, _flavour != AsmFlavour::Loose))
 {
 }
 
