@@ -112,9 +112,9 @@ public:
 };
 
 template <typename ASTNode>
-void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, size_t _numVariables)
+void eliminateVariables(Dialect const& _dialect, ASTNode& _node, size_t _numVariables)
 {
-	RematCandidateSelector selector{*_dialect};
+	RematCandidateSelector selector{_dialect};
 	selector(_node);
 
 	// Select at most _numVariables
@@ -126,14 +126,14 @@ void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, siz
 		varsToEliminate.insert(costs.second);
 	}
 
-	Rematerialiser::run(*_dialect, _node, std::move(varsToEliminate));
-	UnusedPruner::runUntilStabilised(*_dialect, _node);
+	Rematerialiser::run(_dialect, _node, std::move(varsToEliminate));
+	UnusedPruner::runUntilStabilised(_dialect, _node);
 }
 
 }
 
 bool StackCompressor::run(
-	shared_ptr<Dialect> const& _dialect,
+	Dialect const& _dialect,
 	Block& _ast,
 	bool _optimizeStackAllocation,
 	size_t _maxIterations

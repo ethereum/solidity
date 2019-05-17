@@ -35,55 +35,98 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion):
-	Dialect{_flavour}, m_objectAccess(_objectAccess), m_evmVersion(_evmVersion)
+namespace
 {
-	// The EVM instructions will be moved to builtins at some point.
-	if (!m_objectAccess)
-		return;
+pair<YulString, BuiltinFunctionForEVM> createFunction(
+	string _name,
+	size_t _params,
+	size_t _returns,
+	bool _movable,
+	bool _sideEffectFree,
+	bool _literalArguments,
+	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void()>)> _generateCode
+)
+{
+	YulString name{std::move(_name)};
+	BuiltinFunctionForEVM f;
+	f.name = name;
+	f.parameters.resize(_params);
+	f.returns.resize(_returns);
+	f.movable = _movable;
+	f.literalArguments = _literalArguments;
+	f.sideEffectFree = _sideEffectFree;
+	f.generateCode = std::move(_generateCode);
+	return {name, f};
+}
 
-	addFunction("datasize", 1, 1, true, true, true, [this](
-		FunctionCall const& _call,
-		AbstractAssembly& _assembly,
-		std::function<void()>
-	) {
-		yulAssert(m_currentObject, "No object available.");
-		yulAssert(_call.arguments.size() == 1, "");
-		Expression const& arg = _call.arguments.front();
-		YulString dataName = boost::get<Literal>(arg).value;
-		if (m_currentObject->name == dataName)
-			_assembly.appendAssemblySize();
-		else
-		{
-			yulAssert(m_subIDs.count(dataName) != 0, "Could not find assembly object <" + dataName.str() + ">.");
-			_assembly.appendDataSize(m_subIDs.at(dataName));
-		}
-	});
-	addFunction("dataoffset", 1, 1, true, true, true, [this](
-		FunctionCall const& _call,
-		AbstractAssembly& _assembly,
-		std::function<void()>
-	) {
-		yulAssert(m_currentObject, "No object available.");
-		yulAssert(_call.arguments.size() == 1, "");
-		Expression const& arg = _call.arguments.front();
-		YulString dataName = boost::get<Literal>(arg).value;
-		if (m_currentObject->name == dataName)
-			_assembly.appendConstant(0);
-		else
-		{
-			yulAssert(m_subIDs.count(dataName) != 0, "Could not find assembly object <" + dataName.str() + ">.");
-			_assembly.appendDataOffset(m_subIDs.at(dataName));
-		}
-	});
-	addFunction("datacopy", 3, 0, false, false, false, [](
-		FunctionCall const&,
-		AbstractAssembly& _assembly,
-		std::function<void()> _visitArguments
-	) {
-		_visitArguments();
-		_assembly.appendInstruction(dev::eth::Instruction::CODECOPY);
-	});
+map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion, bool _objectAccess)
+{
+	map<YulString, BuiltinFunctionForEVM> builtins;
+	if (_objectAccess)
+	{
+		builtins.emplace(createFunction("datasize", 1, 1, true, true, true, [](
+			FunctionCall const& _call,
+			AbstractAssembly& _assembly,
+			BuiltinContext& _context,
+			function<void()>
+		) {
+			yulAssert(_context.currentObject, "No object available.");
+			yulAssert(_call.arguments.size() == 1, "");
+			Expression const& arg = _call.arguments.front();
+			YulString dataName = boost::get<Literal>(arg).value;
+			if (_context.currentObject->name == dataName)
+				_assembly.appendAssemblySize();
+			else
+			{
+				yulAssert(
+					_context.subIDs.count(dataName) != 0,
+					"Could not find assembly object <" + dataName.str() + ">."
+				);
+				_assembly.appendDataSize(_context.subIDs.at(dataName));
+			}
+		}));
+		builtins.emplace(createFunction("dataoffset", 1, 1, true, true, true, [](
+			FunctionCall const& _call,
+			AbstractAssembly& _assembly,
+			BuiltinContext& _context,
+			std::function<void()>
+		) {
+			yulAssert(_context.currentObject, "No object available.");
+			yulAssert(_call.arguments.size() == 1, "");
+			Expression const& arg = _call.arguments.front();
+			YulString dataName = boost::get<Literal>(arg).value;
+			if (_context.currentObject->name == dataName)
+				_assembly.appendConstant(0);
+			else
+			{
+				yulAssert(
+					_context.subIDs.count(dataName) != 0,
+					"Could not find assembly object <" + dataName.str() + ">."
+				);
+				_assembly.appendDataOffset(_context.subIDs.at(dataName));
+			}
+		}));
+		builtins.emplace(createFunction("datacopy", 3, 0, false, false, false, [](
+			FunctionCall const&,
+			AbstractAssembly& _assembly,
+			BuiltinContext&,
+			std::function<void()> _visitArguments
+		) {
+			_visitArguments();
+			_assembly.appendInstruction(dev::eth::Instruction::CODECOPY);
+		}));
+	}
+	return builtins;
+}
+
+}
+
+EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion):
+	Dialect{_flavour},
+	m_objectAccess(_objectAccess),
+	m_evmVersion(_evmVersion),
+	m_functions(createBuiltins(_evmVersion, _objectAccess))
+{
 }
 
 BuiltinFunctionForEVM const* EVMDialect::builtin(YulString _name) const
@@ -95,55 +138,34 @@ BuiltinFunctionForEVM const* EVMDialect::builtin(YulString _name) const
 		return nullptr;
 }
 
-shared_ptr<EVMDialect> EVMDialect::looseAssemblyForEVM(langutil::EVMVersion _version)
+EVMDialect const& EVMDialect::looseAssemblyForEVM(langutil::EVMVersion _version)
 {
-	return make_shared<EVMDialect>(AsmFlavour::Loose, false, _version);
+	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	if (!dialects[_version])
+		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Loose, false, _version);
+	return *dialects[_version];
 }
 
-shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
+EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
 {
-	return make_shared<EVMDialect>(AsmFlavour::Strict, false, _version);
+	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	if (!dialects[_version])
+		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Strict, false, _version);
+	return *dialects[_version];
 }
 
-shared_ptr<EVMDialect> EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
+EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
 {
-	return make_shared<EVMDialect>(AsmFlavour::Strict, true, _version);
+	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	if (!dialects[_version])
+		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Strict, true, _version);
+	return *dialects[_version];
 }
 
-shared_ptr<yul::EVMDialect> EVMDialect::yulForEVM(langutil::EVMVersion _version)
+EVMDialect const& EVMDialect::yulForEVM(langutil::EVMVersion _version)
 {
-	return make_shared<EVMDialect>(AsmFlavour::Yul, false, _version);
-}
-
-void EVMDialect::setSubIDs(map<YulString, AbstractAssembly::SubID> _subIDs)
-{
-	yulAssert(m_objectAccess, "Sub IDs set with dialect that does not support object access.");
-	m_subIDs = std::move(_subIDs);
-}
-
-void EVMDialect::setCurrentObject(Object const* _object)
-{
-	yulAssert(m_objectAccess, "Current object set with dialect that does not support object access.");
-	m_currentObject = _object;
-}
-
-void EVMDialect::addFunction(
-	string _name,
-	size_t _params,
-	size_t _returns,
-	bool _movable,
-	bool _sideEffectFree,
-	bool _literalArguments,
-	std::function<void(FunctionCall const&, AbstractAssembly&, std::function<void()>)> _generateCode
-)
-{
-	YulString name{std::move(_name)};
-	BuiltinFunctionForEVM& f = m_functions[name];
-	f.name = name;
-	f.parameters.resize(_params);
-	f.returns.resize(_returns);
-	f.movable = _movable;
-	f.sideEffectFree = _sideEffectFree;
-	f.literalArguments = _literalArguments;
-	f.generateCode = std::move(_generateCode);
+	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	if (!dialects[_version])
+		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Yul, false, _version);
+	return *dialects[_version];
 }

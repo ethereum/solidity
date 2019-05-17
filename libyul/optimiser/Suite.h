@@ -39,7 +39,7 @@ class OptimiserSuite
 {
 public:
 	static void run(
-		std::shared_ptr<Dialect> const& _dialect,
+		Dialect const& _dialect,
 		Block& _ast,
 		AsmAnalysisInfo const& _analysisInfo,
 		bool _optimizeStackAllocation,

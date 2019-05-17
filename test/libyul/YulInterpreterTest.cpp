@@ -132,8 +132,7 @@ string YulInterpreterTest::interpret()
 	state.maxTraceSize = 10000;
 	state.maxSteps = 10000;
 	state.maxMemSize = 0x20000000;
-	shared_ptr<Dialect> dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
-	Interpreter interpreter(state, *dialect);
+	Interpreter interpreter(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
 	try
 	{
 		interpreter(*m_ast);

@@ -47,7 +47,7 @@ using namespace yul;
 
 namespace
 {
-shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
+Dialect const& languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
 {
 	switch (_language)
 	{
@@ -58,7 +58,7 @@ shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language, EVMVers
 	case AssemblyStack::Language::Yul:
 		return Dialect::yul();
 	case AssemblyStack::Language::EWasm:
-		return make_shared<WasmDialect>();
+		return WasmDialect::instance();
 	}
 	solAssert(false, "");
 	return Dialect::yul();
@@ -124,14 +124,14 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 
 void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _optimize) const
 {
-	shared_ptr<EVMDialect> dialect;
+	EVMDialect const* dialect = nullptr;
 
 	if (m_language == Language::Assembly)
-		dialect = EVMDialect::looseAssemblyForEVM(m_evmVersion);
+		dialect = &EVMDialect::looseAssemblyForEVM(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::StrictAssembly)
-		dialect = EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
+		dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::Yul)
-		dialect = EVMDialect::yulForEVM(m_evmVersion);
+		dialect = &EVMDialect::yulForEVM(m_evmVersion);
 	else
 		solAssert(false, "Invalid language.");
 
@@ -184,10 +184,10 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	case Machine::eWasm:
 	{
 		solAssert(m_language == Language::EWasm, "");
-		shared_ptr<Dialect> dialect = languageToDialect(m_language, EVMVersion{});
+		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
 
 		MachineAssemblyObject object;
-		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, *dialect);
+		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, dialect);
 		return object;
 	}
 	}

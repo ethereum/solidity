@@ -43,7 +43,7 @@ using namespace yul;
 
 namespace
 {
-shared_ptr<Dialect> defaultDialect(bool _yul)
+Dialect const& defaultDialect(bool _yul)
 {
 	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(dev::test::Options::get().evmVersion());
 }
@@ -75,7 +75,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(strin
 yul::Block yul::test::disambiguate(string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
-	return boost::get<Block>(Disambiguator(*defaultDialect(_yul), *result.second, {})(*result.first));
+	return boost::get<Block>(Disambiguator(defaultDialect(_yul), *result.second, {})(*result.first));
 }
 
 string yul::test::format(string const& _source, bool _yul)

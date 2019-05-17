@@ -33,24 +33,25 @@ using namespace yul;
 using namespace dev;
 
 map<YulString, int> CompilabilityChecker::run(
-	shared_ptr<Dialect> _dialect,
+	Dialect const& _dialect,
 	Block const& _ast,
 	bool _optimizeStackAllocation
 )
 {
-	if (_dialect->flavour == AsmFlavour::Yul)
+	if (_dialect.flavour == AsmFlavour::Yul)
 		return {};
 
-	solAssert(_dialect->flavour == AsmFlavour::Strict, "");
+	solAssert(_dialect.flavour == AsmFlavour::Strict, "");
 
-	solAssert(dynamic_cast<EVMDialect const*>(_dialect.get()), "");
-	shared_ptr<NoOutputEVMDialect> noOutputDialect = make_shared<NoOutputEVMDialect>(dynamic_pointer_cast<EVMDialect>(_dialect));
+	solAssert(dynamic_cast<EVMDialect const*>(&_dialect), "");
+	NoOutputEVMDialect noOutputDialect(dynamic_cast<EVMDialect const&>(_dialect));
+	BuiltinContext builtinContext;
 
 	yul::AsmAnalysisInfo analysisInfo =
 		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
 
 	NoOutputAssembly assembly;
-	CodeTransform transform(assembly, analysisInfo, _ast, *noOutputDialect, _optimizeStackAllocation);
+	CodeTransform transform(assembly, analysisInfo, _ast, noOutputDialect, builtinContext, _optimizeStackAllocation);
 	try
 	{
 		transform(_ast);

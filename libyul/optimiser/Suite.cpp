@@ -58,7 +58,7 @@ using namespace dev;
 using namespace yul;
 
 void OptimiserSuite::run(
-	shared_ptr<Dialect> const& _dialect,
+	Dialect const& _dialect,
 	Block& _ast,
 	AsmAnalysisInfo const& _analysisInfo,
 	bool _optimizeStackAllocation,
@@ -67,7 +67,7 @@ void OptimiserSuite::run(
 {
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 
-	Block ast = boost::get<Block>(Disambiguator(*_dialect, _analysisInfo, reservedIdentifiers)(_ast));
+	Block ast = boost::get<Block>(Disambiguator(_dialect, _analysisInfo, reservedIdentifiers)(_ast));
 
 	VarDeclInitializer{}(ast);
 	FunctionHoister{}(ast);
@@ -76,16 +76,16 @@ void OptimiserSuite::run(
 	DeadCodeEliminator{}(ast);
 	FunctionGrouper{}(ast);
 	EquivalentFunctionCombiner::run(ast);
-	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 	BlockFlattener{}(ast);
 	ControlFlowSimplifier{}(ast);
-	StructuralSimplifier{*_dialect}(ast);
+	StructuralSimplifier{_dialect}(ast);
 	ControlFlowSimplifier{}(ast);
 	BlockFlattener{}(ast);
 
 	// None of the above can make stack problems worse.
 
-	NameDispenser dispenser{*_dialect, ast};
+	NameDispenser dispenser{_dialect, ast};
 
 	size_t codeSize = 0;
 	for (size_t rounds = 0; rounds < 12; ++rounds)
@@ -99,35 +99,35 @@ void OptimiserSuite::run(
 
 		{
 			// Turn into SSA and simplify
-			ExpressionSplitter{*_dialect, dispenser}(ast);
+			ExpressionSplitter{_dialect, dispenser}(ast);
 			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(*_dialect, ast);
-			RedundantAssignEliminator::run(*_dialect, ast);
+			RedundantAssignEliminator::run(_dialect, ast);
+			RedundantAssignEliminator::run(_dialect, ast);
 
-			ExpressionSimplifier::run(*_dialect, ast);
-			CommonSubexpressionEliminator{*_dialect}(ast);
+			ExpressionSimplifier::run(_dialect, ast);
+			CommonSubexpressionEliminator{_dialect}(ast);
 		}
 
 		{
 			// still in SSA, perform structural simplification
 			ControlFlowSimplifier{}(ast);
-			StructuralSimplifier{*_dialect}(ast);
+			StructuralSimplifier{_dialect}(ast);
 			ControlFlowSimplifier{}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{}(ast);
-			UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 		}
 		{
 			// simplify again
-			CommonSubexpressionEliminator{*_dialect}(ast);
-			UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+			CommonSubexpressionEliminator{_dialect}(ast);
+			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 		}
 
 		{
 			// reverse SSA
 			SSAReverser::run(ast);
-			CommonSubexpressionEliminator{*_dialect}(ast);
-			UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+			CommonSubexpressionEliminator{_dialect}(ast);
+			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 			ExpressionJoiner::run(ast);
 			ExpressionJoiner::run(ast);
@@ -137,17 +137,17 @@ void OptimiserSuite::run(
 
 		{
 			// run functional expression inliner
-			ExpressionInliner(*_dialect, ast).run();
-			UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+			ExpressionInliner(_dialect, ast).run();
+			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 		}
 
 		{
 			// Turn into SSA again and simplify
-			ExpressionSplitter{*_dialect, dispenser}(ast);
+			ExpressionSplitter{_dialect, dispenser}(ast);
 			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(*_dialect, ast);
-			RedundantAssignEliminator::run(*_dialect, ast);
-			CommonSubexpressionEliminator{*_dialect}(ast);
+			RedundantAssignEliminator::run(_dialect, ast);
+			RedundantAssignEliminator::run(_dialect, ast);
+			CommonSubexpressionEliminator{_dialect}(ast);
 		}
 
 		{
@@ -161,39 +161,39 @@ void OptimiserSuite::run(
 		{
 			// SSA plus simplify
 			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(*_dialect, ast);
-			RedundantAssignEliminator::run(*_dialect, ast);
-			ExpressionSimplifier::run(*_dialect, ast);
-			StructuralSimplifier{*_dialect}(ast);
+			RedundantAssignEliminator::run(_dialect, ast);
+			RedundantAssignEliminator::run(_dialect, ast);
+			ExpressionSimplifier::run(_dialect, ast);
+			StructuralSimplifier{_dialect}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{}(ast);
 			ControlFlowSimplifier{}(ast);
-			CommonSubexpressionEliminator{*_dialect}(ast);
+			CommonSubexpressionEliminator{_dialect}(ast);
 			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(*_dialect, ast);
-			RedundantAssignEliminator::run(*_dialect, ast);
-			UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
-			CommonSubexpressionEliminator{*_dialect}(ast);
+			RedundantAssignEliminator::run(_dialect, ast);
+			RedundantAssignEliminator::run(_dialect, ast);
+			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+			CommonSubexpressionEliminator{_dialect}(ast);
 		}
 	}
 
 	// Make source short and pretty.
 
 	ExpressionJoiner::run(ast);
-	Rematerialiser::run(*_dialect, ast);
-	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+	Rematerialiser::run(_dialect, ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 	SSAReverser::run(ast);
-	CommonSubexpressionEliminator{*_dialect}(ast);
-	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+	CommonSubexpressionEliminator{_dialect}(ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 	ExpressionJoiner::run(ast);
-	Rematerialiser::run(*_dialect, ast);
-	UnusedPruner::runUntilStabilised(*_dialect, ast, reservedIdentifiers);
+	Rematerialiser::run(_dialect, ast);
+	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
@@ -206,7 +206,7 @@ void OptimiserSuite::run(
 	ControlFlowSimplifier{}(ast);
 
 	FunctionGrouper{}(ast);
-	VarNameCleaner{ast, *_dialect, reservedIdentifiers}(ast);
+	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);
 	yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, ast);
 
 	_ast = std::move(ast);

@@ -49,7 +49,7 @@ namespace test
 namespace
 {
 
-bool parse(string const& _source, std::shared_ptr<Dialect> _dialect, ErrorReporter& errorReporter)
+bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
 {
 	try
 	{
@@ -73,7 +73,7 @@ bool parse(string const& _source, std::shared_ptr<Dialect> _dialect, ErrorReport
 	return false;
 }
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, shared_ptr<Dialect> _dialect, bool _allowWarnings = true)
+boost::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -98,12 +98,12 @@ boost::optional<Error> parseAndReturnFirstError(string const& _source, shared_pt
 	return {};
 }
 
-bool successParse(std::string const& _source, shared_ptr<Dialect> _dialect = Dialect::yul(), bool _allowWarnings = true)
+bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = true)
 {
 	return !parseAndReturnFirstError(_source, _dialect, _allowWarnings);
 }
 
-Error expectError(std::string const& _source, shared_ptr<Dialect> _dialect = Dialect::yul(), bool _allowWarnings = false)
+Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = false)
 {
 
 	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarnings);
@@ -324,41 +324,39 @@ BOOST_AUTO_TEST_CASE(if_statement)
 
 BOOST_AUTO_TEST_CASE(break_outside_of_for_loop)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ let x if x { break } }",
 		SyntaxError,
 		"Keyword \"break\" needs to be inside a for-loop body.",
-		dialect
+		EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople())
 	);
 }
 
 BOOST_AUTO_TEST_CASE(continue_outside_of_for_loop)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ let x if x { continue } }",
 		SyntaxError,
 		"Keyword \"continue\" needs to be inside a for-loop body.",
-		dialect
+		EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople())
 	);
 }
 
 BOOST_AUTO_TEST_CASE(for_statement)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	BOOST_CHECK(successParse("{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1)} {} }", dialect));
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_break)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	BOOST_CHECK(successParse("{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1)} {break} }", dialect));
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_break_init)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0 break} iszero(eq(i, 10)) {i := add(i, 1)} {} }",
 		SyntaxError,
@@ -369,7 +367,7 @@ BOOST_AUTO_TEST_CASE(for_statement_break_init)
 
 BOOST_AUTO_TEST_CASE(for_statement_break_post)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1) break} {} }",
 		SyntaxError,
@@ -380,7 +378,7 @@ BOOST_AUTO_TEST_CASE(for_statement_break_post)
 
 BOOST_AUTO_TEST_CASE(for_statement_nested_break)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {} { function f() { break } } }",
 		SyntaxError,
@@ -391,13 +389,13 @@ BOOST_AUTO_TEST_CASE(for_statement_nested_break)
 
 BOOST_AUTO_TEST_CASE(for_statement_continue)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	BOOST_CHECK(successParse("{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1)} {continue} }", dialect));
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_continue_fail_init)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0 continue} iszero(eq(i, 10)) {i := add(i, 1)} {} }",
 		SyntaxError,
@@ -408,7 +406,7 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_fail_init)
 
 BOOST_AUTO_TEST_CASE(for_statement_continue_fail_post)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1) continue} {} }",
 		SyntaxError,
@@ -419,7 +417,7 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_fail_post)
 
 BOOST_AUTO_TEST_CASE(for_statement_nested_continue)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {} { function f() { continue } } }",
 		SyntaxError,
@@ -430,7 +428,7 @@ BOOST_AUTO_TEST_CASE(for_statement_nested_continue)
 
 BOOST_AUTO_TEST_CASE(for_statement_continue_nested_init_in_body)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople());
 	CHECK_ERROR_DIALECT(
 		"{ for {} 1 {} {let x for { continue } x {} {}} }",
 		SyntaxError,
@@ -441,31 +439,31 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_nested_init_in_body)
 
 BOOST_AUTO_TEST_CASE(for_statement_continue_nested_body_in_init)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 	BOOST_CHECK(successParse("{ for {let x for {} x {} { continue }} 1 {} {} }", dialect));
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_break_nested_body_in_init)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 	BOOST_CHECK(successParse("{ for {let x for {} x {} { break }} 1 {} {} }", dialect));
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_continue_nested_body_in_post)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 	BOOST_CHECK(successParse("{ for {} 1 {let x for {} x {} { continue }} {} }", dialect));
 }
 
 BOOST_AUTO_TEST_CASE(for_statement_break_nested_body_in_post)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 	BOOST_CHECK(successParse("{ for {} 1 {let x for {} x {} { break }} {} }", dialect));
 }
 
 BOOST_AUTO_TEST_CASE(function_defined_in_init_block)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 	BOOST_CHECK(successParse("{ for { } 1 { function f() {} } {} }", dialect));
 	BOOST_CHECK(successParse("{ for { } 1 {} { function f() {} } }", dialect));
 	CHECK_ERROR_DIALECT(
@@ -478,7 +476,7 @@ BOOST_AUTO_TEST_CASE(function_defined_in_init_block)
 
 BOOST_AUTO_TEST_CASE(function_defined_in_init_nested)
 {
-	auto dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
+	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 	BOOST_CHECK(successParse(
 		"{ for {"
 			"for { } 1 { function f() {} } {}"
@@ -548,7 +546,7 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 		BuiltinFunction f;
 	};
 
-	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
+	SimpleDialect dialect;
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Cannot assign to builtin function \"builtin\".", dialect);
@@ -567,7 +565,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), false, false};
 	};
 
-	shared_ptr<Dialect> dialect = make_shared<SimpleDialect>();
+	SimpleDialect dialect;
 	BOOST_CHECK(successParse("{ let a, b, c := builtin(1, 2) }", dialect));
 	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
 	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);

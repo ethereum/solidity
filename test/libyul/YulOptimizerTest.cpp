@@ -109,6 +109,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	if (!parse(_stream, _linePrefix, _formatted))
 		return TestResult::FatalError;
 
+	soltestAssert(m_dialect, "Dialect not set.");
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
 	else if (m_optimizerStep == "blockFlattener")
@@ -270,7 +271,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		disambiguate();
 		(FunctionGrouper{})(*m_ast);
 		size_t maxIterations = 16;
-		StackCompressor::run(m_dialect, *m_ast, true, maxIterations);
+		StackCompressor::run(*m_dialect, *m_ast, true, maxIterations);
 		(BlockFlattener{})(*m_ast);
 	}
 	else if (m_optimizerStep == "wordSizeTransform")
@@ -281,7 +282,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		WordSizeTransform::run(*m_ast, nameDispenser);
 	}
 	else if (m_optimizerStep == "fullSuite")
-		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo, true);
+		OptimiserSuite::run(*m_dialect, *m_ast, *m_analysisInfo, true);
 	else
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
@@ -353,7 +354,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 		printErrors(_stream, stack.errors());
 		return false;
 	}
-	m_dialect = m_yul ? Dialect::yul() : EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
+	m_dialect = m_yul ? &Dialect::yul() : &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
 	m_ast = stack.parserResult()->code;
 	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;
