@@ -51,12 +51,10 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 	if (!matchingCaseBlock && defaultCase)
 		matchingCaseBlock = &defaultCase->body;
 
-	OptionalStatements s = vector<Statement>{};
-
 	if (matchingCaseBlock)
-		s->emplace_back(std::move(*matchingCaseBlock));
-
-	return s;
+		return make_vector<Statement>(std::move(*matchingCaseBlock));
+	else
+		return {{}};
 }
 
 }

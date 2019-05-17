@@ -56,20 +56,18 @@ void SSAReverser::operator()(Block& _block)
 					identifier &&
 					identifier->name == varDecl->variables.front().name
 				)
-				{
-					vector<Statement> result;
-					result.emplace_back(Assignment{
-						std::move(assignment->location),
-						assignment->variableNames,
-						std::move(varDecl->value)
-					});
-					result.emplace_back(VariableDeclaration{
-						std::move(varDecl->location),
-						std::move(varDecl->variables),
-						std::make_unique<Expression>(std::move(assignment->variableNames.front()))
-					});
-					return { std::move(result) };
-				}
+					return make_vector<Statement>(
+						Assignment{
+							std::move(assignment->location),
+							assignment->variableNames,
+							std::move(varDecl->value)
+						},
+						VariableDeclaration{
+							std::move(varDecl->location),
+							std::move(varDecl->variables),
+							std::make_unique<Expression>(std::move(assignment->variableNames.front()))
+						}
+					);
 			}
 			// Replaces
 			//   let a_1 := E
@@ -89,22 +87,22 @@ void SSAReverser::operator()(Block& _block)
 					)
 				)
 				{
-					vector<Statement> result;
 					auto varIdentifier2 = std::make_unique<Expression>(Identifier{
 						varDecl2->variables.front().location,
 						varDecl2->variables.front().name
 					});
-					result.emplace_back(VariableDeclaration{
-						std::move(varDecl2->location),
-						std::move(varDecl2->variables),
-						std::move(varDecl->value)
-					});
-					result.emplace_back(VariableDeclaration{
-						std::move(varDecl->location),
-						std::move(varDecl->variables),
-						std::move(varIdentifier2)
-					});
-					return { std::move(result) };
+					return make_vector<Statement>(
+						VariableDeclaration{
+							std::move(varDecl2->location),
+							std::move(varDecl2->variables),
+							std::move(varDecl->value)
+						},
+						VariableDeclaration{
+							std::move(varDecl->location),
+							std::move(varDecl->variables),
+							std::move(varIdentifier2)
+						}
+					);
 				}
 			}
 
