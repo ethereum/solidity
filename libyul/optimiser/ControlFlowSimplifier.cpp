@@ -72,11 +72,7 @@ OptionalStatements reduceNoCaseSwitch(Switch& _switchStmt)
 
 	auto loc = locationOf(*_switchStmt.expression);
 
-	OptionalStatements s = vector<Statement>{};
-
-	s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
-
-	return s;
+	return make_vector<Statement>(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
 }
 
 OptionalStatements reduceSingleCaseSwitch(Switch& _switchStmt)
@@ -86,26 +82,20 @@ OptionalStatements reduceSingleCaseSwitch(Switch& _switchStmt)
 	auto& switchCase = _switchStmt.cases.front();
 	auto loc = locationOf(*_switchStmt.expression);
 	if (switchCase.value)
-	{
-		OptionalStatements s = vector<Statement>{};
-		s->emplace_back(If{
-				std::move(_switchStmt.location),
-				make_unique<Expression>(FunctionalInstruction{
-					std::move(loc),
-					dev::eth::Instruction::EQ,
-					{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
-				}),
-				std::move(switchCase.body)
+		return make_vector<Statement>(If{
+			std::move(_switchStmt.location),
+			make_unique<Expression>(FunctionalInstruction{
+				std::move(loc),
+				dev::eth::Instruction::EQ,
+				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
+			}),
+			std::move(switchCase.body)
 		});
-		return s;
-	}
 	else
-	{
-		OptionalStatements s = vector<Statement>{};
-		s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
-		s->emplace_back(std::move(switchCase.body));
-		return s;
-	}
+		return make_vector<Statement>(
+			makePopExpressionStatement(loc, std::move(*_switchStmt.expression)),
+			std::move(switchCase.body)
+		);
 }
 
 }
