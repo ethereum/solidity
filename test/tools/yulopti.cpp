@@ -40,6 +40,7 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -129,7 +130,7 @@ public:
 			}
 			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
 			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
-			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-pre-rewriter/" << endl;
+			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/f(O)r-loop-condition-into-body/" << endl;
 			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/? " << endl;
 			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/? " << endl;
 			cout.flush();
@@ -144,6 +145,9 @@ public:
 				break;
 			case 'o':
 				ForLoopInitRewriter{}(*m_ast);
+				break;
+			case 'O':
+				ForLoopConditionIntoBody{}(*m_ast);
 				break;
 			case 'c':
 				(CommonSubexpressionEliminator{m_dialect})(*m_ast);

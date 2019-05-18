@@ -33,6 +33,7 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -121,6 +122,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		VarDeclInitializer{}(*m_ast);
 	else if (m_optimizerStep == "varNameCleaner")
 		VarNameCleaner{*m_ast, *m_dialect}(*m_ast);
+	else if (m_optimizerStep == "forLoopConditionIntoBody")
+	{
+		disambiguate();
+		ForLoopConditionIntoBody{}(*m_ast);
+	}
 	else if (m_optimizerStep == "forLoopInitRewriter")
 	{
 		disambiguate();
