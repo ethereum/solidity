@@ -76,6 +76,8 @@ add_library(yul
 	optimiser/ExpressionSimplifier.h
 	optimiser/ExpressionSplitter.cpp
 	optimiser/ExpressionSplitter.h
+	optimiser/ForLoopConditionIntoBody.cpp
+	optimiser/ForLoopConditionIntoBody.h
 	optimiser/ForLoopInitRewriter.cpp
 	optimiser/ForLoopInitRewriter.h
 	optimiser/FullInliner.cpp
