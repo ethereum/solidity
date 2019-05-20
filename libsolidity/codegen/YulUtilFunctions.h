@@ -177,8 +177,13 @@ public:
 	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
 	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
 
-private:
 
+	std::string incrementCheckedFunction(Type const& _type);
+	std::string decrementCheckedFunction(Type const& _type);
+
+	std::string negateNumberCheckedFunction(Type const& _type);
+
+private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
 	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);

@@ -234,12 +234,95 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 
 void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 {
-	if (type(_unaryOperation).category() == Type::Category::RationalNumber)
+	Type const& resultType = type(_unaryOperation);
+	Token const op = _unaryOperation.getOperator();
+
+	if (resultType.category() == Type::Category::RationalNumber)
+	{
 		defineExpression(_unaryOperation) <<
-			formatNumber(type(_unaryOperation).literalValue(nullptr)) <<
+			formatNumber(resultType.literalValue(nullptr)) <<
 			"\n";
+	}
+	else if (resultType.category() == Type::Category::Integer)
+	{
+		solAssert(resultType == type(_unaryOperation.subExpression()), "Result type doesn't match!");
+
+		if (op == Token::Inc || op == Token::Dec)
+		{
+			solAssert(!!m_currentLValue, "LValue not retrieved.");
+			string fetchValueExpr = m_currentLValue->retrieveValue();
+			string modifiedValue = m_context.newYulVariable();
+			string originalValue = m_context.newYulVariable();
+
+			m_code << "let " << originalValue << " := " << fetchValueExpr << "\n";
+			m_code <<
+				"let " <<
+				modifiedValue <<
+				" := " <<
+				(op == Token::Inc ?
+					m_utils.incrementCheckedFunction(resultType) :
+					m_utils.decrementCheckedFunction(resultType)
+				) <<
+				"(" <<
+				originalValue <<
+				")\n";
+			m_code << m_currentLValue->storeValue(modifiedValue, resultType);
+			m_currentLValue.reset();
+
+			defineExpression(_unaryOperation) <<
+				(_unaryOperation.isPrefixOperation() ? modifiedValue : originalValue) <<
+				"\n";
+		}
+		else if (op == Token::BitNot)
+			appendSimpleUnaryOperation(_unaryOperation, _unaryOperation.subExpression());
+		else if (op == Token::Add)
+			// According to SyntaxChecker...
+			solAssert(false, "Use of unary + is disallowed.");
+		else if (op == Token::Sub)
+		{
+			IntegerType const& intType = *dynamic_cast<IntegerType const*>(&resultType);
+
+			defineExpression(_unaryOperation) <<
+				m_utils.negateNumberCheckedFunction(intType) <<
+				"(" <<
+				m_context.variable(_unaryOperation.subExpression()) <<
+				")\n";
+		}
+		else
+			solUnimplementedAssert(false, "Unary operator not yet implemented");
+	}
+	else if (resultType.category() == Type::Category::Bool)
+	{
+		solAssert(
+			_unaryOperation.getOperator() != Token::BitNot,
+			"Bitwise Negation can't be done on bool!"
+		);
+
+		appendSimpleUnaryOperation(_unaryOperation, _unaryOperation.subExpression());
+	}
 	else
-		solUnimplementedAssert(false, "");
+		solUnimplementedAssert(false, "Unary operator not yet implemented");
+}
+
+void IRGeneratorForStatements::appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr)
+{
+	string func;
+
+	if (_operation.getOperator() == Token::Not)
+		func = "iszero";
+	else if (_operation.getOperator() == Token::BitNot)
+		func = "not";
+	else
+		solAssert(false, "Invalid Token!");
+
+	defineExpression(_operation) <<
+		m_utils.cleanupFunction(type(_expr)) <<
+		"(" <<
+			func <<
+			"(" <<
+			m_context.variable(_expr) <<
+			")" <<
+		")\n";
 }
 
 bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)

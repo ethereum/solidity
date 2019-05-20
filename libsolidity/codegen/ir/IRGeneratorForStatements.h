@@ -82,6 +82,7 @@ private:
 	std::ostream& defineExpressionPart(Expression const& _expression, size_t _part);
 
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
+	void appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr);
 
 	void setLValue(Expression const& _expression, std::unique_ptr<IRLValue> _lvalue);
 	void generateLoop(
