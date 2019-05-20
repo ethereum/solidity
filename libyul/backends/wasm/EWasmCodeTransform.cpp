@@ -169,9 +169,10 @@ wasm::Expression EWasmCodeTransform::operator()(Switch const& _switch)
 		Case const& c = _switch.cases.at(i);
 		if (c.value)
 		{
-			wasm::BuiltinCall comparison{"i64.eq", {}};
-			comparison.arguments.emplace_back(wasm::LocalVariable{condition});
-			comparison.arguments.emplace_back(visitReturnByValue(*c.value));
+			wasm::BuiltinCall comparison{"i64.eq", make_vector<wasm::Expression>(
+				wasm::LocalVariable{condition},
+				visitReturnByValue(*c.value)
+			)};
 			wasm::If ifStmnt{
 				make_unique<wasm::Expression>(move(comparison)),
 				visit(c.body.statements),
@@ -207,24 +208,18 @@ wasm::Expression EWasmCodeTransform::operator()(ForLoop const& _for)
 	string continueLabel = newLabel();
 	m_breakContinueLabelNames.push({breakLabel, continueLabel});
 
-	// The AST is constructed in this weird way because of some strange
-	// problem with move semantics.
-	wasm::BuiltinCall loopCondition{"i64.eqz", {}};
-	loopCondition.arguments.emplace_back(visitReturnByValue(*_for.condition));
-
-	wasm::BuiltinCall conditionCheck{"br_if", {}};
-	conditionCheck.arguments.emplace_back(wasm::Label{breakLabel});
-	conditionCheck.arguments.emplace_back(move(loopCondition));
-
 	wasm::Loop loop;
 	loop.statements = visit(_for.pre.statements);
-	loop.statements.emplace_back(move(conditionCheck));
+	loop.statements.emplace_back(wasm::BuiltinCall{"br_if", make_vector<wasm::Expression>(
+		wasm::Label{breakLabel},
+		wasm::BuiltinCall{"i64.eqz", make_vector<wasm::Expression>(
+			visitReturnByValue(*_for.condition)
+		)}
+	)});
 	loop.statements.emplace_back(wasm::Block{continueLabel, visit(_for.body.statements)});
 	loop.statements += visit(_for.post.statements);
 
-	wasm::Block breakBlock{breakLabel, {}};
-	breakBlock.statements.emplace_back(move(loop));
-	return { std::move(breakBlock) };
+	return { wasm::Block{breakLabel, make_vector<wasm::Expression>(move(loop))} };
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Break const&)
