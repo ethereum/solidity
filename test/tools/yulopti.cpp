@@ -179,13 +179,13 @@ public:
 				(StructuralSimplifier{m_dialect})(*m_ast);
 				break;
 			case 'n':
-				(ControlFlowSimplifier{})(*m_ast);
+				(ControlFlowSimplifier{m_dialect})(*m_ast);
 				break;
 			case 'u':
 				UnusedPruner::runUntilStabilised(m_dialect, *m_ast);
 				break;
 			case 'D':
-				DeadCodeEliminator{}(*m_ast);
+				DeadCodeEliminator{m_dialect}(*m_ast);
 				break;
 			case 'a':
 				SSATransform::run(*m_ast, *m_nameDispenser);

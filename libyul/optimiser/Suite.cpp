@@ -73,14 +73,14 @@ void OptimiserSuite::run(
 	FunctionHoister{}(ast);
 	BlockFlattener{}(ast);
 	ForLoopInitRewriter{}(ast);
-	DeadCodeEliminator{}(ast);
+	DeadCodeEliminator{_dialect}(ast);
 	FunctionGrouper{}(ast);
 	EquivalentFunctionCombiner::run(ast);
 	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 	BlockFlattener{}(ast);
-	ControlFlowSimplifier{}(ast);
+	ControlFlowSimplifier{_dialect}(ast);
 	StructuralSimplifier{_dialect}(ast);
-	ControlFlowSimplifier{}(ast);
+	ControlFlowSimplifier{_dialect}(ast);
 	BlockFlattener{}(ast);
 
 	// None of the above can make stack problems worse.
@@ -110,11 +110,11 @@ void OptimiserSuite::run(
 
 		{
 			// still in SSA, perform structural simplification
-			ControlFlowSimplifier{}(ast);
+			ControlFlowSimplifier{_dialect}(ast);
 			StructuralSimplifier{_dialect}(ast);
-			ControlFlowSimplifier{}(ast);
+			ControlFlowSimplifier{_dialect}(ast);
 			BlockFlattener{}(ast);
-			DeadCodeEliminator{}(ast);
+			DeadCodeEliminator{_dialect}(ast);
 			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 		}
 		{
@@ -166,8 +166,8 @@ void OptimiserSuite::run(
 			ExpressionSimplifier::run(_dialect, ast);
 			StructuralSimplifier{_dialect}(ast);
 			BlockFlattener{}(ast);
-			DeadCodeEliminator{}(ast);
-			ControlFlowSimplifier{}(ast);
+			DeadCodeEliminator{_dialect}(ast);
+			ControlFlowSimplifier{_dialect}(ast);
 			CommonSubexpressionEliminator{_dialect}(ast);
 			SSATransform::run(ast, dispenser);
 			RedundantAssignEliminator::run(_dialect, ast);
@@ -202,8 +202,8 @@ void OptimiserSuite::run(
 	// message once we perform code generation.
 	StackCompressor::run(_dialect, ast, _optimizeStackAllocation, stackCompressorMaxIterations);
 	BlockFlattener{}(ast);
-	DeadCodeEliminator{}(ast);
-	ControlFlowSimplifier{}(ast);
+	DeadCodeEliminator{_dialect}(ast);
+	ControlFlowSimplifier{_dialect}(ast);
 
 	FunctionGrouper{}(ast);
 	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);

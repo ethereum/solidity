@@ -208,12 +208,13 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	evaluateArgs(_funCall.arguments);
 
-	if (dynamic_cast<EVMDialect const*>(&m_dialect) && m_dialect.builtin(_funCall.functionName.name))
-	{
-		EVMInstructionInterpreter interpreter(m_state);
-		setValue(interpreter.evalBuiltin(_funCall.functionName.name, values()));
-		return;
-	}
+	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+		{
+			EVMInstructionInterpreter interpreter(m_state);
+			setValue(interpreter.evalBuiltin(*fun, values()));
+			return;
+		}
 
 	solAssert(m_functions.count(_funCall.functionName.name), "");
 	FunctionDefinition const& fun = *m_functions.at(_funCall.functionName.name);

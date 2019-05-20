@@ -516,11 +516,11 @@ BOOST_AUTO_TEST_CASE(no_opcodes_in_strict)
 {
 	BOOST_CHECK(successParse("{ pop(callvalue) }"));
 	BOOST_CHECK(successParse("{ callvalue pop }"));
-	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Non-functional instructions are not allowed in this context.");
-	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Call or assignment expected");
+	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Expected '(' but got ')'");
+	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Expected '(' but got identifier");
 	SUCCESS_STRICT("{ pop(callvalue()) }");
 	BOOST_CHECK(successParse("{ switch callvalue case 0 {} }"));
-	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Non-functional instructions are not allowed in this context.");
+	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Expected '(' but got reserved keyword 'case'");
 }
 
 BOOST_AUTO_TEST_CASE(no_labels_in_strict)
@@ -546,7 +546,6 @@ BOOST_AUTO_TEST_CASE(no_dup_swap_in_strict)
 	BOOST_CHECK(successParse("{ dup2 pop }"));
 	CHECK_STRICT_ERROR("{ dup2 pop }", ParserError, "Call or assignment expected.");
 	CHECK_PARSE_ERROR("{ switch dup1 case 0 {} }", ParserError, "Instruction \"dup1\" not allowed in this context");
-	CHECK_STRICT_ERROR("{ switch dup1 case 0 {} }", ParserError, "Instruction \"dup1\" not allowed in this context");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

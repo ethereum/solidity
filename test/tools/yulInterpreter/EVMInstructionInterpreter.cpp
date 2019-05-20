@@ -22,6 +22,7 @@
 
 #include <test/tools/yulInterpreter/Interpreter.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmData.h>
 
 #include <libevmasm/Instruction.h>
@@ -444,13 +445,15 @@ u256 EVMInstructionInterpreter::eval(
 	return 0;
 }
 
-u256 EVMInstructionInterpreter::evalBuiltin(YulString _name, const std::vector<u256>& _arguments)
+u256 EVMInstructionInterpreter::evalBuiltin(BuiltinFunctionForEVM const& _fun, const std::vector<u256>& _arguments)
 {
-	if (_name == "datasize"_yulstring)
+	if (_fun.instruction)
+		return eval(*_fun.instruction, _arguments);
+	else if (_fun.name == "datasize"_yulstring)
 		return u256(keccak256(h256(_arguments.at(0)))) & 0xfff;
-	else if (_name == "dataoffset"_yulstring)
+	else if (_fun.name == "dataoffset"_yulstring)
 		return u256(keccak256(h256(_arguments.at(0) + 2))) & 0xfff;
-	else if (_name == "datacopy"_yulstring)
+	else if (_fun.name == "datacopy"_yulstring)
 	{
 		// This is identical to codecopy.
 		if (logMemoryWrite(_arguments.at(0), _arguments.at(2)))
@@ -463,7 +466,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(YulString _name, const std::vector<u
 			);
 	}
 	else
-		yulAssert(false, "Unknown builtin: " + _name.str());
+		yulAssert(false, "Unknown builtin: " + _fun.name.str());
 	return 0;
 }
 

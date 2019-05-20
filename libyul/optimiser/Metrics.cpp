@@ -22,6 +22,7 @@
 
 #include <libyul/AsmData.h>
 #include <libyul/Exceptions.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libevmasm/Instruction.h>
 
@@ -92,9 +93,9 @@ void CodeSize::visit(Expression const& _expression)
 }
 
 
-size_t CodeCost::codeCost(Expression const& _expr)
+size_t CodeCost::codeCost(Dialect const& _dialect, Expression const& _expr)
 {
-	CodeCost cc;
+	CodeCost cc(_dialect);
 	cc.visit(_expr);
 	return cc.m_cost;
 }
@@ -102,23 +103,26 @@ size_t CodeCost::codeCost(Expression const& _expr)
 
 void CodeCost::operator()(FunctionCall const& _funCall)
 {
-	yulAssert(m_cost >= 1, "Should assign cost one in visit(Expression).");
-	m_cost += 49;
 	ASTWalker::operator()(_funCall);
+
+	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (BuiltinFunctionForEVM const* f = dialect->builtin(_funCall.functionName.name))
+			if (f->instruction)
+			{
+				addInstructionCost(*f->instruction);
+				return;
+			}
+
+	m_cost += 49;
 }
 
 void CodeCost::operator()(FunctionalInstruction const& _instr)
 {
 	yulAssert(m_cost >= 1, "Should assign cost one in visit(Expression).");
-	dev::eth::Tier gasPriceTier = dev::eth::instructionInfo(_instr.instruction).gasPriceTier;
-	if (gasPriceTier < dev::eth::Tier::VeryLow)
-		m_cost -= 1;
-	else if (gasPriceTier < dev::eth::Tier::High)
-		m_cost += 1;
-	else
-		m_cost += 49;
+	addInstructionCost(_instr.instruction);
 	ASTWalker::operator()(_instr);
 }
+
 void CodeCost::operator()(Literal const& _literal)
 {
 	yulAssert(m_cost >= 1, "Should assign cost one in visit(Expression).");
@@ -149,6 +153,17 @@ void CodeCost::visit(Expression const& _expression)
 {
 	++m_cost;
 	ASTWalker::visit(_expression);
+}
+
+void CodeCost::addInstructionCost(eth::Instruction _instruction)
+{
+	dev::eth::Tier gasPriceTier = dev::eth::instructionInfo(_instruction).gasPriceTier;
+	if (gasPriceTier < dev::eth::Tier::VeryLow)
+		m_cost -= 1;
+	else if (gasPriceTier < dev::eth::Tier::High)
+		m_cost += 1;
+	else
+		m_cost += 49;
 }
 
 void AssignmentCounter::operator()(Assignment const& _assignment)

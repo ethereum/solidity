@@ -169,6 +169,7 @@ Statement Parser::parseStatement()
 	// literal,
 	// identifier (might turn into label or functional assignment)
 	ElementaryOperation elementary(parseElementaryOperation());
+
 	switch (currentToken())
 	{
 	case Token::LParen:
@@ -243,10 +244,18 @@ Statement Parser::parseStatement()
 			fatalParserError("Call or assignment expected.");
 		break;
 	}
+
 	if (elementary.type() == typeid(Identifier))
 	{
-		Expression expr = boost::get<Identifier>(elementary);
-		return ExpressionStatement{locationOf(expr), expr};
+		Identifier& identifier = boost::get<Identifier>(elementary);
+		// Fallback from builtin function to Instruction for loose assembly.
+		if (
+			m_dialect.flavour == AsmFlavour::Loose &&
+			instructions().count(identifier.name.str())
+		)
+			return Instruction{identifier.location, instructions().at(identifier.name.str())};
+		else
+			return ExpressionStatement{identifier.location, { move(identifier) }};
 	}
 	else if (elementary.type() == typeid(Literal))
 	{
@@ -307,12 +316,13 @@ ForLoop Parser::parseForLoop()
 Expression Parser::parseExpression()
 {
 	RecursionGuard recursionGuard(*this);
-	// In strict mode, this might parse a plain Instruction, but
-	// it will be converted to a FunctionalInstruction inside
-	// parseCall below.
+
 	ElementaryOperation operation = parseElementaryOperation();
-	if (operation.type() == typeid(Instruction))
+	if (operation.type() == typeid(FunctionCall))
+		return parseCall(std::move(operation));
+	else if (operation.type() == typeid(Instruction))
 	{
+		solAssert(m_dialect.flavour == AsmFlavour::Loose, "");
 		Instruction const& instr = boost::get<Instruction>(operation);
 		// Disallow instructions returning multiple values (and DUP/SWAP) as expression.
 		if (
@@ -394,8 +404,14 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			literal = YulString{currentLiteral()};
 		// first search the set of builtins, then the instructions.
 		if (m_dialect.builtin(literal))
-			ret = Identifier{location(), literal};
-		else if (m_dialect.flavour != AsmFlavour::Yul && instructions().count(literal.str()))
+		{
+			// For builtins we already check here that they are followed by `(`.
+			ret = FunctionCall{location(), Identifier{location(), literal}, {}};
+			advance();
+			expectToken(Token::LParen, false);
+			return ret;
+		}
+		else if (m_dialect.flavour == AsmFlavour::Loose && instructions().count(literal.str()))
 		{
 			dev::eth::Instruction const& instr = instructions().at(literal.str());
 			ret = Instruction{location(), instr};
@@ -582,11 +598,16 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 		expectToken(Token::RParen);
 		return ret;
 	}
-	else if (_initialOp.type() == typeid(Identifier))
+	else if (_initialOp.type() == typeid(Identifier) || _initialOp.type() == typeid(FunctionCall))
 	{
 		FunctionCall ret;
-		ret.functionName = std::move(boost::get<Identifier>(_initialOp));
-		ret.location = ret.functionName.location;
+		if (_initialOp.type() == typeid(Identifier))
+		{
+			ret.functionName = std::move(boost::get<Identifier>(_initialOp));
+			ret.location = ret.functionName.location;
+		}
+		else
+			ret = std::move(boost::get<FunctionCall>(_initialOp));
 		expectToken(Token::LParen);
 		while (currentToken() != Token::RParen)
 		{

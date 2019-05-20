@@ -35,9 +35,9 @@ namespace
 
 ExpressionStatement makePopExpressionStatement(langutil::SourceLocation const& _location, Expression&& _expression)
 {
-	return {_location, FunctionalInstruction{
+	return {_location, FunctionCall{
 		_location,
-		dev::eth::Instruction::POP,
+		Identifier{_location, "pop"_yulstring},
 		{std::move(_expression)}
 	}};
 }
@@ -84,9 +84,9 @@ OptionalStatements reduceSingleCaseSwitch(Switch& _switchStmt)
 	if (switchCase.value)
 		return make_vector<Statement>(If{
 			std::move(_switchStmt.location),
-			make_unique<Expression>(FunctionalInstruction{
-				std::move(loc),
-				dev::eth::Instruction::EQ,
+			make_unique<Expression>(FunctionCall{
+				loc,
+				Identifier{loc, "eq"_yulstring},
 				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
 			}),
 			std::move(switchCase.body)
@@ -122,7 +122,7 @@ void ControlFlowSimplifier::visit(Statement& _st)
 		if (!forLoop.body.statements.empty())
 		{
 			bool isTerminating = false;
-			TerminationFinder::ControlFlow controlFlow = TerminationFinder::controlFlowKind(forLoop.body.statements.back());
+			TerminationFinder::ControlFlow controlFlow = TerminationFinder{m_dialect}.controlFlowKind(forLoop.body.statements.back());
 			if (controlFlow == TerminationFinder::ControlFlow::Break)
 			{
 				isTerminating = true;

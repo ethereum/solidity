@@ -201,7 +201,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
-		DeadCodeEliminator{}(*m_ast);
+		DeadCodeEliminator{*m_dialect}(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 	}
@@ -214,7 +214,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		ForLoopInitRewriter{}(*m_ast);
-		DeadCodeEliminator{}(*m_ast);
+		DeadCodeEliminator{*m_dialect}(*m_ast);
 	}
 	else if (m_optimizerStep == "ssaTransform")
 	{
@@ -237,7 +237,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "controlFlowSimplifier")
 	{
 		disambiguate();
-		ControlFlowSimplifier{}(*m_ast);
+		ControlFlowSimplifier{*m_dialect}(*m_ast);
 	}
 	else if (m_optimizerStep == "structuralSimplifier")
 	{

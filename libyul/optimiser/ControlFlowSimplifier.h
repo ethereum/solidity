@@ -20,6 +20,7 @@
 
 namespace yul
 {
+struct Dialect;
 
 /**
  * Simplifies several control-flow structures:
@@ -45,6 +46,8 @@ namespace yul
 class ControlFlowSimplifier: public ASTModifier
 {
 public:
+	ControlFlowSimplifier(Dialect const& _dialect): m_dialect(_dialect) {}
+
 	using ASTModifier::operator();
 	void operator()(Break&) override { ++m_numBreakStatements; }
 	void operator()(Continue&) override { ++m_numContinueStatements; }
@@ -55,6 +58,7 @@ public:
 private:
 	void simplify(std::vector<Statement>& _statements);
 
+	Dialect const& m_dialect;
 	size_t m_numBreakStatements = 0;
 	size_t m_numContinueStatements = 0;
 };
