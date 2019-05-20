@@ -34,7 +34,8 @@ public:
 
 private:
 	evmc_instance* vm = nullptr;
-	evmc_revision rev = EVMC_PETERSBURG;
+//	evmc_revision rev = EVMC_PETERSBURG;
+	evmc_revision rev = EVMC_BYZANTIUM;
 	static evmc_host_interface interface;
 	// TODO: Initialize transaction
 	evmc_tx_context tx_context = {};

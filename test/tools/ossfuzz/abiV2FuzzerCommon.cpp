@@ -11,5 +11,6 @@ SolidityExecutionFramework::SolidityExecutionFramework(langutil::EVMVersion _evm
 
 SolidityExecutionFramework::SolidityExecutionFramework()
 {
-	m_evmVersion = langutil::EVMVersion();
+//	m_evmVersion = langutil::EVMVersion();
+	m_evmVersion = langutil::EVMVersion::homestead();
 }

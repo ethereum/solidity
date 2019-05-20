@@ -82,7 +82,7 @@ protected:
 	dev::solidity::CompilerStack m_compiler;
 	bool m_compileViaYul = false;
 	langutil::EVMVersion m_evmVersion;
-	dev::solidity::OptimiserSettings m_optimiserSettings = dev::solidity::OptimiserSettings::standard();
+	dev::solidity::OptimiserSettings m_optimiserSettings = dev::solidity::OptimiserSettings::minimal();
 };
 }
 }

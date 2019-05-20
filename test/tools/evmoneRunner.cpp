@@ -40,9 +40,7 @@ evmc_host_interface EvmOneVM::interface{
 void EvmOneVM::execute(evmc_message const& _msg, std::string _runtimeCode)
 {
 	evmc_result result = {};
-
-	auto code = from_hex(_runtimeCode.data());
-	result = vm->execute(vm, this, rev, &_msg, &code[0], code.size());
+	result = vm->execute(vm, this, rev, &_msg, reinterpret_cast<const uint8_t*>(_runtimeCode.data()), _runtimeCode.size());
 	cout << result.status_code << endl;
 	assert(result.status_code == EVMC_SUCCESS);
 	std::string output = std::string{reinterpret_cast<const char*>(result.output_data), result.output_size};
