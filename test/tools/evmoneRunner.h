@@ -30,6 +30,7 @@ public:
 	EvmOneVM() : evmc_context{&interface}, vm{evmc_create_evmone()} {}
 	// Wrapper for evmone::execute. The result will be in the .result field.
 	void execute(evmc_message const& _msg, std::string _runtimeCode);
+	static std::basic_string<uint8_t> from_hex(std::string _hex);
 
 private:
 	evmc_instance* vm = nullptr;

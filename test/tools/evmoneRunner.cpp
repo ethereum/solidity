@@ -41,10 +41,39 @@ void EvmOneVM::execute(evmc_message const& _msg, std::string _runtimeCode)
 {
 	evmc_result result = {};
 
-	result = vm->execute(vm, this, rev, &_msg, reinterpret_cast<uint8_t const*>(_runtimeCode.data()), _runtimeCode.size());
+	auto code = from_hex(_runtimeCode.data());
+	result = vm->execute(vm, this, rev, &_msg, &code[0], code.size());
 	cout << result.status_code << endl;
 	assert(result.status_code == EVMC_SUCCESS);
 	std::string output = std::string{reinterpret_cast<const char*>(result.output_data), result.output_size};
 	assert(output == "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01");
 	cout << result.output_data << endl;
+}
+
+std::basic_string<uint8_t> EvmOneVM::from_hex(std::string _hex)
+{
+    if (_hex.length() % 2 == 1)
+        throw std::length_error{"the length of the input is odd"};
+
+	std::basic_string<uint8_t> bs;
+    int b = 0;
+    for (size_t i = 0; i < _hex.size(); ++i)
+    {
+        auto h = _hex[i];
+        int v;
+        if (h >= '0' && h <= '9')
+            v = h - '0';
+        else if (h >= 'a' && h <= 'f')
+            v = h - 'a' + 10;
+        else if (h >= 'A' && h <= 'F')
+            v = h - 'A' + 10;
+        else
+            throw std::out_of_range{"not a hex digit"};
+
+        if (i % 2 == 0)
+            b = v << 4;
+        else
+            bs.push_back(static_cast<uint8_t>(b | v));
+    }
+    return bs;
 }

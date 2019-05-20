@@ -56,7 +56,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	    for (auto const& id : methodIdentifiers.getMemberNames())
 	    {
 	    	cout << methodIdentifiers[id].asString() << endl;
-            m.input_data = reinterpret_cast<const uint8_t*>(methodIdentifiers[id].asString().c_str());
+	    	auto msg_input = EvmOneVM::from_hex(methodIdentifiers[id].asString());
+            m.input_data = &msg_input[0];
             m.input_size = methodIdentifiers[id].asString().size();
 		    break;
 	    }
