@@ -54,6 +54,8 @@ add_library(yul
 	optimiser/ASTWalker.h
 	optimiser/BlockFlattener.cpp
 	optimiser/BlockFlattener.h
+	optimiser/BlockHasher.cpp
+	optimiser/BlockHasher.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
 	optimiser/ControlFlowSimplifier.cpp

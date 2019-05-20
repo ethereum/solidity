@@ -59,4 +59,11 @@ struct Less<T*>
 template<> bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const;
 extern template struct Less<Literal>;
 
+// This can only be used for cases within one switch statement and
+// relies on the fact that there are no duplicate cases.
+struct SwitchCaseCompareByLiteralValue
+{
+	bool operator()(Case const* _lhsCase, Case const* _rhsCase) const;
+};
+
 }

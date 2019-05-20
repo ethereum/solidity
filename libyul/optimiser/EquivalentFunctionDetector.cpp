@@ -30,8 +30,8 @@ using namespace yul;
 
 void EquivalentFunctionDetector::operator()(FunctionDefinition const& _fun)
 {
-	RoughHeuristic heuristic(_fun);
-	auto& candidates = m_candidates[heuristic];
+	uint64_t bodyHash = m_blockHashes[&_fun.body];
+	auto& candidates = m_candidates[bodyHash];
 	for (auto const& candidate: candidates)
 		if (SyntacticallyEqual{}.statementEqual(_fun, *candidate))
 		{
@@ -39,24 +39,4 @@ void EquivalentFunctionDetector::operator()(FunctionDefinition const& _fun)
 			return;
 		}
 	candidates.push_back(&_fun);
-}
-
-bool EquivalentFunctionDetector::RoughHeuristic::operator<(EquivalentFunctionDetector::RoughHeuristic const& _rhs) const
-{
-	if (
-		std::make_tuple(m_fun.parameters.size(), m_fun.returnVariables.size()) ==
-		std::make_tuple(_rhs.m_fun.parameters.size(), _rhs.m_fun.returnVariables.size())
-	)
-		return codeSize() < _rhs.codeSize();
-	else
-		return
-			std::make_tuple(m_fun.parameters.size(), m_fun.returnVariables.size()) <
-			std::make_tuple(_rhs.m_fun.parameters.size(), _rhs.m_fun.returnVariables.size());
-}
-
-size_t EquivalentFunctionDetector::RoughHeuristic::codeSize() const
-{
-	if (!m_codeSize)
-		m_codeSize = CodeSize::codeSize(m_fun.body);
-	return *m_codeSize;
 }

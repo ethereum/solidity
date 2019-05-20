@@ -122,6 +122,8 @@ public:
 		return YulStringRepository::instance().idToString(m_handle.id);
 	}
 
+	uint64_t hash() const { return m_handle.hash; }
+
 private:
 	/// Handle of the string. Assumes that the empty string has ID zero.
 	YulStringRepository::Handle m_handle{ 0, YulStringRepository::emptyHash() };
