@@ -126,8 +126,9 @@ private:
 	/// visit depth.
 	void visitFunctionOrModifier();
 
+	/// Defines a new global variable or function.
 	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
-	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
+
 	/// Handles the side effects of assignment
 	/// to variable of some SMT array type
 	/// while aliasing is not supported.
@@ -241,9 +242,6 @@ private:
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smt::Expression _value);
 
-	/// Checks if special variable or function was seen.
-	bool knownGlobalSymbol(std::string const& _var) const;
-
 	/// Adds a new path condition
 	void pushPathCondition(smt::Expression const& _e);
 	/// Remove the last path condition
@@ -279,8 +277,6 @@ private:
 	bool m_externalFunctionCallHappened = false;
 	// True if the "No SMT solver available" warning was already created.
 	bool m_noSolverWarning = false;
-
-	std::unordered_map<std::string, std::shared_ptr<smt::SymbolicVariable>> m_globalContext;
 
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
 	/// These may be direct application of UFs or Array index access.

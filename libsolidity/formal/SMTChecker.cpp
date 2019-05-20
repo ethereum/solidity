@@ -111,7 +111,6 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 		m_pathConditions.clear();
 		m_callStack.clear();
 		pushCallStack({&_function, nullptr});
-		m_globalContext.clear();
 		m_uninterpretedTerms.clear();
 		m_overflowTargets.clear();
 		resetStateVariables();
@@ -730,7 +729,7 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 	// We increase the variable index since gasleft changes
 	// inside a tx.
 	defineGlobalVariable(gasLeft, _funCall, true);
-	auto const& symbolicVar = m_globalContext.at(gasLeft);
+	auto const& symbolicVar = m_context.globalSymbol(gasLeft);
 	unsigned index = symbolicVar->index();
 	// We set the current value to unknown anyway to add type constraints.
 	m_context.setUnknownValue(*symbolicVar);
@@ -897,8 +896,8 @@ void SMTChecker::visitFunctionIdentifier(Identifier const& _identifier)
 	auto const& fType = dynamic_cast<FunctionType const&>(*_identifier.annotation().type);
 	if (fType.returnParameterTypes().size() == 1)
 	{
-		defineGlobalFunction(fType.richIdentifier(), _identifier);
-		m_context.createExpression(_identifier, m_globalContext.at(fType.richIdentifier()));
+		defineGlobalVariable(fType.richIdentifier(), _identifier);
+		m_context.createExpression(_identifier, m_context.globalSymbol(fType.richIdentifier()));
 	}
 }
 
@@ -1117,37 +1116,21 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 
 void SMTChecker::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
 {
-	if (!knownGlobalSymbol(_name))
+	if (!m_context.knownGlobalSymbol(_name))
 	{
-		auto result = smt::newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
-		m_globalContext.emplace(_name, result.second);
-		m_context.setUnknownValue(*result.second);
-		if (result.first)
+		bool abstract = m_context.createGlobalSymbol(_name, _expr);
+		if (abstract)
 			m_errorReporter.warning(
 				_expr.location(),
 				"Assertion checker does not yet support this global variable."
 			);
 	}
 	else if (_increaseIndex)
-		m_globalContext.at(_name)->increaseIndex();
+		m_context.globalSymbol(_name)->increaseIndex();
 	// The default behavior is not to increase the index since
 	// most of the global values stay the same throughout a tx.
 	if (smt::isSupportedType(_expr.annotation().type->category()))
-		defineExpr(_expr, m_globalContext.at(_name)->currentValue());
-}
-
-void SMTChecker::defineGlobalFunction(string const& _name, Expression const& _expr)
-{
-	if (!knownGlobalSymbol(_name))
-	{
-		auto result = smt::newSymbolicVariable(*_expr.annotation().type, _name, *m_interface);
-		m_globalContext.emplace(_name, result.second);
-		if (result.first)
-			m_errorReporter.warning(
-				_expr.location(),
-				"Assertion checker does not yet support the type of this function."
-			);
-	}
+		defineExpr(_expr, m_context.globalSymbol(_name)->currentValue());
 }
 
 bool SMTChecker::shortcutRationalNumber(Expression const& _expr)
@@ -1462,7 +1445,7 @@ void SMTChecker::checkCondition(
 				expressionNames.push_back(var.first->name());
 			}
 		}
-		for (auto const& var: m_globalContext)
+		for (auto const& var: m_context.globalSymbols())
 		{
 			auto const& type = var.second->type();
 			if (
@@ -1761,11 +1744,6 @@ smt::Expression SMTChecker::expr(Expression const& _e)
 		createExpr(_e);
 	}
 	return m_context.expression(_e)->currentValue();
-}
-
-bool SMTChecker::knownGlobalSymbol(string const& _var) const
-{
-	return m_globalContext.count(_var);
 }
 
 void SMTChecker::createExpr(Expression const& _e)
