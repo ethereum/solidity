@@ -44,7 +44,7 @@ void EvmOneVM::execute(evmc_message const& _msg, std::string _runtimeCode)
 	result = vm->execute(vm, this, rev, &_msg, reinterpret_cast<uint8_t const*>(_runtimeCode.data()), _runtimeCode.size());
 	cout << result.status_code << endl;
 	assert(result.status_code == EVMC_SUCCESS);
-	std::string output= reinterpret_cast<const char*>(result.output_data);
-	assert(output == "0000000000000000000000000000000000000000000000000000000000000001");
+	std::string output = std::string{reinterpret_cast<const char*>(result.output_data), result.output_size};
+	assert(output == "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01");
 	cout << result.output_data << endl;
 }

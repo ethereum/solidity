@@ -55,6 +55,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		// Call the first function
 	    for (auto const& id : methodIdentifiers.getMemberNames())
 	    {
+	    	cout << methodIdentifiers[id].asString() << endl;
             m.input_data = reinterpret_cast<const uint8_t*>(methodIdentifiers[id].asString().c_str());
             m.input_size = methodIdentifiers[id].asString().size();
 		    break;
