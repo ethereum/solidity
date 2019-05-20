@@ -16,5 +16,4 @@ contract D
 	}
 }
 // ----
-// Warning: (180-187): Internal error: Expression undefined for SMT solver.
 // Warning: (191-206): Assertion violation happens here
