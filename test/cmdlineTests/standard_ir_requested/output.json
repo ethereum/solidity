@@ -10,6 +10,9 @@ object \"C_6\" {
     code {
         mstore(64, 128)
 
+        // Begin state variable initialization for contract \"C\" (0 variables)
+        // End state variable initialization for contract \"C\".
+
 
         codecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
         return(0, datasize(\"C_6_deployed\"))

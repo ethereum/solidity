@@ -39,6 +39,9 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+
+#include <sstream>
 
 using namespace std;
 using namespace dev;
@@ -177,19 +180,45 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 
 string IRGenerator::constructorCode(ContractDefinition const& _contract)
 {
-	// TODO initialize state variables in base to derived order.
-	// TODO base constructors
-	// TODO callValueCheck if there is no constructor.
-	if (FunctionDefinition const* constructor = _contract.constructor())
+	// Initialization of state variables in base-to-derived order.
+	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
+
+	using boost::adaptors::reverse;
+
+	ostringstream out;
+
+	FunctionDefinition const* constructor = _contract.constructor();
+	if (constructor && !constructor->isPayable())
+		out << callValueCheck();
+
+	for (ContractDefinition const* contract: reverse(_contract.annotation().linearizedBaseContracts))
 	{
-		string out;
-		if (!constructor->isPayable())
-			out = callValueCheck();
-		solUnimplementedAssert(constructor->parameters().empty(), "");
-		return move(out) + m_context.functionName(*constructor) + "()\n";
+		out <<
+			"\n// Begin state variable initialization for contract \"" <<
+			contract->name() <<
+			"\" (" <<
+			contract->stateVariables().size() <<
+			" variables)\n";
+
+		IRGeneratorForStatements generator{m_context, m_utils};
+		for (VariableDeclaration const* variable: contract->stateVariables())
+			if (!variable->isConstant())
+				generator.initializeStateVar(*variable);
+		out << generator.code();
+
+		out << "// End state variable initialization for contract \"" << contract->name() << "\".\n";
 	}
 
-	return {};
+	if (constructor)
+	{
+		solUnimplementedAssert(constructor->parameters().empty(), "");
+
+		// TODO base constructors
+
+		out << m_context.functionName(*constructor) + "()\n";
+	}
+
+	return out.str();
 }
 
 string IRGenerator::deployCode(ContractDefinition const& _contract)
