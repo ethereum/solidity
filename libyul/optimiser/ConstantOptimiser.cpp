@@ -35,6 +35,63 @@ using namespace yul;
 
 using Representation = ConstantOptimiser::Representation;
 
+namespace
+{
+struct MiniEVMInterpreter: boost::static_visitor<u256>
+{
+	explicit MiniEVMInterpreter(EVMDialect const& _dialect): m_dialect(_dialect) {}
+
+	u256 eval(Expression const& _expr)
+	{
+		return boost::apply_visitor(*this, _expr);
+	}
+
+	u256 eval(dev::eth::Instruction _instr, vector<Expression> const& _arguments)
+	{
+		vector<u256> args;
+		for (auto const& arg: _arguments)
+			args.emplace_back(eval(arg));
+		switch (_instr)
+		{
+		case eth::Instruction::ADD:
+			return args.at(0) + args.at(1);
+		case eth::Instruction::SUB:
+			return args.at(0) - args.at(1);
+		case eth::Instruction::MUL:
+			return args.at(0) * args.at(1);
+		case eth::Instruction::EXP:
+			return exp256(args.at(0), args.at(1));
+		case eth::Instruction::SHL:
+			return args.at(0) > 255 ? 0 : (args.at(1) << unsigned(args.at(0)));
+		case eth::Instruction::NOT:
+			return ~args.at(0);
+		default:
+			yulAssert(false, "Invalid operation generated in constant optimizer.");
+		}
+		return 0;
+	}
+
+	u256 operator()(FunctionalInstruction const& _instr)
+	{
+		return eval(_instr.instruction, _instr.arguments);
+	}
+	u256 operator()(FunctionCall const& _funCall)
+	{
+		BuiltinFunctionForEVM const* fun = m_dialect.builtin(_funCall.functionName.name);
+		yulAssert(fun, "Expected builtin function.");
+		yulAssert(fun->instruction, "Expected EVM instruction.");
+		return eval(*fun->instruction, _funCall.arguments);
+	}
+	u256 operator()(Literal const& _literal)
+	{
+		return valueOfLiteral(_literal);
+	}
+	u256 operator()(Identifier const&) { yulAssert(false, ""); }
+
+	EVMDialect const& m_dialect;
+};
+}
+
 void ConstantOptimiser::visit(Expression& _e)
 {
 	if (_e.type() == typeid(Literal))
@@ -118,6 +175,7 @@ Representation const& RepresentationFinder::findRepresentation(dev::u256 const& 
 			m_maxSteps--;
 		routine = min(move(routine), move(newRoutine));
 	}
+	yulAssert(MiniEVMInterpreter{m_dialect}.eval(*routine.expression) == _value, "Invalid expression generated.");
 	return m_cache[_value] = move(routine);
 }
 
