@@ -22,8 +22,12 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
+#include <libevmasm/Instruction.h>
+
 namespace yul
 {
+
+struct Dialect;
 
 /**
  * Metric for the size of code.
@@ -71,9 +75,11 @@ private:
 class CodeCost: public ASTWalker
 {
 public:
-	static size_t codeCost(Expression const& _expression);
+	static size_t codeCost(Dialect const& _dialect, Expression const& _expression);
 
 private:
+	CodeCost(Dialect const& _dialect): m_dialect(_dialect) {}
+
 	void operator()(FunctionCall const& _funCall) override;
 	void operator()(FunctionalInstruction const& _instr) override;
 	void operator()(Literal const& _literal) override;
@@ -81,6 +87,9 @@ private:
 	void visit(Expression const& _expression) override;
 
 private:
+	void addInstructionCost(dev::eth::Instruction _instruction);
+
+	Dialect const& m_dialect;
 	size_t m_cost = 0;
 };
 

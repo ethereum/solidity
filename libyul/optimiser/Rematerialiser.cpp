@@ -77,7 +77,7 @@ void Rematerialiser::visit(Expression& _e)
 			assertThrow(m_value.at(name), OptimizerException, "");
 			auto const& value = *m_value.at(name);
 			size_t refs = m_referenceCounts[name];
-			size_t cost = CodeCost::codeCost(value);
+			size_t cost = CodeCost::codeCost(m_dialect, value);
 			if (refs <= 1 || cost == 0 || (refs <= 5 && cost <= 1) || m_varsToAlwaysRematerialize.count(name))
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");

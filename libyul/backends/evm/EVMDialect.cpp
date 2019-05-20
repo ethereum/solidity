@@ -98,6 +98,8 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			if (
 				!dev::eth::isDupInstruction(instr.second) &&
 				!dev::eth::isSwapInstruction(instr.second) &&
+				instr.second != eth::Instruction::JUMP &&
+				instr.second != eth::Instruction::JUMPI &&
 				_evmVersion.hasOpcode(instr.second)
 			)
 				builtins.emplace(createEVMFunction(instr.first, instr.second));

@@ -42,7 +42,7 @@ void DeadCodeEliminator::operator()(Block& _block)
 {
 	TerminationFinder::ControlFlow controlFlowChange;
 	size_t index;
-	tie(controlFlowChange, index) = TerminationFinder::firstUnconditionalControlFlowChange(_block.statements);
+	tie(controlFlowChange, index) = TerminationFinder{m_dialect}.firstUnconditionalControlFlowChange(_block.statements);
 
 	// Erase everything after the terminating statement that is not a function definition.
 	if (controlFlowChange != TerminationFinder::ControlFlow::FlowOut && index != size_t(-1))

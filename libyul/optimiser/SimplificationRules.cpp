@@ -221,6 +221,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 		vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
 			arguments.emplace_back(arg.toExpression(_location));
+		// TODO convert to FunctionCall
 		return FunctionalInstruction{_location, m_instruction, std::move(arguments)};
 	}
 	assertThrow(false, OptimizerException, "Pattern of kind 'any', but no match group.");

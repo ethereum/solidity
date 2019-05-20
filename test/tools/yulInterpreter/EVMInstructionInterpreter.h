@@ -37,6 +37,8 @@ enum class Instruction: uint8_t;
 namespace yul
 {
 class YulString;
+struct BuiltinFunctionForEVM;
+
 namespace test
 {
 
@@ -70,7 +72,7 @@ public:
 	/// Evaluate instruction
 	dev::u256 eval(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments);
 	/// Evaluate builtin function
-	dev::u256 evalBuiltin(YulString _name, std::vector<dev::u256> const& _arguments);
+	dev::u256 evalBuiltin(BuiltinFunctionForEVM const& _fun, std::vector<dev::u256> const& _arguments);
 
 private:
 	/// Record a memory read in the trace. Also updates m_state.msize

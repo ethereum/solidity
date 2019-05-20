@@ -69,7 +69,7 @@ public:
 		{
 			YulString varName = _varDecl.variables.front().name;
 			if (m_value.count(varName))
-				m_expressionCodeCost[varName] = CodeCost::codeCost(*m_value[varName]);
+				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *m_value[varName]);
 		}
 	}
 

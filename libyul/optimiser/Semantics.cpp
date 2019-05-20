@@ -23,6 +23,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libevmasm/SemanticInformation.h>
 
@@ -112,10 +113,14 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 
 bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
 {
-	if (_exprStmnt.expression.type() != typeid(FunctionalInstruction))
-		return false;
-
-	return eth::SemanticInformation::terminatesControlFlow(
-		boost::get<FunctionalInstruction>(_exprStmnt.expression).instruction
-	);
+	if (_exprStmnt.expression.type() == typeid(FunctionalInstruction))
+		return eth::SemanticInformation::terminatesControlFlow(
+			boost::get<FunctionalInstruction>(_exprStmnt.expression).instruction
+		);
+	else if (_exprStmnt.expression.type() == typeid(FunctionCall))
+		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+			if (auto const* builtin = dialect->builtin(boost::get<FunctionCall>(_exprStmnt.expression).functionName.name))
+				if (builtin->instruction)
+					return eth::SemanticInformation::terminatesControlFlow(*builtin->instruction);
+	return false;
 }
