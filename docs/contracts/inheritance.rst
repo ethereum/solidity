@@ -12,7 +12,9 @@ is called, except when the contract name is explicitly given or the
 
 When a contract inherits from other contracts, only a single
 contract is created on the blockchain, and the code from all the base contracts
-is compiled into the created contract.
+is compiled into the created contract. This means that all internal calls
+to functions of base contracts also just use internal function calls
+(``super.f(..)`` will use JUMP and not a message call).
 
 The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
