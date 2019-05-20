@@ -304,6 +304,8 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 				fun = m_utils.overflowCheckedUIntAddFunction(type->numBits());
 			else if (_binOp.getOperator() == Token::Sub)
 				fun = m_utils.overflowCheckedUIntSubFunction();
+			else if (_binOp.getOperator() == Token::Mul)
+				fun = m_utils.overflowCheckedUIntMulFunction(type->numBits());
 			else
 				solUnimplementedAssert(false, "");
 			defineExpression(_binOp) << fun << "(" << left << ", " << right << ")\n";

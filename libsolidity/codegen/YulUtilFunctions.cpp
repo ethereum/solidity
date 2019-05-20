@@ -346,6 +346,34 @@ string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
 	});
 }
 
+string YulUtilFunctions::overflowCheckedUIntMulFunction(size_t _bits)
+{
+	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
+	string functionName = "checked_mul_uint_" + to_string(_bits);
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			// - The current overflow check *before* the multiplication could
+			//   be replaced by the following check *after* the multiplication:
+			//   if and(iszero(iszero(x)), iszero(eq(div(product, x), y))) { revert(0, 0) }
+			// - The case the x equals 0 could be treated separately and directly return zero.
+			Whiskers(R"(
+			function <functionName>(x, y) -> product {
+				if and(iszero(iszero(x)), lt(div(<mask>, x), y)) { revert(0, 0) }
+				<?shortType>
+					product := mulmod(x, y, <powerOfTwo>)
+				<!shortType>
+					product := mul(x, y)
+				</shortType>
+			}
+			)")
+				("shortType", _bits < 256)
+				("functionName", functionName)
+				("powerOfTwo", toCompactHexWithPrefix(u256(1) << _bits))
+				("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
+				.render();
+	});
+}
+
 string YulUtilFunctions::overflowCheckedUIntSubFunction()
 {
 	string functionName = "checked_sub_uint";

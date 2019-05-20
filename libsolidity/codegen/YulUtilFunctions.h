@@ -86,6 +86,8 @@ public:
 
 	std::string overflowCheckedUIntAddFunction(size_t _bits);
 
+	std::string overflowCheckedUIntMulFunction(size_t _bits);
+
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
 	std::string overflowCheckedUIntSubFunction();
