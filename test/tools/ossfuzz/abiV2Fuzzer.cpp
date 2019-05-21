@@ -51,11 +51,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		SolidityExecutionFramework executionFramework;
 		byteCode = executionFramework.compileContract(input);
 		Json::Value methodIdentifiers = executionFramework.getMethodIdentifiers();
+		std::basic_string<uint8_t> msg_input;
 
 		// Call the first function
 	    for (auto const& id : methodIdentifiers.getMemberNames())
 	    {
-	    	auto msg_input = EvmOneVM::from_hex(methodIdentifiers[id].asString());
+	    	msg_input = EvmOneVM::from_hex(methodIdentifiers[id].asString());
             m.input_data = &msg_input[0];
             m.input_size = msg_input.size();
 		    break;
@@ -73,6 +74,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	ofstream myfile;
 	myfile.open("/tmp/runtimeCode");
 	myfile << hexEncodedRuntimeCode;
+	myfile.close();
+	myfile.open("/tmp/input");
+	myfile << m.input_data;
 	myfile.close();
 
 	vm.execute(m, rawRuntimeCode);
