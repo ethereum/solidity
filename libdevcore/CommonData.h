@@ -111,7 +111,7 @@ enum class HexCase
 /// @example toHex("A\x69") == "4169"
 std::string toHex(bytes const& _data, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower);
 
-/// Converts a (printable) ASCII hex character into the correspnding integer value.
+/// Converts a (printable) ASCII hex character into the corresponding integer value.
 /// @example fromHex('A') == 10 && fromHex('f') == 15 && fromHex('5') == 5
 int fromHex(char _i, WhenError _throw);
 

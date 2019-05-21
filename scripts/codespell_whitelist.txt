@@ -3,3 +3,9 @@ nd
 assignend
 uint
 mut
+BA
+FO
+ba
+fo
+compilability
+errorString

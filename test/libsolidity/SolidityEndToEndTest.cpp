@@ -13518,7 +13518,7 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 {
 	char const* sourceCode = R"YY(
 		contract C {
-			/// Calling into non-existant account is successful (creates the account)
+			/// Calling into non-existent account is successful (creates the account)
 			function f() external returns (bool) {
 				(bool success,) = address(0x4242).call("");
 				return success;
