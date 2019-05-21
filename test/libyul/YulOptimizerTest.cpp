@@ -43,6 +43,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/SLoadResolver.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
@@ -251,6 +252,21 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
+	}
+	else if (m_optimizerStep == "sloadResolver")
+	{
+		disambiguate();
+		ForLoopInitRewriter{}(*m_ast);
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
+		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		ExpressionSimplifier::run(*m_dialect, *m_ast);
+
+		SLoadResolver{*m_dialect}(*m_ast);
+
+		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		ExpressionJoiner::run(*m_ast);
+		ExpressionJoiner::run(*m_ast);
 	}
 	else if (m_optimizerStep == "controlFlowSimplifier")
 	{

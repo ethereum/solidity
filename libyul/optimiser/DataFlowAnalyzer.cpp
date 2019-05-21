@@ -26,14 +26,40 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libdevcore/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+
+void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
+{
+	if (boost::optional<pair<YulString, YulString>> vars = isSimpleSStore(_statement))
+	{
+		ASTModifier::operator()(_statement);
+		m_storage.set(vars->first, vars->second);
+		set<YulString> keysToErase;
+		for (auto const& item: m_storage.values)
+			if (!(
+				m_knowledgeBase.knownToBeDifferent(vars->first, item.first) ||
+				m_knowledgeBase.knownToBeEqual(vars->second, item.second)
+			))
+				keysToErase.insert(item.first);
+		for (YulString const& key: keysToErase)
+			m_storage.eraseKey(key);
+	}
+	else
+	{
+		clearStorageKnowledgeIfInvalidated(_statement.expression);
+		ASTModifier::operator()(_statement);
+	}
+}
 
 void DataFlowAnalyzer::operator()(Assignment& _assignment)
 {
@@ -41,6 +67,7 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 	for (auto const& var: _assignment.variableNames)
 		names.emplace(var.name);
 	assertThrow(_assignment.value, OptimizerException, "");
+	clearStorageKnowledgeIfInvalidated(*_assignment.value);
 	visit(*_assignment.value);
 	handleAssignment(names, _assignment.value.get());
 }
@@ -53,14 +80,22 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 	m_variableScopes.back().variables += names;
 
 	if (_varDecl.value)
+	{
+		clearStorageKnowledgeIfInvalidated(*_varDecl.value);
 		visit(*_varDecl.value);
+	}
 
 	handleAssignment(names, _varDecl.value.get());
 }
 
 void DataFlowAnalyzer::operator()(If& _if)
 {
+	clearStorageKnowledgeIfInvalidated(*_if.condition);
+	InvertibleMap<YulString, YulString> storage = m_storage;
+
 	ASTModifier::operator()(_if);
+
+	joinStorageKnowledge(storage);
 
 	Assignments assignments;
 	assignments(_if.body);
@@ -69,17 +104,24 @@ void DataFlowAnalyzer::operator()(If& _if)
 
 void DataFlowAnalyzer::operator()(Switch& _switch)
 {
+	clearStorageKnowledgeIfInvalidated(*_switch.expression);
 	visit(*_switch.expression);
 	set<YulString> assignedVariables;
 	for (auto& _case: _switch.cases)
 	{
+		InvertibleMap<YulString, YulString> storage = m_storage;
 		(*this)(_case.body);
+		joinStorageKnowledge(storage);
+
 		Assignments assignments;
 		assignments(_case.body);
 		assignedVariables += assignments.names();
 		// This is a little too destructive, we could retain the old values.
 		clearValues(assignments.names());
+		clearStorageKnowledgeIfInvalidated(_case.body);
 	}
+	for (auto& _case: _switch.cases)
+		clearStorageKnowledgeIfInvalidated(_case.body);
 	clearValues(assignedVariables);
 }
 
@@ -89,8 +131,10 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	// but this could be difficult if it is subclassed.
 	map<YulString, Expression const*> value;
 	InvertibleRelation<YulString> references;
+	InvertibleMap<YulString, YulString> storage;
 	m_value.swap(value);
 	swap(m_references, references);
+	swap(m_storage, storage);
 	pushScope(true);
 
 	for (auto const& parameter: _fun.parameters)
@@ -105,6 +149,7 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	popScope();
 	m_value.swap(value);
 	swap(m_references, references);
+	swap(m_storage, storage);
 }
 
 void DataFlowAnalyzer::operator()(ForLoop& _for)
@@ -121,11 +166,20 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	assignments(_for.post);
 	clearValues(assignments.names());
 
+	// break/continue are tricky for storage and thus we almost always clear here.
+	clearStorageKnowledgeIfInvalidated(*_for.condition);
+	clearStorageKnowledgeIfInvalidated(_for.post);
+	clearStorageKnowledgeIfInvalidated(_for.body);
+
 	visit(*_for.condition);
 	(*this)(_for.body);
 	clearValues(assignmentsSinceCont.names());
+	clearStorageKnowledgeIfInvalidated(_for.body);
 	(*this)(_for.post);
 	clearValues(assignments.names());
+	clearStorageKnowledgeIfInvalidated(*_for.condition);
+	clearStorageKnowledgeIfInvalidated(_for.post);
+	clearStorageKnowledgeIfInvalidated(_for.body);
 }
 
 void DataFlowAnalyzer::operator()(Block& _block)
@@ -159,7 +213,13 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 
 	auto const& referencedVariables = movableChecker.referencedVariables();
 	for (auto const& name: _variables)
+	{
 		m_references.set(name, referencedVariables);
+		// assignment to slot denoted by "name"
+		m_storage.eraseKey(name);
+		// assignment to slot contents denoted by "name"
+		m_storage.eraseValue(name);
+	}
 }
 
 void DataFlowAnalyzer::pushScope(bool _functionScope)
@@ -188,7 +248,18 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 	// This cannot be easily tested since the substitutions will be done
 	// one by one on the fly, and the last line will just be add(1, 1)
 
-	// Clear variables that reference variables to be cleared.
+	// First clear storage knowledge, because we do not have to clear
+	// storage knowledge of variables whose expression has changed,
+	// since the value is still unchanged.
+	for (auto const& name: _variables)
+	{
+		// clear slot denoted by "name"
+		m_storage.eraseKey(name);
+		// clear slot contents denoted by "name"
+		m_storage.eraseValue(name);
+	}
+
+	// Also clear variables that reference variables to be cleared.
 	for (auto const& name: _variables)
 		for (auto const& ref: m_references.backward[name])
 			_variables.emplace(ref);
@@ -198,6 +269,31 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 		m_value.erase(name);
 	for (auto const& name: _variables)
 		m_references.eraseKey(name);
+}
+
+void DataFlowAnalyzer::clearStorageKnowledgeIfInvalidated(Block const& _block)
+{
+	if (SideEffectsCollector(m_dialect, _block).invalidatesStorage())
+		m_storage.clear();
+}
+
+void DataFlowAnalyzer::clearStorageKnowledgeIfInvalidated(Expression const& _expr)
+{
+	if (SideEffectsCollector(m_dialect, _expr).invalidatesStorage())
+		m_storage.clear();
+}
+
+void DataFlowAnalyzer::joinStorageKnowledge(InvertibleMap<YulString, YulString> const& _other)
+{
+	set<YulString> keysToErase;
+	for (auto const& item: m_storage.values)
+	{
+		auto it = _other.values.find(item.first);
+		if (it == _other.values.end() || it->second != item.second)
+			keysToErase.insert(item.first);
+	}
+	for (auto const& key: keysToErase)
+		m_storage.eraseKey(key);
 }
 
 bool DataFlowAnalyzer::inScope(YulString _variableName) const
@@ -211,3 +307,27 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 	}
 	return false;
 }
+
+boost::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleSStore(
+	ExpressionStatement const& _statement
+) const
+{
+	if (_statement.expression.type() == typeid(FunctionCall))
+	{
+		FunctionCall const& funCall = boost::get<FunctionCall>(_statement.expression);
+		if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+			if (auto const* builtin = dialect->builtin(funCall.functionName.name))
+				if (builtin->instruction == dev::eth::Instruction::SSTORE)
+					if (
+						funCall.arguments.at(0).type() == typeid(Identifier) &&
+						funCall.arguments.at(1).type() == typeid(Identifier)
+					)
+					{
+						YulString key = boost::get<Identifier>(funCall.arguments.at(0)).name;
+						YulString value = boost::get<Identifier>(funCall.arguments.at(1)).name;
+						return make_pair(key, value);
+					}
+	}
+	return {};
+}
+
