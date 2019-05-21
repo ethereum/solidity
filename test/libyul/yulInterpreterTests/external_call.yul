@@ -4,7 +4,6 @@
 }
 // ----
 // Trace:
-//   GAS()
 //   MLOAD_FROM_SIZE(0, 32)
 //   MSTORE_AT_SIZE(48, 32)
 //   CALL(153, 69, 5, 0, 32, 48, 32)

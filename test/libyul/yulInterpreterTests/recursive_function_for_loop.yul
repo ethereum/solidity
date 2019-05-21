@@ -20,12 +20,9 @@
 // ----
 // Trace:
 //   MSTORE_AT_SIZE(1, 1) [0101]
-//   MSIZE()
 //   MLOAD_FROM_SIZE(1, 32)
 //   MSTORE_AT_SIZE(1, 1) [0101]
-//   MSIZE()
 //   MLOAD_FROM_SIZE(1, 64)
-//   MSIZE()
 //   MLOAD_FROM_SIZE(1, 96)
 //   SSTORE(0, 0)
 // Memory dump:
