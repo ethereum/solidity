@@ -35,7 +35,5 @@ void yulFuzzerUtil::interpret(
 	state.maxMemSize = _maxMemory;
 	Interpreter interpreter(state, _dialect);
 	interpreter(*_ast);
-	_os << "Trace:" << endl;
-	for (auto const& line: interpreter.trace())
-		_os << "  " << line << endl;
+	state.dumpTraceAndState(_os);
 }

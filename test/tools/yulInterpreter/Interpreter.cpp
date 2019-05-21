@@ -32,12 +32,33 @@
 #include <libdevcore/FixedHash.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/algorithm/cxx11/all_of.hpp>
+
+#include <ostream>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
 using namespace yul::test;
 
+void InterpreterState::dumpTraceAndState(ostream& _out) const
+{
+	_out << "Trace:" << endl;
+	for (auto const& line: trace)
+		_out << "  " << line << endl;
+	_out << "Memory dump:\n";
+	for (size_t i = 0; i < memory.size(); i += 0x20)
+	{
+		bytesConstRef data(memory.data() + i, 0x20);
+		if (boost::algorithm::all_of_equal(data, 0))
+			continue;
+		_out << "  " << std::hex << std::setw(4) << i << ": " << toHex(data.toBytes()) << endl;
+	}
+	_out << "Storage dump:" << endl;
+	for (auto const& slot: storage)
+		if (slot.second != h256(0))
+			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+}
 
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
 {
