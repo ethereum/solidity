@@ -356,7 +356,12 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 			"\n";
 	else if (TokenTraits::isCompareOp(op))
 	{
-		solUnimplementedAssert(commonType->category() != Type::Category::Function, "");
+		if (auto type = dynamic_cast<FunctionType const*>(commonType))
+		{
+			solAssert(op == Token::Equal || op == Token::NotEqual, "Invalid function pointer comparison!");
+			solAssert(type->kind() != FunctionType::Kind::External, "External function comparison not allowed!");
+		}
+
 		solAssert(commonType->isValueType(), "");
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(commonType))
