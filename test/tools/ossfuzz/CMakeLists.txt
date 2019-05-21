@@ -14,6 +14,9 @@ add_dependencies(ossfuzz
 if (OSSFUZZ)
 add_custom_target(ossfuzz_proto)
 add_dependencies(ossfuzz_proto yul_proto_ossfuzz yul_proto_diff_ossfuzz)
+
+add_custom_target(ossfuzz_abiv2)
+add_dependencies(ossfuzz_abiv2 abiv2_ossfuzz)
 endif()
 
 if (OSSFUZZ)
@@ -52,6 +55,10 @@ if (OSSFUZZ)
             protobuf-mutator.a
             protobuf.a
             FuzzingEngine.a)
+
+    add_executable(abiv2_ossfuzz abiV2FuzzerCommon.cpp abiV2Fuzzer.cpp)
+    target_link_libraries(abiv2_ossfuzz PRIVATE solidity evmasm
+        FuzzingEngine.a)
 else()
     add_library(solc_opt_ossfuzz
             solc_opt_ossfuzz.cpp
@@ -103,3 +110,4 @@ else()
 #            protobuf.a
 #            FuzzingEngine.a)
 endif()
+
