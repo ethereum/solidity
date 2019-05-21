@@ -17,10 +17,12 @@
 
 #include <fstream>
 #include <test/tools/ossfuzz/abiV2FuzzerCommon.h>
+#include <test/tools/evmoneRunner.h>
 
 using namespace dev::test::abiv2fuzzer;
 using namespace std;
 using namespace dev;
+using namespace external::evmone;
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
@@ -48,5 +50,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	}
 
 	std::string hexEncodedRuntimeCode = toHex(runtimeByteCode);
+	EvmOneVM evmOneVm;
+	evmOneVm.execute(hexEncodedRuntimeCode, hexEncodedInput);
+
 	return 0;
 }

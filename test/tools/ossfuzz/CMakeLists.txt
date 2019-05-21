@@ -56,7 +56,7 @@ if (OSSFUZZ)
             protobuf.a
             FuzzingEngine.a)
 
-    add_executable(abiv2_ossfuzz abiV2FuzzerCommon.cpp abiV2Fuzzer.cpp)
+    add_executable(abiv2_ossfuzz abiV2FuzzerCommon.cpp abiV2Fuzzer.cpp ../evmoneRunner.cpp)
     target_link_libraries(abiv2_ossfuzz PRIVATE solidity evmasm
         FuzzingEngine.a)
 else()
@@ -110,4 +110,3 @@ else()
 #            protobuf.a
 #            FuzzingEngine.a)
 endif()
-
