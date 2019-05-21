@@ -18,6 +18,8 @@
 #include <test/tools/evmoneRunner.h>
 #include <iostream>
 #include <assert.h>
+#include <fstream>
+#include <limits>
 
 using namespace external::evmone;
 using namespace std;
@@ -37,23 +39,41 @@ evmc_host_interface EvmOneVM::interface{
 		{},
 };
 
-void EvmOneVM::execute(int64_t _gas, std::string _runtimeCode, std::string _input)
+void EvmOneVM::execute(const evmc_message& _m, std::basic_string<uint8_t> _code)
 {
 	evmc_result result = {};
-	evmc_message msg;
-	auto input = from_hex(_input);
-	msg.gas = _gas;
-	msg.input_data = input.data();
-	msg.input_size = input.size();
-	auto code = from_hex(_runtimeCode);
-	result = vm->execute(vm, this, rev, &msg, code.data(), code.size());
-	cout << result.status_code << endl;
+	result = vm->execute(vm, this, rev, &_m, &_code[0], _code.size());
 	assert(result.status_code == EVMC_SUCCESS);
-	std::string output = std::string{reinterpret_cast<const char*>(result.output_data), result.output_size};
-	assert(output == "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01");
-	cout << result.output_data << endl;
+	// Checking if execution output is true or 1
+	//	assert(result.output_data[31] == '\x01');
 }
 
+void EvmOneVM::execute(int64_t gas, std::basic_string<uint8_t> _code, std::string _hexInput)
+{
+	auto input = from_hex(_hexInput);
+	evmc_message msg = {};
+	msg.gas = gas;
+	msg.input_data = input.data();
+	msg.input_size = input.size();
+	execute(msg, _code);
+}
+
+void EvmOneVM::execute(std::basic_string<uint8_t> _code, std::string _hexInput)
+{
+	execute(std::numeric_limits<int64_t>::max(), _code, _hexInput);
+}
+
+void EvmOneVM::execute(int64_t _gas, std::string _code, std::string _input)
+{
+	execute(_gas, from_hex(_code), _input);
+}
+
+void EvmOneVM::execute(std::string _code, std::string _hexInput)
+{
+	execute(std::numeric_limits<int64_t>::max(), _code, _hexInput);
+}
+
+// Converts hex encoded string to its raw byte representation
 std::basic_string<uint8_t> EvmOneVM::from_hex(std::string _hex)
 {
     if (_hex.length() % 2 == 1)

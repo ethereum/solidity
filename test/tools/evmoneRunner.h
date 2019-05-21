@@ -28,14 +28,18 @@ class EvmOneVM : public evmc_context
 {
 public:
 	EvmOneVM() : evmc_context{&interface}, vm{evmc_create_evmone()} {}
-	// Wrapper for evmone::execute. The result will be in the .result field.
-	void execute(int64_t _gas, std::string _runtimeCode, std::string _input);
+	// Wrapper for evmone::execute.
+//	void execute(int64_t _gas, std::string _hexCode, std::string _input);
+	void execute(std::basic_string<uint8_t> _rawByteCode, std::string _hexInput = {});
+	void execute(std::string _hexCode, std::string _hexInput = {});
+	void execute(const evmc_message& _m, std::basic_string<uint8_t> _rawByteCode);
+	void execute(int64_t _gas, std::basic_string<uint8_t> _rawByteCode, std::string _hexInput = {});
+	void execute(int64_t _gas, std::string _code, std::string _input);
 	static std::basic_string<uint8_t> from_hex(std::string _hex);
 
 private:
 	evmc_instance* vm = nullptr;
-//	evmc_revision rev = EVMC_PETERSBURG;
-	evmc_revision rev = EVMC_BYZANTIUM;
+	evmc_revision rev = EVMC_PETERSBURG;
 	static evmc_host_interface interface;
 	// TODO: Initialize transaction
 	evmc_tx_context tx_context = {};
