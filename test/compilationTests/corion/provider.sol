@@ -371,7 +371,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     function allowUsers(address provider, address[] calldata addr) isReady external {
         /*
-            Permition of the user to be able to connect to the provider.
+            Permission of the user to be able to connect to the provider.
             This can only be invited by the provider’s admin.
             With this kind of call only 100 address can be permitted.
 
