@@ -20,6 +20,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Explicitly turn uninitialized internal function pointers into invalid functions when loaded from storage.
  * Code Generator: Fix assertion failure when assigning structs containing array of mapping.
  * SMTChecker: Fix bad cast in base constructor modifier.
  * SMTChecker: Fix internal error when visiting state variable inherited from base class.

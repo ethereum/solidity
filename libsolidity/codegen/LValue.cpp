@@ -206,6 +206,12 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 				CompilerUtils(m_context).splitExternalFunctionType(false);
 				cleaned = true;
 			}
+			else if (fun->kind() == FunctionType::Kind::Internal)
+			{
+				m_context << Instruction::DUP1 << Instruction::ISZERO;
+				CompilerUtils(m_context).pushZeroValue(*fun);
+				m_context << Instruction::MUL << Instruction::OR;
+			}
 		}
 		if (!cleaned)
 		{

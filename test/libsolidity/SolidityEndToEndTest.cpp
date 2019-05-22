@@ -15683,6 +15683,40 @@ BOOST_AUTO_TEST_CASE(event_wrong_abi_name)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("Deposit(address,bytes32,uint256)")));
 }
 
+BOOST_AUTO_TEST_CASE(uninitialized_internal_storage_function)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function() internal x;
+			function f() public returns (uint r) {
+				function() internal t = x;
+				assembly { r := t }
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	bytes result = callContractFunction("f()");
+	BOOST_CHECK(!result.empty());
+	BOOST_CHECK(result != encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(uninitialized_internal_storage_function_call)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function() internal x;
+			function f() public returns (uint r) {
+				x();
+				return 2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	ABI_CHECK(callContractFunction("f()"), bytes{});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
