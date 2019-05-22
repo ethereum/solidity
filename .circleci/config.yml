@@ -357,6 +357,7 @@ jobs:
             ulimit -a
             # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
             ulimit -s 16384
+            export ASAN_OPTIONS="check_initialization_order=1:detect_stack_use_after_return=1:strict_init_order=1:strict_string_checks=1:detect_invalid_pointer_pairs=1"
             build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
       - run:
           name: Run commandline tests with ASAN
@@ -364,6 +365,7 @@ jobs:
             ulimit -a
             # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
             ulimit -s 16384
+            export ASAN_OPTIONS="check_initialization_order=1:detect_stack_use_after_return=1:strict_init_order=1:strict_string_checks=1:detect_invalid_pointer_pairs=1"
             test/cmdlineTests.sh
       - store_test_results:
           path: test_results/
