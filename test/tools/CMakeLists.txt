@@ -1,6 +1,4 @@
-if (OSSFUZZ)
-    add_subdirectory(ossfuzz)
-endif()
+add_subdirectory(ossfuzz)
 
 add_subdirectory(yulInterpreter)
 add_executable(yulrun yulrun.cpp)
