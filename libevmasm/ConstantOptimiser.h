@@ -129,6 +129,21 @@ protected:
 };
 
 /**
+ * Method that stores the data in the .data section of the code and copies it to the stack.
+ */
+class ShortCodeCopyMethod: public ConstantOptimisationMethod
+{
+public:
+	explicit ShortCodeCopyMethod(Params const& _params, u256 const& _value):
+		ConstantOptimisationMethod(_params, _value) {}
+	bigint gasNeeded() const override;
+	AssemblyItems execute(Assembly& _assembly) const override;
+
+protected:
+	static AssemblyItems const& copyRoutine();
+};
+
+/**
  * Method that tries to compute the constant.
  */
 class ComputeMethod: public ConstantOptimisationMethod

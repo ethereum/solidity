@@ -56,10 +56,17 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 		bigint literalGas = lit.gasNeeded();
 		CodeCopyMethod copy(params, item.data());
 		bigint copyGas = copy.gasNeeded();
+		ShortCodeCopyMethod shortCopy(params, item.data());
+		bigint shortCopyGas = shortCopy.gasNeeded();
 		ComputeMethod compute(params, item.data());
 		bigint computeGas = compute.gasNeeded();
 		AssemblyItems replacement;
-		if (copyGas < literalGas && copyGas < computeGas)
+		if (shortCopyGas < copyGas && shortCopyGas < literalGas && shortCopyGas < computeGas)
+		{
+			replacement = shortCopy.execute(_assembly);
+			optimisations++;
+		}
+		else if (copyGas < literalGas && copyGas < computeGas)
 		{
 			replacement = copy.execute(_assembly);
 			optimisations++;
@@ -144,22 +151,16 @@ bigint CodeCopyMethod::gasNeeded() const
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
 		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
 		// Data gas for data itself
-		dataGas(toCompactBigEndian(m_value, 1))
+		dataGas(toBigEndian(m_value))
 	);
 }
 
 AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 {
-	bytes data = toCompactBigEndian(m_value, 1);
-	assertThrow(data.size() >= 1 && data.size() <= 32, OptimizerException, "Invalid number encoding.");
+	bytes data = toBigEndian(m_value);
+	assertThrow(data.size() == 32, OptimizerException, "Invalid number encoding.");
 	AssemblyItems actualCopyRoutine = copyRoutine();
 	actualCopyRoutine[4] = _assembly.newData(data);
-	if (data.size() != 32)
-	{
-		// Update sizes for short encodings.
-		actualCopyRoutine[3] = u256(data.size());
-		actualCopyRoutine[5] = u256(32 - data.size());
-	}
 	return actualCopyRoutine;
 }
 
@@ -175,9 +176,69 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 		Instruction::MLOAD,
 
 		// codecopy(0, <offset>, 32)
-		u256(32), // replaced above in actualCopyRoutine[3]
+		u256(32),
 		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[4]
-		Instruction::DUP4, // replaced above in actualCopyRoutine[5]
+		Instruction::DUP4,
+		Instruction::CODECOPY,
+
+		// mload(0)
+		Instruction::DUP2,
+		Instruction::MLOAD,
+
+		// restore original memory
+		Instruction::SWAP2,
+		Instruction::MSTORE
+	};
+	return copyRoutine;
+}
+
+bigint ShortCodeCopyMethod::gasNeeded() const
+{
+	return combineGas(
+		// Run gas: we ignore memory increase costs
+		simpleRunGas(copyRoutine()) + GasCosts::copyGas,
+		// Data gas for copy routines: Some bytes are zero, but we ignore them.
+		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
+		// Data gas for data itself
+		dataGas(toCompactBigEndian(m_value, 1))
+	);
+}
+
+AssemblyItems ShortCodeCopyMethod::execute(Assembly& _assembly) const
+{
+	bytes data = toCompactBigEndian(m_value, 1);
+	assertThrow(data.size() >= 1 && data.size() <= 32, OptimizerException, "Invalid number encoding.");
+	AssemblyItems actualCopyRoutine = copyRoutine();
+	actualCopyRoutine[7] = _assembly.newData(data);
+	if (data.size() != 32)
+	{
+		// Update sizes for short encodings.
+		actualCopyRoutine[6] = u256(data.size());
+		actualCopyRoutine[8] = u256(32 - data.size());
+	}
+	return actualCopyRoutine;
+}
+
+AssemblyItems const& ShortCodeCopyMethod::copyRoutine()
+{
+	AssemblyItems static copyRoutine{
+		// constant to be reused 3+ times
+		u256(0),
+
+		// back up memory
+		// mload(0)
+		Instruction::DUP1,
+		Instruction::MLOAD,
+
+		// clear out memory (to avoid dirty upper bits)
+		Instruction::DUP1,
+		Instruction::DUP1,
+		Instruction::MSTORE,
+
+		// codecopy(0, <offset>, 32)
+		u256(32), // replaced above in actualCopyRoutine[6]
+		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[7]
+		Instruction::DUP4, // replaced above in actualCopyRoutine[8]
 		Instruction::CODECOPY,
 
 		// mload(0)
