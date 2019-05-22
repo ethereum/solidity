@@ -14,6 +14,7 @@ Compiler Features:
  * Metadata: Add IPFS hashes of source files.
  * Assembler: Encode the compiler version in the deployed bytecode.
  * Yul Optimizer: Simplify single-run ``for`` loops to ``if`` statements.
+ * Yul Optimizer: Do not inline recursive functions.
  * Optimizer: Add rules for multiplication and division by left-shifted one.
 
 
