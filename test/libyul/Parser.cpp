@@ -549,11 +549,11 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 	SimpleDialect dialect;
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Expected '(' but got ':='", dialect);
+	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Variable name must precede \":=\" in assignment.", dialect);
 	CHECK_ERROR_DIALECT("{ function f(x) { f(builtin) } }", ParserError, "Expected '(' but got ')'", dialect);
 	CHECK_ERROR_DIALECT("{ function f(builtin) {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function f() -> builtin {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function g() -> a,b  {} builtin, builtin2 := g() }", ParserError, "Expected '(' but got ','", dialect);
+	CHECK_ERROR_DIALECT("{ function g() -> a,b  {} builtin, builtin2 := g() }", ParserError, "Variable name must precede \",\" in multiple assignment.", dialect);
 }
 
 BOOST_AUTO_TEST_CASE(builtins_analysis)
