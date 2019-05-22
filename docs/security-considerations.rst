@@ -20,7 +20,8 @@ to take too much care, but if you manage your bank account using that web servic
 you should be more careful.
 
 This section will list some pitfalls and general security recommendations but
-can, of course, never be complete. Also, keep in mind that even if your
+can, of course, never be complete.
+Also, keep in mind that even if your
 smart contract code is bug-free, the compiler or the platform itself might
 have a bug. A list of some publicly known security-relevant bugs of the compiler
 can be found in the
@@ -30,6 +31,10 @@ Solidity compiler.
 
 As always, with open source documentation, please help us extend this section
 (especially, some examples would not hurt)!
+
+NOTE: In addition to the list below, you can find more security recommendations and best practices
+`in Guy Lando's knowledge list <https://github.com/guylando/KnowledgeLists/blob/master/EthereumSmartContracts.md>`_ and
+`the Consensys GitHub repo <https://consensys.github.io/smart-contract-best-practices/>`_.
 
 ********
 Pitfalls
