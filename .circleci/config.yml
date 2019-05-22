@@ -473,8 +473,6 @@ jobs:
             update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
       - run: mkdir -p test_results
       - run: *run_regressions
-      - store_test_results:
-          path: test_results/
       - store_artifacts:
           path: test_results/
           destination: test_results/
