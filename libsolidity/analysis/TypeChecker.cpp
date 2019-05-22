@@ -27,7 +27,6 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -707,7 +706,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
 		Error::Type::SyntaxError,
-		yul::EVMDialect::looseAssemblyForEVM(m_evmVersion),
+		_inlineAssembly.dialect(),
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations()))

@@ -43,6 +43,7 @@ namespace yul
 {
 // Forward-declaration to <yul/AsmData.h>
 struct Block;
+struct Dialect;
 }
 
 namespace dev
@@ -1049,17 +1050,20 @@ public:
 	InlineAssembly(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
+		yul::Dialect const& _dialect,
 		std::shared_ptr<yul::Block> const& _operations
 	):
-		Statement(_location, _docString), m_operations(_operations) {}
+		Statement(_location, _docString), m_dialect(_dialect), m_operations(_operations) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
+	yul::Dialect const& dialect() const { return m_dialect; }
 	yul::Block const& operations() const { return *m_operations; }
 
 	InlineAssemblyAnnotation& annotation() const override;
 
 private:
+	yul::Dialect const& m_dialect;
 	std::shared_ptr<yul::Block> m_operations;
 };
 

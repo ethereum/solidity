@@ -90,19 +90,18 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	return {name, f};
 }
 
-map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess,  bool _evmOpcodes)
+map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
 	map<YulString, BuiltinFunctionForEVM> builtins;
-	if (_evmOpcodes)
-		for (auto const& instr: Parser::instructions())
-			if (
-				!dev::eth::isDupInstruction(instr.second) &&
-				!dev::eth::isSwapInstruction(instr.second) &&
-				instr.second != eth::Instruction::JUMP &&
-				instr.second != eth::Instruction::JUMPI &&
-				_evmVersion.hasOpcode(instr.second)
-			)
-				builtins.emplace(createEVMFunction(instr.first, instr.second));
+	for (auto const& instr: Parser::instructions())
+		if (
+			!dev::eth::isDupInstruction(instr.second) &&
+			!dev::eth::isSwapInstruction(instr.second) &&
+			instr.second != eth::Instruction::JUMP &&
+			instr.second != eth::Instruction::JUMPI &&
+			_evmVersion.hasOpcode(instr.second)
+		)
+			builtins.emplace(createEVMFunction(instr.first, instr.second));
 
 	if (_objectAccess)
 	{
@@ -167,7 +166,7 @@ EVMDialect::EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVer
 	Dialect{_flavour},
 	m_objectAccess(_objectAccess),
 	m_evmVersion(_evmVersion),
-	m_functions(createBuiltins(_evmVersion, _objectAccess, _flavour != AsmFlavour::Loose))
+	m_functions(createBuiltins(_evmVersion, _objectAccess))
 {
 }
 
