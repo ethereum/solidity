@@ -246,7 +246,13 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 	Type const& resultType = type(_unaryOperation);
 	Token const op = _unaryOperation.getOperator();
 
-	if (resultType.category() == Type::Category::RationalNumber)
+	if (op == Token::Delete)
+	{
+		solAssert(!!m_currentLValue, "LValue not retrieved.");
+		m_code << m_currentLValue->setToZero();
+		m_currentLValue.reset();
+	}
+	else if (resultType.category() == Type::Category::RationalNumber)
 	{
 		defineExpression(_unaryOperation) <<
 			formatNumber(resultType.literalValue(nullptr)) <<

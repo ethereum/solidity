@@ -22,6 +22,7 @@
 
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 
 #include <libdevcore/Whiskers.h>
@@ -43,6 +44,11 @@ string IRLocalVariable::storeValue(string const& _value, Type const& _type) cons
 {
 	solAssert(_type == *m_type, "Storing different types - not necessarily a problem.");
 	return m_variableName + " := " + _value + "\n";
+}
+
+string IRLocalVariable::setToZero() const
+{
+	return storeValue(m_context.utils().zeroValueFunction(*m_type) + "()", *m_type);
 }
 
 IRStorageItem::IRStorageItem(
@@ -110,3 +116,7 @@ string IRStorageItem::storeValue(string const& _value, Type const& _sourceType) 
 	}
 }
 
+string IRStorageItem::setToZero() const
+{
+	solUnimplemented("Delete for storage location not yet implemented");
+}

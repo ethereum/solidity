@@ -51,6 +51,8 @@ public:
 	/// of type @a _type in the lvalue. Might perform type conversion.
 	virtual std::string storeValue(std::string const& _value, Type const& _type) const = 0;
 
+	/// Returns code that will reset the stored value to zero
+	virtual std::string setToZero() const = 0;
 protected:
 	IRGenerationContext& m_context;
 	Type const* m_type;
@@ -66,6 +68,7 @@ public:
 	std::string retrieveValue() const override { return m_variableName; }
 	std::string storeValue(std::string const& _value, Type const& _type) const override;
 
+	std::string setToZero() const override;
 private:
 	std::string m_variableName;
 };
@@ -86,6 +89,7 @@ public:
 	std::string retrieveValue() const override;
 	std::string storeValue(std::string const& _value, Type const& _type) const override;
 
+	std::string setToZero() const override;
 private:
 	std::string m_slot;
 	unsigned m_offset;
