@@ -399,9 +399,11 @@ bool AsmAnalyzer::operator()(If const& _if)
 {
 	bool success = true;
 
+	int const initialHeight = m_stackHeight;
 	if (!expectExpression(*_if.condition))
 		success = false;
-	m_stackHeight--;
+
+	m_stackHeight = initialHeight;
 
 	if (!(*this)(_if.body))
 		success = false;
@@ -417,6 +419,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 
 	bool success = true;
 
+	int const initialHeight = m_stackHeight;
 	if (!expectExpression(*_switch.expression))
 		success = false;
 
@@ -476,7 +479,7 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 			success = false;
 	}
 
-	m_stackHeight--;
+	m_stackHeight = initialHeight;
 	m_info.stackHeightInfo[&_switch] = m_stackHeight;
 
 	return success;
@@ -488,6 +491,8 @@ bool AsmAnalyzer::operator()(ForLoop const& _for)
 
 	Scope* outerScope = m_currentScope;
 
+	int const initialHeight = m_stackHeight;
+
 	bool success = true;
 	if (!(*this)(_for.pre))
 		success = false;
@@ -498,6 +503,7 @@ bool AsmAnalyzer::operator()(ForLoop const& _for)
 
 	if (!expectExpression(*_for.condition))
 		success = false;
+
 	m_stackHeight--;
 
 	// backup outer for-loop & create new state
@@ -510,7 +516,7 @@ bool AsmAnalyzer::operator()(ForLoop const& _for)
 	if (!(*this)(_for.post))
 		success = false;
 
-	m_stackHeight -= scope(&_for.pre).numberOfVariables();
+	m_stackHeight = initialHeight;
 	m_info.stackHeightInfo[&_for] = m_stackHeight;
 	m_currentScope = outerScope;
 	m_currentForLoop = outerForLoop;
