@@ -151,6 +151,7 @@ bigint CodeCopyMethod::gasNeeded() const
 AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 {
 	bytes data = toBigEndian(m_value);
+	assertThrow(data.size() == 32, OptimizerException, "Invalid number encoding.");
 	AssemblyItems actualCopyRoutine = copyRoutine();
 	actualCopyRoutine[4] = _assembly.newData(data);
 	return actualCopyRoutine;
@@ -159,15 +160,25 @@ AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 AssemblyItems const& CodeCopyMethod::copyRoutine()
 {
 	AssemblyItems static copyRoutine{
+		// constant to be reused 3+ times
 		u256(0),
+
+		// back up memory
+		// mload(0)
 		Instruction::DUP1,
-		Instruction::MLOAD, // back up memory
+		Instruction::MLOAD,
+
+		// codecopy(0, <offset>, 32)
 		u256(32),
-		AssemblyItem(PushData, u256(1) << 16), // has to be replaced
+		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[4]
 		Instruction::DUP4,
 		Instruction::CODECOPY,
+
+		// mload(0)
 		Instruction::DUP2,
 		Instruction::MLOAD,
+
+		// restore original memory
 		Instruction::SWAP2,
 		Instruction::MSTORE
 	};
