@@ -39,12 +39,7 @@
 //         let t_20 := 0
 //         t_20 := 2
 //         mstore(7, t_20)
-//         let x_1_21 := 10
-//         let x_14_23 := 1
-//         mstore(0, x_14_23)
-//         mstore(7, h())
 //         g(10)
-//         mstore(1, x_14_23)
 //         mstore(1, x)
 //     }
 //     function g(x_1)

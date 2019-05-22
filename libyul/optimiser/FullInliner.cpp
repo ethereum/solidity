@@ -79,16 +79,6 @@ void FullInliner::run()
 	}
 }
 
-void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
-{
-	m_functionSizes[_fun.name] = CodeSize::codeSize(_fun.body);
-}
-
-void FullInliner::handleBlock(YulString _currentFunctionName, Block& _block)
-{
-	InlineModifier{*this, m_nameDispenser, _currentFunctionName}(_block);
-}
-
 bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 {
 	// No recursive inlining
@@ -97,6 +87,9 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 
 	FunctionDefinition* calledFunction = function(_funCall.functionName.name);
 	if (!calledFunction)
+		return false;
+
+	if (recursive(*calledFunction))
 		return false;
 
 	// Inline really, really tiny functions
@@ -131,6 +124,21 @@ void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _call
 	m_functionSizes.at(_callSite) += m_functionSizes.at(_function);
 }
 
+void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
+{
+	m_functionSizes[_fun.name] = CodeSize::codeSize(_fun.body);
+}
+
+void FullInliner::handleBlock(YulString _currentFunctionName, Block& _block)
+{
+	InlineModifier{*this, m_nameDispenser, _currentFunctionName}(_block);
+}
+
+bool FullInliner::recursive(FunctionDefinition const& _fun) const
+{
+	map<YulString, size_t> references = ReferencesCounter::countReferences(_fun);
+	return references[_fun.name] > 0;
+}
 
 void InlineModifier::operator()(Block& _block)
 {
