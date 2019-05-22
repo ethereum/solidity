@@ -144,7 +144,13 @@ else ()
 endif ()
 
 if (SANITIZE)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZE}")
+	# Perform case-insensitive string compare
+	string(TOLOWER "${SANITIZE}" san)
+	# -fno-omit-frame-pointer gives more informative stack trace in case of an error
+	# -fsanitize-address-use-after-scope throws an error when a variable is used beyond its scope
+	if (san STREQUAL "address")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope")
+	endif()
 endif()
 
 # Code coverage support.
