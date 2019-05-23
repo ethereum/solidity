@@ -225,10 +225,8 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::GASPRICE:
 		return m_state.gasprice;
 	case Instruction::EXTCODESIZE:
-		logTrace(_instruction, arg);
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODEHASH:
-		logTrace(_instruction, arg);
 		return u256(keccak256(h256(arg[0] + 1)));
 	case Instruction::EXTCODECOPY:
 		logTrace(_instruction, arg);
@@ -240,7 +238,6 @@ u256 EVMInstructionInterpreter::eval(
 			);
 		return 0;
 	case Instruction::RETURNDATASIZE:
-		logTrace(_instruction, arg);
 		return m_state.returndata.size();
 	case Instruction::RETURNDATACOPY:
 		logTrace(_instruction, arg);
@@ -280,20 +277,15 @@ u256 EVMInstructionInterpreter::eval(
 			m_state.memory[size_t(arg[0])] = uint8_t(arg[1] & 0xff);
 		return 0;
 	case Instruction::SLOAD:
-		logTrace(_instruction, arg);
 		return m_state.storage[h256(arg[0])];
 	case Instruction::SSTORE:
-		logTrace(Instruction::SSTORE, arg);
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
 	case Instruction::PC:
-		logTrace(_instruction);
 		return 0x77;
 	case Instruction::MSIZE:
-		logTrace(_instruction);
 		return m_state.msize;
 	case Instruction::GAS:
-		logTrace(_instruction);
 		return 0x99;
 	case Instruction::LOG0:
 		accessMemory(arg[0], arg[1]);
