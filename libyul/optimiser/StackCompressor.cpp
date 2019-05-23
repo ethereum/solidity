@@ -48,15 +48,16 @@ class RematCandidateSelector: public DataFlowAnalyzer
 public:
 	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 
-	/// @returns a set of pairs of rematerialisation costs and variable to rematerialise.
+	/// @returns a set of tuples of rematerialisation costs, variable to rematerialise
+	/// and variables that occur in its expression.
 	/// Note that this set is sorted by cost.
-	set<pair<size_t, YulString>> candidates()
+	set<tuple<size_t, YulString, set<YulString>>> candidates()
 	{
-		set<pair<size_t, YulString>> cand;
+		set<tuple<size_t, YulString, set<YulString>>> cand;
 		for (auto const& codeCost: m_expressionCodeCost)
 		{
 			size_t numRef = m_numReferences[codeCost.first];
-			cand.emplace(make_pair(codeCost.second * numRef, codeCost.first));
+			cand.emplace(make_tuple(codeCost.second * numRef, codeCost.first, m_references[codeCost.first]));
 		}
 		return cand;
 	}
@@ -123,7 +124,22 @@ void eliminateVariables(Dialect const& _dialect, ASTNode& _node, size_t _numVari
 	{
 		if (varsToEliminate.size() >= _numVariables)
 			break;
-		varsToEliminate.insert(costs.second);
+		// If a variable we would like to eliminate references another one
+		// we already selected for elimination, then stop selecting
+		// candidates. If we would add that variable, then the cost calculation
+		// for the previous variable would be off. Furthermore, we
+		// do not skip the variable because it would be better to properly re-compute
+		// the costs of all other variables instead.
+		bool referencesVarToEliminate = false;
+		for (YulString const& referencedVar: get<2>(costs))
+			if (varsToEliminate.count(referencedVar))
+			{
+				referencesVarToEliminate = true;
+				break;
+			}
+		if (referencesVarToEliminate)
+			break;
+		varsToEliminate.insert(get<1>(costs));
 	}
 
 	Rematerialiser::run(_dialect, _node, std::move(varsToEliminate));
