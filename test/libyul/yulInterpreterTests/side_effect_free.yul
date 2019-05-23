@@ -9,6 +9,8 @@
 	pop(pc())
 	pop(msize())
 }
+// ====
+// EVMVersion: >=constantinople
 // ----
 // Trace:
 // Memory dump:

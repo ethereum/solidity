@@ -53,13 +53,9 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename)
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
 	file.exceptions(ios::badbit);
 
+	m_source = parseSourceAndSettings(file);
+
 	string line;
-	while (getline(file, line))
-	{
-		if (boost::algorithm::starts_with(line, "// ----"))
-			break;
-		m_source += std::move(line) + "\n";
-	}
 	while (getline(file, line))
 		if (boost::algorithm::starts_with(line, "// "))
 			m_expectation += line.substr(3) + "\n";
