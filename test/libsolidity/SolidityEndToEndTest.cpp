@@ -1217,9 +1217,11 @@ BOOST_AUTO_TEST_CASE(strings)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("fixedBytes()"), encodeArgs(string("abc\0\xff__", 7)));
-	ABI_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true), encodeArgs(string("\0\x2", 2), true));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("fixedBytes()"), encodeArgs(string("abc\0\xff__", 7)));
+		ABI_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true), encodeArgs(string("\0\x2", 2), true));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(inc_dec_operators)
@@ -1239,8 +1241,10 @@ BOOST_AUTO_TEST_CASE(inc_dec_operators)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x53866));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0x53866));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(bytes_comparison)
@@ -1255,8 +1259,10 @@ BOOST_AUTO_TEST_CASE(bytes_comparison)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(state_smoke_test)
@@ -1275,15 +1281,17 @@ BOOST_AUTO_TEST_CASE(state_smoke_test)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(0));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(0));
-	ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x00), 0x1234), encodeArgs());
-	ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x01), 0x8765), encodeArgs());
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t( 0x00)), encodeArgs(0x1234));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(0x8765));
-	ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x00), 0x3), encodeArgs());
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(0x3));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(0));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(0));
+		ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x00), 0x1234), encodeArgs());
+		ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x01), 0x8765), encodeArgs());
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(0x1234));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(0x8765));
+		ABI_CHECK(callContractFunction("set(uint8,uint256)", uint8_t(0x00), 0x3), encodeArgs());
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(0x3));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(compound_assign)
@@ -1301,26 +1309,28 @@ BOOST_AUTO_TEST_CASE(compound_assign)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
 
-	u256 value1;
-	u256 value2;
-	auto f = [&](u256 const& _x, u256 const& _y) -> u256
-	{
-		u256 value3 = _y;
-		value1 += _x;
-		value3 *= _x;
-		value2 *= value3 + value1;
-		return value2 += 7;
-	};
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(0), u256(6));
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(1), u256(3));
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(2), u256(25));
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(3), u256(69));
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(4), u256(84));
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(5), u256(2));
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(6), u256(51));
-	testContractAgainstCpp("f(uint256,uint256)", f, u256(7), u256(48));
+		u256 value1;
+		u256 value2;
+		auto f = [&](u256 const& _x, u256 const& _y) -> u256
+		{
+			u256 value3 = _y;
+			value1 += _x;
+			value3 *= _x;
+			value2 *= value3 + value1;
+			return value2 += 7;
+		};
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(0), u256(6));
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(1), u256(3));
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(2), u256(25));
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(3), u256(69));
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(4), u256(84));
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(5), u256(2));
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(6), u256(51));
+		testContractAgainstCpp("f(uint256,uint256)", f, u256(7), u256(48));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(simple_mapping)
@@ -1336,23 +1346,25 @@ BOOST_AUTO_TEST_CASE(simple_mapping)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0)), encodeArgs(uint8_t(0x00)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x00)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-	callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0xa1));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0x00)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-	callContractFunction("set(uint8,uint8)", uint8_t(0x00), uint8_t(0xef));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-	callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0x05));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x05)));
-	ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0)), encodeArgs(uint8_t(0x00)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x00)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+		callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0xa1));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0x00)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+		callContractFunction("set(uint8,uint8)", uint8_t(0x00), uint8_t(0xef));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+		callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0x05));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x05)));
+		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(mapping_state)
@@ -1376,7 +1388,6 @@ BOOST_AUTO_TEST_CASE(mapping_state)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 	class Ballot
 	{
 	public:
@@ -1393,43 +1404,47 @@ BOOST_AUTO_TEST_CASE(mapping_state)
 		map<u160, bool> m_canVote;
 		map<u160, u256> m_voteCount;
 		map<u160, bool> m_voted;
-	} ballot;
+	};
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		Ballot ballot;
 
-	auto getVoteCount = bind(&Ballot::getVoteCount, &ballot, _1);
-	auto grantVoteRight = bind(&Ballot::grantVoteRight, &ballot, _1);
-	auto vote = bind(&Ballot::vote, &ballot, _1, _2);
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
-	// voting without vote right should be rejected
-	testContractAgainstCpp("vote(address,address)", vote, u160(0), u160(2));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
-	// grant vote rights
-	testContractAgainstCpp("grantVoteRight(address)", grantVoteRight, u160(0));
-	testContractAgainstCpp("grantVoteRight(address)", grantVoteRight, u160(1));
-	// vote, should increase 2's vote count
-	testContractAgainstCpp("vote(address,address)", vote, u160(0), u160(2));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
-	// vote again, should be rejected
-	testContractAgainstCpp("vote(address,address)", vote, u160(0), u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
-	// vote without right to vote
-	testContractAgainstCpp("vote(address,address)", vote, u160(2), u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
-	// grant vote right and now vote again
-	testContractAgainstCpp("grantVoteRight(address)", grantVoteRight, u160(2));
-	testContractAgainstCpp("vote(address,address)", vote, u160(2), u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
-	testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
+		auto getVoteCount = bind(&Ballot::getVoteCount, &ballot, _1);
+		auto grantVoteRight = bind(&Ballot::grantVoteRight, &ballot, _1);
+		auto vote = bind(&Ballot::vote, &ballot, _1, _2);
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
+		// voting without vote right should be rejected
+		testContractAgainstCpp("vote(address,address)", vote, u160(0), u160(2));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
+		// grant vote rights
+		testContractAgainstCpp("grantVoteRight(address)", grantVoteRight, u160(0));
+		testContractAgainstCpp("grantVoteRight(address)", grantVoteRight, u160(1));
+		// vote, should increase 2's vote count
+		testContractAgainstCpp("vote(address,address)", vote, u160(0), u160(2));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
+		// vote again, should be rejected
+		testContractAgainstCpp("vote(address,address)", vote, u160(0), u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
+		// vote without right to vote
+		testContractAgainstCpp("vote(address,address)", vote, u160(2), u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
+		// grant vote right and now vote again
+		testContractAgainstCpp("grantVoteRight(address)", grantVoteRight, u160(2));
+		testContractAgainstCpp("vote(address,address)", vote, u160(2), u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
+		testContractAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(mapping_state_inc_dec)
@@ -1447,9 +1462,8 @@ BOOST_AUTO_TEST_CASE(mapping_state_inc_dec)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 
-	u256 value = 0;
+	u256 value;
 	map<u256, u256> table;
 	auto f = [&](u256 const& _x) -> u256
 	{
@@ -1462,7 +1476,13 @@ BOOST_AUTO_TEST_CASE(mapping_state_inc_dec)
 			table[value]++;
 		return --table[value++];
 	};
-	testContractAgainstCppOnRange("f(uint256)", f, 0, 5);
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		value = 0;
+		table.clear();
+
+		testContractAgainstCppOnRange("f(uint256)", f, 0, 5);
+	)
 }
 
 BOOST_AUTO_TEST_CASE(multi_level_mapping)
@@ -1476,22 +1496,25 @@ BOOST_AUTO_TEST_CASE(multi_level_mapping)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-
 	map<u256, map<u256, u256>> table;
 	auto f = [&](u256 const& _x, u256 const& _y, u256 const& _z) -> u256
 	{
 		if (_z == 0) return table[_x][_y];
 		else return table[_x][_y] = _z;
 	};
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(0));
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(0));
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(9));
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(0));
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(0));
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(7));
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(0));
-	testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(0));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		table.clear();
+
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(0));
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(0));
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(9));
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(0));
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(0));
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(7));
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(4), u256(5), u256(0));
+		testContractAgainstCpp("f(uint256,uint256,uint256)", f, u256(5), u256(4), u256(0));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(mapping_local_assignment)
