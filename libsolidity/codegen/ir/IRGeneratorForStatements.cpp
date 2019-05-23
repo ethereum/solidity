@@ -129,21 +129,34 @@ void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _var
 
 bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 {
-	solUnimplementedAssert(_assignment.assignmentOperator() == Token::Assign, "");
-
 	_assignment.rightHandSide().accept(*this);
 	Type const* intermediateType = type(_assignment.rightHandSide()).closestTemporaryType(
 		&type(_assignment.leftHandSide())
 	);
-	string intermediateValue = m_context.newYulVariable();
-	m_code << "let " << intermediateValue << " := " << expressionAsType(_assignment.rightHandSide(), *intermediateType) << "\n";
+	string value = m_context.newYulVariable();
+	m_code << "let " << value << " := " << expressionAsType(_assignment.rightHandSide(), *intermediateType) << "\n";
 
 	_assignment.leftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
-	m_code << m_currentLValue->storeValue(intermediateValue, *intermediateType);
-	m_currentLValue.reset();
 
-	defineExpression(_assignment) << intermediateValue << "\n";
+	if (_assignment.assignmentOperator() != Token::Assign)
+	{
+		solAssert(type(_assignment.leftHandSide()) == *intermediateType, "");
+		solAssert(intermediateType->isValueType(), "Compound operators only available for value types.");
+
+		string leftIntermediate = m_context.newYulVariable();
+		m_code << "let " << leftIntermediate << " := " << m_currentLValue->retrieveValue() << "\n";
+		m_code << value << " := " << binaryOperation(
+			TokenTraits::AssignmentToBinaryOp(_assignment.assignmentOperator()),
+			*intermediateType,
+			leftIntermediate,
+			value
+		);
+	}
+
+	m_code << m_currentLValue->storeValue(value, *intermediateType);
+	m_currentLValue.reset();
+	defineExpression(_assignment) << value << "\n";
 
 	return false;
 }
@@ -319,27 +332,6 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 		solUnimplementedAssert(false, "Unary operator not yet implemented");
 }
 
-void IRGeneratorForStatements::appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr)
-{
-	string func;
-
-	if (_operation.getOperator() == Token::Not)
-		func = "iszero";
-	else if (_operation.getOperator() == Token::BitNot)
-		func = "not";
-	else
-		solAssert(false, "Invalid Token!");
-
-	defineExpression(_operation) <<
-		m_utils.cleanupFunction(type(_expr)) <<
-		"(" <<
-			func <<
-			"(" <<
-			m_context.variable(_expr) <<
-			")" <<
-		")\n";
-}
-
 bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	solAssert(!!_binOp.annotation().commonType, "");
@@ -397,24 +389,10 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 	}
 	else
 	{
-		if (IntegerType const* type = dynamic_cast<IntegerType const*>(commonType))
-		{
-			solUnimplementedAssert(!type->isSigned(), "");
-			string left = expressionAsType(_binOp.leftExpression(), *commonType);
-			string right = expressionAsType(_binOp.rightExpression(), *commonType);
-			string fun;
-			if (_binOp.getOperator() == Token::Add)
-				fun = m_utils.overflowCheckedUIntAddFunction(type->numBits());
-			else if (_binOp.getOperator() == Token::Sub)
-				fun = m_utils.overflowCheckedUIntSubFunction();
-			else if (_binOp.getOperator() == Token::Mul)
-				fun = m_utils.overflowCheckedUIntMulFunction(type->numBits());
-			else
-				solUnimplementedAssert(false, "");
-			defineExpression(_binOp) << fun << "(" << left << ", " << right << ")\n";
-		}
-		else
-			solUnimplementedAssert(false, "");
+		string left = expressionAsType(_binOp.leftExpression(), *commonType);
+		string right = expressionAsType(_binOp.rightExpression(), *commonType);
+
+		defineExpression(_binOp) << binaryOperation(_binOp.getOperator(), *commonType, left, right);
 	}
 	return false;
 }
@@ -1086,6 +1064,55 @@ ostream& IRGeneratorForStatements::defineExpression(Expression const& _expressio
 ostream& IRGeneratorForStatements::defineExpressionPart(Expression const& _expression, size_t _part)
 {
 	return m_code << "let " << m_context.variablePart(_expression, _part) << " := ";
+}
+
+
+void IRGeneratorForStatements::appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr)
+{
+	string func;
+
+	if (_operation.getOperator() == Token::Not)
+		func = "iszero";
+	else if (_operation.getOperator() == Token::BitNot)
+		func = "not";
+	else
+		solAssert(false, "Invalid Token!");
+
+	defineExpression(_operation) <<
+		m_utils.cleanupFunction(type(_expr)) <<
+		"(" <<
+			func <<
+			"(" <<
+			m_context.variable(_expr) <<
+			")" <<
+		")\n";
+}
+
+string IRGeneratorForStatements::binaryOperation(
+	langutil::Token _operator,
+	Type const& _type,
+	string const& _left,
+	string const& _right
+)
+{
+	if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
+	{
+		solUnimplementedAssert(!type->isSigned(), "");
+		string fun;
+		if (_operator == Token::Add)
+			fun = m_utils.overflowCheckedUIntAddFunction(type->numBits());
+		else if (_operator == Token::Sub)
+			fun = m_utils.overflowCheckedUIntSubFunction();
+		else if (_operator == Token::Mul)
+			fun = m_utils.overflowCheckedUIntMulFunction(type->numBits());
+		else
+			solUnimplementedAssert(false, "");
+		return fun + "(" + _left + ", " + _right + ")\n";
+	}
+	else
+		solUnimplementedAssert(false, "");
+
+	return {};
 }
 
 void IRGeneratorForStatements::appendAndOrOperatorCode(BinaryOperation const& _binOp)

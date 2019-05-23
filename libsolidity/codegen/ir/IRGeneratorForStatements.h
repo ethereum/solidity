@@ -84,6 +84,14 @@ private:
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 	void appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr);
 
+	/// @returns code to perform the given binary operation in the given type on the two values.
+	std::string binaryOperation(
+		langutil::Token _op,
+		Type const& _type,
+		std::string const& _left,
+		std::string const& _right
+	);
+
 	void setLValue(Expression const& _expression, std::unique_ptr<IRLValue> _lvalue);
 	void generateLoop(
 		Statement const& _body,
