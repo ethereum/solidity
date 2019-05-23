@@ -112,8 +112,6 @@ private:
 	{
 		if (eth::SemanticInformation::invalidInViewFunctions(_instruction))
 			m_reportMutability(StateMutability::NonPayable, _location);
-		else if (_instruction == dev::eth::Instruction::CALLVALUE)
-			m_reportMutability(StateMutability::Payable, _location);
 		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction))
 			m_reportMutability(StateMutability::View, _location);
 	}

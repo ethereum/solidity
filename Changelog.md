@@ -11,6 +11,7 @@ Compiler Features:
  * SMTChecker: Support tuples and function calls with multiple return values.
  * SMTChecker: Support ``delete``.
  * SMTChecker: Inline external function calls to ``this``.
+ * Inline Assembly: Revert change introduced in 0.5.7: The ``callvalue()`` instruction does not require ``payable`` anymore.
  * Metadata: Add IPFS hashes of source files.
  * Assembler: Encode the compiler version in the deployed bytecode.
  * Yul Optimizer: Simplify single-run ``for`` loops to ``if`` statements.
