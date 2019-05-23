@@ -24,6 +24,8 @@ contract C {
         return 500;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // call(uint256): 0 -> 0
 // call(uint256): 1 -> 1

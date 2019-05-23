@@ -4,6 +4,7 @@ contract C {
     }
 }
 // ====
+// compileViaYul: also
 // EVMVersion: >=constantinople
 // ----
 // f(uint256): 7 -> 28
