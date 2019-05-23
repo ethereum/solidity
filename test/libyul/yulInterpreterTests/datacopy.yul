@@ -1,8 +1,8 @@
 object "main"
 {
     code {
-        datacopy(0, dataoffset("main"), datasize("main"))
-        datacopy(32, dataoffset("sub"), datasize("sub"))
+        datacopy(0, and(dataoffset("main"), 15), and(datasize("main"), 15))
+        datacopy(32, and(dataoffset("sub"), 15), and(datasize("sub"), 15))
         sstore(0, mload(0))
         sstore(1, mload(32))
     }
@@ -10,11 +10,9 @@ object "main"
 }
 // ----
 // Trace:
-//   MSTORE_AT_SIZE(0, 2916)
-//   MSTORE_AT_SIZE(32, 265)
-//   MLOAD_FROM_SIZE(0, 32)
-//   SSTORE(0, 0)
-//   MLOAD_FROM_SIZE(32, 32)
-//   SSTORE(1, 0)
 // Memory dump:
+//      0: 6465636f00000000000000000000000000000000000000000000000000000000
+//     20: 636f6465636f6465000000000000000000000000000000000000000000000000
 // Storage dump:
+//   0000000000000000000000000000000000000000000000000000000000000000: 6465636f00000000000000000000000000000000000000000000000000000000
+//   0000000000000000000000000000000000000000000000000000000000000001: 636f6465636f6465000000000000000000000000000000000000000000000000
