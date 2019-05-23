@@ -25,6 +25,8 @@ public:
 	using mutable_value_type = typename std::conditional<std::is_const<_T>::value, typename std::remove_const<_T>::type, _T>::type;
 	using string_type = typename std::conditional<std::is_const<_T>::value, std::string const, std::string>::type;
 	using vector_type = typename std::conditional<std::is_const<_T>::value, std::vector<typename std::remove_const<_T>::type> const, std::vector<_T>>::type;
+	using iterator = _T*;
+	using const_iterator = _T const*;
 
 	static_assert(std::is_pod<value_type>::value, "vector_ref can only be used with PODs due to its low-level treatment of data.");
 

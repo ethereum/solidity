@@ -53,13 +53,9 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename)
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
 	file.exceptions(ios::badbit);
 
+	m_source = parseSourceAndSettings(file);
+
 	string line;
-	while (getline(file, line))
-	{
-		if (boost::algorithm::starts_with(line, "// ----"))
-			break;
-		m_source += std::move(line) + "\n";
-	}
 	while (getline(file, line))
 		if (boost::algorithm::starts_with(line, "// "))
 			m_expectation += line.substr(3) + "\n";
@@ -142,15 +138,7 @@ string YulInterpreterTest::interpret()
 	}
 
 	stringstream result;
-	result << "Trace:" << endl;;
-	for (auto const& line: interpreter.trace())
-		result << "  " << line << endl;
-	result << "Memory dump:\n";
-	for (size_t i = 0; i < state.memory.size(); i += 0x20)
-		result << "  " << std::hex << std::setw(4) << i << ": " << toHex(bytesConstRef(state.memory.data() + i, 0x20).toBytes()) << endl;
-	result << "Storage dump:" << endl;
-	for (auto const& slot: state.storage)
-		result << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+	state.dumpTraceAndState(result);
 	return result.str();
 }
 

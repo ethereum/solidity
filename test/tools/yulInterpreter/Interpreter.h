@@ -92,6 +92,8 @@ struct InterpreterState
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
 	LoopState loopState = LoopState::Default;
+
+	void dumpTraceAndState(std::ostream& _out) const;
 };
 
 /**
