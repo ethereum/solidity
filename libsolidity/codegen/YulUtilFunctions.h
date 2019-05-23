@@ -183,6 +183,9 @@ public:
 
 	std::string negateNumberCheckedFunction(Type const& _type);
 
+	/// @returns the name of a function that returns the zero value for the
+	/// provided type
+	std::string zeroValueFunction(Type const& _type);
 private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.

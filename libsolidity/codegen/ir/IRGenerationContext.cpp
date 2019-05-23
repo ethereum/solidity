@@ -114,7 +114,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
 	return m_functions->createFunction(funName, [&]() {
 		Whiskers templ(R"(
-			function <functionName>(fun <comma> <in>) -> <out> {
+			function <functionName>(fun <comma> <in>) <arrow> <out> {
 				switch fun
 				<#cases>
 				case <funID>
@@ -129,6 +129,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		templ("comma", _in > 0 ? "," : "");
 		YulUtilFunctions utils(m_evmVersion, m_functions);
 		templ("in", utils.suffixedVariableNameList("in_", 0, _in));
+		templ("arrow", _out > 0 ? "->" : "");
 		templ("out", utils.suffixedVariableNameList("out_", 0, _out));
 		vector<map<string, string>> functions;
 		for (auto const& contract: m_inheritanceHierarchy)
@@ -138,10 +139,15 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 					function->parameters().size() == _in &&
 					function->returnParameters().size() == _out
 				)
+				{
+					// 0 is reserved for uninitialized function pointers
+					solAssert(function->id() != 0, "Unexpected function ID: 0");
+
 					functions.emplace_back(map<string, string> {
 						{ "funID", to_string(function->id()) },
 						{ "name", functionName(*function)}
 					});
+				}
 		templ("cases", move(functions));
 		return templ.render();
 	});

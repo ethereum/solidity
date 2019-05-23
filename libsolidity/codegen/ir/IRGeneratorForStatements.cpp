@@ -246,7 +246,13 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 	Type const& resultType = type(_unaryOperation);
 	Token const op = _unaryOperation.getOperator();
 
-	if (resultType.category() == Type::Category::RationalNumber)
+	if (op == Token::Delete)
+	{
+		solAssert(!!m_currentLValue, "LValue not retrieved.");
+		m_code << m_currentLValue->setToZero();
+		m_currentLValue.reset();
+	}
+	else if (resultType.category() == Type::Category::RationalNumber)
 	{
 		defineExpression(_unaryOperation) <<
 			formatNumber(resultType.literalValue(nullptr)) <<
@@ -356,7 +362,12 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 			"\n";
 	else if (TokenTraits::isCompareOp(op))
 	{
-		solUnimplementedAssert(commonType->category() != Type::Category::Function, "");
+		if (auto type = dynamic_cast<FunctionType const*>(commonType))
+		{
+			solAssert(op == Token::Equal || op == Token::NotEqual, "Invalid function pointer comparison!");
+			solAssert(type->kind() != FunctionType::Kind::External, "External function comparison not allowed!");
+		}
+
 		solAssert(commonType->isValueType(), "");
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(commonType))

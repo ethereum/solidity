@@ -1138,6 +1138,25 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 		});
 }
 
+string YulUtilFunctions::zeroValueFunction(Type const& _type)
+{
+	solUnimplementedAssert(_type.sizeOnStack() == 1, "Stacksize not yet implemented!");
+	solUnimplementedAssert(_type.isValueType(), "Zero value for non-value types not yet implemented");
+
+	string const functionName = "zero_value_for_" + _type.identifier();
+
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>() -> ret {
+				<body>
+			}
+		)")
+			("functionName", functionName)
+			("body", "ret := 0x0")
+			.render();
+		});
+}
+
 string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const& _to)
 {
 	string functionName =
