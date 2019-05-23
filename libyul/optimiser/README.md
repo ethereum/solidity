@@ -74,6 +74,22 @@ and F is a list of function definitions such that no function contains a functio
 
 The benefit of this stage is that we always know where the list of function begins.
 
+### For Loop Condition Into Body
+
+This transformation moves the iteration condition of a for-loop into loop body.
+We need this transformation because [expression splitter](#expression-splitter) won't
+apply to iteration condition expressions (the `C` in the following example).
+
+    for { Init... } C { Post... } {
+        Body...
+    }
+
+is transformed to
+
+    for { Init... } 1 { Post... } {
+        if iszero(C) { break }
+        Body...
+    }
 
 ### For Loop Init Rewriter
 
@@ -172,7 +188,8 @@ The above would be transformed into
 Note that this transformation does not change the order of opcodes or function calls.
 
 It is not applied to loop conditions, because the loop control flow does not allow
-this "outlining" of the inner expressions in all cases.
+this "outlining" of the inner expressions in all cases. We can sidestep this limitation by applying
+[for loop condition into body](#for-loop-condition-into-body) to move the iteration condition into loop body.
 
 The final program should be in a form such that (with the exception of loop conditions)
 function calls cannot appear nested inside expressions
