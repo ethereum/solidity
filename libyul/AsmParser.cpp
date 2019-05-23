@@ -248,14 +248,7 @@ Statement Parser::parseStatement()
 	if (elementary.type() == typeid(Identifier))
 	{
 		Identifier& identifier = boost::get<Identifier>(elementary);
-		// Fallback from builtin function to Instruction for loose assembly.
-		if (
-			m_dialect.flavour == AsmFlavour::Loose &&
-			instructions().count(identifier.name.str())
-		)
-			return Instruction{identifier.location, instructions().at(identifier.name.str())};
-		else
-			return ExpressionStatement{identifier.location, { move(identifier) }};
+		return ExpressionStatement{identifier.location, { move(identifier) }};
 	}
 	else if (elementary.type() == typeid(Literal))
 	{
@@ -405,11 +398,18 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		// first search the set of builtins, then the instructions.
 		if (m_dialect.builtin(literal))
 		{
-			// For builtins we already check here that they are followed by `(`.
-			ret = FunctionCall{location(), Identifier{location(), literal}, {}};
+			Identifier identifier{location(), literal};
 			advance();
-			expectToken(Token::LParen, false);
-			return ret;
+			// If the builtin is not followed by `(` and we are in loose mode,
+			// fall back to instruction.
+			if (
+				m_dialect.flavour == AsmFlavour::Loose &&
+				instructions().count(identifier.name.str()) &&
+				m_scanner->currentToken() != Token::LParen
+			)
+				return Instruction{identifier.location, instructions().at(identifier.name.str())};
+			else
+				return FunctionCall{identifier.location, identifier, {}};
 		}
 		else if (m_dialect.flavour == AsmFlavour::Loose && instructions().count(literal.str()))
 		{

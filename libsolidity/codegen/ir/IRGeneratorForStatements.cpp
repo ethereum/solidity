@@ -32,6 +32,7 @@
 
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmData.h>
+#include <libyul/Dialect.h>
 #include <libyul/optimiser/ASTCopier.h>
 
 #include <libdevcore/Whiskers.h>
@@ -50,14 +51,21 @@ struct CopyTranslate: public yul::ASTCopier
 {
 	using ExternalRefsMap = std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo>;
 
-	CopyTranslate(IRGenerationContext& _context, ExternalRefsMap const& _references):
-		m_context(_context), m_references(_references) {}
+	CopyTranslate(yul::Dialect const& _dialect, IRGenerationContext& _context, ExternalRefsMap const& _references):
+		m_dialect(_dialect), m_context(_context), m_references(_references) {}
 
 	using ASTCopier::operator();
 
 	yul::YulString translateIdentifier(yul::YulString _name) override
 	{
-		return yul::YulString{"usr$" + _name.str()};
+		// Strictly, the dialect used by inline assembly (m_dialect) could be different
+		// from the Yul dialect we are compiling to. So we are assuming here that the builtin
+		// functions are identical. This should not be a problem for now since everything
+		// is EVM anyway.
+		if (m_dialect.builtin(_name))
+			return _name;
+		else
+			return yul::YulString{"usr$" + _name.str()};
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override
@@ -80,6 +88,7 @@ struct CopyTranslate: public yul::ASTCopier
 	}
 
 private:
+	yul::Dialect const& m_dialect;
 	IRGenerationContext& m_context;
 	ExternalRefsMap const& m_references;
 };
@@ -723,7 +732,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 {
-	CopyTranslate bodyCopier{m_context, _inlineAsm.annotation().externalReferences};
+	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
 
 	yul::Statement modified = bodyCopier(_inlineAsm.operations());
 

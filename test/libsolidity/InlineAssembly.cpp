@@ -30,6 +30,7 @@
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libevmasm/Assembly.h>
 
@@ -80,7 +81,12 @@ boost::optional<Error> parseAndReturnFirstError(
 		if (_allowWarnings && e->type() == Error::Type::Warning)
 			continue;
 		if (error)
-			BOOST_FAIL("Found more than one error.");
+		{
+			string errors;
+			for (auto const& err: stack.errors())
+				errors += SourceReferenceFormatter::formatErrorInformation(*err);
+			BOOST_FAIL("Found more than one error:\n" + errors);
+		}
 		error = e;
 	}
 	if (!success)
@@ -299,7 +305,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
 	BOOST_CHECK("{ if calldatasize() {}");
-	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected '{' but got reserved keyword 'let'");
 }
 
@@ -328,7 +334,7 @@ BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
 	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
-	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
@@ -364,7 +370,7 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
-	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 }
 
 BOOST_AUTO_TEST_CASE(for_visibility)
@@ -417,13 +423,13 @@ BOOST_AUTO_TEST_CASE(function_calls)
 
 BOOST_AUTO_TEST_CASE(opcode_for_functions)
 {
-	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use builtin");
 }
 
 BOOST_AUTO_TEST_CASE(opcode_for_function_args)
 {
-	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
-	CHECK_PARSE_ERROR("{ function f() -> gas { } }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use builtin");
+	CHECK_PARSE_ERROR("{ function f() -> gas { } }", ParserError, "Cannot use builtin");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes)
@@ -467,13 +473,13 @@ BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
 
 BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
 {
-	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected expression (instruction \"mul\" expects 2 arguments)");
-	CHECK_PARSE_ERROR("{ mul(1) }", ParserError, "Expected ',' (instruction \"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ pop(mul()) }", TypeError, "Function expects 2 arguments but got 0.");
+	CHECK_PARSE_ERROR("{ pop(mul(1)) }", TypeError, "Function expects 2 arguments but got 1.");
 }
 
 BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
 {
-	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (instruction \"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ pop(mul(1, 2, 3)) }", TypeError, "Function expects 2 arguments but got 3");
 }
 
 BOOST_AUTO_TEST_CASE(recursion_depth)
@@ -517,7 +523,7 @@ BOOST_AUTO_TEST_CASE(no_opcodes_in_strict)
 	BOOST_CHECK(successParse("{ pop(callvalue) }"));
 	BOOST_CHECK(successParse("{ callvalue pop }"));
 	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Expected '(' but got ')'");
-	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Expected '(' but got identifier");
+	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Call or assignment expected");
 	SUCCESS_STRICT("{ pop(callvalue()) }");
 	BOOST_CHECK(successParse("{ switch callvalue case 0 {} }"));
 	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Expected '(' but got reserved keyword 'case'");
@@ -692,12 +698,12 @@ BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 {
-	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use builtin");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
 {
-	CHECK_ASSEMBLE_ERROR("{ 2 =: gas }", ParserError, "Identifier expected, got instruction name.");
+	CHECK_ASSEMBLE_ERROR("{ 2 =: gas }", ParserError, "Identifier expected, got builtin symbol");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)

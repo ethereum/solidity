@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (67-70): Cannot use instruction names for identifier names.
+// ParserError: (67-70): Cannot use builtin function name "mod" as identifier name.
