@@ -1458,6 +1458,7 @@ BOOST_AUTO_TEST_CASE(mapping_state_inc_dec)
 				if (x > 0) table[++value] = 8;
 				if (x > 1) value--;
 				if (x > 2) table[value]++;
+				table[value] += 10;
 				return --table[value++];
 			}
 		}
@@ -1474,6 +1475,7 @@ BOOST_AUTO_TEST_CASE(mapping_state_inc_dec)
 			value --;
 		if (_x > 2)
 			table[value]++;
+		table[value] += 10;
 		return --table[value++];
 	};
 	ALSO_VIA_YUL(
