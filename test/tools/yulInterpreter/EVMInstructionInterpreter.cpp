@@ -284,7 +284,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::PC:
 		return 0x77;
 	case Instruction::MSIZE:
-		return m_state.msize;
+		return 569;
 	case Instruction::GAS:
 		return 0x99;
 	case Instruction::LOG0:
@@ -468,7 +468,6 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 	if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
 	{
 		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
-		m_state.msize = max(m_state.msize, newSize);
 		if (newSize < m_state.maxMemSize)
 		{
 			if (m_state.memory.size() < newSize)
@@ -476,8 +475,6 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 			return true;
 		}
 	}
-	else
-		m_state.msize = u256(-1);
 
 	return false;
 }

@@ -66,8 +66,6 @@ struct InterpreterState
 	dev::bytes returndata;
 	/// TODO turn this into "vector with holes" for the randomized testing
 	dev::bytes memory;
-	/// This is different than memory.size() because we ignore gas.
-	dev::u256 msize;
 	std::map<dev::h256, dev::h256> storage;
 	dev::u160 address = 0x11111111;
 	dev::u256 balance = 0x22222222;
