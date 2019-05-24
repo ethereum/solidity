@@ -28,6 +28,7 @@ option(LLL "Build LLL" OFF)
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(LLLC_LINK_STATIC "Link lllc executable statically on supported platforms" OFF)
 option(INSTALL_LLLC "Include lllc executable in installation" ${LLL})
+option(YUL_FORMAT "Build yul-format command line tool" ON)
 
 # Setup cccache.
 include(EthCcache)
@@ -70,6 +71,11 @@ if (NOT EMSCRIPTEN)
 		add_subdirectory(liblll)
 		add_subdirectory(lllc)
 	endif()
+endif()
+
+# tools
+if (YUL_FORMAT)
+	add_subdirectory(tools/yul-format)
 endif()
 
 if (TESTS AND NOT EMSCRIPTEN)
