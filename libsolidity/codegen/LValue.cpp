@@ -288,7 +288,8 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	{
 		solAssert(
 			_sourceType.category() == m_dataType->category(),
-			"Wrong type conversation for assignment.");
+			"Wrong type conversation for assignment."
+		);
 		if (m_dataType->category() == Type::Category::Array)
 		{
 			m_context << Instruction::POP; // remove byte offset
@@ -313,9 +314,9 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			solAssert(sourceType.location() != DataLocation::CallData, "Structs in calldata not supported.");
 			for (auto const& member: structType.members(nullptr))
 			{
-				// assign each member that is not a mapping
+				// assign each member that can live outside of storage
 				TypePointer const& memberType = member.type;
-				if (memberType->category() == Type::Category::Mapping)
+				if (!memberType->canLiveOutsideStorage())
 					continue;
 				TypePointer sourceMemberType = sourceType.memberType(member.name);
 				if (sourceType.location() == DataLocation::Storage)

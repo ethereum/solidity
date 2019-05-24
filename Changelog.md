@@ -25,6 +25,7 @@ Bugfixes:
  * SMTChecker: Fix internal error in fixed point operations.
  * SMTChecker: Fix internal error in assignment to unsupported type.
  * SMTChecker: Fix internal error in branching when inlining function calls that modify local variables.
+ * Code Generator: Fix assertion failure when assign structs containing array of mapping.
 
 
 

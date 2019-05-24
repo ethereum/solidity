@@ -371,7 +371,8 @@ shown in the following example:
             campaignID = numCampaigns++; // campaignID is return variable
             // Creates new struct in memory and copies it to storage.
             // We leave out the mapping type, because it is not valid in memory.
-            // If structs are copied (even from storage to storage), mapping types
+            // If structs are copied (even from storage to storage),
+            // types that are not valid outside of storage (ex. mappings and array of mappings)
             // are always omitted, because they cannot be enumerated.
             campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0);
         }
