@@ -33,7 +33,7 @@ Please provide a *minimal* source code example to trigger the bug you have found
 Please also mention any command line flags that are necessary for triggering the bug.
 Provide as much information as necessary to reproduce the bug.
 
-```
+```solidity
 // Some *minimal* Solidity source code to reproduce the bug.
 // ...
 ```
