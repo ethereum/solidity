@@ -85,6 +85,7 @@ Compiler Features:
  * Yul: Adds break and continue keywords to for-loop syntax.
  * Yul: Support ``.`` as part of identifiers.
  * Yul Optimizer: Adds steps for detecting and removing of dead code.
+ * Yul Code Generator: Directly jump over a series of function definitions (instead of jumping over each one)
 
 
 Bugfixes:

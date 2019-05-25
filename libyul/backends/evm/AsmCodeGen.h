@@ -44,6 +44,7 @@ public:
 	explicit EthAssemblyAdapter(dev::eth::Assembly& _assembly);
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	int stackHeight() const override;
+	void setStackHeight(int height) override;
 	void appendInstruction(dev::eth::Instruction _instruction) override;
 	void appendConstant(dev::u256 const& _constant) override;
 	void appendLabel(LabelID _labelId) override;
