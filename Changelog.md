@@ -8,6 +8,7 @@ Language Features:
 Compiler Features:
  * Assembler: Encode the compiler version in the deployed bytecode.
  * Code Generator: Fix handling of structs of dynamic size as constructor parameters.
+ * Inline Assembly: Disallow the combination of ``msize()`` and the Yul optimizer.
  * Metadata: Add IPFS hashes of source files.
  * Optimizer: Add rule to simplify SHL/SHR combinations.
  * Optimizer: Add rules for multiplication and division by left-shifted one.
@@ -17,6 +18,7 @@ Compiler Features:
  * SMTChecker: Inline external function calls to ``this``.
  * Yul Optimizer: Simplify single-run ``for`` loops to ``if`` statements.
  * Yul Optimizer: Do not inline recursive functions.
+ * Yul Optimizer: Do not remove instructions that affect ``msize()`` if ``msize()`` is used.
 
 
 Bugfixes:
