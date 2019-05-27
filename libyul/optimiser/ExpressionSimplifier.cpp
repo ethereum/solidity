@@ -43,7 +43,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 		// so if the value of the variable is not movable, the expression that references
 		// the variable still is.
 
-		if (match->removesNonConstants && !MovableChecker(m_dialect, _expression).movable())
+		if (match->removesNonConstants && !SideEffectsCollector(m_dialect, _expression).movable())
 			return;
 		_expression = match->action().toExpression(locationOf(_expression));
 	}

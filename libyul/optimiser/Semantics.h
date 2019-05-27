@@ -45,7 +45,13 @@ public:
 	void operator()(FunctionCall const& _functionCall) override;
 
 	bool movable() const { return m_movable; }
-	bool sideEffectFree() const { return m_sideEffectFree; }
+	bool sideEffectFree(bool _allowMSizeModification = false) const
+	{
+		if (_allowMSizeModification)
+			return sideEffectFreeIfNoMSize();
+		else
+			return m_sideEffectFree;
+	}
 	bool sideEffectFreeIfNoMSize() const { return m_sideEffectFreeIfNoMSize; }
 	bool containsMSize() const { return m_containsMSize; }
 
