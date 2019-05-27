@@ -60,6 +60,12 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 	file.exceptions(ios::badbit);
 
 	m_source = parseSourceAndSettings(file);
+	if (m_settings.count("optimize-yul"))
+	{
+		m_optimiseYul = true;
+		m_validatedSettings["optimize-yul"] = "true";
+		m_settings.erase("optimize-yul");
+	}
 	m_expectations = parseExpectations(file);
 }
 
@@ -69,7 +75,11 @@ TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix
 	compiler().reset();
 	compiler().setSources({{"", versionPragma + m_source}});
 	compiler().setEVMVersion(m_evmVersion);
-
+	compiler().setOptimiserSettings(
+		m_optimiseYul ?
+		OptimiserSettings::full() :
+		OptimiserSettings::minimal()
+	);
 	if (compiler().parse())
 		compiler().analyze();
 

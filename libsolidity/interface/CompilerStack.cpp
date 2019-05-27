@@ -250,7 +250,7 @@ bool CompilerStack::analyze()
 	bool noErrors = true;
 
 	try {
-		SyntaxChecker syntaxChecker(m_errorReporter);
+		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
 			if (!syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;

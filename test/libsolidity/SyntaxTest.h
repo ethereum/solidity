@@ -82,6 +82,7 @@ protected:
 	std::string m_source;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
+	bool m_optimiseYul = false;
 	langutil::EVMVersion const m_evmVersion;
 };
 
