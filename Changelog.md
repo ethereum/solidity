@@ -2,30 +2,30 @@
 
 Language Features:
  * Static Analyzer: Disallow libraries calling themselves externally.
+ * Inline Assembly: Revert change introduced in 0.5.7: The ``callvalue()`` instruction does not require ``payable`` anymore.
 
 
 Compiler Features:
+ * Assembler: Encode the compiler version in the deployed bytecode.
  * Code Generator: Fix handling of structs of dynamic size as constructor parameters.
+ * Metadata: Add IPFS hashes of source files.
  * Optimizer: Add rule to simplify SHL/SHR combinations.
+ * Optimizer: Add rules for multiplication and division by left-shifted one.
  * SMTChecker: Support inherited state variables.
  * SMTChecker: Support tuples and function calls with multiple return values.
  * SMTChecker: Support ``delete``.
  * SMTChecker: Inline external function calls to ``this``.
- * Inline Assembly: Revert change introduced in 0.5.7: The ``callvalue()`` instruction does not require ``payable`` anymore.
- * Metadata: Add IPFS hashes of source files.
- * Assembler: Encode the compiler version in the deployed bytecode.
  * Yul Optimizer: Simplify single-run ``for`` loops to ``if`` statements.
  * Yul Optimizer: Do not inline recursive functions.
- * Optimizer: Add rules for multiplication and division by left-shifted one.
 
 
 Bugfixes:
+ * Code Generator: Fix assertion failure when assigning structs containing array of mapping.
  * SMTChecker: Fix bad cast in base constructor modifier.
  * SMTChecker: Fix internal error when visiting state variable inherited from base class.
  * SMTChecker: Fix internal error in fixed point operations.
  * SMTChecker: Fix internal error in assignment to unsupported type.
  * SMTChecker: Fix internal error in branching when inlining function calls that modify local variables.
- * Code Generator: Fix assertion failure when assign structs containing array of mapping.
 
 
 
