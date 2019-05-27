@@ -72,6 +72,16 @@ namespace
 	}
 }
 
+char TestFileParser::Scanner::peek() const noexcept
+{
+	if (std::distance(m_char, m_line.end()) < 2)
+		return '\0';
+
+	auto next = m_char;
+	std::advance(next, 1);
+	return *next;
+}
+
 vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 {
 	vector<FunctionCall> calls;
@@ -561,7 +571,7 @@ void TestFileParser::Scanner::scanNextToken()
 			else if (isWhiteSpace(current()))
 				token = selectToken(Token::Whitespace);
 			else if (isEndOfLine())
-				token = selectToken(Token::EOS);
+				token = make_pair(Token::EOS, "EOS");
 			else
 				throw Error(
 					Error::Type::ParserError,
