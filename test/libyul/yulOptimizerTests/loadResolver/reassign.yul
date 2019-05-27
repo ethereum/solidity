@@ -5,7 +5,7 @@
     mstore(0, sload(a))
 }
 // ====
-// step: sloadResolver
+// step: loadResolver
 // ----
 // {
 //     let _1 := 0

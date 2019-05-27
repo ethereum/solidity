@@ -15,7 +15,7 @@
     mstore(sload(a), 11)
 }
 // ====
-// step: sloadResolver
+// step: loadResolver
 // ----
 // {
 //     let x := calldataload(1)

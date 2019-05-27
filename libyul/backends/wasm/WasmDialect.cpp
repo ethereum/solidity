@@ -84,5 +84,6 @@ void WasmDialect::addFunction(string _name, size_t _params, size_t _returns)
 	f.sideEffectFreeIfNoMSize = false;
 	f.isMSize = false;
 	f.invalidatesStorage = true;
+	f.invalidatesMemory = true;
 	f.literalArguments = false;
 }

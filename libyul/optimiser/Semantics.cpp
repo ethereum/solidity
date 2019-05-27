@@ -65,6 +65,8 @@ void SideEffectsCollector::operator()(FunctionalInstruction const& _instr)
 		m_containsMSize = true;
 	if (eth::SemanticInformation::invalidatesStorage(_instr.instruction))
 		m_invalidatesStorage = true;
+	if (eth::SemanticInformation::invalidatesMemory(_instr.instruction))
+		m_invalidatesMemory = true;
 }
 
 void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
@@ -83,6 +85,8 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 			m_containsMSize = true;
 		if (f->invalidatesStorage)
 			m_invalidatesStorage = true;
+		if (f->invalidatesMemory)
+			m_invalidatesMemory = true;
 	}
 	else
 	{
@@ -90,6 +94,7 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 		m_sideEffectFree = false;
 		m_sideEffectFreeIfNoMSize = false;
 		m_invalidatesStorage = true;
+		m_invalidatesMemory = true;
 	}
 }
 

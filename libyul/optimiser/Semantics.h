@@ -55,6 +55,7 @@ public:
 	bool sideEffectFreeIfNoMSize() const { return m_sideEffectFreeIfNoMSize; }
 	bool containsMSize() const { return m_containsMSize; }
 	bool invalidatesStorage() const { return m_invalidatesStorage; }
+	bool invalidatesMemory() const { return m_invalidatesMemory; }
 
 private:
 	Dialect const& m_dialect;
@@ -73,6 +74,7 @@ private:
 	/// If false, storage is guaranteed to be unchanged by the coded under all
 	/// circumstances.
 	bool m_invalidatesStorage = false;
+	bool m_invalidatesMemory = false;
 };
 
 /**
@@ -91,7 +93,6 @@ public:
 	/// Disallow visiting anything apart from Expressions (this throws).
 	void visit(Statement const&) override;
 	using ASTWalker::visit;
-
 
 	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
 

@@ -60,6 +60,9 @@ struct BuiltinFunction
 	/// If false, storage of the current contract before and after the function is the same
 	/// under every circumstance. If the function does not return, this can be false.
 	bool invalidatesStorage = true;
+	/// If false, memory before and after the function is the same under every circumstance.
+	/// If the function does not return, this can be false.
+	bool invalidatesMemory = true;
 	/// If true, can only accept literals as arguments and they cannot be moved to variables.
 	bool literalArguments = false;
 };

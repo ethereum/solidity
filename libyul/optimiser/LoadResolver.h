@@ -19,30 +19,39 @@
  * currently stored in storage, if known.
  */
 
-#include <libyul/optimiser/SLoadResolver.h>
+#pragma once
 
-#include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/optimiser/DataFlowAnalyzer.h>
 
-using namespace std;
-using namespace dev;
-using namespace yul;
-
-void SLoadResolver::visit(Expression& _e)
+namespace yul
 {
-	if (_e.type() == typeid(FunctionCall))
-	{
-		FunctionCall const& funCall = boost::get<FunctionCall>(_e);
-		if (auto const* builtin = dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
-			if (builtin->instruction == dev::eth::Instruction::SLOAD)
-				if (funCall.arguments.at(0).type() == typeid(Identifier))
-				{
-					YulString key = boost::get<Identifier>(funCall.arguments.at(0)).name;
-					if (m_storage.values.count(key))
-					{
-						_e = Identifier{locationOf(_e), m_storage.values[key]};
-						return;
-					}
-				}
-	}
+
+struct EVMDialect;
+
+/**
+ * Optimisation stage that replaces expressions of type ``sload(x)`` and ``mload(x)`` by the value
+ * currently stored in storage resp. memory, if known.
+ *
+ * Works best if the code is in SSA form.
+ *
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
+ */
+class LoadResolver: public DataFlowAnalyzer
+{
+public:
+	static void run(Dialect const& _dialect, Block& _ast);
+
+private:
+	LoadResolver(Dialect const& _dialect, bool _optimizeMLoad):
+		DataFlowAnalyzer(_dialect),
+		m_optimizeMLoad(_optimizeMLoad)
+	{}
+
+protected:
+	using ASTModifier::visit;
+	void visit(Expression& _e) override;
+
+	bool m_optimizeMLoad = false;
+};
+
 }

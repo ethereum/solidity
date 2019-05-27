@@ -96,6 +96,8 @@ add_library(yul
 	optimiser/InlinableExpressionFunctionFinder.h
 	optimiser/KnowledgeBase.cpp
 	optimiser/KnowledgeBase.h
+	optimiser/LoadResolver.cpp
+	optimiser/LoadResolver.h
 	optimiser/MainFunction.cpp
 	optimiser/MainFunction.h
 	optimiser/Metrics.cpp
@@ -111,8 +113,6 @@ add_library(yul
 	optimiser/RedundantAssignEliminator.cpp
 	optimiser/RedundantAssignEliminator.h
 	optimiser/Rematerialiser.cpp
-	optimiser/SLoadResolver.cpp
-	optimiser/SLoadResolver.h
 	optimiser/Rematerialiser.h
 	optimiser/SSAReverser.cpp
 	optimiser/SSAReverser.h

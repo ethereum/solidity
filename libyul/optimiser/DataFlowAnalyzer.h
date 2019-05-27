@@ -27,6 +27,9 @@
 #include <libyul/YulString.h>
 #include <libyul/AsmData.h>
 
+// TODO avoid
+#include <libevmasm/Instruction.h>
+
 #include <libdevcore/InvertibleMap.h>
 
 #include <map>
@@ -93,18 +96,32 @@ protected:
 	/// for example at points where control flow is merged.
 	void clearValues(std::set<YulString> _names);
 
-	/// Clears knowledge about storage if storage may be modified inside the block.
-	void clearStorageKnowledgeIfInvalidated(Block const& _block);
+	/// Clears knowledge about storage or memory if they may be modified inside the block.
+	void clearKnowledgeIfInvalidated(Block const& _block);
 
-	/// Clears knowledge about storage if storage may be modified inside the expression.
-	void clearStorageKnowledgeIfInvalidated(Expression const& _expression);
+	/// Clears knowledge about storage or memory if they may be modified inside the expression.
+	void clearKnowledgeIfInvalidated(Expression const& _expression);
 
-	void joinStorageKnowledge(InvertibleMap<YulString, YulString> const& _other);
+	/// Joins knowledge about storage and memory with an older point in the control-flow.
+	/// This only works if the current state is a direct successor of the older point,
+	/// i.e. `_otherStorage` and `_otherMemory` cannot have additional changes.
+	void joinKnowledge(
+		InvertibleMap<YulString, YulString> const& _olderStorage,
+		InvertibleMap<YulString, YulString> const& _olderMemory
+	);
+
+	static void joinKnowledgeHelper(
+		InvertibleMap<YulString, YulString>& _thisData,
+		InvertibleMap<YulString, YulString> const& _olderData
+	);
 
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
 
-	boost::optional<std::pair<YulString, YulString>> isSimpleSStore(ExpressionStatement const& _statement) const;
+	boost::optional<std::pair<YulString, YulString>> isSimpleStore(
+		dev::eth::Instruction _store,
+		ExpressionStatement const& _statement
+	) const;
 
 	Dialect const& m_dialect;
 
@@ -115,6 +132,7 @@ protected:
 	InvertibleRelation<YulString> m_references;
 
 	InvertibleMap<YulString, YulString> m_storage;
+	InvertibleMap<YulString, YulString> m_memory;
 
 	KnowledgeBase m_knowledgeBase;
 
