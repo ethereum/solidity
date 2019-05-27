@@ -41,9 +41,10 @@ class Parser: public langutil::ParserBase
 public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
-		langutil::EVMVersion _evmVersion
+		langutil::EVMVersion _evmVersion,
+		bool _errorRecovery = false
 	):
-		ParserBase(_errorReporter),
+		ParserBase(_errorReporter, _errorRecovery),
 		m_evmVersion(_evmVersion)
 	{}
 
