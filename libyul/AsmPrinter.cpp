@@ -258,6 +258,12 @@ string AsmPrinter::operator()(Block const& _block) const
 	}
 }
 
+std::string AsmPrinter::operator()(Comment const& _comment) const
+{
+	// Leading newline for better readability of comments.
+	return "\n// " + _comment.text;
+}
+
 string AsmPrinter::formatTypedName(TypedName _variable) const
 {
 	solAssert(!_variable.name.empty(), "Invalid variable name.");

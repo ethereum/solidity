@@ -45,10 +45,11 @@ struct Break;
 struct Continue;
 struct ExpressionStatement;
 struct Block;
+struct Comment;
 
 struct TypedName;
 
 using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
-using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block>;
+using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block, Comment>;
 
 }

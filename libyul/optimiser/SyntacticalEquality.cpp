@@ -181,6 +181,11 @@ bool SyntacticallyEqual::statementEqual(Block const& _lhs, Block const& _rhs)
 	});
 }
 
+bool SyntacticallyEqual::statementEqual(Comment const& _lhs, Comment const& _rhs)
+{
+	return _lhs.text == _rhs.text;
+}
+
 bool SyntacticallyEqual::visitDeclaration(TypedName const& _lhs, TypedName const& _rhs)
 {
 	if (_lhs.type != _rhs.type)

@@ -153,6 +153,11 @@ Statement ASTCopier::operator ()(Block const& _block)
 	return translate(_block);
 }
 
+Statement ASTCopier::operator()(Comment const& _comment)
+{
+	return Comment{_comment.location, _comment.text};
+}
+
 Expression ASTCopier::translate(Expression const& _expression)
 {
 	return _expression.apply_visitor(static_cast<ExpressionCopier&>(*this));

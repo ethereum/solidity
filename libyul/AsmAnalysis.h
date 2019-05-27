@@ -94,6 +94,7 @@ public:
 	bool operator()(Break const&);
 	bool operator()(Continue const&);
 	bool operator()(Block const& _block);
+	bool operator()(Comment const& _comment) { return true; }
 
 private:
 	/// Visits the statement and expects it to deposit one item onto the stack.

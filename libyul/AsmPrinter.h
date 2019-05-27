@@ -53,6 +53,7 @@ public:
 	std::string operator()(Break const& _break) const;
 	std::string operator()(Continue const& _continue) const;
 	std::string operator()(Block const& _block) const;
+	std::string operator()(Comment const& _comment) const;
 
 private:
 	std::string formatTypedName(TypedName _variable) const;

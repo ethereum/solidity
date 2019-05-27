@@ -66,6 +66,7 @@ public:
 	bool operator()(Break const&) { return true; }
 	bool operator()(Continue const&) { return true; }
 	bool operator()(Block const& _block);
+	bool operator()(Comment const&) { return true; }
 
 private:
 	bool registerVariable(

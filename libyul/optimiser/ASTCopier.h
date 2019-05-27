@@ -61,6 +61,7 @@ public:
 	virtual Statement operator()(Break const&) = 0;
 	virtual Statement operator()(Continue const&) = 0;
 	virtual Statement operator()(Block const& _block) = 0;
+	virtual Statement operator()(Comment const& _comment) = 0;
 };
 
 /**
@@ -88,6 +89,7 @@ public:
 	Statement operator()(Break const&) override;
 	Statement operator()(Continue const&) override;
 	Statement operator()(Block const& _block) override;
+	Statement operator()(Comment const& _comment) override;
 
 	virtual Expression translate(Expression const& _expression);
 	virtual Statement translate(Statement const& _statement);

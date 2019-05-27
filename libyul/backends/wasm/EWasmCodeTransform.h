@@ -54,6 +54,7 @@ public:
 	wasm::Expression operator()(yul::Break const&);
 	wasm::Expression operator()(yul::Continue const&);
 	wasm::Expression operator()(yul::Block const& _block);
+	wasm::Expression operator()(yul::Comment const&) { return {}; }
 
 private:
 	EWasmCodeTransform(

@@ -59,6 +59,7 @@ public:
 	virtual void operator()(Break const&) {}
 	virtual void operator()(Continue const&) {}
 	virtual void operator()(Block const& _block);
+	virtual void operator()(Comment const&) {}
 
 	virtual void visit(Statement const& _st);
 	virtual void visit(Expression const& _e);
@@ -96,6 +97,7 @@ public:
 	virtual void operator()(Break&);
 	virtual void operator()(Continue&);
 	virtual void operator()(Block& _block);
+	virtual void operator()(Comment&) {}
 
 	virtual void visit(Statement& _st);
 	virtual void visit(Expression& _e);

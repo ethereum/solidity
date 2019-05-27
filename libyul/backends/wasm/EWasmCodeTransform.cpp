@@ -264,7 +264,9 @@ vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Statement> const&
 {
 	vector<wasm::Expression> ret;
 	for (auto const& s: _statements)
-		ret.emplace_back(visit(s));
+		if (s.type() != typeid(yul::Comment))
+			ret.emplace_back(visit(s));
+
 	return ret;
 }
 

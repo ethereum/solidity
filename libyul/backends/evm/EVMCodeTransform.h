@@ -188,6 +188,7 @@ public:
 	void operator()(Break const&);
 	void operator()(Continue const&);
 	void operator()(Block const& _block);
+	void operator()(Comment const&) {}
 
 private:
 	AbstractAssembly::LabelID labelFromIdentifier(Identifier const& _identifier);

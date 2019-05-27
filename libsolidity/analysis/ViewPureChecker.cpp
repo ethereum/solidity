@@ -116,6 +116,10 @@ public:
 			boost::apply_visitor(*this, s);
 	}
 
+	void operator()(yul::Comment const&)
+	{
+	}
+
 private:
 	void checkInstruction(SourceLocation _location, dev::eth::Instruction _instruction)
 	{

@@ -84,8 +84,22 @@ Block Parser::parseBlock()
 	RecursionGuard recursionGuard(*this);
 	Block block = createWithLocation<Block>();
 	expectToken(Token::LBrace);
+
 	while (currentToken() != Token::RBrace)
+	{
+		if (!m_scanner->currentCommentLiteral().empty())
+			block.statements.emplace_back(
+				Comment{m_scanner->currentCommentLocation(), m_scanner->currentCommentLiteral()}
+			);
+
 		block.statements.emplace_back(parseStatement());
+	}
+
+	if (!m_scanner->currentCommentLiteral().empty())
+		block.statements.emplace_back(
+			Comment{m_scanner->currentCommentLocation(), m_scanner->currentCommentLiteral()}
+		);
+
 	block.location.end = endPosition();
 	advance();
 	return block;
