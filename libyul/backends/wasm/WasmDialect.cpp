@@ -72,5 +72,7 @@ void WasmDialect::addFunction(string _name, size_t _params, size_t _returns)
 	f.returns.resize(_returns);
 	f.movable = false;
 	f.sideEffectFree = false;
+	f.sideEffectFreeIfNoMSize = false;
+	f.isMSize = false;
 	f.literalArguments = false;
 }

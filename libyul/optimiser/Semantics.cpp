@@ -33,9 +33,59 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-MovableChecker::MovableChecker(Dialect const& _dialect):
-	m_dialect(_dialect)
+SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Expression const& _expression):
+	SideEffectsCollector(_dialect)
 {
+	visit(_expression);
+}
+
+SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Statement const& _statement):
+	SideEffectsCollector(_dialect)
+{
+	visit(_statement);
+}
+
+SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Block const& _ast):
+	SideEffectsCollector(_dialect)
+{
+	operator()(_ast);
+}
+
+void SideEffectsCollector::operator()(FunctionalInstruction const& _instr)
+{
+	ASTWalker::operator()(_instr);
+
+	if (!eth::SemanticInformation::movable(_instr.instruction))
+		m_movable = false;
+	if (!eth::SemanticInformation::sideEffectFree(_instr.instruction))
+		m_sideEffectFree = false;
+	if (!eth::SemanticInformation::sideEffectFreeIfNoMSize(_instr.instruction))
+		m_sideEffectFreeIfNoMSize = false;
+	if (_instr.instruction == eth::Instruction::MSIZE)
+		m_containsMSize = true;
+}
+
+void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
+{
+	ASTWalker::operator()(_functionCall);
+
+	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
+	{
+		if (!f->movable)
+			m_movable = false;
+		if (!f->sideEffectFree)
+			m_sideEffectFree = false;
+		if (!f->sideEffectFreeIfNoMSize)
+			m_sideEffectFreeIfNoMSize = false;
+		if (f->isMSize)
+			m_containsMSize = true;
+	}
+	else
+	{
+		m_movable = false;
+		m_sideEffectFree = false;
+		m_sideEffectFreeIfNoMSize = false;
+	}
 }
 
 MovableChecker::MovableChecker(Dialect const& _dialect, Expression const& _expression):
@@ -46,36 +96,8 @@ MovableChecker::MovableChecker(Dialect const& _dialect, Expression const& _expre
 
 void MovableChecker::operator()(Identifier const& _identifier)
 {
-	ASTWalker::operator()(_identifier);
+	SideEffectsCollector::operator()(_identifier);
 	m_variableReferences.emplace(_identifier.name);
-}
-
-void MovableChecker::operator()(FunctionalInstruction const& _instr)
-{
-	ASTWalker::operator()(_instr);
-
-	if (!eth::SemanticInformation::movable(_instr.instruction))
-		m_movable = false;
-	if (!eth::SemanticInformation::sideEffectFree(_instr.instruction))
-		m_sideEffectFree = false;
-}
-
-void MovableChecker::operator()(FunctionCall const& _functionCall)
-{
-	ASTWalker::operator()(_functionCall);
-
-	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
-	{
-		if (!f->movable)
-			m_movable = false;
-		if (!f->sideEffectFree)
-			m_sideEffectFree = false;
-	}
-	else
-	{
-		m_movable = false;
-		m_sideEffectFree = false;
-	}
 }
 
 void MovableChecker::visit(Statement const&)

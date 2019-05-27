@@ -52,6 +52,8 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.returns.resize(info.ret);
 	f.movable = eth::SemanticInformation::movable(_instruction);
 	f.sideEffectFree = eth::SemanticInformation::sideEffectFree(_instruction);
+	f.sideEffectFreeIfNoMSize = eth::SemanticInformation::sideEffectFreeIfNoMSize(_instruction);
+	f.isMSize = _instruction == dev::eth::Instruction::MSIZE;
 	f.literalArguments = false;
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](
@@ -73,6 +75,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	size_t _returns,
 	bool _movable,
 	bool _sideEffectFree,
+	bool _sideEffectFreeIfNoMSize,
 	bool _literalArguments,
 	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void()>)> _generateCode
 )
@@ -85,6 +88,8 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	f.movable = _movable;
 	f.literalArguments = _literalArguments;
 	f.sideEffectFree = _sideEffectFree;
+	f.sideEffectFreeIfNoMSize = _sideEffectFreeIfNoMSize;
+	f.isMSize = false;
 	f.instruction = {};
 	f.generateCode = std::move(_generateCode);
 	return {name, f};
@@ -105,7 +110,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 
 	if (_objectAccess)
 	{
-		builtins.emplace(createFunction("datasize", 1, 1, true, true, true, [](
+		builtins.emplace(createFunction("datasize", 1, 1, true, true, true, true, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -126,7 +131,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendDataSize(_context.subIDs.at(dataName));
 			}
 		}));
-		builtins.emplace(createFunction("dataoffset", 1, 1, true, true, true, [](
+		builtins.emplace(createFunction("dataoffset", 1, 1, true, true, true, true, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -147,7 +152,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendDataOffset(_context.subIDs.at(dataName));
 			}
 		}));
-		builtins.emplace(createFunction("datacopy", 3, 0, false, false, false, [](
+		builtins.emplace(createFunction("datacopy", 3, 0, false, false, false, false, [](
 			FunctionCall const&,
 			AbstractAssembly& _assembly,
 			BuiltinContext&,

@@ -29,37 +29,66 @@ namespace yul
 struct Dialect;
 
 /**
- * Specific AST walker that determines whether an expression is movable.
+ * Specific AST walker that determines side-effect free-ness and movability of code.
+ * Enters into function definitions.
  */
-class MovableChecker: public ASTWalker
+class SideEffectsCollector: public ASTWalker
 {
 public:
-	explicit MovableChecker(Dialect const& _dialect);
-	MovableChecker(Dialect const& _dialect, Expression const& _expression);
+	explicit SideEffectsCollector(Dialect const& _dialect): m_dialect(_dialect) {}
+	SideEffectsCollector(Dialect const& _dialect, Expression const& _expression);
+	SideEffectsCollector(Dialect const& _dialect, Statement const& _statement);
+	SideEffectsCollector(Dialect const& _dialect, Block const& _ast);
 
-	void operator()(Identifier const& _identifier) override;
+	using ASTWalker::operator();
 	void operator()(FunctionalInstruction const& _functionalInstruction) override;
 	void operator()(FunctionCall const& _functionCall) override;
 
-	/// Disallow visiting anything apart from Expressions (this throws).
-	void visit(Statement const&) override;
-	using ASTWalker::visit;
-
 	bool movable() const { return m_movable; }
 	bool sideEffectFree() const { return m_sideEffectFree; }
-
-	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
+	bool sideEffectFreeIfNoMSize() const { return m_sideEffectFreeIfNoMSize; }
+	bool containsMSize() const { return m_containsMSize; }
 
 private:
 	Dialect const& m_dialect;
-	/// Which variables the current expression references.
-	std::set<YulString> m_variableReferences;
 	/// Is the current expression movable or not.
 	bool m_movable = true;
 	/// Is the current expression side-effect free, i.e. can be removed
 	/// without changing the semantics.
 	bool m_sideEffectFree = true;
+	/// Is the current expression side-effect free up to msize, i.e. can be removed
+	/// without changing the semantics except for the value returned by the msize instruction.
+	bool m_sideEffectFreeIfNoMSize = true;
+	/// Does the current code contain the MSize operation?
+	/// Note that this is a purely syntactic property meaning that even if this is false,
+	/// the code can still contain calls to functions that contain the msize instruction.
+	bool m_containsMSize = false;
 };
+
+/**
+ * Specific AST walker that determines whether an expression is movable
+ * and collects the referenced variables.
+ * Can only be used on expressions.
+ */
+class MovableChecker: public SideEffectsCollector
+{
+public:
+	explicit MovableChecker(Dialect const& _dialect): SideEffectsCollector(_dialect) {}
+	MovableChecker(Dialect const& _dialect, Expression const& _expression);
+
+	void operator()(Identifier const& _identifier) override;
+
+	/// Disallow visiting anything apart from Expressions (this throws).
+	void visit(Statement const&) override;
+	using ASTWalker::visit;
+
+	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
+
+private:
+	/// Which variables the current expression references.
+	std::set<YulString> m_variableReferences;
+};
+
 
 /**
  * Helper class to find "irregular" control flow.

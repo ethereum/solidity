@@ -213,20 +213,15 @@ bool SemanticInformation::sideEffectFree(Instruction _instruction)
 	// These are not really functional.
 	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
 
-	InstructionInfo info = instructionInfo(_instruction);
-	switch (_instruction)
-	{
-	// All the instructions that merely read memory are fine
-	// even though they are marked "sideEffects" in Instructions.cpp
-	case Instruction::KECCAK256:
-	case Instruction::MLOAD:
+	return !instructionInfo(_instruction).sideEffects;
+}
+
+bool SemanticInformation::sideEffectFreeIfNoMSize(Instruction _instruction)
+{
+	if (_instruction == Instruction::KECCAK256 || _instruction == Instruction::MLOAD)
 		return true;
-	default:
-		break;
-	}
-	if (info.sideEffects)
-		return false;
-	return true;
+	else
+		return sideEffectFree(_instruction);
 }
 
 bool SemanticInformation::invalidatesMemory(Instruction _instruction)
