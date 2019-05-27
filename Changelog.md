@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * Optimizer: Add rule to simplify SUB(~0, X) to NOT(X).
+ * Commandline Interface: Experimental parser error recovery via the ``--error-recovery`` commandline switch.
 
 
 
@@ -44,7 +45,6 @@ Compiler Features:
  * Yul Optimizer: Optimize representation of numbers.
  * Yul Optimizer: Do not inline recursive functions.
  * Yul Optimizer: Do not remove instructions that affect ``msize()`` if ``msize()`` is used.
-
 
 Bugfixes:
  * Code Generator: Explicitly turn uninitialized internal function pointers into invalid functions when loaded from storage.
