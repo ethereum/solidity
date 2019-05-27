@@ -194,7 +194,7 @@ Mathematical and Cryptographic Functions
     the ecrecover function remained unchanged.
 
     This is usually not a problem unless you require signatures to be unique or
-    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.org/docs/cryptography_ecdsa>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
+    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.org/v2.3.0/api/cryptography#ecdsa>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
 
 .. note::
 
