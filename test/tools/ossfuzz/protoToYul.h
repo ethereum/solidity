@@ -46,6 +46,8 @@ public:
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
+		m_objectId = 0;
+		m_isObject = false;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -88,6 +90,10 @@ private:
 	void visit(PopStmt const&);
 	void visit(LowLevelCall const&);
 	void visit(Create const&);
+	void visit(UnaryOpData const&);
+	void visit(Object const&);
+	void visit(Data const&);
+	void visit(Code const&);
 	void visit(Program const&);
 
 	/// Creates a new scope, and adds @a _funcParams to it if it
@@ -109,6 +115,7 @@ private:
 	/// Accepts an arbitrary string, removes all characters that are neither
 	/// alphabets nor digits from it and returns the said string.
 	std::string createAlphaNum(std::string const& _strBytes);
+
 	enum class NumFunctionReturns
 	{
 		None,
@@ -256,6 +263,25 @@ private:
 		return "foo_" + functionTypeToString(_type) + "_" + std::to_string(counter());
 	}
 
+	/// Returns current object identifier as string. Input parameter
+	/// is ignored.
+	std::string getObjectIdentifier(ObjectId const&)
+	{
+		// TODO: Return a pseudo randomly chosen object identifier
+		// that is in scope as string.
+		// At the moment, we simply return the identifier that
+		// corresponds to the currently visited object.
+		return "object" + std::to_string(m_objectId - 1);
+	}
+
+	/// Return new object identifier as string. Identifier string
+	/// is a template of the form "\"object<n>\"" where <n> is
+	/// a monotonically increasing object ID counter.
+	std::string newObjectId()
+	{
+		return "\"object" + std::to_string(m_objectId++) + "\"";
+	}
+
 	std::ostringstream m_output;
 	/// Variables in current scope
 	std::stack<std::vector<std::string>> m_scopeVars;
@@ -288,6 +314,11 @@ private:
 	unsigned m_inputSize;
 	/// Predicate that is true if inside function definition, false otherwise
 	bool m_inFunctionDef;
+	/// Index used for naming objects
+	unsigned m_objectId;
+	/// Flag to track whether program is an object (true) or a statement block
+	/// (false: default value)
+	bool m_isObject;
 };
 }
 }
