@@ -2068,7 +2068,8 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 	{
 		TypePointer type = variable->annotation().type;
 		solAssert(type, "");
-		// Skip all mapping members if we are not in storage.
+		// If we are not in storage, skip all members that cannot live outside of storage,
+		// ex. mappings and array of mappings
 		if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
 			continue;
 		members.emplace_back(
