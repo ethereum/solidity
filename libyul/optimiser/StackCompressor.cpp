@@ -113,7 +113,12 @@ public:
 };
 
 template <typename ASTNode>
-void eliminateVariables(Dialect const& _dialect, ASTNode& _node, size_t _numVariables)
+void eliminateVariables(
+	Dialect const& _dialect,
+	ASTNode& _node,
+	size_t _numVariables,
+	bool _allowMSizeOptimization
+)
 {
 	RematCandidateSelector selector{_dialect};
 	selector(_node);
@@ -143,7 +148,7 @@ void eliminateVariables(Dialect const& _dialect, ASTNode& _node, size_t _numVari
 	}
 
 	Rematerialiser::run(_dialect, _node, std::move(varsToEliminate));
-	UnusedPruner::runUntilStabilised(_dialect, _node);
+	UnusedPruner::runUntilStabilised(_dialect, _node, _allowMSizeOptimization);
 }
 
 }
@@ -159,6 +164,7 @@ bool StackCompressor::run(
 		_ast.statements.size() > 0 && _ast.statements.at(0).type() == typeid(Block),
 		"Need to run the function grouper before the stack compressor."
 	);
+	bool allowMSizeOptimzation = !SideEffectsCollector(_dialect, _ast).containsMSize();
 	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 	{
 		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _ast, _optimizeStackAllocation);
@@ -168,7 +174,12 @@ bool StackCompressor::run(
 		if (stackSurplus.count(YulString{}))
 		{
 			yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
-			eliminateVariables(_dialect, boost::get<Block>(_ast.statements.at(0)), stackSurplus.at({}));
+			eliminateVariables(
+				_dialect,
+				boost::get<Block>(_ast.statements.at(0)),
+				stackSurplus.at({}),
+				allowMSizeOptimzation
+			);
 		}
 
 		for (size_t i = 1; i < _ast.statements.size(); ++i)
@@ -178,7 +189,12 @@ bool StackCompressor::run(
 				continue;
 
 			yulAssert(stackSurplus.at(fun.name) > 0, "Invalid surplus value.");
-			eliminateVariables(_dialect, fun, stackSurplus.at(fun.name));
+			eliminateVariables(
+				_dialect,
+				fun,
+				stackSurplus.at(fun.name),
+				allowMSizeOptimzation
+			);
 		}
 	}
 	return false;

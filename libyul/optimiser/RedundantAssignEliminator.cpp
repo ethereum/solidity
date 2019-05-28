@@ -284,7 +284,7 @@ void RedundantAssignEliminator::finalize(
 	{
 		State const state = assignment.second == State::Undecided ? _finalState : assignment.second;
 
-		if (state == State::Unused && MovableChecker{*m_dialect, *assignment.first->value}.movable())
+		if (state == State::Unused && SideEffectsCollector{*m_dialect, *assignment.first->value}.movable())
 			// TODO the only point where we actually need this
 			// to be a set is for the for loop
 			m_pendingRemovals.insert(assignment.first);

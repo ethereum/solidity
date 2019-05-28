@@ -51,6 +51,11 @@ struct BuiltinFunction
 	bool movable = false;
 	/// If true, a call to this function can be omitted without changing semantics.
 	bool sideEffectFree = false;
+	/// If true, a call to this function can be omitted without changing semantics if the
+	/// program does not contain the msize instruction.
+	bool sideEffectFreeIfNoMSize = false;
+	/// If true, this is the msize instruction.
+	bool isMSize = false;
 	/// If true, can only accept literals as arguments and they cannot be moved to variables.
 	bool literalArguments = false;
 };

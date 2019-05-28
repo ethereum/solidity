@@ -10082,8 +10082,11 @@ BOOST_AUTO_TEST_CASE(create_memory_array_allocation_size)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x40, 0x40, 0x20 + 256, 0x260));
+	if (!m_optimiserSettings.runYulOptimiser)
+	{
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(0x40, 0x40, 0x20 + 256, 0x260));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(memory_arrays_of_various_sizes)
@@ -11273,8 +11276,12 @@ BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("success()"), encodeArgs(u256(1)));
+	// Cannot run against yul optimizer because of msize
+	if (!m_optimiserSettings.runYulOptimiser)
+	{
+		compileAndRun(sourceCode, 0, "C");
+		ABI_CHECK(callContractFunction("success()"), encodeArgs(u256(1)));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(return_does_not_skip_modifier)
