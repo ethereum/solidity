@@ -391,7 +391,6 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 	{
 		string left = expressionAsType(_binOp.leftExpression(), *commonType);
 		string right = expressionAsType(_binOp.rightExpression(), *commonType);
-
 		defineExpression(_binOp) << binaryOperation(_binOp.getOperator(), *commonType, left, right);
 	}
 	return false;
@@ -1097,16 +1096,20 @@ string IRGeneratorForStatements::binaryOperation(
 {
 	if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
 	{
-		solUnimplementedAssert(!type->isSigned(), "");
 		string fun;
-		if (_operator == Token::Add)
-			fun = m_utils.overflowCheckedUIntAddFunction(type->numBits());
-		else if (_operator == Token::Sub)
-			fun = m_utils.overflowCheckedUIntSubFunction();
-		else if (_operator == Token::Mul)
-			fun = m_utils.overflowCheckedUIntMulFunction(type->numBits());
-		else
-			solUnimplementedAssert(false, "");
+		// TODO: Only division is implemented for signed integers for now.
+		if (!type->isSigned())
+		{
+			if (_operator == Token::Add)
+				fun = m_utils.overflowCheckedUIntAddFunction(type->numBits());
+			else if (_operator == Token::Sub)
+				fun = m_utils.overflowCheckedUIntSubFunction();
+			else if (_operator == Token::Mul)
+				fun = m_utils.overflowCheckedUIntMulFunction(type->numBits());
+		}
+		if (_operator == Token::Div)
+			fun = m_utils.overflowCheckedIntDivFunction(*type);
+		solUnimplementedAssert(!fun.empty(), "");
 		return fun + "(" + _left + ", " + _right + ")\n";
 	}
 	else

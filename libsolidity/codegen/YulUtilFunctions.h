@@ -36,6 +36,7 @@ namespace solidity
 class Type;
 class ArrayType;
 class MappingType;
+class IntegerType;
 
 /**
  * Component that can generate various useful Yul functions.
@@ -87,6 +88,11 @@ public:
 	std::string overflowCheckedUIntAddFunction(size_t _bits);
 
 	std::string overflowCheckedUIntMulFunction(size_t _bits);
+
+	/// @returns name of function to perform division on integers.
+	/// Checks for division by zero and the special case of
+	/// signed division of the smallest number by -1.
+	std::string overflowCheckedIntDivFunction(IntegerType const& _type);
 
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.

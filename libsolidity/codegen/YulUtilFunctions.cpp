@@ -374,6 +374,33 @@ string YulUtilFunctions::overflowCheckedUIntMulFunction(size_t _bits)
 	});
 }
 
+string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
+{
+	unsigned bits = _type.numBits();
+	solAssert(0 < bits && bits <= 256 && bits % 8 == 0, "");
+	string functionName = "checked_div_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> r {
+				if iszero(y) { revert(0, 0) }
+				<?signed>
+				// x / -1 == x
+				if and(
+					eq(x, <minVal>),
+					eq(y, sub(0, 1))
+				) { revert(0, 0) }
+				</signed>
+				r := <?signed>s</signed>div(x, y)
+			}
+			)")
+				("functionName", functionName)
+				("signed", _type.isSigned())
+				("minVal", (0 - (u256(1) << (bits - 1))).str())
+				.render();
+	});
+}
+
 string YulUtilFunctions::overflowCheckedUIntSubFunction()
 {
 	string functionName = "checked_sub_uint";
