@@ -943,8 +943,7 @@ bool CommandLineInterface::processInput()
 		m_compiler->setSources(m_sourceCodes);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
-		if (m_args.count(g_argErrorRecovery))
-			m_compiler->setParserErrorRecovery(true);
+		m_compiler->setParserErrorRecovery(m_args.count(g_argErrorRecovery));
 		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 
@@ -966,7 +965,12 @@ bool CommandLineInterface::processInput()
 		}
 
 		if (!successful)
-			return false;
+		{
+			if (m_args.count(g_argErrorRecovery))
+				return true;
+			else
+				return false;
+		}
 	}
 	catch (CompilerError const& _exception)
 	{
@@ -1044,20 +1048,20 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strAbi] = dev::jsonCompactPrint(m_compiler->contractABI(contractName));
 		if (requests.count("metadata"))
 			contractData["metadata"] = m_compiler->metadata(contractName);
-		if (requests.count(g_strBinary))
+		if (requests.count(g_strBinary) && m_compiler->compilationSuccessful())
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
-		if (requests.count(g_strBinaryRuntime))
+		if (requests.count(g_strBinaryRuntime) && m_compiler->compilationSuccessful())
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
-		if (requests.count(g_strOpcodes))
+		if (requests.count(g_strOpcodes) && m_compiler->compilationSuccessful())
 			contractData[g_strOpcodes] = dev::eth::disassemble(m_compiler->object(contractName).bytecode);
-		if (requests.count(g_strAsm))
+		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
-		if (requests.count(g_strSrcMap))
+		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->sourceMapping(contractName);
 			contractData[g_strSrcMap] = map ? *map : "";
 		}
-		if (requests.count(g_strSrcMapRuntime))
+		if (requests.count(g_strSrcMapRuntime) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
@@ -1121,15 +1125,16 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
 		for (auto const& contract: m_compiler->contractNames())
-			if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
-			{
-				auto ret = GasEstimator::breakToStatementLevel(
-					GasEstimator(m_evmVersion).structuralEstimation(*assemblyItems, asts),
-					asts
-				);
-				for (auto const& it: ret)
-					gasCosts[it.first] += it.second;
-			}
+			if (m_compiler->compilationSuccessful())
+				if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
+				{
+					auto ret = GasEstimator::breakToStatementLevel(
+						GasEstimator(m_evmVersion).structuralEstimation(*assemblyItems, asts),
+						asts
+					);
+					for (auto const& it: ret)
+						gasCosts[it.first] += it.second;
+				}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))
@@ -1396,6 +1401,12 @@ void CommandLineInterface::outputCompilationResults()
 	handleAst(g_argAst);
 	handleAst(g_argAstJson);
 	handleAst(g_argAstCompactJson);
+
+	if (!m_compiler->compilationSuccessful())
+	{
+		serr() << endl << "Compilation halted after AST generation due to errors." << endl;
+		return;
+	}
 
 	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)

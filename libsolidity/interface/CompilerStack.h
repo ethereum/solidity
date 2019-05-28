@@ -78,6 +78,8 @@ class DeclarationContainer;
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
  * It holds state and can be used to either step through the compilation stages (and abort e.g.
  * before compilation to bytecode) or run the whole compilation in one call.
+ * If error recovery is active, it is possible to progress through the stages even when
+ * there are errors. In any case, producing code is only possible without errors.
  */
 class CompilerStack: boost::noncopyable
 {
@@ -85,8 +87,8 @@ public:
 	enum State {
 		Empty,
 		SourcesSet,
-		ParsingSuccessful,
-		AnalysisSuccessful,
+		ParsingPerformed,
+		AnalysisPerformed,
 		CompilationSuccessful
 	};
 
@@ -109,6 +111,10 @@ public:
 
 	/// @returns the current state.
 	State state() const { return m_stackState; }
+
+	bool hasError() const { return m_hasError; }
+
+	bool compilationSuccessful() const { return m_stackState >= CompilationSuccessful; }
 
 	/// Resets the compiler to an empty state. Unless @a _keepSettings is set to true,
 	/// all settings are reset as well.
@@ -414,6 +420,9 @@ private:
 	bool m_metadataLiteralSources = false;
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
+	/// Whether or not there has been an error during processing.
+	/// If this is true, the stack will refuse to generate code.
+	bool m_hasError = false;
 	bool m_release = VersionIsRelease;
 };
 

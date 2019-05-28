@@ -844,11 +844,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		));
 	}
 
-	bool const analysisSuccess = compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
+	bool analysisPerformed = compilerStack.state() >= CompilerStack::State::AnalysisPerformed;
 	bool const compilationSuccess = compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
+	if (compilerStack.hasError() && !_inputsAndSettings.parserErrorRecovery)
+		analysisPerformed = false;
+
 	/// Inconsistent state - stop here to receive error reports from users
-	if (((binariesRequested && !compilationSuccess) || !analysisSuccess) && errors.empty())
+	if (((binariesRequested && !compilationSuccess) || !analysisPerformed) && errors.empty())
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	Json::Value output = Json::objectValue;
@@ -864,7 +867,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (string const& sourceName: analysisSuccess ? compilerStack.sourceNames() : vector<string>())
+	for (string const& sourceName: analysisPerformed ? compilerStack.sourceNames() : vector<string>())
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
@@ -876,7 +879,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
-	for (string const& contractName: analysisSuccess ? compilerStack.contractNames() : vector<string>())
+	for (string const& contractName: analysisPerformed ? compilerStack.contractNames() : vector<string>())
 	{
 		size_t colon = contractName.rfind(':');
 		solAssert(colon != string::npos, "");
