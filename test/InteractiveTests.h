@@ -56,7 +56,6 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Yul Interpreter",     "libyul",      "yulInterpreterTests", false, false, &yul::test::YulInterpreterTest::create},
 	{"Yul Object Compiler", "libyul",      "objectCompiler",      false, false, &yul::test::ObjectCompilerTest::create},
 	{"Syntax",              "libsolidity", "syntaxTests",         false, false, &SyntaxTest::create},
-	{"ErrorRecovery",       "libsolidity", "errorRecoveryTests",  false, false, &SyntaxTest::createErrorRecovery},
 	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
 	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
 	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SyntaxTest::create},
@@ -67,3 +66,4 @@ Testsuite const g_interactiveTestsuites[] = {
 }
 }
 }
+

@@ -8,7 +8,6 @@ Language Features:
 Compiler Features:
  * Assembler: Encode the compiler version in the deployed bytecode.
  * Code Generator: Fix handling of structs of dynamic size as constructor parameters.
- * Commandline Interface: Experimental parser error recovery via the ``--error-recovery`` commandline switch.
  * Inline Assembly: Disallow the combination of ``msize()`` and the Yul optimizer.
  * Metadata: Add IPFS hashes of source files.
  * Optimizer: Add rule to simplify SHL/SHR combinations.
@@ -21,6 +20,7 @@ Compiler Features:
  * Yul Optimizer: Optimize representation of numbers.
  * Yul Optimizer: Do not inline recursive functions.
  * Yul Optimizer: Do not remove instructions that affect ``msize()`` if ``msize()`` is used.
+
 
 Bugfixes:
  * Code Generator: Explicitly turn uninitialized internal function pointers into invalid functions when loaded from storage.
