@@ -110,9 +110,6 @@ public:
 	/// @returns the next token and advances input
 	Token next();
 
-	/// Set scanner to a specific offset. This is used in error recovery.
-	void setPosition(size_t _offset);
-
 	///@{
 	///@name Information about the current token
 

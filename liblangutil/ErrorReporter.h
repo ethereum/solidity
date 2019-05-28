@@ -118,9 +118,6 @@ public:
 		return m_errorCount > 0;
 	}
 
-	// @returns true if the maximum error count has been reached.
-	bool hasExcessiveErrors() const;
-
 private:
 	void error(
 		Error::Type _type,
@@ -152,3 +149,4 @@ private:
 };
 
 }
+

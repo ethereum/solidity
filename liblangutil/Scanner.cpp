@@ -156,13 +156,6 @@ void Scanner::reset()
 	next();
 }
 
-void Scanner::setPosition(size_t _offset)
-{
-	m_char = m_source->setPosition(_offset);
-	scanToken();
-	next();
-}
-
 void Scanner::supportPeriodInIdentifier(bool _value)
 {
 	m_supportPeriodInIdentifier = _value;
