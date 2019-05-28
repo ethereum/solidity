@@ -27,6 +27,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	if (_size > 600)
 		return 0;
 
+	YulStringRepository::reset();
+
 	string input(reinterpret_cast<char const*>(_data), _size);
 	AssemblyStack stack(
 		langutil::EVMVersion(),

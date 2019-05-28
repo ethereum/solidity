@@ -187,6 +187,7 @@ BuiltinFunctionForEVM const* EVMDialect::builtin(YulString _name) const
 EVMDialect const& EVMDialect::looseAssemblyForEVM(langutil::EVMVersion _version)
 {
 	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Loose, false, _version);
 	return *dialects[_version];
@@ -195,6 +196,7 @@ EVMDialect const& EVMDialect::looseAssemblyForEVM(langutil::EVMVersion _version)
 EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
 {
 	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Strict, false, _version);
 	return *dialects[_version];
@@ -203,6 +205,7 @@ EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version
 EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
 {
 	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Strict, true, _version);
 	return *dialects[_version];
@@ -211,6 +214,7 @@ EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _
 EVMDialect const& EVMDialect::yulForEVM(langutil::EVMVersion _version)
 {
 	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Yul, false, _version);
 	return *dialects[_version];

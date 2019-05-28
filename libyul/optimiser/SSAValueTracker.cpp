@@ -56,8 +56,7 @@ void SSAValueTracker::setValue(YulString _name, Expression const* _value)
 		OptimizerException,
 		"Source needs to be disambiguated."
 	);
-	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	if (!_value)
-		_value = &zero;
+		_value = &m_zero;
 	m_values[_name] = _value;
 }

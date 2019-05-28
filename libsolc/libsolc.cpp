@@ -21,10 +21,11 @@
  */
 
 #include <libsolc/libsolc.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/JSON.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
+#include <libyul/YulString.h>
+#include <libdevcore/Common.h>
+#include <libdevcore/JSON.h>
 
 #include <string>
 
@@ -100,6 +101,9 @@ extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _
 }
 extern void solidity_free() noexcept
 {
+	// This is called right before each compilation, but not at the end, so additional memory
+	// can be freed here.
+	yul::YulStringRepository::reset();
 	s_outputBuffer.clear();
 }
 }

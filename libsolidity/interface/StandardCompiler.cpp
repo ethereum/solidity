@@ -965,6 +965,8 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 {
+	YulStringRepository::reset();
+
 	try
 	{
 		auto parsed = parseInput(_input);

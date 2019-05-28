@@ -63,6 +63,15 @@ BuiltinFunction const* WasmDialect::builtin(YulString _name) const
 		return nullptr;
 }
 
+WasmDialect const& WasmDialect::instance()
+{
+	static std::unique_ptr<WasmDialect> dialect;
+	static YulStringRepository::ResetCallback callback{[&] { dialect.reset(); }};
+	if (!dialect)
+		dialect = make_unique<WasmDialect>();
+	return *dialect;
+}
+
 void WasmDialect::addFunction(string _name, size_t _params, size_t _returns)
 {
 	YulString name{move(_name)};

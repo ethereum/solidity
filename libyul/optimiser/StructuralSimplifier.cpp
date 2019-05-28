@@ -131,9 +131,8 @@ bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 			return false;
 		},
 		[](Literal const& _literal) -> bool {
-			static YulString const trueString("true");
 			return
-				(_literal.kind == LiteralKind::Boolean && _literal.value == trueString) ||
+				(_literal.kind == LiteralKind::Boolean && _literal.value == "true"_yulstring) ||
 				(_literal.kind == LiteralKind::Number && valueOfNumberLiteral(_literal) != u256(0))
 			;
 		}
@@ -149,9 +148,8 @@ bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 			return false;
 		},
 		[](Literal const& _literal) -> bool {
-			static YulString const falseString("false");
 			return
-				(_literal.kind == LiteralKind::Boolean && _literal.value == falseString) ||
+				(_literal.kind == LiteralKind::Boolean && _literal.value == "false"_yulstring) ||
 				(_literal.kind == LiteralKind::Number && valueOfNumberLiteral(_literal) == u256(0))
 			;
 		}

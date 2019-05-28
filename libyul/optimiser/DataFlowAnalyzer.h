@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/YulString.h>
+#include <libyul/AsmData.h>
 
 #include <map>
 #include <set>
@@ -85,6 +86,9 @@ protected:
 		std::set<YulString> variables;
 		bool isFunction;
 	};
+	/// Special expression whose address will be used in m_value.
+	/// YulString does not need to be reset because DataFlowAnalyzer is short-lived.
+	Expression const m_zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
 	Dialect const& m_dialect;
