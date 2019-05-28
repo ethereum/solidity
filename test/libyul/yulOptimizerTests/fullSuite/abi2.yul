@@ -1,3 +1,4 @@
+// We require constantinople because numbers are represented using shifts.
 {
 	// This ignores many of the encoding / decoding functions. Over time,
 	// we should add them all here.
@@ -1071,13 +1072,14 @@
 }
 // ====
 // step: fullSuite
+// EVMVersion: >=constantinople
 // ----
 // {
 //     {
 //         let _1 := mload(1)
 //         let _2 := mload(0)
 //         if slt(sub(_1, _2), 64) { revert(0, 0) }
-//         sstore(0, and(calldataload(_2), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
+//         sstore(0, and(calldataload(_2), sub(shl(160, 1), 1)))
 //         let x0, x1, x2, x3, x4 := abi_decode_tuple_t_addresst_uint256t_bytes_calldata_ptrt_enum$_Operation_$1949(mload(7), mload(8))
 //         sstore(x1, x0)
 //         sstore(x3, x2)
@@ -1087,7 +1089,7 @@
 //     function abi_decode_tuple_t_addresst_uint256t_bytes_calldata_ptrt_enum$_Operation_$1949(headStart, dataEnd) -> value0, value1, value2, value3, value4
 //     {
 //         if slt(sub(dataEnd, headStart), 128) { revert(value4, value4) }
-//         value0 := and(calldataload(headStart), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
+//         value0 := and(calldataload(headStart), sub(shl(160, 1), 1))
 //         value1 := calldataload(add(headStart, 32))
 //         let offset := calldataload(add(headStart, 64))
 //         let _1 := 0xffffffffffffffff
@@ -1107,7 +1109,7 @@
 //     {
 //         tail := add(headStart, 352)
 //         mstore(headStart, value0)
-//         let _1 := 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+//         let _1 := sub(shl(160, 1), 1)
 //         mstore(add(headStart, 32), and(value1, _1))
 //         mstore(add(headStart, 64), value2)
 //         mstore(add(headStart, 96), value3)

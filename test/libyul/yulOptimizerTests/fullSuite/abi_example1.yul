@@ -1,3 +1,4 @@
+// We require constantinople because numbers are represented using shifts.
 {
     let x := abi_encode_t_array$_t_array$_t_contract$_C_$55_$3_memory_$dyn_memory_ptr_to_t_array$_t_array$_t_address_$3_memory_$dyn_memory_ptr(mload(0), 0x20)
     let a, b, c, d := abi_decode_tuple_t_uint256t_uint256t_array$_t_uint256_$dyn_memory_ptrt_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(mload(0x20), mload(0x40))
@@ -456,6 +457,7 @@
     }
 }
 // ====
+// EVMVersion: >=constantinople
 // step: fullSuite
 // ----
 // {
@@ -546,7 +548,7 @@
 //         let i := 0
 //         for { } lt(i, 0x3) { i := add(i, 1) }
 //         {
-//             mstore(pos, and(mload(srcPtr), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
+//             mstore(pos, and(mload(srcPtr), sub(shl(160, 1), 1)))
 //             srcPtr := add(srcPtr, 0x20)
 //             pos := add(pos, 0x20)
 //         }

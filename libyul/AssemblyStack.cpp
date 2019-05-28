@@ -33,6 +33,7 @@
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/EWasmObjectCompiler.h>
+#include <libyul/optimiser/Metrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
 
@@ -98,7 +99,7 @@ void AssemblyStack::optimize()
 
 	m_analysisSuccessful = false;
 	solAssert(m_parserResult, "");
-	optimize(*m_parserResult);
+	optimize(*m_parserResult, true);
 	solAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
 
@@ -138,15 +139,18 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _o
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _evm15, _optimize);
 }
 
-void AssemblyStack::optimize(Object& _object)
+void AssemblyStack::optimize(Object& _object, bool _isCreation)
 {
 	solAssert(_object.code, "");
 	solAssert(_object.analysisInfo, "");
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
-			optimize(*subObject);
+			optimize(*subObject, false);
+	EVMDialect const& dialect = dynamic_cast<EVMDialect const&>(languageToDialect(m_language, m_evmVersion));
+	GasMeter meter(dialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
 	OptimiserSuite::run(
-		languageToDialect(m_language, m_evmVersion),
+		dialect,
+		meter,
 		*_object.code,
 		*_object.analysisInfo,
 		m_optimiserSettings.optimizeStackAllocation

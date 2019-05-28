@@ -15,7 +15,9 @@ Compiler Features:
  * SMTChecker: Support tuples and function calls with multiple return values.
  * SMTChecker: Support ``delete``.
  * SMTChecker: Inline external function calls to ``this``.
+ * Optimizer: Add rules for multiplication and division by left-shifted one.
  * Yul Optimizer: Simplify single-run ``for`` loops to ``if`` statements.
+ * Yul Optimizer: Optimize representation of numbers.
  * Yul Optimizer: Do not inline recursive functions.
 
 

@@ -99,7 +99,7 @@ private:
 
 	void compileEVM(yul::AbstractAssembly& _assembly, bool _evm15, bool _optimize) const;
 
-	void optimize(yul::Object& _object);
+	void optimize(yul::Object& _object, bool _isCreation);
 
 	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;

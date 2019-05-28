@@ -37,20 +37,6 @@ using namespace yul::test;
 namespace
 {
 
-u256 exp256(u256 _base, u256 _exponent)
-{
-	using boost::multiprecision::limb_type;
-	u256 result = 1;
-	while (_exponent)
-	{
-		if (boost::multiprecision::bit_test(_exponent, 0))
-			result *= _base;
-		_base *= _base;
-		_exponent >>= 1;
-	}
-	return result;
-}
-
 /// Reads 32 bytes from @a _data at position @a _offset bytes while
 /// interpreting @a _data to be padded with an infinite number of zero
 /// bytes beyond its end.

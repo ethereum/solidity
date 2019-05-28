@@ -91,6 +91,20 @@ inline u256 s2u(s256 _u)
 		return u256(c_end + _u);
 }
 
+inline u256 exp256(u256 _base, u256 _exponent)
+{
+	using boost::multiprecision::limb_type;
+	u256 result = 1;
+	while (_exponent)
+	{
+		if (boost::multiprecision::bit_test(_exponent, 0))
+			result *= _base;
+		_base *= _base;
+		_exponent >>= 1;
+	}
+	return result;
+}
+
 inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 {
 	std::ostringstream ss;
