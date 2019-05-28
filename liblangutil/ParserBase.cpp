@@ -137,7 +137,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 void ParserBase::increaseRecursionDepth()
 {
 	m_recursionDepth++;
-	if (m_recursionDepth >= 2560)
+	if (m_recursionDepth >= 2000)
 		fatalParserError("Maximum recursion depth reached during parsing.");
 }
 
