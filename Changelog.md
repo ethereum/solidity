@@ -21,7 +21,7 @@ Compiler Features:
  * Yul Optimizer: Optimize representation of numbers.
  * Yul Optimizer: Do not inline recursive functions.
  * Yul Optimizer: Do not remove instructions that affect ``msize()`` if ``msize()`` is used.
-
+ * Commandline Interface: Experimental parser error recovery via the ``--error-recovery`` commandline switch.
 
 Bugfixes:
  * Code Generator: Explicitly turn uninitialized internal function pointers into invalid functions when loaded from storage.

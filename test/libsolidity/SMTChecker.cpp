@@ -42,14 +42,16 @@ protected:
 		std::string const& _source,
 		bool _reportWarnings = false,
 		bool _insertVersionPragma = true,
-		bool _allowMultipleErrors = false
+		bool _allowMultipleErrors = false,
+		bool _allowRecoveryErrors = false
 	)
 	{
 		return AnalysisFramework::parseAnalyseAndReturnError(
 			"pragma experimental SMTChecker;\n" + _source,
 			_reportWarnings,
 			_insertVersionPragma,
-			_allowMultipleErrors
+			_allowMultipleErrors,
+			_allowRecoveryErrors
 		);
 	}
 };

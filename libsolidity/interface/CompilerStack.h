@@ -132,6 +132,14 @@ public:
 	/// Must be set before parsing.
 	void setOptimiserSettings(OptimiserSettings _settings);
 
+	/// Set whether or not parser error is desired.
+	/// When called without an argument it will revert to the default.
+	/// Must be set before parsing.
+	void setParserErrorRecovery(bool _wantErrorRecovery = false)
+	{
+		m_parserErrorRecovery = _wantErrorRecovery;
+	}
+
 	/// Set the EVM version used before running compile.
 	/// When called without an argument it will revert to the default version.
 	/// Must be set before parsing.
@@ -386,6 +394,7 @@ private:
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
+	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
 	bool m_release = VersionIsRelease;
 };

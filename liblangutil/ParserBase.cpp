@@ -47,7 +47,7 @@ Token ParserBase::peekNextToken() const
 	return m_scanner->peekNextToken();
 }
 
-std::string ParserBase::currentLiteral() const
+string ParserBase::currentLiteral() const
 {
 	return m_scanner->currentLiteral();
 }
@@ -57,30 +57,79 @@ Token ParserBase::advance()
 	return m_scanner->next();
 }
 
+string ParserBase::tokenName(Token _token)
+{
+	if (_token == Token::Identifier)
+		return "identifier";
+	else if (_token == Token::EOS)
+		return "end of source";
+	else if (TokenTraits::isReservedKeyword(_token))
+		return "reserved keyword '" + TokenTraits::friendlyName(_token) + "'";
+	else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
+	{
+		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
+		return "'" + elemTypeName.toString() + "'";
+	}
+	else
+		return "'" + TokenTraits::friendlyName(_token) + "'";
+}
+
 void ParserBase::expectToken(Token _value, bool _advance)
 {
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		auto tokenName = [this](Token _token)
-		{
-			if (_token == Token::Identifier)
-				return string("identifier");
-			else if (_token == Token::EOS)
-				return string("end of source");
-			else if (TokenTraits::isReservedKeyword(_token))
-				return string("reserved keyword '") + TokenTraits::friendlyName(_token) + "'";
-			else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
-			{
-				ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-				return string("'") + elemTypeName.toString() + "'";
-			}
-			else
-				return string("'") + TokenTraits::friendlyName(_token) + "'";
-		};
-
-		fatalParserError(string("Expected ") + tokenName(_value) + string(" but got ") + tokenName(tok));
+		string const expectedToken = ParserBase::tokenName(_value);
+		if (m_parserErrorRecovery)
+			parserError("Expected " + expectedToken + " but got " + tokenName(tok));
+		else
+			fatalParserError("Expected " + expectedToken + " but got " + tokenName(tok));
+		// Do not advance so that recovery can sync or make use of the current token.
+		// This is especially useful if the expected token
+		// is the only one that is missing and is at the end of a construct.
+		// "{ ... ; }" is such an example.
+		//        ^
+		_advance = false;
 	}
+	if (_advance)
+		m_scanner->next();
+}
+
+void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentNodeName, bool _advance)
+{
+	Token tok = m_scanner->currentToken();
+	if (tok != _value)
+	{
+		int startPosition = position();
+		SourceLocation errorLoc = SourceLocation{startPosition, endPosition(), source()};
+		while (m_scanner->currentToken() != _value && m_scanner->currentToken() != Token::EOS)
+			m_scanner->next();
+
+		string const expectedToken = ParserBase::tokenName(_value);
+		string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " +  ParserBase::tokenName(tok) +  "instead.";
+		if (m_scanner->currentToken() == Token::EOS)
+		{
+			// rollback to where the token started, and raise exception to be caught at a higher level.
+			m_scanner->setPosition(startPosition);
+			m_inParserRecovery = true;
+			fatalParserError(errorLoc, msg);
+		}
+		else
+		{
+			if (m_inParserRecovery)
+				parserWarning("Recovered in " + _currentNodeName + " at " + expectedToken + ".");
+			else
+				parserError(errorLoc, msg + "Recovered at next " + expectedToken);
+			m_inParserRecovery = false;
+		}
+	}
+	else if (m_inParserRecovery)
+	{
+		string expectedToken = ParserBase::tokenName(_value);
+		parserWarning("Recovered in " + _currentNodeName + " at " + expectedToken + ".");
+		m_inParserRecovery = false;
+	}
+
 	if (_advance)
 		m_scanner->next();
 }
@@ -98,12 +147,27 @@ void ParserBase::decreaseRecursionDepth()
 	m_recursionDepth--;
 }
 
+void ParserBase::parserWarning(string const& _description)
+{
+	m_errorReporter.warning(SourceLocation{position(), endPosition(), source()}, _description);
+}
+
+void ParserBase::parserError(SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.parserError(_location, _description);
+}
+
 void ParserBase::parserError(string const& _description)
 {
-	m_errorReporter.parserError(SourceLocation{position(), endPosition(), source()}, _description);
+	parserError(SourceLocation{position(), endPosition(), source()}, _description);
 }
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	m_errorReporter.fatalParserError(SourceLocation{position(), endPosition(), source()}, _description);
+	fatalParserError(SourceLocation{position(), endPosition(), source()}, _description);
+}
+
+void ParserBase::fatalParserError(SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.fatalParserError(_location, _description);
 }
