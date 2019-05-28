@@ -44,15 +44,12 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	string const& _source,
 	bool _reportWarnings,
 	bool _insertVersionPragma,
-	bool _allowMultipleErrors,
-	bool _allowRecoveryErrors
+	bool _allowMultipleErrors
 )
 {
 	compiler().reset();
 	compiler().setSources({{"", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source}});
 	compiler().setEVMVersion(dev::test::Options::get().evmVersion());
-	compiler().setParserErrorRecovery(_allowRecoveryErrors);
-	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
 	if (!compiler().parse())
 	{
 		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors());
