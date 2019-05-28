@@ -766,5 +766,9 @@
             "DynamicConstructorArgumentsClippedABIV2"
         ],
         "released": "2019-04-30"
+    },
+    "0.5.9": {
+        "bugs": [],
+        "released": "2019-05-28"
     }
 }
