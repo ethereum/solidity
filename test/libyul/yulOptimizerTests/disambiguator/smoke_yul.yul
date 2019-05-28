@@ -3,5 +3,4 @@
 // step: disambiguator
 // yul: true
 // ----
-// {
-// }
+// { }

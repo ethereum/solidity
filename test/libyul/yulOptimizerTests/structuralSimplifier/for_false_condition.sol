@@ -6,6 +6,4 @@
 // ====
 // step: structuralSimplifier
 // ----
-// {
-//     let a := 42
-// }
+// { let a := 42 }

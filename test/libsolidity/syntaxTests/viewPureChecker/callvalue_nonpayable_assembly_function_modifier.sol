@@ -11,4 +11,3 @@ contract C
     }
 }
 // ----
-// TypeError: (99-100): This modifier uses "msg.value" or "callvalue()" and thus the function has to be payable or internal.

@@ -21,6 +21,9 @@
 #include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libsolidity/interface/Version.h>
 
+#include <libyul/optimiser/Semantics.h>
+#include <libyul/AsmData.h>
+
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>
 
@@ -252,6 +255,23 @@ bool SyntaxChecker::visit(UnaryOperation const& _operation)
 		m_errorReporter.syntaxError(_operation.location(), "Use of unary + is disallowed.");
 
 	return true;
+}
+
+bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
+{
+	if (!m_useYulOptimizer)
+		return false;
+
+	if (yul::SideEffectsCollector(
+		_inlineAssembly.dialect(),
+		_inlineAssembly.operations()
+	).containsMSize())
+		m_errorReporter.syntaxError(
+			_inlineAssembly.location(),
+			"The msize instruction cannot be used when the Yul optimizer is activated because "
+			"it can change its semantics. Either disable the Yul optimizer or do not use the instruction."
+		);
+	return false;
 }
 
 bool SyntaxChecker::visit(PlaceholderStatement const&)

@@ -39,7 +39,7 @@ public:
 	}
 	SMTCheckerTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
 private:
 	std::vector<std::string> hashesFromJson(Json::Value const& _jsonObj, std::string const& _auxInput, std::string const& _smtlib);

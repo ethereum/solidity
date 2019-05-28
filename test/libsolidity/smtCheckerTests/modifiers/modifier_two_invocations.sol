@@ -17,5 +17,3 @@ contract C
 	}
 }
 // ----
-// Warning: (137-142): Condition is always true.
-// Warning: (155-164): Condition is always true.

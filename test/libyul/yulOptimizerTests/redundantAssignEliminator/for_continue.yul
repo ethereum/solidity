@@ -20,17 +20,10 @@
 // ----
 // {
 //     let x
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//     }
+//     for { } calldataload(0) { }
 //     {
 //         x := 2
-//         if callvalue()
-//         {
-//             continue
-//         }
+//         if callvalue() { continue }
 //         mstore(x, 2)
 //     }
 // }

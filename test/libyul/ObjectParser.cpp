@@ -228,14 +228,10 @@ BOOST_AUTO_TEST_CASE(to_string)
 	string expectation = R"(object "O" {
 	code {
 		let x := mload(0)
-		if x
-		{
-			sstore(0, 1)
-		}
+		if x { sstore(0, 1) }
 	}
 	object "i" {
-		code {
-		}
+		code { }
 		data "j" hex"646566"
 	}
 	data "j" hex"616263"

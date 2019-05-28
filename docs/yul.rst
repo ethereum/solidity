@@ -47,20 +47,21 @@ if the backend changes. For a list of mandatory built-in functions, see the sect
 
 The following example program assumes that the EVM opcodes ``mul``, ``div``
 and ``mod`` are available either natively or as functions and computes exponentiation.
+As per the warning above, the following code is untyped and can be compiled using ``solc --strict-assembly``.
 
 .. code::
 
     {
-        function power(base:u256, exponent:u256) -> result:u256
+        function power(base, exponent) -> result
         {
             switch exponent
-            case 0:u256 { result := 1:u256 }
-            case 1:u256 { result := base }
+            case 0 { result := 1 }
+            case 1 { result := base }
             default
             {
-                result := power(mul(base, base), div(exponent, 2:u256))
-                switch mod(exponent, 2:u256)
-                    case 1:u256 { result := mul(base, result) }
+                result := power(mul(base, base), div(exponent, 2))
+                switch mod(exponent, 2)
+                    case 1 { result := mul(base, result) }
             }
         }
     }
@@ -72,10 +73,10 @@ and ``add`` to be available.
 .. code::
 
     {
-        function power(base:u256, exponent:u256) -> result:u256
+        function power(base, exponent) -> result
         {
-            result := 1:u256
-            for { let i := 0:u256 } lt(i, exponent) { i := add(i, 1:u256) }
+            result := 1
+            for { let i := 0 } lt(i, exponent) { i := add(i, 1) }
             {
                 result := mul(result, base)
             }
@@ -593,15 +594,21 @@ An example Yul Object is shown below:
     // are in scope without nested access.
     object "Contract1" {
         code {
+            function allocate(size) -> ptr {
+                ptr := mload(0x40)
+                if iszero(ptr) { ptr := 0x60 }
+                mstore(0x40, add(ptr, size))
+            }
+
             // first create "runtime.Contract2"
-            let size = datasize("runtime.Contract2")
-            let offset = allocate(size)
+            let size := datasize("runtime.Contract2")
+            let offset := allocate(size)
             // This will turn into a memory->memory copy for eWASM and
             // a codecopy for EVM
             datacopy(offset, dataoffset("runtime.Contract2"), size)
             // constructor parameter is a single number 0x1234
             mstore(add(offset, size), 0x1234)
-            create(offset, add(size, 32))
+            pop(create(offset, add(size, 32), 0))
 
             // now return the runtime object (this is
             // constructor code)
@@ -617,16 +624,22 @@ An example Yul Object is shown below:
 
         object "runtime" {
             code {
+                function allocate(size) -> ptr {
+                    ptr := mload(0x40)
+                    if iszero(ptr) { ptr := 0x60 }
+                    mstore(0x40, add(ptr, size))
+                }
+
                 // runtime code
 
-                let size = datasize("Contract2")
-                let offset = allocate(size)
+                let size := datasize("Contract2")
+                let offset := allocate(size)
                 // This will turn into a memory->memory copy for eWASM and
                 // a codecopy for EVM
                 datacopy(offset, dataoffset("Contract2"), size)
                 // constructor parameter is a single number 0x1234
                 mstore(add(offset, size), 0x1234)
-                create(offset, add(size, 32))
+                pop(create(offset, add(size, 32), 0))
             }
 
             // Embedded object. Use case is that the outside is a factory contract,
@@ -640,9 +653,9 @@ An example Yul Object is shown below:
                     code {
                         // code here ...
                     }
-                 }
+                }
 
-                 data "Table1" hex"4123"
+                data "Table1" hex"4123"
             }
         }
     }

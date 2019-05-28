@@ -26,6 +26,8 @@
 
 #include <liblangutil/EVMVersion.h>
 
+#include <libdevcore/Common.h>
+
 #include <string>
 #include <memory>
 #include <vector>
@@ -39,6 +41,7 @@ class ContractDefinition;
 class VariableDeclaration;
 class FunctionDefinition;
 class Expression;
+class YulUtilFunctions;
 
 /**
  * Class that contains contextual information during IR generation.
@@ -62,7 +65,16 @@ public:
 
 
 	std::string addLocalVariable(VariableDeclaration const& _varDecl);
-	std::string variableName(VariableDeclaration const& _varDecl);
+	bool isLocalVariable(VariableDeclaration const& _varDecl) const { return m_localVariables.count(&_varDecl); }
+	std::string localVariableName(VariableDeclaration const& _varDecl);
+
+	void addStateVariable(VariableDeclaration const& _varDecl, u256 _storageOffset, unsigned _byteOffset);
+	bool isStateVariable(VariableDeclaration const& _varDecl) const { return m_stateVariables.count(&_varDecl); }
+	std::pair<u256, unsigned> storageLocationOfVariable(VariableDeclaration const& _varDecl) const
+	{
+		return m_stateVariables.at(&_varDecl);
+	}
+
 	std::string functionName(FunctionDefinition const& _function);
 	FunctionDefinition const& virtualFunction(FunctionDefinition const& _functionDeclaration);
 	std::string virtualFunctionName(FunctionDefinition const& _functionDeclaration);
@@ -71,14 +83,24 @@ public:
 	/// @returns the variable (or comma-separated list of variables) that contain
 	/// the value of the given expression.
 	std::string variable(Expression const& _expression);
+	/// @returns the variable of a multi-variable expression. Variables are numbered
+	/// starting from 1.
+	std::string variablePart(Expression const& _expression, size_t _part);
 
 	std::string internalDispatch(size_t _in, size_t _out);
+
+	/// @returns a new copy of the utility function generator (but using the same function set).
+	YulUtilFunctions utils();
+
+	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
 
 private:
 	langutil::EVMVersion m_evmVersion;
 	OptimiserSettings m_optimiserSettings;
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 	std::map<VariableDeclaration const*, std::string> m_localVariables;
+	/// Storage offsets of state variables
+	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functions;
 	size_t m_varCounter = 0;
 };

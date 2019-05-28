@@ -7,11 +7,7 @@
 // ----
 // {
 //     function f()
-//     {
-//         let x := 0
-//     }
+//     { let x := 0 }
 //     function g()
-//     {
-//         let x := 0
-//     }
+//     { let x := 0 }
 // }

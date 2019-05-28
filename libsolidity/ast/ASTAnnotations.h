@@ -35,8 +35,9 @@
 
 namespace yul
 {
-	struct AsmAnalysisInfo;
-	struct Identifier;
+struct AsmAnalysisInfo;
+struct Identifier;
+struct Dialect;
 }
 
 namespace dev

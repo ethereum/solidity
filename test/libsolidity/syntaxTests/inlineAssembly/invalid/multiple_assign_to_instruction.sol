@@ -7,4 +7,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (102-105): Cannot use instruction names for identifier names.
+// ParserError: (102-105): Cannot use builtin function name "sub" as identifier name.

@@ -23,19 +23,42 @@
 #include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
 
 #include <libyul/AsmData.h>
+#include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <liblangutil/Exceptions.h>
 
 #include <libdevcore/FixedHash.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/algorithm/cxx11/all_of.hpp>
+
+#include <ostream>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
 using namespace yul::test;
 
+void InterpreterState::dumpTraceAndState(ostream& _out) const
+{
+	_out << "Trace:" << endl;
+	for (auto const& line: trace)
+		_out << "  " << line << endl;
+	_out << "Memory dump:\n";
+	for (size_t i = 0; i < memory.size(); i += 0x20)
+	{
+		bytesConstRef data(memory.data() + i, 0x20);
+		if (boost::algorithm::all_of_equal(data, 0))
+			continue;
+		_out << "  " << std::hex << std::setw(4) << i << ": " << toHex(data.toBytes()) << endl;
+	}
+	_out << "Storage dump:" << endl;
+	for (auto const& slot: storage)
+		if (slot.second != h256(0))
+			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+}
 
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
 {
@@ -110,6 +133,7 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 		if (m_state.loopState == LoopState::Break)
 			break;
 
+		m_state.loopState = LoopState::Default;
 		(*this)(_forLoop.post);
 	}
 	m_state.loopState = LoopState::Default;
@@ -156,14 +180,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_variables, m_functions);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_variables, m_functions);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -203,9 +227,17 @@ void ExpressionEvaluator::operator()(FunctionalInstruction const& _instr)
 
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
-	solAssert(m_functions.count(_funCall.functionName.name), "");
 	evaluateArgs(_funCall.arguments);
 
+	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+		{
+			EVMInstructionInterpreter interpreter(m_state);
+			setValue(interpreter.evalBuiltin(*fun, values()));
+			return;
+		}
+
+	solAssert(m_functions.count(_funCall.functionName.name), "");
 	FunctionDefinition const& fun = *m_functions.at(_funCall.functionName.name);
 	solAssert(m_values.size() == fun.parameters.size(), "");
 	map<YulString, u256> variables;
@@ -216,7 +248,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 
 	// TODO function name lookup could be a little more efficient,
 	// we have to copy the list here.
-	Interpreter interpreter(m_state, variables, m_functions);
+	Interpreter interpreter(m_state, m_dialect, variables, m_functions);
 	interpreter(fun.body);
 
 	m_values.clear();

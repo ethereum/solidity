@@ -88,7 +88,8 @@ void interpret(string const& _source)
 	InterpreterState state;
 	state.maxTraceSize = 10000;
 	state.maxMemSize = 0x20000000;
-	Interpreter interpreter(state);
+	Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
+	Interpreter interpreter(state, dialect);
 	try
 	{
 		interpreter(*ast);
@@ -97,15 +98,7 @@ void interpret(string const& _source)
 	{
 	}
 
-	cout << "Trace:" << endl;
-	for (auto const& line: interpreter.trace())
-		cout << "  " << line << endl;
-	cout << "Memory dump:" << endl;
-	for (size_t i = 0; i < state.memory.size(); i += 0x20)
-		cout << "  " << std::hex << std::setw(4) << i << ": " << toHex(bytesConstRef(state.memory.data() + i, 0x20).toBytes()) << endl;
-	cout << "Storage dump:" << endl;
-	for (auto const& slot: state.storage)
-		cout << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+	state.dumpTraceAndState(cout);
 }
 
 }

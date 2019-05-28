@@ -25,6 +25,7 @@
 
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/OptimiserSettings.h>
+#include <libsolidity/interface/Version.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
@@ -130,6 +131,14 @@ public:
 	/// Changes the optimiser settings.
 	/// Must be set before parsing.
 	void setOptimiserSettings(OptimiserSettings _settings);
+
+	/// Set whether or not parser error is desired.
+	/// When called without an argument it will revert to the default.
+	/// Must be set before parsing.
+	void setParserErrorRecovery(bool _wantErrorRecovery = false)
+	{
+		m_parserErrorRecovery = _wantErrorRecovery;
+	}
 
 	/// Set the EVM version used before running compile.
 	/// When called without an argument it will revert to the default version.
@@ -261,6 +270,8 @@ public:
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
+	/// Overwrites the release/prerelease flag. Should only be used for testing.
+	void overwriteReleaseFlag(bool release) { m_release = release; }
 private:
 	/// The state per source unit. Filled gradually during parsing.
 	struct Source
@@ -269,9 +280,11 @@ private:
 		std::shared_ptr<SourceUnit> ast;
 		h256 mutable keccak256HashCached;
 		h256 mutable swarmHashCached;
+		std::string mutable ipfsUrlCached;
 		void reset() { *this = Source(); }
 		h256 const& keccak256() const;
 		h256 const& swarmHash() const;
+		std::string const& ipfsUrl() const;
 	};
 
 	/// The state per contract. Filled gradually during compilation.
@@ -333,7 +346,7 @@ private:
 	std::string createMetadata(Contract const& _contract) const;
 
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
-	static bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);
+	bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);
 
 	/// @returns the computer source mapping string.
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
@@ -381,7 +394,9 @@ private:
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
+	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
+	bool m_release = VersionIsRelease;
 };
 
 }

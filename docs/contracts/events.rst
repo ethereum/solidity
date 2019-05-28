@@ -59,7 +59,9 @@ logs that match a topic with a certain address value:
 
 The hash of the signature of the event is one of the topics, except if you
 declared the event with the ``anonymous`` specifier. This means that it is
-not possible to filter for specific anonymous events by name.
+not possible to filter for specific anonymous events by name, you can
+only filter by the contract address. The advantage of anonymous events
+is that they are cheaper to deploy and call.
 
 ::
 

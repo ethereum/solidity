@@ -7,6 +7,4 @@
 // ====
 // step: deadCodeEliminator
 // ----
-// {
-//     stop()
-// }
+// { stop() }

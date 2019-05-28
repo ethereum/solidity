@@ -22,6 +22,7 @@
 
 #include <test/tools/yulInterpreter/Interpreter.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmData.h>
 
 #include <libevmasm/Instruction.h>
@@ -35,20 +36,6 @@ using namespace yul::test;
 
 namespace
 {
-
-u256 exp256(u256 _base, u256 _exponent)
-{
-	using boost::multiprecision::limb_type;
-	u256 result = 1;
-	while (_exponent)
-	{
-		if (static_cast<limb_type>(_exponent) & 1)	// If exponent is odd.
-			result *= _base;
-		_base *= _base;
-		_exponent >>= 1;
-	}
-	return result;
-}
 
 /// Reads 32 bytes from @a _data at position @a _offset bytes while
 /// interpreting @a _data to be padded with an infinite number of zero
@@ -185,7 +172,7 @@ u256 EVMInstructionInterpreter::eval(
 	// --------------- blockchain stuff ---------------
 	case Instruction::KECCAK256:
 	{
-		if (!logMemoryRead(arg[0], arg[1]))
+		if (!accessMemory(arg[0], arg[1]))
 			return u256("0x1234cafe1234cafe1234cafe") + arg[0];
 		uint64_t offset = uint64_t(arg[0] & uint64_t(-1));
 		uint64_t size = uint64_t(arg[1] & uint64_t(-1));
@@ -206,7 +193,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CALLDATASIZE:
 		return m_state.calldata.size();
 	case Instruction::CALLDATACOPY:
-		if (logMemoryWrite(arg[0], arg[2]))
+		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.calldata,
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
@@ -215,7 +202,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CODESIZE:
 		return m_state.code.size();
 	case Instruction::CODECOPY:
-		if (logMemoryWrite(arg[0], arg[2]))
+		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.code,
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
@@ -224,14 +211,12 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::GASPRICE:
 		return m_state.gasprice;
 	case Instruction::EXTCODESIZE:
-		logTrace(_instruction, arg);
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODEHASH:
-		logTrace(_instruction, arg);
 		return u256(keccak256(h256(arg[0] + 1)));
 	case Instruction::EXTCODECOPY:
 		logTrace(_instruction, arg);
-		if (logMemoryWrite(arg[1], arg[3]))
+		if (accessMemory(arg[1], arg[3]))
 			// TODO this way extcodecopy and codecopy do the same thing.
 			copyZeroExtended(
 				m_state.memory, m_state.code,
@@ -239,11 +224,10 @@ u256 EVMInstructionInterpreter::eval(
 			);
 		return 0;
 	case Instruction::RETURNDATASIZE:
-		logTrace(_instruction, arg);
 		return m_state.returndata.size();
 	case Instruction::RETURNDATACOPY:
 		logTrace(_instruction, arg);
-		if (logMemoryWrite(arg[0], arg[2]))
+		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
 				m_state.memory, m_state.returndata,
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
@@ -266,86 +250,81 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.gaslimit;
 	// --------------- memory / storage / logs ---------------
 	case Instruction::MLOAD:
-		if (logMemoryRead(arg[0], 0x20))
+		if (accessMemory(arg[0], 0x20))
 			return u256(*reinterpret_cast<h256 const*>(m_state.memory.data() + size_t(arg[0])));
 		else
 			return 0x1234 + arg[0];
 	case Instruction::MSTORE:
-		if (logMemoryWrite(arg[0], 0x20, h256(arg[1]).asBytes()))
+		if (accessMemory(arg[0], 0x20))
 			*reinterpret_cast<h256*>(m_state.memory.data() + size_t(arg[0])) = h256(arg[1]);
 		return 0;
 	case Instruction::MSTORE8:
-		if (logMemoryWrite(arg[0], 1, bytes{1, uint8_t(arg[1] & 0xff)}))
+		if (accessMemory(arg[0], 1))
 			m_state.memory[size_t(arg[0])] = uint8_t(arg[1] & 0xff);
 		return 0;
 	case Instruction::SLOAD:
-		logTrace(_instruction, arg);
 		return m_state.storage[h256(arg[0])];
 	case Instruction::SSTORE:
-		logTrace(Instruction::SSTORE, arg);
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
 	case Instruction::PC:
-		logTrace(_instruction);
 		return 0x77;
 	case Instruction::MSIZE:
-		logTrace(_instruction);
 		return m_state.msize;
 	case Instruction::GAS:
-		logTrace(_instruction);
 		return 0x99;
 	case Instruction::LOG0:
-		logMemoryRead(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG1:
-		logMemoryRead(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG2:
-		logMemoryRead(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG3:
-		logMemoryRead(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG4:
-		logMemoryRead(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
 	// --------------- calls ---------------
 	case Instruction::CREATE:
-		logMemoryRead(arg[1], arg[2]);
+		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
 		return 0xcccccc + arg[1];
 	case Instruction::CREATE2:
-		logMemoryRead(arg[2], arg[3]);
+		accessMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
 		return 0xdddddd + arg[1];
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata
-		logMemoryRead(arg[3], arg[4]);
-		logMemoryWrite(arg[5], arg[6]);
+		accessMemory(arg[3], arg[4]);
+		accessMemory(arg[5], arg[6]);
 		logTrace(_instruction, arg);
 		return arg[0] & 1;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
-		logMemoryRead(arg[2], arg[3]);
-		logMemoryWrite(arg[4], arg[5]);
+		accessMemory(arg[2], arg[3]);
+		accessMemory(arg[4], arg[5]);
 		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::RETURN:
 	{
 		bytes data;
-		if (logMemoryRead(arg[0], arg[1]))
+		if (accessMemory(arg[0], arg[1]))
 			data = bytesConstRef(m_state.memory.data() + size_t(arg[0]), size_t(arg[1])).toBytes();
 		logTrace(_instruction, arg, data);
 		throw ExplicitlyTerminated();
 	}
 	case Instruction::REVERT:
-		logMemoryRead(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		throw ExplicitlyTerminated();
 	case Instruction::INVALID:
@@ -444,20 +423,34 @@ u256 EVMInstructionInterpreter::eval(
 	return 0;
 }
 
-bool EVMInstructionInterpreter::logMemoryRead(u256 const& _offset, u256 const& _size)
+u256 EVMInstructionInterpreter::evalBuiltin(BuiltinFunctionForEVM const& _fun, const std::vector<u256>& _arguments)
 {
-	return logMemory(false, _offset, _size);
+	if (_fun.instruction)
+		return eval(*_fun.instruction, _arguments);
+	else if (_fun.name == "datasize"_yulstring)
+		return u256(keccak256(h256(_arguments.at(0)))) & 0xfff;
+	else if (_fun.name == "dataoffset"_yulstring)
+		return u256(keccak256(h256(_arguments.at(0) + 2))) & 0xfff;
+	else if (_fun.name == "datacopy"_yulstring)
+	{
+		// This is identical to codecopy.
+		if (accessMemory(_arguments.at(0), _arguments.at(2)))
+			copyZeroExtended(
+				m_state.memory,
+				m_state.code,
+				size_t(_arguments.at(0)),
+				size_t(_arguments.at(1) & size_t(-1)),
+				size_t(_arguments.at(2))
+			);
+	}
+	else
+		yulAssert(false, "Unknown builtin: " + _fun.name.str());
+	return 0;
 }
 
-bool EVMInstructionInterpreter::logMemoryWrite(u256 const& _offset, u256 const& _size, bytes const& _data)
-{
-	return logMemory(true, _offset, _size, _data);
-}
 
-bool EVMInstructionInterpreter::logMemory(bool _write, u256 const& _offset, u256 const& _size, bytes const& _data)
+bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _size)
 {
-	logTrace(_write ? "MSTORE_AT_SIZE" : "MLOAD_FROM_SIZE", {_offset, _size}, _data);
-
 	if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
 	{
 		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);

@@ -344,6 +344,39 @@ BOOST_AUTO_TEST_CASE(call_arguments_hex_string_lowercase)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(call_arguments_string)
+{
+	char const* source = R"(
+		// f(string): 0x20, 3, "any" ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(string)",
+		false,
+		fmt::encodeDyn(string{"any"})
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_return_string)
+{
+	char const* source = R"(
+		// f() -> 0x20, 3, "any"
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f()",
+		false,
+		fmt::encodeArgs(),
+		fmt::encodeDyn(string{"any"})
+	);
+}
+
 BOOST_AUTO_TEST_CASE(call_arguments_tuple)
 {
 	char const* source = R"(

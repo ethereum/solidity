@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/AsmData.h>
 
 #include <map>
 #include <set>
@@ -51,6 +52,9 @@ public:
 private:
 	void setValue(YulString _name, Expression const* _value);
 
+	/// Special expression whose address will be used in m_values.
+	/// YulString does not need to be reset because SSAValueTracker is short-lived.
+	Expression const m_zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	std::map<YulString, Expression const*> m_values;
 };
 

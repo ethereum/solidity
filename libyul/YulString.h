@@ -26,6 +26,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <functional>
 
 namespace yul
 {
@@ -34,7 +35,7 @@ namespace yul
 /// Owns the string data for all YulStrings, which can be referenced by a Handle.
 /// A Handle consists of an ID (that depends on the insertion order of YulStrings and is potentially
 /// non-deterministic) and a deterministic string hash.
-class YulStringRepository: boost::noncopyable
+class YulStringRepository
 {
 public:
 	struct Handle
@@ -43,13 +44,12 @@ public:
 		std::uint64_t hash;
 	};
 
-	YulStringRepository() = default;
-
 	static YulStringRepository& instance()
 	{
 		static YulStringRepository inst;
 		return inst;
 	}
+
 	Handle stringToHandle(std::string const& _string)
 	{
 		if (_string.empty())
@@ -62,6 +62,7 @@ public:
 		m_strings.emplace_back(std::make_shared<std::string>(_string));
 		size_t id = m_strings.size() - 1;
 		m_hashToID.emplace_hint(range.second, std::make_pair(h, id));
+
 		return Handle{id, h};
 	}
 	std::string const& idToString(size_t _id) const	{ return *m_strings.at(_id); }
@@ -79,8 +80,39 @@ public:
 		return hash;
 	}
 	static constexpr std::uint64_t emptyHash() { return 14695981039346656037u; }
+	/// Clear the repository.
+	/// Use with care - there cannot be any dangling YulString references.
+	/// If references need to be cleared manually, register the callback via
+	/// resetCallback.
+	static void reset()
+	{
+		for (auto const& cb: resetCallbacks())
+			cb();
+		instance() = YulStringRepository{};
+	}
+	/// Struct that registers a reset callback as a side-effect of its construction.
+	/// Useful as static local variable to register a reset callback once.
+	struct ResetCallback
+	{
+		ResetCallback(std::function<void()> _fun)
+		{
+			YulStringRepository::resetCallbacks().emplace_back(std::move(_fun));
+		}
+	};
 
 private:
+	YulStringRepository() = default;
+	YulStringRepository(YulStringRepository const&) = delete;
+	YulStringRepository(YulStringRepository&&) = default;
+	YulStringRepository& operator=(YulStringRepository const& _rhs) = delete;
+	YulStringRepository& operator=(YulStringRepository&& _rhs) = default;
+
+	static std::vector<std::function<void()>>& resetCallbacks()
+	{
+		static std::vector<std::function<void()>> callbacks;
+		return callbacks;
+	}
+
 	std::vector<std::shared_ptr<std::string>> m_strings = {std::make_shared<std::string>()};
 	std::unordered_multimap<std::uint64_t, size_t> m_hashToID = {{emptyHash(), 0}};
 };
@@ -121,6 +153,8 @@ public:
 	{
 		return YulStringRepository::instance().idToString(m_handle.id);
 	}
+
+	uint64_t hash() const { return m_handle.hash; }
 
 private:
 	/// Handle of the string. Assumes that the empty string has ID zero.

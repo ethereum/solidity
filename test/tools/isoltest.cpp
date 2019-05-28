@@ -147,7 +147,6 @@ bool TestTool::m_exitRequested = false;
 
 TestTool::Result TestTool::process()
 {
-	bool success;
 	bool formatted{!m_options.noColor};
 	std::stringstream outputMessages;
 
@@ -159,7 +158,21 @@ TestTool::Result TestTool::process()
 
 			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_options.ipcPath.string(), m_options.evmVersion()});
 			if (m_test->validateSettings(m_options.evmVersion()))
-				success = m_test->run(outputMessages, "  ", formatted);
+				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
+				{
+					case TestCase::TestResult::Success:
+						AnsiColorized(cout, formatted, {BOLD, GREEN}) << "OK" << endl;
+						return Result::Success;
+					default:
+						AnsiColorized(cout, formatted, {BOLD, RED}) << "FAIL" << endl;
+
+						AnsiColorized(cout, formatted, {BOLD, CYAN}) << "  Contract:" << endl;
+						m_test->printSource(cout, "    ", formatted);
+						m_test->printUpdatedSettings(cout, "    ", formatted);
+
+						cout << endl << outputMessages.str() << endl;
+						return result == TestCase::TestResult::FatalError ? Result::Exception : Result::Failure;
+				}
 			else
 			{
 				AnsiColorized(cout, formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
@@ -186,23 +199,6 @@ TestTool::Result TestTool::process()
 		AnsiColorized(cout, formatted, {BOLD, RED}) <<
 			"Unknown exception during test." << endl;
 		return Result::Exception;
-	}
-
-	if (success)
-	{
-		AnsiColorized(cout, formatted, {BOLD, GREEN}) << "OK" << endl;
-		return Result::Success;
-	}
-	else
-	{
-		AnsiColorized(cout, formatted, {BOLD, RED}) << "FAIL" << endl;
-
-		AnsiColorized(cout, formatted, {BOLD, CYAN}) << "  Contract:" << endl;
-		m_test->printSource(cout, "    ", formatted);
-		m_test->printUpdatedSettings(cout, "    ", formatted);
-
-		cout << endl << outputMessages.str() << endl;
-		return Result::Failure;
 	}
 }
 

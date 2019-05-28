@@ -26,6 +26,8 @@ namespace dev
 {
 namespace solidity
 {
+namespace smt
+{
 
 /**
  * This class computes information about which variables are modified in a certain subtree.
@@ -34,19 +36,25 @@ class VariableUsage: private ASTConstVisitor
 {
 public:
 	/// @param _outerCallstack the current callstack in the callers context.
-	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<FunctionDefinition const*> const& _outerCallstack);
+	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<CallableDeclaration const*> const& _outerCallstack);
 
 private:
 	void endVisit(Identifier const& _node) override;
+	void endVisit(IndexAccess const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
 	void endVisit(ModifierInvocation const& _node) override;
 	void endVisit(PlaceholderStatement const& _node) override;
 
+	/// Checks whether an identifier should be added to touchedVariables.
+	void checkIdentifier(Identifier const& _identifier);
+
 	std::set<VariableDeclaration const*> m_touchedVariables;
-	std::vector<FunctionDefinition const*> m_functionPath;
+	std::vector<CallableDeclaration const*> m_callStack;
+	CallableDeclaration const* m_lastCall = nullptr;
 };
 
+}
 }
 }

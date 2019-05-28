@@ -21,42 +21,179 @@
 
 using namespace std;
 using namespace dev;
-using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
 EncodingContext::EncodingContext(SolverInterface& _solver):
 	m_solver(_solver),
 	m_thisAddress(make_unique<SymbolicAddressVariable>("this", m_solver))
 {
-	auto sort = make_shared<smt::ArraySort>(
-		make_shared<smt::Sort>(smt::Kind::Int),
-		make_shared<smt::Sort>(smt::Kind::Int)
+	auto sort = make_shared<ArraySort>(
+		make_shared<Sort>(Kind::Int),
+		make_shared<Sort>(Kind::Int)
 	);
 	m_balances = make_unique<SymbolicVariable>(sort, "balances", m_solver);
 }
 
 void EncodingContext::reset()
 {
+	resetAllVariables();
+	m_expressions.clear();
+	m_globalContext.clear();
 	m_thisAddress->increaseIndex();
 	m_balances->increaseIndex();
 }
 
-smt::Expression EncodingContext::thisAddress()
+/// Variables.
+
+shared_ptr<SymbolicVariable> EncodingContext::variable(solidity::VariableDeclaration const& _varDecl)
+{
+	solAssert(knownVariable(_varDecl), "");
+	return m_variables[&_varDecl];
+}
+
+bool EncodingContext::createVariable(solidity::VariableDeclaration const& _varDecl)
+{
+	solAssert(!knownVariable(_varDecl), "");
+	auto const& type = _varDecl.type();
+	auto result = newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), m_solver);
+	m_variables.emplace(&_varDecl, result.second);
+	return result.first;
+}
+
+bool EncodingContext::knownVariable(solidity::VariableDeclaration const& _varDecl)
+{
+	return m_variables.count(&_varDecl);
+}
+
+void EncodingContext::resetVariable(solidity::VariableDeclaration const& _variable)
+{
+	newValue(_variable);
+	setUnknownValue(_variable);
+}
+
+void EncodingContext::resetVariables(set<solidity::VariableDeclaration const*> const& _variables)
+{
+	for (auto const* decl: _variables)
+		resetVariable(*decl);
+}
+
+void EncodingContext::resetVariables(function<bool(solidity::VariableDeclaration const&)> const& _filter)
+{
+	for_each(begin(m_variables), end(m_variables), [&](auto _variable)
+	{
+		if (_filter(*_variable.first))
+			this->resetVariable(*_variable.first);
+	});
+}
+
+void EncodingContext::resetAllVariables()
+{
+	resetVariables([&](solidity::VariableDeclaration const&) { return true; });
+}
+
+Expression EncodingContext::newValue(solidity::VariableDeclaration const& _decl)
+{
+	solAssert(knownVariable(_decl), "");
+	return m_variables.at(&_decl)->increaseIndex();
+}
+
+void EncodingContext::setZeroValue(solidity::VariableDeclaration const& _decl)
+{
+	solAssert(knownVariable(_decl), "");
+	setZeroValue(*m_variables.at(&_decl));
+}
+
+void EncodingContext::setZeroValue(SymbolicVariable& _variable)
+{
+	setSymbolicZeroValue(_variable, m_solver);
+}
+
+void EncodingContext::setUnknownValue(solidity::VariableDeclaration const& _decl)
+{
+	solAssert(knownVariable(_decl), "");
+	setUnknownValue(*m_variables.at(&_decl));
+}
+
+void EncodingContext::setUnknownValue(SymbolicVariable& _variable)
+{
+	setSymbolicUnknownValue(_variable, m_solver);
+}
+
+/// Expressions
+
+shared_ptr<SymbolicVariable> EncodingContext::expression(solidity::Expression const& _e)
+{
+	if (!knownExpression(_e))
+		createExpression(_e);
+	return m_expressions.at(&_e);
+}
+
+bool EncodingContext::createExpression(solidity::Expression const& _e, shared_ptr<SymbolicVariable> _symbVar)
+{
+	solAssert(_e.annotation().type, "");
+	if (knownExpression(_e))
+	{
+		expression(_e)->increaseIndex();
+		return false;
+	}
+	else if (_symbVar)
+	{
+		m_expressions.emplace(&_e, _symbVar);
+		return false;
+	}
+	else
+	{
+		auto result = newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), m_solver);
+		m_expressions.emplace(&_e, result.second);
+		return result.first;
+	}
+}
+
+bool EncodingContext::knownExpression(solidity::Expression const& _e) const
+{
+	return m_expressions.count(&_e);
+}
+
+/// Global variables and functions.
+
+shared_ptr<SymbolicVariable> EncodingContext::globalSymbol(string const& _name)
+{
+	solAssert(knownGlobalSymbol(_name), "");
+	return m_globalContext.at(_name);
+}
+
+bool EncodingContext::createGlobalSymbol(string const& _name, solidity::Expression const& _expr)
+{
+	solAssert(!knownGlobalSymbol(_name), "");
+	auto result = newSymbolicVariable(*_expr.annotation().type, _name, m_solver);
+	m_globalContext.emplace(_name, result.second);
+	setUnknownValue(*result.second);
+	return result.first;
+}
+
+bool EncodingContext::knownGlobalSymbol(string const& _var) const
+{
+	return m_globalContext.count(_var);
+}
+
+// Blockchain
+
+Expression EncodingContext::thisAddress()
 {
 	return m_thisAddress->currentValue();
 }
 
-smt::Expression EncodingContext::balance()
+Expression EncodingContext::balance()
 {
 	return balance(m_thisAddress->currentValue());
 }
 
-smt::Expression EncodingContext::balance(smt::Expression _address)
+Expression EncodingContext::balance(Expression _address)
 {
-	return smt::Expression::select(m_balances->currentValue(), move(_address));
+	return Expression::select(m_balances->currentValue(), move(_address));
 }
 
-void EncodingContext::transfer(smt::Expression _from, smt::Expression _to, smt::Expression _value)
+void EncodingContext::transfer(Expression _from, Expression _to, Expression _value)
 {
 	unsigned indexBefore = m_balances->index();
 	addBalance(_from, 0 - _value);
@@ -65,7 +202,7 @@ void EncodingContext::transfer(smt::Expression _from, smt::Expression _to, smt::
 	solAssert(indexAfter > indexBefore, "");
 	m_balances->increaseIndex();
 	/// Do not apply the transfer operation if _from == _to.
-	auto newBalances = smt::Expression::ite(
+	auto newBalances = Expression::ite(
 		move(_from) == move(_to),
 		m_balances->valueAtIndex(indexBefore),
 		m_balances->valueAtIndex(indexAfter)
@@ -73,9 +210,9 @@ void EncodingContext::transfer(smt::Expression _from, smt::Expression _to, smt::
 	m_solver.addAssertion(m_balances->currentValue() == newBalances);
 }
 
-void EncodingContext::addBalance(smt::Expression _address, smt::Expression _value)
+void EncodingContext::addBalance(Expression _address, Expression _value)
 {
-	auto newBalances = smt::Expression::store(
+	auto newBalances = Expression::store(
 		m_balances->currentValue(),
 		_address,
 		balance(_address) + move(_value)

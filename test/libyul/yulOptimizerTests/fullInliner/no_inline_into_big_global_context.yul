@@ -54,7 +54,5 @@
 //         let x_1 := f(f(f(f(f(f(b_57))))))
 //     }
 //     function f(a) -> b
-//     {
-//         b := sload(mload(a))
-//     }
+//     { b := sload(mload(a)) }
 // }

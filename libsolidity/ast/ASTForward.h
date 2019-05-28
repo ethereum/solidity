@@ -38,6 +38,7 @@ class SourceUnit;
 class PragmaDirective;
 class ImportDirective;
 class Declaration;
+class CallableDeclaration;
 class ContractDefinition;
 class InheritanceSpecifier;
 class UsingForDirective;

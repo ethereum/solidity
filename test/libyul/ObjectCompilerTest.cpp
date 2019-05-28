@@ -62,7 +62,7 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
 			m_expectation += line + "\n";
 }
 
-bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	AssemblyStack stack(
 		EVMVersion(),
@@ -73,7 +73,7 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, stack.errors());
-		return false;
+		return TestResult::FatalError;
 	}
 	stack.optimize();
 
@@ -98,9 +98,9 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 		printIndented(_stream, m_expectation, nextIndentLevel);
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return false;
+		return TestResult::Failure;
 	}
-	return true;
+	return TestResult::Success;
 }
 
 void ObjectCompilerTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const

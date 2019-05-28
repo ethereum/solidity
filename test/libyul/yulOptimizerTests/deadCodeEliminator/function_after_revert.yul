@@ -19,7 +19,5 @@
 //     fun()
 //     revert(0, 0)
 //     function fun()
-//     {
-//         return(1, 1)
-//     }
+//     { return(1, 1) }
 // }

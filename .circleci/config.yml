@@ -30,7 +30,9 @@ defaults:
       command: scripts/tests.sh --junit_report test_results
   - run_regressions: &run_regressions
       name: Regression tests
-      command: scripts/regressions.py -o test_results
+      command: |
+        export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
+        scripts/regressions.py -o test_results
   - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
@@ -43,12 +45,14 @@ defaults:
   - ossfuzz_artifacts: &ossfuzz_artifacts
       root: build
       paths:
-        - test/tools/ossfuzz/solc_opt_ossfuzz
-        - test/tools/ossfuzz/solc_noopt_ossfuzz
         - test/tools/ossfuzz/const_opt_ossfuzz
+        - test/tools/ossfuzz/solc_noopt_ossfuzz
+        - test/tools/ossfuzz/solc_opt_ossfuzz
+        - test/tools/ossfuzz/strictasm_assembly_ossfuzz
         - test/tools/ossfuzz/strictasm_diff_ossfuzz
-        - test/tools/ossfuzz/yul_proto_ossfuzz
+        - test/tools/ossfuzz/strictasm_opt_ossfuzz
         - test/tools/ossfuzz/yul_proto_diff_ossfuzz
+        - test/tools/ossfuzz/yul_proto_ossfuzz
 
 version: 2
 jobs:
@@ -133,6 +137,24 @@ jobs:
           name: External Zeppelin tests
           command: |
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
+
+  test_emscripten_external_colony:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install test dependencies
+          command: |
+            sudo apt-get -qy install lsof
+      - run:
+          name: External ColonyNetworks tests
+          command: |
+            test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
 
   build_x86_linux:
     docker:
@@ -337,6 +359,7 @@ jobs:
             ulimit -a
             # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
             ulimit -s 16384
+            export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
             build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
       - run:
           name: Run commandline tests with ASAN
@@ -344,6 +367,7 @@ jobs:
             ulimit -a
             # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
             ulimit -s 16384
+            export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
             test/cmdlineTests.sh
       - store_test_results:
           path: test_results/
@@ -416,11 +440,11 @@ jobs:
 
   build_x86_linux_ossfuzz:
     docker:
-      - image: buildpack-deps:cosmic
+      - image: buildpack-deps:disco
     environment:
       TERM: xterm
-      CC: /usr/bin/clang-7
-      CXX: /usr/bin/clang++-7
+      CC: /usr/bin/clang-8
+      CXX: /usr/bin/clang++-8
       CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
     steps:
       - checkout
@@ -428,16 +452,18 @@ jobs:
           name: Install build dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libbz2-dev ninja-build zlib1g-dev libjsoncpp-dev=1.7.4-\*
+            apt-get -qy install wget clang-8 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libbz2-dev ninja-build zlib1g-dev libjsoncpp-dev=1.7.4-\*
             ./scripts/install_lpm.sh
             ./scripts/install_libfuzzer.sh
+            # Install evmone and dependencies (intx and ethash)
+            ./scripts/install_evmone.sh
       - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
       - persist_to_workspace: *ossfuzz_artifacts
 
   test_x86_ossfuzz_regression:
     docker:
-      - image: buildpack-deps:cosmic
+      - image: buildpack-deps:disco
     environment:
       TERM: xterm
     steps:
@@ -448,13 +474,11 @@ jobs:
           name: Install dependencies
           command: |
             apt-get -qq update
-            apt-get -qy install libcvc4-dev llvm-7-dev
+            apt-get -qy install libcvc4-dev llvm-8-dev
             ./scripts/download_ossfuzz_corpus.sh
-            update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
+            update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-8 1
       - run: mkdir -p test_results
       - run: *run_regressions
-      - store_test_results:
-          path: test_results/
       - store_artifacts:
           path: test_results/
           destination: test_results/
@@ -468,14 +492,6 @@ workflows:
       - test_buglist: *build_on_tags
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external_zeppelin:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external_gnosis:
           <<: *build_on_tags
           requires:
             - build_emscripten
@@ -521,8 +537,13 @@ workflows:
           <<: *build_on_tags
           requires:
             - build_emscripten
+      - test_emscripten_external_colony:
+          <<: *build_on_tags
+          requires:
+            - build_emscripten
       - build_x86_linux_ossfuzz: *build_on_tags
       - test_x86_ossfuzz_regression:
           <<: *build_on_tags
           requires:
             - build_x86_linux_ossfuzz
+

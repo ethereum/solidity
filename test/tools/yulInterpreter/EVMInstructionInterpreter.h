@@ -36,6 +36,9 @@ enum class Instruction: uint8_t;
 
 namespace yul
 {
+class YulString;
+struct BuiltinFunctionForEVM;
+
 namespace test
 {
 
@@ -66,17 +69,15 @@ public:
 	explicit EVMInstructionInterpreter(InterpreterState& _state):
 		m_state(_state)
 	{}
+	/// Evaluate instruction
 	dev::u256 eval(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments);
+	/// Evaluate builtin function
+	dev::u256 evalBuiltin(BuiltinFunctionForEVM const& _fun, std::vector<dev::u256> const& _arguments);
 
 private:
-	/// Record a memory read in the trace. Also updates m_state.msize
-	/// @returns true if m_state.memory can be used at that offset.
-	bool logMemoryRead(dev::u256 const& _offset, dev::u256 const& _size = 32);
-	/// Record a memory write in the trace. Also updates m_state.msize
-	/// @returns true if m_state.memory can be used at that offset.
-	bool logMemoryWrite(dev::u256 const& _offset, dev::u256 const& _size = 32, dev::bytes const& _data = {});
-
-	bool logMemory(bool _write, dev::u256 const& _offset, dev::u256 const& _size = 32, dev::bytes const& _data = {});
+	/// Resizes the memory to accommodate the memory access.
+	/// @returns false if memory would have to be expanded beyond m_state.maxMemSize.
+	bool accessMemory(dev::u256 const& _offset, dev::u256 const& _size = 32);
 
 	void logTrace(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,

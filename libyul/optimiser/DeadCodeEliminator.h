@@ -28,6 +28,7 @@
 
 namespace yul
 {
+struct Dialect;
 
 /**
  * Optimisation stage that removes unreachable code
@@ -41,14 +42,19 @@ namespace yul
  * Because variables declared in a for loop's init block have their scope extended to the loop body,
  * we require ForLoopInitRewriter to run before this step.
  *
- * Prerequisite: ForLoopInitRewriter
+ * Prerequisite: ForLoopInitRewriter, Function Hoister, Function Grouper
  */
 class DeadCodeEliminator: public ASTModifier
 {
 public:
+	DeadCodeEliminator(Dialect const& _dialect): m_dialect(_dialect) {}
+
 	using ASTModifier::operator();
 	void operator()(ForLoop& _for) override;
 	void operator()(Block& _block) override;
+
+private:
+	Dialect const& m_dialect;
 };
 
 }

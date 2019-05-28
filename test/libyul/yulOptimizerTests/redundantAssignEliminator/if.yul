@@ -17,9 +17,6 @@
 //     let d
 //     c := calldataload(0)
 //     d := 1
-//     if c
-//     {
-//         d := 2
-//     }
+//     if c { d := 2 }
 //     mstore(0, d)
 // }

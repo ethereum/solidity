@@ -8,6 +8,4 @@
 // ====
 // step: structuralSimplifier
 // ----
-// {
-//     let y := 200
-// }
+// { let y := 200 }

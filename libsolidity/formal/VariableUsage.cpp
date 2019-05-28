@@ -24,33 +24,53 @@
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+using namespace dev::solidity::smt;
+
+set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<CallableDeclaration const*> const& _outerCallstack)
+{
+	m_touchedVariables.clear();
+	m_callStack.clear();
+	m_callStack += _outerCallstack;
+	m_lastCall = m_callStack.back();
+	_node.accept(*this);
+	return m_touchedVariables;
+}
 
 void VariableUsage::endVisit(Identifier const& _identifier)
 {
-	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
-	solAssert(declaration, "");
-	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-		if (_identifier.annotation().lValueRequested)
-			m_touchedVariables.insert(varDecl);
+	if (_identifier.annotation().lValueRequested)
+		checkIdentifier(_identifier);
+}
+
+void VariableUsage::endVisit(IndexAccess const& _indexAccess)
+{
+	if (_indexAccess.annotation().lValueRequested)
+	{
+		/// identifier.annotation().lValueRequested == false, that's why we
+		/// need to check that before.
+		auto identifier = dynamic_cast<Identifier const*>(SMTChecker::leftmostBase(_indexAccess));
+		if (identifier)
+			checkIdentifier(*identifier);
+	}
 }
 
 void VariableUsage::endVisit(FunctionCall const& _funCall)
 {
 	if (auto const& funDef = SMTChecker::inlinedFunctionCallToDefinition(_funCall))
-		if (find(m_functionPath.begin(), m_functionPath.end(), funDef) == m_functionPath.end())
+		if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
 			funDef->accept(*this);
 }
 
 bool VariableUsage::visit(FunctionDefinition const& _function)
 {
-	m_functionPath.push_back(&_function);
+	m_callStack.push_back(&_function);
 	return true;
 }
 
 void VariableUsage::endVisit(FunctionDefinition const&)
 {
-	solAssert(!m_functionPath.empty(), "");
-	m_functionPath.pop_back();
+	solAssert(!m_callStack.empty(), "");
+	m_callStack.pop_back();
 }
 
 void VariableUsage::endVisit(ModifierInvocation const& _modifierInv)
@@ -62,18 +82,23 @@ void VariableUsage::endVisit(ModifierInvocation const& _modifierInv)
 
 void VariableUsage::endVisit(PlaceholderStatement const&)
 {
-	solAssert(!m_functionPath.empty(), "");
-	FunctionDefinition const* function = m_functionPath.back();
-	solAssert(function, "");
-	if (function->isImplemented())
-		function->body().accept(*this);
+	solAssert(!m_callStack.empty(), "");
+	FunctionDefinition const* funDef = nullptr;
+	for (auto it = m_callStack.rbegin(); it != m_callStack.rend() && !funDef; ++it)
+		funDef = dynamic_cast<FunctionDefinition const*>(*it);
+	solAssert(funDef, "");
+	if (funDef->isImplemented())
+		funDef->body().accept(*this);
 }
 
-set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<FunctionDefinition const*> const& _outerCallstack)
+void VariableUsage::checkIdentifier(Identifier const& _identifier)
 {
-	m_touchedVariables.clear();
-	m_functionPath.clear();
-	m_functionPath += _outerCallstack;
-	_node.accept(*this);
-	return m_touchedVariables;
+	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
+	solAssert(declaration, "");
+	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
+	{
+		solAssert(m_lastCall, "");
+		if (!varDecl->isLocalVariable() || varDecl->functionOrModifierDefinition() == m_lastCall)
+			m_touchedVariables.insert(varDecl);
+	}
 }

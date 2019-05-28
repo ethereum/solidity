@@ -1,1 +1,0 @@
-{"contracts":{"A":{"C":{"evm":{"gasEstimates":{"creation":{"codeDepositCost":"19800","executionCost":"75","totalCost":"19875"},"external":{"f()":"122"}}}}}},"sources":{"A":{"id":0}}}

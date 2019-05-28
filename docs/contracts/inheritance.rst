@@ -12,7 +12,9 @@ is called, except when the contract name is explicitly given or the
 
 When a contract inherits from other contracts, only a single
 contract is created on the blockchain, and the code from all the base contracts
-is compiled into the created contract.
+is compiled into the created contract. This means that all internal calls
+to functions of base contracts also just use internal function calls
+(``super.f(..)`` will use JUMP and not a message call).
 
 The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
@@ -25,20 +27,23 @@ Details are given in the following example.
 
     pragma solidity >=0.5.0 <0.7.0;
 
-    contract owned {
+
+    contract Owned {
         constructor() public { owner = msg.sender; }
         address payable owner;
     }
+
 
     // Use `is` to derive from another contract. Derived
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
-    contract mortal is owned {
+    contract Mortal is Owned {
         function kill() public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
+
 
     // These abstract contracts are only provided to make the
     // interface known to the compiler. Note the function
@@ -48,15 +53,17 @@ Details are given in the following example.
         function lookup(uint id) public returns (address adr);
     }
 
+
     contract NameReg {
         function register(bytes32 name) public;
         function unregister() public;
-     }
+    }
+
 
     // Multiple inheritance is possible. Note that `owned` is
     // also a base class of `mortal`, yet there is only a single
     // instance of `owned` (as for virtual inheritance in C++).
-    contract named is owned, mortal {
+    contract Named is Owned, Mortal {
         constructor(bytes32 name) public {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
@@ -73,22 +80,23 @@ Details are given in the following example.
                 NameReg(config.lookup(1)).unregister();
                 // It is still possible to call a specific
                 // overridden function.
-                mortal.kill();
+                Mortal.kill();
             }
         }
     }
 
+
     // If a constructor takes an argument, it needs to be
     // provided in the header (or modifier-invocation-style at
     // the constructor of the derived contract (see below)).
-    contract PriceFeed is owned, mortal, named("GoldFeed") {
-       function updateInfo(uint newInfo) public {
-          if (msg.sender == owner) info = newInfo;
-       }
+    contract PriceFeed is Owned, Mortal, Named("GoldFeed") {
+        function updateInfo(uint newInfo) public {
+            if (msg.sender == owner) info = newInfo;
+        }
 
-       function get() public view returns(uint r) { return info; }
+        function get() public view returns(uint r) { return info; }
 
-       uint info;
+        uint info;
     }
 
 Note that above, we call ``mortal.kill()`` to "forward" the

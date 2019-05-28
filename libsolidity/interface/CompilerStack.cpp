@@ -56,6 +56,7 @@
 #include <libevmasm/Exceptions.h>
 
 #include <libdevcore/SwarmHash.h>
+#include <libdevcore/IpfsHash.h>
 #include <libdevcore/JSON.h>
 
 #include <json/json.h>
@@ -216,7 +217,7 @@ bool CompilerStack::parse()
 		string const& path = sourcesToParse[i];
 		Source& source = m_sources[path];
 		source.scanner->reset();
-		source.ast = Parser(m_errorReporter).parse(source.scanner);
+		source.ast = Parser(m_errorReporter, m_evmVersion, m_parserErrorRecovery).parse(source.scanner);
 		if (!source.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
@@ -249,7 +250,7 @@ bool CompilerStack::analyze()
 	bool noErrors = true;
 
 	try {
-		SyntaxChecker syntaxChecker(m_errorReporter);
+		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
 			if (!syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
@@ -260,7 +261,7 @@ bool CompilerStack::analyze()
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(m_globalContext->declarations(), m_scopes, m_errorReporter);
+		NameAndTypeResolver resolver(*m_globalContext, m_scopes, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (!resolver.registerDeclarations(*source->ast))
 				return false;
@@ -278,11 +279,8 @@ bool CompilerStack::analyze()
 			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 				{
-					m_globalContext->setCurrentContract(*contract);
-					if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
-					if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
-					if (!resolver.resolveNamesAndTypes(*contract)) return false;
 
+					if (!resolver.resolveNamesAndTypes(*contract)) return false;
 					// Note that we now reference contracts by their fully qualified names, and
 					// thus contracts can only conflict if declared in the same source file.  This
 					// already causes a double-declaration error elsewhere, so we do not report
@@ -397,7 +395,8 @@ bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) con
 	return
 		m_requestedContractNames.empty() ||
 		m_requestedContractNames.count(_contract.fullyQualifiedName()) ||
-		m_requestedContractNames.count(_contract.name());
+		m_requestedContractNames.count(_contract.name()) ||
+		m_requestedContractNames.count(":" + _contract.name());
 }
 
 bool CompilerStack::compile()
@@ -771,6 +770,13 @@ h256 const& CompilerStack::Source::swarmHash() const
 	return swarmHashCached;
 }
 
+string const& CompilerStack::Source::ipfsUrl() const
+{
+	if (ipfsUrlCached.empty())
+		if (scanner->source().size() < 1024 * 256)
+			ipfsUrlCached = "dweb:/ipfs/" + dev::ipfsHashBase58(scanner->source());
+	return ipfsUrlCached;
+}
 
 StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
 {
@@ -1032,6 +1038,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		{
 			meta["sources"][s.first]["urls"] = Json::arrayValue;
 			meta["sources"][s.first]["urls"].append("bzzr://" + toHex(s.second.swarmHash().asBytes()));
+			meta["sources"][s.first]["urls"].append(s.second.ipfsUrl());
 		}
 	}
 
@@ -1180,6 +1187,10 @@ bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimen
 	encoder.pushBytes("bzzr0", dev::swarmHash(_metadata).asBytes());
 	if (_experimentalMode)
 		encoder.pushBool("experimental", true);
+	if (m_release)
+		encoder.pushBytes("solc", VersionCompactBytes);
+	else
+		encoder.pushString("solc", VersionStringStrict);
 	return encoder.serialise();
 }
 

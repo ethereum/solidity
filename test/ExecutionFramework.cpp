@@ -140,7 +140,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	}
 
 	string txHash = m_rpc.eth_sendTransaction(d);
-	waitForTransaction(txHash);
+	m_rpc.rpcCall("eth_flush");
 	m_rpc.test_mineBlocks(1);
 	RPCSession::TransactionReceipt receipt(m_rpc.eth_getTransactionReceipt(txHash));
 
@@ -176,27 +176,6 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		m_transactionSuccessful = (receipt.status == "1");
 	else
 		m_transactionSuccessful = (m_gas != m_gasUsed);
-}
-
-void ExecutionFramework::waitForTransaction(std::string const& _txHash) const
-{
-	for (int polls = 0; polls < 3000; polls++)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		auto pendingBlock = m_rpc.eth_getBlockByNumber("pending", false);
-
-		if (!pendingBlock["transactions"].empty())
-		{
-			BOOST_REQUIRE_EQUAL(pendingBlock["transactions"][0].asString(), _txHash);
-			return;
-		}
-
-		if (polls == 200)
-		{
-			cerr << "Note: Already used 200 iterations while waiting for transaction confirmation. Issuing an eth_flush request." << endl;
-			m_rpc.rpcCall("eth_flush");
-		}
-	}
 }
 
 void ExecutionFramework::sendEther(Address const& _to, u256 const& _value)

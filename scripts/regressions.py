@@ -50,6 +50,18 @@ class regressor():
 
     @staticmethod
     def run_cmd(command, logfile=None, env=None):
+        """
+        Args:
+            command (str): command to run
+            logfile (str): log file name
+            env (dict): dictionary holding key-value pairs for bash environment
+                    variables
+
+        Returns:
+            int: The exit status of the command. Exit status codes are:
+                0       -> Success
+                1-255   -> Failure
+        """
         if not logfile:
             logfile = os.devnull
 
@@ -62,12 +74,20 @@ class regressor():
                                 stderr=subprocess.STDOUT)
         ret = proc.wait()
         logfh.close()
-
-        if ret != 0:
-            return False
-        return True
+        return ret
 
     def process_log(self, logfile):
+        """
+        Args:
+            logfile (str): log file name
+
+        Returns:
+            bool: Test status.
+                True       -> Success
+                False      -> Failure
+            int: Number of suppressed memory leaks
+        """
+
         ## Log may contain non ASCII characters, so we simply stringify them
         ## since they don't matter for regular expression matching
         rawtext = str(open(logfile, 'rb').read())
@@ -77,31 +97,42 @@ class regressor():
         return not rv, numSuppressedLeaks
 
     def run(self):
+        """
+        Returns:
+            bool: Test status.
+                True       -> All tests succeeded
+                False      -> At least one test failed
+        """
+
+        testStatus = []
         for fuzzer in glob.iglob("{}/*_ossfuzz".format(self._fuzzer_path)):
             basename = os.path.basename(fuzzer)
             logfile = os.path.join(self._logpath, "{}.log".format(basename))
             corpus_dir = "/tmp/solidity-fuzzing-corpus/{0}_seed_corpus" \
                 .format(basename)
-            cmd = "find {0} -type f | xargs -P2 {1}".format(corpus_dir, fuzzer)
-            if not self.run_cmd(cmd, logfile=logfile):
+            cmd = "find {0} -type f | xargs -n1 {1}".format(corpus_dir, fuzzer)
+            cmd_status = self.run_cmd(cmd, logfile=logfile)
+            if cmd_status:
                 ret, numLeaks = self.process_log(logfile)
                 if not ret:
                     print(
-                        "\t[-] AddressSanitizer reported failure for {0}. "
+                        "\t[-] libFuzzer reported failure for {0}. "
                         "Failure logged to test_results".format(
                             basename))
-                    return False
+                    testStatus.append(cmd_status)
                 else:
                     print("\t[+] {0} passed regression tests but leaked "
                           "memory.".format(basename))
                     print("\t\t[+] Suppressed {0} memory leak reports".format(
                             numLeaks))
+                    testStatus.append(0)
             else:
                 print("\t[+] {0} passed regression tests.".format(basename))
-        return True
+                testStatus.append(cmd_status)
+        return any(testStatus)
 
 
 if __name__ == '__main__':
     dotprinter = PrintDotsThread()
     tool = regressor(DESCRIPTION, sys.argv[1:])
-    tool.run()
+    sys.exit(tool.run())

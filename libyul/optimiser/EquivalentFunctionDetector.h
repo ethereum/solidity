@@ -20,6 +20,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/BlockHasher.h>
 #include <libyul/AsmDataForward.h>
 
 namespace yul
@@ -28,14 +29,14 @@ namespace yul
 /**
  * Optimiser component that detects syntactically equivalent functions.
  *
- * Prerequisite: Disambiguator
+ * Prerequisite: Disambiguator, ForLoopInitRewriter
  */
 class EquivalentFunctionDetector: public ASTWalker
 {
 public:
 	static std::map<YulString, FunctionDefinition const*> run(Block& _block)
 	{
-		EquivalentFunctionDetector detector{};
+		EquivalentFunctionDetector detector{BlockHasher::run(_block)};
 		detector(_block);
 		return std::move(detector.m_duplicates);
 	}
@@ -44,26 +45,10 @@ public:
 	void operator()(FunctionDefinition const& _fun) override;
 
 private:
-	EquivalentFunctionDetector() = default;
-	/**
-	 * Fast heuristic to detect distinct, resp. potentially equal functions.
-	 *
-	 * Defines a partial order on function definitions. If two functions
-	 * are comparable (one is "less" than the other), they are distinct.
-	 * If not (neither is "less" than the other), they are *potentially* equal.
-	 */
-	class RoughHeuristic
-	{
-	public:
-		RoughHeuristic(FunctionDefinition const& _fun): m_fun(_fun) {}
-		bool operator<(RoughHeuristic const& _rhs) const;
-	private:
-		std::size_t codeSize() const;
-		FunctionDefinition const& m_fun;
-		mutable boost::optional<std::size_t> m_codeSize;
-		// In case the heuristic doesn't turn out to be good enough, we might want to define a hash function for code blocks.
-	};
-	std::map<RoughHeuristic, std::vector<FunctionDefinition const*>> m_candidates;
+	EquivalentFunctionDetector(std::map<Block const*, uint64_t> _blockHashes): m_blockHashes(std::move(_blockHashes)) {}
+
+	std::map<Block const*, uint64_t> m_blockHashes;
+	std::map<uint64_t, std::vector<FunctionDefinition const*>> m_candidates;
 	std::map<YulString, FunctionDefinition const*> m_duplicates;
 };
 

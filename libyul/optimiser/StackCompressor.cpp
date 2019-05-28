@@ -48,15 +48,16 @@ class RematCandidateSelector: public DataFlowAnalyzer
 public:
 	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 
-	/// @returns a set of pairs of rematerialisation costs and variable to rematerialise.
+	/// @returns a set of tuples of rematerialisation costs, variable to rematerialise
+	/// and variables that occur in its expression.
 	/// Note that this set is sorted by cost.
-	set<pair<size_t, YulString>> candidates()
+	set<tuple<size_t, YulString, set<YulString>>> candidates()
 	{
-		set<pair<size_t, YulString>> cand;
+		set<tuple<size_t, YulString, set<YulString>>> cand;
 		for (auto const& codeCost: m_expressionCodeCost)
 		{
 			size_t numRef = m_numReferences[codeCost.first];
-			cand.emplace(make_pair(codeCost.second * numRef, codeCost.first));
+			cand.emplace(make_tuple(codeCost.second * numRef, codeCost.first, m_references[codeCost.first]));
 		}
 		return cand;
 	}
@@ -69,7 +70,7 @@ public:
 		{
 			YulString varName = _varDecl.variables.front().name;
 			if (m_value.count(varName))
-				m_expressionCodeCost[varName] = CodeCost::codeCost(*m_value[varName]);
+				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *m_value[varName]);
 		}
 	}
 
@@ -112,9 +113,14 @@ public:
 };
 
 template <typename ASTNode>
-void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, size_t _numVariables)
+void eliminateVariables(
+	Dialect const& _dialect,
+	ASTNode& _node,
+	size_t _numVariables,
+	bool _allowMSizeOptimization
+)
 {
-	RematCandidateSelector selector{*_dialect};
+	RematCandidateSelector selector{_dialect};
 	selector(_node);
 
 	// Select at most _numVariables
@@ -123,17 +129,32 @@ void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, siz
 	{
 		if (varsToEliminate.size() >= _numVariables)
 			break;
-		varsToEliminate.insert(costs.second);
+		// If a variable we would like to eliminate references another one
+		// we already selected for elimination, then stop selecting
+		// candidates. If we would add that variable, then the cost calculation
+		// for the previous variable would be off. Furthermore, we
+		// do not skip the variable because it would be better to properly re-compute
+		// the costs of all other variables instead.
+		bool referencesVarToEliminate = false;
+		for (YulString const& referencedVar: get<2>(costs))
+			if (varsToEliminate.count(referencedVar))
+			{
+				referencesVarToEliminate = true;
+				break;
+			}
+		if (referencesVarToEliminate)
+			break;
+		varsToEliminate.insert(get<1>(costs));
 	}
 
-	Rematerialiser::run(*_dialect, _node, std::move(varsToEliminate));
-	UnusedPruner::runUntilStabilised(*_dialect, _node);
+	Rematerialiser::run(_dialect, _node, std::move(varsToEliminate));
+	UnusedPruner::runUntilStabilised(_dialect, _node, _allowMSizeOptimization);
 }
 
 }
 
 bool StackCompressor::run(
-	shared_ptr<Dialect> const& _dialect,
+	Dialect const& _dialect,
 	Block& _ast,
 	bool _optimizeStackAllocation,
 	size_t _maxIterations
@@ -143,6 +164,7 @@ bool StackCompressor::run(
 		_ast.statements.size() > 0 && _ast.statements.at(0).type() == typeid(Block),
 		"Need to run the function grouper before the stack compressor."
 	);
+	bool allowMSizeOptimzation = !SideEffectsCollector(_dialect, _ast).containsMSize();
 	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 	{
 		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _ast, _optimizeStackAllocation);
@@ -152,7 +174,12 @@ bool StackCompressor::run(
 		if (stackSurplus.count(YulString{}))
 		{
 			yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
-			eliminateVariables(_dialect, boost::get<Block>(_ast.statements.at(0)), stackSurplus.at({}));
+			eliminateVariables(
+				_dialect,
+				boost::get<Block>(_ast.statements.at(0)),
+				stackSurplus.at({}),
+				allowMSizeOptimzation
+			);
 		}
 
 		for (size_t i = 1; i < _ast.statements.size(); ++i)
@@ -162,7 +189,12 @@ bool StackCompressor::run(
 				continue;
 
 			yulAssert(stackSurplus.at(fun.name) > 0, "Invalid surplus value.");
-			eliminateVariables(_dialect, fun, stackSurplus.at(fun.name));
+			eliminateVariables(
+				_dialect,
+				fun,
+				stackSurplus.at(fun.name),
+				allowMSizeOptimzation
+			);
 		}
 	}
 	return false;

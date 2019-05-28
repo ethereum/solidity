@@ -111,7 +111,7 @@ enum class HexCase
 /// @example toHex("A\x69") == "4169"
 std::string toHex(bytes const& _data, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower);
 
-/// Converts a (printable) ASCII hex character into the correspnding integer value.
+/// Converts a (printable) ASCII hex character into the corresponding integer value.
 /// @example fromHex('A') == 10 && fromHex('f') == 15 && fromHex('5') == 5
 int fromHex(char _i, WhenError _throw);
 
@@ -186,12 +186,6 @@ inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 inline bytes toCompactBigEndian(uint8_t _val, unsigned _min = 0)
 {
 	return (_min || _val) ? bytes{ _val } : bytes{};
-}
-
-/// Workarounds shift left bug in boost <1.65.1.
-template <class S> S bigintShiftLeftWorkaround(S const& _a, unsigned _b)
-{
-	return (S)(bigint(_a) << _b);
 }
 
 /// Convenience function for conversion of a u256 to hex
@@ -352,4 +346,27 @@ inline std::string findAnyOf(std::string const& _haystack, std::vector<std::stri
 			return needle;
 	return "";
 }
+
+
+namespace detail
+{
+template<typename T>
+void variadicEmplaceBack(std::vector<T>&) {}
+template<typename T, typename A, typename... Args>
+void variadicEmplaceBack(std::vector<T>& _vector, A&& _a, Args&&... _args)
+{
+	_vector.emplace_back(std::forward<A>(_a));
+	variadicEmplaceBack(_vector, std::forward<Args>(_args)...);
+}
+}
+
+template<typename T, typename... Args>
+std::vector<T> make_vector(Args&&... _args)
+{
+	std::vector<T> result;
+	result.reserve(sizeof...(_args));
+	detail::variadicEmplaceBack(result, std::forward<Args>(_args)...);
+	return result;
+}
+
 }

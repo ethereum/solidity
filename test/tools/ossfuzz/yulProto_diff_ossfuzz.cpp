@@ -23,8 +23,9 @@
 #include <src/libfuzzer/libfuzzer_macro.h>
 
 #include <libyul/AssemblyStack.h>
-#include <liblangutil/EVMVersion.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
@@ -36,12 +37,10 @@ using namespace langutil;
 using namespace dev;
 using namespace yul::test;
 
-DEFINE_PROTO_FUZZER(Function const& _input)
+DEFINE_PROTO_FUZZER(Program const& _input)
 {
 	ProtoConverter converter;
-	string yul_source = converter.functionToString(_input);
-	if (yul_source.size() > 600)
-		return;
+	string yul_source = converter.programToString(_input);
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -50,6 +49,11 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 		ofstream of(dump_path);
 		of.write(yul_source.data(), yul_source.size());
 	}
+
+	if (yul_source.size() > 1200)
+		return;
+
+	YulStringRepository::reset();
 
 	// AssemblyStack entry point
 	AssemblyStack stack(
@@ -76,7 +80,8 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 	{
 		yulFuzzerUtil::interpret(
 			os1,
-			stack.parserResult()->code
+			stack.parserResult()->code,
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
 		);
 	}
 	catch (yul::test::StepLimitReached const&)
@@ -90,8 +95,10 @@ DEFINE_PROTO_FUZZER(Function const& _input)
 	stack.optimize();
 	try
 	{
-		yulFuzzerUtil::interpret(os2,
+		yulFuzzerUtil::interpret(
+			os2,
 			stack.parserResult()->code,
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
 		);
 	}

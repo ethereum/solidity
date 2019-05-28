@@ -19,9 +19,7 @@
 //     let _5 := mul(_4, _2)
 //     if _5
 //     {
-//         for {
-//             let a := 2
-//         }
+//         for { let a := 2 }
 //         lt(a, mload(a))
 //         {
 //             let _6 := 2

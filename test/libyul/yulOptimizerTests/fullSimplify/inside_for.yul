@@ -8,12 +8,6 @@
 // ----
 // {
 //     let a := 10
-//     for {
-//     }
-//     iszero(iszero(a))
-//     {
-//         a := add(a, 1)
-//     }
-//     {
-//     }
+//     for { } iszero(iszero(a)) { a := add(a, 1) }
+//     { }
 // }

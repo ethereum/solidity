@@ -12,13 +12,7 @@
 // {
 //     let a_1 := mload(0)
 //     let a := a_1
-//     for {
-//         mstore(0, a_1)
-//     }
-//     a
-//     {
-//         mstore(0, a)
-//     }
+//     for { mstore(0, a_1) } a { mstore(0, a) }
 //     {
 //         let a_2 := add(a, 3)
 //         a := a_2

@@ -5,6 +5,4 @@
 // ====
 // step: fullSimplify
 // ----
-// {
-//     mstore(0, 13)
-// }
+// { mstore(0, 13) }

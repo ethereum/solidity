@@ -20,10 +20,11 @@ Remix
 
 *We recommend Remix for small contracts and for quickly learning Solidity.*
 
-`Access Remix online <https://remix.ethereum.org/>`_, you don't need to install anything.
+`Access Remix online <https://remix.ethereum.org/>`_, you do not need to install anything.
 If you want to use it without connection to the Internet, go to
 https://github.com/ethereum/remix-live/tree/gh-pages and download the ``.zip`` file as
-explained on that page.
+explained on that page. Remix is also a convenient option for testing nightly builds
+without installing multiple Solidity versions.
 
 Further options on this page detail installing commandline Solidity compiler software
 on your computer. Choose a commandline compiler if you are working on a larger contract
@@ -60,17 +61,36 @@ Please refer to the solc-js repository for instructions.
 Docker
 ======
 
-We provide up to date docker builds for the compiler. The ``stable``
-repository contains released versions while the ``nightly``
-repository contains potentially unstable changes in the develop branch.
+Docker images of Solidity builds are available using the ``solc`` image from the ``ethereum`` organisation.
+Use the ``stable`` tag for the latest released version, and ``nightly`` for potentially unstable changes in the develop branch.
+
+The Docker image runs the compiler executable, so you can pass all compiler arguments to it.
+For example, the command below pulls the stable version of the ``solc`` image (if you do not have it already),
+and runs it in a new container, passing the ``--help`` argument.
 
 .. code-block:: bash
 
-    docker run ethereum/solc:stable --version
+    docker run ethereum/solc:stable --help
 
-Currently, the docker image only contains the compiler executable,
-so you have to do some additional work to link in the source and
-output directories.
+You can also specify release build versions in the tag, for example, for the 0.5.4 release.
+
+.. code-block:: bash
+
+    docker run ethereum/solc:0.5.4 --help
+
+To use the Docker image to compile Solidity files on the host machine mount a
+local folder for input and output, and specify the contract to compile. For example.
+
+.. code-block:: bash
+
+    docker run -v /local/path:/sources ethereum/solc:stable -o /sources/output --abi --bin /sources/Contract.sol
+
+You can also use the standard JSON interface (which is recommended when using the compiler with tooling).
+When using this interface it is not necessary to mount any directories.
+
+.. code-block:: bash
+
+    docker run ethereum/solc:stable --standard-json < input.json > output.json
 
 Binary Packages
 ===============

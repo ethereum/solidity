@@ -54,10 +54,16 @@ class SyntaxTest: AnalysisFramework, public EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
-	{ return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion); }
-	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
+	{
+		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, false);
+	}
+	static std::unique_ptr<TestCase> createErrorRecovery(Config const& _config)
+	{
+		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, true);
+	}
+	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _errorRecovery = false);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
 	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override
@@ -82,7 +88,9 @@ protected:
 	std::string m_source;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
+	bool m_optimiseYul = false;
 	langutil::EVMVersion const m_evmVersion;
+	bool m_errorRecovery = false;
 };
 
 }

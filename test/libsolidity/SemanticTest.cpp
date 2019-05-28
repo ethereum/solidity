@@ -53,9 +53,9 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 	parseExpectations(file);
 }
 
-bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-	soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
+
 
 	bool success = true;
 	for (auto& test: m_tests)
@@ -63,34 +63,61 @@ bool SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _format
 
 	for (auto& test: m_tests)
 	{
-		bytes output = callContractFunctionWithValueNoEncoding(
-			test.call().signature,
-			test.call().value,
-			test.call().arguments.rawBytes()
-		);
+		if (&test == &m_tests.front())
+			if (test.call().isConstructor)
+				deploy("", 0, test.call().arguments.rawBytes());
+			else
+				soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
+		else
+			soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call.");
 
-		if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
-			success = false;
+		if (test.call().isConstructor)
+		{
+			if (m_transactionSuccessful == test.call().expectations.failure)
+				success = false;
 
-		test.setFailure(!m_transactionSuccessful);
-		test.setRawBytes(std::move(output));
+			test.setFailure(!m_transactionSuccessful);
+			test.setRawBytes(bytes());
+		}
+		else
+		{
+			bytes output = callContractFunctionWithValueNoEncoding(
+				test.call().signature,
+				test.call().value,
+				test.call().arguments.rawBytes()
+			);
+
+			if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
+				success = false;
+
+			test.setFailure(!m_transactionSuccessful);
+			test.setRawBytes(std::move(output));
+			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+		}
 	}
 
 	if (!success)
 	{
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
 		for (auto const& test: m_tests)
-			_stream << test.format(_linePrefix, false, _formatted) << endl;
+		{
+			ErrorReporter errorReporter;
+			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+			_stream << errorReporter.format(_linePrefix, _formatted);
+		}
 		_stream << endl;
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
 		for (auto const& test: m_tests)
-			_stream << test.format(_linePrefix, true, _formatted) << endl;
-
+		{
+			ErrorReporter errorReporter;
+			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+			_stream << errorReporter.format(_linePrefix, _formatted);
+		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
 			<< "Attention: Updates on the test will apply the detected format displayed." << endl;
-		return false;
+		return TestResult::Failure;
 	}
-	return true;
+	return TestResult::Success;
 }
 
 void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool) const

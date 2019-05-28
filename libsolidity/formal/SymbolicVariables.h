@@ -26,6 +26,8 @@ namespace dev
 {
 namespace solidity
 {
+namespace smt
+{
 
 class Type;
 
@@ -36,23 +38,23 @@ class SymbolicVariable
 {
 public:
 	SymbolicVariable(
-		TypePointer _type,
+		solidity::TypePointer _type,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 	SymbolicVariable(
-		smt::SortPointer _sort,
+		SortPointer _sort,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 
 	virtual ~SymbolicVariable() = default;
 
-	smt::Expression currentValue() const;
+	Expression currentValue() const;
 	std::string currentName() const;
-	virtual smt::Expression valueAtIndex(int _index) const;
-	virtual smt::Expression increaseIndex();
-	virtual smt::Expression operator()(std::vector<smt::Expression> /*_arguments*/) const
+	virtual Expression valueAtIndex(int _index) const;
+	virtual Expression increaseIndex();
+	virtual Expression operator()(std::vector<Expression> /*_arguments*/) const
 	{
 		solAssert(false, "Function application to non-function.");
 	}
@@ -60,18 +62,18 @@ public:
 	unsigned index() const { return m_ssa->index(); }
 	unsigned& index() { return m_ssa->index(); }
 
-	TypePointer const& type() const { return m_type; }
+	solidity::TypePointer const& type() const { return m_type; }
 
 protected:
 	std::string uniqueSymbol(unsigned _index) const;
 
 	/// SMT sort.
-	smt::SortPointer m_sort;
+	SortPointer m_sort;
 	/// Solidity type, used for size and range in number types.
-	TypePointer m_type;
+	solidity::TypePointer m_type;
 	std::string m_uniqueName;
-	smt::SolverInterface& m_interface;
-	std::shared_ptr<SSAVariable> m_ssa;
+	SolverInterface& m_interface;
+	std::unique_ptr<SSAVariable> m_ssa;
 };
 
 /**
@@ -81,9 +83,9 @@ class SymbolicBoolVariable: public SymbolicVariable
 {
 public:
 	SymbolicBoolVariable(
-		TypePointer _type,
+		solidity::TypePointer _type,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 };
 
@@ -94,9 +96,9 @@ class SymbolicIntVariable: public SymbolicVariable
 {
 public:
 	SymbolicIntVariable(
-		TypePointer _type,
+		solidity::TypePointer _type,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 };
 
@@ -108,7 +110,7 @@ class SymbolicAddressVariable: public SymbolicIntVariable
 public:
 	SymbolicAddressVariable(
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 };
 
@@ -121,7 +123,7 @@ public:
 	SymbolicFixedBytesVariable(
 		unsigned _numBytes,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 };
 
@@ -132,20 +134,20 @@ class SymbolicFunctionVariable: public SymbolicVariable
 {
 public:
 	SymbolicFunctionVariable(
-		TypePointer _type,
+		solidity::TypePointer _type,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 
-	smt::Expression increaseIndex();
-	smt::Expression operator()(std::vector<smt::Expression> _arguments) const;
+	Expression increaseIndex();
+	Expression operator()(std::vector<Expression> _arguments) const;
 
 private:
 	/// Creates a new function declaration.
 	void resetDeclaration();
 
 	/// Stores the current function declaration.
-	smt::Expression m_declaration;
+	Expression m_declaration;
 };
 
 /**
@@ -155,9 +157,9 @@ class SymbolicMappingVariable: public SymbolicVariable
 {
 public:
 	SymbolicMappingVariable(
-		TypePointer _type,
+		solidity::TypePointer _type,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 };
 
@@ -168,9 +170,9 @@ class SymbolicArrayVariable: public SymbolicVariable
 {
 public:
 	SymbolicArrayVariable(
-		TypePointer _type,
+		solidity::TypePointer _type,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 };
 
@@ -181,11 +183,35 @@ class SymbolicEnumVariable: public SymbolicVariable
 {
 public:
 	SymbolicEnumVariable(
-		TypePointer _type,
+		solidity::TypePointer _type,
 		std::string _uniqueName,
-		smt::SolverInterface& _interface
+		SolverInterface& _interface
 	);
 };
 
+/**
+ * Specialization of SymbolicVariable for Tuple
+ */
+class SymbolicTupleVariable: public SymbolicVariable
+{
+public:
+	SymbolicTupleVariable(
+		solidity::TypePointer _type,
+		std::string _uniqueName,
+		SolverInterface& _interface
+	);
+
+	std::vector<std::shared_ptr<SymbolicVariable>> const& components()
+	{
+		return m_components;
+	}
+
+	void setComponents(std::vector<std::shared_ptr<SymbolicVariable>> _components);
+
+private:
+	std::vector<std::shared_ptr<SymbolicVariable>> m_components;
+};
+
+}
 }
 }

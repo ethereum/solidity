@@ -32,39 +32,6 @@ using OptionalStatements = boost::optional<vector<Statement>>;
 
 namespace {
 
-ExpressionStatement makePopExpressionStatement(langutil::SourceLocation const& _location, Expression&& _expression)
-{
-	return {_location, FunctionalInstruction{
-		_location,
-		dev::eth::Instruction::POP,
-		{std::move(_expression)}
-	}};
-}
-
-void removeEmptyDefaultFromSwitch(Switch& _switchStmt)
-{
-	boost::remove_erase_if(
-		_switchStmt.cases,
-		[](Case const& _case) { return !_case.value && _case.body.statements.empty(); }
-	);
-}
-
-void removeEmptyCasesFromSwitch(Switch& _switchStmt)
-{
-	bool hasDefault = boost::algorithm::any_of(
-		_switchStmt.cases,
-		[](Case const& _case) { return !_case.value; }
-	);
-
-	if (hasDefault)
-		return;
-
-	boost::remove_erase_if(
-		_switchStmt.cases,
-		[](Case const& _case) { return _case.body.statements.empty(); }
-	);
-}
-
 OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _constExprVal)
 {
 	Block* matchingCaseBlock = nullptr;
@@ -84,41 +51,10 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 	if (!matchingCaseBlock && defaultCase)
 		matchingCaseBlock = &defaultCase->body;
 
-	OptionalStatements s = vector<Statement>{};
-
 	if (matchingCaseBlock)
-		s->emplace_back(std::move(*matchingCaseBlock));
-
-	return s;
-}
-
-OptionalStatements reduceSingleCaseSwitch(Switch& _switchStmt)
-{
-	yulAssert(_switchStmt.cases.size() == 1, "Expected only one case!");
-
-	auto& switchCase = _switchStmt.cases.front();
-	auto loc = locationOf(*_switchStmt.expression);
-	if (switchCase.value)
-	{
-		OptionalStatements s = vector<Statement>{};
-		s->emplace_back(If{
-				std::move(_switchStmt.location),
-				make_unique<Expression>(FunctionalInstruction{
-					std::move(loc),
-					dev::eth::Instruction::EQ,
-					{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
-				}),
-				std::move(switchCase.body)
-		});
-		return s;
-	}
+		return make_vector<Statement>(std::move(*matchingCaseBlock));
 	else
-	{
-		OptionalStatements s = vector<Statement>{};
-		s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
-		s->emplace_back(std::move(switchCase.body));
-		return s;
-	}
+		return {{}};
 }
 
 }
@@ -128,19 +64,6 @@ void StructuralSimplifier::operator()(Block& _block)
 	pushScope(false);
 	simplify(_block.statements);
 	popScope();
-}
-
-OptionalStatements StructuralSimplifier::reduceNoCaseSwitch(Switch& _switchStmt) const
-{
-	yulAssert(_switchStmt.cases.empty(), "Expected no case!");
-
-	auto loc = locationOf(*_switchStmt.expression);
-
-	OptionalStatements s = vector<Statement>{};
-
-	s->emplace_back(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
-
-	return s;
 }
 
 boost::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
@@ -167,12 +90,6 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
 	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch, ForLoop> const visitor(
 		[&](If& _ifStmt) -> OptionalStatements {
-			if (_ifStmt.body.statements.empty())
-			{
-				OptionalStatements s = vector<Statement>{};
-				s->emplace_back(makePopExpressionStatement(_ifStmt.location, std::move(*_ifStmt.condition)));
-				return s;
-			}
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
 			else if (expressionAlwaysFalse(*_ifStmt.condition))
@@ -182,22 +99,12 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		[&](Switch& _switchStmt) -> OptionalStatements {
 			if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
 				return replaceConstArgSwitch(_switchStmt, constExprVal.get());
-
-			removeEmptyDefaultFromSwitch(_switchStmt);
-			removeEmptyCasesFromSwitch(_switchStmt);
-
-			if (_switchStmt.cases.empty())
-				return reduceNoCaseSwitch(_switchStmt);
-			else if (_switchStmt.cases.size() == 1)
-				return reduceSingleCaseSwitch(_switchStmt);
-
 			return {};
 		},
 		[&](ForLoop& _forLoop) -> OptionalStatements {
 			if (expressionAlwaysFalse(*_forLoop.condition))
 				return {std::move(_forLoop.pre.statements)};
-			else
-				return {};
+			return {};
 		}
 	);
 
@@ -224,9 +131,8 @@ bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 			return false;
 		},
 		[](Literal const& _literal) -> bool {
-			static YulString const trueString("true");
 			return
-				(_literal.kind == LiteralKind::Boolean && _literal.value == trueString) ||
+				(_literal.kind == LiteralKind::Boolean && _literal.value == "true"_yulstring) ||
 				(_literal.kind == LiteralKind::Number && valueOfNumberLiteral(_literal) != u256(0))
 			;
 		}
@@ -242,9 +148,8 @@ bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 			return false;
 		},
 		[](Literal const& _literal) -> bool {
-			static YulString const falseString("false");
 			return
-				(_literal.kind == LiteralKind::Boolean && _literal.value == falseString) ||
+				(_literal.kind == LiteralKind::Boolean && _literal.value == "false"_yulstring) ||
 				(_literal.kind == LiteralKind::Number && valueOfNumberLiteral(_literal) == u256(0))
 			;
 		}

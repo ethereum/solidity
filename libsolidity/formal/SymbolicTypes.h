@@ -26,49 +26,48 @@ namespace dev
 {
 namespace solidity
 {
+namespace smt
+{
 
 /// Returns the SMT sort that models the Solidity type _type.
-smt::SortPointer smtSort(Type const& _type);
-std::vector<smt::SortPointer> smtSort(std::vector<TypePointer> const& _types);
+SortPointer smtSort(solidity::Type const& _type);
+std::vector<SortPointer> smtSort(std::vector<solidity::TypePointer> const& _types);
 /// Returns the SMT kind that models the Solidity type type category _category.
-smt::Kind smtKind(Type::Category _category);
+Kind smtKind(solidity::Type::Category _category);
 
 /// Returns true if type is fully supported (declaration and operations).
-bool isSupportedType(Type::Category _category);
-bool isSupportedType(Type const& _type);
+bool isSupportedType(solidity::Type::Category _category);
+bool isSupportedType(solidity::Type const& _type);
 /// Returns true if type is partially supported (declaration).
-bool isSupportedTypeDeclaration(Type::Category _category);
-bool isSupportedTypeDeclaration(Type const& _type);
+bool isSupportedTypeDeclaration(solidity::Type::Category _category);
+bool isSupportedTypeDeclaration(solidity::Type const& _type);
 
-bool isInteger(Type::Category _category);
-bool isRational(Type::Category _category);
-bool isFixedBytes(Type::Category _category);
-bool isAddress(Type::Category _category);
-bool isContract(Type::Category _category);
-bool isEnum(Type::Category _category);
-bool isNumber(Type::Category _category);
-bool isBool(Type::Category _category);
-bool isFunction(Type::Category _category);
-bool isMapping(Type::Category _category);
-bool isArray(Type::Category _category);
+bool isInteger(solidity::Type::Category _category);
+bool isRational(solidity::Type::Category _category);
+bool isFixedBytes(solidity::Type::Category _category);
+bool isAddress(solidity::Type::Category _category);
+bool isContract(solidity::Type::Category _category);
+bool isEnum(solidity::Type::Category _category);
+bool isNumber(solidity::Type::Category _category);
+bool isBool(solidity::Type::Category _category);
+bool isFunction(solidity::Type::Category _category);
+bool isMapping(solidity::Type::Category _category);
+bool isArray(solidity::Type::Category _category);
+bool isTuple(solidity::Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,
 /// which is true for unsupported types.
-std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(Type const& _type, std::string const& _uniqueName, smt::SolverInterface& _solver);
+std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(solidity::Type const& _type, std::string const& _uniqueName, SolverInterface& _solver);
 
-smt::Expression minValue(IntegerType const& _type);
-smt::Expression maxValue(IntegerType const& _type);
+Expression minValue(solidity::IntegerType const& _type);
+Expression maxValue(solidity::IntegerType const& _type);
 
-namespace smt
-{
-
-void setSymbolicZeroValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
-void setSymbolicZeroValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
-void setSymbolicUnknownValue(SymbolicVariable const& _variable, smt::SolverInterface& _interface);
-void setSymbolicUnknownValue(smt::Expression _expr, TypePointer const& _type, smt::SolverInterface& _interface);
+void setSymbolicZeroValue(SymbolicVariable const& _variable, SolverInterface& _interface);
+void setSymbolicZeroValue(Expression _expr, solidity::TypePointer const& _type, SolverInterface& _interface);
+void setSymbolicUnknownValue(SymbolicVariable const& _variable, SolverInterface& _interface);
+void setSymbolicUnknownValue(Expression _expr, solidity::TypePointer const& _type, SolverInterface& _interface);
 
 }
-
 }
 }

@@ -5,12 +5,6 @@
 // step: expressionJoiner
 // ----
 // {
-//     for {
-//         let b := mload(1)
-//     }
-//     b
-//     {
-//     }
-//     {
-//     }
+//     for { let b := mload(1) } b { }
+//     { }
 // }

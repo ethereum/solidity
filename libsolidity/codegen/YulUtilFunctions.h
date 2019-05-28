@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace dev
 {
@@ -34,6 +35,8 @@ namespace solidity
 
 class Type;
 class ArrayType;
+class MappingType;
+class IntegerType;
 
 /**
  * Component that can generate various useful Yul functions.
@@ -62,6 +65,10 @@ public:
 	/// Pads with zeros and might write more than exactly length.
 	std::string copyToMemoryFunction(bool _fromCalldata);
 
+	// @returns the name of a function that has the equivalent logic of an
+	// `assert` or `require` call.
+	std::string requireOrAssertFunction(bool _assert, Type const* _messageType = nullptr);
+
 	/// @returns the name of a function that takes a (cleaned) value of the given value type and
 	/// left-aligns it, usually for use in non-padded encoding.
 	std::string leftAlignFunction(Type const& _type);
@@ -69,11 +76,27 @@ public:
 	std::string shiftLeftFunction(size_t _numBits);
 	std::string shiftRightFunction(size_t _numBits);
 
+	/// @returns the name of a function f(value, toInsert) -> newValue which replaces the
+	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
+	/// byte) by the _numBytes least significant bytes of `toInsert`.
+	std::string updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes);
+
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
 	std::string roundUpFunction();
 
 	std::string overflowCheckedUIntAddFunction(size_t _bits);
+
+	std::string overflowCheckedUIntMulFunction(size_t _bits);
+
+	/// @returns name of function to perform division on integers.
+	/// Checks for division by zero and the special case of
+	/// signed division of the smallest number by -1.
+	std::string overflowCheckedIntDivFunction(IntegerType const& _type);
+
+	/// @returns computes the difference between two values.
+	/// Assumes the input to be in range for the type.
+	std::string overflowCheckedUIntSubFunction();
 
 	std::string arrayLengthFunction(ArrayType const& _type);
 	/// @returns the name of a function that computes the number of bytes required
@@ -87,6 +110,39 @@ public:
 	/// @returns the name of a function that advances an array data pointer to the next element.
 	/// Only works for memory arrays, calldata arrays and storage arrays that store one item per slot.
 	std::string nextArrayElementFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that performs index access for mappings.
+	/// @param _mappingType the type of the mapping
+	/// @param _keyType the type of the value provided
+	std::string mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType);
+
+	/// @returns a function that reads a value type from storage.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+
+	/// @returns a function that extracts a value type from storage slot that has been
+	/// retrieved already.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+
+	/// Performs cleanup after reading from a potentially compressed storage slot.
+	/// The function does not perform any validation, it just masks or sign-extends
+	/// higher order bytes or left-aligns (in case of bytesNN).
+	/// The storage cleanup expects the value to be right-aligned with potentially
+	/// dirty higher order bytes.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes);
+
+	/// @returns the name of a function that prepares a value of the given type
+	/// for being stored in storage. This usually includes cleanup and right-alignment
+	/// to fit the number of bytes in storage.
+	/// The resulting value might still have dirty higher order bits.
+	std::string prepareStoreFunction(Type const& _type);
 
 	/// @returns the name of a function that allocates memory.
 	/// Modifies the "free memory pointer"
@@ -115,13 +171,32 @@ public:
 	/// This is used for data decoded from external sources.
 	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
 
+	std::string packedHashFunction(std::vector<Type const*> const& _givenTypes, std::vector<Type const*> const& _targetTypes);
+
+	/// @returns the name of a function that reverts and uses returndata (if available)
+	/// as reason string.
+	std::string forwardingRevertFunction();
+
 	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
 	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
 	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
 	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
 	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
 
+
+	std::string incrementCheckedFunction(Type const& _type);
+	std::string decrementCheckedFunction(Type const& _type);
+
+	std::string negateNumberCheckedFunction(Type const& _type);
+
+	/// @returns the name of a function that returns the zero value for the
+	/// provided type
+	std::string zeroValueFunction(Type const& _type);
 private:
+	/// Special case of conversionFunction - handles everything that does not
+	/// use exactly one variable to hold the value.
+	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);
+
 	langutil::EVMVersion m_evmVersion;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
 };

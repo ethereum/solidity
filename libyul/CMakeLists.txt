@@ -38,16 +38,30 @@ add_library(yul
 	backends/evm/EVMObjectCompiler.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
+	backends/wasm/EWasmCodeTransform.cpp
+	backends/wasm/EWasmCodeTransform.h
+	backends/wasm/EWasmObjectCompiler.cpp
+	backends/wasm/EWasmObjectCompiler.h
+	backends/wasm/EWasmToText.cpp
+	backends/wasm/EWasmToText.h
 	backends/wasm/WasmDialect.cpp
 	backends/wasm/WasmDialect.h
+	backends/wasm/WordSizeTransform.cpp
+	backends/wasm/WordSizeTransform.h
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
 	optimiser/ASTWalker.h
 	optimiser/BlockFlattener.cpp
 	optimiser/BlockFlattener.h
+	optimiser/BlockHasher.cpp
+	optimiser/BlockHasher.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
+	optimiser/ConstantOptimiser.cpp
+	optimiser/ConstantOptimiser.h
+	optimiser/ControlFlowSimplifier.cpp
+	optimiser/ControlFlowSimplifier.h
 	optimiser/DataFlowAnalyzer.cpp
 	optimiser/DataFlowAnalyzer.h
 	optimiser/DeadCodeEliminator.cpp
@@ -66,6 +80,8 @@ add_library(yul
 	optimiser/ExpressionSimplifier.h
 	optimiser/ExpressionSplitter.cpp
 	optimiser/ExpressionSplitter.h
+	optimiser/ForLoopConditionIntoBody.cpp
+	optimiser/ForLoopConditionIntoBody.h
 	optimiser/ForLoopInitRewriter.cpp
 	optimiser/ForLoopInitRewriter.h
 	optimiser/FullInliner.cpp

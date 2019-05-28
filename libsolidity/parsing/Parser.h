@@ -24,6 +24,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ParserBase.h>
+#include <liblangutil/EVMVersion.h>
 
 namespace langutil
 {
@@ -38,7 +39,14 @@ namespace solidity
 class Parser: public langutil::ParserBase
 {
 public:
-	explicit Parser(langutil::ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
+	explicit Parser(
+		langutil::ErrorReporter& _errorReporter,
+		langutil::EVMVersion _evmVersion,
+		bool _errorRecovery = false
+	):
+		ParserBase(_errorReporter, _errorRecovery),
+		m_evmVersion(_evmVersion)
+	{}
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<langutil::Scanner> const& _scanner);
 
@@ -181,6 +189,7 @@ private:
 
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
+	langutil::EVMVersion m_evmVersion;
 };
 
 }

@@ -71,6 +71,8 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 
 string IRGenerator::generate(ContractDefinition const& _contract)
 {
+	solUnimplementedAssert(!_contract.isLibrary(), "Libraries not yet implemented.");
+
 	Whiskers t(R"(
 		object "<CreationObject>" {
 			code {
@@ -89,18 +91,27 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 		}
 	)");
 
-	resetContext();
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	resetContext(_contract);
+
 	t("CreationObject", creationObjectName(_contract));
 	t("memoryInit", memoryInit());
-	t("constructor", _contract.constructor() ? constructorCode(*_contract.constructor()) : "");
+	t("constructor", constructorCode(_contract));
 	t("deploy", deployCode(_contract));
+	// We generate code for all functions and rely on the optimizer to remove them again
+	// TODO it would probably be better to only generate functions when internalDispatch or
+	// virtualFunctionName is called - same below.
+	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
+		for (auto const* fun: contract->definedFunctions())
+			generateFunction(*fun);
 	t("functions", m_context.functionCollector()->requestedFunctions());
 
-	resetContext();
+	resetContext(_contract);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
+	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
+		for (auto const* fun: contract->definedFunctions())
+			generateFunction(*fun);
 	t("runtimeFunctions", m_context.functionCollector()->requestedFunctions());
 	return t.render();
 }
@@ -116,7 +127,14 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 {
 	string functionName = m_context.functionName(_function);
 	return m_context.functionCollector()->createFunction(functionName, [&]() {
-		Whiskers t("\nfunction <functionName>(<params>) <returns> {\n<body>\n}\n");
+		Whiskers t(R"(
+			function <functionName>(<params>) <returns> {
+				for { let return_flag := 1 } return_flag {} {
+					<body>
+					break
+				}
+			}
+		)");
 		t("functionName", functionName);
 		string params;
 		for (auto const& varDecl: _function.parameters())
@@ -131,15 +149,21 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	});
 }
 
-string IRGenerator::constructorCode(FunctionDefinition const& _constructor)
+string IRGenerator::constructorCode(ContractDefinition const& _contract)
 {
-	string out;
-	if (!_constructor.isPayable())
-		out = callValueCheck();
+	// TODO initialize state variables in base to derived order.
+	// TODO base constructors
+	// TODO callValueCheck if there is no constructor.
+	if (FunctionDefinition const* constructor = _contract.constructor())
+	{
+		string out;
+		if (!constructor->isPayable())
+			out = callValueCheck();
+		solUnimplementedAssert(constructor->parameters().empty(), "");
+		return move(out) + m_context.functionName(*constructor) + "()\n";
+	}
 
-	solUnimplemented("Constructors are not yet implemented.");
-
-	return out;
+	return {};
 }
 
 string IRGenerator::deployCode(ContractDefinition const& _contract)
@@ -242,7 +266,7 @@ string IRGenerator::memoryInit()
 		.render();
 }
 
-void IRGenerator::resetContext()
+void IRGenerator::resetContext(ContractDefinition const& _contract)
 {
 	solAssert(
 		m_context.functionCollector()->requestedFunctions().empty(),
@@ -250,4 +274,8 @@ void IRGenerator::resetContext()
 	);
 	m_context = IRGenerationContext(m_evmVersion, m_optimiserSettings);
 	m_utils = YulUtilFunctions(m_evmVersion, m_context.functionCollector());
+
+	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	for (auto const& var: ContractType(_contract).stateVariables())
+		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }

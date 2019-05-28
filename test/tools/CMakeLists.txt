@@ -1,6 +1,4 @@
-if (OSSFUZZ)
-    add_subdirectory(ossfuzz)
-endif()
+add_subdirectory(ossfuzz)
 
 add_subdirectory(yulInterpreter)
 add_executable(yulrun yulrun.cpp)
@@ -20,6 +18,7 @@ add_executable(isoltest
 	../TestCase.cpp
 	../libsolidity/util/TestFileParser.cpp
 	../libsolidity/util/TestFunctionCall.cpp
+	../libsolidity/GasTest.cpp
 	../libsolidity/SyntaxTest.cpp
 	../libsolidity/SemanticTest.cpp
 	../libsolidity/AnalysisFramework.cpp

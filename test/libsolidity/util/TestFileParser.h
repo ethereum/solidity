@@ -19,6 +19,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <iosfwd>
+#include <iterator>
 #include <numeric>
 #include <stdexcept>
 #include <string>
@@ -57,6 +58,7 @@ namespace test
 	T(Comment, "#", 0)             \
 	T(Number, "number", 0)         \
 	T(HexNumber, "hex_number", 0)  \
+	T(String, "string", 0)         \
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
@@ -105,13 +107,14 @@ struct ABIType
 {
 	enum Type
 	{
+		None,
+		Failure,
+		Boolean,
 		UnsignedDec,
 		SignedDec,
-		Boolean,
 		Hex,
 		HexString,
-		Failure,
-		None
+		String
 	};
 	enum Align
 	{
@@ -246,6 +249,8 @@ struct FunctionCall
 		MultiLine
 	};
 	DisplayMode displayMode = DisplayMode::SingleLine;
+	/// Marks this function call as the constructor.
+	bool isConstructor = false;
 };
 
 /**
@@ -300,21 +305,36 @@ private:
 		std::string scanIdentifierOrKeyword();
 		std::string scanDecimalNumber();
 		std::string scanHexNumber();
+		std::string scanString();
 
 	private:
 		using TokenDesc = std::pair<Token, std::string>;
 
 		/// Advances current position in the input stream.
-		void advance() { ++m_char; }
-		/// Returns the current character.
-		char current() const { return *m_char; }
-		/// Peeks the next character.
-		char peek() const { auto it = m_char; return *(it + 1); }
+		void advance()
+		{
+			solAssert(m_char != m_line.end(), "Cannot advance beyond end.");
+			++m_char;
+		}
+
+		/// Returns the current character or '\0' if at end of input.
+		char current() const noexcept
+		{
+			if (m_char == m_line.end())
+				return '\0';
+
+			return *m_char;
+		}
+
+		/// Retrieves the next character ('\0' if that would be at (or beyond) the end of input)
+		/// without advancing the input stream iterator.
+		char peek() const noexcept;
+
 		/// Returns true if the end of a line is reached, false otherwise.
 		bool isEndOfLine() const { return m_char == m_line.end(); }
 
 		std::string m_line;
-		std::string::iterator m_char;
+		std::string::const_iterator m_char;
 
 		std::string m_currentLiteral;
 
@@ -375,6 +395,9 @@ private:
 	/// Parses the current hex number literal.
 	std::string parseHexNumber();
 
+	/// Parses the current string literal.
+	std::string parseString();
+
 	/// Tries to convert \param _literal to an unpadded `bytes`
 	/// representation of the boolean number literal. Throws if conversion fails.
 	bytes convertBoolean(std::string const& _literal);
@@ -387,9 +410,9 @@ private:
 	/// representation of the hex literal. Throws if conversion fails.
 	bytes convertHexNumber(std::string const& _literal);
 
-	/// Tries to convert \param _literal to left-aligned, unpadded `bytes`
-	/// representation of the hex string literal. Throws if conversion fails.
-	bytes convertHexString(std::string const& _literal);
+	/// Tries to convert \param _literal to an unpadded `bytes`
+	/// representation of the string literal. Throws if conversion fails.
+	bytes convertString(std::string const& _literal);
 
 	/// A scanner instance
 	Scanner m_scanner;

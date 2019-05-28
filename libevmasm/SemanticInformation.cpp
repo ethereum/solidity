@@ -136,7 +136,13 @@ bool SemanticInformation::terminatesControlFlow(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	switch (_item.instruction())
+	else
+		return terminatesControlFlow(_item.instruction());
+}
+
+bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
+{
+	switch (_instruction)
 	{
 	case Instruction::RETURN:
 	case Instruction::SELFDESTRUCT:
@@ -200,6 +206,22 @@ bool SemanticInformation::movable(Instruction _instruction)
 		return true;
 	}
 	return true;
+}
+
+bool SemanticInformation::sideEffectFree(Instruction _instruction)
+{
+	// These are not really functional.
+	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
+
+	return !instructionInfo(_instruction).sideEffects;
+}
+
+bool SemanticInformation::sideEffectFreeIfNoMSize(Instruction _instruction)
+{
+	if (_instruction == Instruction::KECCAK256 || _instruction == Instruction::MLOAD)
+		return true;
+	else
+		return sideEffectFree(_instruction);
 }
 
 bool SemanticInformation::invalidatesMemory(Instruction _instruction)

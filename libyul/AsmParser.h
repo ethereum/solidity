@@ -44,8 +44,8 @@ public:
 		None, ForLoopPre, ForLoopPost, ForLoopBody
 	};
 
-	explicit Parser(langutil::ErrorReporter& _errorReporter, std::shared_ptr<Dialect> _dialect):
-		ParserBase(_errorReporter), m_dialect(std::move(_dialect)) {}
+	explicit Parser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
+		ParserBase(_errorReporter), m_dialect(_dialect) {}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
@@ -56,7 +56,7 @@ public:
 	static std::map<std::string, dev::eth::Instruction> const& instructions();
 
 protected:
-	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier>;
+	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier, FunctionCall>;
 
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
@@ -81,9 +81,8 @@ protected:
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
 	static std::map<dev::eth::Instruction, std::string> const& instructionNames();
-	/// Parses an elementary operation, i.e. a literal, identifier or instruction.
-	/// This will parse instructions even in strict mode as part of the full parser
-	/// for FunctionalInstruction.
+	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
+	/// builtin functian call (only the name).
 	ElementaryOperation parseElementaryOperation();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
@@ -97,7 +96,7 @@ protected:
 	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
-	std::shared_ptr<Dialect> m_dialect;
+	Dialect const& m_dialect;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 };
 

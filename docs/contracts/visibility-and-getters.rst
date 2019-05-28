@@ -43,7 +43,7 @@ For state variables, ``external`` is not possible.
 .. note::
     Everything that is inside a contract is visible to
     all observers external to the blockchain. Making something ``private``
-    only prevents other contracts from accessing and modifying
+    only prevents other contracts from reading or modifying
     the information, but it will still be visible to the
     whole world outside of the blockchain.
 

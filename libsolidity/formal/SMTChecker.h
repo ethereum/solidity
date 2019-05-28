@@ -55,9 +55,11 @@ public:
 	/// the constructor.
 	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
 
-	/// @return the FunctionDefinition of a called function if possible and should inline,
+	/// @returns the FunctionDefinition of a called function if possible and should inline,
 	/// otherwise nullptr.
 	static FunctionDefinition const* inlinedFunctionCallToDefinition(FunctionCall const& _funCall);
+	/// @returns the leftmost identifier in a multi-d IndexAccess.
+	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
 private:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
@@ -115,14 +117,18 @@ private:
 	void inlineFunctionCall(FunctionCall const& _funCall);
 	/// Creates an uninterpreted function call.
 	void abstractFunctionCall(FunctionCall const& _funCall);
+	/// Inlines if the function call is internal or external to `this`.
+	/// Erases knowledge about state variables if external.
+	void internalOrExternalFunctionCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
 
 	/// Encodes a modifier or function body according to the modifier
 	/// visit depth.
 	void visitFunctionOrModifier();
 
+	/// Defines a new global variable or function.
 	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
-	void defineGlobalFunction(std::string const& _name, Expression const& _expr);
+
 	/// Handles the side effects of assignment
 	/// to variable of some SMT array type
 	/// while aliasing is not supported.
@@ -135,7 +141,18 @@ private:
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value, langutil::SourceLocation const& _location);
+	/// Handles assignments to variables of different types.
 	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, langutil::SourceLocation const& _location);
+	/// Handles assignments between generic expressions.
+	/// Will also be used for assignments of tuple components.
+	void assignment(
+		Expression const& _left,
+		std::vector<smt::Expression> const& _right,
+		TypePointer const& _type,
+		langutil::SourceLocation const& _location
+	);
+	/// Computes the right hand side of a compound assignment.
+	smt::Expression compoundAssignment(Assignment const& _assignment);
 
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
@@ -162,6 +179,8 @@ private:
 		std::string const& _description
 	);
 
+	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
+
 	struct OverflowTarget
 	{
 		enum class Type { Underflow, Overflow, All } type;
@@ -169,9 +188,9 @@ private:
 		smt::Expression value;
 		smt::Expression path;
 		langutil::SourceLocation const& location;
-		std::vector<ASTNode const*> callStack;
+		std::vector<CallStackEntry> callStack;
 
-		OverflowTarget(Type _type, TypePointer _intType, smt::Expression _value, smt::Expression _path, langutil::SourceLocation const& _location, std::vector<ASTNode const*> _callStack):
+		OverflowTarget(Type _type, TypePointer _intType, smt::Expression _value, smt::Expression _path, langutil::SourceLocation const& _location, std::vector<CallStackEntry> _callStack):
 			type(_type),
 			intType(_intType),
 			value(_value),
@@ -198,11 +217,8 @@ private:
 
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
-	void resetVariable(VariableDeclaration const& _variable);
 	void resetStateVariables();
 	void resetStorageReferences();
-	void resetVariables(std::set<VariableDeclaration const*> const& _variables);
-	void resetVariables(std::function<bool(VariableDeclaration const&)> const& _filter);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
 
@@ -211,40 +227,20 @@ private:
 	/// using the branch condition as guard.
 	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
-	/// This fails if the type is not supported.
 	bool createVariable(VariableDeclaration const& _varDecl);
 
-	/// @returns true if _delc is a variable that is known at the current point, i.e.
-	/// has a valid index
-	bool knownVariable(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
 	smt::Expression currentValue(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given index. Does not ensure that this index exists.
 	smt::Expression valueAtIndex(VariableDeclaration const& _decl, int _index);
-	/// Allocates a new index for the declaration, updates the current
-	/// index to this value and returns the expression.
-	smt::Expression newValue(VariableDeclaration const& _decl);
-
-	/// Sets the value of the declaration to zero.
-	void setZeroValue(VariableDeclaration const& _decl);
-	void setZeroValue(SymbolicVariable& _variable);
-	/// Resets the variable to an unknown value (in its range).
-	void setUnknownValue(VariableDeclaration const& decl);
-	void setUnknownValue(SymbolicVariable& _variable);
-
 	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
 	smt::Expression expr(Expression const& _e);
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
-	/// Checks if expression was created
-	bool knownExpr(Expression const& _e) const;
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smt::Expression _value);
-
-	/// Checks if special variable or function was seen.
-	bool knownGlobalSymbol(std::string const& _var) const;
 
 	/// Adds a new path condition
 	void pushPathCondition(smt::Expression const& _e);
@@ -255,16 +251,13 @@ private:
 	/// Returns the current callstack. Used for models.
 	langutil::SecondarySourceLocation currentCallStack();
 	/// Copies and pops the last called node.
-	ASTNode const* popCallStack();
-	/// Adds @param _node to the callstack.
-	void pushCallStack(ASTNode const* _node);
+	CallStackEntry popCallStack();
+	/// Adds (_definition, _node) to the callstack.
+	void pushCallStack(CallStackEntry _entry);
 	/// Conjoin the current path conditions with the given parameter and add to the solver
 	void addPathConjoinedExpression(smt::Expression const& _e);
 	/// Add to the solver: the given expression implied by the current path conditions
 	void addPathImpliedExpression(smt::Expression const& _e);
-
-	/// Removes local variables from the context.
-	void removeLocalVariables();
 
 	/// Copy the SSA indices of m_variables.
 	VariableIndices copyVariableIndices();
@@ -274,18 +267,16 @@ private:
 	/// @returns variables that are touched in _node's subtree.
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node);
 
-	std::shared_ptr<smt::SolverInterface> m_interface;
-	VariableUsage m_variableUsage;
+	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
+	VariableDeclaration const* identifierToVariable(Expression const& _expr);
+
+	std::unique_ptr<smt::SolverInterface> m_interface;
+	smt::VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
 	bool m_externalFunctionCallHappened = false;
 	// True if the "No SMT solver available" warning was already created.
 	bool m_noSolverWarning = false;
-	/// An Expression may have multiple smt::Expression due to
-	/// repeated calls to the same function.
-	std::unordered_map<Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
-	std::unordered_map<VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
-	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> m_globalContext;
 
 	/// Stores the instances of an Uninterpreted Function applied to arguments.
 	/// These may be direct application of UFs or Array index access.
@@ -301,10 +292,8 @@ private:
 	langutil::ErrorList m_smtErrors;
 	std::shared_ptr<langutil::Scanner> m_scanner;
 
-	/// Stores the current path of function calls.
-	std::vector<FunctionDefinition const*> m_functionPath;
-	/// Stores the current call/invocation path.
-	std::vector<ASTNode const*> m_callStack;
+	/// Stores the current function/modifier call/invocation path.
+	std::vector<CallStackEntry> m_callStack;
 	/// Returns true if the current function was not visited by
 	/// a function call.
 	bool isRootFunction();

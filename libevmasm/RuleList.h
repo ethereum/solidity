@@ -47,6 +47,13 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(bigint(_a) % bigint(_b));
 }
 
+// This works around a bug fixed with Boost 1.64.
+// https://www.boost.org/doc/libs/1_68_0/libs/multiprecision/doc/html/boost_multiprecision/map/hist.html#boost_multiprecision.map.hist.multiprecision_2_3_1_boost_1_64
+inline u256 shlWorkaround(u256 const& _x, unsigned _amount)
+{
+	return u256((bigint(_x) << _amount) & u256(-1));
+}
+
 // simplificationRuleList below was split up into parts to prevent
 // stack overflows in the JavaScript optimizer for emscripten builds
 // that affected certain browser versions.
@@ -93,7 +100,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		{{Instruction::SHL, {A, B}}, [=]{
 			if (A.d() > 255)
 				return u256(0);
-			return bigintShiftLeftWorkaround(B.d(), unsigned(A.d()));
+			return shlWorkaround(B.d(), unsigned(A.d()));
 		}, false},
 		{{Instruction::SHR, {A, B}}, [=]{
 			if (A.d() > 255)
@@ -365,6 +372,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		}
 	}
 
+	// Combine two SHL by constant
 	rules.push_back({
 		// SHL(B, SHL(A, X)) -> SHL(min(A+B, 256), X)
 		{Instruction::SHL, {{B}, {Instruction::SHL, {{A}, {X}}}}},
@@ -378,6 +386,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		false
 	});
 
+	// Combine two SHR by constant
 	rules.push_back({
 		// SHR(B, SHR(A, X)) -> SHR(min(A+B, 256), X)
 		{Instruction::SHR, {{B}, {Instruction::SHR, {{A}, {X}}}}},
@@ -391,6 +400,93 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		false
 	});
 
+	// Combine SHL-SHR by constant
+	rules.push_back({
+		// SHR(B, SHL(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
+		{Instruction::SHR, {{B}, {Instruction::SHL, {{A}, {X}}}}},
+		[=]() -> Pattern {
+			u256 mask = shlWorkaround(u256(-1), unsigned(A.d())) >> unsigned(B.d());
+
+			if (A.d() > B.d())
+				return {Instruction::AND, {{Instruction::SHL, {A.d() - B.d(), X}}, mask}};
+			else if (B.d() > A.d())
+				return {Instruction::AND, {{Instruction::SHR, {B.d() - A.d(), X}}, mask}};
+			else
+				return {Instruction::AND, {X, mask}};
+		},
+		false,
+		[=] { return A.d() < 256 && B.d() < 256; }
+	});
+
+	// Combine SHR-SHL by constant
+	rules.push_back({
+		// SHL(B, SHR(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
+		{Instruction::SHL, {{B}, {Instruction::SHR, {{A}, {X}}}}},
+		[=]() -> Pattern {
+			u256 mask = shlWorkaround(u256(-1) >> unsigned(A.d()), unsigned(B.d()));
+
+			if (A.d() > B.d())
+				return {Instruction::AND, {{Instruction::SHR, {A.d() - B.d(), X}}, mask}};
+			else if (B.d() > A.d())
+				return {Instruction::AND, {{Instruction::SHL, {B.d() - A.d(), X}}, mask}};
+			else
+				return {Instruction::AND, {X, mask}};
+		},
+		false,
+		[=] { return A.d() < 256 && B.d() < 256; }
+	});
+
+	// Move AND with constant across SHL and SHR by constant
+	for (auto shiftOp: {Instruction::SHL, Instruction::SHR})
+	{
+		auto replacement = [=]() -> Pattern {
+			u256 mask =
+				shiftOp == Instruction::SHL ?
+				shlWorkaround(A.d(), unsigned(B.d())) :
+				A.d() >> unsigned(B.d());
+			return {Instruction::AND, {{shiftOp, {B.d(), X}}, std::move(mask)}};
+		};
+		rules.push_back({
+			// SH[L/R](B, AND(X, A)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
+			{shiftOp, {{B}, {Instruction::AND, {{X}, {A}}}}},
+			replacement,
+			false,
+			[=] { return B.d() < 256; }
+		});
+		rules.push_back({
+			// SH[L/R](B, AND(A, X)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
+			{shiftOp, {{B}, {Instruction::AND, {{A}, {X}}}}},
+			replacement,
+			false,
+			[=] { return B.d() < 256; }
+		});
+	}
+
+	rules.push_back({
+		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
+		{Instruction::MUL, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		[=]() -> Pattern {
+			return {Instruction::SHL, {Y, X}};
+		},
+		false
+	});
+	rules.push_back({
+		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
+		{Instruction::MUL, {{Instruction::SHL, {X, u256(1)}}, Y}},
+		[=]() -> Pattern {
+			return {Instruction::SHL, {X, Y}};
+		},
+		false
+	});
+
+	rules.push_back({
+		// DIV(X, SHL(Y, 1)) -> SHR(Y, X)
+		{Instruction::DIV, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		[=]() -> Pattern {
+			return {Instruction::SHR, {Y, X}};
+		},
+		false
+	});
 
 	std::function<bool()> feasibilityFunction = [=]() {
 		if (B.d() > 256)

@@ -18,7 +18,5 @@ contract C
 }
 // ----
 // Warning: (86-93): Assertion checker does not support recursive function calls.
-// Warning: (86-93): Internal error: Expression undefined for SMT solver.
 // Warning: (86-93): Assertion checker does not support recursive function calls.
-// Warning: (86-93): Internal error: Expression undefined for SMT solver.
 // Warning: (253-266): Assertion violation happens here

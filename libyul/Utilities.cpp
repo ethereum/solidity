@@ -85,3 +85,9 @@ bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const
 	else
 		return _lhs.value < _rhs.value;
 }
+
+bool SwitchCaseCompareByLiteralValue::operator()(Case const* _lhs, Case const* _rhs) const
+{
+	yulAssert(_lhs && _rhs, "");
+	return Less<Literal*>{}(_lhs->value.get(), _rhs->value.get());
+}

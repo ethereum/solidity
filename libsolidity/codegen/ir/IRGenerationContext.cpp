@@ -39,13 +39,22 @@ string IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl
 	return m_localVariables[&_varDecl] = "vloc_" + _varDecl.name() + "_" + to_string(_varDecl.id());
 }
 
-string IRGenerationContext::variableName(VariableDeclaration const& _varDecl)
+string IRGenerationContext::localVariableName(VariableDeclaration const& _varDecl)
 {
 	solAssert(
 		m_localVariables.count(&_varDecl),
 		"Unknown variable: " + _varDecl.name()
 	);
 	return m_localVariables[&_varDecl];
+}
+
+void IRGenerationContext::addStateVariable(
+	VariableDeclaration const& _declaration,
+	u256 _storageOffset,
+	unsigned _byteOffset
+)
+{
+	m_stateVariables[&_declaration] = make_pair(move(_storageOffset), _byteOffset);
 }
 
 string IRGenerationContext::functionName(FunctionDefinition const& _function)
@@ -85,18 +94,27 @@ string IRGenerationContext::newYulVariable()
 string IRGenerationContext::variable(Expression const& _expression)
 {
 	unsigned size = _expression.annotation().type->sizeOnStack();
-	solUnimplementedAssert(size == 1, "");
-	return "expr_" + to_string(_expression.id());
+	string var = "expr_" + to_string(_expression.id());
+	if (size == 1)
+		return var;
+	else
+		return YulUtilFunctions::suffixedVariableNameList(move(var) + "_", 1, 1 + size);
+}
+
+string IRGenerationContext::variablePart(Expression const& _expression, size_t _part)
+{
+	size_t numVars = _expression.annotation().type->sizeOnStack();
+	solAssert(numVars > 1, "");
+	solAssert(1 <= _part && _part <= numVars, "");
+	return "expr_" + to_string(_expression.id()) + "_" + to_string(_part);
 }
 
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 {
-	// TODO can we limit the generated functions to only those visited
-	// in the expression context? What about creation / runtime context?
 	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
 	return m_functions->createFunction(funName, [&]() {
 		Whiskers templ(R"(
-			function <functionName>(fun <comma> <in>) -> <out> {
+			function <functionName>(fun <comma> <in>) <arrow> <out> {
 				switch fun
 				<#cases>
 				case <funID>
@@ -111,6 +129,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		templ("comma", _in > 0 ? "," : "");
 		YulUtilFunctions utils(m_evmVersion, m_functions);
 		templ("in", utils.suffixedVariableNameList("in_", 0, _in));
+		templ("arrow", _out > 0 ? "->" : "");
 		templ("out", utils.suffixedVariableNameList("out_", 0, _out));
 		vector<map<string, string>> functions;
 		for (auto const& contract: m_inheritanceHierarchy)
@@ -120,11 +139,21 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 					function->parameters().size() == _in &&
 					function->returnParameters().size() == _out
 				)
+				{
+					// 0 is reserved for uninitialized function pointers
+					solAssert(function->id() != 0, "Unexpected function ID: 0");
+
 					functions.emplace_back(map<string, string> {
 						{ "funID", to_string(function->id()) },
 						{ "name", functionName(*function)}
 					});
+				}
 		templ("cases", move(functions));
 		return templ.render();
 	});
+}
+
+YulUtilFunctions IRGenerationContext::utils()
+{
+	return YulUtilFunctions(m_evmVersion, m_functions);
 }

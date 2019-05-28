@@ -94,8 +94,7 @@ Declaration const& resolveDeclaration(
 bytes compileFirstExpression(
 	const string& _sourceCode,
 	vector<vector<string>> _functions = {},
-	vector<vector<string>> _localVariables = {},
-	vector<shared_ptr<MagicVariableDeclaration const>> _globalDeclarations = {}
+	vector<vector<string>> _localVariables = {}
 )
 {
 	ASTPointer<SourceUnit> sourceUnit;
@@ -103,7 +102,9 @@ bytes compileFirstExpression(
 	{
 		ErrorList errors;
 		ErrorReporter errorReporter(errors);
-		sourceUnit = Parser(errorReporter).parse(make_shared<Scanner>(CharStream(_sourceCode, "")));
+		sourceUnit = Parser(errorReporter, dev::test::Options::get().evmVersion()).parse(
+			make_shared<Scanner>(CharStream(_sourceCode, ""))
+		);
 		if (!sourceUnit)
 			return bytes();
 	}
@@ -113,15 +114,11 @@ bytes compileFirstExpression(
 		BOOST_FAIL(msg);
 	}
 
-	vector<Declaration const*> declarations;
-	declarations.reserve(_globalDeclarations.size() + 1);
-	for (ASTPointer<Declaration const> const& variable: _globalDeclarations)
-		declarations.push_back(variable.get());
-
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
+	GlobalContext globalContext;
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver(declarations, scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
@@ -598,10 +595,7 @@ BOOST_AUTO_TEST_CASE(blockhash)
 		}
 	)";
 
-	auto blockhashFun = TypeProvider::function(strings{"uint256"}, strings{"bytes32"},
-		FunctionType::Kind::BlockHash, false, StateMutability::View);
-
-	bytes code = compileFirstExpression(sourceCode, {}, {}, {make_shared<MagicVariableDeclaration>("blockhash", blockhashFun)});
+	bytes code = compileFirstExpression(sourceCode, {}, {});
 
 	bytes expectation({uint8_t(Instruction::PUSH1), 0x03,
 					   uint8_t(Instruction::BLOCKHASH)});
@@ -617,10 +611,7 @@ BOOST_AUTO_TEST_CASE(gas_left)
 			}
 		}
 	)";
-	bytes code = compileFirstExpression(
-		sourceCode, {}, {},
-		{make_shared<MagicVariableDeclaration>("gasleft", TypeProvider::function(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft))}
-	);
+	bytes code = compileFirstExpression(sourceCode, {}, {});
 
 	bytes expectation = bytes({uint8_t(Instruction::GAS)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());

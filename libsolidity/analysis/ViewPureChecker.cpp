@@ -18,6 +18,7 @@
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libyul/AsmData.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libevmasm/SemanticInformation.h>
 #include <functional>
@@ -33,7 +34,11 @@ namespace
 class AssemblyViewPureChecker: public boost::static_visitor<void>
 {
 public:
-	explicit AssemblyViewPureChecker(std::function<void(StateMutability, SourceLocation const&)> _reportMutability):
+	explicit AssemblyViewPureChecker(
+		yul::Dialect const& _dialect,
+		std::function<void(StateMutability, SourceLocation const&)> _reportMutability
+	):
+		m_dialect(_dialect),
 		m_reportMutability(_reportMutability) {}
 
 	void operator()(yul::Label const&) { }
@@ -69,6 +74,11 @@ public:
 	}
 	void operator()(yul::FunctionCall const& _funCall)
 	{
+		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
+			if (yul::BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+				if (fun->instruction)
+					checkInstruction(_funCall.location, *fun->instruction);
+
 		for (auto const& arg: _funCall.arguments)
 			boost::apply_visitor(*this, arg);
 	}
@@ -107,16 +117,16 @@ public:
 	}
 
 private:
-	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
 	void checkInstruction(SourceLocation _location, dev::eth::Instruction _instruction)
 	{
 		if (eth::SemanticInformation::invalidInViewFunctions(_instruction))
 			m_reportMutability(StateMutability::NonPayable, _location);
-		else if (_instruction == dev::eth::Instruction::CALLVALUE)
-			m_reportMutability(StateMutability::Payable, _location);
 		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction))
 			m_reportMutability(StateMutability::View, _location);
 	}
+
+	yul::Dialect const& m_dialect;
+	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
 };
 
 }
@@ -223,6 +233,7 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
+		_inlineAssembly.dialect(),
 		[=](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
 	}(_inlineAssembly.operations());
 }

@@ -31,6 +31,9 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
+#include <libyul/backends/wasm/WasmDialect.h>
+#include <libyul/backends/wasm/EWasmObjectCompiler.h>
+#include <libyul/optimiser/Metrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
 
@@ -45,7 +48,7 @@ using namespace yul;
 
 namespace
 {
-shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
+Dialect const& languageToDialect(AssemblyStack::Language _language, EVMVersion _version)
 {
 	switch (_language)
 	{
@@ -55,6 +58,8 @@ shared_ptr<Dialect> languageToDialect(AssemblyStack::Language _language, EVMVers
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case AssemblyStack::Language::Yul:
 		return Dialect::yul();
+	case AssemblyStack::Language::EWasm:
+		return WasmDialect::instance();
 	}
 	solAssert(false, "");
 	return Dialect::yul();
@@ -94,7 +99,7 @@ void AssemblyStack::optimize()
 
 	m_analysisSuccessful = false;
 	solAssert(m_parserResult, "");
-	optimize(*m_parserResult);
+	optimize(*m_parserResult, true);
 	solAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
 
@@ -120,29 +125,32 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 
 void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _optimize) const
 {
-	shared_ptr<EVMDialect> dialect;
+	EVMDialect const* dialect = nullptr;
 
 	if (m_language == Language::Assembly)
-		dialect = EVMDialect::looseAssemblyForEVM(m_evmVersion);
+		dialect = &EVMDialect::looseAssemblyForEVM(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::StrictAssembly)
-		dialect = EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
+		dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::Yul)
-		dialect = EVMDialect::yulForEVM(m_evmVersion);
+		dialect = &EVMDialect::yulForEVM(m_evmVersion);
 	else
 		solAssert(false, "Invalid language.");
 
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _evm15, _optimize);
 }
 
-void AssemblyStack::optimize(Object& _object)
+void AssemblyStack::optimize(Object& _object, bool _isCreation)
 {
 	solAssert(_object.code, "");
 	solAssert(_object.analysisInfo, "");
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
-			optimize(*subObject);
+			optimize(*subObject, false);
+	EVMDialect const& dialect = dynamic_cast<EVMDialect const&>(languageToDialect(m_language, m_evmVersion));
+	GasMeter meter(dialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
 	OptimiserSuite::run(
-		languageToDialect(m_language, m_evmVersion),
+		dialect,
+		meter,
 		*_object.code,
 		*_object.analysisInfo,
 		m_optimiserSettings.optimizeStackAllocation
@@ -178,7 +186,14 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		return object;
 	}
 	case Machine::eWasm:
-		solUnimplemented("eWasm backend is not yet implemented.");
+	{
+		solAssert(m_language == Language::EWasm, "");
+		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
+
+		MachineAssemblyObject object;
+		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, dialect);
+		return object;
+	}
 	}
 	// unreachable
 	return MachineAssemblyObject();

@@ -23,6 +23,7 @@ using namespace yul::test::yul_fuzzer;
 void yulFuzzerUtil::interpret(
 	ostream& _os,
 	shared_ptr<yul::Block> _ast,
+	Dialect const& _dialect,
 	size_t _maxSteps,
 	size_t _maxTraceSize,
 	size_t _maxMemory
@@ -32,9 +33,7 @@ void yulFuzzerUtil::interpret(
 	state.maxTraceSize = _maxTraceSize;
 	state.maxSteps = _maxSteps;
 	state.maxMemSize = _maxMemory;
-	Interpreter interpreter(state);
+	Interpreter interpreter(state, _dialect);
 	interpreter(*_ast);
-	_os << "Trace:" << endl;
-	for (auto const& line: interpreter.trace())
-		_os << "  " << line << endl;
+	state.dumpTraceAndState(_os);
 }

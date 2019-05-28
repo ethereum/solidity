@@ -53,13 +53,9 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename)
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
 	file.exceptions(ios::badbit);
 
+	m_source = parseSourceAndSettings(file);
+
 	string line;
-	while (getline(file, line))
-	{
-		if (boost::algorithm::starts_with(line, "// ----"))
-			break;
-		m_source += std::move(line) + "\n";
-	}
 	while (getline(file, line))
 		if (boost::algorithm::starts_with(line, "// "))
 			m_expectation += line.substr(3) + "\n";
@@ -67,10 +63,10 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename)
 			m_expectation += line + "\n";
 }
 
-bool YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
-		return false;
+		return TestResult::FatalError;
 
 	m_obtainedResult = interpret();
 
@@ -82,9 +78,9 @@ bool YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool c
 		printIndented(_stream, m_expectation, nextIndentLevel);
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return false;
+		return TestResult::Failure;
 	}
-	return true;
+	return TestResult::Success;
 }
 
 void YulInterpreterTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
@@ -132,7 +128,7 @@ string YulInterpreterTest::interpret()
 	state.maxTraceSize = 10000;
 	state.maxSteps = 10000;
 	state.maxMemSize = 0x20000000;
-	Interpreter interpreter(state);
+	Interpreter interpreter(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
 	try
 	{
 		interpreter(*m_ast);
@@ -142,15 +138,7 @@ string YulInterpreterTest::interpret()
 	}
 
 	stringstream result;
-	result << "Trace:" << endl;;
-	for (auto const& line: interpreter.trace())
-		result << "  " << line << endl;
-	result << "Memory dump:\n";
-	for (size_t i = 0; i < state.memory.size(); i += 0x20)
-		result << "  " << std::hex << std::setw(4) << i << ": " << toHex(bytesConstRef(state.memory.data() + i, 0x20).toBytes()) << endl;
-	result << "Storage dump:" << endl;
-	for (auto const& slot: state.storage)
-		result << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+	state.dumpTraceAndState(result);
 	return result.str();
 }
 

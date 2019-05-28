@@ -19,6 +19,7 @@
  */
 
 #include <libyul/optimiser/DeadCodeEliminator.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/AsmData.h>
 
 #include <libevmasm/SemanticInformation.h>
@@ -30,42 +31,6 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-namespace
-{
-bool isTerminating(yul::ExpressionStatement const& _exprStmnt)
-{
-	if (_exprStmnt.expression.type() != typeid(FunctionalInstruction))
-		return false;
-
-	auto const& funcInstr = boost::get<FunctionalInstruction>(_exprStmnt.expression);
-
-	return eth::SemanticInformation::terminatesControlFlow(funcInstr.instruction);
-}
-
-/// Returns an iterator to the first terminating statement or
-/// `_block.statements.end()()` when none was found
-auto findFirstTerminatingStatement(Block& _block)
-{
-	return find_if(
-		_block.statements.begin(),
-		_block.statements.end(),
-		[](Statement const& _stmnt)
-		{
-			if (
-				_stmnt.type() == typeid(ExpressionStatement) &&
-				isTerminating(boost::get<ExpressionStatement>(_stmnt))
-			)
-				return true;
-			else if (_stmnt.type() == typeid(Break))
-				return true;
-			else if (_stmnt.type() == typeid(Continue))
-				return true;
-
-			return false;
-		}
-	);
-}
-}
 
 void DeadCodeEliminator::operator()(ForLoop& _for)
 {
@@ -75,24 +40,19 @@ void DeadCodeEliminator::operator()(ForLoop& _for)
 
 void DeadCodeEliminator::operator()(Block& _block)
 {
-	auto& statements = _block.statements;
+	TerminationFinder::ControlFlow controlFlowChange;
+	size_t index;
+	tie(controlFlowChange, index) = TerminationFinder{m_dialect}.firstUnconditionalControlFlowChange(_block.statements);
 
-	auto firstTerminatingStatment = findFirstTerminatingStatement(_block);
-
-	if (
-		firstTerminatingStatment != statements.end() &&
-		firstTerminatingStatment + 1 != statements.end()
-	)
-		statements.erase(
-			std::remove_if(
-				firstTerminatingStatment + 1,
-				statements.end(),
-				[] (Statement const& _s)
-				{
-					return _s.type() != typeid(yul::FunctionDefinition);
-				}
+	// Erase everything after the terminating statement that is not a function definition.
+	if (controlFlowChange != TerminationFinder::ControlFlow::FlowOut && index != size_t(-1))
+		_block.statements.erase(
+			remove_if(
+				_block.statements.begin() + index + 1,
+				_block.statements.end(),
+				[] (Statement const& _s) { return _s.type() != typeid(yul::FunctionDefinition); }
 			),
-			statements.end()
+			_block.statements.end()
 		);
 
 	ASTModifier::operator()(_block);

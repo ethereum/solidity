@@ -30,7 +30,6 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 struct Block;
-struct Dialect;
 }
 
 namespace yul
@@ -38,7 +37,7 @@ namespace yul
 namespace test
 {
 
-class YulInterpreterTest: public dev::solidity::test::TestCase
+class YulInterpreterTest: public dev::solidity::test::EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
@@ -48,7 +47,7 @@ public:
 
 	explicit YulInterpreterTest(std::string const& _filename);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;

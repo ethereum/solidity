@@ -11,13 +11,6 @@
 // {
 //     let a := caller()
 //     pop(caller())
-//     for {
-//     }
-//     caller()
-//     {
-//         pop(caller())
-//     }
-//     {
-//         pop(caller())
-//     }
+//     for { } caller() { pop(caller()) }
+//     { pop(caller()) }
 // }

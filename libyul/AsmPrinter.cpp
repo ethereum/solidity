@@ -191,7 +191,11 @@ string AsmPrinter::operator()(FunctionCall const& _functionCall) const
 string AsmPrinter::operator()(If const& _if) const
 {
 	solAssert(_if.condition, "Invalid if condition.");
-	return "if " + boost::apply_visitor(*this, *_if.condition) + "\n" + (*this)(_if.body);
+	string body = (*this)(_if.body);
+	char delim = '\n';
+	if (body.find('\n') == string::npos)
+		delim = ' ';
+	return "if " + boost::apply_visitor(*this, *_if.condition) + delim + (*this)(_if.body);
 }
 
 string AsmPrinter::operator()(Switch const& _switch) const
@@ -212,15 +216,19 @@ string AsmPrinter::operator()(Switch const& _switch) const
 string AsmPrinter::operator()(ForLoop const& _forLoop) const
 {
 	solAssert(_forLoop.condition, "Invalid for loop condition.");
-	string out = "for ";
-	out += (*this)(_forLoop.pre);
-	out += "\n";
-	out += boost::apply_visitor(*this, *_forLoop.condition);
-	out += "\n";
-	out += (*this)(_forLoop.post);
-	out += "\n";
-	out += (*this)(_forLoop.body);
-	return out;
+	string pre = (*this)(_forLoop.pre);
+	string condition = boost::apply_visitor(*this, *_forLoop.condition);
+	string post = (*this)(_forLoop.post);
+	char delim = '\n';
+	if (
+		pre.size() + condition.size() + post.size() < 60 &&
+		pre.find('\n') == string::npos &&
+		post.find('\n') == string::npos
+	)
+		delim = ' ';
+	return
+		("for " + move(pre) + delim + move(condition) + delim + move(post) + "\n") +
+		(*this)(_forLoop.body);
 }
 
 string AsmPrinter::operator()(Break const&) const
@@ -236,13 +244,18 @@ string AsmPrinter::operator()(Continue const&) const
 string AsmPrinter::operator()(Block const& _block) const
 {
 	if (_block.statements.empty())
-		return "{\n}";
+		return "{ }";
 	string body = boost::algorithm::join(
 		_block.statements | boost::adaptors::transformed(boost::apply_visitor(*this)),
 		"\n"
 	);
-	boost::replace_all(body, "\n", "\n    ");
-	return "{\n    " + body + "\n}";
+	if (body.size() < 30 && body.find('\n') == string::npos)
+		return "{ " + body + " }";
+	else
+	{
+		boost::replace_all(body, "\n", "\n    ");
+		return "{\n    " + body + "\n}";
+	}
 }
 
 string AsmPrinter::formatTypedName(TypedName _variable) const
