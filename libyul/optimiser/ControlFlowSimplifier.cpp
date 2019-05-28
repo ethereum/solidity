@@ -18,6 +18,7 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AsmData.h>
 #include <libyul/Utilities.h>
+#include <libyul/Dialect.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Visitor.h>
 
@@ -33,11 +34,16 @@ using OptionalStatements = boost::optional<vector<Statement>>;
 namespace
 {
 
-ExpressionStatement makePopExpressionStatement(langutil::SourceLocation const& _location, Expression&& _expression)
+ExpressionStatement makeDiscardCall(
+	langutil::SourceLocation const& _location,
+	Dialect const& _dialect,
+	Expression&& _expression
+)
 {
+	yulAssert(_dialect.discardFunction(), "No discard function available.");
 	return {_location, FunctionCall{
 		_location,
-		Identifier{_location, "pop"_yulstring},
+		Identifier{_location, _dialect.discardFunction()->name},
 		{std::move(_expression)}
 	}};
 }
@@ -66,36 +72,55 @@ void removeEmptyCasesFromSwitch(Switch& _switchStmt)
 	);
 }
 
-OptionalStatements reduceNoCaseSwitch(Switch& _switchStmt)
+OptionalStatements reduceNoCaseSwitch(Dialect const& _dialect, Switch& _switchStmt)
 {
 	yulAssert(_switchStmt.cases.empty(), "Expected no case!");
+	if (!_dialect.discardFunction())
+		return {};
 
 	auto loc = locationOf(*_switchStmt.expression);
 
-	return make_vector<Statement>(makePopExpressionStatement(loc, std::move(*_switchStmt.expression)));
+	return make_vector<Statement>(makeDiscardCall(
+		loc,
+		_dialect,
+		std::move(*_switchStmt.expression)
+	));
 }
 
-OptionalStatements reduceSingleCaseSwitch(Switch& _switchStmt)
+OptionalStatements reduceSingleCaseSwitch(Dialect const& _dialect, Switch& _switchStmt)
 {
 	yulAssert(_switchStmt.cases.size() == 1, "Expected only one case!");
 
 	auto& switchCase = _switchStmt.cases.front();
 	auto loc = locationOf(*_switchStmt.expression);
 	if (switchCase.value)
+	{
+		if (!_dialect.equalityFunction())
+			return {};
 		return make_vector<Statement>(If{
 			std::move(_switchStmt.location),
 			make_unique<Expression>(FunctionCall{
 				loc,
-				Identifier{loc, "eq"_yulstring},
+				Identifier{loc, _dialect.equalityFunction()->name},
 				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
 			}),
 			std::move(switchCase.body)
 		});
+	}
 	else
+	{
+		if (!_dialect.discardFunction())
+			return {};
+
 		return make_vector<Statement>(
-			makePopExpressionStatement(loc, std::move(*_switchStmt.expression)),
+			makeDiscardCall(
+				loc,
+				_dialect,
+				std::move(*_switchStmt.expression)
+			),
 			std::move(switchCase.body)
 		);
+	}
 }
 
 }
@@ -151,10 +176,14 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
 	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch> const visitor(
 		[&](If& _ifStmt) -> OptionalStatements {
-			if (_ifStmt.body.statements.empty())
+			if (_ifStmt.body.statements.empty() && m_dialect.discardFunction())
 			{
 				OptionalStatements s = vector<Statement>{};
-				s->emplace_back(makePopExpressionStatement(_ifStmt.location, std::move(*_ifStmt.condition)));
+				s->emplace_back(makeDiscardCall(
+					_ifStmt.location,
+					m_dialect,
+					std::move(*_ifStmt.condition)
+				));
 				return s;
 			}
 			return {};
@@ -164,9 +193,9 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			removeEmptyCasesFromSwitch(_switchStmt);
 
 			if (_switchStmt.cases.empty())
-				return reduceNoCaseSwitch(_switchStmt);
+				return reduceNoCaseSwitch(m_dialect, _switchStmt);
 			else if (_switchStmt.cases.size() == 1)
-				return reduceSingleCaseSwitch(_switchStmt);
+				return reduceSingleCaseSwitch(m_dialect, _switchStmt);
 
 			return {};
 		}

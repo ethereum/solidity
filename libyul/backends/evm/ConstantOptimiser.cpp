@@ -18,14 +18,12 @@
  * Optimisation stage that replaces constants by expressions that compute them.
  */
 
-#include <libyul/optimiser/ConstantOptimiser.h>
+#include <libyul/backends/evm/ConstantOptimiser.h>
 
 #include <libyul/optimiser/ASTCopier.h>
-#include <libyul/optimiser/Metrics.h>
+#include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/AsmData.h>
-#include <libyul/AsmPrinter.h>
 #include <libyul/Utilities.h>
-#include <libyul/AsmParser.h>
 
 #include <libdevcore/CommonData.h>
 
