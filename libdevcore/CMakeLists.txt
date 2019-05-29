@@ -12,6 +12,7 @@ set(sources
 	FixedHash.h
 	IndentedWriter.cpp
 	IndentedWriter.h
+	InvertibleMap.h
 	IpfsHash.cpp
 	IpfsHash.h
 	JSON.cpp
