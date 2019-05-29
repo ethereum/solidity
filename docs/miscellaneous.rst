@@ -64,10 +64,11 @@ So for the following contract snippet::
 
     pragma solidity >=0.4.0 <0.7.0;
 
+
     contract C {
-      struct s { uint a; uint b; }
-      uint x;
-      mapping(uint => mapping(uint => s)) data;
+        struct S { uint a; uint b; }
+        uint x;
+        mapping(uint => mapping(uint => S)) data;
     }
 
 The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
