@@ -55,36 +55,30 @@ string ProtoConverter::createAlphaNum(string const& _strBytes) const
 
 bool ProtoConverter::isCaseLiteralUnique(Literal const& _x)
 {
-	std::string tmp;
+	dev::u256 mpCaseLiteralValue;
 	bool isUnique = false;
-	bool isEmptyString = false;
+
 	switch (_x.literal_oneof_case())
 	{
 	case Literal::kIntval:
-		tmp = std::to_string(_x.intval());
+		mpCaseLiteralValue = dev::u256(_x.intval());
 		break;
 	case Literal::kHexval:
-		tmp = "0x" + createHex(_x.hexval());
+		// We need to ask boost mp library to treat this
+		// as a hex value. Hence the "0x" prefix.
+		mpCaseLiteralValue = dev::u256("0x" + createHex(_x.hexval()));
 		break;
 	case Literal::kStrval:
-		tmp = createAlphaNum(_x.strval());
-		if (tmp.empty())
-		{
-			isEmptyString = true;
-			tmp = std::to_string(0);
-		}
-		else
-			tmp = "\"" + tmp + "\"";
+		mpCaseLiteralValue = dev::u256(dev::h256(createAlphaNum(_x.strval()), dev::h256::FromBinary, dev::h256::AlignLeft));
 		break;
 	case Literal::LITERAL_ONEOF_NOT_SET:
-		tmp = std::to_string(1);
+		// If the proto generator does not generate a valid Literal
+		// we generate a case 1:
+		mpCaseLiteralValue = 1;
 		break;
 	}
-	if (!_x.has_strval() || isEmptyString)
-		isUnique = m_switchLiteralSetPerScope.top().insert(dev::u256(tmp)).second;
-	else
-		isUnique = m_switchLiteralSetPerScope.top().insert(
-				dev::u256(dev::h256(tmp, dev::h256::FromBinary, dev::h256::AlignLeft))).second;
+
+	isUnique = m_switchLiteralSetPerScope.top().insert(mpCaseLiteralValue).second;
 	return isUnique;
 }
 
