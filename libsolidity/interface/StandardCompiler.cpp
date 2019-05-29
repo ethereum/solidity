@@ -769,6 +769,15 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			"Exception during compilation: " + boost::diagnostic_information(_exception)
 		));
 	}
+	catch (std::exception const& _e)
+	{
+		errors.append(formatError(
+			false,
+			"Exception",
+			"general",
+			"Unknown exception during compilation" + (_e.what() ? ": " + string(_e.what()) : ".")
+		));
+	}
 	catch (...)
 	{
 		errors.append(formatError(
