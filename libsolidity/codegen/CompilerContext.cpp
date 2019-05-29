@@ -422,9 +422,10 @@ void CompilerContext::appendInlineAssembly(
 	if (_optimiserSettings.runYulOptimiser && _localVariables.empty())
 	{
 		bool const isCreation = m_runtimeContext != nullptr;
+		yul::GasMeter meter(dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 		yul::OptimiserSuite::run(
 			dialect,
-			yul::GasMeter(dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment),
+			&meter,
 			*parserResult,
 			analysisInfo,
 			_optimiserSettings.optimizeStackAllocation,

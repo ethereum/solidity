@@ -60,7 +60,7 @@ using namespace yul;
 
 void OptimiserSuite::run(
 	Dialect const& _dialect,
-	GasMeter const& _meter,
+	GasMeter const* _meter,
 	Block& _ast,
 	AsmAnalysisInfo const& _analysisInfo,
 	bool _optimizeStackAllocation,
@@ -68,6 +68,7 @@ void OptimiserSuite::run(
 )
 {
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
+	reservedIdentifiers += _dialect.fixedFunctionNames();
 
 	Block ast = boost::get<Block>(Disambiguator(_dialect, _analysisInfo, reservedIdentifiers)(_ast));
 
@@ -210,7 +211,10 @@ void OptimiserSuite::run(
 	FunctionGrouper{}(ast);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-		ConstantOptimiser{*dialect, _meter}(ast);
+	{
+		yulAssert(_meter, "");
+		ConstantOptimiser{*dialect, *_meter}(ast);
+	}
 	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);
 	yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, ast);
 

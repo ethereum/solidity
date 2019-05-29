@@ -94,8 +94,6 @@ void AssemblyStack::optimize()
 	if (!m_optimiserSettings.runYulOptimiser)
 		return;
 
-	if (m_language != Language::StrictAssembly)
-		solUnimplemented("Optimizer for both loose assembly and Yul is not yet implemented");
 	solAssert(m_analysisSuccessful, "Analysis was not successful.");
 
 	m_analysisSuccessful = false;
@@ -147,17 +145,18 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 			optimize(*subObject, false);
-	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&languageToDialect(m_language, m_evmVersion)))
-	{
-		GasMeter meter(*dialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
-		OptimiserSuite::run(
-			*dialect,
-			meter,
-			*_object.code,
-			*_object.analysisInfo,
-			m_optimiserSettings.optimizeStackAllocation
-		);
-	}
+
+	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
+	unique_ptr<GasMeter> meter;
+	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
+		meter = make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+	OptimiserSuite::run(
+		dialect,
+		meter.get(),
+		*_object.code,
+		*_object.analysisInfo,
+		m_optimiserSettings.optimizeStackAllocation
+	);
 }
 
 MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
