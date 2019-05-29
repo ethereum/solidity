@@ -271,19 +271,20 @@ because only a reference and not a copy is passed.
 
     pragma solidity >=0.4.16 <0.7.0;
 
-     contract C {
+
+    contract C {
         uint[20] x;
 
-         function f() public {
+        function f() public {
             g(x);
             h(x);
         }
 
-         function g(uint[20] memory y) internal pure {
+        function g(uint[20] memory y) internal pure {
             y[2] = 3;
         }
 
-         function h(uint[20] storage y) internal {
+        function h(uint[20] storage y) internal {
             y[3] = 4;
         }
     }
@@ -354,7 +355,7 @@ In any case, you will get a warning about the outer variable being shadowed.
     for the entire function, regardless where it was declared. The following example shows a code snippet that used
     to compile but leads to an error starting from version 0.5.0.
 
- ::
+::
 
     pragma solidity >=0.5.0 <0.7.0;
     // This will not compile
