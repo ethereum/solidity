@@ -778,7 +778,7 @@ No::
 
 
     contract A is B, C, D {
-        uint x;
+        uint private x;
 
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
         B(param1)
@@ -790,7 +790,7 @@ No::
 
 
     contract X is B, C, D {
-        uint x;
+        uint private x;
 
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
             B(param1)
@@ -1120,7 +1120,7 @@ added looks like the one below::
     /// @author The Solidity Team
     /// @title A simple storage example
     contract SimpleStorage {
-        uint storedData;
+        uint private storedData;
 
         /// Store `x`.
         /// @param x the new value to store
