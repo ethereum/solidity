@@ -1126,4 +1126,4 @@ added looks like the one below::
 
 It is recommended that Solidity contracts are fully annontated using `NatSpec <natspec>`_ for all public interfaces (everything in the ABI).
 
-Please see the sectian about `NatSpec <natspec>`_ for a detailed explanation.
+Please see the section about `NatSpec <natspec>`_ for a detailed explanation.
