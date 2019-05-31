@@ -611,7 +611,10 @@ BOOST_AUTO_TEST_CASE(recursion_depth2)
 {
 	string text("contract C { function f() {");
 	for (size_t i = 0; i < 30000; i++)
+	{
+		if (i % 1000 == 0) printf("i is now %zu\n", i);
 		text += "{";
+	}
 	CHECK_PARSE_ERROR(text, "Maximum recursion depth reached during parsing");
 }
 
