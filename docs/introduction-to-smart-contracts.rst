@@ -57,13 +57,13 @@ and overwrite your number, but the number is still stored in the history
 of the blockchain. Later, you will see how you can impose access restrictions
 so that only you can alter the number.
 
-.. note::
-    All identifiers (contract names, function names and variable names) are restricted to
-    the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
-
 .. warning::
     Be careful with using Unicode text, as similar looking (or even identical) characters can
     have different code points and as such are encoded as a different byte array.
+
+.. note::
+    All identifiers (contract names, function names and variable names) are restricted to
+    the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
 
 .. index:: ! subcurrency
 
@@ -513,10 +513,10 @@ Deactivate and Self-destruct
 
 The only way to remove code from the blockchain is when a contract at that address performs the ``selfdestruct`` operation. The remaining Ether stored at that address is sent to a designated target and then the storage and code is removed from the state. Removing the contract in theory sounds like a good idea, but it is potentially dangerous, as if someone sends Ether to removed contracts, the Ether is forever lost.
 
+.. warning::
+    Even if a contract is removed by "selfdestruct", it is still part of the history of the blockchain and probably retained by most Ethereum nodes. So using "selfdestruct" is not the same as deleting data from a hard disk.
+
 .. note::
     Even if a contract's code does not contain a call to ``selfdestruct``, it can still perform that operation using ``delegatecall`` or ``callcode``.
 
 If you want to deactivate your contracts, you should instead **disable** them by changing some internal state which causes all functions to revert. This makes it impossible to use the contract, as it returns Ether immediately.
-
-.. warning::
-    Even if a contract is removed by "selfdestruct", it is still part of the history of the blockchain and probably retained by most Ethereum nodes. So using "selfdestruct" is not the same as deleting data from a hard disk.

@@ -163,6 +163,16 @@ Mathematical and Cryptographic Functions
 ``keccak256(bytes memory) returns (bytes32)``:
     compute the Keccak-256 hash of the input
 
+.. warning::
+
+    If you use ``ecrecover``, be aware that a valid signature can be turned into a different valid signature without
+    requiring knowledge of the corresponding private key. In the Homestead hard fork, this issue was fixed
+    for _transaction_ signatures (see `EIP-2 <http://eips.ethereum.org/EIPS/eip-2#specification>`_), but
+    the ecrecover function remained unchanged.
+
+    This is usually not a problem unless you require signatures to be unique or
+    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.org/v2.3.0/api/cryptography#ecdsa>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
+
 .. note::
 
     There used to be an alias for ``keccak256`` called ``sha3``, which was removed in version 0.5.0.
@@ -185,16 +195,6 @@ Mathematical and Cryptographic Functions
     conversion, in case you need to transfer funds to the recovered address.
 
     For further details, read `example usage <https://ethereum.stackexchange.com/q/1777/222>`_.
-
-.. warning::
-
-    If you use ``ecrecover``, be aware that a valid signature can be turned into a different valid signature without
-    requiring knowledge of the corresponding private key. In the Homestead hard fork, this issue was fixed
-    for _transaction_ signatures (see `EIP-2 <http://eips.ethereum.org/EIPS/eip-2#specification>`_), but
-    the ecrecover function remained unchanged.
-
-    This is usually not a problem unless you require signatures to be unique or
-    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.org/v2.3.0/api/cryptography#ecdsa>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
 
 .. note::
 

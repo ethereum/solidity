@@ -66,6 +66,28 @@ as the actual contract has not been created yet.
 Functions of other contracts have to be called externally. For an external call,
 all function arguments have to be copied to memory.
 
+.. warning::
+  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call. So in this case, the function is not called and the ``value`` and ``gas`` settings are lost.
+
+Function calls cause exceptions if the called contract does not exist (in the
+sense that the account does not contain code) or if the called contract itself
+throws an exception or goes out of gas.
+
+.. warning::
+    Any interaction with another contract imposes a potential danger, especially
+    if the source code of the contract is not known in advance. The
+    current contract hands over control to the called contract and that may potentially
+    do just about anything. Even if the called contract inherits from a known parent contract,
+    the inheriting contract is only required to have a correct interface. The
+    implementation of the contract, however, can be completely arbitrary and thus,
+    pose a danger. In addition, be prepared in case it calls into other contracts of
+    your system or even back into the calling contract before the first
+    call returns. This means
+    that the called contract can change state variables of the calling contract
+    via its functions. Write your functions in a way that, for example, calls to
+    external functions happen after any changes to state variables in your contract
+    so your contract is not vulnerable to a reentrancy exploit.
+
 .. note::
     A function call from one contract to another does not create its own transaction,
     it is a message call as part of the overall transaction.
@@ -88,28 +110,6 @@ When calling functions of other contracts, you can specify the amount of Wei or 
 
 You need to use the modifier ``payable`` with the ``info`` function because
 otherwise, the ``.value()`` option would not be available.
-
-.. warning::
-  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call. So in this case, the function is not called and the ``value`` and ``gas`` settings are lost.
-
-Function calls cause exceptions if the called contract does not exist (in the
-sense that the account does not contain code) or if the called contract itself
-throws an exception or goes out of gas.
-
-.. warning::
-    Any interaction with another contract imposes a potential danger, especially
-    if the source code of the contract is not known in advance. The
-    current contract hands over control to the called contract and that may potentially
-    do just about anything. Even if the called contract inherits from a known parent contract,
-    the inheriting contract is only required to have a correct interface. The
-    implementation of the contract, however, can be completely arbitrary and thus,
-    pose a danger. In addition, be prepared in case it calls into other contracts of
-    your system or even back into the calling contract before the first
-    call returns. This means
-    that the called contract can change state variables of the calling contract
-    via its functions. Write your functions in a way that, for example, calls to
-    external functions happen after any changes to state variables in your contract
-    so your contract is not vulnerable to a reentrancy exploit.
 
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------
@@ -247,15 +247,15 @@ groupings of expressions.
 It is not possible to mix variable declarations and non-declaration assignments,
 i.e. the following is not valid: ``(x, uint y) = (1, 2);``
 
-.. note::
-    Prior to version 0.5.0 it was possible to assign to tuples of smaller size, either
-    filling up on the left or on the right side (which ever was empty). This is
-    now disallowed, so both sides have to have the same number of components.
-
 .. warning::
     Be careful when assigning to multiple variables at the same time when
     reference types are involved, because it could lead to unexpected
     copying behaviour.
+
+.. note::
+    Prior to version 0.5.0 it was possible to assign to tuples of smaller size, either
+    filling up on the left or on the right side (which ever was empty). This is
+    now disallowed, so both sides have to have the same number of components.
 
 Complications for Arrays and Structs
 ------------------------------------
@@ -385,6 +385,9 @@ There are two other ways to trigger exceptions: The ``revert`` function can be u
 revert the current call. It is possible to provide a string message containing details about the error
 that will be passed back to the caller.
 
+.. warning::
+    The low-level functions ``call``, ``delegatecall`` and ``staticcall`` return ``true`` as their first return value if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
+
 .. note::
     There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
     was deprecated in version 0.4.13 and removed in version 0.5.0.
@@ -392,9 +395,6 @@ that will be passed back to the caller.
 When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send``
 and the low-level functions ``call``, ``delegatecall`` and ``staticcall`` -- those return ``false`` as their first return value in case
 of an exception instead of "bubbling up".
-
-.. warning::
-    The low-level functions ``call``, ``delegatecall`` and ``staticcall`` return ``true`` as their first return value if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
 
 Catching exceptions is not yet possible.
 
