@@ -60,7 +60,7 @@ so that only you can alter the number.
 .. warning::
     Be careful with using Unicode text, as similar looking (or even identical) characters can
     have different code points and as such are encoded as a different byte array.
-    
+
 .. note::
     All identifiers (contract names, function names and variable names) are restricted to
     the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
