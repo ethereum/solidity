@@ -251,7 +251,7 @@ i.e. the following is not valid: ``(x, uint y) = (1, 2);``
     Be careful when assigning to multiple variables at the same time when
     reference types are involved, because it could lead to unexpected
     copying behaviour.
-    
+
 .. note::
     Prior to version 0.5.0 it was possible to assign to tuples of smaller size, either
     filling up on the left or on the right side (which ever was empty). This is
