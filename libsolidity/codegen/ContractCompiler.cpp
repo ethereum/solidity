@@ -54,7 +54,13 @@ class StackHeightChecker
 public:
 	explicit StackHeightChecker(CompilerContext const& _context):
 		m_context(_context), stackHeight(m_context.stackHeight()) {}
-	void check() { solAssert(m_context.stackHeight() == stackHeight, std::string("I sense a disturbance in the stack: ") + to_string(m_context.stackHeight()) + " vs " + to_string(stackHeight)); }
+	void check()
+	{
+		solAssert(
+			m_context.stackHeight() == stackHeight,
+			std::string("I sense a disturbance in the stack: ") + to_string(m_context.stackHeight()) + " vs " + to_string(stackHeight)
+		);
+	}
 private:
 	CompilerContext const& m_context;
 	unsigned stackHeight;
@@ -893,9 +899,9 @@ bool ContractCompiler::visit(VariableDeclarationStatement const& _variableDeclar
 
 	// Local variable slots are reserved when their declaration is visited,
 	// and freed in the end of their scope.
-	for (auto _decl: _variableDeclarationStatement.declarations())
-		if (_decl)
-			appendStackVariableInitialisation(*_decl);
+	for (auto decl: _variableDeclarationStatement.declarations())
+		if (decl)
+			appendStackVariableInitialisation(*decl);
 
 	StackHeightChecker checker(m_context);
 	if (Expression const* expression = _variableDeclarationStatement.initialValue())

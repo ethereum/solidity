@@ -1055,28 +1055,27 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 	switch (location)
 	{
 	case DataLocation::Memory:
+		// stack: <base_ref> <index>
+		if (!_arrayType.isByteArray())
+			m_context << u256(_arrayType.memoryHeadSize()) << Instruction::MUL;
+		if (_arrayType.isDynamicallySized())
+			m_context << u256(32) << Instruction::ADD;
+		if (_keepReference)
+			m_context << Instruction::DUP2;
+		m_context << Instruction::ADD;
+		break;
 	case DataLocation::CallData:
 		if (!_arrayType.isByteArray())
 		{
-			if (location == DataLocation::CallData)
-			{
-				if (_arrayType.baseType()->isDynamicallyEncoded())
-					m_context << u256(0x20);
-				else
-					m_context << _arrayType.baseType()->calldataEncodedSize();
-			}
+			if (_arrayType.baseType()->isDynamicallyEncoded())
+				m_context << u256(0x20);
 			else
-				m_context << u256(_arrayType.memoryHeadSize());
+				m_context << _arrayType.baseType()->calldataEncodedSize();
 			m_context << Instruction::MUL;
 		}
 		// stack: <base_ref> <index * size>
-
-		if (location == DataLocation::Memory && _arrayType.isDynamicallySized())
-			m_context << u256(32) << Instruction::ADD;
-
 		if (_keepReference)
 			m_context << Instruction::DUP2;
-
 		m_context << Instruction::ADD;
 		break;
 	case DataLocation::Storage:

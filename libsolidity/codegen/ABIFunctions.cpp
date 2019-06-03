@@ -414,7 +414,8 @@ string ABIFunctions::abiEncodingFunctionCalldataArrayWithoutCleanup(
 		fromArrayType.isByteArray() ||
 		*fromArrayType.baseType() == *TypeProvider::uint256() ||
 		*fromArrayType.baseType() == FixedBytesType(32),
-	"");
+		""
+	);
 	solAssert(fromArrayType.calldataStride() == toArrayType.memoryStride(), "");
 
 	solAssert(
