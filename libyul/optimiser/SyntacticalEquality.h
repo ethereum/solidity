@@ -58,7 +58,8 @@ public:
 	bool statementEqual(Break const&, Break const&) { return true; }
 	bool statementEqual(Continue const&, Continue const&) { return true; }
 	bool statementEqual(Block const& _lhs, Block const& _rhs);
-	bool statementEqual(Comment const& _lhs, Comment const& _rhs);
+	bool statementEqual(Comment const&, Comment const&) { return true; }
+
 private:
 	bool statementEqual(Instruction const& _lhs, Instruction const& _rhs);
 	bool statementEqual(Label const& _lhs, Label const& _rhs);

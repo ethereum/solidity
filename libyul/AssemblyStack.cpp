@@ -75,7 +75,7 @@ Scanner const& AssemblyStack::scanner() const
 	return *m_scanner;
 }
 
-bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
+bool AssemblyStack::parse(std::string const& _sourceName, std::string const& _source)
 {
 	m_errors.clear();
 	m_analysisSuccessful = false;
@@ -85,6 +85,19 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 		return false;
 	solAssert(m_parserResult, "");
 	solAssert(m_parserResult->code, "");
+	return true;
+}
+
+yul::Object const& AssemblyStack::parseTree() const noexcept
+{
+	yulAssert(m_parserResult, "Parser result must be available.");
+	return *m_parserResult;
+}
+
+bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
+{
+	if (!parse(_sourceName, _source))
+		return false;
 
 	return analyzeParsed();
 }

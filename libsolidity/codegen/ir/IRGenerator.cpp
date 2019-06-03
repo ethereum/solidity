@@ -45,7 +45,6 @@ using namespace dev::solidity;
 
 pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 {
-	// TODO Would be nice to pretty-print this while retaining comments.
 	string ir = generate(_contract);
 
 	yul::AssemblyStack asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
@@ -56,6 +55,10 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(*error);
 		solAssert(false, "Invalid IR generated:\n" + errorMessage + "\n" + ir);
 	}
+
+	// NB: pretty-print is retaining documentation comments (those with tripple-slash).
+	string const irPrettyPrinted = asmStack.parseTree().toString(true);
+
 	asmStack.optimize();
 
 	string warning =
@@ -66,7 +69,7 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 		" *                !USE AT YOUR OWN RISK!               *\n"
 		" *******************************************************/\n\n";
 
-	return {warning + ir, warning + asmStack.print()};
+	return {warning + irPrettyPrinted, warning + asmStack.print()};
 }
 
 string IRGenerator::generate(ContractDefinition const& _contract)

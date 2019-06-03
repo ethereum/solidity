@@ -73,6 +73,8 @@ public:
 	/// @returns the scanner used during parsing
 	langutil::Scanner const& scanner() const;
 
+	bool parse(std::string const& _sourceName, std::string const& _source);
+
 	/// Runs parsing and analysis steps, returns false if input cannot be assembled.
 	/// Multiple calls overwrite the previous state.
 	bool parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
@@ -83,6 +85,9 @@ public:
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
+
+	/// @returns parsed source code as AST.
+	yul::Object const& parseTree() const noexcept;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	langutil::ErrorList const& errors() const { return m_errors; }

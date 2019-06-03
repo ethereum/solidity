@@ -60,6 +60,7 @@ private:
 	std::string appendTypeName(YulString _type) const;
 
 	bool m_yul = false;
+	mutable size_t m_blockStatementIndex;
 };
 
 }

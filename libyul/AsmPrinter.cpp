@@ -243,13 +243,23 @@ string AsmPrinter::operator()(Continue const&) const
 
 string AsmPrinter::operator()(Block const& _block) const
 {
+	size_t const outerBlockStatementIndex = exchange(m_blockStatementIndex, 0);
+	ScopeGuard const _restoreBlockStatementIndex{[=]() { m_blockStatementIndex = outerBlockStatementIndex; }};
+	auto const incrementBlockStatementIndex = [&](string _s) -> string
+	{
+		++m_blockStatementIndex;
+		return _s;
+	};
+
 	if (_block.statements.empty())
 		return "{ }";
 	string body = boost::algorithm::join(
-		_block.statements | boost::adaptors::transformed(boost::apply_visitor(*this)),
+		_block.statements |
+		boost::adaptors::transformed(boost::apply_visitor(*this)) |
+		boost::adaptors::transformed(incrementBlockStatementIndex),
 		"\n"
 	);
-	if (body.size() < 30 && body.find('\n') == string::npos)
+	if (body.size() < 30 && body.find('\n') == string::npos && body.find("//") == string::npos)
 		return "{ " + body + " }";
 	else
 	{
@@ -258,10 +268,30 @@ string AsmPrinter::operator()(Block const& _block) const
 	}
 }
 
-std::string AsmPrinter::operator()(Comment const& _comment) const
+string AsmPrinter::operator()(Comment const& _comment) const
 {
-	// Leading newline for better readability of comments.
-	return "\n// " + _comment.text;
+	auto const static trimWhitespace = [](string _s) -> string
+	{
+		auto const static isnospace = [](int _ch) { return !std::isspace(_ch); };
+		_s.erase(_s.begin(), std::find_if(_s.begin(), _s.end(), isnospace));
+		_s.erase(find_if(_s.rbegin(), _s.rend(), isnospace).base(), _s.end());
+		return _s;
+	};
+	auto const trimmedText = trimWhitespace(_comment.text);
+
+	vector<string> lines;
+	boost::split(lines, trimmedText, [](auto _ch) -> bool { return _ch == '\n'; });
+
+	stringstream out;
+
+	if (m_blockStatementIndex > 0)
+		out << '\n';        // One leading newline for better readability of comments.
+
+	for (size_t i = 0; i < lines.size() - 1; ++i)
+		out << "// " << trimWhitespace(lines[i]) + "\n";
+
+	out << "// " << trimWhitespace(lines.back());
+	return out.str();
 }
 
 string AsmPrinter::formatTypedName(TypedName _variable) const
