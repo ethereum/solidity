@@ -402,7 +402,8 @@ Local Solidity variables are available for assignments, for example:
     To be safe, always clear the data properly before you use it
     in a context where this is important:
     ``uint32 x = f(); assembly { x := and(x, 0xffffffff) /* now use x */ }``
-    To clean signed types, you can use the ``signextend`` opcode.
+    To clean signed types, you can use the ``signextend`` opcode:
+    ``assembly { signextend(0, x) }``
 
 .. code::
 
