@@ -64,47 +64,6 @@ int constexpr roundTo32(int _num)
 	return (_num + 31) / 32 * 32;
 }
 
-BOOST_AUTO_TEST_CASE(transaction_status)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f() public { }
-			function g() public { revert(); }
-			function h() public { assert(false); }
-		}
-	)";
-	compileAndRun(sourceCode);
-	callContractFunction("f()");
-	BOOST_CHECK(m_transactionSuccessful);
-	callContractFunction("g()");
-	BOOST_CHECK(!m_transactionSuccessful);
-	callContractFunction("h()");
-	BOOST_CHECK(!m_transactionSuccessful);
-}
-
-
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f(uint a) public returns(uint d) { return a * 7; }
-		}
-	)";
-	compileAndRun(sourceCode);
-	testContractAgainstCppOnRange("f(uint256)", [](u256 const& a) -> u256 { return a * 7; }, 0, 100);
-}
-
-BOOST_AUTO_TEST_CASE(empty_contract)
-{
-	char const* sourceCode = R"(
-		contract test { }
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()).empty());
-	)
-}
-
 BOOST_AUTO_TEST_CASE(exp_operator)
 {
 	char const* sourceCode = R"(
