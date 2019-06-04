@@ -131,8 +131,14 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		else if (n == "false")
 			return m_context.bool_val(false);
 		else
-			// We assume it is an integer...
-			return m_context.int_val(n.c_str());
+			try
+			{
+				return m_context.int_val(n.c_str());
+			}
+			catch (...)
+			{
+				solAssert(false, "");
+			}
 	}
 
 	solAssert(_expr.hasCorrectArity(), "");

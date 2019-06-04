@@ -132,8 +132,14 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		else if (n == "false")
 			return m_context.mkConst(false);
 		else
-			// We assume it is an integer...
-			return m_context.mkConst(CVC4::Rational(n));
+			try
+			{
+				return m_context.mkConst(CVC4::Rational(n));
+			}
+			catch (...)
+			{
+				solAssert(false, "");
+			}
 	}
 
 	solAssert(_expr.hasCorrectArity(), "");
