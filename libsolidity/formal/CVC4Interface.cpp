@@ -145,6 +145,8 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		return arguments[0].andExpr(arguments[1]);
 	else if (n == "or")
 		return arguments[0].orExpr(arguments[1]);
+	else if (n == "implies")
+		return m_context.mkExpr(CVC4::kind::IMPLIES, arguments[0], arguments[1]);
 	else if (n == "=")
 		return m_context.mkExpr(CVC4::kind::EQUAL, arguments[0], arguments[1]);
 	else if (n == "<")
