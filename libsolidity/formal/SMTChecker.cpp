@@ -52,9 +52,12 @@ SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _
 
 void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
 {
+	if (!_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
+		return;
+
 	m_scanner = _scanner;
-	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
-		_source.accept(*this);
+
+	_source.accept(*this);
 
 	solAssert(m_interface.solvers() > 0, "");
 	// If this check is true, Z3 and CVC4 are not available
