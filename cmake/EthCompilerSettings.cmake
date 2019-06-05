@@ -41,11 +41,11 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# Additional GCC-specific compiler settings.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 
-		# Check that we've got GCC 4.7 or newer.
+		# Check that we've got GCC 5.0 or newer.
 		execute_process(
 			COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-		if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
-			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
+		if (NOT (GCC_VERSION VERSION_GREATER 5.0 OR GCC_VERSION VERSION_EQUAL 5.0))
+			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 5.0 or greater.")
 		endif ()
 
 	# Additional Clang-specific compiler settings.
