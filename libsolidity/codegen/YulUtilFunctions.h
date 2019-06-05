@@ -74,12 +74,17 @@ public:
 	std::string leftAlignFunction(Type const& _type);
 
 	std::string shiftLeftFunction(size_t _numBits);
+	std::string dynamicShiftLeftFunction();
 	std::string shiftRightFunction(size_t _numBits);
+	std::string dynamicShiftRightFunction();
 
 	/// @returns the name of a function f(value, toInsert) -> newValue which replaces the
 	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
 	/// byte) by the _numBytes least significant bytes of `toInsert`.
 	std::string updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes);
+
+	/// signature: (value, shiftBytes, toInsert) -> result
+	std::string dynamicUpdateByteSliceFunction(size_t _numBytes);
 
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
@@ -121,6 +126,7 @@ public:
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+	std::string dynamicReadFromStorage(Type const& _type, bool _splitFunctionTypes);
 
 	/// @returns a function that extracts a value type from storage slot that has been
 	/// retrieved already.
@@ -128,6 +134,13 @@ public:
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+	std::string dynamicExtractFromStorageValue(Type const& _type, bool _splitFunctionTypes);
+
+	/// Returns the name of a function will write the given value to
+	/// the specified slot and offset. If offset is not given, it is expected as
+	/// runtime parameter.
+	/// signature: (slot, [offset,] value)
+	std::string updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const _offset = boost::optional<unsigned>());
 
 	/// Performs cleanup after reading from a potentially compressed storage slot.
 	/// The function does not perform any validation, it just masks or sign-extends
