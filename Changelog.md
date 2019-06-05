@@ -11,6 +11,10 @@ Compiler Features:
 Bugfixes:
 
 
+Build System:
+ * Attempt to use stock Z3 cmake files to find Z3 and only fall back to manual discovery.
+
+
 
 ### 0.5.9 (2019-05-28)
 
