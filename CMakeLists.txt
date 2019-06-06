@@ -13,6 +13,11 @@ eth_policy()
 set(PROJECT_VERSION "0.5.10")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
+if (${CMAKE_VERSION} VERSION_LESS "3.9.0")
+	# needed for the big endian test for older cmake versions
+	enable_language(C)
+endif()
+
 include(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 if (IS_BIG_ENDIAN)
