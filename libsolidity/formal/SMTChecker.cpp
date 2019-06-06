@@ -624,6 +624,8 @@ void SMTChecker::endVisit(BinaryOperation const& _op)
 	if (TokenTraits::isBooleanOp(_op.getOperator()))
 		return;
 
+	createExpr(_op);
+
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))

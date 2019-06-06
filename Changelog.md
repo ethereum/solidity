@@ -9,6 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix internal error on tuples containing fixed point numbers.
  * Yul / Inline Assembly Parser: Disallow trailing commas in function call arguments.
 
 
