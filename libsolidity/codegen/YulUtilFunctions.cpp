@@ -104,16 +104,16 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 	});
 }
 
-string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType)
+string YulUtilFunctions::requireOrAssertFunction(bool _assert, bool _withMessage)
 {
 	string functionName =
 		string(_assert ? "assert_helper" : "require_helper") +
-		(_messageType ? ("_" + _messageType->identifier()) : "");
+		(_withMessage ? "_message" : "");
 
-	solAssert(!_assert || !_messageType, "Asserts can't have messages!");
+	solAssert(!_assert || !_withMessage, "Asserts can't have messages!");
 
 	return m_functionCollector->createFunction(functionName, [&]() {
-		if (!_messageType)
+		if (!_withMessage)
 			return Whiskers(R"(
 				function <functionName>(condition) {
 					if iszero(condition) { <invalidOrRevert> }
@@ -132,16 +132,16 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 
 		string const encodeFunc = ABIFunctions(m_evmVersion, m_functionCollector)
 			.tupleEncoder(
-				{_messageType},
+				{TypeProvider::stringMemory()},
 				{TypeProvider::stringMemory()}
 			);
 
 		return Whiskers(R"(
-			function <functionName>(condition <messageVars>) {
+			function <functionName>(condition, message) {
 				if iszero(condition) {
 					let fmp := mload(<freeMemPointer>)
 					mstore(fmp, <errorHash>)
-					let end := <abiEncodeFunc>(add(fmp, <hashHeaderSize>) <messageVars>)
+					let end := <abiEncodeFunc>(add(fmp, <hashHeaderSize>), message)
 					revert(fmp, sub(end, fmp))
 				}
 			}
@@ -151,10 +151,6 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 		("errorHash", formatNumber(errorHash))
 		("abiEncodeFunc", encodeFunc)
 		("hashHeaderSize", to_string(hashHeaderSize))
-		("messageVars",
-			(_messageType->sizeOnStack() > 0 ? ", " : "") +
-			suffixedVariableNameList("message_", 1, 1 + _messageType->sizeOnStack())
-		)
 		.render();
 	});
 }

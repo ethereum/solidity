@@ -552,12 +552,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		string requireOrAssertFunction = m_utils.requireOrAssertFunction(
 			functionType->kind() == FunctionType::Kind::Assert,
-			arguments.size() > 1 ? arguments[1]->annotation().type : nullptr
+			arguments.size() > 1
 		);
 
 		m_code << move(requireOrAssertFunction) << "(" << m_context.variable(*arguments[0]);
 		if (arguments.size() > 1)
-			m_code << ", " << m_context.variable(*arguments[1]);
+			m_code << ", " << expressionAsType(*arguments[1], *TypeProvider::stringMemory());
 		m_code << ")\n";
 
 		break;
