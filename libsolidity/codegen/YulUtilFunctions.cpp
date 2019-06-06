@@ -224,34 +224,24 @@ string YulUtilFunctions::shiftLeftFunction(size_t _numBits)
 	solAssert(_numBits < 256, "");
 
 	string functionName = "shift_left_" + to_string(_numBits);
-	if (m_evmVersion.hasBitwiseShifting())
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := shl(<numBits>, value)
-				}
-				)")
-				("functionName", functionName)
-				("numBits", to_string(_numBits))
-				.render();
-		});
-	}
-	else
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := mul(value, <multiplier>)
-				}
-				)")
-				("functionName", functionName)
-				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-				.render();
-		});
-	}
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shl(<numBits>, value)
+				<!hasShifts>
+					mul(value, <multiplier>)
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("numBits", to_string(_numBits))
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+			.render();
+	});
 }
 
 string YulUtilFunctions::dynamicShiftLeftFunction()
@@ -282,7 +272,7 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 	// Note that if this is extended with signed shifts,
 	// the opcodes SAR and SDIV behave differently with regards to rounding!
 
-	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned_" + m_evmVersion.name();
+	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned";
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
