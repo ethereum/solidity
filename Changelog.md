@@ -9,6 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Yul / Inline Assembly Parser: Disallow trailing commas in function call arguments.
 
 
 Build System:
