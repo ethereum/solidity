@@ -78,7 +78,7 @@ jobs:
           name: Save Boost build
           key: *boost-cache-key
           paths:
-            - boost_1_68_0
+            - boost_1_70_0_install
       - store_artifacts:
           path: emscripten_build/libsolc/soljson.js
           destination: soljson.js
