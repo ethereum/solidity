@@ -13,6 +13,12 @@ eth_policy()
 set(PROJECT_VERSION "0.5.10")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
+include(TestBigEndian)
+TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
+if (IS_BIG_ENDIAN)
+	message(FATAL_ERROR "${PROJECT_NAME} currently does not support big endian systems.")
+endif()
+
 option(LLL "Build LLL" OFF)
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
 option(LLLC_LINK_STATIC "Link lllc executable statically on supported platforms" OFF)
