@@ -65,6 +65,8 @@ public:
 private:
 	std::string m_source;
 	std::vector<TestFunctionCall> m_tests;
+	bool m_runWithYul = false;
+	bool m_runWithoutYul = true;
 };
 
 }
