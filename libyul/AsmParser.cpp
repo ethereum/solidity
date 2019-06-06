@@ -609,12 +609,14 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 		else
 			ret = std::move(boost::get<FunctionCall>(_initialOp));
 		expectToken(Token::LParen);
-		while (currentToken() != Token::RParen)
+		if (currentToken() != Token::RParen)
 		{
 			ret.arguments.emplace_back(parseExpression());
-			if (currentToken() == Token::RParen)
-				break;
-			expectToken(Token::Comma);
+			while (currentToken() != Token::RParen)
+			{
+				expectToken(Token::Comma);
+				ret.arguments.emplace_back(parseExpression());
+			}
 		}
 		ret.location.end = endPosition();
 		expectToken(Token::RParen);
