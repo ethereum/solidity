@@ -9,6 +9,12 @@ Compiler Features:
 
 
 Bugfixes:
+ * Yul / Inline Assembly Parser: Disallow trailing commas in function call arguments.
+
+
+Build System:
+ * Attempt to use stock Z3 cmake files to find Z3 and only fall back to manual discovery.
+ * Generate a cmake error for gcc versions older than 5.0.
 
 
 

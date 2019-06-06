@@ -131,8 +131,14 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		else if (n == "false")
 			return m_context.bool_val(false);
 		else
-			// We assume it is an integer...
-			return m_context.int_val(n.c_str());
+			try
+			{
+				return m_context.int_val(n.c_str());
+			}
+			catch (...)
+			{
+				solAssert(false, "");
+			}
 	}
 
 	solAssert(_expr.hasCorrectArity(), "");
@@ -144,6 +150,8 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		return arguments[0] && arguments[1];
 	else if (n == "or")
 		return arguments[0] || arguments[1];
+	else if (n == "implies")
+		return z3::implies(arguments[0], arguments[1]);
 	else if (n == "=")
 		return arguments[0] == arguments[1];
 	else if (n == "<")

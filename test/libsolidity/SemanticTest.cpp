@@ -46,8 +46,18 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 	m_source = parseSourceAndSettings(file);
 	if (m_settings.count("compileViaYul"))
 	{
-		m_validatedSettings["compileViaYul"] = m_settings["compileViaYul"];
-		m_compileViaYul = true;
+		if (m_settings["compileViaYul"] == "also")
+		{
+			m_validatedSettings["compileViaYul"] = m_settings["compileViaYul"];
+			m_runWithYul = true;
+			m_runWithoutYul = true;
+		}
+		else
+		{
+			m_validatedSettings["compileViaYul"] = "only";
+			m_runWithYul = true;
+			m_runWithoutYul = false;
+		}
 		m_settings.erase("compileViaYul");
 	}
 	parseExpectations(file);
@@ -55,68 +65,84 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-
-
-	bool success = true;
-	for (auto& test: m_tests)
-		test.reset();
-
-	for (auto& test: m_tests)
+	for(bool compileViaYul: set<bool>{!m_runWithoutYul, m_runWithYul})
 	{
-		if (&test == &m_tests.front())
-			if (test.call().isConstructor)
-				deploy("", 0, test.call().arguments.rawBytes());
+		bool success = true;
+
+		m_compileViaYul = compileViaYul;
+		if (compileViaYul)
+			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul:" << endl;
+
+		for (auto& test: m_tests)
+			test.reset();
+
+		for (auto& test: m_tests)
+		{
+			if (&test == &m_tests.front())
+				if (test.call().isConstructor)
+					deploy("", 0, test.call().arguments.rawBytes());
+				else
+					soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
 			else
-				soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
-		else
-			soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call.");
+				soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call.");
 
-		if (test.call().isConstructor)
-		{
-			if (m_transactionSuccessful == test.call().expectations.failure)
-				success = false;
+			if (test.call().isConstructor)
+			{
+				if (m_transactionSuccessful == test.call().expectations.failure)
+					success = false;
 
-			test.setFailure(!m_transactionSuccessful);
-			test.setRawBytes(bytes());
+				test.setFailure(!m_transactionSuccessful);
+				test.setRawBytes(bytes());
+			}
+			else
+			{
+				bytes output = callContractFunctionWithValueNoEncoding(
+					test.call().signature,
+					test.call().value,
+					test.call().arguments.rawBytes()
+				);
+
+				if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
+					success = false;
+
+				test.setFailure(!m_transactionSuccessful);
+				test.setRawBytes(std::move(output));
+				test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+			}
 		}
-		else
+
+		if (!success)
 		{
-			bytes output = callContractFunctionWithValueNoEncoding(
-				test.call().signature,
-				test.call().value,
-				test.call().arguments.rawBytes()
-			);
-
-			if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
-				success = false;
-
-			test.setFailure(!m_transactionSuccessful);
-			test.setRawBytes(std::move(output));
-			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+			for (auto const& test: m_tests)
+			{
+				ErrorReporter errorReporter;
+				_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+				_stream << errorReporter.format(_linePrefix, _formatted);
+			}
+			_stream << endl;
+			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+			for (auto const& test: m_tests)
+			{
+				ErrorReporter errorReporter;
+				_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+				_stream << errorReporter.format(_linePrefix, _formatted);
+			}
+			AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
+				<< "Attention: Updates on the test will apply the detected format displayed." << endl;
+			if (compileViaYul && m_runWithoutYul)
+			{
+				_stream << _linePrefix << endl << _linePrefix;
+				AnsiColorized(_stream, _formatted, {RED_BACKGROUND}) << "Note that the test passed without Yul.";
+				_stream << endl;
+			}
+			else if (!compileViaYul && m_runWithYul)
+				AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) << _linePrefix << endl << _linePrefix
+					<< "Note that the test also has to pass via Yul." << endl;
+			return TestResult::Failure;
 		}
 	}
 
-	if (!success)
-	{
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-		for (auto const& test: m_tests)
-		{
-			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
-			_stream << errorReporter.format(_linePrefix, _formatted);
-		}
-		_stream << endl;
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
-		for (auto const& test: m_tests)
-		{
-			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
-			_stream << errorReporter.format(_linePrefix, _formatted);
-		}
-		AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
-			<< "Attention: Updates on the test will apply the detected format displayed." << endl;
-		return TestResult::Failure;
-	}
 	return TestResult::Success;
 }
 

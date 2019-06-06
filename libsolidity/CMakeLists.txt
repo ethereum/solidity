@@ -140,7 +140,7 @@ add_library(solidity ${sources} ${z3_SRCS} ${cvc4_SRCS})
 target_link_libraries(solidity PUBLIC yul evmasm langutil devcore ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 if (${Z3_FOUND})
-  target_link_libraries(solidity PUBLIC Z3::Z3)
+  target_link_libraries(solidity PUBLIC z3::libz3)
 endif()
 
 if (${CVC4_FOUND})
