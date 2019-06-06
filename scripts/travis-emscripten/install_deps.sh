@@ -30,7 +30,7 @@
 set -ev
 
 echo -en 'travis_fold:start:installing_dependencies\\r'
-test -e boost_1_70_0_install || (
+test -e boost_1_70_0_install/include/boost/version.hpp || (
 rm -rf boost_1_70_0
 rm -f boost.tar.gz
 wget -q 'https://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.tar.gz/download'\

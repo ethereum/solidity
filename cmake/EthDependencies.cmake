@@ -28,9 +28,16 @@ set(BOOST_COMPONENTS "regex;filesystem;unit_test_framework;program_options;syste
 find_package(Boost 1.65.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 # make sure we actually get all required imported targets for boost
-list(APPEND BOOST_COMPONENTS "boost") # header only target
+if (NOT TARGET Boost::boost) # header only target
+	add_library(Boost::boost INTERFACE IMPORTED)
+	target_include_directories(Boost::boost INTERFACE ${Boost_INCLUDE_DIRS})
+endif()
 foreach (BOOST_COMPONENT IN LISTS BOOST_COMPONENTS)
 	if (NOT TARGET Boost::${BOOST_COMPONENT})
-		message(FATAL_ERROR "Boost target Boost::${BOOST_COMPONENT} was not defined by cmake.")
+		add_library(Boost::${BOOST_COMPONENT} UNKNOWN IMPORTED)
+		string(TOUPPER ${BOOST_COMPONENT} BOOST_COMPONENT_UPPER)
+		set_property(TARGET Boost::${BOOST_COMPONENT} PROPERTY IMPORTED_LOCATION ${Boost_${BOOST_COMPONENT_UPPER}_LIBRARY})
+		set_property(TARGET Boost::${BOOST_COMPONENT} PROPERTY INTERFACE_LINK_LIBRARIES ${Boost_${BOOST_COMPONENT_UPPER}_LIBRARIES})
+		set_property(TARGET Boost::${BOOST_COMPONENT} PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIRS})
     endif()
 endforeach()
