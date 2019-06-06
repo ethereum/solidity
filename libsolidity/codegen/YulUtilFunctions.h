@@ -104,6 +104,22 @@ public:
 	std::string overflowCheckedUIntSubFunction();
 
 	std::string arrayLengthFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that resizes a storage array
+	/// signature: (array, newLen)
+	std::string resizeDynamicArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that will clear the storage area given
+	/// by the start and end (exclusive) parameters (slots). Only works for value types.
+	/// signature: (start, end)
+	std::string clearStorageRangeFunction(Type const& _type);
+
+	/// Returns the name of a function that will convert a given length to the
+	/// size in memory (number of storage slots or calldata/memory bytes) it
+	/// will require.
+	/// signature: (length) -> size
+	std::string arrayConvertLengthToSize(ArrayType const& _type);
+
 	/// @returns the name of a function that computes the number of bytes required
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
 	/// The function reverts for too large lengths.

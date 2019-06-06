@@ -517,6 +517,120 @@ string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 	});
 }
 
+std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+	solAssert(_type.isDynamicallySized(), "");
+	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
+	solUnimplementedAssert(_type.baseType()->isValueType(), "...");
+	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
+	solUnimplementedAssert(_type.baseType()->storageSize() == 1, "");
+
+	string functionName = "resize_array_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, newLen) {
+				if gt(newLen, <maxArrayLength>) {
+					invalid()
+				}
+
+				let oldLen := <fetchLength>(array)
+
+				// Store new length
+				sstore(array, newLen)
+
+				// Size was reduced, clear end of array
+				if lt(newLen, oldLen) {
+					let oldSlotCount := <convertToSize>(oldLen)
+					let newSlotCount := <convertToSize>(newLen)
+					let arrayDataStart := <dataPosition>(array)
+					let deleteStart := add(arrayDataStart, newSlotCount)
+					let deleteEnd := add(arrayDataStart, oldSlotCount)
+					<clearStorageRange>(deleteStart, deleteEnd)
+				}
+			})")
+			("functionName", functionName)
+			("fetchLength", arrayLengthFunction(_type))
+			("convertToSize", arrayConvertLengthToSize(_type))
+			("dataPosition", arrayDataAreaFunction(_type))
+			("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
+			("maxArrayLength", (u256(1) << 64).str())
+			.render();
+	});
+}
+
+string YulUtilFunctions::clearStorageRangeFunction(Type const& _type)
+{
+	string functionName = "clear_storage_range_" + _type.identifier();
+
+	solUnimplementedAssert(_type.isValueType(), "...");
+
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(start, end) {
+				for {} lt(start, end) { start := add(start, 1) }
+				{
+					sstore(start, 0)
+				}
+			}
+		)")
+		("functionName", functionName)
+		.render();
+	});
+}
+
+string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
+{
+	string functionName = "array_convert_length_to_size_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		Type const& baseType = *_type.baseType();
+
+		switch (_type.location())
+		{
+			case DataLocation::Storage:
+			{
+				unsigned const baseStorageBytes = baseType.storageBytes();
+				solAssert(baseStorageBytes > 0, "");
+				solAssert(32 / baseStorageBytes > 0, "");
+
+				return Whiskers(R"(
+					function <functionName>(length) -> size {
+						size := length
+						<?multiSlot>
+							size := <mul>(<storageSize>, length)
+						<!multiSlot>
+							// Number of slots rounded up
+							size := div(add(length, sub(<itemsPerSlot>, 1)), <itemsPerSlot>)
+						</multiSlot>
+					})")
+					("functionName", functionName)
+					("multiSlot", baseType.storageSize() > 1)
+					("itemsPerSlot", to_string(32 / baseStorageBytes))
+					("storageSize", baseType.storageSize().str())
+					("mul", overflowCheckedUIntMulFunction(TypeProvider::uint256()->numBits()))
+					.render();
+			}
+			case DataLocation::CallData: // fallthrough
+			case DataLocation::Memory:
+				return Whiskers(R"(
+					function <functionName>(length) -> size {
+						<?byteArray>
+							size := length
+						<!byteArray>
+							size := <mul>(length, <elementSize>)
+						</byteArray>
+					})")
+					("functionName", functionName)
+					("elementSize", _type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedSize())
+					("byteArray", _type.isByteArray())
+					("mul", overflowCheckedUIntMulFunction(TypeProvider::uint256()->numBits()))
+					.render();
+			default:
+				solAssert(false, "");
+		}
+
+	});
+}
 string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
