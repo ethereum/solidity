@@ -394,17 +394,6 @@ use ``x_slot``, and to retrieve the byte-offset you use ``x_offset``.
 
 Local Solidity variables are available for assignments, for example:
 
-.. warning::
-    If you access variables of a type that spans less than 256 bits
-    (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
-    you cannot make any assumptions about bits not part of the
-    encoding of the type. Especially, do not assume them to be zero.
-    To be safe, always clear the data properly before you use it
-    in a context where this is important:
-    ``uint32 x = f(); assembly { x := and(x, 0xffffffff) /* now use x */ }``
-    To clean signed types, you can use the ``signextend`` opcode:
-    ``assembly { signextend(0, x) }``
-
 .. code::
 
     pragma solidity >=0.4.11 <0.7.0;
@@ -417,6 +406,17 @@ Local Solidity variables are available for assignments, for example:
             }
         }
     }
+
+.. warning::
+    If you access variables of a type that spans less than 256 bits
+    (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
+    you cannot make any assumptions about bits not part of the
+    encoding of the type. Especially, do not assume them to be zero.
+    To be safe, always clear the data properly before you use it
+    in a context where this is important:
+    ``uint32 x = f(); assembly { x := and(x, 0xffffffff) /* now use x */ }``
+    To clean signed types, you can use the ``signextend`` opcode:
+    ``assembly { signextend(<bit_width_of_x>, x) }``
 
 Labels
 ------
