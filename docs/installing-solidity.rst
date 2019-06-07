@@ -201,6 +201,13 @@ The following are dependencies for all builds of Solidity:
 .. _CMake: https://cmake.org/download/
 .. _z3: https://github.com/Z3Prover/z3
 
+.. note::
+    Solidity versions prior to 0.5.10 can fail to correctly link against Boost versions 1.70+.
+    A possible workaround is to temporarily rename ``<Boost install path>/lib/cmake/Boost-1.70.0``
+    prior to running the cmake command to configure solidity.
+
+    Starting from 0.5.10 linking against Boost 1.70+ should work without manual intervention.
+
 Prerequisites - macOS
 ---------------------
 
