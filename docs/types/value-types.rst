@@ -427,6 +427,9 @@ long as the operands are integers. If any of the two is fractional, bit operatio
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
 
+.. warning::
+    Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
+
 .. note::
     Solidity has a number literal type for each rational number.
     Integer literals and rational number literals belong to number literal types.
@@ -435,8 +438,6 @@ a non-rational number).
     types.  So the number literal expressions ``1 + 2`` and ``2 + 1`` both
     belong to the same number literal type for the rational number three.
 
-.. warning::
-    Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
     Number literal expressions are converted into a non-literal type as soon as they are used with non-literal

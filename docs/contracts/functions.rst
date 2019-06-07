@@ -252,10 +252,6 @@ will consume more gas than the 2300 gas stipend:
 
 Like any function, the fallback function can execute complex operations as long as there is enough gas passed on to it.
 
-.. note::
-    Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
-    any payload supplied with the call.
-
 .. warning::
     The fallback function is also executed if the caller meant to call
     a function that is not available. If you want to implement the fallback
@@ -272,6 +268,10 @@ Like any function, the fallback function can execute complex operations as long 
 .. warning::
     A contract without a payable fallback function can receive Ether as a recipient of a `coinbase transaction` (aka `miner block reward`)
     or as a destination of a ``selfdestruct``.
+
+.. note::
+    Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
+    any payload supplied with the call.
 
     A contract cannot react to such Ether transfers and thus also cannot reject them. This is a design choice of the EVM and Solidity cannot work around it.
 
