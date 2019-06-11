@@ -92,6 +92,8 @@ protected:
 	std::string parseSourceAndSettings(std::istream& _file);
 	static void expect(std::string::iterator& _it, std::string::iterator _end, std::string::value_type _c);
 
+	static std::string parseSimpleExpectations(std::istream& _file);
+
 	template<typename IteratorType>
 	static void skipWhitespace(IteratorType& _it, IteratorType _end)
 	{

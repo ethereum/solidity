@@ -55,11 +55,7 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
 			m_optimize = true;
 		m_source += line + "\n";
 	}
-	while (getline(file, line))
-		if (boost::algorithm::starts_with(line, "//"))
-			m_expectation += line.substr((line.size() >= 3 && line[2] == ' ') ? 3 : 2) + "\n";
-		else
-			m_expectation += line + "\n";
+	m_expectation = parseSimpleExpectations(file);
 }
 
 TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
