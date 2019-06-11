@@ -46,14 +46,12 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
 	file.exceptions(ios::badbit);
 
-	string line;
-	while (getline(file, line))
+	m_source = parseSourceAndSettings(file);
+	if (m_settings.count("optimize"))
 	{
-		if (boost::algorithm::starts_with(line, "// ----"))
-			break;
-		if (m_source.empty() && boost::algorithm::starts_with(line, "// optimize"))
-			m_optimize = true;
-		m_source += line + "\n";
+		m_optimize = true;
+		m_validatedSettings["optimize"] = "true";
+		m_settings.erase("optimize");
 	}
 	m_expectation = parseSimpleExpectations(file);
 }
