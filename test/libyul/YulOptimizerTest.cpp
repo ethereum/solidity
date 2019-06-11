@@ -99,12 +99,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		m_settings.erase("step");
 	}
 
-	string line;
-	while (getline(file, line))
-		if (boost::algorithm::starts_with(line, "// "))
-			m_expectation += line.substr(3) + "\n";
-		else
-			m_expectation += line + "\n";
+	m_expectation = parseSimpleExpectations(file);
 }
 
 TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)

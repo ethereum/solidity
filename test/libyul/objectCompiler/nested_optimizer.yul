@@ -1,4 +1,3 @@
-// optimize
 object "a" {
   code {
     let x := calldataload(0)
@@ -15,24 +14,26 @@ object "a" {
     }
   }
 }
+// ====
+// optimize: true
 // ----
 // Assembly:
-//     /* "source":60:61   */
+//     /* "source":48:49   */
 //   0x00
 //   0x00
-//     /* "source":47:62   */
+//     /* "source":35:50   */
 //   calldataload
-//     /* "source":119:139   */
+//     /* "source":107:127   */
 //   sstore
 // stop
 //
 // sub_0: assembly {
-//         /* "source":200:201   */
+//         /* "source":188:189   */
 //       0x00
 //       0x00
-//         /* "source":187:202   */
+//         /* "source":175:190   */
 //       calldataload
-//         /* "source":265:285   */
+//         /* "source":253:273   */
 //       sstore
 // }
 // Bytecode: 600060003555fe
