@@ -409,31 +409,35 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntMulFunction(size_t _bits)
+string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 {
-	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
-	string functionName = "checked_mul_uint_" + to_string(_bits);
+	string functionName = "checked_mul_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
-			// - The current overflow check *before* the multiplication could
-			//   be replaced by the following check *after* the multiplication:
-			//   if and(iszero(iszero(x)), iszero(eq(div(product, x), y))) { revert(0, 0) }
-			// - The case the x equals 0 could be treated separately and directly return zero.
+			// Multiplication by zero could be treated separately and directly return zero.
 			Whiskers(R"(
 			function <functionName>(x, y) -> product {
-				if and(iszero(iszero(x)), lt(div(<mask>, x), y)) { revert(0, 0) }
-				<?shortType>
-					product := mulmod(x, y, <powerOfTwo>)
-				<!shortType>
-					product := mul(x, y)
-				</shortType>
+				<?signed>
+					// overflow, if x > 0, y > 0 and x > (maxValue / y)
+					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { revert(0, 0) }
+					// underflow, if x > 0, y < 0 and y < (minValue / x)
+					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { revert(0, 0) }
+					// underflow, if x < 0, y > 0 and x < (minValue / y)
+					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { revert(0, 0) }
+					// overflow, if x < 0, y < 0 and x < (maxValue / y)
+					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { revert(0, 0) }
+				<!signed>
+					// overflow, if x != 0 and y > (maxValue / x)
+					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { revert(0, 0) }
+				</signed>
+				product := mul(x, y)
 			}
 			)")
-				("shortType", _bits < 256)
-				("functionName", functionName)
-				("powerOfTwo", toCompactHexWithPrefix(u256(1) << _bits))
-				("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
-				.render();
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			.render();
 	});
 }
 
@@ -620,7 +624,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 					("multiSlot", baseType.storageSize() > 1)
 					("itemsPerSlot", to_string(32 / baseStorageBytes))
 					("storageSize", baseType.storageSize().str())
-					("mul", overflowCheckedUIntMulFunction(TypeProvider::uint256()->numBits()))
+					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
 					.render();
 			}
 			case DataLocation::CallData: // fallthrough
@@ -636,7 +640,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 					("functionName", functionName)
 					("elementSize", _type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedSize())
 					("byteArray", _type.isByteArray())
-					("mul", overflowCheckedUIntMulFunction(TypeProvider::uint256()->numBits()))
+					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
 					.render();
 			default:
 				solAssert(false, "");

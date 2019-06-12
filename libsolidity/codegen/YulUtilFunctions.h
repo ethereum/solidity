@@ -96,7 +96,7 @@ public:
 	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
 
 	/// signature: (x, y) -> product
-	std::string overflowCheckedUIntMulFunction(size_t _bits);
+	std::string overflowCheckedIntMulFunction(IntegerType const& _type);
 
 	/// @returns name of function to perform division on integers.
 	/// Checks for division by zero and the special case of
