@@ -30,7 +30,7 @@ add_executable(soltest ${sources} ${headers}
     ${libsolidity_sources} ${libsolidity_headers}
     ${libsolidity_util_sources} ${libsolidity_util_headers}
 )
-target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm devcore ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm devcore Boost::boost Boost::program_options Boost::unit_test_framework)
 
 if (LLL)
     target_link_libraries(soltest PRIVATE lll)
