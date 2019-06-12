@@ -112,6 +112,8 @@ function ask_expectation_update()
                 q* ) exit 1;;
             esac
         done
+    else
+        exit 1
     fi
 }
 
