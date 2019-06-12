@@ -466,6 +466,23 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 	});
 }
 
+string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
+{
+	string functionName = "checked_mod_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> r {
+				if iszero(y) { revert(0, 0) }
+				r := <?signed>s</signed>mod(x, y)
+			}
+			)")
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			.render();
+	});
+}
+
 string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 {
 	string functionName = "checked_sub_" + _type.identifier();

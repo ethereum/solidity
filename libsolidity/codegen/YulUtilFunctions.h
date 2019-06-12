@@ -103,6 +103,10 @@ public:
 	/// signed division of the smallest number by -1.
 	std::string overflowCheckedIntDivFunction(IntegerType const& _type);
 
+	/// @returns name of function to perform modulo on integers.
+	/// Reverts for modulo by zero.
+	std::string checkedIntModFunction(IntegerType const& _type);
+
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
 	/// signature: (x, y) -> diff
