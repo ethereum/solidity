@@ -1133,8 +1133,7 @@ string IRGeneratorForStatements::binaryOperation(
 				fun = m_utils.overflowCheckedIntAddFunction(*type);
 				break;
 			case Token::Sub:
-				if (!type->isSigned())
-					fun = m_utils.overflowCheckedUIntSubFunction();
+				fun = m_utils.overflowCheckedIntSubFunction(*type);
 				break;
 			case Token::Mul:
 				if (!type->isSigned())

@@ -464,18 +464,28 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntSubFunction()
+string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 {
-	string functionName = "checked_sub_uint";
+	string functionName = "checked_sub_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&] {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> diff {
-				if lt(x, y) { revert(0, 0) }
+				<?signed>
+					// underflow, if y >= 0 and x < (minValue + y)
+					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { revert(0, 0) }
+					// overflow, if y < 0 and x > (maxValue + y)
+					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { revert(0, 0) }
+				<!signed>
+					if lt(x, y) { revert(0, 0) }
+				</signed>
 				diff := sub(x, y)
 			}
 			)")
 			("functionName", functionName)
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			.render();
 	});
 }

@@ -106,7 +106,7 @@ public:
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
 	/// signature: (x, y) -> diff
-	std::string overflowCheckedUIntSubFunction();
+	std::string overflowCheckedIntSubFunction(IntegerType const& _type);
 
 	/// @returns the name of a function that fetches the length of the given
 	/// array
