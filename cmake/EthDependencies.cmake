@@ -36,7 +36,7 @@ find_package(Boost 1.65.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 if (NOT TARGET Boost::boost) # header only target
 	add_library(Boost::boost INTERFACE IMPORTED)
-	target_include_directories(Boost::boost INTERFACE ${Boost_INCLUDE_DIRS})
+	set_property(TARGET Boost::boost APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIRS})
 endif()
 get_property(LOCATION TARGET Boost::boost PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 message(STATUS "Found Boost headers in ${LOCATION}")
