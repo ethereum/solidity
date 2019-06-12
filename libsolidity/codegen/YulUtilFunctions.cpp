@@ -224,34 +224,45 @@ string YulUtilFunctions::shiftLeftFunction(size_t _numBits)
 	solAssert(_numBits < 256, "");
 
 	string functionName = "shift_left_" + to_string(_numBits);
-	if (m_evmVersion.hasBitwiseShifting())
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := shl(<numBits>, value)
-				}
-				)")
-				("functionName", functionName)
-				("numBits", to_string(_numBits))
-				.render();
-		});
-	}
-	else
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := mul(value, <multiplier>)
-				}
-				)")
-				("functionName", functionName)
-				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-				.render();
-		});
-	}
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shl(<numBits>, value)
+				<!hasShifts>
+					mul(value, <multiplier>)
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("numBits", to_string(_numBits))
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+			.render();
+	});
+}
+
+string YulUtilFunctions::dynamicShiftLeftFunction()
+{
+	string functionName = "shift_left";
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(bits, value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shl(bits, value)
+				<!hasShifts>
+					mul(value, exp(2, bits))
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			.render();
+	});
 }
 
 string YulUtilFunctions::shiftRightFunction(size_t _numBits)
@@ -261,7 +272,7 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 	// Note that if this is extended with signed shifts,
 	// the opcodes SAR and SDIV behave differently with regards to rounding!
 
-	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned_" + m_evmVersion.name();
+	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned";
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -278,6 +289,30 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 			("hasShifts", m_evmVersion.hasBitwiseShifting())
 			("numBits", to_string(_numBits))
 			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+			.render();
+	});
+}
+
+string YulUtilFunctions::dynamicShiftRightFunction()
+{
+	// Note that if this is extended with signed shifts,
+	// the opcodes SAR and SDIV behave differently with regards to rounding!
+
+	string const functionName = "shift_right_unsigned";
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(bits, value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shr(bits, value)
+				<!hasShifts>
+					div(value, exp(2, bits))
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
 			.render();
 	});
 }
@@ -302,6 +337,29 @@ string YulUtilFunctions::updateByteSliceFunction(size_t _numBytes, size_t _shift
 			("functionName", functionName)
 			("mask", formatNumber(((bigint(1) << numBits) - 1) << shiftBits))
 			("shl", shiftLeftFunction(shiftBits))
+			.render();
+	});
+}
+
+string YulUtilFunctions::dynamicUpdateByteSliceFunction(size_t _numBytes)
+{
+	solAssert(_numBytes <= 32, "");
+	size_t numBits = _numBytes * 8;
+	string functionName = "update_byte_slice_" + to_string(_numBytes);
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value, shiftBytes, toInsert) -> result {
+				let shiftBits := mul(shiftBytes, 8)
+				let mask := <shl>(shiftBits, <mask>)
+				toInsert := <shl>(shiftBits, toInsert)
+				value := and(value, not(mask))
+				result := or(value, and(toInsert, mask))
+			}
+			)")
+			("functionName", functionName)
+			("mask", formatNumber((bigint(1) << numBits) - 1))
+			("shl", dynamicShiftLeftFunction())
 			.render();
 	});
 }
@@ -609,6 +667,89 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 		)")
 		("functionName", functionName)
 		("extract", extractFromStorageValue(_type, _offset, false))
+		.render();
+	});
+}
+
+string YulUtilFunctions::dynamicReadFromStorage(Type const& _type, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+	string functionName =
+		"read_from_storage_" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		"_" +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		solAssert(_type.sizeOnStack() == 1, "");
+		return Whiskers(R"(
+			function <functionName>(slot, offset) -> value {
+				value := <extract>(sload(slot), offset)
+			}
+		)")
+		("functionName", functionName)
+		("extract", dynamicExtractFromStorageValue(_type, false))
+		.render();
+	});
+}
+
+string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const _offset)
+{
+	string const functionName =
+		"update_storage_value_" +
+		(_offset.is_initialized() ? ("offset_" + to_string(*_offset)) : "") +
+		_type.identifier();
+
+	return m_functionCollector->createFunction(functionName, [&] {
+		if (_type.isValueType())
+		{
+			solAssert(_type.storageBytes() <= 32, "Invalid storage bytes size.");
+			solAssert(_type.storageBytes() > 0, "Invalid storage bytes size.");
+
+			return Whiskers(R"(
+				function <functionName>(slot, <offset>value) {
+					sstore(slot, <update>(sload(slot), <offset><prepare>(value)))
+				}
+
+			)")
+			("functionName", functionName)
+			("update",
+				_offset.is_initialized() ?
+					updateByteSliceFunction(_type.storageBytes(), *_offset) :
+					dynamicUpdateByteSliceFunction(_type.storageBytes())
+			)
+			("offset", _offset.is_initialized() ? "" : "offset, ")
+			("prepare", prepareStoreFunction(_type))
+			.render();
+		}
+		else
+		{
+			if (_type.category() == Type::Category::Array)
+				solUnimplementedAssert(false, "");
+			else if (_type.category() == Type::Category::Struct)
+				solUnimplementedAssert(false, "");
+			else
+				solAssert(false, "Invalid non-value type for assignment.");
+		}
+	});
+}
+
+string YulUtilFunctions::dynamicExtractFromStorageValue(Type const& _type, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+
+	string functionName =
+		"extract_from_storage_value_" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot_value, offset) -> value {
+				value := <cleanupStorage>(<shr>(mul(offset, 8), slot_value))
+			}
+		)")
+		("functionName", functionName)
+		("shr", dynamicShiftRightFunction())
+		("cleanupStorage", cleanupFromStorageFunction(_type, false))
 		.render();
 	});
 }

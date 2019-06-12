@@ -20,8 +20,11 @@
 
 #pragma once
 
+#include <libdevcore/Common.h>
+
 #include <string>
 #include <ostream>
+#include <boost/variant.hpp>
 
 namespace dev
 {
@@ -83,7 +86,7 @@ public:
 	IRStorageItem(
 		IRGenerationContext& _context,
 		std::string _slot,
-		unsigned _offset,
+		boost::variant<std::string, unsigned> _offset,
 		Type const& _type
 	);
 	std::string retrieveValue() const override;
@@ -91,8 +94,14 @@ public:
 
 	std::string setToZero() const override;
 private:
-	std::string m_slot;
-	unsigned m_offset;
+	IRStorageItem(
+		IRGenerationContext& _context,
+		Type const& _type,
+		std::pair<u256, unsigned> slot_offset
+	);
+
+	std::string const m_slot;
+	boost::variant<std::string, unsigned> const m_offset;
 };
 
 
