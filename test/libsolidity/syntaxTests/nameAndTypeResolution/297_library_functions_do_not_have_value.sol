@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (87-96): Member "value" is only available for payable functions.
+// TypeError: (87-96): Member "value" is not allowed in delegated calls due to "msg.value" persisting.

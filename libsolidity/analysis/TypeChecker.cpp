@@ -2065,6 +2065,11 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			{
 				if (funType->kind() == FunctionType::Kind::Creation)
 					errorMsg = "Constructor for " + t.front()->toString() + " must be payable for member \"value\" to be available.";
+				else if (
+					funType->kind() == FunctionType::Kind::DelegateCall ||
+					funType->kind() == FunctionType::Kind::BareDelegateCall
+				)
+					errorMsg = "Member \"value\" is not allowed in delegated calls due to \"msg.value\" persisting.";
 				else
 					errorMsg = "Member \"value\" is only available for payable functions.";
 			}
