@@ -93,7 +93,7 @@ public:
 	std::string roundUpFunction();
 
 	/// signature: (x, y) -> sum
-	std::string overflowCheckedUIntAddFunction(size_t _bits);
+	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
 
 	/// signature: (x, y) -> product
 	std::string overflowCheckedUIntMulFunction(size_t _bits);

@@ -379,27 +379,32 @@ string YulUtilFunctions::roundUpFunction()
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
+string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 {
-	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
-	string functionName = "checked_add_uint_" + to_string(_bits);
+	string functionName = "checked_add_" + _type.identifier();
+	// TODO: Consider to add a special case for unsigned 256-bit integers
+	//       and use the following instead:
+	//       sum := add(x, y) if lt(sum, x) { revert(0, 0) }
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> sum {
-				<?shortType>
-					let mask := <mask>
-					sum := add(and(x, mask), and(y, mask))
-					if and(sum, not(mask)) { revert(0, 0) }
-				<!shortType>
-					sum := add(x, y)
-					if lt(sum, x) { revert(0, 0) }
-				</shortType>
+				<?signed>
+					// overflow, if x >= 0 and y > (maxValue - x)
+					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { revert(0, 0) }
+					// underflow, if x < 0 and y < (minValue - x)
+					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { revert(0, 0) }
+				<!signed>
+					// overflow, if x > (maxValue - y)
+					if gt(x, sub(<maxValue>, y)) { revert(0, 0) }
+				</signed>
+				sum := add(x, y)
 			}
 			)")
-			("shortType", _bits < 256)
 			("functionName", functionName)
-			("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			.render();
 	});
 }
