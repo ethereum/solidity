@@ -108,7 +108,7 @@ to the end-user as:
 
     This function will multiply 10 by 7
 
-if a function is being called and the input ``a`` is assigned a value of 7.
+if a function is being called and the input ``a`` is assigned a value of 10.
 
 Specifying these dynamic expressions is outside the scope of the Solidity
 documentation and you may read more at
