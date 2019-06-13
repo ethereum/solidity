@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Optimizer: Add rule to simplify SUB(~0, X) to NOT(X).
 
 
 
