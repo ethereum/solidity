@@ -10,6 +10,7 @@ Compiler Features:
 
 Bugfixes:
  * Yul / Inline Assembly Parser: Disallow trailing commas in function call arguments.
+ * Set state mutability of the function type members ``gas`` and ``value`` to pure (while their return type inherits state mutability from the function type).
 
 
 Build System:
