@@ -136,6 +136,12 @@ public:
 	/// a memory pointer or a calldata pointer to the slot number / memory pointer / calldata pointer
 	/// for the data position of an array which is stored in that slot / memory area / calldata area.
 	std::string arrayDataAreaFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that returns the slot and offset for the
+	/// given array and index
+	/// signature: (array, index) -> slot, offset
+	std::string storageArrayIndexAccessFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that advances an array data pointer to the next element.
 	/// Only works for memory arrays, calldata arrays and storage arrays that store one item per slot.
 	std::string nextArrayElementFunction(ArrayType const& _type);
