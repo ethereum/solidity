@@ -2912,7 +2912,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						strings(1, ""),
 						Kind::SetValue,
 						false,
-						StateMutability::NonPayable,
+						StateMutability::Pure,
 						nullptr,
 						m_gasSet,
 						m_valueSet
@@ -2929,7 +2929,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					strings(1, ""),
 					Kind::SetGas,
 					false,
-					StateMutability::NonPayable,
+					StateMutability::Pure,
 					nullptr,
 					m_gasSet,
 					m_valueSet
