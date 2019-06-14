@@ -22,16 +22,19 @@ def SMOD(x, y):
 	return If(y == 0, 0, x % y)
 
 def LT(x, y):
-	return ULT(x, y)
+	return If(ULT(x, y), BitVecVal(1, x.size()), BitVecVal(0, x.size()))
 
 def GT(x, y):
-	return UGT(x, y)
+	return If(UGT(x, y), BitVecVal(1, x.size()), BitVecVal(0, x.size()))
 
 def SLT(x, y):
-	return x < y
+	return If(x < y, BitVecVal(1, x.size()), BitVecVal(0, x.size()))
 
 def SGT(x, y):
-	return x > y
+	return If(x > y, BitVecVal(1, x.size()), BitVecVal(0, x.size()))
+
+def ISZERO(x):
+	return If(x == 0, BitVecVal(1, x.size()), BitVecVal(0, x.size()))
 
 def AND(x, y):
 	return x & y
