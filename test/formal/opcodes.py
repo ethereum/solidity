@@ -33,6 +33,9 @@ def SLT(x, y):
 def SGT(x, y):
 	return If(x > y, BitVecVal(1, x.size()), BitVecVal(0, x.size()))
 
+def EQ(x, y):
+	return If(x == y, BitVecVal(1, x.size()), BitVecVal(0, x.size()))
+
 def ISZERO(x):
 	return If(x == 0, BitVecVal(1, x.size()), BitVecVal(0, x.size()))
 
