@@ -16,14 +16,11 @@ n_bits = 64
 X = BitVec('X', n_bits)
 Y = BitVec('Y', n_bits)
 
-# Constants
-ONE = BitVecVal(1, n_bits)
-
 # Requirements
 
 # Non optimized result
-nonopt_1 = MUL(X, SHL(Y, ONE))
-nonopt_2 = MUL(SHL(X, ONE), Y)
+nonopt_1 = MUL(X, SHL(Y, 1))
+nonopt_2 = MUL(SHL(X, 1), Y)
 
 # Optimized result
 opt_1 = SHL(Y, X)

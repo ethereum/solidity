@@ -33,7 +33,7 @@ nonopt = SHL(B, SHR(A, X))
 Mask = SHL(B, SHR(A, Int2BV(IntVal(-1), n_bits)))
 opt = If(
 	UGT(A, B),
-	AND(SHR(a - b, x), Mask),
+	AND(SHR(A - B, X), Mask),
 		If(
 			UGT(B, A),
 			AND(SHL(B - A, X), Mask),

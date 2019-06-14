@@ -15,11 +15,8 @@ n_bits = 32
 X = BitVec('X', n_bits)
 Y = BitVec('Y', n_bits)
 
-# Constants
-ONE = BitVecVal(1, n_bits)
-
 # Non optimized result
-nonopt = DIV(X, SHL(Y, ONE))
+nonopt = DIV(X, SHL(Y, 1))
 
 # Optimized result
 opt = SHR(Y, X)
