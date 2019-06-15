@@ -16,15 +16,28 @@
 */
 
 #include <test/tools/ossfuzz/protoToYul.h>
-#include <libdevcore/StringUtils.h>
-#include <boost/range/algorithm_ext/erase.hpp>
+#include <test/tools/ossfuzz/yulOptimizerFuzzDictionary.h>
+
 #include <libyul/Exceptions.h>
+
+#include <libdevcore/StringUtils.h>
+
+#include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
 using namespace yul::test::yul_fuzzer;
 using namespace dev;
 
-string ProtoConverter::createHex(string const& _hexBytes) const
+string ProtoConverter::dictionaryToken(HexPrefix _p)
+{
+	unsigned indexVar = m_inputSize * m_inputSize + counter();
+	std::string token = dictionary[indexVar % dictionary.size()];
+	yulAssert(token.size() <= 64, "Proto Fuzzer: Dictionary token too large");
+
+	return _p == HexPrefix::Add ? "0x" + token : token;
+}
+
+string ProtoConverter::createHex(string const& _hexBytes)
 {
 	string tmp{_hexBytes};
 	if (!tmp.empty())
@@ -35,12 +48,14 @@ string ProtoConverter::createHex(string const& _hexBytes) const
 		tmp = tmp.substr(0, 64);
 	}
 	// We need this awkward if case because hex literals cannot be empty.
+	// Use a dictionary token.
 	if (tmp.empty())
-		tmp = "1";
+		tmp = dictionaryToken(HexPrefix::DontAdd);
+	yulAssert(tmp.size() <= 64, "Proto Fuzzer: Dictionary token too large");
 	return tmp;
 }
 
-string ProtoConverter::createAlphaNum(string const& _strBytes) const
+string ProtoConverter::createAlphaNum(string const& _strBytes)
 {
 	string tmp{_strBytes};
 	if (!tmp.empty())
@@ -56,7 +71,6 @@ string ProtoConverter::createAlphaNum(string const& _strBytes) const
 bool ProtoConverter::isCaseLiteralUnique(Literal const& _x)
 {
 	dev::u256 mpCaseLiteralValue;
-	bool isUnique = false;
 
 	switch (_x.literal_oneof_case())
 	{
@@ -74,11 +88,11 @@ bool ProtoConverter::isCaseLiteralUnique(Literal const& _x)
 	case Literal::LITERAL_ONEOF_NOT_SET:
 		// If the proto generator does not generate a valid Literal
 		// we generate a case 1:
-		mpCaseLiteralValue = 1;
+		mpCaseLiteralValue = u256(dictionaryToken());
 		break;
 	}
 
-	isUnique = m_switchLiteralSetPerScope.top().insert(mpCaseLiteralValue).second;
+	bool isUnique = m_switchLiteralSetPerScope.top().insert(mpCaseLiteralValue).second;
 	return isUnique;
 }
 
@@ -96,7 +110,7 @@ void ProtoConverter::visit(Literal const& _x)
 		m_output << "\"" << createAlphaNum(_x.strval()) << "\"";
 		break;
 	case Literal::LITERAL_ONEOF_NOT_SET:
-		m_output << "1";
+		m_output << dictionaryToken();
 		break;
 	}
 }
@@ -134,7 +148,7 @@ void ProtoConverter::visit(Expression const& _x)
 		visit(_x.func_expr());
 		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
-		m_output << "1";
+		m_output << dictionaryToken();
 		break;
 	}
 }
@@ -965,6 +979,9 @@ void ProtoConverter::visit(FunctionDefinition const& _x)
 
 void ProtoConverter::visit(Program const& _x)
 {
+	// Initialize input size
+	m_inputSize = _x.ByteSizeLong();
+
 	/* Program template is as follows
 	 *      Four Globals a_0, a_1, a_2, and a_3 to hold up to four function return values
 	 *

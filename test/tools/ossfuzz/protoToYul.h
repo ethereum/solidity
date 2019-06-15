@@ -46,6 +46,8 @@ public:
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
 		m_numNestedForLoops = 0;
+		m_counter = 0;
+		m_inputSize = 0;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -89,12 +91,10 @@ private:
 	void visit(FunctionDefinitionSingleReturnVal const&);
 	void visit(FunctionDefinitionMultiReturnVal const&);
 	void visit(Program const&);
-	template <class T>
-	void visit(google::protobuf::RepeatedPtrField<T> const& _repeated_field);
 	void registerFunction(FunctionDefinition const&);
 
-	std::string createHex(std::string const& _hexBytes) const;
-	std::string createAlphaNum(std::string const& _strBytes) const;
+	std::string createHex(std::string const& _hexBytes);
+	std::string createAlphaNum(std::string const& _strBytes);
 	bool isCaseLiteralUnique(Literal const&);
 	enum class NumFunctionReturns
 	{
@@ -127,6 +127,20 @@ private:
 				break;
 		}
 	}
+	/// Returns a pseudo-random dictionary token.
+	/// @param _p Enum that decides if the returned token is hex prefixed ("0x") or not
+	/// @return Dictionary token at the index computed using a
+	/// monotonically increasing counter as follows:
+	///		index = (m_inputSize * m_inputSize + counter) % dictionarySize
+	/// where m_inputSize is the size of the protobuf input and
+	/// dictionarySize is the total number of entries in the dictionary.
+	std::string dictionaryToken(dev::HexPrefix _p = dev::HexPrefix::Add);
+
+	/// Returns a monotonically increasing counter that starts from zero.
+	unsigned counter()
+	{
+		return m_counter++;
+	}
 
 	std::ostringstream m_output;
 	// Number of live variables in inner scope of a function
@@ -151,6 +165,10 @@ private:
 	unsigned m_numNestedForLoops;
 	// predicate to keep track of for loop init scope
 	bool m_inForInitScope;
+	/// Monotonically increasing counter
+	unsigned m_counter;
+	/// Size of protobuf input
+	unsigned m_inputSize;
 };
 }
 }
