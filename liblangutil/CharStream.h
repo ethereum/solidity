@@ -76,7 +76,13 @@ public:
 
 	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
 	char advanceAndGet(size_t _chars = 1);
+	/// Sets scanner position to @ _amount characters backwards in source text.
+	/// @returns The character of the current location after update is returned.
 	char rollback(size_t _amount);
+	/// Sets scanner position to @ _location if it refers a valid offset in m_source.
+	/// If not, nothing is done.
+	/// @returns The character of the current location after update is returned.
+	char setPosition(size_t _location);
 
 	void reset() { m_position = 0; }
 
