@@ -89,7 +89,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		{{Instruction::BYTE, {A, B}}, [=]{ return A.d() >= 32 ? 0 : (B.d() >> unsigned(8 * (31 - A.d()))) & 0xff; }, false},
 		{{Instruction::ADDMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) + bigint(B.d())) % C.d()); }, false},
 		{{Instruction::MULMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) * bigint(B.d())) % C.d()); }, false},
-		{{Instruction::MULMOD, {A, B, C}}, [=]{ return A.d() * B.d(); }, false},
 		{{Instruction::SIGNEXTEND, {A, B}}, [=]() -> u256 {
 			if (A.d() >= 31)
 				return B.d();
