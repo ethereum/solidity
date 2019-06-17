@@ -26,6 +26,7 @@ Operators:
 The operators ``||`` and ``&&`` apply the common short-circuiting rules. This means that in the expression ``f(x) || g(y)``, if ``f(x)`` evaluates to ``true``, ``g(y)`` will not be evaluated even if it may have side-effects.
 
 .. index:: ! uint, ! int, ! integer
+.. _integers:
 
 Integers
 --------
