@@ -256,8 +256,15 @@ message IfStmt {
   required Block if_body = 2;
 }
 
+message BoundedForStmt {
+  required Block for_body = 1;
+}
+
 message ForStmt {
   required Block for_body = 1;
+  required Block for_init = 2;
+  required Block for_post = 3;
+  required Expression for_cond = 4;
 }
 
 message CaseStmt {
@@ -324,6 +331,7 @@ message Statement {
     ExtCodeCopy         extcode_copy    = 12;
     TerminatingStmt     terminatestmt   = 13;
     FunctionCall        functioncall    = 14;
+    BoundedForStmt      boundedforstmt  = 15;
   }
 }
 
