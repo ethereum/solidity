@@ -101,6 +101,9 @@ private:
 	);
 
 	std::string const m_slot;
+	/// unsigned: Used when the offset is known at compile time, uses optimized
+	///           functions
+	/// string: Used when the offset is determined at run time
 	boost::variant<std::string, unsigned> const m_offset;
 };
 
