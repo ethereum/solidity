@@ -164,7 +164,7 @@ transactions.
 
 To listen for this event, you could use the following
 JavaScript code, which uses `web3.js <https://github.com/ethereum/web3.js/>`_ to create the ``Coin`` contract object,
-and any user interface calls the automatically generated ``balances`` function from aboves::
+and any user interface calls the automatically generated ``balances`` function from above::
 
     Coin.Sent().watch({}, '', function(error, result) {
         if (!error) {
