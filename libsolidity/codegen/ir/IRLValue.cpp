@@ -54,8 +54,8 @@ string IRLocalVariable::setToZero() const
 IRStorageItem::IRStorageItem(
 	IRGenerationContext& _context,
 	VariableDeclaration const& _varDecl
-)
-:IRStorageItem(
+):
+	IRStorageItem(
 	_context,
 	*_varDecl.annotation().type,
 	_context.storageLocationOfVariable(_varDecl)
@@ -66,8 +66,8 @@ IRStorageItem::IRStorageItem(
 	IRGenerationContext& _context,
 	Type const& _type,
 	std::pair<u256, unsigned> slot_offset
-)
-:	IRLValue(_context, &_type),
+):
+	IRLValue(_context, &_type),
 	m_slot(toCompactHexWithPrefix(slot_offset.first)),
 	m_offset(slot_offset.second)
 {
@@ -94,7 +94,7 @@ string IRStorageItem::retrieveValue() const
 	solUnimplementedAssert(m_type->category() != Type::Category::Function, "");
 	if (m_offset.type() == typeid(string))
 		return
-			m_context.utils().dynamicReadFromStorage(*m_type, false) +
+			m_context.utils().readFromStorageDynamic(*m_type, false) +
 			"(" +
 			m_slot +
 			", " +

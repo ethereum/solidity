@@ -244,9 +244,9 @@ string YulUtilFunctions::shiftLeftFunction(size_t _numBits)
 	});
 }
 
-string YulUtilFunctions::dynamicShiftLeftFunction()
+string YulUtilFunctions::shiftLeftFunctionDynamic()
 {
-	string functionName = "shift_left";
+	string functionName = "shift_left_dynamic";
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -293,12 +293,12 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 	});
 }
 
-string YulUtilFunctions::dynamicShiftRightFunction()
+string YulUtilFunctions::shiftRightFunctionDynamic()
 {
 	// Note that if this is extended with signed shifts,
 	// the opcodes SAR and SDIV behave differently with regards to rounding!
 
-	string const functionName = "shift_right_unsigned";
+	string const functionName = "shift_right_unsigned_dynamic";
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -341,11 +341,11 @@ string YulUtilFunctions::updateByteSliceFunction(size_t _numBytes, size_t _shift
 	});
 }
 
-string YulUtilFunctions::dynamicUpdateByteSliceFunction(size_t _numBytes)
+string YulUtilFunctions::updateByteSliceFunctionDynamic(size_t _numBytes)
 {
 	solAssert(_numBytes <= 32, "");
 	size_t numBits = _numBytes * 8;
-	string functionName = "update_byte_slice_" + to_string(_numBytes);
+	string functionName = "update_byte_slice_dynamic" + to_string(_numBytes);
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -359,7 +359,7 @@ string YulUtilFunctions::dynamicUpdateByteSliceFunction(size_t _numBytes)
 			)")
 			("functionName", functionName)
 			("mask", formatNumber((bigint(1) << numBits) - 1))
-			("shl", dynamicShiftLeftFunction())
+			("shl", shiftLeftFunctionDynamic())
 			.render();
 	});
 }
@@ -671,11 +671,11 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 	});
 }
 
-string YulUtilFunctions::dynamicReadFromStorage(Type const& _type, bool _splitFunctionTypes)
+string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes)
 {
 	solUnimplementedAssert(!_splitFunctionTypes, "");
 	string functionName =
-		"read_from_storage_" +
+		"read_from_storage_dynamic" +
 		string(_splitFunctionTypes ? "split_" : "") +
 		"_" +
 		_type.identifier();
@@ -687,7 +687,7 @@ string YulUtilFunctions::dynamicReadFromStorage(Type const& _type, bool _splitFu
 			}
 		)")
 		("functionName", functionName)
-		("extract", dynamicExtractFromStorageValue(_type, false))
+		("extract", extractFromStorageValueDynamic(_type, _splitFunctionTypes))
 		.render();
 	});
 }
@@ -715,7 +715,7 @@ string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::op
 			("update",
 				_offset.is_initialized() ?
 					updateByteSliceFunction(_type.storageBytes(), *_offset) :
-					dynamicUpdateByteSliceFunction(_type.storageBytes())
+					updateByteSliceFunctionDynamic(_type.storageBytes())
 			)
 			("offset", _offset.is_initialized() ? "" : "offset, ")
 			("prepare", prepareStoreFunction(_type))
@@ -733,12 +733,12 @@ string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::op
 	});
 }
 
-string YulUtilFunctions::dynamicExtractFromStorageValue(Type const& _type, bool _splitFunctionTypes)
+string YulUtilFunctions::extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes)
 {
 	solUnimplementedAssert(!_splitFunctionTypes, "");
 
 	string functionName =
-		"extract_from_storage_value_" +
+		"extract_from_storage_value_dynamic" +
 		string(_splitFunctionTypes ? "split_" : "") +
 		_type.identifier();
 	return m_functionCollector->createFunction(functionName, [&] {
@@ -748,8 +748,8 @@ string YulUtilFunctions::dynamicExtractFromStorageValue(Type const& _type, bool 
 			}
 		)")
 		("functionName", functionName)
-		("shr", dynamicShiftRightFunction())
-		("cleanupStorage", cleanupFromStorageFunction(_type, false))
+		("shr", shiftRightFunctionDynamic())
+		("cleanupStorage", cleanupFromStorageFunction(_type, _splitFunctionTypes))
 		.render();
 	});
 }
@@ -772,7 +772,7 @@ string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offs
 		)")
 		("functionName", functionName)
 		("shr", shiftRightFunction(_offset * 8))
-		("cleanupStorage", cleanupFromStorageFunction(_type, false))
+		("cleanupStorage", cleanupFromStorageFunction(_type, _splitFunctionTypes))
 		.render();
 	});
 }
