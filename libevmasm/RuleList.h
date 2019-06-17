@@ -123,6 +123,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{{Instruction::ADD, {X, 0}}, [=]{ return X; }, false},
 		{{Instruction::ADD, {0, X}}, [=]{ return X; }, false},
 		{{Instruction::SUB, {X, 0}}, [=]{ return X; }, false},
+		{{Instruction::SUB, {~u256(0), X}}, [=]() -> Pattern { return {Instruction::NOT, {X}}; }, false},
 		{{Instruction::MUL, {X, 0}}, [=]{ return u256(0); }, true},
 		{{Instruction::MUL, {0, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::MUL, {X, 1}}, [=]{ return X; }, false},
