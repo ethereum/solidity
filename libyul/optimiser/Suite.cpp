@@ -24,7 +24,6 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
-#include <libyul/optimiser/ConstantOptimiser.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -45,6 +44,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Metrics.h>
+#include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
@@ -209,7 +209,8 @@ void OptimiserSuite::run(
 
 	FunctionGrouper{}(ast);
 
-	ConstantOptimiser{dynamic_cast<EVMDialect const&>(_dialect), _meter}(ast);
+	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
+		ConstantOptimiser{*dialect, _meter}(ast);
 	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);
 	yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, ast);
 

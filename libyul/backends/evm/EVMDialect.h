@@ -68,6 +68,9 @@ struct EVMDialect: public Dialect
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
+	BuiltinFunctionForEVM const* discardFunction() const override { return builtin("pop"_yulstring); }
+	BuiltinFunctionForEVM const* equalityFunction() const override { return builtin("eq"_yulstring); }
+
 	static EVMDialect const& looseAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);

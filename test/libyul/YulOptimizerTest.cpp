@@ -23,7 +23,6 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
-#include <libyul/optimiser/ConstantOptimiser.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -47,8 +46,9 @@
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
-#include <libyul/optimiser/Metrics.h>
+#include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
