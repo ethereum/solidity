@@ -182,7 +182,7 @@ TestTool::Result TestTool::process()
 		else
 			return Result::Skipped;
 	}
-	catch(boost::exception const& _e)
+	catch (boost::exception const& _e)
 	{
 		AnsiColorized(cout, formatted, {BOLD, RED}) <<
 			"Exception during test: " << boost::diagnostic_information(_e) << endl;
@@ -191,7 +191,9 @@ TestTool::Result TestTool::process()
 	catch (std::exception const& _e)
 	{
 		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Exception during test: " << _e.what() << endl;
+			"Exception during test" <<
+			(_e.what() ? ": " + string(_e.what()) : ".") <<
+			endl;
 		return Result::Exception;
 	}
 	catch (...)
