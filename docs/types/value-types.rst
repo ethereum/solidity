@@ -333,7 +333,7 @@ type and this type is also used in the :ref:`ABI<ABI>`.
 Contracts do not support any operators.
 
 The members of contract types are the external functions of the contract
-including public state variables.
+including any state variables marked as ``public``.
 
 For a contract ``C`` you can use ``type(C)`` to access
 :ref:`type information<meta-type>` about the contract.
