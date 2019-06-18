@@ -61,7 +61,7 @@ public:
 	{
 		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, true);
 	}
-	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _errorRecovery = false);
+	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery = false);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
@@ -90,7 +90,7 @@ protected:
 	std::vector<SyntaxTestError> m_errorList;
 	bool m_optimiseYul = false;
 	langutil::EVMVersion const m_evmVersion;
-	bool m_errorRecovery = false;
+	bool m_parserErrorRecovery = false;
 };
 
 }
