@@ -123,6 +123,7 @@ static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
 static string const g_strIR = "ir";
+static string const g_strEWasm = "ewasm";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
@@ -170,6 +171,7 @@ static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
+static string const g_argEWasm = g_strEWasm;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -307,6 +309,20 @@ void CommandLineInterface::handleIR(string const& _contractName)
 		{
 			sout() << "IR: " << endl;
 			sout() << m_compiler->yulIR(_contractName) << endl;
+		}
+	}
+}
+
+void CommandLineInterface::handleEWasm(string const& _contractName)
+{
+	if (m_args.count(g_argEWasm))
+	{
+		if (m_args.count(g_argOutputDir))
+			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->eWasm(_contractName));
+		else
+		{
+			sout() << "eWasm: " << endl;
+			sout() << m_compiler->eWasm(_contractName) << endl;
 		}
 	}
 }
@@ -705,6 +721,7 @@ Allowed options)",
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
 		(g_argIR.c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
+		(g_argEWasm.c_str(), "EWasm text representation of all contracts (EXPERIMENTAL).")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
@@ -932,6 +949,7 @@ bool CommandLineInterface::processInput()
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_args.count(g_argIR));
+		m_compiler->enableEWasmGeneration(m_args.count(g_argEWasm));
 
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -1409,6 +1427,7 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleIR(contract);
+		handleEWasm(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);

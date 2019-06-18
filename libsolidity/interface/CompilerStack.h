@@ -154,6 +154,9 @@ public:
 	/// Enable experimental generation of Yul IR code.
 	void enableIRGeneration(bool _enable = true) { m_generateIR = _enable; }
 
+	/// Enable experimental generation of eWasm code. If enabled, IR is also generated.
+	void enableEWasmGeneration(bool _enable = true) { m_generateEWasm = _enable; }
+
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
 	void useMetadataLiteralSources(bool _metadataLiteralSources);
@@ -218,6 +221,9 @@ public:
 
 	/// @returns the optimized IR representation of a contract.
 	std::string const& yulIROptimized(std::string const& _contractName) const;
+
+	/// @returns the eWasm (text) representation of a contract.
+	std::string const& eWasm(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName) const;
@@ -296,6 +302,7 @@ private:
 		eth::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Experimental Yul IR code.
 		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
+		std::string eWasm; ///< Experimental eWasm code (text representation).
 		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
@@ -325,6 +332,9 @@ private:
 	/// Generate Yul IR for a single contract.
 	/// The IR is stored but otherwise unused.
 	void generateIR(ContractDefinition const& _contract);
+
+	/// Generate eWasm text representation for a single contract.
+	void generateEWasm(ContractDefinition const& _contract);
 
 	/// Links all the known library addresses in the available objects. Any unknown
 	/// library will still be kept as an unlinked placeholder in the objects.
@@ -379,6 +389,7 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	std::set<std::string> m_requestedContractNames;
 	bool m_generateIR;
+	bool m_generateEWasm;
 	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"

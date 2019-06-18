@@ -49,6 +49,12 @@
 #include <libsolidity/codegen/ir/IRGenerator.h>
 
 #include <libyul/YulString.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
+#include <libyul/backends/wasm/EWasmObjectCompiler.h>
+#include <libyul/backends/wasm/WasmDialect.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/AssemblyStack.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
@@ -73,6 +79,7 @@ static int g_compilerStackCounts = 0;
 CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
 	m_readFile{_readFile},
 	m_generateIR{false},
+	m_generateEWasm{false},
 	m_errorList{},
 	m_errorReporter{m_errorList}
 {
@@ -171,6 +178,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
 		m_generateIR = false;
+		m_generateEWasm = false;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
 	}
@@ -413,8 +421,10 @@ bool CompilerStack::compile()
 				if (isRequestedContract(*contract))
 				{
 					compileContract(*contract, otherCompilers);
-					if (m_generateIR)
+					if (m_generateIR || m_generateEWasm)
 						generateIR(*contract);
+					if (m_generateEWasm)
+						generateEWasm(*contract);
 				}
 	m_stackState = CompilationSuccessful;
 	this->link();
@@ -538,6 +548,14 @@ string const& CompilerStack::yulIROptimized(string const& _contractName) const
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	return contract(_contractName).yulIROptimized;
+}
+
+string const& CompilerStack::eWasm(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	return contract(_contractName).eWasm;
 }
 
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -969,6 +987,36 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 
 	IRGenerator generator(m_evmVersion, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract);
+}
+
+void CompilerStack::generateEWasm(ContractDefinition const& _contract)
+{
+	solAssert(m_stackState >= AnalysisSuccessful, "");
+	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+	solAssert(!compiledContract.yulIROptimized.empty(), "");
+	if (!compiledContract.eWasm.empty())
+		return;
+
+	// Re-parse the Yul IR in EVM dialect
+	yul::AssemblyStack evmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	evmStack.parseAndAnalyze("", compiledContract.yulIROptimized);
+
+	// Turn into eWasm dialect
+	yul::Object ewasmObject = yul::EVMToEWasmTranslator(
+		yul::EVMDialect::strictAssemblyForEVMObjects(m_evmVersion)
+	).run(*evmStack.parserResult());
+
+	// Re-inject into an assembly stack for the eWasm dialect
+	yul::AssemblyStack ewasmStack(m_evmVersion, yul::AssemblyStack::Language::EWasm, m_optimiserSettings);
+	// TODO this is a hack for now - provide as structured AST!
+	ewasmStack.parseAndAnalyze("", "{}");
+	*ewasmStack.parserResult() = move(ewasmObject);
+	ewasmStack.optimize();
+
+	//cout << yul::AsmPrinter{}(*ewasmStack.parserResult()->code) << endl;
+
+	// Turn into eWasm text representation.
+	compiledContract.eWasm = ewasmStack.assemble(yul::AssemblyStack::Machine::eWasm).assembly;
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
