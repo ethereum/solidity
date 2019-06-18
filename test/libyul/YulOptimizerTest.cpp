@@ -297,7 +297,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		disambiguate();
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
-		WordSizeTransform::run(*m_ast, nameDispenser);
+		WordSizeTransform::run(*m_dialect, *m_ast, nameDispenser);
 	}
 	else if (m_optimizerStep == "fullSuite")
 	{
