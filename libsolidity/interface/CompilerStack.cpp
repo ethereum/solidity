@@ -784,7 +784,7 @@ h256 const& CompilerStack::Source::keccak256() const
 h256 const& CompilerStack::Source::swarmHash() const
 {
 	if (swarmHashCached == h256{})
-		swarmHashCached = dev::bzzr0Hash(scanner->source());
+		swarmHashCached = dev::bzzr1Hash(scanner->source());
 	return swarmHashCached;
 }
 
@@ -1085,7 +1085,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		else
 		{
 			meta["sources"][s.first]["urls"] = Json::arrayValue;
-			meta["sources"][s.first]["urls"].append("bzzr://" + toHex(s.second.swarmHash().asBytes()));
+			meta["sources"][s.first]["urls"].append("bzz-raw://" + toHex(s.second.swarmHash().asBytes()));
 			meta["sources"][s.first]["urls"].append(s.second.ipfsUrl());
 		}
 	}
@@ -1232,7 +1232,7 @@ private:
 bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
 {
 	MetadataCBOREncoder encoder;
-	encoder.pushBytes("bzzr0", dev::bzzr0Hash(_metadata).asBytes());
+	encoder.pushBytes("bzzr1", dev::bzzr1Hash(_metadata).asBytes());
 	if (_experimentalMode)
 		encoder.pushBool("experimental", true);
 	if (m_release)

@@ -40,18 +40,18 @@ namespace test
 #define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt) \
 	do \
 	{ \
-		u256 bzzr0Cost = GasMeter::dataGas(dev::bzzr0Hash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true); \
+		u256 bzzr1Cost = GasMeter::dataGas(dev::bzzr1Hash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true); \
 		u256 gasOpt{_gasOpt}; \
 		u256 gasNoOpt{_gasNoOpt}; \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
 		BOOST_CHECK_MESSAGE( \
-			m_gasUsed >= bzzr0Cost, \
+			m_gasUsed >= bzzr1Cost, \
 			"Gas used: " + \
 			m_gasUsed.str() + \
-			" is less than the data cost for the bzzr0 hash: " + \
-			u256(bzzr0Cost).str() \
+			" is less than the data cost for the bzzr1 hash: " + \
+			u256(bzzr1Cost).str() \
 		); \
-		u256 gasUsed = m_gasUsed - bzzr0Cost; \
+		u256 gasUsed = m_gasUsed - bzzr1Cost; \
 		BOOST_CHECK_MESSAGE( \
 			gas == gasUsed, \
 			"Gas used: " + \

@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 		bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
 		std::string const& metadata = compilerStack.metadata("test");
 		BOOST_CHECK(dev::test::isValidMetadata(metadata));
-		bytes hash = dev::bzzr0Hash(metadata).asBytes();
+		bytes hash = dev::bzzr1Hash(metadata).asBytes();
 		BOOST_REQUIRE(hash.size() == 32);
 		auto const cborMetadata = requireParsedCBORMetadata(bytecode);
 		BOOST_CHECK(cborMetadata.size() == 2);
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 			BOOST_CHECK(cborMetadata.at("solc") == toHex(VersionCompactBytes));
 		else
 			BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
-		BOOST_CHECK(cborMetadata.count("bzzr0") == 1);
-		BOOST_CHECK(cborMetadata.at("bzzr0") == toHex(hash));
+		BOOST_CHECK(cborMetadata.count("bzzr1") == 1);
+		BOOST_CHECK(cborMetadata.at("bzzr1") == toHex(hash));
 	}
 }
 
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 		bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
 		std::string const& metadata = compilerStack.metadata("test");
 		BOOST_CHECK(dev::test::isValidMetadata(metadata));
-		bytes hash = dev::bzzr0Hash(metadata).asBytes();
+		bytes hash = dev::bzzr1Hash(metadata).asBytes();
 		BOOST_REQUIRE(hash.size() == 32);
 		auto const cborMetadata = requireParsedCBORMetadata(bytecode);
 		BOOST_CHECK(cborMetadata.size() == 3);
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			BOOST_CHECK(cborMetadata.at("solc") == toHex(VersionCompactBytes));
 		else
 			BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
-		BOOST_CHECK(cborMetadata.count("bzzr0") == 1);
-		BOOST_CHECK(cborMetadata.at("bzzr0") == toHex(hash));
+		BOOST_CHECK(cborMetadata.count("bzzr1") == 1);
+		BOOST_CHECK(cborMetadata.at("bzzr1") == toHex(hash));
 		BOOST_CHECK(cborMetadata.count("experimental") == 1);
 		BOOST_CHECK(cborMetadata.at("experimental") == "true");
 	}

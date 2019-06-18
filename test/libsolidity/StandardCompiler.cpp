@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"tag_1:\n    /* \"fileA\":0:14  contract A { } */\n  pop\n  dataSize(sub_0)\n  dup1\n  "
 		"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n        "
 		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      0x00\n      "
-		"dup1\n      revert\n\n    auxdata: 0xa265627a7a72305820"
+		"dup1\n      revert\n\n    auxdata: 0xa265627a7a72315820"
 	) == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(contract["evm"]["gasEstimates"].size(), 1);
