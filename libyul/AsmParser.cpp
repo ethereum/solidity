@@ -384,17 +384,10 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	case Token::Identifier:
 	case Token::Return:
 	case Token::Byte:
+	case Token::Bool:
 	case Token::Address:
 	{
-		YulString literal;
-		if (currentToken() == Token::Return)
-			literal = "return"_yulstring;
-		else if (currentToken() == Token::Byte)
-			literal = "byte"_yulstring;
-		else if (currentToken() == Token::Address)
-			literal = "address"_yulstring;
-		else
-			literal = YulString{currentLiteral()};
+		YulString literal{currentLiteral()};
 		// first search the set of builtins, then the instructions.
 		if (m_dialect.builtin(literal))
 		{
@@ -648,26 +641,25 @@ TypedName Parser::parseTypedName()
 
 YulString Parser::expectAsmIdentifier()
 {
-	YulString name = YulString{currentLiteral()};
-	if (m_dialect.flavour == AsmFlavour::Yul)
+	YulString name{currentLiteral()};
+	switch (currentToken())
 	{
-		switch (currentToken())
-		{
-		case Token::Return:
-		case Token::Byte:
-		case Token::Address:
-		case Token::Bool:
-			advance();
-			return name;
-		default:
-			break;
-		}
+	case Token::Return:
+	case Token::Byte:
+	case Token::Address:
+	case Token::Bool:
+	case Token::Identifier:
+		break;
+	default:
+		expectToken(Token::Identifier);
+		break;
 	}
-	else if (m_dialect.builtin(name))
+
+	if (m_dialect.builtin(name))
 		fatalParserError("Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
-	else if (instructions().count(name.str()))
-		fatalParserError("Cannot use instruction names for identifier names.");
-	expectToken(Token::Identifier);
+	else if (m_dialect.flavour == AsmFlavour::Loose && instructions().count(name.str()))
+		fatalParserError("Cannot use instruction name \"" + name.str() + "\" as identifier name.");
+	advance();
 	return name;
 }
 
