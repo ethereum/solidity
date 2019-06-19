@@ -62,6 +62,7 @@ public:
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
 	virtual int stackHeight() const = 0;
+	virtual void setStackHeight(int height) = 0;
 	/// Append an EVM instruction.
 	virtual void appendInstruction(dev::eth::Instruction _instruction) = 0;
 	/// Append a constant.

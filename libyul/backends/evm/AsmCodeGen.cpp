@@ -57,6 +57,11 @@ int EthAssemblyAdapter::stackHeight() const
 	return m_assembly.deposit();
 }
 
+void EthAssemblyAdapter::setStackHeight(int height)
+{
+	m_assembly.setDeposit(height);
+}
+
 void EthAssemblyAdapter::appendInstruction(dev::eth::Instruction _instruction)
 {
 	m_assembly.append(_instruction);

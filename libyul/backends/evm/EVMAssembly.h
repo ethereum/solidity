@@ -45,6 +45,7 @@ public:
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
 	int stackHeight() const override { return m_stackHeight; }
+	void setStackHeight(int height) override { m_stackHeight = height; }
 	/// Append an EVM instruction.
 	void appendInstruction(dev::eth::Instruction _instruction) override;
 	/// Append a constant.
