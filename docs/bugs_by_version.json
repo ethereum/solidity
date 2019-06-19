@@ -452,6 +452,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -463,6 +464,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -475,6 +477,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -486,6 +489,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -514,6 +518,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -526,6 +531,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -538,6 +544,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -550,6 +557,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -561,6 +569,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -572,6 +581,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -581,6 +591,7 @@
     },
     "0.4.26": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2"
         ],
         "released": "2019-04-29"
@@ -689,6 +700,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
@@ -698,6 +710,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
@@ -707,6 +720,7 @@
     },
     "0.5.2": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
@@ -716,6 +730,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
@@ -725,6 +740,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
@@ -734,6 +750,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
@@ -745,6 +762,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries",
@@ -755,6 +773,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
             "IncorrectEventSignatureInLibraries"
@@ -763,12 +782,15 @@
     },
     "0.5.8": {
         "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2"
         ],
         "released": "2019-04-30"
     },
     "0.5.9": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2StorageArrayWithMultiSlotElement"
+        ],
         "released": "2019-05-28"
     }
 }

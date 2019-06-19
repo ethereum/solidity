@@ -1,5 +1,16 @@
 [
     {
+        "name": "ABIEncoderV2StorageArrayWithMultiSlotElement",
+        "summary": "Storage arrays containing structs or other arrays are not read properly when directly encoded in function calls or in abi.encode*.",
+        "description": "When storage arrays whose elements occupy more than a single storage slot are directly encoded in function calls or using abi.encode*, their elements are read in an overlapping manner, i.e. the element pointer is not properly advanced between reads. This is not a problem when the storage data is first copied to a memory variable.",
+        "introduced": "0.4.16",
+        "fixed": "0.5.10",
+        "severity": "low",
+        "conditions": {
+            "ABIEncoderV2": true
+        }
+    },
+    {
         "name": "DynamicConstructorArgumentsClippedABIV2",
         "summary": "A contract's constructor that takes structs or arrays that contain dynamically-sized arrays reverts or decodes to invalid data.",
         "description": "During construction of a contract, constructor parameters are copied from the code section to memory for decoding. The amount of bytes to copy was calculated incorrectly in case all parameters are statically-sized but contain dynamically-sized arrays as struct members or inner arrays. Such types are only available if ABIEncoderV2 is activated.",
