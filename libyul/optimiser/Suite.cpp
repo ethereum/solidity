@@ -87,7 +87,7 @@ void OptimiserSuite::run(
 
 	// None of the above can make stack problems worse.
 
-	NameDispenser dispenser{_dialect, ast};
+	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
 
 	size_t codeSize = 0;
 	for (size_t rounds = 0; rounds < 12; ++rounds)

@@ -36,6 +36,7 @@
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/MainFunction.h>
+#include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -110,6 +111,15 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	soltestAssert(m_dialect, "Dialect not set.");
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
+	else if (m_optimizerStep == "nameDisplacer")
+	{
+		disambiguate();
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
+		NameDisplacer{
+			nameDispenser,
+			{"illegal1"_yulstring, "illegal2"_yulstring, "illegal3"_yulstring, "illegal4"_yulstring, "illegal5"_yulstring}
+		}(*m_ast);
+	}
 	else if (m_optimizerStep == "blockFlattener")
 	{
 		disambiguate();
