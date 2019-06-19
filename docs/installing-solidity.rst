@@ -305,10 +305,6 @@ You might want to install ccache to speed up repeated builds.
 CMake will pick it up automatically.
 Building Solidity is quite similar on Linux, macOS and other Unices:
 
-.. warning::
-
-    BSD builds should work, but are untested by the Solidity team.
-
 .. code-block:: bash
 
     mkdir build
@@ -321,6 +317,10 @@ or even easier on Linux and macOS, you can run:
 
     #note: this will install binaries solc and soltest at usr/local/bin
     ./scripts/build.sh
+
+.. warning::
+
+    BSD builds should work, but are untested by the Solidity team.
 
 And for Windows:
 
