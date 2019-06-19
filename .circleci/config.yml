@@ -33,6 +33,9 @@ defaults:
       command: |
         export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
         scripts/regressions.py -o test_results
+  - run_proofs: &run_proofs
+      name: Correctness proofs for optimization rules
+      command: scripts/run_proofs.sh
   - solc_artifact: &solc_artifact
       path: build/solc/solc
       destination: solc
@@ -304,6 +307,21 @@ jobs:
           name: Test buglist
           command: ./test/buglistTests.js
 
+  proofs:
+    docker:
+      - image: buildpack-deps:bionic
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run:
+          name: Z3 python deps
+          command: |
+            apt-get -qq update
+            apt-get -qy install python-pip
+            pip install --user z3-solver
+      - run: *run_proofs
+
   test_x86_linux:
     docker:
       - image: buildpack-deps:bionic
@@ -490,6 +508,7 @@ workflows:
       - test_check_spelling: *build_on_tags
       - test_check_style: *build_on_tags
       - test_buglist: *build_on_tags
+      - proofs: *build_on_tags
       - build_emscripten: *build_on_tags
       - test_emscripten_solcjs:
           <<: *build_on_tags
