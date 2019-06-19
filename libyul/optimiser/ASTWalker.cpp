@@ -35,6 +35,7 @@ void ASTWalker::operator()(FunctionalInstruction const& _instr)
 
 void ASTWalker::operator()(FunctionCall const& _funCall)
 {
+	// Does not visit _funCall.functionName on purpose
 	walkVector(_funCall.arguments | boost::adaptors::reversed);
 }
 
@@ -108,6 +109,7 @@ void ASTModifier::operator()(FunctionalInstruction& _instr)
 
 void ASTModifier::operator()(FunctionCall& _funCall)
 {
+	// Does not visit _funCall.functionName on purpose
 	walkVector(_funCall.arguments | boost::adaptors::reversed);
 }
 

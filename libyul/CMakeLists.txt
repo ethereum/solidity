@@ -102,6 +102,8 @@ add_library(yul
 	optimiser/NameCollector.h
 	optimiser/NameDispenser.cpp
 	optimiser/NameDispenser.h
+	optimiser/NameDisplacer.cpp
+	optimiser/NameDisplacer.h
 	optimiser/OptimizerUtilities.cpp
 	optimiser/OptimizerUtilities.h
 	optimiser/RedundantAssignEliminator.cpp
