@@ -34,9 +34,18 @@ string EWasmToText::run(
 	vector<wasm::FunctionDefinition> const& _functions
 )
 {
-	string ret = "(module\n\n";
+	string ret = "(module\n";
+	// TODO Add all the interface functions:
+	// ret += "    (import \"ethereum\" \"getBalance\"  (func $getBalance (param i32 i32)))\n";
+
+	// allocate one 64k page of memory and make it available to the Ethereum client
+	ret += "    (memory $memory (export \"memory\") 1)\n";
+	// export the main function
+	ret += "    (export \"main\" (func $main))\n";
+
 	for (auto const& g: _globals)
 		ret += "    (global $" + g.variableName + " (mut i64) (i64.const 0))\n";
+	ret += "\n";
 	for (auto const& f: _functions)
 		ret += transform(f) + "\n";
 	return move(ret) + ")\n";
