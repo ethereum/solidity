@@ -1588,45 +1588,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			setLValue<MemoryItem>(_indexAccess, *_indexAccess.annotation().type, !arrayType.isByteArray());
 			break;
 		case DataLocation::CallData:
-			if (arrayType.baseType()->isDynamicallyEncoded())
-			{
-				// stack layout: <base_ref> <length> <index>
-				ArrayUtils(m_context).accessIndex(arrayType, true, true);
-				// stack layout: <base_ref> <ptr_to_tail>
-
-				CompilerUtils(m_context).accessCalldataTail(*arrayType.baseType());
-				// stack layout: <tail_ref> [length]
-			}
-			else
-			{
-				ArrayUtils(m_context).accessIndex(arrayType, true);
-				if (arrayType.baseType()->isValueType())
-				{
-					solAssert(arrayType.baseType()->storageBytes() <= 32, "");
-					if (
-						!arrayType.isByteArray() &&
-						arrayType.baseType()->storageBytes() < 32 &&
-						m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
-					)
-					{
-						m_context << u256(32);
-						CompilerUtils(m_context).abiDecodeV2({arrayType.baseType()}, false);
-					}
-					else
-						CompilerUtils(m_context).loadFromMemoryDynamic(
-							*arrayType.baseType(),
-							true,
-							!arrayType.isByteArray(),
-							false
-						);
-				}
-				else
-					solAssert(
-						arrayType.baseType()->category() == Type::Category::Struct ||
-						arrayType.baseType()->category() == Type::Category::Array,
-						"Invalid statically sized non-value base type on array access."
-					);
-			}
+			ArrayUtils(m_context).accessCallDataArrayElement(arrayType);
 			break;
 		}
 	}

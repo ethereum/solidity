@@ -1131,6 +1131,50 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 	}
 }
 
+void ArrayUtils::accessCallDataArrayElement(ArrayType const& _arrayType, bool _doBoundsCheck) const
+{
+	solAssert(_arrayType.location() == DataLocation::CallData, "");
+	if (_arrayType.baseType()->isDynamicallyEncoded())
+	{
+		// stack layout: <base_ref> <length> <index>
+		ArrayUtils(m_context).accessIndex(_arrayType, _doBoundsCheck, true);
+		// stack layout: <base_ref> <ptr_to_tail>
+
+		CompilerUtils(m_context).accessCalldataTail(*_arrayType.baseType());
+		// stack layout: <tail_ref> [length]
+	}
+	else
+	{
+		ArrayUtils(m_context).accessIndex(_arrayType, _doBoundsCheck);
+		if (_arrayType.baseType()->isValueType())
+		{
+			solAssert(_arrayType.baseType()->storageBytes() <= 32, "");
+			if (
+				!_arrayType.isByteArray() &&
+				_arrayType.baseType()->storageBytes() < 32 &&
+				m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
+			)
+			{
+				m_context << u256(32);
+				CompilerUtils(m_context).abiDecodeV2({_arrayType.baseType()}, false);
+			}
+			else
+				CompilerUtils(m_context).loadFromMemoryDynamic(
+					*_arrayType.baseType(),
+					true,
+					!_arrayType.isByteArray(),
+					false
+				);
+		}
+		else
+			solAssert(
+				_arrayType.baseType()->category() == Type::Category::Struct ||
+				_arrayType.baseType()->category() == Type::Category::Array,
+				"Invalid statically sized non-value base type on array access."
+			);
+	}
+}
+
 void ArrayUtils::incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPosition, unsigned _storageOffsetPosition) const
 {
 	solAssert(_byteSize < 32, "");
