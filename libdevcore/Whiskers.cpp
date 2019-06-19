@@ -37,6 +37,7 @@ Whiskers::Whiskers(string _template):
 
 Whiskers& Whiskers::operator()(string _parameter, string _value)
 {
+	checkParameterValid(_parameter);
 	checkParameterUnknown(_parameter);
 	m_parameters[move(_parameter)] = move(_value);
 	return *this;
@@ -44,6 +45,7 @@ Whiskers& Whiskers::operator()(string _parameter, string _value)
 
 Whiskers& Whiskers::operator()(string _parameter, bool _value)
 {
+	checkParameterValid(_parameter);
 	checkParameterUnknown(_parameter);
 	m_conditions[move(_parameter)] = _value;
 	return *this;
@@ -54,7 +56,11 @@ Whiskers& Whiskers::operator()(
 	vector<map<string, string>> _values
 )
 {
+	checkParameterValid(_listParameter);
 	checkParameterUnknown(_listParameter);
+	for (auto const& element: _values)
+		for (auto const& val: element)
+			checkParameterValid(val.first);
 	m_listParameters[move(_listParameter)] = move(_values);
 	return *this;
 }
@@ -64,7 +70,17 @@ string Whiskers::render() const
 	return replace(m_template, m_parameters, m_conditions, m_listParameters);
 }
 
-void Whiskers::checkParameterUnknown(string const& _parameter)
+void Whiskers::checkParameterValid(string const& _parameter) const
+{
+	static boost::regex validParam("^" + paramRegex() + "$");
+	assertThrow(
+		boost::regex_match(_parameter, validParam),
+		WhiskersError,
+		"Parameter" + _parameter + " contains invalid characters."
+	);
+}
+
+void Whiskers::checkParameterUnknown(string const& _parameter) const
 {
 	assertThrow(
 		!m_parameters.count(_parameter),
@@ -91,7 +107,7 @@ string Whiskers::replace(
 )
 {
 	using namespace boost;
-	static regex listOrTag("<([^#/?!>]+)>|<#([^>]+)>(.*?)</\\2>|<\\?([^>]+)>(.*?)(<!\\4>(.*?))?</\\4>");
+	static regex listOrTag("<(" + paramRegex() + ")>|<#(" + paramRegex() + ")>(.*?)</\\2>|<\\?(" + paramRegex() + ")>(.*?)(<!\\4>(.*?))?</\\4>");
 	return regex_replace(_template, listOrTag, [&](match_results<string::const_iterator> _match) -> string
 	{
 		string tagName(_match[1]);
