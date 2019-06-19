@@ -1,5 +1,9 @@
 ### 0.5.10 (unreleased)
 
+Important Bugfixes:
+ * Fix incorrect abi encoding of storage array of data type that occupy multiple storage slots
+
+
 Language Features:
 
 

@@ -154,7 +154,7 @@ private:
 		EncodingOptions const& _options
 	);
 	/// Part of @a abiEncodingFunction for array target type and given memory array or
-	/// a given storage array with one item per slot.
+	/// a given storage array with every item occupies one or multiple full slots.
 	std::string abiEncodingFunctionSimpleArray(
 		ArrayType const& _givenType,
 		ArrayType const& _targetType,

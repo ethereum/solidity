@@ -589,18 +589,29 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 			}
 		)");
 		templ("functionName", functionName);
-		if (_type.location() == DataLocation::Memory)
+		switch (_type.location())
+		{
+		case DataLocation::Memory:
 			templ("advance", "0x20");
-		else if (_type.location() == DataLocation::Storage)
-			templ("advance", "1");
-		else if (_type.location() == DataLocation::CallData)
-			templ("advance", toCompactHexWithPrefix(
+			break;
+		case DataLocation::Storage:
+		{
+			u256 size = _type.baseType()->storageSize();
+			solAssert(size >= 1, "");
+			templ("advance", toCompactHexWithPrefix(size));
+			break;
+		}
+		case DataLocation::CallData:
+		{
+			u256 size =
 				_type.baseType()->isDynamicallyEncoded() ?
 				32 :
-				_type.baseType()->calldataEncodedSize()
-			));
-		else
-			solAssert(false, "");
+				_type.baseType()->calldataEncodedSize();
+			solAssert(size >= 32 && size % 32 == 0, "");
+			templ("advance", toCompactHexWithPrefix(size));
+			break;
+		}
+		}
 		return templ.render();
 	});
 }
