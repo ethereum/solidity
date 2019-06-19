@@ -292,7 +292,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "fullSuite")
 	{
 		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-		OptimiserSuite::run(*m_dialect, meter, *m_ast, *m_analysisInfo, true);
+		OptimiserSuite::run(*m_dialect, &meter, *m_ast, *m_analysisInfo, true);
 	}
 	else
 	{

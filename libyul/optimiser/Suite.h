@@ -41,7 +41,7 @@ class OptimiserSuite
 public:
 	static void run(
 		Dialect const& _dialect,
-		GasMeter const& _meter,
+		GasMeter const* _meter,
 		Block& _ast,
 		AsmAnalysisInfo const& _analysisInfo,
 		bool _optimizeStackAllocation,

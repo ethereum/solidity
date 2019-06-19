@@ -115,9 +115,9 @@ wasm::Expression EWasmCodeTransform::operator()(Label const&)
 	return {};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(FunctionalInstruction const&)
+wasm::Expression EWasmCodeTransform::operator()(FunctionalInstruction const& _f)
 {
-	yulAssert(false, "");
+	yulAssert(false, "EVM instruction in ewasm code: " + eth::instructionInfo(_f.instruction).name);
 	return {};
 }
 
