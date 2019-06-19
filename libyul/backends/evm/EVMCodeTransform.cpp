@@ -123,16 +123,19 @@ CodeTransform::CodeTransform(
 	}
 }
 
-void CodeTransform::decreaseReference(YulString, Scope::Variable const& _var)
+void CodeTransform::decreaseReference(YulString _name, Scope::Variable const& _var)
 {
 	if (!m_allowStackOpt)
 		return;
+
 
 	unsigned& ref = m_context->variableReferences.at(&_var);
 	solAssert(ref >= 1, "");
 	--ref;
 	if (ref == 0)
 		m_variablesScheduledForDeletion.insert(&_var);
+
+	cout << "decreaseReference of " << _name.str() << ref << "\n";
 }
 
 bool CodeTransform::unreferenced(Scope::Variable const& _var) const
@@ -176,11 +179,12 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	solAssert(m_scope, "");
 
 	int const numVariables = _varDecl.variables.size();
-	int height = m_assembly.stackHeight();
+	int const height = m_assembly.stackHeight();
 	if (_varDecl.value)
 	{
+		int const oldStackAdjustment = m_stackAdjustment;
 		boost::apply_visitor(*this, *_varDecl.value);
-		expectDeposit(numVariables, height);
+		expectDeposit(numVariables, height, oldStackAdjustment);
 	}
 	else
 	{
@@ -193,6 +197,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	for (int varIndex = numVariables - 1; varIndex >= 0; --varIndex)
 	{
 		YulString varName = _varDecl.variables[varIndex].name;
+		cout << "VariableDeclaration loop: " << varName.str() << "\n";
 		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(varName));
 		m_context->variableStackHeights[&var] = height + varIndex;
 		if (!m_allowStackOpt)
@@ -241,9 +246,10 @@ void CodeTransform::stackError(StackTooDeepError _error, int _targetStackHeight)
 
 void CodeTransform::operator()(Assignment const& _assignment)
 {
-	int height = m_assembly.stackHeight();
+	int const height = m_assembly.stackHeight();
+	int const oldStackAdjustment = m_stackAdjustment;
 	boost::apply_visitor(*this, *_assignment.value);
-	expectDeposit(_assignment.variableNames.size(), height);
+	expectDeposit(_assignment.variableNames.size(), height, oldStackAdjustment);
 
 	m_assembly.setSourceLocation(_assignment.location);
 	generateMultiAssignment(_assignment.variableNames);
@@ -364,14 +370,26 @@ void CodeTransform::operator()(Identifier const& _identifier)
 	if (m_scope->lookup(_identifier.name, Scope::NonconstVisitor(
 		[=](Scope::Variable& _var)
 		{
-			// TODO: opportunity for optimization: Do not DUP if this is the last reference
-			// to the top most element of the stack
-			if (int heightDiff = variableHeightDiff(_var, _identifier.name, false))
-				m_assembly.appendInstruction(dev::eth::dupInstruction(heightDiff));
+			decreaseReference(_identifier.name, _var);
+			cout << "Identifier: " << _identifier.name.str() << "\n";
+			if (int const heightDiff = variableHeightDiff(_var, _identifier.name, false))
+			{
+				if (m_variablesScheduledForDeletion.count(&_var) && heightDiff <= 2)
+				{
+					if (heightDiff == 2)
+						m_assembly.appendInstruction(dev::eth::swapInstruction(1));
+
+					m_context->variableStackHeights.erase(&_var);
+					m_context->variableReferences.erase(&_var);
+					m_variablesScheduledForDeletion.erase(&_var);
+					--m_stackAdjustment;
+				}
+				else
+					m_assembly.appendInstruction(dev::eth::dupInstruction(heightDiff));
+			}
 			else
 				// Store something to balance the stack
 				m_assembly.appendConstant(u256(0));
-			decreaseReference(_identifier.name, _var);
 		},
 		[=](Scope::Label& _label)
 		{
@@ -720,9 +738,13 @@ AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope:
 
 void CodeTransform::visitExpression(Expression const& _expression)
 {
-	int height = m_assembly.stackHeight();
+	int const oldHeight = m_assembly.stackHeight();
+	int const oldStackAdjustment = m_stackAdjustment;
+// 	cout << "visitExpression before: " << m_assembly.stackHeight() << " : " << m_stackAdjustment << "\n";
 	boost::apply_visitor(*this, _expression);
-	expectDeposit(1, height);
+// 	int const stackAdjustmentDiff = m_stackAdjustment - oldStackAdjustment;
+// 	cout << "visitExpression after:  " << m_assembly.stackHeight() << " : " << m_stackAdjustment << " = " << stackAdjustmentDiff << "\n";
+	expectDeposit(1, oldHeight, oldStackAdjustment);
 }
 
 void CodeTransform::visitStatements(vector<Statement> const& _statements)
@@ -772,6 +794,7 @@ void CodeTransform::generateMultiAssignment(vector<Identifier> const& _variableN
 void CodeTransform::generateAssignment(Identifier const& _variableName)
 {
 	solAssert(m_scope, "");
+	cout << "generateAssignment: " << _variableName.name.str() << "\n";
 	if (auto var = m_scope->lookup(_variableName.name))
 	{
 		Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
@@ -792,6 +815,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 
 int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
 {
+	cout << "variableHeightDiff " << m_context->variableStackHeights[&_var] << " for " << _varName.str() << "\n";
 	solAssert(m_context->variableStackHeights.count(&_var), "");
 	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
 	solAssert(heightDiff > (_forSwap ? 1 : 0), "Negative stack difference for variable.");
@@ -811,9 +835,10 @@ int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _va
 	return heightDiff;
 }
 
-void CodeTransform::expectDeposit(int _deposit, int _oldHeight) const
+void CodeTransform::expectDeposit(int const _deposit, int const _oldHeight, int const _oldStackAdjustment) const
 {
-	solAssert(m_assembly.stackHeight() == _oldHeight + _deposit, "Invalid stack deposit.");
+// 	cout << "expectDeposit " << _deposit << " : " << _oldHeight << " : " << _oldStackAdjustment << " : " << m_assembly.stackHeight() << " : " << m_stackAdjustment << "\n";
+	solAssert(m_assembly.stackHeight() - m_stackAdjustment == _oldHeight - _oldStackAdjustment + _deposit, "Invalid stack deposit.");
 }
 
 void CodeTransform::checkStackHeight(void const* _astElement) const

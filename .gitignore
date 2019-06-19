@@ -57,6 +57,8 @@ CMakeLists.txt.user
 /.vs
 /.cproject
 /.project
+*.kdev4
+/.kdev4
 
 # place to put local temporary files
 tmp

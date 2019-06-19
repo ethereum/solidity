@@ -212,7 +212,7 @@ private:
 	/// the (positive) stack height difference otherwise.
 	int variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
 
-	void expectDeposit(int _deposit, int _oldHeight) const;
+	void expectDeposit(int const _deposit, int const _oldHeight, int const _oldStackAdjustment) const;
 
 	void checkStackHeight(void const* _astElement) const;
 
