@@ -78,9 +78,10 @@ public:
 	std::string shiftRightFunction(size_t _numBits);
 	std::string shiftRightFunctionDynamic();
 
-	/// @returns the name of a function f(value, toInsert) -> newValue which replaces the
+	/// @returns the name of a function which replaces the
 	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
 	/// byte) by the _numBytes least significant bytes of `toInsert`.
+	/// signature: (value, toInsert) -> result
 	std::string updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes);
 
 	/// signature: (value, shiftBytes, toInsert) -> result
@@ -88,10 +89,13 @@ public:
 
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
+	/// signature: (value) -> result
 	std::string roundUpFunction();
 
+	/// signature: (x, y) -> sum
 	std::string overflowCheckedUIntAddFunction(size_t _bits);
 
+	/// signature: (x, y) -> product
 	std::string overflowCheckedUIntMulFunction(size_t _bits);
 
 	/// @returns name of function to perform division on integers.
@@ -101,9 +105,29 @@ public:
 
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
+	/// signature: (x, y) -> diff
 	std::string overflowCheckedUIntSubFunction();
 
+	/// @returns the name of a function that fetches the length of the given
+	/// array
+	/// signature: (array) -> length
 	std::string arrayLengthFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that resizes a storage array
+	/// signature: (array, newLen)
+	std::string resizeDynamicArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that will clear the storage area given
+	/// by the start and end (exclusive) parameters (slots). Only works for value types.
+	/// signature: (start, end)
+	std::string clearStorageRangeFunction(Type const& _type);
+
+	/// Returns the name of a function that will convert a given length to the
+	/// size in memory (number of storage slots or calldata/memory bytes) it
+	/// will require.
+	/// signature: (length) -> size
+	std::string arrayConvertLengthToSize(ArrayType const& _type);
+
 	/// @returns the name of a function that computes the number of bytes required
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
 	/// The function reverts for too large lengths.

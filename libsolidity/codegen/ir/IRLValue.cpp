@@ -137,3 +137,31 @@ string IRStorageItem::setToZero() const
 {
 	solUnimplemented("Delete for storage location not yet implemented");
 }
+
+IRStorageArrayLength::IRStorageArrayLength(IRGenerationContext& _context, string _slot, Type const& _type, ArrayType const& _arrayType):
+	IRLValue(_context, &_type), m_arrayType(_arrayType), m_slot(move(_slot))
+{
+	solAssert(*m_type == *TypeProvider::uint256(), "Must be uint256!");
+}
+
+string IRStorageArrayLength::retrieveValue() const
+{
+	return m_context.utils().arrayLengthFunction(m_arrayType) + "(" + m_slot + ")\n";
+}
+
+string IRStorageArrayLength::storeValue(std::string const& _value, Type const& _type) const
+{
+	solAssert(_type == *m_type, "Different type, but might not be an error.");
+
+	return m_context.utils().resizeDynamicArrayFunction(m_arrayType) +
+		"(" +
+		m_slot +
+		", " +
+		_value +
+		")\n";
+}
+
+string IRStorageArrayLength::setToZero() const
+{
+	return storeValue("0", *TypeProvider::uint256());
+}
