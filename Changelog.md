@@ -7,6 +7,7 @@ Language Features:
 
 
 Compiler Features:
+ * eWasm: Highly experimental eWasm output using ``--ewasm`` in the commandline interface or output selection of ``ewasm.wast`` in standard-json.
 
 
 
