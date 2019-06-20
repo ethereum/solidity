@@ -379,63 +379,70 @@ string YulUtilFunctions::roundUpFunction()
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
+string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 {
-	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
-	string functionName = "checked_add_uint_" + to_string(_bits);
+	string functionName = "checked_add_" + _type.identifier();
+	// TODO: Consider to add a special case for unsigned 256-bit integers
+	//       and use the following instead:
+	//       sum := add(x, y) if lt(sum, x) { revert(0, 0) }
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> sum {
-				<?shortType>
-					let mask := <mask>
-					sum := add(and(x, mask), and(y, mask))
-					if and(sum, not(mask)) { revert(0, 0) }
-				<!shortType>
-					sum := add(x, y)
-					if lt(sum, x) { revert(0, 0) }
-				</shortType>
+				<?signed>
+					// overflow, if x >= 0 and y > (maxValue - x)
+					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { revert(0, 0) }
+					// underflow, if x < 0 and y < (minValue - x)
+					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { revert(0, 0) }
+				<!signed>
+					// overflow, if x > (maxValue - y)
+					if gt(x, sub(<maxValue>, y)) { revert(0, 0) }
+				</signed>
+				sum := add(x, y)
 			}
 			)")
-			("shortType", _bits < 256)
 			("functionName", functionName)
-			("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			.render();
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntMulFunction(size_t _bits)
+string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 {
-	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
-	string functionName = "checked_mul_uint_" + to_string(_bits);
+	string functionName = "checked_mul_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
-			// - The current overflow check *before* the multiplication could
-			//   be replaced by the following check *after* the multiplication:
-			//   if and(iszero(iszero(x)), iszero(eq(div(product, x), y))) { revert(0, 0) }
-			// - The case the x equals 0 could be treated separately and directly return zero.
+			// Multiplication by zero could be treated separately and directly return zero.
 			Whiskers(R"(
 			function <functionName>(x, y) -> product {
-				if and(iszero(iszero(x)), lt(div(<mask>, x), y)) { revert(0, 0) }
-				<?shortType>
-					product := mulmod(x, y, <powerOfTwo>)
-				<!shortType>
-					product := mul(x, y)
-				</shortType>
+				<?signed>
+					// overflow, if x > 0, y > 0 and x > (maxValue / y)
+					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { revert(0, 0) }
+					// underflow, if x > 0, y < 0 and y < (minValue / x)
+					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { revert(0, 0) }
+					// underflow, if x < 0, y > 0 and x < (minValue / y)
+					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { revert(0, 0) }
+					// overflow, if x < 0, y < 0 and x < (maxValue / y)
+					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { revert(0, 0) }
+				<!signed>
+					// overflow, if x != 0 and y > (maxValue / x)
+					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { revert(0, 0) }
+				</signed>
+				product := mul(x, y)
 			}
 			)")
-				("shortType", _bits < 256)
-				("functionName", functionName)
-				("powerOfTwo", toCompactHexWithPrefix(u256(1) << _bits))
-				("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
-				.render();
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			.render();
 	});
 }
 
 string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 {
-	unsigned bits = _type.numBits();
-	solAssert(0 < bits && bits <= 256 && bits % 8 == 0, "");
 	string functionName = "checked_div_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
@@ -443,7 +450,7 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> r {
 				if iszero(y) { revert(0, 0) }
 				<?signed>
-				// x / -1 == x
+				// overflow for minVal / -1
 				if and(
 					eq(x, <minVal>),
 					eq(y, sub(0, 1))
@@ -452,25 +459,52 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 				r := <?signed>s</signed>div(x, y)
 			}
 			)")
-				("functionName", functionName)
-				("signed", _type.isSigned())
-				("minVal", (0 - (u256(1) << (bits - 1))).str())
-				.render();
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
+			.render();
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntSubFunction()
+string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
 {
-	string functionName = "checked_sub_uint";
+	string functionName = "checked_mod_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> r {
+				if iszero(y) { revert(0, 0) }
+				r := <?signed>s</signed>mod(x, y)
+			}
+			)")
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
+{
+	string functionName = "checked_sub_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&] {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> diff {
-				if lt(x, y) { revert(0, 0) }
+				<?signed>
+					// underflow, if y >= 0 and x < (minValue + y)
+					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { revert(0, 0) }
+					// overflow, if y < 0 and x > (maxValue + y)
+					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { revert(0, 0) }
+				<!signed>
+					if lt(x, y) { revert(0, 0) }
+				</signed>
 				diff := sub(x, y)
 			}
 			)")
 			("functionName", functionName)
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			.render();
 	});
 }
@@ -607,7 +641,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 					("multiSlot", baseType.storageSize() > 1)
 					("itemsPerSlot", to_string(32 / baseStorageBytes))
 					("storageSize", baseType.storageSize().str())
-					("mul", overflowCheckedUIntMulFunction(TypeProvider::uint256()->numBits()))
+					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
 					.render();
 			}
 			case DataLocation::CallData: // fallthrough
@@ -623,7 +657,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 					("functionName", functionName)
 					("elementSize", _type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedSize())
 					("byteArray", _type.isByteArray())
-					("mul", overflowCheckedUIntMulFunction(TypeProvider::uint256()->numBits()))
+					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
 					.render();
 			default:
 				solAssert(false, "");

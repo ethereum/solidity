@@ -93,20 +93,24 @@ public:
 	std::string roundUpFunction();
 
 	/// signature: (x, y) -> sum
-	std::string overflowCheckedUIntAddFunction(size_t _bits);
+	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
 
 	/// signature: (x, y) -> product
-	std::string overflowCheckedUIntMulFunction(size_t _bits);
+	std::string overflowCheckedIntMulFunction(IntegerType const& _type);
 
 	/// @returns name of function to perform division on integers.
 	/// Checks for division by zero and the special case of
 	/// signed division of the smallest number by -1.
 	std::string overflowCheckedIntDivFunction(IntegerType const& _type);
 
+	/// @returns name of function to perform modulo on integers.
+	/// Reverts for modulo by zero.
+	std::string checkedIntModFunction(IntegerType const& _type);
+
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
 	/// signature: (x, y) -> diff
-	std::string overflowCheckedUIntSubFunction();
+	std::string overflowCheckedIntSubFunction(IntegerType const& _type);
 
 	/// @returns the name of a function that fetches the length of the given
 	/// array
