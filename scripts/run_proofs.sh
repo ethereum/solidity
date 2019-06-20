@@ -2,15 +2,17 @@
 
 set -e
 
+(
 REPO_ROOT="$(dirname "$0")"/..
+cd "$REPO_ROOT"
 
 git fetch origin
 error=0
-for new_proof in $(git diff develop --name-only $REPO_ROOT/test/formal/)
+for new_proof in $(git diff origin/develop --name-only test/formal/)
 do
 	set +e
 	echo "Proving $new_proof..."
-	output=$(python "$REPO_ROOT/$new_proof")
+	output=$(python "$new_proof")
 	result=$?
 	set -e
 
@@ -27,3 +29,4 @@ then
 fi
 
 exit $error
+)
