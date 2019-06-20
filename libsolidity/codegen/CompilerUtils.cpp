@@ -920,6 +920,7 @@ void CompilerUtils::convertType(
 				// stack: <source ref> (variably sized) <length> <mem start>
 				m_context << Instruction::DUP1;
 				moveIntoStack(2 + stackSize);
+				// stack: <mem start> <source ref> (variably sized) <length> <mem start>
 				if (targetType.isDynamicallySized())
 				{
 					m_context << Instruction::DUP2;
@@ -929,22 +930,39 @@ void CompilerUtils::convertType(
 				if (targetType.baseType()->isValueType())
 				{
 					copyToStackTop(2 + stackSize, stackSize);
+					// stack: <mem start> <source ref> (variably sized) <length> <mem data pos> <source ref> (variably sized)
 					ArrayUtils(m_context).copyArrayToMemory(typeOnStack);
 				}
 				else
 				{
+					// Since the base type is not a value type, here we recursively convert each array element
 					m_context << u256(0) << Instruction::SWAP1;
 					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
 					auto repeat = m_context.newTag();
 					m_context << repeat;
 					m_context << Instruction::DUP3 << Instruction::DUP3;
+					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos> <length> <counter>
 					m_context << Instruction::LT << Instruction::ISZERO;
 					auto loopEnd = m_context.appendConditionalJump();
+					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
 					copyToStackTop(3 + stackSize, stackSize);
+					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos> <source ref> (variably sized)
 					copyToStackTop(2 + stackSize, 1);
-					ArrayUtils(m_context).accessIndex(typeOnStack, false);
-					if (typeOnStack.location() == DataLocation::Storage)
+					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos> <source ref> (variably sized) <counter>
+					switch (typeOnStack.location())
+					{
+					case DataLocation::Storage:
+						ArrayUtils(m_context).accessIndex(typeOnStack, false, false);
 						StorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
+						break;
+					case DataLocation::CallData:
+						ArrayUtils(m_context).accessCallDataArrayElement(typeOnStack, false);
+						break;
+					case DataLocation::Memory:
+						// This code block is in the scope of `if (typeOnStack.location() != DataLocation::Memory)`
+						// So this case should be unreachable
+						solAssert(false, "");
+					}
 					convertType(*typeOnStack.baseType(), *targetType.baseType(), _cleanupNeeded);
 					storeInMemoryDynamic(*targetType.baseType(), true);
 					m_context << Instruction::SWAP1 << u256(1) << Instruction::ADD;
