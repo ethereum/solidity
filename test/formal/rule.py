@@ -1,3 +1,5 @@
+import sys
+
 from z3 import *
 
 class Rule:
@@ -21,9 +23,9 @@ class Rule:
 		result = self.solver.check()
 
 		if result == unknown:
-			raise BaseException('Unable to satisfy requirements.')
+			self.error('Unable to satisfy requirements.')
 		elif result == unsat:
-			raise BaseException('Requirements are unsatisfiable.')
+			self.error('Requirements are unsatisfiable.')
 
 		self.solver.push()
 		self.solver.add(self.constraints)
@@ -31,8 +33,12 @@ class Rule:
 
 		result = self.solver.check()
 		if result == unknown:
-			raise BaseException('Unable to prove rule.')
+			self.error('Unable to prove rule.')
 		elif result == sat:
 			m = self.solver.model()
-			raise BaseException('Rule is incorrect.\nModel: ' + str(m))
+			self.error('Rule is incorrect.\nModel: ' + str(m))
 		self.solver.pop()
+
+	def error(self, msg):
+		print(msg)
+		sys.exit(1)
