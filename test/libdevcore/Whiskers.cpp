@@ -116,11 +116,11 @@ BOOST_AUTO_TEST_CASE(conditional_plus_list)
 
 BOOST_AUTO_TEST_CASE(complicated_replacement)
 {
-	string templ = "a <b> x <complicated> \n <nes<ted>>.";
+	string templ = "a <b> x <complicated> \n <nested>>.";
 	string result = Whiskers(templ)
 		("b", "BE")
 		("complicated", "CO<M>PL")
-		("nes<ted", "NEST")
+		("nested", "NEST")
 		.render();
 	BOOST_CHECK_EQUAL(result, "a BE x CO<M>PL \n NEST>.");
 }
@@ -178,6 +178,20 @@ BOOST_AUTO_TEST_CASE(parameter_collision)
 	Whiskers m(templ);
 	m("a", "X")("b", list);
 	BOOST_CHECK_THROW(m.render(), WhiskersError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_param)
+{
+	string templ = "a <b >";
+	Whiskers m(templ);
+	BOOST_CHECK_THROW(m("b ", "X"), WhiskersError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_param_rendered)
+{
+	string templ = "a <b >";
+	Whiskers m(templ);
+	BOOST_CHECK_EQUAL(m.render(), templ);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

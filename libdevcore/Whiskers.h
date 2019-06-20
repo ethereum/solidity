@@ -85,7 +85,8 @@ public:
 	std::string render() const;
 
 private:
-	void checkParameterUnknown(std::string const& _parameter);
+	void checkParameterValid(std::string const& _parameter) const;
+	void checkParameterUnknown(std::string const& _parameter) const;
 
 	static std::string replace(
 		std::string const& _template,
@@ -93,6 +94,8 @@ private:
 		std::map<std::string, bool> const& _conditions,
 		StringListMap const& _listParameters = StringListMap()
 	);
+
+	static std::string paramRegex() { return "[a-zA-Z0-9_$-]+"; }
 
 	/// Joins the two maps throwing an exception if two keys are equal.
 	static StringMap joinMaps(StringMap const& _a, StringMap const& _b);
