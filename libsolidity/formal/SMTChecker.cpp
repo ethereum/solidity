@@ -34,7 +34,7 @@ using namespace langutil;
 using namespace dev::solidity;
 
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
-	m_interface(_smtlib2Responses),
+	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
 	m_errorReporterReference(_errorReporter),
 	m_errorReporter(m_smtErrors),
 	m_context(m_interface)
@@ -59,11 +59,11 @@ void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _
 
 	_source.accept(*this);
 
-	solAssert(m_interface.solvers() > 0, "");
+	solAssert(m_interface->solvers() > 0, "");
 	// If this check is true, Z3 and CVC4 are not available
 	// and the query answers were not provided, since SMTPortfolio
 	// guarantees that SmtLib2Interface is the first solver.
-	if (!m_interface.unhandledQueries().empty() && m_interface.solvers() == 1)
+	if (!m_interface->unhandledQueries().empty() && m_interface->solvers() == 1)
 	{
 		if (!m_noSolverWarning)
 		{
@@ -109,7 +109,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 	// Not visited by a function call
 	if (m_callStack.empty())
 	{
-		m_interface.reset();
+		m_interface->reset();
 		m_context.reset();
 		m_pathConditions.clear();
 		m_callStack.clear();
@@ -305,13 +305,13 @@ bool SMTChecker::visit(ForStatement const& _node)
 			checkBooleanNotConstant(*_node.condition(), "For loop condition is always $VALUE.");
 	}
 
-	m_interface.push();
+	m_interface->push();
 	if (_node.condition())
-		m_interface.addAssertion(expr(*_node.condition()));
+		m_interface->addAssertion(expr(*_node.condition()));
 	_node.body().accept(*this);
 	if (_node.loopExpression())
 		_node.loopExpression()->accept(*this);
-	m_interface.pop();
+	m_interface->pop();
 
 	auto indicesAfterLoop = copyVariableIndices();
 	// We reset the execution to before the loop
@@ -696,7 +696,7 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		solAssert(value, "");
 
 		smt::Expression thisBalance = m_context.balance();
-		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), m_interface);
+		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), *m_interface);
 		checkCondition(thisBalance < expr(*value), _funCall.location(), "Insufficient funds", "address(this).balance", &thisBalance);
 
 		m_context.transfer(m_context.thisAddress(), expr(address), expr(*value));
@@ -740,7 +740,7 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 	// We set the current value to unknown anyway to add type constraints.
 	m_context.setUnknownValue(*symbolicVar);
 	if (index > 0)
-		m_interface.addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
+		m_interface->addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
 }
 
 void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
@@ -822,7 +822,7 @@ void SMTChecker::abstractFunctionCall(FunctionCall const& _funCall)
 		smtArguments.push_back(expr(*arg));
 	defineExpr(_funCall, (*m_context.expression(_funCall.expression()))(smtArguments));
 	m_uninterpretedTerms.insert(&_funCall);
-	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, m_interface);
+	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, *m_interface);
 }
 
 void SMTChecker::endVisit(Identifier const& _identifier)
@@ -914,7 +914,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 			auto stringType = TypeProvider::stringMemory();
 			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type);
 			solAssert(stringLit, "");
-			auto result = smt::newSymbolicVariable(*stringType, stringLit->richIdentifier(), m_interface);
+			auto result = smt::newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
 			m_context.createExpression(_literal, result.second);
 		}
 		m_errorReporter.warning(
@@ -939,10 +939,10 @@ void SMTChecker::endVisit(Return const& _return)
 			solAssert(components.size() == returnParams.size(), "");
 			for (unsigned i = 0; i < returnParams.size(); ++i)
 				if (components.at(i))
-					m_interface.addAssertion(expr(*components.at(i)) == m_context.newValue(*returnParams.at(i)));
+					m_interface->addAssertion(expr(*components.at(i)) == m_context.newValue(*returnParams.at(i)));
 		}
 		else if (returnParams.size() == 1)
-			m_interface.addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
+			m_interface->addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
 	}
 }
 
@@ -984,7 +984,7 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 		if (_memberAccess.memberName() == "balance")
 		{
 			defineExpr(_memberAccess, m_context.balance(expr(_memberAccess.expression())));
-			setSymbolicUnknownValue(*m_context.expression(_memberAccess), m_interface);
+			setSymbolicUnknownValue(*m_context.expression(_memberAccess), *m_interface);
 			m_uninterpretedTerms.insert(&_memberAccess);
 			return false;
 		}
@@ -1031,7 +1031,7 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	setSymbolicUnknownValue(
 		expr(_indexAccess),
 		_indexAccess.annotation().type,
-		m_interface
+		*m_interface
 	);
 	m_uninterpretedTerms.insert(&_indexAccess);
 }
@@ -1083,7 +1083,7 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 			expr(*indexAccess.indexExpression()),
 			_rightHandSide
 		);
-		m_interface.addAssertion(m_context.newValue(*varDecl) == store);
+		m_interface->addAssertion(m_context.newValue(*varDecl) == store);
 		// Update the SMT select value after the assignment,
 		// necessary for sound models.
 		defineExpr(indexAccess, smt::Expression::select(
@@ -1214,7 +1214,7 @@ smt::Expression SMTChecker::arithmeticOperation(
 	if (_op == Token::Div || _op == Token::Mod)
 	{
 		checkCondition(_right == 0, _location, "Division by zero", "<result>", &_right);
-		m_interface.addAssertion(_right != 0);
+		m_interface->addAssertion(_right != 0);
 	}
 
 	addOverflowTarget(
@@ -1396,7 +1396,7 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 		addOverflowTarget(OverflowTarget::Type::All, TypeProvider::uint(160), _value, _location);
 	else if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
-	m_interface.addAssertion(m_context.newValue(_variable) == _value);
+	m_interface->addAssertion(m_context.newValue(_variable) == _value);
 }
 
 SMTChecker::VariableIndices SMTChecker::visitBranch(ASTNode const* _statement, smt::Expression _condition)
@@ -1425,7 +1425,7 @@ void SMTChecker::checkCondition(
 	smt::Expression const* _additionalValue
 )
 {
-	m_interface.push();
+	m_interface->push();
 	addPathConjoinedExpression(_condition);
 
 	vector<smt::Expression> expressionsToEvaluate;
@@ -1537,7 +1537,7 @@ void SMTChecker::checkCondition(
 		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
 		break;
 	}
-	m_interface.pop();
+	m_interface->pop();
 }
 
 void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string const& _description)
@@ -1546,15 +1546,15 @@ void SMTChecker::checkBooleanNotConstant(Expression const& _condition, string co
 	if (dynamic_cast<Literal const*>(&_condition))
 		return;
 
-	m_interface.push();
+	m_interface->push();
 	addPathConjoinedExpression(expr(_condition));
 	auto positiveResult = checkSatisfiable();
-	m_interface.pop();
+	m_interface->pop();
 
-	m_interface.push();
+	m_interface->push();
 	addPathConjoinedExpression(!expr(_condition));
 	auto negatedResult = checkSatisfiable();
-	m_interface.pop();
+	m_interface->pop();
 
 	if (positiveResult == smt::CheckResult::ERROR || negatedResult == smt::CheckResult::ERROR)
 		m_errorReporter.warning(_condition.location(), "Error trying to invoke SMT solver.");
@@ -1599,7 +1599,7 @@ SMTChecker::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _exp
 	vector<string> values;
 	try
 	{
-		tie(result, values) = m_interface.check(_expressionsToEvaluate);
+		tie(result, values) = m_interface->check(_expressionsToEvaluate);
 	}
 	catch (smt::SolverError const& _e)
 	{
@@ -1635,7 +1635,7 @@ void SMTChecker::initializeFunctionCallParameters(CallableDeclaration const& _fu
 	for (unsigned i = 0; i < funParams.size(); ++i)
 		if (createVariable(*funParams[i]))
 		{
-			m_interface.addAssertion(_callArgs[i] == m_context.newValue(*funParams[i]));
+			m_interface->addAssertion(_callArgs[i] == m_context.newValue(*funParams[i]));
 			if (funParams[i]->annotation().type->category() == Type::Category::Mapping)
 				m_arrayAssignmentHappened = true;
 		}
@@ -1701,7 +1701,7 @@ void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variable
 		int trueIndex = _indicesEndTrue.at(decl);
 		int falseIndex = _indicesEndFalse.at(decl);
 		solAssert(trueIndex != falseIndex, "");
-		m_interface.addAssertion(m_context.newValue(*decl) == smt::Expression::ite(
+		m_interface->addAssertion(m_context.newValue(*decl) == smt::Expression::ite(
 			_condition,
 			valueAtIndex(*decl, trueIndex),
 			valueAtIndex(*decl, falseIndex))
@@ -1761,7 +1761,7 @@ void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
 	solAssert(smt::smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
-	m_interface.addAssertion(expr(_e) == _value);
+	m_interface->addAssertion(expr(_e) == _value);
 }
 
 void SMTChecker::popPathCondition()
@@ -1810,12 +1810,12 @@ void SMTChecker::pushCallStack(CallStackEntry _entry)
 
 void SMTChecker::addPathConjoinedExpression(smt::Expression const& _e)
 {
-	m_interface.addAssertion(currentPathConditions() && _e);
+	m_interface->addAssertion(currentPathConditions() && _e);
 }
 
 void SMTChecker::addPathImpliedExpression(smt::Expression const& _e)
 {
-	m_interface.addAssertion(smt::Expression::implies(currentPathConditions(), _e));
+	m_interface->addAssertion(smt::Expression::implies(currentPathConditions(), _e));
 }
 
 bool SMTChecker::isRootFunction()
