@@ -26,9 +26,56 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/FixedHash.h>
 
+#include <boost/algorithm/string.hpp>
+
+#include <algorithm>
+#include <iterator>
+#include <sstream>
+#include <vector>
+
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+using boost::split;
+using boost::is_any_of;
+
+string yul::reindent(string const& _code)
+{
+	auto const static countBraces = [](string const& _s) noexcept -> int
+	{
+		auto const i = _s.find("//");
+		auto const e = i == _s.npos ? end(_s) : next(begin(_s), i);
+		auto const opening = count_if(begin(_s), e, [](auto ch) { return ch == '{' || ch == '('; });
+		auto const closing = count_if(begin(_s), e, [](auto ch) { return ch == '}' || ch == ')'; });
+		return opening - closing;
+	};
+
+	vector<string> lines;
+	split(lines, _code, is_any_of("\n"));
+	for (string& line: lines)
+		boost::trim(line);
+
+	stringstream out;
+	int depth = 0;
+
+	for (string const& line: lines)
+	{
+		int const diff = countBraces(line);
+		if (diff < 0)
+			depth += diff;
+
+		for (int i = 0; i < depth; ++i)
+			out << '\t';
+
+		out << line << '\n';
+
+		if (diff > 0)
+			depth += diff;
+	}
+
+	return out.str();
+}
 
 u256 yul::valueOfNumberLiteral(Literal const& _literal)
 {
