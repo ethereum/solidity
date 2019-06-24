@@ -96,7 +96,7 @@ void SMTChecker::endVisit(ContractDefinition const&)
 void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
 {
 	if (_varDecl.isLocalVariable() && _varDecl.type()->isValueType() &&_varDecl.value())
-		assignment(_varDecl, *_varDecl.value(), _varDecl.location());
+		assignment(_varDecl, *_varDecl.value());
 }
 
 bool SMTChecker::visit(ModifierDefinition const&)
@@ -346,14 +346,14 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 						declarations.at(i) &&
 						m_context.knownVariable(*declarations.at(i))
 					)
-						assignment(*declarations.at(i), components.at(i)->currentValue(), declarations.at(i)->location());
+						assignment(*declarations.at(i), components.at(i)->currentValue());
 			}
 		}
 	}
 	else if (m_context.knownVariable(*_varDecl.declarations().front()))
 	{
 		if (_varDecl.initialValue())
-			assignment(*_varDecl.declarations().front(), *_varDecl.initialValue(), _varDecl.location());
+			assignment(*_varDecl.declarations().front(), *_varDecl.initialValue());
 	}
 	else
 		m_errorReporter.warning(
@@ -540,7 +540,7 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 			auto innerValue = currentValue(*decl);
 			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			assignment(*decl, newValue, _op.location());
+			assignment(*decl, newValue);
 		}
 		else if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
 		{
@@ -554,6 +554,14 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 				_op.location(),
 				"Assertion checker does not yet implement such increments / decrements."
 			);
+
+		addOverflowTarget(
+			_op.getOperator() == Token::Inc ? OverflowTarget::Type::Overflow : OverflowTarget::Type::Underflow,
+			_op.annotation().type,
+			expr(_op),
+			_op.location()
+		);
+
 		break;
 	}
 	case Token::Sub: // -
@@ -1336,7 +1344,7 @@ void SMTChecker::assignment(
 	else if (auto varDecl = identifierToVariable(_left))
 	{
 		solAssert(_right.size() == 1, "");
-		assignment(*varDecl, _right.front(), _location);
+		assignment(*varDecl, _right.front());
 	}
 	else if (dynamic_cast<IndexAccess const*>(&_left))
 	{
@@ -1382,19 +1390,15 @@ smt::Expression SMTChecker::compoundAssignment(Assignment const& _assignment)
 	);
 }
 
-void SMTChecker::assignment(VariableDeclaration const& _variable, Expression const& _value, SourceLocation const& _location)
+void SMTChecker::assignment(VariableDeclaration const& _variable, Expression const& _value)
 {
-	assignment(_variable, expr(_value), _location);
+	assignment(_variable, expr(_value));
 }
 
-void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expression const& _value, SourceLocation const& _location)
+void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expression const& _value)
 {
 	TypePointer type = _variable.type();
-	if (type->category() == Type::Category::Integer)
-		addOverflowTarget(OverflowTarget::Type::All, type,	_value,	_location);
-	else if (type->category() == Type::Category::Address)
-		addOverflowTarget(OverflowTarget::Type::All, TypeProvider::uint(160), _value, _location);
-	else if (type->category() == Type::Category::Mapping)
+	if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
 	m_interface->addAssertion(m_context.newValue(_variable) == _value);
 }

@@ -11,5 +11,3 @@ contract C {
 }
 // ----
 // Warning: (213-226): Assertion violation happens here
-// Warning: (142-147): Underflow (resulting value less than 0) happens here
-// Warning: (142-147): Overflow (resulting value larger than 2**256 - 1) happens here
