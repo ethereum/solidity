@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// Warning: (138-144): For loop condition is always true.
+// Warning: (138-144): Condition is always true.

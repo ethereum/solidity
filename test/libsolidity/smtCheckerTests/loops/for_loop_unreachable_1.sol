@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning: (122-127): For loop condition is always false.
+// Warning: (122-127): Condition is always false.
