@@ -106,7 +106,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 			m_scanner->next();
 
 		string const expectedToken = ParserBase::tokenName(_value);
-		string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " +  ParserBase::tokenName(tok) +  "instead.";
+		string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " +  ParserBase::tokenName(tok) +  " instead.";
 		if (m_scanner->currentToken() == Token::EOS)
 		{
 			// rollback to where the token started, and raise exception to be caught at a higher level.
