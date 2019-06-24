@@ -130,7 +130,7 @@ The CI runs additional tests (including ``solc-js`` and testing third party Soli
 
     Some versions of ``aleth`` can not be used for testing. We suggest using
     the same version that the Solidity continuous integration tests use.
-    Currently the CI uses version ``1.5.0-alpha.7`` of ``aleth``.
+    Currently the CI uses version ``1.6.0`` of ``aleth``.
 
 Writing and running syntax tests
 --------------------------------

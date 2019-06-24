@@ -1,51 +1,72 @@
+# vim:ts=2:sw=2:et
+# --------------------------------------------------------------------------
+#   Prefixes used in order to keep CircleCI workflow overview more readable:
+#     - b: build
+#     - t: test
+#     - ubu: ubuntu
+#     - ems: Emscripten
+version: 2
+
 defaults:
-  # The default for tags is to not run, so we have to explicitly match a filter.
-  - build_on_tags: &build_on_tags
-      filters:
-        tags:
-          only: /.*/
+
+  # --------------------------------------------------------------------------
+  # Build Templates
+
   - setup_prerelease_commit_hash: &setup_prerelease_commit_hash
       name: Store commit hash and prerelease
       command: |
         if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
         echo -n "$CIRCLE_SHA1" > commit_hash.txt
+
   - run_build: &run_build
       name: Build
       command: |
+        set -ex
+        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+        echo -n "$CIRCLE_SHA1" > commit_hash.txt
         mkdir -p build
         cd build
         [ -n "$COVERAGE" -a "$CIRCLE_BRANCH" != release -a -z "$CIRCLE_TAG" ] && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCOVERAGE=ON"
-        cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
+        cmake .. -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} $CMAKE_OPTIONS -G "Unix Makefiles"
         make -j4
+
   - run_build_ossfuzz: &run_build_ossfuzz
       name: Build_ossfuzz
       command: |
         mkdir -p build
         cd build
-        /src/LPM/external.protobuf/bin/protoc --proto_path=../test/tools/ossfuzz yulProto.proto --cpp_out=../test/tools/ossfuzz
-        cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS
+        protoc --proto_path=../test/tools/ossfuzz yulProto.proto --cpp_out=../test/tools/ossfuzz
+        cmake .. -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} $CMAKE_OPTIONS
         make ossfuzz ossfuzz_proto -j4
-  - run_tests: &run_tests
-      name: Tests
-      command: scripts/tests.sh --junit_report test_results
-  - run_regressions: &run_regressions
-      name: Regression tests
-      command: |
-        export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
-        scripts/regressions.py -o test_results
+
   - run_proofs: &run_proofs
       name: Correctness proofs for optimization rules
       command: scripts/run_proofs.sh
-  - solc_artifact: &solc_artifact
+
+  # --------------------------------------------------------------------------
+  # Artifacts Templates
+
+  # the whole build directory
+  - artifacts_build_dir: &artifacts_build_dir
+      root: build
+      paths:
+        - "*"
+
+  # compiled solc executable target
+  - artifacts_solc: &artifacts_solc
       path: build/solc/solc
       destination: solc
-  - all_artifacts: &all_artifacts
+
+  # compiled executable targets
+  - artifacts_executables: &artifacts_executables
       root: build
       paths:
         - solc/solc
         - test/soltest
         - test/tools/solfuzzer
-  - ossfuzz_artifacts: &ossfuzz_artifacts
+
+  # compiled OSSFUZZ targets
+  - artifacts_executables_ossfuzz: &artifacts_executables_ossfuzz
       root: build
       paths:
         - test/tools/ossfuzz/const_opt_ossfuzz
@@ -57,9 +78,280 @@ defaults:
         - test/tools/ossfuzz/yul_proto_diff_ossfuzz
         - test/tools/ossfuzz/yul_proto_ossfuzz
 
-version: 2
+  # test result output directory
+  - artifacts_test_results: &artifacts_test_results
+      path: test_results/
+      destination: test_results/
+
+  # --------------------------------------------------------------------------
+  # Tests Templates
+
+  # store_test_results helper
+  - store_test_results: &store_test_results
+      path: test_results/
+
+  - run_soltest: &run_soltest
+      name: soltest
+      command: ./.circleci/soltest.sh
+
+  - run_cmdline_tests: &run_cmdline_tests
+      name: command line tests
+      command: ./test/cmdlineTests.sh
+
+  - test_steps: &test_steps
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: *run_soltest
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
+  - test_ubuntu1904: &test_ubuntu1904
+      docker:
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      steps: *test_steps
+
+  - test_asan: &test_asan
+      <<: *test_ubuntu1904
+      steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          <<: *run_soltest
+          no_output_timeout: 30m
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
+  # --------------------------------------------------------------------------
+  # Workflow Templates
+
+  - workflow_trigger_on_tags: &workflow_trigger_on_tags
+      filters:
+        tags:
+          only: /.*/
+
+  - workflow_ubuntu1904: &workflow_ubuntu1904
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu
+
+  - workflow_ubuntu1904_codecov: &workflow_ubuntu1904_codecov
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_codecov
+
+  - workflow_osx: &workflow_osx
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_osx
+
+  - workflow_ubuntu1904_asan: &workflow_ubuntu1904_asan
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_asan
+
+  - workflow_emscripten: &workflow_emscripten
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ems
+
+  - workflow_ubuntu1904_ossfuzz: &workflow_ubuntu1904_ossfuzz
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_ossfuzz
+
+# -----------------------------------------------------------------------------------------------
 jobs:
-  build_emscripten:
+
+  chk_spelling:
+    docker:
+      - image: circleci/python:3.6
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            pip install --user codespell
+      - run:
+          name: Check spelling
+          command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
+
+  chk_coding_style:
+    docker:
+      - image: buildpack-deps:disco
+    steps:
+      - checkout
+      - run:
+          name: Check for C++ coding style
+          command: ./scripts/check_style.sh
+
+  chk_buglist:
+    docker:
+      - image: circleci/node
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run:
+          name: JS deps
+          command: |
+            npm install download
+            npm install JSONPath
+            npm install mktemp
+      - run:
+          name: Test buglist
+          command: ./test/buglistTests.js
+
+  chk_proofs:
+    docker:
+      - image: buildpack-deps:disco
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run:
+          name: Z3 python deps
+          command: |
+            apt-get -qq update
+            apt-get -qy install python-pip
+            pip install --user z3-solver
+      - run: *run_proofs
+
+  b_ubu: &build_ubuntu1904
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
+  b_ubu_codecov:
+    <<: *build_ubuntu1904
+    environment:
+      COVERAGE: ON
+      CMAKE_BUILD_TYPE: Debug
+    steps:
+      - checkout
+      - run: *run_build
+      - persist_to_workspace: *artifacts_build_dir
+
+  t_ubu_codecov:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 1
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: "soltest: Syntax Tests"
+          command: build/test/soltest -t 'syntaxTest*' -- --no-ipc --testpath test
+      - run:
+          name: "Code Coverage: Syntax Tests"
+          command: codecov --flags syntax --gcov-root build
+      - run: *run_soltest
+      - run:
+          name: "Coverage: All"
+          command: codecov --flags all --gcov-root build
+      - store_artifacts: *artifacts_test_results
+
+  # Builds in C++17 mode and uses debug build in order to speed up.
+  # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
+  b_ubu_cxx17:
+    <<: *build_ubuntu1904
+    environment:
+      CMAKE_BUILD_TYPE: Debug
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake -DUSE_CVC4=OFF
+    steps:
+      - checkout
+      - run: *run_build
+
+  b_ubu_ossfuzz:
+    <<: *build_ubuntu1904
+    environment:
+      TERM: xterm
+      CC: /usr/bin/clang-8
+      CXX: /usr/bin/clang++-8
+      CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
+    steps:
+      - checkout
+      - run: *setup_prerelease_commit_hash
+      - run: *run_build_ossfuzz
+      - persist_to_workspace: *artifacts_executables_ossfuzz
+
+  t_ubu_ossfuzz: &t_ubu_ossfuzz
+    <<: *test_ubuntu1904
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Regression tests
+          command: |
+            mkdir -p test_results
+            export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
+            scripts/regressions.py -o test_results
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
+  b_archlinux:
+    docker:
+      - image: ethereum/solidity-buildpack-deps:archlinux
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
+  b_osx:
+    macos:
+      xcode: "10.0.0"
+    environment:
+      TERM: xterm
+      CMAKE_BUILD_TYPE: Debug
+      CMAKE_OPTIONS: -DLLL=ON
+    steps:
+      - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            brew unlink python
+            brew install z3
+            brew install boost
+            brew install cmake
+            brew install wget
+            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
+  t_osx_cli:
+    macos:
+      xcode: "10.0.0"
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: |
+            brew unlink python
+            brew install z3
+      - run: *run_cmdline_tests
+      - store_artifacts: *artifacts_test_results
+
+  b_ems:
     docker:
       - image: trzeci/emscripten:sdk-tag-1.38.22-64bit
     environment:
@@ -94,7 +386,123 @@ jobs:
             - soljson.js
             - version.txt
 
-  test_emscripten_solcjs:
+  # x64 ASAN build, for testing for memory related bugs
+  b_ubu_asan: &b_ubu_asan
+    <<: *build_ubuntu1904
+    environment:
+      CMAKE_OPTIONS: -DSANITIZE=address
+      CMAKE_BUILD_TYPE: Release
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
+  b_docs:
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+    steps:
+      - checkout
+      - run: *setup_prerelease_commit_hash
+      - run:
+          name: Build documentation
+          command: ./scripts/docs.sh
+      - store_artifacts:
+          path: docs/_build/html/
+          destination: docs-html
+
+  t_ubu_cli: &t_ubu_cli
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: *run_cmdline_tests
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
+  t_ubu_asan_cli:
+    <<: *t_ubu_cli
+    environment:
+      TERM: xterm
+      ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          <<: *run_cmdline_tests
+          no_output_timeout: 30m
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
+  t_ubu_asan_constantinople:
+    <<: *test_asan
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 0
+      SOLTEST_IPC: 0
+      ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
+
+  t_ubu_homestead:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: homestead
+      OPTIMIZE: 0
+
+  t_ubu_homestead_opt:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: homestead
+      OPTIMIZE: 1
+
+  t_ubu_byzantium:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: byzantium
+      OPTIMIZE: 0
+
+  t_ubu_byzantium_opt:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: byzantium
+      OPTIMIZE: 1
+
+  t_ubu_constantinople:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 0
+
+  t_ubu_constantinople_opt:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 1
+
+  t_ubu_constantinople_opt_abiv2:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 1
+      ABI_ENCODER_V2: 1
+
+  t_ubu_petersburg:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: petersburg
+      OPTIMIZE: 0
+
+  t_ubu_petersburg_opt:
+    <<: *test_ubuntu1904
+    environment:
+      EVM: petersburg
+      OPTIMIZE: 1
+
+  t_ems_solcjs:
     docker:
       - image: circleci/node:10
     environment:
@@ -104,16 +512,13 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: Install external tests deps
+          name: Test solcjs
           command: |
             node --version
             npm --version
-      - run:
-          name: Test solcjs
-          command: |
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
-  test_emscripten_external_gnosis:
+  t_ems_external_gnosis:
     docker:
       - image: circleci/node:10
     environment:
@@ -127,7 +532,7 @@ jobs:
           command: |
             test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
 
-  test_emscripten_external_zeppelin:
+  t_ems_external_zeppelin:
     docker:
       - image: circleci/node:10
     environment:
@@ -141,7 +546,7 @@ jobs:
           command: |
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
 
-  test_emscripten_external_colony:
+  t_ems_external_colony:
     docker:
       - image: circleci/node:10
     environment:
@@ -159,386 +564,51 @@ jobs:
           command: |
             test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
 
-  build_x86_linux:
-    docker:
-      - image: buildpack-deps:bionic
-    environment:
-      TERM: xterm
-      COVERAGE: "ON"
-    steps:
-      - checkout
-      - run:
-          name: Install build dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build
-      - store_artifacts: *solc_artifact
-      - persist_to_workspace:
-          root: build
-          paths:
-            - "*"
-
-  build_x86_linux_cxx17:
-    docker:
-      - image: buildpack-deps:disco
-    environment:
-      TERM: xterm
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake
-    steps:
-      - checkout
-      - run:
-          name: Install build dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build
-
-  build_x86_archlinux:
-    docker:
-      - image: archlinux/base
-    environment:
-      TERM: xterm
-    steps:
-      - run:
-          name: Install build dependencies
-          command: |
-            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
-      - checkout
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build
-      - store_artifacts: *solc_artifact
-      - persist_to_workspace:
-          root: build
-          paths:
-            - solc/solc
-            - test/soltest
-            - test/tools/solfuzzer
-
-  build_x86_clang7_asan:
-    docker:
-      - image: buildpack-deps:cosmic
-    environment:
-      TERM: xterm
-      CC: /usr/bin/clang-7
-      CXX: /usr/bin/clang++-7
-      CMAKE_OPTIONS: -DSANITIZE=address -DCMAKE_BUILD_TYPE=Debug
-    steps:
-      - checkout
-      - run:
-          name: Install build dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install clang-7 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libjsoncpp-dev=1.7.4-\*
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build
-      - store_artifacts: *solc_artifact
-      - persist_to_workspace:
-          root: build
-          paths:
-            - solc/solc
-            - test/soltest
-            - test/tools/solfuzzer
-
-  build_x86_mac:
-    macos:
-      xcode: "10.0.0"
-    environment:
-      TERM: xterm
-      CMAKE_OPTIONS: -DLLL=ON
-    steps:
-      - checkout
-      - run:
-          name: Install build dependencies
-          command: |
-            brew unlink python
-            brew install z3
-            brew install boost
-            brew install cmake
-            brew install wget
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build
-      - store_artifacts: *solc_artifact
-      - persist_to_workspace: *all_artifacts
-
-  test_check_spelling:
-    docker:
-      - image: circleci/python:3.6
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          name: Install dependencies
-          command: |
-            pip install --user codespell
-      - run:
-          name: Check spelling
-          command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
-
-  test_check_style:
-    docker:
-      - image: buildpack-deps:bionic
-    steps:
-      - checkout
-      - run:
-          name: Check for trailing whitespace
-          command: ./scripts/check_style.sh
-
-  test_buglist:
-    docker:
-      - image: circleci/node
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - run:
-          name: JS deps
-          command: |
-            npm install download
-            npm install JSONPath
-            npm install mktemp
-      - run:
-          name: Test buglist
-          command: ./test/buglistTests.js
-
-  proofs:
-    docker:
-      - image: buildpack-deps:bionic
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - run:
-          name: Z3 python deps
-          command: |
-            apt-get -qq update
-            apt-get -qy install python-pip
-            pip install --user z3-solver
-      - run: *run_proofs
-
-  test_x86_linux:
-    docker:
-      - image: buildpack-deps:bionic
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          name: Install dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install libcvc4-dev libleveldb1v5 python-pip
-            pip install codecov
-      - run: mkdir -p test_results
-      - run:
-          name: Test type checker
-          command: build/test/soltest -t 'syntaxTest*' -- --no-ipc --testpath test
-      - run:
-          name: Coverage of type checker
-          command: codecov --flags syntax --gcov-root build
-      - run: *run_tests
-      - run:
-          name: Coverage of all
-          command: codecov --flags all --gcov-root build
-      - store_test_results:
-          path: test_results/
-      - store_artifacts:
-          path: test_results/
-          destination: test_results/
-
-  test_x86_clang7_asan:
-    docker:
-      - image: buildpack-deps:cosmic
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          name: Install dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install llvm-7-dev libcvc4-dev libleveldb1v5 python-pip
-            # This is needed to resolve the symbols. Since we're using clang7 in the build, we must use the appropriate symbolizer.
-            update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-7 1
-      - run: mkdir -p test_results
-      - run:
-          name: Run soltest with ASAN
-          command: |
-            ulimit -a
-            # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
-            ulimit -s 16384
-            export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
-            build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
-      - run:
-          name: Run commandline tests with ASAN
-          command: |
-            ulimit -a
-            # Increase stack size because ASan makes stack frames bigger and that breaks our assumptions (in tests).
-            ulimit -s 16384
-            export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
-            test/cmdlineTests.sh
-      - store_test_results:
-          path: test_results/
-      - store_artifacts:
-          path: test_results/
-          destination: test_results/
-
-  test_x86_archlinux:
-    docker:
-      - image: archlinux/base
-    environment:
-      TERM: xterm
-    steps:
-      - run:
-          name: Install dependencies
-          command: |
-            pacman --noconfirm -Syu --noprogressbar --needed boost z3 cvc4 git openssh tar
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: mkdir -p test_results
-      - run: build/test/soltest --logger=JUNIT,test_suite,test_results/result.xml -- --no-ipc --testpath test
-      - store_test_results:
-          path: test_results/
-      - store_artifacts:
-          path: test_results/
-          destination: test_results/
-
-  test_x86_mac:
-    macos:
-      xcode: "10.0.0"
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          name: Install dependencies
-          command: |
-            brew unlink python
-            brew install z3
-      - run: mkdir -p test_results
-      - run: *run_tests
-      - store_test_results:
-          path: test_results/
-      - store_artifacts:
-          path: test_results/
-          destination: test_results/
-
-  docs:
-    docker:
-      - image: buildpack-deps:bionic
-    environment:
-      DEBIAN_FRONTEND: noninteractive
-    steps:
-      - checkout
-      - run:
-          name: Install build dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install python-sphinx python-pip
-      - run: *setup_prerelease_commit_hash
-      - run:
-          name: Build documentation
-          command: ./scripts/docs.sh
-      - store_artifacts:
-          path: docs/_build/html/
-          destination: docs-html
-
-  build_x86_linux_ossfuzz:
-    docker:
-      - image: buildpack-deps:disco
-    environment:
-      TERM: xterm
-      CC: /usr/bin/clang-8
-      CXX: /usr/bin/clang++-8
-      CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
-    steps:
-      - checkout
-      - run:
-          name: Install build dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install wget clang-8 cmake libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev libboost-program-options-dev libcvc4-dev libbz2-dev ninja-build zlib1g-dev libjsoncpp-dev=1.7.4-\*
-            ./scripts/install_lpm.sh
-            ./scripts/install_libfuzzer.sh
-            # Install evmone and dependencies (intx and ethash)
-            ./scripts/install_evmone.sh
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build_ossfuzz
-      - persist_to_workspace: *ossfuzz_artifacts
-
-  test_x86_ossfuzz_regression:
-    docker:
-      - image: buildpack-deps:disco
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: build
-      - run:
-          name: Install dependencies
-          command: |
-            apt-get -qq update
-            apt-get -qy install libcvc4-dev llvm-8-dev
-            ./scripts/download_ossfuzz_corpus.sh
-            update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-8 1
-      - run: mkdir -p test_results
-      - run: *run_regressions
-      - store_artifacts:
-          path: test_results/
-          destination: test_results/
-
 workflows:
   version: 2
-  build_all:
-    jobs:
-      - test_check_spelling: *build_on_tags
-      - test_check_style: *build_on_tags
-      - test_buglist: *build_on_tags
-      - proofs: *build_on_tags
-      - build_emscripten: *build_on_tags
-      - test_emscripten_solcjs:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - build_x86_linux: *build_on_tags
-      - build_x86_linux_cxx17: *build_on_tags
-      - build_x86_clang7_asan: *build_on_tags
-      - build_x86_mac: *build_on_tags
-      - test_x86_linux:
-          <<: *build_on_tags
-          requires:
-            - build_x86_linux
-      - test_x86_clang7_asan:
-          <<: *build_on_tags
-          requires:
-            - build_x86_clang7_asan
-      - test_x86_mac:
-          <<: *build_on_tags
-          requires:
-            - build_x86_mac
-      - docs: *build_on_tags
-      - build_x86_archlinux: *build_on_tags
-      - test_x86_archlinux:
-          <<: *build_on_tags
-          requires:
-            - build_x86_archlinux
-      - build_x86_linux_ossfuzz: *build_on_tags
 
-  test_nightly:
+  main:
+    jobs:
+      # basic checks
+      - chk_spelling: *workflow_trigger_on_tags
+      - chk_coding_style: *workflow_trigger_on_tags
+      - chk_buglist: *workflow_trigger_on_tags
+      - chk_proofs: *workflow_trigger_on_tags
+
+      # build-only
+      - b_docs: *workflow_trigger_on_tags
+      - b_archlinux: *workflow_trigger_on_tags
+      - b_ubu_cxx17: *workflow_trigger_on_tags
+      - b_ubu_ossfuzz: *workflow_trigger_on_tags
+
+      # OS/X build and tests
+      - b_osx: *workflow_trigger_on_tags
+      - t_osx_cli: *workflow_osx
+
+      # Ubuntu 18.10 build and tests
+      - b_ubu: *workflow_trigger_on_tags
+      - t_ubu_cli: *workflow_ubuntu1904
+      - t_ubu_homestead: *workflow_ubuntu1904
+      - t_ubu_homestead_opt: *workflow_ubuntu1904
+      - t_ubu_byzantium: *workflow_ubuntu1904
+      - t_ubu_byzantium_opt: *workflow_ubuntu1904
+      - t_ubu_constantinople: *workflow_ubuntu1904
+      - t_ubu_constantinople_opt: *workflow_ubuntu1904
+      - t_ubu_constantinople_opt_abiv2: *workflow_ubuntu1904
+      - t_ubu_petersburg: *workflow_ubuntu1904
+      - t_ubu_petersburg_opt: *workflow_ubuntu1904
+
+      # ASan build and tests
+      - b_ubu_asan: *workflow_trigger_on_tags
+      - t_ubu_asan_constantinople: *workflow_ubuntu1904_asan
+      - t_ubu_asan_cli: *workflow_ubuntu1904_asan
+
+      # Emscripten build and selected tests
+      - b_ems: *workflow_trigger_on_tags
+      - t_ems_solcjs: *workflow_emscripten
+
+  nightly:
+
     triggers:
       - schedule:
           cron: "0 0 * * *"
@@ -546,23 +616,19 @@ workflows:
             branches:
               only:
                 - develop
+
     jobs:
-      - build_emscripten: *build_on_tags
-      - test_emscripten_external_zeppelin:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external_gnosis:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - test_emscripten_external_colony:
-          <<: *build_on_tags
-          requires:
-            - build_emscripten
-      - build_x86_linux_ossfuzz: *build_on_tags
-      - test_x86_ossfuzz_regression:
-          <<: *build_on_tags
-          requires:
-            - build_x86_linux_ossfuzz
+      # Emscripten builds and external tests
+      - b_ems: *workflow_trigger_on_tags
+      - t_ems_external_zeppelin: *workflow_emscripten
+      - t_ems_external_gnosis: *workflow_emscripten
+      - t_ems_external_colony: *workflow_emscripten
+
+      # OSSFUZZ builds and (regression) tests
+      - b_ubu_ossfuzz: *workflow_trigger_on_tags
+      - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
+
+      # Code Coverage enabled build and tests
+      - b_ubu_codecov: *workflow_trigger_on_tags
+      - t_ubu_codecov: *workflow_ubuntu1904_codecov
 
