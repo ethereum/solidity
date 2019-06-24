@@ -53,7 +53,7 @@ public:
 	/// This is used if the SMT solver is not directly linked into this binary.
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to
 	/// the constructor.
-	std::vector<std::string> unhandledQueries() { return m_interface.unhandledQueries(); }
+	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
 
 	/// @returns the FunctionDefinition of a called function if possible and should inline,
 	/// otherwise nullptr.
@@ -90,10 +90,6 @@ private:
 	bool visit(MemberAccess const& _node) override;
 	void endVisit(IndexAccess const& _node) override;
 	bool visit(InlineAssembly const& _node) override;
-
-	smt::Expression assertions() { return m_interface.assertions(); }
-	void push() { m_interface.push(); }
-	void pop() { m_interface.pop(); }
 
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.
@@ -274,7 +270,7 @@ private:
 	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
-	smt::SMTPortfolio m_interface;
+	std::shared_ptr<smt::SolverInterface> m_interface;
 	smt::VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;

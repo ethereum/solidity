@@ -53,8 +53,6 @@ public:
 
 	void addAssertion(Expression const& _expr) override;
 
-	Expression assertions();
-
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 	std::vector<std::string> unhandledQueries() override;
