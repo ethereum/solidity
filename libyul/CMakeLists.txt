@@ -94,6 +94,10 @@ add_library(yul
 	optimiser/FunctionHoister.h
 	optimiser/InlinableExpressionFunctionFinder.cpp
 	optimiser/InlinableExpressionFunctionFinder.h
+	optimiser/KnowledgeBase.cpp
+	optimiser/KnowledgeBase.h
+	optimiser/LoadResolver.cpp
+	optimiser/LoadResolver.h
 	optimiser/MainFunction.cpp
 	optimiser/MainFunction.h
 	optimiser/Metrics.cpp
