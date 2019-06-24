@@ -60,4 +60,6 @@ test "${SOLTEST_IPC}" = "1" || SOLTEST_ARGS="$SOLTEST_ARGS --no-ipc"
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
 test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2 --optimize-yul"
 
+echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}"
+
 ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}
