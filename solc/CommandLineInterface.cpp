@@ -1102,8 +1102,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
-		for (auto const& contract : m_compiler->contractNames())
-		{
+		for (auto const& contract: m_compiler->contractNames())
 			if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
 			{
 				auto ret = GasEstimator::breakToStatementLevel(
@@ -1113,8 +1112,6 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				for (auto const& it: ret)
 					gasCosts[it.first] += it.second;
 			}
-
-		}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))
