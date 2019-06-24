@@ -56,6 +56,35 @@ struct CopyTranslate: public yul::ASTCopier
 
 	using ASTCopier::operator();
 
+	yul::Expression operator()(yul::Identifier const& _identifier) override
+	{
+		if (m_references.count(&_identifier))
+		{
+			auto const& reference = m_references.at(&_identifier);
+			auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+			solUnimplementedAssert(varDecl, "");
+
+			if (reference.isOffset || reference.isSlot)
+			{
+				solAssert(reference.isOffset != reference.isSlot, "");
+
+				pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(*varDecl);
+
+				string const value = reference.isSlot ?
+					slot_offset.first.str() :
+					to_string(slot_offset.second);
+
+				return yul::Literal{
+					_identifier.location,
+						yul::LiteralKind::Number,
+						yul::YulString{value},
+						yul::YulString{"uint256"}
+				};
+			}
+		}
+		return ASTCopier::operator()(_identifier);
+	}
+
 	yul::YulString translateIdentifier(yul::YulString _name) override
 	{
 		// Strictly, the dialect used by inline assembly (m_dialect) could be different
@@ -76,9 +105,10 @@ struct CopyTranslate: public yul::ASTCopier
 		auto const& reference = m_references.at(&_identifier);
 		auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
 		solUnimplementedAssert(varDecl, "");
-		solUnimplementedAssert(
+
+		solAssert(
 			reference.isOffset == false && reference.isSlot == false,
-			""
+			"Should not be called for offset/slot"
 		);
 
 		return yul::Identifier{
@@ -790,7 +820,45 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		));
 	}
 	else if (baseType.category() == Type::Category::Array)
-		solUnimplementedAssert(false, "");
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
+		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+		switch (arrayType.location())
+		{
+			case DataLocation::Storage:
+			{
+				string slot = m_context.newYulVariable();
+				string offset = m_context.newYulVariable();
+
+				m_code << Whiskers(R"(
+					let <slot>, <offset> := <indexFunc>(<array>, <index>)
+				)")
+				("slot", slot)
+				("offset", offset)
+				("indexFunc", m_utils.storageArrayIndexAccessFunction(arrayType))
+				("array", m_context.variable(_indexAccess.baseExpression()))
+				("index", m_context.variable(*_indexAccess.indexExpression()))
+				.render();
+
+				setLValue(_indexAccess, make_unique<IRStorageItem>(
+					m_context,
+					slot,
+					offset,
+					*_indexAccess.annotation().type
+				));
+
+				break;
+			}
+			case DataLocation::Memory:
+				solUnimplementedAssert(false, "");
+				break;
+			case DataLocation::CallData:
+				solUnimplementedAssert(false, "");
+				break;
+		}
+
+	}
 	else if (baseType.category() == Type::Category::FixedBytes)
 		solUnimplementedAssert(false, "");
 	else if (baseType.category() == Type::Category::TypeType)

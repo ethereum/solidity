@@ -724,6 +724,36 @@ string YulUtilFunctions::arrayDataAreaFunction(ArrayType const& _type)
 	});
 }
 
+string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
+{
+	solUnimplementedAssert(_type.baseType()->storageBytes() > 16, "");
+
+	string functionName = "storage_array_index_access_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, index) -> slot, offset {
+				if iszero(lt(index, <arrayLen>(array))) {
+					invalid()
+				}
+
+				let data := <dataAreaFunc>(array)
+				<?multipleItemsPerSlot>
+
+				<!multipleItemsPerSlot>
+					slot := add(data, mul(index, <storageSize>))
+					offset := 0
+				</multipleItemsPerSlot>
+			}
+		)")
+		("functionName", functionName)
+		("arrayLen", arrayLengthFunction(_type))
+		("dataAreaFunc", arrayDataAreaFunction(_type))
+		("multipleItemsPerSlot", _type.baseType()->storageBytes() <= 16)
+		("storageSize", _type.baseType()->storageSize().str())
+		.render();
+	});
+}
+
 string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 {
 	solAssert(!_type.isByteArray(), "");
