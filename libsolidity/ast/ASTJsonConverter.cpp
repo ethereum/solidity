@@ -456,15 +456,13 @@ bool ASTJsonConverter::visit(ArrayTypeName const& _node)
 bool ASTJsonConverter::visit(InlineAssembly const& _node)
 {
 	Json::Value externalReferences(Json::arrayValue);
-	for (auto const& it : _node.annotation().externalReferences)
-	{
+	for (auto const& it: _node.annotation().externalReferences)
 		if (it.first)
 		{
 			Json::Value tuple(Json::objectValue);
 			tuple[it.first->name.str()] = inlineAssemblyIdentifierToJson(it);
 			externalReferences.append(tuple);
 		}
-	}
 	setJsonNode(_node, "InlineAssembly", {
 		make_pair("operations", Json::Value(yul::AsmPrinter()(_node.operations()))),
 		make_pair("externalReferences", std::move(externalReferences))
