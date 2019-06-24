@@ -298,8 +298,8 @@ Scoping and Declarations
 A variable which is declared will have an initial default value whose byte-representation is all zeros.
 The "default values" of variables are the typical "zero-state" of whatever the type is. For example, the default value for a ``bool``
 is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes1`` to ``bytes32``, each individual
-element will be initialized to the default value corresponding to its type. Finally, for dynamically-sized arrays, ``bytes``
-and ``string``, the default value is an empty array or string.
+element will be initialized to the default value corresponding to its type. For dynamically-sized arrays, ``bytes``
+and ``string``, the default value is an empty array or string. For the ``enum`` type, the default value is its first member.
 
 Scoping in Solidity follows the widespread scoping rules of C99
 (and many other languages): Variables are visible from the point right after their declaration
