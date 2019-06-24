@@ -76,9 +76,9 @@ struct CopyTranslate: public yul::ASTCopier
 
 				return yul::Literal{
 					_identifier.location,
-						yul::LiteralKind::Number,
-						yul::YulString{value},
-						yul::YulString{"uint256"}
+					yul::LiteralKind::Number,
+					yul::YulString{value},
+					yul::YulString{"uint256"}
 				};
 			}
 		}
