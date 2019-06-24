@@ -38,6 +38,7 @@ public:
 
 public:
 	std::string operator()(wasm::Literal const& _literal);
+	std::string operator()(wasm::StringLiteral const& _literal);
 	std::string operator()(wasm::LocalVariable const& _identifier);
 	std::string operator()(wasm::GlobalVariable const& _identifier);
 	std::string operator()(wasm::Label const& _label);

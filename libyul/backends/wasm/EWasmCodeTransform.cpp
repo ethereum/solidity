@@ -126,8 +126,18 @@ wasm::Expression EWasmCodeTransform::operator()(FunctionalInstruction const& _f)
 
 wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 {
-	if (m_dialect.builtin(_call.functionName.name))
-		return wasm::BuiltinCall{_call.functionName.name.str(), visit(_call.arguments)};
+	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+	{
+		if (builtin->literalArguments)
+		{
+			vector<wasm::Expression> literals;
+			for (auto const& arg: _call.arguments)
+				literals.emplace_back(wasm::StringLiteral{boost::get<Literal>(arg).value.str()});
+			return wasm::BuiltinCall{_call.functionName.name.str(), std::move(literals)};
+		}
+		else
+			return wasm::BuiltinCall{_call.functionName.name.str(), visit(_call.arguments)};
+	}
 	else
 		// If this function returns multiple values, then the first one will
 		// be returned in the expression itself and the others in global variables.
