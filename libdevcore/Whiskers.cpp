@@ -25,8 +25,6 @@
 
 #include <libdevcore/Assertions.h>
 
-#include <boost/regex.hpp>
-
 using namespace std;
 using namespace dev;
 
@@ -72,9 +70,9 @@ string Whiskers::render() const
 
 void Whiskers::checkParameterValid(string const& _parameter) const
 {
-	static boost::regex validParam("^" + paramRegex() + "$");
+	static std::regex validParam("^" + paramRegex() + "$");
 	assertThrow(
-		boost::regex_match(_parameter, validParam),
+		regex_match(_parameter, validParam),
 		WhiskersError,
 		"Parameter" + _parameter + " contains invalid characters."
 	);
