@@ -1,8 +1,8 @@
-### 0.5.10 (unreleased)
+### 0.5.10 (2019-06-25)
 
 Important Bugfixes:
- * Fix incorrect abi encoding of storage array of data type that occupy multiple storage slots
- * Properly zero out higher order bits in elements of an array of negative numbers when assigning to storage and converting the type at the same time.
+ * ABIEncoderV2: Fix incorrect abi encoding of storage array of data type that occupy multiple storage slots
+ * Code Generator: Properly zero out higher order bits in elements of an array of negative numbers when assigning to storage and converting the type at the same time.
 
 
 Compiler Features:
@@ -12,15 +12,15 @@ Compiler Features:
 
 
 Bugfixes:
+ * Type Checker: Set state mutability of the function type members ``gas`` and ``value`` to pure (while their return type inherits state mutability from the function type).
  * Yul / Inline Assembly Parser: Disallow trailing commas in function call arguments.
- * Set state mutability of the function type members ``gas`` and ``value`` to pure (while their return type inherits state mutability from the function type).
 
 
 Build System:
  * Attempt to use stock Z3 cmake files to find Z3 and only fall back to manual discovery.
- * Generate a cmake error for gcc versions older than 5.0.
  * CMake: use imported targets for boost.
  * Emscripten build: upgrade to boost 1.70.
+ * Generate a cmake error for gcc versions older than 5.0.
 
 
 
