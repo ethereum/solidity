@@ -25,6 +25,8 @@
 
 #include <libdevcore/Assertions.h>
 
+#include <regex>
+
 using namespace std;
 using namespace dev;
 
