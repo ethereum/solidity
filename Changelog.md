@@ -2,6 +2,7 @@
 
 Important Bugfixes:
  * Fix incorrect abi encoding of storage array of data type that occupy multiple storage slots
+ * Properly zero out higher order bits in elements of an array of negative numbers when assigning to storage and converting the type at the same time.
 
 
 Compiler Features:

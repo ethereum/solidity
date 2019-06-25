@@ -380,6 +380,7 @@
     },
     "0.4.10": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -394,6 +395,7 @@
     },
     "0.4.11": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -407,6 +409,7 @@
     },
     "0.4.12": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -419,6 +422,7 @@
     },
     "0.4.13": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -431,6 +435,7 @@
     },
     "0.4.14": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -442,6 +447,7 @@
     },
     "0.4.15": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -452,6 +458,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -464,6 +471,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -477,6 +485,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -489,6 +498,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -518,6 +528,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -531,6 +542,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -544,6 +556,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -557,6 +570,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -569,6 +583,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -581,6 +596,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -591,6 +607,7 @@
     },
     "0.4.26": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2"
         ],
@@ -658,6 +675,7 @@
     },
     "0.4.7": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -672,6 +690,7 @@
     },
     "0.4.8": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -686,6 +705,7 @@
     },
     "0.4.9": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -700,6 +720,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -710,6 +731,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -720,6 +742,7 @@
     },
     "0.5.2": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -730,6 +753,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -740,6 +764,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -750,6 +775,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -762,6 +788,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -773,6 +800,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
             "UninitializedFunctionPointerInConstructor",
@@ -782,6 +810,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2"
         ],
@@ -789,6 +818,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement"
         ],
         "released": "2019-05-28"
