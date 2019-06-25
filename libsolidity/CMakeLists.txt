@@ -75,10 +75,14 @@ set(sources
 	codegen/ir/IRGenerationContext.h
 	codegen/ir/IRLValue.cpp
 	codegen/ir/IRLValue.h
+	formal/BMC.cpp
+	formal/BMC.h
 	formal/EncodingContext.cpp
 	formal/EncodingContext.h
-	formal/SMTChecker.cpp
-	formal/SMTChecker.h
+	formal/ModelChecker.cpp
+	formal/ModelChecker.h
+	formal/SMTEncoder.cpp
+	formal/SMTEncoder.h
 	formal/SMTLib2Interface.cpp
 	formal/SMTLib2Interface.h
 	formal/SMTPortfolio.cpp

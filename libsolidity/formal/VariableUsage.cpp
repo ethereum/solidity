@@ -17,7 +17,8 @@
 
 #include <libsolidity/formal/VariableUsage.h>
 
-#include <libsolidity/formal/SMTChecker.h>
+#include <libsolidity/formal/BMC.h>
+#include <libsolidity/formal/SMTEncoder.h>
 
 #include <algorithm>
 
@@ -48,7 +49,7 @@ void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 	{
 		/// identifier.annotation().lValueRequested == false, that's why we
 		/// need to check that before.
-		auto identifier = dynamic_cast<Identifier const*>(SMTChecker::leftmostBase(_indexAccess));
+		auto identifier = dynamic_cast<Identifier const*>(SMTEncoder::leftmostBase(_indexAccess));
 		if (identifier)
 			checkIdentifier(*identifier);
 	}
@@ -56,7 +57,8 @@ void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 
 void VariableUsage::endVisit(FunctionCall const& _funCall)
 {
-	if (auto const& funDef = SMTChecker::inlinedFunctionCallToDefinition(_funCall))
+	/// TODO this should run only in the BMC case, not for Horn.
+	if (auto const& funDef = BMC::inlinedFunctionCallToDefinition(_funCall))
 		if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
 			funDef->accept(*this);
 }
