@@ -846,9 +846,9 @@ void CompilerUtils::convertType(
 					cleanHigherOrderBits(targetType);
 				if (chopSignBitsPending)
 				{
-					if (typeOnStack.numBits() < 256)
+					if (targetType.numBits() < 256)
 						m_context
-							<< ((u256(1) << typeOnStack.numBits()) - 1)
+							<< ((u256(1) << targetType.numBits()) - 1)
 							<< Instruction::AND;
 					chopSignBitsPending = false;
 				}
