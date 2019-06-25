@@ -33,38 +33,40 @@ Let us rewrite the set example from the
 
     pragma solidity >=0.4.16 <0.7.0;
 
+
     // This is the same code as before, just without comments
     library Set {
-      struct Data { mapping(uint => bool) flags; }
+        struct Data { mapping(uint => bool) flags; }
 
-      function insert(Data storage self, uint value)
-          public
-          returns (bool)
-      {
-          if (self.flags[value])
-            return false; // already there
-          self.flags[value] = true;
-          return true;
-      }
+        function insert(Data storage self, uint value)
+            public
+            returns (bool)
+        {
+            if (self.flags[value])
+                return false; // already there
+            self.flags[value] = true;
+            return true;
+        }
 
-      function remove(Data storage self, uint value)
-          public
-          returns (bool)
-      {
-          if (!self.flags[value])
-              return false; // not there
-          self.flags[value] = false;
-          return true;
-      }
+        function remove(Data storage self, uint value)
+            public
+            returns (bool)
+        {
+            if (!self.flags[value])
+                return false; // not there
+            self.flags[value] = false;
+            return true;
+        }
 
-      function contains(Data storage self, uint value)
-          public
-          view
-          returns (bool)
-      {
-          return self.flags[value];
-      }
+        function contains(Data storage self, uint value)
+            public
+            view
+            returns (bool)
+        {
+            return self.flags[value];
+        }
     }
+
 
     contract C {
         using Set for Set.Data; // this is the crucial change

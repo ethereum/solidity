@@ -81,7 +81,7 @@ void Rematerialiser::visit(Expression& _e)
 			if (refs <= 1 || cost == 0 || (refs <= 5 && cost <= 1) || m_varsToAlwaysRematerialize.count(name))
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
-				for (auto const& ref: m_references[name])
+				for (auto const& ref: m_references.forward[name])
 					assertThrow(inScope(ref), OptimizerException, "");
 				// update reference counts
 				m_referenceCounts[name]--;

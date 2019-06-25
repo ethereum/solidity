@@ -298,8 +298,8 @@ Scoping and Declarations
 A variable which is declared will have an initial default value whose byte-representation is all zeros.
 The "default values" of variables are the typical "zero-state" of whatever the type is. For example, the default value for a ``bool``
 is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes1`` to ``bytes32``, each individual
-element will be initialized to the default value corresponding to its type. Finally, for dynamically-sized arrays, ``bytes``
-and ``string``, the default value is an empty array or string.
+element will be initialized to the default value corresponding to its type. For dynamically-sized arrays, ``bytes``
+and ``string``, the default value is an empty array or string. For the ``enum`` type, the default value is its first member.
 
 Scoping in Solidity follows the widespread scoping rules of C99
 (and many other languages): Variables are visible from the point right after their declaration
@@ -373,33 +373,53 @@ In any case, you will get a warning about the outer variable being shadowed.
 Error handling: Assert, Require, Revert and Exceptions
 ======================================================
 
-Solidity uses state-reverting exceptions to handle errors. Such an exception will undo all changes made to the
-state in the current call (and all its sub-calls) and also flag an error to the caller.
-The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
-if the condition is not met. The ``assert`` function should only be used to test for internal errors, and to check invariants.
-The ``require`` function should be used to ensure valid conditions, such as inputs, or contract state variables are met, or to validate return values from calls to external contracts.
-If used properly, analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``. Properly functioning code should never reach a failing assert statement; if this happens there is a bug in your contract which you should fix.
+Solidity uses state-reverting exceptions to handle errors. Such an exception undoes all changes made to the
+state in the current call (and all its sub-calls) and flags an error to the caller.
 
-There are two other ways to trigger exceptions: The ``revert`` function can be used to flag an error and
-revert the current call. It is possible to provide a string message containing details about the error
-that will be passed back to the caller.
-
-.. note::
-    There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
-    was deprecated in version 0.4.13 and removed in version 0.5.0.
-
-When exceptions happen in a sub-call, they "bubble up" (i.e. exceptions are rethrown) automatically. Exceptions to this rule are ``send``
-and the low-level functions ``call``, ``delegatecall`` and ``staticcall`` -- those return ``false`` as their first return value in case
+When exceptions happen in a sub-call, they "bubble up" (i.e., exceptions are rethrown) automatically. Exceptions to this rule are ``send``
+and the low-level functions ``call``, ``delegatecall`` and ``staticcall``, they return ``false`` as their first return value in case
 of an exception instead of "bubbling up".
 
 .. warning::
-    The low-level functions ``call``, ``delegatecall`` and ``staticcall`` return ``true`` as their first return value if the called account is non-existent, as part of the design of EVM. Existence must be checked prior to calling if desired.
+    The low-level functions ``call``, ``delegatecall`` and ``staticcall`` return ``true`` as their first return value if the account called is non-existent, as part of the design of EVM. Existence must be checked prior to calling if needed.
 
-Catching exceptions is not yet possible.
+It is not yet possible to catch exceptions with Solidity.
 
-In the following example, you can see how ``require`` can be used to easily check conditions on inputs
-and how ``assert`` can be used for internal error checking. Note that you can optionally provide
-a message string for ``require``, but not for ``assert``.
+``assert`` and ``require``
+--------------------------
+
+The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
+if the condition is not met.
+
+The ``assert`` function should only be used to test for internal errors, and to check invariants. Properly functioning code should never reach a failing ``assert`` statement; if this happens there is a bug in your contract which you should fix. Language analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``.
+
+An ``assert``-style exception is generated in the following situations:
+
+#. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+#. If you access a fixed-length ``bytesN`` at a too large or negative index.
+#. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+#. If you shift by a negative amount.
+#. If you convert a value too big or negative into an enum type.
+#. If you call a zero-initialized variable of internal function type.
+#. If you call ``assert`` with an argument that evaluates to false.
+
+The ``require`` function should be used to ensure valid conditions that cannot be detected until execution time.
+These conditions include inputs, or contract state variables are met, or to validate return values from calls to external contracts.
+
+A ``require``-style exception is generated in the following situations:
+
+#. Calling ``require`` with an argument that evaluates to ``false``.
+#. If you call a function via a message call but it does not finish properly (i.e., it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall`` is used. The low level operations never throw exceptions but indicate failures by returning ``false``.
+#. If you create a contract using the ``new`` keyword but the contract creation :ref:`does not finish properly<creating-contracts>`.
+#. If you perform an external function call targeting a contract that contains no code.
+#. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+#. If your contract receives Ether via a public getter function.
+#. If a ``.transfer()`` fails.
+
+You can optionally provide a message string for ``require``, but not for ``assert``.
+
+The following example shows how you can use ``require`` to check conditions on inputs
+and ``assert`` for internal error checking.
 
 ::
 
@@ -418,34 +438,23 @@ a message string for ``require``, but not for ``assert``.
         }
     }
 
-An ``assert``-style exception is generated in the following situations:
-
-#. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-#. If you access a fixed-length ``bytesN`` at a too large or negative index.
-#. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-#. If you shift by a negative amount.
-#. If you convert a value too big or negative into an enum type.
-#. If you call a zero-initialized variable of internal function type.
-#. If you call ``assert`` with an argument that evaluates to false.
-
-A ``require``-style exception is generated in the following situations:
-
-#. Calling ``require`` with an argument that evaluates to ``false``.
-#. If you call a function via a message call but it does not finish properly (i.e. it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall`` is used.  The low level operations never throw exceptions but indicate failures by returning ``false``.
-#. If you create a contract using the ``new`` keyword but the contract creation does not finish properly (see above for the definition of "not finish properly").
-#. If you perform an external function call targeting a contract that contains no code.
-#. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
-#. If your contract receives Ether via a public getter function.
-#. If a ``.transfer()`` fails.
-
 Internally, Solidity performs a revert operation (instruction ``0xfd``) for a ``require``-style exception and executes an invalid operation
 (instruction ``0xfe``) to throw an ``assert``-style exception. In both cases, this causes
 the EVM to revert all changes made to the state. The reason for reverting is that there is no safe way to continue execution, because an expected effect
-did not occur. Because we want to retain the atomicity of transactions, the safest thing to do is to revert all changes and make the whole transaction
-(or at least call) without effect. Note that ``assert``-style exceptions consume all gas available to the call, while
-``require``-style exceptions will not consume any gas starting from the Metropolis release.
+did not occur. Because we want to keep the atomicity of transactions, the safest action is to revert all changes and make the whole transaction
+(or at least call) without effect.
 
-The following example shows how an error string can be used together with revert and require:
+.. note::
+
+    ``assert``-style exceptions consume all gas available to the call, while ``require``-style exceptions do not consume any gas starting from the Metropolis release.
+
+``revert``
+----------
+
+The ``revert`` function is another way to trigger exceptions from within other code blocks to flag an error and
+revert the current call. The function takes an optional string message containing details about the error that is passed back to the caller.
+
+The following example shows how to use an error string together with ``revert`` and the equivalent ``require``:
 
 ::
 
@@ -464,9 +473,10 @@ The following example shows how an error string can be used together with revert
         }
     }
 
-The provided string will be :ref:`abi-encoded <ABI>` as if it were a call to a function ``Error(string)``.
-In the above example, ``revert("Not enough Ether provided.");`` will cause the following hexadecimal data be
-set as error return data:
+The two syntax options are equivalent, it's developer preference which to use.
+
+The provided string is :ref:`abi-encoded <ABI>` as if it were a call to a function ``Error(string)``.
+In the above example, ``revert("Not enough Ether provided.");`` returns the following hexadecimal as error return data:
 
 .. code::
 
@@ -474,3 +484,7 @@ set as error return data:
     0x0000000000000000000000000000000000000000000000000000000000000020 // Data offset
     0x000000000000000000000000000000000000000000000000000000000000001a // String length
     0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // String data
+
+.. note::
+    There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
+    was deprecated in version 0.4.13 and removed in version 0.5.0.

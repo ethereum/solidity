@@ -25,6 +25,7 @@
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
+#include <libyul/Dialect.h>
 
 #include <boost/algorithm/cxx11/none_of.hpp>
 
@@ -92,12 +93,10 @@ void UnusedPruner::operator()(Block& _block)
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.location), {}};
 				}
-				else if (varDecl.variables.size() == 1)
-					// In pure Yul, this should be replaced by a function call to `drop`
-					// instead of `pop`.
-					statement = ExpressionStatement{varDecl.location, FunctionalInstruction{
+				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction())
+					statement = ExpressionStatement{varDecl.location, FunctionCall{
 						varDecl.location,
-						dev::eth::Instruction::POP,
+						{varDecl.location, m_dialect.discardFunction()->name},
 						{*std::move(varDecl.value)}
 					}};
 			}

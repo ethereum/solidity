@@ -13,6 +13,7 @@ Safe Remote Purchase
         address payable public seller;
         address payable public buyer;
         enum State { Created, Locked, Inactive }
+        // The state variable has a default value of the first member, `State.created`
         State public state;
 
         // Ensure that `msg.value` is an even number.

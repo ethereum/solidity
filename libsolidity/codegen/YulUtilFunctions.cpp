@@ -224,34 +224,45 @@ string YulUtilFunctions::shiftLeftFunction(size_t _numBits)
 	solAssert(_numBits < 256, "");
 
 	string functionName = "shift_left_" + to_string(_numBits);
-	if (m_evmVersion.hasBitwiseShifting())
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := shl(<numBits>, value)
-				}
-				)")
-				("functionName", functionName)
-				("numBits", to_string(_numBits))
-				.render();
-		});
-	}
-	else
-	{
-		return m_functionCollector->createFunction(functionName, [&]() {
-			return
-				Whiskers(R"(
-				function <functionName>(value) -> newValue {
-					newValue := mul(value, <multiplier>)
-				}
-				)")
-				("functionName", functionName)
-				("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
-				.render();
-		});
-	}
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shl(<numBits>, value)
+				<!hasShifts>
+					mul(value, <multiplier>)
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("numBits", to_string(_numBits))
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+			.render();
+	});
+}
+
+string YulUtilFunctions::shiftLeftFunctionDynamic()
+{
+	string functionName = "shift_left_dynamic";
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(bits, value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shl(bits, value)
+				<!hasShifts>
+					mul(value, exp(2, bits))
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			.render();
+	});
 }
 
 string YulUtilFunctions::shiftRightFunction(size_t _numBits)
@@ -261,7 +272,7 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 	// Note that if this is extended with signed shifts,
 	// the opcodes SAR and SDIV behave differently with regards to rounding!
 
-	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned_" + m_evmVersion.name();
+	string functionName = "shift_right_" + to_string(_numBits) + "_unsigned";
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -278,6 +289,30 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 			("hasShifts", m_evmVersion.hasBitwiseShifting())
 			("numBits", to_string(_numBits))
 			("multiplier", toCompactHexWithPrefix(u256(1) << _numBits))
+			.render();
+	});
+}
+
+string YulUtilFunctions::shiftRightFunctionDynamic()
+{
+	// Note that if this is extended with signed shifts,
+	// the opcodes SAR and SDIV behave differently with regards to rounding!
+
+	string const functionName = "shift_right_unsigned_dynamic";
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(bits, value) -> newValue {
+				newValue :=
+				<?hasShifts>
+					shr(bits, value)
+				<!hasShifts>
+					div(value, exp(2, bits))
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
 			.render();
 	});
 }
@@ -306,6 +341,29 @@ string YulUtilFunctions::updateByteSliceFunction(size_t _numBytes, size_t _shift
 	});
 }
 
+string YulUtilFunctions::updateByteSliceFunctionDynamic(size_t _numBytes)
+{
+	solAssert(_numBytes <= 32, "");
+	size_t numBits = _numBytes * 8;
+	string functionName = "update_byte_slice_dynamic" + to_string(_numBytes);
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value, shiftBytes, toInsert) -> result {
+				let shiftBits := mul(shiftBytes, 8)
+				let mask := <shl>(shiftBits, <mask>)
+				toInsert := <shl>(shiftBits, toInsert)
+				value := and(value, not(mask))
+				result := or(value, and(toInsert, mask))
+			}
+			)")
+			("functionName", functionName)
+			("mask", formatNumber((bigint(1) << numBits) - 1))
+			("shl", shiftLeftFunctionDynamic())
+			.render();
+	});
+}
+
 string YulUtilFunctions::roundUpFunction()
 {
 	string functionName = "round_up_to_mul_of_32";
@@ -321,63 +379,70 @@ string YulUtilFunctions::roundUpFunction()
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntAddFunction(size_t _bits)
+string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 {
-	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
-	string functionName = "checked_add_uint_" + to_string(_bits);
+	string functionName = "checked_add_" + _type.identifier();
+	// TODO: Consider to add a special case for unsigned 256-bit integers
+	//       and use the following instead:
+	//       sum := add(x, y) if lt(sum, x) { revert(0, 0) }
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> sum {
-				<?shortType>
-					let mask := <mask>
-					sum := add(and(x, mask), and(y, mask))
-					if and(sum, not(mask)) { revert(0, 0) }
-				<!shortType>
-					sum := add(x, y)
-					if lt(sum, x) { revert(0, 0) }
-				</shortType>
+				<?signed>
+					// overflow, if x >= 0 and y > (maxValue - x)
+					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { revert(0, 0) }
+					// underflow, if x < 0 and y < (minValue - x)
+					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { revert(0, 0) }
+				<!signed>
+					// overflow, if x > (maxValue - y)
+					if gt(x, sub(<maxValue>, y)) { revert(0, 0) }
+				</signed>
+				sum := add(x, y)
 			}
 			)")
-			("shortType", _bits < 256)
 			("functionName", functionName)
-			("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			.render();
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntMulFunction(size_t _bits)
+string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 {
-	solAssert(0 < _bits && _bits <= 256 && _bits % 8 == 0, "");
-	string functionName = "checked_mul_uint_" + to_string(_bits);
+	string functionName = "checked_mul_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
-			// - The current overflow check *before* the multiplication could
-			//   be replaced by the following check *after* the multiplication:
-			//   if and(iszero(iszero(x)), iszero(eq(div(product, x), y))) { revert(0, 0) }
-			// - The case the x equals 0 could be treated separately and directly return zero.
+			// Multiplication by zero could be treated separately and directly return zero.
 			Whiskers(R"(
 			function <functionName>(x, y) -> product {
-				if and(iszero(iszero(x)), lt(div(<mask>, x), y)) { revert(0, 0) }
-				<?shortType>
-					product := mulmod(x, y, <powerOfTwo>)
-				<!shortType>
-					product := mul(x, y)
-				</shortType>
+				<?signed>
+					// overflow, if x > 0, y > 0 and x > (maxValue / y)
+					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { revert(0, 0) }
+					// underflow, if x > 0, y < 0 and y < (minValue / x)
+					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { revert(0, 0) }
+					// underflow, if x < 0, y > 0 and x < (minValue / y)
+					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { revert(0, 0) }
+					// overflow, if x < 0, y < 0 and x < (maxValue / y)
+					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { revert(0, 0) }
+				<!signed>
+					// overflow, if x != 0 and y > (maxValue / x)
+					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { revert(0, 0) }
+				</signed>
+				product := mul(x, y)
 			}
 			)")
-				("shortType", _bits < 256)
-				("functionName", functionName)
-				("powerOfTwo", toCompactHexWithPrefix(u256(1) << _bits))
-				("mask", toCompactHexWithPrefix((u256(1) << _bits) - 1))
-				.render();
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			.render();
 	});
 }
 
 string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 {
-	unsigned bits = _type.numBits();
-	solAssert(0 < bits && bits <= 256 && bits % 8 == 0, "");
 	string functionName = "checked_div_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return
@@ -385,7 +450,7 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> r {
 				if iszero(y) { revert(0, 0) }
 				<?signed>
-				// x / -1 == x
+				// overflow for minVal / -1
 				if and(
 					eq(x, <minVal>),
 					eq(y, sub(0, 1))
@@ -394,25 +459,52 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 				r := <?signed>s</signed>div(x, y)
 			}
 			)")
-				("functionName", functionName)
-				("signed", _type.isSigned())
-				("minVal", (0 - (u256(1) << (bits - 1))).str())
-				.render();
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
+			.render();
 	});
 }
 
-string YulUtilFunctions::overflowCheckedUIntSubFunction()
+string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
 {
-	string functionName = "checked_sub_uint";
+	string functionName = "checked_mod_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> r {
+				if iszero(y) { revert(0, 0) }
+				r := <?signed>s</signed>mod(x, y)
+			}
+			)")
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
+{
+	string functionName = "checked_sub_" + _type.identifier();
 	return m_functionCollector->createFunction(functionName, [&] {
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> diff {
-				if lt(x, y) { revert(0, 0) }
+				<?signed>
+					// underflow, if y >= 0 and x < (minValue + y)
+					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { revert(0, 0) }
+					// overflow, if y < 0 and x > (maxValue + y)
+					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { revert(0, 0) }
+				<!signed>
+					if lt(x, y) { revert(0, 0) }
+				</signed>
 				diff := sub(x, y)
 			}
 			)")
 			("functionName", functionName)
+			("signed", _type.isSigned())
+			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
+			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			.render();
 	});
 }
@@ -459,6 +551,120 @@ string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 	});
 }
 
+std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+	solAssert(_type.isDynamicallySized(), "");
+	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
+	solUnimplementedAssert(_type.baseType()->isValueType(), "...");
+	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
+	solUnimplementedAssert(_type.baseType()->storageSize() == 1, "");
+
+	string functionName = "resize_array_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, newLen) {
+				if gt(newLen, <maxArrayLength>) {
+					invalid()
+				}
+
+				let oldLen := <fetchLength>(array)
+
+				// Store new length
+				sstore(array, newLen)
+
+				// Size was reduced, clear end of array
+				if lt(newLen, oldLen) {
+					let oldSlotCount := <convertToSize>(oldLen)
+					let newSlotCount := <convertToSize>(newLen)
+					let arrayDataStart := <dataPosition>(array)
+					let deleteStart := add(arrayDataStart, newSlotCount)
+					let deleteEnd := add(arrayDataStart, oldSlotCount)
+					<clearStorageRange>(deleteStart, deleteEnd)
+				}
+			})")
+			("functionName", functionName)
+			("fetchLength", arrayLengthFunction(_type))
+			("convertToSize", arrayConvertLengthToSize(_type))
+			("dataPosition", arrayDataAreaFunction(_type))
+			("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
+			("maxArrayLength", (u256(1) << 64).str())
+			.render();
+	});
+}
+
+string YulUtilFunctions::clearStorageRangeFunction(Type const& _type)
+{
+	string functionName = "clear_storage_range_" + _type.identifier();
+
+	solUnimplementedAssert(_type.isValueType(), "...");
+
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(start, end) {
+				for {} lt(start, end) { start := add(start, 1) }
+				{
+					sstore(start, 0)
+				}
+			}
+		)")
+		("functionName", functionName)
+		.render();
+	});
+}
+
+string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
+{
+	string functionName = "array_convert_length_to_size_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		Type const& baseType = *_type.baseType();
+
+		switch (_type.location())
+		{
+			case DataLocation::Storage:
+			{
+				unsigned const baseStorageBytes = baseType.storageBytes();
+				solAssert(baseStorageBytes > 0, "");
+				solAssert(32 / baseStorageBytes > 0, "");
+
+				return Whiskers(R"(
+					function <functionName>(length) -> size {
+						size := length
+						<?multiSlot>
+							size := <mul>(<storageSize>, length)
+						<!multiSlot>
+							// Number of slots rounded up
+							size := div(add(length, sub(<itemsPerSlot>, 1)), <itemsPerSlot>)
+						</multiSlot>
+					})")
+					("functionName", functionName)
+					("multiSlot", baseType.storageSize() > 1)
+					("itemsPerSlot", to_string(32 / baseStorageBytes))
+					("storageSize", baseType.storageSize().str())
+					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
+					.render();
+			}
+			case DataLocation::CallData: // fallthrough
+			case DataLocation::Memory:
+				return Whiskers(R"(
+					function <functionName>(length) -> size {
+						<?byteArray>
+							size := length
+						<!byteArray>
+							size := <mul>(length, <elementSize>)
+						</byteArray>
+					})")
+					("functionName", functionName)
+					("elementSize", _type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedSize())
+					("byteArray", _type.isByteArray())
+					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
+					.render();
+			default:
+				solAssert(false, "");
+		}
+
+	});
+}
 string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
@@ -518,6 +724,36 @@ string YulUtilFunctions::arrayDataAreaFunction(ArrayType const& _type)
 	});
 }
 
+string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
+{
+	solUnimplementedAssert(_type.baseType()->storageBytes() > 16, "");
+
+	string functionName = "storage_array_index_access_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(array, index) -> slot, offset {
+				if iszero(lt(index, <arrayLen>(array))) {
+					invalid()
+				}
+
+				let data := <dataAreaFunc>(array)
+				<?multipleItemsPerSlot>
+
+				<!multipleItemsPerSlot>
+					slot := add(data, mul(index, <storageSize>))
+					offset := 0
+				</multipleItemsPerSlot>
+			}
+		)")
+		("functionName", functionName)
+		("arrayLen", arrayLengthFunction(_type))
+		("dataAreaFunc", arrayDataAreaFunction(_type))
+		("multipleItemsPerSlot", _type.baseType()->storageBytes() <= 16)
+		("storageSize", _type.baseType()->storageSize().str())
+		.render();
+	});
+}
+
 string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 {
 	solAssert(!_type.isByteArray(), "");
@@ -531,18 +767,29 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 			}
 		)");
 		templ("functionName", functionName);
-		if (_type.location() == DataLocation::Memory)
+		switch (_type.location())
+		{
+		case DataLocation::Memory:
 			templ("advance", "0x20");
-		else if (_type.location() == DataLocation::Storage)
-			templ("advance", "1");
-		else if (_type.location() == DataLocation::CallData)
-			templ("advance", toCompactHexWithPrefix(
+			break;
+		case DataLocation::Storage:
+		{
+			u256 size = _type.baseType()->storageSize();
+			solAssert(size >= 1, "");
+			templ("advance", toCompactHexWithPrefix(size));
+			break;
+		}
+		case DataLocation::CallData:
+		{
+			u256 size =
 				_type.baseType()->isDynamicallyEncoded() ?
 				32 :
-				_type.baseType()->calldataEncodedSize()
-			));
-		else
-			solAssert(false, "");
+				_type.baseType()->calldataEncodedSize();
+			solAssert(size >= 32 && size % 32 == 0, "");
+			templ("advance", toCompactHexWithPrefix(size));
+			break;
+		}
+		}
 		return templ.render();
 	});
 }
@@ -613,6 +860,89 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 	});
 }
 
+string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+	string functionName =
+		"read_from_storage_dynamic" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		"_" +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		solAssert(_type.sizeOnStack() == 1, "");
+		return Whiskers(R"(
+			function <functionName>(slot, offset) -> value {
+				value := <extract>(sload(slot), offset)
+			}
+		)")
+		("functionName", functionName)
+		("extract", extractFromStorageValueDynamic(_type, _splitFunctionTypes))
+		.render();
+	});
+}
+
+string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const _offset)
+{
+	string const functionName =
+		"update_storage_value_" +
+		(_offset.is_initialized() ? ("offset_" + to_string(*_offset)) : "") +
+		_type.identifier();
+
+	return m_functionCollector->createFunction(functionName, [&] {
+		if (_type.isValueType())
+		{
+			solAssert(_type.storageBytes() <= 32, "Invalid storage bytes size.");
+			solAssert(_type.storageBytes() > 0, "Invalid storage bytes size.");
+
+			return Whiskers(R"(
+				function <functionName>(slot, <offset>value) {
+					sstore(slot, <update>(sload(slot), <offset><prepare>(value)))
+				}
+
+			)")
+			("functionName", functionName)
+			("update",
+				_offset.is_initialized() ?
+					updateByteSliceFunction(_type.storageBytes(), *_offset) :
+					updateByteSliceFunctionDynamic(_type.storageBytes())
+			)
+			("offset", _offset.is_initialized() ? "" : "offset, ")
+			("prepare", prepareStoreFunction(_type))
+			.render();
+		}
+		else
+		{
+			if (_type.category() == Type::Category::Array)
+				solUnimplementedAssert(false, "");
+			else if (_type.category() == Type::Category::Struct)
+				solUnimplementedAssert(false, "");
+			else
+				solAssert(false, "Invalid non-value type for assignment.");
+		}
+	});
+}
+
+string YulUtilFunctions::extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes)
+{
+	solUnimplementedAssert(!_splitFunctionTypes, "");
+
+	string functionName =
+		"extract_from_storage_value_dynamic" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		_type.identifier();
+	return m_functionCollector->createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot_value, offset) -> value {
+				value := <cleanupStorage>(<shr>(mul(offset, 8), slot_value))
+			}
+		)")
+		("functionName", functionName)
+		("shr", shiftRightFunctionDynamic())
+		("cleanupStorage", cleanupFromStorageFunction(_type, _splitFunctionTypes))
+		.render();
+	});
+}
+
 string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes)
 {
 	solUnimplementedAssert(!_splitFunctionTypes, "");
@@ -631,7 +961,7 @@ string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offs
 		)")
 		("functionName", functionName)
 		("shr", shiftRightFunction(_offset * 8))
-		("cleanupStorage", cleanupFromStorageFunction(_type, false))
+		("cleanupStorage", cleanupFromStorageFunction(_type, _splitFunctionTypes))
 		.render();
 	});
 }

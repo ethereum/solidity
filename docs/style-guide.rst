@@ -757,19 +757,25 @@ No::
 
     pragma solidity >=0.4.0 <0.7.0;
 
+
     // Base contracts just to make this compile
     contract B {
         constructor(uint) public {
         }
     }
+
+
     contract C {
         constructor(uint, uint) public {
         }
     }
+
+
     contract D {
         constructor(uint) public {
         }
     }
+
 
     contract A is B, C, D {
         uint x;
@@ -778,11 +784,11 @@ No::
         B(param1)
         C(param2, param3)
         D(param4)
-        public
-        {
+        public {
             x = param5;
         }
     }
+
 
     contract X is B, C, D {
         uint x;
@@ -792,9 +798,10 @@ No::
             C(param2, param3)
             D(param4)
             public {
-            x = param5;
-        }
+                x = param5;
+            }
     }
+
 
 When declaring short functions with a single statement, it is permissible to do it on a single line.
 
@@ -973,26 +980,31 @@ Yes::
 
     pragma solidity >=0.4.0 <0.7.0;
 
+
     // Owned.sol
     contract Owned {
-         address public owner;
+        address public owner;
 
-         constructor() public {
-             owner = msg.sender;
-         }
+        constructor() public {
+            owner = msg.sender;
+        }
 
-         modifier onlyOwner {
-             require(msg.sender == owner);
-             _;
-         }
+        modifier onlyOwner {
+            require(msg.sender == owner);
+            _;
+        }
 
-         function transferOwnership(address newOwner) public onlyOwner {
-             owner = newOwner;
-         }
+        function transferOwnership(address newOwner) public onlyOwner {
+            owner = newOwner;
+        }
     }
 
-    // Congress.sol
+and in ``Congress.sol``::
+
+    pragma solidity >=0.4.0 <0.7.0;
+
     import "./Owned.sol";
+
 
     contract Congress is Owned, TokenRecipient {
         //...
@@ -1002,31 +1014,33 @@ No::
 
     pragma solidity >=0.4.0 <0.7.0;
 
+
     // owned.sol
     contract owned {
-         address public owner;
+        address public owner;
 
-         constructor() public {
-             owner = msg.sender;
-         }
+        constructor() public {
+            owner = msg.sender;
+        }
 
-         modifier onlyOwner {
-             require(msg.sender == owner);
-             _;
-         }
+        modifier onlyOwner {
+            require(msg.sender == owner);
+            _;
+        }
 
-         function transferOwnership(address newOwner) public onlyOwner {
-             owner = newOwner;
-         }
+        function transferOwnership(address newOwner) public onlyOwner {
+            owner = newOwner;
+        }
     }
 
-    // Congress.sol
+and in ``Congress.sol``::
+
     import "./owned.sol";
+
 
     contract Congress is owned, tokenRecipient {
         //...
     }
-
 
 Struct Names
 ==========================
@@ -1104,6 +1118,7 @@ added looks like the one below::
 
     pragma solidity >=0.4.0 <0.7.0;
 
+
     /// @author The Solidity Team
     /// @title A simple storage example
     contract SimpleStorage {
@@ -1126,4 +1141,4 @@ added looks like the one below::
 
 It is recommended that Solidity contracts are fully annontated using `NatSpec <natspec>`_ for all public interfaces (everything in the ABI).
 
-Please see the sectian about `NatSpec <natspec>`_ for a detailed explanation.
+Please see the section about `NatSpec <natspec>`_ for a detailed explanation.

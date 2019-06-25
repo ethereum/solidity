@@ -25,6 +25,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <vector>
+#include <set>
 
 namespace yul
 {
@@ -56,6 +57,12 @@ struct BuiltinFunction
 	bool sideEffectFreeIfNoMSize = false;
 	/// If true, this is the msize instruction.
 	bool isMSize = false;
+	/// If false, storage of the current contract before and after the function is the same
+	/// under every circumstance. If the function does not return, this can be false.
+	bool invalidatesStorage = true;
+	/// If false, memory before and after the function is the same under every circumstance.
+	/// If the function does not return, this can be false.
+	bool invalidatesMemory = true;
 	/// If true, can only accept literals as arguments and they cannot be moved to variables.
 	bool literalArguments = false;
 };
@@ -65,6 +72,11 @@ struct Dialect: boost::noncopyable
 	AsmFlavour const flavour = AsmFlavour::Loose;
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
+
+	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
+	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
+
+	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 
 	Dialect(AsmFlavour _flavour): flavour(_flavour) {}
 	virtual ~Dialect() = default;

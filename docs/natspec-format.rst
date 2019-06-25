@@ -36,12 +36,16 @@ Documentation is inserted above each ``class``, ``interface`` and
    documentation <https://vyper.readthedocs.io/en/latest/structure-of-a-contract.html#natspec-metadata>`__.
 
 The following example shows a contract and a function using all available tags.
-Note: NatSpec currently does NOT apply to public state variables (see
-`solidity#3418 <https://github.com/ethereum/solidity/issues/3418>`__),
-even if they are declared public and therefore do affect the ABI. Note:
-The Solidity compiler only interprets tags if they are external or
-public. You are welcome to use similar comments for your internal and
-private functions, but those will not be parsed.
+
+.. note::
+
+  NatSpec currently does NOT apply to public state variables (see
+  `solidity#3418 <https://github.com/ethereum/solidity/issues/3418>`__),
+  even if they are declared public and therefore do affect the ABI.
+
+  The Solidity compiler only interprets tags if they are external or
+  public. You are welcome to use similar comments for your internal and
+  private functions, but those will not be parsed.
 
 .. code:: solidity
 
@@ -108,7 +112,7 @@ to the end-user as:
 
     This function will multiply 10 by 7
 
-if a function is being called and the input ``a`` is assigned a value of 7.
+if a function is being called and the input ``a`` is assigned a value of 10.
 
 Specifying these dynamic expressions is outside the scope of the Solidity
 documentation and you may read more at
@@ -196,4 +200,3 @@ file should also be produced and should look like this:
       },
       "title" : "A simulator for trees"
     }
-

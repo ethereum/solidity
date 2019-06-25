@@ -23,7 +23,6 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
-#include <libyul/optimiser/ConstantOptimiser.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -36,7 +35,9 @@
 #include <libyul/optimiser/FullInliner.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
+#include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/MainFunction.h>
+#include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -47,8 +48,9 @@
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
-#include <libyul/optimiser/Metrics.h>
+#include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
@@ -99,12 +101,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		m_settings.erase("step");
 	}
 
-	string line;
-	while (getline(file, line))
-		if (boost::algorithm::starts_with(line, "// "))
-			m_expectation += line.substr(3) + "\n";
-		else
-			m_expectation += line + "\n";
+	m_expectation = parseSimpleExpectations(file);
 }
 
 TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -115,6 +112,15 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	soltestAssert(m_dialect, "Dialect not set.");
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
+	else if (m_optimizerStep == "nameDisplacer")
+	{
+		disambiguate();
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
+		NameDisplacer{
+			nameDispenser,
+			{"illegal1"_yulstring, "illegal2"_yulstring, "illegal3"_yulstring, "illegal4"_yulstring, "illegal5"_yulstring}
+		}(*m_ast);
+	}
 	else if (m_optimizerStep == "blockFlattener")
 	{
 		disambiguate();
@@ -247,6 +253,21 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
 	}
+	else if (m_optimizerStep == "loadResolver")
+	{
+		disambiguate();
+		ForLoopInitRewriter{}(*m_ast);
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
+		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		ExpressionSimplifier::run(*m_dialect, *m_ast);
+
+		LoadResolver::run(*m_dialect, *m_ast);
+
+		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		ExpressionJoiner::run(*m_ast);
+		ExpressionJoiner::run(*m_ast);
+	}
 	else if (m_optimizerStep == "controlFlowSimplifier")
 	{
 		disambiguate();
@@ -292,12 +313,12 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		disambiguate();
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
-		WordSizeTransform::run(*m_ast, nameDispenser);
+		WordSizeTransform::run(*m_dialect, *m_ast, nameDispenser);
 	}
 	else if (m_optimizerStep == "fullSuite")
 	{
 		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-		OptimiserSuite::run(*m_dialect, meter, *m_ast, *m_analysisInfo, true);
+		OptimiserSuite::run(*m_dialect, &meter, *m_ast, *m_analysisInfo, true);
 	}
 	else
 	{

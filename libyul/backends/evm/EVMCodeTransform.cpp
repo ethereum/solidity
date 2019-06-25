@@ -490,19 +490,15 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	}
 
 	m_assembly.setSourceLocation(_function.location);
-	int stackHeightBefore = m_assembly.stackHeight();
-	AbstractAssembly::LabelID afterFunction = m_assembly.newLabelId();
+	int const stackHeightBefore = m_assembly.stackHeight();
 
 	if (m_evm15)
-	{
-		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore);
 		m_assembly.appendBeginsub(functionEntryID(_function.name, function), _function.parameters.size());
-	}
 	else
-	{
-		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore + height);
 		m_assembly.appendLabel(functionEntryID(_function.name, function));
-	}
+
+	m_assembly.setStackHeight(height);
+
 	m_stackAdjustment += localStackAdjustment;
 
 	for (auto const& v: _function.returnVariables)
@@ -592,8 +588,8 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	else
 		m_assembly.appendJump(stackHeightBefore - _function.returnVariables.size());
 	m_stackAdjustment -= localStackAdjustment;
-	m_assembly.appendLabel(afterFunction);
 	checkStackHeight(&_function);
+	m_assembly.setStackHeight(stackHeightBefore);
 }
 
 void CodeTransform::operator()(ForLoop const& _forLoop)
@@ -727,11 +723,32 @@ void CodeTransform::visitExpression(Expression const& _expression)
 
 void CodeTransform::visitStatements(vector<Statement> const& _statements)
 {
+	// Workaround boost bug:
+	// https://www.boost.org/doc/libs/1_63_0/libs/optional/doc/html/boost_optional/tutorial/gotchas/false_positive_with__wmaybe_uninitialized.html
+	boost::optional<AbstractAssembly::LabelID> jumpTarget = boost::make_optional(false, AbstractAssembly::LabelID());
+
 	for (auto const& statement: _statements)
 	{
 		freeUnusedVariables();
+		auto const* functionDefinition = boost::get<FunctionDefinition>(&statement);
+		if (functionDefinition && !jumpTarget)
+		{
+			m_assembly.setSourceLocation(locationOf(statement));
+			jumpTarget = m_assembly.newLabelId();
+			m_assembly.appendJumpTo(*jumpTarget, 0);
+		}
+		else if (!functionDefinition && jumpTarget)
+		{
+			m_assembly.appendLabel(*jumpTarget);
+			jumpTarget = boost::none;
+		}
+
 		boost::apply_visitor(*this, statement);
 	}
+	// we may have a leftover jumpTarget
+	if (jumpTarget)
+		m_assembly.appendLabel(*jumpTarget);
+
 	freeUnusedVariables();
 }
 

@@ -36,12 +36,12 @@ namespace smt
 class EncodingContext
 {
 public:
-	EncodingContext(SolverInterface& _solver);
+	EncodingContext(std::shared_ptr<SolverInterface> _solver);
 
 	/// Resets the entire context.
 	void reset();
 
-	/// Methods related to variables.
+	/// Variables.
 	//@{
 	/// @returns the symbolic representation of a program variable.
 	std::shared_ptr<SymbolicVariable> variable(solidity::VariableDeclaration const& _varDecl);
@@ -74,7 +74,7 @@ public:
 	void setUnknownValue(SymbolicVariable& _variable);
 	//@}
 
-	/// Methods related to expressions.
+	/// Expressions.
 	////@{
 	/// @returns the symbolic representation of an AST node expression.
 	std::shared_ptr<SymbolicVariable> expression(solidity::Expression const& _e);
@@ -88,12 +88,13 @@ public:
 	bool knownExpression(solidity::Expression const& _e) const;
 	//@}
 
-	/// Methods related to global variables and functions.
+	/// Global variables and functions.
 	//@{
 	/// Global variables and functions.
 	std::shared_ptr<SymbolicVariable> globalSymbol(std::string const& _name);
-	/// @returns all symbolic variables.
+	/// @returns all symbolic globals.
 	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> const& globalSymbols() const { return m_globalContext; }
+
 	/// Defines a new global variable or function
 	/// and @returns true if type was abstracted.
 	bool createGlobalSymbol(std::string const& _name, solidity::Expression const& _expr);
@@ -101,7 +102,7 @@ public:
 	bool knownGlobalSymbol(std::string const& _var) const;
 	//@}
 
-	/// Blockchain related methods.
+	/// Blockchain.
 	//@{
 	/// Value of `this` address.
 	Expression thisAddress();
@@ -113,12 +114,22 @@ public:
 	void transfer(Expression _from, Expression _to, Expression _value);
 	//@}
 
+	/// Solver.
+	//@{
+	/// @returns conjunction of all added assertions.
+	Expression assertions();
+	void pushSolver();
+	void popSolver();
+	void addAssertion(Expression const& _e);
+	std::shared_ptr<SolverInterface> solver() { return m_solver; }
+	//@}
+
 private:
 	/// Adds _value to _account's balance.
 	void addBalance(Expression _account, Expression _value);
 
-	SolverInterface& m_solver;
-
+	/// Symbolic expressions.
+	//{@
 	/// Symbolic variables.
 	std::unordered_map<solidity::VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
 
@@ -134,6 +145,16 @@ private:
 
 	/// Symbolic balances.
 	std::unique_ptr<SymbolicVariable> m_balances;
+	//@}
+
+	/// Solver related.
+	//@{
+	/// Solver can be SMT solver or Horn solver in the future.
+	std::shared_ptr<SolverInterface> m_solver;
+
+	/// Assertion stack.
+	std::vector<Expression> m_assertions;
+	//@}
 };
 
 }

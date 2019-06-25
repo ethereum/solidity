@@ -415,7 +415,8 @@ Local Solidity variables are available for assignments, for example:
     To be safe, always clear the data properly before you use it
     in a context where this is important:
     ``uint32 x = f(); assembly { x := and(x, 0xffffffff) /* now use x */ }``
-    To clean signed types, you can use the ``signextend`` opcode.
+    To clean signed types, you can use the ``signextend`` opcode:
+    ``assembly { signextend(<num_bytes_of_x_minus_one>, x) }``
 
 Labels
 ------
@@ -595,21 +596,21 @@ of their block is reached.
 Conventions in Solidity
 -----------------------
 
-In contrast to EVM assembly, Solidity knows types which are narrower than 256 bits,
-e.g. ``uint24``. In order to make them more efficient, most arithmetic operations just
-treat them as 256-bit numbers and the higher-order bits are only cleaned at the
-point where it is necessary, i.e. just shortly before they are written to memory
-or before comparisons are performed. This means that if you access such a variable
-from within inline assembly, you might have to manually clean the higher order bits
+In contrast to EVM assembly, Solidity has types which are narrower than 256 bits,
+e.g. ``uint24``. For efficiency, most arithmetic operations ignore the fact that types can be shorter than 256
+bits, and the higher-order bits are cleaned when necessary,
+i.e., shortly before they are written to memory or before comparisons are performed.
+This means that if you access such a variable
+from within inline assembly, you might have to manually clean the higher-order bits
 first.
 
-Solidity manages memory in a very simple way: There is a "free memory pointer"
-at position ``0x40`` in memory. If you want to allocate memory, just use the memory
-starting from where this pointer points at and update it accordingly.
+Solidity manages memory in the following way. There is a "free memory pointer"
+at position ``0x40`` in memory. If you want to allocate memory, use the memory
+starting from where this pointer points at and update it.
 There is no guarantee that the memory has not been used before and thus
 you cannot assume that its contents are zero bytes.
 There is no built-in mechanism to release or free allocated memory.
-Here is an assembly snippet that can be used for allocating memory::
+Here is an assembly snippet you can use for allocating memory that follows the process outlined above::
 
     function allocate(length) -> pos {
       pos := mload(0x40)
@@ -617,13 +618,13 @@ Here is an assembly snippet that can be used for allocating memory::
     }
 
 The first 64 bytes of memory can be used as "scratch space" for short-term
-allocation. The 32 bytes after the free memory pointer (i.e. starting at ``0x60``)
-is meant to be zero permanently and is used as the initial value for
+allocation. The 32 bytes after the free memory pointer (i.e., starting at ``0x60``)
+are meant to be zero permanently and is used as the initial value for
 empty dynamic memory arrays.
 This means that the allocatable memory starts at ``0x80``, which is the initial value
 of the free memory pointer.
 
-Elements in memory arrays in Solidity always occupy multiples of 32 bytes (yes, this is
+Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this is
 even true for ``byte[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
 arrays are pointers to memory arrays. The length of a dynamic array is stored at the
 first slot of the array and followed by the array elements.
@@ -631,7 +632,7 @@ first slot of the array and followed by the array elements.
 .. warning::
     Statically-sized memory arrays do not have a length field, but it might be added later
     to allow better convertibility between statically- and dynamically-sized arrays, so
-    please do not rely on that.
+    do not rely on this.
 
 
 Standalone Assembly

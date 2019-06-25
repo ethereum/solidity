@@ -19,7 +19,7 @@
 
 
 #include <libsolidity/formal/EncodingContext.h>
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsolidity/formal/SMTPortfolio.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/VariableUsage.h>
 
@@ -270,7 +270,7 @@ private:
 	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
-	std::unique_ptr<smt::SolverInterface> m_interface;
+	std::shared_ptr<smt::SolverInterface> m_interface;
 	smt::VariableUsage m_variableUsage;
 	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;

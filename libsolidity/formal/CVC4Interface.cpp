@@ -60,17 +60,21 @@ void CVC4Interface::addAssertion(Expression const& _expr)
 	{
 		m_solver.assertFormula(toCVC4Expr(_expr));
 	}
-	catch (CVC4::TypeCheckingException const&)
+	catch (CVC4::TypeCheckingException const& _e)
 	{
-		solAssert(false, "");
+		solAssert(false, _e.what());
 	}
-	catch (CVC4::LogicException const&)
+	catch (CVC4::LogicException const& _e)
 	{
-		solAssert(false, "");
+		solAssert(false, _e.what());
 	}
-	catch (CVC4::UnsafeInterruptException const&)
+	catch (CVC4::UnsafeInterruptException const& _e)
 	{
-		solAssert(false, "");
+		solAssert(false, _e.what());
+	}
+	catch (CVC4::Exception const& _e)
+	{
+		solAssert(false, _e.what());
 	}
 }
 
@@ -120,58 +124,82 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 	for (auto const& arg: _expr.arguments)
 		arguments.push_back(toCVC4Expr(arg));
 
-	string const& n = _expr.name;
-	// Function application
-	if (!arguments.empty() && m_variables.count(_expr.name))
-		return m_context.mkExpr(CVC4::kind::APPLY_UF, m_variables.at(n), arguments);
-	// Literal
-	else if (arguments.empty())
+	try
 	{
-		if (n == "true")
-			return m_context.mkConst(true);
-		else if (n == "false")
-			return m_context.mkConst(false);
-		else
-			// We assume it is an integer...
-			return m_context.mkConst(CVC4::Rational(n));
+		string const& n = _expr.name;
+		// Function application
+		if (!arguments.empty() && m_variables.count(_expr.name))
+			return m_context.mkExpr(CVC4::kind::APPLY_UF, m_variables.at(n), arguments);
+		// Literal
+		else if (arguments.empty())
+		{
+			if (n == "true")
+				return m_context.mkConst(true);
+			else if (n == "false")
+				return m_context.mkConst(false);
+			else
+				try
+				{
+					return m_context.mkConst(CVC4::Rational(n));
+				}
+				catch (CVC4::TypeCheckingException const& _e)
+				{
+					solAssert(false, _e.what());
+				}
+				catch (CVC4::Exception const& _e)
+				{
+					solAssert(false, _e.what());
+				}
+		}
+
+		solAssert(_expr.hasCorrectArity(), "");
+		if (n == "ite")
+			return arguments[0].iteExpr(arguments[1], arguments[2]);
+		else if (n == "not")
+			return arguments[0].notExpr();
+		else if (n == "and")
+			return arguments[0].andExpr(arguments[1]);
+		else if (n == "or")
+			return arguments[0].orExpr(arguments[1]);
+		else if (n == "implies")
+			return m_context.mkExpr(CVC4::kind::IMPLIES, arguments[0], arguments[1]);
+		else if (n == "=")
+			return m_context.mkExpr(CVC4::kind::EQUAL, arguments[0], arguments[1]);
+		else if (n == "<")
+			return m_context.mkExpr(CVC4::kind::LT, arguments[0], arguments[1]);
+		else if (n == "<=")
+			return m_context.mkExpr(CVC4::kind::LEQ, arguments[0], arguments[1]);
+		else if (n == ">")
+			return m_context.mkExpr(CVC4::kind::GT, arguments[0], arguments[1]);
+		else if (n == ">=")
+			return m_context.mkExpr(CVC4::kind::GEQ, arguments[0], arguments[1]);
+		else if (n == "+")
+			return m_context.mkExpr(CVC4::kind::PLUS, arguments[0], arguments[1]);
+		else if (n == "-")
+			return m_context.mkExpr(CVC4::kind::MINUS, arguments[0], arguments[1]);
+		else if (n == "*")
+			return m_context.mkExpr(CVC4::kind::MULT, arguments[0], arguments[1]);
+		else if (n == "/")
+			return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
+		else if (n == "mod")
+			return m_context.mkExpr(CVC4::kind::INTS_MODULUS, arguments[0], arguments[1]);
+		else if (n == "select")
+			return m_context.mkExpr(CVC4::kind::SELECT, arguments[0], arguments[1]);
+		else if (n == "store")
+			return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
+
+		solAssert(false, "");
+	}
+	catch (CVC4::TypeCheckingException const& _e)
+	{
+		solAssert(false, _e.what());
+	}
+	catch (CVC4::Exception const& _e)
+	{
+		solAssert(false, _e.what());
 	}
 
-	solAssert(_expr.hasCorrectArity(), "");
-	if (n == "ite")
-		return arguments[0].iteExpr(arguments[1], arguments[2]);
-	else if (n == "not")
-		return arguments[0].notExpr();
-	else if (n == "and")
-		return arguments[0].andExpr(arguments[1]);
-	else if (n == "or")
-		return arguments[0].orExpr(arguments[1]);
-	else if (n == "=")
-		return m_context.mkExpr(CVC4::kind::EQUAL, arguments[0], arguments[1]);
-	else if (n == "<")
-		return m_context.mkExpr(CVC4::kind::LT, arguments[0], arguments[1]);
-	else if (n == "<=")
-		return m_context.mkExpr(CVC4::kind::LEQ, arguments[0], arguments[1]);
-	else if (n == ">")
-		return m_context.mkExpr(CVC4::kind::GT, arguments[0], arguments[1]);
-	else if (n == ">=")
-		return m_context.mkExpr(CVC4::kind::GEQ, arguments[0], arguments[1]);
-	else if (n == "+")
-		return m_context.mkExpr(CVC4::kind::PLUS, arguments[0], arguments[1]);
-	else if (n == "-")
-		return m_context.mkExpr(CVC4::kind::MINUS, arguments[0], arguments[1]);
-	else if (n == "*")
-		return m_context.mkExpr(CVC4::kind::MULT, arguments[0], arguments[1]);
-	else if (n == "/")
-		return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
-	else if (n == "mod")
-		return m_context.mkExpr(CVC4::kind::INTS_MODULUS, arguments[0], arguments[1]);
-	else if (n == "select")
-		return m_context.mkExpr(CVC4::kind::SELECT, arguments[0], arguments[1]);
-	else if (n == "store")
-		return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
-	// Cannot reach here.
 	solAssert(false, "");
-	return arguments[0];
 }
 
 CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)

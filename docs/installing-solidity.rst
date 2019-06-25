@@ -184,7 +184,7 @@ The following are dependencies for all builds of Solidity:
 +-----------------------------------+-------------------------------------------------------+
 | Software                          | Notes                                                 |
 +===================================+=======================================================+
-| `CMake`_                          | Cross-platform build file generator.                  |
+| `CMake`_ (version 3.5+)           | Cross-platform build file generator.                  |
 +-----------------------------------+-------------------------------------------------------+
 | `Boost`_  (version 1.65+)         | C++ libraries.                                        |
 +-----------------------------------+-------------------------------------------------------+
@@ -200,6 +200,13 @@ The following are dependencies for all builds of Solidity:
 .. _Boost: https://www.boost.org
 .. _CMake: https://cmake.org/download/
 .. _z3: https://github.com/Z3Prover/z3
+
+.. note::
+    Solidity versions prior to 0.5.10 can fail to correctly link against Boost versions 1.70+.
+    A possible workaround is to temporarily rename ``<Boost install path>/lib/cmake/Boost-1.70.0``
+    prior to running the cmake command to configure solidity.
+
+    Starting from 0.5.10 linking against Boost 1.70+ should work without manual intervention.
 
 Prerequisites - macOS
 ---------------------
@@ -304,16 +311,16 @@ Building Solidity is quite similar on Linux, macOS and other Unices:
     cd build
     cmake .. && make
 
-.. warning::
-
-    BSD builds should work, but are untested by the Solidity team.
-
 or even easier on Linux and macOS, you can run:
 
 .. code-block:: bash
 
     #note: this will install binaries solc and soltest at usr/local/bin
     ./scripts/build.sh
+
+.. warning::
+
+    BSD builds should work, but are untested by the Solidity team.
 
 And for Windows:
 

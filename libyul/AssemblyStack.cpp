@@ -31,6 +31,7 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
+#include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/EWasmObjectCompiler.h>
 #include <libyul/optimiser/Metrics.h>
@@ -93,8 +94,6 @@ void AssemblyStack::optimize()
 	if (!m_optimiserSettings.runYulOptimiser)
 		return;
 
-	if (m_language != Language::StrictAssembly)
-		solUnimplemented("Optimizer for both loose assembly and Yul is not yet implemented");
 	solAssert(m_analysisSuccessful, "Analysis was not successful.");
 
 	m_analysisSuccessful = false;
@@ -146,11 +145,14 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 			optimize(*subObject, false);
-	EVMDialect const& dialect = dynamic_cast<EVMDialect const&>(languageToDialect(m_language, m_evmVersion));
-	GasMeter meter(dialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+
+	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
+	unique_ptr<GasMeter> meter;
+	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
+		meter = make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
 	OptimiserSuite::run(
 		dialect,
-		meter,
+		meter.get(),
 		*_object.code,
 		*_object.analysisInfo,
 		m_optimiserSettings.optimizeStackAllocation

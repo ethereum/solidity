@@ -51,7 +51,7 @@ namespace yul
  * take four times the parameters and each of type u64.
  * In addition, it uses a single other builtin function called `or_bool` that
  * takes four u64 parameters and is supposed to return the logical disjunction
- * of them es a u64 value.
+ * of them as a u64 value. If this name is already used somewhere, it is renamed.
  *
  * Prerequisite: Disambiguator, ExpressionSplitter
  */
@@ -63,12 +63,14 @@ public:
 	void operator()(FunctionCall&) override;
 	void operator()(If&) override;
 	void operator()(Switch&) override;
+	void operator()(ForLoop&) override;
 	void operator()(Block& _block) override;
 
-	static void run(Block& _ast, NameDispenser& _nameDispenser);
+	static void run(Dialect const& _inputDialect, Block& _ast, NameDispenser& _nameDispenser);
 
 private:
-	explicit WordSizeTransform(NameDispenser& _nameDispenser):
+	explicit WordSizeTransform(Dialect const& _inputDialect, NameDispenser& _nameDispenser):
+		m_inputDialect(_inputDialect),
 		m_nameDispenser(_nameDispenser)
 	{ }
 
@@ -80,6 +82,7 @@ private:
 	std::array<std::unique_ptr<Expression>, 4> expandValue(Expression const& _e);
 	std::vector<Expression> expandValueToVector(Expression const& _e);
 
+	Dialect const& m_inputDialect;
 	NameDispenser& m_nameDispenser;
 	/// maps original u256 variable's name to corresponding u64 variables' names
 	std::map<YulString, std::array<YulString, 4>> m_variableMapping;

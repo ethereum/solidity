@@ -55,25 +55,36 @@ IRStorageItem::IRStorageItem(
 	IRGenerationContext& _context,
 	VariableDeclaration const& _varDecl
 ):
-	IRLValue(_context, _varDecl.annotation().type)
+	IRStorageItem(
+	_context,
+	*_varDecl.annotation().type,
+	_context.storageLocationOfVariable(_varDecl)
+)
+{ }
+
+IRStorageItem::IRStorageItem(
+	IRGenerationContext& _context,
+	Type const& _type,
+	std::pair<u256, unsigned> slot_offset
+):
+	IRLValue(_context, &_type),
+	m_slot(toCompactHexWithPrefix(slot_offset.first)),
+	m_offset(slot_offset.second)
 {
-	u256 slot;
-	unsigned offset;
-	std::tie(slot, offset) = _context.storageLocationOfVariable(_varDecl);
-	m_slot = toCompactHexWithPrefix(slot);
-	m_offset = offset;
 }
 
 IRStorageItem::IRStorageItem(
 	IRGenerationContext& _context,
 	string _slot,
-	unsigned _offset,
+	boost::variant<string, unsigned> _offset,
 	Type const& _type
 ):
 	IRLValue(_context, &_type),
 	m_slot(move(_slot)),
-	m_offset(_offset)
+	m_offset(std::move(_offset))
 {
+	solAssert(!m_offset.empty(), "");
+	solAssert(!m_slot.empty(), "");
 }
 
 string IRStorageItem::retrieveValue() const
@@ -81,42 +92,77 @@ string IRStorageItem::retrieveValue() const
 	if (!m_type->isValueType())
 		return m_slot;
 	solUnimplementedAssert(m_type->category() != Type::Category::Function, "");
-	return m_context.utils().readFromStorage(*m_type, m_offset, false) + "(" + m_slot + ")";
+	if (m_offset.type() == typeid(string))
+		return
+			m_context.utils().readFromStorageDynamic(*m_type, false) +
+			"(" +
+			m_slot +
+			", " +
+			boost::get<string>(m_offset) +
+			")";
+	else if (m_offset.type() == typeid(unsigned))
+		return
+			m_context.utils().readFromStorage(*m_type, boost::get<unsigned>(m_offset), false) +
+			"(" +
+			m_slot +
+			")";
+
+	solAssert(false, "");
 }
 
 string IRStorageItem::storeValue(string const& _value, Type const& _sourceType) const
 {
 	if (m_type->isValueType())
-	{
-		solAssert(m_type->storageBytes() <= 32, "Invalid storage bytes size.");
-		solAssert(m_type->storageBytes() > 0, "Invalid storage bytes size.");
-		solAssert(m_type->storageBytes() + m_offset <= 32, "");
-
 		solAssert(_sourceType == *m_type, "Different type, but might not be an error.");
 
-		return Whiskers("sstore(<slot>, <update>(sload(<slot>), <prepare>(<value>)))\n")
-			("slot", m_slot)
-			("update", m_context.utils().updateByteSliceFunction(m_type->storageBytes(), m_offset))
-			("prepare", m_context.utils().prepareStoreFunction(*m_type))
-			("value", _value)
-			.render();
-	}
-	else
-	{
-		solAssert(
-			_sourceType.category() == m_type->category(),
-			"Wrong type conversation for assignment."
-		);
-		if (m_type->category() == Type::Category::Array)
-			solUnimplementedAssert(false, "");
-		else if (m_type->category() == Type::Category::Struct)
-			solUnimplementedAssert(false, "");
-		else
-			solAssert(false, "Invalid non-value type for assignment.");
-	}
+	boost::optional<unsigned> offset;
+
+	if (m_offset.type() == typeid(unsigned))
+		offset = get<unsigned>(m_offset);
+
+	return
+		m_context.utils().updateStorageValueFunction(*m_type, offset) +
+		"(" +
+		m_slot +
+		(m_offset.type() == typeid(string) ?
+			(", " + get<string>(m_offset)) :
+			""
+		) +
+		", " +
+		_value +
+		")\n";
 }
 
 string IRStorageItem::setToZero() const
 {
-	solUnimplemented("Delete for storage location not yet implemented");
+	solUnimplementedAssert(m_type->isValueType(), "");
+	return storeValue(m_context.utils().zeroValueFunction(*m_type) + "()", *m_type);
+}
+
+IRStorageArrayLength::IRStorageArrayLength(IRGenerationContext& _context, string _slot, Type const& _type, ArrayType const& _arrayType):
+	IRLValue(_context, &_type), m_arrayType(_arrayType), m_slot(move(_slot))
+{
+	solAssert(*m_type == *TypeProvider::uint256(), "Must be uint256!");
+}
+
+string IRStorageArrayLength::retrieveValue() const
+{
+	return m_context.utils().arrayLengthFunction(m_arrayType) + "(" + m_slot + ")\n";
+}
+
+string IRStorageArrayLength::storeValue(std::string const& _value, Type const& _type) const
+{
+	solAssert(_type == *m_type, "Different type, but might not be an error.");
+
+	return m_context.utils().resizeDynamicArrayFunction(m_arrayType) +
+		"(" +
+		m_slot +
+		", " +
+		_value +
+		")\n";
+}
+
+string IRStorageArrayLength::setToZero() const
+{
+	return storeValue("0", *TypeProvider::uint256());
 }

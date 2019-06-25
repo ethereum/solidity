@@ -104,6 +104,10 @@ public:
 	/// Stack post (storage): [reference] storage_slot byte_offset
 	/// Stack post: [reference] memory/calldata_offset
 	void accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck = true, bool _keepReference = false) const;
+	/// Access calldata array's element and put it on stack.
+	/// Stack pre: reference [length] index
+	/// Stack post: value
+	void accessCallDataArrayElement(ArrayType const& _arrayType, bool _doBoundsCheck = true) const;
 
 private:
 	/// Adds the given number of bytes to a storage byte offset counter and also increments

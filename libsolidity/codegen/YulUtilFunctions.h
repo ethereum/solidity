@@ -74,31 +74,64 @@ public:
 	std::string leftAlignFunction(Type const& _type);
 
 	std::string shiftLeftFunction(size_t _numBits);
+	std::string shiftLeftFunctionDynamic();
 	std::string shiftRightFunction(size_t _numBits);
+	std::string shiftRightFunctionDynamic();
 
-	/// @returns the name of a function f(value, toInsert) -> newValue which replaces the
+	/// @returns the name of a function which replaces the
 	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
 	/// byte) by the _numBytes least significant bytes of `toInsert`.
+	/// signature: (value, toInsert) -> result
 	std::string updateByteSliceFunction(size_t _numBytes, size_t _shiftBytes);
+
+	/// signature: (value, shiftBytes, toInsert) -> result
+	std::string updateByteSliceFunctionDynamic(size_t _numBytes);
 
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
+	/// signature: (value) -> result
 	std::string roundUpFunction();
 
-	std::string overflowCheckedUIntAddFunction(size_t _bits);
+	/// signature: (x, y) -> sum
+	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
 
-	std::string overflowCheckedUIntMulFunction(size_t _bits);
+	/// signature: (x, y) -> product
+	std::string overflowCheckedIntMulFunction(IntegerType const& _type);
 
 	/// @returns name of function to perform division on integers.
 	/// Checks for division by zero and the special case of
 	/// signed division of the smallest number by -1.
 	std::string overflowCheckedIntDivFunction(IntegerType const& _type);
 
+	/// @returns name of function to perform modulo on integers.
+	/// Reverts for modulo by zero.
+	std::string checkedIntModFunction(IntegerType const& _type);
+
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
-	std::string overflowCheckedUIntSubFunction();
+	/// signature: (x, y) -> diff
+	std::string overflowCheckedIntSubFunction(IntegerType const& _type);
 
+	/// @returns the name of a function that fetches the length of the given
+	/// array
+	/// signature: (array) -> length
 	std::string arrayLengthFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that resizes a storage array
+	/// signature: (array, newLen)
+	std::string resizeDynamicArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that will clear the storage area given
+	/// by the start and end (exclusive) parameters (slots). Only works for value types.
+	/// signature: (start, end)
+	std::string clearStorageRangeFunction(Type const& _type);
+
+	/// Returns the name of a function that will convert a given length to the
+	/// size in memory (number of storage slots or calldata/memory bytes) it
+	/// will require.
+	/// signature: (length) -> size
+	std::string arrayConvertLengthToSize(ArrayType const& _type);
+
 	/// @returns the name of a function that computes the number of bytes required
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
 	/// The function reverts for too large lengths.
@@ -107,8 +140,14 @@ public:
 	/// a memory pointer or a calldata pointer to the slot number / memory pointer / calldata pointer
 	/// for the data position of an array which is stored in that slot / memory area / calldata area.
 	std::string arrayDataAreaFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that returns the slot and offset for the
+	/// given array and index
+	/// signature: (array, index) -> slot, offset
+	std::string storageArrayIndexAccessFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that advances an array data pointer to the next element.
-	/// Only works for memory arrays, calldata arrays and storage arrays that store one item per slot.
+	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies one or multiple full slots.
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that performs index access for mappings.
@@ -121,6 +160,7 @@ public:
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+	std::string readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes);
 
 	/// @returns a function that extracts a value type from storage slot that has been
 	/// retrieved already.
@@ -128,6 +168,13 @@ public:
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+	std::string extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes);
+
+	/// Returns the name of a function will write the given value to
+	/// the specified slot and offset. If offset is not given, it is expected as
+	/// runtime parameter.
+	/// signature: (slot, [offset,] value)
+	std::string updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const _offset = boost::optional<unsigned>());
 
 	/// Performs cleanup after reading from a potentially compressed storage slot.
 	/// The function does not perform any validation, it just masks or sign-extends

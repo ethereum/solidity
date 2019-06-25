@@ -11,7 +11,7 @@ Layout of State Variables in Storage
 Statically-sized variables (everything except mapping and dynamically-sized array types) are laid out contiguously in storage starting from position ``0``. Multiple, contiguous items that need less than 32 bytes are packed into a single storage slot if possible, according to the following rules:
 
 - The first item in a storage slot is stored lower-order aligned.
-- Elementary types use only that many bytes that are necessary to store them.
+- Elementary types use only as many bytes as are necessary to store them.
 - If an elementary type does not fit the remaining part of a storage slot, it is moved to the next storage slot.
 - Structs and array data always start a new slot and occupy whole slots (but items inside a struct or array are packed tightly according to these rules).
 
@@ -64,10 +64,11 @@ So for the following contract snippet::
 
     pragma solidity >=0.4.0 <0.7.0;
 
+
     contract C {
-      struct s { uint a; uint b; }
-      uint x;
-      mapping(uint => mapping(uint => s)) data;
+        struct S { uint a; uint b; }
+        uint x;
+        mapping(uint => mapping(uint => S)) data;
     }
 
 The position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
@@ -268,7 +269,7 @@ Tips and Tricks
 
 * Use ``delete`` on arrays to delete all its elements.
 * Use shorter types for struct elements and sort them such that short types are grouped together. This can lower the gas costs as multiple ``SSTORE`` operations might be combined into a single (``SSTORE`` costs 5000 or 20000 gas, so this is what you want to optimise). Use the gas price estimator (with optimiser enabled) to check!
-* Make your state variables public - the compiler will create :ref:`getters <visibility-and-getters>` for you automatically.
+* Make your state variables public - the compiler creates :ref:`getters <visibility-and-getters>` for you automatically.
 * If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
 * Initialize storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
 

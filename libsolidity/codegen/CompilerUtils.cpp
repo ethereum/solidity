@@ -816,7 +816,12 @@ void CompilerUtils::convertType(
 		}
 		else
 		{
-			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract || targetTypeCategory == Type::Category::Address, "");
+			solAssert(
+				targetTypeCategory == Type::Category::Integer ||
+				targetTypeCategory == Type::Category::Contract ||
+				targetTypeCategory == Type::Category::Address,
+				""
+			);
 			IntegerType addressType(160);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
 				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
@@ -841,9 +846,9 @@ void CompilerUtils::convertType(
 					cleanHigherOrderBits(targetType);
 				if (chopSignBitsPending)
 				{
-					if (typeOnStack.numBits() < 256)
+					if (targetType.numBits() < 256)
 						m_context
-							<< ((u256(1) << typeOnStack.numBits()) - 1)
+							<< ((u256(1) << targetType.numBits()) - 1)
 							<< Instruction::AND;
 					chopSignBitsPending = false;
 				}
@@ -923,7 +928,6 @@ void CompilerUtils::convertType(
 				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos>
 				if (targetType.baseType()->isValueType())
 				{
-					solAssert(typeOnStack.baseType()->isValueType(), "");
 					copyToStackTop(2 + stackSize, stackSize);
 					ArrayUtils(m_context).copyArrayToMemory(typeOnStack);
 				}
@@ -957,10 +961,11 @@ void CompilerUtils::convertType(
 		}
 		case DataLocation::CallData:
 			solAssert(
-					targetType.isByteArray() &&
-					typeOnStack.isByteArray() &&
-					typeOnStack.location() == DataLocation::CallData,
-				"Invalid conversion to calldata type.");
+				targetType.isByteArray() &&
+				typeOnStack.isByteArray() &&
+				typeOnStack.location() == DataLocation::CallData,
+				"Invalid conversion to calldata type."
+			);
 			break;
 		}
 		break;

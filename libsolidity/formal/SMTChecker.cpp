@@ -34,10 +34,10 @@ using namespace langutil;
 using namespace dev::solidity;
 
 SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
-	m_interface(make_unique<smt::SMTPortfolio>(_smtlib2Responses)),
+	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
 	m_errorReporterReference(_errorReporter),
 	m_errorReporter(m_smtErrors),
-	m_context(*m_interface)
+	m_context(m_interface)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (!_smtlib2Responses.empty())
@@ -52,9 +52,12 @@ SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _
 
 void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
 {
+	if (!_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
+		return;
+
 	m_scanner = _scanner;
-	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
-		_source.accept(*this);
+
+	_source.accept(*this);
 
 	solAssert(m_interface->solvers() > 0, "");
 	// If this check is true, Z3 and CVC4 are not available

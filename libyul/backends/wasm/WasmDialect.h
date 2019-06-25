@@ -45,6 +45,10 @@ struct WasmDialect: public Dialect
 	WasmDialect();
 
 	BuiltinFunction const* builtin(YulString _name) const override;
+	BuiltinFunction const* discardFunction() const override { return builtin("drop"_yulstring); }
+	BuiltinFunction const* equalityFunction() const override { return builtin("i64.eq"_yulstring); }
+
+	std::set<YulString> fixedFunctionNames() const override { return {"main"_yulstring}; }
 
 	static WasmDialect const& instance();
 

@@ -52,6 +52,8 @@ interpret a function parameter in days, you can in the following way::
         }
     }
 
+.. _special-variables-functions:
+
 Special Variables and Functions
 ===============================
 

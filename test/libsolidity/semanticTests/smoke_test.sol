@@ -33,6 +33,9 @@ contract C {
     function p() public returns (string memory, uint, string memory) {
         return ("any", 42, "any");
     }
+    function q(uint a) public returns (uint d) {
+        return a * 7;
+    }
 }
 // ----
 // constructor(): 3 ->
@@ -51,3 +54,5 @@ contract C {
 // n() -> 0x20, 3, "any"
 // o() -> 0x40, 0x80, 3, "any", 3, "any"
 // p() -> 0x60, 0x2a, 0xa0, 3, "any", 3, "any"
+// q(uint256): 0 -> 0
+// q(uint256): 99 -> 693

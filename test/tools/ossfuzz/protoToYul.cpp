@@ -55,36 +55,30 @@ string ProtoConverter::createAlphaNum(string const& _strBytes) const
 
 bool ProtoConverter::isCaseLiteralUnique(Literal const& _x)
 {
-	std::string tmp;
+	dev::u256 mpCaseLiteralValue;
 	bool isUnique = false;
-	bool isEmptyString = false;
+
 	switch (_x.literal_oneof_case())
 	{
 	case Literal::kIntval:
-		tmp = std::to_string(_x.intval());
+		mpCaseLiteralValue = dev::u256(_x.intval());
 		break;
 	case Literal::kHexval:
-		tmp = "0x" + createHex(_x.hexval());
+		// We need to ask boost mp library to treat this
+		// as a hex value. Hence the "0x" prefix.
+		mpCaseLiteralValue = dev::u256("0x" + createHex(_x.hexval()));
 		break;
 	case Literal::kStrval:
-		tmp = createAlphaNum(_x.strval());
-		if (tmp.empty())
-		{
-			isEmptyString = true;
-			tmp = std::to_string(0);
-		}
-		else
-			tmp = "\"" + tmp + "\"";
+		mpCaseLiteralValue = dev::u256(dev::h256(createAlphaNum(_x.strval()), dev::h256::FromBinary, dev::h256::AlignLeft));
 		break;
 	case Literal::LITERAL_ONEOF_NOT_SET:
-		tmp = std::to_string(1);
+		// If the proto generator does not generate a valid Literal
+		// we generate a case 1:
+		mpCaseLiteralValue = 1;
 		break;
 	}
-	if (!_x.has_strval() || isEmptyString)
-		isUnique = m_switchLiteralSetPerScope.top().insert(dev::u256(tmp)).second;
-	else
-		isUnique = m_switchLiteralSetPerScope.top().insert(
-				dev::u256(dev::h256(tmp, dev::h256::FromBinary, dev::h256::AlignLeft))).second;
+
+	isUnique = m_switchLiteralSetPerScope.top().insert(mpCaseLiteralValue).second;
 	return isUnique;
 }
 
@@ -622,7 +616,9 @@ void ProtoConverter::visit(FunctionCall const& _x)
 		visit(_x.call_zero());
 		break;
 	case FunctionCall::kCallMultidecl:
-		visit(_x.call_multidecl());
+		// Hack: Disallow (multi) variable declarations until scope extension is implemented for "for-init"
+		if (!m_inForInitScope)
+			visit(_x.call_multidecl());
 		break;
 	case FunctionCall::kCallMultiassign:
 		visit(_x.call_multiassign());
@@ -662,16 +658,37 @@ void ProtoConverter::visit(StoreFunc const& _x)
 
 void ProtoConverter::visit(ForStmt const& _x)
 {
+	bool wasInForBody = m_inForBodyScope;
+	bool wasInForInit = m_inForInitScope;
+	m_inForBodyScope = false;
+	m_inForInitScope = true;
+	m_output << "for ";
+	visit(_x.for_init());
+	m_inForInitScope = false;
+	visit(_x.for_cond());
+	visit(_x.for_post());
+	m_inForBodyScope = true;
+	visit(_x.for_body());
+	m_inForBodyScope = wasInForBody;
+	m_inForInitScope = wasInForInit;
+}
+
+void ProtoConverter::visit(BoundedForStmt const& _x)
+{
 	// Boilerplate for loop that limits the number of iterations to a maximum of 4.
-	// TODO: Generalize for loop init, condition, and post blocks.
 	std::string loopVarName("i_" + std::to_string(m_numNestedForLoops++));
 	m_output << "for { let " << loopVarName << " := 0 } "
-		<< "lt(" << loopVarName << ", 0x60) "
-		<< "{ " << loopVarName << " := add(" << loopVarName << ", 0x20) } ";
-	m_inForScope.push(true);
+	       << "lt(" << loopVarName << ", 0x60) "
+	       << "{ " << loopVarName << " := add(" << loopVarName << ", 0x20) } ";
+	// Store previous for body scope
+	bool wasInForBody = m_inForBodyScope;
+	bool wasInForInit = m_inForInitScope;
+	m_inForBodyScope = true;
+	m_inForInitScope = false;
 	visit(_x.for_body());
-	m_inForScope.pop();
-	--m_numNestedForLoops;
+	// Restore previous for body scope and init
+	m_inForBodyScope = wasInForBody;
+	m_inForInitScope = wasInForInit;
 }
 
 void ProtoConverter::visit(CaseStmt const& _x)
@@ -771,7 +788,9 @@ void ProtoConverter::visit(Statement const& _x)
 	switch (_x.stmt_oneof_case())
 	{
 	case Statement::kDecl:
-		visit(_x.decl());
+		// Hack: Disallow (multi) variable declarations until scope extension is implemented for "for-init"
+		if (!m_inForInitScope)
+			visit(_x.decl());
 		break;
 	case Statement::kAssignment:
 		visit(_x.assignment());
@@ -788,15 +807,18 @@ void ProtoConverter::visit(Statement const& _x)
 	case Statement::kForstmt:
 		visit(_x.forstmt());
 		break;
+	case Statement::kBoundedforstmt:
+		visit(_x.boundedforstmt());
+		break;
 	case Statement::kSwitchstmt:
 		visit(_x.switchstmt());
 		break;
 	case Statement::kBreakstmt:
-		if (m_inForScope.top())
+		if (m_inForBodyScope)
 			m_output << "break\n";
 		break;
 	case Statement::kContstmt:
-		if (m_inForScope.top())
+		if (m_inForBodyScope)
 			m_output << "continue\n";
 		break;
 	case Statement::kLogFunc:

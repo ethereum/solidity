@@ -89,7 +89,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		{{Instruction::BYTE, {A, B}}, [=]{ return A.d() >= 32 ? 0 : (B.d() >> unsigned(8 * (31 - A.d()))) & 0xff; }, false},
 		{{Instruction::ADDMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) + bigint(B.d())) % C.d()); }, false},
 		{{Instruction::MULMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) * bigint(B.d())) % C.d()); }, false},
-		{{Instruction::MULMOD, {A, B, C}}, [=]{ return A.d() * B.d(); }, false},
 		{{Instruction::SIGNEXTEND, {A, B}}, [=]() -> u256 {
 			if (A.d() >= 31)
 				return B.d();
@@ -124,6 +123,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{{Instruction::ADD, {X, 0}}, [=]{ return X; }, false},
 		{{Instruction::ADD, {0, X}}, [=]{ return X; }, false},
 		{{Instruction::SUB, {X, 0}}, [=]{ return X; }, false},
+		{{Instruction::SUB, {~u256(0), X}}, [=]() -> Pattern { return {Instruction::NOT, {X}}; }, false},
 		{{Instruction::MUL, {X, 0}}, [=]{ return u256(0); }, true},
 		{{Instruction::MUL, {0, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::MUL, {X, 1}}, [=]{ return X; }, false},

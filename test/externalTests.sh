@@ -37,6 +37,7 @@ fi
 SOLJSON="$1"
 REPO_ROOT="$(dirname "$0")"
 
+source scripts/common.sh
 source test/externalTests/common.sh
 
 printTask "Running external tests..."

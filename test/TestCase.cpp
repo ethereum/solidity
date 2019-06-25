@@ -95,6 +95,20 @@ string TestCase::parseSourceAndSettings(istream& _stream)
 	return source;
 }
 
+string TestCase::parseSimpleExpectations(std::istream& _file)
+{
+	string result;
+	string line;
+	while (getline(_file, line))
+		if (boost::algorithm::starts_with(line, "// "))
+			result += line.substr(3) + "\n";
+		else if (line == "//")
+			result += "\n";
+		else
+			BOOST_THROW_EXCEPTION(runtime_error("Test expectations must start with \"// \"."));
+	return result;
+}
+
 void TestCase::expect(string::iterator& _it, string::iterator _end, string::value_type _c)
 {
 	if (_it == _end || *_it != _c)

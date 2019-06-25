@@ -26,6 +26,8 @@
 namespace yul
 {
 
+std::string reindent(std::string const& _code);
+
 dev::u256 valueOfNumberLiteral(Literal const& _literal);
 dev::u256 valueOfStringLiteral(Literal const& _literal);
 dev::u256 valueOfBoolLiteral(Literal const& _literal);

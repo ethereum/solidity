@@ -112,6 +112,7 @@ static string const g_strBinaryRuntime = "bin-runtime";
 static string const g_strCombinedJson = "combined-json";
 static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
+static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
@@ -163,6 +164,7 @@ static string const g_argBinary = g_strBinary;
 static string const g_argBinaryRuntime = g_strBinaryRuntime;
 static string const g_argCombinedJson = g_strCombinedJson;
 static string const g_argCompactJSON = g_strCompactJSON;
+static string const g_argErrorRecovery = g_strErrorRecovery;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
@@ -689,6 +691,7 @@ Allowed options)",
 		(g_argColor.c_str(), "Force colored output.")
 		(g_argNoColor.c_str(), "Explicitly disable colored output, disabling terminal auto-detection.")
 		(g_argNewReporter.c_str(), "Enables new diagnostics reporter.")
+		(g_argErrorRecovery.c_str(), "Enables additional parser error recovery.")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
@@ -923,6 +926,8 @@ bool CommandLineInterface::processInput()
 		m_compiler->setSources(m_sourceCodes);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+		if (m_args.count(g_argErrorRecovery))
+			m_compiler->setParserErrorRecovery(true);
 		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 
@@ -982,6 +987,13 @@ bool CommandLineInterface::processInput()
 	catch (Exception const& _exception)
 	{
 		serr() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
+		return false;
+	}
+	catch (std::exception const& _e)
+	{
+		serr() << "Unknown exception during compilation" << (
+			_e.what() ? ": " + string(_e.what()) : "."
+		) << endl;
 		return false;
 	}
 	catch (...)
@@ -1090,8 +1102,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
-		for (auto const& contract : m_compiler->contractNames())
-		{
+		for (auto const& contract: m_compiler->contractNames())
 			if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
 			{
 				auto ret = GasEstimator::breakToStatementLevel(
@@ -1101,8 +1112,6 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				for (auto const& it: ret)
 					gasCosts[it.first] += it.second;
 			}
-
-		}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))
@@ -1274,6 +1283,14 @@ bool CommandLineInterface::assemble(
 			serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
 			return false;
 		}
+		catch (std::exception const& _e)
+		{
+			serr() <<
+				"Unknown exception during compilation" <<
+				(_e.what() ? ": " + string(_e.what()) : ".") <<
+				endl;
+			return false;
+		}
 		catch (...)
 		{
 			serr() << "Unknown exception in assembler." << endl;
@@ -1322,6 +1339,13 @@ bool CommandLineInterface::assemble(
 		catch (Exception const& _exception)
 		{
 			serr() << "Exception while assembling: " << boost::diagnostic_information(_exception) << endl;
+			return false;
+		}
+		catch (std::exception const& _e)
+		{
+			serr() << "Unknown exception during compilation" << (
+				_e.what() ? ": " + string(_e.what()) : "."
+			) << endl;
 			return false;
 		}
 		catch (...)

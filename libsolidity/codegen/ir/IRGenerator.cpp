@@ -30,6 +30,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 
 #include <libyul/AssemblyStack.h>
+#include <libyul/Utilities.h>
 
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Whiskers.h>
@@ -45,8 +46,7 @@ using namespace dev::solidity;
 
 pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 {
-	// TODO Would be nice to pretty-print this while retaining comments.
-	string ir = generate(_contract);
+	string const ir = yul::reindent(generate(_contract));
 
 	yul::AssemblyStack asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
 	if (!asmStack.parseAndAnalyze("", ir))
@@ -54,7 +54,7 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 		string errorMessage;
 		for (auto const& error: asmStack.errors())
 			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(*error);
-		solAssert(false, "Invalid IR generated:\n" + errorMessage + "\n" + ir);
+		solAssert(false, ir + "\n\nInvalid IR generated:\n" + errorMessage + "\n");
 	}
 	asmStack.optimize();
 

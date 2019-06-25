@@ -301,7 +301,7 @@ boost::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 boost::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
+	static set<string> keys{"parserErrorRecovery", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
 	return checkKeys(_input, keys, "settings");
 }
 
@@ -576,6 +576,13 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 	if (auto result = checkSettingsKeys(settings))
 		return *result;
 
+	if (settings.isMember("parserErrorRecovery"))
+	{
+		if (!settings["parserErrorRecovery"].isBool())
+			return formatFatalError("JSONError", "\"settings.parserErrorRecovery\" must be a Boolean.");
+		ret.parserErrorRecovery = settings["parserErrorRecovery"].asBool();
+	}
+
 	if (settings.isMember("evmVersion"))
 	{
 		if (!settings["evmVersion"].isString())
@@ -675,6 +682,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
 		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
 	compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);
+	compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
 	compilerStack.setRemappings(_inputsAndSettings.remappings);
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
 	compilerStack.setLibraries(_inputsAndSettings.libraries);
@@ -767,6 +775,15 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			"Exception",
 			"general",
 			"Exception during compilation: " + boost::diagnostic_information(_exception)
+		));
+	}
+	catch (std::exception const& _e)
+	{
+		errors.append(formatError(
+			false,
+			"Exception",
+			"general",
+			"Unknown exception during compilation" + (_e.what() ? ": " + string(_e.what()) : ".")
 		));
 	}
 	catch (...)

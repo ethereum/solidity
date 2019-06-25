@@ -28,6 +28,8 @@ add_library(yul
 	backends/evm/AbstractAssembly.h
 	backends/evm/AsmCodeGen.h
 	backends/evm/AsmCodeGen.cpp
+	backends/evm/ConstantOptimiser.cpp
+	backends/evm/ConstantOptimiser.h
 	backends/evm/EVMAssembly.cpp
 	backends/evm/EVMAssembly.h
 	backends/evm/EVMCodeTransform.cpp
@@ -36,6 +38,8 @@ add_library(yul
 	backends/evm/EVMDialect.h
 	backends/evm/EVMObjectCompiler.cpp
 	backends/evm/EVMObjectCompiler.h
+	backends/evm/EVMMetrics.cpp
+	backends/evm/EVMMetrics.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
 	backends/wasm/EWasmCodeTransform.cpp
@@ -58,8 +62,6 @@ add_library(yul
 	optimiser/BlockHasher.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
-	optimiser/ConstantOptimiser.cpp
-	optimiser/ConstantOptimiser.h
 	optimiser/ControlFlowSimplifier.cpp
 	optimiser/ControlFlowSimplifier.h
 	optimiser/DataFlowAnalyzer.cpp
@@ -92,6 +94,10 @@ add_library(yul
 	optimiser/FunctionHoister.h
 	optimiser/InlinableExpressionFunctionFinder.cpp
 	optimiser/InlinableExpressionFunctionFinder.h
+	optimiser/KnowledgeBase.cpp
+	optimiser/KnowledgeBase.h
+	optimiser/LoadResolver.cpp
+	optimiser/LoadResolver.h
 	optimiser/MainFunction.cpp
 	optimiser/MainFunction.h
 	optimiser/Metrics.cpp
@@ -100,6 +106,8 @@ add_library(yul
 	optimiser/NameCollector.h
 	optimiser/NameDispenser.cpp
 	optimiser/NameDispenser.h
+	optimiser/NameDisplacer.cpp
+	optimiser/NameDisplacer.h
 	optimiser/OptimizerUtilities.cpp
 	optimiser/OptimizerUtilities.h
 	optimiser/RedundantAssignEliminator.cpp

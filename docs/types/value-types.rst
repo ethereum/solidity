@@ -26,6 +26,7 @@ Operators:
 The operators ``||`` and ``&&`` apply the common short-circuiting rules. This means that in the expression ``f(x) || g(y)``, if ``f(x)`` evaluates to ``true``, ``g(y)`` will not be evaluated even if it may have side-effects.
 
 .. index:: ! uint, ! int, ! integer
+.. _integers:
 
 Integers
 --------
@@ -332,7 +333,7 @@ type and this type is also used in the :ref:`ABI<ABI>`.
 Contracts do not support any operators.
 
 The members of contract types are the external functions of the contract
-including public state variables.
+including any state variables marked as ``public``.
 
 For a contract ``C`` you can use ``type(C)`` to access
 :ref:`type information<meta-type>` about the contract.
@@ -427,6 +428,9 @@ long as the operands are integers. If any of the two is fractional, bit operatio
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
 
+.. warning::
+    Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
+
 .. note::
     Solidity has a number literal type for each rational number.
     Integer literals and rational number literals belong to number literal types.
@@ -435,8 +439,6 @@ a non-rational number).
     types.  So the number literal expressions ``1 + 2`` and ``2 + 1`` both
     belong to the same number literal type for the rational number three.
 
-.. warning::
-    Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
     Number literal expressions are converted into a non-literal type as soon as they are used with non-literal
@@ -510,7 +512,7 @@ Enums
 Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
 to and from all integer types but implicit conversion is not allowed.  The explicit conversion
 from integer checks at runtime that the value lies inside the range of the enum and causes a failing assert otherwise.
-Enums needs at least one member.
+Enums require at least one member, and its default value when declared is the first member.
 
 The data representation is the same as for enums in C: The options are represented by
 subsequent unsigned integer values starting from ``0``.
@@ -624,100 +626,116 @@ Example that shows how to use the members::
 
     pragma solidity >=0.4.16 <0.7.0;
 
+
     contract Example {
-      function f() public payable returns (bytes4) {
-        return this.f.selector;
-      }
-      function g() public {
-        this.f.gas(10).value(800)();
-      }
+        function f() public payable returns (bytes4) {
+            return this.f.selector;
+        }
+
+        function g() public {
+            this.f.gas(10).value(800)();
+        }
     }
 
 Example that shows how to use internal function types::
 
     pragma solidity >=0.4.16 <0.7.0;
 
+
     library ArrayUtils {
-      // internal functions can be used in internal library functions because
-      // they will be part of the same code context
-      function map(uint[] memory self, function (uint) pure returns (uint) f)
-        internal
-        pure
-        returns (uint[] memory r)
-      {
-        r = new uint[](self.length);
-        for (uint i = 0; i < self.length; i++) {
-          r[i] = f(self[i]);
+        // internal functions can be used in internal library functions because
+        // they will be part of the same code context
+        function map(uint[] memory self, function (uint) pure returns (uint) f)
+            internal
+            pure
+            returns (uint[] memory r)
+        {
+            r = new uint[](self.length);
+            for (uint i = 0; i < self.length; i++) {
+                r[i] = f(self[i]);
+            }
         }
-      }
-      function reduce(
-        uint[] memory self,
-        function (uint, uint) pure returns (uint) f
-      )
-        internal
-        pure
-        returns (uint r)
-      {
-        r = self[0];
-        for (uint i = 1; i < self.length; i++) {
-          r = f(r, self[i]);
+
+        function reduce(
+            uint[] memory self,
+            function (uint, uint) pure returns (uint) f
+        )
+            internal
+            pure
+            returns (uint r)
+        {
+            r = self[0];
+            for (uint i = 1; i < self.length; i++) {
+                r = f(r, self[i]);
+            }
         }
-      }
-      function range(uint length) internal pure returns (uint[] memory r) {
-        r = new uint[](length);
-        for (uint i = 0; i < r.length; i++) {
-          r[i] = i;
+
+        function range(uint length) internal pure returns (uint[] memory r) {
+            r = new uint[](length);
+            for (uint i = 0; i < r.length; i++) {
+                r[i] = i;
+            }
         }
-      }
     }
 
+
     contract Pyramid {
-      using ArrayUtils for *;
-      function pyramid(uint l) public pure returns (uint) {
-        return ArrayUtils.range(l).map(square).reduce(sum);
-      }
-      function square(uint x) internal pure returns (uint) {
-        return x * x;
-      }
-      function sum(uint x, uint y) internal pure returns (uint) {
-        return x + y;
-      }
+        using ArrayUtils for *;
+
+        function pyramid(uint l) public pure returns (uint) {
+            return ArrayUtils.range(l).map(square).reduce(sum);
+        }
+
+        function square(uint x) internal pure returns (uint) {
+            return x * x;
+        }
+
+        function sum(uint x, uint y) internal pure returns (uint) {
+            return x + y;
+        }
     }
 
 Another example that uses external function types::
 
     pragma solidity >=0.4.22 <0.7.0;
 
+
     contract Oracle {
-      struct Request {
-        bytes data;
-        function(uint) external callback;
-      }
-      Request[] requests;
-      event NewRequest(uint);
-      function query(bytes memory data, function(uint) external callback) public {
-        requests.push(Request(data, callback));
-        emit NewRequest(requests.length - 1);
-      }
-      function reply(uint requestID, uint response) public {
-        // Here goes the check that the reply comes from a trusted source
-        requests[requestID].callback(response);
-      }
+        struct Request {
+            bytes data;
+            function(uint) external callback;
+        }
+
+        Request[] private requests;
+        event NewRequest(uint);
+
+        function query(bytes memory data, function(uint) external callback) public {
+            requests.push(Request(data, callback));
+            emit NewRequest(requests.length - 1);
+        }
+
+        function reply(uint requestID, uint response) public {
+            // Here goes the check that the reply comes from a trusted source
+            requests[requestID].callback(response);
+        }
     }
 
+
     contract OracleUser {
-      Oracle constant oracle = Oracle(0x1234567); // known contract
-      uint exchangeRate;
-      function buySomething() public {
-        oracle.query("USD", this.oracleResponse);
-      }
-      function oracleResponse(uint response) public {
-        require(
-            msg.sender == address(oracle),
-            "Only oracle can call this."
-        );
-        exchangeRate = response;
-      }
+        Oracle constant private ORACLE_CONST = Oracle(0x1234567); // known contract
+        uint private exchangeRate;
+
+        function buySomething() public {
+            ORACLE_CONST.query("USD", this.oracleResponse);
+        }
+
+        function oracleResponse(uint response) public {
+            require(
+                msg.sender == address(ORACLE_CONST),
+                "Only oracle can call this."
+            );
+            exchangeRate = response;
+        }
     }
 
 .. note::

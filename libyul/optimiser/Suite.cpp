@@ -24,7 +24,6 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
-#include <libyul/optimiser/ConstantOptimiser.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -45,6 +44,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Metrics.h>
+#include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
@@ -60,7 +60,7 @@ using namespace yul;
 
 void OptimiserSuite::run(
 	Dialect const& _dialect,
-	GasMeter const& _meter,
+	GasMeter const* _meter,
 	Block& _ast,
 	AsmAnalysisInfo const& _analysisInfo,
 	bool _optimizeStackAllocation,
@@ -68,6 +68,7 @@ void OptimiserSuite::run(
 )
 {
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
+	reservedIdentifiers += _dialect.fixedFunctionNames();
 
 	Block ast = boost::get<Block>(Disambiguator(_dialect, _analysisInfo, reservedIdentifiers)(_ast));
 
@@ -87,7 +88,7 @@ void OptimiserSuite::run(
 
 	// None of the above can make stack problems worse.
 
-	NameDispenser dispenser{_dialect, ast};
+	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
 
 	size_t codeSize = 0;
 	for (size_t rounds = 0; rounds < 12; ++rounds)
@@ -209,7 +210,11 @@ void OptimiserSuite::run(
 
 	FunctionGrouper{}(ast);
 
-	ConstantOptimiser{dynamic_cast<EVMDialect const&>(_dialect), _meter}(ast);
+	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
+	{
+		yulAssert(_meter, "");
+		ConstantOptimiser{*dialect, *_meter}(ast);
+	}
 	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);
 	yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, ast);
 

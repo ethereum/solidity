@@ -42,9 +42,10 @@ public:
 	{
 		m_numLiveVars = 0;
 		m_numVarsPerScope.push(m_numLiveVars);
-		m_numNestedForLoops = 0;
-		m_inForScope.push(false);
 		m_numFunctionSets = 0;
+		m_inForBodyScope = false;
+		m_inForInitScope = false;
+		m_numNestedForLoops = 0;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -69,6 +70,7 @@ private:
 	void visit(Statement const&);
 	void visit(FunctionDefinition const&);
 	void visit(ForStmt const&);
+	void visit(BoundedForStmt const&);
 	void visit(CaseStmt const&);
 	void visit(SwitchStmt const&);
 	void visit(TernaryOp const&);
@@ -131,9 +133,6 @@ private:
 	std::stack<unsigned> m_numVarsPerScope;
 	// Number of live variables in function scope
 	unsigned m_numLiveVars;
-	// Number of nested for loops for loop index referencing
-	unsigned m_numNestedForLoops;
-	std::stack<bool> m_inForScope;
 	// Set that is used for deduplicating switch case literals
 	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
 	// Total number of function sets. A function set contains one function of each type defined by
@@ -146,6 +145,12 @@ private:
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
 	static unsigned constexpr modInputParams = 5;
 	static unsigned constexpr modOutputParams = 5;
+	// predicate to keep track of for body scope
+	bool m_inForBodyScope;
+	// Index used for naming loop variable of bounded for loops
+	unsigned m_numNestedForLoops;
+	// predicate to keep track of for loop init scope
+	bool m_inForInitScope;
 };
 }
 }

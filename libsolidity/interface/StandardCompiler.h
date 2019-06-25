@@ -60,6 +60,7 @@ private:
 	{
 		std::string language;
 		Json::Value errors;
+		bool parserErrorRecovery = false;
 		std::map<std::string, std::string> sources;
 		std::map<h256, std::string> smtLib2Responses;
 		langutil::EVMVersion evmVersion;

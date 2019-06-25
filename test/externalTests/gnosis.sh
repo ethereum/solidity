@@ -18,6 +18,7 @@
 #
 # (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
+source scripts/common.sh
 source test/externalTests/common.sh
 
 verify_input "$1"

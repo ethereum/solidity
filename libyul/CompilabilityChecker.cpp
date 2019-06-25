@@ -43,27 +43,31 @@ map<YulString, int> CompilabilityChecker::run(
 
 	solAssert(_dialect.flavour == AsmFlavour::Strict, "");
 
-	solAssert(dynamic_cast<EVMDialect const*>(&_dialect), "");
-	NoOutputEVMDialect noOutputDialect(dynamic_cast<EVMDialect const&>(_dialect));
-	BuiltinContext builtinContext;
-
-	yul::AsmAnalysisInfo analysisInfo =
-		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
-
-	NoOutputAssembly assembly;
-	CodeTransform transform(assembly, analysisInfo, _ast, noOutputDialect, builtinContext, _optimizeStackAllocation);
-	try
+	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
-		transform(_ast);
-	}
-	catch (StackTooDeepError const&)
-	{
-		solAssert(!transform.stackErrors().empty(), "Got stack too deep exception that was not stored.");
-	}
+		NoOutputEVMDialect noOutputDialect(*evmDialect);
+		BuiltinContext builtinContext;
 
-	std::map<YulString, int> functions;
-	for (StackTooDeepError const& error: transform.stackErrors())
-		functions[error.functionName] = max(error.depth, functions[error.functionName]);
+		yul::AsmAnalysisInfo analysisInfo =
+			yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
 
-	return functions;
+		NoOutputAssembly assembly;
+		CodeTransform transform(assembly, analysisInfo, _ast, noOutputDialect, builtinContext, _optimizeStackAllocation);
+		try
+		{
+			transform(_ast);
+		}
+		catch (StackTooDeepError const&)
+		{
+			solAssert(!transform.stackErrors().empty(), "Got stack too deep exception that was not stored.");
+		}
+
+		std::map<YulString, int> functions;
+		for (StackTooDeepError const& error: transform.stackErrors())
+			functions[error.functionName] = max(error.depth, functions[error.functionName]);
+
+		return functions;
+	}
+	else
+		return {};
 }

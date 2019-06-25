@@ -56,6 +56,35 @@ struct CopyTranslate: public yul::ASTCopier
 
 	using ASTCopier::operator();
 
+	yul::Expression operator()(yul::Identifier const& _identifier) override
+	{
+		if (m_references.count(&_identifier))
+		{
+			auto const& reference = m_references.at(&_identifier);
+			auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+			solUnimplementedAssert(varDecl, "");
+
+			if (reference.isOffset || reference.isSlot)
+			{
+				solAssert(reference.isOffset != reference.isSlot, "");
+
+				pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(*varDecl);
+
+				string const value = reference.isSlot ?
+					slot_offset.first.str() :
+					to_string(slot_offset.second);
+
+				return yul::Literal{
+					_identifier.location,
+					yul::LiteralKind::Number,
+					yul::YulString{value},
+					yul::YulString{"uint256"}
+				};
+			}
+		}
+		return ASTCopier::operator()(_identifier);
+	}
+
 	yul::YulString translateIdentifier(yul::YulString _name) override
 	{
 		// Strictly, the dialect used by inline assembly (m_dialect) could be different
@@ -76,9 +105,10 @@ struct CopyTranslate: public yul::ASTCopier
 		auto const& reference = m_references.at(&_identifier);
 		auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
 		solUnimplementedAssert(varDecl, "");
-		solUnimplementedAssert(
+
+		solAssert(
 			reference.isOffset == false && reference.isSlot == false,
-			""
+			"Should not be called for offset/slot"
 		);
 
 		return yul::Identifier{
@@ -550,13 +580,14 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		solAssert(arguments.size() > 0, "Expected at least one parameter for require/assert");
 		solAssert(arguments.size() <= 2, "Expected no more than two parameters for require/assert");
 
+		Type const* messageArgumentType = arguments.size() > 1 ? arguments[1]->annotation().type : nullptr;
 		string requireOrAssertFunction = m_utils.requireOrAssertFunction(
 			functionType->kind() == FunctionType::Kind::Assert,
-			arguments.size() > 1 ? arguments[1]->annotation().type : nullptr
+			messageArgumentType
 		);
 
 		m_code << move(requireOrAssertFunction) << "(" << m_context.variable(*arguments[0]);
-		if (arguments.size() > 1)
+		if (messageArgumentType && messageArgumentType->sizeOnStack() > 0)
 			m_code << ", " << m_context.variable(*arguments[1]);
 		m_code << ")\n";
 
@@ -702,7 +733,35 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	}
 	case Type::Category::Array:
 	{
-		solUnimplementedAssert(false, "");
+		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
+
+		solAssert(member == "length", "");
+
+		if (!type.isDynamicallySized())
+			defineExpression(_memberAccess) << type.length() << "\n";
+		else
+			switch (type.location())
+			{
+			case DataLocation::CallData:
+				solUnimplementedAssert(false, "");
+				//m_context << Instruction::SWAP1 << Instruction::POP;
+				break;
+			case DataLocation::Storage:
+				setLValue(_memberAccess, make_unique<IRStorageArrayLength>(
+					m_context,
+					m_context.variable(_memberAccess.expression()),
+					*_memberAccess.annotation().type,
+					type
+				));
+
+				break;
+			case DataLocation::Memory:
+				solUnimplementedAssert(false, "");
+				//m_context << Instruction::MLOAD;
+				break;
+			}
+
+		break;
 	}
 	case Type::Category::FixedBytes:
 	{
@@ -761,7 +820,45 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		));
 	}
 	else if (baseType.category() == Type::Category::Array)
-		solUnimplementedAssert(false, "");
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
+		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+		switch (arrayType.location())
+		{
+			case DataLocation::Storage:
+			{
+				string slot = m_context.newYulVariable();
+				string offset = m_context.newYulVariable();
+
+				m_code << Whiskers(R"(
+					let <slot>, <offset> := <indexFunc>(<array>, <index>)
+				)")
+				("slot", slot)
+				("offset", offset)
+				("indexFunc", m_utils.storageArrayIndexAccessFunction(arrayType))
+				("array", m_context.variable(_indexAccess.baseExpression()))
+				("index", m_context.variable(*_indexAccess.indexExpression()))
+				.render();
+
+				setLValue(_indexAccess, make_unique<IRStorageItem>(
+					m_context,
+					slot,
+					offset,
+					*_indexAccess.annotation().type
+				));
+
+				break;
+			}
+			case DataLocation::Memory:
+				solUnimplementedAssert(false, "");
+				break;
+			case DataLocation::CallData:
+				solUnimplementedAssert(false, "");
+				break;
+		}
+
+	}
 	else if (baseType.category() == Type::Category::FixedBytes)
 		solUnimplementedAssert(false, "");
 	else if (baseType.category() == Type::Category::TypeType)
@@ -1097,18 +1194,28 @@ string IRGeneratorForStatements::binaryOperation(
 	if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
 	{
 		string fun;
-		// TODO: Only division is implemented for signed integers for now.
-		if (!type->isSigned())
+		// TODO: Implement all operations for signed and unsigned types.
+		switch (_operator)
 		{
-			if (_operator == Token::Add)
-				fun = m_utils.overflowCheckedUIntAddFunction(type->numBits());
-			else if (_operator == Token::Sub)
-				fun = m_utils.overflowCheckedUIntSubFunction();
-			else if (_operator == Token::Mul)
-				fun = m_utils.overflowCheckedUIntMulFunction(type->numBits());
+			case Token::Add:
+				fun = m_utils.overflowCheckedIntAddFunction(*type);
+				break;
+			case Token::Sub:
+				fun = m_utils.overflowCheckedIntSubFunction(*type);
+				break;
+			case Token::Mul:
+				fun = m_utils.overflowCheckedIntMulFunction(*type);
+				break;
+			case Token::Div:
+				fun = m_utils.overflowCheckedIntDivFunction(*type);
+				break;
+			case Token::Mod:
+				fun = m_utils.checkedIntModFunction(*type);
+				break;
+			default:
+				break;
 		}
-		if (_operator == Token::Div)
-			fun = m_utils.overflowCheckedIntDivFunction(*type);
+
 		solUnimplementedAssert(!fun.empty(), "");
 		return fun + "(" + _left + ", " + _right + ")\n";
 	}

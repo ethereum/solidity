@@ -54,13 +54,7 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename)
 	file.exceptions(ios::badbit);
 
 	m_source = parseSourceAndSettings(file);
-
-	string line;
-	while (getline(file, line))
-		if (boost::algorithm::starts_with(line, "// "))
-			m_expectation += line.substr(3) + "\n";
-		else
-			m_expectation += line + "\n";
+	m_expectation = parseSimpleExpectations(file);
 }
 
 TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)

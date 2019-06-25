@@ -30,7 +30,15 @@ add_executable(soltest ${sources} ${headers}
     ${libsolidity_sources} ${libsolidity_headers}
     ${libsolidity_util_sources} ${libsolidity_util_headers}
 )
-target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm devcore ${Boost_PROGRAM_OPTIONS_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm devcore Boost::boost Boost::program_options Boost::unit_test_framework)
+
+# Special compilation flag for Visual Studio (version 2019 at least affected)
+# in order to compile SolidityEndToEndTest.cpp, which is quite huge.
+# We can remove this flag once we've extracted the tests.
+# TODO: Remove this option as soon as we have reduced the SLoC's in SolidityEndToEndTest.cpp
+if (MSVC)
+    target_compile_options(soltest PUBLIC "/bigobj")
+endif()
 
 if (LLL)
     target_link_libraries(soltest PRIVATE lll)
