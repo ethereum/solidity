@@ -386,7 +386,7 @@ Hexadecimal literals that pass the address checksum test, for example
 ``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address payable`` type.
 Hexadecimal literals that are between 39 and 41 digits
 long and do not pass the checksum test produce
-a warning and are treated as regular rational number literals.
+an error. You can prepend (for integer types) or append (for bytesNN types) zeros to remove the error.
 
 .. note::
     The mixed-case address checksum format is defined in `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_.
