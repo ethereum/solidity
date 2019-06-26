@@ -16,6 +16,4 @@ contract C
 // Warning: (244-257): Assertion violation happens here
 // Warning: (176-181): Underflow (resulting value less than 0) happens here
 // Warning: (176-181): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (172-181): Underflow (resulting value less than 0) happens here
-// Warning: (172-181): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning: (126-129): Overflow (resulting value larger than 2**256 - 1) happens here

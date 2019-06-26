@@ -140,9 +140,9 @@ private:
 	/// of rounding for signed division.
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
 
-	void assignment(VariableDeclaration const& _variable, Expression const& _value, langutil::SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.
-	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value, langutil::SourceLocation const& _location);
+	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value);
 	/// Handles assignments between generic expressions.
 	/// Will also be used for assignments of tuple components.
 	void assignment(
