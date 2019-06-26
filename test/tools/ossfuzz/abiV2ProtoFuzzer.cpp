@@ -142,7 +142,7 @@ DEFINE_PROTO_FUZZER(Contract const& _input)
 
 	// We target the default EVM which is the latest
 	langutil::EVMVersion version = {};
-	EVMHost hostContext(version, evmone);
+	EVMHost hostContext(version, &evmone);
 
 	// Deploy contract and signal failure if deploy failed
 	evmc::result createResult = deployContract(hostContext, byteCode);

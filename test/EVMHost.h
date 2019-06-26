@@ -38,7 +38,7 @@ using Address = h160;
 class EVMHost: public evmc::Host
 {
 public:
-	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::vm& _vmInstance);
+	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm = getVM());
 
 	struct Account
 	{
@@ -147,11 +147,6 @@ public:
 		size_t _topicsCount
 	) noexcept;
 
-	evmc_revision getRevision()
-	{
-		return m_evmVersion;
-	}
-
 	static Address convertFromEVMC(evmc_address const& _addr);
 	static evmc_address convertToEVMC(Address const& _addr);
 	static h256 convertFromEVMC(evmc_bytes32 const& _data);
@@ -165,7 +160,7 @@ public:
 private:
 	evmc::result precompileSha256(evmc_message const& _message) noexcept;
 
-	evmc::vm& m_vm;
+	evmc::vm* m_vm = nullptr;
 	evmc_revision m_evmVersion;
 };
 

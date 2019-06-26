@@ -95,19 +95,19 @@ void CommonOptions::validate() const
 		"Invalid test path specified."
 	);
 
-	if (!disableIPC)
-	{
-		assertThrow(
-			!ipcPath.empty(),
-			ConfigException,
-			"No ipc path specified. The --ipcpath argument must not be empty when given."
-		);
-		assertThrow(
-			fs::exists(ipcPath),
-			ConfigException,
-			"Invalid ipc path specified."
-		);
-	}
+//	if (!disableIPC)
+//	{
+//		assertThrow(
+//			!ipcPath.empty(),
+//			ConfigException,
+//			"No ipc path specified. The --ipcpath argument must not be empty when given."
+//		);
+//		assertThrow(
+//			fs::exists(ipcPath),
+//			ConfigException,
+//			"Invalid ipc path specified."
+//		);
+//	}
 }
 
 bool CommonOptions::parse(int argc, char const* const* argv)

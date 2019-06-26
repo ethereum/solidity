@@ -33,9 +33,52 @@ using namespace std;
 using namespace dev;
 using namespace dev::test;
 
-EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm& _vmInstance):
-	m_vm(_vmInstance)
+namespace
 {
+
+
+evmc::vm& getVM()
+{
+	static unique_ptr<evmc::vm> theVM;
+	if (!theVM)
+	{
+		// TODO make this an option
+		for (auto path: {
+			"deps/lib/libevmone.so",
+			"../deps/lib/libevmone.so",
+			"/usr/lib/libevmone.so",
+			"/usr/local/lib/libevmone.so",
+			// TODO the circleci docker image somehow only has the .a file
+			"/usr/lib/libevmone.a"
+		})
+		{
+			evmc_loader_error_code errorCode = {};
+			evmc_instance* vm = evmc_load_and_create(path, &errorCode);
+			if (!vm || errorCode != EVMC_LOADER_SUCCESS)
+				continue;
+			theVM = make_unique<evmc::vm>(vm);
+			break;
+		}
+		if (!theVM)
+		{
+			cerr << "Unable to find library libevmone.so" << endl;
+			assertThrow(false, Exception, "");
+		}
+	}
+	return *theVM;
+}
+
+}
+
+EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
+	m_vm(_vm)
+{
+	if (!m_vm)
+	{
+		cerr << "Unable to find library libevmone.so" << endl;
+		assertThrow(false, Exception, "");
+	}
+
 	if (_evmVersion == langutil::EVMVersion::homestead())
 		m_evmVersion = EVMC_HOMESTEAD;
 	else if (_evmVersion == langutil::EVMVersion::tangerineWhistle())
@@ -123,7 +166,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	evmc_address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
-	evmc::result result = m_vm.execute(*this, m_evmVersion, message, code.data(), code.size());
+	evmc::result result = m_vm->execute(*this, m_evmVersion, message, code.data(), code.size());
 	m_currentAddress = currentAddress;
 
 	if (result.status_code != EVMC_SUCCESS)

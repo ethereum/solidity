@@ -43,9 +43,9 @@ namespace test
 {
 
 #define REQUIRE_LOG_DATA(DATA) do { \
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 1); \
-	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress); \
-	ABI_CHECK(m_logs[0].data, DATA); \
+	BOOST_REQUIRE_EQUAL(numLogs(), 1); \
+	BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress); \
+	ABI_CHECK(logData(0), DATA); \
 } while (false)
 
 BOOST_FIXTURE_TEST_SUITE(ABIEncoderTest, SolidityExecutionFramework)
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(structs)
 		);
 		BOOST_CHECK(callContractFunction("f()") == encoded);
 		REQUIRE_LOG_DATA(encoded);
-		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
+		BOOST_CHECK_EQUAL(logTopic(0, 0), dev::keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
 	)
 }
 
