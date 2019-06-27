@@ -15887,6 +15887,45 @@ BOOST_AUTO_TEST_CASE(uninitialized_internal_storage_function_call)
 	ABI_CHECK(callContractFunction("f()"), bytes{});
 }
 
+BOOST_AUTO_TEST_CASE(dirty_scratch_space_prior_to_constant_optimiser)
+{
+	char const* sourceCode = R"(
+		contract C {
+			event X(uint);
+			constructor() public {
+				assembly {
+					// make scratch space dirty
+					mstore(0, 0x4242424242424242424242424242424242424242424242424242424242424242)
+				}
+				uint x = 0x0000000000001234123412431234123412412342112341234124312341234124;
+				// This is just to create many instances of x
+				emit X(x + f() * g(tx.origin) ^ h(block.number));
+				assembly {
+					// make scratch space dirty
+					mstore(0, 0x4242424242424242424242424242424242424242424242424242424242424242)
+				}
+				emit X(x);
+			}
+			function f() internal pure returns (uint) {
+				return 0x0000000000001234123412431234123412412342112341234124312341234124;
+			}
+			function g(address a) internal pure returns (uint) {
+				return uint(a) * 0x0000000000001234123412431234123412412342112341234124312341234124;
+			}
+			function h(uint a) internal pure returns (uint) {
+				return a * 0x0000000000001234123412431234123412412342112341234124312341234124;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[1].address, m_contractAddress);
+	ABI_CHECK(
+		m_logs[1].data,
+		encodeArgs(u256("0x0000000000001234123412431234123412412342112341234124312341234124"))
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
