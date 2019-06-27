@@ -48,7 +48,8 @@ string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 			statement.type() == typeid(yul::FunctionDefinition),
 			"Expected only function definitions at the highest level."
 		);
-		functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
+		if (statement.type() == typeid(yul::FunctionDefinition))
+			functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
 	}
 
 	return EWasmToText{}.run(transform.m_globalVariables, functions);
@@ -64,6 +65,8 @@ wasm::Expression EWasmCodeTransform::generateMultiAssignment(
 
 	if (_variableNames.size() == 1)
 		return { std::move(assignment) };
+
+	allocateGlobals(_variableNames.size() - 1);
 
 	wasm::Block block;
 	block.statements.emplace_back(move(assignment));
@@ -123,8 +126,18 @@ wasm::Expression EWasmCodeTransform::operator()(FunctionalInstruction const& _f)
 
 wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 {
-	if (m_dialect.builtin(_call.functionName.name))
-		return wasm::BuiltinCall{_call.functionName.name.str(), visit(_call.arguments)};
+	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+	{
+		if (builtin->literalArguments)
+		{
+			vector<wasm::Expression> literals;
+			for (auto const& arg: _call.arguments)
+				literals.emplace_back(wasm::StringLiteral{boost::get<Literal>(arg).value.str()});
+			return wasm::BuiltinCall{_call.functionName.name.str(), std::move(literals)};
+		}
+		else
+			return wasm::BuiltinCall{_call.functionName.name.str(), visit(_call.arguments)};
+	}
 	else
 		// If this function returns multiple values, then the first one will
 		// be returned in the expression itself and the others in global variables.
@@ -141,7 +154,7 @@ wasm::Expression EWasmCodeTransform::operator()(Identifier const& _identifier)
 wasm::Expression EWasmCodeTransform::operator()(Literal const& _literal)
 {
 	u256 value = valueOfLiteral(_literal);
-	yulAssert(value <= numeric_limits<uint64_t>::max(), "");
+	yulAssert(value <= numeric_limits<uint64_t>::max(), "Literal too large: " + value.str());
 	return wasm::Literal{uint64_t(value)};
 }
 

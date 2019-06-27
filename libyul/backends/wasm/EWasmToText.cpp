@@ -56,6 +56,13 @@ string EWasmToText::operator()(wasm::Literal const& _literal)
 	return "(i64.const " + to_string(_literal.value) + ")";
 }
 
+string EWasmToText::operator()(wasm::StringLiteral const& _literal)
+{
+	string quoted = boost::replace_all_copy(_literal.value, "\\", "\\\\");
+	boost::replace_all(quoted, "\"", "\\\"");
+	return "\"" + quoted + "\"";
+}
+
 string EWasmToText::operator()(wasm::LocalVariable const& _identifier)
 {
 	return "(get_local $" + _identifier.name + ")";

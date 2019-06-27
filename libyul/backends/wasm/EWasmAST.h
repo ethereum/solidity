@@ -30,6 +30,7 @@ namespace wasm
 {
 
 struct Literal;
+struct StringLiteral;
 struct LocalVariable;
 struct GlobalVariable;
 struct Label;
@@ -43,12 +44,13 @@ struct Loop;
 struct Break;
 struct Continue;
 using Expression = boost::variant<
-	Literal, LocalVariable, GlobalVariable, Label,
+	Literal, StringLiteral, LocalVariable, GlobalVariable, Label,
 	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
 	Block, If, Loop, Break, Continue
 >;
 
 struct Literal { uint64_t value; };
+struct StringLiteral { std::string value; };
 struct LocalVariable { std::string name; };
 struct GlobalVariable { std::string name; };
 struct Label { std::string name; };

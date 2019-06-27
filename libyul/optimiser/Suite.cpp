@@ -50,6 +50,7 @@
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
 
+#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/evm/NoOutputAssembly.h>
 
 #include <libdevcore/CommonData.h>
@@ -214,6 +215,13 @@ void OptimiserSuite::run(
 	{
 		yulAssert(_meter, "");
 		ConstantOptimiser{*dialect, *_meter}(ast);
+	}
+	else if (dynamic_cast<WasmDialect const*>(&_dialect))
+	{
+		// If the first statement is an empty block, remove it.
+		// We should only have function definitions after that.
+		if (ast.statements.size() > 1 && boost::get<Block>(ast.statements.front()).statements.empty())
+			ast.statements.erase(ast.statements.begin());
 	}
 	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);
 	yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, ast);
