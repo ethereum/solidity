@@ -50,7 +50,7 @@ function or_bool(a, b, c, d) -> r {
 	r := i64.ne(0, i64.or(i64.or(a, b), i64.or(c, d)))
 }
 // returns a + y + c plus carry value on 64 bit values.
-// c should be at most 2
+// c should be at most 1
 function add_carry(x, y, c) -> r, r_c {
 	let t := i64.add(x, y)
 	r := i64.add(t, c)
@@ -73,9 +73,9 @@ function sub(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// x - y = x + (~y + 1)
 	let carry
 	r4, carry := add_carry(x4, bit_negate(y4), 1)
-	r3, carry := add_carry(x3, bit_negate(y3), i64.add(carry, 1))
-	r2, carry := add_carry(x2, bit_negate(y2), i64.add(carry, 1))
-	r1, carry := add_carry(x1, bit_negate(y1), i64.add(carry, 1))
+	r3, carry := add_carry(x3, bit_negate(y3), carry)
+	r2, carry := add_carry(x2, bit_negate(y2), carry)
+	r1, carry := add_carry(x1, bit_negate(y1), carry)
 }
 function split(x) -> hi, lo {
 	hi := i64.shr_u(x, 32)
@@ -100,14 +100,6 @@ function mul_64x64_128(x, y) -> hi, lo {
 	lo := i64.or(i64.shl(u2, 32), t0l)
 	hi := i64.add(t3, i64.add(i64.shr_u(u2, 32), u1h))
 }
-// Add three 64-bit values plus carry (at most 2).
-// Return the sum and the new carry value.
-function add3_carry(a, b, c, carr) -> x, carry {
-	let c1, c2
-	x, c1 := add_carry(a, b, carr)
-	x, c2 := add_carry(x, c, 0)
-	carry := i64.add(c1, c2)
-}
 // Multiplies two 128 bit values resulting in a 256 bit
 // value split into four 64 bit values.
 function mul_128x128_256(x1, x2, y1, y2) -> r1, r2, r3, r4 {
@@ -115,18 +107,47 @@ function mul_128x128_256(x1, x2, y1, y2) -> r1, r2, r3, r4 {
 	let     bh, bl := mul_64x64_128(x1, y2)
 	let     ch, cl := mul_64x64_128(x2, y1)
 	let         dh, dl := mul_64x64_128(x2, y2)
-	let carry
+
 	r4 := dl
-	r3, carry := add3_carry(bl, cl, dh, 0)
-	r2, carry := add3_carry(al, bh, ch, carry)
-	r1 := i64.add(ah, carry)
+
+	let carry1, carry2
+	let t1, t2
+
+	r3, carry1 := add_carry(bl, cl, 0)
+	r3, carry2 := add_carry(r3, dh, 0)
+
+	t1, carry1 := add_carry(bh, ch, carry1)
+	r2, carry2 := add_carry(t1, al, carry2)
+
+	r1 := i64.add(i64.add(ah, carry1), carry2)
 }
 function mul(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// TODO it would actually suffice to have mul_128x128_128 for the first two.
+	let b1, b2, b3, b4 := mul_128x128_256(x3, x4, y1, y2)
+	let c1, c2, c3, c4 := mul_128x128_256(x1, x2, y3, y4)
+	let         d1, d2, d3, d4 := mul_128x128_256(x3, x4, y3, y4)
+	r4 := d4
+	r3 := d3
+	let t1, t2
+	t1, t2, r1, r2 := add(0, 0, b3, b4, 0, 0, c3, c4)
+	t1, t2, r1, r2 := add(0, 0, r1, r2, 0, 0, d1, d2)
 }
-function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {}
-function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {}
-function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {}
-function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {}
+function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// TODO implement properly
+	r4 := i64.div_u(x4, y4)
+}
+function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// TODO implement properly
+	r4 := i64.rem_u(x4, y4)
+}
+function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// TODO implement properly
+	r4 := i64.rem_u(x4, y4)
+}
+function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// TODO implement properly
+	unreachable()
+}
 
 function byte(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	if i64.eqz(i64.or(i64.or(x1, x2), x3)) {
@@ -178,89 +199,262 @@ function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	}
 }
 
+// returns 0 if a == b, -1 if a < b and 1 if a > b
+function cmp(a, b) -> r {
+	switch i64.lt_u(a, b)
+	case 1 { r := 0xffffffffffffffff }
+	default {
+		switch i64.gt_u(a, b)
+		case 1 { r := 1 }
+		default { r := 0 }
+	}
+}
 
-// TODO
-function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function gt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function slt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function sgt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
+function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	switch cmp(x1, y1)
+	case 0 {
+		switch cmp(x2, y2)
+		case 0 {
+			switch cmp(x3, y3)
+			case 0 {
+				switch cmp(x4, y4)
+				case 0 { z4 := 0 }
+				case 1 { z4 := 0 }
+				default { z4 := 1 }
+			}
+			case 1 { z4 := 0 }
+			default { z4 := 1 }
+		}
+		case 1 { z4 := 0 }
+		default { z4 := 1 }
+	}
+	case 1 { z4 := 0 }
+	default { z4 := 1 }
+}
+function gt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	z1, z2, z3, z4 := lt(y1, y2, y3, y4, x1, x2, x3, x4)
+}
+function slt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO correct?
+	x1 := i64.add(x1, 0x8000000000000000)
+	y1 := i64.add(y1, 0x8000000000000000)
+	z1, z2, z3, z4 := lt(x1, x2, x3, x4, y1, y2, y3, y4)
+}
+function sgt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	z1, z2, z3, z4 := slt(y1, y2, y3, y4, x1, x2, x3, x4)
+}
 
-function shl(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function shr(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function addmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function mulmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function signextend(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
-function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {}
+function shl(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function shr(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function addmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function mulmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function signextend(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
 
-function address() -> z1, z2, z3, z4 {}
-function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {}
-function origin() -> z1, z2, z3, z4 {}
-function caller() -> z1, z2, z3, z4 {}
-function callvalue() -> z1, z2, z3, z4 {}
-function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {}
-function calldatasize() -> z1, z2, z3, z4 {}
-function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {}
+function address() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function origin() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function caller() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function callvalue() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function calldatasize() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
+	// TODO implement
+	unreachable()
+}
 
 // Needed?
-function codesize() -> z1, z2, z3, z4 {}
-function codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {}
-function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {}
+function codesize() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
+	// TODO implement
+	unreachable()
+}
+function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
+	// TODO implement
+	unreachable()
+}
 
-function gasprice() -> z1, z2, z3, z4 {}
-function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {}
-function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {}
-function extcodecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {}
+function gasprice() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function extcodecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
+	// TODO implement
+	unreachable()
+}
 
-function returndatasize() -> z1, z2, z3, z4 {}
-function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {}
+function returndatasize() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
+	// TODO implement
+	unreachable()
+}
 
-function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {}
-function coinbase() -> z1, z2, z3, z4 {}
-function timestamp() -> z1, z2, z3, z4 {}
-function number() -> z1, z2, z3, z4 {}
-function difficulty() -> z1, z2, z3, z4 {}
-function gaslimit() -> z1, z2, z3, z4 {}
+function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function coinbase() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function timestamp() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function number() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function difficulty() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function gaslimit() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
 
-function pop(x1, x2, x3, x4) {}
+function pop(x1, x2, x3, x4) {
+	// TODO implement
+	unreachable()
+}
 
-function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {}
-function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {}
-function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {}
+function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
+	// TODO implement
+	unreachable()
+}
+function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
+	// TODO implement
+	unreachable()
+}
 // Needed?
-function msize() -> z1, z2, z3, z4 {}
-function sload(x1, x2, x3, x4) -> z1, z2, z3, z4 {}
-function sstore(x1, x2, x3, x4, y1, y2, y3, y4) {}
+function msize() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function sload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function sstore(x1, x2, x3, x4, y1, y2, y3, y4) {
+	// TODO implement
+	unreachable()
+}
 
 // Needed?
-function pc() -> z1, z2, z3, z4 {}
-function gas() -> z1, z2, z3, z4 {}
+function pc() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
+function gas() -> z1, z2, z3, z4 {
+	// TODO implement
+	unreachable()
+}
 
-function log0(p1, p2, p3, p4, s1, s2, s3, s4) {}
+function log0(p1, p2, p3, p4, s1, s2, s3, s4) {
+	// TODO implement
+	unreachable()
+}
 function log1(
 	p1, p2, p3, p4, s1, s2, s3, s4,
 	t11, t12, t13, t14
-) {}
+) {
+	// TODO implement
+	unreachable()
+}
 function log2(
 	p1, p2, p3, p4, s1, s2, s3, s4,
 	t11, t12, t13, t14,
 	t21, t22, t23, t24
-) {}
+) {
+	// TODO implement
+	unreachable()
+}
 function log3(
 	p1, p2, p3, p4, s1, s2, s3, s4,
 	t11, t12, t13, t14,
 	t21, t22, t23, t24,
 	t31, t32, t33, t34
-) {}
+) {
+	// TODO implement
+	unreachable()
+}
 function log4(
 	p1, p2, p3, p4, s1, s2, s3, s4,
 	t11, t12, t13, t14,
 	t21, t22, t23, t24,
 	t31, t32, t33, t34,
 	t41, t42, t43, t44,
-) {}
+) {
+	// TODO implement
+	unreachable()
+}
 
-function create(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) -> a1, a2, a3, a4 {}
+function create(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) -> a1, a2, a3, a4 {
+	// TODO implement
+	unreachable()
+}
 function call(
 	a1, a2, a3, a4,
 	b1, b2, b3, b4,
@@ -269,7 +463,10 @@ function call(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
-) -> x1, x2, x3, x4 {}
+) -> x1, x2, x3, x4 {
+	// TODO implement
+	unreachable()
+}
 function callcode(
 	a1, a2, a3, a4,
 	b1, b2, b3, b4,
@@ -278,7 +475,10 @@ function callcode(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
-) -> x1, x2, x3, x4 {}
+) -> x1, x2, x3, x4 {
+	// TODO implement
+	unreachable()
+}
 function delegatecall(
 	a1, a2, a3, a4,
 	b1, b2, b3, b4,
@@ -286,7 +486,10 @@ function delegatecall(
 	d1, d2, d3, d4,
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
-) -> x1, x2, x3, x4 {}
+) -> x1, x2, x3, x4 {
+	// TODO implement
+	unreachable()
+}
 function staticcall(
 	a1, a2, a3, a4,
 	b1, b2, b3, b4,
@@ -294,17 +497,32 @@ function staticcall(
 	d1, d2, d3, d4,
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
-) -> x1, x2, x3, x4 {}
+) -> x1, x2, x3, x4 {
+	// TODO implement
+	unreachable()
+}
 function create2(
 	a1, a2, a3, a4,
 	b1, b2, b3, b4,
 	c1, c2, c3, c4,
 	d1, d2, d3, d4
-) -> x1, x2, x3, x4 {}
-function selfdestruct(a1, a2, a3, a4) {}
+) -> x1, x2, x3, x4 {
+	// TODO implement
+	unreachable()
+}
+function selfdestruct(a1, a2, a3, a4) {
+	// TODO implement
+	unreachable()
+}
 
-function return(x1, x2, x3, x4, y1, y2, y3, y4) {}
-function revert(x1, x2, x3, x4, y1, y2, y3, y4) {}
+function return(x1, x2, x3, x4, y1, y2, y3, y4) {
+	// TODO implement
+	unreachable()
+}
+function revert(x1, x2, x3, x4, y1, y2, y3, y4) {
+	// TODO implement
+	unreachable()
+}
 function invalid() {
 	unreachable()
 }
