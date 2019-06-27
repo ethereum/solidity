@@ -593,8 +593,22 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		break;
 	}
+	// Array creation using new
+	case FunctionType::Kind::ObjectCreation:
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);
+		solAssert(arguments.size() == 1, "");
+
+		defineExpression(_functionCall) <<
+			m_utils.allocateMemoryArrayFunction(arrayType) <<
+			"(" <<
+				expressionAsType(*arguments[0], *TypeProvider::uint256()) <<
+			")\n";
+
+		break;
+	}
 	default:
-		solUnimplemented("");
+		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
 	}
 }
 
@@ -756,11 +770,12 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 				break;
 			case DataLocation::Memory:
-				solUnimplementedAssert(false, "");
-				//m_context << Instruction::MLOAD;
+				defineExpression(_memberAccess) <<
+					"mload(" <<
+					m_context.variable(_memberAccess.expression()) <<
+					")\n";
 				break;
 			}
-
 		break;
 	}
 	case Type::Category::FixedBytes:
@@ -851,13 +866,29 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 				break;
 			}
 			case DataLocation::Memory:
-				solUnimplementedAssert(false, "");
-				break;
-			case DataLocation::CallData:
-				solUnimplementedAssert(false, "");
-				break;
-		}
+			{
+				string const memAddress =
+					m_utils.memoryArrayIndexAccessFunction(arrayType) +
+					"(" +
+					m_context.variable(_indexAccess.baseExpression()) +
+					", " +
+					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) +
+					")";
 
+				setLValue(_indexAccess, make_unique<IRMemoryItem>(
+					m_context,
+					memAddress,
+					false,
+					*arrayType.baseType()
+				));
+				break;
+			}
+			case DataLocation::CallData:
+			{
+				solUnimplemented("calldata not yet implemented!");
+
+			}
+		}
 	}
 	else if (baseType.category() == Type::Category::FixedBytes)
 		solUnimplementedAssert(false, "");

@@ -17,10 +17,6 @@ contract C {
 
 		return func() == internal_func();
 	}
-	function external_func() external pure returns (int8)
-	{
-		return 1;
-	}
 }
 // ====
 // compileViaYul: true
