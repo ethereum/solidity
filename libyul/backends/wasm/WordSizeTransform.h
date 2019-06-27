@@ -23,6 +23,8 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
 
+#include <liblangutil/SourceLocation.h>
+
 #include <array>
 #include <vector>
 
@@ -77,6 +79,15 @@ private:
 	void rewriteVarDeclList(std::vector<TypedName>&);
 	void rewriteIdentifierList(std::vector<Identifier>&);
 	void rewriteFunctionCallArguments(std::vector<Expression>&);
+
+	std::vector<Statement> handleSwitch(Switch& _switch);
+	std::vector<Statement> handleSwitchInternal(
+		langutil::SourceLocation const& _location,
+		std::vector<YulString> const& _splitExpressions,
+		std::vector<Case> _cases,
+		YulString _runDefaultFlag,
+		size_t _depth
+	);
 
 	std::array<YulString, 4> generateU64IdentifierNames(YulString const& _s);
 	std::array<std::unique_ptr<Expression>, 4> expandValue(Expression const& _e);
