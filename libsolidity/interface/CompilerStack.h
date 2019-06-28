@@ -42,6 +42,7 @@
 #include <functional>
 #include <memory>
 #include <ostream>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -145,9 +146,12 @@ public:
 	/// Must be set before parsing.
 	void setEVMVersion(langutil::EVMVersion _version = langutil::EVMVersion{});
 
-	/// Sets the list of requested contract names. If empty, no filtering is performed and every contract
-	/// found in the supplied sources is compiled. Names are cleared iff @a _contractNames is missing.
-	void setRequestedContractNames(std::set<std::string> const& _contractNames = std::set<std::string>{}) {
+	/// Sets the requested contract names by source.
+	/// If empty, no filtering is performed and every contract
+	/// found in the supplied sources is compiled.
+	/// Names are cleared iff @a _contractNames is missing.
+	void setRequestedContractNames(std::map<std::string, std::set<std::string>> const& _contractNames = std::map<std::string, std::set<std::string>>{})
+	{
 		m_requestedContractNames = _contractNames;
 	}
 
@@ -318,6 +322,9 @@ private:
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
 
+	/// @returns true if the source is requested to be compiled.
+	bool isRequestedSource(std::string const& _sourceName) const;
+
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;
 
@@ -387,7 +394,7 @@ private:
 	ReadCallback::Callback m_readFile;
 	OptimiserSettings m_optimiserSettings;
 	langutil::EVMVersion m_evmVersion;
-	std::set<std::string> m_requestedContractNames;
+	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateIR;
 	bool m_generateEWasm;
 	std::map<std::string, h160> m_libraries;

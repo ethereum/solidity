@@ -398,13 +398,29 @@ bool CompilerStack::parseAndAnalyze()
 	return parse() && analyze();
 }
 
-bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) const
+bool CompilerStack::isRequestedSource(string const& _sourceName) const
 {
 	return
 		m_requestedContractNames.empty() ||
-		m_requestedContractNames.count(_contract.fullyQualifiedName()) ||
-		m_requestedContractNames.count(_contract.name()) ||
-		m_requestedContractNames.count(":" + _contract.name());
+		m_requestedContractNames.count("") ||
+		m_requestedContractNames.count(_sourceName);
+}
+
+bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) const
+{
+	/// In case nothing was specified in outputSelection.
+	if (m_requestedContractNames.empty())
+		return true;
+
+	for (auto const& key: vector<string>{"", _contract.sourceUnitName()})
+	{
+		auto const& it = m_requestedContractNames.find(key);
+		if (it != m_requestedContractNames.end())
+			if (it->second.count(_contract.name()) || it->second.count(""))
+				return true;
+	}
+
+	return false;
 }
 
 bool CompilerStack::compile()
@@ -900,7 +916,8 @@ void CompilerStack::resolveImports()
 	};
 
 	for (auto const& sourcePair: m_sources)
-		toposort(&sourcePair.second);
+		if (isRequestedSource(sourcePair.first))
+			toposort(&sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
 }
