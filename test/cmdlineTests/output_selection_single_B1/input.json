@@ -1,0 +1,21 @@
+{
+ "language": "Solidity",
+ "sources": {
+  "a.sol": {
+   "content": "contract A1 { function a(uint x) public pure { assert(x > 0); } } contract A2 { function a(uint x) public pure { assert(x > 0); } }"
+  },
+  "b.sol": {
+   "content": "contract A1 { function b(uint x) public { assert(x > 0); } } contract B2 { function b(uint x) public pure { assert(x > 0); } }"
+  }
+ },
+ "settings": {
+  "evmVersion": "petersburg",
+  "outputSelection": {
+   "b.sol": {
+    "B2": [
+     "evm.bytecode.object"
+    ]
+   }
+  }
+ }
+}
