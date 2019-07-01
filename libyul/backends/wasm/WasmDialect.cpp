@@ -47,14 +47,24 @@ WasmDialect::WasmDialect():
 		addFunction(name, 2, 1);
 
 	addFunction("i64.eqz", 1, 1);
-	addFunction("i64.store", 2, 0);
-	addFunction("i64.load", 1, 1);
+
+	addFunction("i64.store", 2, 0, false);
+	m_functions["i64.store"_yulstring].invalidatesStorage = false;
+
+	addFunction("i64.load", 1, 1, false);
+	m_functions["i64.load"_yulstring].invalidatesStorage = false;
+	m_functions["i64.load"_yulstring].invalidatesMemory = false;
+	m_functions["i64.load"_yulstring].sideEffectFree = true;
+	m_functions["i64.load"_yulstring].sideEffectFreeIfNoMSize = true;
 
 	addFunction("drop", 1, 0);
-	addFunction("unreachable", 0, 0);
 
-	addFunction("datasize", 1, 4, true);
-	addFunction("dataoffset", 1, 4, true);
+	addFunction("unreachable", 0, 0, false);
+	m_functions["unreachable"_yulstring].invalidatesStorage = false;
+	m_functions["unreachable"_yulstring].invalidatesMemory = false;
+
+	addFunction("datasize", 1, 4, true, true);
+	addFunction("dataoffset", 1, 4, true, true);
 }
 
 BuiltinFunction const* WasmDialect::builtin(YulString _name) const
@@ -75,18 +85,24 @@ WasmDialect const& WasmDialect::instance()
 	return *dialect;
 }
 
-void WasmDialect::addFunction(string _name, size_t _params, size_t _returns, bool _literalArguments)
+void WasmDialect::addFunction(
+	string _name,
+	size_t _params,
+	size_t _returns,
+	bool _movable,
+	bool _literalArguments
+)
 {
 	YulString name{move(_name)};
 	BuiltinFunction& f = m_functions[name];
 	f.name = name;
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
-	f.movable = false;
-	f.sideEffectFree = false;
-	f.sideEffectFreeIfNoMSize = false;
+	f.movable = _movable;
+	f.sideEffectFree = _movable;
+	f.sideEffectFreeIfNoMSize = _movable;
 	f.isMSize = false;
-	f.invalidatesStorage = true;
-	f.invalidatesMemory = true;
+	f.invalidatesStorage = !_movable;
+	f.invalidatesMemory = !_movable;
 	f.literalArguments = _literalArguments;
 }
