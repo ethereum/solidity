@@ -17,14 +17,18 @@ contract C
 // Warning: (71-197): Function state mutability can be restricted to pure
 // Warning: (101-111): Assertion checker does not yet support the type of this variable.
 // Warning: (115-118): Assertion checker does not yet support this expression.
+// Warning: (115-116): Assertion checker does not yet implement type struct C.S memory
 // Warning: (115-121): Assertion checker does not yet implement this expression.
 // Warning: (115-121): Assertion checker does not yet implement this expression.
 // Warning: (139-142): Assertion checker does not yet support this expression.
+// Warning: (139-140): Assertion checker does not yet implement type struct C.S memory
 // Warning: (139-145): Assertion checker does not yet implement this expression.
 // Warning: (139-145): Assertion checker does not yet implement this expression.
 // Warning: (161-164): Assertion checker does not yet support this expression.
+// Warning: (161-162): Assertion checker does not yet implement type struct C.S memory
 // Warning: (161-167): Assertion checker does not yet implement this expression.
 // Warning: (161-167): Assertion checker does not yet implement this expression.
 // Warning: (182-185): Assertion checker does not yet support this expression.
+// Warning: (182-183): Assertion checker does not yet implement type struct C.S memory
 // Warning: (182-188): Assertion checker does not yet implement this expression.
 // Warning: (175-193): Assertion violation happens here

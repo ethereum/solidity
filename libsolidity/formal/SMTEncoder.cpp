@@ -204,6 +204,8 @@ void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 
 void SMTEncoder::endVisit(Assignment const& _assignment)
 {
+	createExpr(_assignment);
+
 	static set<Token> const compoundOps{
 		Token::AssignAdd,
 		Token::AssignSub,
@@ -219,10 +221,6 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 		);
 	else if (!smt::isSupportedType(_assignment.annotation().type->category()))
 	{
-		m_errorReporter.warning(
-			_assignment.location(),
-			"Assertion checker does not yet implement type " + _assignment.annotation().type->toString()
-		);
 		// Give it a new index anyway to keep the SSA scheme sound.
 		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
 			m_context.newValue(*varDecl);
@@ -260,6 +258,8 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 
 void SMTEncoder::endVisit(TupleExpression const& _tuple)
 {
+	createExpr(_tuple);
+
 	if (_tuple.isInlineArray())
 		m_errorReporter.warning(
 			_tuple.location(),
@@ -267,7 +267,6 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 		);
 	else if (_tuple.annotation().type->category() == Type::Category::Tuple)
 	{
-		createExpr(_tuple);
 		vector<shared_ptr<smt::SymbolicVariable>> components;
 		for (auto const& component: _tuple.components())
 			if (component)
@@ -301,6 +300,8 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 {
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
+
+	createExpr(_op);
 
 	switch (_op.getOperator())
 	{
@@ -400,6 +401,8 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		return;
 	if (TokenTraits::isBooleanOp(_op.getOperator()))
 		return;
+
+	createExpr(_op);
 
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
@@ -535,24 +538,21 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 	}
 	else if (_identifier.annotation().type->category() == Type::Category::Function)
 		visitFunctionIdentifier(_identifier);
-	else if (smt::isSupportedType(_identifier.annotation().type->category()))
+	else if (auto decl = identifierToVariable(_identifier))
+		defineExpr(_identifier, currentValue(*decl));
+	else if (_identifier.name() == "now")
+		defineGlobalVariable(_identifier.name(), _identifier);
+	else if (_identifier.name() == "this")
 	{
-		if (auto decl = identifierToVariable(_identifier))
-			defineExpr(_identifier, currentValue(*decl));
-		else if (_identifier.name() == "now")
-			defineGlobalVariable(_identifier.name(), _identifier);
-		else if (_identifier.name() == "this")
-		{
-			defineExpr(_identifier, m_context.thisAddress());
-			m_uninterpretedTerms.insert(&_identifier);
-		}
-		else
-			// TODO: handle MagicVariableDeclaration here
-			m_errorReporter.warning(
-				_identifier.location(),
-				"Assertion checker does not yet support the type of this variable."
-			);
+		defineExpr(_identifier, m_context.thisAddress());
+		m_uninterpretedTerms.insert(&_identifier);
 	}
+	else if (smt::isSupportedType(_identifier.annotation().type->category()))
+		// TODO: handle MagicVariableDeclaration here
+		m_errorReporter.warning(
+			_identifier.location(),
+			"Assertion checker does not yet support the type of this variable."
+		);
 }
 
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
@@ -654,6 +654,8 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	if (accessType->category() == Type::Category::Function)
 		return true;
 
+	createExpr(_memberAccess);
+
 	auto const& exprType = _memberAccess.expression().annotation().type;
 	solAssert(exprType, "");
 	auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
@@ -697,12 +699,13 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			"Assertion checker does not yet support this expression."
 		);
 
-	createExpr(_memberAccess);
 	return true;
 }
 
 void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 {
+	createExpr(_indexAccess);
+
 	shared_ptr<smt::SymbolicVariable> array;
 	if (auto const& id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
 	{
@@ -717,7 +720,6 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 	}
 	else
 	{
-		createExpr(_indexAccess);
 		m_errorReporter.warning(
 			_indexAccess.location(),
 			"Assertion checker does not yet implement this expression."
@@ -1227,7 +1229,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 	if (abstract)
 		m_errorReporter.warning(
 			_e.location(),
-			"Assertion checker does not yet implement this type."
+			"Assertion checker does not yet implement type " + _e.annotation().type->toString()
 		);
 }
 
