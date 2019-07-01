@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (98-99): Constant variables not supported by inline assembly.
+// TypeError: (98-99): Constant variables cannot be assigned to.

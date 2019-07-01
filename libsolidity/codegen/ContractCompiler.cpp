@@ -629,8 +629,46 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (auto variable = dynamic_cast<VariableDeclaration const*>(decl))
 			{
-				solAssert(!variable->isConstant(), "");
-				if (m_context.isStateVariable(decl))
+				if (variable->isConstant())
+				{
+					u256 value;
+					if (variable->value()->annotation().type->category() == Type::Category::RationalNumber)
+					{
+						value = dynamic_cast<RationalNumberType const&>(*variable->value()->annotation().type).literalValue(nullptr);
+						if (FixedBytesType const* bytesType = dynamic_cast<FixedBytesType const*>(variable->type()))
+							value = value << (256 - 8 * bytesType->numBytes());
+						else
+							solAssert(variable->type()->category() == Type::Category::Integer, "");
+					}
+					else if (Literal const* literal = dynamic_cast<Literal const*>(variable->value().get()))
+					{
+						TypePointer type = literal->annotation().type;
+
+						switch (type->category())
+						{
+						case Type::Category::Bool:
+						case Type::Category::Address:
+							solAssert(*type == *variable->annotation().type, "");
+							value = type->literalValue(literal);
+							break;
+						case Type::Category::StringLiteral:
+						{
+							StringLiteralType const& stringLiteral = dynamic_cast<StringLiteralType const&>(*type);
+							solAssert(variable->type()->category() == Type::Category::FixedBytes, "");
+							unsigned const numBytes = dynamic_cast<FixedBytesType const&>(*variable->type()).numBytes();
+							solAssert(stringLiteral.value().size() <= numBytes, "");
+							value = u256(h256(stringLiteral.value(), h256::AlignLeft));
+							break;
+						}
+						default:
+							solAssert(false, "");
+						}
+					}
+					else
+						solAssert(false, "Invalid constant in inline assembly.");
+					m_context << value;
+				}
+				else if (m_context.isStateVariable(decl))
 				{
 					auto const& location = m_context.storageLocationOfVariable(*decl);
 					if (ref->second.isSlot)
