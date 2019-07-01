@@ -386,7 +386,7 @@ void BMC::visitAssert(FunctionCall const& _funCall)
 void BMC::visitRequire(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
-	solAssert(args.size() == 1, "");
+	solAssert(args.size() >= 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
 	if (isRootFunction())
 		addVerificationTarget(
