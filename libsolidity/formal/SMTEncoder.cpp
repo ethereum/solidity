@@ -15,71 +15,27 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/SMTChecker.h>
+#include <libsolidity/formal/SMTEncoder.h>
 
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/formal/SMTPortfolio.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
-#include <libdevcore/StringUtils.h>
-
-#include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptors.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/optional.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-SMTChecker::SMTChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
+SMTEncoder::SMTEncoder(smt::EncodingContext& _context, map<h256, string> const& _smtlib2Responses):
 	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
-	m_errorReporterReference(_errorReporter),
 	m_errorReporter(m_smtErrors),
-	m_context(m_interface)
+	m_context(_context)
 {
-#if defined (HAVE_Z3) || defined (HAVE_CVC4)
-	if (!_smtlib2Responses.empty())
-		m_errorReporter.warning(
-			"SMT-LIB2 query responses were given in the auxiliary input, "
-			"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
-			"These responses will be ignored."
-			"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
-		);
-#endif
 }
 
-void SMTChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
-{
-	if (!_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
-		return;
-
-	m_scanner = _scanner;
-
-	_source.accept(*this);
-
-	solAssert(m_interface->solvers() > 0, "");
-	// If this check is true, Z3 and CVC4 are not available
-	// and the query answers were not provided, since SMTPortfolio
-	// guarantees that SmtLib2Interface is the first solver.
-	if (!m_interface->unhandledQueries().empty() && m_interface->solvers() == 1)
-	{
-		if (!m_noSolverWarning)
-		{
-			m_noSolverWarning = true;
-			m_errorReporterReference.warning(
-				SourceLocation(),
-				"SMTChecker analysis was not possible since no integrated SMT solver (Z3 or CVC4) was found."
-			);
-		}
-	}
-	else
-		m_errorReporterReference.append(m_errorReporter.errors());
-	m_errorReporter.clear();
-}
-
-bool SMTChecker::visit(ContractDefinition const& _contract)
+bool SMTEncoder::visit(ContractDefinition const& _contract)
 {
 	for (auto const& contract: _contract.annotation().linearizedBaseContracts)
 		for (auto var: contract->stateVariables())
@@ -88,40 +44,28 @@ bool SMTChecker::visit(ContractDefinition const& _contract)
 	return true;
 }
 
-void SMTChecker::endVisit(ContractDefinition const&)
+void SMTEncoder::endVisit(ContractDefinition const&)
 {
 	m_context.resetAllVariables();
 }
 
-void SMTChecker::endVisit(VariableDeclaration const& _varDecl)
+void SMTEncoder::endVisit(VariableDeclaration const& _varDecl)
 {
 	if (_varDecl.isLocalVariable() && _varDecl.type()->isValueType() &&_varDecl.value())
 		assignment(_varDecl, *_varDecl.value());
 }
 
-bool SMTChecker::visit(ModifierDefinition const&)
+bool SMTEncoder::visit(ModifierDefinition const&)
 {
 	return false;
 }
 
-bool SMTChecker::visit(FunctionDefinition const& _function)
+bool SMTEncoder::visit(FunctionDefinition const& _function)
 {
 	// Not visited by a function call
 	if (m_callStack.empty())
-	{
-		m_interface->reset();
-		m_context.reset();
-		m_context.pushSolver();
-		m_pathConditions.clear();
-		pushCallStack({&_function, nullptr});
-		m_uninterpretedTerms.clear();
-		m_verificationTargets.clear();
-		resetStateVariables();
-		initializeLocalVariables(_function);
-		m_loopExecutionHappened = false;
-		m_arrayAssignmentHappened = false;
-		m_externalFunctionCallHappened = false;
-	}
+		initFunction(_function);
+
 	m_modifierDepthStack.push_back(-1);
 	if (_function.isConstructor())
 	{
@@ -140,7 +84,7 @@ bool SMTChecker::visit(FunctionDefinition const& _function)
 	return false;
 }
 
-void SMTChecker::visitFunctionOrModifier()
+void SMTEncoder::visitFunctionOrModifier()
 {
 	solAssert(!m_callStack.empty(), "");
 	solAssert(!m_modifierDepthStack.empty(), "");
@@ -175,7 +119,7 @@ void SMTChecker::visitFunctionOrModifier()
 	--m_modifierDepthStack.back();
 }
 
-bool SMTChecker::visit(PlaceholderStatement const&)
+bool SMTEncoder::visit(PlaceholderStatement const&)
 {
 	solAssert(!m_callStack.empty(), "");
 	auto lastCall = popCallStack();
@@ -184,20 +128,16 @@ bool SMTChecker::visit(PlaceholderStatement const&)
 	return true;
 }
 
-void SMTChecker::endVisit(FunctionDefinition const&)
+void SMTEncoder::endVisit(FunctionDefinition const&)
 {
 	popCallStack();
 	solAssert(m_modifierDepthStack.back() == -1, "");
 	m_modifierDepthStack.pop_back();
 	if (m_callStack.empty())
-	{
-		checkVerificationTargets(m_context.assertions());
-		m_verificationTargets.clear();
 		m_context.popSolver();
-	}
 }
 
-bool SMTChecker::visit(InlineAssembly const& _inlineAsm)
+bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 {
 	m_errorReporter.warning(
 		_inlineAsm.location(),
@@ -206,18 +146,9 @@ bool SMTChecker::visit(InlineAssembly const& _inlineAsm)
 	return false;
 }
 
-bool SMTChecker::visit(IfStatement const& _node)
+bool SMTEncoder::visit(IfStatement const& _node)
 {
 	_node.condition().accept(*this);
-
-	// We ignore called functions here because they have
-	// specific input values.
-	if (isRootFunction())
-		addVerificationTarget(
-			VerificationTarget::Type::ConstantCondition,
-			expr(_node.condition()),
-			&_node.condition()
-		);
 
 	auto indicesEndTrue = visitBranch(&_node.trueStatement(), expr(_node.condition()));
 	auto touchedVars = touchedVariables(_node.trueStatement());
@@ -235,111 +166,7 @@ bool SMTChecker::visit(IfStatement const& _node)
 	return false;
 }
 
-// Here we consider the execution of two branches:
-// Branch 1 assumes the loop condition to be true and executes the loop once,
-// after resetting touched variables.
-// Branch 2 assumes the loop condition to be false and skips the loop after
-// visiting the condition (it might contain side-effects, they need to be considered)
-// and does not erase knowledge.
-// If the loop is a do-while, condition side-effects are lost since the body,
-// executed once before the condition, might reassign variables.
-// Variables touched by the loop are merged with Branch 2.
-bool SMTChecker::visit(WhileStatement const& _node)
-{
-	auto indicesBeforeLoop = copyVariableIndices();
-	auto touchedVars = touchedVariables(_node);
-	m_context.resetVariables(touchedVars);
-	decltype(indicesBeforeLoop) indicesAfterLoop;
-	if (_node.isDoWhile())
-	{
-		indicesAfterLoop = visitBranch(&_node.body());
-		// TODO the assertions generated in the body should still be active in the condition
-		_node.condition().accept(*this);
-		if (isRootFunction())
-			addVerificationTarget(
-				VerificationTarget::Type::ConstantCondition,
-				expr(_node.condition()),
-				&_node.condition()
-			);
-	}
-	else
-	{
-		_node.condition().accept(*this);
-		if (isRootFunction())
-			addVerificationTarget(
-				VerificationTarget::Type::ConstantCondition,
-				expr(_node.condition()),
-				&_node.condition()
-			);
-
-		indicesAfterLoop = visitBranch(&_node.body(), expr(_node.condition()));
-	}
-
-	// We reset the execution to before the loop
-	// and visit the condition in case it's not a do-while.
-	// A do-while's body might have non-precise information
-	// in its first run about variables that are touched.
-	resetVariableIndices(indicesBeforeLoop);
-	if (!_node.isDoWhile())
-		_node.condition().accept(*this);
-
-	mergeVariables(touchedVars, expr(_node.condition()), indicesAfterLoop, copyVariableIndices());
-
-	m_loopExecutionHappened = true;
-	return false;
-}
-
-// Here we consider the execution of two branches similar to WhileStatement.
-bool SMTChecker::visit(ForStatement const& _node)
-{
-	if (_node.initializationExpression())
-		_node.initializationExpression()->accept(*this);
-
-	auto indicesBeforeLoop = copyVariableIndices();
-
-	// Do not reset the init expression part.
-	auto touchedVars = touchedVariables(_node.body());
-	if (_node.condition())
-		touchedVars += touchedVariables(*_node.condition());
-	if (_node.loopExpression())
-		touchedVars += touchedVariables(*_node.loopExpression());
-
-	m_context.resetVariables(touchedVars);
-
-	if (_node.condition())
-	{
-		_node.condition()->accept(*this);
-		if (isRootFunction())
-			addVerificationTarget(
-				VerificationTarget::Type::ConstantCondition,
-				expr(*_node.condition()),
-				_node.condition()
-			);
-	}
-
-	m_context.pushSolver();
-	if (_node.condition())
-		m_context.addAssertion(expr(*_node.condition()));
-	_node.body().accept(*this);
-	if (_node.loopExpression())
-		_node.loopExpression()->accept(*this);
-	m_context.popSolver();
-
-	auto indicesAfterLoop = copyVariableIndices();
-	// We reset the execution to before the loop
-	// and visit the condition.
-	resetVariableIndices(indicesBeforeLoop);
-	if (_node.condition())
-		_node.condition()->accept(*this);
-
-	auto forCondition = _node.condition() ? expr(*_node.condition()) : smt::Expression(true);
-	mergeVariables(touchedVars, forCondition, indicesAfterLoop, copyVariableIndices());
-
-	m_loopExecutionHappened = true;
-	return false;
-}
-
-void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
+void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 {
 	if (_varDecl.declarations().size() != 1)
 	{
@@ -375,7 +202,7 @@ void SMTChecker::endVisit(VariableDeclarationStatement const& _varDecl)
 
 }
 
-void SMTChecker::endVisit(Assignment const& _assignment)
+void SMTEncoder::endVisit(Assignment const& _assignment)
 {
 	static set<Token> const compoundOps{
 		Token::AssignAdd,
@@ -431,7 +258,7 @@ void SMTChecker::endVisit(Assignment const& _assignment)
 	}
 }
 
-void SMTChecker::endVisit(TupleExpression const& _tuple)
+void SMTEncoder::endVisit(TupleExpression const& _tuple)
 {
 	if (_tuple.isInlineArray())
 		m_errorReporter.warning(
@@ -470,7 +297,7 @@ void SMTChecker::endVisit(TupleExpression const& _tuple)
 	}
 }
 
-void SMTChecker::endVisit(UnaryOperation const& _op)
+void SMTEncoder::endVisit(UnaryOperation const& _op)
 {
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
@@ -511,23 +338,11 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 				"Assertion checker does not yet implement such increments / decrements."
 			);
 
-		addVerificationTarget(
-			_op.getOperator() == Token::Inc ? VerificationTarget::Type::Overflow : VerificationTarget::Type::Underflow,
-			expr(_op),
-			&_op
-		);
-
 		break;
 	}
 	case Token::Sub: // -
 	{
 		defineExpr(_op, 0 - expr(_op.subExpression()));
-		if (_op.annotation().type->category() == Type::Category::Integer)
-			addVerificationTarget(
-				VerificationTarget::Type::UnderOverflow,
-				expr(_op),
-				&_op
-			);
 		break;
 	}
 	case Token::Delete:
@@ -562,12 +377,12 @@ void SMTChecker::endVisit(UnaryOperation const& _op)
 	}
 }
 
-bool SMTChecker::visit(UnaryOperation const& _op)
+bool SMTEncoder::visit(UnaryOperation const& _op)
 {
 	return !shortcutRationalNumber(_op);
 }
 
-bool SMTChecker::visit(BinaryOperation const& _op)
+bool SMTEncoder::visit(BinaryOperation const& _op)
 {
 	if (shortcutRationalNumber(_op))
 		return false;
@@ -579,7 +394,7 @@ bool SMTChecker::visit(BinaryOperation const& _op)
 	return true;
 }
 
-void SMTChecker::endVisit(BinaryOperation const& _op)
+void SMTEncoder::endVisit(BinaryOperation const& _op)
 {
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
@@ -597,7 +412,7 @@ void SMTChecker::endVisit(BinaryOperation const& _op)
 		);
 }
 
-void SMTChecker::endVisit(FunctionCall const& _funCall)
+void SMTEncoder::endVisit(FunctionCall const& _funCall)
 {
 	solAssert(_funCall.annotation().kind != FunctionCallKind::Unset, "");
 	createExpr(_funCall);
@@ -638,7 +453,6 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::BareDelegateCall:
 	case FunctionType::Kind::BareStaticCall:
 	case FunctionType::Kind::Creation:
-		internalOrExternalFunctionCall(_funCall);
 		break;
 	case FunctionType::Kind::KECCAK256:
 	case FunctionType::Kind::ECRecover:
@@ -647,7 +461,6 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::BlockHash:
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
-		abstractFunctionCall(_funCall);
 		break;
 	case FunctionType::Kind::Send:
 	case FunctionType::Kind::Transfer:
@@ -660,12 +473,6 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 		smt::Expression thisBalance = m_context.balance();
 		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), *m_interface);
 
-		addVerificationTarget(
-			VerificationTarget::Type::Balance,
-			thisBalance < expr(*value),
-			&_funCall
-		);
-
 		m_context.transfer(m_context.thisAddress(), expr(address), expr(*value));
 		break;
 	}
@@ -677,34 +484,36 @@ void SMTChecker::endVisit(FunctionCall const& _funCall)
 	}
 }
 
-void SMTChecker::visitAssert(FunctionCall const& _funCall)
+void SMTEncoder::initFunction(FunctionDefinition const& _function)
+{
+	solAssert(m_callStack.empty(), "");
+	m_context.reset();
+	m_context.pushSolver();
+	m_pathConditions.clear();
+	pushCallStack({&_function, nullptr});
+	m_uninterpretedTerms.clear();
+	resetStateVariables();
+	initializeLocalVariables(_function);
+	m_arrayAssignmentHappened = false;
+}
+
+void SMTEncoder::visitAssert(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
 	solAssert(args.size() == 1, "");
 	solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
-	addVerificationTarget(
-		VerificationTarget::Type::Assert,
-		m_context.expression(*args.front())->currentValue(),
-		&_funCall
-	);
 	addPathImpliedExpression(expr(*args[0]));
 }
 
-void SMTChecker::visitRequire(FunctionCall const& _funCall)
+void SMTEncoder::visitRequire(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
 	solAssert(args.size() == 1, "");
 	solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
-	if (isRootFunction())
-		addVerificationTarget(
-			VerificationTarget::Type::ConstantCondition,
-			m_context.expression(*args.front())->currentValue(),
-			args.front().get()
-		);
 	addPathImpliedExpression(expr(*args[0]));
 }
 
-void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
+void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 {
 	string gasLeft = "gasleft()";
 	// We increase the variable index since gasleft changes
@@ -718,89 +527,7 @@ void SMTChecker::visitGasLeft(FunctionCall const& _funCall)
 		m_context.addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
 }
 
-void SMTChecker::inlineFunctionCall(FunctionCall const& _funCall)
-{
-	FunctionDefinition const* funDef = inlinedFunctionCallToDefinition(_funCall);
-	solAssert(funDef, "");
-	if (visitedFunction(funDef))
-		m_errorReporter.warning(
-			_funCall.location(),
-			"Assertion checker does not support recursive function calls.",
-			SecondarySourceLocation().append("Starting from function:", funDef->location())
-		);
-	else
-	{
-		vector<smt::Expression> funArgs;
-		Expression const* calledExpr = &_funCall.expression();
-		auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
-		solAssert(funType, "");
-
-		if (funType->bound())
-		{
-			auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
-			solAssert(boundFunction, "");
-			funArgs.push_back(expr(boundFunction->expression()));
-		}
-
-		for (auto arg: _funCall.arguments())
-			funArgs.push_back(expr(*arg));
-		initializeFunctionCallParameters(*funDef, funArgs);
-
-		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)
-		// is that there we don't have `_funCall`.
-		pushCallStack({funDef, &_funCall});
-		funDef->accept(*this);
-		// The callstack entry is popped only in endVisit(FunctionDefinition) instead of here
-		// as well to avoid code duplication (not all entries are from inlined function calls).
-
-		auto const& returnParams = funDef->returnParameters();
-		if (returnParams.size() > 1)
-		{
-			vector<shared_ptr<smt::SymbolicVariable>> components;
-			for (auto param: returnParams)
-			{
-				solAssert(m_context.variable(*param), "");
-				components.push_back(m_context.variable(*param));
-			}
-			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
-			solAssert(symbTuple, "");
-			symbTuple->setComponents(move(components));
-		}
-		else if (returnParams.size() == 1)
-			defineExpr(_funCall, currentValue(*returnParams.front()));
-	}
-}
-
-void SMTChecker::internalOrExternalFunctionCall(FunctionCall const& _funCall)
-{
-	auto funDef = inlinedFunctionCallToDefinition(_funCall);
-	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	if (funDef)
-		inlineFunctionCall(_funCall);
-	else if (funType.kind() == FunctionType::Kind::Internal)
-		m_errorReporter.warning(
-			_funCall.location(),
-			"Assertion checker does not yet implement this type of function call."
-		);
-	else
-	{
-		m_externalFunctionCallHappened = true;
-		resetStateVariables();
-		resetStorageReferences();
-	}
-}
-
-void SMTChecker::abstractFunctionCall(FunctionCall const& _funCall)
-{
-	vector<smt::Expression> smtArguments;
-	for (auto const& arg: _funCall.arguments())
-		smtArguments.push_back(expr(*arg));
-	defineExpr(_funCall, (*m_context.expression(_funCall.expression()))(smtArguments));
-	m_uninterpretedTerms.insert(&_funCall);
-	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, *m_interface);
-}
-
-void SMTChecker::endVisit(Identifier const& _identifier)
+void SMTEncoder::endVisit(Identifier const& _identifier)
 {
 	if (_identifier.annotation().lValueRequested)
 	{
@@ -828,7 +555,7 @@ void SMTChecker::endVisit(Identifier const& _identifier)
 	}
 }
 
-void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
+void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 {
 	solAssert(_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
 	solAssert(_funCall.arguments().size() == 1, "");
@@ -864,7 +591,7 @@ void SMTChecker::visitTypeConversion(FunctionCall const& _funCall)
 	}
 }
 
-void SMTChecker::visitFunctionIdentifier(Identifier const& _identifier)
+void SMTEncoder::visitFunctionIdentifier(Identifier const& _identifier)
 {
 	auto const& fType = dynamic_cast<FunctionType const&>(*_identifier.annotation().type);
 	if (fType.returnParameterTypes().size() == 1)
@@ -874,7 +601,7 @@ void SMTChecker::visitFunctionIdentifier(Identifier const& _identifier)
 	}
 }
 
-void SMTChecker::endVisit(Literal const& _literal)
+void SMTEncoder::endVisit(Literal const& _literal)
 {
 	solAssert(_literal.annotation().type, "Expected type for AST node");
 	Type const& type = *_literal.annotation().type;
@@ -901,7 +628,7 @@ void SMTChecker::endVisit(Literal const& _literal)
 	}
 }
 
-void SMTChecker::endVisit(Return const& _return)
+void SMTEncoder::endVisit(Return const& _return)
 {
 	if (_return.expression() && m_context.knownExpression(*_return.expression()))
 	{
@@ -921,7 +648,7 @@ void SMTChecker::endVisit(Return const& _return)
 	}
 }
 
-bool SMTChecker::visit(MemberAccess const& _memberAccess)
+bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 {
 	auto const& accessType = _memberAccess.annotation().type;
 	if (accessType->category() == Type::Category::Function)
@@ -974,7 +701,7 @@ bool SMTChecker::visit(MemberAccess const& _memberAccess)
 	return true;
 }
 
-void SMTChecker::endVisit(IndexAccess const& _indexAccess)
+void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 {
 	shared_ptr<smt::SymbolicVariable> array;
 	if (auto const& id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
@@ -1011,12 +738,12 @@ void SMTChecker::endVisit(IndexAccess const& _indexAccess)
 	m_uninterpretedTerms.insert(&_indexAccess);
 }
 
-void SMTChecker::arrayAssignment()
+void SMTEncoder::arrayAssignment()
 {
 	m_arrayAssignmentHappened = true;
 }
 
-void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide)
+void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide)
 {
 	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_expr);
 	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
@@ -1087,7 +814,7 @@ void SMTChecker::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		);
 }
 
-void SMTChecker::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
+void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
 {
 	if (!m_context.knownGlobalSymbol(_name))
 	{
@@ -1106,7 +833,7 @@ void SMTChecker::defineGlobalVariable(string const& _name, Expression const& _ex
 		defineExpr(_expr, m_context.globalSymbol(_name)->currentValue());
 }
 
-bool SMTChecker::shortcutRationalNumber(Expression const& _expr)
+bool SMTEncoder::shortcutRationalNumber(Expression const& _expr)
 {
 	if (_expr.annotation().type->category() == Type::Category::RationalNumber)
 	{
@@ -1121,7 +848,7 @@ bool SMTChecker::shortcutRationalNumber(Expression const& _expr)
 	return false;
 }
 
-void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
+void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
 {
 	auto type = _op.annotation().commonType;
 	solAssert(type, "");
@@ -1135,13 +862,14 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 		case Token::Div:
 		case Token::Mod:
 		{
-			defineExpr(_op, arithmeticOperation(
+			auto values = arithmeticOperation(
 				_op.getOperator(),
 				expr(_op.leftExpression()),
 				expr(_op.rightExpression()),
 				_op.annotation().commonType,
 				_op
-			));
+			);
+			defineExpr(_op, values.first);
 			break;
 		}
 		default:
@@ -1158,12 +886,12 @@ void SMTChecker::arithmeticOperation(BinaryOperation const& _op)
 		);
 }
 
-smt::Expression SMTChecker::arithmeticOperation(
+pair<smt::Expression, smt::Expression> SMTEncoder::arithmeticOperation(
 	Token _op,
 	smt::Expression const& _left,
 	smt::Expression const& _right,
 	TypePointer const& _commonType,
-	Expression const& _expression
+	Expression const&
 )
 {
 	static set<Token> validOperators{
@@ -1178,7 +906,7 @@ smt::Expression SMTChecker::arithmeticOperation(
 	solAssert(_commonType->category() == Type::Category::Integer, "");
 
 	auto const& intType = dynamic_cast<IntegerType const&>(*_commonType);
-	smt::Expression value(
+	smt::Expression valueNoMod(
 		_op == Token::Add ? _left + _right :
 		_op == Token::Sub ? _left - _right :
 		_op == Token::Div ? division(_left, _right, intType) :
@@ -1187,26 +915,13 @@ smt::Expression SMTChecker::arithmeticOperation(
 	);
 
 	if (_op == Token::Div || _op == Token::Mod)
-	{
-		addVerificationTarget(
-			VerificationTarget::Type::DivByZero,
-			_right,
-			&_expression
-		);
 		m_context.addAssertion(_right != 0);
-	}
-
-	addVerificationTarget(
-		VerificationTarget::Type::UnderOverflow,
-		value,
-		&_expression
-	);
 
 	smt::Expression intValueRange = (0 - smt::minValue(intType)) + smt::maxValue(intType) + 1;
-	value = smt::Expression::ite(
-		value > smt::maxValue(intType) || value < smt::minValue(intType),
-		value % intValueRange,
-		value
+	auto value = smt::Expression::ite(
+		valueNoMod > smt::maxValue(intType) || valueNoMod < smt::minValue(intType),
+		valueNoMod % intValueRange,
+		valueNoMod
 	);
 	if (intType.isSigned())
 	{
@@ -1217,10 +932,10 @@ smt::Expression SMTChecker::arithmeticOperation(
 		);
 	}
 
-	return value;
+	return {value, valueNoMod};
 }
 
-void SMTChecker::compareOperation(BinaryOperation const& _op)
+void SMTEncoder::compareOperation(BinaryOperation const& _op)
 {
 	solAssert(_op.annotation().commonType, "");
 	if (smt::isSupportedType(_op.annotation().commonType->category()))
@@ -1258,7 +973,7 @@ void SMTChecker::compareOperation(BinaryOperation const& _op)
 		);
 }
 
-void SMTChecker::booleanOperation(BinaryOperation const& _op)
+void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 {
 	solAssert(_op.getOperator() == Token::And || _op.getOperator() == Token::Or, "");
 	solAssert(_op.annotation().commonType, "");
@@ -1286,7 +1001,7 @@ void SMTChecker::booleanOperation(BinaryOperation const& _op)
 		);
 }
 
-smt::Expression SMTChecker::division(smt::Expression _left, smt::Expression _right, IntegerType const& _type)
+smt::Expression SMTEncoder::division(smt::Expression _left, smt::Expression _right, IntegerType const& _type)
 {
 	// Signed division in SMTLIB2 rounds differently for negative division.
 	if (_type.isSigned())
@@ -1299,7 +1014,7 @@ smt::Expression SMTChecker::division(smt::Expression _left, smt::Expression _rig
 		return _left / _right;
 }
 
-void SMTChecker::assignment(
+void SMTEncoder::assignment(
 	Expression const& _left,
 	vector<smt::Expression> const& _right,
 	TypePointer const& _type,
@@ -1339,7 +1054,7 @@ void SMTChecker::assignment(
 		);
 }
 
-smt::Expression SMTChecker::compoundAssignment(Assignment const& _assignment)
+smt::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment)
 {
 	static map<Token, Token> const compoundToArithmetic{
 		{Token::AssignAdd, Token::Add},
@@ -1351,21 +1066,22 @@ smt::Expression SMTChecker::compoundAssignment(Assignment const& _assignment)
 	Token op = _assignment.assignmentOperator();
 	solAssert(compoundToArithmetic.count(op), "");
 	auto decl = identifierToVariable(_assignment.leftHandSide());
-	return arithmeticOperation(
+	auto values = arithmeticOperation(
 		compoundToArithmetic.at(op),
 		decl ? currentValue(*decl) : expr(_assignment.leftHandSide()),
 		expr(_assignment.rightHandSide()),
 		_assignment.annotation().type,
 		_assignment
 	);
+	return values.first;
 }
 
-void SMTChecker::assignment(VariableDeclaration const& _variable, Expression const& _value)
+void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression const& _value)
 {
 	assignment(_variable, expr(_value));
 }
 
-void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expression const& _value)
+void SMTEncoder::assignment(VariableDeclaration const& _variable, smt::Expression const& _value)
 {
 	TypePointer type = _variable.type();
 	if (type->category() == Type::Category::Mapping)
@@ -1373,12 +1089,12 @@ void SMTChecker::assignment(VariableDeclaration const& _variable, smt::Expressio
 	m_context.addAssertion(m_context.newValue(_variable) == _value);
 }
 
-SMTChecker::VariableIndices SMTChecker::visitBranch(ASTNode const* _statement, smt::Expression _condition)
+SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smt::Expression _condition)
 {
 	return visitBranch(_statement, &_condition);
 }
 
-SMTChecker::VariableIndices SMTChecker::visitBranch(ASTNode const* _statement, smt::Expression const* _condition)
+SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smt::Expression const* _condition)
 {
 	auto indicesBeforeBranch = copyVariableIndices();
 	if (_condition)
@@ -1391,383 +1107,7 @@ SMTChecker::VariableIndices SMTChecker::visitBranch(ASTNode const* _statement, s
 	return indicesAfterBranch;
 }
 
-/// Verification targets.
-
-void SMTChecker::checkVerificationTargets(smt::Expression const& _constraints)
-{
-	for (auto& target: m_verificationTargets)
-		checkVerificationTarget(target, _constraints);
-}
-
-void SMTChecker::checkVerificationTarget(VerificationTarget& _target, smt::Expression const& _constraints)
-{
-	switch (_target.type)
-	{
-		case VerificationTarget::Type::ConstantCondition:
-			checkConstantCondition(_target);
-			break;
-		case VerificationTarget::Type::Underflow:
-			checkUnderflow(_target, _constraints);
-			break;
-		case VerificationTarget::Type::Overflow:
-			checkOverflow(_target, _constraints);
-			break;
-		case VerificationTarget::Type::UnderOverflow:
-			checkUnderflow(_target, _constraints);
-			checkOverflow(_target, _constraints);
-			break;
-		case VerificationTarget::Type::DivByZero:
-			checkDivByZero(_target);
-			break;
-		case VerificationTarget::Type::Balance:
-			checkBalance(_target);
-			break;
-		case VerificationTarget::Type::Assert:
-			checkAssert(_target);
-			break;
-		default:
-			solAssert(false, "");
-	}
-}
-
-void SMTChecker::checkConstantCondition(VerificationTarget& _target)
-{
-	checkBooleanNotConstant(
-		*_target.expression,
-		_target.constraints,
-		_target.value,
-		_target.callStack,
-		"Condition is always $VALUE."
-	);
-}
-
-void SMTChecker::checkUnderflow(VerificationTarget& _target, smt::Expression const& _constraints)
-{
-	solAssert(
-		_target.type == VerificationTarget::Type::Underflow ||
-			_target.type == VerificationTarget::Type::UnderOverflow,
-		""
-	);
-	auto intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
-	solAssert(intType, "");
-	checkCondition(
-		_target.constraints && _constraints && _target.value < smt::minValue(*intType),
-		_target.callStack,
-		_target.modelExpressions,
-		_target.expression->location(),
-		"Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")",
-		"<result>",
-		&_target.value
-	);
-}
-
-void SMTChecker::checkOverflow(VerificationTarget& _target, smt::Expression const& _constraints)
-{
-	solAssert(
-		_target.type == VerificationTarget::Type::Overflow ||
-			_target.type == VerificationTarget::Type::UnderOverflow,
-		""
-	);
-	auto intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
-	solAssert(intType, "");
-	checkCondition(
-		_target.constraints && _constraints && _target.value > smt::maxValue(*intType),
-		_target.callStack,
-		_target.modelExpressions,
-		_target.expression->location(),
-		"Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")",
-		"<result>",
-		&_target.value
-	);
-}
-
-void SMTChecker::checkDivByZero(VerificationTarget& _target)
-{
-	solAssert(_target.type == VerificationTarget::Type::DivByZero, "");
-	checkCondition(
-		_target.constraints && (_target.value == 0),
-		_target.callStack,
-		_target.modelExpressions,
-		_target.expression->location(),
-		"Division by zero",
-		"<result>",
-		&_target.value
-	);
-}
-
-void SMTChecker::checkBalance(VerificationTarget& _target)
-{
-	solAssert(_target.type == VerificationTarget::Type::Balance, "");
-	checkCondition(
-		_target.constraints && _target.value,
-		_target.callStack,
-		_target.modelExpressions,
-		_target.expression->location(),
-		"Insufficient funds",
-		"address(this).balance"
-	);
-}
-
-void SMTChecker::checkAssert(VerificationTarget& _target)
-{
-	solAssert(_target.type == VerificationTarget::Type::Assert, "");
-	checkCondition(
-		_target.constraints && !_target.value,
-		_target.callStack,
-		_target.modelExpressions,
-		_target.expression->location(),
-		"Assertion violation"
-	);
-}
-
-void SMTChecker::addVerificationTarget(
-	VerificationTarget::Type _type,
-	smt::Expression const& _value,
-	Expression const* _expression
-)
-{
-	VerificationTarget target{
-		_type,
-		_value,
-		currentPathConditions() && m_context.assertions(),
-		_expression,
-		m_callStack,
-		modelExpressions()
-	};
-	if (_type == VerificationTarget::Type::ConstantCondition)
-		checkVerificationTarget(target);
-	else
-		m_verificationTargets.emplace_back(move(target));
-}
-
-pair<vector<smt::Expression>, vector<string>> SMTChecker::modelExpressions()
-{
-	vector<smt::Expression> expressionsToEvaluate;
-	vector<string> expressionNames;
-	for (auto const& var: m_context.variables())
-	{
-		if (var.first->type()->isValueType())
-		{
-			expressionsToEvaluate.emplace_back(m_context.variable(*var.first)->currentValue());
-			expressionNames.push_back(var.first->name());
-		}
-	}
-	for (auto const& var: m_context.globalSymbols())
-	{
-		auto const& type = var.second->type();
-		if (
-			type->isValueType() &&
-			smt::smtKind(type->category()) != smt::Kind::Function
-		)
-		{
-			expressionsToEvaluate.emplace_back(var.second->currentValue());
-			expressionNames.push_back(var.first);
-		}
-	}
-	solAssert(m_scanner, "");
-	for (auto const& uf: m_uninterpretedTerms)
-	{
-		if (uf->annotation().type->isValueType())
-		{
-			expressionsToEvaluate.emplace_back(expr(*uf));
-			expressionNames.push_back(m_scanner->sourceAt(uf->location()));
-		}
-	}
-
-	return {expressionsToEvaluate, expressionNames};
-}
-
-void SMTChecker::checkCondition(
-	smt::Expression const& _condition,
-	vector<CallStackEntry> const& callStack,
-	pair<vector<smt::Expression>, vector<string>> const& _modelExpressions,
-	SourceLocation const& _location,
-	string const& _description,
-	string const& _additionalValueName,
-	smt::Expression const* _additionalValue
-)
-{
-	m_interface->push();
-	m_interface->addAssertion(_condition);
-
-	vector<smt::Expression> expressionsToEvaluate;
-	vector<string> expressionNames;
-	tie(expressionsToEvaluate, expressionNames) = _modelExpressions;
-	if (callStack.size())
-		if (_additionalValue)
-		{
-			expressionsToEvaluate.emplace_back(*_additionalValue);
-			expressionNames.push_back(_additionalValueName);
-		}
-	smt::CheckResult result;
-	vector<string> values;
-	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
-
-	string extraComment;
-	if (m_loopExecutionHappened)
-		extraComment =
-			"\nNote that some information is erased after the execution of loops.\n"
-			"You can re-introduce information using require().";
-	if (m_arrayAssignmentHappened)
-		extraComment +=
-			"\nNote that array aliasing is not supported,"
-			" therefore all mapping information is erased after"
-			" a mapping local variable/parameter is assigned.\n"
-			"You can re-introduce information using require().";
-	if (m_externalFunctionCallHappened)
-		extraComment +=
-			"\nNote that external function calls are not inlined,"
-			" even if the source code of the function is available."
-			" This is due to the possibility that the actual called contract"
-			" has the same ABI but implements the function differently.";
-
-	SecondarySourceLocation secondaryLocation{};
-	secondaryLocation.append(extraComment, SourceLocation{});
-
-	switch (result)
-	{
-	case smt::CheckResult::SATISFIABLE:
-	{
-		std::ostringstream message;
-		message << _description << " happens here";
-		if (callStack.size())
-		{
-			std::ostringstream modelMessage;
-			modelMessage << "  for:\n";
-			solAssert(values.size() == expressionNames.size(), "");
-			map<string, string> sortedModel;
-			for (size_t i = 0; i < values.size(); ++i)
-				if (expressionsToEvaluate.at(i).name != values.at(i))
-					sortedModel[expressionNames.at(i)] = values.at(i);
-
-			for (auto const& eval: sortedModel)
-				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
-			m_errorReporter.warning(
-				_location,
-				message.str(),
-				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
-				.append(callStackMessage(callStack))
-				.append(move(secondaryLocation))
-			);
-		}
-		else
-		{
-			message << ".";
-			m_errorReporter.warning(_location, message.str(), secondaryLocation);
-		}
-		break;
-	}
-	case smt::CheckResult::UNSATISFIABLE:
-		break;
-	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here.", secondaryLocation);
-		break;
-	case smt::CheckResult::CONFLICTING:
-		m_errorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
-		break;
-	case smt::CheckResult::ERROR:
-		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
-		break;
-	}
-
-	m_interface->pop();
-}
-
-void SMTChecker::checkBooleanNotConstant(
-	Expression const& _condition,
-	smt::Expression const& _constraints,
-	smt::Expression const& _value,
-	vector<CallStackEntry> const& _callStack,
-	string const& _description
-)
-{
-	// Do not check for const-ness if this is a constant.
-	if (dynamic_cast<Literal const*>(&_condition))
-		return;
-
-	m_interface->push();
-	m_interface->addAssertion(_constraints && _value);
-	auto positiveResult = checkSatisfiable();
-	m_interface->pop();
-
-	m_interface->push();
-	m_interface->addAssertion(_constraints && !_value);
-	auto negatedResult = checkSatisfiable();
-	m_interface->pop();
-
-	if (positiveResult == smt::CheckResult::ERROR || negatedResult == smt::CheckResult::ERROR)
-		m_errorReporter.warning(_condition.location(), "Error trying to invoke SMT solver.");
-	else if (positiveResult == smt::CheckResult::CONFLICTING || negatedResult == smt::CheckResult::CONFLICTING)
-		m_errorReporter.warning(_condition.location(), "At least two SMT solvers provided conflicting answers. Results might not be sound.");
-	else if (positiveResult == smt::CheckResult::SATISFIABLE && negatedResult == smt::CheckResult::SATISFIABLE)
-	{
-		// everything fine.
-	}
-	else if (positiveResult == smt::CheckResult::UNKNOWN || negatedResult == smt::CheckResult::UNKNOWN)
-	{
-		// can't do anything.
-	}
-	else if (positiveResult == smt::CheckResult::UNSATISFIABLE && negatedResult == smt::CheckResult::UNSATISFIABLE)
-		m_errorReporter.warning(_condition.location(), "Condition unreachable.", callStackMessage(_callStack));
-	else
-	{
-		string value;
-		if (positiveResult == smt::CheckResult::SATISFIABLE)
-		{
-			solAssert(negatedResult == smt::CheckResult::UNSATISFIABLE, "");
-			value = "true";
-		}
-		else
-		{
-			solAssert(positiveResult == smt::CheckResult::UNSATISFIABLE, "");
-			solAssert(negatedResult == smt::CheckResult::SATISFIABLE, "");
-			value = "false";
-		}
-		m_errorReporter.warning(
-			_condition.location(),
-			boost::algorithm::replace_all_copy(_description, "$VALUE", value),
-			callStackMessage(_callStack)
-		);
-	}
-}
-
-pair<smt::CheckResult, vector<string>>
-SMTChecker::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _expressionsToEvaluate)
-{
-	smt::CheckResult result;
-	vector<string> values;
-	try
-	{
-		tie(result, values) = m_interface->check(_expressionsToEvaluate);
-	}
-	catch (smt::SolverError const& _e)
-	{
-		string description("Error querying SMT solver");
-		if (_e.comment())
-			description += ": " + *_e.comment();
-		m_errorReporter.warning(description);
-		result = smt::CheckResult::ERROR;
-	}
-
-	for (string& value: values)
-	{
-		try
-		{
-			// Parse and re-format nicely
-			value = formatNumberReadable(bigint(value));
-		}
-		catch (...) { }
-	}
-
-	return make_pair(result, values);
-}
-
-smt::CheckResult SMTChecker::checkSatisfiable()
-{
-	return checkSatisfiableAndGenerateModel({}).first;
-}
-
-void SMTChecker::initializeFunctionCallParameters(CallableDeclaration const& _function, vector<smt::Expression> const& _callArgs)
+void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _function, vector<smt::Expression> const& _callArgs)
 {
 	auto const& funParams = _function.parameters();
 	solAssert(funParams.size() == _callArgs.size(), "");
@@ -1795,7 +1135,7 @@ void SMTChecker::initializeFunctionCallParameters(CallableDeclaration const& _fu
 			}
 }
 
-void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)
+void SMTEncoder::initializeLocalVariables(FunctionDefinition const& _function)
 {
 	for (auto const& variable: _function.localVariables())
 		if (createVariable(*variable))
@@ -1811,24 +1151,19 @@ void SMTChecker::initializeLocalVariables(FunctionDefinition const& _function)
 				m_context.setZeroValue(*retParam);
 }
 
-void SMTChecker::resetStateVariables()
+void SMTEncoder::resetStateVariables()
 {
 	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.isStateVariable(); });
 }
 
-void SMTChecker::resetStorageReferences()
-{
-	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
-}
-
-TypePointer SMTChecker::typeWithoutPointer(TypePointer const& _type)
+TypePointer SMTEncoder::typeWithoutPointer(TypePointer const& _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
 		return TypeProvider::withLocationIfReference(refType->location(), _type);
 	return _type;
 }
 
-void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
+void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
 {
 	auto cmp = [] (VariableDeclaration const* var1, VariableDeclaration const* var2) {
 		return var1->id() < var2->id();
@@ -1848,19 +1183,19 @@ void SMTChecker::mergeVariables(set<VariableDeclaration const*> const& _variable
 	}
 }
 
-smt::Expression SMTChecker::currentValue(VariableDeclaration const& _decl)
+smt::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl)
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->currentValue();
 }
 
-smt::Expression SMTChecker::valueAtIndex(VariableDeclaration const& _decl, int _index)
+smt::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, int _index)
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->valueAtIndex(_index);
 }
 
-bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
+bool SMTEncoder::createVariable(VariableDeclaration const& _varDecl)
 {
 	if (m_context.knownVariable(_varDecl))
 		return true;
@@ -1876,7 +1211,7 @@ bool SMTChecker::createVariable(VariableDeclaration const& _varDecl)
 	return true;
 }
 
-smt::Expression SMTChecker::expr(Expression const& _e)
+smt::Expression SMTEncoder::expr(Expression const& _e)
 {
 	if (!m_context.knownExpression(_e))
 	{
@@ -1886,7 +1221,7 @@ smt::Expression SMTChecker::expr(Expression const& _e)
 	return m_context.expression(_e)->currentValue();
 }
 
-void SMTChecker::createExpr(Expression const& _e)
+void SMTEncoder::createExpr(Expression const& _e)
 {
 	bool abstract = m_context.createExpression(_e);
 	if (abstract)
@@ -1896,32 +1231,32 @@ void SMTChecker::createExpr(Expression const& _e)
 		);
 }
 
-void SMTChecker::defineExpr(Expression const& _e, smt::Expression _value)
+void SMTEncoder::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
 	solAssert(smt::smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_context.addAssertion(expr(_e) == _value);
 }
 
-void SMTChecker::popPathCondition()
+void SMTEncoder::popPathCondition()
 {
 	solAssert(m_pathConditions.size() > 0, "Cannot pop path condition, empty.");
 	m_pathConditions.pop_back();
 }
 
-void SMTChecker::pushPathCondition(smt::Expression const& _e)
+void SMTEncoder::pushPathCondition(smt::Expression const& _e)
 {
 	m_pathConditions.push_back(currentPathConditions() && _e);
 }
 
-smt::Expression SMTChecker::currentPathConditions()
+smt::Expression SMTEncoder::currentPathConditions()
 {
 	if (m_pathConditions.empty())
 		return smt::Expression(true);
 	return m_pathConditions.back();
 }
 
-SecondarySourceLocation SMTChecker::callStackMessage(vector<CallStackEntry> const& _callStack)
+SecondarySourceLocation SMTEncoder::callStackMessage(vector<CallStackEntry> const& _callStack)
 {
 	SecondarySourceLocation callStackLocation;
 	solAssert(!_callStack.empty(), "");
@@ -1934,7 +1269,7 @@ SecondarySourceLocation SMTChecker::callStackMessage(vector<CallStackEntry> cons
 	return callStackLocation;
 }
 
-pair<CallableDeclaration const*, ASTNode const*> SMTChecker::popCallStack()
+pair<CallableDeclaration const*, ASTNode const*> SMTEncoder::popCallStack()
 {
 	solAssert(!m_callStack.empty(), "");
 	auto lastCalled = m_callStack.back();
@@ -1942,27 +1277,22 @@ pair<CallableDeclaration const*, ASTNode const*> SMTChecker::popCallStack()
 	return lastCalled;
 }
 
-void SMTChecker::pushCallStack(CallStackEntry _entry)
+void SMTEncoder::pushCallStack(CallStackEntry _entry)
 {
 	m_callStack.push_back(_entry);
 }
 
-void SMTChecker::addPathConjoinedExpression(smt::Expression const& _e)
-{
-	m_context.addAssertion(currentPathConditions() && _e);
-}
-
-void SMTChecker::addPathImpliedExpression(smt::Expression const& _e)
+void SMTEncoder::addPathImpliedExpression(smt::Expression const& _e)
 {
 	m_context.addAssertion(smt::Expression::implies(currentPathConditions(), _e));
 }
 
-bool SMTChecker::isRootFunction()
+bool SMTEncoder::isRootFunction()
 {
 	return m_callStack.size() == 1;
 }
 
-bool SMTChecker::visitedFunction(FunctionDefinition const* _funDef)
+bool SMTEncoder::visitedFunction(FunctionDefinition const* _funDef)
 {
 	for (auto const& call: m_callStack)
 		if (call.first == _funDef)
@@ -1970,7 +1300,7 @@ bool SMTChecker::visitedFunction(FunctionDefinition const* _funDef)
 	return false;
 }
 
-SMTChecker::VariableIndices SMTChecker::copyVariableIndices()
+SMTEncoder::VariableIndices SMTEncoder::copyVariableIndices()
 {
 	VariableIndices indices;
 	for (auto const& var: m_context.variables())
@@ -1978,56 +1308,13 @@ SMTChecker::VariableIndices SMTChecker::copyVariableIndices()
 	return indices;
 }
 
-void SMTChecker::resetVariableIndices(VariableIndices const& _indices)
+void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
 		m_context.variable(*var.first)->index() = var.second;
 }
 
-FunctionDefinition const* SMTChecker::inlinedFunctionCallToDefinition(FunctionCall const& _funCall)
-{
-	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
-		return nullptr;
-
-	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	if (funType.kind() == FunctionType::Kind::External)
-	{
-		auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
-		auto identifier = memberAccess ?
-			dynamic_cast<Identifier const*>(&memberAccess->expression()) :
-			nullptr;
-		if (!(
-			identifier &&
-			identifier->name() == "this" &&
-			identifier->annotation().referencedDeclaration &&
-			dynamic_cast<MagicVariableDeclaration const*>(identifier->annotation().referencedDeclaration)
-		))
-			return nullptr;
-	}
-	else if (funType.kind() != FunctionType::Kind::Internal)
-		return nullptr;
-
-	FunctionDefinition const* funDef = nullptr;
-	Expression const* calledExpr = &_funCall.expression();
-
-	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(&_funCall.expression()))
-	{
-		solAssert(fun->components().size() == 1, "");
-		calledExpr = fun->components().front().get();
-	}
-
-	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
-		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
-	else if (MemberAccess const* fun = dynamic_cast<MemberAccess const*>(calledExpr))
-		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
-
-	if (funDef && funDef->isImplemented())
-		return funDef;
-
-	return nullptr;
-}
-
-Expression const* SMTChecker::leftmostBase(IndexAccess const& _indexAccess)
+Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 {
 	Expression const* base = &_indexAccess.baseExpression();
 	while (auto access = dynamic_cast<IndexAccess const*>(base))
@@ -2035,7 +1322,7 @@ Expression const* SMTChecker::leftmostBase(IndexAccess const& _indexAccess)
 	return base;
 }
 
-set<VariableDeclaration const*> SMTChecker::touchedVariables(ASTNode const& _node)
+set<VariableDeclaration const*> SMTEncoder::touchedVariables(ASTNode const& _node)
 {
 	solAssert(!m_callStack.empty(), "");
 	vector<CallableDeclaration const*> callStack;
@@ -2044,7 +1331,7 @@ set<VariableDeclaration const*> SMTChecker::touchedVariables(ASTNode const& _nod
 	return m_variableUsage.touchedVariables(_node, callStack);
 }
 
-VariableDeclaration const* SMTChecker::identifierToVariable(Expression const& _expr)
+VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _expr)
 {
 	if (auto identifier = dynamic_cast<Identifier const*>(&_expr))
 	{
@@ -2055,4 +1342,16 @@ VariableDeclaration const* SMTChecker::identifierToVariable(Expression const& _e
 		}
 	}
 	return nullptr;
+}
+
+string SMTEncoder::extraComment()
+{
+	string extra;
+	if (m_arrayAssignmentHappened)
+		extra +=
+			"\nNote that array aliasing is not supported,"
+			" therefore all mapping information is erased after"
+			" a mapping local variable/parameter is assigned.\n"
+			"You can re-introduce information using require().";
+	return extra;
 }

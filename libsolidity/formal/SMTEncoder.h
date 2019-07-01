@@ -14,6 +14,11 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+ * Encodes Solidity into SMT expressions without creating
+ * any verification targets.
+ * Also implements the SSA scheme for branches.
+ */
 
 #pragma once
 
@@ -43,25 +48,15 @@ namespace dev
 namespace solidity
 {
 
-class SMTChecker: private ASTConstVisitor
+class SMTEncoder: public ASTConstVisitor
 {
 public:
-	SMTChecker(langutil::ErrorReporter& _errorReporter, std::map<h256, std::string> const& _smtlib2Responses);
+	SMTEncoder(smt::EncodingContext& _context, std::map<h256, std::string> const& _smtlib2Responses);
 
-	void analyze(SourceUnit const& _sources, std::shared_ptr<langutil::Scanner> const& _scanner);
-
-	/// This is used if the SMT solver is not directly linked into this binary.
-	/// @returns a list of inputs to the SMT solver that were not part of the argument to
-	/// the constructor.
-	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
-
-	/// @returns the FunctionDefinition of a called function if possible and should inline,
-	/// otherwise nullptr.
-	static FunctionDefinition const* inlinedFunctionCallToDefinition(FunctionCall const& _funCall);
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
-private:
+protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined
 	// TODO: or just force a certain order, but people might have a different idea about that.
@@ -74,8 +69,8 @@ private:
 	void endVisit(FunctionDefinition const& _node) override;
 	bool visit(PlaceholderStatement const& _node) override;
 	bool visit(IfStatement const& _node) override;
-	bool visit(WhileStatement const& _node) override;
-	bool visit(ForStatement const& _node) override;
+	bool visit(WhileStatement const&) override { return false; }
+	bool visit(ForStatement const&) override { return false; }
 	void endVisit(VariableDeclarationStatement const& _node) override;
 	void endVisit(Assignment const& _node) override;
 	void endVisit(TupleExpression const& _node) override;
@@ -95,10 +90,10 @@ private:
 	/// Symbolic _expr is the rational literal.
 	bool shortcutRationalNumber(Expression const& _expr);
 	void arithmeticOperation(BinaryOperation const& _op);
-	/// @returns _op(_left, _right).
+	/// @returns _op(_left, _right) with and without modular arithmetic.
 	/// Used by the function above, compound assignments and
 	/// unary increment/decrement.
-	smt::Expression arithmeticOperation(
+	virtual std::pair<smt::Expression, smt::Expression> arithmeticOperation(
 		Token _op,
 		smt::Expression const& _left,
 		smt::Expression const& _right,
@@ -108,18 +103,11 @@ private:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 
+	void initFunction(FunctionDefinition const& _function);
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
 	void visitTypeConversion(FunctionCall const& _funCall);
-	/// Visits the FunctionDefinition of the called function
-	/// if available and inlines the return value.
-	void inlineFunctionCall(FunctionCall const& _funCall);
-	/// Creates an uninterpreted function call.
-	void abstractFunctionCall(FunctionCall const& _funCall);
-	/// Inlines if the function call is internal or external to `this`.
-	/// Erases knowledge about state variables if external.
-	void internalOrExternalFunctionCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
 
 	/// Encodes a modifier or function body according to the modifier
@@ -165,71 +153,9 @@ private:
 
 	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
 
-	/// Verification targets.
-	//@{
-	struct VerificationTarget
-	{
-		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert } type;
-		smt::Expression value;
-		smt::Expression constraints;
-		Expression const* expression;
-		std::vector<CallStackEntry> callStack;
-		std::pair<std::vector<smt::Expression>, std::vector<std::string>> modelExpressions;
-	};
-
-	void checkVerificationTargets(smt::Expression const& _constraints);
-	void checkVerificationTarget(VerificationTarget& _target, smt::Expression const& _constraints = smt::Expression(true));
-	void checkConstantCondition(VerificationTarget& _target);
-	void checkUnderflow(VerificationTarget& _target, smt::Expression const& _constraints);
-	void checkOverflow(VerificationTarget& _target, smt::Expression const& _constraints);
-	void checkDivByZero(VerificationTarget& _target);
-	void checkBalance(VerificationTarget& _target);
-	void checkAssert(VerificationTarget& _target);
-	void addVerificationTarget(
-		VerificationTarget::Type _type,
-		smt::Expression const& _value,
-		Expression const* _expression
-	);
-	//@}
-
-	/// Solver related.
-	//@{
-
-	std::pair<std::vector<smt::Expression>, std::vector<std::string>> modelExpressions();
-	/// Check that a condition can be satisfied.
-	void checkCondition(
-		smt::Expression const& _condition,
-		std::vector<CallStackEntry> const& callStack,
-		std::pair<std::vector<smt::Expression>, std::vector<std::string>> const& _modelExpressions,
-		langutil::SourceLocation const& _location,
-		std::string const& _description,
-		std::string const& _additionalValueName = "",
-		smt::Expression const* _additionalValue = nullptr
-	);
-	/// Checks whether a Boolean condition is constant.
-	/// Do not warn if the expression is a literal constant.
-	/// @param _condition the Solidity expression, used to check whether it is a Literal and for location.
-	/// @param _constraints the program constraints, including control-flow.
-	/// @param _value the Boolean term to be checked.
-	/// @param _callStack the callStack to be shown with the model if applicable.
-	/// @param _description the warning string, $VALUE will be replaced by the constant value.
-	void checkBooleanNotConstant(
-		Expression const& _condition,
-		smt::Expression const& _constraints,
-		smt::Expression const& _value,
-		std::vector<CallStackEntry> const& _callStack,
-		std::string const& _description
-	);
-	std::pair<smt::CheckResult, std::vector<std::string>>
-	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
-
-	smt::CheckResult checkSatisfiable();
-	//@}
-
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
 	void resetStateVariables();
-	void resetStorageReferences();
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
 
@@ -265,8 +191,6 @@ private:
 	CallStackEntry popCallStack();
 	/// Adds (_definition, _node) to the callstack.
 	void pushCallStack(CallStackEntry _entry);
-	/// Conjoin the current path conditions with the given parameter and add to the solver
-	void addPathConjoinedExpression(smt::Expression const& _e);
 	/// Add to the solver: the given expression implied by the current path conditions
 	void addPathImpliedExpression(smt::Expression const& _e);
 
@@ -281,11 +205,12 @@ private:
 	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
+	/// @returns a note to be added to warnings.
+	std::string extraComment();
+
 	std::shared_ptr<smt::SolverInterface> m_interface;
 	smt::VariableUsage m_variableUsage;
-	bool m_loopExecutionHappened = false;
 	bool m_arrayAssignmentHappened = false;
-	bool m_externalFunctionCallHappened = false;
 	// True if the "No SMT solver available" warning was already created.
 	bool m_noSolverWarning = false;
 
@@ -294,9 +219,7 @@ private:
 	/// Used to retrieve models.
 	std::set<Expression const*> m_uninterpretedTerms;
 	std::vector<smt::Expression> m_pathConditions;
-	/// ErrorReporter that comes from CompilerStack.
-	langutil::ErrorReporter& m_errorReporterReference;
-	/// Local SMTChecker ErrorReporter.
+	/// Local SMTEncoder ErrorReporter.
 	/// This is necessary to show the "No SMT solver available"
 	/// warning before the others in case it's needed.
 	langutil::ErrorReporter m_errorReporter;
@@ -311,8 +234,6 @@ private:
 	/// Returns true if _funDef was already visited.
 	bool visitedFunction(FunctionDefinition const* _funDef);
 
-	std::vector<VerificationTarget> m_verificationTargets;
-
 	/// Depth of visit to modifiers.
 	/// When m_modifierDepth == #modifiers the function can be visited
 	/// when placeholder is visited.
@@ -320,7 +241,7 @@ private:
 	std::vector<int> m_modifierDepthStack;
 
 	/// Stores the context of the encoding.
-	smt::EncodingContext m_context;
+	smt::EncodingContext& m_context;
 };
 
 }
