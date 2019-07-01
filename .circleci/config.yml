@@ -564,6 +564,20 @@ jobs:
           command: |
             test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
 
+  t_ems_external_0xproject:
+    docker:
+      - image: circleci/node:9
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: External 0xProject tests
+          command: |
+            test/externalTests/0xproject.sh /tmp/workspace/soljson.js || test/externalTests/0xproject.sh /tmp/workspace/soljson.js
+
 workflows:
   version: 2
 
@@ -623,6 +637,7 @@ workflows:
       - t_ems_external_zeppelin: *workflow_emscripten
       - t_ems_external_gnosis: *workflow_emscripten
       - t_ems_external_colony: *workflow_emscripten
+      - t_ems_external_0xproject: *workflow_emscripten
 
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
