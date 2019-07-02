@@ -9,4 +9,3 @@ contract C
 // ----
 // Warning: (76-96): Unused local variable.
 // Warning: (99-114): Assertion checker does not yet implement inline arrays.
-// Warning: (99-114): Internal error: Expression undefined for SMT solver.

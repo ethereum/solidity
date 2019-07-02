@@ -123,14 +123,18 @@ contract PropagateThroughReturnValue {
 // Warning: (353-378): Assertion checker does not yet support the type of this variable.
 // Warning: (384-409): Assertion checker does not yet support the type of this variable.
 // Warning: (464-479): Assertion checker does not yet support this expression.
+// Warning: (464-475): Assertion checker does not yet implement type struct Reference.St storage ref
 // Warning: (464-494): Assertion checker does not yet implement such assignments.
 // Warning: (539-554): Assertion checker does not yet support this expression.
+// Warning: (539-550): Assertion checker does not yet implement type struct Reference.St storage ref
 // Warning: (557-567): Assertion checker does not yet support this expression.
+// Warning: (557-563): Assertion checker does not yet implement type struct Reference.St storage ref
 // Warning: (539-567): Assertion checker does not yet implement such assignments.
 // Warning: (629-643): Assertion checker does not yet support the type of this variable.
-// Warning: (646-668): Internal error: Expression undefined for SMT solver.
-// Warning: (646-668): Assertion checker does not yet implement this type.
+// Warning: (646-668): Assertion checker does not yet implement type struct Reference.St storage ref
+// Warning: (706-728): Assertion checker does not yet implement type struct Reference.St storage ref
 // Warning: (700-728): Assertion checker does not yet implement type struct Reference.St storage pointer
 // Warning: (748-755): Assertion checker does not yet support this expression.
+// Warning: (748-751): Assertion checker does not yet implement type struct Reference.St storage pointer
 // Warning: (748-770): Assertion checker does not yet implement such assignments.
 // Warning: (849-905): Assertion checker does not yet support constructors.
