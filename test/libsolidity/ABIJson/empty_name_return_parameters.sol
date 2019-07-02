@@ -11,6 +11,7 @@ contract test {
 //     "inputs":
 //     [
 //       {
+//         "internalType": "uint256",
 //         "name": "k",
 //         "type": "uint256"
 //       }
@@ -19,6 +20,7 @@ contract test {
 //     "outputs":
 //     [
 //       {
+//         "internalType": "uint256",
 //         "name": "",
 //         "type": "uint256"
 //       }

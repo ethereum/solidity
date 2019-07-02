@@ -45,15 +45,25 @@ private:
 	/// @returns a json value suitable for a list of types in function input or output
 	/// parameters or other places. If @a _forLibrary is true, complex types are referenced
 	/// by name, otherwise they are anonymously expanded.
+	/// @a _solidityTypes is the list of original Solidity types where @a _encodingTypes is the list of
+	/// ABI types used for the actual encoding.
 	static Json::Value formatTypeList(
 		std::vector<std::string> const& _names,
-		std::vector<TypePointer> const& _types,
+		std::vector<TypePointer> const& _encodingTypes,
+		std::vector<TypePointer> const& _solidityTypes,
 		bool _forLibrary
 	);
-	/// @returns a Json object with "name", "type" and potentially "components" keys, according
-	/// to the ABI specification.
+	/// @returns a Json object with "name", "type", "internalType" and potentially
+	/// "components" keys, according to the ABI specification.
 	/// If it is possible to express the type as a single string, it is allowed to return a single string.
-	static Json::Value formatType(std::string const& _name, Type const& _type, bool _forLibrary);
+	/// @a _solidityType is the original Solidity type and @a _encodingTypes is the
+	/// ABI type used for the actual encoding.
+	static Json::Value formatType(
+		std::string const& _name,
+		Type const& _encodingType,
+		Type const& _solidityType,
+		bool _forLibrary
+	);
 };
 
 }

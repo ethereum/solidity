@@ -15,11 +15,13 @@ contract C {
 //         "components":
 //         [
 //           {
+//             "internalType": "uint256[2]",
 //             "name": "x",
 //             "type": "uint256[2]"
 //           }
 //         ],
 //         "indexed": false,
+//         "internalType": "struct C.T",
 //         "name": "t",
 //         "type": "tuple"
 //       },
@@ -27,6 +29,7 @@ contract C {
 //         "components":
 //         [
 //           {
+//             "internalType": "uint256",
 //             "name": "a",
 //             "type": "uint256"
 //           },
@@ -34,19 +37,23 @@ contract C {
 //             "components":
 //             [
 //               {
+//                 "internalType": "uint256[2]",
 //                 "name": "x",
 //                 "type": "uint256[2]"
 //               }
 //             ],
+//             "internalType": "struct C.T[]",
 //             "name": "sub",
 //             "type": "tuple[]"
 //           },
 //           {
+//             "internalType": "bytes",
 //             "name": "b",
 //             "type": "bytes"
 //           }
 //         ],
 //         "indexed": false,
+//         "internalType": "struct C.S",
 //         "name": "s",
 //         "type": "tuple"
 //       }

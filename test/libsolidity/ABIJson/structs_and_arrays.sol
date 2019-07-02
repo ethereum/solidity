@@ -10,14 +10,17 @@ contract test {
 //     "inputs":
 //     [
 //       {
+//         "internalType": "string",
 //         "name": "a",
 //         "type": "string"
 //       },
 //       {
+//         "internalType": "bytes",
 //         "name": "b",
 //         "type": "bytes"
 //       },
 //       {
+//         "internalType": "uint256[]",
 //         "name": "c",
 //         "type": "uint256[]"
 //       }

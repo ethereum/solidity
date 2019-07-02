@@ -17,18 +17,22 @@ contract C {
 //         "components":
 //         [
 //           {
+//             "internalType": "contract C[]",
 //             "name": "x",
 //             "type": "address[]"
 //           },
 //           {
+//             "internalType": "contract C",
 //             "name": "y",
 //             "type": "address"
 //           }
 //         ],
+//         "internalType": "struct C.S",
 //         "name": "s",
 //         "type": "tuple"
 //       },
 //       {
+//         "internalType": "contract C",
 //         "name": "c",
 //         "type": "address"
 //       }
