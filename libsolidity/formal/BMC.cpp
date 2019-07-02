@@ -28,8 +28,9 @@ using namespace langutil;
 using namespace dev::solidity;
 
 BMC::BMC(smt::EncodingContext& _context, ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
-	SMTEncoder(_context, _smtlib2Responses),
-	m_outerErrorReporter(_errorReporter)
+	SMTEncoder(_context),
+	m_outerErrorReporter(_errorReporter),
+	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses))
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (!_smtlib2Responses.empty())

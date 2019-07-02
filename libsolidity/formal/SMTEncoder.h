@@ -24,7 +24,6 @@
 
 
 #include <libsolidity/formal/EncodingContext.h>
-#include <libsolidity/formal/SMTPortfolio.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/VariableUsage.h>
 
@@ -51,7 +50,7 @@ namespace solidity
 class SMTEncoder: public ASTConstVisitor
 {
 public:
-	SMTEncoder(smt::EncodingContext& _context, std::map<h256, std::string> const& _smtlib2Responses);
+	SMTEncoder(smt::EncodingContext& _context);
 
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
@@ -208,7 +207,6 @@ protected:
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
 
-	std::shared_ptr<smt::SolverInterface> m_interface;
 	smt::VariableUsage m_variableUsage;
 	bool m_arrayAssignmentHappened = false;
 	// True if the "No SMT solver available" warning was already created.
