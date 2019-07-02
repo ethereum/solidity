@@ -2,6 +2,7 @@
 
 
 Language Features:
+ * Inline Assembly: Support direct constants of value type in inline assembly.
 
 
 

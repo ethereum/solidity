@@ -629,14 +629,27 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");
-			if (var->isConstant())
+			if (var->isConstant() && (!type(*var)->isValueType() || (
+				type(*var->value())->category() != Type::Category::RationalNumber &&
+				dynamic_cast<Literal const*>(var->value().get()) == nullptr
+			)))
 			{
-				m_errorReporter.typeError(_identifier.location, "Constant variables not supported by inline assembly.");
+				m_errorReporter.typeError(_identifier.location, "Only direct number constants are supported by inline assembly.");
+				return size_t(-1);
+			}
+			else if (var->isConstant() && _context == yul::IdentifierContext::LValue)
+			{
+				m_errorReporter.typeError(_identifier.location, "Constant variables cannot be assigned to.");
 				return size_t(-1);
 			}
 			else if (requiresStorage)
 			{
-				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
+				if (var->isConstant())
+				{
+					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on non-constant storage variables.");
+					return size_t(-1);
+				}
+				else if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
 				{
 					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
 					return size_t(-1);
@@ -647,7 +660,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					return size_t(-1);
 				}
 			}
-			else if (!var->isLocalVariable())
+			else if (!var->isConstant() && var->isStateVariable())
 			{
 				m_errorReporter.typeError(_identifier.location, "Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.");
 				return size_t(-1);

@@ -1,8 +1,8 @@
-contract test {
-    uint constant x = 1;
+contract C {
+    uint constant x = 2**20;
     function f() public pure {
         assembly {
-            let y := x
+            let a := x
         }
     }
 }
