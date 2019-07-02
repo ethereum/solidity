@@ -1264,8 +1264,6 @@ SecondarySourceLocation SMTEncoder::callStackMessage(vector<CallStackEntry> cons
 	for (auto const& call: _callStack | boost::adaptors::reversed)
 		if (call.second)
 			callStackLocation.append("", call.second->location());
-	// The first function in the tx has no FunctionCall.
-	solAssert(_callStack.front().second == nullptr, "");
 	return callStackLocation;
 }
 
