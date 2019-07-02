@@ -30,7 +30,7 @@
 
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SMTEncoder.h>
-#include <libsolidity/formal/SMTPortfolio.h>
+#include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
@@ -174,6 +174,8 @@ private:
 	langutil::ErrorReporter& m_outerErrorReporter;
 
 	std::vector<VerificationTarget> m_verificationTargets;
+
+	std::shared_ptr<smt::SolverInterface> m_interface;
 };
 
 }

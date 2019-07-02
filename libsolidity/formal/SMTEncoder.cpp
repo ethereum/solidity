@@ -28,8 +28,7 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-SMTEncoder::SMTEncoder(smt::EncodingContext& _context, map<h256, string> const& _smtlib2Responses):
-	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses)),
+SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
 	m_errorReporter(m_smtErrors),
 	m_context(_context)
 {
@@ -471,7 +470,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		solAssert(value, "");
 
 		smt::Expression thisBalance = m_context.balance();
-		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), *m_interface);
+		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), *m_context.solver());
 
 		m_context.transfer(m_context.thisAddress(), expr(address), expr(*value));
 		break;
@@ -616,7 +615,7 @@ void SMTEncoder::endVisit(Literal const& _literal)
 			auto stringType = TypeProvider::stringMemory();
 			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type);
 			solAssert(stringLit, "");
-			auto result = smt::newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_interface);
+			auto result = smt::newSymbolicVariable(*stringType, stringLit->richIdentifier(), *m_context.solver());
 			m_context.createExpression(_literal, result.second);
 		}
 		m_errorReporter.warning(
@@ -686,7 +685,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		if (_memberAccess.memberName() == "balance")
 		{
 			defineExpr(_memberAccess, m_context.balance(expr(_memberAccess.expression())));
-			setSymbolicUnknownValue(*m_context.expression(_memberAccess), *m_interface);
+			setSymbolicUnknownValue(*m_context.expression(_memberAccess), *m_context.solver());
 			m_uninterpretedTerms.insert(&_memberAccess);
 			return false;
 		}
@@ -733,7 +732,7 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 	setSymbolicUnknownValue(
 		expr(_indexAccess),
 		_indexAccess.annotation().type,
-		*m_interface
+		*m_context.solver()
 	);
 	m_uninterpretedTerms.insert(&_indexAccess);
 }
