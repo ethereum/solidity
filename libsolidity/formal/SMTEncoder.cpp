@@ -501,16 +501,16 @@ void SMTEncoder::visitAssert(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
 	solAssert(args.size() == 1, "");
-	solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
-	addPathImpliedExpression(expr(*args[0]));
+	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
+	addPathImpliedExpression(expr(*args.front()));
 }
 
 void SMTEncoder::visitRequire(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
-	solAssert(args.size() == 1, "");
-	solAssert(args[0]->annotation().type->category() == Type::Category::Bool, "");
-	addPathImpliedExpression(expr(*args[0]));
+	solAssert(args.size() >= 1, "");
+	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
+	addPathImpliedExpression(expr(*args.front()));
 }
 
 void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
