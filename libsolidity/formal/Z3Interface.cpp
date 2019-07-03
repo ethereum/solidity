@@ -25,12 +25,13 @@ using namespace dev;
 using namespace dev::solidity::smt;
 
 Z3Interface::Z3Interface():
-	m_solver(m_context)
+	m_context(make_shared<z3::context>()),
+	m_solver(*m_context)
 {
 	// This needs to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
 	// This needs to be set in the context.
-	m_context.set("timeout", queryTimeout);
+	m_context->set("timeout", queryTimeout);
 }
 
 void Z3Interface::reset()
@@ -55,7 +56,7 @@ void Z3Interface::declareVariable(string const& _name, Sort const& _sort)
 	if (_sort.kind == Kind::Function)
 		declareFunction(_name, _sort);
 	else if (!m_constants.count(_name))
-		m_constants.insert({_name, m_context.constant(_name.c_str(), z3Sort(_sort))});
+		m_constants.insert({_name, m_context->constant(_name.c_str(), z3Sort(_sort))});
 }
 
 void Z3Interface::declareFunction(string const& _name, Sort const& _sort)
@@ -64,7 +65,7 @@ void Z3Interface::declareFunction(string const& _name, Sort const& _sort)
 	if (!m_functions.count(_name))
 	{
 		FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
-		m_functions.insert({_name, m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain))});
+		m_functions.insert({_name, m_context->function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain))});
 	}
 }
 
@@ -112,7 +113,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 {
 	if (_expr.arguments.empty() && m_constants.count(_expr.name))
 		return m_constants.at(_expr.name);
-	z3::expr_vector arguments(m_context);
+	z3::expr_vector arguments(*m_context);
 	for (auto const& arg: _expr.arguments)
 		arguments.push_back(toZ3Expr(arg));
 
@@ -129,13 +130,13 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		else if (arguments.empty())
 		{
 			if (n == "true")
-				return m_context.bool_val(true);
+				return m_context->bool_val(true);
 			else if (n == "false")
-				return m_context.bool_val(false);
+				return m_context->bool_val(false);
 			else
 				try
 				{
-					return m_context.int_val(n.c_str());
+					return m_context->int_val(n.c_str());
 				}
 				catch (z3::exception const& _e)
 				{
@@ -194,25 +195,25 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 	switch (_sort.kind)
 	{
 	case Kind::Bool:
-		return m_context.bool_sort();
+		return m_context->bool_sort();
 	case Kind::Int:
-		return m_context.int_sort();
+		return m_context->int_sort();
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
-		return m_context.array_sort(z3Sort(*arraySort.domain), z3Sort(*arraySort.range));
+		return m_context->array_sort(z3Sort(*arraySort.domain), z3Sort(*arraySort.range));
 	}
 	default:
 		break;
 	}
 	solAssert(false, "");
 	// Cannot be reached.
-	return m_context.int_sort();
+	return m_context->int_sort();
 }
 
 z3::sort_vector Z3Interface::z3Sort(vector<SortPointer> const& _sorts)
 {
-	z3::sort_vector z3Sorts(m_context);
+	z3::sort_vector z3Sorts(*m_context);
 	for (auto const& _sort: _sorts)
 		z3Sorts.push_back(z3Sort(*_sort));
 	return z3Sorts;
