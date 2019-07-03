@@ -145,9 +145,10 @@ function test_solc_behaviour()
         sed -i -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
         # Remove explicit bytecode and references to bytecode offsets
-        sed -i -E -e 's/\"object\":\"[a-f0-9]+\"/\"object\":\"bytecode removed\"/g' "$stdout_path"
-        sed -i -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"opcodes removed\"/g' "$stdout_path"
-        sed -i -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"sourceMap removed\"/g' "$stdout_path"
+        sed -i.bak -E -e 's/\"object\":\"[a-f0-9]+\"/\"object\":\"bytecode removed\"/g' "$stdout_path"
+        sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"opcodes removed\"/g' "$stdout_path"
+        sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"sourceMap removed\"/g' "$stdout_path"
+        rm "$stdout_path.bak"
     else
         sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
         sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
