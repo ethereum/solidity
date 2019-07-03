@@ -43,17 +43,24 @@ public:
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
+	z3::expr toZ3Expr(Expression const& _expr);
+
+	std::map<std::string, z3::expr> constants() const { return m_constants; }
+	std::map<std::string, z3::func_decl> functions() const { return m_functions; }
+
+	z3::context* context() { return &m_context; }
+
 private:
 	void declareFunction(std::string const& _name, Sort const& _sort);
 
-	z3::expr toZ3Expr(Expression const& _expr);
 	z3::sort z3Sort(smt::Sort const& _sort);
 	z3::sort_vector z3Sort(std::vector<smt::SortPointer> const& _sorts);
 
-	z3::context m_context;
-	z3::solver m_solver;
 	std::map<std::string, z3::expr> m_constants;
 	std::map<std::string, z3::func_decl> m_functions;
+
+	z3::context m_context;
+	z3::solver m_solver;
 };
 
 }
