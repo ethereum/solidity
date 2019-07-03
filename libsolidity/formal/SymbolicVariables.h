@@ -54,6 +54,7 @@ public:
 	Expression currentValue() const;
 	std::string currentName() const;
 	virtual Expression valueAtIndex(int _index) const;
+	virtual std::string nameAtIndex(int _index) const;
 	virtual Expression increaseIndex();
 	virtual Expression operator()(std::vector<Expression> /*_arguments*/) const
 	{
@@ -63,6 +64,7 @@ public:
 	unsigned index() const { return m_ssa->index(); }
 	unsigned& index() { return m_ssa->index(); }
 
+	SortPointer const& sort() const { return m_sort; }
 	solidity::TypePointer const& type() const { return m_type; }
 
 protected:
@@ -136,6 +138,11 @@ class SymbolicFunctionVariable: public SymbolicVariable
 public:
 	SymbolicFunctionVariable(
 		solidity::TypePointer _type,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+	SymbolicFunctionVariable(
+		SortPointer _sort,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
