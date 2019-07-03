@@ -40,7 +40,8 @@ using namespace langutil;
 using namespace dev::solidity;
 using namespace yul;
 
-namespace {
+namespace
+{
 
 Json::Value formatError(
 	bool _warning,
@@ -48,7 +49,8 @@ Json::Value formatError(
 	string const& _component,
 	string const& _message,
 	string const& _formattedMessage = "",
-	Json::Value const& _sourceLocation = Json::Value()
+	Json::Value const& _sourceLocation = Json::Value(),
+	Json::Value const& _secondarySourceLocation = Json::Value()
 )
 {
 	Json::Value error = Json::objectValue;
@@ -59,6 +61,8 @@ Json::Value formatError(
 	error["formattedMessage"] = (_formattedMessage.length() > 0) ? _formattedMessage : _message;
 	if (_sourceLocation.isObject())
 		error["sourceLocation"] = _sourceLocation;
+	if (_secondarySourceLocation.isArray())
+		error["secondarySourceLocations"] = _secondarySourceLocation;
 	return error;
 }
 
@@ -68,6 +72,34 @@ Json::Value formatFatalError(string const& _type, string const& _message)
 	output["errors"] = Json::arrayValue;
 	output["errors"].append(formatError(false, _type, "general", _message));
 	return output;
+}
+
+Json::Value formatSourceLocation(SourceLocation const* location)
+{
+	Json::Value sourceLocation;
+	if (location && location->source && !location->source->name().empty())
+	{
+		sourceLocation["file"] = location->source->name();
+		sourceLocation["start"] = location->start;
+		sourceLocation["end"] = location->end;
+	}
+
+	return sourceLocation;
+}
+
+Json::Value formatSecondarySourceLocation(SecondarySourceLocation const* _secondaryLocation)
+{
+	if (!_secondaryLocation)
+		return {};
+
+	Json::Value secondarySourceLocation = Json::arrayValue;
+	for (auto const& location: _secondaryLocation->infos)
+	{
+		Json::Value msg = formatSourceLocation(&location.second);
+		msg["message"] = location.first;
+		secondarySourceLocation.append(msg);
+	}
+	return secondarySourceLocation;
 }
 
 Json::Value formatErrorWithException(
@@ -81,23 +113,20 @@ Json::Value formatErrorWithException(
 	string message;
 	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
 
-	// NOTE: the below is partially a copy from SourceReferenceFormatter
-	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
-
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		message = ((_message.length() > 0) ? (_message + ":") : "") + *description;
 	else
 		message = _message;
 
-	Json::Value sourceLocation;
-	if (location && location->source && location->source->name() != "")
-	{
-		sourceLocation["file"] = location->source->name();
-		sourceLocation["start"] = location->start;
-		sourceLocation["end"] = location->end;
-	}
-
-	return formatError(_warning, _type, _component, message, formattedMessage, sourceLocation);
+	return formatError(
+		_warning,
+		_type,
+		_component,
+		message,
+		formattedMessage,
+		formatSourceLocation(boost::get_error_info<errinfo_sourceLocation>(_exception)),
+		formatSecondarySourceLocation(boost::get_error_info<errinfo_secondarySourceLocation>(_exception))
+	);
 }
 
 map<string, set<string>> requestedContractNames(Json::Value const& _outputSelection)
