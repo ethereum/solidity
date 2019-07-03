@@ -16,12 +16,17 @@
 */
 
 #include <test/libsolidity/util/TestFileParser.h>
+
+#include <test/libsolidity/util/BytesUtils.h>
 #include <test/Options.h>
+
 #include <liblangutil/Common.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/optional.hpp>
 #include <boost/throw_exception.hpp>
+
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -242,10 +247,12 @@ Parameter TestFileParser::parseParameter()
 	Parameter parameter;
 	if (accept(Token::Newline, true))
 		parameter.format.newline = true;
+
 	auto literal = parseABITypeLiteral();
 	parameter.rawBytes = get<0>(literal);
 	parameter.abiType = get<1>(literal);
 	parameter.rawString = get<2>(literal);
+
 	return parameter;
 }
 
@@ -286,7 +293,7 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 			abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
 			string parsed = parseBoolean();
 			rawString += parsed;
-			result = applyAlign(alignment, abiType, convertBoolean(parsed));
+			result = applyAlign(alignment, abiType, BytesUtils().convertBoolean(parsed));
 		}
 		else if (accept(Token::HexNumber))
 		{
@@ -295,7 +302,7 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 			abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
 			string parsed = parseHexNumber();
 			rawString += parsed;
-			result = applyAlign(alignment, abiType, convertHexNumber(parsed));
+			result = applyAlign(alignment, abiType, BytesUtils().convertHexNumber(parsed));
 		}
 		else if (accept(Token::Hex, true))
 		{
@@ -305,7 +312,7 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 				throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
 			string parsed = parseString();
 			rawString += "hex\"" + parsed + "\"";
-			result = convertHexNumber(parsed);
+			result = BytesUtils().convertHexNumber(parsed);
 			abiType = ABIType{ABIType::HexString, ABIType::AlignNone, result.size()};
 		}
 		else if (accept(Token::String))
@@ -317,7 +324,7 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 			abiType = ABIType{ABIType::String, ABIType::AlignLeft, 32};
 			string parsed = parseString();
 			rawString += "\"" + parsed + "\"";
-			result = applyAlign(DeclaredAlignment::Left, abiType, convertString(parsed));
+			result = applyAlign(DeclaredAlignment::Left, abiType, BytesUtils().convertString(parsed));
 		}
 		else if (accept(Token::Number))
 		{
@@ -327,7 +334,7 @@ tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
 			rawString += parsed;
 			if (isSigned)
 				parsed = "-" + parsed;
-			result = applyAlign(alignment, abiType, convertNumber(parsed));
+			result = applyAlign(alignment, abiType, BytesUtils().convertNumber(parsed));
 		}
 		else if (accept(Token::Failure, true))
 		{
@@ -424,55 +431,6 @@ string TestFileParser::parseString()
 	string literal = m_scanner.currentLiteral();
 	expect(Token::String);
 	return literal;
-}
-
-bytes TestFileParser::convertBoolean(string const& _literal)
-{
-	if (_literal == "true")
-		return bytes{true};
-	else if (_literal == "false")
-		return bytes{false};
-	else
-		throw Error(Error::Type::ParserError, "Boolean literal invalid.");
-}
-
-bytes TestFileParser::convertNumber(string const& _literal)
-{
-	try
-	{
-		return toCompactBigEndian(u256{_literal});
-	}
-	catch (std::exception const&)
-	{
-		throw Error(Error::Type::ParserError, "Number encoding invalid.");
-	}
-}
-
-bytes TestFileParser::convertHexNumber(string const& _literal)
-{
-	try
-	{
-		if (_literal.size() % 2)
-			throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
-		else
-			return fromHex(_literal);
-	}
-	catch (std::exception const&)
-	{
-		throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
-	}
-}
-
-bytes TestFileParser::convertString(string const& _literal)
-{
-	try
-	{
-		return asBytes(_literal);
-	}
-	catch (std::exception const&)
-	{
-		throw Error(Error::Type::ParserError, "String encoding invalid.");
-	}
 }
 
 void TestFileParser::Scanner::readStream(istream& _stream)
