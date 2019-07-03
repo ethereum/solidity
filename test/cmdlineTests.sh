@@ -148,6 +148,8 @@ function test_solc_behaviour()
         sed -i.bak -E -e 's/\"object\":\"[a-f0-9]+\"/\"object\":\"bytecode removed\"/g' "$stdout_path"
         sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"opcodes removed\"/g' "$stdout_path"
         sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"sourceMap removed\"/g' "$stdout_path"
+        # Replace escaped newlines by actual newlines for readability
+        sed -i.bak -E -e 's/\\n/\'$'\n/g' "$stdout_path"
         rm "$stdout_path.bak"
     else
         sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
