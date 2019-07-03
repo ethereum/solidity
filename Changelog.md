@@ -15,6 +15,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * View/Pure Checker: Properly detect state variable access through base class.
 
 
 

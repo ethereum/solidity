@@ -6,4 +6,4 @@ contract Child is Parent {
     function foo() public returns (uint256) { return Parent.m_aMember; }
 }
 // ----
-// Warning: (158-226): Function state mutability can be restricted to pure
+// Warning: (158-226): Function state mutability can be restricted to view
