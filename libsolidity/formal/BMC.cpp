@@ -459,7 +459,7 @@ void BMC::abstractFunctionCall(FunctionCall const& _funCall)
 		smtArguments.push_back(expr(*arg));
 	defineExpr(_funCall, (*m_context.expression(_funCall.expression()))(smtArguments));
 	m_uninterpretedTerms.insert(&_funCall);
-	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, *m_context.solver());
+	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, m_context);
 }
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)

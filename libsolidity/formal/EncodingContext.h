@@ -41,6 +41,13 @@ public:
 	/// Resets the entire context.
 	void reset();
 
+	/// Forwards variable creation to the solver.
+	Expression newVariable(std::string _name, SortPointer _sort)
+	{
+		solAssert(m_solver, "");
+		return m_solver->newVariable(move(_name), move(_sort));
+	}
+
 	/// Variables.
 	//@{
 	/// @returns the symbolic representation of a program variable.
