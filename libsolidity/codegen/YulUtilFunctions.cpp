@@ -655,7 +655,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 						</byteArray>
 					})")
 					("functionName", functionName)
-					("elementSize", _type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedSize())
+					("elementSize", to_string(_type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedSize()))
 					("byteArray", _type.isByteArray())
 					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
 					.render();
