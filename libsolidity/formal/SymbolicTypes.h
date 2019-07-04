@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
@@ -58,15 +58,15 @@ bool isTuple(solidity::Type::Category _category);
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,
 /// which is true for unsupported types.
-std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(solidity::Type const& _type, std::string const& _uniqueName, SolverInterface& _solver);
+std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(solidity::Type const& _type, std::string const& _uniqueName, EncodingContext& _context);
 
 Expression minValue(solidity::IntegerType const& _type);
 Expression maxValue(solidity::IntegerType const& _type);
 
-void setSymbolicZeroValue(SymbolicVariable const& _variable, SolverInterface& _interface);
-void setSymbolicZeroValue(Expression _expr, solidity::TypePointer const& _type, SolverInterface& _interface);
-void setSymbolicUnknownValue(SymbolicVariable const& _variable, SolverInterface& _interface);
-void setSymbolicUnknownValue(Expression _expr, solidity::TypePointer const& _type, SolverInterface& _interface);
+void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context);
+void setSymbolicZeroValue(Expression _expr, solidity::TypePointer const& _type, EncodingContext& _context);
+void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext& _context);
+void setSymbolicUnknownValue(Expression _expr, solidity::TypePointer const& _type, EncodingContext& _context);
 
 }
 }
