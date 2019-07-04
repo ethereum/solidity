@@ -24,6 +24,7 @@ using namespace dev::solidity;
 
 ModelChecker::ModelChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
 	m_bmc(m_context, _errorReporter, _smtlib2Responses),
+	m_chc(m_context, _errorReporter),
 	m_context()
 {
 }
@@ -33,7 +34,8 @@ void ModelChecker::analyze(SourceUnit const& _source, shared_ptr<Scanner> const&
 	if (!_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		return;
 
-	m_bmc.analyze(_source, _scanner);
+	m_chc.analyze(_source, _scanner);
+	m_bmc.analyze(_source, _scanner, m_chc.safeAssertions());
 }
 
 vector<string> ModelChecker::unhandledQueries()

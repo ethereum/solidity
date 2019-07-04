@@ -53,11 +53,14 @@ void Z3CHCInterface::registerRelation(Expression const& _expr)
 void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 {
 	z3::expr rule = m_z3Interface->toZ3Expr(_expr);
-	if (m_variables.empty())
+	if (m_z3Interface->constants().empty())
 		m_solver.add_rule(rule, m_context->str_symbol(_name.c_str()));
 	else
 	{
-		z3::expr boundRule = z3::forall(m_variables, rule);
+		z3::expr_vector variables(*m_context);
+		for (auto const& var: m_z3Interface->constants())
+			variables.push_back(var.second);
+		z3::expr boundRule = z3::forall(variables, rule);
 		m_solver.add_rule(boundRule, m_context->str_symbol(_name.c_str()));
 	}
 }
