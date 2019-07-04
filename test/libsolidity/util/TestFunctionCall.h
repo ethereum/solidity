@@ -199,14 +199,6 @@ private:
 		std::string const& _linePrefix = ""
 	) const;
 
-	/// If parameter count does not match, take types defined by ABI, but only
-	/// if the contract ABI is defined (needed for format tests where the actual
-	/// result does not matter).
-	ParameterList choosePreferredParameters(
-		ParameterList const& _parsedParamters,
-		ParameterList const& _abiParameters
-	) const;
-
 	/// Compares raw expectations (which are converted to a byte representation before),
 	/// and also the expected transaction status of the function call to the actual test results.
 	bool matchesExpectation() const;

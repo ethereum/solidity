@@ -146,9 +146,7 @@ private:
 	/// appends it to the internal `bytes` buffer of the parameter. It can also
 	/// store newlines found in the source, that are needed to
 	/// format input and output of the interactive update.
-	Parameter parseParameter();
-
-	/// Parses and converts the current literal to its byte representation and
+	///  Parses and converts the current literal to its byte representation and
 	/// preserves the chosen ABI type, as well as a raw, unformatted string representation
 	/// of this literal.
 	/// Based on the type information retrieved, the driver of this parser may format arguments,
@@ -157,7 +155,7 @@ private:
 	/// Returns invalid ABI type for empty literal. This is needed in order
 	/// to detect empty expectations. Throws a ParserError if data is encoded incorrectly or
 	/// if data type is not supported.
-	std::tuple<bytes, ABIType, std::string> parseABITypeLiteral();
+	Parameter parseParameter();
 
 	/// Recursively parses an identifier or a tuple definition that contains identifiers
 	/// and / or parentheses like `((uint, uint), (uint, (uint, uint)), uint)`.

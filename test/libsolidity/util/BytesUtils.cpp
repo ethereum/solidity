@@ -163,3 +163,36 @@ string BytesUtils::formatString(bytes const& _bytes) const
 
 	return os.str();
 }
+
+bytes BytesUtils::alignLeft(bytes _bytes) const
+{
+	return std::move(_bytes) + bytes(32 - _bytes.size(), 0);
+}
+
+bytes BytesUtils::alignRight(bytes _bytes) const
+{
+	return bytes(32 - _bytes.size(), 0) + std::move(_bytes);
+}
+
+bytes BytesUtils::applyAlign(
+	Parameter::Alignment _alignment,
+	ABIType& _abiType,
+	bytes _bytes
+) const
+{
+	if (_alignment != Parameter::Alignment::None)
+		_abiType.alignDeclared = true;
+
+	switch (_alignment)
+	{
+	case Parameter::Alignment::Left:
+		_abiType.align = ABIType::AlignLeft;
+		return alignLeft(std::move(_bytes));
+	case Parameter::Alignment::Right:
+		_abiType.align = ABIType::AlignRight;
+		return alignRight(std::move(_bytes));
+	default:
+		_abiType.align = ABIType::AlignRight;
+		return alignRight(std::move(_bytes));
+	}
+}

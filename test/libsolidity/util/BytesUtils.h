@@ -77,6 +77,22 @@ public:
 	/// string representation of a byte array which is assumed to hold
 	/// a string value.
 	std::string formatString(bytes const& _bytes) const;
+
+	/// Left-aligns and pads given _bytes and returns a new
+	/// bytes array.
+	bytes alignLeft(bytes _bytes) const;
+
+	/// Right-aligns and pads given _bytes and returns a new
+	/// bytes array.
+	bytes alignRight(bytes _bytes) const;
+
+	/// Applies given _alignment to _bytes and returns a new
+	/// bytes array.
+	bytes applyAlign(
+		Parameter::Alignment _alignment,
+		ABIType& _abiType,
+		bytes _bytes
+	) const;
 };
 
 }

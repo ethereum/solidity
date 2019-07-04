@@ -135,6 +135,13 @@ struct FormatInfo
  */
 struct Parameter
 {
+	enum Alignment
+	{
+		Left,
+		Right,
+		None,
+	};
+
 	/// ABI encoded / decoded `bytes` of values.
 	/// These `bytes` are used to pass values to function calls
 	/// and also to store expected return vales. These are
@@ -151,6 +158,8 @@ struct Parameter
 	/// Format info attached to the parameter. It handles newlines given
 	/// in the declaration of it.
 	FormatInfo format;
+	/// Stores the parsed alignment, which can be either left(...) or right(...).
+	Alignment alignment = Alignment::None;
 };
 using ParameterList = std::vector<Parameter>;
 

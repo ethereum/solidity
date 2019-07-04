@@ -38,45 +38,6 @@ using namespace dev::solidity::test;
 using namespace std;
 using namespace soltest;
 
-namespace
-{
-	enum class DeclaredAlignment
-	{
-		Left,
-		Right,
-		None,
-	};
-
-	inline bytes alignLeft(bytes _bytes)
-	{
-		return std::move(_bytes) + bytes(32 - _bytes.size(), 0);
-	}
-
-	inline bytes alignRight(bytes _bytes)
-	{
-		return bytes(32 - _bytes.size(), 0) + std::move(_bytes);
-	}
-
-	inline bytes applyAlign(DeclaredAlignment _alignment, ABIType& _abiType, bytes _converted)
-	{
-		if (_alignment != DeclaredAlignment::None)
-			_abiType.alignDeclared = true;
-
-		switch (_alignment)
-		{
-		case DeclaredAlignment::Left:
-			_abiType.align = ABIType::AlignLeft;
-			return alignLeft(std::move(_converted));
-		case DeclaredAlignment::Right:
-			_abiType.align = ABIType::AlignRight;
-			return alignRight(std::move(_converted));
-		default:
-			_abiType.align = ABIType::AlignRight;
-			return alignRight(std::move(_converted));
-		}
-	}
-}
-
 char TestFileParser::Scanner::peek() const noexcept
 {
 	if (std::distance(m_char, m_line.end()) < 2)
@@ -248,112 +209,124 @@ Parameter TestFileParser::parseParameter()
 	if (accept(Token::Newline, true))
 		parameter.format.newline = true;
 
-	auto literal = parseABITypeLiteral();
-	parameter.rawBytes = get<0>(literal);
-	parameter.abiType = get<1>(literal);
-	parameter.rawString = get<2>(literal);
-
-	return parameter;
-}
-
-tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
-{
-	ABIType abiType{ABIType::None, ABIType::AlignNone, 0};
-	DeclaredAlignment alignment{DeclaredAlignment::None};
-	bytes result{toBigEndian(u256{0})};
-	string rawString;
 	bool isSigned = false;
 
 	if (accept(Token::Left, true))
 	{
-		rawString += formatToken(Token::Left);
+		parameter.rawString += formatToken(Token::Left);
 		expect(Token::LParen);
-		rawString += formatToken(Token::LParen);
-		alignment = DeclaredAlignment::Left;
+		parameter.rawString += formatToken(Token::LParen);
+		parameter.alignment = Parameter::Alignment::Left;
 	}
 	if (accept(Token::Right, true))
 	{
-		rawString += formatToken(Token::Right);
+		parameter.rawString += formatToken(Token::Right);
 		expect(Token::LParen);
-		rawString += formatToken(Token::LParen);
-		alignment = DeclaredAlignment::Right;
+		parameter.rawString += formatToken(Token::LParen);
+		parameter.alignment = Parameter::Alignment::Right;
 	}
 
 	try
 	{
 		if (accept(Token::Sub, true))
 		{
-			rawString += formatToken(Token::Sub);
+			parameter.rawString += formatToken(Token::Sub);
 			isSigned = true;
 		}
 		if (accept(Token::Boolean))
 		{
 			if (isSigned)
 				throw Error(Error::Type::ParserError, "Invalid boolean literal.");
-			abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
+
+			parameter.abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
 			string parsed = parseBoolean();
-			rawString += parsed;
-			result = applyAlign(alignment, abiType, BytesUtils().convertBoolean(parsed));
+			parameter.rawString += parsed;
+			parameter.rawBytes = BytesUtils().applyAlign(
+				parameter.alignment,
+				parameter.abiType,
+				BytesUtils().convertBoolean(parsed)
+			);
 		}
 		else if (accept(Token::HexNumber))
 		{
 			if (isSigned)
 				throw Error(Error::Type::ParserError, "Invalid hex number literal.");
-			abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
+
+			parameter.abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
 			string parsed = parseHexNumber();
-			rawString += parsed;
-			result = applyAlign(alignment, abiType, BytesUtils().convertHexNumber(parsed));
+			parameter.rawString += parsed;
+			parameter.rawBytes = BytesUtils().applyAlign(
+				parameter.alignment,
+				parameter.abiType,
+				BytesUtils().convertHexNumber(parsed)
+			);
 		}
 		else if (accept(Token::Hex, true))
 		{
 			if (isSigned)
 				throw Error(Error::Type::ParserError, "Invalid hex string literal.");
-			if (alignment != DeclaredAlignment::None)
+			if (parameter.alignment != Parameter::Alignment::None)
 				throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
+
 			string parsed = parseString();
-			rawString += "hex\"" + parsed + "\"";
-			result = BytesUtils().convertHexNumber(parsed);
-			abiType = ABIType{ABIType::HexString, ABIType::AlignNone, result.size()};
+			parameter.rawString += "hex\"" + parsed + "\"";
+			parameter.rawBytes = BytesUtils().convertHexNumber(parsed);
+			parameter.abiType = ABIType{
+				ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()
+			};
 		}
 		else if (accept(Token::String))
 		{
 			if (isSigned)
 				throw Error(Error::Type::ParserError, "Invalid string literal.");
-			if (alignment != DeclaredAlignment::None)
+			if (parameter.alignment != Parameter::Alignment::None)
 				throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
-			abiType = ABIType{ABIType::String, ABIType::AlignLeft, 32};
+
+			parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, 32};
 			string parsed = parseString();
-			rawString += "\"" + parsed + "\"";
-			result = applyAlign(DeclaredAlignment::Left, abiType, BytesUtils().convertString(parsed));
+			parameter.rawString += "\"" + parsed + "\"";
+			parameter.rawBytes = BytesUtils().applyAlign(
+				Parameter::Alignment::Left,
+				parameter.abiType,
+				BytesUtils().convertString(parsed)
+			);
 		}
 		else if (accept(Token::Number))
 		{
 			auto type = isSigned ? ABIType::SignedDec : ABIType::UnsignedDec;
-			abiType = ABIType{type, ABIType::AlignRight, 32};
+
+			parameter.abiType = ABIType{type, ABIType::AlignRight, 32};
 			string parsed = parseDecimalNumber();
-			rawString += parsed;
+			parameter.rawString += parsed;
 			if (isSigned)
 				parsed = "-" + parsed;
-			result = applyAlign(alignment, abiType, BytesUtils().convertNumber(parsed));
+
+			parameter.rawBytes = BytesUtils().applyAlign(
+				parameter.alignment,
+				parameter.abiType,
+				BytesUtils().convertNumber(parsed)
+			);
 		}
 		else if (accept(Token::Failure, true))
 		{
 			if (isSigned)
 				throw Error(Error::Type::ParserError, "Invalid failure literal.");
-			abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
-			result = bytes{};
+
+			parameter.abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
+			parameter.rawBytes = bytes{};
 		}
-		if (alignment != DeclaredAlignment::None)
+		if (parameter.alignment != Parameter::Alignment::None)
 		{
 			expect(Token::RParen);
-			rawString += formatToken(Token::RParen);
+			parameter.rawString += formatToken(Token::RParen);
 		}
-		return make_tuple(result, abiType, rawString);
 	}
 	catch (std::exception const&)
 	{
 		throw Error(Error::Type::ParserError, "Literal encoding invalid.");
 	}
+
+	return parameter;
 }
 
 string TestFileParser::parseIdentifierOrTuple()
