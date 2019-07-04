@@ -43,6 +43,7 @@
 ### Release solc-js
  - [ ] Increment the version number, create a pull request for that, merge it after tests succeeded.
  - [ ] Run ``npm publish`` in the updated ``solc-js`` repository.
+ - [ ] Make sure to push the tag ``npm publish`` created with ``git push --tags``.
 
 ### Post-release
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
