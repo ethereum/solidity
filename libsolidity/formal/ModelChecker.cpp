@@ -24,7 +24,7 @@ using namespace dev::solidity;
 
 ModelChecker::ModelChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
 	m_bmc(m_context, _errorReporter, _smtlib2Responses),
-	m_context(m_bmc.solver())
+	m_context()
 {
 }
 

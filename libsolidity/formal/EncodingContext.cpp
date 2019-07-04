@@ -23,9 +23,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity::smt;
 
-EncodingContext::EncodingContext(std::shared_ptr<SolverInterface> _solver):
-	m_thisAddress(make_unique<SymbolicAddressVariable>("this", *this)),
-	m_solver(_solver)
+EncodingContext::EncodingContext():
+	m_thisAddress(make_unique<SymbolicAddressVariable>("this", *this))
 {
 	auto sort = make_shared<ArraySort>(
 		make_shared<Sort>(Kind::Int),
@@ -214,7 +213,7 @@ void EncodingContext::transfer(Expression _from, Expression _to, Expression _val
 		m_balances->valueAtIndex(indexBefore),
 		m_balances->valueAtIndex(indexAfter)
 	);
-	m_solver->addAssertion(m_balances->currentValue() == newBalances);
+	addAssertion(m_balances->currentValue() == newBalances);
 }
 
 /// Solver.
@@ -256,5 +255,5 @@ void EncodingContext::addBalance(Expression _address, Expression _value)
 		balance(_address) + move(_value)
 	);
 	m_balances->increaseIndex();
-	m_solver->addAssertion(newBalances == m_balances->currentValue());
+	addAssertion(newBalances == m_balances->currentValue());
 }
