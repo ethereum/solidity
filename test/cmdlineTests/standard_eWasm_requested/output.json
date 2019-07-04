@@ -1,1 +1,20 @@
-{"contracts":{"A":{"C":{"ewasm":{"wast":"(module\n    (memory $memory (export \"memory\") 1)\n    (export \"main\" (func $main))\n\n(func $main\n    (unreachable ) (unreachable )\n)\n\n)\n(module\n    (memory $memory (export \"memory\") 1)\n    (export \"main\" (func $main))\n\n(func $main\n    (unreachable ) (unreachable ) (unreachable )\n)\n\n)\n"}}}},"errors":[{"component":"general","formattedMessage":"Warning: The Yul optimiser is still experimental. Do not use it in production unless correctness of generated code is verified with extensive tests.\n","message":"The Yul optimiser is still experimental. Do not use it in production unless correctness of generated code is verified with extensive tests.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}
+{"contracts":{"A":{"C":{"ewasm":{"wast":"(module
+    (memory $memory (export \"memory\") 1)
+    (export \"main\" (func $main))
+
+(func $main
+    (unreachable ) (unreachable )
+)
+
+)
+(module
+    (memory $memory (export \"memory\") 1)
+    (export \"main\" (func $main))
+
+(func $main
+    (unreachable ) (unreachable ) (unreachable )
+)
+
+)
+"}}}},"errors":[{"component":"general","formattedMessage":"Warning: The Yul optimiser is still experimental. Do not use it in production unless correctness of generated code is verified with extensive tests.
+","message":"The Yul optimiser is still experimental. Do not use it in production unless correctness of generated code is verified with extensive tests.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}
