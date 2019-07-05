@@ -24,6 +24,7 @@
 #include <libsolidity/ast/AST.h>
 
 #include <libdevcore/Whiskers.h>
+#include <libdevcore/StringUtils.h>
 
 using namespace dev;
 using namespace dev::solidity;
@@ -98,7 +99,7 @@ string IRGenerationContext::variable(Expression const& _expression)
 	if (size == 1)
 		return var;
 	else
-		return YulUtilFunctions::suffixedVariableNameList(move(var) + "_", 1, 1 + size);
+		return suffixedVariableNameList(move(var) + "_", 1, 1 + size);
 }
 
 string IRGenerationContext::variablePart(Expression const& _expression, size_t _part)
@@ -128,9 +129,9 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		templ("functionName", funName);
 		templ("comma", _in > 0 ? "," : "");
 		YulUtilFunctions utils(m_evmVersion, m_functions);
-		templ("in", utils.suffixedVariableNameList("in_", 0, _in));
+		templ("in", suffixedVariableNameList("in_", 0, _in));
 		templ("arrow", _out > 0 ? "->" : "");
-		templ("out", utils.suffixedVariableNameList("out_", 0, _out));
+		templ("out", suffixedVariableNameList("out_", 0, _out));
 		vector<map<string, string>> functions;
 		for (auto const& contract: m_inheritanceHierarchy)
 			for (FunctionDefinition const* function: contract->definedFunctions())

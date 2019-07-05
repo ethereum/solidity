@@ -224,13 +224,6 @@ public:
 	/// as reason string.
 	std::string forwardingRevertFunction();
 
-	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
-	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
-	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
-	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
-	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
-
-
 	std::string incrementCheckedFunction(Type const& _type);
 	std::string decrementCheckedFunction(Type const& _type);
 

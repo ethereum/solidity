@@ -227,13 +227,13 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 
 		unsigned paramVars = make_shared<TupleType>(type->parameterTypes())->sizeOnStack();
 		unsigned retVars = make_shared<TupleType>(type->returnParameterTypes())->sizeOnStack();
-		templ["assignToParams"] = paramVars == 0 ? "" : "let " + m_utils.suffixedVariableNameList("param_", 0, paramVars) + " := ";
-		templ["assignToRetParams"] = retVars == 0 ? "" : "let " + m_utils.suffixedVariableNameList("ret_", 0, retVars) + " := ";
+		templ["assignToParams"] = paramVars == 0 ? "" : "let " + suffixedVariableNameList("param_", 0, paramVars) + " := ";
+		templ["assignToRetParams"] = retVars == 0 ? "" : "let " + suffixedVariableNameList("ret_", 0, retVars) + " := ";
 
 		ABIFunctions abiFunctions(m_evmVersion, m_context.functionCollector());
 		templ["abiDecode"] = abiFunctions.tupleDecoder(type->parameterTypes());
-		templ["params"] = m_utils.suffixedVariableNameList("param_", 0, paramVars);
-		templ["retParams"] = m_utils.suffixedVariableNameList("ret_", retVars, 0);
+		templ["params"] = suffixedVariableNameList("param_", 0, paramVars);
+		templ["retParams"] = suffixedVariableNameList("ret_", retVars, 0);
 		templ["function"] = generateFunction(dynamic_cast<FunctionDefinition const&>(type->declaration()));
 		templ["allocate"] = m_utils.allocationFunction();
 		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), false);

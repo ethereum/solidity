@@ -24,6 +24,7 @@
 
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libdevcore/Whiskers.h>
+#include <libdevcore/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -82,7 +83,7 @@ string ABIFunctions::tupleEncoder(
 					<abiEncode>(<values> add(headStart, <pos>))
 				)")
 			);
-			string values = m_utils.suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
+			string values = suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
 			elementTempl("values", values.empty() ? "" : values + ", ");
 			elementTempl("pos", to_string(headPos));
 			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
@@ -91,7 +92,7 @@ string ABIFunctions::tupleEncoder(
 			stackPos += sizeOnStack;
 		}
 		solAssert(headPos == headSize_, "");
-		string valueParams = m_utils.suffixedVariableNameList("value", stackPos, 0);
+		string valueParams = suffixedVariableNameList("value", stackPos, 0);
 		templ("valueParams", valueParams.empty() ? "" : ", " + valueParams);
 		templ("encodeElements", encodeElements);
 
@@ -147,7 +148,7 @@ string ABIFunctions::tupleEncoderPacked(
 					pos := add(pos, <calldataEncodedSize>)
 				)")
 			);
-			string values = m_utils.suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
+			string values = suffixedVariableNameList("value", stackPos, stackPos + sizeOnStack);
 			elementTempl("values", values.empty() ? "" : values + ", ");
 			if (!dynamic)
 				elementTempl("calldataEncodedSize", to_string(_targetTypes[i]->calldataEncodedSize(false)));
@@ -155,7 +156,7 @@ string ABIFunctions::tupleEncoderPacked(
 			encodeElements += elementTempl.render();
 			stackPos += sizeOnStack;
 		}
-		string valueParams = m_utils.suffixedVariableNameList("value", stackPos, 0);
+		string valueParams = suffixedVariableNameList("value", stackPos, 0);
 		templ("valueParams", valueParams.empty() ? "" : ", " + valueParams);
 		templ("encodeElements", encodeElements);
 
@@ -367,7 +368,7 @@ string ABIFunctions::abiEncodeAndReturnUpdatedPosFunction(
 		_targetType.identifier() +
 		_options.toFunctionNameSuffix();
 	return createFunction(functionName, [&]() {
-		string values = m_utils.suffixedVariableNameList("value", 0, numVariablesForType(_givenType, _options));
+		string values = suffixedVariableNameList("value", 0, numVariablesForType(_givenType, _options));
 		string encoder = abiEncodingFunction(_givenType, _targetType, _options);
 		if (_targetType.isDynamicallyEncoded())
 			return Whiskers(R"(
@@ -508,7 +509,7 @@ string ABIFunctions::abiEncodingFunctionSimpleArray(
 		EncodingOptions subOptions(_options);
 		subOptions.encodeFunctionFromStack = false;
 		subOptions.padded = true;
-		string elementValues = m_utils.suffixedVariableNameList("elementValue", 0, numVariablesForType(*_from.baseType(), subOptions));
+		string elementValues = suffixedVariableNameList("elementValue", 0, numVariablesForType(*_from.baseType(), subOptions));
 		Whiskers templ(
 			usesTail ?
 			R"(
@@ -892,7 +893,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			// Like with arrays, struct members are always padded.
 			subOptions.padded = true;
 
-			string memberValues = m_utils.suffixedVariableNameList("memberValue", 0, numVariablesForType(*memberTypeFrom, subOptions));
+			string memberValues = suffixedVariableNameList("memberValue", 0, numVariablesForType(*memberTypeFrom, subOptions));
 			members.back()["memberValues"] = memberValues;
 
 			string encode;

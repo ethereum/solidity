@@ -24,6 +24,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libdevcore/Whiskers.h>
+#include <libdevcore/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -1397,24 +1398,6 @@ string YulUtilFunctions::forwardingRevertFunction()
 			("functionName", functionName)
 			.render();
 	});
-}
-
-string YulUtilFunctions::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
-{
-	string result;
-	if (_startSuffix < _endSuffix)
-	{
-		result = _baseName + to_string(_startSuffix++);
-		while (_startSuffix < _endSuffix)
-			result += ", " + _baseName + to_string(_startSuffix++);
-	}
-	else if (_endSuffix < _startSuffix)
-	{
-		result = _baseName + to_string(_endSuffix++);
-		while (_endSuffix < _startSuffix)
-			result = _baseName + to_string(_endSuffix++) + ", " + result;
-	}
-	return result;
 }
 
 std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
