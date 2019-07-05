@@ -993,9 +993,6 @@ void CompilerUtils::convertType(
 		solAssert(targetTypeCategory == stackTypeCategory, "");
 		auto& targetType = dynamic_cast<StructType const&>(_targetType);
 		auto& typeOnStack = dynamic_cast<StructType const&>(_typeOnStack);
-		solAssert(
-			targetType.location() != DataLocation::CallData
-		, "");
 		switch (targetType.location())
 		{
 		case DataLocation::Storage:
@@ -1048,7 +1045,6 @@ void CompilerUtils::convertType(
 			}
 			case DataLocation::CallData:
 			{
-				solUnimplementedAssert(!typeOnStack.isDynamicallyEncoded(), "");
 				m_context << Instruction::DUP1;
 				m_context << Instruction::CALLDATASIZE;
 				m_context << Instruction::SUB;
