@@ -1397,6 +1397,23 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 					"might overflow. Silence this warning by converting the literal to the "
 					"expected type."
 				);
+		if (
+			commonType->category() == Type::Category::Integer &&
+			rightType->category() == Type::Category::Integer &&
+			dynamic_cast<IntegerType const&>(*commonType).numBits() <
+			dynamic_cast<IntegerType const&>(*rightType).numBits()
+		)
+			m_errorReporter.warning(
+				_operation.location(),
+				"The result type of the " +
+				operation +
+				" operation is equal to the type of the first operand (" +
+				commonType->toString() +
+				") ignoring the (larger) type of the second operand (" +
+				rightType->toString() +
+				") which might be unexpected. Silence this warning by either converting "
+				"the first or the second operand to the type of the other."
+			);
 	}
 }
 

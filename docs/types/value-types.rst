@@ -123,8 +123,9 @@ results in the same sign as its left operand (or zero) and ``a % n == -(abs(a) %
 Exponentiation
 ^^^^^^^^^^^^^^
 
-Exponentiation is only available for unsigned types. Please take care that the types
-you are using are large enough to hold the result and prepare for potential wrapping behaviour.
+Exponentiation is only available for unsigned types in the exponent. The resulting type
+of an exponentiation is always equal to the type of the base. Please take care that it is
+large enough to hold the result and prepare for potential wrapping behaviour.
 
 .. note::
   Note that ``0**0`` is defined by the EVM as ``1``.

@@ -29,6 +29,10 @@ Semantic and Syntactic Changes
 
 This section highlights changes that affect syntax and semantics.
 
+* The resulting type of an exponentiation is the type of the base. It used to be the smallest type
+  that can hold both the type of the base and the type of the exponent, as with symmentric
+  operations. Additionally, signed types are allowed for the base of the exponetation.
+
 
 How to update your code
 =======================

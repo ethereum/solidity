@@ -600,6 +600,17 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		else
 			return nullptr;
 	}
+	else if (Token::Exp == _operator)
+	{
+		if (auto otherIntType = dynamic_cast<IntegerType const*>(_other))
+		{
+			if (otherIntType->isSigned())
+				return TypeResult::err("Exponentiation power is not allowed to be a signed integer type.");
+		}
+		else if (dynamic_cast<FixedPointType const*>(_other))
+			return nullptr;
+		return this;
+	}
 
 	auto commonType = Type::commonType(this, _other); //might be an integer or fixed point
 	if (!commonType)
@@ -610,14 +621,6 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		return commonType;
 	if (TokenTraits::isBooleanOp(_operator))
 		return nullptr;
-	if (auto intType = dynamic_cast<IntegerType const*>(commonType))
-	{
-		if (Token::Exp == _operator && intType->isSigned())
-			return TypeResult::err("Exponentiation is not allowed for signed integer types.");
-	}
-	else if (dynamic_cast<FixedPointType const*>(commonType))
-		if (Token::Exp == _operator)
-			return nullptr;
 	return commonType;
 }
 
