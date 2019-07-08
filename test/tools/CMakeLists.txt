@@ -34,4 +34,4 @@ add_executable(isoltest
 	../libyul/YulOptimizerTest.cpp
 	../libyul/YulInterpreterTest.cpp
 )
-target_link_libraries(isoltest PRIVATE libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework)
+target_link_libraries(isoltest PRIVATE evmc libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework)

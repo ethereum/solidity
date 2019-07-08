@@ -27,7 +27,7 @@ dev::bytes SolidityCompilationFramework::compileContract(
 			);
 		std::cerr << "Compiling contract failed" << std::endl;
 	}
-	dev::eth::LinkerObject obj = m_compiler.runtimeObject(
+	dev::eth::LinkerObject obj = m_compiler.object(
 		_contractName.empty() ?
 		m_compiler.lastContractName() :
 		_contractName

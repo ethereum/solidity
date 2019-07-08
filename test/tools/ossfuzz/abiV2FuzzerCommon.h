@@ -28,7 +28,7 @@ public:
 protected:
 	dev::solidity::CompilerStack m_compiler;
 	langutil::EVMVersion m_evmVersion;
-	dev::solidity::OptimiserSettings m_optimiserSettings = dev::solidity::OptimiserSettings::full();
+	dev::solidity::OptimiserSettings m_optimiserSettings = dev::solidity::OptimiserSettings::none();
 };
 }
 }

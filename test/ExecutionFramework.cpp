@@ -27,6 +27,10 @@
 #include <boost/test/framework.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
+#include <test/evmc/evmc.hpp>
+#include <test/evmc/loader.h>
+#include <test/evmc/helpers.hpp>
+
 #include <cstdlib>
 
 #include <chrono>
