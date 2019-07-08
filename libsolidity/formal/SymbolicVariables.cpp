@@ -68,6 +68,11 @@ Expression SymbolicVariable::valueAtIndex(int _index) const
 	return m_context.newVariable(uniqueSymbol(_index), m_sort);
 }
 
+string SymbolicVariable::nameAtIndex(int _index) const
+{
+	return uniqueSymbol(_index);
+}
+
 string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
@@ -125,6 +130,17 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	m_declaration(m_context.newVariable(currentName(), m_sort))
 {
 	solAssert(m_type->category() == solidity::Type::Category::Function, "");
+}
+
+SymbolicFunctionVariable::SymbolicFunctionVariable(
+	SortPointer _sort,
+	string _uniqueName,
+	EncodingContext& _context
+):
+	SymbolicVariable(move(_sort), move(_uniqueName), _context),
+	m_declaration(m_context.newVariable(currentName(), m_sort))
+{
+	solAssert(m_sort->kind == Kind::Function, "");
 }
 
 void SymbolicFunctionVariable::resetDeclaration()
