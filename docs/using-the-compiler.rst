@@ -314,6 +314,15 @@ Output Description
             "start": 0,
             "end": 100
           ],
+          // Optional: Further locations (e.g. places of conflicting declarations)
+          "secondarySourceLocations": [
+            {
+              "file": "sourceFile.sol",
+              "start": 64,
+              "end": 92,
+              "message": "Other declaration is here:"
+            }
+          ],
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc.
           // See below for complete list of types.
           "type": "TypeError",
