@@ -44,6 +44,12 @@ void EncodingContext::reset()
 	m_assertions.clear();
 }
 
+void EncodingContext::clear()
+{
+	m_variables.clear();
+	reset();
+}
+
 /// Variables.
 
 shared_ptr<SymbolicVariable> EncodingContext::variable(solidity::VariableDeclaration const& _varDecl)
