@@ -57,10 +57,10 @@ void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 
 void VariableUsage::endVisit(FunctionCall const& _funCall)
 {
-	/// TODO this should run only in the BMC case, not for Horn.
-	if (auto const& funDef = BMC::inlinedFunctionCallToDefinition(_funCall))
-		if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
-			funDef->accept(*this);
+	if (m_inlineFunctionCalls)
+		if (auto const& funDef = BMC::inlinedFunctionCallToDefinition(_funCall))
+			if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
+				funDef->accept(*this);
 }
 
 bool VariableUsage::visit(FunctionDefinition const& _function)
