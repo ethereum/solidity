@@ -345,8 +345,8 @@ void ContractLevelChecker::annotateBaseConstructorArguments(
 		else
 		{
 			mainLocation = &_currentContract.location();
-			ssl.append("First constructor call is here: ", _argumentNode->location());
-			ssl.append("Second constructor call is here: ", previousNode->location());
+			ssl.append("First constructor call is here:", _argumentNode->location());
+			ssl.append("Second constructor call is here:", previousNode->location());
 		}
 
 		m_errorReporter.declarationError(
