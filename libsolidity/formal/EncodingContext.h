@@ -38,8 +38,13 @@ class EncodingContext
 public:
 	EncodingContext(std::shared_ptr<SolverInterface> _solver);
 
-	/// Resets the entire context.
+	/// Resets the entire context except for symbolic variables which stay
+	/// alive because of state variables and inlined function calls.
+	/// To be used in the beginning of a root function visit.
 	void reset();
+	/// Clears the entire context, erasing everything.
+	/// To be used before a model checking engine starts.
+	void clear();
 
 	/// Forwards variable creation to the solver.
 	Expression newVariable(std::string _name, SortPointer _sort)

@@ -49,6 +49,8 @@ void BMC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner
 
 	m_scanner = _scanner;
 
+	m_context.clear();
+
 	_source.accept(*this);
 
 	solAssert(m_interface->solvers() > 0, "");
