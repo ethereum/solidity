@@ -31,7 +31,6 @@ set -e
 ## GLOBAL VARIABLES
 
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
-source "${REPO_ROOT}/scripts/common.sh"
 SOLC="$REPO_ROOT/build/solc/solc"
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
@@ -41,13 +40,17 @@ fi
 
 FULLARGS="--optimize --ignore-missing --combined-json abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
 
-# extend stack size in case we run via ASAN
-if [[ -n "${CIRCLECI}" ]] || [[ -n "$CI" ]]; then
-    ulimit -s 16384
-    ulimit -a
+## FUNCTIONS
+
+if [ "$CIRCLECI" ]
+then
+    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
+    function printError() { echo "$(tput setaf 1)$1$(tput setaf 7)"; }
+else
+    function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+    function printError() { echo "$(tput setaf 1)$1$(tput sgr0)"; }
 fi
 
-## FUNCTIONS
 
 function compileFull()
 {

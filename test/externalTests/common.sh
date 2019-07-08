@@ -20,7 +20,16 @@
 #------------------------------------------------------------------------------
 set -e
 
-# Requires "${REPO_ROOT}/scripts/common.sh" to be included before.
+if [ "$CIRCLECI" ]
+then
+    function printTask() { echo ""; echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
+    function printError() { echo ""; echo "$(tput setaf 1)$1$(tput setaf 7)"; }
+    function printLog() { echo "$(tput setaf 3)$1$(tput setaf 7)"; }
+else
+    function printTask() { echo ""; echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
+    function printError() { echo ""; echo "$(tput setaf 1)$1$(tput sgr0)"; }
+    function printLog() { echo "$(tput setaf 3)$1$(tput sgr0)"; }
+fi
 
 function verify_input
 {
