@@ -149,6 +149,32 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	});
 }
 
+string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
+{
+	string functionName = m_context.functionName(_varDecl);
+
+	Type const* type = _varDecl.annotation().type;
+
+	solAssert(!_varDecl.isConstant(), "");
+	solAssert(_varDecl.isStateVariable(), "");
+
+	solUnimplementedAssert(type->isValueType(), "");
+
+	return m_context.functionCollector()->createFunction(functionName, [&]() {
+		pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
+
+		return Whiskers(R"(
+			function <functionName>() -> rval {
+				rval := <readStorage>(<slot>)
+			}
+		)")
+		("functionName", functionName)
+		("readStorage", m_utils.readFromStorage(*type, slot_offset.second, false))
+		("slot", slot_offset.first.str())
+		.render();
+	});
+}
+
 string IRGenerator::constructorCode(ContractDefinition const& _contract)
 {
 	// TODO initialize state variables in base to derived order.
@@ -234,7 +260,14 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		templ["abiDecode"] = abiFunctions.tupleDecoder(type->parameterTypes());
 		templ["params"] = suffixedVariableNameList("param_", 0, paramVars);
 		templ["retParams"] = suffixedVariableNameList("ret_", retVars, 0);
-		templ["function"] = generateFunction(dynamic_cast<FunctionDefinition const&>(type->declaration()));
+
+		if (FunctionDefinition const* funDef = dynamic_cast<FunctionDefinition const*>(&type->declaration()))
+			templ["function"] = generateFunction(*funDef);
+		else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(&type->declaration()))
+			templ["function"] = generateGetter(*varDecl);
+		else
+			solAssert(false, "Unexpected declaration for function!");
+
 		templ["allocate"] = m_utils.allocationFunction();
 		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), false);
 		templ["comma"] = retVars == 0 ? "" : ", ";
