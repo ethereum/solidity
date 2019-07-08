@@ -42,6 +42,8 @@ using boost::is_any_of;
 
 string yul::reindent(string const& _code)
 {
+	int constexpr indentationWidth = 4;
+
 	auto const static countBraces = [](string const& _s) noexcept -> int
 	{
 		auto const i = _s.find("//");
@@ -65,10 +67,13 @@ string yul::reindent(string const& _code)
 		if (diff < 0)
 			depth += diff;
 
-		for (int i = 0; i < depth; ++i)
-			out << '\t';
-
-		out << line << '\n';
+		if (!line.empty())
+		{
+			for (int i = 0; i < depth * indentationWidth; ++i)
+				out << ' ';
+			out << line;
+		}
+		out << '\n';
 
 		if (diff > 0)
 			depth += diff;
