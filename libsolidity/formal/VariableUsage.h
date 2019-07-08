@@ -38,6 +38,9 @@ public:
 	/// @param _outerCallstack the current callstack in the callers context.
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<CallableDeclaration const*> const& _outerCallstack);
 
+	/// Sets whether to inline function calls.
+	void setFunctionInlining(bool _inlineFunction) { m_inlineFunctionCalls = _inlineFunction; }
+
 private:
 	void endVisit(Identifier const& _node) override;
 	void endVisit(IndexAccess const& _node) override;
@@ -53,6 +56,8 @@ private:
 	std::set<VariableDeclaration const*> m_touchedVariables;
 	std::vector<CallableDeclaration const*> m_callStack;
 	CallableDeclaration const* m_lastCall = nullptr;
+
+	bool m_inlineFunctionCalls = false;
 };
 
 }

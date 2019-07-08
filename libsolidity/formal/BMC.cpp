@@ -50,6 +50,7 @@ void BMC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner
 	m_scanner = _scanner;
 
 	m_context.clear();
+	m_variableUsage.setFunctionInlining(true);
 
 	_source.accept(*this);
 
