@@ -7,81 +7,81 @@
 
 
 object \"C_6\" {
-\tcode {
-\t\tmstore(64, 128)
-\t\t
-\t\t
-\t\tcodecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
-\t\treturn(0, datasize(\"C_6_deployed\"))
-\t\t
-\t\t
-\t\tfunction fun_f_5()  {
-\t\t\tfor { let return_flag := 1 } return_flag {} {
-\t\t\t\t
-\t\t\t\tbreak
-\t\t\t}
-\t\t}
-\t\t
-\t}
-\tobject \"C_6_deployed\" {
-\t\tcode {
-\t\t\tmstore(64, 128)
-\t\t\t
-\t\t\tif iszero(lt(calldatasize(), 4))
-\t\t\t{
-\t\t\t\tlet selector := shift_right_224_unsigned(calldataload(0))
-\t\t\t\tswitch selector
-\t\t\t\t
-\t\t\t\tcase 0x26121ff0
-\t\t\t\t{
-\t\t\t\t\t// f()
-\t\t\t\t\tif callvalue() { revert(0, 0) }
-\t\t\t\t\tabi_decode_tuple_(4, calldatasize())
-\t\t\t\t\tfun_f_5()
-\t\t\t\t\tlet memPos := allocateMemory(0)
-\t\t\t\t\tlet memEnd := abi_encode_tuple__to__fromStack(memPos  )
-\t\t\t\t\treturn(memPos, sub(memEnd, memPos))
-\t\t\t\t}
-\t\t\t\t
-\t\t\t\tdefault {}
-\t\t\t}
-\t\t\trevert(0, 0)
-\t\t\t
-\t\t\t
-\t\t\tfunction abi_decode_tuple_(headStart, dataEnd)   {
-\t\t\t\tif slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
-\t\t\t\t
-\t\t\t}
-\t\t\t
-\t\t\tfunction abi_encode_tuple__to__fromStack(headStart ) -> tail {
-\t\t\t\ttail := add(headStart, 0)
-\t\t\t\t
-\t\t\t}
-\t\t\t
-\t\t\tfunction allocateMemory(size) -> memPtr {
-\t\t\t\tmemPtr := mload(64)
-\t\t\t\tlet newFreePtr := add(memPtr, size)
-\t\t\t\t// protect against overflow
-\t\t\t\tif or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
-\t\t\t\tmstore(64, newFreePtr)
-\t\t\t}
-\t\t\t
-\t\t\tfunction fun_f_5()  {
-\t\t\t\tfor { let return_flag := 1 } return_flag {} {
-\t\t\t\t\t
-\t\t\t\t\tbreak
-\t\t\t\t}
-\t\t\t}
-\t\t\t
-\t\t\tfunction shift_right_224_unsigned(value) -> newValue {
-\t\t\t\tnewValue :=
-\t\t\t\t
-\t\t\t\tshr(224, value)
-\t\t\t\t
-\t\t\t}
-\t\t\t
-\t\t}
-\t}
+    code {
+        mstore(64, 128)
+
+
+        codecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
+        return(0, datasize(\"C_6_deployed\"))
+
+
+        function fun_f_5()  {
+            for { let return_flag := 1 } return_flag {} {
+
+                break
+            }
+        }
+
+    }
+    object \"C_6_deployed\" {
+        code {
+            mstore(64, 128)
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x26121ff0
+                {
+                    // f()
+                    if callvalue() { revert(0, 0) }
+                    abi_decode_tuple_(4, calldatasize())
+                    fun_f_5()
+                    let memPos := allocateMemory(0)
+                    let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+            revert(0, 0)
+
+
+            function abi_decode_tuple_(headStart, dataEnd)   {
+                if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function allocateMemory(size) -> memPtr {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, size)
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                mstore(64, newFreePtr)
+            }
+
+            function fun_f_5()  {
+                for { let return_flag := 1 } return_flag {} {
+
+                    break
+                }
+            }
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+        }
+    }
 }
 
 "}}},"sources":{"A":{"id":0}}}
