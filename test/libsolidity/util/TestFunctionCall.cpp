@@ -14,11 +14,13 @@
 
 #include <test/libsolidity/util/TestFunctionCall.h>
 
+#include <test/libsolidity/util/BytesUtils.h>
+#include <test/libsolidity/util/ContractABIUtils.h>
+
 #include <libdevcore/AnsiColorized.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
-#include <regex>
 #include <stdexcept>
 #include <string>
 
@@ -26,47 +28,6 @@ using namespace dev;
 using namespace solidity;
 using namespace dev::solidity::test;
 using namespace std;
-
-namespace
-{
-
-static regex s_boolType{"(bool)"};
-static regex s_uintType{"(uint\\d*)"};
-static regex s_intType{"(int\\d*)"};
-static regex s_bytesType{"(bytes\\d+)"};
-static regex s_dynBytesType{"(\\bbytes\\b)"};
-static regex s_stringType{"(string)"};
-
-/// Translates Solidity's ABI types into the internal type representation of
-/// soltest.
-auto contractABITypes(string const& _type) -> vector<ABIType>
-{
-	vector<ABIType> abiTypes;
-	if (regex_match(_type, s_boolType))
-		abiTypes.push_back(ABIType{ABIType::Boolean, ABIType::AlignRight, 32});
-	else if (regex_match(_type, s_uintType))
-		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
-	else if (regex_match(_type, s_intType))
-		abiTypes.push_back(ABIType{ABIType::SignedDec, ABIType::AlignRight, 32});
-	else if (regex_match(_type, s_bytesType))
-		abiTypes.push_back(ABIType{ABIType::Hex, ABIType::AlignRight, 32});
-	else if (regex_match(_type, s_dynBytesType))
-	{
-		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
-		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
-		abiTypes.push_back(ABIType{ABIType::HexString, ABIType::AlignLeft, 32});
-	}
-	else if (regex_match(_type, s_stringType))
-	{
-		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
-		abiTypes.push_back(ABIType{ABIType::UnsignedDec, ABIType::AlignRight, 32});
-		abiTypes.push_back(ABIType{ABIType::String, ABIType::AlignLeft, 32});
-	}
-	else
-		abiTypes.push_back(ABIType{ABIType::None, ABIType::AlignRight, 0});
-	return abiTypes;
-};
-}
 
 string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
@@ -192,21 +153,9 @@ string TestFunctionCall::formatBytesParameters(
 	stringstream os;
 	string functionName{_signature.substr(0, _signature.find("("))};
 
-	auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
-	size_t encodingSize = std::accumulate(_params.begin(), _params.end(), size_t{0}, sizeFold);
-
-	/// Infer type from Contract ABI. Used to generate values for
+	/// Create parameters from Contract ABI. Used to generate values for
 	/// auto-correction during interactive update routine.
-	ParameterList abiParams;
-	for (auto const& function: m_contractABI)
-		if (function["name"] == functionName)
-			for (auto const& output: function["outputs"])
-			{
-				auto types = contractABITypes(output["type"].asString());
-				for (auto const& type: types)
-					abiParams.push_back(Parameter{bytes(), "", type, FormatInfo{}});
-			}
-
+	ParameterList abiParams = ContractABIUtils().parametersFromJson(m_contractABI, functionName);
 
 	/// If parameter count does not match, take types defined by ABI, but only
 	/// if the contract ABI is defined (needed for format tests where the actual
@@ -214,6 +163,9 @@ string TestFunctionCall::formatBytesParameters(
 	ParameterList preferredParams;
 	if (m_contractABI && (_params.size() != abiParams.size()))
 	{
+		auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
+		size_t encodingSize = std::accumulate(_params.begin(), _params.end(), size_t{0}, sizeFold);
+
 		_errorReporter.warning(
 			"Encoding does not match byte range. The call returned " +
 			to_string(_bytes.size()) + " bytes, but " +
@@ -294,57 +246,23 @@ string TestFunctionCall::formatBytesRange(
 		// be signed. If an unsigned was detected in the expectations,
 		// but the actual result returned a signed, it would be formatted
 		// incorrectly.
-		if (*_bytes.begin() & 0x80)
-			os << u2s(fromBigEndian<u256>(_bytes));
-		else
-			os << fromBigEndian<u256>(_bytes);
+		os << BytesUtils().formatUnsigned(_bytes);
 		break;
 	case ABIType::SignedDec:
-		if (*_bytes.begin() & 0x80)
-			os << u2s(fromBigEndian<u256>(_bytes));
-		else
-			os << fromBigEndian<u256>(_bytes);
+		os << BytesUtils().formatSigned(_bytes);
 		break;
 	case ABIType::Boolean:
-	{
-		u256 result = fromBigEndian<u256>(_bytes);
-		if (result == 0)
-			os << "false";
-		else if (result == 1)
-			os << "true";
-		else
-			os << result;
+		os << BytesUtils().formatBoolean(_bytes);
 		break;
-	}
 	case ABIType::Hex:
-	{
-		string hex{toHex(_bytes, HexPrefix::Add)};
-		boost::algorithm::replace_all(hex, "00", "");
-		os << hex;
+		os << BytesUtils().formatHex(_bytes);
 		break;
-	}
 	case ABIType::HexString:
-		os << "hex\"" << toHex(_bytes) << "\"";
+		os << BytesUtils().formatHexString(_bytes);
 		break;
 	case ABIType::String:
-	{
-		os << "\"";
-		bool expectZeros = false;
-		for (auto const& v: _bytes)
-		{
-			if (expectZeros && v != 0)
-				return {};
-			if (v == 0) expectZeros = true;
-			else
-			{
-				if (!isprint(v) || v == '"')
-					return {};
-				os << v;
-			}
-		}
-		os << "\"";
+		os << BytesUtils().formatString(_bytes);
 		break;
-	}
 	case ABIType::Failure:
 		break;
 	case ABIType::None:
