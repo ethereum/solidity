@@ -114,18 +114,13 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 	solAssert(_object.code, "");
 	_object.analysisInfo = make_shared<AsmAnalysisInfo>();
 
-	set<YulString> objectNames;
-	objectNames.insert(_object.name);
-	for (auto const& subObject: _object.subIndexByName)
-		objectNames.insert(subObject.first);
-
 	AsmAnalyzer analyzer(
 		*_object.analysisInfo,
 		m_errorReporter,
 		boost::none,
 		languageToDialect(m_language, m_evmVersion),
 		{},
-		objectNames
+		_object.dataNames()
 	);
 	bool success = analyzer.analyze(*_object.code);
 	for (auto& subNode: _object.subObjects)
@@ -166,8 +161,7 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	OptimiserSuite::run(
 		dialect,
 		meter.get(),
-		*_object.code,
-		*_object.analysisInfo,
+		_object,
 		m_optimiserSettings.optimizeStackAllocation
 	);
 }

@@ -34,6 +34,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/Object.h>
 #include <libyul/YulString.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -423,23 +424,19 @@ void CompilerContext::appendInlineAssembly(
 	{
 		bool const isCreation = m_runtimeContext != nullptr;
 		yul::GasMeter meter(dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
+		yul::Object obj;
+		obj.code = parserResult;
+		obj.analysisInfo = make_shared<yul::AsmAnalysisInfo>(analysisInfo);
 		yul::OptimiserSuite::run(
 			dialect,
 			&meter,
-			*parserResult,
-			analysisInfo,
+			obj,
 			_optimiserSettings.optimizeStackAllocation,
 			externallyUsedIdentifiers
 		);
-		analysisInfo = yul::AsmAnalysisInfo{};
-		if (!yul::AsmAnalyzer(
-			analysisInfo,
-			errorReporter,
-			boost::none,
-			dialect,
-			identifierAccess.resolve
-		).analyze(*parserResult))
-			reportError("Optimizer introduced error into inline assembly.");
+		analysisInfo = std::move(*obj.analysisInfo);
+		parserResult = std::move(obj.code);
+
 #ifdef SOL_OUTPUT_ASM
 		cout << "After optimizer: " << endl;
 		cout << yul::AsmPrinter()(*parserResult) << endl;

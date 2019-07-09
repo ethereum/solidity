@@ -77,7 +77,9 @@ public:
 
 	bool analyze(Block const& _block);
 
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Block const& _ast);
+	/// Performs analysis on the outermost code of the given object and returns the analysis info.
+	/// Asserts on failure.
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
 
 	bool operator()(Instruction const&);
 	bool operator()(Literal const& _literal);

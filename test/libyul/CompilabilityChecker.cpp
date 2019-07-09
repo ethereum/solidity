@@ -37,9 +37,10 @@ namespace
 {
 string check(string const& _input)
 {
-	shared_ptr<Block> ast = yul::test::parse(_input, false).first;
-	BOOST_REQUIRE(ast);
-	map<YulString, int> functions = CompilabilityChecker::run(EVMDialect::strictAssemblyForEVM(dev::test::Options::get().evmVersion()), *ast, true);
+	Object obj;
+	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(_input, false);
+	BOOST_REQUIRE(obj.code);
+	map<YulString, int> functions = CompilabilityChecker::run(EVMDialect::strictAssemblyForEVM(dev::test::Options::get().evmVersion()), obj, true);
 	string out;
 	for (auto const& function: functions)
 		out += function.first.str() + ": " + to_string(function.second) + " ";
