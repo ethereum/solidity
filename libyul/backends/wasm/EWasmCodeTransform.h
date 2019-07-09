@@ -26,6 +26,7 @@
 #include <libyul/optimiser/NameDispenser.h>
 
 #include <stack>
+#include <map>
 
 namespace yul
 {
@@ -90,6 +91,7 @@ private:
 
 	std::vector<wasm::VariableDeclaration> m_localVariables;
 	std::vector<wasm::GlobalVariableDeclaration> m_globalVariables;
+	std::map<YulString, wasm::FunctionImport> m_functionsToImport;
 	std::stack<std::pair<std::string, std::string>> m_breakContinueLabelNames;
 };
 

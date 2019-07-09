@@ -28,15 +28,24 @@
 
 using namespace std;
 using namespace yul;
+using namespace dev;
 
 string EWasmToText::run(
 	vector<wasm::GlobalVariableDeclaration> const& _globals,
+	vector<wasm::FunctionImport> const& _imports,
 	vector<wasm::FunctionDefinition> const& _functions
 )
 {
 	string ret = "(module\n";
-	// TODO Add all the interface functions:
-	// ret += "    (import \"ethereum\" \"getBalance\"  (func $getBalance (param i32 i32)))\n";
+	for (wasm::FunctionImport const& imp: _imports)
+	{
+		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
+		if (!imp.paramTypes.empty())
+			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes, " ", " ") + ")";
+		if (imp.returnType)
+			ret += " (result " + *imp.returnType + ")";
+		ret += "))\n";
+	}
 
 	// allocate one 64k page of memory and make it available to the Ethereum client
 	ret += "    (memory $memory (export \"memory\") 1)\n";

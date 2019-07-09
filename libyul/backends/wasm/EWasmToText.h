@@ -33,6 +33,7 @@ class EWasmToText: public boost::static_visitor<std::string>
 public:
 	std::string run(
 		std::vector<wasm::GlobalVariableDeclaration> const& _globals,
+		std::vector<wasm::FunctionImport> const& _imports,
 		std::vector<wasm::FunctionDefinition> const& _functions
 	);
 

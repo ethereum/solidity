@@ -52,7 +52,14 @@ string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 			functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
 	}
 
-	return EWasmToText{}.run(transform.m_globalVariables, functions);
+	std::vector<wasm::FunctionImport> imports;
+	for (auto& imp: transform.m_functionsToImport)
+		imports.emplace_back(std::move(imp.second));
+	return EWasmToText{}.run(
+		transform.m_globalVariables,
+		imports,
+		functions
+	);
 }
 
 wasm::Expression EWasmCodeTransform::generateMultiAssignment(
@@ -128,7 +135,25 @@ wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 {
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
-		if (builtin->literalArguments)
+		if (_call.functionName.name.str().substr(0, 4) == "eth.")
+		{
+			yulAssert(builtin->returns.size() <= 1, "");
+			// Imported function, use regular call, but mark for import.
+			if (!m_functionsToImport.count(builtin->name))
+			{
+				wasm::FunctionImport imp{
+					"ethereum",
+					builtin->name.str().substr(4),
+					builtin->name.str(),
+					{},
+					builtin->returns.empty() ? nullptr : make_unique<string>(builtin->returns.front().str())
+				};
+				for (auto const& param: builtin->parameters)
+					imp.paramTypes.emplace_back(param.str());
+				m_functionsToImport[builtin->name] = std::move(imp);
+			}
+		}
+		else if (builtin->literalArguments)
 		{
 			vector<wasm::Expression> literals;
 			for (auto const& arg: _call.arguments)
@@ -138,12 +163,12 @@ wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 		else
 			return wasm::BuiltinCall{_call.functionName.name.str(), visit(_call.arguments)};
 	}
-	else
-		// If this function returns multiple values, then the first one will
-		// be returned in the expression itself and the others in global variables.
-		// The values have to be used right away in an assignment or variable declaration,
-		// so it is handled there.
-		return wasm::FunctionCall{_call.functionName.name.str(), visit(_call.arguments)};
+
+	// If this function returns multiple values, then the first one will
+	// be returned in the expression itself and the others in global variables.
+	// The values have to be used right away in an assignment or variable declaration,
+	// so it is handled there.
+	return wasm::FunctionCall{_call.functionName.name.str(), visit(_call.arguments)};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Identifier const& _identifier)
