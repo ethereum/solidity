@@ -629,27 +629,36 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");
-			if (var->isConstant() && (!type(*var)->isValueType() || (
-				type(*var->value())->category() != Type::Category::RationalNumber &&
-				dynamic_cast<Literal const*>(var->value().get()) == nullptr
-			)))
+			if (var->isConstant())
 			{
-				m_errorReporter.typeError(_identifier.location, "Only direct number constants are supported by inline assembly.");
-				return size_t(-1);
-			}
-			else if (var->isConstant() && _context == yul::IdentifierContext::LValue)
-			{
-				m_errorReporter.typeError(_identifier.location, "Constant variables cannot be assigned to.");
-				return size_t(-1);
-			}
-			else if (requiresStorage)
-			{
-				if (var->isConstant())
+				if (!var->value())
+				{
+					m_errorReporter.typeError(_identifier.location, "Constant has no value.");
+					return size_t(-1);
+				}
+				else if (!type(*var)->isValueType() || (
+					dynamic_cast<Literal const*>(var->value().get()) == nullptr &&
+					type(*var->value())->category() != Type::Category::RationalNumber
+				))
+				{
+					m_errorReporter.typeError(_identifier.location, "Only direct number constants are supported by inline assembly.");
+					return size_t(-1);
+				}
+				else if (_context == yul::IdentifierContext::LValue)
+				{
+					m_errorReporter.typeError(_identifier.location, "Constant variables cannot be assigned to.");
+					return size_t(-1);
+				}
+				else if (requiresStorage)
 				{
 					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on non-constant storage variables.");
 					return size_t(-1);
 				}
-				else if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
+			}
+
+			if (requiresStorage)
+			{
+				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
 				{
 					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
 					return size_t(-1);
