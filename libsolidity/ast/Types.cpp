@@ -1647,15 +1647,13 @@ bool ArrayType::validForCalldata() const
 	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType()))
 		if (!arrayBaseType->validForCalldata())
 			return false;
-	return unlimitedCalldataEncodedSize(true) <= numeric_limits<unsigned>::max();
+	return isDynamicallySized() || unlimitedStaticCalldataSize(true) <= numeric_limits<unsigned>::max();
 }
 
-bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
+bigint ArrayType::unlimitedStaticCalldataSize(bool _padded) const
 {
-	if (isDynamicallySized())
-		return 32;
-	// Array elements are always padded.
-	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(true));
+	solAssert(!isDynamicallySized(), "");
+	bigint size = bigint(length()) * calldataStride();
 	if (_padded)
 		size = ((size + 31) / 32) * 32;
 	return size;
@@ -1663,7 +1661,20 @@ bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 
 unsigned ArrayType::calldataEncodedSize(bool _padded) const
 {
-	bigint size = unlimitedCalldataEncodedSize(_padded);
+	solAssert(!isDynamicallyEncoded(), "");
+	bigint size = unlimitedStaticCalldataSize(_padded);
+	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
+	return unsigned(size);
+}
+
+unsigned ArrayType::calldataEncodedTailSize() const
+{
+	solAssert(isDynamicallyEncoded(), "");
+	if (isDynamicallySized())
+		// We do not know the dynamic length itself, but at least the uint256 containing the
+		// length must still be present.
+		return 32;
+	bigint size = unlimitedStaticCalldataSize(false);
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
 	return unsigned(size);
 }
@@ -1832,10 +1843,11 @@ TypeResult ArrayType::interfaceType(bool _inLibrary) const
 	return result;
 }
 
-u256 ArrayType::memorySize() const
+u256 ArrayType::memoryDataSize() const
 {
 	solAssert(!isDynamicallySized(), "");
 	solAssert(m_location == DataLocation::Memory, "");
+	solAssert(!isByteArray(), "");
 	bigint size = bigint(m_length) * m_baseType->memoryHeadSize();
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit u256.");
 	return u256(size);
@@ -1992,20 +2004,33 @@ bool StructType::operator==(Type const& _other) const
 	return ReferenceType::operator==(other) && other.m_struct == m_struct;
 }
 
+
 unsigned StructType::calldataEncodedSize(bool) const
 {
+	solAssert(!isDynamicallyEncoded(), "");
+
 	unsigned size = 0;
 	for (auto const& member: members(nullptr))
-		if (!member.type->canLiveOutsideStorage())
-			return 0;
-		else
-		{
-			// Struct members are always padded.
-			unsigned memberSize = member.type->calldataEncodedSize(true);
-			if (memberSize == 0)
-				return 0;
-			size += memberSize;
-		}
+	{
+		solAssert(member.type->canLiveOutsideStorage(), "");
+		// Struct members are always padded.
+		size += member.type->calldataEncodedSize();
+	}
+	return size;
+}
+
+
+unsigned StructType::calldataEncodedTailSize() const
+{
+	solAssert(isDynamicallyEncoded(), "");
+
+	unsigned size = 0;
+	for (auto const& member: members(nullptr))
+	{
+		solAssert(member.type->canLiveOutsideStorage(), "");
+		// Struct members are always padded.
+		size += member.type->calldataHeadSize();
+	}
 	return size;
 }
 
@@ -2017,12 +2042,8 @@ unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
 		solAssert(member.type->canLiveOutsideStorage(), "");
 		if (member.name == _member)
 			return offset;
-		{
-			// Struct members are always padded.
-			unsigned memberSize = member.type->calldataEncodedSize(true);
-			solAssert(memberSize != 0, "");
-			offset += memberSize;
-		}
+		// Struct members are always padded.
+		offset += member.type->calldataHeadSize();
 	}
 	solAssert(false, "Struct member not found.");
 }
@@ -2040,7 +2061,7 @@ bool StructType::isDynamicallyEncoded() const
 	return false;
 }
 
-u256 StructType::memorySize() const
+u256 StructType::memoryDataSize() const
 {
 	u256 size;
 	for (auto const& t: memoryMemberTypes())

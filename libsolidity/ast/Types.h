@@ -208,16 +208,32 @@ public:
 	virtual bool operator==(Type const& _other) const { return category() == _other.category(); }
 	virtual bool operator!=(Type const& _other) const { return !this->operator ==(_other); }
 
-	/// @returns number of bytes used by this type when encoded for CALL. If it is a dynamic type,
-	/// returns the size of the pointer (usually 32). Returns 0 if the type cannot be encoded
-	/// in calldata.
+	/// @returns number of bytes used by this type when encoded for CALL. Cannot be used for
+	/// dynamically encoded types.
+	/// Always returns a value greater than zero and throws if the type cannot be encoded in calldata
+	/// (or is dynamically encoded).
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
-	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
+	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; solAssert(false, ""); }
+	/// Convenience version of @see calldataEncodedSize(bool)
+	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
+	/// @returns the distance between two elements of this type in a calldata array, tuple or struct.
+	/// For statically encoded types this is the same as calldataEncodedSize(true).
+	/// For dynamically encoded types this is the distance between two tail pointers, i.e. 32.
+	/// Always returns a value greater than zero and throws if the type cannot be encoded in calldata.
+	unsigned calldataHeadSize() const { return isDynamicallyEncoded() ? 32 : calldataEncodedSize(true); }
+	/// @returns the (minimal) size of the calldata tail for this type. Can only be used for
+	/// dynamically encoded types. For dynamically-sized arrays this is 32 (the size of the length),
+	/// for statically-sized, but dynamically encoded arrays this is 32*length(), for structs
+	/// this is the sum of the calldataHeadSize's of its members.
+	/// Always returns a value greater than zero and throws if the type cannot be encoded in calldata
+	/// (or is not dynamically encoded).
+	virtual unsigned calldataEncodedTailSize() const { solAssert(false, ""); }
 	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
 	/// types, this is the size of the memory pointer.
 	virtual unsigned memoryHeadSize() const { return calldataEncodedSize(); }
-	/// Convenience version of @see calldataEncodedSize(bool)
-	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
+	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
+	/// types, this is the size of the actual data area, if it is statically-sized.
+	virtual u256 memoryDataSize() const { return calldataEncodedSize(); }
 	/// @returns true if the type is a dynamic array
 	virtual bool isDynamicallySized() const { return false; }
 	/// @returns true if the type is dynamically encoded in the ABI
@@ -634,6 +650,10 @@ public:
 		return nullptr;
 	}
 	unsigned memoryHeadSize() const override { return 32; }
+	u256 memoryDataSize() const override = 0;
+
+	unsigned calldataEncodedSize(bool) const override = 0;
+	unsigned calldataEncodedTailSize() const override = 0;
 
 	/// @returns a copy of this type with location (recursively) changed to @a _location,
 	/// whereas isPointer is only shallowly changed - the deep copy is always a bound reference.
@@ -701,7 +721,8 @@ public:
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
-	unsigned calldataEncodedSize(bool _padded) const override;
+	unsigned calldataEncodedSize(bool) const override;
+	unsigned calldataEncodedTailSize() const override;
 	bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	bool isDynamicallyEncoded() const override;
 	u256 storageSize() const override;
@@ -724,12 +745,12 @@ public:
 	bool isString() const { return m_arrayKind == ArrayKind::String; }
 	Type const* baseType() const { solAssert(!!m_baseType, ""); return m_baseType; }
 	u256 const& length() const { return m_length; }
-	u256 memorySize() const;
+	u256 memoryDataSize() const override;
 
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	/// The offset to advance in calldata to move from one array element to the next.
-	unsigned calldataStride() const { return isByteArray() ? 1 : m_baseType->calldataEncodedSize(); }
+	unsigned calldataStride() const { return isByteArray() ? 1 : m_baseType->calldataHeadSize(); }
 	/// The offset to advance in memory to move from one array element to the next.
 	unsigned memoryStride() const { return isByteArray() ? 1 : m_baseType->memoryHeadSize(); }
 	/// The offset to advance in storage to move from one array element to the next.
@@ -741,7 +762,7 @@ private:
 	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
 
-	bigint unlimitedCalldataEncodedSize(bool _padded) const;
+	bigint unlimitedStaticCalldataSize(bool _padded) const;
 
 	///< Byte arrays ("bytes") and strings have different semantics from ordinary arrays.
 	ArrayKind m_arrayKind = ArrayKind::Ordinary;
@@ -829,9 +850,10 @@ public:
 	BoolResult isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
-	unsigned calldataEncodedSize(bool _padded) const override;
+	unsigned calldataEncodedSize(bool) const override;
+	unsigned calldataEncodedTailSize() const override;
 	bool isDynamicallyEncoded() const override;
-	u256 memorySize() const;
+	u256 memoryDataSize() const override;
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return true; }
 	std::string toString(bool _short) const override;
