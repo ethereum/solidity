@@ -40,6 +40,7 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 	m_currentContract = &_contract;
 
 	initializeStateVariables(_contract);
+
 	return true;
 }
 
