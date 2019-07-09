@@ -278,6 +278,19 @@ BOOST_AUTO_TEST_CASE(args_to_datacopy_are_arbitrary)
 	BOOST_CHECK(successParse(code));
 }
 
+
+BOOST_AUTO_TEST_CASE(non_existing_objects)
+{
+	BOOST_CHECK(successParse(
+		"object \"main\" { code { pop(datasize(\"main\")) } }"
+	));
+	CHECK_ERROR(
+		"object \"main\" { code { pop(datasize(\"abc\")) } }",
+		TypeError,
+		"Unknown data object"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

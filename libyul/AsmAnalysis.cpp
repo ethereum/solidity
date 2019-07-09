@@ -383,11 +383,19 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	{
 		if (!expectExpression(arg))
 			success = false;
-		else if (needsLiteralArguments && arg.type() != typeid(Literal))
-			m_errorReporter.typeError(
-				_funCall.functionName.location,
-				"Function expects direct literals as arguments."
-			);
+		else if (needsLiteralArguments)
+		{
+			if (arg.type() != typeid(Literal))
+				m_errorReporter.typeError(
+					_funCall.functionName.location,
+					"Function expects direct literals as arguments."
+				);
+			else if (!m_dataNames.count(boost::get<Literal>(arg).value))
+				m_errorReporter.typeError(
+					_funCall.functionName.location,
+					"Unknown data object \"" + boost::get<Literal>(arg).value.str() + "\"."
+				);
+		}
 	}
 	// Use argument size instead of parameter count to avoid misleading errors.
 	m_stackHeight += int(returns) - int(_funCall.arguments.size());
