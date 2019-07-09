@@ -1,3 +1,6 @@
+
+ * Fix assertion failure when copy nested calldata dynamic arrays from calldata to storage.
+
 ### 0.5.11 (unreleased)
 
 

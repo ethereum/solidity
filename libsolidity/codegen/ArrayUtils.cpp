@@ -58,10 +58,16 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	bool haveByteOffsetTarget = !directCopy && targetBaseType->storageBytes() <= 16;
 	unsigned byteOffsetSize = (haveByteOffsetSource ? 1 : 0) + (haveByteOffsetTarget ? 1 : 0);
 
+	// if source type is nested dynamically encoded data type, we need to keep base source ref during
+	// the copy loop, so that we can decode tail pointer.
+	bool retainSourceRefInLoop =
+		dynamic_cast<ReferenceType const*>(sourceBaseType) &&
+		dynamic_cast<ReferenceType const*>(sourceBaseType)->location() == DataLocation::CallData &&
+		dynamic_cast<ReferenceType const*>(sourceBaseType)->isDynamicallyEncoded();
+
 	// stack: source_ref [source_length] target_ref
 	// store target_ref
-	for (unsigned i = _sourceType.sizeOnStack(); i > 0; --i)
-		m_context << swapInstruction(i);
+	CompilerUtils(m_context).moveToStackTop(1, _sourceType.sizeOnStack());
 	// stack: target_ref source_ref [source_length]
 	// stack: target_ref source_ref [source_length]
 	// retrieve source length
@@ -119,12 +125,18 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			_context << Instruction::SWAP3;
 			// stack: target_ref target_data_end source_length target_data_pos source_ref
 
+			if (retainSourceRefInLoop)
+			{
+				_context << Instruction::DUP1;
+				CompilerUtils(_context).moveIntoStack(5, 1);
+			}
+
 			eth::AssemblyItem copyLoopEndWithoutByteOffset = _context.newTag();
 
 			// special case for short byte arrays: Store them together with their length.
 			if (_targetType.isByteArray())
 			{
-				// stack: target_ref target_data_end source_length target_data_pos source_ref
+				// stack: [source_ref] target_ref target_data_end source_length target_data_pos source_ref
 				_context << Instruction::DUP3 << u256(31) << Instruction::LT;
 				eth::AssemblyItem longByteArray = _context.appendConditionalJump();
 				// store the short byte array
@@ -139,7 +151,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 				{
 					_context << Instruction::DUP1;
 					CompilerUtils(_context).loadFromMemoryDynamic(*sourceBaseType, fromCalldata, true, false);
-					// stack: target_ref target_data_end source_length target_data_pos source_ref value
+					// stack: [source_ref] target_ref target_data_end source_length target_data_pos source_ref value
 					// clear the lower-order byte - which will hold the length
 					_context << u256(0xff) << Instruction::NOT << Instruction::AND;
 					// fetch the length and shift it left by one
@@ -162,16 +174,16 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 
 			if (_sourceType.location() == DataLocation::Storage && _sourceType.isDynamicallySized())
 				CompilerUtils(_context).computeHashStatic();
-			// stack: target_ref target_data_end source_length target_data_pos source_data_pos
+			// stack: [source_ref] target_ref target_data_end source_length target_data_pos source_data_pos
 			_context << Instruction::SWAP2;
 			utils.convertLengthToSize(_sourceType);
 			_context << Instruction::DUP3 << Instruction::ADD;
-			// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end
+			// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos source_data_end
 			if (haveByteOffsetTarget)
 				_context << u256(0);
 			if (haveByteOffsetSource)
 				_context << u256(0);
-			// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
+			// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
 			eth::AssemblyItem copyLoopStart = _context.newTag();
 			_context << copyLoopStart;
 			// check for loop condition
@@ -179,16 +191,37 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 				<< dupInstruction(3 + byteOffsetSize) << dupInstruction(2 + byteOffsetSize)
 				<< Instruction::GT << Instruction::ISZERO;
 			eth::AssemblyItem copyLoopEnd = _context.appendConditionalJump();
-			// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
+			// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
 			// copy
 			if (sourceBaseType->category() == Type::Category::Array)
 			{
 				solAssert(byteOffsetSize == 0, "Byte offset for array as base type.");
 				auto const& sourceBaseArrayType = dynamic_cast<ArrayType const&>(*sourceBaseType);
 				_context << Instruction::DUP3;
-				if (sourceBaseArrayType.location() == DataLocation::Memory)
+				switch (sourceBaseArrayType.location())
+				{
+				case DataLocation::Storage:
+					_context << Instruction::DUP3;
+					break;
+				case DataLocation::Memory:
 					_context << Instruction::MLOAD;
-				_context << Instruction::DUP3;
+					_context << Instruction::DUP3;
+					break;
+				case DataLocation::CallData:
+					if (sourceBaseArrayType.isDynamicallyEncoded())
+					{
+						solAssert(retainSourceRefInLoop, "");
+						// stack: source_ref target_ref target_data_end source_data_pos target_data_pos source_data_end source_data_pos
+						_context << Instruction::DUP7 << Instruction::SWAP1;
+						// stack: source_ref target_ref target_data_end source_data_pos target_data_pos source_data_end source_ref source_data_pos
+						CompilerUtils(_context).accessCalldataTail(sourceBaseArrayType);
+						// stack: source_ref target_ref target_data_end source_data_pos target_data_pos source_data_end element_ref [element_ref_length]
+						_context << dupInstruction(2 + sourceBaseArrayType.sizeOnStack());
+					}
+					else
+						_context << Instruction::DUP3;
+					break;
+				}
 				utils.copyArrayToStorage(dynamic_cast<ArrayType const&>(*targetBaseType), sourceBaseArrayType);
 				_context << Instruction::POP;
 			}
@@ -204,7 +237,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 				// Note that we have to copy each element on its own in case conversion is involved.
 				// We might copy too much if there is padding at the last element, but this way end
 				// checking is easier.
-				// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
+				// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
 				_context << dupInstruction(3 + byteOffsetSize);
 				if (_sourceType.location() == DataLocation::Storage)
 				{
@@ -218,7 +251,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 					CompilerUtils(_context).loadFromMemoryDynamic(*sourceBaseType, fromCalldata, true, false);
 				else
 					solUnimplemented("Copying of type " + _sourceType.toString(false) + " to storage not yet supported.");
-				// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset] <source_value>...
+				// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset] <source_value>...
 				solAssert(
 					2 + byteOffsetSize + sourceBaseType->sizeOnStack() <= 16,
 					"Stack too deep, try removing local variables."
@@ -231,7 +264,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 					_context << u256(0);
 				StorageItem(_context, *targetBaseType).storeValue(*sourceBaseType, SourceLocation(), true);
 			}
-			// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
+			// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
 			// increment source
 			if (haveByteOffsetSource)
 				utils.incrementByteOffset(sourceBaseType->storageBytes(), 1, haveByteOffsetTarget ? 5 : 4);
@@ -262,7 +295,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			if (haveByteOffsetTarget)
 			{
 				// clear elements that might be left over in the current slot in target
-				// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end target_byte_offset [source_byte_offset]
+				// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos source_data_end target_byte_offset [source_byte_offset]
 				_context << dupInstruction(byteOffsetSize) << Instruction::ISZERO;
 				eth::AssemblyItem copyCleanupLoopEnd = _context.appendConditionalJump();
 				_context << dupInstruction(2 + byteOffsetSize) << dupInstruction(1 + byteOffsetSize);
@@ -278,11 +311,15 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			_context << copyLoopEndWithoutByteOffset;
 
 			// zero-out leftovers in target
-			// stack: target_ref target_data_end source_data_pos target_data_pos_updated source_data_end
+			// stack: [source_ref] target_ref target_data_end source_data_pos target_data_pos_updated source_data_end
 			_context << Instruction::POP << Instruction::SWAP1 << Instruction::POP;
-			// stack: target_ref target_data_end target_data_pos_updated
+			// stack: [source_ref] target_ref target_data_end target_data_pos_updated
 			utils.clearStorageLoop(targetBaseType);
 			_context << Instruction::POP;
+			// stack: [source_ref] target_ref
+			if (retainSourceRefInLoop)
+				_context << Instruction::SWAP1 << Instruction::POP;
+			// stack: target_ref
 		}
 	);
 }
