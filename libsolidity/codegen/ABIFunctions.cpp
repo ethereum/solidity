@@ -691,6 +691,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			// Multiple items per slot
 			solAssert(_from.baseType()->storageBytes() <= 16, "");
 			solAssert(!_from.baseType()->isDynamicallyEncoded(), "");
+			solAssert(!_to.baseType()->isDynamicallyEncoded(), "");
 			solAssert(_from.baseType()->isValueType(), "");
 			bool dynamic = _to.isDynamicallyEncoded();
 			size_t storageBytes = _from.baseType()->storageBytes();
@@ -1202,6 +1203,7 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 		Whiskers w{templ};
 		w("functionName", functionName);
 		w("readableTypeName", _type.toString(true));
+		// TODO this might make a difference
 		w("baseEncodedSize", toCompactHexWithPrefix(_type.isByteArray() ? 1 : _type.baseType()->calldataEncodedSize()));
 		if (!_type.isDynamicallySized())
 			w("length", toCompactHexWithPrefix(_type.length()));
@@ -1404,6 +1406,7 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 				w("handleLength", "");
 				w("return", "value");
 			}
+			// TODO this makes a difference!
 			w("neededLength", toCompactHexWithPrefix(baseEncodedSize));
 			w("functionName", functionName);
 			return w.render();

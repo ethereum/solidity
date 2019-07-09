@@ -1652,7 +1652,7 @@ bool ArrayType::validForCalldata() const
 
 bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 {
-	if (isDynamicallySized())
+	if (isDynamicallyEncoded())
 		return 32;
 	// Array elements are always padded.
 	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(true));
@@ -1994,6 +1994,9 @@ bool StructType::operator==(Type const& _other) const
 
 unsigned StructType::calldataEncodedSize(bool) const
 {
+	if (isDynamicallyEncoded())
+		return 32;
+
 	unsigned size = 0;
 	for (auto const& member: members(nullptr))
 		if (!member.type->canLiveOutsideStorage())
