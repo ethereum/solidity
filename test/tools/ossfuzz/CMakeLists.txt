@@ -38,7 +38,7 @@ if (OSSFUZZ)
 
     add_executable(yul_proto_ossfuzz yulProtoFuzzer.cpp protoToYul.cpp yulProto.pb.cc)
     target_include_directories(yul_proto_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
-    target_link_libraries(yul_proto_ossfuzz PRIVATE yul evmasm solidity
+    target_link_libraries(yul_proto_ossfuzz PRIVATE yul
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
             protobuf.a
@@ -46,7 +46,7 @@ if (OSSFUZZ)
 
     add_executable(yul_proto_diff_ossfuzz yulProto_diff_ossfuzz.cpp yulFuzzerCommon.cpp protoToYul.cpp yulProto.pb.cc)
     target_include_directories(yul_proto_diff_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
-    target_link_libraries(yul_proto_diff_ossfuzz PRIVATE yul evmasm
+    target_link_libraries(yul_proto_diff_ossfuzz PRIVATE yul
             yulInterpreter
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
@@ -88,7 +88,7 @@ else()
 
 #    add_executable(yul_proto_ossfuzz yulProtoFuzzer.cpp protoToYul.cpp yulProto.pb.cc)
 #    target_include_directories(yul_proto_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
-#    target_link_libraries(yul_proto_ossfuzz PRIVATE yul evmasm solidity
+#    target_link_libraries(yul_proto_ossfuzz PRIVATE yul
 #            protobuf-mutator-libfuzzer.a
 #            protobuf-mutator.a
 #            protobuf.a
@@ -96,7 +96,7 @@ else()
 #
 #    add_executable(yul_proto_diff_ossfuzz yulProto_diff_ossfuzz.cpp yulFuzzerCommon.cpp protoToYul.cpp yulProto.pb.cc)
 #    target_include_directories(yul_proto_diff_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
-#    target_link_libraries(yul_proto_diff_ossfuzz PRIVATE yul evmasm
+#    target_link_libraries(yul_proto_diff_ossfuzz PRIVATE yul
 #            yulInterpreter
 #            protobuf-mutator-libfuzzer.a
 #            protobuf-mutator.a

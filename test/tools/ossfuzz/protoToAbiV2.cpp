@@ -2,12 +2,12 @@
 #include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
 #include <test/tools/ossfuzz/protoToAbiV2.h>
-#include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libdevcore/StringUtils.h>
 #include <libdevcore/Whiskers.h>
 #include <liblangutil/Exceptions.h>
 
 using namespace std;
-using namespace dev::solidity;
+using namespace dev;
 using namespace dev::test::abiv2fuzzer;
 
 // Create a new variable declaration and append said variable to function parameter lists
@@ -651,7 +651,7 @@ void ProtoConverter::visit(TestFunction const& _x)
 		return (uint(1000) + this.coder_external(<parameter_names>));
 	}
 	)")
-	("parameter_names", YulUtilFunctions::suffixedVariableNameList(s_varNamePrefix, 0, m_varCounter))
+	("parameter_names", dev::suffixedVariableNameList(s_varNamePrefix, 0, m_varCounter))
 	.render();
 }
 
