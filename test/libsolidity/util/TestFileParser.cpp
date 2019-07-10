@@ -300,8 +300,8 @@ Parameter TestFileParser::parseParameter()
 			if (parameter.alignment != Parameter::Alignment::None)
 				throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
 
-			parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, 32};
 			string parsed = parseString();
+			parameter.abiType = {ABIType::String, ABIType::AlignLeft, parsed.size()};
 			parameter.rawString += "\"" + parsed + "\"";
 			parameter.rawBytes = BytesUtils().applyAlign(
 				Parameter::Alignment::Left,
@@ -589,8 +589,70 @@ string TestFileParser::Scanner::scanString()
 
 	while (current() != '\"')
 	{
-		str += current();
-		advance();
+		if (current() == '\\')
+		{
+			advance();
+			switch (current())
+			{
+				case '\\':
+					str += current();
+					advance();
+					break;
+				case 'n':
+					str += '\n';
+					advance();
+					break;
+				case 'r':
+					str += '\r';
+					advance();
+					break;
+				case 't':
+					str += '\t';
+					advance();
+					break;
+				case '0':
+					str += '\0';
+					advance();
+					break;
+				case 'x':
+					str += scanHexPart();
+					break;
+				default:
+					throw Error(Error::Type::ParserError, "Invalid or escape sequence found in string literal.");
+			}
+		}
+		else
+		{
+			str += current();
+			advance();
+		}
 	}
 	return str;
+}
+
+char TestFileParser::Scanner::scanHexPart()
+{
+	advance(); // skip 'x'
+
+	char value{};
+	if (isdigit(current()))
+		value = current() - '0';
+	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
+		value = tolower(current()) - 'a' + 10;
+	else
+		throw Error(Error::Type::ParserError, "\\x used with no following hex digits.");
+
+	advance();
+	if (current() == '"')
+		return value;
+
+	value <<= 4;
+	if (isdigit(current()))
+		value |= current() - '0';
+	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
+		value |= tolower(current()) - 'a' + 10;
+
+	advance();
+
+	return value;
 }

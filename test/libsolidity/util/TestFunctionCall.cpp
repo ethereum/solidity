@@ -261,7 +261,7 @@ string TestFunctionCall::formatBytesRange(
 		os << BytesUtils().formatHexString(_bytes);
 		break;
 	case ABIType::String:
-		os << BytesUtils().formatString(_bytes);
+		os << BytesUtils().formatString(_bytes, _abiType.size);
 		break;
 	case ABIType::Failure:
 		break;

@@ -89,15 +89,16 @@ private:
 		std::string scanDecimalNumber();
 		std::string scanHexNumber();
 		std::string scanString();
+		char scanHexPart();
 
 	private:
 		using TokenDesc = std::pair<Token, std::string>;
 
 		/// Advances current position in the input stream.
-		void advance()
+		void advance(unsigned n = 1)
 		{
 			solAssert(m_char != m_line.end(), "Cannot advance beyond end.");
-			++m_char;
+			m_char = std::next(m_char, n);
 		}
 
 		/// Returns the current character or '\0' if at end of input.
