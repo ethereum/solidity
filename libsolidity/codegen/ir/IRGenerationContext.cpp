@@ -65,6 +65,11 @@ string IRGenerationContext::functionName(FunctionDefinition const& _function)
 	return "fun_" + _function.name() + "_" + to_string(_function.id());
 }
 
+string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
+{
+	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
+}
+
 FunctionDefinition const& IRGenerationContext::virtualFunction(FunctionDefinition const& _function)
 {
 	// @TODO previously, we had to distinguish creation context and runtime context,

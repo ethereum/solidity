@@ -607,6 +607,26 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		break;
 	}
+	case FunctionType::Kind::KECCAK256:
+	{
+		solAssert(arguments.size() == 1, "");
+
+		ArrayType const* arrayType = TypeProvider::bytesMemory();
+		string const& array = m_context.newYulVariable();
+		m_code << "let " << array << " := " << expressionAsType(*arguments[0], *arrayType) << "\n";
+
+		defineExpression(_functionCall) <<
+			"keccak256(" <<
+			m_utils.arrayDataAreaFunction(*arrayType) << "(" <<
+			array <<
+			"), " <<
+			m_utils.arrayLengthFunction(*arrayType) <<
+			"(" <<
+			array <<
+			"))\n";
+
+		break;
+	}
 	default:
 		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
 	}
