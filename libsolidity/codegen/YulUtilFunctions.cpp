@@ -557,7 +557,6 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
 	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
-	solUnimplementedAssert(_type.baseType()->isValueType(), "...");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
 	solUnimplementedAssert(_type.baseType()->storageSize() == 1, "");
 
@@ -598,18 +597,62 @@ string YulUtilFunctions::clearStorageRangeFunction(Type const& _type)
 {
 	string functionName = "clear_storage_range_" + _type.identifier();
 
-	solUnimplementedAssert(_type.isValueType(), "...");
+	solAssert(_type.storageBytes() >= 32, "Expected smaller value for storage bytes");
 
 	return m_functionCollector->createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(start, end) {
-				for {} lt(start, end) { start := add(start, 1) }
+				for {} lt(start, end) { start := add(start, <increment>) }
 				{
-					sstore(start, 0)
+					<setToZero>(start, 0)
 				}
 			}
 		)")
 		("functionName", functionName)
+		("setToZero", storageSetToZeroFunction(_type))
+		("increment", _type.storageSize().str())
+		.render();
+	});
+}
+
+string YulUtilFunctions::clearStorageArrayFunction(ArrayType const& _type)
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+
+	if (_type.baseType()->storageBytes() < 32)
+	{
+		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
+		solAssert(_type.baseType()->storageSize() <= 1, "Invalid storage size for type.");
+	}
+
+	if (_type.baseType()->isValueType())
+		solAssert(_type.baseType()->storageSize() <= 1, "Invalid size for value type.");
+
+	string functionName = "clear_storage_array_" + _type.identifier();
+
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(slot) {
+				<?dynamic>
+					<resizeArray>(slot, 0)
+				<!dynamic>
+					<clearRange>(slot, add(slot, <lenToSize>(<len>)))
+				</dynamic>
+			}
+		)")
+		("functionName", functionName)
+		("dynamic", _type.isDynamicallySized())
+		("resizeArray", _type.isDynamicallySized() ? resizeDynamicArrayFunction(_type) : "")
+		(
+			"clearRange",
+			clearStorageRangeFunction(
+				(_type.baseType()->storageBytes() < 32) ?
+				*TypeProvider::uint256() :
+				*_type.baseType()
+			)
+		)
+		("lenToSize", arrayConvertLengthToSize(_type))
+		("len", _type.length().str())
 		.render();
 	});
 }
@@ -1632,6 +1675,35 @@ string YulUtilFunctions::zeroValueFunction(Type const& _type)
 			("body", "ret := 0x0")
 			.render();
 		});
+}
+
+string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)
+{
+	string const functionName = "storage_set_to_zero_" + _type.identifier();
+
+	return m_functionCollector->createFunction(functionName, [&]() {
+		if (_type.isValueType())
+			return Whiskers(R"(
+				function <functionName>(slot, offset) {
+					<store>(slot, offset, <zeroValue>())
+				}
+			)")
+			("functionName", functionName)
+			("store", updateStorageValueFunction(_type))
+			("zeroValue", zeroValueFunction(_type))
+			.render();
+		else if (_type.category() == Type::Category::Array)
+			return Whiskers(R"(
+				function <functionName>(slot, offset) {
+					<clearArray>(slot)
+				}
+			)")
+			("functionName", functionName)
+			("clearArray", clearStorageArrayFunction(dynamic_cast<ArrayType const&>(_type)))
+			.render();
+		else
+			solUnimplemented("setToZero for type " + _type.identifier() + " not yet implemented!");
+	});
 }
 
 string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const& _to)
