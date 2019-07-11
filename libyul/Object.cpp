@@ -59,3 +59,14 @@ string Object::toString(bool _yul) const
 
 	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
+
+set<YulString> Object::dataNames() const
+{
+	set<YulString> names;
+	names.insert(name);
+	for (auto const& subObject: subIndexByName)
+		names.insert(subObject.first);
+	// The empty name is not valid
+	names.erase(YulString{});
+	return names;
+}

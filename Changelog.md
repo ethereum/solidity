@@ -18,6 +18,7 @@ Compiler Features:
 
 Bugfixes:
  * View/Pure Checker: Properly detect state variable access through base class.
+ * Yul analyzer: Check availability of data objects already in analysis phase.
 
 
 
