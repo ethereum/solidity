@@ -66,6 +66,10 @@ public:
 
 	Account* account(evmc_address const& _address)
 	{
+		// Make all precompiled contracts exist.
+		// Be future-proof and consider everything below 1024 as precompiled contract.
+		if (u160(convertFromEVMC(_address)) < 1024)
+			m_state.accounts[_address];
 		auto it = m_state.accounts.find(_address);
 		return it == m_state.accounts.end() ? nullptr : &it->second;
 	}
@@ -158,7 +162,18 @@ public:
 	evmc_address m_coinbase = convertToEVMC(Address("0x7878787878787878787878787878787878787878"));
 
 private:
+	evmc::result precompileECRecover(evmc_message const& _message) noexcept;
 	evmc::result precompileSha256(evmc_message const& _message) noexcept;
+	evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
+	evmc::result precompileIdentity(evmc_message const& _message) noexcept;
+	evmc::result precompileModExp(evmc_message const& _message) noexcept;
+	evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
+	evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
+	evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
+	evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
+	/// @returns a result object with no gas usage and result data taken from @a _data.
+	/// @note The return value is only valid as long as @a _data is alive!
+	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;
 
 	evmc::vm* m_vm = nullptr;
 	evmc_revision m_evmVersion;
