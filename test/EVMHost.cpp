@@ -24,6 +24,8 @@
 #include <test/evmc/helpers.hpp>
 #include <test/evmc/loader.h>
 
+#include <libevmasm/GasMeter.h>
+
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/Keccak256.h>
@@ -131,6 +133,20 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	bytes code;
 
 	evmc_message message = _message;
+	if (message.depth == 0)
+	{
+		message.gas -= message.kind == EVMC_CREATE ? eth::GasCosts::txCreateGas : eth::GasCosts::txGas;
+		for (size_t i = 0; i < message.input_size; ++i)
+			message.gas -= message.input_data[i] == 0 ? eth::GasCosts::txDataZeroGas : eth::GasCosts::txDataNonZeroGas;
+		if (message.gas < 0)
+		{
+			evmc::result result({});
+			result.status_code = EVMC_OUT_OF_GAS;
+			m_state = stateBackup;
+			return result;
+		}
+	}
+
 	if (message.kind == EVMC_CREATE)
 	{
 		// TODO this is not the right formula
@@ -169,14 +185,25 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	evmc::result result = m_vm->execute(*this, m_evmVersion, message, code.data(), code.size());
 	m_currentAddress = currentAddress;
 
+	if (message.kind == EVMC_CREATE)
+	{
+		result.gas_left -= eth::GasCosts::createDataGas * result.output_size;
+		if (result.gas_left < 0)
+		{
+			result.gas_left = 0;
+			result.status_code = EVMC_OUT_OF_GAS;
+			// TODO clear some fields?
+		}
+		else
+		{
+			result.create_address = message.destination;
+			destination.code = bytes(result.output_data, result.output_data + result.output_size);
+			destination.codeHash = convertToEVMC(keccak256(destination.code));
+		}
+	}
+
 	if (result.status_code != EVMC_SUCCESS)
 		m_state = stateBackup;
-	else if (message.kind == EVMC_CREATE)
-	{
-		result.create_address = message.destination;
-		destination.code = bytes(result.output_data, result.output_data + result.output_size);
-		destination.codeHash = convertToEVMC(keccak256(destination.code));
-	}
 
 	return result;
 }
