@@ -59,7 +59,10 @@ private:
 	std::string transform(wasm::FunctionDefinition const& _function);
 
 	std::string visit(wasm::Expression const& _expression);
-	std::string joinTransformed(std::vector<wasm::Expression> const& _expressions);
+	std::string joinTransformed(
+		std::vector<wasm::Expression> const& _expressions,
+		char _separator = ' '
+	);
 };
 
 }

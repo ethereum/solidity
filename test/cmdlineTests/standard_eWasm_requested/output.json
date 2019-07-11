@@ -35,9 +35,9 @@
     (result i64)
     (local $v i64)
     (if (i64.ne (i64.const 0) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
-        (unreachable )))
+        (unreachable)))
     (if (i64.ne (i64.const 0) (i64.shr_u (get_local $x4) (i64.const 32))) (then
-        (unreachable )))
+        (unreachable)))
     (set_local $v (get_local $x4))
     (get_local $v)
 )
@@ -102,14 +102,14 @@
         (set_local $_5 (get_global $global_))
         (set_local $_6 (get_global $global__1))
         (set_local $_7 (get_global $global__2))
-    
+
     )
     (block
         (set_local $_8 (dataoffset \"C_2_deployed\"))
         (set_local $_9 (get_global $global_))
         (set_local $_10 (get_global $global__1))
         (set_local $_11 (get_global $global__2))
-    
+
     )
     (call $eth.codeCopy (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (get_local $_1)) (call $u256_to_i32 (get_local $_8) (get_local $_9) (get_local $_10) (get_local $_11)) (call $u256_to_i32 (get_local $_4) (get_local $_5) (get_local $_6) (get_local $_7))) (call $eth.finish (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (get_local $_1)) (call $u256_to_i32 (get_local $_4) (get_local $_5) (get_local $_6) (get_local $_7)))
 )
@@ -122,9 +122,9 @@
     (result i64)
     (local $v i64)
     (if (i64.ne (i64.const 0) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
-        (unreachable )))
+        (unreachable)))
     (if (i64.ne (i64.const 0) (i64.shr_u (get_local $x4) (i64.const 32))) (then
-        (unreachable )))
+        (unreachable)))
     (set_local $v (get_local $x4))
     (get_local $v)
 )
