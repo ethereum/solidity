@@ -88,7 +88,7 @@ string ABIFunctions::tupleEncoder(
 			elementTempl("pos", to_string(headPos));
 			elementTempl("abiEncode", abiEncodingFunction(*_givenTypes[i], *_targetTypes[i], options));
 			encodeElements += elementTempl.render();
-			headPos += dynamic ? 0x20 : _targetTypes[i]->calldataEncodedSize();
+			headPos += _targetTypes[i]->calldataEncodedSize();
 			stackPos += sizeOnStack;
 		}
 		solAssert(headPos == headSize_, "");
@@ -225,7 +225,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 			elementTempl("pos", to_string(headPos));
 			elementTempl("abiDecode", abiDecodingFunction(*_types[i], _fromMemory, true));
 			decodeElements += elementTempl.render();
-			headPos += dynamic ? 0x20 : decodingTypes[i]->calldataEncodedSize();
+			headPos += decodingTypes[i]->calldataEncodedSize();
 		}
 		templ("valueReturnParams", boost::algorithm::join(valueReturnParams, ", "));
 		templ("arrow", valueReturnParams.empty() ? "" : "->");
@@ -915,7 +915,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 				);
 				encodeTempl("memberValues", memberValues);
 				encodeTempl("encodingOffset", toCompactHexWithPrefix(encodingOffset));
-				encodingOffset += dynamicMember ? 0x20 : memberTypeTo->calldataEncodedSize();
+				encodingOffset += memberTypeTo->calldataEncodedSize();
 				encodeTempl("abiEncode", abiEncodingFunction(*memberTypeFrom, *memberTypeTo, subOptions));
 				encode = encodeTempl.render();
 			}
@@ -1324,7 +1324,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 			members.push_back({});
 			members.back()["decode"] = memberTempl.render();
 			members.back()["memberName"] = member.name;
-			headPos += dynamic ? 0x20 : decodingType->calldataEncodedSize();
+			headPos += decodingType->calldataEncodedSize();
 		}
 		templ("members", members);
 		templ("minimumSize", toCompactHexWithPrefix(headPos));
@@ -1486,12 +1486,7 @@ size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
 {
 	size_t headSize = 0;
 	for (auto const& t: _targetTypes)
-	{
-		if (t->isDynamicallyEncoded())
-			headSize += 0x20;
-		else
-			headSize += t->calldataEncodedSize();
-	}
+		headSize += t->calldataEncodedSize();
 
 	return headSize;
 }

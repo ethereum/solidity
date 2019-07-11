@@ -812,10 +812,7 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 		}
 		case DataLocation::CallData:
 		{
-			u256 size =
-				_type.baseType()->isDynamicallyEncoded() ?
-				32 :
-				_type.baseType()->calldataEncodedSize();
+			u256 size = _type.baseType()->calldataEncodedSize();
 			solAssert(size >= 32 && size % 32 == 0, "");
 			templ("advance", toCompactHexWithPrefix(size));
 			break;
