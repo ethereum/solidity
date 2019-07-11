@@ -170,7 +170,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 		solAssert(!_fromCalldata, "");
 		solAssert(_padToWordBoundaries, "");
 		if (_keepUpdatedMemoryOffset)
-			m_context << arrayType->memorySize() << Instruction::ADD;
+			m_context << arrayType->memoryDataSize() << Instruction::ADD;
 	}
 	else
 	{
@@ -573,11 +573,6 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 	}
 	else
 	{
-		// TODO: Potential optimization:
-		// When we create a new multi-dimensional dynamic array, each element
-		// is initialized to an empty array. It actually does not hurt
-		// to re-use exactly the same empty array for all elements. Currently,
-		// a new one is created each time.
 		auto repeat = m_context.newTag();
 		m_context << repeat;
 		pushZeroValue(*_type.baseType());
@@ -999,7 +994,7 @@ void CompilerUtils::convertType(
 				{
 					CompilerUtils utils(_context);
 					// stack: <source ref>
-					utils.allocateMemory(typeOnStack->memorySize());
+					utils.allocateMemory(typeOnStack->memoryDataSize());
 					_context << Instruction::SWAP1 << Instruction::DUP2;
 					// stack: <memory ptr> <source ref> <memory ptr>
 					for (auto const& member: typeOnStack->members(nullptr))
@@ -1182,7 +1177,8 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		1,
 		[type](CompilerContext& _context) {
 			CompilerUtils utils(_context);
-			utils.allocateMemory(max(32u, type->calldataEncodedSize()));
+
+			utils.allocateMemory(max<u256>(32u, type->memoryDataSize()));
 			_context << Instruction::DUP1;
 
 			if (auto structType = dynamic_cast<StructType const*>(type))
@@ -1349,6 +1345,8 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWords)
 {
+	solAssert(_type.isValueType(), "");
+
 	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
 	bool isExternalFunctionType = false;
 	if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
@@ -1420,6 +1418,8 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 		_type.sizeOnStack() == 1,
 		"Memory store of types with stack size != 1 not allowed (Type: " + _type.toString(true) + ")."
 	);
+
+	solAssert(!_type.isDynamicallyEncoded(), "");
 
 	unsigned numBytes = _type.calldataEncodedSize(_padToWords);
 

@@ -1293,8 +1293,8 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 		templ("functionName", functionName);
 		templ("readableTypeName", _type.toString(true));
 		templ("allocate", m_utils.allocationFunction());
-		solAssert(_type.memorySize() < u256("0xffffffffffffffff"), "");
-		templ("memorySize", toCompactHexWithPrefix(_type.memorySize()));
+		solAssert(_type.memoryDataSize() < u256("0xffffffffffffffff"), "");
+		templ("memorySize", toCompactHexWithPrefix(_type.memoryDataSize()));
 		size_t headPos = 0;
 		vector<map<string, string>> members;
 		for (auto const& member: _type.members(nullptr))

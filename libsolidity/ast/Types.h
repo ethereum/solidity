@@ -216,6 +216,9 @@ public:
 	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
 	/// types, this is the size of the memory pointer.
 	virtual unsigned memoryHeadSize() const { return calldataEncodedSize(); }
+	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
+	/// types, this is the size of the actual data area, if it is statically-sized.
+	virtual u256 memoryDataSize() const { return calldataEncodedSize(); }
 	/// Convenience version of @see calldataEncodedSize(bool)
 	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
 	/// @returns true if the type is a dynamic array
@@ -634,6 +637,7 @@ public:
 		return nullptr;
 	}
 	unsigned memoryHeadSize() const override { return 32; }
+	u256 memoryDataSize() const override = 0;
 
 	/// @returns a copy of this type with location (recursively) changed to @a _location,
 	/// whereas isPointer is only shallowly changed - the deep copy is always a bound reference.
@@ -724,7 +728,7 @@ public:
 	bool isString() const { return m_arrayKind == ArrayKind::String; }
 	Type const* baseType() const { solAssert(!!m_baseType, ""); return m_baseType; }
 	u256 const& length() const { return m_length; }
-	u256 memorySize() const;
+	u256 memoryDataSize() const;
 
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
@@ -831,7 +835,7 @@ public:
 	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool _padded) const override;
 	bool isDynamicallyEncoded() const override;
-	u256 memorySize() const;
+	u256 memoryDataSize() const;
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return true; }
 	std::string toString(bool _short) const override;

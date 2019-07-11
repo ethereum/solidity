@@ -1832,10 +1832,11 @@ TypeResult ArrayType::interfaceType(bool _inLibrary) const
 	return result;
 }
 
-u256 ArrayType::memorySize() const
+u256 ArrayType::memoryDataSize() const
 {
 	solAssert(!isDynamicallySized(), "");
 	solAssert(m_location == DataLocation::Memory, "");
+	solAssert(!isByteArray(), "");
 	bigint size = bigint(m_length) * m_baseType->memoryHeadSize();
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit u256.");
 	return u256(size);
@@ -2043,7 +2044,7 @@ bool StructType::isDynamicallyEncoded() const
 	return false;
 }
 
-u256 StructType::memorySize() const
+u256 StructType::memoryDataSize() const
 {
 	u256 size;
 	for (auto const& t: memoryMemberTypes())
