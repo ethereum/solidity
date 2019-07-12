@@ -139,7 +139,8 @@ BOOST_AUTO_TEST_CASE(format_hex_singleline)
 	BOOST_REQUIRE_EQUAL(test.format(), "// f(bytes32): 0x31 -> 0x31");
 
 	bytes actualResult = fromHex("0x32");
-	bytes actualBytes = actualResult + bytes(32 - actualResult.size(), 0);
+	bytes actualBytes = bytes(32 - actualResult.size(), 0) + actualResult;
+
 	test.setRawBytes(actualBytes);
 	test.setFailure(false);
 

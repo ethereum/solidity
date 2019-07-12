@@ -404,6 +404,27 @@ BOOST_AUTO_TEST_CASE(call_arguments_string)
 	);
 }
 
+
+BOOST_AUTO_TEST_CASE(call_hex_number)
+{
+	char const* source = R"(
+		// f(bytes32, bytes32): 0x616, 0x1042 -> 1
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(bytes32,bytes32)",
+		false,
+		fmt::encodeArgs(
+			fromHex("0x616"),
+			fromHex("0x1042")
+		),
+		fmt::encodeArgs(1)
+	);
+}
+
 BOOST_AUTO_TEST_CASE(call_return_string)
 {
 	char const* source = R"(
@@ -782,14 +803,6 @@ BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
 {
 	char const* source = R"(
 		// f(uint256), 2 btc : 1 -> 1
-	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
-}
-
-BOOST_AUTO_TEST_CASE(call_hex_number_invalid)
-{
-	char const* source = R"(
-		// f(bytes32, bytes32): 0x616, 0x042 -> 1
 	)";
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
