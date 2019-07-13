@@ -695,13 +695,6 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid_parantheses)
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
 
-BOOST_AUTO_TEST_CASE(call_expectations_missing)
-{
-	char const* source = R"(
-		// f())";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
-}
-
 BOOST_AUTO_TEST_CASE(call_ether_value_expectations_missing)
 {
 	char const* source = R"(
@@ -803,7 +796,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_newline_colon)
 BOOST_AUTO_TEST_CASE(call_arrow_missing)
 {
 	char const* source = R"(
-		// h256()
+		// h256() FAILURE
 	)";
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }

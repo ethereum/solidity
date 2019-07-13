@@ -249,6 +249,9 @@ struct FunctionCall
 	DisplayMode displayMode = DisplayMode::SingleLine;
 	/// Marks this function call as the constructor.
 	bool isConstructor = false;
+	/// Marks this function call as "short-handed", meaning
+	/// no `->` declared.
+	bool omitsArrow = true;
 };
 
 }

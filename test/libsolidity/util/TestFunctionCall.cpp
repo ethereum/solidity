@@ -74,7 +74,16 @@ string TestFunctionCall::format(
 		{
 			if (!m_call.arguments.comment.empty())
 				stream << ws << comment << m_call.arguments.comment << comment;
-			stream << ws << arrow << ws;
+
+			if (m_call.omitsArrow)
+			{
+				if (_renderResult && (m_failure || !matchesExpectation()))
+					stream << ws << arrow << ws;
+			}
+			else
+			{
+				stream << ws << arrow << ws;
+			}
 		}
 		else
 		{
