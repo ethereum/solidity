@@ -62,7 +62,7 @@ string TestFunctionCall::format(
 		{
 			string output = formatRawParameters(m_call.arguments.parameters, _linePrefix);
 			stream << colon;
-			if (_singleLine)
+			if (!m_call.arguments.parameters.at(0).format.newline)
 				stream << ws;
 			stream << output;
 
@@ -78,12 +78,10 @@ string TestFunctionCall::format(
 			if (m_call.omitsArrow)
 			{
 				if (_renderResult && (m_failure || !matchesExpectation()))
-					stream << ws << arrow << ws;
+					stream << ws << arrow;
 			}
 			else
-			{
-				stream << ws << arrow << ws;
-			}
+				stream << ws << arrow;
 		}
 		else
 		{
@@ -93,7 +91,7 @@ string TestFunctionCall::format(
 				 stream << comment << m_call.arguments.comment << comment;
 				 stream << endl << _linePrefix << newline << ws;
 			}
-			stream << arrow << ws;
+			stream << arrow;
 		}
 
 		/// Format either the expected output or the actual result output
@@ -105,7 +103,8 @@ string TestFunctionCall::format(
 			result = isFailure ?
 				failure :
 				formatRawParameters(m_call.expectations.result);
-			AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << result;
+			if (!result.empty())
+				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << ws << result;
 		}
 		else
 		{
@@ -124,9 +123,11 @@ string TestFunctionCall::format(
 					);
 
 			if (isFailure)
-				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << result;
+				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << ws << result;
 			else
-				stream << result;
+				if (!result.empty())
+					stream << ws << result;
+
 		}
 
 		/// Format comments on expectations taking the display-mode into account.
@@ -292,7 +293,12 @@ string TestFunctionCall::formatRawParameters(
 			os << endl << _linePrefix << "// ";
 		os << param.rawString;
 		if (&param != &_params.back())
-			os << ", ";
+		{
+			if (param.format.newline)
+				os << ",";
+			else
+				os << ", ";
+		}
 	}
 	return os.str();
 }
