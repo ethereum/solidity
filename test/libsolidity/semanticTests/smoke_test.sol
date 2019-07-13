@@ -1,7 +1,10 @@
 contract C {
     uint public state = 0;
-    constructor(uint _state) public {
+    constructor(uint _state) public payable {
         state = _state;
+    }
+    function balance() payable public returns (uint256) {
+        return address(this).balance;
     }
     function f() payable public returns (uint) {
         return 2;
@@ -38,8 +41,9 @@ contract C {
     }
 }
 // ----
-// constructor(): 3 ->
+// constructor(), 2 ether: 3 ->
 // state() -> 3
+// balance() -> 2
 // _() -> FAILURE
 // f() -> 2
 // f(), 1 ether -> 2

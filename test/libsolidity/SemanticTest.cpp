@@ -80,7 +80,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 		{
 			if (&test == &m_tests.front())
 				if (test.call().isConstructor)
-					deploy("", 0, test.call().arguments.rawBytes());
+					deploy("", test.call().value, test.call().arguments.rawBytes());
 				else
 					soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
 			else
