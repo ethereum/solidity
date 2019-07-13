@@ -64,6 +64,7 @@ public:
 
 private:
 	std::string m_source;
+	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
 	bool m_runWithYul = false;
 	bool m_runWithoutYul = true;

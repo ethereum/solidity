@@ -59,7 +59,9 @@ public:
 	/// Throws an exception if a function call cannot be parsed because of its
 	/// incorrect structure, an invalid or unsupported encoding
 	/// of its arguments or expected results.
-	std::vector<FunctionCall> parseFunctionCalls();
+	/// Passes the source line offset, such that parsing errors can be enhanced
+	/// with a line number it occurred in.
+	std::vector<FunctionCall> parseFunctionCalls(std::size_t _lineOffset);
 
 private:
 	using Token = soltest::Token;
@@ -179,6 +181,10 @@ private:
 
 	/// A scanner instance
 	Scanner m_scanner;
+
+	/// The current line number. Incremented when Token::Newline (//) is found and
+	/// used to enhance parser error messages.
+	size_t m_lineNumber = 0;
 };
 
 }

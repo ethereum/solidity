@@ -62,16 +62,19 @@ bool TestCase::validateSettings(langutil::EVMVersion)
 	return true;
 }
 
-string TestCase::parseSourceAndSettings(istream& _stream)
+pair<string, size_t> TestCase::parseSourceAndSettingsWithLineNumbers(istream& _stream)
 {
 	string source;
 	string line;
+	size_t lineNumber = 1;
 	static string const comment("// ");
 	static string const settingsDelimiter("// ====");
 	static string const delimiter("// ----");
 	bool sourcePart = true;
 	while (getline(_stream, line))
 	{
+		lineNumber++;
+
 		if (boost::algorithm::starts_with(line, delimiter))
 			break;
 		else if (boost::algorithm::starts_with(line, settingsDelimiter))
@@ -92,7 +95,12 @@ string TestCase::parseSourceAndSettings(istream& _stream)
 		else
 			throw runtime_error(string("Expected \"//\" or \"// ---\" to terminate settings and source."));
 	}
-	return source;
+	return make_pair(source, lineNumber);
+}
+
+string TestCase::parseSourceAndSettings(istream& _stream)
+{
+	return get<0>(parseSourceAndSettingsWithLineNumbers(_stream));
 }
 
 string TestCase::parseSimpleExpectations(std::istream& _file)

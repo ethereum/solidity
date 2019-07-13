@@ -48,7 +48,7 @@ char TestFileParser::Scanner::peek() const noexcept
 	return *next;
 }
 
-vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
+vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
 {
 	vector<FunctionCall> calls;
 	if (!accept(Token::EOS))
@@ -70,32 +70,47 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 				if (calls.empty())
 					expect(Token::Newline);
 				else
-					accept(Token::Newline, true);
+					if (accept(Token::Newline, true))
+						m_lineNumber++;
 
-				call.signature = parseFunctionSignature();
-				if (accept(Token::Comma, true))
-					call.value = parseFunctionCallValue();
-				if (accept(Token::Colon, true))
-					call.arguments = parseFunctionCallArguments();
+				try
+				{
+					call.signature = parseFunctionSignature();
+					if (accept(Token::Comma, true))
+						call.value = parseFunctionCallValue();
+					if (accept(Token::Colon, true))
+						call.arguments = parseFunctionCallArguments();
 
-				if (accept(Token::Newline, true))
-					call.displayMode = FunctionCall::DisplayMode::MultiLine;
+					if (accept(Token::Newline, true))
+					{
+						call.displayMode = FunctionCall::DisplayMode::MultiLine;
+						m_lineNumber++;
+					}
 
-				call.arguments.comment = parseComment();
+					call.arguments.comment = parseComment();
 
-				if (accept(Token::Newline, true))
-					call.displayMode = FunctionCall::DisplayMode::MultiLine;
+					if (accept(Token::Newline, true))
+					{
+						call.displayMode = FunctionCall::DisplayMode::MultiLine;
+						m_lineNumber++;
+					}
 
-				expect(Token::Arrow);
-				call.expectations = parseFunctionCallExpectations();
+					expect(Token::Arrow);
+					call.expectations = parseFunctionCallExpectations();
 
-				accept(Token::Newline, true);
-				call.expectations.comment = parseComment();
+					if (accept(Token::Newline, true))
+						m_lineNumber++;
+					call.expectations.comment = parseComment();
 
-				if (call.signature == "constructor()")
-					call.isConstructor = true;
+					if (call.signature == "constructor()")
+						call.isConstructor = true;
 
-				calls.emplace_back(std::move(call));
+					calls.emplace_back(std::move(call));
+				}
+				catch (Error const& _e)
+				{
+					throw Error{_e.type(), "Line " + to_string(_lineOffset + m_lineNumber) + ": " + _e.what()};
+				}
 			}
 		}
 	}
@@ -207,7 +222,10 @@ Parameter TestFileParser::parseParameter()
 {
 	Parameter parameter;
 	if (accept(Token::Newline, true))
+	{
 		parameter.format.newline = true;
+		m_lineNumber++;
+	}
 
 	bool isSigned = false;
 
