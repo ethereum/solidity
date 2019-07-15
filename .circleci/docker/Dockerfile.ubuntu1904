@@ -60,21 +60,23 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/z3
 
-# OSSFUZZ: LPM package (do not remove build dirs as solidity compiles/links against that dir)
+# OSSFUZZ: libprotobuf-mutator
 RUN set -ex; \
-	mkdir /src; \
-	cd /src; \
-	git clone https://github.com/google/libprotobuf-mutator.git; \
-	cd libprotobuf-mutator; \
+	git clone https://github.com/google/libprotobuf-mutator.git \
+	    /usr/src/libprotobuf-mutator; \
+	cd /usr/src/libprotobuf-mutator; \
 	git checkout d1fe8a7d8ae18f3d454f055eba5213c291986f21; \
-	mkdir ../LPM; \
-	cd ../LPM; \
-	cmake ../libprotobuf-mutator -GNinja -DLIB_PROTO_MUTATOR_DOWNLOAD_PROTOBUF=ON -DLIB_PROTO_MUTATOR_TESTING=OFF -DCMAKE_BUILD_TYPE=Release; \
+	mkdir build; \
+	cd build; \
+	cmake .. -GNinja -DLIB_PROTO_MUTATOR_DOWNLOAD_PROTOBUF=ON \
+        -DLIB_PROTO_MUTATOR_TESTING=OFF -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="/usr"; \
 	ninja; \
 	cp -vpr external.protobuf/bin/* /usr/bin/; \
 	cp -vpr external.protobuf/include/* /usr/include/; \
 	cp -vpr external.protobuf/lib/* /usr/lib/; \
-	ninja install/strip
+	ninja install/strip; \
+	rm -rf /usr/src/libprotobuf-mutator
 
 # OSSFUZZ: libfuzzer
 RUN set -ex; \

@@ -1,6 +1,3 @@
-if (OSSFUZZ)
-    link_directories(/src/LPM/src /src/LPM/src/libfuzzer /src/LPM/external.protobuf/lib)
-endif()
 add_custom_target(ossfuzz)
 add_dependencies(ossfuzz
         solc_opt_ossfuzz
@@ -37,7 +34,7 @@ if (OSSFUZZ)
     target_link_libraries(strictasm_assembly_ossfuzz PRIVATE yul FuzzingEngine.a)
 
     add_executable(yul_proto_ossfuzz yulProtoFuzzer.cpp protoToYul.cpp yulProto.pb.cc)
-    target_include_directories(yul_proto_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
+    target_include_directories(yul_proto_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
     target_link_libraries(yul_proto_ossfuzz PRIVATE yul
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
@@ -45,7 +42,7 @@ if (OSSFUZZ)
             FuzzingEngine.a)
 
     add_executable(yul_proto_diff_ossfuzz yulProto_diff_ossfuzz.cpp yulFuzzerCommon.cpp protoToYul.cpp yulProto.pb.cc)
-    target_include_directories(yul_proto_diff_ossfuzz PRIVATE /src/libprotobuf-mutator /src/LPM/external.protobuf/include)
+    target_include_directories(yul_proto_diff_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
     target_link_libraries(yul_proto_diff_ossfuzz PRIVATE yul
             yulInterpreter
             protobuf-mutator-libfuzzer.a
