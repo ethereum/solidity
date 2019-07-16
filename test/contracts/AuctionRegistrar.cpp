@@ -455,37 +455,6 @@ BOOST_AUTO_TEST_CASE(auction_bidding)
 	BOOST_CHECK_EQUAL(registrar.owner(name), account(1));
 }
 
-BOOST_AUTO_TEST_CASE(auction_renewal)
-{
-	deployRegistrar();
-
-	string name = "x";
-	RegistrarInterface registrar(*this);
-	size_t startTime = currentTimestamp();
-	// register name by auction
-	registrar.setNextValue(8);
-	registrar.reserve(name);
-	m_evmHost->m_state.timestamp = startTime + 4 * m_biddingTime;
-	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), m_sender);
-
-	// try to re-register before interval end
-	sendEther(account(1), 10 * ether);
-	m_sender = account(1);
-	m_evmHost->m_state.timestamp = currentTimestamp() + m_renewalInterval - 1;
-	registrar.setNextValue(80);
-	registrar.reserve(name);
-	m_evmHost->m_state.timestamp = currentTimestamp() + m_biddingTime;
-	// if there is a bug in the renewal logic, this would transfer the ownership to account(1),
-	// but if there is no bug, this will initiate the auction, albeit with a zero bid
-	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), account(0));
-
-	registrar.setNextValue(80);
-	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), account(1));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }
