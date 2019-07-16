@@ -34,11 +34,10 @@ struct ConfigException : public Exception {};
 
 struct CommonOptions: boost::noncopyable
 {
-	boost::filesystem::path ipcPath;
+	boost::filesystem::path evmonePath;
 	boost::filesystem::path testPath;
 	bool optimize = false;
 	bool optimizeYul = false;
-	bool disableIPC = false;
 	bool disableSMT = false;
 
 	langutil::EVMVersion evmVersion() const;

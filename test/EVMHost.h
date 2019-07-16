@@ -38,6 +38,11 @@ using Address = h160;
 class EVMHost: public evmc::Host
 {
 public:
+	/// Tries to dynamically load libevmone. @returns nullptr on failure.
+	/// The path has to be provided for the first successful run and will be ignored
+	/// afterwards.
+	static evmc::vm* getVM(std::string const& _path = {});
+
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm = getVM());
 
 	struct Account

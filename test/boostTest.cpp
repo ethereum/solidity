@@ -37,6 +37,7 @@
 
 #include <test/InteractiveTests.h>
 #include <test/Options.h>
+#include <test/EVMHost.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -140,6 +141,14 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	master.p_name.value = "SolidityTests";
 	dev::test::Options::get().validate();
 
+	bool disableIPC = !dev::test::EVMHost::getVM();
+	if (disableIPC)
+	{
+		cout << "Unable to find libevmone.so. Please provide the path using -- --evmonepath <path>." << endl;
+		cout << "You can download it at" << endl;
+		cout << "https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz" << endl;
+		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
+	}
 	// Include the interactive tests in the automatic tests as well
 	for (auto const& ts: g_interactiveTestsuites)
 	{
@@ -148,19 +157,19 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		if (ts.smt && options.disableSMT)
 			continue;
 
-		if (ts.ipc && options.disableIPC)
+		if (ts.ipc && disableIPC)
 			continue;
 
 		solAssert(registerTests(
 			master,
 			options.testPath / ts.path,
 			ts.subpath,
-			options.ipcPath.string(),
+			options.evmonePath.string(),
 			ts.testCaseCreator
 		) > 0, std::string("no ") + ts.title + " tests found");
 	}
 
-	if (dev::test::Options::get().disableIPC)
+	if (disableIPC)
 	{
 		for (auto suite: {
 			"ABIDecoderTest",

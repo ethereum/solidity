@@ -35,41 +35,18 @@ using namespace std;
 using namespace dev;
 using namespace dev::test;
 
-namespace
-{
 
-
-evmc::vm& getVM()
+evmc::vm* EVMHost::getVM(string const& _path)
 {
 	static unique_ptr<evmc::vm> theVM;
-	if (!theVM)
+	if (!theVM && !_path.empty())
 	{
-		// TODO make this an option
-		for (auto path: {
-			"deps/lib/libevmone.so",
-			"../deps/lib/libevmone.so",
-			"/usr/lib/libevmone.so",
-			"/usr/local/lib/libevmone.so",
-			// TODO the circleci docker image somehow only has the .a file
-			"/usr/lib/libevmone.a"
-		})
-		{
-			evmc_loader_error_code errorCode = {};
-			evmc_instance* vm = evmc_load_and_create(path, &errorCode);
-			if (!vm || errorCode != EVMC_LOADER_SUCCESS)
-				continue;
+		evmc_loader_error_code errorCode = {};
+		evmc_instance* vm = evmc_load_and_create(_path.c_str(), &errorCode);
+		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 			theVM = make_unique<evmc::vm>(vm);
-			break;
-		}
-		if (!theVM)
-		{
-			cerr << "Unable to find library libevmone.so" << endl;
-			assertThrow(false, Exception, "");
-		}
 	}
-	return *theVM;
-}
-
+	return theVM.get();
 }
 
 EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):

@@ -22,6 +22,7 @@
 #include <test/tools/IsolTestOptions.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/InteractiveTests.h>
+#include <test/EVMHost.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -156,7 +157,7 @@ TestTool::Result TestTool::process()
 		{
 			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
 
-			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_options.ipcPath.string(), m_options.evmVersion()});
+			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_options.evmonePath.string(), m_options.evmVersion()});
 			if (m_test->validateSettings(m_options.evmVersion()))
 				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
 				{
@@ -413,6 +414,15 @@ int main(int argc, char const *argv[])
 		return 1;
 	}
 
+	bool disableSemantics = !dev::test::EVMHost::getVM();
+	if (disableSemantics)
+	{
+		cout << "Unable to find libevmone.so. Please provide the path using --evmonepath <path>." << endl;
+		cout << "You can download it at" << endl;
+		cout << "https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz" << endl;
+		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
+	}
+
 	TestStats global_stats{0, 0};
 	cout << "Running tests..." << endl << endl;
 
@@ -420,7 +430,7 @@ int main(int argc, char const *argv[])
 	// Interactive tests are added in InteractiveTests.h
 	for (auto const& ts: g_interactiveTestsuites)
 	{
-		if (ts.ipc && options.disableIPC)
+		if (ts.ipc && disableSemantics)
 			continue;
 
 		if (ts.smt && options.disableSMT)
@@ -450,6 +460,9 @@ int main(int argc, char const *argv[])
 		cout << " tests skipped)";
 	}
 	cout << "." << endl;
+
+	if (disableSemantics)
+		cout << "\nNOTE: Skipped semantics tests because libevmone.so could not be found.\n" << endl;
 
 	return global_stats ? 0 : 1;
 }
