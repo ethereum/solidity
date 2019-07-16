@@ -29,7 +29,6 @@
 
 #include <libdevcore/FixedHash.h>
 
-
 namespace dev
 {
 namespace test

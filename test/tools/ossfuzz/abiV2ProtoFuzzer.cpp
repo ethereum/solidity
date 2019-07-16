@@ -18,8 +18,10 @@
 #include <test/EVMHost.h>
 #include <test/tools/ossfuzz/abiV2FuzzerCommon.h>
 #include <test/tools/ossfuzz/protoToAbiV2.h>
+
 #include <evmone/evmone.h>
 #include <src/libfuzzer/libfuzzer_macro.h>
+
 #include <fstream>
 
 static evmc::vm evmone = evmc::vm{evmc_create_evmone()};

@@ -42,33 +42,18 @@
 #define ATTR_FORMAT(...)
 #endif
 
-#if _WIN32
-#define strcpy_sx strcpy_s
-#else
+#if !_WIN32
 /*
- * Limited variant of strcpy_s().
- *
- * Provided for C standard libraries where strcpy_s() is not available.
+ * Provide strcpy_s() for GNU libc.
  * The availability check might need to adjusted for other C standard library implementations.
  */
-#if !defined(EVMC_LOADER_MOCK)
-static
-#endif
-    int
-    strcpy_sx(char* restrict dest, size_t destsz, const char* restrict src)
+static void strcpy_s(char* dest, size_t destsz, const char* src)
 {
     size_t len = strlen(src);
-    if (len >= destsz)
-    {
-        // The input src will not fit into the dest buffer.
-        // Set the first byte of the dest to null to make it effectively empty string
-        // and return error.
-        dest[0] = 0;
-        return 1;
-    }
+    if (len > destsz - 1)
+        len = destsz - 1;
     memcpy(dest, src, len);
     dest[len] = 0;
-    return 0;
 }
 #endif
 
@@ -139,7 +124,7 @@ evmc_create_fn evmc_load(const char* filename, enum evmc_loader_error_code* erro
     const char prefix[] = "evmc_create_";
     const size_t prefix_length = strlen(prefix);
     char prefixed_name[sizeof(prefix) + PATH_MAX_LENGTH];
-    strcpy_sx(prefixed_name, sizeof(prefixed_name), prefix);
+    strcpy_s(prefixed_name, sizeof(prefixed_name), prefix);
 
     // Find filename in the path.
     const char* sep_pos = strrchr(filename, '/');
@@ -157,7 +142,7 @@ evmc_create_fn evmc_load(const char* filename, enum evmc_loader_error_code* erro
         name_pos += lib_prefix_length;
 
     char* base_name = prefixed_name + prefix_length;
-    strcpy_sx(base_name, PATH_MAX_LENGTH, name_pos);
+    strcpy_s(base_name, PATH_MAX_LENGTH, name_pos);
 
     // Trim the file extension.
     char* ext_pos = strrchr(prefixed_name, '.');
@@ -212,29 +197,21 @@ struct evmc_instance* evmc_load_and_create(const char* filename,
     if (!create_fn)
         return NULL;
 
-    enum evmc_loader_error_code ec = EVMC_LOADER_SUCCESS;
-
     struct evmc_instance* instance = create_fn();
     if (!instance)
     {
-        ec = set_error(EVMC_LOADER_INSTANCE_CREATION_FAILURE,
-                       "creating EVMC instance of %s has failed", filename);
-        goto exit;
+        *error_code = set_error(EVMC_LOADER_INSTANCE_CREATION_FAILURE,
+                                "creating EVMC instance of %s has failed", filename);
+        return NULL;
     }
 
     if (!evmc_is_abi_compatible(instance))
     {
-        ec = set_error(EVMC_LOADER_ABI_VERSION_MISMATCH,
-                       "EVMC ABI version %d of %s mismatches the expected version %d",
-                       instance->abi_version, filename, EVMC_ABI_VERSION);
-        evmc_destroy(instance);
-        instance = NULL;
-        goto exit;
+        *error_code = set_error(EVMC_LOADER_ABI_VERSION_MISMATCH,
+                                "EVMC ABI version %d of %s mismatches the expected version %d",
+                                instance->abi_version, filename, EVMC_ABI_VERSION);
+        return NULL;
     }
-
-exit:
-    if (error_code)
-        *error_code = ec;
 
     return instance;
 }

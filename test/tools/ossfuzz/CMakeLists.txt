@@ -61,12 +61,10 @@ if (OSSFUZZ)
             abiV2Proto.pb.cc
     )
     target_include_directories(abiv2_proto_ossfuzz PRIVATE
-            /src/LPM/external.protobuf/include
-            /src/libprotobuf-mutator
-            /src/evmone/include
+            /usr/include/libprotobuf-mutator
     )
     target_link_libraries(abiv2_proto_ossfuzz PRIVATE solidity
-            evmone intx ethash keccak evmc-instructions evmc
+            evmone intx ethash evmc-instructions
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
             protobuf.a

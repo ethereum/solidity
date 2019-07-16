@@ -1,9 +1,12 @@
 #pragma once
 
 #include <libsolidity/interface/CompilerStack.h>
+
 #include <libyul/AssemblyStack.h>
+
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libdevcore/Keccak256.h>
 
 namespace dev

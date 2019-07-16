@@ -974,12 +974,12 @@ struct evmc_instance
     evmc_execute_fn execute;
 
     /**
-     * A method returning capabilities supported by the VM instance.
+     * Pointer to function returning capabilities supported by the VM instance.
      *
-     * The value returned MAY change when different options are set via the set_option() method.
+     * The value returned might change when different options are requested via set_option.
      *
-     * A Client SHOULD only rely on the value returned if it has queried it after
-     * it has called the set_option().
+     * A Client SHOULD only rely on the value returned here if it has queried it after
+     * it has called set_option.
      *
      * This is a mandatory method and MUST NOT be set to NULL.
      */
