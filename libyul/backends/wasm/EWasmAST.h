@@ -70,6 +70,13 @@ struct Continue { Label label; };
 
 struct VariableDeclaration { std::string variableName; };
 struct GlobalVariableDeclaration { std::string variableName; };
+struct FunctionImport {
+	std::string module;
+	std::string externalName;
+	std::string internalName;
+	std::vector<std::string> paramTypes;
+	std::unique_ptr<std::string> returnType;
+};
 
 struct FunctionDefinition
 {

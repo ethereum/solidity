@@ -28,15 +28,24 @@
 
 using namespace std;
 using namespace yul;
+using namespace dev;
 
 string EWasmToText::run(
 	vector<wasm::GlobalVariableDeclaration> const& _globals,
+	vector<wasm::FunctionImport> const& _imports,
 	vector<wasm::FunctionDefinition> const& _functions
 )
 {
 	string ret = "(module\n";
-	// TODO Add all the interface functions:
-	// ret += "    (import \"ethereum\" \"getBalance\"  (func $getBalance (param i32 i32)))\n";
+	for (wasm::FunctionImport const& imp: _imports)
+	{
+		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
+		if (!imp.paramTypes.empty())
+			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes, " ", " ") + ")";
+		if (imp.returnType)
+			ret += " (result " + *imp.returnType + ")";
+		ret += "))\n";
+	}
 
 	// allocate one 64k page of memory and make it available to the Ethereum client
 	ret += "    (memory $memory (export \"memory\") 1)\n";
@@ -80,12 +89,14 @@ string EWasmToText::operator()(wasm::Label const& _label)
 
 string EWasmToText::operator()(wasm::BuiltinCall const& _builtinCall)
 {
-	return "(" + _builtinCall.functionName + " " + joinTransformed(_builtinCall.arguments) + ")";
+	string args = joinTransformed(_builtinCall.arguments);
+	return "(" + _builtinCall.functionName + (args.empty() ? "" : " " + args) + ")";
 }
 
 string EWasmToText::operator()(wasm::FunctionCall const& _functionCall)
 {
-	return "(call $" + _functionCall.functionName + " " + joinTransformed(_functionCall.arguments) + ")";
+	string args = joinTransformed(_functionCall.arguments);
+	return "(call $" + _functionCall.functionName + (args.empty() ? "" : " " + args) + ")";
 }
 
 string EWasmToText::operator()(wasm::LocalAssignment const& _assignment)
@@ -100,16 +111,16 @@ string EWasmToText::operator()(wasm::GlobalAssignment const& _assignment)
 
 string EWasmToText::operator()(wasm::If const& _if)
 {
-	string text = "(if " + visit(*_if.condition) + " (then\n" + indented(joinTransformed(_if.statements)) + ")";
+	string text = "(if " + visit(*_if.condition) + " (then\n" + indented(joinTransformed(_if.statements, '\n')) + ")";
 	if (_if.elseStatements)
-		text += "(else\n" + indented(joinTransformed(*_if.elseStatements)) + ")";
+		text += "(else\n" + indented(joinTransformed(*_if.elseStatements, '\n')) + ")";
 	return std::move(text) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::Loop const& _loop)
 {
 	string label = _loop.labelName.empty() ? "" : " $" + _loop.labelName;
-	return "(loop" + move(label) + "\n" + indented(joinTransformed(_loop.statements)) + ")\n";
+	return "(loop" + move(label) + "\n" + indented(joinTransformed(_loop.statements, '\n')) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::Break const& _break)
@@ -125,17 +136,22 @@ string EWasmToText::operator()(wasm::Continue const& _continue)
 string EWasmToText::operator()(wasm::Block const& _block)
 {
 	string label = _block.labelName.empty() ? "" : " $" + _block.labelName;
-	return "(block" + move(label) + "\n" + indented(joinTransformed(_block.statements)) + "\n)\n";
+	return "(block" + move(label) + "\n" + indented(joinTransformed(_block.statements, '\n')) + "\n)\n";
 }
 
 string EWasmToText::indented(string const& _in)
 {
 	string replacement;
+
 	if (!_in.empty())
 	{
-		replacement = "    " + boost::replace_all_copy(_in, "\n", "\n    ");
-		if (_in.back() == '\n')
-			replacement = replacement.substr(0, replacement.size() - 4);
+		replacement.reserve(_in.size() + 4);
+		replacement += "    ";
+		for (auto it = _in.begin(); it != _in.end(); ++it)
+			if (*it == '\n' && it + 1 != _in.end() && *(it + 1) != '\n')
+				replacement += "\n    ";
+			else
+				replacement += *it;
 	}
 	return replacement;
 }
@@ -162,14 +178,14 @@ string EWasmToText::visit(wasm::Expression const& _expression)
 	return boost::apply_visitor(*this, _expression);
 }
 
-string EWasmToText::joinTransformed(vector<wasm::Expression> const& _expressions)
+string EWasmToText::joinTransformed(vector<wasm::Expression> const& _expressions, char _separator)
 {
 	string ret;
 	for (auto const& e: _expressions)
 	{
 		string t = visit(e);
 		if (!t.empty() && !ret.empty() && ret.back() != '\n')
-			ret += ' ';
+			ret += _separator;
 		ret += move(t);
 	}
 	return ret;

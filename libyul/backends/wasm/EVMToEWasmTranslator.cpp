@@ -268,61 +268,96 @@ function signextend(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
+
+function u256_to_i64(x1, x2, x3, x4) -> v {
+	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
+	v := x4
+}
+
+function u256_to_i32(x1, x2, x3, x4) -> v {
+	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
+	if i64.ne(0, i64.shr_u(x4, 32)) { invalid() }
+	v := x4
+}
+
+function u256_to_i32ptr(x1, x2, x3, x4) -> v {
+	v := u256_to_i32(x1, x2, x3, x4)
+}
+
 function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
 
 function address() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.getAddress(0)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
 function origin() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.getTxOrigin(0)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function caller() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.getCaller(0)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function callvalue() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.getCallValue(0)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.callDataCopy(0, u256_to_i32(x1, x2, x3, x4), 32)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function calldatasize() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	z4 := eth.getCallDataSize()
 }
 function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	// TODO implement
-	unreachable()
+	eth.callDataCopy(
+		u256_to_i32ptr(x1, x2, x3, x4),
+		u256_to_i32(y1, y2, y3, y4),
+		u256_to_i32(z1, z2, z3, z4)
+	)
 }
 
 // Needed?
 function codesize() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.getCodeSize(0)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	// TODO implement
-	unreachable()
+	eth.codeCopy(
+		u256_to_i32ptr(x1, x2, x3, x4),
+		u256_to_i32(y1, y2, y3, y4),
+		u256_to_i32(z1, z2, z3, z4)
+	)
 }
 function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	// TODO implement
-	unreachable()
+	// TODO correct?
+	codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4)
 }
 
 function gasprice() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.getTxGasPrice(0)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO implement
@@ -338,12 +373,14 @@ function extcodecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 }
 
 function returndatasize() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	z4 := eth.getReturnDataSize()
 }
 function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	// TODO implement
-	unreachable()
+	eth.returnDataCopy(
+		u256_to_i32ptr(x1, x2, x3, x4),
+		u256_to_i32(y1, y2, y3, y4),
+		u256_to_i32(z1, z2, z3, z4)
+	)
 }
 
 function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
@@ -355,34 +392,87 @@ function coinbase() -> z1, z2, z3, z4 {
 	unreachable()
 }
 function timestamp() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	z4 := eth.getBlockTimestamp()
 }
 function number() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	z4 := eth.getBlockNumber()
 }
 function difficulty() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4 := save_temp_mem_32()
+	eth.getBlockDifficulty(0)
+	z1, z2, z3, z4 := mload(0, 0, 0, 0)
+	restore_temp_mem_32(t1, t2, t3, t4)
 }
 function gaslimit() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	z4 := eth.getBlockGasLimit()
 }
 
 function pop(x1, x2, x3, x4) {
-	// TODO implement
-	unreachable()
 }
 
+
+function endian_swap_16(x) -> y {
+	let hi := i64.and(i64.shl(x, 8), 0xff00)
+	let lo := i64.and(i64.shr_u(x, 8), 0xff)
+	y := i64.or(hi, lo)
+}
+
+function endian_swap_32(x) -> y {
+	let hi := i64.shl(endian_swap_16(x), 16)
+	let lo := endian_swap_16(i64.shr_u(x, 16))
+	y := i64.or(hi, lo)
+}
+
+function endian_swap(x) -> y {
+	let hi := i64.shl(endian_swap_32(x), 32)
+	let lo := endian_swap_32(i64.shr_u(x, 32))
+	y := i64.or(hi, lo)
+}
+function save_temp_mem_32() -> t1, t2, t3, t4 {
+	t1 := i64.load(0)
+	t2 := i64.load(8)
+	t3 := i64.load(16)
+	t4 := i64.load(24)
+}
+function restore_temp_mem_32(t1, t2, t3, t4) {
+	i64.store(0, t1)
+	i64.store(8, t2)
+	i64.store(16, t3)
+	i64.store(24, t4)
+}
+function save_temp_mem_64() -> t1, t2, t3, t4, t5, t6, t7, t8 {
+	t1 := i64.load(0)
+	t2 := i64.load(8)
+	t3 := i64.load(16)
+	t4 := i64.load(24)
+	t5 := i64.load(32)
+	t6 := i64.load(40)
+	t7 := i64.load(48)
+	t8 := i64.load(54)
+}
+function restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8) {
+	i64.store(0, t1)
+	i64.store(8, t2)
+	i64.store(16, t3)
+	i64.store(24, t4)
+	i64.store(32, t5)
+	i64.store(40, t6)
+	i64.store(48, t7)
+	i64.store(54, t8)
+}
 function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let pos := u256_to_i32ptr(x1, x2, x3, x4)
+	z1 := endian_swap(i64.load(pos))
+	z2 := endian_swap(i64.load(i64.add(pos, 8)))
+	z3 := endian_swap(i64.load(i64.add(pos, 16)))
+	z4 := endian_swap(i64.load(i64.add(pos, 24)))
 }
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
-	// TODO implement
-	unreachable()
+	let pos := u256_to_i32ptr(x1, x2, x3, x4)
+	i64.store(pos, endian_swap(x1))
+	i64.store(i64.add(pos, 8), endian_swap(x2))
+	i64.store(i64.add(pos, 16), endian_swap(x3))
+	i64.store(i64.add(pos, 24), endian_swap(x4))
 }
 function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
 	// TODO implement
@@ -394,12 +484,19 @@ function msize() -> z1, z2, z3, z4 {
 	unreachable()
 }
 function sload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4, t5, t6, t7, t8 := save_temp_mem_64()
+	mstore(0, 0, 0, 0, x1, x2, x3, x4)
+	eth.storageLoad(0, 16)
+	z1, z2, z3, z4 := mload(0, 0, 0, 16)
+	restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8)
 }
+
 function sstore(x1, x2, x3, x4, y1, y2, y3, y4) {
-	// TODO implement
-	unreachable()
+	let t1, t2, t3, t4, t5, t6, t7, t8 := save_temp_mem_64()
+	mstore(0, 0, 0, 0, x1, x2, x3, x4)
+	mstore(0, 0, 0, 32, y1, y2, y3, y4)
+	eth.storageStore(0, 32)
+	restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8)
 }
 
 // Needed?
@@ -408,8 +505,7 @@ function pc() -> z1, z2, z3, z4 {
 	unreachable()
 }
 function gas() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	z4 := eth.getGasLeft()
 }
 
 function log0(p1, p2, p3, p4, s1, s2, s3, s4) {
@@ -511,17 +607,22 @@ function create2(
 	unreachable()
 }
 function selfdestruct(a1, a2, a3, a4) {
-	// TODO implement
-	unreachable()
+	mstore(0, 0, 0, 0, a1, a2, a3, a4)
+	// In EVM, addresses are padded to 32 bytes, so discard the first 12.
+	eth.selfDestruct(12)
 }
 
 function return(x1, x2, x3, x4, y1, y2, y3, y4) {
-	// TODO implement
-	unreachable()
+	eth.finish(
+		u256_to_i32ptr(x1, x2, x3, x4),
+		u256_to_i32(y1, y2, y3, y4)
+	)
 }
 function revert(x1, x2, x3, x4, y1, y2, y3, y4) {
-	// TODO implement
-	unreachable()
+	eth.revert(
+		u256_to_i32ptr(x1, x2, x3, x4),
+		u256_to_i32(y1, y2, y3, y4)
+	)
 }
 function invalid() {
 	unreachable()
