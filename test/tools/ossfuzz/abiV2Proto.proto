@@ -35,9 +35,14 @@ message ArrayType {
         FixedByteType byty = 2;
         AddressType adty = 3;
         StructType stty = 4;
+        BoolType boolty = 5;
+        DynamicByteArrayType dynbytesty = 6;
     }
-    repeated ArrayDimensionInfo info = 5;
+    repeated ArrayDimensionInfo info = 7;
 }
+
+// bool
+message BoolType {}
 
 // uint8...256, int8...256
 message IntegerType {
@@ -60,6 +65,7 @@ message ValueType {
         IntegerType inty = 1;
         FixedByteType byty = 2;
         AddressType adty = 3;
+        BoolType boolty = 4;
     }
 }
 

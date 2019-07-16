@@ -101,6 +101,8 @@ private:
 		ARRAY
 	};
 
+	void visit(BoolType const&);
+
 	void visit(IntegerType const&);
 
 	void visit(FixedByteType const&);
@@ -126,6 +128,8 @@ private:
 	void visit(Contract const&);
 
 	std::string getValueByBaseType(ArrayType const&);
+
+	DataType getDataTypeByBaseType(ArrayType const& _x);
 
 	void resizeInitArray(
 		ArrayType const& _x,
@@ -247,6 +251,7 @@ private:
 
 	// Static declarations
 	static std::string structTypeAsString(StructType const& _x);
+	static std::string boolValueAsString(unsigned _counter);
 	static std::string intValueAsString(unsigned _width, unsigned _counter);
 	static std::string uintValueAsString(unsigned _width, unsigned _counter);
 	static std::string integerValueAsString(bool _sign, unsigned _width, unsigned _counter);
@@ -278,6 +283,11 @@ private:
 		return _x.is_signed();
 	}
 
+	static std::string getBoolTypeAsString()
+	{
+		return "bool";
+	}
+
 	static std::string getIntTypeAsString(IntegerType const& _x)
 	{
 		return ((isIntSigned(_x) ? "int" : "uint") + std::to_string(getIntWidth(_x)));
@@ -296,6 +306,14 @@ private:
 	static std::string getAddressTypeAsString(AddressType const& _x)
 	{
 		return (_x.payable() ? "address payable": "address");
+	}
+
+	static DataType getDataTypeOfDynBytesType(DynamicByteArrayType const& _x)
+	{
+		if (_x.type() == DynamicByteArrayType::STRING)
+			return DataType::STRING;
+		else
+			return DataType::BYTES;
 	}
 
 	// Convert _counter to string and return its keccak256 hash
