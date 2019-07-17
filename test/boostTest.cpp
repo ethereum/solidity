@@ -141,7 +141,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	master.p_name.value = "SolidityTests";
 	dev::test::Options::get().validate();
 
-	bool disableIPC = !dev::test::EVMHost::getVM();
+	bool disableIPC = !dev::test::EVMHost::getVM(dev::test::Options::get().evmonePath.string());
 	if (disableIPC)
 	{
 		cout << "Unable to find libevmone.so. Please provide the path using -- --evmonepath <path>." << endl;

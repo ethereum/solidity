@@ -414,7 +414,7 @@ int main(int argc, char const *argv[])
 		return 1;
 	}
 
-	bool disableSemantics = !dev::test::EVMHost::getVM();
+	bool disableSemantics = !dev::test::EVMHost::getVM(options.evmonePath.string());
 	if (disableSemantics)
 	{
 		cout << "Unable to find libevmone.so. Please provide the path using --evmonepath <path>." << endl;
