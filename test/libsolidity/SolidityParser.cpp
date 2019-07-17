@@ -41,12 +41,13 @@ namespace test
 
 namespace
 {
-ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors)
+ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors, bool errorRecovery = false)
 {
 	ErrorReporter errorReporter(_errors);
 	ASTPointer<SourceUnit> sourceUnit = Parser(
 		errorReporter,
-		dev::test::Options::get().evmVersion()
+		dev::test::Options::get().evmVersion(),
+		errorRecovery
 	).parse(std::make_shared<Scanner>(CharStream(_source, "")));
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
@@ -78,12 +79,12 @@ bool successParse(std::string const& _source)
 	return true;
 }
 
-Error getError(std::string const& _source)
+Error getError(std::string const& _source, bool errorRecovery = false)
 {
 	ErrorList errors;
 	try
 	{
-		parseText(_source, errors);
+		parseText(_source, errors, errorRecovery);
 	}
 	catch (FatalError const& /*_exception*/)
 	{
@@ -132,6 +133,18 @@ BOOST_AUTO_TEST_CASE(unsatisfied_version_followed_by_invalid_syntax)
 		this is surely invalid
 	)";
 	CHECK_PARSE_ERROR(text, "Source file requires different compiler version");
+}
+
+BOOST_AUTO_TEST_CASE(unsatisfied_version_with_recovery)
+{
+	char const* text = R"(
+		pragma solidity ^99.99.0;
+		contract test {
+			uint ;
+		}
+	)";
+	Error err = getError(text, true);
+	BOOST_CHECK(searchErrorMessage(err, "Expected identifier but got ';'"));
 }
 
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
