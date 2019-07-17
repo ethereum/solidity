@@ -57,12 +57,30 @@ boost::filesystem::path testPath()
 	return {};
 }
 
-string EVMOneEnvOrDefaultPath()
+std::string EVMOneEnvOrDefaultPath()
 {
 	if (auto path = getenv("ETH_EVMONE"))
 		return path;
-	else
-		return "./libevmone.so";
+
+	auto const searchPath =
+	{
+		fs::path("/usr/local/lib"),
+		fs::path("/usr/lib"),
+		fs::current_path() / "deps",
+		fs::current_path() / "deps" / "lib",
+		fs::current_path() / ".." / "deps",
+		fs::current_path() / ".." / "deps" / "lib",
+		fs::current_path() / ".." / ".." / "deps",
+		fs::current_path() / ".." / ".." / "deps" / "lib",
+		fs::current_path()
+	};
+	for (auto const& basePath: searchPath)
+	{
+		fs::path p = basePath / "libevmone.so";
+		if (fs::exists(p))
+			return p.string();
+	}
+	return {};
 }
 
 CommonOptions::CommonOptions(std::string _caption):
