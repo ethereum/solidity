@@ -30,16 +30,6 @@ using namespace dev::solidity;
 using namespace dev::solidity::test;
 using namespace std;
 
-SolidityExecutionFramework::SolidityExecutionFramework():
-	ExecutionFramework()
-{
-}
-
-SolidityExecutionFramework::SolidityExecutionFramework(std::string const&, langutil::EVMVersion _evmVersion):
-	ExecutionFramework(_evmVersion)
-{
-}
-
 bytes SolidityExecutionFramework::compileContract(
 	string const& _sourceCode,
 	string const& _contractName,

@@ -44,7 +44,7 @@ struct Testsuite
 	boost::filesystem::path const path;
 	boost::filesystem::path const subpath;
 	bool smt;
-	bool ipc;
+	bool needsVM;
 	TestCase::TestCaseCreator testCaseCreator;
 };
 
@@ -52,7 +52,7 @@ struct Testsuite
 /// Array of testsuits that can be run interactively as well as automatically
 Testsuite const g_interactiveTestsuites[] = {
 /*
-	Title                  Path            Subpath                SMT    IPC    Creator function */
+	Title                   Path           Subpath                SMT   NeedsVM Creator function */
 	{"Yul Optimizer",       "libyul",      "yulOptimizerTests",   false, false, &yul::test::YulOptimizerTest::create},
 	{"Yul Interpreter",     "libyul",      "yulInterpreterTests", false, false, &yul::test::YulInterpreterTest::create},
 	{"Yul Object Compiler", "libyul",      "objectCompiler",      false, false, &yul::test::ObjectCompilerTest::create},

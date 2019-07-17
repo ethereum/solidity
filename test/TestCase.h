@@ -44,7 +44,6 @@ public:
 	struct Config
 	{
 		std::string filename;
-		std::string ipcPath;
 		langutil::EVMVersion evmVersion;
 	};
 
