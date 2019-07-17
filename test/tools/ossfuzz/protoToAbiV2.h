@@ -14,18 +14,10 @@
  *  pragma solidity >=0.0;
  *  pragma experimental ABIEncoderV2;
  *
- *  contract Factory {
- *      // Factory test function. Called by EVM client
- *      function test() external returns (uint) {
- *          C c = new C();
- *          return c.test();
- *      }
- *  }
- *
  * contract C {
  *      // State variable
  *      string x_0;
- *      // Test function. Called by Factory test function
+ *      // Test function that is called by the VM.
  *      function test() public returns (uint) {
  *          // Local variable
  *          bytes x_1 = "1";
@@ -45,7 +37,7 @@
  *
  *      // Public function that is called by test() function. Accepts one or more arguments and returns
  *      // a uint value (zero if abi en/decoding was successful, non-zero otherwise)
- *      function coder_public(string memory c_0, bytes memory c_1) public view returns (uint) {
+ *      function coder_public(string memory c_0, bytes memory c_1) public pure returns (uint) {
  *              if (!bytesCompare(bytes(c_0), "044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d"))
  *	    	        return 1;
  *              if (!bytesCompare(c_1, "1"))
@@ -55,7 +47,7 @@
  *
  *      // External function that is called by test() function. Accepts one or more arguments and returns
  *      // a uint value (zero if abi en/decoding was successful, non-zero otherwise)
- *      function coder_external(string calldata c_0, bytes calldata c_1) external view returns (uint) {
+ *      function coder_external(string calldata c_0, bytes calldata c_1) external pure returns (uint) {
  *              if (!stringCompare(c_0, "044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d"))
  *  		        return 1;
  *              if (!bytesCompare(c_1, "1"))
@@ -243,9 +235,9 @@ private:
 
 	// String and bytes literals are derived by hashing a monotonically increasing
 	// counter and enclosing the said hash inside double quotes.
-	std::string bytesArrayValueAsString()
+	std::string bytesArrayValueAsString(unsigned _counter)
 	{
-		return "\"" + toHex(hashUnsignedInt(getNextCounter()), HexPrefix::DontAdd) + "\"";
+		return "\"" + toHex(hashUnsignedInt(_counter), HexPrefix::DontAdd) + "\"";
 	}
 
 	std::string getQualifier(DataType _dataType)

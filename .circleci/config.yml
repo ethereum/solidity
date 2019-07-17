@@ -36,8 +36,9 @@ defaults:
         mkdir -p build
         cd build
         protoc --proto_path=../test/tools/ossfuzz yulProto.proto --cpp_out=../test/tools/ossfuzz
+        protoc --proto_path=../test/tools/ossfuzz abiV2Proto.proto --cpp_out=../test/tools/ossfuzz
         cmake .. -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} $CMAKE_OPTIONS
-        make ossfuzz ossfuzz_proto -j4
+        make ossfuzz ossfuzz_proto ossfuzz_abiv2 -j4
 
   - run_proofs: &run_proofs
       name: Correctness proofs for optimization rules
@@ -69,6 +70,7 @@ defaults:
   - artifacts_executables_ossfuzz: &artifacts_executables_ossfuzz
       root: build
       paths:
+        - test/tools/ossfuzz/abiv2_proto_ossfuzz
         - test/tools/ossfuzz/const_opt_ossfuzz
         - test/tools/ossfuzz/solc_noopt_ossfuzz
         - test/tools/ossfuzz/solc_opt_ossfuzz

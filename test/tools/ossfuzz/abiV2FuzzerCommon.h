@@ -1,9 +1,12 @@
 #pragma once
 
 #include <libsolidity/interface/CompilerStack.h>
+
 #include <libyul/AssemblyStack.h>
+
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libdevcore/Keccak256.h>
 
 namespace dev
@@ -28,7 +31,7 @@ public:
 protected:
 	dev::solidity::CompilerStack m_compiler;
 	langutil::EVMVersion m_evmVersion;
-	dev::solidity::OptimiserSettings m_optimiserSettings = dev::solidity::OptimiserSettings::full();
+	dev::solidity::OptimiserSettings m_optimiserSettings = dev::solidity::OptimiserSettings::none();
 };
 }
 }

@@ -9,8 +9,11 @@ add_dependencies(ossfuzz
         )
 
 if (OSSFUZZ)
-add_custom_target(ossfuzz_proto)
-add_dependencies(ossfuzz_proto yul_proto_ossfuzz yul_proto_diff_ossfuzz)
+    add_custom_target(ossfuzz_proto)
+    add_dependencies(ossfuzz_proto yul_proto_ossfuzz yul_proto_diff_ossfuzz)
+
+    add_custom_target(ossfuzz_abiv2)
+    add_dependencies(ossfuzz_abiv2 abiv2_proto_ossfuzz)
 endif()
 
 if (OSSFUZZ)
@@ -49,6 +52,24 @@ if (OSSFUZZ)
             protobuf-mutator.a
             protobuf.a
             FuzzingEngine.a)
+
+    add_executable(abiv2_proto_ossfuzz
+            ../../EVMHost.cpp
+            abiV2ProtoFuzzer.cpp
+            abiV2FuzzerCommon.cpp
+            protoToAbiV2.cpp
+            abiV2Proto.pb.cc
+    )
+    target_include_directories(abiv2_proto_ossfuzz PRIVATE
+            /usr/include/libprotobuf-mutator
+    )
+    target_link_libraries(abiv2_proto_ossfuzz PRIVATE solidity
+            evmone intx ethash evmc-instructions
+            protobuf-mutator-libfuzzer.a
+            protobuf-mutator.a
+            protobuf.a
+            FuzzingEngine.a
+    )
 else()
     add_library(solc_opt_ossfuzz
             solc_opt_ossfuzz.cpp
@@ -99,4 +120,23 @@ else()
 #            protobuf-mutator.a
 #            protobuf.a
 #            FuzzingEngine.a)
+#    add_executable(abiv2_proto_ossfuzz
+#            ../../EVMHost.cpp
+#            abiV2ProtoFuzzer.cpp
+#            abiV2FuzzerCommon.cpp
+#            protoToAbiV2.cpp
+#            abiV2Proto.pb.cc
+#    )
+#    target_include_directories(abiv2_proto_ossfuzz PRIVATE
+#            /src/LPM/external.protobuf/include
+#            /src/libprotobuf-mutator
+#            /src/evmone/include
+#    )
+#    target_link_libraries(abiv2_proto_ossfuzz PRIVATE solidity
+#            evmone intx ethash keccak evmc-instructions evmc
+#            protobuf-mutator-libfuzzer.a
+#            protobuf-mutator.a
+#            protobuf.a
+#            FuzzingEngine.a
+#    )
 endif()
