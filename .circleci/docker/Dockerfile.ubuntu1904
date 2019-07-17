@@ -46,15 +46,6 @@ RUN set -ex; \
 
 FROM base AS libraries
 
-# Aleth for end-to-end tests
-ARG ALETH_VERSION="1.6.0"
-ARG ALETH_HASH="7f7004e1563299bc57882e32b32e4a195747dfb6"
-ARG ALETH_URL="https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz"
-RUN set -ex; \
-	wget -q -O /tmp/aleth.tar.gz "${ALETH_URL}"; \
-	test "$(shasum /tmp/aleth.tar.gz)" = "$ALETH_HASH  /tmp/aleth.tar.gz"; \
-	tar -xf /tmp/aleth.tar.gz -C /usr
-
 # Z3
 RUN set -ex; \
 	git clone --depth=1 --branch="Z3-4.8.5" https://github.com/Z3Prover/z3.git /usr/src/z3; \
