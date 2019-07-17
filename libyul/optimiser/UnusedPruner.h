@@ -34,6 +34,11 @@ struct Dialect;
  * Optimisation stage that removes unused variables and functions and also
  * removes side-effect-free expression statements.
  *
+ * If msize is used, we cannot remove any statements that access memory.
+ * Because of that, the Unused Pruner should only be invoked on full ASTs,
+ * such that it can check for the presence of msize itself, or
+ * the `_allowMSizeOptimization` needs to be passed.
+ *
  * Note that this does not remove circular references.
  *
  * Prerequisite: Disambiguator
@@ -64,7 +69,7 @@ public:
 	static void runUntilStabilised(
 		Dialect const& _dialect,
 		Block& _ast,
-		bool _allowMSizeOptization,
+		bool _allowMSizeOptimization,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 
