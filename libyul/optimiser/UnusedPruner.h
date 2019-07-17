@@ -64,7 +64,7 @@ public:
 	static void runUntilStabilised(
 		Dialect const& _dialect,
 		Block& _ast,
-		bool _allowMSizeOptization,
+		bool _allowMSizeOptimization,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 
