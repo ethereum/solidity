@@ -38,7 +38,10 @@ struct Dialect;
  *  - have a body like r := <functional expression>
  *  - neither reference themselves nor r in the right hand side
  *
- * Furthermore, the arguments of the function call cannot have any side-effects.
+ * Furthermore, for all parameters, all of the following need to be true
+ *  - the argument is movable
+ *  - the parameter is either referenced less than twice in the function body, or the argument is rather cheap
+ *    ("cost" of at most 1 like a constant up to 0xff)
  *
  * This component can only be used on sources with unique names.
  */
@@ -65,6 +68,5 @@ private:
 	Block& m_block;
 	Dialect const& m_dialect;
 };
-
 
 }

@@ -14,6 +14,7 @@ Compiler Features:
  * Standard JSON Interface: Compile only selected sources and contracts.
  * Standard JSON Interface: Provide secondary error locations (e.g. the source position of other conflicting declarations).
  * SMTChecker: Do not erase knowledge about storage pointers if another storage pointer is assigned.
+ * Yul Optimizer: Do not inline function if it would result in expressions being duplicated that are not cheap.
 
 
 
