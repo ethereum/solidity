@@ -55,6 +55,10 @@ public:
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
+	/// @returns the FunctionDefinition of a FunctionCall
+	/// if possible or nullptr.
+	static FunctionDefinition const* functionCallToDefinition(FunctionCall const& _funCall);
+
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined

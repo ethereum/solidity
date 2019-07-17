@@ -1354,3 +1354,25 @@ string SMTEncoder::extraComment()
 			"You can re-introduce information using require().";
 	return extra;
 }
+
+FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall const& _funCall)
+{
+	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+		return nullptr;
+
+	FunctionDefinition const* funDef = nullptr;
+	Expression const* calledExpr = &_funCall.expression();
+
+	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(&_funCall.expression()))
+	{
+		solAssert(fun->components().size() == 1, "");
+		calledExpr = fun->components().front().get();
+	}
+
+	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
+		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
+	else if (MemberAccess const* fun = dynamic_cast<MemberAccess const*>(calledExpr))
+		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
+
+	return funDef;
+}

@@ -62,9 +62,8 @@ public:
 	/// the constructor.
 	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
 
-	/// @returns the FunctionDefinition of a called function if possible and should inline,
-	/// otherwise nullptr.
-	static FunctionDefinition const* inlinedFunctionCallToDefinition(FunctionCall const& _funCall);
+	/// @returns true if _funCall should be inlined, otherwise false.
+	static bool shouldInlineFunctionCall(FunctionCall const& _funCall);
 
 	std::shared_ptr<smt::SolverInterface> solver() { return m_interface; }
 

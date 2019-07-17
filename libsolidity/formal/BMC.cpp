@@ -76,47 +76,32 @@ void BMC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner
 	m_errorReporter.clear();
 }
 
-FunctionDefinition const* BMC::inlinedFunctionCallToDefinition(FunctionCall const& _funCall)
+bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall)
 {
-	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
-		return nullptr;
+	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
+	if (!funDef || !funDef->isImplemented())
+		return false;
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	if (funType.kind() == FunctionType::Kind::External)
 	{
 		auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
-		auto identifier = memberAccess ?
-			dynamic_cast<Identifier const*>(&memberAccess->expression()) :
-			nullptr;
+		if (!memberAccess)
+			return false;
+
+		auto identifier = dynamic_cast<Identifier const*>(&memberAccess->expression());
 		if (!(
 			identifier &&
 			identifier->name() == "this" &&
 			identifier->annotation().referencedDeclaration &&
 			dynamic_cast<MagicVariableDeclaration const*>(identifier->annotation().referencedDeclaration)
 		))
-			return nullptr;
+			return false;
 	}
 	else if (funType.kind() != FunctionType::Kind::Internal)
-		return nullptr;
+		return false;
 
-	FunctionDefinition const* funDef = nullptr;
-	Expression const* calledExpr = &_funCall.expression();
-
-	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(&_funCall.expression()))
-	{
-		solAssert(fun->components().size() == 1, "");
-		calledExpr = fun->components().front().get();
-	}
-
-	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
-		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
-	else if (MemberAccess const* fun = dynamic_cast<MemberAccess const*>(calledExpr))
-		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
-
-	if (funDef && funDef->isImplemented())
-		return funDef;
-
-	return nullptr;
+	return true;
 }
 
 /// AST visitors.
@@ -403,7 +388,8 @@ void BMC::visitRequire(FunctionCall const& _funCall)
 
 void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 {
-	FunctionDefinition const* funDef = inlinedFunctionCallToDefinition(_funCall);
+	solAssert(shouldInlineFunctionCall(_funCall), "");
+	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
 	solAssert(funDef, "");
 	if (visitedFunction(funDef))
 		m_errorReporter.warning(
@@ -468,9 +454,8 @@ void BMC::abstractFunctionCall(FunctionCall const& _funCall)
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 {
-	auto funDef = inlinedFunctionCallToDefinition(_funCall);
 	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	if (funDef)
+	if (shouldInlineFunctionCall(_funCall))
 		inlineFunctionCall(_funCall);
 	else if (funType.kind() == FunctionType::Kind::Internal)
 		m_errorReporter.warning(

@@ -58,9 +58,12 @@ void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 void VariableUsage::endVisit(FunctionCall const& _funCall)
 {
 	if (m_inlineFunctionCalls)
-		if (auto const& funDef = BMC::inlinedFunctionCallToDefinition(_funCall))
+		if (auto const& funDef = SMTEncoder::functionCallToDefinition(_funCall))
+		{
+			solAssert(funDef, "");
 			if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
 				funDef->accept(*this);
+		}
 }
 
 bool VariableUsage::visit(FunctionDefinition const& _function)
