@@ -64,7 +64,7 @@ if (OSSFUZZ)
             /usr/include/libprotobuf-mutator
     )
     target_link_libraries(abiv2_proto_ossfuzz PRIVATE solidity
-            evmone intx ethash evmc-instructions
+            evmc evmone intx ethash evmc-instructions
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
             protobuf.a
