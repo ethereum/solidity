@@ -45,6 +45,13 @@ evmc::vm* EVMHost::getVM(string const& _path)
 		evmc_instance* vm = evmc_load_and_create(_path.c_str(), &errorCode);
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 			theVM = make_unique<evmc::vm>(vm);
+		else
+		{
+			cerr << "Error loading VM from " << _path;
+			if (char const* errorMsg = evmc_last_error_msg())
+				cerr << ":" << endl << errorMsg;
+			cerr << endl;
+		}
 	}
 	return theVM.get();
 }
