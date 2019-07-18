@@ -1,5 +1,5 @@
 contract test {
-    function g(function(uint) external returns (uint) x) public {}
+    function g(function(test) external returns (test[] memory) x) public {}
 }
 // ----
 //     :test
@@ -9,7 +9,7 @@ contract test {
 //     "inputs":
 //     [
 //       {
-//         "internalType": "function (uint256) external returns (uint256)",
+//         "internalType": "function (contract test) external returns (contract test[])",
 //         "name": "x",
 //         "type": "function"
 //       }

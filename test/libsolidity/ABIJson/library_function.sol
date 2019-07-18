@@ -11,10 +11,12 @@ library test {
 //     "inputs":
 //     [
 //       {
+//         "internalType": "uint256[]",
 //         "name": "c",
 //         "type": "uint256[]"
 //       },
 //       {
+//         "internalType": "library test",
 //         "name": "d",
 //         "type": "test"
 //       }
@@ -23,6 +25,7 @@ library test {
 //     "outputs":
 //     [
 //       {
+//         "internalType": "uint256[]",
 //         "name": "e",
 //         "type": "uint256[]"
 //       }

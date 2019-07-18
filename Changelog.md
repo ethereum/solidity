@@ -8,6 +8,7 @@ Language Features:
 
 
 Compiler Features:
+ * ABI: Additional internal type info in the field ``internalType``.
  * eWasm: Highly experimental eWasm output using ``--ewasm`` in the commandline interface or output selection of ``ewasm.wast`` in standard-json.
  * Metadata: Update the swarm hash, changes ``bzzr0`` to ``bzzr1`` and urls to use ``bzz-raw://``.
  * Standard JSON Interface: Compile only selected sources and contracts.

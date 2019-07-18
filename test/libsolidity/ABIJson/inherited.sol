@@ -14,6 +14,7 @@ contract Derived is Base {
 //     "inputs":
 //     [
 //       {
+//         "internalType": "uint256",
 //         "name": "p",
 //         "type": "uint256"
 //       }
@@ -22,6 +23,7 @@ contract Derived is Base {
 //     "outputs":
 //     [
 //       {
+//         "internalType": "uint256",
 //         "name": "i",
 //         "type": "uint256"
 //       }
@@ -36,6 +38,7 @@ contract Derived is Base {
 //     [
 //       {
 //         "indexed": true,
+//         "internalType": "bytes32",
 //         "name": "evtArgBase",
 //         "type": "bytes32"
 //       }
@@ -53,6 +56,7 @@ contract Derived is Base {
 //     "inputs":
 //     [
 //       {
+//         "internalType": "uint256",
 //         "name": "p",
 //         "type": "uint256"
 //       }
@@ -61,6 +65,7 @@ contract Derived is Base {
 //     "outputs":
 //     [
 //       {
+//         "internalType": "uint256",
 //         "name": "i",
 //         "type": "uint256"
 //       }
@@ -74,6 +79,7 @@ contract Derived is Base {
 //     "inputs":
 //     [
 //       {
+//         "internalType": "bytes32",
 //         "name": "p",
 //         "type": "bytes32"
 //       }
@@ -82,6 +88,7 @@ contract Derived is Base {
 //     "outputs":
 //     [
 //       {
+//         "internalType": "bytes32",
 //         "name": "i",
 //         "type": "bytes32"
 //       }
@@ -96,6 +103,7 @@ contract Derived is Base {
 //     [
 //       {
 //         "indexed": true,
+//         "internalType": "uint256",
 //         "name": "evtArgDerived",
 //         "type": "uint256"
 //       }
@@ -109,6 +117,7 @@ contract Derived is Base {
 //     [
 //       {
 //         "indexed": true,
+//         "internalType": "bytes32",
 //         "name": "evtArgBase",
 //         "type": "bytes32"
 //       }
