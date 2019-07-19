@@ -77,6 +77,8 @@ set(sources
 	codegen/ir/IRLValue.h
 	formal/BMC.cpp
 	formal/BMC.h
+	formal/CHC.cpp
+	formal/CHC.h
 	formal/CHCSolverInterface.h
 	formal/EncodingContext.cpp
 	formal/EncodingContext.h

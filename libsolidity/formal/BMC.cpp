@@ -43,12 +43,13 @@ BMC::BMC(smt::EncodingContext& _context, ErrorReporter& _errorReporter, map<h256
 #endif
 }
 
-void BMC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
+void BMC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner, set<Expression const*> _safeAssertions)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
 	m_scanner = _scanner;
 
+	m_safeAssertions += move(_safeAssertions);
 	m_context.setSolver(m_interface);
 	m_context.clear();
 	m_variableUsage.setFunctionInlining(true);
@@ -673,13 +674,14 @@ void BMC::checkBalance(VerificationTarget& _target)
 void BMC::checkAssert(VerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTarget::Type::Assert, "");
-	checkCondition(
-		_target.constraints && !_target.value,
-		_target.callStack,
-		_target.modelExpressions,
-		_target.expression->location(),
-		"Assertion violation"
-	);
+	if (!m_safeAssertions.count(_target.expression))
+		checkCondition(
+			_target.constraints && !_target.value,
+			_target.callStack,
+			_target.modelExpressions,
+			_target.expression->location(),
+			"Assertion violation"
+		);
 }
 
 void BMC::addVerificationTarget(
