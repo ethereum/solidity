@@ -54,6 +54,9 @@ public:
 		m_solver = _solver;
 	}
 
+	/// Sets whether the context should conjoin assertions in the assertion stack.
+	void setAssertionAccumulation(bool _acc) { m_accumulateAssertions = _acc; }
+
 	/// Forwards variable creation to the solver.
 	Expression newVariable(std::string _name, SortPointer _sort)
 	{
@@ -178,6 +181,9 @@ private:
 
 	/// Assertion stack.
 	std::vector<Expression> m_assertions;
+
+	/// Whether to conjoin assertions in the assertion stack.
+	bool m_accumulateAssertions = true;
 	//@}
 };
 
