@@ -17,6 +17,7 @@
 
 #include <test/libyul/YulOptimizerTest.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
