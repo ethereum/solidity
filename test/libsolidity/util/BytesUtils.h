@@ -91,6 +91,11 @@ public:
 	/// a hexString value.
 	static std::string formatHexString(bytes const& _bytes);
 
+	/// Returns a string representation of given _bytes. Adds a newline
+	/// every 32 bytes to increase readability.
+	/// Used to print returned bytes from function calls to the commandline.
+	static std::string formatRawBytes(bytes const& _bytes);
+
 	/// Converts \param _bytes to a soltest-compliant and human-readable
 	/// string representation of a byte array which is assumed to hold
 	/// a string value.

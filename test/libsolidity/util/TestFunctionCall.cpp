@@ -218,6 +218,7 @@ string TestFunctionCall::formatBytesParameters(
 					" does not match the one inferred from ABI."
 				);
 			}
+	_errorReporter.warning("The call to \"" + _signature + "\" returned \n" + BytesUtils::formatRawBytes(_bytes));
 
 		/// Prints obtained result if it does not match the expectation
 		/// and prints the expected result otherwise.
@@ -289,14 +290,12 @@ string TestFunctionCall::formatRawParameters(
 	stringstream os;
 	for (auto const& param: _params)
 	{
-		if (param.format.newline)
-			os << endl << _linePrefix << "// ";
-		os << param.rawString;
-		if (&param != &_params.back())
+		if (!param.rawString.empty())
 		{
 			if (param.format.newline)
-				os << ",";
-			else
+				os << endl << _linePrefix << "// ";
+			os << param.rawString;
+			if (&param != &_params.back())
 				os << ", ";
 		}
 	}

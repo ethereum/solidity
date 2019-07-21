@@ -205,3 +205,24 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff) const
 
 	return os.str();
 }
+
+string BytesUtils::formatRawBytes(bytes const& _bytes)
+{
+	if (_bytes.empty())
+		return "[]";
+
+	stringstream os;
+	auto it = _bytes.begin();
+	for (size_t i = 0; i < _bytes.size(); i += 32)
+	{
+		bytes byteRange{it, it + 32};
+
+		os << "  " << byteRange;
+
+		it += 32;
+		if (it != _bytes.end())
+			os << endl;
+	}
+
+	return os.str();
+}
