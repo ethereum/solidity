@@ -234,6 +234,7 @@ Parameter TestFileParser::parseParameter()
 		parameter.format.newline = true;
 		m_lineNumber++;
 	}
+	parameter.abiType = ABIType{ABIType::None, ABIType::AlignNone, 0};
 
 	bool isSigned = false;
 	if (accept(Token::Left, true))
