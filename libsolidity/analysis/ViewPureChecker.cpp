@@ -357,6 +357,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			{MagicType::Kind::ABI, "encodeWithSignature"},
 			{MagicType::Kind::Block, "blockhash"},
 			{MagicType::Kind::Message, "data"},
+			{MagicType::Kind::Message, "sender"},
 			{MagicType::Kind::Message, "sig"},
 			{MagicType::Kind::MetaType, "creationCode"},
 			{MagicType::Kind::MetaType, "runtimeCode"},

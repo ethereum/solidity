@@ -1,3 +1,22 @@
+### 0.5.12 (unreleased)
+
+Important Bugfixes:
+
+
+
+Compiler Features:
+ * View pure checker: Makes member-access to `msg.sender` pure.
+
+
+Bugfixes:
+
+
+
+Build System:
+
+
+
+
 ### 0.5.11 (unreleased)
 
 

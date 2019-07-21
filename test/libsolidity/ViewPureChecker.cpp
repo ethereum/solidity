@@ -50,7 +50,6 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"blockhash(7)",
 		"gasleft()",
 		"msg.value",
-		"msg.sender",
 		"tx.origin",
 		"tx.gasprice",
 		"this",
@@ -64,6 +63,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	vector<string> pure{
 		"msg.data",
 		"msg.data[0]",
+		"msg.sender",
 		"msg.sig",
 		"msg",
 		"block",

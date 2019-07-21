@@ -2,7 +2,7 @@ pragma experimental SMTChecker;
 
 contract C
 {
-	function f(address c) public view {
+	function f(address c) public pure {
 		address a = msg.sender;
 		address b = msg.sender;
 		assert(a == b);

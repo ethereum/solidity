@@ -15,7 +15,15 @@ contract C {
         assert(true);
         x; y; z;
     }
+    function h() public view returns (address) {
+        return msg.sender;
+    }
+    function i() public view returns (bytes memory) {
+        return msg.data;
+    }
 }
 // ----
 // Warning: (17-288): Function state mutability can be restricted to pure
 // Warning: (293-559): Function state mutability can be restricted to pure
+// Warning: (564-641): Function state mutability can be restricted to pure
+// Warning: (646-726): Function state mutability can be restricted to pure
