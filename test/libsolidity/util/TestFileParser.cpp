@@ -309,7 +309,7 @@ Parameter TestFileParser::parseParameter()
 				throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
 
 			string parsed = parseString();
-			parameter.abiType = {ABIType::String, ABIType::AlignLeft, parsed.size()};
+			parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, parsed.size()};
 			parameter.rawString += "\"" + parsed + "\"";
 			parameter.rawBytes = BytesUtils::applyAlign(
 				Parameter::Alignment::Left,

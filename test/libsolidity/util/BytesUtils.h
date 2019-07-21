@@ -91,20 +91,33 @@ public:
 	/// a hexString value.
 	static std::string formatHexString(bytes const& _bytes);
 
+	/// Converts \param _bytes to a soltest-compliant and human-readable
+	/// string representation of a byte array which is assumed to hold
+	/// a string value.
+	static std::string formatString(bytes const& _bytes, size_t _cutOff);
+
+	static std::string formatString(bytes const& _bytes)
+	{
+		return formatString(_bytes, _bytes.size());
+	}
+
 	/// Returns a string representation of given _bytes. Adds a newline
 	/// every 32 bytes to increase readability.
 	/// Used to print returned bytes from function calls to the commandline.
 	static std::string formatRawBytes(bytes const& _bytes);
 
-	/// Converts \param _bytes to a soltest-compliant and human-readable
-	/// string representation of a byte array which is assumed to hold
-	/// a string value.
-	std::string formatString(bytes const& _bytes, size_t _cutOff) const;
+	/// Formats given _bytes with type information passed in _abiType.
+	static std::string formatBytes(bytes const& _bytes, ABIType const& _abiType);
 
-	std::string formatString(bytes const& _bytes) const
-	{
-		return formatString(_bytes, _bytes.size());
-	}
+	/// Formats given _bytes with type information passed in _abiTypes.
+	/// Prints obtained result if it does not match the expectation
+	/// and prints the expected result otherwise.
+	/// Highlights parameter only if it does not match.
+	static std::string formatBytesRange(
+		bytes _bytes,
+		ParameterList const& _parameters,
+		bool _highlight
+	);
 };
 
 }

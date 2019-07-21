@@ -177,7 +177,7 @@ string BytesUtils::formatHexString(bytes const& _bytes)
 	return os.str();
 }
 
-string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff) const
+string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 {
 	stringstream os;
 
@@ -226,3 +226,76 @@ string BytesUtils::formatRawBytes(bytes const& _bytes)
 
 	return os.str();
 }
+
+string BytesUtils::formatBytes(
+	bytes const& _bytes,
+	ABIType const& _abiType
+)
+{
+	stringstream os;
+
+	switch (_abiType.type)
+	{
+	case ABIType::UnsignedDec:
+		// Check if the detected type was wrong and if this could
+		// be signed. If an unsigned was detected in the expectations,
+		// but the actual result returned a signed, it would be formatted
+		// incorrectly.
+		if (*_bytes.begin() & 0x80)
+			os << formatSigned(_bytes);
+		else
+			os << formatUnsigned(_bytes);
+		break;
+	case ABIType::SignedDec:
+		os << formatSigned(_bytes);
+		break;
+	case ABIType::Boolean:
+		os << formatBoolean(_bytes);
+		break;
+	case ABIType::Hex:
+		os << formatHex(_bytes);
+		break;
+	case ABIType::HexString:
+		os << formatHexString(_bytes);
+		break;
+	case ABIType::String:
+		os << formatString(_bytes);
+		break;
+	case ABIType::Failure:
+		break;
+	case ABIType::None:
+		break;
+	}
+	return os.str();
+}
+
+string BytesUtils::formatBytesRange(
+	bytes _bytes,
+	dev::solidity::test::ParameterList const& _parameters,
+	bool _highlight
+)
+{
+	stringstream os;
+	auto it = _bytes.begin();
+
+	for (auto const& parameter: _parameters)
+	{
+		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
+
+		if (!parameter.matchesBytes(byteRange))
+			AnsiColorized(
+				os,
+				_highlight,
+				{dev::formatting::RED_BACKGROUND}
+			) << formatBytes(byteRange, parameter.abiType);
+		else
+			os << parameter.rawString;
+
+
+		it += static_cast<long>(parameter.abiType.size);
+		if (&parameter != &_parameters.back())
+			os << ", ";
+	}
+	return os.str();
+}
+
