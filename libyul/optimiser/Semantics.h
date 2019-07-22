@@ -71,7 +71,7 @@ private:
 	/// Note that this is a purely syntactic property meaning that even if this is false,
 	/// the code can still contain calls to functions that contain the msize instruction.
 	bool m_containsMSize = false;
-	/// If false, storage is guaranteed to be unchanged by the coded under all
+	/// If false, storage is guaranteed to be unchanged by the code under all
 	/// circumstances.
 	bool m_invalidatesStorage = false;
 	bool m_invalidatesMemory = false;
