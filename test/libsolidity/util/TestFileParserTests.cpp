@@ -310,6 +310,50 @@ BOOST_AUTO_TEST_CASE(call_arguments_bool)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(scanner_hex_values)
+{
+	char const* source = R"(
+		// f(uint256): "\x20\x00\xFf" ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x20\x00\xff", 3)));
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid1)
+{
+	char const* source = R"(
+		// f(uint256): "\x" ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid2)
+{
+	char const* source = R"(
+		// f(uint256): "\x1" ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x1", 1)));
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid3)
+{
+	char const* source = R"(
+		// f(uint256): "\xZ" ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid4)
+{
+	char const* source = R"(
+		// f(uint256): "\xZZ" ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
 BOOST_AUTO_TEST_CASE(call_arguments_hex_string)
 {
 	char const* source = R"(

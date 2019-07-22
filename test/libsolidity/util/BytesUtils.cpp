@@ -22,6 +22,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
+#include <iomanip>
 #include <memory>
 #include <regex>
 #include <stdexcept>
@@ -141,22 +142,28 @@ string BytesUtils::formatHexString(bytes const& _bytes) const
 	return os.str();
 }
 
-string BytesUtils::formatString(bytes const& _bytes) const
+string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff) const
 {
 	stringstream os;
 
 	os << "\"";
-	bool expectZeros = false;
-	for (auto const& v: _bytes)
+	for (size_t i = 0; i < min(_cutOff, _bytes.size()); ++i)
 	{
-		if (expectZeros && v != 0)
-			return {};
-		if (v == 0) expectZeros = true;
-		else
+		auto const v = _bytes[i];
+		switch (v)
 		{
-			if (!isprint(v) || v == '"')
-				return {};
-			os << v;
+			case '\0':
+				os << "\\0";
+				break;
+			case '\n':
+				os << "\\n";
+				break;
+			default:
+				if (isprint(v))
+					os << v;
+				else
+					os << "\\x" << setw(2) << setfill('0') << hex << v;
+
 		}
 	}
 	os << "\"";

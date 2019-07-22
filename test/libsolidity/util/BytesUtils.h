@@ -76,7 +76,12 @@ public:
 	/// Converts \param _bytes to a soltest-compliant and human-readable
 	/// string representation of a byte array which is assumed to hold
 	/// a string value.
-	std::string formatString(bytes const& _bytes) const;
+	std::string formatString(bytes const& _bytes, size_t _cutOff) const;
+
+	std::string formatString(bytes const& _bytes) const
+	{
+		return formatString(_bytes, _bytes.size());
+	}
 
 	/// Left-aligns and pads given _bytes and returns a new
 	/// bytes array.
