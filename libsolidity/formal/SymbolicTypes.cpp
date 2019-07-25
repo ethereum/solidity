@@ -258,7 +258,7 @@ void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _c
 void setSymbolicZeroValue(Expression _expr, solidity::TypePointer const& _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
-	if (isInteger(_type->category()))
+	if (isNumber(_type->category()))
 		_context.addAssertion(_expr == 0);
 	else if (isBool(_type->category()))
 		_context.addAssertion(_expr == Expression(false));
