@@ -55,6 +55,7 @@ public:
 	std::string currentName() const;
 	virtual Expression valueAtIndex(int _index) const;
 	virtual std::string nameAtIndex(int _index) const;
+	virtual Expression resetIndex();
 	virtual Expression increaseIndex();
 	virtual Expression operator()(std::vector<Expression> /*_arguments*/) const
 	{
