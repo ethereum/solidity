@@ -266,24 +266,27 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 		);
 	else if (_tuple.annotation().type->category() == Type::Category::Tuple)
 	{
-		vector<shared_ptr<smt::SymbolicVariable>> components;
-		for (auto const& component: _tuple.components())
-			if (component)
-			{
-				if (auto varDecl = identifierToVariable(*component))
-					components.push_back(m_context.variable(*varDecl));
-				else
-				{
-					solAssert(m_context.knownExpression(*component), "");
-					components.push_back(m_context.expression(*component));
-				}
-			}
-			else
-				components.push_back(nullptr);
-		solAssert(components.size() == _tuple.components().size(), "");
 		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
 		solAssert(symbTuple, "");
-		symbTuple->setComponents(move(components));
+		if (symbTuple->components().empty())
+		{
+			vector<shared_ptr<smt::SymbolicVariable>> components;
+			for (auto const& component: _tuple.components())
+				if (component)
+				{
+					if (auto varDecl = identifierToVariable(*component))
+						components.push_back(m_context.variable(*varDecl));
+					else
+					{
+						solAssert(m_context.knownExpression(*component), "");
+						components.push_back(m_context.expression(*component));
+					}
+				}
+				else
+					components.push_back(nullptr);
+			solAssert(components.size() == _tuple.components().size(), "");
+			symbTuple->setComponents(move(components));
+		}
 	}
 	else
 	{
