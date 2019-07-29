@@ -334,14 +334,27 @@ private:
 		return toHex(maskUnsignedInt(_counter, _numMaskNibbles), HexPrefix::Add);
 	}
 
-	static unsigned getArrayLengthFromFuzz(unsigned _fuzz, unsigned _counter = 0)
+	static unsigned getDynArrayLengthFromFuzz(unsigned _fuzz, unsigned _counter)
 	{
-		return ((_fuzz + _counter) % s_maxArrayLength) + 1;
+		return ((_fuzz + _counter) % s_maxDynamicArrayLength) + 1;
+	}
+
+	static unsigned getStaticArrayLengthFromFuzz(unsigned _fuzz)
+	{
+		return (_fuzz % s_maxStaticArrayLength) + 1;
 	}
 
 	static std::pair<bool, unsigned> arrayDimInfoAsPair(ArrayDimensionInfo const& _x)
 	{
-		return std::make_pair(_x.is_static(), getArrayLengthFromFuzz(_x.length()));
+		return std::make_pair(
+			_x.is_static(),
+			getStaticArrayLengthFromFuzz(_x.length())
+		);
+	}
+
+	static bool addCheck(unsigned _counter)
+	{
+		return (_counter % s_arrayCheckFrequency == 0);
 	}
 
 	/// Contains the test program
@@ -360,8 +373,12 @@ private:
 	unsigned m_varCounter;
 	/// Monotonically increasing return value for error reporting
 	unsigned m_returnValue;
-	static unsigned constexpr s_maxArrayLength = 2;
-	static unsigned constexpr s_maxArrayDimensions = 10;
+	static unsigned constexpr s_maxStaticArrayLength = 7;
+	static unsigned constexpr s_maxDynamicArrayLength = 5;
+	static unsigned constexpr s_maxArrayDimensions = 21;
+	/// Add check only if counter returned by getNextCounter()
+	/// is divisible by s_arrayCheckFrequency
+	static unsigned constexpr s_arrayCheckFrequency = 11;
 	/// Prefixes for declared and parameterized variable names
 	static auto constexpr s_varNamePrefix = "x_";
 	static auto constexpr s_paramNamePrefix = "c_";

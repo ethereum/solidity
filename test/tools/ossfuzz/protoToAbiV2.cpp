@@ -295,20 +295,20 @@ void ProtoConverter::visit(ValueType const& _x)
 {
 	switch (_x.value_type_oneof_case())
 	{
-		case ValueType::kInty:
-			visit(_x.inty());
-			break;
-		case ValueType::kByty:
-			visit(_x.byty());
-			break;
-		case ValueType::kAdty:
-			visit(_x.adty());
-			break;
-		case ValueType::kBoolty:
-			visit(_x.boolty());
-			break;
-		case ValueType::VALUE_TYPE_ONEOF_NOT_SET:
-			break;
+	case ValueType::kInty:
+		visit(_x.inty());
+		break;
+	case ValueType::kByty:
+		visit(_x.byty());
+		break;
+	case ValueType::kAdty:
+		visit(_x.adty());
+		break;
+	case ValueType::kBoolty:
+		visit(_x.boolty());
+		break;
+	case ValueType::VALUE_TYPE_ONEOF_NOT_SET:
+		break;
 	}
 }
 
@@ -328,7 +328,7 @@ void ProtoConverter::visit(StructType const&)
 
 std::string ProtoConverter::arrayDimInfoAsString(ArrayDimensionInfo const& _x)
 {
-	unsigned arrLength = getArrayLengthFromFuzz(_x.length());
+	unsigned arrLength = getStaticArrayLengthFromFuzz(_x.length());
 	if (_x.is_static())
 		return Whiskers(R"([<length>])")
 		("length", std::to_string(arrLength))
@@ -398,7 +398,7 @@ ProtoConverter::DataType ProtoConverter::getDataTypeByBaseType(ArrayType const& 
 // Adds a resize operation for a given dimension of type `_type` and expression referenced
 // by `_var`. `_isStatic` is true for statically sized dimensions, false otherwise.
 // `_arrayLen` is equal to length of statically sized array dimension. For dynamically
-// sized dimension, we use `getArrayLengthFromFuzz()` and a monotonically increasing
+// sized dimension, we use `getDynArrayLengthFromFuzz()` and a monotonically increasing
 // counter to obtain actual length. Function returns dimension length.
 unsigned ProtoConverter::resizeDimension(
 	bool _isStatic,
@@ -413,7 +413,7 @@ unsigned ProtoConverter::resizeDimension(
 		length = _arrayLen;
 	else
 	{
-		length = getArrayLengthFromFuzz(_arrayLen, getNextCounter());
+		length = getDynArrayLengthFromFuzz(_arrayLen, getNextCounter());
 
 		// If local var, new T(l);
 		// Else, l;
@@ -438,8 +438,10 @@ unsigned ProtoConverter::resizeDimension(
 		addVarDef(lhs, rhs);
 	}
 
-	// if (c.length != l)
-	checkResizeOp(_param, length);
+	// Add checks on array length pseudo randomly
+	if (addCheck(getNextCounter()))
+		// if (c.length != l)
+		checkResizeOp(_param, length);
 	return length;
 }
 
@@ -455,12 +457,19 @@ void ProtoConverter::resizeHelper(
 	// (depth-first) recurse otherwise.
 	if (_arrInfoVec.empty())
 	{
-		// expression name is _var
-		// value is a value of base type
-		std::string value = getValueByBaseType(_x);
-		// add assignment and check
-		DataType dataType = getDataTypeByBaseType(_x);
-		addCheckedVarDef(dataType, _varName, _paramName, value);
+		// We are at the leaf node now.
+		// To ensure we do not create a very large test case
+		// especially for multidimensional dynamic arrays,
+		// we create a checked assignment pseudo randomly.
+		if (addCheck(getNextCounter()))
+		{
+			// expression name is _var
+			// value is a value of base type
+			std::string value = getValueByBaseType(_x);
+			// add assignment and check
+			DataType dataType = getDataTypeByBaseType(_x);
+			addCheckedVarDef(dataType, _varName, _paramName, value);
+		}
 	}
 	else
 	{
