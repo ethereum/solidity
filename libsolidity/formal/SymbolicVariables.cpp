@@ -78,6 +78,12 @@ string SymbolicVariable::uniqueSymbol(unsigned _index) const
 	return m_uniqueName + "_" + to_string(_index);
 }
 
+Expression SymbolicVariable::resetIndex()
+{
+	m_ssa->resetIndex();
+	return currentValue();
+}
+
 Expression SymbolicVariable::increaseIndex()
 {
 	++(*m_ssa);

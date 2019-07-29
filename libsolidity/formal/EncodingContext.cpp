@@ -38,8 +38,8 @@ void EncodingContext::reset()
 	resetAllVariables();
 	m_expressions.clear();
 	m_globalContext.clear();
-	m_thisAddress->increaseIndex();
-	m_balances->increaseIndex();
+	m_thisAddress->resetIndex();
+	m_balances->resetIndex();
 	m_assertions.clear();
 }
 
