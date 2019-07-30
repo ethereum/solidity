@@ -922,7 +922,7 @@ string YulUtilFunctions::readFromCalldata(Type const& _type)
 	return readFromMemoryOrCalldata(_type, true);
 }
 
-string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const _offset)
+string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const& _offset)
 {
 	string const functionName =
 		"update_storage_value_" +
