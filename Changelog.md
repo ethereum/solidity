@@ -13,6 +13,7 @@ Compiler Features:
  * Metadata: Update the swarm hash, changes ``bzzr0`` to ``bzzr1`` and urls to use ``bzz-raw://``.
  * Standard JSON Interface: Compile only selected sources and contracts.
  * Standard JSON Interface: Provide secondary error locations (e.g. the source position of other conflicting declarations).
+ * SMTChecker: Do not erase knowledge about storage pointers if another storage pointer is assigned.
 
 
 
