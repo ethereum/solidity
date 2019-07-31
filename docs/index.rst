@@ -100,6 +100,7 @@ Contents
    metadata.rst
    abi-spec.rst
    yul.rst
+   ast.rst
    style-guide.rst
    common-patterns.rst
    bugs.rst
