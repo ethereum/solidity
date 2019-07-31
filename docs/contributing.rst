@@ -21,6 +21,17 @@ In particular, we need help in the following areas:
 
 Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project - in the issues, pull requests, or Gitter channels - you agree to abide by its terms.
 
+Team Calls
+==========
+
+If you have issues or pull requests to discuss, or are interested in hearing what
+the team and contributors are working on, you can join our public team calls:
+
+- Monday at 12pm CET
+- Wednesday at 3pm CET
+
+Both calls take place on `Google Hangouts <https://hangouts.google.com/hangouts/_/ethereum.org/solidity-weekly>`_.
+
 How to Report Issues
 ====================
 
