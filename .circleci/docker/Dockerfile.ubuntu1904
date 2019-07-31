@@ -25,6 +25,11 @@ FROM buildpack-deps:disco
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+# Aleth for end-to-end tests
+ARG ALETH_VERSION="1.6.0"
+ARG ALETH_HASH="7f7004e1563299bc57882e32b32e4a195747dfb6"
+ARG ALETH_URL="https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz"
+
 RUN set -ex; \
 	apt-get update; \
 	apt-get install -qqy --no-install-recommends \
@@ -39,29 +44,25 @@ RUN set -ex; \
 	apt-get install -qy python-pip python-sphinx; \
 	update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-8 1; \
 	pip install codecov; \
-	rm -rf /var/lib/apt/lists/*
-
-# Aleth for end-to-end tests
-ARG ALETH_VERSION="1.6.0"
-ARG ALETH_HASH="7f7004e1563299bc57882e32b32e4a195747dfb6"
-ARG ALETH_URL="https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz"
-RUN set -ex; \
+	rm -rf /var/lib/apt/lists/*; \
+# Aleth for end-to-end tests \
+#RUN set -ex; \
 	wget -q -O /tmp/aleth.tar.gz "${ALETH_URL}"; \
 	test "$(shasum /tmp/aleth.tar.gz)" = "$ALETH_HASH  /tmp/aleth.tar.gz"; \
-	tar -xf /tmp/aleth.tar.gz -C /usr
-
-# Z3
-RUN set -ex; \
+	tar -xf /tmp/aleth.tar.gz -C /usr; \
+# Z3 \
+#RUN set -ex; \
+	cd /usr/src; \
 	git clone --depth=1 --branch="Z3-4.8.5" https://github.com/Z3Prover/z3.git /usr/src/z3; \
 	mkdir /usr/src/z3/build; \
 	cd /usr/src/z3/build; \
 	cmake -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="/usr" -G "Ninja" ..; \
 	ninja; \
 	ninja install/strip; \
-	rm -rf /usr/src/z3
-
-# OSSFUZZ: libprotobuf-mutator
-RUN set -ex; \
+	rm -rf /usr/src/z3; \
+# OSSFUZZ: libprotobuf-mutator \
+#RUN set -ex; \
+	cd /usr/src; \
 	git clone https://github.com/google/libprotobuf-mutator.git \
 	    /usr/src/libprotobuf-mutator; \
 	cd /usr/src/libprotobuf-mutator; \
@@ -76,20 +77,18 @@ RUN set -ex; \
 	cp -vpr external.protobuf/include/* /usr/include/; \
 	cp -vpr external.protobuf/lib/* /usr/lib/; \
 	ninja install/strip; \
-	rm -rf /usr/src/libprotobuf-mutator
-
-# OSSFUZZ: libfuzzer
-RUN set -ex; \
+	rm -rf /usr/src/libprotobuf-mutator; \
+# OSSFUZZ: libfuzzer \
+#RUN set -ex; \
     cd /var/tmp; \
     svn co https://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer libfuzzer; \
     mkdir -p build-libfuzzer; \
     cd build-libfuzzer; \
     clang++-8 -O1 -stdlib=libstdc++ -std=c++11 -O2 -fPIC -c ../libfuzzer/*.cpp -I../libfuzzer; \
     ar r /usr/lib/libFuzzingEngine.a *.o; \
-	rm -rf /var/lib/libfuzzer
-
-# ETHASH
-RUN set -ex; \
+	rm -rf /var/lib/libfuzzer; \
+# ETHASH \
+#RUN set -ex; \
 	cd /usr/src; \
 	git clone --branch="v0.4.4" https://github.com/chfast/ethash.git; \
 	cd ethash; \
@@ -98,10 +97,9 @@ RUN set -ex; \
 	cmake .. -G Ninja -DBUILD_SHARED_LIBS=OFF -DETHASH_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
 	ninja; \
 	ninja install/strip; \
-	rm -rf /usr/src/ethash
-
-# INTX
-RUN set -ex; \
+	rm -rf /usr/src/ethash; \
+# INTX \
+#RUN set -ex; \
 	cd /usr/src; \
 	git clone --branch="v0.2.0" https://github.com/chfast/intx.git; \
 	cd intx; \
@@ -110,10 +108,9 @@ RUN set -ex; \
 	cmake .. -G Ninja -DBUILD_SHARED_LIBS=OFF -DINTX_TESTING=OFF -DINTX_BENCHMARKING=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
 	ninja; \
 	ninja install/strip; \
-	rm -rf /usr/src/intx;
-
-# EVMONE
-RUN set -ex; \
+	rm -rf /usr/src/intx; \
+# EVMONE \
+#RUN set -ex; \
 	cd /usr/src; \
 	git clone --branch="v0.1.0" --recurse-submodules https://github.com/chfast/evmone.git; \
 	cd evmone; \
