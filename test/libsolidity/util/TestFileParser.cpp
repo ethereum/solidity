@@ -95,11 +95,19 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls(siz
 						m_lineNumber++;
 					}
 
-					expect(Token::Arrow);
-					call.expectations = parseFunctionCallExpectations();
+					if (accept(Token::Arrow, true))
+					{
+						call.omitsArrow = false;
+						call.expectations = parseFunctionCallExpectations();
+						if (accept(Token::Newline, true))
+							m_lineNumber++;
+					}
+					else
+					{
+						call.expectations.failure = false;
+						call.displayMode = FunctionCall::DisplayMode::SingleLine;
+					}
 
-					if (accept(Token::Newline, true))
-						m_lineNumber++;
 					call.expectations.comment = parseComment();
 
 					if (call.signature == "constructor()")

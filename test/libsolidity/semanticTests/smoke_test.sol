@@ -6,6 +6,9 @@ contract C {
     function balance() payable public returns (uint256) {
         return address(this).balance;
     }
+    function e(uint a) public {
+        state = a;
+    }
     function f() payable public returns (uint) {
         return 2;
     }
@@ -45,6 +48,7 @@ contract C {
 // state() -> 3
 // balance() -> 2
 // _() -> FAILURE
+// e(uint256): 4
 // f() -> 2
 // f(), 1 ether -> 2
 // g() -> 2, 3
