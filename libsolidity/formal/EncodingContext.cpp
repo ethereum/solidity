@@ -228,7 +228,10 @@ Expression EncodingContext::assertions()
 
 void EncodingContext::pushSolver()
 {
-	m_assertions.push_back(assertions());
+	if (m_accumulateAssertions)
+		m_assertions.push_back(assertions());
+	else
+		m_assertions.push_back(smt::Expression(true));
 }
 
 void EncodingContext::popSolver()

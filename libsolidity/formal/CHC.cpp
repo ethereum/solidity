@@ -50,6 +50,7 @@ void CHC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner
 	solAssert(z3Interface, "");
 	m_context.setSolver(z3Interface->z3Interface());
 	m_context.clear();
+	m_context.setAssertionAccumulation(false);
 	m_variableUsage.setFunctionInlining(false);
 
 	_source.accept(*this);
