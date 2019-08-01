@@ -62,6 +62,7 @@ SemanticTest::SemanticTest(string const& _filename, string const& _ipcPath, lang
 		m_settings.erase("compileViaYul");
 	}
 	parseExpectations(file);
+	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
