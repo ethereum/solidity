@@ -328,13 +328,10 @@ void ProtoConverter::visit(StructType const&)
 
 std::string ProtoConverter::arrayDimInfoAsString(ArrayDimensionInfo const& _x)
 {
-	unsigned arrLength = getArrayLengthFromFuzz(_x.length());
-	if (_x.is_static())
-		return Whiskers(R"([<length>])")
-		("length", std::to_string(arrLength))
+	return Whiskers(R"([<?isStatic><length></isStatic>])")
+		("isStatic", _x.is_static())
+		("length", std::to_string(getStaticArrayLengthFromFuzz(_x.length())))
 		.render();
-	else
-		return R"([])";
 }
 
 void ProtoConverter::arrayDimensionsAsStringVector(
@@ -398,7 +395,7 @@ ProtoConverter::DataType ProtoConverter::getDataTypeByBaseType(ArrayType const& 
 // Adds a resize operation for a given dimension of type `_type` and expression referenced
 // by `_var`. `_isStatic` is true for statically sized dimensions, false otherwise.
 // `_arrayLen` is equal to length of statically sized array dimension. For dynamically
-// sized dimension, we use `getArrayLengthFromFuzz()` and a monotonically increasing
+// sized dimension, we use `getDynArrayLengthFromFuzz()` and a monotonically increasing
 // counter to obtain actual length. Function returns dimension length.
 unsigned ProtoConverter::resizeDimension(
 	bool _isStatic,
@@ -413,7 +410,7 @@ unsigned ProtoConverter::resizeDimension(
 		length = _arrayLen;
 	else
 	{
-		length = getArrayLengthFromFuzz(_arrayLen, getNextCounter());
+		length = getDynArrayLengthFromFuzz(_arrayLen, getNextCounter());
 
 		// If local var, new T(l);
 		// Else, l;
