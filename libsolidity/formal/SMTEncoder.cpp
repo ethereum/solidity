@@ -1173,6 +1173,21 @@ void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variable
 		return var1->id() < var2->id();
 	};
 	set<VariableDeclaration const*, decltype(cmp)> sortedVars(begin(_variables), end(_variables), cmp);
+
+	/// Knowledge about references is erased if a reference is assigned,
+	/// so those also need their SSA's merged.
+	/// This does not cause scope harm since the symbolic variables
+	/// are kept alive.
+	for (auto const& var: _indicesEndTrue)
+	{
+		solAssert(_indicesEndFalse.count(var.first), "");
+		if (
+			_indicesEndFalse.at(var.first) != var.second &&
+			!sortedVars.count(var.first)
+		)
+			sortedVars.insert(var.first);
+	}
+
 	for (auto const* decl: sortedVars)
 	{
 		solAssert(_indicesEndTrue.count(decl) && _indicesEndFalse.count(decl), "");
