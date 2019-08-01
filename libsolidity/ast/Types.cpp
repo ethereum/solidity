@@ -2837,6 +2837,8 @@ unsigned FunctionType::sizeOnStack() const
 	case Kind::ArrayPush:
 	case Kind::ArrayPop:
 	case Kind::ByteArrayPush:
+	case Kind::Transfer:
+	case Kind::Send:
 		size = 1;
 		break;
 	default:
