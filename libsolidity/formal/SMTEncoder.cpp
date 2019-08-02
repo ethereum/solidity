@@ -214,10 +214,16 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	};
 	Token op = _assignment.assignmentOperator();
 	if (op != Token::Assign && !compoundOps.count(op))
+	{
+		// Give it a new index anyway to keep the SSA scheme sound.
+		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
+			m_context.newValue(*varDecl);
+
 		m_errorReporter.warning(
 			_assignment.location(),
 			"Assertion checker does not yet implement this assignment operator."
 		);
+	}
 	else if (!smt::isSupportedType(_assignment.annotation().type->category()))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
@@ -1026,10 +1032,16 @@ void SMTEncoder::assignment(
 )
 {
 	if (!smt::isSupportedType(_type->category()))
+	{
+		// Give it a new index anyway to keep the SSA scheme sound.
+		if (auto varDecl = identifierToVariable(_left))
+			m_context.newValue(*varDecl);
+
 		m_errorReporter.warning(
 			_location,
 			"Assertion checker does not yet implement type " + _type->toString()
 		);
+	}
 	else if (auto varDecl = identifierToVariable(_left))
 	{
 		solAssert(_right.size() == 1, "");
