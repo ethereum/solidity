@@ -174,7 +174,8 @@ private:
 		unsigned _arrayLen,
 		std::string const& _var,
 		std::string const& _param,
-		std::string const& _type
+		std::string const& _type,
+		unsigned _numDimensions
 	);
 
 	void resizeHelper(
@@ -182,7 +183,8 @@ private:
 		std::vector<std::string> _arrStrVec,
 		VecOfBoolUnsigned _arrInfoVec,
 		std::string const& _varName,
-		std::string const& _paramName
+		std::string const& _paramName,
+		unsigned _numDimensions
 	);
 
 	// Utility functions
@@ -293,7 +295,7 @@ private:
 		bool _isHexLiteral
 	);
 	static std::vector<std::pair<bool, unsigned>> arrayDimensionsAsPairVector(ArrayType const& _x);
-	static std::string arrayDimInfoAsString(ArrayDimensionInfo const& _x);
+	static std::string arrayDimInfoAsString(ArrayDimensionInfo const& _x, unsigned _numDimensions);
 	static void arrayDimensionsAsStringVector(
 		ArrayType const& _x,
 		std::vector<std::string>&
@@ -371,25 +373,40 @@ private:
 
 	/// Dynamically sized arrays can have a length of at least zero
 	/// and at most s_maxArrayLength.
-	static unsigned getDynArrayLengthFromFuzz(unsigned _fuzz, unsigned _counter)
+	static unsigned getDynArrayLengthFromFuzz(
+		unsigned _fuzz,
+		unsigned _counter,
+		unsigned _numDimensions
+	)
 	{
-		// Increment modulo value by one in order to meet upper bound
-		return (_fuzz + _counter) % (s_maxArrayLength + 1);
+		// Zero length dimension is more likely when the total
+		// number of dimensions is high.
+		return (
+			_fuzz % _numDimensions != 0 ?
+			0 :
+			// Increment modulo value by one in order to meet upper bound
+			(_fuzz + _counter) % (s_maxArrayLength + 1)
+		);
 	}
 
 	/// Statically sized arrays must have a length of at least one
 	/// and at most s_maxArrayLength.
-	static unsigned getStaticArrayLengthFromFuzz(unsigned _fuzz)
+	static unsigned getStaticArrayLengthFromFuzz(unsigned _fuzz, unsigned _numDimensions)
 	{
-		return _fuzz % s_maxArrayLength + 1;
+		// Unit length dimension is more likely when the total
+		// number of dimensions is high.
+		return (_fuzz % _numDimensions != 0 ? 1 : _fuzz % s_maxArrayLength + 1);
 	}
 
-	static std::pair<bool, unsigned> arrayDimInfoAsPair(ArrayDimensionInfo const& _x)
+	static std::pair<bool, unsigned> arrayDimInfoAsPair(
+		ArrayDimensionInfo const& _x,
+		unsigned _numDimensions
+	)
 	{
 		return (
 			_x.is_static() ?
-			std::make_pair(true, getStaticArrayLengthFromFuzz(_x.length())) :
-			std::make_pair(false, getDynArrayLengthFromFuzz(_x.length(), 0))
+			std::make_pair(true, getStaticArrayLengthFromFuzz(_x.length(), _numDimensions)) :
+			std::make_pair(false, getDynArrayLengthFromFuzz(_x.length(), 0, _numDimensions))
 		);
 	}
 
@@ -413,10 +430,12 @@ private:
 			_counter,
 			_isHexLiteral
 		);
+	}
 
-	static bool addCheck(unsigned _counter)
+	/// Checks are less likely for higher dimensional arrays
+	static bool addCheck(unsigned _counter, unsigned _numDimensions)
 	{
-		return _counter % s_arrayCheckFrequency == 0;
+		return _counter % _numDimensions == 0;
 	}
 
 	/// Contains the test program
@@ -438,9 +457,6 @@ private:
 	static unsigned constexpr s_maxArrayLength = 4;
 	static unsigned constexpr s_maxArrayDimensions = 4;
 	static unsigned constexpr s_maxDynArrayLength = 256;
-	/// Add check only if counter returned by getNextCounter()
-	/// is divisible by s_arrayCheckFrequency
-	static unsigned constexpr s_arrayCheckFrequency = 11;
 	/// Prefixes for declared and parameterized variable names
 	static auto constexpr s_varNamePrefix = "x_";
 	static auto constexpr s_paramNamePrefix = "c_";

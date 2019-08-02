@@ -388,11 +388,14 @@ void ProtoConverter::visit(StructType const&)
 {
 }
 
-std::string ProtoConverter::arrayDimInfoAsString(ArrayDimensionInfo const& _x)
+std::string ProtoConverter::arrayDimInfoAsString(
+	ArrayDimensionInfo const& _x,
+	unsigned _numDimensions
+)
 {
 	return Whiskers(R"([<?isStatic><length></isStatic>])")
 		("isStatic", _x.is_static())
-		("length", std::to_string(getStaticArrayLengthFromFuzz(_x.length())))
+		("length", std::to_string(getStaticArrayLengthFromFuzz(_x.length(), _numDimensions)))
 		.render();
 }
 
@@ -402,7 +405,7 @@ void ProtoConverter::arrayDimensionsAsStringVector(
 {
 	solAssert(_x.info_size() > 0, "Proto ABIv2 Fuzzer: Array dimensions empty.");
 	for (auto const& dim: _x.info())
-		_vecOfStr.push_back(arrayDimInfoAsString(dim));
+		_vecOfStr.push_back(arrayDimInfoAsString(dim, _x.info_size()));
 }
 
 ProtoConverter::VecOfBoolUnsigned ProtoConverter::arrayDimensionsAsPairVector(
@@ -411,7 +414,7 @@ ProtoConverter::VecOfBoolUnsigned ProtoConverter::arrayDimensionsAsPairVector(
 {
 	VecOfBoolUnsigned arrayDimsPairVector = {};
 	for (auto const& dim: _x.info())
-		arrayDimsPairVector.push_back(arrayDimInfoAsPair(dim));
+		arrayDimsPairVector.push_back(arrayDimInfoAsPair(dim, _x.info_size()));
 	solAssert(!arrayDimsPairVector.empty(), "Proto ABIv2 Fuzzer: Array dimensions empty.");
 	return arrayDimsPairVector;
 }
@@ -467,7 +470,8 @@ unsigned ProtoConverter::resizeDimension(
 	unsigned _arrayLen,
 	std::string const& _var,
 	std::string const& _param,
-	std::string const& _type
+	std::string const& _type,
+	unsigned _numDimensions
 )
 {
 	unsigned length;
@@ -475,7 +479,7 @@ unsigned ProtoConverter::resizeDimension(
 		length = _arrayLen;
 	else
 	{
-		length = getDynArrayLengthFromFuzz(_arrayLen, getNextCounter());
+		length = getDynArrayLengthFromFuzz(_arrayLen, getNextCounter(), _numDimensions);
 
 		// If local var, new T(l);
 		// Else, l;
@@ -501,7 +505,7 @@ unsigned ProtoConverter::resizeDimension(
 	}
 
 	// Add checks on array length pseudo randomly
-	if (addCheck(getNextCounter()))
+	if (addCheck(getNextCounter(), _numDimensions))
 		// if (c.length != l)
 		checkResizeOp(_param, length);
 	return length;
@@ -512,7 +516,8 @@ void ProtoConverter::resizeHelper(
 	std::vector<std::string> _arrStrVec,
 	VecOfBoolUnsigned _arrInfoVec,
 	std::string const& _varName,
-	std::string const& _paramName
+	std::string const& _paramName,
+	unsigned _numDimensions
 )
 {
 	// Initialize value expressions if we have arrived at leaf node,
@@ -523,7 +528,7 @@ void ProtoConverter::resizeHelper(
 		// To ensure we do not create a very large test case
 		// especially for multidimensional dynamic arrays,
 		// we create a checked assignment pseudo randomly.
-		if (addCheck(getNextCounter()))
+		if (addCheck(getNextCounter(), _numDimensions))
 		{
 			// expression name is _var
 			// value is a value of base type
@@ -542,7 +547,7 @@ void ProtoConverter::resizeHelper(
 			_arrStrVec.end(),
 			std::string("")
 		);
-		unsigned length = resizeDimension(dim.first, dim.second, _varName, _paramName, type);
+		unsigned length = resizeDimension(dim.first, dim.second, _varName, _paramName, type, _numDimensions);
 		// Recurse one level dimension down.
 		_arrStrVec.pop_back();
 		_arrInfoVec.pop_back();
@@ -552,7 +557,8 @@ void ProtoConverter::resizeHelper(
 				_arrStrVec,
 				_arrInfoVec,
 				_varName + "[" + std::to_string(i) + "]",
-				_paramName + "[" + std::to_string(i) + "]"
+				_paramName + "[" + std::to_string(i) + "]",
+				_numDimensions
 			);
 	}
 }
@@ -569,7 +575,7 @@ void ProtoConverter::resizeInitArray(
 	VecOfBoolUnsigned arrInfoVec = arrayDimensionsAsPairVector(_x);
 	std::vector<std::string> arrStrVec = {_baseType};
 	arrayDimensionsAsStringVector(_x, arrStrVec);
-	resizeHelper(_x, arrStrVec, arrInfoVec, _varName, _paramName);
+	resizeHelper(_x, arrStrVec, arrInfoVec, _varName, _paramName, arrInfoVec.size());
 }
 
 // Returns array type from it's base type (e.g., int8) and array dimensions info contained in
