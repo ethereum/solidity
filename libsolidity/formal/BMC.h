@@ -74,6 +74,7 @@ private:
 	/// or checked are visited.
 	//@{
 	bool visit(ContractDefinition const& _node) override;
+	void endVisit(ContractDefinition const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
 	bool visit(IfStatement const& _node) override;
