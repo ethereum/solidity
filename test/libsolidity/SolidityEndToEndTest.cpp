@@ -7921,8 +7921,10 @@ BOOST_AUTO_TEST_CASE(accessor_for_state_variable)
 		}
 	)";
 
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("ticketPrice()"), encodeArgs(u256(500)));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("ticketPrice()"), encodeArgs(u256(500)));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)

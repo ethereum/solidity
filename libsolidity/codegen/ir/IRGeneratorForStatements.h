@@ -45,6 +45,9 @@ public:
 
 	std::string code() const;
 
+	/// Generates code to initialize the given state variable.
+	void initializeStateVar(VariableDeclaration const& _varDecl);
+
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Assignment const& _assignment) override;
 	bool visit(TupleExpression const& _tuple) override;
