@@ -234,9 +234,9 @@ Parameter TestFileParser::parseParameter()
 		parameter.format.newline = true;
 		m_lineNumber++;
 	}
+	parameter.abiType = ABIType{ABIType::None, ABIType::AlignNone, 0};
 
 	bool isSigned = false;
-
 	if (accept(Token::Left, true))
 	{
 		parameter.rawString += formatToken(Token::Left);
@@ -267,10 +267,10 @@ Parameter TestFileParser::parseParameter()
 			parameter.abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
 			string parsed = parseBoolean();
 			parameter.rawString += parsed;
-			parameter.rawBytes = BytesUtils().applyAlign(
+			parameter.rawBytes = BytesUtils::applyAlign(
 				parameter.alignment,
 				parameter.abiType,
-				BytesUtils().convertBoolean(parsed)
+				BytesUtils::convertBoolean(parsed)
 			);
 		}
 		else if (accept(Token::HexNumber))
@@ -281,10 +281,10 @@ Parameter TestFileParser::parseParameter()
 			parameter.abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
 			string parsed = parseHexNumber();
 			parameter.rawString += parsed;
-			parameter.rawBytes = BytesUtils().applyAlign(
+			parameter.rawBytes = BytesUtils::applyAlign(
 				parameter.alignment,
 				parameter.abiType,
-				BytesUtils().convertHexNumber(parsed)
+				BytesUtils::convertHexNumber(parsed)
 			);
 		}
 		else if (accept(Token::Hex, true))
@@ -296,7 +296,7 @@ Parameter TestFileParser::parseParameter()
 
 			string parsed = parseString();
 			parameter.rawString += "hex\"" + parsed + "\"";
-			parameter.rawBytes = BytesUtils().convertHexNumber(parsed);
+			parameter.rawBytes = BytesUtils::convertHexNumber(parsed);
 			parameter.abiType = ABIType{
 				ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()
 			};
@@ -309,12 +309,12 @@ Parameter TestFileParser::parseParameter()
 				throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
 
 			string parsed = parseString();
-			parameter.abiType = {ABIType::String, ABIType::AlignLeft, parsed.size()};
+			parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, parsed.size()};
 			parameter.rawString += "\"" + parsed + "\"";
-			parameter.rawBytes = BytesUtils().applyAlign(
+			parameter.rawBytes = BytesUtils::applyAlign(
 				Parameter::Alignment::Left,
 				parameter.abiType,
-				BytesUtils().convertString(parsed)
+				BytesUtils::convertString(parsed)
 			);
 		}
 		else if (accept(Token::Number))
@@ -327,10 +327,10 @@ Parameter TestFileParser::parseParameter()
 			if (isSigned)
 				parsed = "-" + parsed;
 
-			parameter.rawBytes = BytesUtils().applyAlign(
+			parameter.rawBytes = BytesUtils::applyAlign(
 				parameter.alignment,
 				parameter.abiType,
-				BytesUtils().convertNumber(parsed)
+				BytesUtils::convertNumber(parsed)
 			);
 		}
 		else if (accept(Token::Failure, true))
