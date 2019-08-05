@@ -21,6 +21,7 @@ Compiler Features:
 Bugfixes:
  * SMTChecker: Fix internal error when inlining functions that contain tuple expressions.
  * SMTChecker: Fix pointer knowledge erasing in loops.
+ * SMTChecker: Fix internal error when using compound bitwise assignment operators inside branches.
  * View/Pure Checker: Properly detect state variable access through base class.
  * Yul analyzer: Check availability of data objects already in analysis phase.
  * Yul Optimizer: Fix an issue where memory-accessing code was removed even though ``msize`` was used in the program.
