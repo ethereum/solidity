@@ -30,11 +30,6 @@ inline bool isHexDigit(char c)
 		('A' <= c && c <= 'F');
 }
 
-inline bool isLineTerminator(char c)
-{
-	return c == '\n';
-}
-
 inline bool isWhiteSpace(char c)
 {
 	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
