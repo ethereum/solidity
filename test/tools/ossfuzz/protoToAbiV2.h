@@ -26,11 +26,42 @@
  *          if (returnVal != 0)
  *              return returnVal;
  *          // Since the return codes in the public and external coder functions are identical
- *          // we offset error code by a fixed amount (1000) for differentiation.
- *          return (uint(1000) + this.coder_external(x_0, x_1));
+ *          // we offset error code by a fixed amount (200000) for differentiation.
+ *          returnVal = this.coder_external(x_0, x_1);
+ *          if (returnVal != 0)
+ *              return 200000 + returnVal;
+ *          // Encode parameters
+ *          bytes memory argumentEncoding = abi.encode(<parameter_names>);
+ *          returnVal = checkEncodedCall(this.coder_public.selector, argumentEncoding, <invalidLengthFuzz>);
+ *          // Check if calls to coder_public meet expectations for correctly/incorrectly encoded data.
+ *          if (returnVal != 0)
+ *              return returnVal;
+ *
+ *          returnVal = checkEncodedCall(this.coder_external.selector, argumentEncoding, <invalidLengthFuzz>);
+ *          // Check if calls to coder_external meet expectations for correctly/incorrectly encoded data.
+ *          // Offset return value to distinguish between failures originating from coder_public and coder_external.
+ *          if (returnVal != 0)
+ *              return uint(200000) + returnVal;
+ *          // Return zero if all checks pass.
+ *          return 0;
  *      }
  *
- *      // Utility functions
+ *      /// Accepts function selector, correct argument encoding, and an invalid encoding length as input.
+ *      /// Returns a non-zero value if either call with correct encoding fails or call with incorrect encoding
+ *      /// succeeds. Returns zero if both calls meet expectation.
+ *      function checkEncodedCall(bytes4 funcSelector, bytes memory argumentEncoding, uint invalidLengthFuzz)
+ *          public returns (uint) {
+ *          ...
+ *      }
+ *
+ *      /// Accepts function selector, correct argument encoding, and length of invalid encoding and returns
+ *      /// the correct and incorrect abi encoding for calling the function specified by the function selector.
+ *      function createEncoding(bytes4 funcSelector, bytes memory argumentEncoding, uint invalidLengthFuzz)
+ *          internal pure returns (bytes memory, bytes memory) {
+ *          ...
+ *      }
+ *
+ *      /// Compares two dynamically sized bytes arrays for equality.
  *      function bytesCompare(bytes memory a, bytes memory b) internal pure returns (bool) {
  *          ...
  *      }
@@ -48,7 +79,7 @@
  *      // External function that is called by test() function. Accepts one or more arguments and returns
  *      // a uint value (zero if abi en/decoding was successful, non-zero otherwise)
  *      function coder_external(string calldata c_0, bytes calldata c_1) external pure returns (uint) {
- *              if (!stringCompare(c_0, "044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d"))
+ *              if (!bytesCompare(bytes(c_0), "044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d"))
  *  		        return 1;
  *              if (!bytesCompare(c_1, "1"))
  *                  return 2;
@@ -375,7 +406,7 @@ private:
 	/// Monotonically increasing return value for error reporting
 	unsigned m_returnValue;
 	static unsigned constexpr s_maxArrayLength = 4;
-	static unsigned constexpr s_maxArrayDimensions = 10;
+	static unsigned constexpr s_maxArrayDimensions = 4;
 	/// Prefixes for declared and parameterized variable names
 	static auto constexpr s_varNamePrefix = "x_";
 	static auto constexpr s_paramNamePrefix = "c_";

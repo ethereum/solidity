@@ -38,7 +38,7 @@ static size_t const expectedOutputLength = 32;
 /// Expected output value is decimal 1000 or hex 03E8
 static uint8_t const expectedOutput[expectedOutputLength] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, u'\x03', u'\xe8'
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /// Compares the contents of the memory address pointed to

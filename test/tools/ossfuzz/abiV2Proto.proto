@@ -102,6 +102,8 @@ message VarDecl {
 
 message TestFunction {
     required VarDecl local_vars = 1;
+    // Length of invalid encoding
+    required uint64 invalid_encoding_length = 2;
 }
 
 message Contract {
