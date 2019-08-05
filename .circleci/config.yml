@@ -183,6 +183,22 @@ jobs:
           name: Check spelling
           command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
 
+  chk_docs_examples:
+    docker:
+      - image: circleci/node
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: JS deps
+          command: sudo npm install -g solhint
+      - run:
+          name: Test Docs examples
+          command: ./test/docsCodeStyle.sh
+
   chk_coding_style:
     docker:
       - image: buildpack-deps:disco
@@ -586,6 +602,7 @@ workflows:
       # basic checks
       - chk_spelling: *workflow_trigger_on_tags
       - chk_coding_style: *workflow_trigger_on_tags
+      - chk_docs_examples: *workflow_trigger_on_tags
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
 
@@ -646,4 +663,3 @@ workflows:
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
       - t_ubu_codecov: *workflow_ubuntu1904_codecov
-
