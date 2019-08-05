@@ -59,8 +59,10 @@ def extract_docs_cases(path):
 def write_cases(f, tests):
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
-        open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(), cleaned_filename), 'wb').write(test)
-
+        # When code examples are extracted they indented by 8 spaces, which violates the style guide,
+        # so before checking remove 4 spaces from each line.
+        remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
+        open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(), cleaned_filename), 'wb').write(remainder)
 
 def extract_and_write(f, path):
         if docs:

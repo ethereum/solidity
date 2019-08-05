@@ -308,6 +308,7 @@ SOLTMPDIR=$(mktemp -d)
     set -e
     cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+
     for f in *.sol
     do
         # The contributors guide uses syntax tests, but we cannot
@@ -317,6 +318,7 @@ SOLTMPDIR=$(mktemp -d)
             continue
         fi
         echo "$f"
+
         opts=''
         # We expect errors if explicitly stated, or if imports
         # are used (in the style guide)
