@@ -643,13 +643,15 @@ void SMTEncoder::endVisit(Return const& _return)
 		auto returnParams = m_callStack.back().first->returnParameters();
 		if (returnParams.size() > 1)
 		{
-			auto tuple = dynamic_cast<TupleExpression const*>(_return.expression());
-			solAssert(tuple, "");
-			auto const& components = tuple->components();
+			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(*_return.expression()));
+			solAssert(symbTuple, "");
+			auto const& components = symbTuple->components();
 			solAssert(components.size() == returnParams.size(), "");
 			for (unsigned i = 0; i < returnParams.size(); ++i)
-				if (components.at(i))
-					m_context.addAssertion(expr(*components.at(i)) == m_context.newValue(*returnParams.at(i)));
+			{
+				solAssert(components.at(i), "");
+				m_context.addAssertion(components.at(i)->currentValue() == m_context.newValue(*returnParams.at(i)));
+			}
 		}
 		else if (returnParams.size() == 1)
 			m_context.addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
@@ -1410,4 +1412,33 @@ FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall cons
 		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
 
 	return funDef;
+}
+
+void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
+{
+	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
+	if (!funDef)
+		return;
+
+	auto const& returnParams = funDef->returnParameters();
+	for (auto param: returnParams)
+		createVariable(*param);
+
+	if (returnParams.size() > 1)
+	{
+		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
+		solAssert(symbTuple, "");
+		if (symbTuple->components().empty())
+		{
+			vector<shared_ptr<smt::SymbolicVariable>> components;
+			for (auto param: returnParams)
+			{
+				solAssert(m_context.knownVariable(*param), "");
+				components.push_back(m_context.variable(*param));
+			}
+			symbTuple->setComponents(move(components));
+		}
+	}
+	else if (returnParams.size() == 1)
+		defineExpr(_funCall, currentValue(*returnParams.front()));
 }

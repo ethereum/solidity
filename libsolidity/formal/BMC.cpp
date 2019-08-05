@@ -426,21 +426,7 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 			initFunction(*funDef);
 		funDef->accept(*this);
 
-		auto const& returnParams = funDef->returnParameters();
-		if (returnParams.size() > 1)
-		{
-			vector<shared_ptr<smt::SymbolicVariable>> components;
-			for (auto param: returnParams)
-			{
-				solAssert(m_context.variable(*param), "");
-				components.push_back(m_context.variable(*param));
-			}
-			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
-			solAssert(symbTuple, "");
-			symbTuple->setComponents(move(components));
-		}
-		else if (returnParams.size() == 1)
-			defineExpr(_funCall, currentValue(*returnParams.front()));
+		createReturnedExpressions(_funCall);
 	}
 }
 

@@ -208,6 +208,10 @@ protected:
 	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
+	/// Creates symbolic expressions for the returned values
+	/// and set them as the components of the symbolic tuple.
+	void createReturnedExpressions(FunctionCall const& _funCall);
+
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
 

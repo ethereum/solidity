@@ -123,6 +123,8 @@ void CHC::endVisit(FunctionCall const& _funCall)
 	}
 
 	SMTEncoder::endVisit(_funCall);
+
+	createReturnedExpressions(_funCall);
 }
 
 void CHC::visitAssert(FunctionCall const&)
