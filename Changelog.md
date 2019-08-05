@@ -18,6 +18,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * ABI decoder: Ensure that decoded arrays always point to distinct memory locations.
  * SMTChecker: Fix internal error when inlining functions that contain tuple expressions.
  * SMTChecker: Fix pointer knowledge erasing in loops.
  * View/Pure Checker: Properly detect state variable access through base class.

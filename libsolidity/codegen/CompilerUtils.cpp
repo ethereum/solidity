@@ -282,6 +282,15 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 				{
 					// compute data pointer
 					m_context << Instruction::DUP1 << Instruction::MLOAD;
+					// stack: v1 v2 ... v(k-1) input_end base_offset current_offset data_offset
+
+					fetchFreeMemoryPointer();
+					// stack: v1 v2 ... v(k-1) input_end base_offset current_offset data_offset dstmem
+					moveIntoStack(4);
+					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset data_offset
+					m_context << Instruction::DUP5;
+					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset data_offset dstmem
+
 					// Check that the data pointer is valid and that length times
 					// item size is still inside the range.
 					Whiskers templ(R"({
@@ -294,11 +303,17 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 							gt(array_length, 0x100000000),
 							gt(add(array_data_start, mul(array_length, <item_size>)), input_end)
 						) { revert(0, 0) }
+						mstore(dst, array_length)
+						dst := add(dst, 0x20)
 					})");
 					templ("item_size", to_string(arrayType.calldataStride()));
-					m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr"});
-					// stack: v1 v2 ... v(k-1) input_end base_offset current_offset v(k)
-					moveIntoStack(3);
+					m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr", "dst"});
+					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset data_ptr dstdata
+					m_context << Instruction::SWAP1;
+					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset dstdata data_ptr
+					ArrayUtils(m_context).copyArrayToMemory(arrayType, true);
+					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset mem_end
+					storeFreeMemoryPointer();
 					m_context << u256(0x20) << Instruction::ADD;
 				}
 				else
