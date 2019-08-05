@@ -3,9 +3,9 @@ pragma experimental SMTChecker;
 contract C
 {
 	mapping (uint => uint) singleMap;
-	mapping (uint => uint)[] severalMaps;
-	mapping (uint => uint8)[] severalMaps8;
-	mapping (uint => uint)[][] severalMaps3d;
+	mapping (uint => uint)[2] severalMaps;
+	mapping (uint => uint8)[2] severalMaps8;
+	mapping (uint => uint)[2][2] severalMaps3d;
 	function f(mapping (uint => uint) storage map) internal {
 		require(severalMaps[0][0] == 42);
 		require(severalMaps8[0][0] == 42);
@@ -20,5 +20,5 @@ contract C
 	}
 }
 // ----
-// Warning: (451-482): Assertion violation happens here
-// Warning: (665-701): Assertion violation happens here
+// Warning: (455-486): Assertion violation happens here
+// Warning: (669-705): Assertion violation happens here

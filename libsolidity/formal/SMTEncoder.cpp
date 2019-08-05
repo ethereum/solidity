@@ -759,6 +759,11 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 			m_context.resetVariables([&](VariableDeclaration const& _var) {
 				if (_var == *varDecl)
 					return false;
+
+				// If both are state variables no need to clear knowledge.
+				if (_var.isStateVariable() && varDecl->isStateVariable())
+					return false;
+
 				TypePointer prefix = _var.type();
 				TypePointer originalType = typeWithoutPointer(varDecl->type());
 				while (
