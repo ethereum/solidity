@@ -35,10 +35,10 @@ namespace
 {
 /// Test function returns a uint256 value
 static size_t const expectedOutputLength = 32;
-/// Expected output value is decimal 1000 or hex 03E8
+/// Expected output value is decimal 0
 static uint8_t const expectedOutput[expectedOutputLength] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, u'\x03', u'\xe8'
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /// Compares the contents of the memory address pointed to
@@ -123,10 +123,15 @@ DEFINE_PROTO_FUZZER(Contract const& _input)
 		// We always call the function test() that is defined in proto converter template
 		hexEncodedInput = methodIdentifiers["test()"].asString();
 	}
-	// Ignore compilation failures
-	catch (Exception const&)
+	// Ignore stack too deep errors during compilation
+	catch (eth::StackTooDeepException const&)
 	{
 		return;
+	}
+	// Do not ignore other compilation failures
+	catch (Exception const&)
+	{
+		throw;
 	}
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_CODE"))
