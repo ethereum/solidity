@@ -204,12 +204,20 @@ std::string ProtoConverter::addressValueAsString(unsigned _counter)
 		.render();
 }
 
-std::string ProtoConverter::fixedByteValueAsString(unsigned _width, unsigned _counter)
+/// Returns a hex literal if _isHexLiteral is true, a string literal otherwise.
+std::string ProtoConverter::hexValueAsString(
+	unsigned _width,
+	unsigned _counter,
+	bool _isHexLiteral
+)
 {
-	solAssert(
-		(_width >= 1 && _width <= 32),
-		"Proto ABIv2 Fuzzer: Fixed byte width is not between 1--32"
-	);
+	// If _width is zero (possible via a call from ...), then simply return an
+	// empty (hex) string
+	if (_width == 0)
+		return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix>"")")
+			("addHexPrefix", _isHexLiteral)
+			.render();
+
 	// Masked value must contain twice the number of nibble "f"'s as _width
 	unsigned numMaskNibbles = _width * 2;
 	// Start position of substring equals totalHexStringLength - numMaskNibbles
@@ -225,9 +233,19 @@ std::string ProtoConverter::fixedByteValueAsString(unsigned _width, unsigned _co
 	// and replaces "0x" with "hex\"...\"" string.
 	// This is needed because solidity interprets a 20-byte 0x prefixed hex literal as an address
 	// payable type.
-	return Whiskers(R"(hex"<value>")")
+	return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix>"<value>")")
+		("addHexPrefix", _isHexLiteral)
 		("value", maskUnsignedIntToHex(_counter, numMaskNibbles).substr(startPos, numMaskNibbles))
 		.render();
+}
+
+std::string ProtoConverter::fixedByteValueAsString(unsigned _width, unsigned _counter)
+{
+	solAssert(
+		(_width >= 1 && _width <= 32),
+		"Proto ABIv2 Fuzzer: Fixed byte width is not between 1--32"
+	);
+	return hexValueAsString(_width, _counter, /*isHexLiteral=*/true);
 }
 
 std::string ProtoConverter::integerValueAsString(bool _sign, unsigned _width, unsigned _counter)
@@ -314,10 +332,14 @@ void ProtoConverter::visit(ValueType const& _x)
 
 void ProtoConverter::visit(DynamicByteArrayType const& _x)
 {
+	bool isBytes = _x.type() == DynamicByteArrayType::BYTES;
 	visitType(
-		(_x.type() == DynamicByteArrayType::BYTES) ? DataType::BYTES : DataType::STRING,
+		isBytes ? DataType::BYTES : DataType::STRING,
 		bytesArrayTypeAsString(_x),
-		bytesArrayValueAsString(getNextCounter())
+		bytesArrayValueAsString(
+			getNextCounter(),
+			isBytes
+		)
 	);
 }
 
@@ -367,7 +389,10 @@ std::string ProtoConverter::getValueByBaseType(ArrayType const& _x)
 	case ArrayType::kBoolty:
 		return boolValueAsString(getNextCounter());
 	case ArrayType::kDynbytesty:
-		return bytesArrayValueAsString(getNextCounter());
+		return bytesArrayValueAsString(
+			getNextCounter(),
+			_x.dynbytesty().type() == DynamicByteArrayType::BYTES
+		);
 	// TODO: Implement structs.
 	case ArrayType::kStty:
 	case ArrayType::BASE_TYPE_ONEOF_NOT_SET:
@@ -695,6 +720,7 @@ void ProtoConverter::visit(TestFunction const& _x)
 		if (returnVal != 0)
 			return uint(200000) + returnVal;
 
+		<?atLeastOneVar>
 		bytes memory argumentEncoding = abi.encode(<parameter_names>);
 
 		returnVal = checkEncodedCall(this.coder_public.selector, argumentEncoding, <invalidLengthFuzz>);
@@ -704,11 +730,13 @@ void ProtoConverter::visit(TestFunction const& _x)
 		returnVal = checkEncodedCall(this.coder_external.selector, argumentEncoding, <invalidLengthFuzz>);
 		if (returnVal != 0)
 			return uint(200000) + returnVal;
+		</atLeastOneVar>
 		return 0;
 	}
 	)")
 	("parameter_names", dev::suffixedVariableNameList(s_varNamePrefix, 0, m_varCounter))
 	("invalidLengthFuzz", std::to_string(_x.invalid_encoding_length()))
+	("atLeastOneVar", m_varCounter > 0)
 	.render();
 }
 
@@ -730,8 +758,12 @@ void ProtoConverter::writeHelperFunctions()
 		internal pure returns (bytes memory, bytes memory)
 	{
 		bytes memory validEncoding = new bytes(4 + argumentEncoding.length);
-		// Ensure that invalidEncoding crops at least one and at most all bytes from correct encoding.
-		uint invalidLength = invalidLengthFuzz % argumentEncoding.length;
+		// Ensure that invalidEncoding crops at least 32 bytes (padding length
+		// is at most 31 bytes) since shorter bytes/string values can lead to
+		// successful decoding when fewer than 32 bytes have been cropped in
+		// the worst case. In other words,
+		// 0 <= invalidLength <= argumentEncoding.length - 32
+		uint invalidLength = invalidLengthFuzz % (argumentEncoding.length - 31);
 		bytes memory invalidEncoding = new bytes(4 + invalidLength);
 		for (uint i = 0; i < 4; i++)
 			validEncoding[i] = invalidEncoding[i] = funcSelector[i];
