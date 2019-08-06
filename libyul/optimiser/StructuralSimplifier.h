@@ -37,7 +37,7 @@ namespace yul
 class StructuralSimplifier: public DataFlowAnalyzer
 {
 public:
-	explicit StructuralSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	explicit StructuralSimplifier(Dialect const& _dialect, Block const& _ast): DataFlowAnalyzer(_dialect, _ast) {}
 
 	using DataFlowAnalyzer::operator();
 	void operator()(Block& _block) override;

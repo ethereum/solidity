@@ -21,7 +21,7 @@
 
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
@@ -206,7 +206,7 @@ void RedundantAssignEliminator::operator()(Block const& _block)
 
 void RedundantAssignEliminator::run(Dialect const& _dialect, Block& _ast)
 {
-	RedundantAssignEliminator rae{_dialect};
+	RedundantAssignEliminator rae{_dialect, _ast};
 	rae(_ast);
 
 	AssignmentRemover remover{rae.m_pendingRemovals};
@@ -284,7 +284,7 @@ void RedundantAssignEliminator::finalize(
 	{
 		State const state = assignment.second == State::Undecided ? _finalState : assignment.second;
 
-		if (state == State::Unused && SideEffectsCollector{*m_dialect, *assignment.first->value}.movable())
+		if (state == State::Unused && m_sideEffectsCollector.sideEffectsOf(*assignment.first->value).movable())
 			// TODO the only point where we actually need this
 			// to be a set is for the for loop
 			m_pendingRemovals.insert(assignment.first);

@@ -26,7 +26,7 @@
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/Metrics.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 
 #include <libyul/CompilabilityChecker.h>
 
@@ -46,7 +46,7 @@ namespace
 class RematCandidateSelector: public DataFlowAnalyzer
 {
 public:
-	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	explicit RematCandidateSelector(Dialect const& _dialect, Block const& _ast): DataFlowAnalyzer(_dialect, _ast) {}
 
 	/// @returns a set of tuples of rematerialisation costs, variable to rematerialise
 	/// and variables that occur in its expression.
@@ -115,12 +115,13 @@ public:
 template <typename ASTNode>
 void eliminateVariables(
 	Dialect const& _dialect,
+	Block const& _ast,
 	ASTNode& _node,
 	size_t _numVariables,
 	bool _allowMSizeOptimization
 )
 {
-	RematCandidateSelector selector{_dialect};
+	RematCandidateSelector selector{_dialect, _ast};
 	selector(_node);
 
 	// Select at most _numVariables
@@ -147,7 +148,7 @@ void eliminateVariables(
 		varsToEliminate.insert(get<1>(costs));
 	}
 
-	Rematerialiser::run(_dialect, _node, std::move(varsToEliminate));
+	Rematerialiser::run(_dialect, _ast, _node, std::move(varsToEliminate));
 	UnusedPruner::runUntilStabilised(_dialect, _node, _allowMSizeOptimization);
 }
 
@@ -165,7 +166,7 @@ bool StackCompressor::run(
 		_object.code->statements.size() > 0 && _object.code->statements.at(0).type() == typeid(Block),
 		"Need to run the function grouper before the stack compressor."
 	);
-	bool allowMSizeOptimzation = !SideEffectsCollector(_dialect, *_object.code).containsMSize();
+	bool allowMSizeOptimzation = !SideEffectsCollector(_dialect, *_object.code).sideEffectsOf(*_object.code).containsMSize();
 	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 	{
 		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _object, _optimizeStackAllocation);
@@ -177,6 +178,7 @@ bool StackCompressor::run(
 			yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
 			eliminateVariables(
 				_dialect,
+				*_object.code,
 				boost::get<Block>(_object.code->statements.at(0)),
 				stackSurplus.at({}),
 				allowMSizeOptimzation
@@ -192,6 +194,7 @@ bool StackCompressor::run(
 			yulAssert(stackSurplus.at(fun.name) > 0, "Invalid surplus value.");
 			eliminateVariables(
 				_dialect,
+				*_object.code,
 				fun,
 				stackSurplus.at(fun.name),
 				allowMSizeOptimzation

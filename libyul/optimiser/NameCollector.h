@@ -61,10 +61,13 @@ public:
 	static std::map<YulString, size_t> countReferences(Block const& _block);
 	static std::map<YulString, size_t> countReferences(FunctionDefinition const& _function);
 	static std::map<YulString, size_t> countReferences(Expression const& _expression);
+	static std::map<YulString, size_t> countVariableReferences(Expression const& _expression);
 
 	std::map<YulString, size_t> const& references() const { return m_references; }
+	std::map<YulString, size_t> const& variableReferences() const { return m_variableReferences; }
 private:
 	std::map<YulString, size_t> m_references;
+	std::map<YulString, size_t> m_variableReferences;
 };
 
 /**

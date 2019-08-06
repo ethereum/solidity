@@ -23,6 +23,7 @@
 #include <libyul/AsmDataForward.h>
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libyul/optimiser/SideEffects.h>
 
 namespace yul
 {
@@ -46,7 +47,8 @@ public:
 
 	static void run(Dialect const& _dialect, Block& _ast);
 private:
-	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	explicit ExpressionSimplifier(Dialect const& _dialect, Block& _ast):
+		DataFlowAnalyzer(_dialect, _ast) {}
 };
 
 }

@@ -45,6 +45,7 @@ void NameCollector::operator ()(FunctionDefinition const& _funDef)
 void ReferencesCounter::operator()(Identifier const& _identifier)
 {
 	++m_references[_identifier.name];
+	++m_variableReferences[_identifier.name];
 }
 
 void ReferencesCounter::operator()(FunctionCall const& _funCall)
@@ -72,6 +73,13 @@ map<YulString, size_t> ReferencesCounter::countReferences(Expression const& _exp
 	ReferencesCounter counter;
 	counter.visit(_expression);
 	return counter.references();
+}
+
+map<YulString, size_t> ReferencesCounter::countVariableReferences(Expression const& _expression)
+{
+	ReferencesCounter counter;
+	counter.visit(_expression);
+	return counter.variableReferences();
 }
 
 void Assignments::operator()(Assignment const& _assignment)

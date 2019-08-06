@@ -21,7 +21,7 @@
 #include <libyul/optimiser/ExpressionSimplifier.h>
 
 #include <libyul/optimiser/SimplificationRules.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/AsmData.h>
 
@@ -43,7 +43,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 		// so if the value of the variable is not movable, the expression that references
 		// the variable still is.
 
-		if (match->removesNonConstants && !SideEffectsCollector(m_dialect, _expression).movable())
+		if (match->removesNonConstants && !m_sideEffectsCollector.sideEffectsOf(_expression).movable())
 			return;
 		_expression = match->action().toExpression(locationOf(_expression));
 	}
@@ -51,5 +51,5 @@ void ExpressionSimplifier::visit(Expression& _expression)
 
 void ExpressionSimplifier::run(Dialect const& _dialect, Block& _ast)
 {
-	ExpressionSimplifier{_dialect}(_ast);
+	ExpressionSimplifier{_dialect, _ast}(_ast);
 }

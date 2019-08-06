@@ -21,7 +21,7 @@
 #include <libyul/optimiser/SimplificationRules.h>
 
 #include <libyul/optimiser/ASTCopier.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmData.h>
@@ -187,7 +187,7 @@ bool Pattern::matches(
 			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
 			return
 				SyntacticallyEqual{}(*firstMatch, _expr) &&
-				SideEffectsCollector(_dialect, _expr).movable();
+				SideEffectsCollector(_dialect).sideEffectsOf(_expr).movable(); // This will throw if _expr contains user defined function call
 		}
 		else if (m_kind == PatternKind::Any)
 			(*m_matchGroups)[m_matchGroup] = &_expr;

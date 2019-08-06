@@ -151,7 +151,7 @@ public:
 				ForLoopConditionIntoBody{}(*m_ast);
 				break;
 			case 'c':
-				(CommonSubexpressionEliminator{m_dialect})(*m_ast);
+				(CommonSubexpressionEliminator{m_dialect, *m_ast})(*m_ast);
 				break;
 			case 'd':
 				(VarDeclInitializer{})(*m_ast);
@@ -181,7 +181,7 @@ public:
 				ExpressionSimplifier::run(m_dialect, *m_ast);
 				break;
 			case 't':
-				(StructuralSimplifier{m_dialect})(*m_ast);
+				(StructuralSimplifier{m_dialect, *m_ast})(*m_ast);
 				break;
 			case 'n':
 				(ControlFlowSimplifier{m_dialect})(*m_ast);
@@ -199,7 +199,7 @@ public:
 				RedundantAssignEliminator::run(m_dialect, *m_ast);
 				break;
 			case 'm':
-				Rematerialiser::run(m_dialect, *m_ast);
+				Rematerialiser::run(m_dialect, *m_ast, *m_ast);
 				break;
 			case 'v':
 				EquivalentFunctionCombiner::run(*m_ast);

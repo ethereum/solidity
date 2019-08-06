@@ -21,7 +21,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 
 #include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
@@ -88,7 +88,8 @@ void UnusedPruner::operator()(Block& _block)
 			{
 				if (!varDecl.value)
 					statement = Block{std::move(varDecl.location), {}};
-				else if (SideEffectsCollector(m_dialect, *varDecl.value).sideEffectFree(m_allowMSizeOptimization))
+				// TODO: This will throw if user defined functions not in block
+				else if (SideEffectsCollector(m_dialect, _block).sideEffectsOf(*varDecl.value).sideEffectFree(m_allowMSizeOptimization))
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.location), {}};
@@ -104,7 +105,8 @@ void UnusedPruner::operator()(Block& _block)
 		else if (statement.type() == typeid(ExpressionStatement))
 		{
 			ExpressionStatement& exprStmt = boost::get<ExpressionStatement>(statement);
-			if (SideEffectsCollector(m_dialect, exprStmt.expression).sideEffectFree(m_allowMSizeOptimization))
+			// TODO: This will throw if user defined functions not in block
+			if (SideEffectsCollector(m_dialect, _block).sideEffectsOf(exprStmt.expression).sideEffectFree(m_allowMSizeOptimization))
 			{
 				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));
 				statement = Block{std::move(exprStmt.location), {}};
@@ -138,7 +140,7 @@ void UnusedPruner::runUntilStabilised(
 	set<YulString> const& _externallyUsedFunctions
 )
 {
-	bool allowMSizeOptimization = !SideEffectsCollector(_dialect, _ast).containsMSize();
+	bool allowMSizeOptimization = !SideEffectsCollector(_dialect, _ast).sideEffectsOf(_ast).containsMSize();
 	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, _externallyUsedFunctions);
 }
 

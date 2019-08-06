@@ -149,7 +149,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "commonSubexpressionEliminator")
 	{
 		disambiguate();
-		(CommonSubexpressionEliminator{*m_dialect})(*m_ast);
+		(CommonSubexpressionEliminator{*m_dialect, *m_ast})(*m_ast);
 	}
 	else if (m_optimizerStep == "expressionSplitter")
 	{
@@ -203,7 +203,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "rematerialiser")
 	{
 		disambiguate();
-		Rematerialiser::run(*m_dialect, *m_ast);
+		Rematerialiser::run(*m_dialect, *m_ast, *m_ast);
 	}
 	else if (m_optimizerStep == "expressionSimplifier")
 	{
@@ -218,7 +218,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
 		ForLoopInitRewriter{}(*m_ast);
-		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		CommonSubexpressionEliminator{*m_dialect, *m_ast}(*m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 		DeadCodeEliminator{*m_dialect}(*m_ast);
@@ -260,7 +260,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		ForLoopInitRewriter{}(*m_ast);
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
-		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		CommonSubexpressionEliminator{*m_dialect, *m_ast}(*m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 
 		LoadResolver::run(*m_dialect, *m_ast);
@@ -277,7 +277,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "structuralSimplifier")
 	{
 		disambiguate();
-		StructuralSimplifier{*m_dialect}(*m_ast);
+		StructuralSimplifier{*m_dialect, *m_ast}(*m_ast);
 	}
 	else if (m_optimizerStep == "equivalentFunctionCombiner")
 	{
@@ -298,7 +298,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
 		// reverse SSA
 		SSAReverser::run(*m_ast);
-		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		CommonSubexpressionEliminator{*m_dialect, *m_ast}(*m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "stackCompressor")

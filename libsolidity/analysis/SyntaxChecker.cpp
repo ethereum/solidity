@@ -21,7 +21,7 @@
 #include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libsolidity/interface/Version.h>
 
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/AsmData.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -262,10 +262,13 @@ bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 	if (!m_useYulOptimizer)
 		return false;
 
-	if (yul::SideEffectsCollector(
-		_inlineAssembly.dialect(),
-		_inlineAssembly.operations()
-	).containsMSize())
+	if (
+		// TODO: This should be pure syntatic instead of ignoring code inside function definitions...
+		yul::SideEffectsCollector(
+			_inlineAssembly.dialect(),
+			_inlineAssembly.operations()
+		).sideEffectsOf(_inlineAssembly.operations()).containsMSize()
+	)
 		m_errorReporter.syntaxError(
 			_inlineAssembly.location(),
 			"The msize instruction cannot be used when the Yul optimizer is activated because "

@@ -42,9 +42,9 @@ public:
 	static void run(Dialect const& _dialect, Block& _ast);
 
 private:
-	LoadResolver(Dialect const& _dialect, bool _optimizeMLoad):
-		DataFlowAnalyzer(_dialect),
-		m_optimizeMLoad(_optimizeMLoad)
+	LoadResolver(Dialect const& _dialect, Block const& _ast):
+		DataFlowAnalyzer(_dialect, _ast),
+		m_optimizeMLoad(!m_sideEffectsCollector.sideEffectsOf(_ast).containsMSize())
 	{}
 
 protected:

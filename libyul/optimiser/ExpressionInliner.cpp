@@ -24,7 +24,7 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Substitution.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 
 #include <libyul/AsmData.h>
 
@@ -62,7 +62,7 @@ void ExpressionInliner::visit(Expression& _expression)
 			Expression const& arg = funCall.arguments[i];
 			YulString paraName = fun.parameters[i].name;
 
-			if (!SideEffectsCollector(m_dialect, arg).movable())
+			if (!m_sideEffectsCollector.sideEffectsOf(arg).movable())
 				return;
 
 			size_t refs = ReferencesCounter::countReferences(fun.body)[paraName];

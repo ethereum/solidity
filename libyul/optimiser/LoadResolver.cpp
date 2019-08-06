@@ -22,7 +22,7 @@
 #include <libyul/optimiser/LoadResolver.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/AsmData.h>
 
 using namespace std;
@@ -31,8 +31,7 @@ using namespace yul;
 
 void LoadResolver::run(Dialect const& _dialect, Block& _ast)
 {
-	bool containsMSize = SideEffectsCollector(_dialect, _ast).containsMSize();
-	LoadResolver{_dialect, !containsMSize}(_ast);
+	LoadResolver{_dialect, _ast}(_ast);
 }
 
 void LoadResolver::visit(Expression& _e)

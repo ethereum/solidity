@@ -30,41 +30,52 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void Rematerialiser::run(Dialect const& _dialect, Block& _ast, set<YulString> _varsToAlwaysRematerialize)
+void Rematerialiser::run(
+	Dialect const& _dialect,
+	Block const& _astContainsUserDefinedFunctions,
+	Block& _ast,
+	set<YulString> _varsToAlwaysRematerialize
+)
 {
-	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize)}(_ast);
+	Rematerialiser{_dialect, _astContainsUserDefinedFunctions, _ast, std::move(_varsToAlwaysRematerialize)}(_ast);
 }
+
 
 void Rematerialiser::run(
 	Dialect const& _dialect,
+	Block const& _ast,
 	FunctionDefinition& _function,
 	set<YulString> _varsToAlwaysRematerialize
 )
 {
-	Rematerialiser{_dialect, _function, std::move(_varsToAlwaysRematerialize)}(_function);
+	Rematerialiser{_dialect, _ast, _function, std::move(_varsToAlwaysRematerialize)}(_function);
 }
 
 Rematerialiser::Rematerialiser(
 	Dialect const& _dialect,
+	Block const& _astContainsUserDefinedFunctions,
 	Block& _ast,
 	set<YulString> _varsToAlwaysRematerialize
 ):
-	DataFlowAnalyzer(_dialect),
+	DataFlowAnalyzer(_dialect, _astContainsUserDefinedFunctions),
 	m_referenceCounts(ReferencesCounter::countReferences(_ast)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize))
 {
 }
 
+
 Rematerialiser::Rematerialiser(
 	Dialect const& _dialect,
+	Block const& _ast,
 	FunctionDefinition& _function,
 	set<YulString> _varsToAlwaysRematerialize
 ):
-	DataFlowAnalyzer(_dialect),
+	DataFlowAnalyzer(_dialect, _ast),
 	m_referenceCounts(ReferencesCounter::countReferences(_function)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize))
 {
 }
+
 
 void Rematerialiser::visit(Expression& _e)
 {

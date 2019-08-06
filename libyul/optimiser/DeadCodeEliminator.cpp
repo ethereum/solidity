@@ -19,7 +19,8 @@
  */
 
 #include <libyul/optimiser/DeadCodeEliminator.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
+#include <libyul/optimiser/TerminationFinder.h>
 #include <libyul/AsmData.h>
 
 #include <libevmasm/SemanticInformation.h>

@@ -37,7 +37,7 @@ struct Dialect;
 class CommonSubexpressionEliminator: public DataFlowAnalyzer
 {
 public:
-	CommonSubexpressionEliminator(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	CommonSubexpressionEliminator(Dialect const& _dialect, Block const& _ast): DataFlowAnalyzer(_dialect, _ast) {}
 
 protected:
 	using ASTModifier::visit;

@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/KnowledgeBase.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/YulString.h>
 #include <libyul/AsmData.h>
 
@@ -67,9 +68,10 @@ struct Dialect;
 class DataFlowAnalyzer: public ASTModifier
 {
 public:
-	explicit DataFlowAnalyzer(Dialect const& _dialect):
+	explicit DataFlowAnalyzer(Dialect const& _dialect, Block const& _ast):
 		m_dialect(_dialect),
-		m_knowledgeBase(_dialect, m_value)
+		m_knowledgeBase(_dialect, m_value),
+		m_sideEffectsCollector(_dialect, _ast)
 	{}
 
 	using ASTModifier::operator();
@@ -147,6 +149,8 @@ protected:
 	Expression const m_zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
+
+	SideEffectsCollector m_sideEffectsCollector;
 };
 
 }

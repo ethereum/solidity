@@ -23,6 +23,7 @@
 
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/SideEffects.h>
 
 #include <map>
 #include <vector>
@@ -105,7 +106,9 @@ struct Dialect;
 class RedundantAssignEliminator: public ASTWalker
 {
 public:
-	explicit RedundantAssignEliminator(Dialect const& _dialect): m_dialect(&_dialect) {}
+	explicit RedundantAssignEliminator(Dialect const& _dialect, Block const& _ast):
+		m_dialect(&_dialect),
+		m_sideEffectsCollector(_dialect, _ast) {}
 	RedundantAssignEliminator() = delete;
 	RedundantAssignEliminator(RedundantAssignEliminator const&) = delete;
 	RedundantAssignEliminator& operator=(RedundantAssignEliminator const&) = delete;
@@ -174,6 +177,8 @@ private:
 	};
 	ForLoopInfo m_forLoopInfo;
 	size_t m_forLoopNestingDepth = 0;
+
+	SideEffectsCollector m_sideEffectsCollector;
 };
 
 class AssignmentRemover: public ASTModifier

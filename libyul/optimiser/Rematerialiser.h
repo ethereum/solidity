@@ -40,11 +40,15 @@ class Rematerialiser: public DataFlowAnalyzer
 public:
 	static void run(
 		Dialect const& _dialect,
+		Block const& _astContainsUserDefinedFunctions,
 		Block& _ast,
 		std::set<YulString> _varsToAlwaysRematerialize = {}
 	);
+
+
 	static void run(
 		Dialect const& _dialect,
+		Block const& _ast,
 		FunctionDefinition& _function,
 		std::set<YulString> _varsToAlwaysRematerialize = {}
 	);
@@ -52,11 +56,14 @@ public:
 protected:
 	Rematerialiser(
 		Dialect const& _dialect,
+		Block const& _astContainsUserDefinedFunctions,
 		Block& _ast,
 		std::set<YulString> _varsToAlwaysRematerialize = {}
 	);
+
 	Rematerialiser(
 		Dialect const& _dialect,
+		Block const& _ast,
 		FunctionDefinition& _function,
 		std::set<YulString> _varsToAlwaysRematerialize = {}
 	);

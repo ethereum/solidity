@@ -20,6 +20,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/AsmDataForward.h>
 
 #include <boost/variant.hpp>
@@ -49,7 +50,7 @@ class ExpressionInliner: public ASTModifier
 {
 public:
 	ExpressionInliner(Dialect const& _dialect, Block& _block):
-		m_block(_block), m_dialect(_dialect)
+		m_block(_block), m_dialect(_dialect), m_sideEffectsCollector(_dialect, _block)
 	{}
 
 	void run();
@@ -67,6 +68,8 @@ private:
 
 	Block& m_block;
 	Dialect const& m_dialect;
+
+	SideEffectsCollector m_sideEffectsCollector;
 };
 
 }

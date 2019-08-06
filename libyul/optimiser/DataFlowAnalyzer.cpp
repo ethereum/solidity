@@ -1,4 +1,4 @@
-/*(
+/*
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
 #include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SideEffects.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -213,9 +213,8 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 {
 	clearValues(_variables);
 
-	MovableChecker movableChecker{m_dialect};
 	if (_value)
-		movableChecker.visit(*_value);
+		; // TODO: rewrite this if-else
 	else
 		for (auto const& var: _variables)
 			m_value[var] = &m_zero;
@@ -225,11 +224,17 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		YulString name = *_variables.begin();
 		// Expression has to be movable and cannot contain a reference
 		// to the variable that will be assigned to.
-		if (movableChecker.movable() && !movableChecker.referencedVariables().count(name))
+		if (m_sideEffectsCollector.sideEffectsOf(*_value).movable() && !ReferencesCounter::countVariableReferences(*_value)[name])
 			m_value[name] = _value;
 	}
 
-	auto const& referencedVariables = movableChecker.referencedVariables();
+	set<YulString> referencedVariables;
+	if (_value)
+	{
+		// TODO: make sure this is correct (will countReferences return a map without 0 value?)
+		for (auto p: ReferencesCounter::countVariableReferences(*_value))
+			referencedVariables.insert(p.first);
+	}
 	for (auto const& name: _variables)
 	{
 		m_references.set(name, referencedVariables);
@@ -299,19 +304,19 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 {
-	SideEffectsCollector sideEffects(m_dialect, _block);
-	if (sideEffects.invalidatesStorage())
+	SideEffects s = m_sideEffectsCollector.sideEffectsOf(_block);
+	if (s.invalidatesStorage())
 		m_storage.clear();
-	if (sideEffects.invalidatesMemory())
+	if (s.invalidatesMemory())
 		m_memory.clear();
 }
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 {
-	SideEffectsCollector sideEffects(m_dialect, _expr);
-	if (sideEffects.invalidatesStorage())
+	SideEffects s = m_sideEffectsCollector.sideEffectsOf(_expr);
+	if (s.invalidatesStorage())
 		m_storage.clear();
-	if (sideEffects.invalidatesMemory())
+	if (s.invalidatesMemory())
 		m_memory.clear();
 }
 
