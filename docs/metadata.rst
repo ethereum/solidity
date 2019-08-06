@@ -107,6 +107,9 @@ explanatory purposes.
         userdoc: [ ... ],
         // Required: NatSpec developer documentation of the contract
         devdoc: [ ... ],
+        // Optional: Information whether the contract is a library or not.
+        // Possible values: ["library", "contract"]
+        contractKind: "library"
       }
     }
 

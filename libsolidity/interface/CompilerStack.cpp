@@ -1160,6 +1160,9 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	meta["output"]["userdoc"] = natspecUser(_contract);
 	meta["output"]["devdoc"] = natspecDev(_contract);
 
+	if (_contract.contract)
+		meta["output"]["contractKind"] = _contract.contract->isLibrary() ? "library" : "contract";
+
 	return jsonCompactPrint(meta);
 }
 

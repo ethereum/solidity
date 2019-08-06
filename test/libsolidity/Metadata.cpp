@@ -234,6 +234,50 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 	check(sourceCode, false);
 }
 
+BOOST_AUTO_TEST_CASE(metadata_library)
+{
+	CompilerStack compilerStack;
+	char const* sourceCodeA = R"(
+		pragma solidity >=0.0;
+		library A {
+			function g(function(uint) external returns (uint) x) public {}
+		}
+	)";
+	char const* sourceCodeB = R"(
+		pragma solidity >=0.0;
+		contract B {
+			function g(function(uint) external returns (uint) x) public {}
+		}
+	)";
+
+	compilerStack.setSources({
+		{"A", std::string(sourceCodeA)},
+		{"B", std::string(sourceCodeB)}
+	});
+	compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
+	compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+
+	std::string const& serialisedMetadataA = compilerStack.metadata("A");
+	std::string const& serialisedMetadataB = compilerStack.metadata("B");
+
+	auto check = [](std::string const& _serialisedMetadata, bool _isLibrary)
+	{
+		BOOST_CHECK(dev::test::isValidMetadata(_serialisedMetadata));
+		Json::Value metadata;
+		BOOST_REQUIRE(jsonParseStrict(_serialisedMetadata, metadata));
+		BOOST_CHECK(metadata.isMember("output"));
+		BOOST_CHECK(metadata["output"].isMember("contractKind"));
+		BOOST_CHECK_EQUAL(
+			metadata["output"]["contractKind"].asString(),
+			_isLibrary ? "library" : "contract"
+		);
+	};
+
+	check(serialisedMetadataA, true);
+	check(serialisedMetadataB, false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
