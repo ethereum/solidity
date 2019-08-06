@@ -268,13 +268,6 @@ private:
 		);
 	}
 
-	// String and bytes literals are derived by hashing a monotonically increasing
-	// counter and enclosing the said hash inside double quotes.
-	std::string bytesArrayValueAsString(unsigned _counter)
-	{
-		return "\"" + toHex(hashUnsignedInt(_counter), HexPrefix::DontAdd) + "\"";
-	}
-
 	std::string getQualifier(DataType _dataType)
 	{
 		return ((isValueType(_dataType) || m_isStateVar) ? "" : "memory");
@@ -288,6 +281,11 @@ private:
 	static std::string integerValueAsString(bool _sign, unsigned _width, unsigned _counter);
 	static std::string addressValueAsString(unsigned _counter);
 	static std::string fixedByteValueAsString(unsigned _width, unsigned _counter);
+	static std::string hexValueAsString(
+		unsigned _width,
+		unsigned _counter,
+		bool _isHexLiteral
+	);
 	static std::vector<std::pair<bool, unsigned>> arrayDimensionsAsPairVector(ArrayType const& _x);
 	static std::string arrayDimInfoAsString(ArrayDimensionInfo const& _x);
 	static void arrayDimensionsAsStringVector(
@@ -387,6 +385,19 @@ private:
 			std::make_pair(true, getStaticArrayLengthFromFuzz(_x.length())) :
 			std::make_pair(false, getDynArrayLengthFromFuzz(_x.length(), 0))
 		);
+	}
+
+	// String and bytes literals are derived by hashing a monotonically increasing
+	// counter and enclosing the (potentially cropped) hash inside double quotes.
+	// Cropping is achieved by masking out higher order bits.
+	// TODO: Test invalid encoding of bytes/string arguments that hold values of over 32 bytes.
+	// See https://github.com/ethereum/solidity/issues/7180
+	static std::string bytesArrayValueAsString(unsigned _counter, bool _isHexLiteral)
+	{
+		// We use _counter to not only create a value but to crop it
+		// to a length (l) such that 0 <= l <= 32 (hence the use of 33 as
+		// the modulo constant)
+		return hexValueAsString(_counter % 33, _counter, _isHexLiteral);
 	}
 
 	/// Contains the test program
