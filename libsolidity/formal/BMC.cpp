@@ -43,11 +43,9 @@ BMC::BMC(smt::EncodingContext& _context, ErrorReporter& _errorReporter, map<h256
 #endif
 }
 
-void BMC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner, set<Expression const*> _safeAssertions)
+void BMC::analyze(SourceUnit const& _source, set<Expression const*> _safeAssertions)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
-
-	m_scanner = _scanner;
 
 	m_safeAssertions += move(_safeAssertions);
 	m_context.setSolver(m_interface);
@@ -542,7 +540,7 @@ pair<vector<smt::Expression>, vector<string>> BMC::modelExpressions()
 		if (uf->annotation().type->isValueType())
 		{
 			expressionsToEvaluate.emplace_back(expr(*uf));
-			expressionNames.push_back(m_scanner->sourceAt(uf->location()));
+			expressionNames.push_back(uf->location().text());
 		}
 
 	return {expressionsToEvaluate, expressionNames};
@@ -717,14 +715,11 @@ void BMC::checkCondition(
 	vector<string> expressionNames;
 	tie(expressionsToEvaluate, expressionNames) = _modelExpressions;
 	if (callStack.size())
-	{
-		solAssert(m_scanner, "");
 		if (_additionalValue)
 		{
 			expressionsToEvaluate.emplace_back(*_additionalValue);
 			expressionNames.push_back(_additionalValueName);
 		}
-	}
 	smt::CheckResult result;
 	vector<string> values;
 	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);

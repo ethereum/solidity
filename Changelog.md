@@ -28,6 +28,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when using compound bitwise assignment operators inside branches.
  * SMTChecker: Fix internal error when inlining a function that returns a tuple containing an unsupported type inside a branch.
  * SMTChecker: Fix internal error when inlining functions that use state variables and belong to a different source.
+ * SMTChecker: Fix internal error when reporting counterexamples concerning state variables from different source files.
  * View/Pure Checker: Properly detect state variable access through base class.
  * Yul analyzer: Check availability of data objects already in analysis phase.
  * Yul Optimizer: Fix an issue where memory-accessing code was removed even though ``msize`` was used in the program.

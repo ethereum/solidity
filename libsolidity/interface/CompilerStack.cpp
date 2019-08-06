@@ -373,7 +373,7 @@ bool CompilerStack::analyze()
 		{
 			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses);
 			for (Source const* source: m_sourceOrder)
-				modelChecker.analyze(*source->ast, source->scanner);
+				modelChecker.analyze(*source->ast);
 			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
 		}
 	}
