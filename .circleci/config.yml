@@ -333,10 +333,14 @@ jobs:
 
   b_archlinux:
     docker:
-      - image: ethereum/solidity-buildpack-deps:archlinux
+      - image: archlinux/base
     environment:
       TERM: xterm
     steps:
+      - run:
+          name: Install build dependencies
+          command: |
+            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
       - checkout
       - run: *run_build
       - store_artifacts: *artifacts_solc
