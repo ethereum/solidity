@@ -63,6 +63,8 @@ void ProtoConverter::visitType(
 	std::string varName, paramName;
 	createDeclAndParamList(_type, _dataType, varName, paramName);
 	addCheckedVarDef(_dataType, varName, paramName, _value);
+	// Update right padding of type
+	m_isLastParamRightPadded = isDataTypeBytesOrString(_dataType);
 }
 
 void ProtoConverter::appendVarDeclToOutput(
@@ -204,22 +206,23 @@ std::string ProtoConverter::addressValueAsString(unsigned _counter)
 		.render();
 }
 
-/// Returns a hex literal if _isHexLiteral is true, a string literal otherwise.
-std::string ProtoConverter::hexValueAsString(
-	unsigned _width,
+std::string ProtoConverter::croppedString(
+	unsigned _numBytes,
 	unsigned _counter,
 	bool _isHexLiteral
 )
 {
-	// If _width is zero (possible via a call from ...), then simply return an
-	// empty (hex) string
-	if (_width == 0)
-		return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix>"")")
-			("addHexPrefix", _isHexLiteral)
-			.render();
+	// _numBytes can not be zero or exceed 32 bytes
+	solAssert(
+		_numBytes > 0 && _numBytes <= 32,
+		"Proto ABIv2 fuzzer: Too short or too long a cropped string"
+	);
 
-	// Masked value must contain twice the number of nibble "f"'s as _width
-	unsigned numMaskNibbles = _width * 2;
+	// Number of masked nibbles is twice the number of bytes for a
+	// hex literal of _numBytes bytes. For a string literal, each nibble
+	// is treated as a character.
+	unsigned numMaskNibbles = _isHexLiteral ? _numBytes * 2 : _numBytes;
+
 	// Start position of substring equals totalHexStringLength - numMaskNibbles
 	// totalHexStringLength = 64 + 2 = 66
 	// e.g., 0x12345678901234567890123456789012 is a total of 66 characters
@@ -228,14 +231,121 @@ std::string ProtoConverter::hexValueAsString(
 	//      <-----------total length --------->
 	// Note: This assumes that maskUnsignedIntToHex() invokes toHex(..., HexPrefix::Add)
 	unsigned startPos = 66 - numMaskNibbles;
+	// Extracts the least significant numMaskNibbles from the result
+	// of maskUnsignedIntToHex().
+	return maskUnsignedIntToHex(
+		_counter,
+		numMaskNibbles
+	).substr(startPos, numMaskNibbles);
+}
 
-	// Extracts the least significant numMaskNibbles from the result of "maskUnsignedIntToHex",
-	// and replaces "0x" with "hex\"...\"" string.
+std::string ProtoConverter::hexValueAsString(
+	unsigned _numBytes,
+	unsigned _counter,
+	bool _isHexLiteral,
+	bool _decorate
+)
+{
+	solAssert(_numBytes > 0 && _numBytes <= 32,
+		"Proto ABIv2 fuzzer: Invalid hex length"
+	);
+
+	// If _decorate is set, then we return a hex"" or a "" string.
+	if (_numBytes == 0)
+		return Whiskers(R"(<?decorate><?isHex>hex</isHex>""</decorate>)")
+			("decorate", _decorate)
+			("isHex", _isHexLiteral)
+			.render();
+
 	// This is needed because solidity interprets a 20-byte 0x prefixed hex literal as an address
 	// payable type.
-	return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix>"<value>")")
-		("addHexPrefix", _isHexLiteral)
-		("value", maskUnsignedIntToHex(_counter, numMaskNibbles).substr(startPos, numMaskNibbles))
+	return Whiskers(R"(<?decorate><?isHex>hex</isHex>"</decorate><value><?decorate>"</decorate>)")
+		("decorate", _decorate)
+		("isHex", _isHexLiteral)
+		("value", croppedString(_numBytes, _counter, _isHexLiteral))
+		.render();
+}
+
+std::string ProtoConverter::variableLengthValueAsString(
+	unsigned _numBytes,
+	unsigned _counter,
+	bool _isHexLiteral
+)
+{
+	solAssert(_numBytes >= 0 && _numBytes <= s_maxDynArrayLength,
+		"Proto ABIv2 fuzzer: Invalid hex length"
+	);
+	if (_numBytes == 0)
+		return Whiskers(R"(<?isHex>hex</isHex>"")")
+			("isHex", _isHexLiteral)
+			.render();
+
+	unsigned numBytesRemaining = _numBytes;
+	// Stores the literal
+	string output{};
+	// If requested value is shorter than or exactly 32 bytes,
+	// the literal is the return value of hexValueAsString.
+	if (numBytesRemaining <= 32)
+		output = hexValueAsString(
+			numBytesRemaining,
+			_counter,
+			_isHexLiteral,
+			/*decorate=*/false
+		);
+	// If requested value is longer than 32 bytes, the literal
+	// is obtained by duplicating the return value of hexValueAsString
+	// until we reach a value of the requested size.
+	else
+	{
+		// Create a 32-byte value to be duplicated and
+		// update number of bytes to be appended.
+		// Stores the cached literal that saves us
+		// (expensive) calls to keccak256.
+		string cachedString = hexValueAsString(
+			/*numBytes=*/32,
+			_counter,
+			_isHexLiteral,
+			/*decorate=*/false
+		);
+		output = cachedString;
+		numBytesRemaining -= 32;
+
+		// Append bytes from cachedString until
+		// we create a value of desired length.
+		unsigned numAppendedBytes;
+		while (numBytesRemaining > 0)
+		{
+			// We append at most 32 bytes at a time
+			numAppendedBytes = numBytesRemaining >= 32 ? 32 : numBytesRemaining;
+			output += cachedString.substr(
+				0,
+				// Double the substring length for hex literals since each
+				// character is actually half a byte (or a nibble).
+				_isHexLiteral ? numAppendedBytes * 2 : numAppendedBytes
+			);
+			numBytesRemaining -= numAppendedBytes;
+		}
+		solAssert(
+			numBytesRemaining == 0,
+			"Proto ABIv2 fuzzer: Logic flaw in variable literal creation"
+		);
+	}
+
+	if (_isHexLiteral)
+		solAssert(
+			output.size() == 2 * _numBytes,
+			"Proto ABIv2 fuzzer: Generated hex literal is of incorrect length"
+		);
+	else
+		solAssert(
+			output.size() == _numBytes,
+			"Proto ABIv2 fuzzer: Generated string literal is of incorrect length"
+		);
+
+	// Decorate output
+	return Whiskers(R"(<?isHexLiteral>hex</isHexLiteral>"<value>")")
+		("isHexLiteral", _isHexLiteral)
+		("value", output)
 		.render();
 }
 
@@ -548,18 +658,23 @@ void ProtoConverter::visit(ArrayType const& _x)
 	{
 	case ArrayType::kInty:
 		baseType = getIntTypeAsString(_x.inty());
+		m_isLastParamRightPadded = false;
 		break;
 	case ArrayType::kByty:
 		baseType = getFixedByteTypeAsString(_x.byty());
+		m_isLastParamRightPadded = false;
 		break;
 	case ArrayType::kAdty:
 		baseType = getAddressTypeAsString(_x.adty());
+		m_isLastParamRightPadded = false;
 		break;
 	case ArrayType::kBoolty:
 		baseType = getBoolTypeAsString();
+		m_isLastParamRightPadded = false;
 		break;
 	case ArrayType::kDynbytesty:
 		baseType = bytesArrayTypeAsString(_x.dynbytesty());
+		m_isLastParamRightPadded = true;
 		break;
 	case ArrayType::kStty:
 	case ArrayType::BASE_TYPE_ONEOF_NOT_SET:
@@ -712,30 +827,41 @@ void ProtoConverter::visit(TestFunction const& _x)
 	visit(_x.local_vars());
 
 	m_output << Whiskers(R"(
-		uint returnVal = this.coder_public(<parameter_names>);
+		uint returnVal = this.coder_public(<parameterNames>);
 		if (returnVal != 0)
 			return returnVal;
 
-		returnVal = this.coder_external(<parameter_names>);
+		returnVal = this.coder_external(<parameterNames>);
 		if (returnVal != 0)
 			return uint(200000) + returnVal;
 
 		<?atLeastOneVar>
-		bytes memory argumentEncoding = abi.encode(<parameter_names>);
+		bytes memory argumentEncoding = abi.encode(<parameterNames>);
 
-		returnVal = checkEncodedCall(this.coder_public.selector, argumentEncoding, <invalidLengthFuzz>);
+		returnVal = checkEncodedCall(
+			this.coder_public.selector,
+			argumentEncoding,
+			<invalidLengthFuzz>,
+			<isRightPadded>
+		);
 		if (returnVal != 0)
 			return returnVal;
 
-		returnVal = checkEncodedCall(this.coder_external.selector, argumentEncoding, <invalidLengthFuzz>);
+		returnVal = checkEncodedCall(
+			this.coder_external.selector,
+			argumentEncoding,
+			<invalidLengthFuzz>,
+			<isRightPadded>
+		);
 		if (returnVal != 0)
 			return uint(200000) + returnVal;
 		</atLeastOneVar>
 		return 0;
 	}
 	)")
-	("parameter_names", dev::suffixedVariableNameList(s_varNamePrefix, 0, m_varCounter))
+	("parameterNames", dev::suffixedVariableNameList(s_varNamePrefix, 0, m_varCounter))
 	("invalidLengthFuzz", std::to_string(_x.invalid_encoding_length()))
+	("isRightPadded", isLastParamRightPadded() ? "true" : "false")
 	("atLeastOneVar", m_varCounter > 0)
 	.render();
 }
@@ -752,18 +878,31 @@ void ProtoConverter::writeHelperFunctions()
 		return true;
 	}
 
-	/// Accepts function selector, correct argument encoding, and length of invalid encoding and returns
-	/// the correct and incorrect abi encoding for calling the function specified by the function selector.
-	function createEncoding(bytes4 funcSelector, bytes memory argumentEncoding, uint invalidLengthFuzz)
-		internal pure returns (bytes memory, bytes memory)
+	/// Accepts function selector, correct argument encoding, and length of
+	/// invalid encoding and returns the correct and incorrect abi encoding
+	/// for calling the function specified by the function selector.
+	function createEncoding(
+		bytes4 funcSelector,
+		bytes memory argumentEncoding,
+		uint invalidLengthFuzz,
+		bool isRightPadded
+	) internal pure returns (bytes memory, bytes memory)
 	{
 		bytes memory validEncoding = new bytes(4 + argumentEncoding.length);
 		// Ensure that invalidEncoding crops at least 32 bytes (padding length
-		// is at most 31 bytes) since shorter bytes/string values can lead to
-		// successful decoding when fewer than 32 bytes have been cropped in
-		// the worst case. In other words,
-		// 0 <= invalidLength <= argumentEncoding.length - 32
-		uint invalidLength = invalidLengthFuzz % (argumentEncoding.length - 31);
+		// is at most 31 bytes) if `isRightPadded` is true.
+		// This is because shorter bytes/string values (whose encoding is right
+		// padded) can lead to successful decoding when fewer than 32 bytes have
+		// been cropped in the worst case. In other words, if `isRightPadded` is
+		// true, then
+		//  0 <= invalidLength <= argumentEncoding.length - 32
+		// otherwise
+		//  0 <= invalidLength <= argumentEncoding.length - 1
+		uint invalidLength;
+		if (isRightPadded)
+			invalidLength = invalidLengthFuzz % (argumentEncoding.length - 31);
+		else
+			invalidLength = invalidLengthFuzz % argumentEncoding.length;
 		bytes memory invalidEncoding = new bytes(4 + invalidLength);
 		for (uint i = 0; i < 4; i++)
 			validEncoding[i] = invalidEncoding[i] = funcSelector[i];
@@ -774,12 +913,23 @@ void ProtoConverter::writeHelperFunctions()
 		return (validEncoding, invalidEncoding);
 	}
 
-	/// Accepts function selector, correct argument encoding, and an invalid encoding length as input.
-	/// Returns a non-zero value if either call with correct encoding fails or call with incorrect encoding
-	/// succeeds. Returns zero if both calls meet expectation.
-	function checkEncodedCall(bytes4 funcSelector, bytes memory argumentEncoding, uint invalidLengthFuzz) public returns (uint)
+	/// Accepts function selector, correct argument encoding, and an invalid
+	/// encoding length as input. Returns a non-zero value if either call with
+	/// correct encoding fails or call with incorrect encoding succeeds.
+	/// Returns zero if both calls meet expectation.
+	function checkEncodedCall(
+		bytes4 funcSelector,
+		bytes memory argumentEncoding,
+		uint invalidLengthFuzz,
+		bool isRightPadded
+	) public returns (uint)
 	{
-		(bytes memory validEncoding, bytes memory invalidEncoding) = createEncoding(funcSelector, argumentEncoding, invalidLengthFuzz);
+		(bytes memory validEncoding, bytes memory invalidEncoding) = createEncoding(
+			funcSelector,
+			argumentEncoding,
+			invalidLengthFuzz,
+			isRightPadded
+		);
 		(bool success, bytes memory returnVal) = address(this).call(validEncoding);
 		uint returnCode = abi.decode(returnVal, (uint));
 		// Return non-zero value if call fails for correct encoding
