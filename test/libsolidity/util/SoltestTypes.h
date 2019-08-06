@@ -119,13 +119,6 @@ struct ABIType
 		size_t _size = 32
 	): type(_type), align(_align), size(_size) {}
 
-	ABIType(ABIType const& _other):
-		type(_other.type),
-		align(_other.align),
-		size(_other.size),
-		alignDeclared(_other.alignDeclared)
-	{}
-
 	Type type = ABIType::None;
 	Align align = ABIType::AlignRight;
 	size_t size = 32;
