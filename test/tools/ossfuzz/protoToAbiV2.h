@@ -284,6 +284,12 @@ private:
 	static std::string hexValueAsString(
 		unsigned _width,
 		unsigned _counter,
+		bool _isHexLiteral,
+		bool _encloseInDoubleQuotes = true
+	);
+	static std::string variableLengthHexValueAsString(
+		unsigned _width,
+		unsigned _counter,
 		bool _isHexLiteral
 	);
 	static std::vector<std::pair<bool, unsigned>> arrayDimensionsAsPairVector(ArrayType const& _x);
@@ -387,17 +393,26 @@ private:
 		);
 	}
 
-	// String and bytes literals are derived by hashing a monotonically increasing
-	// counter and enclosing the (potentially cropped) hash inside double quotes.
-	// Cropping is achieved by masking out higher order bits.
-	// TODO: Test invalid encoding of bytes/string arguments that hold values of over 32 bytes.
-	// See https://github.com/ethereum/solidity/issues/7180
+	/// Accepts a monotonically increasing counter as input and
+	/// returns a value to be used to compute the length of a
+	/// hex or string literal. This function is called by
+	/// bytesArrayValueAsString().
+	static unsigned getVarLength(unsigned _counter)
+	{
+		return (_counter + 879) * 32 % (s_maxDynArrayLength + 1);
+	}
+
+	/// Accepts monotonically increasing counter and a flag that is true for
+	/// hex literals, false otherwise as input.
+	/// Returns a variable length hex/string literal whose value and size are pseudo-
+	/// randomly determined from the counter value.
 	static std::string bytesArrayValueAsString(unsigned _counter, bool _isHexLiteral)
 	{
-		// We use _counter to not only create a value but to crop it
-		// to a length (l) such that 0 <= l <= 32 (hence the use of 33 as
-		// the modulo constant)
-		return hexValueAsString(_counter % 33, _counter, _isHexLiteral);
+		return variableLengthHexValueAsString(
+			getVarLength(_counter),
+			_counter,
+			_isHexLiteral
+		);
 	}
 
 	/// Contains the test program
@@ -418,6 +433,7 @@ private:
 	unsigned m_returnValue;
 	static unsigned constexpr s_maxArrayLength = 4;
 	static unsigned constexpr s_maxArrayDimensions = 4;
+	static unsigned constexpr s_maxDynArrayLength = 256;
 	/// Prefixes for declared and parameterized variable names
 	static auto constexpr s_varNamePrefix = "x_";
 	static auto constexpr s_paramNamePrefix = "c_";

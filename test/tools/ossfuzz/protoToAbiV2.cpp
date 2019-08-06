@@ -205,17 +205,21 @@ std::string ProtoConverter::addressValueAsString(unsigned _counter)
 }
 
 /// Returns a hex literal if _isHexLiteral is true, a string literal otherwise.
+/// The flag _encloseInDoubleQuotes is true by default. It is false only when
+/// called from variableLengthHexValueAsString.
 std::string ProtoConverter::hexValueAsString(
 	unsigned _width,
 	unsigned _counter,
-	bool _isHexLiteral
+	bool _isHexLiteral,
+	bool _encloseInDoubleQuotes
 )
 {
 	// If _width is zero (possible via a call from ...), then simply return an
 	// empty (hex) string
 	if (_width == 0)
-		return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix>"")")
+		return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix><?isQuote>""</isQuote>)")
 			("addHexPrefix", _isHexLiteral)
+			("isQuote", _encloseInDoubleQuotes)
 			.render();
 
 	// Masked value must contain twice the number of nibble "f"'s as _width
@@ -233,9 +237,45 @@ std::string ProtoConverter::hexValueAsString(
 	// and replaces "0x" with "hex\"...\"" string.
 	// This is needed because solidity interprets a 20-byte 0x prefixed hex literal as an address
 	// payable type.
-	return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix>"<value>")")
+	return Whiskers(R"(<?addHexPrefix>hex</addHexPrefix><?isQ>"</isQ><value><?isQ>"</isQ>)")
 		("addHexPrefix", _isHexLiteral)
 		("value", maskUnsignedIntToHex(_counter, numMaskNibbles).substr(startPos, numMaskNibbles))
+		("isQ", _encloseInDoubleQuotes)
+		.render();
+}
+
+/// Concatenates the hash value obtained from monotonically increasing counter
+/// until the desired number of bytes determined by _numBytes.
+std::string ProtoConverter::variableLengthHexValueAsString(
+	unsigned _numBytes,
+	unsigned _counter,
+	bool _isHexLiteral
+)
+{
+	solAssert(_numBytes >= 0, "Proto ABIv2 fuzzer: Invalid hex length");
+	std::string output = {};
+	if (_numBytes == 0)
+		return Whiskers(R"(<?isHex>hex</isHex>"")")
+			("isHex", _isHexLiteral)
+			.render();
+
+	// Duplicate literal until we are able to produce an
+	// output string that is _numBytes in size.
+	while (_numBytes > 0)
+	{
+		unsigned batchSize = _numBytes >= 32 ? 32 : _numBytes;
+		output += hexValueAsString(
+			batchSize,
+			_counter,
+			/*isHexLiteral=*/false,
+			/*encloseInDoubleQuotes=*/false
+		);
+		_numBytes -= batchSize;
+	}
+	// Decorate output
+	return Whiskers(R"(<?isHexLiteral>hex</isHexLiteral>"<value>")")
+		("isHexLiteral", _isHexLiteral)
+		("value", output)
 		.render();
 }
 
