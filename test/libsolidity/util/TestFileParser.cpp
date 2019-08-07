@@ -252,104 +252,97 @@ Parameter TestFileParser::parseParameter()
 		parameter.alignment = Parameter::Alignment::Right;
 	}
 
-	try
+	if (accept(Token::Sub, true))
 	{
-		if (accept(Token::Sub, true))
-		{
-			parameter.rawString += formatToken(Token::Sub);
-			isSigned = true;
-		}
-		if (accept(Token::Boolean))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid boolean literal.");
-
-			parameter.abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
-			string parsed = parseBoolean();
-			parameter.rawString += parsed;
-			parameter.rawBytes = BytesUtils::applyAlign(
-				parameter.alignment,
-				parameter.abiType,
-				BytesUtils::convertBoolean(parsed)
-			);
-		}
-		else if (accept(Token::HexNumber))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid hex number literal.");
-
-			parameter.abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
-			string parsed = parseHexNumber();
-			parameter.rawString += parsed;
-			parameter.rawBytes = BytesUtils::applyAlign(
-				parameter.alignment,
-				parameter.abiType,
-				BytesUtils::convertHexNumber(parsed)
-			);
-		}
-		else if (accept(Token::Hex, true))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid hex string literal.");
-			if (parameter.alignment != Parameter::Alignment::None)
-				throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
-
-			string parsed = parseString();
-			parameter.rawString += "hex\"" + parsed + "\"";
-			parameter.rawBytes = BytesUtils::convertHexNumber(parsed);
-			parameter.abiType = ABIType{
-				ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()
-			};
-		}
-		else if (accept(Token::String))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid string literal.");
-			if (parameter.alignment != Parameter::Alignment::None)
-				throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
-
-			string parsed = parseString();
-			parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, parsed.size()};
-			parameter.rawString += "\"" + parsed + "\"";
-			parameter.rawBytes = BytesUtils::applyAlign(
-				Parameter::Alignment::Left,
-				parameter.abiType,
-				BytesUtils::convertString(parsed)
-			);
-		}
-		else if (accept(Token::Number))
-		{
-			auto type = isSigned ? ABIType::SignedDec : ABIType::UnsignedDec;
-
-			parameter.abiType = ABIType{type, ABIType::AlignRight, 32};
-			string parsed = parseDecimalNumber();
-			parameter.rawString += parsed;
-			if (isSigned)
-				parsed = "-" + parsed;
-
-			parameter.rawBytes = BytesUtils::applyAlign(
-				parameter.alignment,
-				parameter.abiType,
-				BytesUtils::convertNumber(parsed)
-			);
-		}
-		else if (accept(Token::Failure, true))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid failure literal.");
-
-			parameter.abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
-			parameter.rawBytes = bytes{};
-		}
-		if (parameter.alignment != Parameter::Alignment::None)
-		{
-			expect(Token::RParen);
-			parameter.rawString += formatToken(Token::RParen);
-		}
+		parameter.rawString += formatToken(Token::Sub);
+		isSigned = true;
 	}
-	catch (std::exception const&)
+	if (accept(Token::Boolean))
 	{
-		throw Error(Error::Type::ParserError, "Literal encoding invalid.");
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid boolean literal.");
+
+		parameter.abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
+		string parsed = parseBoolean();
+		parameter.rawString += parsed;
+		parameter.rawBytes = BytesUtils::applyAlign(
+			parameter.alignment,
+			parameter.abiType,
+			BytesUtils::convertBoolean(parsed)
+		);
+	}
+	else if (accept(Token::HexNumber))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid hex number literal.");
+
+		parameter.abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
+		string parsed = parseHexNumber();
+		parameter.rawString += parsed;
+		parameter.rawBytes = BytesUtils::applyAlign(
+			parameter.alignment,
+			parameter.abiType,
+			BytesUtils::convertHexNumber(parsed)
+		);
+	}
+	else if (accept(Token::Hex, true))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid hex string literal.");
+		if (parameter.alignment != Parameter::Alignment::None)
+			throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
+
+		string parsed = parseString();
+		parameter.rawString += "hex\"" + parsed + "\"";
+		parameter.rawBytes = BytesUtils::convertHexNumber(parsed);
+		parameter.abiType = ABIType{
+			ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()
+		};
+	}
+	else if (accept(Token::String))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid string literal.");
+		if (parameter.alignment != Parameter::Alignment::None)
+			throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
+
+		string parsed = parseString();
+		parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, parsed.size()};
+		parameter.rawString += "\"" + parsed + "\"";
+		parameter.rawBytes = BytesUtils::applyAlign(
+			Parameter::Alignment::Left,
+			parameter.abiType,
+			BytesUtils::convertString(parsed)
+		);
+	}
+	else if (accept(Token::Number))
+	{
+		auto type = isSigned ? ABIType::SignedDec : ABIType::UnsignedDec;
+
+		parameter.abiType = ABIType{type, ABIType::AlignRight, 32};
+		string parsed = parseDecimalNumber();
+		parameter.rawString += parsed;
+		if (isSigned)
+			parsed = "-" + parsed;
+
+		parameter.rawBytes = BytesUtils::applyAlign(
+			parameter.alignment,
+			parameter.abiType,
+			BytesUtils::convertNumber(parsed)
+		);
+	}
+	else if (accept(Token::Failure, true))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid failure literal.");
+
+		parameter.abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
+		parameter.rawBytes = bytes{};
+	}
+	if (parameter.alignment != Parameter::Alignment::None)
+	{
+		expect(Token::RParen);
+		parameter.rawString += formatToken(Token::RParen);
 	}
 
 	return parameter;

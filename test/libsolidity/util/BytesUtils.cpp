@@ -21,6 +21,8 @@
 
 #include <liblangutil/Common.h>
 
+#include <libdevcore/StringUtils.h>
+
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
@@ -96,10 +98,7 @@ bytes BytesUtils::convertHexNumber(string const& _literal)
 {
 	try
 	{
-		if (_literal.size() % 2)
-			throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
-		else
-			return fromHex(_literal);
+		return fromHex(_literal);
 	}
 	catch (std::exception const&)
 	{
@@ -159,13 +158,10 @@ string BytesUtils::formatBoolean(bytes const& _bytes)
 
 string BytesUtils::formatHex(bytes const& _bytes)
 {
-	stringstream os;
+	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
+	u256 value = fromBigEndian<u256>(_bytes);
 
-	string hex{toHex(_bytes, HexPrefix::Add)};
-	boost::algorithm::replace_all(hex, "00", "");
-	os << hex;
-
-	return os.str();
+	return toCompactHexWithPrefix(value);
 }
 
 string BytesUtils::formatHexString(bytes const& _bytes)
