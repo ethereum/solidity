@@ -26,6 +26,9 @@ FROM buildpack-deps:disco AS base
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN set -ex; \
+	dist=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2); \
+	echo "deb http://ppa.launchpad.net/ethereum/cpp-build-deps/ubuntu $dist main" >> /etc/apt/sources.list ; \
+	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9 ; \
 	apt-get update; \
 	apt-get install -qqy --no-install-recommends \
 		build-essential \
@@ -34,7 +37,7 @@ RUN set -ex; \
 		libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
 		libjsoncpp-dev \
-		llvm-8-dev libcvc4-dev libleveldb1d \
+		llvm-8-dev libcvc4-dev libz3-static-dev libleveldb1d \
 		; \
 	apt-get install -qy python-pip python-sphinx; \
 	update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-8 1; \
