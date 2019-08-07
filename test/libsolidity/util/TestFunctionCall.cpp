@@ -193,7 +193,7 @@ string TestFunctionCall::formatBytesParameters(
 		fill_n(
 			back_inserter(defaultParameters),
 			ceil(_bytes.size() / 32),
-			Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}}
+			Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}}
 		);
 		ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
 		os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);

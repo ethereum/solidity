@@ -21,6 +21,8 @@
 
 #include <liblangutil/Common.h>
 
+#include <libdevcore/StringUtils.h>
+
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
@@ -159,13 +161,8 @@ string BytesUtils::formatBoolean(bytes const& _bytes)
 
 string BytesUtils::formatHex(bytes const& _bytes)
 {
-	stringstream os;
-
-	string hex{toHex(_bytes, HexPrefix::Add)};
-	boost::algorithm::replace_all(hex, "00", "");
-	os << hex;
-
-	return os.str();
+	u256 value = fromBigEndian<u256>(_bytes);
+	return toCompactHexWithPrefix(value);
 }
 
 string BytesUtils::formatHexString(bytes const& _bytes)
