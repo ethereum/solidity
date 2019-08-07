@@ -202,21 +202,28 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 	return os.str();
 }
 
-string BytesUtils::formatRawBytes(bytes const& _bytes)
+string BytesUtils::formatRawBytes(bytes const& _bytes, string _linePrefix, bool _withSignature)
 {
 	if (_bytes.empty())
-		return "[]";
+		return _linePrefix + "[]";
 
 	stringstream os;
 	auto it = _bytes.begin();
-	for (size_t i = 0; i < _bytes.size(); i += 32)
+
+	if (_withSignature)
 	{
-		bytes byteRange{it, it + 32};
+		os << _linePrefix << bytes{it, it + 4} << endl;
+		it += 4;
+	}
 
-		os << "  " << byteRange;
+	bytes tail{it, _bytes.end()};
+	it = tail.begin();
 
+	for (size_t i = 0; i < tail.size(); i += 32)
+	{
+		os << _linePrefix << bytes{it, it + 32};
 		it += 32;
-		if (it != _bytes.end())
+		if (it != tail.end())
 			os << endl;
 	}
 
@@ -287,11 +294,12 @@ string BytesUtils::formatBytesRange(
 		else
 			os << parameter.rawString;
 
-
-		it += static_cast<long>(parameter.abiType.size);
 		if (&parameter != &_parameters.back())
 			os << ", ";
+
+		it += static_cast<long>(parameter.abiType.size);
 	}
+
 	return os.str();
 }
 

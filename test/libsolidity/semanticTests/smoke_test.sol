@@ -18,8 +18,11 @@ contract C {
     function balance() payable public returns (uint256) {
         return address(this).balance;
     }
-    function e(uint a) public {
+    function d(uint a) public {
         state = a;
+    }
+    function e() public {
+        revert("Transaction failed.");
     }
     function f() payable public returns (uint) {
         return 2;
@@ -88,12 +91,15 @@ contract C {
         return (["any", "any"], ["any", "any", "any"]);
     }
 }
+// ====
+// EVMVersion: >homestead
 // ----
 // constructor(), 2 ether: 3 ->
 // state() -> 3
 // balance() -> 2
 // _() -> FAILURE
-// e(uint256): 4
+// d(uint256): 4
+// e() -> FAILURE, hex"08c379a0", 0x20, 19, "Transaction failed."
 // f() -> 2
 // f(uint256): 3 -> 3, 3
 // f(), 1 ether -> 2
