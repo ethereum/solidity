@@ -1,0 +1,8 @@
+recovery_ast_constructor/input.sol:5:27: Error: Expected primary expression.
+    balances[tx.origin] = ; // missing RHS.
+                          ^
+recovery_ast_constructor/input.sol:5:27: Warning: Recovered in Statement at ';'.
+    balances[tx.origin] = ; // missing RHS.
+                          ^
+
+Compilation halted after AST generation due to errors.

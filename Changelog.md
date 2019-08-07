@@ -14,6 +14,7 @@ Compiler Features:
  * Standard JSON Interface: Compile only selected sources and contracts.
  * Standard JSON Interface: Provide secondary error locations (e.g. the source position of other conflicting declarations).
  * SMTChecker: Do not erase knowledge about storage pointers if another storage pointer is assigned.
+ * Standard JSON Interface: Provide AST even on errors if ``--error-recovery`` commandline switch or StandardCompiler `settings.parserErrorRecovery` is true.
  * Yul Optimizer: Do not inline function if it would result in expressions being duplicated that are not cheap.
 
 
@@ -40,7 +41,7 @@ Important Bugfixes:
 
 
 Compiler Features:
- * Commandline Interface: Experimental parser error recovery via the ``--error-recovery`` commandline switch.
+ * Commandline Interface: Experimental parser error recovery via the ``--error-recovery`` commandline switch or StandardCompiler `settings.parserErrorRecovery` boolean.
  * Optimizer: Add rule to simplify ``SUB(~0, X)`` to ``NOT(X)``.
  * Yul Optimizer: Make the optimizer work for all dialects of Yul including eWasm.
 

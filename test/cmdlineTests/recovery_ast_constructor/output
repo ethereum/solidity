@@ -1,0 +1,34 @@
+Syntax trees:
+
+
+======= recovery_ast_constructor/input.sol =======
+PragmaDirective
+   Source: "pragma solidity >=0.0.0;"
+ContractDefinition "Error1"
+   Source: "contract Error1 {\n  constructor() public {\n    balances[tx.origin] = ; // missing RHS.\n  }\n\n  // Without error recovery we stop due to the above error.\n  // Error recovery however recovers at the above ';'\n  // There should be an AST for the above, albeit with error\n  // nodes.\n\n  // This function parses properly and should give AST info.\n  function five() public view returns(uint) {\n    return 5;\n  }\n}"
+  FunctionDefinition "" - public
+     Source: "constructor() public {\n    balances[tx.origin] = ; // missing RHS.\n  }"
+    ParameterList
+       Source: "()"
+    ParameterList
+       Source: ""
+    Block
+       Source: "{\n    balances[tx.origin] = ; // missing RHS.\n  }"
+  FunctionDefinition "five" - public - const
+     Source: "function five() public view returns(uint) {\n    return 5;\n  }"
+    ParameterList
+       Source: "()"
+    ParameterList
+       Source: "(uint)"
+      VariableDeclaration ""
+         Type: uint256
+         Source: "uint"
+        ElementaryTypeName uint
+           Source: "uint"
+    Block
+       Source: "{\n    return 5;\n  }"
+      Return
+         Source: "return 5"
+        Literal, token: [no token] value: 5
+           Type: int_const 5
+           Source: "5"

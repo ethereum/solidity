@@ -6,7 +6,7 @@
 REPO_ROOT="$(dirname "$0")"/..
 cd $REPO_ROOT
 
-WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" | grep -v "test/libsolidity/ASTJSON\|test/compilationTests/zeppelin/LICENSE")
+WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" | grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE")
 
 if [[ "$WHITESPACE" != "" ]]
 then

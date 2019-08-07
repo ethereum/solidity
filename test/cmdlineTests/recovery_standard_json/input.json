@@ -1,0 +1,18 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "pragma solidity >=0.0; contract Errort6 { using foo for  ; /* missing type name */ }"
+		}
+	},
+	"settings":
+	{
+		"parserErrorRecovery": true,
+		"outputSelection":
+		{
+			"*": { "": ["ast"] }
+		}
+	}
+}
