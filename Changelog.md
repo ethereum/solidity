@@ -20,6 +20,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * ABI decoder: Ensure that decoded arrays always point to distinct memory locations.
  * SMTChecker: Fix internal error when inlining functions that contain tuple expressions.
  * SMTChecker: Fix pointer knowledge erasing in loops.
  * SMTChecker: Fix internal error when using compound bitwise assignment operators inside branches.
