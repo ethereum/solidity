@@ -53,9 +53,6 @@ contract MyConc{
 // ----
 // Warning: (773-792): This declaration shadows an existing declaration.
 // Warning: (1009-1086): Function state mutability can be restricted to view
-// Warning: (327-332): Assertion checker does not yet support the type of this literal (literal_string "abc").
-// Warning: (353-358): Assertion checker does not yet support the type of this literal (literal_string "xyz").
-// Warning: (834-839): Assertion checker does not yet support the type of this literal (literal_string "abc").
 // Warning: (874-879): Underflow (resulting value less than 0) happens here.
 // Warning: (874-879): Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning: (985-1002): Overflow (resulting value larger than 2**256 - 1) happens here.

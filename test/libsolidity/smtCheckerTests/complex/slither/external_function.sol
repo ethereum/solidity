@@ -83,7 +83,6 @@ contract InternalCall {
 // Warning: (1144-1206): Function state mutability can be restricted to pure
 // Warning: (1212-1274): Function state mutability can be restricted to pure
 // Warning: (1280-1342): Function state mutability can be restricted to pure
-// Warning: (799-811): Assertion checker does not yet support the type of this literal (literal_string "helloTwo()").
 // Warning: (782-813): Type conversion is not yet fully supported and might yield false positives.
 // Warning: (771-814): Assertion checker does not yet implement this type of function call.
 // Warning: (825-830): Assertion checker does not yet support the type of this variable.
