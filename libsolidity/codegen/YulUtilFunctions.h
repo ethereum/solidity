@@ -122,9 +122,13 @@ public:
 	std::string resizeDynamicArrayFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that will clear the storage area given
-	/// by the start and end (exclusive) parameters (slots). Only works for value types.
+	/// by the start and end (exclusive) parameters (slots).
 	/// signature: (start, end)
 	std::string clearStorageRangeFunction(Type const& _type);
+
+	/// @returns the name of a function that will clear the given storage array
+	/// signature: (slot) ->
+	std::string clearStorageArrayFunction(ArrayType const& _type);
 
 	/// Returns the name of a function that will convert a given length to the
 	/// size in memory (number of storage slots or calldata/memory bytes) it
@@ -262,6 +266,11 @@ public:
 	/// @returns the name of a function that returns the zero value for the
 	/// provided type
 	std::string zeroValueFunction(Type const& _type);
+
+	/// @returns the name of a function that will set the given storage item to
+	/// zero
+	/// signature: (slot, offset) ->
+	std::string storageSetToZeroFunction(Type const& _type);
 private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.

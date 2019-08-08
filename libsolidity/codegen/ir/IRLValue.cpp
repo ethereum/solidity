@@ -135,8 +135,17 @@ string IRStorageItem::storeValue(string const& _value, Type const& _sourceType) 
 
 string IRStorageItem::setToZero() const
 {
-	solUnimplementedAssert(m_type->isValueType(), "");
-	return storeValue(m_context.utils().zeroValueFunction(*m_type) + "()", *m_type);
+	return
+		m_context.utils().storageSetToZeroFunction(*m_type) +
+		"(" +
+		m_slot +
+		", " +
+		(
+			m_offset.type() == typeid(unsigned) ?
+				to_string(get<unsigned>(m_offset)) :
+				get<string>(m_offset)
+		) +
+		")\n";
 }
 
 IRStorageArrayLength::IRStorageArrayLength(IRGenerationContext& _context, string _slot, Type const& _type, ArrayType const& _arrayType):
