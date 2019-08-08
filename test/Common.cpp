@@ -57,15 +57,30 @@ boost::filesystem::path testPath()
 	return {};
 }
 
-std::string IPCEnvOrDefaultPath()
+std::string EVMOneEnvOrDefaultPath()
 {
-	if (auto path = getenv("ETH_TEST_IPC"))
+	if (auto path = getenv("ETH_EVMONE"))
 		return path;
 
-	if (auto home = getenv("HOME"))
-		return std::string(home) + "/.ethereum/geth.ipc";
-
-	return std::string{};
+	auto const searchPath =
+	{
+		fs::path("/usr/local/lib"),
+		fs::path("/usr/lib"),
+		fs::current_path() / "deps",
+		fs::current_path() / "deps" / "lib",
+		fs::current_path() / ".." / "deps",
+		fs::current_path() / ".." / "deps" / "lib",
+		fs::current_path() / ".." / ".." / "deps",
+		fs::current_path() / ".." / ".." / "deps" / "lib",
+		fs::current_path()
+	};
+	for (auto const& basePath: searchPath)
+	{
+		fs::path p = basePath / "libevmone.so";
+		if (fs::exists(p))
+			return p.string();
+	}
+	return {};
 }
 
 CommonOptions::CommonOptions(std::string _caption):
@@ -77,8 +92,7 @@ CommonOptions::CommonOptions(std::string _caption):
 	options.add_options()
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(dev::test::testPath()), "path to test files")
-		("ipcpath", po::value<fs::path>(&ipcPath)->default_value(IPCEnvOrDefaultPath()), "path to ipc socket")
-		("no-ipc", po::bool_switch(&disableIPC), "disable semantic tests")
+		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to libevmone.so")
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker");
 }
 
@@ -95,19 +109,6 @@ void CommonOptions::validate() const
 		"Invalid test path specified."
 	);
 
-	if (!disableIPC)
-	{
-		assertThrow(
-			!ipcPath.empty(),
-			ConfigException,
-			"No ipc path specified. The --ipcpath argument must not be empty when given."
-		);
-		assertThrow(
-			fs::exists(ipcPath),
-			ConfigException,
-			"Invalid ipc path specified."
-		);
-	}
 }
 
 bool CommonOptions::parse(int argc, char const* const* argv)

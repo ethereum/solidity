@@ -5,9 +5,6 @@
 #
 # http://solidity.readthedocs.org
 #
-# TODO - Tests currently disabled, because Tests-over-IPC code is using UNIX
-# sockets unconditionally at the time of writing.
-#
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
 #
@@ -71,7 +68,7 @@ build_script:
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
-    - soltest.exe --show-progress -- --testpath %APPVEYOR_BUILD_FOLDER%\test --no-ipc --no-smt
+    - soltest.exe --show-progress -- --testpath %APPVEYOR_BUILD_FOLDER%\test --no-smt
 # Skip bytecode compare if private key is not available
     - cd %APPVEYOR_BUILD_FOLDER%
     - ps: if ($env:priv_key) {

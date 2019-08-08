@@ -282,7 +282,7 @@ jobs:
           at: build
       - run:
           name: "soltest: Syntax Tests"
-          command: build/test/soltest -t 'syntaxTest*' -- --no-ipc --testpath test
+          command: build/test/soltest -t 'syntaxTest*' -- --testpath test
       - run:
           name: "Code Coverage: Syntax Tests"
           command: codecov --flags syntax --gcov-root build
@@ -478,7 +478,6 @@ jobs:
     environment:
       EVM: constantinople
       OPTIMIZE: 0
-      SOLTEST_IPC: 0
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ubu_homestead:

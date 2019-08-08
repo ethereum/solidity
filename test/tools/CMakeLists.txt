@@ -15,6 +15,7 @@ add_executable(isoltest
 	IsolTestOptions.cpp
 	../Options.cpp
 	../Common.cpp
+	../EVMHost.cpp
 	../TestCase.cpp
         ../libsolidity/util/BytesUtils.cpp
         ../libsolidity/util/ContractABIUtils.cpp
@@ -26,7 +27,6 @@ add_executable(isoltest
 	../libsolidity/AnalysisFramework.cpp
 	../libsolidity/SolidityExecutionFramework.cpp
 	../ExecutionFramework.cpp
-	../RPCSession.cpp
 	../libsolidity/ABIJsonTest.cpp
 	../libsolidity/ASTJSONTest.cpp
 	../libsolidity/SMTCheckerJSONTest.cpp

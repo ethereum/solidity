@@ -485,7 +485,15 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 	auto start = std::chrono::steady_clock::now();
 	compileBothVersions(sourceCode);
 	double duration = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-	BOOST_CHECK_MESSAGE(duration < 20, "Compilation of constants took longer than 20 seconds.");
+	// Since run time on an ASan build is not really realistic, we disable this test for those builds.
+	size_t maxDuration = 20;
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+	maxDuration = size_t(-1);
+	BOOST_TEST_MESSAGE("Disabled constant optimizer run time check for address sanitizer build.");
+#endif
+#endif
+	BOOST_CHECK_MESSAGE(duration <= maxDuration, "Compilation of constants took longer than 20 seconds.");
 	compareVersions("hexEncodeTest(address)", u256(0x123456789));
 }
 
