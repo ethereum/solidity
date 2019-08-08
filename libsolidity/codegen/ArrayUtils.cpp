@@ -243,7 +243,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 				else if (_sourceType.location() == DataLocation::Memory)
 					_context << sourceBaseType->memoryHeadSize();
 				else
-					_context << sourceBaseType->calldataEncodedSize(true);
+					_context << sourceBaseType->calldataHeadSize();
 				_context
 					<< Instruction::ADD
 					<< swapInstruction(2 + byteOffsetSize);
@@ -294,20 +294,13 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		"Nested dynamic arrays not implemented here."
 	);
 	CompilerUtils utils(m_context);
-	unsigned baseSize = 1;
-	if (!_sourceType.isByteArray())
-	{
-		// We always pad the elements, regardless of _padToWordBoundaries.
-		baseSize = _sourceType.baseType()->calldataEncodedSize();
-		solAssert(baseSize >= 0x20, "");
-	}
 
 	if (_sourceType.location() == DataLocation::CallData)
 	{
 		if (!_sourceType.isDynamicallySized())
 			m_context << _sourceType.length();
-		if (baseSize > 1)
-			m_context << u256(baseSize) << Instruction::MUL;
+		if (!_sourceType.isByteArray())
+			convertLengthToSize(_sourceType);
 
 		string routine = "calldatacopy(target, source, len)\n";
 		if (_padToWordBoundaries)
@@ -358,15 +351,14 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			m_context << Instruction::SWAP1 << u256(32) << Instruction::ADD;
 			m_context << Instruction::SWAP1;
 		}
-		// convert length to size
-		if (baseSize > 1)
-			m_context << u256(baseSize) << Instruction::MUL;
+		if (!_sourceType.isByteArray())
+			convertLengthToSize(_sourceType);
 		// stack: <target> <source> <size>
 		m_context << Instruction::DUP1 << Instruction::DUP4 << Instruction::DUP4;
 		// We can resort to copying full 32 bytes only if
 		// - the length is known to be a multiple of 32 or
 		// - we will pad to full 32 bytes later anyway.
-		if (((baseSize % 32) == 0) || _padToWordBoundaries)
+		if (!_sourceType.isByteArray() || _padToWordBoundaries)
 			utils.memoryCopy32();
 		else
 			utils.memoryCopy();
@@ -374,11 +366,8 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		m_context << Instruction::SWAP1 << Instruction::POP;
 		// stack: <target> <size>
 
-		bool paddingNeeded = false;
-		if (_sourceType.isDynamicallySized())
-			paddingNeeded = _padToWordBoundaries && ((baseSize % 32) != 0);
-		else
-			paddingNeeded = _padToWordBoundaries && (((_sourceType.length() * baseSize) % 32) != 0);
+		bool paddingNeeded = _padToWordBoundaries && _sourceType.isByteArray();
+
 		if (paddingNeeded)
 		{
 			// stack: <target> <size>
@@ -455,10 +444,10 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			m_context.appendJumpTo(loopEnd);
 			m_context << longByteArray;
 		}
-		// compute memory end offset
-		if (baseSize > 1)
+		else
 			// convert length to memory size
-			m_context << u256(baseSize) << Instruction::MUL;
+			m_context << _sourceType.baseType()->memoryHeadSize() << Instruction::MUL;
+
 		m_context << Instruction::DUP3 << Instruction::ADD << Instruction::SWAP2;
 		if (_sourceType.isDynamicallySized())
 		{
@@ -515,7 +504,12 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		// stack here: memory_end_offset storage_data_offset [storage_byte_offset] memory_offset
 		if (haveByteOffset)
 			m_context << Instruction::SWAP1 << Instruction::POP;
-		if (_padToWordBoundaries && baseSize % 32 != 0)
+		if (!_sourceType.isByteArray())
+		{
+			solAssert(_sourceType.calldataStride() % 32 == 0, "");
+			solAssert(_sourceType.memoryStride() % 32 == 0, "");
+		}
+		if (_padToWordBoundaries && _sourceType.isByteArray())
 		{
 			// memory_end_offset - start is the actual length (we want to compute the ceil of).
 			// memory_offset - start is its next multiple of 32, but it might be off by 32.
@@ -987,9 +981,9 @@ void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) con
 		if (!_arrayType.isByteArray())
 		{
 			if (_arrayType.location() == DataLocation::Memory)
-				m_context << _arrayType.baseType()->memoryHeadSize();
+				m_context << _arrayType.memoryStride();
 			else
-				m_context << _arrayType.baseType()->calldataEncodedSize();
+				m_context << _arrayType.calldataStride();
 			m_context << Instruction::MUL;
 		}
 		else if (_pad)
@@ -1067,10 +1061,7 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 	case DataLocation::CallData:
 		if (!_arrayType.isByteArray())
 		{
-			if (_arrayType.baseType()->isDynamicallyEncoded())
-				m_context << u256(0x20);
-			else
-				m_context << _arrayType.baseType()->calldataEncodedSize();
+			m_context << _arrayType.calldataStride();
 			m_context << Instruction::MUL;
 		}
 		// stack: <base_ref> <index * size>
