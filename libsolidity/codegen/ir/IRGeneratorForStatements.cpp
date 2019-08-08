@@ -797,7 +797,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				break;
 			case DataLocation::Storage:
 				setLValue(_memberAccess, make_unique<IRStorageArrayLength>(
-					m_context,
+					m_context.utils(),
 					m_context.variable(_memberAccess.expression()),
 					*_memberAccess.annotation().type,
 					type
@@ -863,7 +863,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			templ("key", ", " + m_context.variable(*_indexAccess.indexExpression()));
 		m_code << templ.render();
 		setLValue(_indexAccess, make_unique<IRStorageItem>(
-			m_context,
+			m_context.utils(),
 			slot,
 			0,
 			*_indexAccess.annotation().type
@@ -892,7 +892,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 				.render();
 
 				setLValue(_indexAccess, make_unique<IRStorageItem>(
-					m_context,
+					m_context.utils(),
 					slot,
 					offset,
 					*_indexAccess.annotation().type
@@ -911,7 +911,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 					")";
 
 				setLValue(_indexAccess, make_unique<IRMemoryItem>(
-					m_context,
+					m_context.utils(),
 					memAddress,
 					false,
 					*arrayType.baseType()
