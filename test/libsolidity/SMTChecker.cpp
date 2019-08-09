@@ -19,6 +19,7 @@
  */
 
 #include <test/libsolidity/AnalysisFramework.h>
+#include <test/Options.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -246,6 +247,85 @@ BOOST_AUTO_TEST_CASE(mod)
 		}
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
+}
+
+BOOST_AUTO_TEST_CASE(import_base)
+{
+	CompilerStack c;
+	c.setSources({
+	{"base", R"(
+		pragma solidity >=0.0;
+		contract Base {
+			uint x;
+			function f() internal {
+				++x;
+			}
+		}
+	)"},
+	{"der", R"(
+		pragma solidity >=0.0;
+		pragma experimental SMTChecker;
+		import "base";
+		contract Der is Base {
+			function g(uint y) public {
+				f();
+				assert(y > x);
+			}
+		}
+	)"}
+	});
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	BOOST_CHECK(c.compile());
+
+	unsigned asserts = 0;
+	for (auto const& e: c.errors())
+	{
+		string const* msg = e->comment();
+		BOOST_REQUIRE(msg);
+		if (msg->find("Assertion violation") != string::npos)
+			++asserts;
+	}
+	BOOST_CHECK_EQUAL(asserts, 1);
+}
+
+BOOST_AUTO_TEST_CASE(import_library)
+{
+	CompilerStack c;
+	c.setSources({
+	{"lib", R"(
+		pragma solidity >=0.0;
+		library L {
+			uint constant one = 1;
+			function f() internal pure returns (uint) {
+				return one;
+			}
+		}
+	)"},
+	{"c", R"(
+		pragma solidity >=0.0;
+		pragma experimental SMTChecker;
+		import "lib";
+		contract C {
+			function g(uint x) public pure {
+				uint y = L.f();
+				assert(x > y);
+			}
+		}
+	)"}
+	});
+	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	BOOST_CHECK(c.compile());
+
+	unsigned asserts = 0;
+	for (auto const& e: c.errors())
+	{
+		string const* msg = e->comment();
+		BOOST_REQUIRE(msg);
+		if (msg->find("Assertion violation") != string::npos)
+			++asserts;
+	}
+	BOOST_CHECK_EQUAL(asserts, 1);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

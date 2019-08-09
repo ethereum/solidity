@@ -156,6 +156,7 @@ protected:
 
 	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
 
+	void initializeStateVariables(ContractDefinition const& _contract);
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
 	void resetStateVariables();
@@ -245,6 +246,8 @@ protected:
 	/// when placeholder is visited.
 	/// Needs to be a stack because of function calls.
 	std::vector<int> m_modifierDepthStack;
+
+	ContractDefinition const* m_currentContract = nullptr;
 
 	/// Stores the context of the encoding.
 	smt::EncodingContext& m_context;

@@ -36,16 +36,19 @@ SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
 
 bool SMTEncoder::visit(ContractDefinition const& _contract)
 {
-	for (auto const& contract: _contract.annotation().linearizedBaseContracts)
-		for (auto var: contract->stateVariables())
-			if (*contract == _contract || var->isVisibleInDerivedContracts())
-				createVariable(*var);
+	solAssert(m_currentContract == nullptr, "");
+	m_currentContract = &_contract;
+
+	initializeStateVariables(_contract);
 	return true;
 }
 
-void SMTEncoder::endVisit(ContractDefinition const&)
+void SMTEncoder::endVisit(ContractDefinition const& _contract)
 {
 	m_context.resetAllVariables();
+
+	solAssert(m_currentContract == &_contract, "");
+	m_currentContract = nullptr;
 }
 
 void SMTEncoder::endVisit(VariableDeclaration const& _varDecl)
@@ -1156,6 +1159,12 @@ void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _fu
 				m_context.newValue(*retParam);
 				m_context.setZeroValue(*retParam);
 			}
+}
+
+void SMTEncoder::initializeStateVariables(ContractDefinition const& _contract)
+{
+	for (auto var: _contract.stateVariablesIncludingInherited())
+		createVariable(*var);
 }
 
 void SMTEncoder::initializeLocalVariables(FunctionDefinition const& _function)

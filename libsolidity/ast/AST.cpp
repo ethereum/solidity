@@ -109,6 +109,16 @@ TypePointer ImportDirective::type() const
 	return TypeProvider::module(*annotation().sourceUnit);
 }
 
+vector<VariableDeclaration const*> ContractDefinition::stateVariablesIncludingInherited() const
+{
+	vector<VariableDeclaration const*> stateVars;
+	for (auto const& contract: annotation().linearizedBaseContracts)
+		for (auto var: contract->stateVariables())
+			if (*contract == *this || var->isVisibleInDerivedContracts())
+				stateVars.push_back(var);
+	return stateVars;
+}
+
 map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
 {
 	auto exportedFunctionList = interfaceFunctionList();
