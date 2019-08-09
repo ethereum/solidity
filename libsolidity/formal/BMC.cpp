@@ -393,12 +393,22 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	solAssert(shouldInlineFunctionCall(_funCall), "");
 	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
 	solAssert(funDef, "");
+
 	if (visitedFunction(funDef))
+	{
+		auto const& returnParams = funDef->returnParameters();
+		for (auto param: returnParams)
+		{
+			m_context.newValue(*param);
+			m_context.setUnknownValue(*param);
+		}
+
 		m_errorReporter.warning(
 			_funCall.location(),
 			"Assertion checker does not support recursive function calls.",
 			SecondarySourceLocation().append("Starting from function:", funDef->location())
 		);
+	}
 	else
 	{
 		vector<smt::Expression> funArgs;
@@ -425,9 +435,9 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 		if (m_callStack.empty())
 			initFunction(*funDef);
 		funDef->accept(*this);
-
-		createReturnedExpressions(_funCall);
 	}
+
+	createReturnedExpressions(_funCall);
 }
 
 void BMC::abstractFunctionCall(FunctionCall const& _funCall)
