@@ -245,6 +245,10 @@ jobs:
       - image: ethereum/solidity-buildpack-deps:ubuntu1904
     steps:
       - checkout
+      - run:
+          name: Remove shared Z3
+          command: |
+            rm /lib/*/libz3.so*
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
@@ -268,6 +272,10 @@ jobs:
       CMAKE_BUILD_TYPE: Debug
     steps:
       - checkout
+      - run:
+          name: Remove shared Z3
+          command: |
+            rm /lib/*/libz3.so*
       - run: *run_build
       - persist_to_workspace: *artifacts_build_dir
 
@@ -301,6 +309,10 @@ jobs:
       CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake -DUSE_CVC4=OFF
     steps:
       - checkout
+      - run:
+          name: Remove shared Z3
+          command: |
+            rm /lib/*/libz3.so*
       - run: *run_build
 
   b_ubu_ossfuzz:
@@ -312,6 +324,10 @@ jobs:
       CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
     steps:
       - checkout
+      - run:
+          name: Remove shared Z3
+          command: |
+            rm /lib/*/libz3.so*
       - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
       - persist_to_workspace: *artifacts_executables_ossfuzz
@@ -428,6 +444,10 @@ jobs:
       CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
+      - run:
+          name: Remove shared Z3
+          command: |
+            rm /lib/*/libz3.so*
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
