@@ -46,16 +46,6 @@ RUN set -ex; \
 
 FROM base AS libraries
 
-# Z3
-RUN set -ex; \
-	git clone --depth=1 --branch="Z3-4.8.5" https://github.com/Z3Prover/z3.git /usr/src/z3; \
-	mkdir /usr/src/z3/build; \
-	cd /usr/src/z3/build; \
-	cmake -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="/usr" -G "Ninja" ..; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/z3
-
 # OSSFUZZ: libprotobuf-mutator
 RUN set -ex; \
 	git clone https://github.com/google/libprotobuf-mutator.git \
