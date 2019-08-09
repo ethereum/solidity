@@ -426,6 +426,8 @@ jobs:
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
       CMAKE_BUILD_TYPE: Release
+      CC: /usr/bin/clang-8
+      CXX: /usr/bin/clang++-8
     steps:
       - checkout
       - run: *run_build
