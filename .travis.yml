@@ -188,7 +188,7 @@ cache:
 
 install:
     - test $SOLC_INSTALL_DEPS_TRAVIS != On || (scripts/install_deps.sh)
-    - test "$TRAVIS_OS_NAME" != "linux" || (scripts/install_cmake.sh)
+    - test "$TRAVIS_OS_NAME" != "linux" || (sudo scripts/install_cmake.sh)
 
 before_script:
     # Disable tests unless run on the release branch, on tags or with daily cron

@@ -6,15 +6,17 @@
 
 set -e
 
-VERSION=3.7.1
-PREFIX=~/.local
+VERSION_MAJOR=3
+VERSION_MINOR=15
+VERSION_MICRO=2
+VERSION=$VERSION_MAJOR.$VERSION_MINOR.$VERSION_MICRO
+PREFIX="/usr/local"
 
 OS=$(uname -s)
 case $OS in
-Linux)  SHA256=7b4b7a1d9f314f45722899c0521c261e4bfab4a6b532609e37fef391da6bade2;;
-Darwin) SHA256=1851d1448964893fdc5a8c05863326119f397a3790e0c84c40b83499c7960267;;
+Linux)  SHA256=f8cbec2abc433938bd9378b129d1d288bb33b8b5a277afe19644683af6e32a59;;
+Darwin) SHA256=7ec056d641b8cbea98b220efdcc99da1991758a370063dcac3a0cd388d6b30b6;;
 esac
-
 
 BIN=$PREFIX/bin
 
@@ -24,7 +26,7 @@ if test -f $BIN/cmake && ($BIN/cmake --version | grep -q "$VERSION"); then
     echo "CMake $VERSION already installed in $BIN"
 else
     FILE=cmake-$VERSION-$OS-x86_64.tar.gz
-    URL=https://cmake.org/files/v3.7/$FILE
+    URL=https://cmake.org/files/v$VERSION_MAJOR.$VERSION_MINOR/$FILE
     ERROR=0
     TMPFILE=$(mktemp --tmpdir cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
     echo "Downloading CMake ($URL)..."

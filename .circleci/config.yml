@@ -292,13 +292,13 @@ jobs:
           command: codecov --flags all --gcov-root build
       - store_artifacts: *artifacts_test_results
 
-  # Builds in C++17 mode and uses debug build in order to speed up.
+  # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
-  b_ubu_cxx17:
+  b_ubu_cxx20:
     <<: *build_ubuntu1904
     environment:
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake -DUSE_CVC4=OFF
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx20.cmake -DUSE_CVC4=OFF
     steps:
       - checkout
       - run: *run_build
@@ -612,7 +612,7 @@ workflows:
       # build-only
       - b_docs: *workflow_trigger_on_tags
       - b_archlinux: *workflow_trigger_on_tags
-      - b_ubu_cxx17: *workflow_trigger_on_tags
+      - b_ubu_cxx20: *workflow_trigger_on_tags
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
 
       # OS/X build and tests
