@@ -248,6 +248,7 @@ jobs:
       - run:
           name: Remove shared Z3
           command: |
+            cp /root/project/z3_cmake/* /usr/lib/x86_64-linux-gnu/cmake/z3/
             rm /lib/*/libz3.so*
       - run: *run_build
       - store_artifacts: *artifacts_solc
@@ -275,6 +276,7 @@ jobs:
       - run:
           name: Remove shared Z3
           command: |
+            cp /root/project/z3_cmake/* /usr/lib/x86_64-linux-gnu/cmake/z3/
             rm /lib/*/libz3.so*
       - run: *run_build
       - persist_to_workspace: *artifacts_build_dir
@@ -312,6 +314,7 @@ jobs:
       - run:
           name: Remove shared Z3
           command: |
+            cp /root/project/z3_cmake/* /usr/lib/x86_64-linux-gnu/cmake/z3/
             rm /lib/*/libz3.so*
       - run: *run_build
 
@@ -327,6 +330,7 @@ jobs:
       - run:
           name: Remove shared Z3
           command: |
+            cp /root/project/z3_cmake/* /usr/lib/x86_64-linux-gnu/cmake/z3/
             rm /lib/*/libz3.so*
       - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
@@ -447,6 +451,7 @@ jobs:
       - run:
           name: Remove shared Z3
           command: |
+            cp /root/project/z3_cmake/* /usr/lib/x86_64-linux-gnu/cmake/z3/
             rm /lib/*/libz3.so*
       - run: *run_build
       - store_artifacts: *artifacts_solc
