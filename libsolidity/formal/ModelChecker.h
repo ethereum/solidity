@@ -28,7 +28,6 @@
 
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
 
 namespace langutil
 {
@@ -46,7 +45,7 @@ class ModelChecker
 public:
 	ModelChecker(langutil::ErrorReporter& _errorReporter, std::map<h256, std::string> const& _smtlib2Responses);
 
-	void analyze(SourceUnit const& _sources, std::shared_ptr<langutil::Scanner> const& _scanner);
+	void analyze(SourceUnit const& _sources);
 
 	/// This is used if the SMT solver is not directly linked into this binary.
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to

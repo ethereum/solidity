@@ -39,11 +39,9 @@ CHC::CHC(smt::EncodingContext& _context, ErrorReporter& _errorReporter):
 {
 }
 
-void CHC::analyze(SourceUnit const& _source, shared_ptr<Scanner> const& _scanner)
+void CHC::analyze(SourceUnit const& _source)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
-
-	m_scanner = _scanner;
 
 #ifdef HAVE_Z3
 	auto z3Interface = dynamic_pointer_cast<smt::Z3CHCInterface>(m_interface);

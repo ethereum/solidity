@@ -34,7 +34,6 @@
 
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
 
 #include <set>
 #include <string>
@@ -56,7 +55,7 @@ class BMC: public SMTEncoder
 public:
 	BMC(smt::EncodingContext& _context, langutil::ErrorReporter& _errorReporter, std::map<h256, std::string> const& _smtlib2Responses);
 
-	void analyze(SourceUnit const& _sources, std::shared_ptr<langutil::Scanner> const& _scanner, std::set<Expression const*> _safeAssertions);
+	void analyze(SourceUnit const& _sources, std::set<Expression const*> _safeAssertions);
 
 	/// This is used if the SMT solver is not directly linked into this binary.
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to

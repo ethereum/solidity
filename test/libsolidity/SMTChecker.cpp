@@ -257,8 +257,11 @@ BOOST_AUTO_TEST_CASE(import_base)
 		pragma solidity >=0.0;
 		contract Base {
 			uint x;
-			function f() internal {
+			address a;
+			function f() internal returns (uint) {
+				a = address(this);
 				++x;
+				return 2;
 			}
 		}
 	)"},
@@ -268,7 +271,7 @@ BOOST_AUTO_TEST_CASE(import_base)
 		import "base";
 		contract Der is Base {
 			function g(uint y) public {
-				f();
+				x += f();
 				assert(y > x);
 			}
 		}
@@ -327,6 +330,7 @@ BOOST_AUTO_TEST_CASE(import_library)
 	BOOST_CHECK_EQUAL(asserts, 1);
 
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -30,7 +30,6 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Scanner.h>
 
 #include <string>
 #include <unordered_map>
@@ -231,7 +230,6 @@ protected:
 	/// warning before the others in case it's needed.
 	langutil::ErrorReporter m_errorReporter;
 	langutil::ErrorList m_smtErrors;
-	std::shared_ptr<langutil::Scanner> m_scanner;
 
 	/// Stores the current function/modifier call/invocation path.
 	std::vector<CallStackEntry> m_callStack;

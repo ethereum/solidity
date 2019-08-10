@@ -46,7 +46,7 @@ class CHC: public SMTEncoder
 public:
 	CHC(smt::EncodingContext& _context, langutil::ErrorReporter& _errorReporter);
 
-	void analyze(SourceUnit const& _sources, std::shared_ptr<langutil::Scanner> const& _scanner);
+	void analyze(SourceUnit const& _sources);
 
 	std::set<Expression const*> const& safeAssertions() const { return m_safeAssertions; }
 
