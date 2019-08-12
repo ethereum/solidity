@@ -119,15 +119,13 @@ void UnusedPruner::operator()(Block& _block)
 void UnusedPruner::runUntilStabilised(
 	Dialect const& _dialect,
 	Block& _ast,
-	bool _allowMSizeOptization,
+	bool _allowMSizeOptimization,
 	set<YulString> const& _externallyUsedFunctions
 )
 {
-	_allowMSizeOptization = !SideEffectsCollector(_dialect, _ast).containsMSize();
-
 	while (true)
 	{
-		UnusedPruner pruner(_dialect, _ast, _allowMSizeOptization, _externallyUsedFunctions);
+		UnusedPruner pruner(_dialect, _ast, _allowMSizeOptimization, _externallyUsedFunctions);
 		pruner(_ast);
 		if (!pruner.shouldRunAgain())
 			return;

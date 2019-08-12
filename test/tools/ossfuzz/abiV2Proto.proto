@@ -1,0 +1,114 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+syntax = "proto2";
+
+// Flattened specification of array dimension
+// If is_static is false, and this array dimension is contained
+// inside another dimension e.g., x[][2] ([2] being the outer dimension)
+// then `length` for this dimension is the length of the first dynamically
+// sized array. The other (n-1) lengths are unspecified
+message ArrayDimensionInfo {
+    required uint32 length = 1;
+    required bool is_static = 2;
+}
+
+// TODO: Add more base types
+// See https://github.com/ethereum/solidity/issues/6749
+message ArrayType {
+    oneof base_type_oneof {
+        IntegerType inty = 1;
+        FixedByteType byty = 2;
+        AddressType adty = 3;
+        StructType stty = 4;
+        BoolType boolty = 5;
+        DynamicByteArrayType dynbytesty = 6;
+    }
+    repeated ArrayDimensionInfo info = 7;
+}
+
+// bool
+message BoolType {}
+
+// uint8...256, int8...256
+message IntegerType {
+    required bool is_signed = 1;
+    required uint32 width = 2;
+}
+
+// bytes1, bytes2,..., bytes32
+message FixedByteType {
+    required uint32 width = 1;
+}
+
+// address, address payable
+message AddressType {
+    required bool payable = 1;
+}
+
+message ValueType {
+    oneof value_type_oneof {
+        IntegerType inty = 1;
+        FixedByteType byty = 2;
+        AddressType adty = 3;
+        BoolType boolty = 4;
+    }
+}
+
+// bytes/string
+message DynamicByteArrayType {
+    enum DType {
+        BYTES = 0;
+        STRING = 1;
+    }
+    required DType type = 1;
+}
+
+message NonValueType {
+    oneof nonvalue_type_oneof {
+        DynamicByteArrayType dynbytearray = 1;
+        ArrayType arrtype = 2;
+        StructType stype = 3;
+    }
+}
+
+message Type {
+    oneof type_oneof {
+        ValueType vtype = 1;
+        NonValueType nvtype = 2;
+    }
+}
+
+// TODO: This must not reference itself either directly or indirectly
+message StructType {}
+
+message VarDecl {
+    required Type type = 1;
+}
+
+message TestFunction {
+    required VarDecl local_vars = 1;
+    // Length of invalid encoding
+    required uint64 invalid_encoding_length = 2;
+}
+
+message Contract {
+    required VarDecl state_vars = 1;
+    required TestFunction testfunction = 2;
+}
+
+package dev.test.abiv2fuzzer;

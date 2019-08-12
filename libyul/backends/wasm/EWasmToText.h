@@ -33,11 +33,13 @@ class EWasmToText: public boost::static_visitor<std::string>
 public:
 	std::string run(
 		std::vector<wasm::GlobalVariableDeclaration> const& _globals,
+		std::vector<wasm::FunctionImport> const& _imports,
 		std::vector<wasm::FunctionDefinition> const& _functions
 	);
 
 public:
 	std::string operator()(wasm::Literal const& _literal);
+	std::string operator()(wasm::StringLiteral const& _literal);
 	std::string operator()(wasm::LocalVariable const& _identifier);
 	std::string operator()(wasm::GlobalVariable const& _identifier);
 	std::string operator()(wasm::Label const& _label);
@@ -57,7 +59,10 @@ private:
 	std::string transform(wasm::FunctionDefinition const& _function);
 
 	std::string visit(wasm::Expression const& _expression);
-	std::string joinTransformed(std::vector<wasm::Expression> const& _expressions);
+	std::string joinTransformed(
+		std::vector<wasm::Expression> const& _expressions,
+		char _separator = ' '
+	);
 };
 
 }

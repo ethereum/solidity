@@ -45,8 +45,10 @@ class SolidityExecutionFramework: public dev::test::ExecutionFramework
 {
 
 public:
-	SolidityExecutionFramework();
-	SolidityExecutionFramework(std::string const& _ipcPath, langutil::EVMVersion _evmVersion);
+	SolidityExecutionFramework() {}
+	explicit SolidityExecutionFramework(langutil::EVMVersion _evmVersion):
+		ExecutionFramework(_evmVersion)
+	{}
 
 	virtual bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,

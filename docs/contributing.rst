@@ -21,6 +21,17 @@ In particular, we need help in the following areas:
 
 Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project - in the issues, pull requests, or Gitter channels - you agree to abide by its terms.
 
+Team Calls
+==========
+
+If you have issues or pull requests to discuss, or are interested in hearing what
+the team and contributors are working on, you can join our public team calls:
+
+- Monday at 12pm CET
+- Wednesday at 3pm CET
+
+Both calls take place on `Google Hangouts <https://hangouts.google.com/hangouts/_/ethereum.org/solidity-weekly>`_.
+
 How to Report Issues
 ====================
 
@@ -70,15 +81,23 @@ Thank you for your help!
 Running the compiler tests
 ==========================
 
-The ``./scripts/tests.sh`` script executes most Solidity tests and
-runs ``aleth`` automatically if it is in the path. The script does not download it,
-so you need to install it first. Please read on for the details.
+The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
+but for quicker feedback, you might want to run specific tests.
 
-Solidity includes different types of tests, most of them bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
-Some of them require the ``aleth`` client in testing mode, others require ``libz3``.
+Solidity includes different types of tests, most of them bundled into the
+`Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
+Running ``build/test/soltest` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
 
-To run a basic set of tests that require neither ``aleth`` nor ``libz3``, run
-``./scripts/soltest.sh --no-ipc --no-smt``.
+Some tests require the ``libevmone.so`` library, others require ``libz3``.
+
+The test system will automatically try to discover the location of ``libevmone.so``
+starting from the current directory. If it does not find it, the relevant tests
+are skipped. To run all tests, download the library from
+`Github <https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz>`_
+and either place it in the project root path or inside the ``deps`` folder.
+
+If you do not have libz3 installed on your system, you should disable the SMT tests:
+``./scripts/soltest.sh --no-smt``.
 
 ``./build/test/soltest --help`` has extensive help on all of the options available.
 See especially:
@@ -89,27 +108,19 @@ See especially:
 
 .. note ::
 
-    Those working in a Windows environment wanting to run the above basic sets without aleth or libz3 in Git Bash, you would have to do: ``./build/test/Release/soltest.exe -- --no-ipc --no-smt``.
-    If you're running this in plain Command Prompt, use ``.\build\test\Release\soltest.exe -- --no-ipc --no-smt``.
-
-The option ``--no-smt`` disables the tests that require ``libz3`` and
-``--no-ipc`` disables those that require ``aleth``.
-
-If you want to run the ipc tests (that test the semantics of the generated code),
-you need to install `aleth <https://github.com/ethereum/aleth/releases/download/v1.6.0/aleth-1.6.0-linux-x86_64.tar.gz>`_ and run it in testing mode: ``aleth --db memorydb --test -d /tmp/testeth``.
-
-To run the actual tests, use: ``./scripts/soltest.sh --ipcpath /tmp/testeth/geth.ipc``.
+    Those working in a Windows environment wanting to run the above basic sets without libz3 in Git Bash, you would have to do: ``./build/test/Release/soltest.exe -- --no-smt``.
+    If you are running this in plain Command Prompt, use ``.\build\test\Release\soltest.exe -- --no-smt``.
 
 To run a subset of tests, you can use filters:
-``./scripts/soltest.sh -t TestSuite/TestName --ipcpath /tmp/testeth/geth.ipc``,
+``./scripts/soltest.sh -t TestSuite/TestName,
 where ``TestName`` can be a wildcard ``*``.
 
-For example, here's an example test you might run;
-``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-ipc --no-smt``.
+For example, here is an example test you might run;
+``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-smt``.
 This will test all the tests for the disambiguator.
 
 To get a list of all tests, use
-``./build/test/soltest --list_content=HRF -- --ipcpath /tmp/irrelevant``.
+``./build/test/soltest --list_content=HRF``.
 
 If you want to debug using GDB, make sure you build differently than the "usual".
 For example, you could run the following command in your ``build`` folder:
@@ -126,11 +137,6 @@ in addition to those found in ``soltest``.
 
 The CI runs additional tests (including ``solc-js`` and testing third party Solidity frameworks) that require compiling the Emscripten target.
 
-.. note ::
-
-    Some versions of ``aleth`` can not be used for testing. We suggest using
-    the same version that the Solidity continuous integration tests use.
-    Currently the CI uses version ``1.6.0`` of ``aleth``.
 
 Writing and running syntax tests
 --------------------------------

@@ -34,7 +34,7 @@ using namespace dev;
 
 map<YulString, int> CompilabilityChecker::run(
 	Dialect const& _dialect,
-	Block const& _ast,
+	Object const& _object,
 	bool _optimizeStackAllocation
 )
 {
@@ -46,16 +46,26 @@ map<YulString, int> CompilabilityChecker::run(
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
 		NoOutputEVMDialect noOutputDialect(*evmDialect);
-		BuiltinContext builtinContext;
 
 		yul::AsmAnalysisInfo analysisInfo =
-			yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
+			yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _object);
 
+		BuiltinContext builtinContext;
+		builtinContext.currentObject = &_object;
+		for (auto name: _object.dataNames())
+			builtinContext.subIDs[name] = 1;
 		NoOutputAssembly assembly;
-		CodeTransform transform(assembly, analysisInfo, _ast, noOutputDialect, builtinContext, _optimizeStackAllocation);
+		CodeTransform transform(
+			assembly,
+			analysisInfo,
+			*_object.code,
+			noOutputDialect,
+			builtinContext,
+			_optimizeStackAllocation
+		);
 		try
 		{
-			transform(_ast);
+			transform(*_object.code);
 		}
 		catch (StackTooDeepError const&)
 		{

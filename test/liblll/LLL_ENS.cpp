@@ -377,11 +377,11 @@ BOOST_AUTO_TEST_CASE(transfer_ownership)
 	BOOST_REQUIRE(callContractFunction("setOwner(bytes32,address)", 0x00, ACCOUNT(1)) == encodeArgs());
 
 	// Check that an event was raised and contents are correct.
-	BOOST_REQUIRE(m_logs.size() == 1);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(ACCOUNT(1)));
-	BOOST_REQUIRE(m_logs[0].topics.size() == 2);
-	BOOST_CHECK(m_logs[0].topics[0] == keccak256(string("Transfer(bytes32,address)")));
-	BOOST_CHECK(m_logs[0].topics[1] == u256(0x00));
+	BOOST_REQUIRE(numLogs() == 1);
+	BOOST_CHECK(logData(0) == encodeArgs(ACCOUNT(1)));
+	BOOST_REQUIRE(numLogTopics(0) == 2);
+	BOOST_CHECK(logTopic(0, 0) == keccak256(string("Transfer(bytes32,address)")));
+	BOOST_CHECK(logTopic(0, 1) == u256(0x00));
 
 	// Verify that owner of 0x00 is now account(1).
 	BOOST_CHECK(callContractFunction("owner(bytes32)", 0x00) == encodeArgs(ACCOUNT(1)));
@@ -406,11 +406,11 @@ BOOST_AUTO_TEST_CASE(set_resolver)
 	BOOST_REQUIRE(callContractFunction("setResolver(bytes32,address)", 0x00, ACCOUNT(1)) == encodeArgs());
 
 	// Check that an event was raised and contents are correct.
-	BOOST_REQUIRE(m_logs.size() == 1);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(ACCOUNT(1)));
-	BOOST_REQUIRE(m_logs[0].topics.size() == 2);
-	BOOST_CHECK(m_logs[0].topics[0] == keccak256(string("NewResolver(bytes32,address)")));
-	BOOST_CHECK(m_logs[0].topics[1] == u256(0x00));
+	BOOST_REQUIRE(numLogs() == 1);
+	BOOST_CHECK(logData(0) == encodeArgs(ACCOUNT(1)));
+	BOOST_REQUIRE(numLogTopics(0) == 2);
+	BOOST_CHECK(logTopic(0, 0) == keccak256(string("NewResolver(bytes32,address)")));
+	BOOST_CHECK(logTopic(0, 1) == u256(0x00));
 
 	// Verify that the resolver is changed to account(1).
 	BOOST_CHECK(callContractFunction("resolver(bytes32)", 0x00) == encodeArgs(ACCOUNT(1)));
@@ -435,11 +435,11 @@ BOOST_AUTO_TEST_CASE(set_ttl)
 	BOOST_REQUIRE(callContractFunction("setTTL(bytes32,uint64)", 0x00, 3600) == encodeArgs());
 
 	// Check that an event was raised and contents are correct.
-	BOOST_REQUIRE(m_logs.size() == 1);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(3600));
-	BOOST_REQUIRE(m_logs[0].topics.size() == 2);
-	BOOST_CHECK(m_logs[0].topics[0] == keccak256(string("NewTTL(bytes32,uint64)")));
-	BOOST_CHECK(m_logs[0].topics[1] == u256(0x00));
+	BOOST_REQUIRE(numLogs() == 1);
+	BOOST_CHECK(logData(0) == encodeArgs(3600));
+	BOOST_REQUIRE(numLogTopics(0) == 2);
+	BOOST_CHECK(logTopic(0, 0) == keccak256(string("NewTTL(bytes32,uint64)")));
+	BOOST_CHECK(logTopic(0, 1) == u256(0x00));
 
 	// Verify that the TTL has been set.
 	BOOST_CHECK(callContractFunction("ttl(bytes32)", 0x00) == encodeArgs(3600));
@@ -464,12 +464,12 @@ BOOST_AUTO_TEST_CASE(create_subnode)
 	BOOST_REQUIRE(callContractFunction("setSubnodeOwner(bytes32,bytes32,address)", 0x00, keccak256(string("eth")), ACCOUNT(1)) == encodeArgs());
 
 	// Check that an event was raised and contents are correct.
-	BOOST_REQUIRE(m_logs.size() == 1);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(ACCOUNT(1)));
-	BOOST_REQUIRE(m_logs[0].topics.size() == 3);
-	BOOST_CHECK(m_logs[0].topics[0] == keccak256(string("NewOwner(bytes32,bytes32,address)")));
-	BOOST_CHECK(m_logs[0].topics[1] == u256(0x00));
-	BOOST_CHECK(m_logs[0].topics[2] == keccak256(string("eth")));
+	BOOST_REQUIRE(numLogs() == 1);
+	BOOST_CHECK(logData(0) == encodeArgs(ACCOUNT(1)));
+	BOOST_REQUIRE(numLogTopics(0) == 3);
+	BOOST_CHECK(logTopic(0, 0) == keccak256(string("NewOwner(bytes32,bytes32,address)")));
+	BOOST_CHECK(logTopic(0, 1) == u256(0x00));
+	BOOST_CHECK(logTopic(0, 2) == keccak256(string("eth")));
 
 	// Verify that the sub-node owner is now account(1).
 	u256 namehash = keccak256(h256(0x00).asBytes() + keccak256("eth").asBytes());

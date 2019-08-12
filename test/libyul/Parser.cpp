@@ -574,6 +574,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

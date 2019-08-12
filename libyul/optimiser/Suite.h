@@ -32,9 +32,11 @@ namespace yul
 struct AsmAnalysisInfo;
 struct Dialect;
 class GasMeter;
+struct Object;
 
 /**
- * Optimiser suite that combines all steps and also provides the settings for the heuristics
+ * Optimiser suite that combines all steps and also provides the settings for the heuristics.
+ * Only optimizes the code of the provided object, does not descend into the sub-objects.
  */
 class OptimiserSuite
 {
@@ -42,8 +44,7 @@ public:
 	static void run(
 		Dialect const& _dialect,
 		GasMeter const* _meter,
-		Block& _ast,
-		AsmAnalysisInfo const& _analysisInfo,
+		Object& _object,
 		bool _optimizeStackAllocation,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);

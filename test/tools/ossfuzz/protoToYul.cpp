@@ -16,13 +16,13 @@
 */
 
 #include <test/tools/ossfuzz/protoToYul.h>
-#include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libdevcore/StringUtils.h>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <libyul/Exceptions.h>
 
 using namespace std;
 using namespace yul::test::yul_fuzzer;
-using namespace dev::solidity;
+using namespace dev;
 
 string ProtoConverter::createHex(string const& _hexBytes) const
 {
@@ -250,7 +250,7 @@ void ProtoConverter::visit(MultiVarDecl const& _x)
 	// (k-p)+1 = numOutParams
 	m_output <<
 		"let " <<
-		YulUtilFunctions::suffixedVariableNameList("x_", m_numLiveVars, m_numLiveVars + numOutParams) <<
+		dev::suffixedVariableNameList("x_", m_numLiveVars, m_numLiveVars + numOutParams) <<
 		" := ";
 
 	// Create RHS of multi var decl
@@ -887,7 +887,7 @@ void ProtoConverter::createFunctionDefAndCall(T const& _x, unsigned _numInParams
 	m_output << "function foo_" << functionTypeToString(_type) << "_" << m_numFunctionSets;
 	m_output << "(";
 	if (_numInParams > 0)
-		m_output << YulUtilFunctions::suffixedVariableNameList("x_", 0, _numInParams);
+		m_output << dev::suffixedVariableNameList("x_", 0, _numInParams);
 	m_output << ")";
 
 	// Book keeping for variables in function scope and in nested scopes
@@ -897,7 +897,7 @@ void ProtoConverter::createFunctionDefAndCall(T const& _x, unsigned _numInParams
 	// This creates -> x_n+1,...,x_r
 	if (_numOutParams > 0)
 	{
-		m_output << " -> " << YulUtilFunctions::suffixedVariableNameList("x_", _numInParams, _numInParams + _numOutParams);
+		m_output << " -> " << dev::suffixedVariableNameList("x_", _numInParams, _numInParams + _numOutParams);
 		// More bookkeeping
 		m_numVarsPerScope.top() += _numOutParams;
 		m_numLiveVars += _numOutParams;
@@ -915,7 +915,7 @@ void ProtoConverter::createFunctionDefAndCall(T const& _x, unsigned _numInParams
 	// Manually create a multi assignment using global variables
 	// This prints a_0, ..., a_k-1 for this function that returns "k" values
 	if (_numOutParams > 0)
-		m_output << YulUtilFunctions::suffixedVariableNameList("a_", 0, _numOutParams) << " := ";
+		m_output << dev::suffixedVariableNameList("a_", 0, _numOutParams) << " := ";
 
 	// Call the function with the correct number of input parameters via calls to calldataload with
 	// incremental addresses.
@@ -976,7 +976,7 @@ void ProtoConverter::visit(Program const& _x)
 	m_output << "{\n";
 	// Create globals at the beginning
 	// This creates let a_0, a_1, a_2, a_3 (followed by a new line)
-	m_output << "let " << YulUtilFunctions::suffixedVariableNameList("a_", 0, modOutputParams - 1) << "\n";
+	m_output << "let " << dev::suffixedVariableNameList("a_", 0, modOutputParams - 1) << "\n";
 	// Register function interface. Useful while visiting multi var decl/assignment statements.
 	for (auto const& f: _x.funcs())
 		registerFunction(f);

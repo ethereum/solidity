@@ -1,10 +1,13 @@
-{
-    // We should never split arguments to ``dataoffset``
-    // or ``datasize`` because they need to be literals
-    let x := dataoffset("abc")
-    let y := datasize("abc")
-    // datacopy is fine, though
-    datacopy(mload(0), mload(1), mload(2))
+object "main" {
+    code {
+        // We should never split arguments to ``dataoffset``
+        // or ``datasize`` because they need to be literals
+        let x := dataoffset("abc")
+        let y := datasize("abc")
+        // datacopy is fine, though
+        datacopy(mload(0), mload(1), mload(2))
+    }
+    data "abc" "Hello, World!"
 }
 // ====
 // step: expressionSplitter

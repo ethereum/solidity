@@ -113,7 +113,15 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 {
 	solAssert(_object.code, "");
 	_object.analysisInfo = make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*_object.analysisInfo, m_errorReporter, boost::none, languageToDialect(m_language, m_evmVersion));
+
+	AsmAnalyzer analyzer(
+		*_object.analysisInfo,
+		m_errorReporter,
+		boost::none,
+		languageToDialect(m_language, m_evmVersion),
+		{},
+		_object.dataNames()
+	);
 	bool success = analyzer.analyze(*_object.code);
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
@@ -153,8 +161,7 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	OptimiserSuite::run(
 		dialect,
 		meter.get(),
-		*_object.code,
-		*_object.analysisInfo,
+		_object,
 		m_optimiserSettings.optimizeStackAllocation
 	);
 }

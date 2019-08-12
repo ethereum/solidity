@@ -36,10 +36,33 @@ namespace smt
 class EncodingContext
 {
 public:
-	EncodingContext(std::shared_ptr<SolverInterface> _solver);
+	EncodingContext();
 
-	/// Resets the entire context.
+	/// Resets the entire context except for symbolic variables which stay
+	/// alive because of state variables and inlined function calls.
+	/// To be used in the beginning of a root function visit.
 	void reset();
+	/// Clears the entire context, erasing everything.
+	/// To be used before a model checking engine starts.
+	void clear();
+
+	/// Sets the current solver used by the current engine for
+	/// SMT variable declaration.
+	void setSolver(std::shared_ptr<SolverInterface> _solver)
+	{
+		solAssert(_solver, "");
+		m_solver = _solver;
+	}
+
+	/// Sets whether the context should conjoin assertions in the assertion stack.
+	void setAssertionAccumulation(bool _acc) { m_accumulateAssertions = _acc; }
+
+	/// Forwards variable creation to the solver.
+	Expression newVariable(std::string _name, SortPointer _sort)
+	{
+		solAssert(m_solver, "");
+		return m_solver->newVariable(move(_name), move(_sort));
+	}
 
 	/// Variables.
 	//@{
@@ -121,7 +144,11 @@ public:
 	void pushSolver();
 	void popSolver();
 	void addAssertion(Expression const& _e);
-	std::shared_ptr<SolverInterface> solver() { return m_solver; }
+	std::shared_ptr<SolverInterface> solver()
+	{
+		solAssert(m_solver, "");
+		return m_solver;
+	}
 	//@}
 
 private:
@@ -154,6 +181,9 @@ private:
 
 	/// Assertion stack.
 	std::vector<Expression> m_assertions;
+
+	/// Whether to conjoin assertions in the assertion stack.
+	bool m_accumulateAssertions = true;
 	//@}
 };
 

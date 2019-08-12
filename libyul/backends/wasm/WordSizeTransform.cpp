@@ -24,6 +24,7 @@
 #include <libdevcore/CommonData.h>
 
 #include <array>
+#include <map>
 
 using namespace std;
 using namespace dev;
@@ -62,7 +63,7 @@ void WordSizeTransform::operator()(If& _if)
 
 void WordSizeTransform::operator()(Switch&)
 {
-	yulAssert(false, "Switch statement not implemented.");
+	yulAssert(false, "Switch statement has to be handled inside the containing block.");
 }
 
 void WordSizeTransform::operator()(ForLoop& _for)
@@ -153,6 +154,8 @@ void WordSizeTransform::operator()(Block& _block)
 				else
 					yulAssert(false, "");
 			}
+			else if (_s.type() == typeid(Switch))
+				return handleSwitch(boost::get<Switch>(_s));
 			else
 				visit(_s);
 			return boost::none;
@@ -206,6 +209,110 @@ void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
 	);
 }
 
+vector<Statement> WordSizeTransform::handleSwitchInternal(
+	langutil::SourceLocation const& _location,
+	vector<YulString> const& _splitExpressions,
+	vector<Case> _cases,
+	YulString _runDefaultFlag,
+	size_t _depth
+)
+{
+	if (_depth == 4)
+	{
+		yulAssert(_cases.size() == 1, "");
+		return std::move(_cases.front().body.statements);
+	}
+
+	// Extract current 64 bit segment and group by it.
+	map<u256, vector<Case>> cases;
+	for (Case& c: _cases)
+	{
+		yulAssert(c.value, "Default case still present.");
+		cases[
+			(valueOfLiteral(*c.value) >> (256 - 64 * (_depth + 1)))	&
+			std::numeric_limits<uint64_t>::max()
+		].emplace_back(std::move(c));
+	}
+
+	Switch ret{
+		_location,
+		make_unique<Expression>(Identifier{_location, _splitExpressions.at(_depth)}),
+		{}
+	};
+
+	for (auto& c: cases)
+	{
+		Literal label{_location, LiteralKind::Number, YulString(c.first.str()), "u64"_yulstring};
+		ret.cases.emplace_back(Case{
+			c.second.front().location,
+			make_unique<Literal>(std::move(label)),
+			Block{_location, handleSwitchInternal(
+				_location,
+				_splitExpressions,
+				std::move(c.second),
+				_runDefaultFlag,
+				_depth + 1
+			)}
+		});
+	}
+	if (!_runDefaultFlag.empty())
+		ret.cases.emplace_back(Case{
+			_location,
+			nullptr,
+			Block{_location, make_vector<Statement>(
+				Assignment{
+					_location,
+					{{_location, _runDefaultFlag}},
+					make_unique<Expression>(Literal{_location, LiteralKind::Number, "1"_yulstring, "u64"_yulstring})
+				}
+			)}
+		});
+	return make_vector<Statement>(std::move(ret));
+}
+
+std::vector<Statement> WordSizeTransform::handleSwitch(Switch& _switch)
+{
+	for (auto& c: _switch.cases)
+		(*this)(c.body);
+
+	// Turns the switch into a quadruply-nested switch plus
+	// a flag that tells to execute the default case after all the switches.
+	vector<Statement> ret;
+
+	YulString runDefaultFlag;
+	Case defaultCase;
+	if (!_switch.cases.back().value)
+	{
+		runDefaultFlag = m_nameDispenser.newName("run_default"_yulstring);
+		defaultCase = std::move(_switch.cases.back());
+		_switch.cases.pop_back();
+		ret.emplace_back(VariableDeclaration{
+			_switch.location,
+			{TypedName{_switch.location, runDefaultFlag, "u64"_yulstring}},
+			{}
+		});
+	}
+	vector<YulString> splitExpressions;
+	for (auto const& expr: expandValue(*_switch.expression))
+		splitExpressions.emplace_back(boost::get<Identifier>(*expr).name);
+
+	ret += handleSwitchInternal(
+		_switch.location,
+		splitExpressions,
+		std::move(_switch.cases),
+		runDefaultFlag,
+		0
+	);
+	if (!runDefaultFlag.empty())
+		ret.emplace_back(If{
+			_switch.location,
+			make_unique<Expression>(Identifier{_switch.location, runDefaultFlag}),
+			std::move(defaultCase.body)
+		});
+	return ret;
+}
+
+
 array<YulString, 4> WordSizeTransform::generateU64IdentifierNames(YulString const& _s)
 {
 	yulAssert(m_variableMapping.find(_s) == m_variableMapping.end(), "");
@@ -242,7 +349,7 @@ array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const
 		}
 	}
 	else
-		yulAssert(false, "");
+		yulAssert(false, "Invalid expression to split.");
 	return ret;
 }
 

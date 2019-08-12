@@ -133,6 +133,21 @@ string IRGeneratorForStatements::code() const
 	return m_code.str();
 }
 
+void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _varDecl)
+{
+	solAssert(m_context.isStateVariable(_varDecl), "Must be a state variable.");
+	solAssert(!_varDecl.isConstant(), "");
+	if (_varDecl.value())
+	{
+		_varDecl.value()->accept(*this);
+		string value = m_context.newYulVariable();
+		Type const& varType = *_varDecl.type();
+
+		m_code << "let " << value << " := " << expressionAsType(*_varDecl.value(), varType) << "\n";
+		m_code << IRStorageItem{m_context, _varDecl}.storeValue(value, varType);
+	}
+}
+
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	for (auto const& decl: _varDeclStatement.declarations())
@@ -593,8 +608,42 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		break;
 	}
+	// Array creation using new
+	case FunctionType::Kind::ObjectCreation:
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);
+		solAssert(arguments.size() == 1, "");
+
+		defineExpression(_functionCall) <<
+			m_utils.allocateMemoryArrayFunction(arrayType) <<
+			"(" <<
+				expressionAsType(*arguments[0], *TypeProvider::uint256()) <<
+			")\n";
+
+		break;
+	}
+	case FunctionType::Kind::KECCAK256:
+	{
+		solAssert(arguments.size() == 1, "");
+
+		ArrayType const* arrayType = TypeProvider::bytesMemory();
+		string const& array = m_context.newYulVariable();
+		m_code << "let " << array << " := " << expressionAsType(*arguments[0], *arrayType) << "\n";
+
+		defineExpression(_functionCall) <<
+			"keccak256(" <<
+			m_utils.arrayDataAreaFunction(*arrayType) << "(" <<
+			array <<
+			"), " <<
+			m_utils.arrayLengthFunction(*arrayType) <<
+			"(" <<
+			array <<
+			"))\n";
+
+		break;
+	}
 	default:
-		solUnimplemented("");
+		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
 	}
 }
 
@@ -748,7 +797,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				break;
 			case DataLocation::Storage:
 				setLValue(_memberAccess, make_unique<IRStorageArrayLength>(
-					m_context,
+					m_context.utils(),
 					m_context.variable(_memberAccess.expression()),
 					*_memberAccess.annotation().type,
 					type
@@ -756,11 +805,12 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 				break;
 			case DataLocation::Memory:
-				solUnimplementedAssert(false, "");
-				//m_context << Instruction::MLOAD;
+				defineExpression(_memberAccess) <<
+					"mload(" <<
+					m_context.variable(_memberAccess.expression()) <<
+					")\n";
 				break;
 			}
-
 		break;
 	}
 	case Type::Category::FixedBytes:
@@ -813,7 +863,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			templ("key", ", " + m_context.variable(*_indexAccess.indexExpression()));
 		m_code << templ.render();
 		setLValue(_indexAccess, make_unique<IRStorageItem>(
-			m_context,
+			m_context.utils(),
 			slot,
 			0,
 			*_indexAccess.annotation().type
@@ -842,7 +892,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 				.render();
 
 				setLValue(_indexAccess, make_unique<IRStorageItem>(
-					m_context,
+					m_context.utils(),
 					slot,
 					offset,
 					*_indexAccess.annotation().type
@@ -851,13 +901,29 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 				break;
 			}
 			case DataLocation::Memory:
-				solUnimplementedAssert(false, "");
-				break;
-			case DataLocation::CallData:
-				solUnimplementedAssert(false, "");
-				break;
-		}
+			{
+				string const memAddress =
+					m_utils.memoryArrayIndexAccessFunction(arrayType) +
+					"(" +
+					m_context.variable(_indexAccess.baseExpression()) +
+					", " +
+					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) +
+					")";
 
+				setLValue(_indexAccess, make_unique<IRMemoryItem>(
+					m_context.utils(),
+					memAddress,
+					false,
+					*arrayType.baseType()
+				));
+				break;
+			}
+			case DataLocation::CallData:
+			{
+				solUnimplemented("calldata not yet implemented!");
+
+			}
+		}
 	}
 	else if (baseType.category() == Type::Category::FixedBytes)
 		solUnimplementedAssert(false, "");

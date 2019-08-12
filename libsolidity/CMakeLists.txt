@@ -75,10 +75,17 @@ set(sources
 	codegen/ir/IRGenerationContext.h
 	codegen/ir/IRLValue.cpp
 	codegen/ir/IRLValue.h
+	formal/BMC.cpp
+	formal/BMC.h
+	formal/CHC.cpp
+	formal/CHC.h
+	formal/CHCSolverInterface.h
 	formal/EncodingContext.cpp
 	formal/EncodingContext.h
-	formal/SMTChecker.cpp
-	formal/SMTChecker.h
+	formal/ModelChecker.cpp
+	formal/ModelChecker.h
+	formal/SMTEncoder.cpp
+	formal/SMTEncoder.h
 	formal/SMTLib2Interface.cpp
 	formal/SMTLib2Interface.h
 	formal/SMTPortfolio.cpp
@@ -117,7 +124,7 @@ find_package(Z3 4.6.0)
 if (${Z3_FOUND})
   add_definitions(-DHAVE_Z3)
   message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
-  set(z3_SRCS formal/Z3Interface.cpp formal/Z3Interface.h)
+  set(z3_SRCS formal/Z3Interface.cpp formal/Z3Interface.h formal/Z3CHCInterface.cpp formal/Z3CHCInterface.h)
 else()
   set(z3_SRCS)
 endif()

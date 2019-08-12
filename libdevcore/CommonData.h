@@ -33,6 +33,7 @@
 #include <string>
 #include <set>
 #include <functional>
+#include <utility>
 
 /// Operators need to stay in the global namespace.
 

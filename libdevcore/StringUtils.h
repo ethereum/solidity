@@ -39,6 +39,12 @@ size_t stringDistance(std::string const& _str1, std::string const& _str2);
 // Return a string having elements of suggestions as quoted, alternative suggestions. e.g. "a", "b" or "c"
 std::string quotedAlternativesList(std::vector<std::string> const& suggestions);
 
+/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
+/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
+/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
+/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
+std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
+
 /// Joins collection of strings into one string with separators between, last separator can be different.
 /// @param _list collection of strings to join
 /// @param _separator defaults to ", "

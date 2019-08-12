@@ -118,12 +118,15 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> c
 	static SemVerVersion const currentVersion{string(VersionString)};
 	// FIXME: only match for major version incompatibility
 	if (!matchExpression.matches(currentVersion))
-		m_errorReporter.fatalParserError(
-			_location,
-			"Source file requires different compiler version (current compiler is " +
-			string(VersionString) + " - note that nightly builds are considered to be "
-			"strictly less than the released version"
-		);
+		// If m_parserErrorRecovery is true, the same message will appear from SyntaxChecker::visit(),
+		// so we don't need to report anything here.
+		if (!m_parserErrorRecovery)
+			m_errorReporter.fatalParserError(
+				_location,
+				"Source file requires different compiler version (current compiler is " +
+				string(VersionString) + " - note that nightly builds are considered to be "
+				"strictly less than the released version"
+			);
 }
 
 ASTPointer<PragmaDirective> Parser::parsePragmaDirective()

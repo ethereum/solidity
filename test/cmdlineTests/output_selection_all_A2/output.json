@@ -1,0 +1,10 @@
+{"contracts":{"a.sol":{"A2":{"evm":{"bytecode":{"linkReferences":{},"object":"bytecode removed","opcodes":"opcodes removed","sourceMap":"sourceMap removed"}}}}},"errors":[{"component":"general","formattedMessage":"a.sol:1:1: Warning: Source file does not specify required compiler version!
+contract A1 { function a(uint x) public pure { assert(x > 0); } } contract A2 { function a(uint x) public pure { assert(x > 0); } }
+^---------------------------------------------------------------------------------------------------------------------------------^
+","message":"Source file does not specify required compiler version!","severity":"warning","sourceLocation":{"end":131,"file":"a.sol","start":0},"type":"Warning"},{"component":"general","formattedMessage":"b.sol:1:1: Warning: Source file does not specify required compiler version!
+contract A1 { function b(uint x) public { assert(x > 0); } } contract B2 { function b(uint x) public pure { assert(x > 0); } }
+^----------------------------------------------------------------------------------------------------------------------------^
+","message":"Source file does not specify required compiler version!","severity":"warning","sourceLocation":{"end":126,"file":"b.sol","start":0},"type":"Warning"},{"component":"general","formattedMessage":"b.sol:1:15: Warning: Function state mutability can be restricted to pure
+contract A1 { function b(uint x) public { assert(x > 0); } } contract B2 { function b(uint x) public pure { assert(x > 0); } }
+              ^------------------------------------------^
+","message":"Function state mutability can be restricted to pure","severity":"warning","sourceLocation":{"end":58,"file":"b.sol","start":14},"type":"Warning"}],"sources":{"a.sol":{"id":0},"b.sol":{"id":1}}}

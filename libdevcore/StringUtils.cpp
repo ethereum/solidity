@@ -96,3 +96,20 @@ string dev::quotedAlternativesList(vector<string> const& suggestions)
 	return joinHumanReadable(quotedSuggestions, ", ", " or ");
 }
 
+string dev::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
+{
+	string result;
+	if (_startSuffix < _endSuffix)
+	{
+		result = _baseName + to_string(_startSuffix++);
+		while (_startSuffix < _endSuffix)
+			result += ", " + _baseName + to_string(_startSuffix++);
+	}
+	else if (_endSuffix < _startSuffix)
+	{
+		result = _baseName + to_string(_endSuffix++);
+		while (_endSuffix < _startSuffix)
+			result = _baseName + to_string(_endSuffix++) + ", " + result;
+	}
+	return result;
+}

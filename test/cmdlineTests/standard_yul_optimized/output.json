@@ -1,1 +1,17 @@
-{"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":17:18   */\n  0x00\n  0x00\n    /* \"A\":11:19   */\n  mload\n    /* \"A\":20:40   */\n  sstore\n","bytecode":{"linkReferences":{},"object":"600060005155","opcodes":"PUSH1 0x0 PUSH1 0x0 MLOAD SSTORE ","sourceMap":""}},"ir":"object \"object\" {\n    code {\n        let x := mload(0)\n        sstore(add(x, 0), 0)\n    }\n}\n","irOptimized":"object \"object\" {\n    code { { sstore(mload(0), 0) } }\n}\n"}}},"errors":[{"component":"general","formattedMessage":"Yul is still experimental. Please use the output with care.","message":"Yul is still experimental. Please use the output with care.","severity":"warning","type":"Warning"}]}
+{"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":17:18   */
+  0x00
+  0x00
+    /* \"A\":11:19   */
+  mload
+    /* \"A\":20:40   */
+  sstore
+","bytecode":{"linkReferences":{},"object":"bytecode removed","opcodes":"opcodes removed","sourceMap":""}},"ir":"object \"object\" {
+    code {
+        let x := mload(0)
+        sstore(add(x, 0), 0)
+    }
+}
+","irOptimized":"object \"object\" {
+    code { { sstore(mload(0), 0) } }
+}
+"}}},"errors":[{"component":"general","formattedMessage":"Yul is still experimental. Please use the output with care.","message":"Yul is still experimental. Please use the output with care.","severity":"warning","type":"Warning"}]}

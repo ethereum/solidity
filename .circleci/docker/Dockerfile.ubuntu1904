@@ -21,11 +21,14 @@
 #
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
-FROM buildpack-deps:disco
+FROM buildpack-deps:disco AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN set -ex; \
+	dist=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2); \
+	echo "deb http://ppa.launchpad.net/ethereum/cpp-build-deps/ubuntu $dist main" >> /etc/apt/sources.list ; \
+	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9 ; \
 	apt-get update; \
 	apt-get install -qqy --no-install-recommends \
 		build-essential \
@@ -34,21 +37,14 @@ RUN set -ex; \
 		libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
 		libjsoncpp-dev \
-		llvm-8-dev libcvc4-dev libleveldb1d \
+		llvm-8-dev libcvc4-dev libz3-static-dev libleveldb1d \
 		; \
 	apt-get install -qy python-pip python-sphinx; \
 	update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-8 1; \
 	pip install codecov; \
 	rm -rf /var/lib/apt/lists/*
 
-# Aleth for end-to-end tests
-ARG ALETH_VERSION="1.6.0"
-ARG ALETH_HASH="7f7004e1563299bc57882e32b32e4a195747dfb6"
-ARG ALETH_URL="https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz"
-RUN set -ex; \
-	wget -q -O /tmp/aleth.tar.gz "${ALETH_URL}"; \
-	test "$(shasum /tmp/aleth.tar.gz)" = "$ALETH_HASH  /tmp/aleth.tar.gz"; \
-	tar -xf /tmp/aleth.tar.gz -C /usr
+FROM base AS libraries
 
 # Z3
 RUN set -ex; \
@@ -60,21 +56,23 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/z3
 
-# OSSFUZZ: LPM package (do not remove build dirs as solidity compiles/links against that dir)
+# OSSFUZZ: libprotobuf-mutator
 RUN set -ex; \
-	mkdir /src; \
-	cd /src; \
-	git clone https://github.com/google/libprotobuf-mutator.git; \
-	cd libprotobuf-mutator; \
+	git clone https://github.com/google/libprotobuf-mutator.git \
+	    /usr/src/libprotobuf-mutator; \
+	cd /usr/src/libprotobuf-mutator; \
 	git checkout d1fe8a7d8ae18f3d454f055eba5213c291986f21; \
-	mkdir ../LPM; \
-	cd ../LPM; \
-	cmake ../libprotobuf-mutator -GNinja -DLIB_PROTO_MUTATOR_DOWNLOAD_PROTOBUF=ON -DLIB_PROTO_MUTATOR_TESTING=OFF -DCMAKE_BUILD_TYPE=Release; \
+	mkdir build; \
+	cd build; \
+	cmake .. -GNinja -DLIB_PROTO_MUTATOR_DOWNLOAD_PROTOBUF=ON \
+        -DLIB_PROTO_MUTATOR_TESTING=OFF -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="/usr"; \
 	ninja; \
 	cp -vpr external.protobuf/bin/* /usr/bin/; \
 	cp -vpr external.protobuf/include/* /usr/include/; \
 	cp -vpr external.protobuf/lib/* /usr/lib/; \
-	ninja install/strip
+	ninja install/strip; \
+	rm -rf /usr/src/libprotobuf-mutator
 
 # OSSFUZZ: libfuzzer
 RUN set -ex; \
@@ -113,12 +111,16 @@ RUN set -ex; \
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.1.0" --recurse-submodules https://github.com/chfast/evmone.git; \
+	git clone --branch="v0.1.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \
-	cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="/usr" ..; \
 	ninja; \
 	ninja install/strip; \
 	rm -rf /usr/src/evmone
 
+FROM base
+COPY --from=libraries /usr/lib /usr/lib
+COPY --from=libraries /usr/bin /usr/bin
+COPY --from=libraries /usr/include /usr/include

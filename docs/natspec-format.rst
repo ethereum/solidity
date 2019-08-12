@@ -12,7 +12,7 @@ This documentation is segmented into developer-focused messages and end-user-fac
 messages. These messages may be shown to the end user (the human) at the
 time that they will interact with the contract (i.e. sign a transaction).
 
-It is recommended that Solidity contracts are fully annontated using NatSpec for
+It is recommended that Solidity contracts are fully annotated using NatSpec for
 all public interfaces (everything in the ABI).
 
 NatSpec includes the formatting for comments that the smart contract author will

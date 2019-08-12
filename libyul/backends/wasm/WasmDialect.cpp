@@ -47,11 +47,26 @@ WasmDialect::WasmDialect():
 		addFunction(name, 2, 1);
 
 	addFunction("i64.eqz", 1, 1);
-	addFunction("i64.store", 2, 0);
-	addFunction("i64.load", 1, 1);
+
+	addFunction("i64.store", 2, 0, false);
+	m_functions["i64.store"_yulstring].invalidatesStorage = false;
+
+	addFunction("i64.load", 1, 1, false);
+	m_functions["i64.load"_yulstring].invalidatesStorage = false;
+	m_functions["i64.load"_yulstring].invalidatesMemory = false;
+	m_functions["i64.load"_yulstring].sideEffectFree = true;
+	m_functions["i64.load"_yulstring].sideEffectFreeIfNoMSize = true;
 
 	addFunction("drop", 1, 0);
-	addFunction("unreachable", 0, 0);
+
+	addFunction("unreachable", 0, 0, false);
+	m_functions["unreachable"_yulstring].invalidatesStorage = false;
+	m_functions["unreachable"_yulstring].invalidatesMemory = false;
+
+	addFunction("datasize", 1, 4, true, true);
+	addFunction("dataoffset", 1, 4, true, true);
+
+	addEthereumExternals();
 }
 
 BuiltinFunction const* WasmDialect::builtin(YulString _name) const
@@ -72,18 +87,87 @@ WasmDialect const& WasmDialect::instance()
 	return *dialect;
 }
 
-void WasmDialect::addFunction(string _name, size_t _params, size_t _returns)
+void WasmDialect::addEthereumExternals()
+{
+	// These are not YulStrings because that would be too complicated with regards
+	// to the YulStringRepository reset.
+	static string const i64{"i64"};
+	static string const i32{"i32"};
+	static string const i32ptr{"i32"}; // Uses "i32" on purpose.
+	struct External { string name; vector<string> parameters; vector<string> returns; };
+	static vector<External> externals{
+		{"getAddress", {i32ptr}, {}},
+		{"getExternalBalance", {i32ptr, i32ptr}, {}},
+		{"getBlockHash", {i64, i32ptr}, {i32}},
+		{"call", {i64, i32ptr, i32ptr, i32ptr, i32}, {i32}},
+		{"callDataCopy", {i32ptr, i32, i32}, {}},
+		{"getCallDataSize", {}, {i32}},
+		{"callCode", {i64, i32ptr, i32ptr, i32ptr, i32}, {i32}},
+		{"callDelegate", {i64, i32ptr, i32ptr, i32}, {i32}},
+		{"callStatic", {i64, i32ptr, i32ptr, i32}, {i32}},
+		{"storageStore", {i32ptr, i32ptr}, {}},
+		{"storageLoad", {i32ptr, i32ptr}, {}},
+		{"getCaller", {i32ptr}, {}},
+		{"getCallValue", {i32ptr}, {}},
+		{"codeCopy", {i32ptr, i32, i32}, {}},
+		{"getCodeSize", {i32ptr}, {}},
+		{"getBlockCoinbase", {i32ptr}, {}},
+		{"create", {i32ptr, i32ptr, i32, i32ptr}, {i32}},
+		{"getBlockDifficulty", {i32ptr}, {}},
+		{"externalCodeCopy", {i32ptr, i32ptr, i32, i32}, {}},
+		{"getExternalCodeSize", {i32ptr}, {i32}},
+		{"getGasLeft", {}, {i64}},
+		{"getBlockGasLimit", {}, {i64}},
+		{"getTxGasPrice", {i32ptr}, {}},
+		{"log", {i32ptr, i32, i32, i32ptr, i32ptr, i32ptr, i32ptr}, {}},
+		{"getBlockNumber", {}, {i64}},
+		{"getTxOrigin", {i32ptr}, {}},
+		{"finish", {i32ptr, i32}, {}},
+		{"revert", {i32ptr, i32}, {}},
+		{"getReturnDataSize", {}, {i32}},
+		{"returnDataCopy", {i32ptr, i32, i32}, {}},
+		{"selfDestruct", {i32ptr}, {}},
+		{"getBlockTimestamp", {}, {i64}}
+	};
+	for (External const& ext: externals)
+	{
+		YulString name{"eth." + ext.name};
+		BuiltinFunction& f = m_functions[name];
+		f.name = name;
+		for (string const& p: ext.parameters)
+			f.parameters.emplace_back(YulString(p));
+		for (string const& p: ext.returns)
+			f.returns.emplace_back(YulString(p));
+		f.movable = false;
+		// TODO some of them are side effect free.
+		f.sideEffectFree = false;
+		f.sideEffectFreeIfNoMSize = false;
+		f.isMSize = false;
+		f.invalidatesStorage = (ext.name == "storageStore");
+		// TODO some of them do not invalidate memory
+		f.invalidatesMemory = true;
+		f.literalArguments = false;
+	}
+}
+
+void WasmDialect::addFunction(
+	string _name,
+	size_t _params,
+	size_t _returns,
+	bool _movable,
+	bool _literalArguments
+)
 {
 	YulString name{move(_name)};
 	BuiltinFunction& f = m_functions[name];
 	f.name = name;
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
-	f.movable = false;
-	f.sideEffectFree = false;
-	f.sideEffectFreeIfNoMSize = false;
+	f.movable = _movable;
+	f.sideEffectFree = _movable;
+	f.sideEffectFreeIfNoMSize = _movable;
 	f.isMSize = false;
-	f.invalidatesStorage = true;
-	f.invalidatesMemory = true;
-	f.literalArguments = false;
+	f.invalidatesStorage = !_movable;
+	f.invalidatesMemory = !_movable;
+	f.literalArguments = _literalArguments;
 }

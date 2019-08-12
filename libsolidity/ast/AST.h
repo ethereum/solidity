@@ -79,13 +79,15 @@ public:
 	static void listAccept(std::vector<T> const& _list, ASTVisitor& _visitor)
 	{
 		for (T const& element: _list)
-			element->accept(_visitor);
+			if (element)
+				element->accept(_visitor);
 	}
 	template <class T>
 	static void listAccept(std::vector<T> const& _list, ASTConstVisitor& _visitor)
 	{
 		for (T const& element: _list)
-			element->accept(_visitor);
+			if (element)
+				element->accept(_visitor);
 	}
 
 	/// @returns a copy of the vector containing only the nodes which derive from T.
@@ -394,6 +396,7 @@ public:
 	std::vector<StructDefinition const*> definedStructs() const { return filteredNodes<StructDefinition>(m_subNodes); }
 	std::vector<EnumDefinition const*> definedEnums() const { return filteredNodes<EnumDefinition>(m_subNodes); }
 	std::vector<VariableDeclaration const*> stateVariables() const { return filteredNodes<VariableDeclaration>(m_subNodes); }
+	std::vector<VariableDeclaration const*> stateVariablesIncludingInherited() const;
 	std::vector<ModifierDefinition const*> functionModifiers() const { return filteredNodes<ModifierDefinition>(m_subNodes); }
 	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }

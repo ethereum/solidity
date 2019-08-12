@@ -40,7 +40,8 @@ using namespace langutil;
 using namespace dev::solidity;
 using namespace yul;
 
-namespace {
+namespace
+{
 
 Json::Value formatError(
 	bool _warning,
@@ -48,7 +49,8 @@ Json::Value formatError(
 	string const& _component,
 	string const& _message,
 	string const& _formattedMessage = "",
-	Json::Value const& _sourceLocation = Json::Value()
+	Json::Value const& _sourceLocation = Json::Value(),
+	Json::Value const& _secondarySourceLocation = Json::Value()
 )
 {
 	Json::Value error = Json::objectValue;
@@ -59,6 +61,8 @@ Json::Value formatError(
 	error["formattedMessage"] = (_formattedMessage.length() > 0) ? _formattedMessage : _message;
 	if (_sourceLocation.isObject())
 		error["sourceLocation"] = _sourceLocation;
+	if (_secondarySourceLocation.isArray())
+		error["secondarySourceLocations"] = _secondarySourceLocation;
 	return error;
 }
 
@@ -68,6 +72,34 @@ Json::Value formatFatalError(string const& _type, string const& _message)
 	output["errors"] = Json::arrayValue;
 	output["errors"].append(formatError(false, _type, "general", _message));
 	return output;
+}
+
+Json::Value formatSourceLocation(SourceLocation const* location)
+{
+	Json::Value sourceLocation;
+	if (location && location->source && !location->source->name().empty())
+	{
+		sourceLocation["file"] = location->source->name();
+		sourceLocation["start"] = location->start;
+		sourceLocation["end"] = location->end;
+	}
+
+	return sourceLocation;
+}
+
+Json::Value formatSecondarySourceLocation(SecondarySourceLocation const* _secondaryLocation)
+{
+	if (!_secondaryLocation)
+		return {};
+
+	Json::Value secondarySourceLocation = Json::arrayValue;
+	for (auto const& location: _secondaryLocation->infos)
+	{
+		Json::Value msg = formatSourceLocation(&location.second);
+		msg["message"] = location.first;
+		secondarySourceLocation.append(msg);
+	}
+	return secondarySourceLocation;
 }
 
 Json::Value formatErrorWithException(
@@ -81,39 +113,35 @@ Json::Value formatErrorWithException(
 	string message;
 	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
 
-	// NOTE: the below is partially a copy from SourceReferenceFormatter
-	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
-
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		message = ((_message.length() > 0) ? (_message + ":") : "") + *description;
 	else
 		message = _message;
 
-	Json::Value sourceLocation;
-	if (location && location->source && location->source->name() != "")
-	{
-		sourceLocation["file"] = location->source->name();
-		sourceLocation["start"] = location->start;
-		sourceLocation["end"] = location->end;
-	}
-
-	return formatError(_warning, _type, _component, message, formattedMessage, sourceLocation);
+	return formatError(
+		_warning,
+		_type,
+		_component,
+		message,
+		formattedMessage,
+		formatSourceLocation(boost::get_error_info<errinfo_sourceLocation>(_exception)),
+		formatSecondarySourceLocation(boost::get_error_info<errinfo_secondarySourceLocation>(_exception))
+	);
 }
 
-set<string> requestedContractNames(Json::Value const& _outputSelection)
+map<string, set<string>> requestedContractNames(Json::Value const& _outputSelection)
 {
-	set<string> names;
+	map<string, set<string>> contracts;
 	for (auto const& sourceName: _outputSelection.getMemberNames())
 	{
+		string key = (sourceName == "*") ? "" : sourceName;
 		for (auto const& contractName: _outputSelection[sourceName].getMemberNames())
 		{
-			/// Consider the "all sources" shortcuts as requesting everything.
-			if (contractName == "*" || contractName == "")
-				return set<string>();
-			names.insert((sourceName == "*" ? "" : sourceName) + ":" + contractName);
+			string value = (contractName == "*") ? "" : contractName;
+			contracts[key].insert(value);
 		}
 	}
-	return names;
+	return contracts;
 }
 
 /// Returns true iff @a _hash (hex with 0x prefix) is the Keccak256 hash of the binary data in @a _content.
@@ -129,16 +157,17 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 	}
 }
 
-bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact, bool _wildcardMatchesIR)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact, bool _wildcardMatchesExperimental)
 {
+	static set<string> experimental{"ir", "irOptimized", "wast", "ewasm", "ewasm.wast"};
 	for (auto const& artifact: _outputSelection)
 		/// @TODO support sub-matching, e.g "evm" matches "evm.assembly"
 		if (artifact == _artifact)
 			return true;
 		else if (artifact == "*")
 		{
-			// "ir" and "irOptimized" can only be matched by "*" if activated.
-			if ((_artifact != "ir" && _artifact != "irOptimized") || _wildcardMatchesIR)
+			// "ir", "irOptimized", "wast" and "ewasm.wast" can only be matched by "*" if activated.
+			if (experimental.count(_artifact) == 0 || _wildcardMatchesExperimental)
 				return true;
 		}
 	return false;
@@ -157,7 +186,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _art
 ///
 /// @TODO optimise this. Perhaps flatten the structure upfront.
 ///
-bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, string const& _artifact, bool _wildcardMatchesIR)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, string const& _artifact, bool _wildcardMatchesExperimental)
 {
 	if (!_outputSelection.isObject())
 		return false;
@@ -174,7 +203,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 				if (
 					_outputSelection[file].isMember(contract) &&
 					_outputSelection[file][contract].isArray() &&
-					isArtifactRequested(_outputSelection[file][contract], _artifact, _wildcardMatchesIR)
+					isArtifactRequested(_outputSelection[file][contract], _artifact, _wildcardMatchesExperimental)
 				)
 					return true;
 		}
@@ -182,10 +211,10 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 	return false;
 }
 
-bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, vector<string> const& _artifacts, bool _wildcardMatchesIR)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, vector<string> const& _artifacts, bool _wildcardMatchesExperimental)
 {
 	for (auto const& artifact: _artifacts)
-		if (isArtifactRequested(_outputSelection, _file, _contract, artifact, _wildcardMatchesIR))
+		if (isArtifactRequested(_outputSelection, _file, _contract, artifact, _wildcardMatchesExperimental))
 			return true;
 	return false;
 }
@@ -200,6 +229,7 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	static vector<string> const outputsThatRequireBinaries{
 		"*",
 		"ir", "irOptimized",
+		"wast", "wasm", "ewasm.wast", "ewasm.wasm",
 		"evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes",
 		"evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences",
 		"evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap",
@@ -215,10 +245,29 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	return false;
 }
 
+/// @returns true if any eWasm code was requested. Note that as an exception, '*' does not
+/// yet match "ewasm.wast" or "ewasm"
+bool isEWasmRequested(Json::Value const& _outputSelection)
+{
+	if (!_outputSelection.isObject())
+		return false;
+
+	for (auto const& fileRequests: _outputSelection)
+		for (auto const& requests: fileRequests)
+			for (auto const& request: requests)
+				if (request == "ewasm" || request == "ewasm.wast")
+					return true;
+
+	return false;
+}
+
 /// @returns true if any Yul IR was requested. Note that as an exception, '*' does not
 /// yet match "ir" or "irOptimized"
 bool isIRRequested(Json::Value const& _outputSelection)
 {
+	if (isEWasmRequested(_outputSelection))
+		return true;
+
 	if (!_outputSelection.isObject())
 		return false;
 
@@ -230,7 +279,6 @@ bool isIRRequested(Json::Value const& _outputSelection)
 
 	return false;
 }
-
 
 Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 {
@@ -689,9 +737,9 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
 
-	bool const irRequested = isIRRequested(_inputsAndSettings.outputSelection);
+	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
 
-	compilerStack.enableIRGeneration(irRequested);
+	compilerStack.enableEWasmGeneration(isEWasmRequested(_inputsAndSettings.outputSelection));
 
 	Json::Value errors = std::move(_inputsAndSettings.errors);
 
@@ -796,11 +844,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		));
 	}
 
-	bool const analysisSuccess = compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
+	bool analysisPerformed = compilerStack.state() >= CompilerStack::State::AnalysisPerformed;
 	bool const compilationSuccess = compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
+	if (compilerStack.hasError() && !_inputsAndSettings.parserErrorRecovery)
+		analysisPerformed = false;
+
 	/// Inconsistent state - stop here to receive error reports from users
-	if (((binariesRequested && !compilationSuccess) || !analysisSuccess) && errors.empty())
+	if (((binariesRequested && !compilationSuccess) || !analysisPerformed) && errors.empty())
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	Json::Value output = Json::objectValue;
@@ -812,23 +863,23 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		for (string const& query: compilerStack.unhandledSMTLib2Queries())
 			output["auxiliaryInputRequested"]["smtlib2queries"]["0x" + keccak256(query).hex()] = query;
 
-	bool const wildcardMatchesIR = false;
+	bool const wildcardMatchesExperimental = false;
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (string const& sourceName: analysisSuccess ? compilerStack.sourceNames() : vector<string>())
+	for (string const& sourceName: analysisPerformed ? compilerStack.sourceNames() : vector<string>())
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = sourceIndex++;
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast", wildcardMatchesIR))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast", wildcardMatchesExperimental))
 			sourceResult["ast"] = ASTJsonConverter(false, compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "legacyAST", wildcardMatchesIR))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "legacyAST", wildcardMatchesExperimental))
 			sourceResult["legacyAST"] = ASTJsonConverter(true, compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
 		output["sources"][sourceName] = sourceResult;
 	}
 
 	Json::Value contractsOutput = Json::objectValue;
-	for (string const& contractName: analysisSuccess ? compilerStack.contractNames() : vector<string>())
+	for (string const& contractName: analysisPerformed ? compilerStack.contractNames() : vector<string>())
 	{
 		size_t colon = contractName.rfind(':');
 		solAssert(colon != string::npos, "");
@@ -837,30 +888,34 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 		// ABI, documentation and metadata
 		Json::Value contractData(Json::objectValue);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "abi", wildcardMatchesIR))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "abi", wildcardMatchesExperimental))
 			contractData["abi"] = compilerStack.contractABI(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "metadata", wildcardMatchesIR))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "metadata", wildcardMatchesExperimental))
 			contractData["metadata"] = compilerStack.metadata(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "userdoc", wildcardMatchesIR))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "userdoc", wildcardMatchesExperimental))
 			contractData["userdoc"] = compilerStack.natspecUser(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "devdoc", wildcardMatchesIR))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "devdoc", wildcardMatchesExperimental))
 			contractData["devdoc"] = compilerStack.natspecDev(contractName);
 
 		// IR
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ir", wildcardMatchesIR))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ir", wildcardMatchesExperimental))
 			contractData["ir"] = compilerStack.yulIR(contractName);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized", wildcardMatchesIR))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized", wildcardMatchesExperimental))
 			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
+
+		// eWasm
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ewasm.wast", wildcardMatchesExperimental))
+			contractData["ewasm"]["wast"] = compilerStack.eWasm(contractName);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly", wildcardMatchesIR))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly", wildcardMatchesExperimental))
 			evmData["assembly"] = compilerStack.assemblyString(contractName, sourceList);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly", wildcardMatchesIR))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly", wildcardMatchesExperimental))
 			evmData["legacyAssembly"] = compilerStack.assemblyJSON(contractName, sourceList);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers", wildcardMatchesIR))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers", wildcardMatchesExperimental))
 			evmData["methodIdentifiers"] = compilerStack.methodIdentifiers(contractName);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.gasEstimates", wildcardMatchesIR))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.gasEstimates", wildcardMatchesExperimental))
 			evmData["gasEstimates"] = compilerStack.gasEstimates(contractName);
 
 		if (compilationSuccess && isArtifactRequested(
@@ -868,7 +923,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			file,
 			name,
 			{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" },
-			wildcardMatchesIR
+			wildcardMatchesExperimental
 		))
 			evmData["bytecode"] = collectEVMObject(
 				compilerStack.object(contractName),
@@ -880,7 +935,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			file,
 			name,
 			{ "evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes", "evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences" },
-			wildcardMatchesIR
+			wildcardMatchesExperimental
 		))
 			evmData["deployedBytecode"] = collectEVMObject(
 				compilerStack.runtimeObject(contractName),
@@ -954,8 +1009,8 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	string contractName = stack.parserResult()->name.str();
 
-	bool const wildcardMatchesIR = true;
-	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir", wildcardMatchesIR))
+	bool const wildcardMatchesExperimental = true;
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["ir"] = stack.print();
 
 	stack.optimize();
@@ -967,13 +1022,13 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		sourceName,
 		contractName,
 		{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" },
-		wildcardMatchesIR
+		wildcardMatchesExperimental
 	))
 		output["contracts"][sourceName][contractName]["evm"]["bytecode"] = collectEVMObject(*object.bytecode, nullptr);
 
-	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesIR))
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();
-	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "evm.assembly", wildcardMatchesIR))
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "evm.assembly", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["evm"]["assembly"] = object.assembly;
 
 	return output;

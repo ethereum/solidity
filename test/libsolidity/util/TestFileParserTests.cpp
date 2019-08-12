@@ -44,7 +44,7 @@ vector<FunctionCall> parse(string const& _source)
 {
 	istringstream stream{_source, ios_base::out};
 	TestFileParser parser{stream};
-	return parser.parseFunctionCalls();
+	return parser.parseFunctionCalls(0);
 }
 
 void testFunctionCall(
@@ -310,6 +310,50 @@ BOOST_AUTO_TEST_CASE(call_arguments_bool)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(scanner_hex_values)
+{
+	char const* source = R"(
+		// f(uint256): "\x20\x00\xFf" ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x20\x00\xff", 3)));
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid1)
+{
+	char const* source = R"(
+		// f(uint256): "\x" ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid2)
+{
+	char const* source = R"(
+		// f(uint256): "\x1" ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x1", 1)));
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid3)
+{
+	char const* source = R"(
+		// f(uint256): "\xZ" ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid4)
+{
+	char const* source = R"(
+		// f(uint256): "\xZZ" ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
 BOOST_AUTO_TEST_CASE(call_arguments_hex_string)
 {
 	char const* source = R"(
@@ -357,6 +401,27 @@ BOOST_AUTO_TEST_CASE(call_arguments_string)
 		"f(string)",
 		false,
 		fmt::encodeDyn(string{"any"})
+	);
+}
+
+
+BOOST_AUTO_TEST_CASE(call_hex_number)
+{
+	char const* source = R"(
+		// f(bytes32, bytes32): 0x616, 0x1042 -> 1
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(bytes32,bytes32)",
+		false,
+		fmt::encodeArgs(
+			fromHex("0x616"),
+			fromHex("0x1042")
+		),
+		fmt::encodeArgs(1)
 	);
 }
 
@@ -695,13 +760,6 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid_parantheses)
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
 
-BOOST_AUTO_TEST_CASE(call_expectations_missing)
-{
-	char const* source = R"(
-		// f())";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
-}
-
 BOOST_AUTO_TEST_CASE(call_ether_value_expectations_missing)
 {
 	char const* source = R"(
@@ -745,14 +803,6 @@ BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
 {
 	char const* source = R"(
 		// f(uint256), 2 btc : 1 -> 1
-	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
-}
-
-BOOST_AUTO_TEST_CASE(call_hex_number_invalid)
-{
-	char const* source = R"(
-		// f(bytes32, bytes32): 0x616, 0x042 -> 1
 	)";
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
@@ -803,7 +853,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_newline_colon)
 BOOST_AUTO_TEST_CASE(call_arrow_missing)
 {
 	char const* source = R"(
-		// h256()
+		// h256() FAILURE
 	)";
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }

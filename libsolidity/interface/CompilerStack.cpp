@@ -39,7 +39,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/Compiler.h>
-#include <libsolidity/formal/SMTChecker.h>
+#include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
@@ -49,6 +49,12 @@
 #include <libsolidity/codegen/ir/IRGenerator.h>
 
 #include <libyul/YulString.h>
+#include <libyul/AsmPrinter.h>
+#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
+#include <libyul/backends/wasm/EWasmObjectCompiler.h>
+#include <libyul/backends/wasm/WasmDialect.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/AssemblyStack.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
@@ -73,6 +79,7 @@ static int g_compilerStackCounts = 0;
 CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
 	m_readFile{_readFile},
 	m_generateIR{false},
+	m_generateEWasm{false},
 	m_errorList{},
 	m_errorReporter{m_errorList}
 {
@@ -110,7 +117,7 @@ boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string c
 
 void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 {
-	if (m_stackState >= ParsingSuccessful)
+	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set remappings before parsing."));
 	for (auto const& remapping: _remappings)
 		solAssert(!remapping.prefix.empty(), "");
@@ -119,14 +126,14 @@ void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 
 void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 {
-	if (m_stackState >= ParsingSuccessful)
+	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set EVM version before parsing."));
 	m_evmVersion = _version;
 }
 
 void CompilerStack::setLibraries(std::map<std::string, h160> const& _libraries)
 {
-	if (m_stackState >= ParsingSuccessful)
+	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set libraries before parsing."));
 	m_libraries = _libraries;
 }
@@ -140,21 +147,21 @@ void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
 
 void CompilerStack::setOptimiserSettings(OptimiserSettings _settings)
 {
-	if (m_stackState >= ParsingSuccessful)
+	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set optimiser settings before parsing."));
 	m_optimiserSettings = std::move(_settings);
 }
 
 void CompilerStack::useMetadataLiteralSources(bool _metadataLiteralSources)
 {
-	if (m_stackState >= ParsingSuccessful)
+	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set use literal sources before parsing."));
 	m_metadataLiteralSources = _metadataLiteralSources;
 }
 
 void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _response)
 {
-	if (m_stackState >= ParsingSuccessful)
+	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must add SMTLib2 responses before parsing."));
 	m_smtlib2Responses[_hash] = _response;
 }
@@ -162,6 +169,7 @@ void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _respons
 void CompilerStack::reset(bool _keepSettings)
 {
 	m_stackState = Empty;
+	m_hasError = false;
 	m_sources.clear();
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
@@ -171,6 +179,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
 		m_generateIR = false;
+		m_generateEWasm = false;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
 	}
@@ -232,24 +241,23 @@ bool CompilerStack::parse()
 			}
 		}
 	}
-	if (Error::containsOnlyWarnings(m_errorReporter.errors()))
-	{
-		m_stackState = ParsingSuccessful;
-		return true;
-	}
-	else
-		return false;
+
+	m_stackState = ParsingPerformed;
+	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
+		m_hasError = true;
+	return !m_hasError;
 }
 
 bool CompilerStack::analyze()
 {
-	if (m_stackState != ParsingSuccessful || m_stackState >= AnalysisSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call analyze only after parsing was successful."));
+	if (m_stackState != ParsingPerformed || m_stackState >= AnalysisPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call analyze only after parsing was performed."));
 	resolveImports();
 
 	bool noErrors = true;
 
-	try {
+	try
+	{
 		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
 			if (!syntaxChecker.checkSyntax(*source->ast))
@@ -363,47 +371,67 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			SMTChecker smtChecker(m_errorReporter, m_smtlib2Responses);
+			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses);
 			for (Source const* source: m_sourceOrder)
-				smtChecker.analyze(*source->ast, source->scanner);
-			m_unhandledSMTLib2Queries += smtChecker.unhandledQueries();
+				modelChecker.analyze(*source->ast);
+			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
 		}
 	}
-	catch(FatalError const&)
+	catch (FatalError const&)
 	{
 		if (m_errorReporter.errors().empty())
 			throw; // Something is weird here, rather throw again.
 		noErrors = false;
 	}
 
-	if (noErrors)
-	{
-		m_stackState = AnalysisSuccessful;
-		return true;
-	}
-	else
-		return false;
+	m_stackState = AnalysisPerformed;
+	if (!noErrors)
+		m_hasError = true;
+
+	return !m_hasError;
 }
 
 bool CompilerStack::parseAndAnalyze()
 {
-	return parse() && analyze();
+	bool success = parse();
+	if (success || m_parserErrorRecovery)
+		success = analyze();
+	return success;
+}
+
+bool CompilerStack::isRequestedSource(string const& _sourceName) const
+{
+	return
+		m_requestedContractNames.empty() ||
+		m_requestedContractNames.count("") ||
+		m_requestedContractNames.count(_sourceName);
 }
 
 bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) const
 {
-	return
-		m_requestedContractNames.empty() ||
-		m_requestedContractNames.count(_contract.fullyQualifiedName()) ||
-		m_requestedContractNames.count(_contract.name()) ||
-		m_requestedContractNames.count(":" + _contract.name());
+	/// In case nothing was specified in outputSelection.
+	if (m_requestedContractNames.empty())
+		return true;
+
+	for (auto const& key: vector<string>{"", _contract.sourceUnitName()})
+	{
+		auto const& it = m_requestedContractNames.find(key);
+		if (it != m_requestedContractNames.end())
+			if (it->second.count(_contract.name()) || it->second.count(""))
+				return true;
+	}
+
+	return false;
 }
 
 bool CompilerStack::compile()
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		if (!parseAndAnalyze())
 			return false;
+
+	if (m_hasError)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
 
 	// Only compile contracts individually which have been requested.
 	map<ContractDefinition const*, shared_ptr<Compiler const>> otherCompilers;
@@ -413,8 +441,10 @@ bool CompilerStack::compile()
 				if (isRequestedContract(*contract))
 				{
 					compileContract(*contract, otherCompilers);
-					if (m_generateIR)
+					if (m_generateIR || m_generateEWasm)
 						generateIR(*contract);
+					if (m_generateEWasm)
+						generateEWasm(*contract);
 				}
 	m_stackState = CompilationSuccessful;
 	this->link();
@@ -433,7 +463,7 @@ void CompilerStack::link()
 
 vector<string> CompilerStack::contractNames() const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 	vector<string> contractNames;
 	for (auto const& contract: m_contracts)
@@ -443,7 +473,7 @@ vector<string> CompilerStack::contractNames() const
 
 string const CompilerStack::lastContractName() const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 	// try to find some user-supplied contract
 	string contractName;
@@ -502,7 +532,7 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 
 std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
 
 	// Look up the contract (by its fully-qualified name)
@@ -538,6 +568,14 @@ string const& CompilerStack::yulIROptimized(string const& _contractName) const
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	return contract(_contractName).yulIROptimized;
+}
+
+string const& CompilerStack::eWasm(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	return contract(_contractName).eWasm;
 }
 
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -601,7 +639,7 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 
 Json::Value const& CompilerStack::contractABI(string const& _contractName) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	return contractABI(contract(_contractName));
@@ -609,7 +647,7 @@ Json::Value const& CompilerStack::contractABI(string const& _contractName) const
 
 Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	solAssert(_contract.contract, "");
@@ -623,7 +661,7 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 
 Json::Value const& CompilerStack::natspecUser(string const& _contractName) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	return natspecUser(contract(_contractName));
@@ -631,7 +669,7 @@ Json::Value const& CompilerStack::natspecUser(string const& _contractName) const
 
 Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	solAssert(_contract.contract, "");
@@ -645,7 +683,7 @@ Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 
 Json::Value const& CompilerStack::natspecDev(string const& _contractName) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	return natspecDev(contract(_contractName));
@@ -653,7 +691,7 @@ Json::Value const& CompilerStack::natspecDev(string const& _contractName) const
 
 Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	solAssert(_contract.contract, "");
@@ -667,7 +705,7 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 
 Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	Json::Value methodIdentifiers(Json::objectValue);
@@ -678,7 +716,7 @@ Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
 
 string const& CompilerStack::metadata(string const& _contractName) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	return metadata(contract(_contractName));
@@ -686,7 +724,7 @@ string const& CompilerStack::metadata(string const& _contractName) const
 
 string const& CompilerStack::metadata(Contract const& _contract) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	solAssert(_contract.contract, "");
@@ -708,7 +746,9 @@ Scanner const& CompilerStack::scanner(string const& _sourceName) const
 
 SourceUnit const& CompilerStack::ast(string const& _sourceName) const
 {
-	if (m_stackState < ParsingSuccessful)
+	if (m_stackState < ParsingPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing not yet performed."));
+	if (!source(_sourceName).ast && !m_parserErrorRecovery)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
 	return *source(_sourceName).ast;
@@ -716,7 +756,7 @@ SourceUnit const& CompilerStack::ast(string const& _sourceName) const
 
 ContractDefinition const& CompilerStack::contractDefinition(string const& _contractName) const
 {
-	if (m_stackState < AnalysisSuccessful)
+	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
 
 	return *contract(_contractName).contract;
@@ -766,7 +806,7 @@ h256 const& CompilerStack::Source::keccak256() const
 h256 const& CompilerStack::Source::swarmHash() const
 {
 	if (swarmHashCached == h256{})
-		swarmHashCached = dev::swarmHash(scanner->source());
+		swarmHashCached = dev::bzzr1Hash(scanner->source());
 	return swarmHashCached;
 }
 
@@ -780,7 +820,7 @@ string const& CompilerStack::Source::ipfsUrl() const
 
 StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
 {
-	solAssert(m_stackState < ParsingSuccessful, "");
+	solAssert(m_stackState < ParsingPerformed, "");
 	StringMap newSources;
 	for (auto const& node: _ast.nodes())
 		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
@@ -816,7 +856,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 
 string CompilerStack::applyRemapping(string const& _path, string const& _context)
 {
-	solAssert(m_stackState < ParsingSuccessful, "");
+	solAssert(m_stackState < ParsingPerformed, "");
 	// Try to find the longest prefix match in all remappings that are active in the current context.
 	auto isPrefixOf = [](string const& _a, string const& _b)
 	{
@@ -858,7 +898,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 
 void CompilerStack::resolveImports()
 {
-	solAssert(m_stackState == ParsingSuccessful, "");
+	solAssert(m_stackState == ParsingPerformed, "");
 
 	// topological sorting (depth first search) of the import graph, cutting potential cycles
 	vector<Source const*> sourceOrder;
@@ -869,20 +909,22 @@ void CompilerStack::resolveImports()
 		if (sourcesSeen.count(_source))
 			return;
 		sourcesSeen.insert(_source);
-		for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
-			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
-			{
-				string const& path = import->annotation().absolutePath;
-				solAssert(!path.empty(), "");
-				solAssert(m_sources.count(path), "");
-				import->annotation().sourceUnit = m_sources[path].ast.get();
-				toposort(&m_sources[path]);
-			}
+		if (_source->ast)
+			for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
+				if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
+				{
+					string const& path = import->annotation().absolutePath;
+					solAssert(!path.empty(), "");
+					solAssert(m_sources.count(path), "");
+					import->annotation().sourceUnit = m_sources[path].ast.get();
+					toposort(&m_sources[path]);
+				}
 		sourceOrder.push_back(_source);
 	};
 
 	for (auto const& sourcePair: m_sources)
-		toposort(&sourcePair.second);
+		if (isRequestedSource(sourcePair.first))
+			toposort(&sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
 }
@@ -903,7 +945,9 @@ void CompilerStack::compileContract(
 	map<ContractDefinition const*, shared_ptr<Compiler const>>& _otherCompilers
 )
 {
-	solAssert(m_stackState >= AnalysisSuccessful, "");
+	solAssert(m_stackState >= AnalysisPerformed, "");
+	if (m_hasError)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
 
 	if (_otherCompilers.count(&_contract) || !_contract.canBeDeployed())
 		return;
@@ -955,7 +999,9 @@ void CompilerStack::compileContract(
 
 void CompilerStack::generateIR(ContractDefinition const& _contract)
 {
-	solAssert(m_stackState >= AnalysisSuccessful, "");
+	solAssert(m_stackState >= AnalysisPerformed, "");
+	if (m_hasError)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateIR with errors."));
 
 	if (!_contract.canBeDeployed())
 		return;
@@ -971,9 +1017,42 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract);
 }
 
+void CompilerStack::generateEWasm(ContractDefinition const& _contract)
+{
+	solAssert(m_stackState >= AnalysisPerformed, "");
+	if (m_hasError)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateEWasm with errors."));
+
+	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+	solAssert(!compiledContract.yulIROptimized.empty(), "");
+	if (!compiledContract.eWasm.empty())
+		return;
+
+	// Re-parse the Yul IR in EVM dialect
+	yul::AssemblyStack evmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	evmStack.parseAndAnalyze("", compiledContract.yulIROptimized);
+
+	// Turn into eWasm dialect
+	yul::Object ewasmObject = yul::EVMToEWasmTranslator(
+		yul::EVMDialect::strictAssemblyForEVMObjects(m_evmVersion)
+	).run(*evmStack.parserResult());
+
+	// Re-inject into an assembly stack for the eWasm dialect
+	yul::AssemblyStack ewasmStack(m_evmVersion, yul::AssemblyStack::Language::EWasm, m_optimiserSettings);
+	// TODO this is a hack for now - provide as structured AST!
+	ewasmStack.parseAndAnalyze("", "{}");
+	*ewasmStack.parserResult() = move(ewasmObject);
+	ewasmStack.optimize();
+
+	//cout << yul::AsmPrinter{}(*ewasmStack.parserResult()->code) << endl;
+
+	// Turn into eWasm text representation.
+	compiledContract.eWasm = ewasmStack.assemble(yul::AssemblyStack::Machine::eWasm).assembly;
+}
+
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
 {
-	solAssert(m_stackState >= AnalysisSuccessful, "");
+	solAssert(m_stackState >= AnalysisPerformed, "");
 
 	auto it = m_contracts.find(_contractName);
 	if (it != m_contracts.end())
@@ -1037,7 +1116,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		else
 		{
 			meta["sources"][s.first]["urls"] = Json::arrayValue;
-			meta["sources"][s.first]["urls"].append("bzzr://" + toHex(s.second.swarmHash().asBytes()));
+			meta["sources"][s.first]["urls"].append("bzz-raw://" + toHex(s.second.swarmHash().asBytes()));
 			meta["sources"][s.first]["urls"].append(s.second.ipfsUrl());
 		}
 	}
@@ -1184,7 +1263,7 @@ private:
 bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
 {
 	MetadataCBOREncoder encoder;
-	encoder.pushBytes("bzzr0", dev::swarmHash(_metadata).asBytes());
+	encoder.pushBytes("bzzr1", dev::bzzr1Hash(_metadata).asBytes());
 	if (_experimentalMode)
 		encoder.pushBool("experimental", true);
 	if (m_release)

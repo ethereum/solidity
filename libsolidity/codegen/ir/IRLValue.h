@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <libsolidity/codegen/YulUtilFunctions.h>
+
 #include <libdevcore/Common.h>
 
 #include <string>
@@ -42,8 +44,8 @@ class ArrayType;
 class IRLValue
 {
 protected:
-	IRLValue(IRGenerationContext& _context, Type const* _type = nullptr):
-		m_context(_context),
+	explicit IRLValue(YulUtilFunctions _utils, Type const* _type = nullptr):
+		m_utils(std::move(_utils)),
 		m_type(_type)
 	{}
 
@@ -58,7 +60,7 @@ public:
 	/// Returns code that will reset the stored value to zero
 	virtual std::string setToZero() const = 0;
 protected:
-	IRGenerationContext& m_context;
+	YulUtilFunctions mutable m_utils;
 	Type const* m_type;
 };
 
@@ -85,7 +87,7 @@ public:
 		VariableDeclaration const& _varDecl
 	);
 	IRStorageItem(
-		IRGenerationContext& _context,
+		YulUtilFunctions _utils,
 		std::string _slot,
 		boost::variant<std::string, unsigned> _offset,
 		Type const& _type
@@ -96,7 +98,7 @@ public:
 	std::string setToZero() const override;
 private:
 	IRStorageItem(
-		IRGenerationContext& _context,
+		YulUtilFunctions _utils,
 		Type const& _type,
 		std::pair<u256, unsigned> slot_offset
 	);
@@ -116,7 +118,12 @@ private:
 class IRStorageArrayLength: public IRLValue
 {
 public:
-	IRStorageArrayLength(IRGenerationContext& _context, std::string _slot, Type const& _type, ArrayType const& _arrayType);
+	IRStorageArrayLength(
+		YulUtilFunctions _utils,
+		std::string _slot,
+		Type const& _type,
+		ArrayType const& _arrayType
+	);
 
 	std::string retrieveValue() const override;
 	std::string storeValue(std::string const& _value, Type const& _type) const override;
@@ -125,6 +132,24 @@ public:
 private:
 	ArrayType const& m_arrayType;
 	std::string const m_slot;
+};
+
+class IRMemoryItem: public IRLValue
+{
+public:
+	IRMemoryItem(
+		YulUtilFunctions _utils,
+		std::string _address,
+		bool _byteArrayElement,
+		Type const& _type
+	);
+	std::string retrieveValue() const override;
+	std::string storeValue(std::string const& _value, Type const& _type) const override;
+
+	std::string setToZero() const override;
+private:
+	std::string const m_address;
+	bool m_byteArrayElement;
 };
 
 }

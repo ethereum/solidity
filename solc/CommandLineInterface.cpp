@@ -123,6 +123,7 @@ static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
 static string const g_strIR = "ir";
+static string const g_strEWasm = "ewasm";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
@@ -170,6 +171,7 @@ static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
+static string const g_argEWasm = g_strEWasm;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -307,6 +309,20 @@ void CommandLineInterface::handleIR(string const& _contractName)
 		{
 			sout() << "IR: " << endl;
 			sout() << m_compiler->yulIR(_contractName) << endl;
+		}
+	}
+}
+
+void CommandLineInterface::handleEWasm(string const& _contractName)
+{
+	if (m_args.count(g_argEWasm))
+	{
+		if (m_args.count(g_argOutputDir))
+			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->eWasm(_contractName));
+		else
+		{
+			sout() << "eWasm: " << endl;
+			sout() << m_compiler->eWasm(_contractName) << endl;
 		}
 	}
 }
@@ -705,6 +721,7 @@ Allowed options)",
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
 		(g_argIR.c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
+		(g_argEWasm.c_str(), "EWasm text representation of all contracts (EXPERIMENTAL).")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
@@ -926,12 +943,12 @@ bool CommandLineInterface::processInput()
 		m_compiler->setSources(m_sourceCodes);
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
-		if (m_args.count(g_argErrorRecovery))
-			m_compiler->setParserErrorRecovery(true);
+		m_compiler->setParserErrorRecovery(m_args.count(g_argErrorRecovery));
 		m_compiler->setEVMVersion(m_evmVersion);
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_args.count(g_argIR));
+		m_compiler->enableEWasmGeneration(m_args.count(g_argEWasm));
 
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -948,7 +965,12 @@ bool CommandLineInterface::processInput()
 		}
 
 		if (!successful)
-			return false;
+		{
+			if (m_args.count(g_argErrorRecovery))
+				return true;
+			else
+				return false;
+		}
 	}
 	catch (CompilerError const& _exception)
 	{
@@ -1026,20 +1048,20 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strAbi] = dev::jsonCompactPrint(m_compiler->contractABI(contractName));
 		if (requests.count("metadata"))
 			contractData["metadata"] = m_compiler->metadata(contractName);
-		if (requests.count(g_strBinary))
+		if (requests.count(g_strBinary) && m_compiler->compilationSuccessful())
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
-		if (requests.count(g_strBinaryRuntime))
+		if (requests.count(g_strBinaryRuntime) && m_compiler->compilationSuccessful())
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
-		if (requests.count(g_strOpcodes))
+		if (requests.count(g_strOpcodes) && m_compiler->compilationSuccessful())
 			contractData[g_strOpcodes] = dev::eth::disassemble(m_compiler->object(contractName).bytecode);
-		if (requests.count(g_strAsm))
+		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
-		if (requests.count(g_strSrcMap))
+		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->sourceMapping(contractName);
 			contractData[g_strSrcMap] = map ? *map : "";
 		}
-		if (requests.count(g_strSrcMapRuntime))
+		if (requests.count(g_strSrcMapRuntime) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
@@ -1103,15 +1125,16 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
 		for (auto const& contract: m_compiler->contractNames())
-			if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
-			{
-				auto ret = GasEstimator::breakToStatementLevel(
-					GasEstimator(m_evmVersion).structuralEstimation(*assemblyItems, asts),
-					asts
-				);
-				for (auto const& it: ret)
-					gasCosts[it.first] += it.second;
-			}
+			if (m_compiler->compilationSuccessful())
+				if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
+				{
+					auto ret = GasEstimator::breakToStatementLevel(
+						GasEstimator(m_evmVersion).structuralEstimation(*assemblyItems, asts),
+						asts
+					);
+					for (auto const& it: ret)
+						gasCosts[it.first] += it.second;
+				}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))
@@ -1379,6 +1402,12 @@ void CommandLineInterface::outputCompilationResults()
 	handleAst(g_argAstJson);
 	handleAst(g_argAstCompactJson);
 
+	if (!m_compiler->compilationSuccessful())
+	{
+		serr() << endl << "Compilation halted after AST generation due to errors." << endl;
+		return;
+	}
+
 	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)
 	{
@@ -1409,6 +1438,7 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleIR(contract);
+		handleEWasm(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);

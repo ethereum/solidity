@@ -8,8 +8,6 @@ contract C
 		require(x > 0);
 		_;
 		// Fails because of overflow behavior.
-		// Overflow is not reported because this assertion prevents
-		// it from reaching the end of the function.
 		assert(x > 1);
 	}
 
@@ -19,4 +17,4 @@ contract C
 	}
 }
 // ----
-// Warning: (245-258): Assertion violation happens here
+// Warning: (136-149): Assertion violation happens here

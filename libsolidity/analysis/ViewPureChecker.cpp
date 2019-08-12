@@ -389,7 +389,14 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 		break;
 	}
 	default:
+	{
+		if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(
+			_memberAccess.annotation().referencedDeclaration
+		))
+			if (varDecl->isStateVariable() && !varDecl->isConstant())
+				mutability = writes ? StateMutability::NonPayable : StateMutability::View;
 		break;
+	}
 	}
 	reportMutability(mutability, _memberAccess.location());
 }

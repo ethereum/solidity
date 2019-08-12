@@ -27,12 +27,14 @@ using namespace dev::solidity::smt;
 
 SymbolicVariable::SymbolicVariable(
 	solidity::TypePointer _type,
+	solidity::TypePointer _originalType,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	m_type(move(_type)),
+	m_type(_type),
+	m_originalType(_originalType),
 	m_uniqueName(move(_uniqueName)),
-	m_interface(_interface),
+	m_context(_context),
 	m_ssa(make_unique<SSAVariable>())
 {
 	solAssert(m_type, "");
@@ -43,17 +45,17 @@ SymbolicVariable::SymbolicVariable(
 SymbolicVariable::SymbolicVariable(
 	SortPointer _sort,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
 	m_sort(move(_sort)),
 	m_uniqueName(move(_uniqueName)),
-	m_interface(_interface),
+	m_context(_context),
 	m_ssa(make_unique<SSAVariable>())
 {
 	solAssert(m_sort, "");
 }
 
-Expression SymbolicVariable::currentValue() const
+Expression SymbolicVariable::currentValue(solidity::TypePointer const&) const
 {
 	return valueAtIndex(m_ssa->index());
 }
@@ -65,12 +67,23 @@ string SymbolicVariable::currentName() const
 
 Expression SymbolicVariable::valueAtIndex(int _index) const
 {
-	return m_interface.newVariable(uniqueSymbol(_index), m_sort);
+	return m_context.newVariable(uniqueSymbol(_index), m_sort);
+}
+
+string SymbolicVariable::nameAtIndex(int _index) const
+{
+	return uniqueSymbol(_index);
 }
 
 string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
 	return m_uniqueName + "_" + to_string(_index);
+}
+
+Expression SymbolicVariable::resetIndex()
+{
+	m_ssa->resetIndex();
+	return currentValue();
 }
 
 Expression SymbolicVariable::increaseIndex()
@@ -82,54 +95,67 @@ Expression SymbolicVariable::increaseIndex()
 SymbolicBoolVariable::SymbolicBoolVariable(
 	solidity::TypePointer _type,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicVariable(move(_type), move(_uniqueName), _interface)
+	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
 	solAssert(m_type->category() == solidity::Type::Category::Bool, "");
 }
 
 SymbolicIntVariable::SymbolicIntVariable(
 	solidity::TypePointer _type,
+	solidity::TypePointer _originalType,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicVariable(move(_type), move(_uniqueName), _interface)
+	SymbolicVariable(_type, _originalType, move(_uniqueName), _context)
 {
 	solAssert(isNumber(m_type->category()), "");
 }
 
 SymbolicAddressVariable::SymbolicAddressVariable(
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicIntVariable(TypeProvider::uint(160), move(_uniqueName), _interface)
+	SymbolicIntVariable(TypeProvider::uint(160), TypeProvider::uint(160), move(_uniqueName), _context)
 {
 }
 
 SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
+	solidity::TypePointer _originalType,
 	unsigned _numBytes,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicIntVariable(TypeProvider::uint(_numBytes * 8), move(_uniqueName), _interface)
+	SymbolicIntVariable(TypeProvider::uint(_numBytes * 8), _originalType, move(_uniqueName), _context)
 {
 }
 
 SymbolicFunctionVariable::SymbolicFunctionVariable(
 	solidity::TypePointer _type,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicVariable(move(_type), move(_uniqueName), _interface),
-	m_declaration(m_interface.newVariable(currentName(), m_sort))
+	SymbolicVariable(_type, _type, move(_uniqueName), _context),
+	m_declaration(m_context.newVariable(currentName(), m_sort))
 {
 	solAssert(m_type->category() == solidity::Type::Category::Function, "");
 }
 
+SymbolicFunctionVariable::SymbolicFunctionVariable(
+	SortPointer _sort,
+	string _uniqueName,
+	EncodingContext& _context
+):
+	SymbolicVariable(move(_sort), move(_uniqueName), _context),
+	m_declaration(m_context.newVariable(currentName(), m_sort))
+{
+	solAssert(m_sort->kind == Kind::Function, "");
+}
+
 void SymbolicFunctionVariable::resetDeclaration()
 {
-	m_declaration = m_interface.newVariable(currentName(), m_sort);
+	m_declaration = m_context.newVariable(currentName(), m_sort);
 }
 
 Expression SymbolicFunctionVariable::increaseIndex()
@@ -147,29 +173,43 @@ Expression SymbolicFunctionVariable::operator()(vector<Expression> _arguments) c
 SymbolicMappingVariable::SymbolicMappingVariable(
 	solidity::TypePointer _type,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicVariable(move(_type), move(_uniqueName), _interface)
+	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
 	solAssert(isMapping(m_type->category()), "");
 }
 
 SymbolicArrayVariable::SymbolicArrayVariable(
 	solidity::TypePointer _type,
+	solidity::TypePointer _originalType,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicVariable(move(_type), move(_uniqueName), _interface)
+	SymbolicVariable(_type, _originalType, move(_uniqueName), _context)
 {
 	solAssert(isArray(m_type->category()), "");
+}
+
+Expression SymbolicArrayVariable::currentValue(solidity::TypePointer const& _targetType) const
+{
+	if (_targetType)
+		// StringLiterals are encoded as SMT arrays in the generic case,
+		// but they can also be compared/assigned to fixed bytes, in which
+		// case they'd need to be encoded as numbers.
+		if (auto strType = dynamic_cast<StringLiteralType const*>(m_originalType))
+			if (_targetType->category() == solidity::Type::Category::FixedBytes)
+				return smt::Expression(u256(toHex(asBytes(strType->value()), HexPrefix::Add)));
+
+	return SymbolicVariable::currentValue(_targetType);
 }
 
 SymbolicEnumVariable::SymbolicEnumVariable(
 	solidity::TypePointer _type,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicVariable(move(_type), move(_uniqueName), _interface)
+	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
 	solAssert(isEnum(m_type->category()), "");
 }
@@ -177,9 +217,9 @@ SymbolicEnumVariable::SymbolicEnumVariable(
 SymbolicTupleVariable::SymbolicTupleVariable(
 	solidity::TypePointer _type,
 	string _uniqueName,
-	SolverInterface& _interface
+	EncodingContext& _context
 ):
-	SymbolicVariable(move(_type), move(_uniqueName), _interface)
+	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
 	solAssert(isTuple(m_type->category()), "");
 }

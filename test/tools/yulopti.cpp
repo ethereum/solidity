@@ -27,6 +27,7 @@
 #include <libyul/AsmData.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/Object.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -207,8 +208,12 @@ public:
 				SSAReverser::run(*m_ast);
 				break;
 			case 'p':
-				StackCompressor::run(m_dialect, *m_ast, true, 16);
+			{
+				Object obj;
+				obj.code = m_ast;
+				StackCompressor::run(m_dialect, obj, true, 16);
 				break;
+			}
 			default:
 				cout << "Unknown option." << endl;
 			}

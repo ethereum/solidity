@@ -21,11 +21,12 @@
 #include <libyul/optimiser/ExpressionInliner.h>
 
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
+#include <libyul/optimiser/Metrics.h>
+#include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Substitution.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
 
-#include <boost/algorithm/cxx11/all_of.hpp>
+#include <libyul/AsmData.h>
 
 using namespace std;
 using namespace dev;
@@ -40,7 +41,6 @@ void ExpressionInliner::run()
 	(*this)(m_block);
 }
 
-
 void ExpressionInliner::operator()(FunctionDefinition& _fun)
 {
 	ASTModifier::operator()(_fun);
@@ -52,21 +52,28 @@ void ExpressionInliner::visit(Expression& _expression)
 	if (_expression.type() == typeid(FunctionCall))
 	{
 		FunctionCall& funCall = boost::get<FunctionCall>(_expression);
+		if (!m_inlinableFunctions.count(funCall.functionName.name))
+			return;
+		FunctionDefinition const& fun = *m_inlinableFunctions.at(funCall.functionName.name);
 
-		bool movable = boost::algorithm::all_of(
-			funCall.arguments,
-			[=](Expression const& _arg) { return SideEffectsCollector(m_dialect, _arg).movable(); }
-		);
-		if (m_inlinableFunctions.count(funCall.functionName.name) && movable)
+		map<YulString, Expression const*> substitutions;
+		for (size_t i = 0; i < funCall.arguments.size(); i++)
 		{
-			FunctionDefinition const& fun = *m_inlinableFunctions.at(funCall.functionName.name);
-			map<YulString, Expression const*> substitutions;
-			for (size_t i = 0; i < fun.parameters.size(); ++i)
-				substitutions[fun.parameters[i].name] = &funCall.arguments[i];
-			_expression = Substitution(substitutions).translate(*boost::get<Assignment>(fun.body.statements.front()).value);
+			Expression const& arg = funCall.arguments[i];
+			YulString paraName = fun.parameters[i].name;
 
-			// TODO Add metric! This metric should perform well on a pair of functions who
-			// call each other recursively.
+			if (!SideEffectsCollector(m_dialect, arg).movable())
+				return;
+
+			size_t refs = ReferencesCounter::countReferences(fun.body)[paraName];
+			size_t cost = CodeCost::codeCost(m_dialect, arg);
+
+			if (refs > 1 && cost > 1)
+				return;
+
+			substitutions[paraName] = &arg;
 		}
+
+		_expression = Substitution(substitutions).translate(*boost::get<Assignment>(fun.body.statements.front()).value);
 	}
 }

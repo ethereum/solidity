@@ -144,6 +144,13 @@ function test_solc_behaviour()
     then
         sed -i -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
+        # Remove explicit bytecode and references to bytecode offsets
+        sed -i.bak -E -e 's/\"object\":\"[a-f0-9]+\"/\"object\":\"bytecode removed\"/g' "$stdout_path"
+        sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"opcodes removed\"/g' "$stdout_path"
+        sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"sourceMap removed\"/g' "$stdout_path"
+        # Replace escaped newlines by actual newlines for readability
+        sed -i.bak -E -e 's/\\n/\'$'\n/g' "$stdout_path"
+        rm "$stdout_path.bak"
     else
         sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
         sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
@@ -301,6 +308,7 @@ SOLTMPDIR=$(mktemp -d)
     set -e
     cd "$SOLTMPDIR"
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+
     for f in *.sol
     do
         # The contributors guide uses syntax tests, but we cannot
@@ -310,6 +318,7 @@ SOLTMPDIR=$(mktemp -d)
             continue
         fi
         echo "$f"
+
         opts=''
         # We expect errors if explicitly stated, or if imports
         # are used (in the style guide)

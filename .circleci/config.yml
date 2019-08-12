@@ -36,8 +36,9 @@ defaults:
         mkdir -p build
         cd build
         protoc --proto_path=../test/tools/ossfuzz yulProto.proto --cpp_out=../test/tools/ossfuzz
+        protoc --proto_path=../test/tools/ossfuzz abiV2Proto.proto --cpp_out=../test/tools/ossfuzz
         cmake .. -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} $CMAKE_OPTIONS
-        make ossfuzz ossfuzz_proto -j4
+        make ossfuzz ossfuzz_proto ossfuzz_abiv2 -j4
 
   - run_proofs: &run_proofs
       name: Correctness proofs for optimization rules
@@ -69,6 +70,7 @@ defaults:
   - artifacts_executables_ossfuzz: &artifacts_executables_ossfuzz
       root: build
       paths:
+        - test/tools/ossfuzz/abiv2_proto_ossfuzz
         - test/tools/ossfuzz/const_opt_ossfuzz
         - test/tools/ossfuzz/solc_noopt_ossfuzz
         - test/tools/ossfuzz/solc_opt_ossfuzz
@@ -179,7 +181,23 @@ jobs:
             pip install --user codespell
       - run:
           name: Check spelling
-          command: ~/.local/bin/codespell -S "*.enc,.git" -I ./scripts/codespell_whitelist.txt
+          command: ~/.local/bin/codespell -S "*.enc,.git,Dockerfile*" -I ./scripts/codespell_whitelist.txt
+
+  chk_docs_examples:
+    docker:
+      - image: circleci/node
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: JS deps
+          command: sudo npm install -g solhint
+      - run:
+          name: Test Docs examples
+          command: ./test/docsCodeStyle.sh
 
   chk_coding_style:
     docker:
@@ -231,6 +249,18 @@ jobs:
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
 
+  b_ubu18: &build_ubuntu1804
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1804
+    environment:
+      CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2
+      CMAKE_BUILD_TYPE: RelWithDebugInfo
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
   b_ubu_codecov:
     <<: *build_ubuntu1904
     environment:
@@ -252,7 +282,7 @@ jobs:
           at: build
       - run:
           name: "soltest: Syntax Tests"
-          command: build/test/soltest -t 'syntaxTest*' -- --no-ipc --testpath test
+          command: build/test/soltest -t 'syntaxTest*' -- --testpath test
       - run:
           name: "Code Coverage: Syntax Tests"
           command: codecov --flags syntax --gcov-root build
@@ -303,10 +333,14 @@ jobs:
 
   b_archlinux:
     docker:
-      - image: ethereum/solidity-buildpack-deps:archlinux
+      - image: archlinux/base
     environment:
       TERM: xterm
     steps:
+      - run:
+          name: Install build dependencies
+          command: |
+            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
       - checkout
       - run: *run_build
       - store_artifacts: *artifacts_solc
@@ -444,7 +478,6 @@ jobs:
     environment:
       EVM: constantinople
       OPTIMIZE: 0
-      SOLTEST_IPC: 0
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ubu_homestead:
@@ -572,6 +605,7 @@ workflows:
       # basic checks
       - chk_spelling: *workflow_trigger_on_tags
       - chk_coding_style: *workflow_trigger_on_tags
+      - chk_docs_examples: *workflow_trigger_on_tags
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
 
@@ -587,6 +621,7 @@ workflows:
 
       # Ubuntu 18.10 build and tests
       - b_ubu: *workflow_trigger_on_tags
+      - b_ubu18: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu1904
       - t_ubu_homestead: *workflow_ubuntu1904
       - t_ubu_homestead_opt: *workflow_ubuntu1904
@@ -631,4 +666,3 @@ workflows:
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
       - t_ubu_codecov: *workflow_ubuntu1904_codecov
-

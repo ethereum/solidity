@@ -141,19 +141,19 @@ on the type of ``X`` being
   ``enc(X) = head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(k))``
 
   where ``X = (X(1), ..., X(k))`` and
-  ``head`` and ``tail`` are defined for ``Ti`` being a static type as
+  ``head`` and ``tail`` are defined for ``Ti`` as follows:
+
+  if ``Ti`` is static:
 
     ``head(X(i)) = enc(X(i))`` and ``tail(X(i)) = ""`` (the empty string)
 
-  and as
+  otherwise, i.e. if ``Ti`` is dynamic:
 
-    ``head(X(i)) = enc(len(head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
+    ``head(X(i)) = enc(len( head(X(1)) ... head(X(k)) tail(X(1)) ... tail(X(i-1)) ))``
     ``tail(X(i)) = enc(X(i))``
 
-  otherwise, i.e. if ``Ti`` is a dynamic type.
-
   Note that in the dynamic case, ``head(X(i))`` is well-defined since the lengths of
-  the head parts only depend on the types and not the values. Its value is the offset
+  the head parts only depend on the types and not the values. The value of ``head(X(i))`` is the offset
   of the beginning of ``tail(X(i))`` relative to the start of ``enc(X)``.
 
 - ``T[k]`` for any ``T`` and ``k``:

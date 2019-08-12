@@ -122,9 +122,13 @@ public:
 	std::string resizeDynamicArrayFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that will clear the storage area given
-	/// by the start and end (exclusive) parameters (slots). Only works for value types.
+	/// by the start and end (exclusive) parameters (slots).
 	/// signature: (start, end)
 	std::string clearStorageRangeFunction(Type const& _type);
+
+	/// @returns the name of a function that will clear the given storage array
+	/// signature: (slot) ->
+	std::string clearStorageArrayFunction(ArrayType const& _type);
 
 	/// Returns the name of a function that will convert a given length to the
 	/// size in memory (number of storage slots or calldata/memory bytes) it
@@ -146,6 +150,17 @@ public:
 	/// signature: (array, index) -> slot, offset
 	std::string storageArrayIndexAccessFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that returns the memory address for the
+	/// given array base ref and index.
+	/// Causes invalid opcode on out of range access.
+	/// signature: (baseRef, index) -> address
+	std::string memoryArrayIndexAccessFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that returns the calldata address for the
+	/// given array base ref and index.
+	/// signature: (baseRef, index) -> address
+	std::string calldataArrayIndexAccessFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that advances an array data pointer to the next element.
 	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies one or multiple full slots.
 	std::string nextArrayElementFunction(ArrayType const& _type);
@@ -162,6 +177,14 @@ public:
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
 	std::string readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes);
 
+	/// @returns a function that reads a value type from memory.
+	/// signature: (addr) -> value
+	std::string readFromMemory(Type const& _type);
+	/// @returns a function that reads a value type from calldata.
+	/// Reverts on invalid input.
+	/// signature: (addr) -> value
+	std::string readFromCalldata(Type const& _type);
+
 	/// @returns a function that extracts a value type from storage slot that has been
 	/// retrieved already.
 	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
@@ -174,7 +197,13 @@ public:
 	/// the specified slot and offset. If offset is not given, it is expected as
 	/// runtime parameter.
 	/// signature: (slot, [offset,] value)
-	std::string updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const _offset = boost::optional<unsigned>());
+	std::string updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const& _offset = boost::optional<unsigned>());
+
+	/// Returns the name of a function that will write the given value to
+	/// the specified address.
+	/// Performs a cleanup before writing for value types.
+	/// signature: (memPtr, value) ->
+	std::string writeToMemoryFunction(Type const& _type);
 
 	/// Performs cleanup after reading from a potentially compressed storage slot.
 	/// The function does not perform any validation, it just masks or sign-extends
@@ -196,6 +225,11 @@ public:
 	/// Arguments: size
 	/// Return value: pointer
 	std::string allocationFunction();
+
+	/// @returns the name of a function that allocates a memory array.
+	/// For dynamic arrays it adds space for length and stores it.
+	/// signature: (length) -> memPtr
+	std::string allocateMemoryArrayFunction(ArrayType const& _type);
 
 	/// @returns the name of the function that converts a value of type @a _from
 	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
@@ -224,13 +258,6 @@ public:
 	/// as reason string.
 	std::string forwardingRevertFunction();
 
-	/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
-	/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
-	/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
-	/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
-	static std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
-
-
 	std::string incrementCheckedFunction(Type const& _type);
 	std::string decrementCheckedFunction(Type const& _type);
 
@@ -239,10 +266,17 @@ public:
 	/// @returns the name of a function that returns the zero value for the
 	/// provided type
 	std::string zeroValueFunction(Type const& _type);
+
+	/// @returns the name of a function that will set the given storage item to
+	/// zero
+	/// signature: (slot, offset) ->
+	std::string storageSetToZeroFunction(Type const& _type);
 private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
 	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);
+
+	std::string readFromMemoryOrCalldata(Type const& _type, bool _fromCalldata);
 
 	langutil::EVMVersion m_evmVersion;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;

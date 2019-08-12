@@ -61,13 +61,15 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		boost::optional<langutil::Error::Type> _errorTypeForLoose,
 		Dialect const& _dialect,
-		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
+		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver(),
+		std::set<YulString> const& _dataNames = {}
 	):
 		m_resolver(_resolver),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
 		m_dialect(_dialect),
-		m_errorTypeForLoose(_errorTypeForLoose)
+		m_errorTypeForLoose(_errorTypeForLoose),
+		m_dataNames(_dataNames)
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			m_evmVersion = evmDialect->evmVersion();
@@ -75,7 +77,9 @@ public:
 
 	bool analyze(Block const& _block);
 
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Block const& _ast);
+	/// Performs analysis on the outermost code of the given object and returns the analysis info.
+	/// Asserts on failure.
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
 
 	bool operator()(Instruction const&);
 	bool operator()(Literal const& _literal);
@@ -124,6 +128,8 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	Dialect const& m_dialect;
 	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
+	/// Names of data objects to be referenced by builtin functions with literal arguments.
+	std::set<YulString> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;
 };
 

@@ -85,6 +85,8 @@ public:
 	std::string render() const;
 
 private:
+	// Prevent implicit cast to bool
+	Whiskers& operator()(std::string _parameter, long long);
 	void checkParameterValid(std::string const& _parameter) const;
 	void checkParameterUnknown(std::string const& _parameter) const;
 

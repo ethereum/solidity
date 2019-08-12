@@ -3,11 +3,11 @@
 ## This is used to package .deb packages and upload them to the launchpad
 ## ppa servers for building.
 ##
-## If no argument is given, creates a package for the develop branch
-## and uploads it to the ethereum/ethereum-dev ppa.
+## You can pass a branch name as argument to this script (which, if no argument is given,
+## will default to "develop").
 ##
-## If an argument is given, it is used as a tag and the resulting package
-## is uploaded to the ethereum/ethereum ppa.
+## If the gien branch is "release", the resulting package will be uplaoded to
+## ethereum/ethereum PPA, or ethereum/ethereum-dev PPA otherwise.
 ##
 ## The gnupg key for "builds@ethereum.org" has to be present in order to sign
 ## the package.
@@ -47,15 +47,19 @@ else
     branch=$1
 fi
 
+is_release() {
+    [[ "${branch}" = "release" ]] || [[ "${branch}" =~ ^v[0-9]+(\.[0-9])*$ ]]
+}
+
 keyid=70D110489D66E2F6
 email=builds@ethereum.org
 packagename=solc
 
-static_build_distribution=cosmic
+static_build_distribution=disco
 
-DISTRIBUTIONS="bionic cosmic disco"
+DISTRIBUTIONS="bionic disco"
 
-if [ branch != develop ]
+if is_release
 then
     DISTRIBUTIONS="$DISTRIBUTIONS STATIC"
 fi
@@ -73,11 +77,11 @@ then
     SMTDEPENDENCY=""
     CMAKE_OPTIONS="-DSOLC_LINK_STATIC=On"
 else
-    if [ "$branch" = develop ]
+    if is_release
     then
-        pparepo=ethereum-dev
-    else
         pparepo=ethereum
+    else
+        pparepo=ethereum-dev
     fi
     SMTDEPENDENCY="libcvc4-dev,
                "
@@ -101,12 +105,12 @@ committimestamp=$(git show --format=%ci HEAD | head -n 1)
 commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 
 echo "$commithash" > commit_hash.txt
-if [ $branch = develop ]
+if is_release
 then
-    debversion="$version~develop-$commitdate-$commithash"
-else
     debversion="$version"
     echo -n > prerelease.txt # proper release
+else
+    debversion="$version~develop-$commitdate-$commithash"
 fi
 
 # gzip will create different tars all the time and we are not allowed

@@ -76,6 +76,7 @@ public:
 	}
 
 	std::string functionName(FunctionDefinition const& _function);
+	std::string functionName(VariableDeclaration const& _varDecl);
 	FunctionDefinition const& virtualFunction(FunctionDefinition const& _functionDeclaration);
 	std::string virtualFunctionName(FunctionDefinition const& _functionDeclaration);
 

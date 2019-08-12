@@ -26,6 +26,7 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Utilities.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Object.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -69,17 +70,19 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	return success && !m_errorReporter.hasErrors();
 }
 
-AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Block const& _ast)
+AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
 {
 	ErrorList errorList;
 	langutil::ErrorReporter errors(errorList);
-	yul::AsmAnalysisInfo analysisInfo;
+	AsmAnalysisInfo analysisInfo;
 	bool success = yul::AsmAnalyzer(
 		analysisInfo,
 		errors,
 		Error::Type::SyntaxError,
-		_dialect
-	).analyze(_ast);
+		_dialect,
+		{},
+		_object.dataNames()
+	).analyze(*_object.code);
 	solAssert(success && errorList.empty(), "Invalid assembly/yul code.");
 	return analysisInfo;
 }
@@ -383,11 +386,19 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	{
 		if (!expectExpression(arg))
 			success = false;
-		else if (needsLiteralArguments && arg.type() != typeid(Literal))
-			m_errorReporter.typeError(
-				_funCall.functionName.location,
-				"Function expects direct literals as arguments."
-			);
+		else if (needsLiteralArguments)
+		{
+			if (arg.type() != typeid(Literal))
+				m_errorReporter.typeError(
+					_funCall.functionName.location,
+					"Function expects direct literals as arguments."
+				);
+			else if (!m_dataNames.count(boost::get<Literal>(arg).value))
+				m_errorReporter.typeError(
+					_funCall.functionName.location,
+					"Unknown data object \"" + boost::get<Literal>(arg).value.str() + "\"."
+				);
+		}
 	}
 	// Use argument size instead of parameter count to avoid misleading errors.
 	m_stackHeight += int(returns) - int(_funCall.arguments.size());

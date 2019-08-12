@@ -49,7 +49,9 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/Object.h>
 
+#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/evm/NoOutputAssembly.h>
 
 #include <libdevcore/CommonData.h>
@@ -61,8 +63,7 @@ using namespace yul;
 void OptimiserSuite::run(
 	Dialect const& _dialect,
 	GasMeter const* _meter,
-	Block& _ast,
-	AsmAnalysisInfo const& _analysisInfo,
+	Object& _object,
 	bool _optimizeStackAllocation,
 	set<YulString> const& _externallyUsedIdentifiers
 )
@@ -70,7 +71,12 @@ void OptimiserSuite::run(
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	Block ast = boost::get<Block>(Disambiguator(_dialect, _analysisInfo, reservedIdentifiers)(_ast));
+	*_object.code = boost::get<Block>(Disambiguator(
+		_dialect,
+		*_object.analysisInfo,
+		reservedIdentifiers
+	)(*_object.code));
+	Block& ast = *_object.code;
 
 	VarDeclInitializer{}(ast);
 	FunctionHoister{}(ast);
@@ -203,7 +209,12 @@ void OptimiserSuite::run(
 	FunctionGrouper{}(ast);
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
-	StackCompressor::run(_dialect, ast, _optimizeStackAllocation, stackCompressorMaxIterations);
+	StackCompressor::run(
+		_dialect,
+		_object,
+		_optimizeStackAllocation,
+		stackCompressorMaxIterations
+	);
 	BlockFlattener{}(ast);
 	DeadCodeEliminator{_dialect}(ast);
 	ControlFlowSimplifier{_dialect}(ast);
@@ -215,8 +226,14 @@ void OptimiserSuite::run(
 		yulAssert(_meter, "");
 		ConstantOptimiser{*dialect, *_meter}(ast);
 	}
+	else if (dynamic_cast<WasmDialect const*>(&_dialect))
+	{
+		// If the first statement is an empty block, remove it.
+		// We should only have function definitions after that.
+		if (ast.statements.size() > 1 && boost::get<Block>(ast.statements.front()).statements.empty())
+			ast.statements.erase(ast.statements.begin());
+	}
 	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);
-	yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, ast);
 
-	_ast = std::move(ast);
+	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
 }

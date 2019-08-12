@@ -17,6 +17,7 @@
 
 #include <test/libyul/YulOptimizerTest.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -305,7 +306,10 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		disambiguate();
 		(FunctionGrouper{})(*m_ast);
 		size_t maxIterations = 16;
-		StackCompressor::run(*m_dialect, *m_ast, true, maxIterations);
+		Object obj;
+		obj.code = m_ast;
+		StackCompressor::run(*m_dialect, obj, true, maxIterations);
+		m_ast = obj.code;
 		(BlockFlattener{})(*m_ast);
 	}
 	else if (m_optimizerStep == "wordSizeTransform")
@@ -318,7 +322,10 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "fullSuite")
 	{
 		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-		OptimiserSuite::run(*m_dialect, &meter, *m_ast, *m_analysisInfo, true);
+		yul::Object obj;
+		obj.code = m_ast;
+		obj.analysisInfo = m_analysisInfo;
+		OptimiserSuite::run(*m_dialect, &meter, obj, true);
 	}
 	else
 	{

@@ -22,7 +22,9 @@
 
 #pragma once
 
+#include <libdevcore/Assertions.h>
 #include <libdevcore/Common.h> // defines noexcept macro for MSVC
+#include <libdevcore/Exceptions.h>
 #include <liblangutil/CharStream.h>
 #include <memory>
 #include <string>
@@ -31,6 +33,7 @@
 
 namespace langutil
 {
+struct SourceLocationError: virtual dev::Exception {};
 
 /**
  * Representation of an interval of source positions.
@@ -48,6 +51,15 @@ struct SourceLocation
 	inline bool intersects(SourceLocation const& _other) const;
 
 	bool isEmpty() const { return start == -1 && end == -1; }
+
+	std::string text() const
+	{
+		assertThrow(source, SourceLocationError, "Requested text from null source.");
+		assertThrow(!isEmpty(), SourceLocationError, "Requested text from empty source location.");
+		assertThrow(start <= end, SourceLocationError, "Invalid source location.");
+		assertThrow(end <= int(source->source().length()), SourceLocationError, "Invalid source location.");
+		return source->source().substr(start, end - start);
+	}
 
 	/// @returns the smallest SourceLocation that contains both @param _a and @param _b.
 	/// Assumes that @param _a and @param _b refer to the same source (exception: if the source of either one

@@ -1,0 +1,22 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "pragma solidity >=0.0; contract C { }"
+		}
+	},
+	"settings":
+	{
+		"optimizer":
+		{
+			"enabled": true,
+			"details": {"yul": true}
+		},
+		"outputSelection":
+		{
+			"*": { "*": ["ewasm.wast"] }
+		}
+	}
+}

@@ -53,7 +53,9 @@ struct WasmDialect: public Dialect
 	static WasmDialect const& instance();
 
 private:
-	void addFunction(std::string _name, size_t _params, size_t _returns);
+	void addEthereumExternals();
+
+	void addFunction(std::string _name, size_t _params, size_t _returns, bool _movable = true, bool _literalArguments = false);
 
 	std::map<YulString, BuiltinFunction> m_functions;
 };

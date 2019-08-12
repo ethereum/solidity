@@ -193,15 +193,18 @@ Input Description
           // disabled by default
           "enabled": true,
           // Optimize for how many times you intend to run the code.
-          // Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage.
+          // Lower values will optimize more for initial deployment cost, higher
+          // values will optimize more for high-frequency usage.
           "runs": 200,
           // Switch optimizer components on or off in detail.
           // The "enabled" switch above provides two defaults which can be
           // tweaked here. If "details" is given, "enabled" can be omitted.
           "details": {
-            // The peephole optimizer is always on if no details are given, use details to switch it off.
+            // The peephole optimizer is always on if no details are given,
+            // use details to switch it off.
             "peephole": true,
-            // The unused jumpdest remover is always on if no details are given, use details to switch it off.
+            // The unused jumpdest remover is always on if no details are given,
+            // use details to switch it off.
             "jumpdestRemover": true,
             // Sometimes re-orders literals in commutative operations.
             "orderLiterals": false,
@@ -224,16 +227,21 @@ Input Description
             }
           }
         },
-        "evmVersion": "byzantium", // Version of the EVM to compile for. Affects type checking and code generation. Can be homestead, tangerineWhistle, spuriousDragon, byzantium, constantinople or petersburg
+        // Version of the EVM to compile for.
+        // Affects type checking and code generation. Can be homestead,
+        // tangerineWhistle, spuriousDragon, byzantium, constantinople or petersburg
+        "evmVersion": "byzantium",
         // Metadata settings (optional)
         "metadata": {
           // Use only literal content and not URLs (false by default)
           "useLiteralContent": true
         },
-        // Addresses of the libraries. If not all libraries are given here, it can result in unlinked objects whose output data is different.
+        // Addresses of the libraries. If not all libraries are given here,
+        // it can result in unlinked objects whose output data is different.
         "libraries": {
           // The top level key is the the name of the source file where the library is used.
-          // If remappings are used, this source file should match the global path after remappings were applied.
+          // If remappings are used, this source file should match the global path
+          // after remappings were applied.
           // If this key is an empty string, that refers to a global level.
           "myFile.sol": {
             "MyLib": "0x123123..."
@@ -314,6 +322,15 @@ Output Description
             "start": 0,
             "end": 100
           ],
+          // Optional: Further locations (e.g. places of conflicting declarations)
+          "secondarySourceLocations": [
+            {
+              "file": "sourceFile.sol",
+              "start": 64,
+              "end": 92,
+              "message": "Other declaration is here:"
+            }
+          ],
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc.
           // See below for complete list of types.
           "type": "TypeError",
@@ -327,7 +344,8 @@ Output Description
           "formattedMessage": "sourceFile.sol:100: Invalid keyword"
         }
       ],
-      // This contains the file-level outputs. In can be limited/filtered by the outputSelection settings.
+      // This contains the file-level outputs.
+      // It can be limited/filtered by the outputSelection settings.
       "sources": {
         "sourceFile.sol": {
           // Identifier of the source (used in source maps)
@@ -338,7 +356,8 @@ Output Description
           "legacyAST": {}
         }
       },
-      // This contains the contract-level outputs. It can be limited/filtered by the outputSelection settings.
+      // This contains the contract-level outputs.
+      // It can be limited/filtered by the outputSelection settings.
       "contracts": {
         "sourceFile.sol": {
           // If the language used has no contract names, this field should equal to an empty string.
@@ -371,7 +390,8 @@ Output Description
                 // If given, this is an unlinked object.
                 "linkReferences": {
                   "libraryFile.sol": {
-                    // Byte offsets into the bytecode. Linking replaces the 20 bytes located there.
+                    // Byte offsets into the bytecode.
+                    // Linking replaces the 20 bytes located there.
                     "Library1": [
                       { "start": 0, "length": 20 },
                       { "start": 200, "length": 20 }

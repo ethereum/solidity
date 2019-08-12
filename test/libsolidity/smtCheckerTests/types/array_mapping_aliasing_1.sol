@@ -13,7 +13,7 @@ contract C
 		map[0] = 2;
 		// Should fail since map == severalMaps[0] is possible.
 		assert(severalMaps[0][0] == 42);
-		// Should not fail since knowledge is erase only for mapping (uint => uint).
+		// Should not fail since knowledge is erased only for mapping (uint => uint).
 		assert(severalMaps8[0][0] == 42);
 		// Should fail since map == severalMaps3d[0][0] is possible.
 		assert(severalMaps3d[0][0][0] == 42);
@@ -21,4 +21,4 @@ contract C
 }
 // ----
 // Warning: (451-482): Assertion violation happens here
-// Warning: (664-700): Assertion violation happens here
+// Warning: (665-701): Assertion violation happens here

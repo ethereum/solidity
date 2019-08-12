@@ -33,10 +33,6 @@ REPO_ROOT="$(dirname "$0")/.."
 source "${REPO_ROOT}/scripts/common.sh"
 
 WORKDIR=`mktemp -d`
-# Will be printed in case of a test failure
-ALETH_TMP_OUT=`mktemp`
-IPC_ENABLED=true
-ALETH_PID=
 CMDLINE_PID=
 
 if [[ "$OSTYPE" == "darwin"* ]]
@@ -48,10 +44,6 @@ cleanup() {
     # ensure failing commands don't cause termination during cleanup (especially within safe_kill)
     set +e
 
-    if [[ "$IPC_ENABLED" = true ]] && [[ -n "${ALETH_PID}" ]]
-    then
-        safe_kill $ALETH_PID $ALETH_PATH
-    fi
     if [[ -n "$CMDLINE_PID" ]]
     then
         safe_kill $CMDLINE_PID "Commandline tests"
@@ -59,7 +51,6 @@ cleanup() {
 
     echo "Cleaning up working directory ${WORKDIR} ..."
     rm -rf "$WORKDIR" || true
-    rm $ALETH_TMP_OUT
 }
 trap cleanup INT TERM
 
@@ -89,20 +80,6 @@ else
     fi
 fi
 
-function check_aleth() {
-    printTask "Running IPC tests with $ALETH_PATH..."
-    if ! hash $ALETH_PATH 2>/dev/null; then
-      printError "$ALETH_PATH not found"
-      exit 1
-    fi
-}
-
-if [ "$IPC_ENABLED" = true ];
-then
-    download_aleth
-    check_aleth
-    ALETH_PID=$(run_aleth)
-fi
 
 EVM_VERSIONS="homestead byzantium"
 
@@ -112,7 +89,7 @@ then
 fi
 
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
-# and homestead / byzantium VM, # pointing to that IPC endpoint.
+# and homestead / byzantium VM
 for optimize in "" "--optimize"
 do
   for vm in $EVM_VERSIONS
@@ -143,16 +120,9 @@ do
         fi
 
         set +e
-        "$REPO_ROOT"/build/test/soltest --show-progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS $force_abiv2_flag --ipcpath "${WORKDIR}/geth.ipc"
+        "$REPO_ROOT"/build/test/soltest --show-progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv2_flag
 
         if test "0" -ne "$?"; then
-            if [ -n "$log_directory" ]
-            then
-                # Need to kill aleth first so the log is written
-                safe_kill $ALETH_PID $ALETH_PATH
-                cp $ALETH_TMP_OUT $log_directory/aleth.log
-                printError "Some test failed, wrote aleth.log"
-            fi
             exit 1
         fi
         set -e

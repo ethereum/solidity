@@ -15,7 +15,10 @@ add_executable(isoltest
 	IsolTestOptions.cpp
 	../Options.cpp
 	../Common.cpp
+	../EVMHost.cpp
 	../TestCase.cpp
+        ../libsolidity/util/BytesUtils.cpp
+        ../libsolidity/util/ContractABIUtils.cpp
 	../libsolidity/util/TestFileParser.cpp
 	../libsolidity/util/TestFunctionCall.cpp
 	../libsolidity/GasTest.cpp
@@ -24,11 +27,11 @@ add_executable(isoltest
 	../libsolidity/AnalysisFramework.cpp
 	../libsolidity/SolidityExecutionFramework.cpp
 	../ExecutionFramework.cpp
-	../RPCSession.cpp
+	../libsolidity/ABIJsonTest.cpp
 	../libsolidity/ASTJSONTest.cpp
 	../libsolidity/SMTCheckerJSONTest.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/YulOptimizerTest.cpp
 	../libyul/YulInterpreterTest.cpp
 )
-target_link_libraries(isoltest PRIVATE libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework)
+target_link_libraries(isoltest PRIVATE evmc libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework)

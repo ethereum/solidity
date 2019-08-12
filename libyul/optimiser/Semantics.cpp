@@ -1,4 +1,4 @@
-/*(
+/*
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify

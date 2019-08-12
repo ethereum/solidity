@@ -16,12 +16,17 @@
 */
 
 #include <test/libsolidity/util/TestFileParser.h>
+
+#include <test/libsolidity/util/BytesUtils.h>
 #include <test/Options.h>
+
 #include <liblangutil/Common.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/optional.hpp>
 #include <boost/throw_exception.hpp>
+
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -33,45 +38,6 @@ using namespace dev::solidity::test;
 using namespace std;
 using namespace soltest;
 
-namespace
-{
-	enum class DeclaredAlignment
-	{
-		Left,
-		Right,
-		None,
-	};
-
-	inline bytes alignLeft(bytes _bytes)
-	{
-		return std::move(_bytes) + bytes(32 - _bytes.size(), 0);
-	}
-
-	inline bytes alignRight(bytes _bytes)
-	{
-		return bytes(32 - _bytes.size(), 0) + std::move(_bytes);
-	}
-
-	inline bytes applyAlign(DeclaredAlignment _alignment, ABIType& _abiType, bytes _converted)
-	{
-		if (_alignment != DeclaredAlignment::None)
-			_abiType.alignDeclared = true;
-
-		switch (_alignment)
-		{
-		case DeclaredAlignment::Left:
-			_abiType.align = ABIType::AlignLeft;
-			return alignLeft(std::move(_converted));
-		case DeclaredAlignment::Right:
-			_abiType.align = ABIType::AlignRight;
-			return alignRight(std::move(_converted));
-		default:
-			_abiType.align = ABIType::AlignRight;
-			return alignRight(std::move(_converted));
-		}
-	}
-}
-
 char TestFileParser::Scanner::peek() const noexcept
 {
 	if (std::distance(m_char, m_line.end()) < 2)
@@ -82,7 +48,7 @@ char TestFileParser::Scanner::peek() const noexcept
 	return *next;
 }
 
-vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
+vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
 {
 	vector<FunctionCall> calls;
 	if (!accept(Token::EOS))
@@ -104,32 +70,55 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls()
 				if (calls.empty())
 					expect(Token::Newline);
 				else
-					accept(Token::Newline, true);
+					if (accept(Token::Newline, true))
+						m_lineNumber++;
 
-				call.signature = parseFunctionSignature();
-				if (accept(Token::Comma, true))
-					call.value = parseFunctionCallValue();
-				if (accept(Token::Colon, true))
-					call.arguments = parseFunctionCallArguments();
+				try
+				{
+					call.signature = parseFunctionSignature();
+					if (accept(Token::Comma, true))
+						call.value = parseFunctionCallValue();
+					if (accept(Token::Colon, true))
+						call.arguments = parseFunctionCallArguments();
 
-				if (accept(Token::Newline, true))
-					call.displayMode = FunctionCall::DisplayMode::MultiLine;
+					if (accept(Token::Newline, true))
+					{
+						call.displayMode = FunctionCall::DisplayMode::MultiLine;
+						m_lineNumber++;
+					}
 
-				call.arguments.comment = parseComment();
+					call.arguments.comment = parseComment();
 
-				if (accept(Token::Newline, true))
-					call.displayMode = FunctionCall::DisplayMode::MultiLine;
+					if (accept(Token::Newline, true))
+					{
+						call.displayMode = FunctionCall::DisplayMode::MultiLine;
+						m_lineNumber++;
+					}
 
-				expect(Token::Arrow);
-				call.expectations = parseFunctionCallExpectations();
+					if (accept(Token::Arrow, true))
+					{
+						call.omitsArrow = false;
+						call.expectations = parseFunctionCallExpectations();
+						if (accept(Token::Newline, true))
+							m_lineNumber++;
+					}
+					else
+					{
+						call.expectations.failure = false;
+						call.displayMode = FunctionCall::DisplayMode::SingleLine;
+					}
 
-				accept(Token::Newline, true);
-				call.expectations.comment = parseComment();
+					call.expectations.comment = parseComment();
 
-				if (call.signature == "constructor()")
-					call.isConstructor = true;
+					if (call.signature == "constructor()")
+						call.isConstructor = true;
 
-				calls.emplace_back(std::move(call));
+					calls.emplace_back(std::move(call));
+				}
+				catch (Error const& _e)
+				{
+					throw Error{_e.type(), "Line " + to_string(_lineOffset + m_lineNumber) + ": " + _e.what()};
+				}
 			}
 		}
 	}
@@ -241,112 +230,122 @@ Parameter TestFileParser::parseParameter()
 {
 	Parameter parameter;
 	if (accept(Token::Newline, true))
+	{
 		parameter.format.newline = true;
-	auto literal = parseABITypeLiteral();
-	parameter.rawBytes = get<0>(literal);
-	parameter.abiType = get<1>(literal);
-	parameter.rawString = get<2>(literal);
-	return parameter;
-}
+		m_lineNumber++;
+	}
+	parameter.abiType = ABIType{ABIType::None, ABIType::AlignNone, 0};
 
-tuple<bytes, ABIType, string> TestFileParser::parseABITypeLiteral()
-{
-	ABIType abiType{ABIType::None, ABIType::AlignNone, 0};
-	DeclaredAlignment alignment{DeclaredAlignment::None};
-	bytes result{toBigEndian(u256{0})};
-	string rawString;
 	bool isSigned = false;
-
 	if (accept(Token::Left, true))
 	{
-		rawString += formatToken(Token::Left);
+		parameter.rawString += formatToken(Token::Left);
 		expect(Token::LParen);
-		rawString += formatToken(Token::LParen);
-		alignment = DeclaredAlignment::Left;
+		parameter.rawString += formatToken(Token::LParen);
+		parameter.alignment = Parameter::Alignment::Left;
 	}
 	if (accept(Token::Right, true))
 	{
-		rawString += formatToken(Token::Right);
+		parameter.rawString += formatToken(Token::Right);
 		expect(Token::LParen);
-		rawString += formatToken(Token::LParen);
-		alignment = DeclaredAlignment::Right;
+		parameter.rawString += formatToken(Token::LParen);
+		parameter.alignment = Parameter::Alignment::Right;
 	}
 
-	try
+	if (accept(Token::Sub, true))
 	{
-		if (accept(Token::Sub, true))
-		{
-			rawString += formatToken(Token::Sub);
-			isSigned = true;
-		}
-		if (accept(Token::Boolean))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid boolean literal.");
-			abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
-			string parsed = parseBoolean();
-			rawString += parsed;
-			result = applyAlign(alignment, abiType, convertBoolean(parsed));
-		}
-		else if (accept(Token::HexNumber))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid hex number literal.");
-			abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
-			string parsed = parseHexNumber();
-			rawString += parsed;
-			result = applyAlign(alignment, abiType, convertHexNumber(parsed));
-		}
-		else if (accept(Token::Hex, true))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid hex string literal.");
-			if (alignment != DeclaredAlignment::None)
-				throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
-			string parsed = parseString();
-			rawString += "hex\"" + parsed + "\"";
-			result = convertHexNumber(parsed);
-			abiType = ABIType{ABIType::HexString, ABIType::AlignNone, result.size()};
-		}
-		else if (accept(Token::String))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid string literal.");
-			if (alignment != DeclaredAlignment::None)
-				throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
-			abiType = ABIType{ABIType::String, ABIType::AlignLeft, 32};
-			string parsed = parseString();
-			rawString += "\"" + parsed + "\"";
-			result = applyAlign(DeclaredAlignment::Left, abiType, convertString(parsed));
-		}
-		else if (accept(Token::Number))
-		{
-			auto type = isSigned ? ABIType::SignedDec : ABIType::UnsignedDec;
-			abiType = ABIType{type, ABIType::AlignRight, 32};
-			string parsed = parseDecimalNumber();
-			rawString += parsed;
-			if (isSigned)
-				parsed = "-" + parsed;
-			result = applyAlign(alignment, abiType, convertNumber(parsed));
-		}
-		else if (accept(Token::Failure, true))
-		{
-			if (isSigned)
-				throw Error(Error::Type::ParserError, "Invalid failure literal.");
-			abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
-			result = bytes{};
-		}
-		if (alignment != DeclaredAlignment::None)
-		{
-			expect(Token::RParen);
-			rawString += formatToken(Token::RParen);
-		}
-		return make_tuple(result, abiType, rawString);
+		parameter.rawString += formatToken(Token::Sub);
+		isSigned = true;
 	}
-	catch (std::exception const&)
+	if (accept(Token::Boolean))
 	{
-		throw Error(Error::Type::ParserError, "Literal encoding invalid.");
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid boolean literal.");
+
+		parameter.abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
+		string parsed = parseBoolean();
+		parameter.rawString += parsed;
+		parameter.rawBytes = BytesUtils::applyAlign(
+			parameter.alignment,
+			parameter.abiType,
+			BytesUtils::convertBoolean(parsed)
+		);
 	}
+	else if (accept(Token::HexNumber))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid hex number literal.");
+
+		parameter.abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
+		string parsed = parseHexNumber();
+		parameter.rawString += parsed;
+		parameter.rawBytes = BytesUtils::applyAlign(
+			parameter.alignment,
+			parameter.abiType,
+			BytesUtils::convertHexNumber(parsed)
+		);
+	}
+	else if (accept(Token::Hex, true))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid hex string literal.");
+		if (parameter.alignment != Parameter::Alignment::None)
+			throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
+
+		string parsed = parseString();
+		parameter.rawString += "hex\"" + parsed + "\"";
+		parameter.rawBytes = BytesUtils::convertHexNumber(parsed);
+		parameter.abiType = ABIType{
+			ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()
+		};
+	}
+	else if (accept(Token::String))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid string literal.");
+		if (parameter.alignment != Parameter::Alignment::None)
+			throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
+
+		string parsed = parseString();
+		parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, parsed.size()};
+		parameter.rawString += "\"" + parsed + "\"";
+		parameter.rawBytes = BytesUtils::applyAlign(
+			Parameter::Alignment::Left,
+			parameter.abiType,
+			BytesUtils::convertString(parsed)
+		);
+	}
+	else if (accept(Token::Number))
+	{
+		auto type = isSigned ? ABIType::SignedDec : ABIType::UnsignedDec;
+
+		parameter.abiType = ABIType{type, ABIType::AlignRight, 32};
+		string parsed = parseDecimalNumber();
+		parameter.rawString += parsed;
+		if (isSigned)
+			parsed = "-" + parsed;
+
+		parameter.rawBytes = BytesUtils::applyAlign(
+			parameter.alignment,
+			parameter.abiType,
+			BytesUtils::convertNumber(parsed)
+		);
+	}
+	else if (accept(Token::Failure, true))
+	{
+		if (isSigned)
+			throw Error(Error::Type::ParserError, "Invalid failure literal.");
+
+		parameter.abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
+		parameter.rawBytes = bytes{};
+	}
+	if (parameter.alignment != Parameter::Alignment::None)
+	{
+		expect(Token::RParen);
+		parameter.rawString += formatToken(Token::RParen);
+	}
+
+	return parameter;
 }
 
 string TestFileParser::parseIdentifierOrTuple()
@@ -424,55 +423,6 @@ string TestFileParser::parseString()
 	string literal = m_scanner.currentLiteral();
 	expect(Token::String);
 	return literal;
-}
-
-bytes TestFileParser::convertBoolean(string const& _literal)
-{
-	if (_literal == "true")
-		return bytes{true};
-	else if (_literal == "false")
-		return bytes{false};
-	else
-		throw Error(Error::Type::ParserError, "Boolean literal invalid.");
-}
-
-bytes TestFileParser::convertNumber(string const& _literal)
-{
-	try
-	{
-		return toCompactBigEndian(u256{_literal});
-	}
-	catch (std::exception const&)
-	{
-		throw Error(Error::Type::ParserError, "Number encoding invalid.");
-	}
-}
-
-bytes TestFileParser::convertHexNumber(string const& _literal)
-{
-	try
-	{
-		if (_literal.size() % 2)
-			throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
-		else
-			return fromHex(_literal);
-	}
-	catch (std::exception const&)
-	{
-		throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
-	}
-}
-
-bytes TestFileParser::convertString(string const& _literal)
-{
-	try
-	{
-		return asBytes(_literal);
-	}
-	catch (std::exception const&)
-	{
-		throw Error(Error::Type::ParserError, "String encoding invalid.");
-	}
 }
 
 void TestFileParser::Scanner::readStream(istream& _stream)
@@ -640,8 +590,70 @@ string TestFileParser::Scanner::scanString()
 
 	while (current() != '\"')
 	{
-		str += current();
-		advance();
+		if (current() == '\\')
+		{
+			advance();
+			switch (current())
+			{
+				case '\\':
+					str += current();
+					advance();
+					break;
+				case 'n':
+					str += '\n';
+					advance();
+					break;
+				case 'r':
+					str += '\r';
+					advance();
+					break;
+				case 't':
+					str += '\t';
+					advance();
+					break;
+				case '0':
+					str += '\0';
+					advance();
+					break;
+				case 'x':
+					str += scanHexPart();
+					break;
+				default:
+					throw Error(Error::Type::ParserError, "Invalid or escape sequence found in string literal.");
+			}
+		}
+		else
+		{
+			str += current();
+			advance();
+		}
 	}
 	return str;
+}
+
+char TestFileParser::Scanner::scanHexPart()
+{
+	advance(); // skip 'x'
+
+	char value{};
+	if (isdigit(current()))
+		value = current() - '0';
+	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
+		value = tolower(current()) - 'a' + 10;
+	else
+		throw Error(Error::Type::ParserError, "\\x used with no following hex digits.");
+
+	advance();
+	if (current() == '"')
+		return value;
+
+	value <<= 4;
+	if (isdigit(current()))
+		value |= current() - '0';
+	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
+		value |= tolower(current()) - 'a' + 10;
+
+	advance();
+
+	return value;
 }
