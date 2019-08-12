@@ -2515,8 +2515,69 @@ void TypeChecker::requireLValue(Expression const& _expression)
 	_expression.annotation().lValueRequested = true;
 	_expression.accept(*this);
 
+	if (_expression.annotation().isLValue)
+		return;
+
 	if (_expression.annotation().isConstant)
+	{
 		m_errorReporter.typeError(_expression.location(), "Cannot assign to a constant variable.");
-	else if (!_expression.annotation().isLValue)
-		m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
+		return;
+	}
+
+	if (auto indexAccess = dynamic_cast<IndexAccess const*>(&_expression))
+	{
+		if (auto arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
+		{
+			if (arrayType->dataStoredIn(DataLocation::CallData))
+			{
+				m_errorReporter.typeError(_expression.location(), "Calldata arrays are read-only.");
+				return;
+			}
+		}
+		else if (type(indexAccess->baseExpression())->category() == Type::Category::FixedBytes)
+		{
+			m_errorReporter.typeError(_expression.location(), "Single bytes in fixed bytes arrays cannot be modified.");
+			return;
+		}
+	}
+
+	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
+	{
+		if (auto structType = dynamic_cast<StructType const*>(type(memberAccess->expression())))
+		{
+			if (structType->dataStoredIn(DataLocation::CallData))
+			{
+				m_errorReporter.typeError(_expression.location(), "Calldata structs are read-only.");
+				return;
+			}
+		}
+		else if (auto arrayType = dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
+		{
+			if (memberAccess->memberName() == "length")
+			{
+				switch (arrayType->location())
+				{
+					case DataLocation::Memory:
+						m_errorReporter.typeError(_expression.location(), "Memory arrays cannot be resized.");
+						return;
+						break;
+					case DataLocation::CallData:
+						m_errorReporter.typeError(_expression.location(), "Calldata arrays cannot be resized.");
+						return;
+					case DataLocation::Storage:
+						break;
+				}
+			}
+		}
+	}
+
+	if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
+		if (auto varDecl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
+			if (varDecl->isExternalCallableParameter() && dynamic_cast<ReferenceType const*>(identifier->annotation().type))
+			{
+				m_errorReporter.typeError(_expression.location(), "External function arguments of reference type are read-only.");
+				return;
+			}
+
+	m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
 }
