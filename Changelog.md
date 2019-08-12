@@ -1,25 +1,19 @@
-### 0.5.11 (unreleased)
+### 0.5.11 (2019-08-12)
 
 
 Language Features:
  * Inline Assembly: Support direct constants of value type in inline assembly.
 
-
-
-
 Compiler Features:
  * ABI: Additional internal type info in the field ``internalType``.
  * eWasm: Highly experimental eWasm output using ``--ewasm`` in the commandline interface or output selection of ``ewasm.wast`` in standard-json.
- * Metadata: Update the swarm hash, changes ``bzzr0`` to ``bzzr1`` and urls to use ``bzz-raw://``.
+ * Metadata: Update the swarm hash to the current specification, changes ``bzzr0`` to ``bzzr1`` and urls to use ``bzz-raw://``.
  * Standard JSON Interface: Compile only selected sources and contracts.
  * Standard JSON Interface: Provide secondary error locations (e.g. the source position of other conflicting declarations).
  * SMTChecker: Do not erase knowledge about storage pointers if another storage pointer is assigned.
  * SMTChecker: Support string literal type.
  * Standard JSON Interface: Provide AST even on errors if ``--error-recovery`` commandline switch or StandardCompiler `settings.parserErrorRecovery` is true.
  * Yul Optimizer: Do not inline function if it would result in expressions being duplicated that are not cheap.
-
-
-
 
 Bugfixes:
  * ABI decoder: Ensure that decoded arrays always point to distinct memory locations.
@@ -32,10 +26,8 @@ Bugfixes:
  * SMTChecker: Fix internal error when reporting counterexamples concerning state variables from different source files.
  * SMTChecker: Fix SMT sort mismatch when using string literals.
  * View/Pure Checker: Properly detect state variable access through base class.
- * Yul analyzer: Check availability of data objects already in analysis phase.
+ * Yul Analyzer: Check availability of data objects already in analysis phase.
  * Yul Optimizer: Fix an issue where memory-accessing code was removed even though ``msize`` was used in the program.
-
-
 
 
 ### 0.5.10 (2019-06-25)
