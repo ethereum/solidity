@@ -70,10 +70,55 @@ private:
 	bool shouldVisit(FunctionDefinition const& _function) const;
 	//@}
 
+	/// Sort helpers.
+	//@{
+	smt::SortPointer constructorSort();
+	smt::SortPointer interfaceSort();
+	smt::SortPointer functionSort(FunctionDefinition const& _function);
+	//@}
+
+	/// Predicate helpers.
+	//@{
+	/// @returns a new block of given _sort and _name.
+	std::unique_ptr<smt::SymbolicFunctionVariable> createBlock(smt::SortPointer _sort, std::string const& _name);
+
+	/// Constructor predicate over current variables.
+	smt::Expression constructor();
+	/// Interface predicate over current variables.
+	smt::Expression interface();
+	/// Error predicate over current variables.
+	smt::Expression error();
+	//@}
+
 	/// Solver related.
 	//@{
 	/// @returns true if query is unsatisfiable (safe).
 	bool query(smt::Expression const& _query, langutil::SourceLocation const& _location);
+	//@}
+
+	/// Predicates.
+	//@{
+	/// Constructor predicate.
+	/// Default constructor sets state vars to 0.
+	std::unique_ptr<smt::SymbolicVariable> m_constructorPredicate;
+
+	/// Artificial Interface predicate.
+	/// Single entry block for all functions.
+	std::unique_ptr<smt::SymbolicVariable> m_interfacePredicate;
+
+	/// Artificial Error predicate.
+	/// Single error block for all assertions.
+	std::unique_ptr<smt::SymbolicVariable> m_errorPredicate;
+	//@}
+
+	/// Variables.
+	//@{
+	/// State variables sorts.
+	/// Used by all predicates.
+	std::vector<smt::SortPointer> m_stateSorts;
+	/// State variables.
+	/// Used to create all predicates.
+	std::vector<VariableDeclaration const*> m_stateVariables;
 	//@}
 
 	/// Verification targets.
