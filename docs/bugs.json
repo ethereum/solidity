@@ -1,5 +1,16 @@
 [
     {
+        "name": "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
+        "summary": "Reading from calldata structs that contain dynamically encoded, but statically-sized members can result in incorrect values.",
+        "description": "When a calldata struct contains a dynamically encoded, but statically-sized member, the offsets for all subsequent struct members are calculated incorrectly. All reads from such members will result in invalid values. Only calldata structs are affected, i.e. this occurs in external functions with such structs as argument. Using affected structs in storage or memory or as arguments to public functions on the other hand works correctly.",
+        "introduced": "0.5.6",
+        "fixed": "0.5.11",
+        "severity": "low",
+        "conditions": {
+            "ABIEncoderV2": true
+        }
+    },
+    {
         "name": "SignedArrayStorageCopy",
         "summary": "Assigning an array of signed integers to a storage array of different type can lead to data corruption in that array.",
         "description": "In two's complement, negative integers have their higher order bits set. In order to fit into a shared storage slot, these have to be set to zero. When a conversion is done at the same time, the bits to set to zero were incorrectly determined from the source and not the target type. This means that such copy operations can lead to incorrect values being stored.",
