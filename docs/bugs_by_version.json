@@ -741,7 +741,9 @@
         "released": "2018-12-03"
     },
     "0.5.10": {
-        "bugs": [],
+        "bugs": [
+            "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers"
+        ],
         "released": "2019-06-25"
     },
     "0.5.2": {
@@ -792,6 +794,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -804,6 +807,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -814,6 +818,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2"
@@ -822,6 +827,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement"
         ],
