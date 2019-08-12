@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(division)
 			}
 		}
 	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
+	CHECK_SUCCESS_OR_WARNING(text, "might happen");
 	text = R"(
 		contract C {
 			function mul(uint256 a, uint256 b) internal pure returns (uint256) {

@@ -153,6 +153,19 @@ do \
 } \
 while(0)
 
+#define CHECK_SUCCESS_OR_WARNING(text, substring) \
+do \
+{ \
+	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
+	auto const& errors = sourceAndError.second; \
+	if (!errors.empty()) \
+	{ \
+		auto message = searchErrors(errors, {{(Error::Type::Warning), (substring)}}); \
+		BOOST_CHECK_MESSAGE(message.empty(), message); \
+	} \
+} \
+while(0)
+
 }
 }
 }
