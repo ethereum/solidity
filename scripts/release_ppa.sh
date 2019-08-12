@@ -55,9 +55,9 @@ keyid=70D110489D66E2F6
 email=builds@ethereum.org
 packagename=solc
 
-static_build_distribution=cosmic
+static_build_distribution=disco
 
-DISTRIBUTIONS="bionic cosmic disco"
+DISTRIBUTIONS="bionic disco"
 
 if is_release
 then
