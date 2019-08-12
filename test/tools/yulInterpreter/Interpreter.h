@@ -159,12 +159,14 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		std::map<YulString, dev::u256> const& _variables,
-		std::map<YulString, FunctionDefinition const*> const& _functions
+		std::map<YulString, FunctionDefinition const*> const& _functions,
+		std::vector<std::set<YulString>> const& _scopes
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
-		m_functions(_functions)
+		m_functions(_functions),
+		m_scopes(_scopes)
 	{}
 
 	void operator()(Literal const&) override;
@@ -184,12 +186,16 @@ private:
 	/// stores it in m_value.
 	void evaluateArgs(std::vector<Expression> const& _expr);
 
+	/// Extracts functions from the earlier scopes that are visible for the given function
+	std::map<YulString, FunctionDefinition const*> visibleFunctionsFor(YulString const& _name);
+
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
 	std::map<YulString, dev::u256> const& m_variables;
 	/// Meanings of functions.
 	std::map<YulString, FunctionDefinition const*> const& m_functions;
+	std::vector<std::set<YulString>> const& m_scopes;
 	/// Current value of the expression
 	std::vector<dev::u256> m_values;
 };

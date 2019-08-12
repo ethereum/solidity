@@ -180,14 +180,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions, m_scopes);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions, m_scopes);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -248,7 +248,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 
 	// TODO function name lookup could be a little more efficient,
 	// we have to copy the list here.
-	Interpreter interpreter(m_state, m_dialect, variables, m_functions);
+	Interpreter interpreter(m_state, m_dialect, variables, visibleFunctionsFor(fun.name));
 	interpreter(fun.body);
 
 	m_values.clear();
@@ -279,4 +279,21 @@ void ExpressionEvaluator::evaluateArgs(vector<Expression> const& _expr)
 	}
 	m_values = std::move(values);
 	std::reverse(m_values.begin(), m_values.end());
+}
+
+std::map<YulString, FunctionDefinition const*> ExpressionEvaluator::visibleFunctionsFor(YulString const& _name)
+{
+	std::map<YulString, FunctionDefinition const*> functions;
+
+	for (auto const& scope: m_scopes)
+	{
+		for (auto const& symbol: scope)
+			if (m_functions.count(symbol) > 0)
+				functions[symbol] = m_functions.at(symbol);
+
+		if (scope.count(_name))
+			break;
+	}
+
+	return functions;
 }
