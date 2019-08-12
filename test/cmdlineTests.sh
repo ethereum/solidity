@@ -143,6 +143,7 @@ function test_solc_behaviour()
     if [[ "$solc_args" == *"--standard-json"* ]]
     then
         sed -i -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
+        sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
         sed -i -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
         # Remove explicit bytecode and references to bytecode offsets
         sed -i.bak -E -e 's/\"object\":\"[a-f0-9]+\"/\"object\":\"bytecode removed\"/g' "$stdout_path"
