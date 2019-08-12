@@ -14,6 +14,7 @@ Compiler Features:
  * Standard JSON Interface: Compile only selected sources and contracts.
  * Standard JSON Interface: Provide secondary error locations (e.g. the source position of other conflicting declarations).
  * SMTChecker: Do not erase knowledge about storage pointers if another storage pointer is assigned.
+ * SMTChecker: Support string literal type.
  * Standard JSON Interface: Provide AST even on errors if ``--error-recovery`` commandline switch or StandardCompiler `settings.parserErrorRecovery` is true.
  * Yul Optimizer: Do not inline function if it would result in expressions being duplicated that are not cheap.
 
@@ -29,6 +30,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when inlining a function that returns a tuple containing an unsupported type inside a branch.
  * SMTChecker: Fix internal error when inlining functions that use state variables and belong to a different source.
  * SMTChecker: Fix internal error when reporting counterexamples concerning state variables from different source files.
+ * SMTChecker: Fix SMT sort mismatch when using string literals.
  * View/Pure Checker: Properly detect state variable access through base class.
  * Yul analyzer: Check availability of data objects already in analysis phase.
  * Yul Optimizer: Fix an issue where memory-accessing code was removed even though ``msize`` was used in the program.

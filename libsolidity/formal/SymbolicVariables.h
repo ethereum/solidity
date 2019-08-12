@@ -40,6 +40,7 @@ class SymbolicVariable
 public:
 	SymbolicVariable(
 		solidity::TypePointer _type,
+		solidity::TypePointer _originalType,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -51,7 +52,7 @@ public:
 
 	virtual ~SymbolicVariable() = default;
 
-	Expression currentValue() const;
+	virtual Expression currentValue(solidity::TypePointer const& _targetType = TypePointer{}) const;
 	std::string currentName() const;
 	virtual Expression valueAtIndex(int _index) const;
 	virtual std::string nameAtIndex(int _index) const;
@@ -67,6 +68,7 @@ public:
 
 	SortPointer const& sort() const { return m_sort; }
 	solidity::TypePointer const& type() const { return m_type; }
+	solidity::TypePointer const& originalType() const { return m_originalType; }
 
 protected:
 	std::string uniqueSymbol(unsigned _index) const;
@@ -75,6 +77,8 @@ protected:
 	SortPointer m_sort;
 	/// Solidity type, used for size and range in number types.
 	solidity::TypePointer m_type;
+	/// Solidity original type, used for type conversion if necessary.
+	solidity::TypePointer m_originalType;
 	std::string m_uniqueName;
 	EncodingContext& m_context;
 	std::unique_ptr<SSAVariable> m_ssa;
@@ -101,6 +105,7 @@ class SymbolicIntVariable: public SymbolicVariable
 public:
 	SymbolicIntVariable(
 		solidity::TypePointer _type,
+		solidity::TypePointer _originalType,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -125,6 +130,7 @@ class SymbolicFixedBytesVariable: public SymbolicIntVariable
 {
 public:
 	SymbolicFixedBytesVariable(
+		solidity::TypePointer _originalType,
 		unsigned _numBytes,
 		std::string _uniqueName,
 		EncodingContext& _context
@@ -180,9 +186,12 @@ class SymbolicArrayVariable: public SymbolicVariable
 public:
 	SymbolicArrayVariable(
 		solidity::TypePointer _type,
+		solidity::TypePointer _originalTtype,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
+
+	Expression currentValue(solidity::TypePointer const& _targetType = TypePointer{}) const override;
 };
 
 /**

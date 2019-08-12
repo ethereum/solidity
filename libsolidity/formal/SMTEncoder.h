@@ -175,8 +175,10 @@ protected:
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given index. Does not ensure that this index exists.
 	smt::Expression valueAtIndex(VariableDeclaration const& _decl, int _index);
-	/// Returns the expression corresponding to the AST node. Throws if the expression does not exist.
-	smt::Expression expr(Expression const& _e);
+	/// Returns the expression corresponding to the AST node.
+	/// If _targetType is not null apply conversion.
+	/// Throws if the expression does not exist.
+	smt::Expression expr(Expression const& _e, TypePointer _targetType = nullptr);
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
 	/// Creates the expression and sets its value.

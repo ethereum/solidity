@@ -64,6 +64,13 @@ SortPointer smtSort(solidity::Type const& _type)
 			solAssert(mapType, "");
 			return make_shared<ArraySort>(smtSort(*mapType->keyType()), smtSort(*mapType->valueType()));
 		}
+		else if (isStringLiteral(_type.category()))
+		{
+			auto stringLitType = dynamic_cast<solidity::StringLiteralType const*>(&_type);
+			solAssert(stringLitType, "");
+			auto intSort = make_shared<Sort>(Kind::Int);
+			return make_shared<ArraySort>(intSort, intSort);
+		}
 		else
 		{
 			solAssert(isArray(_type.category()), "");
@@ -127,19 +134,19 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;
-		var = make_shared<SymbolicIntVariable>(solidity::TypeProvider::uint256(), _uniqueName, _context);
+		var = make_shared<SymbolicIntVariable>(solidity::TypeProvider::uint256(), type, _uniqueName, _context);
 	}
 	else if (isBool(_type.category()))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _context);
 	else if (isFunction(_type.category()))
 		var = make_shared<SymbolicFunctionVariable>(type, _uniqueName, _context);
 	else if (isInteger(_type.category()))
-		var = make_shared<SymbolicIntVariable>(type, _uniqueName, _context);
+		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	else if (isFixedBytes(_type.category()))
 	{
 		auto fixedBytesType = dynamic_cast<solidity::FixedBytesType const*>(type);
 		solAssert(fixedBytesType, "");
-		var = make_shared<SymbolicFixedBytesVariable>(fixedBytesType->numBytes(), _uniqueName, _context);
+		var = make_shared<SymbolicFixedBytesVariable>(type, fixedBytesType->numBytes(), _uniqueName, _context);
 	}
 	else if (isAddress(_type.category()) || isContract(_type.category()))
 		var = make_shared<SymbolicAddressVariable>(_uniqueName, _context);
@@ -150,16 +157,21 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		auto rational = dynamic_cast<solidity::RationalNumberType const*>(&_type);
 		solAssert(rational, "");
 		if (rational->isFractional())
-			var = make_shared<SymbolicIntVariable>(solidity::TypeProvider::uint256(), _uniqueName, _context);
+			var = make_shared<SymbolicIntVariable>(solidity::TypeProvider::uint256(), type, _uniqueName, _context);
 		else
-			var = make_shared<SymbolicIntVariable>(type, _uniqueName, _context);
+			var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	}
 	else if (isMapping(_type.category()))
 		var = make_shared<SymbolicMappingVariable>(type, _uniqueName, _context);
 	else if (isArray(_type.category()))
-		var = make_shared<SymbolicArrayVariable>(type, _uniqueName, _context);
+		var = make_shared<SymbolicArrayVariable>(type, type, _uniqueName, _context);
 	else if (isTuple(_type.category()))
 		var = make_shared<SymbolicTupleVariable>(type, _uniqueName, _context);
+	else if (isStringLiteral(_type.category()))
+	{
+		auto stringType = TypeProvider::stringMemory();
+		var = make_shared<SymbolicArrayVariable>(stringType, type, _uniqueName, _context);
+	}
 	else
 		solAssert(false, "");
 	return make_pair(abstract, var);
@@ -232,12 +244,18 @@ bool isMapping(solidity::Type::Category _category)
 
 bool isArray(solidity::Type::Category _category)
 {
-	return _category == solidity::Type::Category::Array;
+	return _category == solidity::Type::Category::Array ||
+		_category == solidity::Type::Category::StringLiteral;
 }
 
 bool isTuple(solidity::Type::Category _category)
 {
 	return _category == solidity::Type::Category::Tuple;
+}
+
+bool isStringLiteral(solidity::Type::Category _category)
+{
+	return _category == solidity::Type::Category::StringLiteral;
 }
 
 Expression minValue(solidity::IntegerType const& _type)

@@ -54,6 +54,7 @@ bool isFunction(solidity::Type::Category _category);
 bool isMapping(solidity::Type::Category _category);
 bool isArray(solidity::Type::Category _category);
 bool isTuple(solidity::Type::Category _category);
+bool isStringLiteral(solidity::Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,

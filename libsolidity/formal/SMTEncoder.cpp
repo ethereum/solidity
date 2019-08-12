@@ -187,7 +187,7 @@ void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 						declarations.at(i) &&
 						m_context.knownVariable(*declarations.at(i))
 					)
-						assignment(*declarations.at(i), components.at(i)->currentValue());
+						assignment(*declarations.at(i), components.at(i)->currentValue(declarations.at(i)->type()));
 			}
 		}
 	}
@@ -235,30 +235,43 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	}
 	else
 	{
+		auto const& type = _assignment.annotation().type;
 		vector<smt::Expression> rightArguments;
 		if (_assignment.rightHandSide().annotation().type->category() == Type::Category::Tuple)
 		{
-			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.rightHandSide()));
-			solAssert(symbTuple, "");
-			for (auto const& component: symbTuple->components())
+			auto symbTupleLeft = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.leftHandSide()));
+			solAssert(symbTupleLeft, "");
+			auto symbTupleRight = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.rightHandSide()));
+			solAssert(symbTupleRight, "");
+
+			auto const& leftComponents = symbTupleLeft->components();
+			auto const& rightComponents = symbTupleRight->components();
+			solAssert(leftComponents.size() == rightComponents.size(), "");
+
+			for (unsigned i = 0; i < leftComponents.size(); ++i)
 			{
+				auto const& left = leftComponents.at(i);
+				auto const& right = rightComponents.at(i);
 				/// Right hand side tuple component cannot be empty.
-				solAssert(component, "");
-				rightArguments.push_back(component->currentValue());
+				solAssert(right, "");
+				if (left)
+					rightArguments.push_back(right->currentValue(left->originalType()));
+				else
+					rightArguments.push_back(right->currentValue());
 			}
 		}
 		else
 		{
 			auto rightHandSide = compoundOps.count(op) ?
 				compoundAssignment(_assignment) :
-				expr(_assignment.rightHandSide());
+				expr(_assignment.rightHandSide(), type);
 			defineExpr(_assignment, rightHandSide);
-			rightArguments.push_back(expr(_assignment));
+			rightArguments.push_back(expr(_assignment, type));
 		}
 		assignment(
 			_assignment.leftHandSide(),
 			rightArguments,
-			_assignment.annotation().type,
+			type,
 			_assignment.location()
 		);
 	}
@@ -620,16 +633,10 @@ void SMTEncoder::endVisit(Literal const& _literal)
 		defineExpr(_literal, smt::Expression(type.literalValue(&_literal)));
 	else if (smt::isBool(type.category()))
 		defineExpr(_literal, smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
+	else if (smt::isStringLiteral(type.category()))
+		createExpr(_literal);
 	else
 	{
-		if (type.category() == Type::Category::StringLiteral)
-		{
-			auto stringType = TypeProvider::stringMemory();
-			auto stringLit = dynamic_cast<StringLiteralType const*>(_literal.annotation().type);
-			solAssert(stringLit, "");
-			auto result = smt::newSymbolicVariable(*stringType, stringLit->richIdentifier(), m_context);
-			m_context.createExpression(_literal, result.second);
-		}
 		m_errorReporter.warning(
 			_literal.location(),
 			"Assertion checker does not yet support the type of this literal (" +
@@ -653,7 +660,7 @@ void SMTEncoder::endVisit(Return const& _return)
 			for (unsigned i = 0; i < returnParams.size(); ++i)
 			{
 				solAssert(components.at(i), "");
-				m_context.addAssertion(components.at(i)->currentValue() == m_context.newValue(*returnParams.at(i)));
+				m_context.addAssertion(components.at(i)->currentValue(returnParams.at(i)->type()) == m_context.newValue(*returnParams.at(i)));
 			}
 		}
 		else if (returnParams.size() == 1)
@@ -957,14 +964,15 @@ pair<smt::Expression, smt::Expression> SMTEncoder::arithmeticOperation(
 
 void SMTEncoder::compareOperation(BinaryOperation const& _op)
 {
-	solAssert(_op.annotation().commonType, "");
-	if (smt::isSupportedType(_op.annotation().commonType->category()))
+	auto const& commonType = _op.annotation().commonType;
+	solAssert(commonType, "");
+	if (smt::isSupportedType(commonType->category()))
 	{
-		smt::Expression left(expr(_op.leftExpression()));
-		smt::Expression right(expr(_op.rightExpression()));
+		smt::Expression left(expr(_op.leftExpression(), commonType));
+		smt::Expression right(expr(_op.rightExpression(), commonType));
 		Token op = _op.getOperator();
 		shared_ptr<smt::Expression> value;
-		if (smt::isNumber(_op.annotation().commonType->category()))
+		if (smt::isNumber(commonType->category()))
 		{
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
@@ -977,7 +985,7 @@ void SMTEncoder::compareOperation(BinaryOperation const& _op)
 		}
 		else // Bool
 		{
-			solUnimplementedAssert(smt::isBool(_op.annotation().commonType->category()), "Operation not yet supported");
+			solUnimplementedAssert(smt::isBool(commonType->category()), "Operation not yet supported");
 			value = make_shared<smt::Expression>(
 				op == Token::Equal ? (left == right) :
 				/*op == Token::NotEqual*/ (left != right)
@@ -1104,7 +1112,7 @@ smt::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment)
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression const& _value)
 {
-	assignment(_variable, expr(_value));
+	assignment(_variable, expr(_value, _variable.type()));
 }
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, smt::Expression const& _value)
@@ -1258,14 +1266,15 @@ bool SMTEncoder::createVariable(VariableDeclaration const& _varDecl)
 	return true;
 }
 
-smt::Expression SMTEncoder::expr(Expression const& _e)
+smt::Expression SMTEncoder::expr(Expression const& _e, TypePointer _targetType)
 {
 	if (!m_context.knownExpression(_e))
 	{
 		m_errorReporter.warning(_e.location(), "Internal error: Expression undefined for SMT solver." );
 		createExpr(_e);
 	}
-	return m_context.expression(_e)->currentValue();
+
+	return m_context.expression(_e)->currentValue(_targetType);
 }
 
 void SMTEncoder::createExpr(Expression const& _e)

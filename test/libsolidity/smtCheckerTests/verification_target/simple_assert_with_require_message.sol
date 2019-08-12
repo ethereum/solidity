@@ -6,4 +6,3 @@ contract C {
 	}
 }
 // ----
-// Warning: (97-125): Assertion checker does not yet support the type of this literal (literal_string "Input number is too large.").
