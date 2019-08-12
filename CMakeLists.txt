@@ -10,7 +10,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.5.11")
+set(PROJECT_VERSION "0.5.12")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
 
 if (${CMAKE_VERSION} VERSION_LESS "3.9.0")
