@@ -604,6 +604,32 @@ protected:
 	ASTPointer<ParameterList> m_returnParameters;
 };
 
+/**
+ * Function override specifier. Consists of a single override keyword
+ * potentially followed by a parenthesized list of base contract names.
+ */
+class OverrideSpecifier: public ASTNode
+{
+public:
+	OverrideSpecifier(
+		SourceLocation const& _location,
+		std::vector<ASTPointer<UserDefinedTypeName>> const& _overrides
+	):
+		ASTNode(_location),
+		m_overrides(_overrides)
+	{
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	/// @returns the list of specific overrides, if any
+	std::vector<ASTPointer<UserDefinedTypeName>> const& overrides() const { return m_overrides; }
+
+protected:
+	std::vector<ASTPointer<UserDefinedTypeName>> m_overrides;
+};
+
 class FunctionDefinition: public CallableDeclaration, public Documented, public ImplementationOptional
 {
 public:
@@ -613,6 +639,7 @@ public:
 		Declaration::Visibility _visibility,
 		StateMutability _stateMutability,
 		bool _isConstructor,
+		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
 		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
@@ -624,6 +651,7 @@ public:
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
 		m_isConstructor(_isConstructor),
+		m_overrides(_overrides),
 		m_functionModifiers(_modifiers),
 		m_body(_body)
 	{}
@@ -633,6 +661,7 @@ public:
 
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isConstructor() const { return m_isConstructor; }
+	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
@@ -661,6 +690,7 @@ public:
 private:
 	StateMutability m_stateMutability;
 	bool m_isConstructor;
+	ASTPointer<OverrideSpecifier> m_overrides;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
 };
@@ -683,6 +713,7 @@ public:
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		bool _isConstant = false,
+		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		Location _referenceLocation = Location::Unspecified
 	):
 		Declaration(_sourceLocation, _name, _visibility),
@@ -691,6 +722,7 @@ public:
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
 		m_isConstant(_isConstant),
+		m_overrides(_overrides),
 		m_location(_referenceLocation) {}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -730,6 +762,7 @@ public:
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
+	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.
 	std::set<Location> allowedDataLocations() const;
@@ -753,6 +786,7 @@ private:
 	bool m_isStateVariable; ///< Whether or not this is a contract state variable
 	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
 	bool m_isConstant; ///< Whether the variable is a compile-time constant.
+	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
 	Location m_location; ///< Location of the variable if it is of reference type.
 };
 

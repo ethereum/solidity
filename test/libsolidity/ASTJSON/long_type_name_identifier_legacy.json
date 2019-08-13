@@ -40,6 +40,7 @@
 					{
 						"constant" : false,
 						"name" : "a",
+						"overrides" : null,
 						"scope" : 14,
 						"stateVariable" : true,
 						"storageLocation" : "default",
@@ -89,6 +90,7 @@
 							null
 						],
 						"name" : "f",
+						"overrides" : null,
 						"scope" : 14,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,
@@ -140,6 +142,7 @@
 											{
 												"constant" : false,
 												"name" : "b",
+												"overrides" : null,
 												"scope" : 12,
 												"stateVariable" : false,
 												"storageLocation" : "storage",

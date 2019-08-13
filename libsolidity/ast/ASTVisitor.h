@@ -54,6 +54,7 @@ public:
 	virtual bool visit(EnumDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(EnumValue& _node) { return visitNode(_node); }
 	virtual bool visit(ParameterList& _node) { return visitNode(_node); }
+	virtual bool visit(OverrideSpecifier& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(VariableDeclaration& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierDefinition& _node) { return visitNode(_node); }
@@ -100,6 +101,7 @@ public:
 	virtual void endVisit(EnumDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(EnumValue& _node) { endVisitNode(_node); }
 	virtual void endVisit(ParameterList& _node) { endVisitNode(_node); }
+	virtual void endVisit(OverrideSpecifier& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(VariableDeclaration& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierDefinition& _node) { endVisitNode(_node); }
@@ -159,6 +161,7 @@ public:
 	virtual bool visit(EnumDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(EnumValue const& _node) { return visitNode(_node); }
 	virtual bool visit(ParameterList const& _node) { return visitNode(_node); }
+	virtual bool visit(OverrideSpecifier const& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(VariableDeclaration const& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierDefinition const& _node) { return visitNode(_node); }
@@ -205,6 +208,7 @@ public:
 	virtual void endVisit(EnumDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(EnumValue const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ParameterList const& _node) { endVisitNode(_node); }
+	virtual void endVisit(OverrideSpecifier const& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(VariableDeclaration const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierDefinition const& _node) { endVisitNode(_node); }

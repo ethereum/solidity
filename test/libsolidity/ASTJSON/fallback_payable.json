@@ -41,6 +41,7 @@
 					"modifiers" : [],
 					"name" : "",
 					"nodeType" : "FunctionDefinition",
+					"overrides" : null,
 					"parameters" : 
 					{
 						"id" : 1,

@@ -111,6 +111,13 @@ bool ASTPrinter::visit(ParameterList const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(OverrideSpecifier const& _node)
+{
+	writeLine("OverrideSpecifier");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(FunctionDefinition const& _node)
 {
 	writeLine(
@@ -428,6 +435,11 @@ void ASTPrinter::endVisit(EnumValue const&)
 }
 
 void ASTPrinter::endVisit(ParameterList const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(OverrideSpecifier const&)
 {
 	m_indentation--;
 }

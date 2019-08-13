@@ -382,6 +382,36 @@ Declaration::Visibility Parser::parseVisibilitySpecifier()
 	return visibility;
 }
 
+ASTPointer<OverrideSpecifier> Parser::parseOverrideSpecifier()
+{
+	solAssert(m_scanner->currentToken() == Token::Override, "");
+
+	ASTNodeFactory nodeFactory(*this);
+	std::vector<ASTPointer<UserDefinedTypeName>> overrides;
+
+	nodeFactory.markEndPosition();
+	m_scanner->next();
+
+	if (m_scanner->currentToken() == Token::LParen)
+	{
+		m_scanner->next();
+		while (true)
+		{
+			overrides.push_back(parseUserDefinedTypeName());
+
+			if (m_scanner->currentToken() == Token::RParen)
+				break;
+
+			expectToken(Token::Comma);
+		}
+
+		nodeFactory.markEndPosition();
+		expectToken(Token::RParen);
+	}
+
+	return nodeFactory.createNode<OverrideSpecifier>(move(overrides));
+}
+
 StateMutability Parser::parseStateMutability()
 {
 	StateMutability stateMutability(StateMutability::NonPayable);
@@ -411,12 +441,13 @@ StateMutability Parser::parseStateMutability()
 	return stateMutability;
 }
 
-Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers)
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _onlyFuncType, bool _allowFuncDef)
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
 
 	result.isConstructor = false;
+	result.overrides = nullptr;
 
 	if (m_scanner->currentToken() == Token::Constructor)
 		result.isConstructor = true;
@@ -426,7 +457,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 
 	if (result.isConstructor)
 		result.name = make_shared<ASTString>();
-	else if (_forceEmptyName || m_scanner->currentToken() == Token::LParen)
+	else if (_onlyFuncType || m_scanner->currentToken() == Token::LParen)
 		result.name = make_shared<ASTString>();
 	else if (m_scanner->currentToken() == Token::Constructor)
 		fatalParserError(string(
@@ -443,7 +474,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 	while (true)
 	{
 		Token token = m_scanner->currentToken();
-		if (_allowModifiers && token == Token::Identifier)
+		if (_allowFuncDef && token == Token::Identifier)
 		{
 			// If the name is empty (and this is not a constructor),
 			// then this can either be a modifier (fallback function declaration)
@@ -493,6 +524,13 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _forceEmptyN
 			else
 				result.stateMutability = parseStateMutability();
 		}
+		else if (_allowFuncDef && token == Token::Override)
+		{
+			if (result.overrides)
+				parserError("Override already specified.");
+
+			result.overrides = parseOverrideSpecifier();
+		}
 		else
 			break;
 	}
@@ -521,6 +559,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
 		header.isConstructor ||
 		!header.modifiers.empty() ||
 		!header.name->empty() ||
+		header.overrides ||
 		m_scanner->currentToken() == Token::Semicolon ||
 		m_scanner->currentToken() == Token::LBrace
 	)
@@ -540,6 +579,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
 			header.visibility,
 			header.stateMutability,
 			header.isConstructor,
+			header.overrides,
 			docstring,
 			header.parameters,
 			header.modifiers,
@@ -637,6 +677,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 	bool isIndexed = false;
 	bool isDeclaredConst = false;
+	ASTPointer<OverrideSpecifier> overrides = nullptr;
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
 	VariableDeclaration::Location location = VariableDeclaration::Location::Unspecified;
 	ASTPointer<ASTString> identifier;
@@ -658,6 +699,13 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			}
 			else
 				visibility = parseVisibilitySpecifier();
+		}
+		else if (_options.isStateVariable && token == Token::Override)
+		{
+			if (overrides)
+				parserError("Override already specified.");
+
+			overrides = parseOverrideSpecifier();
 		}
 		else
 		{
@@ -724,6 +772,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		_options.isStateVariable,
 		isIndexed,
 		isDeclaredConst,
+		overrides,
 		location
 	);
 }

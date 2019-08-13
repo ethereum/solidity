@@ -1,3 +1,5 @@
 contract C {
 	function() external {}
 }
+
+// ----
