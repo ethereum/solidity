@@ -22,6 +22,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/SideEffects.h>
+#include <libyul/AsmData.h>
 
 #include <set>
 
@@ -36,7 +37,10 @@ struct Dialect;
 class SideEffectsCollector: public ASTWalker
 {
 public:
-	explicit SideEffectsCollector(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit SideEffectsCollector(
+		Dialect const& _dialect,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
 	SideEffectsCollector(Dialect const& _dialect, Expression const& _expression);
 	SideEffectsCollector(Dialect const& _dialect, Statement const& _statement);
 	SideEffectsCollector(Dialect const& _dialect, Block const& _ast);
@@ -59,6 +63,7 @@ public:
 
 private:
 	Dialect const& m_dialect;
+	std::map<YulString, SideEffects> const* m_functionSideEffects = nullptr;
 	SideEffects m_sideEffects;
 };
 
@@ -108,7 +113,10 @@ private:
 class MovableChecker: public SideEffectsCollector
 {
 public:
-	explicit MovableChecker(Dialect const& _dialect): SideEffectsCollector(_dialect) {}
+	explicit MovableChecker(
+		Dialect const& _dialect,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	): SideEffectsCollector(_dialect, _functionSideEffects) {}
 	MovableChecker(Dialect const& _dialect, Expression const& _expression);
 
 	void operator()(Identifier const& _identifier) override;

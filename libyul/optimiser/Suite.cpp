@@ -23,6 +23,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
@@ -37,6 +38,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
@@ -114,7 +116,8 @@ void OptimiserSuite::run(
 			RedundantAssignEliminator::run(_dialect, ast);
 
 			ExpressionSimplifier::run(_dialect, ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
+
+			CommonSubexpressionEliminator::run(_dialect, ast);
 		}
 
 		{
@@ -126,16 +129,17 @@ void OptimiserSuite::run(
 			DeadCodeEliminator{_dialect}(ast);
 			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 		}
+
 		{
 			// simplify again
-			CommonSubexpressionEliminator{_dialect}(ast);
+			CommonSubexpressionEliminator::run(_dialect, ast);
 			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 		}
 
 		{
 			// reverse SSA
 			SSAReverser::run(ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
+			CommonSubexpressionEliminator::run(_dialect, ast);
 			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 			ExpressionJoiner::run(ast);
@@ -156,7 +160,7 @@ void OptimiserSuite::run(
 			SSATransform::run(ast, dispenser);
 			RedundantAssignEliminator::run(_dialect, ast);
 			RedundantAssignEliminator::run(_dialect, ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
+			CommonSubexpressionEliminator::run(_dialect, ast);
 		}
 
 		{
@@ -177,12 +181,12 @@ void OptimiserSuite::run(
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{_dialect}(ast);
 			ControlFlowSimplifier{_dialect}(ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
+			CommonSubexpressionEliminator::run(_dialect, ast);
 			SSATransform::run(ast, dispenser);
 			RedundantAssignEliminator::run(_dialect, ast);
 			RedundantAssignEliminator::run(_dialect, ast);
 			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-			CommonSubexpressionEliminator{_dialect}(ast);
+			CommonSubexpressionEliminator::run(_dialect, ast);
 		}
 	}
 
@@ -197,7 +201,7 @@ void OptimiserSuite::run(
 	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 	SSAReverser::run(ast);
-	CommonSubexpressionEliminator{_dialect}(ast);
+	CommonSubexpressionEliminator::run(_dialect, ast);
 	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
 
 	ExpressionJoiner::run(ast);

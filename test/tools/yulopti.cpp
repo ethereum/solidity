@@ -151,7 +151,7 @@ public:
 				ForLoopConditionIntoBody{}(*m_ast);
 				break;
 			case 'c':
-				(CommonSubexpressionEliminator{m_dialect})(*m_ast);
+				CommonSubexpressionEliminator::run(m_dialect, *m_ast);
 				break;
 			case 'd':
 				(VarDeclInitializer{})(*m_ast);

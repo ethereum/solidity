@@ -27,6 +27,7 @@ namespace yul
 {
 
 struct Dialect;
+struct SideEffects;
 
 /**
  * Optimisation stage that replaces expressions known to be the current value of a variable
@@ -37,7 +38,14 @@ struct Dialect;
 class CommonSubexpressionEliminator: public DataFlowAnalyzer
 {
 public:
-	CommonSubexpressionEliminator(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	/// Runs the CSE pass. @a _ast needs to be the complete AST of the program!
+	static void run(Dialect const& _dialect, Block& _ast);
+
+private:
+	CommonSubexpressionEliminator(
+		Dialect const& _dialect,
+		std::map<YulString, SideEffects> _functionSideEffects
+	);
 
 protected:
 	using ASTModifier::visit;
