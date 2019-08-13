@@ -2518,66 +2518,44 @@ void TypeChecker::requireLValue(Expression const& _expression)
 	if (_expression.annotation().isLValue)
 		return;
 
-	if (_expression.annotation().isConstant)
-	{
-		m_errorReporter.typeError(_expression.location(), "Cannot assign to a constant variable.");
-		return;
-	}
+	return m_errorReporter.typeError(_expression.location(), [&]() {
+		if (_expression.annotation().isConstant)
+			return "Cannot assign to a constant variable.";
 
-	if (auto indexAccess = dynamic_cast<IndexAccess const*>(&_expression))
-	{
-		if (auto arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
+		if (auto indexAccess = dynamic_cast<IndexAccess const*>(&_expression))
 		{
-			if (arrayType->dataStoredIn(DataLocation::CallData))
-			{
-				m_errorReporter.typeError(_expression.location(), "Calldata arrays are read-only.");
-				return;
-			}
+			if (type(indexAccess->baseExpression())->category() == Type::Category::FixedBytes)
+				return "Single bytes in fixed bytes arrays cannot be modified.";
+			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
+				if (arrayType->dataStoredIn(DataLocation::CallData))
+					return "Calldata arrays are read-only.";
 		}
-		else if (type(indexAccess->baseExpression())->category() == Type::Category::FixedBytes)
-		{
-			m_errorReporter.typeError(_expression.location(), "Single bytes in fixed bytes arrays cannot be modified.");
-			return;
-		}
-	}
 
-	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
-	{
-		if (auto structType = dynamic_cast<StructType const*>(type(memberAccess->expression())))
+		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
 		{
-			if (structType->dataStoredIn(DataLocation::CallData))
+			if (auto structType = dynamic_cast<StructType const*>(type(memberAccess->expression())))
 			{
-				m_errorReporter.typeError(_expression.location(), "Calldata structs are read-only.");
-				return;
+				if (structType->dataStoredIn(DataLocation::CallData))
+					return "Calldata structs are read-only.";
 			}
+			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
+				if (memberAccess->memberName() == "length")
+					switch (arrayType->location())
+					{
+						case DataLocation::Memory:
+							return "Memory arrays cannot be resized.";
+						case DataLocation::CallData:
+							return "Calldata arrays cannot be resized.";
+						case DataLocation::Storage:
+							break;
+					}
 		}
-		else if (auto arrayType = dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
-		{
-			if (memberAccess->memberName() == "length")
-			{
-				switch (arrayType->location())
-				{
-					case DataLocation::Memory:
-						m_errorReporter.typeError(_expression.location(), "Memory arrays cannot be resized.");
-						return;
-						break;
-					case DataLocation::CallData:
-						m_errorReporter.typeError(_expression.location(), "Calldata arrays cannot be resized.");
-						return;
-					case DataLocation::Storage:
-						break;
-				}
-			}
-		}
-	}
 
-	if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
-		if (auto varDecl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
-			if (varDecl->isExternalCallableParameter() && dynamic_cast<ReferenceType const*>(identifier->annotation().type))
-			{
-				m_errorReporter.typeError(_expression.location(), "External function arguments of reference type are read-only.");
-				return;
-			}
+		if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
+			if (auto varDecl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
+				if (varDecl->isExternalCallableParameter() && dynamic_cast<ReferenceType const*>(identifier->annotation().type))
+					return "External function arguments of reference type are read-only.";
 
-	m_errorReporter.typeError(_expression.location(), "Expression has to be an lvalue.");
+		return "Expression has to be an lvalue.";
+	}());
 }
