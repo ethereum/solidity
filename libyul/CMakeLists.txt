@@ -62,6 +62,8 @@ add_library(yul
 	optimiser/BlockFlattener.h
 	optimiser/BlockHasher.cpp
 	optimiser/BlockHasher.h
+	optimiser/CallGraphGenerator.cpp
+	optimiser/CallGraphGenerator.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
 	optimiser/ControlFlowSimplifier.cpp
