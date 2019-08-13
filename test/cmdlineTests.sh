@@ -31,8 +31,9 @@ set -e
 ## GLOBAL VARIABLES
 
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
+SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-build}
 source "${REPO_ROOT}/scripts/common.sh"
-SOLC="$REPO_ROOT/build/solc/solc"
+SOLC="$REPO_ROOT/${SOLIDITY_BUILD_DIR}/solc/solc"
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
 then
@@ -439,8 +440,8 @@ SOLTMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
 
-    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/build/test/tools/solfuzzer --quiet --input-files
-    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/build/test/tools/solfuzzer --without-optimizer --quiet --input-files
+    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer --quiet --input-files
+    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer --without-optimizer --quiet --input-files
 )
 rm -rf "$SOLTMPDIR"
 
