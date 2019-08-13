@@ -90,4 +90,32 @@ struct InvertibleRelation
 			backward[v].erase(_key);
 		forward.erase(_key);
 	}
+
+	/// @returns the set of all vertices in the graph.
+	std::set<T> vertices() const
+	{
+		std::set<T> v;
+		for (auto const& edge: forward)
+		{
+			v.insert(edge.first);
+			v += edge.second;
+		}
+		return v;
+	}
+
+	/// Turns the graph into its transitive closure, i.e. there will be an
+	/// arc from A to B if and only if there is a path from A to B in the directed graph.
+	void transitiveClosure()
+	{
+		std::set<T> v = vertices();
+		for (T k: v)
+			for (T a: v)
+			{
+				if (!forward[a].count(k))
+					continue;
+				for (T b: v)
+					if (!forward[a].count(b) && forward[a].count(k) && forward[k].count(b))
+						insert(a, b);
+			}
+	}
 };
