@@ -1552,7 +1552,13 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 		{
 			m_scanner->next();
 			nodeFactory.markEndPosition();
-			expression = nodeFactory.createNode<MemberAccess>(expression, expectIdentifierToken());
+			if (m_scanner->currentToken() == Token::Address)
+			{
+				expression = nodeFactory.createNode<MemberAccess>(expression, make_shared<ASTString>("address"));
+				m_scanner->next();
+			}
+			else
+				expression = nodeFactory.createNode<MemberAccess>(expression, expectIdentifierToken());
 			break;
 		}
 		case Token::LParen:

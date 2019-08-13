@@ -9,6 +9,14 @@ For the full list check
 `the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.6.0>`_.
 
 
+Syntactic Only Changes
+======================
+
+This section lists purely syntactic changes that do not affect the behavior of existing code.
+
+* Conversions from external function types to ``address`` are now disallowed. Instead external
+  function types have a member called ``address``, similar to the existing ``selector`` member.
+
 Semantic Only Changes
 =====================
 
@@ -27,6 +35,7 @@ How to update your code
 
 This section gives detailed instructions on how to update prior code for every breaking change.
 
+* Change ``address(f)`` to ``f.address`` for ``f`` being a variable of external function type.
 
 Deprecated Elements
 ===================

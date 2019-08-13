@@ -11201,25 +11201,6 @@ BOOST_AUTO_TEST_CASE(function_array_cross_calls)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(u256(5), u256(6), u256(7)));
 }
 
-BOOST_AUTO_TEST_CASE(external_function_to_address)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (bool) {
-				return address(this.f) == address(this);
-			}
-			function g(function() external cb) public returns (address) {
-				return address(cb);
-			}
-		}
-	)";
-
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
-	ABI_CHECK(callContractFunction("g(function)", fromHex("00000000000000000000000000000000000004226121ff00000000000000000")), encodeArgs(u160(0x42)));
-}
-
-
 BOOST_AUTO_TEST_CASE(copy_internal_function_array_to_storage)
 {
 	char const* sourceCode = R"(
