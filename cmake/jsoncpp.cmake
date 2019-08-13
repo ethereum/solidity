@@ -15,9 +15,9 @@ set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 # versions used in the CI runs.
 if(EMSCRIPTEN)
     # Do not include all flags in CMAKE_CXX_FLAGS for emscripten,
-    # but only use -std=c++14. Using all flags causes build failures
+    # but only use -std=c++17. Using all flags causes build failures
     # at the moment.
-    set(JSONCPP_CXX_FLAGS -std=c++14)
+    set(JSONCPP_CXX_FLAGS -std=c++17)
 else()
     set(JSONCPP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()

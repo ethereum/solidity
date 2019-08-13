@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.9.0)
 
 set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/cmake"   CACHE PATH "The the path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
@@ -12,11 +12,6 @@ eth_policy()
 # project name and version should be set after cmake_policy CMP0048
 set(PROJECT_VERSION "0.5.12")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
-
-if (${CMAKE_VERSION} VERSION_LESS "3.9.0")
-	# needed for the big endian test for older cmake versions
-	enable_language(C)
-endif()
 
 include(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
