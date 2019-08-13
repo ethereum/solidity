@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/SideEffects.h>
 
 #include <set>
 
@@ -44,32 +45,21 @@ public:
 	void operator()(FunctionalInstruction const& _functionalInstruction) override;
 	void operator()(FunctionCall const& _functionCall) override;
 
-	bool movable() const { return m_movable; }
+	bool movable() const { return m_sideEffects.movable; }
 	bool sideEffectFree(bool _allowMSizeModification = false) const
 	{
 		if (_allowMSizeModification)
 			return sideEffectFreeIfNoMSize();
 		else
-			return m_sideEffectFree;
+			return m_sideEffects.sideEffectFree;
 	}
-	bool sideEffectFreeIfNoMSize() const { return m_sideEffectFreeIfNoMSize; }
-	bool invalidatesStorage() const { return m_invalidatesStorage; }
-	bool invalidatesMemory() const { return m_invalidatesMemory; }
+	bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
+	bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
+	bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
 
 private:
 	Dialect const& m_dialect;
-	/// Is the current expression movable or not.
-	bool m_movable = true;
-	/// Is the current expression side-effect free, i.e. can be removed
-	/// without changing the semantics.
-	bool m_sideEffectFree = true;
-	/// Is the current expression side-effect free up to msize, i.e. can be removed
-	/// without changing the semantics except for the value returned by the msize instruction.
-	bool m_sideEffectFreeIfNoMSize = true;
-	/// If false, storage is guaranteed to be unchanged by the code under all
-	/// circumstances.
-	bool m_invalidatesStorage = false;
-	bool m_invalidatesMemory = false;
+	SideEffects m_sideEffects;
 };
 
 /**
