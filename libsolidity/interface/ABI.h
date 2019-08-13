@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Utilities to handle the Contract ABI (https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI)
+ * Utilities to handle the Contract ABI (https://solidity.readthedocs.io/en/develop/abi-spec.html)
  */
 
 #pragma once
