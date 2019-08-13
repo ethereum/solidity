@@ -1,0 +1,31 @@
+# Formatting approximately used in Solidity's C++
+#
+# See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# For an online formatter to test settings, see
+# https://zed0.co.uk/clang-format-configurator/
+# Note that clang-format cannot express the style that closing parentheses
+# behave similar to closing curly braces in a multi-line setting in that
+# they have to be on a line of their own at the same indentation level
+# as the opening part.
+
+Language: Cpp
+BasedOnStyle: LLVM
+AlignEscapedNewlinesLeft: true
+AlwaysBreakAfterReturnType: None
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+ContinuationIndentWidth: 4
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 2
+PenaltyBreakBeforeFirstCallParameter: 2000
+SpaceAfterCStyleCast: true
+SpaceBeforeParens: ControlStatements
+TabWidth: 4
+
+# Local Variables:
+# mode: yaml
+# End:
