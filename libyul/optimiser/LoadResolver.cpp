@@ -31,7 +31,7 @@ using namespace yul;
 
 void LoadResolver::run(Dialect const& _dialect, Block& _ast)
 {
-	bool containsMSize = SideEffectsCollector(_dialect, _ast).containsMSize();
+	bool containsMSize = MSizeFinder::containsMSize(_dialect, _ast);
 	LoadResolver{_dialect, !containsMSize}(_ast);
 }
 

@@ -53,7 +53,6 @@ public:
 			return m_sideEffectFree;
 	}
 	bool sideEffectFreeIfNoMSize() const { return m_sideEffectFreeIfNoMSize; }
-	bool containsMSize() const { return m_containsMSize; }
 	bool invalidatesStorage() const { return m_invalidatesStorage; }
 	bool invalidatesMemory() const { return m_invalidatesMemory; }
 
@@ -67,14 +66,33 @@ private:
 	/// Is the current expression side-effect free up to msize, i.e. can be removed
 	/// without changing the semantics except for the value returned by the msize instruction.
 	bool m_sideEffectFreeIfNoMSize = true;
-	/// Does the current code contain the MSize operation?
-	/// Note that this is a purely syntactic property meaning that even if this is false,
-	/// the code can still contain calls to functions that contain the msize instruction.
-	bool m_containsMSize = false;
 	/// If false, storage is guaranteed to be unchanged by the code under all
 	/// circumstances.
 	bool m_invalidatesStorage = false;
 	bool m_invalidatesMemory = false;
+};
+
+/**
+ * Class that can be used to find out if certain code contains the MSize instruction.
+ *
+ * Note that this is a purely syntactic property meaning that even if this is false,
+ * the code can still contain calls to functions that contain the msize instruction.
+ *
+ * The only safe way to determine this is by passing the full AST.
+ */
+class MSizeFinder: public ASTWalker
+{
+public:
+	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
+
+	using ASTWalker::operator();
+	void operator()(FunctionalInstruction const& _instr);
+	void operator()(FunctionCall const& _funCall);
+
+private:
+	MSizeFinder(Dialect const& _dialect): m_dialect(_dialect) {}
+	Dialect const& m_dialect;
+	bool m_msizeFound = false;
 };
 
 /**
