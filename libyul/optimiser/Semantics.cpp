@@ -61,8 +61,6 @@ void SideEffectsCollector::operator()(FunctionalInstruction const& _instr)
 		m_sideEffectFree = false;
 	if (!eth::SemanticInformation::sideEffectFreeIfNoMSize(_instr.instruction))
 		m_sideEffectFreeIfNoMSize = false;
-	if (_instr.instruction == eth::Instruction::MSIZE)
-		m_containsMSize = true;
 	if (eth::SemanticInformation::invalidatesStorage(_instr.instruction))
 		m_invalidatesStorage = true;
 	if (eth::SemanticInformation::invalidatesMemory(_instr.instruction))
@@ -81,8 +79,6 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 			m_sideEffectFree = false;
 		if (!f->sideEffectFreeIfNoMSize)
 			m_sideEffectFreeIfNoMSize = false;
-		if (f->isMSize)
-			m_containsMSize = true;
 		if (f->invalidatesStorage)
 			m_invalidatesStorage = true;
 		if (f->invalidatesMemory)
@@ -96,6 +92,30 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 		m_invalidatesStorage = true;
 		m_invalidatesMemory = true;
 	}
+}
+
+bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
+{
+	MSizeFinder finder(_dialect);
+	finder(_ast);
+	return finder.m_msizeFound;
+}
+
+void MSizeFinder::operator()(FunctionalInstruction const& _instr)
+{
+	ASTWalker::operator()(_instr);
+
+	if (_instr.instruction == eth::Instruction::MSIZE)
+		m_msizeFound = true;
+}
+
+void MSizeFinder::operator()(FunctionCall const& _functionCall)
+{
+	ASTWalker::operator()(_functionCall);
+
+	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
+		if (f->isMSize)
+			m_msizeFound = true;
 }
 
 MovableChecker::MovableChecker(Dialect const& _dialect, Expression const& _expression):

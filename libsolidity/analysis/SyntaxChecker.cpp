@@ -262,10 +262,7 @@ bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 	if (!m_useYulOptimizer)
 		return false;
 
-	if (yul::SideEffectsCollector(
-		_inlineAssembly.dialect(),
-		_inlineAssembly.operations()
-	).containsMSize())
+	if (yul::MSizeFinder::containsMSize(_inlineAssembly.dialect(), _inlineAssembly.operations()))
 		m_errorReporter.syntaxError(
 			_inlineAssembly.location(),
 			"The msize instruction cannot be used when the Yul optimizer is activated because "
