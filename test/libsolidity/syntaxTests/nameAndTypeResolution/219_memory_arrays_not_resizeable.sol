@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (72-80): Expression has to be an lvalue.
+// TypeError: (72-80): Memory arrays cannot be resized.
