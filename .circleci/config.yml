@@ -256,6 +256,8 @@ jobs:
   b_ubu: &build_ubuntu1904
     docker:
       - image: ethereum/solidity-buildpack-deps:ubuntu1904
+    environment:
+      CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
       - run: *run_build
@@ -267,7 +269,7 @@ jobs:
       - image: ethereum/solidity-buildpack-deps:ubuntu1804
     environment:
       CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2
-      CMAKE_BUILD_TYPE: RelWithDebugInfo
+      CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
       - run: *run_build
