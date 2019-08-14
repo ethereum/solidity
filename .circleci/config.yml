@@ -96,22 +96,35 @@ defaults:
       name: soltest
       command: ./.circleci/soltest.sh
 
+  - run_soltest_all: &run_soltest_all
+      name: soltest_all
+      command: ./.circleci/soltest_all.sh
+
   - run_cmdline_tests: &run_cmdline_tests
       name: command line tests
       command: ./test/cmdlineTests.sh
 
-  - test_steps: &test_steps
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_soltest
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
-
   - test_ubuntu1904: &test_ubuntu1904
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1904
-      steps: *test_steps
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
+
+  - test_ubuntu1904_all: &test_ubuntu1904
+      docker:
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest_all
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
 
   - test_asan: &test_asan
       <<: *test_ubuntu1904
@@ -292,13 +305,13 @@ jobs:
           command: codecov --flags all --gcov-root build
       - store_artifacts: *artifacts_test_results
 
-  # Builds in C++17 mode and uses debug build in order to speed up.
+  # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
-  b_ubu_cxx17:
+  b_ubu_cxx20:
     <<: *build_ubuntu1904
     environment:
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake -DUSE_CVC4=OFF
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx20.cmake -DUSE_CVC4=OFF
     steps:
       - checkout
       - run: *run_build
@@ -445,6 +458,9 @@ jobs:
           path: docs/_build/html/
           destination: docs-html
 
+  t_ubu_soltest: &t_ubu_soltest
+    <<: *test_ubuntu1904
+
   t_ubu_cli: &t_ubu_cli
     docker:
       - image: ethereum/solidity-buildpack-deps:ubuntu1904
@@ -479,61 +495,6 @@ jobs:
       EVM: constantinople
       OPTIMIZE: 0
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-
-  t_ubu_homestead:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: homestead
-      OPTIMIZE: 0
-
-  t_ubu_homestead_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: homestead
-      OPTIMIZE: 1
-
-  t_ubu_byzantium:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: byzantium
-      OPTIMIZE: 0
-
-  t_ubu_byzantium_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: byzantium
-      OPTIMIZE: 1
-
-  t_ubu_constantinople:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: constantinople
-      OPTIMIZE: 0
-
-  t_ubu_constantinople_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: constantinople
-      OPTIMIZE: 1
-
-  t_ubu_constantinople_opt_abiv2:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: constantinople
-      OPTIMIZE: 1
-      ABI_ENCODER_V2: 1
-
-  t_ubu_petersburg:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: petersburg
-      OPTIMIZE: 0
-
-  t_ubu_petersburg_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: petersburg
-      OPTIMIZE: 1
 
   t_ems_solcjs:
     docker:
@@ -612,26 +573,18 @@ workflows:
       # build-only
       - b_docs: *workflow_trigger_on_tags
       - b_archlinux: *workflow_trigger_on_tags
-      - b_ubu_cxx17: *workflow_trigger_on_tags
+      - b_ubu_cxx20: *workflow_trigger_on_tags
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
 
       # OS/X build and tests
       - b_osx: *workflow_trigger_on_tags
       - t_osx_cli: *workflow_osx
 
-      # Ubuntu 18.10 build and tests
+      # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
       - b_ubu18: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu1904
-      - t_ubu_homestead: *workflow_ubuntu1904
-      - t_ubu_homestead_opt: *workflow_ubuntu1904
-      - t_ubu_byzantium: *workflow_ubuntu1904
-      - t_ubu_byzantium_opt: *workflow_ubuntu1904
-      - t_ubu_constantinople: *workflow_ubuntu1904
-      - t_ubu_constantinople_opt: *workflow_ubuntu1904
-      - t_ubu_constantinople_opt_abiv2: *workflow_ubuntu1904
-      - t_ubu_petersburg: *workflow_ubuntu1904
-      - t_ubu_petersburg_opt: *workflow_ubuntu1904
+      - t_ubu_soltest: *workflow_ubuntu1904
 
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags

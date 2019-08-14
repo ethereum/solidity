@@ -80,6 +80,8 @@ struct EVMDialect: public Dialect
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
+	static SideEffects sideEffectsOfInstruction(dev::eth::Instruction _instruction);
+
 protected:
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;

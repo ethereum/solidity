@@ -3,36 +3,18 @@
 ## This is used to package .deb packages and upload them to the launchpad
 ## ppa servers for building.
 ##
-## You can pass a branch name as argument to this script (which, if no argument is given,
-## will default to "develop").
-##
-## If the gien branch is "release", the resulting package will be uplaoded to
-## ethereum/ethereum PPA, or ethereum/ethereum-dev PPA otherwise.
-##
 ## The gnupg key for "builds@ethereum.org" has to be present in order to sign
 ## the package.
 ##
-## It will clone the Solidity git from github, determine the version,
+## It will clone the Z3 git from github on the specified version tag,
 ## create a source archive and push it to the ubuntu ppa servers.
 ##
 ## This requires the following entries in /etc/dput.cf:
 ##
-##  [ethereum-dev]
+##  [cpp-build-deps]
 ##  fqdn			= ppa.launchpad.net
 ##  method			= ftp
-##  incoming		= ~ethereum/ethereum-dev
-##  login			= anonymous
-##
-##  [ethereum]
-##  fqdn			= ppa.launchpad.net
-##  method			= ftp
-##  incoming		= ~ethereum/ethereum
-##  login			= anonymous
-##
-##  [ethereum-static]
-##  fqdn			= ppa.launchpad.net
-##  method			= ftp
-##  incoming		= ~ethereum/ethereum-static
+##  incoming		= ~ethereum/cpp-build-deps
 ##  login			= anonymous
 
 ##
@@ -40,29 +22,12 @@
 
 set -ev
 
-if [ -z "$1" ]
-then
-    branch=develop
-else
-    branch=$1
-fi
-
-is_release() {
-    [[ "${branch}" = "release" ]] || [[ "${branch}" =~ ^v[0-9]+(\.[0-9])*$ ]]
-}
-
 keyid=70D110489D66E2F6
 email=builds@ethereum.org
-packagename=solc
-
-static_build_distribution=disco
+packagename=libz3-static-dev
+version=4.8.5
 
 DISTRIBUTIONS="bionic disco"
-
-if is_release
-then
-    DISTRIBUTIONS="$DISTRIBUTIONS STATIC"
-fi
 
 for distribution in $DISTRIBUTIONS
 do
@@ -71,54 +36,15 @@ rm -rf $distribution
 mkdir $distribution
 cd $distribution
 
-if [ $distribution = STATIC ]
-then
-    pparepo=ethereum-static
-    SMTDEPENDENCY=""
-    CMAKE_OPTIONS="-DSOLC_LINK_STATIC=On"
-else
-    if is_release
-    then
-        pparepo=ethereum
-    else
-        pparepo=ethereum-dev
-    fi
-    if [ $distribution = disco ]
-    then
-        SMTDEPENDENCY="libz3-static-dev,
-               libcvc4-dev,
-               "
-    else
-        SMTDEPENDENCY="libz3-static-dev,
-               "
-    fi
-    CMAKE_OPTIONS=""
-fi
+pparepo=cpp-build-deps
 ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/${pparepo}/+files
 
 # Fetch source
-git clone --depth 2 --recursive https://github.com/ethereum/solidity.git -b "$branch"
-mv solidity solc
+git clone --depth 1 --branch Z3-${version} https://github.com/Z3Prover/z3.git
+cd z3
+debversion="$version"
 
-# Fetch jsoncpp dependency
-mkdir -p ./solc/deps/downloads/ 2>/dev/null || true
-wget -O ./solc/deps/downloads/jsoncpp-1.8.4.tar.gz https://github.com/open-source-parsers/jsoncpp/archive/1.8.4.tar.gz
-
-# Determine version
-cd solc
-version=$($(dirname "$0")/get_version.sh)
-commithash=$(git rev-parse --short=8 HEAD)
-committimestamp=$(git show --format=%ci HEAD | head -n 1)
-commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
-
-echo "$commithash" > commit_hash.txt
-if is_release
-then
-    debversion="$version"
-    echo -n > prerelease.txt # proper release
-else
-    debversion="$version~develop-$commitdate-$commithash"
-fi
+CMAKE_OPTIONS="-DBUILD_LIBZ3_SHARED=OFF -DCMAKE_BUILD_TYPE=Release"
 
 # gzip will create different tars all the time and we are not allowed
 # to upload the same file twice with different contents, so we only
@@ -133,33 +59,37 @@ cp /tmp/${packagename}_${debversion}.orig.tar.gz ../
 
 mkdir debian
 echo 9 > debian/compat
+# TODO: the Z3 packages have different build dependencies
 cat <<EOF > debian/control
-Source: solc
+Source: libz3-static-dev
 Section: science
 Priority: extra
-Maintainer: Christian (Buildserver key) <builds@ethereum.org>
-Build-Depends: ${SMTDEPENDENCY}debhelper (>= 9.0.0),
+Maintainer: Daniel Kirchner <daniel@ekpyron.org>
+Build-Depends: debhelper (>= 9.0.0),
                cmake,
                g++,
                git,
                libgmp-dev,
-               libboost-all-dev,
-               automake,
-               libtool,
-               scons
-Standards-Version: 3.9.5
-Homepage: https://ethereum.org
-Vcs-Git: git://github.com/ethereum/solidity.git
-Vcs-Browser: https://github.com/ethereum/solidity
+               dh-python,
+               python
+Standards-Version: 3.9.6
+Homepage: https://github.com/Z3Prover/z3
+Vcs-Git: git://github.com/Z3Prover/z3.git
+Vcs-Browser: https://github.com/Z3Prover/z3
 
-Package: solc
+Package: libz3-static-dev
+Section: libdevel
 Architecture: any-i386 any-amd64
 Multi-Arch: same
 Depends: \${shlibs:Depends}, \${misc:Depends}
-Replaces: lllc (<< 1:0.3.6)
-Conflicts: libethereum (<= 1.2.9)
-Description: Solidity compiler.
- The commandline interface to the Solidity smart contract compiler.
+Description: theorem prover from Microsoft Research - development files (static library)
+ Z3 is a state-of-the art theorem prover from Microsoft Research. It can be
+ used to check the satisfiability of logical formulas over one or more
+ theories. Z3 offers a compelling match for software analysis and verification
+ tools, since several common software constructs map directly into supported
+ theories.
+ .
+ This package can be used to invoke Z3 via its C++ API.
 EOF
 cat <<EOF > debian/rules
 #!/usr/bin/make -f
@@ -182,35 +112,54 @@ export DH_OPTIONS
 
 
 %:
-	dh \$@ --buildsystem=cmake #--with sphinxdoc
+	dh \$@ --buildsystem=cmake
 
 override_dh_auto_test:
-
-#override_dh_installdocs:
-#	make -C docs html
-#	dh_installdocs docs/_build/html
 
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DINSTALL_LLLC=Off -DTESTS=OFF ${CMAKE_OPTIONS}
+	dh_auto_configure -- ${CMAKE_OPTIONS}
+
+override_dh_auto_install:
+	dh_auto_install --destdir debian/tmp
+EOF
+cat <<EOF > debian/libz3-static-dev.install
+usr/include/*
+usr/lib/*/libz3.a
+usr/lib/*/cmake/z3/*
 EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: solc
-Source: https://github.com/ethereum/solidity
+Upstream-Name: z3
+Source: https://github.com/Z3Prover/z3
 
 Files: *
-Copyright: 2014-2016 Ethereum
-License: GPL-3.0+
+Copyright: Microsoft Corporation
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+ this software and associated documentation files (the "Software"), to deal in
+ the Software without restriction, including without limitation the rights to
+ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ of the Software, and to permit persons to whom the Software is furnished to do
+ so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
 
 Files: debian/*
-Copyright: 2016 Ethereum
+Copyright: 2019 Ethereum
 License: GPL-3.0+
-
-License: GPL-3.0+
- This program is free software: you can redistribute it and/or modify
+This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
@@ -227,21 +176,18 @@ License: GPL-3.0+
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 EOF
 cat <<EOF > debian/changelog
-solc (0.0.1-0ubuntu1) saucy; urgency=low
+libz3-static-dev (0.0.1-0ubuntu1) saucy; urgency=low
 
   * Initial release.
 
- -- Christian <build@ethereum.org>  Mon, 03 Feb 2016 14:50:20 +0000
+ -- Daniel <daniel@ekpyron.org>  Mon, 03 Jun 2019 14:50:20 +0000
 EOF
-echo docs > debian/docs
 mkdir debian/source
 echo "3.0 (quilt)" > debian/source/format
 chmod +x debian/rules
 
 versionsuffix=0ubuntu1~${distribution}
-# bump version / add entry to changelog
-EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${commithash}"
-
+EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "build of ${version}"
 
 # build source package
 # If packages is rejected because original source is already present, add
@@ -250,12 +196,7 @@ EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${commithas
 debuild -S -d -sa -us -uc
 
 # prepare .changes file for Launchpad
-if [ $distribution = STATIC ]
-then
-    sed -i -e s/UNRELEASED/${static_build_distribution}/ -e s/urgency=medium/urgency=low/ ../*.changes
-else
-    sed -i -e s/UNRELEASED/${distribution}/ -e s/urgency=medium/urgency=low/ ../*.changes
-fi
+sed -i -e s/UNRELEASED/${distribution}/ -e s/urgency=medium/urgency=low/ ../*.changes
 
 # check if ubuntu already has the source tarball
 (

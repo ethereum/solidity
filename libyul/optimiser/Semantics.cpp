@@ -33,6 +33,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
+
 SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Expression const& _expression):
 	SideEffectsCollector(_dialect)
 {
@@ -55,18 +56,7 @@ void SideEffectsCollector::operator()(FunctionalInstruction const& _instr)
 {
 	ASTWalker::operator()(_instr);
 
-	if (!eth::SemanticInformation::movable(_instr.instruction))
-		m_movable = false;
-	if (!eth::SemanticInformation::sideEffectFree(_instr.instruction))
-		m_sideEffectFree = false;
-	if (!eth::SemanticInformation::sideEffectFreeIfNoMSize(_instr.instruction))
-		m_sideEffectFreeIfNoMSize = false;
-	if (_instr.instruction == eth::Instruction::MSIZE)
-		m_containsMSize = true;
-	if (eth::SemanticInformation::invalidatesStorage(_instr.instruction))
-		m_invalidatesStorage = true;
-	if (eth::SemanticInformation::invalidatesMemory(_instr.instruction))
-		m_invalidatesMemory = true;
+	m_sideEffects += EVMDialect::sideEffectsOfInstruction(_instr.instruction);
 }
 
 void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
@@ -74,28 +64,33 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 	ASTWalker::operator()(_functionCall);
 
 	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
-	{
-		if (!f->movable)
-			m_movable = false;
-		if (!f->sideEffectFree)
-			m_sideEffectFree = false;
-		if (!f->sideEffectFreeIfNoMSize)
-			m_sideEffectFreeIfNoMSize = false;
-		if (f->isMSize)
-			m_containsMSize = true;
-		if (f->invalidatesStorage)
-			m_invalidatesStorage = true;
-		if (f->invalidatesMemory)
-			m_invalidatesMemory = true;
-	}
+		m_sideEffects += f->sideEffects;
 	else
-	{
-		m_movable = false;
-		m_sideEffectFree = false;
-		m_sideEffectFreeIfNoMSize = false;
-		m_invalidatesStorage = true;
-		m_invalidatesMemory = true;
-	}
+		m_sideEffects += SideEffects::worst();
+}
+
+bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
+{
+	MSizeFinder finder(_dialect);
+	finder(_ast);
+	return finder.m_msizeFound;
+}
+
+void MSizeFinder::operator()(FunctionalInstruction const& _instr)
+{
+	ASTWalker::operator()(_instr);
+
+	if (_instr.instruction == eth::Instruction::MSIZE)
+		m_msizeFound = true;
+}
+
+void MSizeFinder::operator()(FunctionCall const& _functionCall)
+{
+	ASTWalker::operator()(_functionCall);
+
+	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
+		if (f->isMSize)
+			m_msizeFound = true;
 }
 
 MovableChecker::MovableChecker(Dialect const& _dialect, Expression const& _expression):

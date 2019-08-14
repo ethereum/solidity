@@ -34,6 +34,6 @@ set(sources
 )
 
 add_library(devcore ${sources})
-target_link_libraries(devcore PUBLIC jsoncpp Boost::boost Boost::filesystem Boost::regex Boost::system Threads::Threads)
+target_link_libraries(devcore PUBLIC jsoncpp Boost::boost Boost::filesystem Boost::regex Boost::system)
 target_include_directories(devcore PUBLIC "${CMAKE_SOURCE_DIR}")
 add_dependencies(devcore solidity_BuildInfo.h)

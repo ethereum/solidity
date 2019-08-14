@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/SideEffects.h>
 
 #include <set>
 
@@ -44,37 +45,44 @@ public:
 	void operator()(FunctionalInstruction const& _functionalInstruction) override;
 	void operator()(FunctionCall const& _functionCall) override;
 
-	bool movable() const { return m_movable; }
+	bool movable() const { return m_sideEffects.movable; }
 	bool sideEffectFree(bool _allowMSizeModification = false) const
 	{
 		if (_allowMSizeModification)
 			return sideEffectFreeIfNoMSize();
 		else
-			return m_sideEffectFree;
+			return m_sideEffects.sideEffectFree;
 	}
-	bool sideEffectFreeIfNoMSize() const { return m_sideEffectFreeIfNoMSize; }
-	bool containsMSize() const { return m_containsMSize; }
-	bool invalidatesStorage() const { return m_invalidatesStorage; }
-	bool invalidatesMemory() const { return m_invalidatesMemory; }
+	bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
+	bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
+	bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
 
 private:
 	Dialect const& m_dialect;
-	/// Is the current expression movable or not.
-	bool m_movable = true;
-	/// Is the current expression side-effect free, i.e. can be removed
-	/// without changing the semantics.
-	bool m_sideEffectFree = true;
-	/// Is the current expression side-effect free up to msize, i.e. can be removed
-	/// without changing the semantics except for the value returned by the msize instruction.
-	bool m_sideEffectFreeIfNoMSize = true;
-	/// Does the current code contain the MSize operation?
-	/// Note that this is a purely syntactic property meaning that even if this is false,
-	/// the code can still contain calls to functions that contain the msize instruction.
-	bool m_containsMSize = false;
-	/// If false, storage is guaranteed to be unchanged by the code under all
-	/// circumstances.
-	bool m_invalidatesStorage = false;
-	bool m_invalidatesMemory = false;
+	SideEffects m_sideEffects;
+};
+
+/**
+ * Class that can be used to find out if certain code contains the MSize instruction.
+ *
+ * Note that this is a purely syntactic property meaning that even if this is false,
+ * the code can still contain calls to functions that contain the msize instruction.
+ *
+ * The only safe way to determine this is by passing the full AST.
+ */
+class MSizeFinder: public ASTWalker
+{
+public:
+	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
+
+	using ASTWalker::operator();
+	void operator()(FunctionalInstruction const& _instr);
+	void operator()(FunctionCall const& _funCall);
+
+private:
+	MSizeFinder(Dialect const& _dialect): m_dialect(_dialect) {}
+	Dialect const& m_dialect;
+	bool m_msizeFound = false;
 };
 
 /**

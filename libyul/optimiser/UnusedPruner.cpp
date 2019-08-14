@@ -138,7 +138,7 @@ void UnusedPruner::runUntilStabilised(
 	set<YulString> const& _externallyUsedFunctions
 )
 {
-	bool allowMSizeOptimization = !SideEffectsCollector(_dialect, _ast).containsMSize();
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _ast);
 	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, _externallyUsedFunctions);
 }
 
