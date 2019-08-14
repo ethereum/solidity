@@ -19,3 +19,4 @@ If something is missing here, please contact us on
    assembly.rst
    miscellaneous.rst
    050-breaking-changes.rst
+   060-breaking-changes.rst
