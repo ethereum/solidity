@@ -106,8 +106,8 @@ public:
 	/// If _withSignature is true, the first 4 bytes will be formatted separately.
 	static std::string formatRawBytes(
 		bytes const& _bytes,
-		std::string _linePrefix = "",
-		bool _withSignature = false
+		ParameterList const& _parameters,
+		std::string _linePrefix = ""
 	);
 
 	/// Formats given _bytes with type information passed in _abiType.

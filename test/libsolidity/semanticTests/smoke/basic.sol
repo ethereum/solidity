@@ -1,6 +1,8 @@
 pragma experimental ABIEncoderV2;
 
 contract C {
+    function d() public {
+    }
     function e() public payable returns (uint) {
         return msg.value;
     }
@@ -27,6 +29,7 @@ contract C {
     }
 }
 // ----
+// d() ->
 // e(), 1 ether -> 1
 // f(uint256): 3 -> 3, 3
 // g() -> 2, 3

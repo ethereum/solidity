@@ -124,9 +124,24 @@ string TestFunctionCall::format(
 
 			if (!matchesExpectation())
 			{
+				boost::optional<ParameterList> abiParams;
+
+				if (isFailure && !output.empty())
+					abiParams = boost::make_optional(ContractABIUtils::failureParameters());
+				else
+					abiParams = ContractABIUtils::parametersFromJsonOutputs(
+						_errorReporter,
+						m_contractABI,
+						m_call.signature
+					);
+
+				string bytesOutput = abiParams ?
+					BytesUtils::formatRawBytes(output, abiParams.get(), _linePrefix) :
+					_linePrefix + "[]";
+
 				_errorReporter.warning(
 					"The call to \"" + m_call.signature + "\" returned \n" +
-					BytesUtils::formatRawBytes(output, _linePrefix, isFailure && !output.empty())
+					bytesOutput
 				);
 			}
 
@@ -176,14 +191,11 @@ string TestFunctionCall::formatBytesParameters(
 
 	if (_failure)
 	{
-		ParameterList defaultParameters;
-
-		defaultParameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}});
-		defaultParameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
-		defaultParameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});
-		defaultParameters.push_back(Parameter{bytes(), "", ABIType{ABIType::String}, FormatInfo{}});
-
-		os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);
+		os << BytesUtils::formatBytesRange(
+			_bytes,
+			ContractABIUtils::failureParameters(),
+			_highlight
+		);
 
 		return os.str();
 	}
@@ -212,12 +224,8 @@ string TestFunctionCall::formatBytesParameters(
 		}
 		else
 		{
-			ParameterList defaultParameters;
-			fill_n(
-				back_inserter(defaultParameters),
-				ceil(_bytes.size() / 32),
-				Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}}
-			);
+			ParameterList defaultParameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+
 			ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
 			os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);
 		}
