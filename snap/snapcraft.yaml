@@ -26,7 +26,7 @@ parts:
     source: .
     source-type: git
     plugin: cmake
-    build-packages: [build-essential, libboost-all-dev, libcvc4-dev]
+    build-packages: [build-essential, libboost-all-dev]
     stage-packages: [libicu60]
     override-build: |
       if git describe --exact-match --tags 2> /dev/null
@@ -34,7 +34,7 @@ parts:
         echo -n > ../src/prerelease.txt
       fi
       snapcraftctl build
-    after: [z3]
+    after: [z3, cvc4]
   z3:
     source: https://github.com/Z3Prover/z3.git
     source-tag: z3-4.8.4
@@ -47,3 +47,14 @@ parts:
       cd build
       make -j -l $(grep -c "^processor" /proc/cpuinfo)
       make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+  cvc4:
+    source: https://github.com/CVC4/CVC4.git
+    source-tag: "1.7"
+    plugin: nil
+    build-packages: [python, cmake, openjdk-11-jre, libgmp-dev]
+    override-build: |
+      ./contrib/get-antlr-3.4
+      ./configure.sh --prefix=$SNAPCRAFT_STAGE/usr
+      cd build
+      make -j -l $(grep -c "^processor" /proc/cpuinfo)
+      make install DESTDIR=$SNAPCRAFT_STAGE
