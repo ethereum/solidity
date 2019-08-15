@@ -57,4 +57,4 @@ parts:
       ./configure.sh --prefix=$SNAPCRAFT_STAGE/usr
       cd build
       make -j -l $(grep -c "^processor" /proc/cpuinfo)
-      make install DESTDIR=$SNAPCRAFT_STAGE
+      make install
