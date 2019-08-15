@@ -11,3 +11,4 @@ contract C {
 // g()
 // # g() does not exist #
 // -> FAILURE
+

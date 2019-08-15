@@ -95,13 +95,23 @@ private:
 		bytes const& _bytes,
 		std::string const& _signature,
 		ParameterList const& _params,
-		bool highlight = false
+		bool highlight = false,
+		bool failure = false
 	) const;
 
 	/// Formats a given _bytes applying the _abiType.
 	std::string formatBytesRange(
 		bytes const& _bytes,
 		ABIType const& _abiType
+	) const;
+
+	/// Formats a FAILURE plus additional parameters, if e.g. a revert message was returned.
+	std::string formatFailure(
+		ErrorReporter& _errorReporter,
+		FunctionCall const& _call,
+		bytes const& _output,
+		bool _renderResult,
+		bool _highlight
 	) const;
 
 	/// Formats the given parameters using their raw string representation.

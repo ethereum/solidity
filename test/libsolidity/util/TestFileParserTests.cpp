@@ -219,6 +219,23 @@ BOOST_AUTO_TEST_CASE(non_existent_call_revert)
 	testFunctionCall(calls.at(0), Mode::MultiLine, "i_am_not_there()", true);
 }
 
+BOOST_AUTO_TEST_CASE(call_revert_message)
+{
+	char const* source = R"(
+		// f() -> FAILURE, hex"08c379a0", 0x20, 6, "Revert"
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f()",
+		true,
+		fmt::encodeArgs(),
+		fromHex("08c379a0") + fmt::encodeDyn(string{"Revert"})
+	);
+}
+
 BOOST_AUTO_TEST_CASE(call_expectations_empty_single_line)
 {
 	char const* source = R"(
