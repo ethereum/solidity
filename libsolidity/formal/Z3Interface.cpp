@@ -99,9 +99,12 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 				values.push_back(toString(m.eval(toZ3Expr(e))));
 		}
 	}
-	catch (z3::exception const&)
+	catch (z3::exception const& _e)
 	{
-		result = CheckResult::ERROR;
+		solAssert(_e.msg(), "Z3 threw without message.");
+		result = string(_e.msg()).find("canceled") == string::npos ?
+			CheckResult::ERROR :
+			CheckResult::UNKNOWN;
 		values.clear();
 	}
 
