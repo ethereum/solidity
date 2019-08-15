@@ -28,6 +28,7 @@
 #include <libevmasm/SemanticInformation.h>
 
 #include <libdevcore/CommonData.h>
+#include <libdevcore/Algorithms.h>
 
 using namespace std;
 using namespace dev;
@@ -91,6 +92,33 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
 		if (f->isMSize)
 			m_msizeFound = true;
+}
+
+
+map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
+	Dialect const& _dialect,
+	map<YulString, std::set<YulString>> const& _directCallGraph
+)
+{
+	map<YulString, SideEffects> ret;
+	for (auto const& call: _directCallGraph)
+	{
+		YulString funName = call.first;
+		SideEffects sideEffects;
+		BreadthFirstSearch<YulString>{call.second, {funName}}.run(
+			[&](YulString _function, auto&& _addChild) {
+				if (sideEffects == SideEffects::worst())
+					return;
+				if (BuiltinFunction const* f = _dialect.builtin(_function))
+					sideEffects += f->sideEffects;
+				else
+					for (YulString callee: _directCallGraph.at(_function))
+						_addChild(callee);
+			}
+		);
+		ret[funName] = sideEffects;
+	}
+	return ret;
 }
 
 MovableChecker::MovableChecker(Dialect const& _dialect, Expression const& _expression):
