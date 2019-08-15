@@ -187,7 +187,7 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 	return true;
 }
 
-boost::optional<unsigned> Scanner::scanUnicode()
+std::optional<unsigned> Scanner::scanUnicode()
 {
 	unsigned x = 0;
 	for (int i = 0; i < 4; i++)
@@ -694,7 +694,7 @@ bool Scanner::scanEscape()
 		break;
 	case 'u':
 	{
-		if (boost::optional<unsigned> codepoint = scanUnicode())
+		if (std::optional<unsigned> codepoint = scanUnicode())
 			addUnicodeAsUTF8(*codepoint);
 		else
 			return false;
