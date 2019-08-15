@@ -166,7 +166,7 @@ string TestFunctionCall::formatBytesParameters(
 
 	_errorReporter.warning("The call to \"" + _signature + "\" returned \n" + BytesUtils::formatRawBytes(_bytes));
 
-	boost::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
+	std::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
 		_errorReporter,
 		m_contractABI,
 		_signature
@@ -174,7 +174,7 @@ string TestFunctionCall::formatBytesParameters(
 
 	if (abiParams)
 	{
-		boost::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
+		std::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
 			_errorReporter,
 			_parameters,
 			abiParams.get(),

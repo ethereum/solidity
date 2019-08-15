@@ -28,7 +28,7 @@
 #include <regex>
 #include <string>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace po = boost::program_options;
 
 namespace dev

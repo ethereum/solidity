@@ -30,7 +30,7 @@ using namespace dev::solidity::test;
 using namespace dev::formatting;
 using namespace dev;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 using namespace boost::unit_test;
 
 namespace

@@ -769,8 +769,8 @@ private:
 	Type const* m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
-	mutable boost::optional<TypeResult> m_interfaceType;
-	mutable boost::optional<TypeResult> m_interfaceType_library;
+	mutable std::optional<TypeResult> m_interfaceType;
+	mutable std::optional<TypeResult> m_interfaceType_library;
 };
 
 /**
@@ -898,9 +898,9 @@ public:
 private:
 	StructDefinition const& m_struct;
 	// Caches for interfaceType(bool)
-	mutable boost::optional<TypeResult> m_interfaceType;
-	mutable boost::optional<TypeResult> m_interfaceType_library;
-	mutable boost::optional<bool> m_recursive;
+	mutable std::optional<TypeResult> m_interfaceType;
+	mutable std::optional<TypeResult> m_interfaceType_library;
+	mutable std::optional<bool> m_recursive;
 };
 
 /**

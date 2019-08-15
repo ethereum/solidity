@@ -44,7 +44,7 @@ void TestCase::printUpdatedSettings(ostream& _stream, const string& _linePrefix,
 		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
 }
 
-bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
+bool TestCase::isTestFilename(std::filesystem::path const& _filename)
 {
 	string extension = _filename.extension().string();
 	return (extension == ".sol" || extension == ".yul") &&
@@ -151,7 +151,7 @@ bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVer
 			break;
 
 	versionString = versionString.substr(versionBegin);
-	boost::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(versionString);
+	std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(versionString);
 	if (!version)
 		throw runtime_error("Invalid EVM version: \"" + versionString + "\"");
 

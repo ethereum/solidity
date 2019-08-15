@@ -144,7 +144,7 @@ if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
 endif()
 
 add_library(solidity ${sources} ${z3_SRCS} ${cvc4_SRCS})
-target_link_libraries(solidity PUBLIC yul evmasm langutil devcore Boost::boost Boost::filesystem Boost::system)
+target_link_libraries(solidity PUBLIC yul evmasm langutil devcore Boost::boost std::filesystem Boost::system)
 
 if (${Z3_FOUND})
   target_link_libraries(solidity PUBLIC z3::libz3)

@@ -159,7 +159,7 @@ private:
 		return tmp;
 	}
 	static Json::Value typePointerToJson(TypePointer _tp, bool _short = false);
-	static Json::Value typePointerToJson(boost::optional<FuncCallArguments> const& _tps);
+	static Json::Value typePointerToJson(std::optional<FuncCallArguments> const& _tps);
 	void appendExpressionAttributes(
 		std::vector<std::pair<std::string, Json::Value>> &_attributes,
 		ExpressionAnnotation const& _annotation

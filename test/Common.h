@@ -34,8 +34,8 @@ struct ConfigException : public Exception {};
 
 struct CommonOptions: boost::noncopyable
 {
-	boost::filesystem::path evmonePath;
-	boost::filesystem::path testPath;
+	std::filesystem::path evmonePath;
+	std::filesystem::path testPath;
 	bool optimize = false;
 	bool optimizeYul = false;
 	bool disableSMT = false;

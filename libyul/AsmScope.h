@@ -48,7 +48,7 @@ struct Scope
 		std::vector<YulType> returns;
 	};
 
-	using Identifier = boost::variant<Variable, Label, Function>;
+	using Identifier = std::variant<Variable, Label, Function>;
 	using Visitor = dev::GenericVisitor<Variable const, Label const, Function const>;
 	using NonconstVisitor = dev::GenericVisitor<Variable, Label, Function>;
 

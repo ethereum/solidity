@@ -57,7 +57,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 			# Boost libraries use visibility=hidden to reduce unnecessary DWARF entries.
 			# Unless we match visibility, ld will give a warning message like:
-			#   ld: warning: direct access in function 'boost::filesystem... from file ...
+			#   ld: warning: direct access in function 'std::filesystem... from file ...
 			#   means the weak symbol cannot be overridden at runtime. This was likely caused by different translation units being compiled with different visibility settings.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
 		endif()

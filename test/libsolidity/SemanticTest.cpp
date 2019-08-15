@@ -33,7 +33,7 @@ using namespace std;
 using namespace boost;
 using namespace boost::algorithm;
 using namespace boost::unit_test;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 
 SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion):

@@ -63,7 +63,7 @@ std::pair<bool, ErrorList> parse(string const& _source)
 	return {false, {}};
 }
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarnings = true)
+std::optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarnings = true)
 {
 	bool success;
 	ErrorList errors;

@@ -70,7 +70,7 @@ public:
 	/// Each line of output is prefixed with @arg _linePrefix.
 	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const = 0;
 
-	static bool isTestFilename(boost::filesystem::path const& _filename);
+	static bool isTestFilename(std::filesystem::path const& _filename);
 
 	/// Validates the settings, i.e. moves them from m_settings to m_validatedSettings.
 	/// Throws a runtime exception if any setting is left at this class (i.e. unknown setting).

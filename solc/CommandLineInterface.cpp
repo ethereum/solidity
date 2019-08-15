@@ -478,8 +478,8 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				addStdin = true;
 			else
 			{
-				auto infile = boost::filesystem::path(path);
-				if (!boost::filesystem::exists(infile))
+				auto infile = std::filesystem::path(path);
+				if (!std::filesystem::exists(infile))
 				{
 					if (!ignoreMissing)
 					{
@@ -492,7 +492,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				if (!boost::filesystem::is_regular_file(infile))
+				if (!std::filesystem::is_regular_file(infile))
 				{
 					if (!ignoreMissing)
 					{
@@ -506,9 +506,9 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				}
 
 				m_sourceCodes[infile.generic_string()] = dev::readFileAsString(infile.string());
-				path = boost::filesystem::canonical(infile).string();
+				path = std::filesystem::canonical(infile).string();
 			}
-			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
+			m_allowedDirectories.push_back(std::filesystem::path(path).remove_filename());
 		}
 	if (addStdin)
 		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
@@ -523,7 +523,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
 {
-	namespace fs = boost::filesystem;
+	namespace fs = std::filesystem;
 	string data = _input;
 	try
 	{
@@ -586,7 +586,7 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
-	namespace fs = boost::filesystem;
+	namespace fs = std::filesystem;
 	// create directory if not existent
 	fs::path p(m_args.at(g_argOutputDir).as<string>());
 	// Do not try creating the directory if the first item is . or ..
@@ -607,7 +607,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)
 {
-	createFile(boost::filesystem::basename(_fileName) + string(".json"), _json);
+	createFile(std::filesystem::basename(_fileName) + string(".json"), _json);
 }
 
 bool CommandLineInterface::parseArguments(int _argc, char** _argv)
@@ -796,8 +796,8 @@ bool CommandLineInterface::processInput()
 	{
 		try
 		{
-			auto path = boost::filesystem::path(_path);
-			auto canonicalPath = boost::filesystem::weakly_canonical(path);
+			auto path = std::filesystem::path(_path);
+			auto canonicalPath = std::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
@@ -814,10 +814,10 @@ bool CommandLineInterface::processInput()
 			if (!isAllowed)
 				return ReadCallback::Result{false, "File outside of allowed directories."};
 
-			if (!boost::filesystem::exists(canonicalPath))
+			if (!std::filesystem::exists(canonicalPath))
 				return ReadCallback::Result{false, "File not found."};
 
-			if (!boost::filesystem::is_regular_file(canonicalPath))
+			if (!std::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
 
 			auto contents = dev::readFileAsString(canonicalPath.string());
@@ -839,7 +839,7 @@ bool CommandLineInterface::processInput()
 		vector<string> paths;
 		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
 		{
-			auto filesystem_path = boost::filesystem::path(path);
+			auto filesystem_path = std::filesystem::path(path);
 			// If the given path had a trailing slash, the Boost filesystem
 			// path will have it's last component set to '.'. This breaks
 			// path comparison in later parts of the code, so we need to strip
@@ -869,7 +869,7 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
-		boost::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
+		std::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
 		if (!versionOption)
 		{
 			serr() << "Invalid option for --evm-version: " << versionOptionStr << endl;
@@ -1153,7 +1153,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 					ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
 					postfix += "_json";
 				}
-				boost::filesystem::path path(sourceCode.first);
+				std::filesystem::path path(sourceCode.first);
 				createFile(path.filename().string() + postfix + ".ast", data.str());
 			}
 		}

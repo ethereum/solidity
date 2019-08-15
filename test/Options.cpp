@@ -32,7 +32,7 @@
 
 using namespace std;
 using namespace dev::test;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace po = boost::program_options;
 
 

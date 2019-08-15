@@ -183,7 +183,7 @@ struct ExpressionAnnotation: ASTAnnotation
 
 	/// Types and - if given - names of arguments if the expr. is a function
 	/// that is called, used for overload resoultion
-	boost::optional<FuncCallArguments> arguments;
+	std::optional<FuncCallArguments> arguments;
 };
 
 struct IdentifierAnnotation: ExpressionAnnotation

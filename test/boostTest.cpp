@@ -46,7 +46,7 @@
 
 using namespace boost::unit_test;
 using namespace dev::solidity::test;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 using namespace std;
 
 #if BOOST_VERSION < 105900
@@ -73,8 +73,8 @@ void removeTestSuite(std::string const& _name)
 
 int registerTests(
 	boost::unit_test::test_suite& _suite,
-	boost::filesystem::path const& _basepath,
-	boost::filesystem::path const& _path,
+	std::filesystem::path const& _basepath,
+	std::filesystem::path const& _path,
 	TestCase::TestCaseCreator _testCaseCreator
 )
 {

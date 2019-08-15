@@ -76,7 +76,7 @@ IRStorageItem::IRStorageItem(
 IRStorageItem::IRStorageItem(
 	YulUtilFunctions _utils,
 	string _slot,
-	boost::variant<string, unsigned> _offset,
+	std::variant<string, unsigned> _offset,
 	Type const& _type
 ):
 	IRLValue(std::move(_utils), &_type),
@@ -115,7 +115,7 @@ string IRStorageItem::storeValue(string const& _value, Type const& _sourceType) 
 	if (m_type->isValueType())
 		solAssert(_sourceType == *m_type, "Different type, but might not be an error.");
 
-	boost::optional<unsigned> offset;
+	std::optional<unsigned> offset;
 
 	if (m_offset.type() == typeid(unsigned))
 		offset = get<unsigned>(m_offset);

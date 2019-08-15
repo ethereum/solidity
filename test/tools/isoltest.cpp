@@ -45,7 +45,7 @@ using namespace dev::solidity::test;
 using namespace dev::formatting;
 using namespace std;
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 using TestCreator = TestCase::TestCaseCreator;
 using TestOptions = dev::test::IsolTestOptions;
@@ -350,7 +350,7 @@ void setupTerminal()
 #endif
 }
 
-boost::optional<TestStats> runTestSuite(
+std::optional<TestStats> runTestSuite(
 	TestCreator _testCaseCreator,
 	TestOptions const& _options,
 	fs::path const& _basePath,

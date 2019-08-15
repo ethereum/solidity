@@ -123,7 +123,7 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	boost::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
+	std::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
 	std::vector<Statement> performInline(Statement& _statement, FunctionCall& _funCall);
 
 	YulString m_currentFunction;

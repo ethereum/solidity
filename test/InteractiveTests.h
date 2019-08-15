@@ -41,8 +41,8 @@ namespace test
 struct Testsuite
 {
 	char const* title;
-	boost::filesystem::path const path;
-	boost::filesystem::path const subpath;
+	std::filesystem::path const path;
+	std::filesystem::path const subpath;
 	bool smt;
 	bool needsVM;
 	TestCase::TestCaseCreator testCaseCreator;

@@ -79,7 +79,7 @@ using namespace std;
 
 YulOptimizerTest::YulOptimizerTest(string const& _filename)
 {
-	boost::filesystem::path path(_filename);
+	std::filesystem::path path(_filename);
 
 	if (path.empty() || std::next(path.begin()) == path.end() || std::next(std::next(path.begin())) == path.end())
 		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));

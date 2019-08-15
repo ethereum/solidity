@@ -39,7 +39,7 @@ using namespace std;
 
 ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
 {
-	boost::filesystem::path path(_filename);
+	std::filesystem::path path(_filename);
 
 	ifstream file(_filename);
 	if (!file)

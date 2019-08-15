@@ -95,7 +95,7 @@ CompilerStack::~CompilerStack()
 	TypeProvider::reset();
 }
 
-boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)
+std::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)
 {
 	auto eq = find(_remapping.begin(), _remapping.end(), '=');
 	if (eq == _remapping.end())

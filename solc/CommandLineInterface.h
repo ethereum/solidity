@@ -104,7 +104,7 @@ private:
 	/// list of remappings
 	std::vector<dev::solidity::CompilerStack::Remapping> m_remappings;
 	/// list of allowed directories to read files from
-	std::vector<boost::filesystem::path> m_allowedDirectories;
+	std::vector<std::filesystem::path> m_allowedDirectories;
 	/// map of library names to addresses
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack

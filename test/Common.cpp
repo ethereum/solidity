@@ -21,7 +21,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace po = boost::program_options;
 
 namespace dev
@@ -35,7 +35,7 @@ namespace test
 /// The routine searches in the current directory, and inside the "test" directory
 /// starting from the current directory and up to three levels up.
 /// @returns the path of the first match or an empty path if not found.
-boost::filesystem::path testPath()
+std::filesystem::path testPath()
 {
 	if (auto path = getenv("ETH_TEST_PATH"))
 		return path;
