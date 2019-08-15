@@ -15,6 +15,7 @@ Bugfixes:
 ### 0.5.12 (unreleased)
 
 Language Features:
+ * Type Checker: Allow assignment to external function arguments except for reference types.
 
 
 Compiler Features:
