@@ -19,7 +19,14 @@ if(EMSCRIPTEN)
     # at the moment.
     set(JSONCPP_CXX_FLAGS -std=c++17)
 else()
-    set(JSONCPP_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    # jsoncpp uses implicit casts for comparing integer and
+    # floating point numbers. This causes clang-10 (used by ossfuzz builder)
+    # to error on the implicit conversions. Here, we request jsoncpp
+    # to unconditionally use static casts for these conversions by defining the
+    # JSON_USE_INT64_DOUBLE_CONVERSION preprocessor macro. Doing so,
+    # not only gets rid of the implicit conversion error that clang-10 produces
+    # but also forces safer behavior in general.
+    set(JSONCPP_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_USE_INT64_DOUBLE_CONVERSION")
 endif()
 
 set(byproducts "")
