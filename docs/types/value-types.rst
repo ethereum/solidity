@@ -582,9 +582,6 @@ do not have a default.
 
 Conversions:
 
-A value of external function type can be explicitly converted to ``address``
-resulting in the address of the contract of the function.
-
 A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
 their parameter types are identical, their return types are identical,
 their internal/external property is identical and the state mutability of ``A``
@@ -616,8 +613,9 @@ just use ``f``, if you want to use its external form, use ``this.f``.
 
 Members:
 
-Public (or external) functions have the following members:
+External (or public) functions have the following members:
 
+* ``.address`` returns the address of the contract of the function.
 * ``.selector`` returns the :ref:`ABI function selector <abi_function_selector>`
 * ``.gas(uint)`` returns a callable function object which, when called, will send the specified amount of gas to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
 * ``.value(uint)`` returns a callable function object which, when called, will send the specified amount of wei to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
@@ -629,6 +627,7 @@ Example that shows how to use the members::
 
     contract Example {
         function f() public payable returns (bytes4) {
+            assert(this.f.address == address(this));
             return this.f.selector;
         }
 

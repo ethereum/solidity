@@ -35,7 +35,7 @@ How to update your code
 
 This section gives detailed instructions on how to update prior code for every breaking change.
 
-* Change ``address(f)`` to ``f.address`` for ``f`` being a variable of external function type.
+* Change ``address(f)`` to ``f.address`` for ``f`` being of external function type.
 
 Deprecated Elements
 ===================
