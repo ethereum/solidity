@@ -24,8 +24,10 @@ Compiler Features:
  * Standard JSON Interface: Provide secondary error locations (e.g. the source position of other conflicting declarations).
  * SMTChecker: Do not erase knowledge about storage pointers if another storage pointer is assigned.
  * SMTChecker: Support string literal type.
+ * SMTChecker: New Horn-based algorithm that proves assertions via multi-transaction contract invariants.
  * Standard JSON Interface: Provide AST even on errors if ``--error-recovery`` commandline switch or StandardCompiler `settings.parserErrorRecovery` is true.
  * Yul Optimizer: Do not inline function if it would result in expressions being duplicated that are not cheap.
+
 
 Bugfixes:
  * ABI decoder: Ensure that decoded arrays always point to distinct memory locations.

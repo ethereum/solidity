@@ -58,23 +58,30 @@ private:
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
 	bool visit(IfStatement const& _node) override;
+	bool visit(WhileStatement const&) override;
+	bool visit(ForStatement const&) override;
 	void endVisit(FunctionCall const& _node) override;
 
 	void visitAssert(FunctionCall const& _funCall);
+	void unknownFunctionCall(FunctionCall const& _funCall);
 	//@}
 
 	/// Helpers.
 	//@{
 	void reset();
+	void eraseKnowledge();
 	bool shouldVisit(ContractDefinition const& _contract) const;
 	bool shouldVisit(FunctionDefinition const& _function) const;
+	void pushBlock(smt::Expression const& _block);
+	void popBlock();
 	//@}
 
 	/// Sort helpers.
 	//@{
 	smt::SortPointer constructorSort();
 	smt::SortPointer interfaceSort();
-	smt::SortPointer functionSort(FunctionDefinition const& _function);
+	smt::SortPointer sort(FunctionDefinition const& _function);
+	smt::SortPointer sort(Block const& _block);
 	//@}
 
 	/// Predicate helpers.
@@ -88,6 +95,33 @@ private:
 	smt::Expression interface();
 	/// Error predicate over current variables.
 	smt::Expression error();
+
+	/// Creates a block for the given _function or increases its SSA index
+	/// if the block already exists which in practice creates a new function.
+	/// The predicate parameters are _function input and output parameters.
+	void createFunctionBlock(FunctionDefinition const& _function);
+	/// Creates a block for the given _function or increases its SSA index
+	/// if the block already exists which in practice creates a new function.
+	/// The predicate parameters are m_currentFunction input, output
+	/// and local variables.
+	void createFunctionBlock(Block const& _block);
+
+	/// @returns the current symbolic values of the current function's
+	/// input and output parameters.
+	std::vector<smt::Expression> currentFunctionVariables();
+	/// @returns the samve as currentFunctionVariables plus
+	/// local variables.
+	std::vector<smt::Expression> currentBlockVariables();
+
+	/// @returns the predicate name for a given function.
+	std::string predicateName(FunctionDefinition const& _function);
+	/// @returns a predicate application over the current function's parameters.
+	smt::Expression predicateCurrent(ASTNode const* _node);
+	/// @returns a predicate application over the current function's parameters plus local variables.
+	smt::Expression predicateBodyCurrent(ASTNode const* _node);
+	/// Predicate for block _node over the variables at the latest
+	/// block entry.
+	smt::Expression predicateEntry(ASTNode const* _node);
 	//@}
 
 	/// Solver related.
@@ -109,6 +143,9 @@ private:
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
 	std::unique_ptr<smt::SymbolicVariable> m_errorPredicate;
+
+	/// Maps AST nodes to their predicates.
+	std::unordered_map<ASTNode const*, std::shared_ptr<smt::SymbolicVariable>> m_predicates;
 	//@}
 
 	/// Variables.
@@ -119,6 +156,9 @@ private:
 	/// State variables.
 	/// Used to create all predicates.
 	std::vector<VariableDeclaration const*> m_stateVariables;
+
+	/// Input sorts for AST nodes.
+	std::map<ASTNode const*, smt::SortPointer> m_nodeSorts;
 	//@}
 
 	/// Verification targets.
@@ -132,6 +172,13 @@ private:
 	/// Control-flow.
 	//@{
 	FunctionDefinition const* m_currentFunction = nullptr;
+
+	/// Number of basic blocks created for the body of the current function.
+	unsigned m_functionBlocks = 0;
+	/// The current control flow path.
+	std::vector<smt::Expression> m_path;
+	/// Whether a function call was seen in the current scope.
+	bool m_unknownFunctionCallSeen = false;
 	//@}
 
 	/// CHC solver.
