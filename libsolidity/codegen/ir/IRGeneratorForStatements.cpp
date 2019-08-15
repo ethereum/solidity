@@ -718,6 +718,10 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		{
 			solUnimplementedAssert(false, "");
 		}
+		else if (member == "address")
+		{
+			solUnimplementedAssert(false, "");
+		}
 		else
 			solAssert(
 				!!_memberAccess.expression().annotation().type->memberType(member),
