@@ -58,3 +58,5 @@ parts:
       cd build
       make -j -l $(grep -c "^processor" /proc/cpuinfo)
       make install
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/lib/
+      cp $SNAPCRAFT_STAGE/usr/lib/libcvc4.so.6 $SNAPCRAFT_PART_INSTALL/usr/lib/
