@@ -33,7 +33,7 @@ RUN set -ex; \
 	apt-get install -qqy --no-install-recommends \
 		build-essential \
 		software-properties-common \
-		cmake ninja-build clang++-8 \
+		cmake ninja-build clang++-8 libc++-8-dev libc++abi-8-dev \
 		libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
 		libjsoncpp-dev \
