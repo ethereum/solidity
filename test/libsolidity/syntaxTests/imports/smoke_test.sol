@@ -1,0 +1,2 @@
+==== Source: a ====
+contract C {}
