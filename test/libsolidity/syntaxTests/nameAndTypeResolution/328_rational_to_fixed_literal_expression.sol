@@ -11,5 +11,6 @@ contract test {
     }
 }
 // ----
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.
 // Warning: (238-252): This declaration shadows an existing declaration.
 // Warning: (20-339): Function state mutability can be restricted to pure

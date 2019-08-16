@@ -4,3 +4,5 @@ contract test {
         fixedString[0.5] = "Half";
     }
 }
+// ----
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.

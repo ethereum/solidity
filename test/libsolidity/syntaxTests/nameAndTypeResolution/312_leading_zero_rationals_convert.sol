@@ -7,3 +7,5 @@ contract A {
         a; b; c; d;
     }
 }
+// ----
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.

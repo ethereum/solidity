@@ -83,7 +83,21 @@ TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix
 		OptimiserSettings::minimal()
 	);
 	if (compiler().parse())
-		compiler().analyze();
+		if (compiler().analyze())
+			try
+			{
+				if (!compiler().compile())
+					BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
+			}
+			catch (UnimplementedFeatureError const& _e)
+			{
+				m_errorList.emplace_back(SyntaxTestError{
+					"UnimplementedFeatureError",
+					errorMessage(_e),
+					-1,
+					-1
+				});
+			}
 
 	for (auto const& currentError: filterErrors(compiler().errors(), true))
 	{
