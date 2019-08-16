@@ -73,6 +73,16 @@ struct SideEffects
 		*this = *this + _other;
 		return *this;
 	}
+
+	bool operator==(SideEffects const& _other) const
+	{
+		return
+			movable == _other.movable &&
+			sideEffectFree == _other.sideEffectFree &&
+			sideEffectFreeIfNoMSize == _other.sideEffectFreeIfNoMSize &&
+			invalidatesStorage == _other.invalidatesStorage &&
+			invalidatesMemory == _other.invalidatesMemory;
+	}
 };
 
 }

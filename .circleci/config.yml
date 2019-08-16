@@ -322,7 +322,7 @@ jobs:
       TERM: xterm
       CC: /usr/bin/clang-8
       CXX: /usr/bin/clang++-8
-      CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash

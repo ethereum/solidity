@@ -17,6 +17,10 @@ contract C
 	function f() m public {
 		x = x + 1;
 	}
+
+	function g(uint _x) public {
+		x = _x;
+	}
 }
 // ----
 // Warning: (156-170): Assertion violation happens here

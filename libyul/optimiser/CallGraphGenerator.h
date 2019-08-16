@@ -40,8 +40,7 @@ namespace yul
 class CallGraphGenerator: public ASTWalker
 {
 public:
-	/// @returns the call graph of the visited AST.
-	InvertibleRelation<YulString> const& callGraph() const { return m_callGraph; }
+	static std::map<YulString, std::set<YulString>> callGraph(Block const& _ast);
 
 	using ASTWalker::operator();
 	void operator()(FunctionalInstruction const& _functionalInstruction) override;
@@ -49,7 +48,9 @@ public:
 	void operator()(FunctionDefinition const& _functionDefinition) override;
 
 private:
-	InvertibleRelation<YulString> m_callGraph;
+	CallGraphGenerator();
+
+	std::map<YulString, std::set<YulString>> m_callGraph;
 	/// The name of the function we are currently visiting during traversal.
 	YulString m_currentFunction;
 };

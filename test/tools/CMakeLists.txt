@@ -30,6 +30,8 @@ add_executable(isoltest
 	../libsolidity/ABIJsonTest.cpp
 	../libsolidity/ASTJSONTest.cpp
 	../libsolidity/SMTCheckerJSONTest.cpp
+	../libyul/Common.cpp
+	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/YulOptimizerTest.cpp
 	../libyul/YulInterpreterTest.cpp

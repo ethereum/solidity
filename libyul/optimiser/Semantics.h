@@ -63,6 +63,21 @@ private:
 };
 
 /**
+ * This class can be used to determine the side-effects of user-defined functions.
+ *
+ * It is given a dialect and a mapping that represents the direct calls from user-defined
+ * functions to other user-defined functions and built-in functions.
+ */
+class SideEffectsPropagator
+{
+public:
+	static std::map<YulString, SideEffects> sideEffects(
+		Dialect const& _dialect,
+		std::map<YulString, std::set<YulString>> const& _directCallGraph
+	);
+};
+
+/**
  * Class that can be used to find out if certain code contains the MSize instruction.
  *
  * Note that this is a purely syntactic property meaning that even if this is false,
