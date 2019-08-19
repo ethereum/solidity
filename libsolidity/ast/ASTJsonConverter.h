@@ -29,6 +29,8 @@
 #include <json/json.h>
 #include <ostream>
 #include <stack>
+#include <vector>
+#include <algorithm>
 
 namespace langutil
 {
@@ -148,15 +150,23 @@ private:
 		return _node.id();
 	}
 	template<class Container>
-	static Json::Value getContainerIds(Container const& container)
+	static Json::Value getContainerIds(Container const& _container, bool _order = false)
 	{
-		Json::Value tmp(Json::arrayValue);
-		for (auto const& element: container)
+		std::vector<int> tmp;
+
+		for (auto const& element: _container)
 		{
 			solAssert(element, "");
-			tmp.append(nodeId(*element));
+			tmp.push_back(nodeId(*element));
 		}
-		return tmp;
+		if (_order)
+			std::sort(tmp.begin(), tmp.end());
+		Json::Value json(Json::arrayValue);
+
+		for (int val: tmp)
+			json.append(val);
+
+		return json;
 	}
 	static Json::Value typePointerToJson(TypePointer _tp, bool _short = false);
 	static Json::Value typePointerToJson(boost::optional<FuncCallArguments> const& _tps);

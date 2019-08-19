@@ -1,0 +1,233 @@
+{
+	"absolutePath" : "a",
+	"exportedSymbols" : 
+	{
+		"A" : 
+		[
+			1
+		],
+		"B" : 
+		[
+			4
+		],
+		"C" : 
+		[
+			7
+		],
+		"D" : 
+		[
+			10
+		],
+		"E" : 
+		[
+			13
+		]
+	},
+	"id" : 14,
+	"nodeType" : "SourceUnit",
+	"nodes" : 
+	[
+		{
+			"baseContracts" : [],
+			"contractDependencies" : [],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 1,
+			"linearizedBaseContracts" : 
+			[
+				1
+			],
+			"name" : "A",
+			"nodeType" : "ContractDefinition",
+			"nodes" : [],
+			"scope" : 14,
+			"src" : "0:14:1"
+		},
+		{
+			"baseContracts" : 
+			[
+				{
+					"arguments" : null,
+					"baseName" : 
+					{
+						"contractScope" : null,
+						"id" : 2,
+						"name" : "A",
+						"nodeType" : "UserDefinedTypeName",
+						"referencedDeclaration" : 1,
+						"src" : "29:1:1",
+						"typeDescriptions" : 
+						{
+							"typeIdentifier" : "t_contract$_A_$1",
+							"typeString" : "contract A"
+						}
+					},
+					"id" : 3,
+					"nodeType" : "InheritanceSpecifier",
+					"src" : "29:1:1"
+				}
+			],
+			"contractDependencies" : 
+			[
+				1
+			],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 4,
+			"linearizedBaseContracts" : 
+			[
+				4,
+				1
+			],
+			"name" : "B",
+			"nodeType" : "ContractDefinition",
+			"nodes" : [],
+			"scope" : 14,
+			"src" : "15:19:1"
+		},
+		{
+			"baseContracts" : 
+			[
+				{
+					"arguments" : null,
+					"baseName" : 
+					{
+						"contractScope" : null,
+						"id" : 5,
+						"name" : "B",
+						"nodeType" : "UserDefinedTypeName",
+						"referencedDeclaration" : 4,
+						"src" : "49:1:1",
+						"typeDescriptions" : 
+						{
+							"typeIdentifier" : "t_contract$_B_$4",
+							"typeString" : "contract B"
+						}
+					},
+					"id" : 6,
+					"nodeType" : "InheritanceSpecifier",
+					"src" : "49:1:1"
+				}
+			],
+			"contractDependencies" : 
+			[
+				1,
+				4
+			],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 7,
+			"linearizedBaseContracts" : 
+			[
+				7,
+				4,
+				1
+			],
+			"name" : "C",
+			"nodeType" : "ContractDefinition",
+			"nodes" : [],
+			"scope" : 14,
+			"src" : "35:19:1"
+		},
+		{
+			"baseContracts" : 
+			[
+				{
+					"arguments" : null,
+					"baseName" : 
+					{
+						"contractScope" : null,
+						"id" : 8,
+						"name" : "C",
+						"nodeType" : "UserDefinedTypeName",
+						"referencedDeclaration" : 7,
+						"src" : "69:1:1",
+						"typeDescriptions" : 
+						{
+							"typeIdentifier" : "t_contract$_C_$7",
+							"typeString" : "contract C"
+						}
+					},
+					"id" : 9,
+					"nodeType" : "InheritanceSpecifier",
+					"src" : "69:1:1"
+				}
+			],
+			"contractDependencies" : 
+			[
+				1,
+				4,
+				7
+			],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 10,
+			"linearizedBaseContracts" : 
+			[
+				10,
+				7,
+				4,
+				1
+			],
+			"name" : "D",
+			"nodeType" : "ContractDefinition",
+			"nodes" : [],
+			"scope" : 14,
+			"src" : "55:19:1"
+		},
+		{
+			"baseContracts" : 
+			[
+				{
+					"arguments" : null,
+					"baseName" : 
+					{
+						"contractScope" : null,
+						"id" : 11,
+						"name" : "D",
+						"nodeType" : "UserDefinedTypeName",
+						"referencedDeclaration" : 10,
+						"src" : "89:1:1",
+						"typeDescriptions" : 
+						{
+							"typeIdentifier" : "t_contract$_D_$10",
+							"typeString" : "contract D"
+						}
+					},
+					"id" : 12,
+					"nodeType" : "InheritanceSpecifier",
+					"src" : "89:1:1"
+				}
+			],
+			"contractDependencies" : 
+			[
+				1,
+				4,
+				7,
+				10
+			],
+			"contractKind" : "contract",
+			"documentation" : null,
+			"fullyImplemented" : true,
+			"id" : 13,
+			"linearizedBaseContracts" : 
+			[
+				13,
+				10,
+				7,
+				4,
+				1
+			],
+			"name" : "E",
+			"nodeType" : "ContractDefinition",
+			"nodes" : [],
+			"scope" : 14,
+			"src" : "75:19:1"
+		}
+	],
+	"src" : "0:95:1"
+}
