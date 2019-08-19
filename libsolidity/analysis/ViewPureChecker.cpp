@@ -52,21 +52,21 @@ public:
 	{
 		checkInstruction(_instr.location, _instr.instruction);
 		for (auto const& arg: _instr.arguments)
-			boost::apply_visitor(*this, arg);
+			std::apply_visitor(*this, arg);
 	}
 	void operator()(yul::ExpressionStatement const& _expr)
 	{
-		boost::apply_visitor(*this, _expr.expression);
+		std::apply_visitor(*this, _expr.expression);
 	}
 	void operator()(yul::StackAssignment const&) {}
 	void operator()(yul::Assignment const& _assignment)
 	{
-		boost::apply_visitor(*this, *_assignment.value);
+		std::apply_visitor(*this, *_assignment.value);
 	}
 	void operator()(yul::VariableDeclaration const& _varDecl)
 	{
 		if (_varDecl.value)
-			boost::apply_visitor(*this, *_varDecl.value);
+			std::apply_visitor(*this, *_varDecl.value);
 	}
 	void operator()(yul::FunctionDefinition const& _funDef)
 	{
@@ -80,16 +80,16 @@ public:
 					checkInstruction(_funCall.location, *fun->instruction);
 
 		for (auto const& arg: _funCall.arguments)
-			boost::apply_visitor(*this, arg);
+			std::apply_visitor(*this, arg);
 	}
 	void operator()(yul::If const& _if)
 	{
-		boost::apply_visitor(*this, *_if.condition);
+		std::apply_visitor(*this, *_if.condition);
 		(*this)(_if.body);
 	}
 	void operator()(yul::Switch const& _switch)
 	{
-		boost::apply_visitor(*this, *_switch.expression);
+		std::apply_visitor(*this, *_switch.expression);
 		for (auto const& _case: _switch.cases)
 		{
 			if (_case.value)
@@ -100,7 +100,7 @@ public:
 	void operator()(yul::ForLoop const& _for)
 	{
 		(*this)(_for.pre);
-		boost::apply_visitor(*this, *_for.condition);
+		std::apply_visitor(*this, *_for.condition);
 		(*this)(_for.body);
 		(*this)(_for.post);
 	}
@@ -113,7 +113,7 @@ public:
 	void operator()(yul::Block const& _block)
 	{
 		for (auto const& s: _block.statements)
-			boost::apply_visitor(*this, s);
+			std::apply_visitor(*this, s);
 	}
 
 private:

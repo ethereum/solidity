@@ -175,7 +175,7 @@ string EWasmToText::transform(wasm::FunctionDefinition const& _function)
 
 string EWasmToText::visit(wasm::Expression const& _expression)
 {
-	return boost::apply_visitor(*this, _expression);
+	return std::apply_visitor(*this, _expression);
 }
 
 string EWasmToText::joinTransformed(vector<wasm::Expression> const& _expressions, char _separator)

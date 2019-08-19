@@ -57,7 +57,7 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 				// function body.
 				assertThrow(m_disallowedIdentifiers.empty() && !m_foundDisallowedIdentifier, OptimizerException, "");
 				m_disallowedIdentifiers = set<YulString>{retVariable, _function.name};
-				boost::apply_visitor(*this, *assignment.value);
+				std::apply_visitor(*this, *assignment.value);
 				if (!m_foundDisallowedIdentifier)
 					m_inlinableFunctions[_function.name] = &_function;
 				m_disallowedIdentifiers.clear();

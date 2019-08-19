@@ -94,7 +94,7 @@ struct LocationExtractor: boost::static_visitor<langutil::SourceLocation>
 /// Extracts the source location from an inline assembly node.
 template <class T> inline langutil::SourceLocation locationOf(T const& _node)
 {
-	return boost::apply_visitor(LocationExtractor(), _node);
+	return std::apply_visitor(LocationExtractor(), _node);
 }
 
 }

@@ -205,7 +205,7 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
-			OptionalStatements result = boost::apply_visitor(visitor, _stmt);
+			OptionalStatements result = std::apply_visitor(visitor, _stmt);
 			if (result)
 				simplify(*result);
 			else

@@ -214,7 +214,7 @@ bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
 bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
-	bool success = boost::apply_visitor(*this, _statement.expression);
+	bool success = std::apply_visitor(*this, _statement.expression);
 	if (m_stackHeight != initialStackHeight && (m_dialect.flavour != AsmFlavour::Loose || m_errorTypeForLoose))
 	{
 		Error::Type errorType = m_dialect.flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
@@ -249,7 +249,7 @@ bool AsmAnalyzer::operator()(Assignment const& _assignment)
 	int const expectedItems = _assignment.variableNames.size();
 	solAssert(expectedItems >= 1, "");
 	int const stackHeight = m_stackHeight;
-	bool success = boost::apply_visitor(*this, *_assignment.value);
+	bool success = std::apply_visitor(*this, *_assignment.value);
 	if ((m_stackHeight - stackHeight) != expectedItems)
 	{
 		m_errorReporter.declarationError(
@@ -276,7 +276,7 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 	if (_varDecl.value)
 	{
 		int const stackHeight = m_stackHeight;
-		success = boost::apply_visitor(*this, *_varDecl.value);
+		success = std::apply_visitor(*this, *_varDecl.value);
 		int numValues = m_stackHeight - stackHeight;
 		if (numValues != numVariables)
 		{
@@ -556,7 +556,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	int const initialStackHeight = m_stackHeight;
 
 	for (auto const& s: _block.statements)
-		if (!boost::apply_visitor(*this, s))
+		if (!std::apply_visitor(*this, s))
 			success = false;
 
 	m_stackHeight -= scope(&_block).numberOfVariables();
@@ -585,7 +585,7 @@ bool AsmAnalyzer::expectExpression(Expression const& _expr)
 {
 	bool success = true;
 	int const initialHeight = m_stackHeight;
-	if (!boost::apply_visitor(*this, _expr))
+	if (!std::apply_visitor(*this, _expr))
 		success = false;
 	if (!expectDeposit(1, initialHeight, locationOf(_expr)))
 		success = false;

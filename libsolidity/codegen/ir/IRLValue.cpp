@@ -76,7 +76,7 @@ IRStorageItem::IRStorageItem(
 IRStorageItem::IRStorageItem(
 	YulUtilFunctions _utils,
 	string _slot,
-	boost::variant<string, unsigned> _offset,
+	std::variant<string, unsigned> _offset,
 	Type const& _type
 ):
 	IRLValue(std::move(_utils), &_type),

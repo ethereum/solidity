@@ -47,7 +47,7 @@ ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
 
 bool ScopeFiller::operator()(ExpressionStatement const& _expr)
 {
-	return boost::apply_visitor(*this, _expr.expression);
+	return std::apply_visitor(*this, _expr.expression);
 }
 
 bool ScopeFiller::operator()(Label const& _item)
@@ -116,7 +116,7 @@ bool ScopeFiller::operator()(ForLoop const& _forLoop)
 	if (!(*this)(_forLoop.pre))
 		success = false;
 	m_currentScope = &scope(&_forLoop.pre);
-	if (!boost::apply_visitor(*this, *_forLoop.condition))
+	if (!std::apply_visitor(*this, *_forLoop.condition))
 		success = false;
 	if (!(*this)(_forLoop.body))
 		success = false;
@@ -141,7 +141,7 @@ bool ScopeFiller::operator()(Block const& _block)
 			if (!registerFunction(boost::get<FunctionDefinition>(s)))
 				success = false;
 	for (auto const& s: _block.statements)
-		if (!boost::apply_visitor(*this, s))
+		if (!std::apply_visitor(*this, s))
 			success = false;
 
 	m_currentScope = m_currentScope->superScope;

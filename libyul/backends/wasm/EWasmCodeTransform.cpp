@@ -277,12 +277,12 @@ wasm::Expression EWasmCodeTransform::operator()(Block const& _block)
 
 unique_ptr<wasm::Expression> EWasmCodeTransform::visit(yul::Expression const& _expression)
 {
-	return make_unique<wasm::Expression>(boost::apply_visitor(*this, _expression));
+	return make_unique<wasm::Expression>(std::apply_visitor(*this, _expression));
 }
 
 wasm::Expression EWasmCodeTransform::visitReturnByValue(yul::Expression const& _expression)
 {
-	return boost::apply_visitor(*this, _expression);
+	return std::apply_visitor(*this, _expression);
 }
 
 vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Expression> const& _expressions)
@@ -295,7 +295,7 @@ vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Expression> const
 
 wasm::Expression EWasmCodeTransform::visit(yul::Statement const& _statement)
 {
-	return boost::apply_visitor(*this, _statement);
+	return std::apply_visitor(*this, _statement);
 }
 
 vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Statement> const& _statements)

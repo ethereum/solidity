@@ -41,7 +41,7 @@ struct MiniEVMInterpreter: boost::static_visitor<u256>
 
 	u256 eval(Expression const& _expr)
 	{
-		return boost::apply_visitor(*this, _expr);
+		return std::apply_visitor(*this, _expr);
 	}
 
 	u256 eval(dev::eth::Instruction _instr, vector<Expression> const& _arguments)

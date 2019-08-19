@@ -36,7 +36,7 @@ void FunctionHoister::operator()(Block& _block)
 	m_isTopLevel = false;
 	for (auto&& statement: _block.statements)
 	{
-		boost::apply_visitor(*this, statement);
+		std::apply_visitor(*this, statement);
 		if (statement.type() == typeid(FunctionDefinition))
 		{
 			m_functions.emplace_back(std::move(statement));

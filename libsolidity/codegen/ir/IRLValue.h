@@ -89,7 +89,7 @@ public:
 	IRStorageItem(
 		YulUtilFunctions _utils,
 		std::string _slot,
-		boost::variant<std::string, unsigned> _offset,
+		std::variant<std::string, unsigned> _offset,
 		Type const& _type
 	);
 	std::string retrieveValue() const override;
@@ -107,7 +107,7 @@ private:
 	/// unsigned: Used when the offset is known at compile time, uses optimized
 	///           functions
 	/// string: Used when the offset is determined at run time
-	boost::variant<std::string, unsigned> const m_offset;
+	std::variant<std::string, unsigned> const m_offset;
 };
 
 /**

@@ -112,7 +112,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
-			OptionalStatements result = boost::apply_visitor(visitor, _stmt);
+			OptionalStatements result = std::apply_visitor(visitor, _stmt);
 			if (result)
 				simplify(*result);
 			else
@@ -124,7 +124,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 
 bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 {
-	return boost::apply_visitor(GenericFallbackReturnsVisitor<bool, Identifier const, Literal const>(
+	return std::apply_visitor(GenericFallbackReturnsVisitor<bool, Identifier const, Literal const>(
 		[&](Identifier const& _identifier) -> bool {
 			if (auto expr = m_value[_identifier.name])
 				return expressionAlwaysTrue(*expr);
@@ -141,7 +141,7 @@ bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 
 bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 {
-	return boost::apply_visitor(GenericFallbackReturnsVisitor<bool, Identifier const, Literal const>(
+	return std::apply_visitor(GenericFallbackReturnsVisitor<bool, Identifier const, Literal const>(
 		[&](Identifier const& _identifier) -> bool {
 			if (auto expr = m_value[_identifier.name])
 				return expressionAlwaysFalse(*expr);

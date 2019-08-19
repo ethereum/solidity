@@ -103,14 +103,14 @@ string AsmPrinter::operator()(FunctionalInstruction const& _functionalInstructio
 		boost::to_lower_copy(instructionInfo(_functionalInstruction.instruction).name) +
 		"(" +
 		boost::algorithm::join(
-			_functionalInstruction.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
+			_functionalInstruction.arguments | boost::adaptors::transformed(std::apply_visitor(*this)),
 			", ") +
 		")";
 }
 
 string AsmPrinter::operator()(ExpressionStatement const& _statement) const
 {
-	return boost::apply_visitor(*this, _statement.expression);
+	return std::apply_visitor(*this, _statement.expression);
 }
 
 string AsmPrinter::operator()(Label const& _label) const
@@ -133,7 +133,7 @@ string AsmPrinter::operator()(Assignment const& _assignment) const
 	string variables = (*this)(_assignment.variableNames.front());
 	for (size_t i = 1; i < _assignment.variableNames.size(); ++i)
 		variables += ", " + (*this)(_assignment.variableNames[i]);
-	return variables + " := " + boost::apply_visitor(*this, *_assignment.value);
+	return variables + " := " + std::apply_visitor(*this, *_assignment.value);
 }
 
 string AsmPrinter::operator()(VariableDeclaration const& _variableDeclaration) const
@@ -148,7 +148,7 @@ string AsmPrinter::operator()(VariableDeclaration const& _variableDeclaration) c
 	if (_variableDeclaration.value)
 	{
 		out += " := ";
-		out += boost::apply_visitor(*this, *_variableDeclaration.value);
+		out += std::apply_visitor(*this, *_variableDeclaration.value);
 	}
 	return out;
 }
@@ -183,7 +183,7 @@ string AsmPrinter::operator()(FunctionCall const& _functionCall) const
 	return
 		(*this)(_functionCall.functionName) + "(" +
 		boost::algorithm::join(
-			_functionCall.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
+			_functionCall.arguments | boost::adaptors::transformed(std::apply_visitor(*this)),
 			", " ) +
 		")";
 }
@@ -195,13 +195,13 @@ string AsmPrinter::operator()(If const& _if) const
 	char delim = '\n';
 	if (body.find('\n') == string::npos)
 		delim = ' ';
-	return "if " + boost::apply_visitor(*this, *_if.condition) + delim + (*this)(_if.body);
+	return "if " + std::apply_visitor(*this, *_if.condition) + delim + (*this)(_if.body);
 }
 
 string AsmPrinter::operator()(Switch const& _switch) const
 {
 	solAssert(_switch.expression, "Invalid expression pointer.");
-	string out = "switch " + boost::apply_visitor(*this, *_switch.expression);
+	string out = "switch " + std::apply_visitor(*this, *_switch.expression);
 	for (auto const& _case: _switch.cases)
 	{
 		if (!_case.value)
@@ -217,7 +217,7 @@ string AsmPrinter::operator()(ForLoop const& _forLoop) const
 {
 	solAssert(_forLoop.condition, "Invalid for loop condition.");
 	string pre = (*this)(_forLoop.pre);
-	string condition = boost::apply_visitor(*this, *_forLoop.condition);
+	string condition = std::apply_visitor(*this, *_forLoop.condition);
 	string post = (*this)(_forLoop.post);
 	char delim = '\n';
 	if (
@@ -246,7 +246,7 @@ string AsmPrinter::operator()(Block const& _block) const
 	if (_block.statements.empty())
 		return "{ }";
 	string body = boost::algorithm::join(
-		_block.statements | boost::adaptors::transformed(boost::apply_visitor(*this)),
+		_block.statements | boost::adaptors::transformed(std::apply_visitor(*this)),
 		"\n"
 	);
 	if (body.size() < 30 && body.find('\n') == string::npos)

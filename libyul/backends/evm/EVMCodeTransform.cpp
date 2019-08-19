@@ -179,7 +179,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	int height = m_assembly.stackHeight();
 	if (_varDecl.value)
 	{
-		boost::apply_visitor(*this, *_varDecl.value);
+		std::apply_visitor(*this, *_varDecl.value);
 		expectDeposit(numVariables, height);
 	}
 	else
@@ -242,7 +242,7 @@ void CodeTransform::stackError(StackTooDeepError _error, int _targetStackHeight)
 void CodeTransform::operator()(Assignment const& _assignment)
 {
 	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, *_assignment.value);
+	std::apply_visitor(*this, *_assignment.value);
 	expectDeposit(_assignment.variableNames.size(), height);
 
 	m_assembly.setSourceLocation(_assignment.location);
@@ -261,7 +261,7 @@ void CodeTransform::operator()(StackAssignment const& _assignment)
 void CodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	m_assembly.setSourceLocation(_statement.location);
-	boost::apply_visitor(*this, _statement.expression);
+	std::apply_visitor(*this, _statement.expression);
 	checkStackHeight(&_statement);
 }
 
@@ -717,7 +717,7 @@ AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope:
 void CodeTransform::visitExpression(Expression const& _expression)
 {
 	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, _expression);
+	std::apply_visitor(*this, _expression);
 	expectDeposit(1, height);
 }
 
@@ -743,7 +743,7 @@ void CodeTransform::visitStatements(vector<Statement> const& _statements)
 			jumpTarget = boost::none;
 		}
 
-		boost::apply_visitor(*this, statement);
+		std::apply_visitor(*this, statement);
 	}
 	// we may have a leftover jumpTarget
 	if (jumpTarget)

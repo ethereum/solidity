@@ -43,7 +43,7 @@ struct If;
 struct Loop;
 struct Break;
 struct Continue;
-using Expression = boost::variant<
+using Expression = std::variant<
 	Literal, StringLiteral, LocalVariable, GlobalVariable, Label,
 	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
 	Block, If, Loop, Break, Continue
