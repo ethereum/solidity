@@ -66,8 +66,10 @@ public:
 	);
 
 	/// Returns a list of parameters corresponding to the encoding of
-	/// returned values in case of a failure.
-	static ParameterList failureParameters();
+	/// returned values in case of a failure. Creates an additional parameter
+	/// for the error message if _bytes is larger than 68 bytes
+	/// (function_selector + tail_ptr + message_length).
+	static ParameterList failureParameters(bytes const _bytes);
 
 	/// Returns _count parameters with their type set to ABIType::UnsignedDec
 	/// and their size set to 32 bytes.
