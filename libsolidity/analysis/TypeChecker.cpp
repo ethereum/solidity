@@ -1478,12 +1478,28 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 							variableDeclaration->location()
 						);
 				m_errorReporter.typeError(
-					_functionCall.location(), ssl,
+					_functionCall.location(),
+					ssl,
 					"Explicit type conversion not allowed from non-payable \"address\" to \"" +
 					resultType->toString() +
 					"\", which has a payable fallback function."
 				);
 			}
+			else if (
+				auto const* functionType = dynamic_cast<FunctionType const*>(argType);
+				functionType &&
+				functionType->kind() == FunctionType::Kind::External &&
+				resultType->category() == Type::Category::Address
+			)
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Explicit type conversion not allowed from \"" +
+					argType->toString() +
+					"\" to \"" +
+					resultType->toString() +
+					"\". To obtain the address of the contract of the function, " +
+					"you can use the .address member of the function."
+				);
 			else
 				m_errorReporter.typeError(
 					_functionCall.location(),

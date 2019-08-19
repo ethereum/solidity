@@ -1338,6 +1338,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			/// need to store it as bytes4
 			utils().leftShiftNumberOnStack(224);
 		}
+		else if (member == "address")
+		{
+			auto const& functionType = dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type);
+			solAssert(functionType.kind() == FunctionType::Kind::External, "");
+			// stack: <address> <function_id>
+			m_context << Instruction::POP;
+		}
 		else
 			solAssert(
 				!!_memberAccess.expression().annotation().type->memberType(member),

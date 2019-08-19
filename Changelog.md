@@ -1,6 +1,7 @@
 ### 0.6.0 (unreleased)
 
 Breaking changes:
+ * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
 
 
 Language Features:

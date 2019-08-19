@@ -1112,37 +1112,28 @@ void CompilerUtils::convertType(
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 		break;
 	default:
-		if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Address)
+		// we used to allow conversions from function to address
+		solAssert(!(stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Address), "");
+		if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Function)
 		{
 			FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
-			solAssert(typeOnStack.kind() == FunctionType::Kind::External, "Only external function type can be converted.");
-
-			// stack: <address> <function_id>
-			m_context << Instruction::POP;
+			FunctionType const& targetType = dynamic_cast<FunctionType const&>(_targetType);
+			solAssert(
+				typeOnStack.isImplicitlyConvertibleTo(targetType) &&
+				typeOnStack.sizeOnStack() == targetType.sizeOnStack() &&
+				(typeOnStack.kind() == FunctionType::Kind::Internal || typeOnStack.kind() == FunctionType::Kind::External) &&
+				typeOnStack.kind() == targetType.kind(),
+				"Invalid function type conversion requested."
+			);
 		}
 		else
-		{
-			if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Function)
-			{
-				FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
-				FunctionType const& targetType = dynamic_cast<FunctionType const&>(_targetType);
-				solAssert(
-					typeOnStack.isImplicitlyConvertibleTo(targetType) &&
-					typeOnStack.sizeOnStack() == targetType.sizeOnStack() &&
-					(typeOnStack.kind() == FunctionType::Kind::Internal || typeOnStack.kind() == FunctionType::Kind::External) &&
-					typeOnStack.kind() == targetType.kind(),
-					"Invalid function type conversion requested."
-				);
-			}
-			else
-				// All other types should not be convertible to non-equal types.
-				solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+			// All other types should not be convertible to non-equal types.
+			solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
 
-			if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
-				m_context
-					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
-					<< Instruction::AND;
-		}
+		if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
+			m_context
+				<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
+				<< Instruction::AND;
 		break;
 	}
 

@@ -2726,8 +2726,6 @@ bool FunctionType::operator==(Type const& _other) const
 
 BoolResult FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_kind == Kind::External && _convertTo == *TypeProvider::address())
-		return true;
 	return _convertTo.category() == category();
 }
 
@@ -2922,7 +2920,10 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
+		{
 			members.emplace_back("selector", TypeProvider::fixedBytes(4));
+			members.emplace_back("address", TypeProvider::address());
+		}
 		if (m_kind != Kind::BareDelegateCall)
 		{
 			if (isPayable())
