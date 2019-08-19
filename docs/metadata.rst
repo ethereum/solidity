@@ -124,7 +124,7 @@ Encoding of the Metadata Hash in the Bytecode
 =============================================
 
 Because we might support other ways to retrieve the metadata file in the future,
-the mapping ``{"bzzr0": <Swarm hash>, "solc": <compiler version>}`` is stored
+the mapping ``{"bzzr1": <Swarm hash>, "solc": <compiler version>}`` is stored
 `CBOR <https://tools.ietf.org/html/rfc7049>`_-encoded. Since the mapping might
 contain more keys (see below) and the beginning of that
 encoding is not easy to find, its length is added in a two-byte big-endian
@@ -132,7 +132,7 @@ encoding. The current version of the Solidity compiler usually adds the followin
 to the end of the deployed bytecode::
 
     0xa2
-    0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 <32 bytes swarm hash>
+    0x65 'b' 'z' 'z' 'r' '1' 0x58 0x20 <32 bytes swarm hash>
     0x64 's' 'o' 'l' 'c' 0x43 <3 byte version encoding>
     0x00 0x32
 
@@ -150,9 +150,9 @@ will instead use a complete version string including commit hash and build date.
   are used, the mapping will also contain ``"experimental": true``.
 
 .. note::
-  The compiler currently uses the "swarm version 0" hash of the metadata,
+  The compiler currently uses the "swarm version 1" hash of the metadata,
   but this might change in the future, so do not rely on this sequence
-  to start with ``0xa2 0x65 'b' 'z' 'z' 'r' '0'``. We might also
+  to start with ``0xa2 0x65 'b' 'z' 'z' 'r' '1'``. We might also
   add additional data to this CBOR structure, so the
   best option is to use a proper CBOR parser.
 
