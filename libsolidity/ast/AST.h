@@ -903,7 +903,7 @@ public:
 	ElementaryTypeName(
 		SourceLocation const& _location,
 		ElementaryTypeNameToken const& _elem,
-		boost::optional<StateMutability> _stateMutability = {}
+		std::optional<StateMutability> _stateMutability = {}
 	): TypeName(_location), m_type(_elem), m_stateMutability(_stateMutability)
 	{
 		solAssert(!_stateMutability.is_initialized() || _elem.token() == Token::Address, "");
@@ -914,11 +914,11 @@ public:
 
 	ElementaryTypeNameToken const& typeName() const { return m_type; }
 
-	boost::optional<StateMutability> const& stateMutability() const { return m_stateMutability; }
+	std::optional<StateMutability> const& stateMutability() const { return m_stateMutability; }
 
 private:
 	ElementaryTypeNameToken m_type;
-	boost::optional<StateMutability> m_stateMutability; ///< state mutability for address type
+	std::optional<StateMutability> m_stateMutability; ///< state mutability for address type
 };
 
 /**

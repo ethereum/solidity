@@ -54,7 +54,7 @@ namespace test
 namespace
 {
 
-boost::optional<Error> parseAndReturnFirstError(
+std::optional<Error> parseAndReturnFirstError(
 	string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,

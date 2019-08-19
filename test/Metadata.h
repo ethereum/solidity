@@ -48,7 +48,7 @@ std::string bytecodeSansMetadata(std::string const& _bytecode);
 /// - bytes into hex strings
 /// - booleans into "true"/"false" strings
 /// - everything else is invalid
-boost::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const& _metadata);
+std::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const& _metadata);
 
 /// Expects a serialised metadata JSON and returns true if the
 /// content is valid metadata.

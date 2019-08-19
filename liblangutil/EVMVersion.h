@@ -49,7 +49,7 @@ public:
 	static EVMVersion constantinople() { return {Version::Constantinople}; }
 	static EVMVersion petersburg() { return {Version::Petersburg}; }
 
-	static boost::optional<EVMVersion> fromString(std::string const& _version)
+	static std::optional<EVMVersion> fromString(std::string const& _version)
 	{
 		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg()})
 			if (_version == v.name())

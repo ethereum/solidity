@@ -354,7 +354,7 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 	return false;
 }
 
-boost::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
+std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 	dev::eth::Instruction _store,
 	ExpressionStatement const& _statement
 ) const

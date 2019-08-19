@@ -29,7 +29,7 @@ void VarDeclInitializer::operator()(Block& _block)
 {
 	ASTModifier::operator()(_block);
 
-	using OptionalStatements = boost::optional<vector<Statement>>;
+	using OptionalStatements = std::optional<vector<Statement>>;
 	GenericFallbackReturnsVisitor<OptionalStatements, VariableDeclaration> visitor{
 		[](VariableDeclaration& _varDecl) -> OptionalStatements
 		{

@@ -124,7 +124,7 @@ string TestFunctionCall::format(
 
 			if (!matchesExpectation())
 			{
-				boost::optional<ParameterList> abiParams;
+				std::optional<ParameterList> abiParams;
 
 				if (isFailure && !output.empty())
 					abiParams = boost::make_optional(ContractABIUtils::failureParameters());
@@ -201,7 +201,7 @@ string TestFunctionCall::formatBytesParameters(
 	}
 	else
 	{
-		boost::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
+		std::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
 			_errorReporter,
 			m_contractABI,
 			_signature
@@ -209,7 +209,7 @@ string TestFunctionCall::formatBytesParameters(
 
 		if (abiParams)
 		{
-			boost::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
+			std::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
 				_errorReporter,
 				_parameters,
 				abiParams.get(),

@@ -64,7 +64,7 @@ bool SimplificationRules::isInitialized() const
 	return !m_rules[uint8_t(dev::eth::Instruction::ADD)].empty();
 }
 
-boost::optional<std::pair<dev::eth::Instruction, vector<Expression> const*>>
+std::optional<std::pair<dev::eth::Instruction, vector<Expression> const*>>
 	SimplificationRules::instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
 {
 	if (_expr.type() == typeid(FunctionalInstruction))

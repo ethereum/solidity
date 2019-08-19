@@ -141,7 +141,7 @@ string functionSignatureFromABI(Json::Value const& _functionABI)
 
 }
 
-boost::optional<dev::solidity::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(
+std::optional<dev::solidity::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(
 	ErrorReporter& _errorReporter,
 	Json::Value const& _contractABI,
 	string const& _functionSignature
@@ -184,7 +184,7 @@ boost::optional<dev::solidity::test::ParameterList> ContractABIUtils::parameters
 
 				inplaceTypeParams.clear();
 			}
-			return boost::optional<ParameterList>(finalParams + dynamicTypeParams);
+			return std::optional<ParameterList>(finalParams + dynamicTypeParams);
 		}
 
 	return boost::none;

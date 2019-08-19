@@ -725,7 +725,7 @@ void CodeTransform::visitStatements(vector<Statement> const& _statements)
 {
 	// Workaround boost bug:
 	// https://www.boost.org/doc/libs/1_63_0/libs/optional/doc/html/boost_optional/tutorial/gotchas/false_positive_with__wmaybe_uninitialized.html
-	boost::optional<AbstractAssembly::LabelID> jumpTarget = boost::make_optional(false, AbstractAssembly::LabelID());
+	std::optional<AbstractAssembly::LabelID> jumpTarget = boost::make_optional(false, AbstractAssembly::LabelID());
 
 	for (auto const& statement: _statements)
 	{

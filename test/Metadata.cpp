@@ -150,7 +150,7 @@ private:
 	bytes const& m_metadata;
 };
 
-boost::optional<map<string, string>> parseCBORMetadata(bytes const& _metadata)
+std::optional<map<string, string>> parseCBORMetadata(bytes const& _metadata)
 {
 	try
 	{

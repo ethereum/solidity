@@ -27,7 +27,7 @@ void ForLoopInitRewriter::operator()(Block& _block)
 {
 	iterateReplacing(
 		_block.statements,
-		[&](Statement& _stmt) -> boost::optional<vector<Statement>>
+		[&](Statement& _stmt) -> std::optional<vector<Statement>>
 		{
 			if (_stmt.type() == typeid(ForLoop))
 			{
