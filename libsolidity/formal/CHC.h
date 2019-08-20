@@ -61,9 +61,17 @@ private:
 	bool visit(WhileStatement const&) override;
 	bool visit(ForStatement const&) override;
 	void endVisit(FunctionCall const& _node) override;
+	void endVisit(Break const& _node) override;
+	void endVisit(Continue const& _node) override;
 
 	void visitAssert(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
+	void visitLoop(
+		BreakableStatement const& _loop,
+		Expression const* _condition,
+		Statement const& _body,
+		ASTNode const* _postLoop
+	);
 	//@}
 
 	/// Helpers.
@@ -72,7 +80,7 @@ private:
 	void eraseKnowledge();
 	bool shouldVisit(ContractDefinition const& _contract) const;
 	bool shouldVisit(FunctionDefinition const& _function) const;
-	void pushBlock(smt::Expression const& _block);
+	void pushBlock(ASTNode const* _node);
 	void popBlock();
 	//@}
 
@@ -81,13 +89,13 @@ private:
 	smt::SortPointer constructorSort();
 	smt::SortPointer interfaceSort();
 	smt::SortPointer sort(FunctionDefinition const& _function);
-	smt::SortPointer sort(Block const& _block);
+	smt::SortPointer sort(ASTNode const* _block);
 	//@}
 
 	/// Predicate helpers.
 	//@{
 	/// @returns a new block of given _sort and _name.
-	std::unique_ptr<smt::SymbolicFunctionVariable> createBlock(smt::SortPointer _sort, std::string const& _name);
+	std::unique_ptr<smt::SymbolicFunctionVariable> createSymbolicBlock(smt::SortPointer _sort, std::string const& _name);
 
 	/// Constructor predicate over current variables.
 	smt::Expression constructor();
@@ -95,16 +103,17 @@ private:
 	smt::Expression interface();
 	/// Error predicate over current variables.
 	smt::Expression error();
+	smt::Expression error(unsigned _idx);
 
-	/// Creates a block for the given _function or increases its SSA index
+	/// Creates a block for the given _node or increases its SSA index
 	/// if the block already exists which in practice creates a new function.
-	/// The predicate parameters are _function input and output parameters.
-	void createFunctionBlock(FunctionDefinition const& _function);
-	/// Creates a block for the given _function or increases its SSA index
-	/// if the block already exists which in practice creates a new function.
-	/// The predicate parameters are m_currentFunction input, output
-	/// and local variables.
-	void createFunctionBlock(Block const& _block);
+	void createBlock(ASTNode const* _node, std::string const& _prefix = "");
+
+	/// Creates a new error block to be used by an assertion.
+	/// Also registers the predicate.
+	void createErrorBlock();
+
+	void connectBlocks(smt::Expression const& _from, smt::Expression const& _to, smt::Expression const& _constraints = smt::Expression(true));
 
 	/// @returns the current symbolic values of the current function's
 	/// input and output parameters.
@@ -113,19 +122,20 @@ private:
 	/// local variables.
 	std::vector<smt::Expression> currentBlockVariables();
 
-	/// @returns the predicate name for a given function.
-	std::string predicateName(FunctionDefinition const& _function);
-	/// @returns a predicate application over the current function's parameters.
-	smt::Expression predicateCurrent(ASTNode const* _node);
-	/// @returns a predicate application over the current function's parameters plus local variables.
-	smt::Expression predicateBodyCurrent(ASTNode const* _node);
-	/// Predicate for block _node over the variables at the latest
-	/// block entry.
-	smt::Expression predicateEntry(ASTNode const* _node);
+	/// Sets the SSA indices of the variables in scope to 0.
+	/// Used when starting a new block.
+	void clearIndices();
+
+	/// @returns the predicate name for a given node.
+	std::string predicateName(ASTNode const* _node);
+	/// @returns a predicate application over the current scoped variables.
+	smt::Expression predicate(ASTNode const* _node);
 	//@}
 
 	/// Solver related.
 	//@{
+	/// Adds Horn rule to the solver.
+	void addRule(smt::Expression const& _rule, std::string const& _ruleName);
 	/// @returns true if query is unsatisfiable (safe).
 	bool query(smt::Expression const& _query, langutil::SourceLocation const& _location);
 	//@}
@@ -179,6 +189,15 @@ private:
 	std::vector<smt::Expression> m_path;
 	/// Whether a function call was seen in the current scope.
 	bool m_unknownFunctionCallSeen = false;
+	/// Whether a break statement was seen in the current scope.
+	bool m_breakSeen = false;
+	/// Whether a continue statement was seen in the current scope.
+	bool m_continueSeen = false;
+
+	/// Block where a loop break should go to.
+	ASTNode const* m_breakDest;
+	/// Block where a loop continue should go to.
+	ASTNode const* m_continueDest;
 	//@}
 
 	/// CHC solver.
