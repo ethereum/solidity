@@ -17,8 +17,6 @@
 
 #include <libsolidity/formal/SMTLib2Interface.h>
 
-#include <libsolidity/interface/ReadFile.h>
-#include <liblangutil/Exceptions.h>
 #include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -30,7 +28,6 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <string>
 
 using namespace std;
 using namespace dev;

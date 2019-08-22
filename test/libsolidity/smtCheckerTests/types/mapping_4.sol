@@ -9,4 +9,3 @@ contract C
 	}
 }
 // ----
-// Warning: (125-144): Assertion violation happens here
