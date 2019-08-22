@@ -1,5 +1,5 @@
 
-static const std::vector<std::string> dictionary = {
+static const std::vector<std::string> hexDictionary = {
 	"0",
 	"1",
 	"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",

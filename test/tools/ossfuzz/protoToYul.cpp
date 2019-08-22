@@ -23,6 +23,7 @@
 #include <libdevcore/StringUtils.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/algorithm/cxx11/all_of.hpp>
 
 using namespace std;
 using namespace yul::test::yul_fuzzer;
@@ -31,7 +32,7 @@ using namespace dev;
 string ProtoConverter::dictionaryToken(HexPrefix _p)
 {
 	unsigned indexVar = m_inputSize * m_inputSize + counter();
-	std::string token = dictionary[indexVar % dictionary.size()];
+	std::string token = hexDictionary[indexVar % hexDictionary.size()];
 	yulAssert(token.size() <= 64, "Proto Fuzzer: Dictionary token too large");
 
 	return _p == HexPrefix::Add ? "0x" + token : token;
@@ -68,50 +69,18 @@ string ProtoConverter::createAlphaNum(string const& _strBytes)
 	return tmp;
 }
 
-bool ProtoConverter::isCaseLiteralUnique(Literal const& _x)
-{
-	dev::u256 mpCaseLiteralValue;
-
-	switch (_x.literal_oneof_case())
-	{
-	case Literal::kIntval:
-		mpCaseLiteralValue = dev::u256(_x.intval());
-		break;
-	case Literal::kHexval:
-		// We need to ask boost mp library to treat this
-		// as a hex value. Hence the "0x" prefix.
-		mpCaseLiteralValue = dev::u256("0x" + createHex(_x.hexval()));
-		break;
-	case Literal::kStrval:
-		mpCaseLiteralValue = dev::u256(dev::h256(createAlphaNum(_x.strval()), dev::h256::FromBinary, dev::h256::AlignLeft));
-		break;
-	case Literal::LITERAL_ONEOF_NOT_SET:
-		// If the proto generator does not generate a valid Literal
-		// we generate a case 1:
-		mpCaseLiteralValue = u256(dictionaryToken());
-		break;
-	}
-
-	bool isUnique = m_switchLiteralSetPerScope.top().insert(mpCaseLiteralValue).second;
-	return isUnique;
-}
-
-void ProtoConverter::visit(Literal const& _x)
+string ProtoConverter::visit(Literal const& _x)
 {
 	switch (_x.literal_oneof_case())
 	{
 	case Literal::kIntval:
-		m_output << _x.intval();
-		break;
+		return to_string(_x.intval());
 	case Literal::kHexval:
-		m_output << "0x" << createHex(_x.hexval());
-		break;
+		return "0x" + createHex(_x.hexval());
 	case Literal::kStrval:
-		m_output << "\"" << createAlphaNum(_x.strval()) << "\"";
-		break;
+		return "\"" + createAlphaNum(_x.strval()) + "\"";
 	case Literal::LITERAL_ONEOF_NOT_SET:
-		m_output << dictionaryToken();
-		break;
+		return dictionaryToken();
 	}
 }
 
@@ -130,7 +99,7 @@ void ProtoConverter::visit(Expression const& _x)
 		visit(_x.varref());
 		break;
 	case Expression::kCons:
-		visit(_x.cons());
+		m_output << visit(_x.cons());
 		break;
 	case Expression::kBinop:
 		visit(_x.binop());
@@ -707,12 +676,64 @@ void ProtoConverter::visit(BoundedForStmt const& _x)
 
 void ProtoConverter::visit(CaseStmt const& _x)
 {
-	// Silently ignore duplicate case literals
-	if (isCaseLiteralUnique(_x.case_lit()))
+	string literal = visit(_x.case_lit());
+	// u256 value of literal
+	u256 literalVal;
+
+	// Convert string to u256 before looking for duplicate case literals
+	if (_x.case_lit().has_strval())
 	{
-		m_output << "case ";
-		visit(_x.case_lit());
-		m_output << " ";
+		// Since string literals returned by the Literal visitor are enclosed within
+		// double quotes (like this "\"<string>\""), their size is at least two in the worst case
+		// that <string> is empty. Here we assert this invariant.
+		yulAssert(literal.size() >= 2, "Proto fuzzer: String literal too short");
+		// This variable stores the <string> part i.e., literal minus the first and last
+		// double quote characters. This is used to compute the keccak256 hash of the
+		// string literal. The hashing is done to check whether we are about to create
+		// a case statement containing a case literal that has already been used in a
+		// previous case statement. If the hash (u256 value) matches a previous hash,
+		// then we simply don't create a new case statement.
+		string noDoubleQuoteStr = "";
+		if (literal.size() > 2)
+		{
+			// Ensure that all characters in the string literal except the first
+			// and the last (double quote characters) are alphanumeric.
+			yulAssert(
+				boost::algorithm::all_of(literal.begin() + 1, literal.end() - 2, [=](char c) -> bool {
+					return std::isalpha(c) || std::isdigit(c);
+				}),
+				"Proto fuzzer: Invalid string literal encountered"
+			);
+
+			// Make a copy because literal will need to be used later
+			noDoubleQuoteStr = literal.substr(1, literal.size() - 2);
+		}
+		// Hash the result to check for duplicate case literal strings
+		literalVal = u256(h256(noDoubleQuoteStr, h256::FromBinary, h256::AlignLeft));
+
+		// Make sure that an empty string literal evaluates to zero. This is to detect creation of
+		// duplicate case literals like so
+		// switch (x)
+		// {
+		//    case "": { x := 0 }
+		//    case 0: { x:= 1 } // Case statement with duplicate literal is invalid
+		// } // This snippet will not be parsed successfully.
+		if (noDoubleQuoteStr.empty())
+			yulAssert(literalVal == 0, "Proto fuzzer: Empty string does not evaluate to zero");
+	}
+	else
+		literalVal = u256(literal);
+
+	// Check if set insertion fails (case literal present) or succeeds (case literal
+	// absent).
+	bool isUnique = m_switchLiteralSetPerScope.top().insert(literalVal).second;
+
+	// It is fine to bail out if we encounter a duplicate case literal because
+	// we can be assured that the switch statement is well-formed i.e., contains
+	// at least one case statement or a default block.
+	if (isUnique)
+	{
+		m_output << "case " << literal << " ";
 		visit(_x.case_block());
 	}
 }

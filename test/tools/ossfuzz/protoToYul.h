@@ -57,7 +57,7 @@ private:
 	void visit(BinaryOp const&);
 	void visit(Block const&);
 	void visit(SpecialBlock const&);
-	void visit(Literal const&);
+	std::string visit(Literal const&);
 	void visit(VarRef const&);
 	void visit(Expression const&);
 	void visit(VarDecl const&);
@@ -94,8 +94,10 @@ private:
 	void registerFunction(FunctionDefinition const&);
 
 	std::string createHex(std::string const& _hexBytes);
+
+	/// Accepts an arbitrary string, removes all characters that are neither
+	/// alphabets nor digits from it and returns the said string.
 	std::string createAlphaNum(std::string const& _strBytes);
-	bool isCaseLiteralUnique(Literal const&);
 	enum class NumFunctionReturns
 	{
 		None,
