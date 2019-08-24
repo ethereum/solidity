@@ -116,13 +116,15 @@ BOOST_AUTO_TEST_CASE(division)
 				if (a == 0) {
 					return 0;
 				}
+				// TODO remove when SMTChecker sees that this code is the `else` of the `return`.
+				require(a != 0);
 				uint256 c = a * b;
 				require(c / a == b);
 				return c;
 			}
 		}
 	)";
-	CHECK_WARNING(text, "Division by zero");
+	CHECK_SUCCESS_OR_WARNING(text, "might happen");
 	text = R"(
 		contract C {
 			function div(uint256 a, uint256 b) internal pure returns (uint256) {
