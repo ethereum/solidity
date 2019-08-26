@@ -6,4 +6,4 @@ contract B {
 }
 contract C is A, B {}
 // ----
-// TypeError: (81-123): Overriding function visibility differs.
+// TypeError: (81-123): Functions from multiple base classes conflict: visibility differs.

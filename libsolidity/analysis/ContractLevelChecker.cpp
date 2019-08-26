@@ -232,9 +232,14 @@ bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 		success = false;
 	}
 
+	string funcStr = "Overriding function";
+
+	if (!_isBaseOf)
+		funcStr = "Functions from multiple base classes conflict:";
+
 	if (!functionType->hasEqualReturnTypes(*superType))
 	{
-		overrideError(_function, _super, "Overriding function return types differ.");
+		overrideError(_function, _super, funcStr + " return types differ.");
 		success = false;
 	}
 
@@ -250,7 +255,7 @@ bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 			_function.visibility() == FunctionDefinition::Visibility::Public
 		))
 		{
-			overrideError(_function, _super, "Overriding function visibility differs.");
+			overrideError(_function, _super, funcStr + " visibility differs.");
 			success = false;
 		}
 	}
@@ -259,9 +264,10 @@ bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 		overrideError(
 			_function,
 			_super,
-			"Overriding function changes state mutability from \"" +
+			funcStr +
+			" mutability differs: \"" +
 			stateMutabilityToString(_super.stateMutability()) +
-			"\" to \"" +
+			"\" vs \"" +
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
