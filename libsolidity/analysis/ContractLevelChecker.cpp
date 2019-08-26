@@ -150,6 +150,8 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 	map<string, vector<FunctionDefinition const*>> functions;
 	map<string, ModifierDefinition const*> modifiers;
 
+	bool isMostDerivedContract = true;
+
 	// We search from derived to base, so the stored item causes the error.
 	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
 	{
@@ -158,11 +160,18 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			if (function->isConstructor())
 				continue; // constructors can neither be overridden nor override anything
 			string const& name = function->name();
-			if (modifiers.count(name))
-				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
 
-			for (FunctionDefinition const* overriding: functions[name])
-				checkFunctionOverride(*overriding, *function);
+			// Don't check the most derived contract as that leads to wrong
+			// errors (functions of the same contract are checked with override
+			// logic against each other)
+			if (!isMostDerivedContract)
+			{
+				if (modifiers.count(name))
+					m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
+
+				for (FunctionDefinition const* overriding: functions[name])
+					checkFunctionOverride(*overriding, *function);
+			}
 
 			functions[name].push_back(function);
 		}
@@ -177,6 +186,8 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			if (!functions[name].empty())
 				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
 		}
+
+		isMostDerivedContract = false;
 	}
 }
 

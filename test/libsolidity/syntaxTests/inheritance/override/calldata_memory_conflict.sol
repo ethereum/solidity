@@ -20,7 +20,3 @@ contract B is A {
 // DeclarationError: (317-369): Function with same name and arguments defined twice.
 // DeclarationError: (374-426): Function with same name and arguments defined twice.
 // DeclarationError: (431-478): Function with same name and arguments defined twice.
-// TypeError: (268-312): Overriding function visibility differs.
-// TypeError: (317-369): Overriding function visibility differs.
-// TypeError: (374-426): Overriding function visibility differs.
-// TypeError: (431-478): Overriding function visibility differs.
