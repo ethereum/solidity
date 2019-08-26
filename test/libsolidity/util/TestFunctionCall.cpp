@@ -127,7 +127,7 @@ string TestFunctionCall::format(
 				boost::optional<ParameterList> abiParams;
 
 				if (isFailure && !output.empty())
-					abiParams = boost::make_optional(ContractABIUtils::failureParameters());
+					abiParams = boost::make_optional(ContractABIUtils::failureParameters(output));
 				else
 					abiParams = ContractABIUtils::parametersFromJsonOutputs(
 						_errorReporter,
@@ -193,7 +193,7 @@ string TestFunctionCall::formatBytesParameters(
 	{
 		os << BytesUtils::formatBytesRange(
 			_bytes,
-			ContractABIUtils::failureParameters(),
+			ContractABIUtils::failureParameters(_bytes),
 			_highlight
 		);
 
