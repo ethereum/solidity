@@ -44,6 +44,22 @@ bool hasEqualNameAndArguments(T const& _a, T const& _b)
 	);
 }
 
+bool isBaseOf(ContractLevelChecker::FunctionInfo const& _derived, ContractLevelChecker::FunctionInfo const& _super)
+{
+	auto const& derivedBaseContracts =
+		_derived.contract->annotation().linearizedBaseContracts;
+	auto const result = find_if(
+		derivedBaseContracts.cbegin(),
+		derivedBaseContracts.cend(),
+		[&](ContractDefinition const* _c)
+		{
+			return _c == _super.contract;
+		}
+	);
+
+	return result != derivedBaseContracts.cend();
+}
+
 }
 
 bool ContractLevelChecker::check(ContractDefinition const& _contract)
@@ -147,7 +163,7 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 {
 	// TODO unify this at a later point. for this we need to put the constness and the access specifier
 	// into the types
-	map<string, list<FunctionDefinition const*>> functions;
+	map<string, list<FunctionInfo>> functions;
 	map<string, ModifierDefinition const*> modifiers;
 
 	bool isMostDerivedContract = true;
@@ -171,15 +187,20 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 
 				auto& overriding = functions[name];
 				for (auto it = overriding.begin(); it != overriding.end();)
-					if (!checkFunctionOverride(**it, *function))
+					if (!checkFunctionOverride(
+						*it->funcDef,
+						*function,
+						isBaseOf(*it, {function, contract})
+					))
 						// Remove errored functions to avoid double error reports
 						it = overriding.erase(it);
 					else
 						it++;
 			}
 
-			functions[name].push_back(function);
+			functions[name].push_back({function, contract});
 		}
+
 		for (ModifierDefinition const* modifier: contract->functionModifiers())
 		{
 			string const& name = modifier->name();
@@ -196,7 +217,7 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 	}
 }
 
-bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
+bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super, bool _isBaseOf)
 {
 	bool success = true;
 	FunctionTypePointer functionType = FunctionType(_function).asCallableFunction(false);
@@ -204,6 +225,12 @@ bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 
 	if (!functionType->hasEqualParameterTypes(*superType))
 		return true;
+
+	if (_isBaseOf && !_function.overrides())
+	{
+		overrideError(_function, _super, "Overriding function is missing 'override' specifier.");
+		success = false;
+	}
 
 	if (!functionType->hasEqualReturnTypes(*superType))
 	{

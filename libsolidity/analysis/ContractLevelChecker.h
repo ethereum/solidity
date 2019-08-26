@@ -41,6 +41,13 @@ namespace solidity
 class ContractLevelChecker
 {
 public:
+	/// Helper struct to check overrides
+	struct FunctionInfo
+	{
+		FunctionDefinition const* funcDef;
+		ContractDefinition const* contract;
+	};
+
 	/// @param _errorReporter provides the error logging functionality.
 	explicit ContractLevelChecker(langutil::ErrorReporter& _errorReporter):
 		m_errorReporter(_errorReporter)
@@ -61,7 +68,7 @@ private:
 	/// Returns false and reports a type error with an appropriate message if
 	/// overridden function signature differs.
 	/// Also stores the direct super function in the AST annotations.
-	bool checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
+	bool checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super, bool _isBaseOf);
 	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
 	void checkAbstractFunctions(ContractDefinition const& _contract);
 	void checkBaseConstructorArguments(ContractDefinition const& _contract);

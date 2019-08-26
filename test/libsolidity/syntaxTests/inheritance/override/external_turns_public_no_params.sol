@@ -2,6 +2,6 @@ contract A {
     function f() external pure {}
 }
 contract B is A {
-    function f() public pure {
+    function f() public override pure {
     }
 }

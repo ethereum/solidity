@@ -28,6 +28,7 @@ contract CategoricalEvent is Event {
     /// @return Sender's winnings
     function redeemWinnings()
         public
+        override
         returns (uint winnings)
     {
         // Winning outcome has to be set
@@ -45,6 +46,7 @@ contract CategoricalEvent is Event {
     /// @return Event hash
     function getEventHash()
         public
+        override
         view
         returns (bytes32)
     {

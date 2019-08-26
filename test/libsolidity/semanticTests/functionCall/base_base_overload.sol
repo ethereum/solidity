@@ -11,11 +11,11 @@ contract BaseBase {
 }
 
 contract Base is BaseBase {
-	function init(uint a, uint b) public {
+	function init(uint a, uint b) public override {
 		x = a;
 		y = b;
 	}
-	function init(uint a) public {
+	function init(uint a) public override {
 		x = a;
 	}
 }

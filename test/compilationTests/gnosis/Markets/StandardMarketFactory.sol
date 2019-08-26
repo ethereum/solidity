@@ -17,6 +17,7 @@ contract StandardMarketFactory is MarketFactory {
     /// @return Market contract
     function createMarket(Event eventContract, MarketMaker marketMaker, uint24 fee)
         public
+        override
         returns (Market market)
     {
         market = new StandardMarket(msg.sender, eventContract, marketMaker, fee);

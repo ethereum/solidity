@@ -24,6 +24,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @return Cost
     function calcCost(Market market, uint8 outcomeTokenIndex, uint outcomeTokenCount)
         public
+        override
         view
         returns (uint cost)
     {
@@ -59,6 +60,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @return Profit
     function calcProfit(Market market, uint8 outcomeTokenIndex, uint outcomeTokenCount)
         public
+        override
         view
         returns (uint profit)
     {
@@ -85,6 +87,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @return Marginal price of an outcome as a fixed point number
     function calcMarginalPrice(Market market, uint8 outcomeTokenIndex)
         public
+        override
         view
         returns (uint price)
     {

@@ -421,7 +421,7 @@ contract Wallet is multisig, multiowned, daylimit {
 
 	// INTERNAL METHODS
 
-	function clearPending() internal {
+	function clearPending() internal override {
 		uint length = m_pendingIndex.length;
 		for (uint i = 0; i < length; ++i)
 			delete m_txs[m_pendingIndex[i]];
