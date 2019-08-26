@@ -1,0 +1,13 @@
+{
+   "persistentCheckout": true,
+   "callToAction": {
+     "default": "Please support work on Solidity by purchasing a key to our Lock on Ethereum!",
+     "pending": "Thank you for your support. It means a lot to us!",
+     "confirmed": "Thank you for your support. It means a lot to us!"
+   },
+   "locks": {
+     "0x38Ad3BEA0FA53A7Ac63Ba56CAA88ce1DE690E1Ea": {
+       "name": "Solidity Supporters"
+     }
+   }
+ }
