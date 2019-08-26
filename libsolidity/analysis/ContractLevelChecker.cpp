@@ -147,7 +147,7 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 {
 	// TODO unify this at a later point. for this we need to put the constness and the access specifier
 	// into the types
-	map<string, vector<FunctionDefinition const*>> functions;
+	map<string, list<FunctionDefinition const*>> functions;
 	map<string, ModifierDefinition const*> modifiers;
 
 	bool isMostDerivedContract = true;
@@ -169,8 +169,13 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 				if (modifiers.count(name))
 					m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
 
-				for (FunctionDefinition const* overriding: functions[name])
-					checkFunctionOverride(*overriding, *function);
+				auto& overriding = functions[name];
+				for (auto it = overriding.begin(); it != overriding.end();)
+					if (!checkFunctionOverride(**it, *function))
+						// Remove errored functions to avoid double error reports
+						it = overriding.erase(it);
+					else
+						it++;
 			}
 
 			functions[name].push_back(function);
@@ -191,15 +196,20 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 	}
 }
 
-void ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
+bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
 {
+	bool success = true;
 	FunctionTypePointer functionType = FunctionType(_function).asCallableFunction(false);
 	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
 
 	if (!functionType->hasEqualParameterTypes(*superType))
-		return;
+		return true;
+
 	if (!functionType->hasEqualReturnTypes(*superType))
+	{
 		overrideError(_function, _super, "Overriding function return types differ.");
+		success = false;
+	}
 
 	if (!_function.annotation().superFunction)
 		_function.annotation().superFunction = &_super;
@@ -212,9 +222,13 @@ void ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 			_super.visibility() == FunctionDefinition::Visibility::External &&
 			_function.visibility() == FunctionDefinition::Visibility::Public
 		))
+		{
 			overrideError(_function, _super, "Overriding function visibility differs.");
+			success = false;
+		}
 	}
 	if (_function.stateMutability() != _super.stateMutability())
+	{
 		overrideError(
 			_function,
 			_super,
@@ -224,6 +238,10 @@ void ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
+		success = false;
+	}
+
+	return success;
 }
 
 void ContractLevelChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
