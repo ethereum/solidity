@@ -47,6 +47,7 @@
 							null
 						],
 						"name" : "f",
+						"overrides" : null,
 						"scope" : 10,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,
@@ -99,6 +100,7 @@
 											{
 												"constant" : false,
 												"name" : "x",
+												"overrides" : null,
 												"scope" : 8,
 												"stateVariable" : false,
 												"storageLocation" : "memory",

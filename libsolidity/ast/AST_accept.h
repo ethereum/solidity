@@ -187,10 +187,26 @@ void ParameterList::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void OverrideSpecifier::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+		listAccept(m_overrides, _visitor);
+	_visitor.endVisit(*this);
+}
+
+void OverrideSpecifier::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+		listAccept(m_overrides, _visitor);
+	_visitor.endVisit(*this);
+}
+
 void FunctionDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_overrides)
+			m_overrides->accept(_visitor);
 		m_parameters->accept(_visitor);
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
@@ -205,6 +221,8 @@ void FunctionDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_overrides)
+			m_overrides->accept(_visitor);
 		m_parameters->accept(_visitor);
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);

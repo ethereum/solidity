@@ -39,6 +39,7 @@ class PragmaDirective;
 class ImportDirective;
 class Declaration;
 class CallableDeclaration;
+class OverrideSpecifier;
 class ContractDefinition;
 class InheritanceSpecifier;
 class UsingForDirective;

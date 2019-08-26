@@ -31,6 +31,7 @@
 					"id" : 3,
 					"name" : "i",
 					"nodeType" : "VariableDeclaration",
+					"overrides" : null,
 					"scope" : 4,
 					"src" : "13:8:1",
 					"stateVariable" : true,

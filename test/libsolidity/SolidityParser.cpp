@@ -545,7 +545,6 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"mutable",
 		"null",
 		"of",
-		"override",
 		"partial",
 		"promise",
 		"reference",

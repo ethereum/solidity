@@ -1,0 +1,492 @@
+{
+	"attributes" : 
+	{
+		"absolutePath" : "a",
+		"exportedSymbols" : 
+		{
+			"A" : 
+			[
+				5
+			],
+			"B" : 
+			[
+				16
+			],
+			"C" : 
+			[
+				31
+			]
+		}
+	},
+	"children" : 
+	[
+		{
+			"attributes" : 
+			{
+				"baseContracts" : 
+				[
+					null
+				],
+				"contractDependencies" : 
+				[
+					null
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					5
+				],
+				"name" : "A",
+				"scope" : 32
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"documentation" : null,
+						"implemented" : true,
+						"isConstructor" : false,
+						"kind" : "function",
+						"modifiers" : 
+						[
+							null
+						],
+						"name" : "faa",
+						"overrides" : null,
+						"scope" : 5,
+						"stateMutability" : "nonpayable",
+						"superFunction" : null,
+						"visibility" : "public"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 1,
+							"name" : "ParameterList",
+							"src" : "26:2:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 2,
+							"name" : "ParameterList",
+							"src" : "36:0:1"
+						},
+						{
+							"attributes" : 
+							{
+								"statements" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 3,
+							"name" : "Block",
+							"src" : "36:2:1"
+						}
+					],
+					"id" : 4,
+					"name" : "FunctionDefinition",
+					"src" : "14:24:1"
+				}
+			],
+			"id" : 5,
+			"name" : "ContractDefinition",
+			"src" : "0:40:1"
+		},
+		{
+			"attributes" : 
+			{
+				"contractDependencies" : 
+				[
+					5
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : false,
+				"linearizedBaseContracts" : 
+				[
+					16,
+					5
+				],
+				"name" : "B",
+				"scope" : 32
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"arguments" : null
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"contractScope" : null,
+								"name" : "A",
+								"referencedDeclaration" : 5,
+								"type" : "contract A"
+							},
+							"id" : 6,
+							"name" : "UserDefinedTypeName",
+							"src" : "55:1:1"
+						}
+					],
+					"id" : 7,
+					"name" : "InheritanceSpecifier",
+					"src" : "55:1:1"
+				},
+				{
+					"attributes" : 
+					{
+						"body" : null,
+						"documentation" : null,
+						"implemented" : false,
+						"isConstructor" : false,
+						"kind" : "function",
+						"modifiers" : 
+						[
+							null
+						],
+						"name" : "foo",
+						"overrides" : null,
+						"scope" : 16,
+						"stateMutability" : "nonpayable",
+						"superFunction" : null,
+						"visibility" : "public"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 8,
+							"name" : "ParameterList",
+							"src" : "72:2:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 9,
+							"name" : "ParameterList",
+							"src" : "81:0:1"
+						}
+					],
+					"id" : 10,
+					"name" : "FunctionDefinition",
+					"src" : "60:22:1"
+				},
+				{
+					"attributes" : 
+					{
+						"documentation" : null,
+						"implemented" : true,
+						"isConstructor" : false,
+						"kind" : "function",
+						"modifiers" : 
+						[
+							null
+						],
+						"name" : "faa",
+						"overrides" : 
+						[
+							null
+						],
+						"scope" : 16,
+						"stateMutability" : "nonpayable",
+						"superFunction" : 4,
+						"visibility" : "public"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 11,
+							"name" : "ParameterList",
+							"src" : "96:2:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 13,
+							"name" : "ParameterList",
+							"src" : "115:0:1"
+						},
+						{
+							"attributes" : 
+							{
+								"statements" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 14,
+							"name" : "Block",
+							"src" : "115:2:1"
+						}
+					],
+					"id" : 15,
+					"name" : "FunctionDefinition",
+					"src" : "84:33:1"
+				}
+			],
+			"id" : 16,
+			"name" : "ContractDefinition",
+			"src" : "41:78:1"
+		},
+		{
+			"attributes" : 
+			{
+				"contractDependencies" : 
+				[
+					5,
+					16
+				],
+				"contractKind" : "contract",
+				"documentation" : null,
+				"fullyImplemented" : true,
+				"linearizedBaseContracts" : 
+				[
+					31,
+					16,
+					5
+				],
+				"name" : "C",
+				"scope" : 32
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"arguments" : null
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"contractScope" : null,
+								"name" : "B",
+								"referencedDeclaration" : 16,
+								"type" : "contract B"
+							},
+							"id" : 17,
+							"name" : "UserDefinedTypeName",
+							"src" : "134:1:1"
+						}
+					],
+					"id" : 18,
+					"name" : "InheritanceSpecifier",
+					"src" : "134:1:1"
+				},
+				{
+					"attributes" : 
+					{
+						"documentation" : null,
+						"implemented" : true,
+						"isConstructor" : false,
+						"kind" : "function",
+						"modifiers" : 
+						[
+							null
+						],
+						"name" : "foo",
+						"overrides" : 
+						[
+							null
+						],
+						"scope" : 31,
+						"stateMutability" : "nonpayable",
+						"superFunction" : 10,
+						"visibility" : "public"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 19,
+							"name" : "ParameterList",
+							"src" : "151:2:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 21,
+							"name" : "ParameterList",
+							"src" : "170:0:1"
+						},
+						{
+							"attributes" : 
+							{
+								"statements" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 22,
+							"name" : "Block",
+							"src" : "170:3:1"
+						}
+					],
+					"id" : 23,
+					"name" : "FunctionDefinition",
+					"src" : "139:34:1"
+				},
+				{
+					"attributes" : 
+					{
+						"documentation" : null,
+						"implemented" : true,
+						"isConstructor" : false,
+						"kind" : "function",
+						"modifiers" : 
+						[
+							null
+						],
+						"name" : "faa",
+						"scope" : 31,
+						"stateMutability" : "nonpayable",
+						"superFunction" : 15,
+						"visibility" : "public"
+					},
+					"children" : 
+					[
+						{
+							"attributes" : 
+							{
+								"contractScope" : null,
+								"name" : "A",
+								"referencedDeclaration" : 5,
+								"type" : "contract A"
+							},
+							"id" : 25,
+							"name" : "UserDefinedTypeName",
+							"src" : "206:1:1"
+						},
+						{
+							"attributes" : 
+							{
+								"contractScope" : null,
+								"name" : "B",
+								"referencedDeclaration" : 16,
+								"type" : "contract B"
+							},
+							"id" : 26,
+							"name" : "UserDefinedTypeName",
+							"src" : "209:1:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 24,
+							"name" : "ParameterList",
+							"src" : "187:2:1"
+						},
+						{
+							"attributes" : 
+							{
+								"parameters" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 28,
+							"name" : "ParameterList",
+							"src" : "212:0:1"
+						},
+						{
+							"attributes" : 
+							{
+								"statements" : 
+								[
+									null
+								]
+							},
+							"children" : [],
+							"id" : 29,
+							"name" : "Block",
+							"src" : "212:2:1"
+						}
+					],
+					"id" : 30,
+					"name" : "FunctionDefinition",
+					"src" : "175:39:1"
+				}
+			],
+			"id" : 31,
+			"name" : "ContractDefinition",
+			"src" : "120:96:1"
+		}
+	],
+	"id" : 32,
+	"name" : "SourceUnit",
+	"src" : "0:217:1"
+}

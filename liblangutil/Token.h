@@ -171,6 +171,7 @@ namespace langutil
 	K(Memory, "memory", 0)                                             \
 	K(Modifier, "modifier", 0)                                         \
 	K(New, "new", 0)                                                   \
+	K(Override, "override", 0)                                         \
 	K(Payable, "payable", 0)                                           \
 	K(Public, "public", 0)                                             \
 	K(Pragma, "pragma", 0)                                             \
@@ -248,7 +249,6 @@ namespace langutil
 	K(Mutable, "mutable", 0)                                           \
 	K(NullLiteral, "null", 0)                                          \
 	K(Of, "of", 0)                                                     \
-	K(Override, "override", 0)                                         \
 	K(Partial, "partial", 0)                                           \
 	K(Promise, "promise", 0)                                           \
 	K(Reference, "reference", 0)                                       \
