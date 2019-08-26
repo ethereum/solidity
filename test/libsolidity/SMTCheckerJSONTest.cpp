@@ -108,6 +108,9 @@ TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePr
 				BOOST_THROW_EXCEPTION(runtime_error("Error must have a SourceLocation with start and end."));
 			int start = location["start"].asInt();
 			int end = location["end"].asInt();
+			std::string sourceName;
+			if (location.isMember("source") && location["source"].isString())
+				sourceName = location["source"].asString();
 			if (start >= static_cast<int>(versionPragma.size()))
 				start -= versionPragma.size();
 			if (end >= static_cast<int>(versionPragma.size()))
@@ -115,6 +118,7 @@ TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePr
 			m_errorList.emplace_back(SyntaxTestError{
 				error["type"].asString(),
 				error["message"].asString(),
+				sourceName,
 				start,
 				end
 			});
@@ -141,13 +145,20 @@ vector<string> SMTCheckerTest::hashesFromJson(Json::Value const& _jsonObj, strin
 Json::Value SMTCheckerTest::buildJson(string const& _extra)
 {
 	string language = "\"language\": \"Solidity\"";
-	string sourceName = "\"A\"";
-	string sourceContent = "\"" + _extra + m_source + "\"";
-	string sourceObj = "{ \"content\": " + sourceContent + "}";
-	string sources = " \"sources\": { " + sourceName + ": " + sourceObj + "}";
+	string sources = " \"sources\": { ";
+	bool first = true;
+	for (auto [sourceName, sourceContent]: m_sources)
+	{
+		string sourceObj = "{ \"content\": \"" + _extra + sourceContent + "\"}";
+		if (!first)
+			sources += ", ";
+		sources += "\"" + sourceName + "\": " + sourceObj;
+		first = false;
+	}
+	sources += "}";
 	string input = "{" + language + ", " + sources + "}";
 	Json::Value source;
 	if (!jsonParse(input, source))
-		BOOST_THROW_EXCEPTION(runtime_error("Could not build JSON from string."));
+		BOOST_THROW_EXCEPTION(runtime_error("Could not build JSON from string: " + input));
 	return source;
 }

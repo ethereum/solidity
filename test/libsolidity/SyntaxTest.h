@@ -38,12 +38,14 @@ struct SyntaxTestError
 {
 	std::string type;
 	std::string message;
+	std::string sourceName;
 	int locationStart;
 	int locationEnd;
 	bool operator==(SyntaxTestError const& _rhs) const
 	{
 		return type == _rhs.type &&
 			message == _rhs.message &&
+			sourceName == _rhs.sourceName &&
 			locationStart == _rhs.locationStart &&
 			locationEnd == _rhs.locationEnd;
 	}
@@ -85,7 +87,7 @@ protected:
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
-	std::string m_source;
+	std::map<std::string, std::string> m_sources;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
 	bool m_optimiseYul = false;

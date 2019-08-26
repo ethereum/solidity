@@ -5,3 +5,5 @@ contract test {
         a; b;
     }
 }
+// ----
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.

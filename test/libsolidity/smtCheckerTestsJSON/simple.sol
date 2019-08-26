@@ -1,3 +1,4 @@
+==== Source: A ====
 pragma experimental SMTChecker;
 
 contract C

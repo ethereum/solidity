@@ -6,6 +6,7 @@ contract A {
     }
 }
 // ----
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.
 // Warning: (52-60): Unused function parameter. Remove or comment out the variable name to silence this warning.
 // Warning: (62-74): Unused function parameter. Remove or comment out the variable name to silence this warning.
 // Warning: (93-104): Unused local variable.
