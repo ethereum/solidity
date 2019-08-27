@@ -40,8 +40,6 @@ class ProtoConverter
 public:
 	ProtoConverter()
 	{
-		m_numLiveVars = 0;
-		m_numVarsPerScope.push(m_numLiveVars);
 		m_numFunctionSets = 0;
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
@@ -55,8 +53,18 @@ public:
 
 private:
 	void visit(BinaryOp const&);
-	void visit(Block const&);
-	void visit(SpecialBlock const&);
+	/// Visits a basic block optionally adding @a _funcParams to scope.
+	/// @param _block Reference to a basic block of yul statements.
+	/// @param _funcParams List of function parameter names, defaults to
+	/// an empty vector.
+	void visit(Block const& _block, std::vector<std::string> _funcParams = {});
+
+	/// Visits a basic block that contains a variable declaration at the
+	/// very beginning, optionally adding @a _funcParams to scope.
+	/// @param _block Reference to a basic block of yul statements.
+	/// @param _funcParams List of function parameter names, defaults to
+	/// an empty vector.
+	void visit(SpecialBlock const& _block, std::vector<std::string> _funcParams = {});
 	std::string visit(Literal const&);
 	void visit(VarRef const&);
 	void visit(Expression const&);
@@ -93,7 +101,20 @@ private:
 	void visit(Program const&);
 	void registerFunction(FunctionDefinition const&);
 
+	/// Creates a new scope, and optionally adds @a _funcParams to it
+	void openScope(std::vector<std::string> const& _funcParams);
+	/// Closes current scope
+	void closeScope();
+	/// Adds @a _vars to current scope
+	void addToScope(std::vector<std::string> const& _vars);
+
 	std::string createHex(std::string const& _hexBytes);
+
+	/// Returns a new variable name.
+	std::string newVarName()
+	{
+		return "x_" + std::to_string(counter());
+	}
 
 	/// Accepts an arbitrary string, removes all characters that are neither
 	/// alphabets nor digits from it and returns the said string.
@@ -112,10 +133,13 @@ private:
 	void createFunctionDefAndCall(T const&, unsigned, unsigned, NumFunctionReturns);
 	std::string functionTypeToString(NumFunctionReturns _type);
 
+	/// Creates variable declarations "x_<_startIdx>",...,"x_<_endIdx - 1>"
+	std::vector<std::string> createVars(unsigned _startIdx, unsigned _endIdx);
+
 	template <class T>
 	void registerFunction(T const& _x, NumFunctionReturns _type, unsigned _numOutputParams = 0)
 	{
-		unsigned numInputParams = _x.num_input_params() % modInputParams;
+		unsigned numInputParams = _x.num_input_params() % s_modInputParams;
 		switch (_type)
 		{
 			case NumFunctionReturns::None:
@@ -145,10 +169,10 @@ private:
 	}
 
 	std::ostringstream m_output;
-	// Number of live variables in inner scope of a function
-	std::stack<unsigned> m_numVarsPerScope;
-	// Number of live variables in function scope
-	unsigned m_numLiveVars;
+	/// Scope
+	std::stack<std::set<std::string>> m_scopes;
+	/// Variables
+	std::vector<std::string> m_variables;
 	// Set that is used for deduplicating switch case literals
 	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
 	// Total number of function sets. A function set contains one function of each type defined by
@@ -159,8 +183,8 @@ private:
 	std::vector<unsigned> m_functionVecSingleReturnValue;
 	std::vector<std::pair<unsigned, unsigned>> m_functionVecMultiReturnValue;
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
-	static unsigned constexpr modInputParams = 5;
-	static unsigned constexpr modOutputParams = 5;
+	static unsigned constexpr s_modInputParams = 5;
+	static unsigned constexpr s_modOutputParams = 5;
 	// predicate to keep track of for body scope
 	bool m_inForBodyScope;
 	// Index used for naming loop variable of bounded for loops
