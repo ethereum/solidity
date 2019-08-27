@@ -35,6 +35,10 @@ using namespace dev::solidity;
 
 namespace {
 
+string getSignature(FunctionDefinition const& _def)
+{
+	return _def.name() + TypeProvider::function(_def)->toString(true);
+}
 
 template <class T>
 bool hasEqualNameAndArguments(T const& _a, T const& _b)
@@ -58,6 +62,58 @@ bool isBaseOf(ContractLevelChecker::FunctionInfo const& _derived, ContractLevelC
 	);
 
 	return result != derivedBaseContracts.cend();
+}
+
+// Returns amount of functions that _begin could override,
+// counting between ]_begin.._end[
+size_t countContracts(
+	list<ContractLevelChecker::FunctionInfo>::const_iterator _begin,
+	list<ContractLevelChecker::FunctionInfo>::const_iterator const& _end
+)
+{
+	size_t numContracts = 0;
+	vector<ContractDefinition const*> unreachableBases;
+
+	auto const derived = _begin;
+
+	for (;_begin != _end; _begin++)
+		if (
+			// Exclude functions defined in the same contract
+			_begin->contract != derived->contract &&
+			// Only consider functions that match in name and arguments
+			hasEqualNameAndArguments(*_begin->funcDef, *derived->funcDef) &&
+			// Only consider functions that are a base of 'derived'
+			isBaseOf(*derived, *_begin) &&
+			// Exclude functions that are bases of bases of 'derived'
+			// as only the first overriding contract must be specified,
+			// not the contracts further up in the inheritance chain
+			count(
+				unreachableBases.cbegin(),
+				unreachableBases.cend(),
+				_begin->contract
+			) == 0
+		)
+		{
+			unreachableBases += _begin->contract->annotation().linearizedBaseContracts;
+			numContracts++;
+		}
+
+	return numContracts;
+};
+
+map<string, ContractLevelChecker::FunctionInfo> getInheritableAndInheritedFunctions(ContractDefinition const* _contract)
+{
+	map<string, ContractLevelChecker::FunctionInfo> _functions;
+
+	for (FunctionDefinition const* f: _contract->definedFunctions())
+		if (f->isVisibleInDerivedContracts() && !f->name().empty())
+			_functions[getSignature(*f)] = {f, _contract};
+
+	for (ContractDefinition const* c: _contract->annotation().linearizedBaseContracts)
+		if (c != _contract)
+			_functions.merge(getInheritableAndInheritedFunctions(c));
+
+	return _functions;
 }
 
 }
@@ -175,6 +231,8 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 		{
 			if (function->isConstructor())
 				continue; // constructors can neither be overridden nor override anything
+
+
 			string const& name = function->name();
 
 			// Don't check the most derived contract as that leads to wrong
@@ -183,7 +241,10 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			if (!isMostDerivedContract)
 			{
 				if (modifiers.count(name))
-					m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
+					m_errorReporter.typeError(
+						modifiers[name]->location(),
+						"Override changes function to modifier."
+					);
 
 				auto& overriding = functions[name];
 				for (auto it = overriding.begin(); it != overriding.end();)
@@ -215,6 +276,9 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 
 		isMostDerivedContract = false;
 	}
+
+	checkAmbiguousOverrides(_contract, functions);
+	checkOverrideList(functions);
 }
 
 bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super, bool _isBaseOf)
@@ -581,4 +645,260 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
 		);
 
+}
+
+void ContractLevelChecker::checkAmbiguousOverrides(ContractDefinition const& _contract, map<string, list<FunctionInfo>> const& _functions) const
+{
+	map<string, FunctionInfo> baseFuncs;
+
+	for (ASTPointer<InheritanceSpecifier> const& inheritance: _contract.baseContracts())
+	{
+		Declaration const* decl = inheritance->name().annotation().referencedDeclaration;
+		ContractDefinition const* contr = dynamic_cast<decltype(contr)>(decl);
+		solAssert(contr, "");
+
+		auto furtherBaseFuncs = getInheritableAndInheritedFunctions(contr);
+
+		for (
+			decltype(baseFuncs)::const_iterator a = baseFuncs.cbegin(),
+				b = furtherBaseFuncs.cbegin();
+			a != baseFuncs.cend() && b != furtherBaseFuncs.cend();
+		)
+		{
+			if (a->first < b->first)
+				a++;
+			else if (b->first < a->first)
+				b++;
+			else
+			{
+				bool match = false;
+
+				// Does our contract define this function?
+				for (auto const& f: _contract.definedFunctions())
+					if (f->name().empty())
+						continue;
+					else if (getSignature(*f) == a->first)
+					{
+						match = true;
+						break;
+					}
+
+				// Function not defined and origin from multiple base classes
+				if (!match && _functions.at(b->second.funcDef->name()).size() > 1)
+					m_errorReporter.typeError(
+						_contract.location(),
+						"Ambiguous base function " +
+						b->second.funcDef->name() +
+						"() must be overridden."
+					);
+
+				a++;
+				b++;
+			}
+		}
+
+		baseFuncs.merge(furtherBaseFuncs);
+	}
+}
+
+void ContractLevelChecker::checkOverrideList(map<string, list<FunctionInfo>> const& _functions) const
+{
+	for (auto const& pair: _functions)
+	{
+		auto& funcList = pair.second;
+
+		for (
+			auto mostDerived = funcList.cbegin();
+			mostDerived != funcList.cend();
+			mostDerived++
+		)
+		{
+			if (
+				countContracts(mostDerived, funcList.cend()) == 0 &&
+				mostDerived->funcDef->overrides()
+			)
+			{
+				m_errorReporter.typeError(
+					mostDerived->funcDef->overrides()->location(),
+					"Function with override keyword does not override anything."
+				);
+				break;
+			}
+
+			// Lack of override keyword was previously checked
+			if (!mostDerived->funcDef->overrides())
+				continue;
+
+			vector<ContractDefinition const*> const& specifiedContracts =
+				resolveOverrideList(*mostDerived->funcDef->overrides());
+
+			checkForMissingOverrides(mostDerived, funcList.cend(), specifiedContracts);
+			checkForInvalidOverrides(mostDerived, funcList.cend(), specifiedContracts);
+		}
+	}
+}
+
+void ContractLevelChecker::checkForMissingOverrides(
+	list<FunctionInfo>::const_iterator _begin,
+	list<FunctionInfo>::const_iterator const& _end,
+	vector<ContractDefinition const*> const& _specifiedContracts
+) const
+{
+	auto const mostDerived = _begin;
+	size_t countedContracts = countContracts(mostDerived, _end);
+
+	vector<ContractDefinition const*> unreachableBases;
+
+	set<ASTString> missingOverrides;
+
+	for (_begin++; _begin != _end; _begin++)
+	{
+		// If the function is in the same contract, _begin's not an
+		// inheritance issue
+		if (_begin->contract == mostDerived->contract)
+			continue;
+
+
+		if (count(
+			unreachableBases.cbegin(),
+			unreachableBases.cend(),
+			_begin->contract)
+		)
+			continue;
+
+		// Difference in name/arguments means _begin's not an inheritance
+		// issue
+		if (!hasEqualNameAndArguments(*_begin->funcDef, *mostDerived->funcDef))
+			continue;
+
+		auto const result = find(
+			_specifiedContracts.begin(),
+			_specifiedContracts.end(),
+			_begin->contract
+		);
+
+		if (result != _specifiedContracts.end())
+		{
+			// Exclude all further base classes once a class has defined and/or
+			// overridden the function
+			unreachableBases += _begin->contract->annotation().linearizedBaseContracts;
+			continue;
+		}
+
+		// Only one function overrides another
+		if (countedContracts == 1)
+		{
+			// No contracts specified
+			if (_specifiedContracts.size() == 0)
+				continue;
+			else
+				// Contracts specified, but the wrong one
+				m_errorReporter.typeError(
+					mostDerived->funcDef->overrides()->location(),
+					"Expect contract " +
+					_begin->contract->name() +
+					" instead of " +
+					_specifiedContracts.front()->name() +
+					" in override contract list."
+				);
+		}
+		else
+			missingOverrides.insert(_begin->contract->name());
+	}
+
+	if (missingOverrides.empty())
+		return;
+
+	string contractSingularPlural = "contract ";
+	if (missingOverrides.size() > 1)
+		contractSingularPlural = "contracts ";
+
+	m_errorReporter.typeError(
+		mostDerived->funcDef->overrides()->location(),
+		"Function needs to specify overridden " +
+		contractSingularPlural +
+		joinHumanReadable(missingOverrides, ", ", " and ") +
+		"."
+	);
+}
+
+void ContractLevelChecker::checkForInvalidOverrides(
+	list<FunctionInfo>::const_iterator _begin,
+	list<FunctionInfo>::const_iterator const& _end,
+	vector<ContractDefinition const*> const& _specifiedContracts
+) const
+{
+	auto const mostDerived = _begin;
+	set<ASTString> invalidOverrides;
+
+	for (ContractDefinition const* contract: _specifiedContracts)
+	{
+		auto const result = find_if(
+			mostDerived,
+			_end,
+			[&](auto const& _funcInfo) { return _funcInfo.contract == contract; }
+		);
+
+		if (result == _end)
+			invalidOverrides.insert(contract->name());
+	}
+
+	if (invalidOverrides.empty())
+		return;
+
+	string contractSingularPlural = "contract ";
+	if (invalidOverrides.size() > 1)
+		contractSingularPlural = "contracts ";
+
+	m_errorReporter.typeError(
+		mostDerived->funcDef->overrides()->location(),
+		"Invalid " +
+		contractSingularPlural +
+		"specified in override list: " +
+		joinHumanReadable(invalidOverrides, ", ", " and ") +
+		"."
+	);
+}
+
+vector<ContractDefinition const*> ContractLevelChecker::resolveOverrideList(OverrideSpecifier const& _overrides) const
+{
+	std::vector<ASTPointer<UserDefinedTypeName>> const& overrides = _overrides.overrides();
+
+	vector<ContractDefinition const*> resolved{overrides.size(), nullptr};
+
+	transform(
+		overrides.begin(),
+		overrides.end(),
+		resolved.begin(),
+		[&] (ASTPointer<UserDefinedTypeName> const& _name) -> ContractDefinition const*
+		{
+			Declaration const* decl  = _name->annotation().referencedDeclaration;
+			solAssert(decl, "Expected declaration to be resolved.");
+
+			if (ContractDefinition const* _contract = dynamic_cast<decltype(_contract)>(decl))
+				return _contract;
+
+			TypeType const* actualTypeType = dynamic_cast<TypeType const*>(decl->type());
+
+			// If it's not an enum, contract or struct, it will be caught
+			// earlier
+			solAssert(
+				actualTypeType,
+				"Expected contract, enum or struct (which should return TypeType!)"
+			);
+
+			m_errorReporter.typeError(
+				_name->location(),
+				"Expected contract but got " +
+				actualTypeType->actualType()->toString(true) +
+				"."
+			);
+
+			return nullptr;
+		}
+	);
+
+	remove(resolved.begin(), resolved.end(), nullptr);
+
+	return resolved;
 }

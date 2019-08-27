@@ -41,7 +41,7 @@ Details are given in the following example.
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
     contract Mortal is Owned {
-        function kill() public override {
+        function kill() public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
@@ -96,6 +96,7 @@ Details are given in the following example.
             if (msg.sender == owner) info = newInfo;
         }
 
+        function kill() public override (Mortal, Named) { Named.kill(); }
         function get() public view returns(uint r) { return info; }
 
         uint info;
@@ -113,7 +114,7 @@ seen in the following example::
     }
 
     contract mortal is owned {
-        function kill() public override {
+        function kill() public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
@@ -127,12 +128,12 @@ seen in the following example::
     }
 
     contract Final is Base1, Base2 {
+        function kill() public override(Base1, Base2) { Base2.kill(); }
     }
 
-A call to ``Final.kill()`` will call ``Base2.kill`` as the most
-derived override, but this function will bypass
-``Base1.kill``, basically because it does not even know about
-``Base1``.  The way around this is to use ``super``::
+A call to ``Final.kill()`` will call ``Base2.kill`` because we specify it
+explicitly in the final override, but this function will bypass
+``Base1.kill``. The way around this is to use ``super``::
 
     pragma solidity >=0.4.22 <0.7.0;
 
@@ -142,7 +143,7 @@ derived override, but this function will bypass
     }
 
     contract mortal is owned {
-        function kill() override public {
+        function kill() public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
@@ -157,6 +158,7 @@ derived override, but this function will bypass
     }
 
     contract Final is Base1, Base2 {
+        function kill() public override(Base1, Base2) { Base2.kill(); }
     }
 
 If ``Base2`` calls a function of ``super``, it does not simply

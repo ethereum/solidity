@@ -11,6 +11,6 @@ contract C2 is D {
     function g() public override {}
 }
 // ----
-// TypeError: (118-149): Overriding function changes state mutability from "view" to "nonpayable".
-// TypeError: (154-190): Overriding function changes state mutability from "pure" to "view".
-// TypeError: (216-247): Overriding function changes state mutability from "pure" to "nonpayable".
+// TypeError: (118-149): Overriding function mutability differs: "view" vs "nonpayable".
+// TypeError: (154-190): Overriding function mutability differs: "pure" vs "view".
+// TypeError: (216-247): Overriding function mutability differs: "pure" vs "nonpayable".

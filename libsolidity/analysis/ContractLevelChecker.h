@@ -23,6 +23,7 @@
 
 #include <libsolidity/ast/ASTForward.h>
 #include <map>
+#include <list>
 
 namespace langutil
 {
@@ -58,6 +59,7 @@ public:
 	bool check(ContractDefinition const& _contract);
 
 private:
+
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
 	void checkDuplicateFunctions(ContractDefinition const& _contract);
@@ -88,6 +90,21 @@ private:
 	void checkLibraryRequirements(ContractDefinition const& _contract);
 	/// Checks base contracts for ABI compatibility
 	void checkBaseABICompatibility(ContractDefinition const& _contract);
+
+	void checkAmbiguousOverrides(ContractDefinition const& _contract, std::map<std::string, std::list<FunctionInfo>> const& _functions) const;
+	void checkOverrideList(std::map<std::string, std::list<FunctionInfo>> const& _functions) const;
+	void checkForMissingOverrides(
+		std::list<FunctionInfo>::const_iterator _begin,
+		std::list<FunctionInfo>::const_iterator const& _end,
+		std::vector<ContractDefinition const*> const& _specifiedContracts
+	) const;
+	void checkForInvalidOverrides(
+		std::list<FunctionInfo>::const_iterator _begin,
+		std::list<FunctionInfo>::const_iterator const& _end,
+		std::vector<ContractDefinition const*> const& _specifiedContracts
+	) const;
+
+	std::vector<ContractDefinition const*> resolveOverrideList(OverrideSpecifier const& _overrides) const;
 
 	langutil::ErrorReporter& m_errorReporter;
 };
