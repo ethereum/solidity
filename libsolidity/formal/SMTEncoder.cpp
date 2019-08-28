@@ -748,6 +748,12 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		return;
 	}
 
+	if (!_indexAccess.indexExpression())
+	{
+		solAssert(_indexAccess.annotation().type->category() == Type::Category::TypeType, "");
+		return;
+	}
+
 	solAssert(array, "");
 	defineExpr(_indexAccess, smt::Expression::select(
 		array->currentValue(),
