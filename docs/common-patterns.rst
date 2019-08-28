@@ -41,15 +41,11 @@ become the new richest.
             mostSent = msg.value;
         }
 
-        function becomeRichest() public payable returns (bool) {
-            if (msg.value > mostSent) {
-                pendingWithdrawals[richest] += msg.value;
-                richest = msg.sender;
-                mostSent = msg.value;
-                return true;
-            } else {
-                return false;
-            }
+        function becomeRichest() public payable {
+            require(msg.value > mostSent, "Not enough money sent.");
+            pendingWithdrawals[richest] += msg.value;
+            richest = msg.sender;
+            mostSent = msg.value;
         }
 
         function withdraw() public {
@@ -76,16 +72,12 @@ This is as opposed to the more intuitive sending pattern:
             mostSent = msg.value;
         }
 
-        function becomeRichest() public payable returns (bool) {
-            if (msg.value > mostSent) {
-                // This line can cause problems (explained below).
-                richest.transfer(msg.value);
-                richest = msg.sender;
-                mostSent = msg.value;
-                return true;
-            } else {
-                return false;
-            }
+        function becomeRichest() public payable {
+            require(msg.value > mostSent, "Not enough money sent.");
+            // This line can cause problems (explained below).
+            richest.transfer(msg.value);
+            richest = msg.sender;
+            mostSent = msg.value;
         }
     }
 
