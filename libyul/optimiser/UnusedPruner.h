@@ -29,6 +29,7 @@
 namespace yul
 {
 struct Dialect;
+struct SideEffects;
 
 /**
  * Optimisation stage that removes unused variables and functions and also
@@ -50,6 +51,7 @@ public:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 	UnusedPruner(
@@ -70,10 +72,15 @@ public:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 
-	static void runUntilStabilised(
+	/// Run the pruner until the code does not change anymore.
+	/// The provided block has to be a full AST.
+	/// The pruner itself determines if msize is used and which user-defined functions
+	/// are side-effect free.
+	static void runUntilStabilisedOnFullAST(
 		Dialect const& _dialect,
 		Block& _ast,
 		std::set<YulString> const& _externallyUsedFunctions = {}
@@ -97,6 +104,7 @@ private:
 
 	Dialect const& m_dialect;
 	bool m_allowMSizeOptimization = false;
+	std::map<YulString, SideEffects> const* m_functionSideEffects = nullptr;
 	bool m_shouldRunAgain = false;
 	std::map<YulString, size_t> m_references;
 };

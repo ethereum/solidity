@@ -41,7 +41,11 @@ public:
 		Dialect const& _dialect,
 		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
 	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
-	SideEffectsCollector(Dialect const& _dialect, Expression const& _expression);
+	SideEffectsCollector(
+		Dialect const& _dialect,
+		Expression const& _expression,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	);
 	SideEffectsCollector(Dialect const& _dialect, Statement const& _statement);
 	SideEffectsCollector(Dialect const& _dialect, Block const& _ast);
 

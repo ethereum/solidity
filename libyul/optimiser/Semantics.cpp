@@ -35,8 +35,12 @@ using namespace dev;
 using namespace yul;
 
 
-SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Expression const& _expression):
-	SideEffectsCollector(_dialect)
+SideEffectsCollector::SideEffectsCollector(
+		Dialect const& _dialect,
+		Expression const& _expression,
+		map<YulString, SideEffects> const* _functionSideEffects
+):
+	SideEffectsCollector(_dialect, _functionSideEffects)
 {
 	visit(_expression);
 }

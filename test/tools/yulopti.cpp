@@ -32,6 +32,7 @@
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -54,6 +55,7 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 
@@ -187,7 +189,7 @@ public:
 				(ControlFlowSimplifier{m_dialect})(*m_ast);
 				break;
 			case 'u':
-				UnusedPruner::runUntilStabilised(m_dialect, *m_ast);
+				UnusedPruner::runUntilStabilisedOnFullAST(m_dialect, *m_ast);
 				break;
 			case 'D':
 				DeadCodeEliminator{m_dialect}(*m_ast);
