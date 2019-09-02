@@ -106,12 +106,12 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		std::map<YulString, dev::u256> _variables = {},
-		std::map<YulString, FunctionDefinition const*> _functions = {}
+		std::vector<std::map<YulString, FunctionDefinition const*>> _scopes = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
 		m_variables(std::move(_variables)),
-		m_functions(std::move(_functions))
+		m_scopes(std::move(_scopes))
 	{}
 
 	void operator()(ExpressionStatement const& _statement) override;
@@ -136,17 +136,17 @@ private:
 	std::vector<dev::u256> evaluateMulti(Expression const& _expression);
 
 	void openScope() { m_scopes.push_back({}); }
-	/// Unregisters variables.
+	/// Unregisters variables and functions.
 	void closeScope();
 
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.
 	std::map<YulString, dev::u256> m_variables;
-	/// Meanings of functions.
-	std::map<YulString, FunctionDefinition const*> m_functions;
-	/// Scopes of variables and functions, used to clear them at end of blocks.
-	std::vector<std::set<YulString>> m_scopes;
+	/// Scopes of variables and functions. Used for lookup, clearing at end of blocks
+	/// and passing over the visible functions across function calls.
+	/// The pointer is nullptr if and only if the key is a variable.
+	std::vector<std::map<YulString, FunctionDefinition const*>> m_scopes;
 };
 
 /**
@@ -159,13 +159,11 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		std::map<YulString, dev::u256> const& _variables,
-		std::map<YulString, FunctionDefinition const*> const& _functions,
-		std::vector<std::set<YulString>> const& _scopes
+		std::vector<std::map<YulString, FunctionDefinition const*>> const& _scopes
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
-		m_functions(_functions),
 		m_scopes(_scopes)
 	{}
 
@@ -186,16 +184,19 @@ private:
 	/// stores it in m_value.
 	void evaluateArgs(std::vector<Expression> const& _expr);
 
-	/// Extracts functions from the earlier scopes that are visible for the given function
-	std::map<YulString, FunctionDefinition const*> visibleFunctionsFor(YulString const& _name);
+	/// Finds the function called @a _functionName in the current scope stack and returns
+	/// the function's scope stack (with variables removed) and definition.
+	std::pair<
+		std::vector<std::map<YulString, FunctionDefinition const*>>,
+		FunctionDefinition const*
+	> findFunctionAndScope(YulString _functionName) const;
 
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
 	std::map<YulString, dev::u256> const& m_variables;
-	/// Meanings of functions.
-	std::map<YulString, FunctionDefinition const*> const& m_functions;
-	std::vector<std::set<YulString>> const& m_scopes;
+	/// Stack of scopes in the current context.
+	std::vector<std::map<YulString, FunctionDefinition const*>> const& m_scopes;
 	/// Current value of the expression
 	std::vector<dev::u256> m_values;
 };

@@ -90,7 +90,8 @@ void Interpreter::operator()(VariableDeclaration const& _declaration)
 		YulString varName = _declaration.variables.at(i).name;
 		solAssert(!m_variables.count(varName), "");
 		m_variables[varName] = values.at(i);
-		m_scopes.back().insert(varName);
+		solAssert(!m_scopes.back().count(varName), "");
+		m_scopes.back().emplace(varName, nullptr);
 	}
 }
 
@@ -164,8 +165,8 @@ void Interpreter::operator()(Block const& _block)
 		if (statement.type() == typeid(FunctionDefinition))
 		{
 			FunctionDefinition const& funDef = boost::get<FunctionDefinition>(statement);
-			m_functions[funDef.name] = &funDef;
-			m_scopes.back().insert(funDef.name);
+			solAssert(!m_scopes.back().count(funDef.name), "");
+			m_scopes.back().emplace(funDef.name, &funDef);
 		}
 
 	for (auto const& statement: _block.statements)
@@ -180,25 +181,23 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions, m_scopes);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_scopes);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_functions, m_scopes);
+	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_scopes);
 	ev.visit(_expression);
 	return ev.values();
 }
 
 void Interpreter::closeScope()
 {
-	for (auto const& var: m_scopes.back())
-	{
-		size_t erased = m_variables.erase(var) + m_functions.erase(var);
-		solAssert(erased == 1, "");
-	}
+	for (auto const& [var, funDeclaration]: m_scopes.back())
+		if (!funDeclaration)
+			solAssert(m_variables.erase(var) == 1, "");
 	m_scopes.pop_back();
 }
 
@@ -237,22 +236,21 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 			return;
 		}
 
-	solAssert(m_functions.count(_funCall.functionName.name), "");
-	FunctionDefinition const& fun = *m_functions.at(_funCall.functionName.name);
-	solAssert(m_values.size() == fun.parameters.size(), "");
-	map<YulString, u256> variables;
-	for (size_t i = 0; i < fun.parameters.size(); ++i)
-		variables[fun.parameters.at(i).name] = m_values.at(i);
-	for (size_t i = 0; i < fun.returnVariables.size(); ++i)
-		variables[fun.returnVariables.at(i).name] = 0;
+	auto [functionScopes, fun] = findFunctionAndScope(_funCall.functionName.name);
 
-	// TODO function name lookup could be a little more efficient,
-	// we have to copy the list here.
-	Interpreter interpreter(m_state, m_dialect, variables, visibleFunctionsFor(fun.name));
-	interpreter(fun.body);
+	solAssert(fun, "Function not found.");
+	solAssert(m_values.size() == fun->parameters.size(), "");
+	map<YulString, u256> variables;
+	for (size_t i = 0; i < fun->parameters.size(); ++i)
+		variables[fun->parameters.at(i).name] = m_values.at(i);
+	for (size_t i = 0; i < fun->returnVariables.size(); ++i)
+		variables[fun->returnVariables.at(i).name] = 0;
+
+	Interpreter interpreter(m_state, m_dialect, variables, functionScopes);
+	interpreter(fun->body);
 
 	m_values.clear();
-	for (auto const& retVar: fun.returnVariables)
+	for (auto const& retVar: fun->returnVariables)
 		m_values.emplace_back(interpreter.valueOfVariable(retVar.name));
 }
 
@@ -281,19 +279,26 @@ void ExpressionEvaluator::evaluateArgs(vector<Expression> const& _expr)
 	std::reverse(m_values.begin(), m_values.end());
 }
 
-std::map<YulString, FunctionDefinition const*> ExpressionEvaluator::visibleFunctionsFor(YulString const& _name)
+pair<
+	vector<map<YulString, FunctionDefinition const*>>,
+	FunctionDefinition const*
+> ExpressionEvaluator::findFunctionAndScope(YulString _functionName) const
 {
-	std::map<YulString, FunctionDefinition const*> functions;
-
+	FunctionDefinition const* fun = nullptr;
+	std::vector<std::map<YulString, FunctionDefinition const*>> newScopes;
 	for (auto const& scope: m_scopes)
 	{
-		for (auto const& symbol: scope)
-			if (m_functions.count(symbol) > 0)
-				functions[symbol] = m_functions.at(symbol);
-
-		if (scope.count(_name))
+		// Copy over all functions.
+		newScopes.push_back({});
+		for (auto const& [name, funDef]: scope)
+			if (funDef)
+				newScopes.back().emplace(name, funDef);
+		// Stop at the called function.
+		if (scope.count(_functionName))
+		{
+			fun = scope.at(_functionName);
 			break;
+		}
 	}
-
-	return functions;
+	return {move(newScopes), fun};
 }
