@@ -259,6 +259,14 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		[=]() { return A.d() >= 256; }
 	});
 
+	// Replace BYTE(A, X), A >= 32 with 0
+	rules.push_back({
+		{Instruction::BYTE, {A, X}},
+		[=]() -> Pattern { return u256(0); },
+		true,
+		[=]() { return A.d() >= 32; }
+	});
+
 	for (auto const& op: std::vector<Instruction>{
 		Instruction::ADDRESS,
 		Instruction::CALLER,
