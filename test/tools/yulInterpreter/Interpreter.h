@@ -64,8 +64,7 @@ struct InterpreterState
 {
 	dev::bytes calldata;
 	dev::bytes returndata;
-	/// TODO turn this into "vector with holes" for the randomized testing
-	dev::bytes memory;
+	std::map<dev::u256, uint8_t> memory;
 	/// This is different than memory.size() because we ignore gas.
 	dev::u256 msize;
 	std::map<dev::h256, dev::h256> storage;
@@ -86,9 +85,6 @@ struct InterpreterState
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
 	size_t maxTraceSize = 0;
-	/// Memory size limit. Anything beyond this will still work, but it has
-	/// deterministic yet not necessarily consistent behaviour.
-	size_t maxMemSize = 0x200;
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
 	LoopState loopState = LoopState::Default;
