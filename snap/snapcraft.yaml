@@ -51,7 +51,7 @@ parts:
     source: https://github.com/CVC4/CVC4.git
     source-tag: "1.7"
     plugin: nil
-    build-packages: [python, cmake, openjdk-11-jre, libgmp-dev]
+    build-packages: [python, cmake, openjdk-11-jre, libgmp-dev, wget]
     override-build: |
       ./contrib/get-antlr-3.4
       ./configure.sh --prefix=$SNAPCRAFT_STAGE/usr

@@ -30,12 +30,10 @@ struct yulFuzzerUtil
 		std::shared_ptr<yul::Block> _ast,
 		Dialect const& _dialect,
 		size_t _maxSteps = maxSteps,
-		size_t _maxTraceSize = maxTraceSize,
-		size_t _maxMemory = maxMemory
+		size_t _maxTraceSize = maxTraceSize
 	);
 	static size_t constexpr maxSteps = 100;
 	static size_t constexpr maxTraceSize = 75;
-	static size_t constexpr maxMemory = 0x200;
 };
 }
 }

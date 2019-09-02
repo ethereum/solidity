@@ -208,7 +208,11 @@ string BytesUtils::formatRawBytes(
 	dev::solidity::test::ParameterList const& _parameters,
 	string _linePrefix)
 {
-	soltestAssert(_bytes.size() == ContractABIUtils::encodingSize(_parameters), "");
+	soltestAssert(
+		_bytes.size() == ContractABIUtils::encodingSize(_parameters),
+		"Got " + to_string(_bytes.size()) + " bytes, but expected " +
+		to_string(ContractABIUtils::encodingSize(_parameters)) + " bytes."
+	);
 
 	stringstream os;
 	auto it = _bytes.begin();
@@ -275,7 +279,11 @@ string BytesUtils::formatBytesRange(
 	bool _highlight
 )
 {
-	soltestAssert(_bytes.size() == ContractABIUtils::encodingSize(_parameters), "");
+	soltestAssert(
+		_bytes.size() == ContractABIUtils::encodingSize(_parameters),
+		"Got " + to_string(_bytes.size()) + " bytes, but expected " +
+		to_string(ContractABIUtils::encodingSize(_parameters)) + " bytes."
+	);
 
 	stringstream os;
 	auto it = _bytes.begin();

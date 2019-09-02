@@ -121,7 +121,6 @@ string YulInterpreterTest::interpret()
 	InterpreterState state;
 	state.maxTraceSize = 10000;
 	state.maxSteps = 10000;
-	state.maxMemSize = 0x20000000;
 	Interpreter interpreter(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
 	try
 	{
