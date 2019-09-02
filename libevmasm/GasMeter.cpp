@@ -188,6 +188,12 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::BALANCE:
 			gas = GasCosts::balanceGas(m_evmVersion);
 			break;
+		case Instruction::CHAINID:
+			gas = runGas(Instruction::CHAINID);
+			break;
+		case Instruction::SELFBALANCE:
+			gas = runGas(Instruction::SELFBALANCE);
+			break;
 		default:
 			gas = runGas(_item.instruction());
 			break;

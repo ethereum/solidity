@@ -70,6 +70,7 @@ struct InterpreterState
 	std::map<dev::h256, dev::h256> storage;
 	dev::u160 address = 0x11111111;
 	dev::u256 balance = 0x22222222;
+	dev::u256 selfbalance = 0x22223333;
 	dev::u160 origin = 0x33333333;
 	dev::u160 caller = 0x44444444;
 	dev::u256 callvalue = 0x55555555;
@@ -81,6 +82,7 @@ struct InterpreterState
 	dev::u256 blockNumber = 1024;
 	dev::u256 difficulty = 0x9999999;
 	dev::u256 gaslimit = 4000000;
+	dev::u256 chainid = 0x01;
 	/// Log of changes / effects. Sholud be structured data in the future.
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
