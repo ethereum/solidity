@@ -1,0 +1,41 @@
+{
+	"attributes" : 
+	{
+		"absolutePath" : "a",
+		"exportedSymbols" : 
+		{
+			"E" : 
+			[
+				2
+			]
+		}
+	},
+	"children" : 
+	[
+		{
+			"attributes" : 
+			{
+				"canonicalName" : "E",
+				"name" : "E"
+			},
+			"children" : 
+			[
+				{
+					"attributes" : 
+					{
+						"name" : "A"
+					},
+					"id" : 1,
+					"name" : "EnumValue",
+					"src" : "9:1:1"
+				}
+			],
+			"id" : 2,
+			"name" : "EnumDefinition",
+			"src" : "0:12:1"
+		}
+	],
+	"id" : 3,
+	"name" : "SourceUnit",
+	"src" : "0:13:1"
+}

@@ -1,0 +1,58 @@
+{
+	"absolutePath" : "a",
+	"exportedSymbols" : 
+	{
+		"S" : 
+		[
+			3
+		]
+	},
+	"id" : 4,
+	"nodeType" : "SourceUnit",
+	"nodes" : 
+	[
+		{
+			"canonicalName" : "S",
+			"id" : 3,
+			"members" : 
+			[
+				{
+					"constant" : false,
+					"id" : 2,
+					"name" : "a",
+					"nodeType" : "VariableDeclaration",
+					"overrides" : null,
+					"scope" : 3,
+					"src" : "11:9:1",
+					"stateVariable" : false,
+					"storageLocation" : "default",
+					"typeDescriptions" : 
+					{
+						"typeIdentifier" : "t_uint256",
+						"typeString" : "uint256"
+					},
+					"typeName" : 
+					{
+						"id" : 1,
+						"name" : "uint256",
+						"nodeType" : "ElementaryTypeName",
+						"src" : "11:7:1",
+						"typeDescriptions" : 
+						{
+							"typeIdentifier" : "t_uint256",
+							"typeString" : "uint256"
+						}
+					},
+					"value" : null,
+					"visibility" : "internal"
+				}
+			],
+			"name" : "S",
+			"nodeType" : "StructDefinition",
+			"scope" : 4,
+			"src" : "0:23:1",
+			"visibility" : "public"
+		}
+	],
+	"src" : "0:24:1"
+}

@@ -5,6 +5,7 @@ Breaking changes:
 
 
 Language Features:
+ * Allow global enums and structs.
 
 
 Compiler Features:

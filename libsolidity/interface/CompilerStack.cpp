@@ -285,17 +285,17 @@ bool CompilerStack::analyze()
 		// the special variables "this" and "super" must be set appropriately.
 		for (Source const* source: m_sourceOrder)
 			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+			{
+				if (!resolver.resolveNamesAndTypes(*node))
+					return false;
 				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-				{
-
-					if (!resolver.resolveNamesAndTypes(*contract)) return false;
 					// Note that we now reference contracts by their fully qualified names, and
 					// thus contracts can only conflict if declared in the same source file.  This
 					// already causes a double-declaration error elsewhere, so we do not report
 					// an error here and instead silently drop any additional contracts we find.
 					if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
 						m_contracts[contract->fullyQualifiedName()].contract = contract;
-				}
+			}
 
 		// Next, we check inheritance, overrides, function collisions and other things at
 		// contract or function level.
