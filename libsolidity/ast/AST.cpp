@@ -448,12 +448,16 @@ bool VariableDeclaration::isLocalVariable() const
 		dynamic_cast<FunctionTypeName const*>(s) ||
 		dynamic_cast<CallableDeclaration const*>(s) ||
 		dynamic_cast<Block const*>(s) ||
+		dynamic_cast<TryCatchClause const*>(s) ||
 		dynamic_cast<ForStatement const*>(s);
 }
 
 bool VariableDeclaration::isCallableParameter() const
 {
-	if (isReturnParameter())
+	// TODO Adjust for catch params.
+	// I think catch params should return true here.
+	// some of the error strings would need to be adjusted.
+	if (isReturnParameter() || dynamic_cast<TryCatchClause const*>(scope()))
 		return true;
 
 	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
@@ -472,6 +476,7 @@ bool VariableDeclaration::isCallableParameter() const
 
 bool VariableDeclaration::isLocalOrReturn() const
 {
+	// TODO adjust for catch params
 	return isReturnParameter() || (isLocalVariable() && !isCallableParameter());
 }
 

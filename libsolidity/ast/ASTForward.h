@@ -64,6 +64,8 @@ class Statement;
 class Block;
 class PlaceholderStatement;
 class IfStatement;
+class TryCatchClause;
+class TryStatement;
 class BreakableStatement;
 class WhileStatement;
 class ForStatement;

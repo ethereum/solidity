@@ -461,6 +461,48 @@ void IfStatement::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void TryCatchClause::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		if (m_parameters)
+			m_parameters->accept(_visitor);
+		m_block->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void TryCatchClause::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		if (m_parameters)
+			m_parameters->accept(_visitor);
+		m_block->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void TryStatement::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_externalCall->accept(_visitor);
+		listAccept(m_clauses, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void TryStatement::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_externalCall->accept(_visitor);
+		listAccept(m_clauses, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void WhileStatement::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

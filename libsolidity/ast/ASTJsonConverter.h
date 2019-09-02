@@ -93,6 +93,8 @@ public:
 	bool visit(Block const& _node) override;
 	bool visit(PlaceholderStatement const& _node) override;
 	bool visit(IfStatement const& _node) override;
+	bool visit(TryCatchClause const& _node) override;
+	bool visit(TryStatement const& _node) override;
 	bool visit(WhileStatement const& _node) override;
 	bool visit(ForStatement const& _node) override;
 	bool visit(Continue const& _node) override;

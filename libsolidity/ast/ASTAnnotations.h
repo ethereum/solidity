@@ -218,6 +218,8 @@ enum class FunctionCallKind
 struct FunctionCallAnnotation: ExpressionAnnotation
 {
 	FunctionCallKind kind = FunctionCallKind::Unset;
+	/// If true, this is the external call of a try statement.
+	bool tryCall = false;
 };
 
 }
