@@ -25,14 +25,12 @@ void yulFuzzerUtil::interpret(
 	shared_ptr<yul::Block> _ast,
 	Dialect const& _dialect,
 	size_t _maxSteps,
-	size_t _maxTraceSize,
-	size_t _maxMemory
+	size_t _maxTraceSize
 )
 {
 	InterpreterState state;
 	state.maxTraceSize = _maxTraceSize;
 	state.maxSteps = _maxSteps;
-	state.maxMemSize = _maxMemory;
 	Interpreter interpreter(state, _dialect);
 	interpreter(*_ast);
 	state.dumpTraceAndState(_os);
