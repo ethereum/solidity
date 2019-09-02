@@ -47,7 +47,11 @@ public:
 		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
 	);
 	SideEffectsCollector(Dialect const& _dialect, Statement const& _statement);
-	SideEffectsCollector(Dialect const& _dialect, Block const& _ast);
+	SideEffectsCollector(
+		Dialect const& _dialect,
+		Block const& _ast,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	);
 
 	using ASTWalker::operator();
 	void operator()(FunctionalInstruction const& _functionalInstruction) override;

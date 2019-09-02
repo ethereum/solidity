@@ -297,7 +297,7 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 {
-	SideEffectsCollector sideEffects(m_dialect, _block);
+	SideEffectsCollector sideEffects(m_dialect, _block, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
 	if (sideEffects.invalidatesMemory())
@@ -306,7 +306,7 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 {
-	SideEffectsCollector sideEffects(m_dialect, _expr);
+	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
 	if (sideEffects.invalidatesMemory())
