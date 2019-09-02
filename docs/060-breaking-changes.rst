@@ -50,6 +50,12 @@ This section gives detailed instructions on how to update prior code for every b
 * Change ``uint length = array.push(value)`` to ``array.push(value);``. The new length can be
   accessed via ``array.length``.
 
+New Features
+============
+
+ * The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
+
+
 Deprecated Elements
 ===================
 
