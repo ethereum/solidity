@@ -99,8 +99,11 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			case Token::Struct:
 				nodes.push_back(parseStructDefinition());
 				break;
+			case Token::Enum:
+				nodes.push_back(parseEnumDefinition());
+				break;
 			default:
-				fatalParserError(string("Expected pragma, import directive or contract/interface/library/struct definition."));
+				fatalParserError(string("Expected pragma, import directive or contract/interface/library/struct/enum definition."));
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
