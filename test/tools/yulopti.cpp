@@ -58,6 +58,7 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/LoadResolver.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -135,7 +136,7 @@ public:
 			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/f(O)r-loop-condition-into-body/" << endl;
 			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/? " << endl;
-			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/? " << endl;
+			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/? " << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -216,6 +217,9 @@ public:
 				StackCompressor::run(m_dialect, obj, true, 16);
 				break;
 			}
+			case 'L':
+				LoadResolver::run(m_dialect, *m_ast);
+				break;
 			default:
 				cout << "Unknown option." << endl;
 			}
