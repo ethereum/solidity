@@ -250,8 +250,7 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::MLOAD:
 		if (accessMemory(arg[0], 0x20))
 			return readMemoryWord(arg[0]);
-		else
-			return 0x1234 + arg[0];
+		return 0;
 	case Instruction::MSTORE:
 		if (accessMemory(arg[0], 0x20))
 			writeMemoryWord(arg[0], arg[1]);
