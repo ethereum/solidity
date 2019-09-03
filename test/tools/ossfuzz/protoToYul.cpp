@@ -1078,6 +1078,44 @@ void ProtoConverter::registerFunction(FunctionDef const* _x)
 	m_functionDefMap.emplace(make_pair(_x, funcName));
 }
 
+void ProtoConverter::createFunctionCall(
+	string _funcName,
+	unsigned _numInParams,
+	unsigned _numOutParams
+)
+{
+	// Prints the following to output stream "let x_i,...,x_n := "
+	unsigned startIdx = counter();
+	vector<string> varsVec{};
+	if (_numOutParams > 0)
+	{
+		varsVec = createVarDecls(
+			startIdx,
+			startIdx + _numOutParams,
+			/*isAssignment=*/true
+		);
+	}
+
+	// Call the function with the correct number of input parameters via calls to calldataload with
+	// incremental addresses.
+	m_output << _funcName << "(";
+	for (unsigned i = 0; i < _numInParams; i++)
+	{
+		m_output << "calldataload(" << std::to_string(i*32) << ")";
+		if (i < _numInParams - 1)
+			m_output << ",";
+	}
+	m_output << ")\n";
+
+	// Save output values to storage
+	for (unsigned i = 0; i < varsVec.size(); i++)
+		m_output << "sstore(" << std::to_string(i*32) << ", " << varsVec[i] << ")\n";
+
+	// Add newly minted vars to current scope
+	if (!varsVec.empty())
+		addVarsToScope(varsVec);
+}
+
 void ProtoConverter::createFunctionDefAndCall(
 	FunctionDef const& _x,
 	unsigned _numInParams,
@@ -1133,24 +1171,11 @@ void ProtoConverter::createFunctionDefAndCall(
 	m_inForBodyScope = wasInForBody;
 	m_inFunctionDef = wasInFunctionDef;
 
-	// Manually create a multi assignment using global variables
-	// This prints a_0, ..., a_k-1 for this function that returns "k" values
-//	if (_numOutParams > 0)
-//		m_output << dev::suffixedVariableNameList("a_", 0, _numOutParams) << " := ";
-//
-//	// Call the function with the correct number of input parameters via calls to calldataload with
-//	// incremental addresses.
-//	m_output << funcName << "(";
-//	for (unsigned i = 0; i < _numInParams; i++)
-//	{
-//		m_output << "calldataload(" << std::to_string(i*32) << ")";
-//		if (i < _numInParams - 1)
-//			m_output << ",";
-//	}
-//	m_output << ")\n";
-//
-//	for (unsigned i = 0; i < _numOutParams; i++)
-//		m_output << "sstore(" << std::to_string(i*32) << ", a_" << std::to_string(i) << ")\n";
+	yulAssert(
+		!m_inForInitScope,
+		"Proto fuzzer: Trying to create function call inside for-init block"
+	);
+	createFunctionCall(funcName, _numInParams, _numOutParams);
 }
 
 void ProtoConverter::visit(FunctionDef const& _x)

@@ -201,6 +201,13 @@ private:
 	/// @return A vector of strings containing the printed variable names.
 	std::vector<std::string> createVars(unsigned _startIdx, unsigned _endIdx);
 
+	/// Print the yul syntax to make a call to a function named @a _funcName to
+	/// the output stream.
+	/// @param _funcName Name of the function to be called
+	/// @param _numInParams Number of input parameters in function signature
+	/// @param _numOutParams Number of output parameters in function signature
+	void createFunctionCall(std::string _funcName, unsigned _numInParams, unsigned _numOutParams);
+
 	/// Register a function declaration
 	/// @param _f Pointer to a FunctionDef object
 	void registerFunction(FunctionDef const* _f);
