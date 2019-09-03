@@ -48,10 +48,12 @@ public:
 	static EVMVersion byzantium() { return {Version::Byzantium}; }
 	static EVMVersion constantinople() { return {Version::Constantinople}; }
 	static EVMVersion petersburg() { return {Version::Petersburg}; }
+	static EVMVersion istanbul() { return {Version::Istanbul}; }
+	static EVMVersion berlin() { return {Version::Berlin}; }
 
 	static boost::optional<EVMVersion> fromString(std::string const& _version)
 	{
-		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg()})
+		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg(), istanbul(), berlin()})
 			if (_version == v.name())
 				return v;
 		return {};
@@ -70,6 +72,8 @@ public:
 		case Version::Byzantium: return "byzantium";
 		case Version::Constantinople: return "constantinople";
 		case Version::Petersburg: return "petersburg";
+		case Version::Istanbul: return "istanbul";
+		case Version::Berlin: return "berlin";
 		}
 		return "INVALID";
 	}
@@ -88,7 +92,7 @@ public:
 	bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
 
 private:
-	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium, Constantinople, Petersburg };
+	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium, Constantinople, Petersburg, Istanbul, Berlin };
 
 	EVMVersion(Version _version): m_version(_version) {}
 
