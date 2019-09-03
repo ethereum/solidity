@@ -58,6 +58,7 @@ private:
 	bool visit(MemberAccess const& _memberAccess) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
 	void endVisit(IndexAccess const& _indexAccess) override;
+	void endVisit(IndexRangeAccess const& _indexAccess) override;
 	void endVisit(ModifierInvocation const& _modifier) override;
 	void endVisit(FunctionCall const& _functionCall) override;
 	void endVisit(InlineAssembly const& _inlineAssembly) override;

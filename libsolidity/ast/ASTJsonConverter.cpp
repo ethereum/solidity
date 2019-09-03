@@ -694,6 +694,18 @@ bool ASTJsonConverter::visit(IndexAccess const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(IndexRangeAccess const& _node)
+{
+	std::vector<pair<string, Json::Value>> attributes = {
+		make_pair("baseExpression", toJson(_node.baseExpression())),
+		make_pair("startExpression", toJsonOrNull(_node.startExpression())),
+		make_pair("endExpression", toJsonOrNull(_node.endExpression())),
+	};
+	appendExpressionAttributes(attributes, _node.annotation());
+	setJsonNode(_node, "IndexRangeAccess", std::move(attributes));
+	return false;
+}
+
 bool ASTJsonConverter::visit(Identifier const& _node)
 {
 	Json::Value overloads(Json::arrayValue);

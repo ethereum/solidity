@@ -111,6 +111,7 @@ public:
 	bool visit(NewExpression const& _node) override;
 	bool visit(MemberAccess const& _node) override;
 	bool visit(IndexAccess const& _node) override;
+	bool visit(IndexRangeAccess const& _node) override;
 	bool visit(Identifier const& _node) override;
 	bool visit(ElementaryTypeNameExpression const& _node) override;
 	bool visit(Literal const& _node) override;

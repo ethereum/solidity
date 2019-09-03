@@ -80,6 +80,7 @@ private:
 	bool visit(NewExpression const& _newExpression) override;
 	bool visit(MemberAccess const& _memberAccess) override;
 	bool visit(IndexAccess const& _indexAccess) override;
+	bool visit(IndexRangeAccess const& _indexAccess) override;
 	void endVisit(Identifier const& _identifier) override;
 	void endVisit(Literal const& _literal) override;
 

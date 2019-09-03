@@ -783,6 +783,32 @@ void IndexAccess::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void IndexRangeAccess::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_base->accept(_visitor);
+		if (m_start)
+			m_start->accept(_visitor);
+		if (m_end)
+			m_end->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void IndexRangeAccess::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_base->accept(_visitor);
+		if (m_start)
+			m_start->accept(_visitor);
+		if (m_end)
+			m_end->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void Identifier::accept(ASTVisitor& _visitor)
 {
 	_visitor.visit(*this);

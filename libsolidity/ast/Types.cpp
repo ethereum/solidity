@@ -1869,6 +1869,30 @@ std::unique_ptr<ReferenceType> ArrayType::copyForLocation(DataLocation _location
 	return copy;
 }
 
+BoolResult ArraySliceType::isImplicitlyConvertibleTo(Type const& _other) const
+{
+	if (m_arrayType.location() == DataLocation::CallData && m_arrayType.isDynamicallySized() && m_arrayType == _other)
+		return true;
+	return (*this) == _other;
+}
+
+string ArraySliceType::richIdentifier() const
+{
+	return m_arrayType.richIdentifier() + "_slice";
+}
+
+bool ArraySliceType::operator==(Type const& _other) const
+{
+	if (auto const* other = dynamic_cast<ArraySliceType const*>(&_other))
+		return m_arrayType == other->m_arrayType;
+	return false;
+}
+
+string ArraySliceType::toString(bool _short) const
+{
+	return m_arrayType.toString(_short) + " slice";
+}
+
 string ContractType::richIdentifier() const
 {
 	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + to_string(m_contract.id());

@@ -86,6 +86,7 @@ Expression
   = Expression ('++' | '--')
   | NewExpression
   | IndexAccess
+  | IndexRangeAccess
   | MemberAccess
   | FunctionCall
   | '(' Expression ')'
@@ -123,6 +124,7 @@ FunctionCallArguments = '{' NameValueList? '}'
 NewExpression = 'new' TypeName
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
+IndexRangeAccess = Expression '[' Expression? ':' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
 NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?

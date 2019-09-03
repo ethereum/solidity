@@ -767,6 +767,15 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 	m_uninterpretedTerms.insert(&_indexAccess);
 }
 
+void SMTEncoder::endVisit(IndexRangeAccess const& _indexRangeAccess)
+{
+	createExpr(_indexRangeAccess);
+	m_errorReporter.warning(
+		_indexRangeAccess.location(),
+		"Assertion checker does not yet implement this expression."
+	);
+}
+
 void SMTEncoder::arrayAssignment()
 {
 	m_arrayAssignmentHappened = true;

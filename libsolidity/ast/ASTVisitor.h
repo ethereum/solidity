@@ -87,6 +87,7 @@ public:
 	virtual bool visit(NewExpression& _node) { return visitNode(_node); }
 	virtual bool visit(MemberAccess& _node) { return visitNode(_node); }
 	virtual bool visit(IndexAccess& _node) { return visitNode(_node); }
+	virtual bool visit(IndexRangeAccess& _node) { return visitNode(_node); }
 	virtual bool visit(Identifier& _node) { return visitNode(_node); }
 	virtual bool visit(ElementaryTypeNameExpression& _node) { return visitNode(_node); }
 	virtual bool visit(Literal& _node) { return visitNode(_node); }
@@ -134,6 +135,7 @@ public:
 	virtual void endVisit(NewExpression& _node) { endVisitNode(_node); }
 	virtual void endVisit(MemberAccess& _node) { endVisitNode(_node); }
 	virtual void endVisit(IndexAccess& _node) { endVisitNode(_node); }
+	virtual void endVisit(IndexRangeAccess& _node) { endVisitNode(_node); }
 	virtual void endVisit(Identifier& _node) { endVisitNode(_node); }
 	virtual void endVisit(ElementaryTypeNameExpression& _node) { endVisitNode(_node); }
 	virtual void endVisit(Literal& _node) { endVisitNode(_node); }
@@ -194,6 +196,7 @@ public:
 	virtual bool visit(NewExpression const& _node) { return visitNode(_node); }
 	virtual bool visit(MemberAccess const& _node) { return visitNode(_node); }
 	virtual bool visit(IndexAccess const& _node) { return visitNode(_node); }
+	virtual bool visit(IndexRangeAccess const& _node) { return visitNode(_node); }
 	virtual bool visit(Identifier const& _node) { return visitNode(_node); }
 	virtual bool visit(ElementaryTypeNameExpression const& _node) { return visitNode(_node); }
 	virtual bool visit(Literal const& _node) { return visitNode(_node); }
@@ -241,6 +244,7 @@ public:
 	virtual void endVisit(NewExpression const& _node) { endVisitNode(_node); }
 	virtual void endVisit(MemberAccess const& _node) { endVisitNode(_node); }
 	virtual void endVisit(IndexAccess const& _node) { endVisitNode(_node); }
+	virtual void endVisit(IndexRangeAccess const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Identifier const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ElementaryTypeNameExpression const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Literal const& _node) { endVisitNode(_node); }

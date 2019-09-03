@@ -14,6 +14,7 @@ Language Features:
  * Allow global enums and structs.
  * Allow underscores as delimiters in hex strings.
  * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
+ * Introduce syntax for array slices and implement them for dynamic calldata arrays.
 
 
 Compiler Features:
