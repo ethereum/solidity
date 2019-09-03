@@ -17,8 +17,6 @@
 
 #include <libsolidity/formal/SMTLib2Interface.h>
 
-#include <libsolidity/interface/ReadFile.h>
-#include <liblangutil/Exceptions.h>
 #include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -30,7 +28,6 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <string>
 
 using namespace std;
 using namespace dev;
@@ -96,12 +93,12 @@ void SMTLib2Interface::declareFunction(string const& _name, Sort const& _sort)
 	}
 }
 
-void SMTLib2Interface::addAssertion(Expression const& _expr)
+void SMTLib2Interface::addAssertion(smt::Expression const& _expr)
 {
 	write("(assert " + toSExpr(_expr) + ")");
 }
 
-pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<smt::Expression> const& _expressionsToEvaluate)
 {
 	string response = querySolver(
 		boost::algorithm::join(m_accumulatedOutput, "\n") +
@@ -125,7 +122,7 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 	return make_pair(result, values);
 }
 
-string SMTLib2Interface::toSExpr(Expression const& _expr)
+string SMTLib2Interface::toSExpr(smt::Expression const& _expr)
 {
 	if (_expr.arguments.empty())
 		return _expr.name;
@@ -169,7 +166,7 @@ void SMTLib2Interface::write(string _data)
 	m_accumulatedOutput.back() += move(_data) + "\n";
 }
 
-string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _expressionsToEvaluate)
+string SMTLib2Interface::checkSatAndGetValuesCommand(vector<smt::Expression> const& _expressionsToEvaluate)
 {
 	string command;
 	if (_expressionsToEvaluate.empty())

@@ -51,9 +51,9 @@ public:
 
 	void declareVariable(std::string const&, Sort const&) override;
 
-	void addAssertion(Expression const& _expr) override;
+	void addAssertion(smt::Expression const& _expr) override;
 
-	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+	std::pair<CheckResult, std::vector<std::string>> check(std::vector<smt::Expression> const& _expressionsToEvaluate) override;
 
 	std::vector<std::string> unhandledQueries() override;
 	unsigned solvers() override { return m_solvers.size(); }
@@ -62,7 +62,7 @@ private:
 
 	std::vector<std::unique_ptr<smt::SolverInterface>> m_solvers;
 
-	std::vector<Expression> m_assertions;
+	std::vector<smt::Expression> m_assertions;
 };
 
 }

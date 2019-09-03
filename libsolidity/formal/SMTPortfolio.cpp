@@ -65,7 +65,7 @@ void SMTPortfolio::declareVariable(string const& _name, Sort const& _sort)
 		s->declareVariable(_name, _sort);
 }
 
-void SMTPortfolio::addAssertion(Expression const& _expr)
+void SMTPortfolio::addAssertion(smt::Expression const& _expr)
 {
 	for (auto const& s: m_solvers)
 		s->addAssertion(_expr);
@@ -101,7 +101,7 @@ void SMTPortfolio::addAssertion(Expression const& _expr)
  *
  *   If all solvers return ERROR, the result is ERROR.
 */
-pair<CheckResult, vector<string>> SMTPortfolio::check(vector<Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> SMTPortfolio::check(vector<smt::Expression> const& _expressionsToEvaluate)
 {
 	CheckResult lastResult = CheckResult::ERROR;
 	vector<string> finalValues;

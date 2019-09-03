@@ -50,21 +50,21 @@ public:
 
 	void declareVariable(std::string const&, Sort const&) override;
 
-	void addAssertion(Expression const& _expr) override;
-	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+	void addAssertion(smt::Expression const& _expr) override;
+	std::pair<CheckResult, std::vector<std::string>> check(std::vector<smt::Expression> const& _expressionsToEvaluate) override;
 
 	std::vector<std::string> unhandledQueries() override { return m_unhandledQueries; }
 
 private:
 	void declareFunction(std::string const&, Sort const&);
 
-	std::string toSExpr(Expression const& _expr);
+	std::string toSExpr(smt::Expression const& _expr);
 	std::string toSmtLibSort(Sort const& _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	void write(std::string _data);
 
-	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
+	std::string checkSatAndGetValuesCommand(std::vector<smt::Expression> const& _expressionsToEvaluate);
 	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
 
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
