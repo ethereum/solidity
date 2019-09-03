@@ -1078,17 +1078,67 @@ void ProtoConverter::registerFunction(FunctionDef const* _x)
 	m_functionDefMap.emplace(make_pair(_x, funcName));
 }
 
+void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
+{
+	for (unsigned i = 0; i < _numInParams; i++)
+	{
+		// Throw a 4-sided dice to choose whether to populate function input
+		// argument from a pseudo-randomly chosen slot in one of the following
+		// locations: calldata, memory, storage, or yul optimizer dictionary.
+		unsigned diceValue = counter() % 4;
+		// Pseudo-randomly choose one of the first ten 32-byte
+		// aligned slots.
+		string slot = to_string((counter() % 10) * 32);
+		switch (diceValue)
+		{
+		case 0:
+			m_output << "calldataload(" << slot << ")";
+			break;
+		case 1:
+			m_output << "mload(" << slot << ")";
+			break;
+		case 2:
+			m_output << "sload(" << slot << ")";
+			break;
+		case 3:
+			// Call to dictionaryToken() automatically picks a token
+			// at a pseudo-random location.
+			m_output << dictionaryToken();
+			break;
+		}
+		if (i < _numInParams - 1)
+			m_output << ",";
+	}
+}
+
+void ProtoConverter::saveFunctionCallOutput(vector<string> const& _varsVec)
+{
+	for (auto const& var: _varsVec)
+	{
+		// Flip a dice to choose whether to save output values
+		// in storage or memory.
+		bool coinFlip = counter() % 2 == 0;
+		// Pseudo-randomly choose one of the first ten 32-byte
+		// aligned slots.
+		string slot = to_string((counter() % 10) * 32);
+		if (coinFlip)
+			m_output << "sstore(" << slot << ", " << var << ")\n";
+		else
+			m_output << "mstore(" << slot << ", " << var << ")\n";
+	}
+}
+
 void ProtoConverter::createFunctionCall(
 	string _funcName,
 	unsigned _numInParams,
 	unsigned _numOutParams
 )
 {
-	// Prints the following to output stream "let x_i,...,x_n := "
-	unsigned startIdx = counter();
 	vector<string> varsVec{};
 	if (_numOutParams > 0)
 	{
+		unsigned startIdx = counter();
+		// Prints the following to output stream "let x_i,...,x_n := "
 		varsVec = createVarDecls(
 			startIdx,
 			startIdx + _numOutParams,
@@ -1096,24 +1146,22 @@ void ProtoConverter::createFunctionCall(
 		);
 	}
 
-	// Call the function with the correct number of input parameters via calls to calldataload with
-	// incremental addresses.
+	// Call the function with the correct number of input parameters
 	m_output << _funcName << "(";
-	for (unsigned i = 0; i < _numInParams; i++)
-	{
-		m_output << "calldataload(" << std::to_string(i*32) << ")";
-		if (i < _numInParams - 1)
-			m_output << ",";
-	}
+	if (_numInParams > 0)
+		fillFunctionCallInput(_numInParams);
 	m_output << ")\n";
 
-	// Save output values to storage
-	for (unsigned i = 0; i < varsVec.size(); i++)
-		m_output << "sstore(" << std::to_string(i*32) << ", " << varsVec[i] << ")\n";
-
-	// Add newly minted vars to current scope
 	if (!varsVec.empty())
+	{
+		// Save values returned by function so that they are reflected
+		// in the interpreter trace.
+		saveFunctionCallOutput(varsVec);
+		// Add newly minted vars to current scope
 		addVarsToScope(varsVec);
+	}
+	else
+		yulAssert(_numOutParams == 0, "Proto fuzzer: Function return value not saved");
 }
 
 void ProtoConverter::createFunctionDefAndCall(

@@ -208,6 +208,21 @@ private:
 	/// @param _numOutParams Number of output parameters in function signature
 	void createFunctionCall(std::string _funcName, unsigned _numInParams, unsigned _numOutParams);
 
+	/// Print the yul syntax to pass input arguments to a function that has
+	/// @a _numInParams number of input parameters to the output stream.
+	/// The input arguments are pseudo-randomly chosen from calldata, memory,
+	/// storage, or the yul optimizer hex dictionary.
+	/// @param _numInParams Number of input arguments to fill
+	void fillFunctionCallInput(unsigned _numInParams);
+
+	/// Print the yul syntax to save values returned by a function call
+	/// to the output stream. The values are either stored to memory or
+	/// storage based on a simulated coin flip. The saved location is
+	/// decided pseudo-randomly.
+	/// @param _varsVec A vector of strings that reference variables
+	/// holding the return values of a function call.
+	void saveFunctionCallOutput(std::vector<std::string> const& _varsVec);
+
 	/// Register a function declaration
 	/// @param _f Pointer to a FunctionDef object
 	void registerFunction(FunctionDef const* _f);
