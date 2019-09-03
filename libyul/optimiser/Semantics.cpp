@@ -35,8 +35,12 @@ using namespace dev;
 using namespace yul;
 
 
-SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Expression const& _expression):
-	SideEffectsCollector(_dialect)
+SideEffectsCollector::SideEffectsCollector(
+		Dialect const& _dialect,
+		Expression const& _expression,
+		map<YulString, SideEffects> const* _functionSideEffects
+):
+	SideEffectsCollector(_dialect, _functionSideEffects)
 {
 	visit(_expression);
 }
@@ -64,8 +68,11 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
+	YulString functionName = _functionCall.functionName.name;
+	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
 		m_sideEffects += f->sideEffects;
+	else if (m_functionSideEffects && m_functionSideEffects->count(functionName))
+		m_sideEffects += m_functionSideEffects->at(functionName);
 	else
 		m_sideEffects += SideEffects::worst();
 }

@@ -23,6 +23,9 @@
 
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/Semantics.h>
+#include <libyul/SideEffects.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
@@ -30,6 +33,23 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+void CommonSubexpressionEliminator::run(Dialect const& _dialect, Block& _ast)
+{
+	CommonSubexpressionEliminator cse{
+		_dialect,
+		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast))
+	};
+	cse(_ast);
+}
+
+CommonSubexpressionEliminator::CommonSubexpressionEliminator(
+	Dialect const& _dialect,
+	map<YulString, SideEffects> _functionSideEffects
+):
+	DataFlowAnalyzer(_dialect, std::move(_functionSideEffects))
+{
+}
 
 void CommonSubexpressionEliminator::visit(Expression& _e)
 {

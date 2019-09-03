@@ -26,6 +26,7 @@
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/YulString.h>
 #include <libyul/AsmData.h>
+#include <libyul/SideEffects.h>
 
 // TODO avoid
 #include <libevmasm/Instruction.h>
@@ -38,6 +39,7 @@
 namespace yul
 {
 struct Dialect;
+struct SideEffects;
 
 /**
  * Base class to perform data flow analysis during AST walks.
@@ -67,8 +69,16 @@ struct Dialect;
 class DataFlowAnalyzer: public ASTModifier
 {
 public:
-	explicit DataFlowAnalyzer(Dialect const& _dialect):
+	/// @param _functionSideEffects
+	///            Side-effects of user-defined functions. Worst-case side-effects are assumed
+	///            if this is not provided or the function is not found.
+	///            The parameter is mostly used to determine movability of expressions.
+	explicit DataFlowAnalyzer(
+		Dialect const& _dialect,
+		std::map<YulString, SideEffects> _functionSideEffects = {}
+	):
 		m_dialect(_dialect),
+		m_functionSideEffects(std::move(_functionSideEffects)),
 		m_knowledgeBase(_dialect, m_value)
 	{}
 
@@ -124,6 +134,9 @@ protected:
 	) const;
 
 	Dialect const& m_dialect;
+	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
+	/// if this is not provided or the function is not found.
+	std::map<YulString, SideEffects> m_functionSideEffects;
 
 	/// Current values of variables, always movable.
 	std::map<YulString, Expression const*> m_value;

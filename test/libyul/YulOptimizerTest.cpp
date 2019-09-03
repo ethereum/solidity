@@ -26,6 +26,7 @@
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
@@ -45,6 +46,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
@@ -149,7 +151,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "commonSubexpressionEliminator")
 	{
 		disambiguate();
-		(CommonSubexpressionEliminator{*m_dialect})(*m_ast);
+		CommonSubexpressionEliminator::run(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "expressionSplitter")
 	{
@@ -218,9 +220,9 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
 		ForLoopInitRewriter{}(*m_ast);
-		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		CommonSubexpressionEliminator::run(*m_dialect, *m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
-		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		UnusedPruner::runUntilStabilisedOnFullAST(*m_dialect, *m_ast);
 		DeadCodeEliminator{*m_dialect}(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 		ExpressionJoiner::run(*m_ast);
@@ -228,7 +230,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "unusedPruner")
 	{
 		disambiguate();
-		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		UnusedPruner::runUntilStabilisedOnFullAST(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "deadCodeEliminator")
 	{
@@ -260,12 +262,12 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		ForLoopInitRewriter{}(*m_ast);
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
-		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
+		CommonSubexpressionEliminator::run(*m_dialect, *m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 
 		LoadResolver::run(*m_dialect, *m_ast);
 
-		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		UnusedPruner::runUntilStabilisedOnFullAST(*m_dialect, *m_ast);
 		ExpressionJoiner::run(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 	}
@@ -298,8 +300,8 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
 		// reverse SSA
 		SSAReverser::run(*m_ast);
-		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
-		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		CommonSubexpressionEliminator::run(*m_dialect, *m_ast);
+		UnusedPruner::runUntilStabilisedOnFullAST(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "stackCompressor")
 	{
