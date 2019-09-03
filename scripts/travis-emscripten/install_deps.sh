@@ -33,7 +33,7 @@ echo -en 'travis_fold:start:installing_dependencies\\r'
 test -e boost_1_70_0_install/include/boost/version.hpp || (
 rm -rf boost_1_70_0
 rm -f boost.tar.gz
-wget -q 'https://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.tar.gz/download'\
+wget -q 'https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.tar.gz'\
  -O boost.tar.gz
 test "$(shasum boost.tar.gz)" = "7804c782deb00f36ac80b1000b71a3707eadb620  boost.tar.gz"
 tar -xzf boost.tar.gz
