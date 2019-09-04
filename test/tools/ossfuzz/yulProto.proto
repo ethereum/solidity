@@ -129,6 +129,8 @@ message UnaryOp {
     CALLDATALOAD = 4;
     EXTCODESIZE = 5;
     EXTCODEHASH = 6;
+    BALANCE = 7;
+    BLOCKHASH = 8;
   }
   required UOp op = 1;
   required Expression operand = 2;
@@ -172,6 +174,16 @@ message NullaryOp {
     CALLDATASIZE = 4;
     CODESIZE = 5;
     RETURNDATASIZE = 6;
+    ADDRESS = 7;
+    ORIGIN = 8;
+    CALLER = 9;
+    CALLVALUE = 10;
+    GASPRICE = 11;
+    COINBASE = 12;
+    TIMESTAMP = 13;
+    NUMBER = 14;
+    DIFFICULTY = 15;
+    GASLIMIT = 16;
   }
   required NOp op = 1;
 }
@@ -287,6 +299,10 @@ message FunctionDef {
   required Block block = 3;
 }
 
+message PopStmt {
+  required Expression expr = 1;
+}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl            = 1;
@@ -305,6 +321,7 @@ message Statement {
     FunctionCall        functioncall    = 14;
     BoundedForStmt      boundedforstmt  = 15;
     FunctionDef         funcdef         = 16;
+    PopStmt             pop             = 17;
   }
 }
 
