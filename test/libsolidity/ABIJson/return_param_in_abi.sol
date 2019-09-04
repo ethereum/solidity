@@ -11,6 +11,19 @@ contract test {
 //     :test
 // [
 //   {
+//     "inputs":
+//     [
+//       {
+//         "internalType": "enum test.ActionChoices",
+//         "name": "param",
+//         "type": "uint8"
+//       }
+//     ],
+//     "payable": false,
+//     "stateMutability": "nonpayable",
+//     "type": "constructor"
+//   },
+//   {
 //     "constant": false,
 //     "inputs": [],
 //     "name": "ret",
@@ -25,18 +38,5 @@ contract test {
 //     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
-//   },
-//   {
-//     "inputs":
-//     [
-//       {
-//         "internalType": "enum test.ActionChoices",
-//         "name": "param",
-//         "type": "uint8"
-//       }
-//     ],
-//     "payable": false,
-//     "stateMutability": "nonpayable",
-//     "type": "constructor"
 //   }
 // ]

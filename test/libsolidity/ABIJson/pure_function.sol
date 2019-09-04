@@ -6,6 +6,29 @@ contract test {
 //     :test
 // [
 //   {
+//     "constant": true,
+//     "inputs":
+//     [
+//       {
+//         "internalType": "uint32",
+//         "name": "a",
+//         "type": "uint32"
+//       }
+//     ],
+//     "name": "boo",
+//     "outputs":
+//     [
+//       {
+//         "internalType": "uint256",
+//         "name": "b",
+//         "type": "uint256"
+//       }
+//     ],
+//     "payable": false,
+//     "stateMutability": "pure",
+//     "type": "function"
+//   },
+//   {
 //     "constant": false,
 //     "inputs":
 //     [
@@ -31,29 +54,6 @@ contract test {
 //     ],
 //     "payable": false,
 //     "stateMutability": "nonpayable",
-//     "type": "function"
-//   },
-//   {
-//     "constant": true,
-//     "inputs":
-//     [
-//       {
-//         "internalType": "uint32",
-//         "name": "a",
-//         "type": "uint32"
-//       }
-//     ],
-//     "name": "boo",
-//     "outputs":
-//     [
-//       {
-//         "internalType": "uint256",
-//         "name": "b",
-//         "type": "uint256"
-//       }
-//     ],
-//     "payable": false,
-//     "stateMutability": "pure",
 //     "type": "function"
 //   }
 // ]

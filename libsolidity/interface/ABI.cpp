@@ -40,7 +40,10 @@ bool anyDataStoredInStorage(TypePointers const& _pointers)
 
 Json::Value ABI::generate(ContractDefinition const& _contractDef)
 {
-	Json::Value abi(Json::arrayValue);
+	auto compare = [](Json::Value const& _a, Json::Value const& _b) -> bool {
+		return make_tuple(_a["type"], _a["name"]) < make_tuple(_b["type"], _b["name"]);
+	};
+	multiset<Json::Value, decltype(compare)> abi(compare);
 
 	for (auto it: _contractDef.interfaceFunctions())
 	{
@@ -71,7 +74,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 			it.second->returnParameterTypes(),
 			_contractDef.isLibrary()
 		);
-		abi.append(std::move(method));
+		abi.emplace(std::move(method));
 	}
 	if (_contractDef.constructor())
 	{
@@ -88,7 +91,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 			constrType.parameterTypes(),
 			_contractDef.isLibrary()
 		);
-		abi.append(std::move(method));
+		abi.emplace(std::move(method));
 	}
 	if (_contractDef.fallbackFunction())
 	{
@@ -98,7 +101,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		method["type"] = "fallback";
 		method["payable"] = externalFunctionType->isPayable();
 		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
-		abi.append(std::move(method));
+		abi.emplace(std::move(method));
 	}
 	for (auto const& it: _contractDef.interfaceEvents())
 	{
@@ -117,10 +120,13 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 			params.append(std::move(param));
 		}
 		event["inputs"] = std::move(params);
-		abi.append(std::move(event));
+		abi.emplace(std::move(event));
 	}
 
-	return abi;
+	Json::Value abiJson{Json::arrayValue};
+	for (auto& f: abi)
+		abiJson.append(std::move(f));
+	return abiJson;
 }
 
 Json::Value ABI::formatTypeList(

@@ -9,29 +9,6 @@ contract test {
 //     :test
 // [
 //   {
-//     "constant": false,
-//     "inputs":
-//     [
-//       {
-//         "internalType": "uint256",
-//         "name": "a",
-//         "type": "uint256"
-//       }
-//     ],
-//     "name": "f",
-//     "outputs":
-//     [
-//       {
-//         "internalType": "uint256",
-//         "name": "d",
-//         "type": "uint256"
-//       }
-//     ],
-//     "payable": false,
-//     "stateMutability": "nonpayable",
-//     "type": "function"
-//   },
-//   {
 //     "anonymous": false,
 //     "inputs":
 //     [
@@ -76,5 +53,28 @@ contract test {
 //     "inputs": [],
 //     "name": "e3",
 //     "type": "event"
+//   },
+//   {
+//     "constant": false,
+//     "inputs":
+//     [
+//       {
+//         "internalType": "uint256",
+//         "name": "a",
+//         "type": "uint256"
+//       }
+//     ],
+//     "name": "f",
+//     "outputs":
+//     [
+//       {
+//         "internalType": "uint256",
+//         "name": "d",
+//         "type": "uint256"
+//       }
+//     ],
+//     "payable": false,
+//     "stateMutability": "nonpayable",
+//     "type": "function"
 //   }
 // ]
