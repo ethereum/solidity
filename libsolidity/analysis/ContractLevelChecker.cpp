@@ -391,6 +391,19 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 				_contract.annotation().unimplementedFunctions.push_back(function);
 				break;
 			}
+
+	if (_contract.abstract() && _contract.contractKind() != ContractDefinition::ContractKind::Contract)
+		m_errorReporter.typeError(_contract.location(), "Only contracts can be abstract.");
+
+	if (
+		_contract.contractKind() == ContractDefinition::ContractKind::Contract &&
+		!_contract.annotation().unimplementedFunctions.empty() &&
+		!_contract.abstract()
+	)
+		m_errorReporter.typeError(
+			_contract.location(),
+			"Contract \"" + _contract.annotation().canonicalName + "\" should be marked as abstract."
+		);
 }
 
 

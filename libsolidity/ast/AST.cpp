@@ -151,7 +151,7 @@ bool ContractDefinition::constructorIsPublic() const
 
 bool ContractDefinition::canBeDeployed() const
 {
-	return constructorIsPublic() && annotation().unimplementedFunctions.empty();
+	return constructorIsPublic() && annotation().unimplementedFunctions.empty() && !abstract();
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const

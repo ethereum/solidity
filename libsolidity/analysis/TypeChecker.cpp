@@ -88,7 +88,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 
-
 	return false;
 }
 
@@ -2152,21 +2151,10 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
 		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
-		if (!contract->annotation().unimplementedFunctions.empty())
-		{
-			SecondarySourceLocation ssl;
-			for (auto function: contract->annotation().unimplementedFunctions)
-				ssl.append("Missing implementation:", function->location());
-			string msg = "Trying to create an instance of an abstract contract.";
-			ssl.limitSize(msg);
-			m_errorReporter.typeError(
-				_newExpression.location(),
-				ssl,
-				msg
-			);
-		}
 		if (!contract->constructorIsPublic())
 			m_errorReporter.typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
+		if (contract->abstract() || !contract->annotation().unimplementedFunctions.empty())
+			m_errorReporter.typeError(_newExpression.location(), "Cannot instantiate an abstract contract.");
 
 		solAssert(!!m_scope, "");
 		m_scope->annotation().contractDependencies.insert(contract);
