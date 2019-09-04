@@ -176,6 +176,28 @@ defaults:
       requires:
         - b_ubu_ossfuzz
 
+  # --------------------------------------------------------------------------
+  # Notification Templates
+  - gitter_notify_failure: &gitter_notify_failure
+      name: Gitter notify failure
+      command: >-
+        curl -X POST -i
+        -i -H "Content-Type: application/json"
+        -H "Accept: application/json"
+        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
+        -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed. Please check '$CIRCLE_BUILD_URL' for details."}'
+      when: on_fail
+
+  - gitter_notify_success: &gitter_notify_success
+      name: Gitter notify success
+      command: >-
+        curl -X POST -i
+        -i -H "Content-Type: application/json"
+        -H "Accept: application/json"
+        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
+        -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded. Please check '$CIRCLE_BUILD_URL' for details."}'
+      when: on_success
+
 # -----------------------------------------------------------------------------------------------
 jobs:
 
@@ -341,6 +363,8 @@ jobs:
             mkdir -p test_results
             export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
             scripts/regressions.py -o test_results
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -526,6 +550,8 @@ jobs:
           name: External GnosisSafe tests
           command: |
             test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
 
   t_ems_external_zeppelin:
     docker:
@@ -540,6 +566,8 @@ jobs:
           name: External Zeppelin tests
           command: |
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
 
   t_ems_external_colony:
     docker:
@@ -558,6 +586,8 @@ jobs:
           name: External ColonyNetworks tests
           command: |
             test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
 
 workflows:
   version: 2
