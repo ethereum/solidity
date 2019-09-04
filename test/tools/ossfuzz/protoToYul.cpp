@@ -337,6 +337,12 @@ void ProtoConverter::visit(UnaryOp const& _x)
 	case UnaryOp::EXTCODEHASH:
 		m_output << "extcodehash";
 		break;
+	case UnaryOp::BALANCE:
+		m_output << "balance";
+		break;
+	case UnaryOp::BLOCKHASH:
+		m_output << "blockhash";
+		break;
 	}
 	m_output << "(";
 	visit(_x.operand());
@@ -384,6 +390,36 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		break;
 	case NullaryOp::RETURNDATASIZE:
 		m_output << "returndatasize()";
+		break;
+	case NullaryOp::ADDRESS:
+		m_output << "address()";
+		break;
+	case NullaryOp::ORIGIN:
+		m_output << "origin()";
+		break;
+	case NullaryOp::CALLER:
+		m_output << "caller()";
+		break;
+	case NullaryOp::CALLVALUE:
+		m_output << "callvalue()";
+		break;
+	case NullaryOp::GASPRICE:
+		m_output << "gasprice()";
+		break;
+	case NullaryOp::COINBASE:
+		m_output << "coinbase()";
+		break;
+	case NullaryOp::TIMESTAMP:
+		m_output << "timestamp()";
+		break;
+	case NullaryOp::NUMBER:
+		m_output << "number()";
+		break;
+	case NullaryOp::DIFFICULTY:
+		m_output << "difficulty()";
+		break;
+	case NullaryOp::GASLIMIT:
+		m_output << "gaslimit()";
 		break;
 	}
 }
@@ -947,6 +983,9 @@ void ProtoConverter::visit(Statement const& _x)
 		if (!m_inForInitScope)
 			visit(_x.funcdef());
 		break;
+	case Statement::kPop:
+		visit(_x.pop());
+		break;
 	case Statement::STMT_ONEOF_NOT_SET:
 		break;
 	}
@@ -1231,6 +1270,13 @@ void ProtoConverter::visit(FunctionDef const& _x)
 	unsigned numInParams = _x.num_input_params() % s_modInputParams;
 	unsigned numOutParams = _x.num_output_params() % s_modOutputParams;
 	createFunctionDefAndCall(_x, numInParams, numOutParams);
+}
+
+void ProtoConverter::visit(PopStmt const& _x)
+{
+	m_output << "pop(";
+	visit(_x.expr());
+	m_output << ")\n";
 }
 
 void ProtoConverter::visit(Program const& _x)
