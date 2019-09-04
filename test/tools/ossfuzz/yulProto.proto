@@ -21,54 +21,24 @@ message VarDecl {
   required Expression expr = 1;
 }
 
-message FunctionCallNoReturnVal {
-  // Indexes a function that does not return anything
-  required uint32 func_index = 1;
-  required Expression in_param1 = 2;
-  required Expression in_param2 = 3;
-  required Expression in_param3 = 4;
-  required Expression in_param4 = 5;
-}
-
-// Used by Expression
-message FunctionCallSingleReturnVal {
-  // Indexes a function that returns exactly one value
-  required uint32 func_index = 1;
-  required Expression in_param1 = 2;
-  required Expression in_param2 = 3;
-  required Expression in_param3 = 4;
-  required Expression in_param4 = 5;
-}
-
-message MultiVarDecl {
-  // Indexes a function that returns more than one value
-  required uint32 func_index = 1;
-  required Expression in_param1 = 2;
-  required Expression in_param2 = 3;
-  required Expression in_param3 = 4;
-  required Expression in_param4 = 5;
-}
-
-message MultiAssignment {
-  // Indexes a function that returns more than one value
-  required uint32 func_index = 1;
-  required Expression in_param1 = 2;
-  required Expression in_param2 = 3;
-  required Expression in_param3 = 4;
-  required Expression in_param4 = 5;
-  required VarRef out_param1 = 6;
-  required VarRef out_param2 = 7;
-  required VarRef out_param3 = 8;
-  required VarRef out_param4 = 9;
-}
-
-// We exclude function calls with single return value here and use them as expressions
 message FunctionCall {
-  oneof functioncall_oneof {
-    FunctionCallNoReturnVal call_zero = 1;
-    MultiVarDecl call_multidecl = 2;
-    MultiAssignment call_multiassign = 3;
+  enum Returns {
+    ZERO = 1;
+    SINGLE = 2;
+    MULTIDECL = 3;
+    MULTIASSIGN = 4;
   }
+  required Returns ret = 1;
+  // Indexes an existing function
+  required uint32 func_index = 2;
+  required Expression in_param1 = 3;
+  required Expression in_param2 = 4;
+  required Expression in_param3 = 5;
+  required Expression in_param4 = 6;
+  required VarRef out_param1 = 7;
+  required VarRef out_param2 = 8;
+  required VarRef out_param3 = 9;
+  required VarRef out_param4 = 10;
 }
 
 message TypedVarDecl {
@@ -242,7 +212,7 @@ message Expression {
     UnaryOp unop = 4;
     TernaryOp top = 5;
     NullaryOp nop = 6;
-    FunctionCallSingleReturnVal func_expr = 7;
+    FunctionCall func_expr = 7;
   }
 }
 
@@ -311,10 +281,12 @@ message TerminatingStmt {
   }
 }
 
-// Stub for a VarDecl without an Expression on the RHS
-message EmptyVarDecl {}
+message FunctionDef {
+  required uint32 num_input_params = 1;
+  required uint32 num_output_params = 2;
+  required Block block = 3;
+}
 
-// TODO: Make Function definition a Statement
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl            = 1;
@@ -332,6 +304,7 @@ message Statement {
     TerminatingStmt     terminatestmt   = 13;
     FunctionCall        functioncall    = 14;
     BoundedForStmt      boundedforstmt  = 15;
+    FunctionDef         funcdef         = 16;
   }
 }
 
@@ -339,39 +312,8 @@ message Block {
   repeated Statement statements = 1;
 }
 
-// Identical to Block with the addition of an empty var right at the top
-// Used by FunctionDefinitionNoReturnVal only.
-message SpecialBlock {
-  required EmptyVarDecl var = 1;
-  repeated Statement statements = 2;
-}
-
-// This ensures that proto mutator generates at least one of each type if it creates at least 1 functiondef message.
-message FunctionDefinition {
-  required FunctionDefinitionNoReturnVal fd_zero = 1;
-  required FunctionDefinitionSingleReturnVal fd_one = 2;
-  required FunctionDefinitionMultiReturnVal fd_multi = 3;
-}
-
-// Since this function can have 0 parameters, we hoist an empty var decl at the top via SpecialBlock.
-message FunctionDefinitionNoReturnVal {
-  required uint32 num_input_params = 1;
-  required SpecialBlock statements = 2;
-}
-
-message FunctionDefinitionSingleReturnVal {
-  required uint32 num_input_params = 1;
-  required Block statements = 2;
-}
-
-message FunctionDefinitionMultiReturnVal {
-  required uint32 num_input_params = 1;
-  required uint32 num_output_params = 2;
-  required Block statements = 3;
-}
-
 message Program {
-  repeated FunctionDefinition funcs = 1;
+  required Block block = 1;
 }
 
 package yul.test.yul_fuzzer;
