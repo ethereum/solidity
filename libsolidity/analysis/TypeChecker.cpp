@@ -1527,11 +1527,14 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					"\"."
 				);
 		}
-		if (resultType->category() == Type::Category::Address)
-		{
-			bool const payable = argType->isExplicitlyConvertibleTo(*TypeProvider::payableAddress());
-			resultType = payable ? TypeProvider::payableAddress() : TypeProvider::address();
-		}
+		if (auto addressType = dynamic_cast<AddressType const*>(resultType))
+			if (addressType->stateMutability() != StateMutability::Payable)
+			{
+				bool payable = false;
+				if (argType->category() != Type::Category::Address)
+					payable = argType->isExplicitlyConvertibleTo(*TypeProvider::payableAddress());
+				resultType = payable ? TypeProvider::payableAddress() : TypeProvider::address();
+			}
 	}
 	return resultType;
 }
@@ -2423,7 +2426,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 {
-	_expr.annotation().type = TypeProvider::typeType(TypeProvider::fromElementaryTypeName(_expr.typeName()));
+	_expr.annotation().type = TypeProvider::typeType(TypeProvider::fromElementaryTypeName(_expr.type().typeName(), _expr.type().stateMutability()));
 	_expr.annotation().isPure = true;
 }
 

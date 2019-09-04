@@ -16,6 +16,8 @@ This section lists purely syntactic changes that do not affect the behavior of e
 
 * Conversions from external function types to ``address`` are now disallowed. Instead external
   function types have a member called ``address``, similar to the existing ``selector`` member.
+* Conversions from ``address`` to ``address payable`` are now possible via ``payable(x)``, where
+  ``x`` must be of type ``address``.
 
 * New reserved keywords: ``virtual``.
 

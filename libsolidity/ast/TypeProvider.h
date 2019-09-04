@@ -54,7 +54,7 @@ public:
 
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static Type const* fromElementaryTypeName(ElementaryTypeNameToken const& _type);
+	static Type const* fromElementaryTypeName(ElementaryTypeNameToken const& _type, boost::optional<StateMutability> _stateMutability = {});
 
 	/// Converts a given elementary type name with optional data location
 	/// suffix " storage", " calldata" or " memory" to a type pointer. If suffix not given, defaults to " storage".

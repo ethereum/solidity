@@ -171,17 +171,19 @@ while a plain ``address`` cannot be sent Ether.
 
 Type conversions:
 
-Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable`` are
-not possible (the only way to perform such a conversion is by using an intermediate conversion to ``uint160``).
+Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable``
+must be explicit via ``payable(<address>)``.
 
 :ref:`Address literals<address_literals>` can be implicitly converted to ``address payable``.
 
 Explicit conversions to and from ``address`` are allowed for integers, integer literals, ``bytes20`` and contract types with the following
 caveat:
-Conversions of the form ``address payable(x)`` are not allowed. Instead the result of a conversion of the form ``address(x)``
+The result of a conversion of the form ``address(x)``
 has the type ``address payable``, if ``x`` is of integer or fixed bytes type, a literal or a contract with a payable fallback function.
 If ``x`` is a contract without payable fallback function, then ``address(x)`` will be of type ``address``.
 In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
+
+Only expressions of type ``address`` can be converted to type ``address payable`` via ``payable(<address>)``.
 
 .. note::
     It might very well be that you do not need to care about the distinction between ``address``
@@ -310,10 +312,12 @@ Every :ref:`contract<contracts>` defines its own type.
 You can implicitly convert contracts to contracts they inherit from.
 Contracts can be explicitly converted to and from the ``address`` type.
 
-Explicit conversion to and from the ``address payable`` type
-is only possible if the contract type has a payable fallback function.
-The conversion is still performed using ``address(x)`` and not
-using ``address payable(x)``. You can find more information in the section about
+Explicit conversion to and from the ``address payable`` type is only possible
+if the contract type has a payable fallback function.  The conversion is still
+performed using ``address(x)``. If the contract type does not have a payable
+fallback function, the conversion to ``address payable`` can be done using
+``payable(address(x))``.
+You can find more information in the section about
 the :ref:`address type<address>`.
 
 .. note::

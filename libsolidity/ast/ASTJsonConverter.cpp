@@ -712,7 +712,7 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
-		make_pair(m_legacy ? "value" : "typeName", _node.typeName().toString())
+		make_pair(m_legacy ? "value" : "typeName", _node.type().typeName().toString())
 	};
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "ElementaryTypeNameExpression", std::move(attributes));
