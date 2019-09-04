@@ -30,7 +30,7 @@ function test_fn { yarn run test:contracts; }
 
 function colony_test
 {
-    OPTIMIZER_LEVEL=3
+    OPTIMIZER_LEVELS=2
     FORCE_ABIv2=false
     setup https://github.com/JoinColony/colonyNetwork.git develop master
     run_install install_fn

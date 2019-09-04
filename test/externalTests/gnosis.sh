@@ -30,7 +30,7 @@ function test_fn { npm test; }
 
 function gnosis_safe_test
 {
-    OPTIMIZER_LEVEL=1
+    OPTIMIZER_LEVELS=0
     setup https://github.com/gnosis/safe-contracts.git development
     run_install install_fn
 

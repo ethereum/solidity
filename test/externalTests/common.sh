@@ -189,20 +189,30 @@ function run_test
 
     force_solc "$CONFIG" "$DIR" "$SOLJSON"
 
-    printLog "Checking optimizer level..."
-    if [ -z "$OPTIMIZER_LEVEL" ]; then
-        printError "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
+    printLog "Checking optimizer levels..."
+    if [ -z "$OPTIMIZER_LEVELS" ]; then
+        printError "Optimizer level not found. Please define OPTIMIZER_LEVELS=[0, 1, 2, 3, 4, 5]"
         exit 1
     fi
-    if [[ "$OPTIMIZER_LEVEL" == 1 ]]; then
-        declare -a optimizer_settings=("{ enabled: false }" "{ enabled: true }" "{ enabled: true, details: { yul: true } }")
+    if [[ "$OPTIMIZER_LEVELS" == 0 ]]; then
+        declare -a optimizer_settings=("{ enabled: false }")
     fi
-    if [[ "$OPTIMIZER_LEVEL" == 2 ]]; then
-        declare -a optimizer_settings=("{ enabled: true }" "{ enabled: true, details: { yul: true } }")
+    if [[ "$OPTIMIZER_LEVELS" == 1 ]]; then
+        declare -a optimizer_settings=("{ enabled: true }")
     fi
-    if [[ "$OPTIMIZER_LEVEL" == 3 ]]; then
+    if [[ "$OPTIMIZER_LEVELS" == 2 ]]; then
         declare -a optimizer_settings=("{ enabled: true, details: { yul: true } }")
     fi
+    if [[ "$OPTIMIZER_LEVELS" == 3 ]]; then
+        declare -a optimizer_settings=("{ enabled: true }" "{ enabled: true, details: { yul: true } }")
+    fi
+    if [[ "$OPTIMIZER_LEVELS" == 4 ]]; then
+        declare -a optimizer_settings=("{ enabled: false }" "{ enabled: true }")
+    fi
+    if [[ "$OPTIMIZER_LEVELS" == 5 ]]; then
+        declare -a optimizer_settings=("{ enabled: false }" "{ enabled: true }" "{ enabled: true, details: { yul: true } }")
+    fi
+
 
     for optimize in "${optimizer_settings[@]}"
     do
