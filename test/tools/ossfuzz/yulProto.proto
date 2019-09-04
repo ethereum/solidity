@@ -21,6 +21,37 @@ message VarDecl {
   required Expression expr = 1;
 }
 
+message LowLevelCall {
+  enum Type {
+    CALL = 0;
+    CALLCODE = 1;
+    DELEGATECALL = 2;
+    STATICCALL = 3;
+  }
+  required Type callty = 1;
+  required Expression gas = 2;
+  required Expression addr = 3;
+  // Valid for call and callcode only
+  required Expression wei = 4;
+  required Expression in = 5;
+  required Expression insize = 6;
+  required Expression out = 7;
+  required Expression outsize = 8;
+}
+
+message Create {
+  enum Type {
+    CREATE = 0;
+    CREATE2 = 1;
+  }
+  required Type createty = 1;
+  required Expression wei = 2;
+  required Expression position = 3;
+  required Expression size = 4;
+  // Valid for create2 only
+  required Expression value = 5;
+}
+
 message FunctionCall {
   enum Returns {
     ZERO = 1;
@@ -225,6 +256,8 @@ message Expression {
     TernaryOp top = 5;
     NullaryOp nop = 6;
     FunctionCall func_expr = 7;
+    LowLevelCall lowcall = 8;
+    Create create = 9;
   }
 }
 
