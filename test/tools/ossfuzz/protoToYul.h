@@ -85,6 +85,9 @@ private:
 	void visit(TerminatingStmt const&);
 	void visit(FunctionCall const&);
 	void visit(FunctionDef const&);
+	void visit(PopStmt const&);
+	void visit(LowLevelCall const&);
+	void visit(Create const&);
 	void visit(Program const&);
 
 	/// Creates a new scope, and adds @a _funcParams to it if it

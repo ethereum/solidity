@@ -21,6 +21,37 @@ message VarDecl {
   required Expression expr = 1;
 }
 
+message LowLevelCall {
+  enum Type {
+    CALL = 0;
+    CALLCODE = 1;
+    DELEGATECALL = 2;
+    STATICCALL = 3;
+  }
+  required Type callty = 1;
+  required Expression gas = 2;
+  required Expression addr = 3;
+  // Valid for call and callcode only
+  required Expression wei = 4;
+  required Expression in = 5;
+  required Expression insize = 6;
+  required Expression out = 7;
+  required Expression outsize = 8;
+}
+
+message Create {
+  enum Type {
+    CREATE = 0;
+    CREATE2 = 1;
+  }
+  required Type createty = 1;
+  required Expression wei = 2;
+  required Expression position = 3;
+  required Expression size = 4;
+  // Valid for create2 only
+  required Expression value = 5;
+}
+
 message FunctionCall {
   enum Returns {
     ZERO = 1;
@@ -129,6 +160,8 @@ message UnaryOp {
     CALLDATALOAD = 4;
     EXTCODESIZE = 5;
     EXTCODEHASH = 6;
+    BALANCE = 7;
+    BLOCKHASH = 8;
   }
   required UOp op = 1;
   required Expression operand = 2;
@@ -172,6 +205,16 @@ message NullaryOp {
     CALLDATASIZE = 4;
     CODESIZE = 5;
     RETURNDATASIZE = 6;
+    ADDRESS = 7;
+    ORIGIN = 8;
+    CALLER = 9;
+    CALLVALUE = 10;
+    GASPRICE = 11;
+    COINBASE = 12;
+    TIMESTAMP = 13;
+    NUMBER = 14;
+    DIFFICULTY = 15;
+    GASLIMIT = 16;
   }
   required NOp op = 1;
 }
@@ -213,6 +256,8 @@ message Expression {
     TernaryOp top = 5;
     NullaryOp nop = 6;
     FunctionCall func_expr = 7;
+    LowLevelCall lowcall = 8;
+    Create create = 9;
   }
 }
 
@@ -287,6 +332,10 @@ message FunctionDef {
   required Block block = 3;
 }
 
+message PopStmt {
+  required Expression expr = 1;
+}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl            = 1;
@@ -305,6 +354,7 @@ message Statement {
     FunctionCall        functioncall    = 14;
     BoundedForStmt      boundedforstmt  = 15;
     FunctionDef         funcdef         = 16;
+    PopStmt             pop             = 17;
   }
 }
 
