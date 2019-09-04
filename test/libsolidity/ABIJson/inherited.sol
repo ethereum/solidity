@@ -10,6 +10,20 @@ contract Derived is Base {
 //     :Base
 // [
 //   {
+//     "anonymous": false,
+//     "inputs":
+//     [
+//       {
+//         "indexed": true,
+//         "internalType": "bytes32",
+//         "name": "evtArgBase",
+//         "type": "bytes32"
+//       }
+//     ],
+//     "name": "baseEvent",
+//     "type": "event"
+//   },
+//   {
 //     "constant": false,
 //     "inputs":
 //     [
@@ -31,7 +45,12 @@ contract Derived is Base {
 //     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
-//   },
+//   }
+// ]
+//
+//
+//     :Derived
+// [
 //   {
 //     "anonymous": false,
 //     "inputs":
@@ -45,12 +64,21 @@ contract Derived is Base {
 //     ],
 //     "name": "baseEvent",
 //     "type": "event"
-//   }
-// ]
-//
-//
-//     :Derived
-// [
+//   },
+//   {
+//     "anonymous": false,
+//     "inputs":
+//     [
+//       {
+//         "indexed": true,
+//         "internalType": "uint256",
+//         "name": "evtArgDerived",
+//         "type": "uint256"
+//       }
+//     ],
+//     "name": "derivedEvent",
+//     "type": "event"
+//   },
 //   {
 //     "constant": false,
 //     "inputs":
@@ -96,33 +124,5 @@ contract Derived is Base {
 //     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
-//   },
-//   {
-//     "anonymous": false,
-//     "inputs":
-//     [
-//       {
-//         "indexed": true,
-//         "internalType": "uint256",
-//         "name": "evtArgDerived",
-//         "type": "uint256"
-//       }
-//     ],
-//     "name": "derivedEvent",
-//     "type": "event"
-//   },
-//   {
-//     "anonymous": false,
-//     "inputs":
-//     [
-//       {
-//         "indexed": true,
-//         "internalType": "bytes32",
-//         "name": "evtArgBase",
-//         "type": "bytes32"
-//       }
-//     ],
-//     "name": "baseEvent",
-//     "type": "event"
 //   }
 // ]

@@ -122,6 +122,8 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Shifting operators use shifting opcodes and thus need less gas.
 - ``petersburg`` (**default**)
    - The compiler behaves the same way as with constantinople.
+- ``istanbul`` (**experimental**)
+- ``berlin`` (**experimental**)
 
 
 .. _compiler-api:
@@ -229,7 +231,7 @@ Input Description
         },
         // Version of the EVM to compile for.
         // Affects type checking and code generation. Can be homestead,
-        // tangerineWhistle, spuriousDragon, byzantium, constantinople or petersburg
+        // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
         "evmVersion": "byzantium",
         // Metadata settings (optional)
         "metadata": {

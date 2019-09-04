@@ -33,6 +33,17 @@ Z3CHCInterface::Z3CHCInterface():
 	z3::set_param("rewriter.pull_cheap_ite", true);
 	// This needs to be set in the context.
 	m_context->set("timeout", queryTimeout);
+
+	// Spacer options.
+	// These needs to be set in the solver.
+	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
+	z3::params p(*m_context);
+	// These are useful for solving problems with arrays and loops.
+	// Use quantified lemma generalizer.
+	p.set("fp.spacer.q3.use_qgen", true);
+	// Ground pobs by using values from a model.
+	p.set("fp.spacer.ground_pobs", false);
+	m_solver.set(p);
 }
 
 void Z3CHCInterface::declareVariable(string const& _name, Sort const& _sort)
@@ -82,8 +93,10 @@ pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
 			break;
 		}
 		case z3::check_result::unknown:
+		{
 			result = CheckResult::UNKNOWN;
 			break;
+		}
 		}
 		// TODO retrieve model / invariants
 	}

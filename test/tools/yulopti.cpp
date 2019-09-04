@@ -32,6 +32,7 @@
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -54,8 +55,10 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/LoadResolver.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -133,7 +136,7 @@ public:
 			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/f(O)r-loop-condition-into-body/" << endl;
 			cout << "  s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/? " << endl;
-			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/? " << endl;
+			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/? " << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -151,7 +154,7 @@ public:
 				ForLoopConditionIntoBody{}(*m_ast);
 				break;
 			case 'c':
-				(CommonSubexpressionEliminator{m_dialect})(*m_ast);
+				CommonSubexpressionEliminator::run(m_dialect, *m_ast);
 				break;
 			case 'd':
 				(VarDeclInitializer{})(*m_ast);
@@ -187,7 +190,7 @@ public:
 				(ControlFlowSimplifier{m_dialect})(*m_ast);
 				break;
 			case 'u':
-				UnusedPruner::runUntilStabilised(m_dialect, *m_ast);
+				UnusedPruner::runUntilStabilisedOnFullAST(m_dialect, *m_ast);
 				break;
 			case 'D':
 				DeadCodeEliminator{m_dialect}(*m_ast);
@@ -214,6 +217,9 @@ public:
 				StackCompressor::run(m_dialect, obj, true, 16);
 				break;
 			}
+			case 'L':
+				LoadResolver::run(m_dialect, *m_ast);
+				break;
 			default:
 				cout << "Unknown option." << endl;
 			}

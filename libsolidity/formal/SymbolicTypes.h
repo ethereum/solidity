@@ -63,6 +63,7 @@ std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(solidity:
 
 Expression minValue(solidity::IntegerType const& _type);
 Expression maxValue(solidity::IntegerType const& _type);
+Expression zeroValue(solidity::TypePointer const& _type);
 
 void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context);
 void setSymbolicZeroValue(Expression _expr, solidity::TypePointer const& _type, EncodingContext& _context);

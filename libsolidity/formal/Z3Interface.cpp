@@ -132,6 +132,12 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 				return m_context.bool_val(true);
 			else if (n == "false")
 				return m_context.bool_val(false);
+			else if (_expr.sort->kind == Kind::Sort)
+			{
+				auto sortSort = dynamic_pointer_cast<SortSort>(_expr.sort);
+				solAssert(sortSort, "");
+				return m_context.constant(n.c_str(), z3Sort(*sortSort->inner));
+			}
 			else
 				try
 				{
@@ -178,6 +184,14 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return z3::select(arguments[0], arguments[1]);
 		else if (n == "store")
 			return z3::store(arguments[0], arguments[1], arguments[2]);
+		else if (n == "const_array")
+		{
+			shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
+			solAssert(sortSort, "");
+			auto arraySort = dynamic_pointer_cast<ArraySort>(sortSort->inner);
+			solAssert(arraySort && arraySort->domain, "");
+			return z3::const_array(z3Sort(*arraySort->domain), arguments[1]);
+		}
 
 		solAssert(false, "");
 	}

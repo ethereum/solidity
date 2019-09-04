@@ -10,12 +10,9 @@ contract C
 			delete a;
 		else
 			delete a[2];
-		// Assertion fails as false positive because
-		// setZeroValue for arrays needs \forall i . a[i] = 0
-		// which is still unimplemented.
 		assert(a[2] == 0);
+		assert(a[1] == 0);
 	}
 }
 // ----
 // Warning: (118-119): Condition is always true.
-// Warning: (297-314): Assertion violation happens here

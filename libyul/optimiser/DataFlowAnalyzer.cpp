@@ -211,7 +211,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 {
 	clearValues(_variables);
 
-	MovableChecker movableChecker{m_dialect};
+	MovableChecker movableChecker{m_dialect, &m_functionSideEffects};
 	if (_value)
 		movableChecker.visit(*_value);
 	else
