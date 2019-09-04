@@ -152,6 +152,12 @@ void ProtoConverter::visit(Expression const& _x)
 		else
 			m_output << dictionaryToken();
 		break;
+	case Expression::kLowcall:
+		visit(_x.lowcall());
+		break;
+	case Expression::kCreate:
+		visit(_x.create());
+		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
 		m_output << dictionaryToken();
 		break;
@@ -711,6 +717,68 @@ void ProtoConverter::visit(FunctionCall const& _x)
 		convertFunctionCall(_x, funcName, numInParams);
 		break;
 	}
+}
+
+void ProtoConverter::visit(LowLevelCall const& _x)
+{
+	LowLevelCall_Type type = _x.callty();
+	switch (type)
+	{
+	case LowLevelCall::CALL:
+		m_output << "call(";
+		break;
+	case LowLevelCall::CALLCODE:
+		m_output << "callcode(";
+		break;
+	case LowLevelCall::DELEGATECALL:
+		m_output << "delegatecall(";
+		break;
+	case LowLevelCall::STATICCALL:
+		m_output << "staticcall(";
+		break;
+	}
+	visit(_x.gas());
+	m_output << ", ";
+	visit(_x.addr());
+	m_output << ", ";
+	if (type == LowLevelCall::CALL || LowLevelCall::CALLCODE)
+	{
+		visit(_x.wei());
+		m_output << ", ";
+	}
+	visit(_x.in());
+	m_output << ", ";
+	visit(_x.insize());
+	m_output << ", ";
+	visit(_x.out());
+	m_output << ", ";
+	visit(_x.outsize());
+	m_output << ")";
+}
+
+void ProtoConverter::visit(Create const& _x)
+{
+	Create_Type type = _x.createty();
+	switch (type)
+	{
+	case Create::CREATE:
+		m_output << "create(";
+		break;
+	case Create::CREATE2:
+		m_output << "create2(";
+		break;
+	}
+	visit(_x.wei());
+	m_output << ", ";
+	visit(_x.position());
+	m_output << ", ";
+	visit(_x.size());
+	if (type == Create::CREATE2)
+	{
+		m_output << ", ";
+		visit(_x.value());
+	}
+	m_output << ")";
 }
 
 void ProtoConverter::visit(IfStmt const& _x)
