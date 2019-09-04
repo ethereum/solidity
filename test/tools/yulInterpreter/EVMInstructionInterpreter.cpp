@@ -248,16 +248,15 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.gaslimit;
 	// --------------- memory / storage / logs ---------------
 	case Instruction::MLOAD:
-		if (accessMemory(arg[0], 0x20))
-			return readMemoryWord(arg[0]);
-		return 0;
+		accessMemory(arg[0], 0x20);
+		return readMemoryWord(arg[0]);
 	case Instruction::MSTORE:
-		if (accessMemory(arg[0], 0x20))
-			writeMemoryWord(arg[0], arg[1]);
+		accessMemory(arg[0], 0x20);
+		writeMemoryWord(arg[0], arg[1]);
 		return 0;
 	case Instruction::MSTORE8:
-		if (accessMemory(arg[0], 1))
-			m_state.memory[arg[0]] = uint8_t(arg[1] & 0xff);
+		accessMemory(arg[0], 1);
+		m_state.memory[arg[0]] = uint8_t(arg[1] & 0xff);
 		return 0;
 	case Instruction::SLOAD:
 		return m_state.storage[h256(arg[0])];
