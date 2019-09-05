@@ -96,9 +96,12 @@ private:
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
+	/// @param _tryCall if true, this is the external call of a try statement. In that case,
+	///                 returns success flag on top of stack and does not revert on failure.
 	void appendExternalFunctionCall(
 		FunctionType const& _functionType,
-		std::vector<ASTPointer<Expression const>> const& _arguments
+		std::vector<ASTPointer<Expression const>> const& _arguments,
+		bool _tryCall
 	);
 	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
 	/// expected to be on the stack and is updated by this call.
