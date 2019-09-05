@@ -738,9 +738,12 @@ public:
 	/// (or function type name or event) or declared inside a function body.
 	bool isLocalVariable() const;
 	/// @returns true if this variable is a parameter or return parameter of a function.
-	bool isCallableParameter() const;
+	bool isCallableOrCatchParameter() const;
 	/// @returns true if this variable is a return parameter of a function.
 	bool isReturnParameter() const;
+	/// @returns true if this variable is a parameter of the success or failure clausse
+	/// of a try/catch statement.
+	bool isTryCatchParameter() const;
 	/// @returns true if this variable is a local variable or return parameter.
 	bool isLocalOrReturn() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.

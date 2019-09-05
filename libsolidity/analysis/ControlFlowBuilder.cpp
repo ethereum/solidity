@@ -396,7 +396,7 @@ bool ControlFlowBuilder::visit(VariableDeclaration const& _variableDeclaration)
 			_variableDeclaration.value().get()
 		);
 	// Function arguments are considered to be immediately assigned as well (they are "externally assigned").
-	else if (_variableDeclaration.isCallableParameter() && !_variableDeclaration.isReturnParameter())
+	else if (_variableDeclaration.isCallableOrCatchParameter() && !_variableDeclaration.isReturnParameter())
 		m_currentNode->variableOccurrences.emplace_back(
 			_variableDeclaration,
 			VariableOccurrence::Kind::Assignment,

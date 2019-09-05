@@ -177,6 +177,8 @@ private:
 	bool visit(EnumValue& _value) override;
 	bool visit(FunctionDefinition& _function) override;
 	void endVisit(FunctionDefinition& _function) override;
+	bool visit(TryCatchClause& _tryCatchClause) override;
+	void endVisit(TryCatchClause& _tryCatchClause) override;
 	bool visit(ModifierDefinition& _modifier) override;
 	void endVisit(ModifierDefinition& _modifier) override;
 	bool visit(FunctionTypeName& _funTypeName) override;
