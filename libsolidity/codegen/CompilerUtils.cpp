@@ -95,6 +95,26 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	m_context << Instruction::REVERT;
 }
 
+void CompilerUtils::returnDataToArray()
+{
+	if (m_context.evmVersion().supportsReturndata())
+	{
+		m_context << Instruction::RETURNDATASIZE;
+		m_context.appendInlineAssembly(R"({
+			switch v case 0 {
+				v := 0x60
+			} default {
+				v := mload(0x40)
+				mstore(0x40, add(v, and(add(returndatasize(), 0x3f), not(0x1f))))
+				mstore(v, returndatasize())
+				returndatacopy(add(v, 0x20), 0, returndatasize())
+			}
+		})", {"v"});
+	}
+	else
+		pushZeroPointer();
+}
+
 void CompilerUtils::accessCalldataTail(Type const& _type)
 {
 	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
