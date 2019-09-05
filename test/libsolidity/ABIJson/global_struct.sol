@@ -25,7 +25,7 @@ contract C {
 //         "type": "tuple"
 //       }
 //     ],
-//     "name": "g",
+//     "name": "f",
 //     "outputs": [],
 //     "payable": false,
 //     "stateMutability": "view",
@@ -49,7 +49,7 @@ contract C {
 //         "type": "tuple"
 //       }
 //     ],
-//     "name": "f",
+//     "name": "g",
 //     "outputs": [],
 //     "payable": false,
 //     "stateMutability": "view",
