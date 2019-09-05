@@ -741,7 +741,7 @@ void ProtoConverter::visit(LowLevelCall const& _x)
 	m_output << ", ";
 	visit(_x.addr());
 	m_output << ", ";
-	if (type == LowLevelCall::CALL || LowLevelCall::CALLCODE)
+	if (type == LowLevelCall::CALL || type == LowLevelCall::CALLCODE)
 	{
 		visit(_x.wei());
 		m_output << ", ";
