@@ -455,8 +455,6 @@ A function description is a JSON object with the fields:
 - ``outputs``: an array of objects similar to ``inputs``, can be omitted if function doesn't return anything;
 - ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` (function does not accept Ether) and ``payable`` (function accepts Ether);
 
-``type`` can be omitted, defaulting to ``"function"``.
-
 Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
 
 .. note::
