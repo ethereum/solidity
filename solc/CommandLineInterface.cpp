@@ -27,7 +27,6 @@
 
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/ast/ASTPrinter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -158,7 +157,6 @@ static string const g_argAllowPaths = g_strAllowPaths;
 static string const g_argAsm = g_strAsm;
 static string const g_argAsmJson = g_strAsmJson;
 static string const g_argAssemble = g_strAssemble;
-static string const g_argAst = g_strAst;
 static string const g_argAstCompactJson = g_strAstCompactJson;
 static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
@@ -711,7 +709,6 @@ Allowed options)",
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
-		(g_argAst.c_str(), "AST of all source files.")
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
 		(g_argAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
 		(g_argAsm.c_str(), "EVM assembly of the contracts.")
@@ -1108,9 +1105,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 {
 	string title;
 
-	if (_argStr == g_argAst)
-		title = "Syntax trees:";
-	else if (_argStr == g_argAstJson)
+	if (_argStr == g_argAstJson)
 		title = "JSON AST:";
 	else if (_argStr == g_argAstCompactJson)
 		title = "JSON AST (compact format):";
@@ -1143,16 +1138,8 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			{
 				stringstream data;
 				string postfix = "";
-				if (_argStr == g_argAst)
-				{
-					ASTPrinter printer(m_compiler->ast(sourceCode.first), sourceCode.second);
-					printer.print(data);
-				}
-				else
-				{
-					ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
-					postfix += "_json";
-				}
+				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+				postfix += "_json";
 				boost::filesystem::path path(sourceCode.first);
 				createFile(path.filename().string() + postfix + ".ast", data.str());
 			}
@@ -1163,17 +1150,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			for (auto const& sourceCode: m_sourceCodes)
 			{
 				sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-				if (_argStr == g_argAst)
-				{
-					ASTPrinter printer(
-						m_compiler->ast(sourceCode.first),
-						sourceCode.second,
-						gasCosts
-					);
-					printer.print(sout());
-				}
-				else
-					ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
+				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 			}
 		}
 	}
@@ -1398,7 +1375,6 @@ void CommandLineInterface::outputCompilationResults()
 	handleCombinedJSON();
 
 	// do we need AST output?
-	handleAst(g_argAst);
 	handleAst(g_argAstJson);
 	handleAst(g_argAstCompactJson);
 
