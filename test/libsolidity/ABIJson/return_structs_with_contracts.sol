@@ -8,7 +8,6 @@ contract C {
 //     :C
 // [
 //   {
-//     "constant": false,
 //     "inputs": [],
 //     "name": "f",
 //     "outputs":
@@ -37,7 +36,6 @@ contract C {
 //         "type": "address"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }

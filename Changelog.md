@@ -1,6 +1,7 @@
 ### 0.6.0 (unreleased)
 
 Breaking changes:
+ * ABI: remove the deprecated ``constant`` and ``payable`` fields.
  * Commandline interface: remove the text-based ast printer (``--ast``).
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.

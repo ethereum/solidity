@@ -8,7 +8,6 @@ contract C {
 //     :C
 // [
 //   {
-//     "constant": true,
 //     "inputs":
 //     [
 //       {
@@ -27,12 +26,10 @@ contract C {
 //     ],
 //     "name": "f",
 //     "outputs": [],
-//     "payable": false,
 //     "stateMutability": "view",
 //     "type": "function"
 //   },
 //   {
-//     "constant": true,
 //     "inputs":
 //     [
 //       {
@@ -51,7 +48,6 @@ contract C {
 //     ],
 //     "name": "g",
 //     "outputs": [],
-//     "payable": false,
 //     "stateMutability": "view",
 //     "type": "function"
 //   }
