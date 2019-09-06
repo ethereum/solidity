@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
 		string("6080604052348015600f57600080fd5b5060") +
-		(VersionIsRelease ? "3e" : toHex(bytes{uint8_t(60 + VersionStringStrict.size())})) +
+		(VersionIsRelease ? "3f" : toHex(bytes{uint8_t(61 + VersionStringStrict.size())})) +
 		"80601d6000396000f3fe6080604052600080fdfe"
 	);
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"tag_1:\n    /* \"fileA\":0:14  contract A { } */\n  pop\n  dataSize(sub_0)\n  dup1\n  "
 		"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n        "
 		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      0x00\n      "
-		"dup1\n      revert\n\n    auxdata: 0xa265627a7a72315820"
+		"dup1\n      revert\n\n    auxdata: 0xa26469706673582212"
 	) == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(contract["evm"]["gasEstimates"].size(), 1);

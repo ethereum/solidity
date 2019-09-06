@@ -159,6 +159,13 @@ void CompilerStack::useMetadataLiteralSources(bool _metadataLiteralSources)
 	m_metadataLiteralSources = _metadataLiteralSources;
 }
 
+void CompilerStack::setMetadataHash(MetadataHash _metadataHash)
+{
+	if (m_stackState >= ParsingPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set metadata hash before parsing."));
+	m_metadataHash = _metadataHash;
+}
+
 void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _response)
 {
 	if (m_stackState >= ParsingPerformed)
@@ -182,6 +189,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_generateEWasm = false;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
+		m_metadataHash = MetadataHash::IPFS;
 	}
 	m_globalContext.reset();
 	m_scopes.clear();
@@ -1155,6 +1163,10 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 	if (m_metadataLiteralSources)
 		meta["settings"]["metadata"]["useLiteralContent"] = true;
+
+	static vector<string> hashes{"ipfs", "bzzr1", "none"};
+	meta["settings"]["metadata"]["bytecodeHash"] = hashes.at(unsigned(m_metadataHash));
+
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
@@ -1263,7 +1275,17 @@ private:
 bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
 {
 	MetadataCBOREncoder encoder;
-	encoder.pushBytes("bzzr1", dev::bzzr1Hash(_metadata).asBytes());
+
+	if (m_metadataHash == MetadataHash::IPFS)
+	{
+		solAssert(_metadata.length() < 1024 * 256, "Metadata too large.");
+		encoder.pushBytes("ipfs", dev::ipfsHash(_metadata));
+	}
+	else if (m_metadataHash == MetadataHash::Bzzr1)
+		encoder.pushBytes("bzzr1", dev::bzzr1Hash(_metadata).asBytes());
+	else
+		solAssert(m_metadataHash == MetadataHash::None, "Invalid metadata hash");
+
 	if (_experimentalMode)
 		encoder.pushBool("experimental", true);
 	if (m_release)

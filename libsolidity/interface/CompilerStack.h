@@ -92,6 +92,12 @@ public:
 		CompilationSuccessful
 	};
 
+	enum class MetadataHash {
+		IPFS,
+		Bzzr1,
+		None
+	};
+
 	struct Remapping
 	{
 		std::string context;
@@ -170,6 +176,11 @@ public:
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
 	void useMetadataLiteralSources(bool _metadataLiteralSources);
+
+	/// Sets whether and which hash should be used
+	/// to store the metadata in the bytecode.
+	/// @param _metadataHash can be IPFS, Bzzr1, None
+	void setMetadataHash(MetadataHash _metadataHash);
 
 	/// Sets the sources. Must be set before parsing.
 	void setSources(StringMap _sources);
@@ -418,6 +429,7 @@ private:
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
+	MetadataHash m_metadataHash = MetadataHash::IPFS;
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
 	/// Whether or not there has been an error during processing.

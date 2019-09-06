@@ -236,7 +236,12 @@ Input Description
         // Metadata settings (optional)
         "metadata": {
           // Use only literal content and not URLs (false by default)
-          "useLiteralContent": true
+          "useLiteralContent": true,
+          // Use the given hash method for the metadata hash that is appended to the bytecode.
+          // The metadata hash can be removed from the bytecode via option "none".
+          // The other options are "ipfs" and "bzzr1".
+          // If the option is omitted, "ipfs" is used by default.
+          "bytecodeHash": "ipfs"
         },
         // Addresses of the libraries. If not all libraries are given here,
         // it can result in unlinked objects whose output data is different.

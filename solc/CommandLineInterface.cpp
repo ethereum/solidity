@@ -122,15 +122,18 @@ static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
 static string const g_strIR = "ir";
+static string const g_strIPFS = "ipfs";
 static string const g_strEWasm = "ewasm";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strMachine = "machine";
 static string const g_strMetadata = "metadata";
+static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
+static string const g_strNone = "none";
 static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
@@ -144,6 +147,7 @@ static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
+static string const g_strSwarm = "swarm";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
@@ -174,6 +178,7 @@ static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
 static string const g_argMetadata = g_strMetadata;
+static string const g_argMetadataHash = g_strMetadataHash;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
@@ -216,6 +221,14 @@ static set<string> const g_machineArgs
 	g_strEVM,
 	g_strEVM15,
 	g_streWasm
+};
+
+/// Possible arguments to for --metadata-hash
+static set<string> const g_metadataHashArgs
+{
+	g_strIPFS,
+	g_strSwarm,
+	g_strNone
 };
 
 static void version()
@@ -696,7 +709,12 @@ Allowed options)",
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
 		)
-		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.")
+		(
+			g_argMetadataHash.c_str(),
+			po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
+			"Choose hash method for the bytecode metadata or disable it."
+		)
+		(g_argMetadataLiteral.c_str(), "Store referenced sources as literal data in the metadata output.")
 		(
 			g_argAllowPaths.c_str(),
 			po::value<string>()->value_name("path(s)"),
@@ -923,6 +941,22 @@ bool CommandLineInterface::processInput()
 		return link();
 	}
 
+	if (m_args.count(g_argMetadataHash))
+	{
+		string hashStr = m_args[g_argMetadataHash].as<string>();
+		if (hashStr == g_strIPFS)
+			m_metadataHash = CompilerStack::MetadataHash::IPFS;
+		else if (hashStr == g_strSwarm)
+			m_metadataHash = CompilerStack::MetadataHash::Bzzr1;
+		else if (hashStr == g_strNone)
+			m_metadataHash = CompilerStack::MetadataHash::None;
+		else
+		{
+			serr() << "Invalid option for --metadata-hash: " << hashStr << endl;
+			return false;
+		}
+	}
+
 	m_compiler.reset(new CompilerStack(fileReader));
 
 	unique_ptr<SourceReferenceFormatter> formatter;
@@ -935,6 +969,8 @@ bool CommandLineInterface::processInput()
 	{
 		if (m_args.count(g_argMetadataLiteral) > 0)
 			m_compiler->useMetadataLiteralSources(true);
+		if (m_args.count(g_argMetadataHash))
+			m_compiler->setMetadataHash(m_metadataHash);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);
 		m_compiler->setSources(m_sourceCodes);

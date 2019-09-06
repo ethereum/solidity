@@ -378,9 +378,16 @@ boost::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, s
 
 boost::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
-	if (_input.isObject() && _input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
-		return formatFatalError("JSONError", "\"settings.metadata.useLiteralContent\" must be Boolean");
-	static set<string> keys{"useLiteralContent"};
+	if (_input.isObject())
+	{
+		if (_input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
+			return formatFatalError("JSONError", "\"settings.metadata.useLiteralContent\" must be Boolean");
+
+		static set<string> hashes{"ipfs", "bzzr1", "none"};
+		if (_input.isMember("bytecodeHash") && !hashes.count(_input["bytecodeHash"].asString()))
+			return formatFatalError("JSONError", "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"");
+	}
+	static set<string> keys{"useLiteralContent", "bytecodeHash"};
 	return checkKeys(_input, keys, "settings.metadata");
 }
 
@@ -710,6 +717,16 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 		return *result;
 
 	ret.metadataLiteralSources = metadataSettings.get("useLiteralContent", Json::Value(false)).asBool();
+	if (metadataSettings.isMember("bytecodeHash"))
+	{
+		auto metadataHash = metadataSettings["bytecodeHash"].asString();
+		ret.metadataHash =
+			metadataHash == "ipfs" ?
+			CompilerStack::MetadataHash::IPFS :
+				metadataHash == "bzzr1" ?
+				CompilerStack::MetadataHash::Bzzr1 :
+				CompilerStack::MetadataHash::None;
+	}
 
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
 
@@ -735,6 +752,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
 	compilerStack.setLibraries(_inputsAndSettings.libraries);
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
+	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
 
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
