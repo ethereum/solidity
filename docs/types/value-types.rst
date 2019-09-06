@@ -499,7 +499,7 @@ terminate the string literal. Newline only terminates the string literal if it i
 Hexadecimal Literals
 --------------------
 
-Hexadecimal literals are prefixed with the keyword ``hex`` and are enclosed in double or single-quotes (``hex"001122FF"``). Their content must be a hexadecimal string and their value will be the binary representation of those values.
+Hexadecimal literals are prefixed with the keyword ``hex`` and are enclosed in double or single-quotes (``hex"001122FF"``, ``hex'0011_22_FF'``). Their content must be hexadecimal digits which can optionally use a single underscore as separator between byte boundaries. The value of the literal will be the binary representation of the hexadecimal sequence.
 
 Hexadecimal literals behave like :ref:`string literals <string_literals>` and have the same convertibility restrictions.
 

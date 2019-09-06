@@ -67,7 +67,7 @@ string langutil::to_string(ScannerError _errorCode)
 	{
 		case ScannerError::NoError: return "No error.";
 		case ScannerError::IllegalToken: return "Invalid token.";
-		case ScannerError::IllegalHexString: return "Expected even number of hex-nibbles within double-quotes.";
+		case ScannerError::IllegalHexString: return "Expected even number of hex-nibbles.";
 		case ScannerError::IllegalHexDigit: return "Hexadecimal digit missing or invalid.";
 		case ScannerError::IllegalCommentTerminator: return "Expected multi-line comment-terminator.";
 		case ScannerError::IllegalEscapeSequence: return "Invalid escape sequence.";
@@ -759,13 +759,25 @@ Token Scanner::scanHexString()
 	char const quote = m_char;
 	advance();  // consume quote
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
+	bool allowUnderscore = false;
 	while (m_char != quote && !isSourcePastEndOfInput())
 	{
 		char c = m_char;
-		if (!scanHexByte(c))
-			// can only return false if hex-byte is incomplete (only one hex digit instead of two)
+
+		if (scanHexByte(c))
+		{
+			addLiteralChar(c);
+			allowUnderscore = true;
+		}
+		else if (c == '_')
+		{
+			advance();
+			if (!allowUnderscore || m_char == quote)
+				return setError(ScannerError::IllegalNumberSeparator);
+			allowUnderscore = false;
+		}
+		else
 			return setError(ScannerError::IllegalHexString);
-		addLiteralChar(c);
 	}
 
 	if (m_char != quote)

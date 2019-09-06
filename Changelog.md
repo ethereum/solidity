@@ -7,6 +7,7 @@ Breaking changes:
 
 Language Features:
  * Allow global enums and structs.
+ * Allow underscores as delimiters in hex strings.
 
 
 Compiler Features:
