@@ -5,7 +5,6 @@ contract test {
 //     :test
 // [
 //   {
-//     "constant": false,
 //     "inputs":
 //     [
 //       {
@@ -16,7 +15,6 @@ contract test {
 //     ],
 //     "name": "g",
 //     "outputs": [],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }

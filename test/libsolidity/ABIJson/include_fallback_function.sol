@@ -5,7 +5,6 @@ contract test {
 //     :test
 // [
 //   {
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "fallback"
 //   }

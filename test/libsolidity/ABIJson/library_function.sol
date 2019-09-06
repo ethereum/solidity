@@ -7,7 +7,6 @@ library test {
 //     :test
 // [
 //   {
-//     "constant": true,
 //     "inputs":
 //     [
 //       {
@@ -30,7 +29,6 @@ library test {
 //         "type": "uint256[]"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "pure",
 //     "type": "function"
 //   }

@@ -9,7 +9,6 @@ library L {
 //     :L
 // [
 //   {
-//     "constant": true,
 //     "inputs":
 //     [
 //       {
@@ -46,7 +45,6 @@ library L {
 //     ],
 //     "name": "g",
 //     "outputs": [],
-//     "payable": false,
 //     "stateMutability": "view",
 //     "type": "function"
 //   }
