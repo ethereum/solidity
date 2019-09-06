@@ -74,7 +74,7 @@ function compileFull()
     set +e
     "$SOLC" $FULLARGS $files >/dev/null 2>"$stderr_path"
     local exit_code=$?
-    local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|\^-------------------------------\^' < "$stderr_path")
+    local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\|' < "$stderr_path")
     set -e
     rm "$stderr_path"
 
@@ -156,6 +156,9 @@ function test_solc_behaviour()
     else
         sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
         sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
+        # Remove trailing empty lines. Needs a line break to make OSX sed happy.
+        sed -i -e '1{/^$/d
+}' "$stderr_path"
     fi
     # Remove path to cpp file
     sed -i -e 's/^\(Exception while assembling:\).*/\1/' "$stderr_path"
