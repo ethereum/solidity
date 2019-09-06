@@ -150,7 +150,7 @@ static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
-static string const g_strNewReporter = "new-reporter";
+static string const g_strOldReporter = "old-reporter";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -191,7 +191,7 @@ static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 static string const g_argColor = g_strColor;
 static string const g_argNoColor = g_strNoColor;
-static string const g_argNewReporter = g_strNewReporter;
+static string const g_argOldReporter = g_strOldReporter;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -706,7 +706,7 @@ Allowed options)",
 		)
 		(g_argColor.c_str(), "Force colored output.")
 		(g_argNoColor.c_str(), "Explicitly disable colored output, disabling terminal auto-detection.")
-		(g_argNewReporter.c_str(), "Enables new diagnostics reporter.")
+		(g_argOldReporter.c_str(), "Enables old diagnostics reporter.")
 		(g_argErrorRecovery.c_str(), "Enables additional parser error recovery.")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
@@ -929,10 +929,10 @@ bool CommandLineInterface::processInput()
 	m_compiler.reset(new CompilerStack(fileReader));
 
 	unique_ptr<SourceReferenceFormatter> formatter;
-	if (m_args.count(g_argNewReporter))
-		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
-	else
+	if (m_args.count(g_argOldReporter))
 		formatter = make_unique<SourceReferenceFormatter>(serr(false));
+	else
+		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
 
 	try
 	{
@@ -1325,10 +1325,10 @@ bool CommandLineInterface::assemble(
 	{
 		auto const& stack = sourceAndStack.second;
 		unique_ptr<SourceReferenceFormatter> formatter;
-		if (m_args.count(g_argNewReporter))
-			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
-		else
+		if (m_args.count(g_argOldReporter))
 			formatter = make_unique<SourceReferenceFormatter>(serr(false));
+		else
+			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
 
 		for (auto const& error: stack.errors())
 		{

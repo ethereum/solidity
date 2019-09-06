@@ -3,6 +3,7 @@
 Breaking changes:
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
+ * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
 
 
 Language Features:
