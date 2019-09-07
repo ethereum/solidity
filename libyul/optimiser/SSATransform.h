@@ -23,6 +23,8 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
+#include <liblangutil/SourceLocation.h>
+
 #include <vector>
 
 namespace yul
@@ -61,8 +63,10 @@ class NameDispenser;
  * Furthermore, always note the current variable/value assigned to a and replace each
  * reference to a by this variable.
  * The current value mapping is cleared for a variable a at the end of each block
- * in which it was assigned and just after the for loop init block if it is assigned
- * inside the for loop.
+ * in which it was assigned. We compensate that by appending a declaration
+ * of the form of "let a_1 := a" right after the location where control flow joins so
+ * variable references can use the SSA variable. The only exception to this rule are
+ * for loop conditions, as we cannot insert a variable declaration there.
  *
  * After this stage, redundantAssignmentRemover is recommended to remove the unnecessary
  * intermediate assignments.
@@ -70,7 +74,17 @@ class NameDispenser;
  * This stage provides best results if CSE is run right before it, because
  * then it does not generate excessive amounts of variables.
  *
+ * The transform is implemented in three stages. All stages are only concerned
+ * with variables that are assigned somewhere in the code (excluding declarations).
+ * The first stage inserts new SSA variables for each declaration and assignment of
+ * such variables.
+ * The second stage inserts new SSA variables at control flow joins.
+ * The last stage replaces references to variables that are assigned to somewhere in the
+ * code by their current SSA variable.
+ *
  * TODO Which transforms are required to keep this idempotent?
+ *
+ * Prerequisite: Disambiguator.
  */
 class SSATransform: public ASTModifier
 {

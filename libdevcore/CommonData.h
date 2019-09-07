@@ -98,6 +98,14 @@ inline std::set<T> operator+(std::set<T>&& _a, U&& _b)
 	ret += std::forward<U>(_b);
 	return ret;
 }
+/// Remove one set from another one.
+template <class T>
+inline std::set<T>& operator-=(std::set<T>& _a, std::set<T> const& _b)
+{
+	for (auto const& x: _b)
+		_a.erase(x);
+	return _a;
+}
 
 namespace dev
 {

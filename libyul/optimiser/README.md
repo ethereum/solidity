@@ -119,8 +119,9 @@ so that other components can more easily work with it. The final representation
 will be similar to a static-single-assignment (SSA) form, with the difference
 that it does not make use of explicit "phi" functions which combines the values
 from different branches of control flow because such a feature does not exist
-in the Yul language. Instead, assignments to existing variables are
-used.
+in the Yul language. Instead, when control flow merges, if a variable is re-assigned
+in one of the branches, a new SSA variable is declared to hold its current value,
+so that the following expressions still only need to reference SSA variables.
 
 An example transformation is the following:
 
@@ -139,21 +140,25 @@ as follows:
 
     {
         let _1 := 0
-        let a_1 := calldataload(_1)
+        let a_9 := calldataload(_1)
+        let a := a_9
         let _2 := 0x20
-        let b_1 := calldataload(_2)
-        let b := b_1
+        let b_10 := calldataload(_2)
+        let b := b_10
         let _3 := 0
-        let _4 := gt(a_1, _3)
-        if _4 {
+        let _4 := gt(a_9, _3)
+        if _4
+        {
             let _5 := 0x20
-            let b_2 := mul(b_1, _5)
-            b := b_2
+            let b_11 := mul(b_10, _5)
+            b := b_11
         }
-        let a_2 := add(a_1, 1)
-        let _6 := 0x20
-        let _7 := add(b, _6)
-        sstore(a_2, _7)
+        let b_12 := b
+        let _6 := 1
+        let a_13 := add(a_9, _6)
+        let _7 := 0x20
+        let _8 := add(b_12, _7)
+        sstore(a_13, _8)
     }
 
 Note that the only variable that is re-assigned in this snippet is ``b``.
@@ -240,6 +245,10 @@ reference to ``a`` by ``a_i``.
 The current value mapping is cleared for a variable ``a`` at the end of each block
 in which it was assigned to and at the end of the for loop init block if it is assigned
 inside the for loop body or post block.
+If a variable's value is cleared according to the rule above and the variable is declared outside
+the block, a new SSA variable will be created at the location where control flow joins,
+this includes the beginning of loop post/body block and the location right after
+If/Switch/ForLoop/Block statement.
 
 After this stage, the Redundant Assign Eliminator is recommended to remove the unnecessary
 intermediate assignments.

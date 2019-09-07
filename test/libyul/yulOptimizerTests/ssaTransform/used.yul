@@ -33,7 +33,8 @@
 //         a := a_4
 //         mstore(a_4, 0)
 //     }
-//     mstore(a, 0)
+//     let a_6 := a
+//     mstore(a_6, 0)
 //     let a_5 := 4
 //     a := a_5
 //     mstore(a_5, 0)
