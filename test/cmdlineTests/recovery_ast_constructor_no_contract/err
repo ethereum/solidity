@@ -1,0 +1,7 @@
+recovery_ast_constructor_no_contract/input.sol:3:1: Error: Expected pragma, import directive or contract/interface/library definition.
+c
+^
+Exception during output generation:
+Dynamic exception type:
+std::exception::what: Parsing was not successful.
+[dev::tag_comment*] = Parsing was not successful.

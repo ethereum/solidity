@@ -260,8 +260,18 @@ bool CompilerStack::analyze()
 	{
 		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
-			if (!syntaxChecker.checkSyntax(*source->ast))
+		{
+			if (source->ast)
+			{
+				if (!syntaxChecker.checkSyntax(*source->ast))
+					noErrors = false;
+			}
+			else
+			{
 				noErrors = false;
+				return false;
+			}
+		}
 
 		DocStringAnalyser docStringAnalyser(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
