@@ -83,15 +83,17 @@ Rules::Rules()
 	Pattern B(Push);
 	Pattern C(Push);
 	// Anything.
+	Pattern W;
 	Pattern X;
 	Pattern Y;
+	Pattern Z;
 	A.setMatchGroup(1, m_matchGroups);
 	B.setMatchGroup(2, m_matchGroups);
 	C.setMatchGroup(3, m_matchGroups);
 	X.setMatchGroup(4, m_matchGroups);
 	Y.setMatchGroup(5, m_matchGroups);
 
-	addRules(simplificationRuleList(A, B, C, X, Y));
+	addRules(simplificationRuleList(A, B, C, W, X, Y, Z));
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
