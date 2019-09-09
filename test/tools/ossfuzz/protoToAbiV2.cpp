@@ -63,8 +63,6 @@ void ProtoConverter::visitType(
 	std::string varName, paramName;
 	createDeclAndParamList(_type, _dataType, varName, paramName);
 	addCheckedVarDef(_dataType, varName, paramName, _value);
-	// Update right padding of type
-	m_isLastParamRightPadded = isDataTypeBytesOrString(_dataType);
 }
 
 void ProtoConverter::appendVarDeclToOutput(
@@ -451,6 +449,8 @@ void ProtoConverter::visit(DynamicByteArrayType const& _x)
 			isBytes
 		)
 	);
+	// Update right padding of type
+	m_isLastDynParamRightPadded = true;
 }
 
 // TODO: Implement struct visitor
@@ -658,23 +658,23 @@ void ProtoConverter::visit(ArrayType const& _x)
 	{
 	case ArrayType::kInty:
 		baseType = getIntTypeAsString(_x.inty());
-		m_isLastParamRightPadded = false;
+		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kByty:
 		baseType = getFixedByteTypeAsString(_x.byty());
-		m_isLastParamRightPadded = false;
+		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kAdty:
 		baseType = getAddressTypeAsString(_x.adty());
-		m_isLastParamRightPadded = false;
+		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kBoolty:
 		baseType = getBoolTypeAsString();
-		m_isLastParamRightPadded = false;
+		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kDynbytesty:
 		baseType = bytesArrayTypeAsString(_x.dynbytesty());
-		m_isLastParamRightPadded = true;
+		m_isLastDynParamRightPadded = true;
 		break;
 	case ArrayType::kStty:
 	case ArrayType::BASE_TYPE_ONEOF_NOT_SET:
@@ -861,7 +861,7 @@ void ProtoConverter::visit(TestFunction const& _x)
 	)")
 	("parameterNames", dev::suffixedVariableNameList(s_varNamePrefix, 0, m_varCounter))
 	("invalidLengthFuzz", std::to_string(_x.invalid_encoding_length()))
-	("isRightPadded", isLastParamRightPadded() ? "true" : "false")
+	("isRightPadded", isLastDynParamRightPadded() ? "true" : "false")
 	("atLeastOneVar", m_varCounter > 0)
 	.render();
 }
