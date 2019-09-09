@@ -271,9 +271,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		Instruction::ADDRESS,
 		Instruction::CALLER,
 		Instruction::ORIGIN,
-		Instruction::COINBASE,
-		Instruction::CREATE,
-		Instruction::CREATE2
+		Instruction::COINBASE
 	})
 	{
 		u256 const mask = (u256(1) << 160) - 1;
@@ -288,6 +286,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 			false
 		});
 	}
+
 	return rules;
 }
 
@@ -565,8 +564,48 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 	return rules;
 }
 
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart9(
+	Pattern,
+	Pattern,
+	Pattern,
+	Pattern W,
+	Pattern X,
+	Pattern Y,
+	Pattern Z
+)
+{
+	std::vector<SimplificationRule<Pattern>> rules;
+
+	u256 const mask = (u256(1) << 160) - 1;
+	// CREATE
+	rules.push_back({
+		{Instruction::AND, {{Instruction::CREATE, {W, X, Y}}, mask}},
+		[=]() -> Pattern { return {Instruction::CREATE, {W, X, Y}}; },
+		false
+	});
+	rules.push_back({
+		{Instruction::AND, {{mask, {Instruction::CREATE, {W, X, Y}}}}},
+		[=]() -> Pattern { return {Instruction::CREATE, {W, X, Y}}; },
+		false
+	});
+	// CREATE2
+	rules.push_back({
+		{Instruction::AND, {{Instruction::CREATE2, {W, X, Y, Z}}, mask}},
+		[=]() -> Pattern { return {Instruction::CREATE2, {W, X, Y, Z}}; },
+		false
+	});
+	rules.push_back({
+		{Instruction::AND, {{mask, {Instruction::CREATE2, {W, X, Y, Z}}}}},
+		[=]() -> Pattern { return {Instruction::CREATE2, {W, X, Y, Z}}; },
+		false
+	});
+
+	return rules;
+}
+
 /// @returns a list of simplification rules given certain match placeholders.
-/// A, B and C should represent constants, X and Y arbitrary expressions.
+/// A, B and C should represent constants, W, X, Y, and Z arbitrary expressions.
 /// The simplifications should never change the order of evaluation of
 /// arbitrary operations.
 template <class Pattern>
@@ -574,19 +613,22 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	Pattern A,
 	Pattern B,
 	Pattern C,
+	Pattern W,
 	Pattern X,
-	Pattern Y
+	Pattern Y,
+	Pattern Z
 )
 {
 	std::vector<SimplificationRule<Pattern>> rules;
-	rules += simplificationRuleListPart1(A, B, C, X, Y);
-	rules += simplificationRuleListPart2(A, B, C, X, Y);
-	rules += simplificationRuleListPart3(A, B, C, X, Y);
-	rules += simplificationRuleListPart4(A, B, C, X, Y);
-	rules += simplificationRuleListPart5(A, B, C, X, Y);
-	rules += simplificationRuleListPart6(A, B, C, X, Y);
-	rules += simplificationRuleListPart7(A, B, C, X, Y);
-	rules += simplificationRuleListPart8(A, B, C, X, Y);
+	rules += simplificationRuleListPart1(A, B, C, W, X);
+	rules += simplificationRuleListPart2(A, B, C, W, X);
+	rules += simplificationRuleListPart3(A, B, C, W, X);
+	rules += simplificationRuleListPart4(A, B, C, W, X);
+	rules += simplificationRuleListPart5(A, B, C, W, X);
+	rules += simplificationRuleListPart6(A, B, C, W, X);
+	rules += simplificationRuleListPart7(A, B, C, W, X);
+	rules += simplificationRuleListPart8(A, B, C, W, X);
+	rules += simplificationRuleListPart9(A, B, C, W, X, Y, Z);
 	return rules;
 }
 
