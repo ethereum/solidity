@@ -2514,23 +2514,6 @@ BOOST_AUTO_TEST_CASE(super_alone)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(fallback_function)
-{
-	char const* sourceCode = R"(
-		contract A {
-			uint data;
-			function() external { data = 1; }
-			function getData() public returns (uint r) { return data; }
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("getData()"), encodeArgs(0));
-		ABI_CHECK(callContractFunction(""), encodeArgs());
-		ABI_CHECK(callContractFunction("getData()"), encodeArgs(1));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(inherited_fallback_function)
 {
 	char const* sourceCode = R"(
