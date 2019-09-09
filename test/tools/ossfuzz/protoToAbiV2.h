@@ -103,7 +103,7 @@ public:
 		m_counter(0),
 		m_varCounter(0),
 		m_returnValue(1),
-		m_isLastParamRightPadded(false)
+		m_isLastDynParamRightPadded(false)
 	{}
 
 	ProtoConverter(ProtoConverter const&) = delete;
@@ -274,9 +274,9 @@ private:
 		return ((isValueType(_dataType) || m_isStateVar) ? "" : "memory");
 	}
 
-	bool isLastParamRightPadded()
+	bool isLastDynParamRightPadded()
 	{
-		return m_isLastParamRightPadded;
+		return m_isLastDynParamRightPadded;
 	}
 
 	// Static declarations
@@ -466,10 +466,10 @@ private:
 	unsigned m_varCounter;
 	/// Monotonically increasing return value for error reporting
 	unsigned m_returnValue;
-	/// Flag that indicates if last parameter passed to a function call
-	/// is of a type that is going to be right padded by the ABI
-	/// encoder.
-	bool m_isLastParamRightPadded;
+	/// Flag that indicates if last dynamically encoded parameter
+	/// passed to a function call is of a type that is going to be
+	/// right padded by the ABI encoder.
+	bool m_isLastDynParamRightPadded;
 	static unsigned constexpr s_maxArrayLength = 4;
 	static unsigned constexpr s_maxArrayDimensions = 4;
 	static unsigned constexpr s_maxDynArrayLength = 256;
