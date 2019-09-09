@@ -45,6 +45,7 @@ object \"C_6\" {
 
                 default {}
             }
+            if iszero(calldatasize()) {  }
             revert(0, 0)
 
 

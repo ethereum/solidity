@@ -1,4 +1,4 @@
 contract C {
     uint x;
-    function() external { x = 2; }
+    fallback() external { x = 2; }
 }

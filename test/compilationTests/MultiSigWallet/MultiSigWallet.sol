@@ -88,8 +88,8 @@ contract MultiSigWallet {
         _;
     }
 
-    /// @dev Fallback function allows to deposit ether.
-    function()
+    /// @dev Receive function allows to deposit ether.
+    receive()
         external
         payable
     {

@@ -5,7 +5,7 @@ contract A {
 contract B {
     A a;
 
-    function() external {
+    fallback() external {
         a.transfer();
     }
 }

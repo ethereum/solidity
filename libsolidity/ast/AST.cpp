@@ -163,6 +163,15 @@ FunctionDefinition const* ContractDefinition::fallbackFunction() const
 	return nullptr;
 }
 
+FunctionDefinition const* ContractDefinition::receiveFunction() const
+{
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		for (FunctionDefinition const* f: contract->definedFunctions())
+			if (f->isReceive())
+				return f;
+	return nullptr;
+}
+
 vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
 {
 	if (!m_interfaceEvents)

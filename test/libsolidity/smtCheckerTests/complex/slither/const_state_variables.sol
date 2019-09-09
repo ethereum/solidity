@@ -25,7 +25,7 @@ contract B is A {
 
     address public mySistersAddress = 0x999999cf1046e68e36E1aA2E0E07105eDDD1f08E;
 
-    function () external {
+    fallback () external {
         used = 0;
     }
 

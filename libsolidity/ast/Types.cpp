@@ -1462,8 +1462,9 @@ BoolResult ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool ContractType::isPayable() const
 {
+	auto receiveFunction = m_contract.receiveFunction();
 	auto fallbackFunction = m_contract.fallbackFunction();
-	return fallbackFunction && fallbackFunction->isPayable();
+	return receiveFunction || (fallbackFunction && fallbackFunction->isPayable());
 }
 
 TypeResult ContractType::unaryOperatorResult(Token _operator) const

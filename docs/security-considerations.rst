@@ -224,7 +224,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
             owner = msg.sender;
         }
 
-        function() external {
+        fallback() external {
             TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
         }
     }

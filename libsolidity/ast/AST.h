@@ -435,6 +435,9 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* fallbackFunction() const;
 
+	/// Returns the ether receiver function or nullptr if no receive function was specified.
+	FunctionDefinition const* receiveFunction() const;
+
 	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
 	TypePointer type() const override;
@@ -657,7 +660,7 @@ public:
 		ASTPointer<ASTString> const& _name,
 		Declaration::Visibility _visibility,
 		StateMutability _stateMutability,
-		bool _isConstructor,
+		Token _kind,
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
@@ -669,26 +672,31 @@ public:
 		Documented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
-		m_isConstructor(_isConstructor),
+		m_kind(_kind),
 		m_functionModifiers(_modifiers),
 		m_body(_body)
-	{}
+	{
+		solAssert(_kind == Token::Constructor || _kind == Token::Function || _kind == Token::Fallback || _kind == Token::Receive, "");
+	}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	StateMutability stateMutability() const { return m_stateMutability; }
-	bool isConstructor() const { return m_isConstructor; }
-	bool isFallback() const { return !m_isConstructor && name().empty(); }
-	bool isOverridable() const { return !isFallback() && !isConstructor(); }
+	bool isOrdinary() const { return m_kind == Token::Function; }
+	bool isConstructor() const { return m_kind == Token::Constructor; }
+	bool isFallback() const { return m_kind == Token::Fallback; }
+	bool isReceive() const { return m_kind == Token::Receive; }
+	Token kind() const { return m_kind; }
+	bool isOverridable() const { return !isConstructor(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 	bool isVisibleInContract() const override
 	{
-		return Declaration::isVisibleInContract() && !isConstructor() && !isFallback();
+		return Declaration::isVisibleInContract() && isOrdinary();
 	}
-	bool isPartOfExternalInterface() const override { return isPublic() && !isConstructor() && !isFallback(); }
+	bool isPartOfExternalInterface() const override { return isPublic() && isOrdinary(); }
 
 	/// @returns the external signature of the function
 	/// That consists of the name of the function followed by the types of the
@@ -707,7 +715,7 @@ public:
 
 private:
 	StateMutability m_stateMutability;
-	bool m_isConstructor;
+	Token const m_kind;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
 };

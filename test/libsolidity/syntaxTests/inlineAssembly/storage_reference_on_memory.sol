@@ -1,6 +1,6 @@
 contract C {
     uint[] x;
-    function() external {
+    fallback() external {
         uint[] memory y = x;
         assembly {
             pop(y_slot)

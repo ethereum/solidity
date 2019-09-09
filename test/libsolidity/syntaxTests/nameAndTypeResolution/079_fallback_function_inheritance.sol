@@ -1,7 +1,7 @@
 contract A {
     uint x;
-    function() external { x = 1; }
+    fallback() external { x = 1; }
 }
 contract C is A {
-    function() override external { x = 2; }
+    fallback() override external { x = 2; }
 }

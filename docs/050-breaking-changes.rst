@@ -437,7 +437,7 @@ New version:
         function f(uint y) external {
             x = y;
         }
-        function() payable external {}
+        receive() payable external {}
     }
 
     contract New {

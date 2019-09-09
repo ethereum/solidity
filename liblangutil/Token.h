@@ -157,6 +157,7 @@ namespace langutil
 	K(Emit, "emit", 0)                                                 \
 	K(Event, "event", 0)                                               \
 	K(External, "external", 0)                                         \
+	K(Fallback, "fallback", 0)                                         \
 	K(For, "for", 0)                                                   \
 	K(Function, "function", 0)                                         \
 	K(Hex, "hex", 0)                                                   \
@@ -177,6 +178,7 @@ namespace langutil
 	K(Pragma, "pragma", 0)                                             \
 	K(Private, "private", 0)                                           \
 	K(Pure, "pure", 0)                                                 \
+	K(Receive, "receive", 0)                                           \
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Storage, "storage", 0)                                           \

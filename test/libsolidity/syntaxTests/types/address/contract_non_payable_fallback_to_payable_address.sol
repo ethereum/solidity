@@ -3,7 +3,7 @@ contract C {
     address payable a = address(this);
     a;
   }
-  function() external {
+  fallback() external {
   }
 }
 // ----

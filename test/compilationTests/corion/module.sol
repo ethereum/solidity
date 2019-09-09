@@ -140,6 +140,6 @@ contract module {
         require( msg.sender == moduleHandlerAddress );
         _;
     }
-    function() external payable {
+    receive() external payable {
     }
 }

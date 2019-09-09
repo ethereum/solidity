@@ -8,6 +8,7 @@ Breaking changes:
  * Command line interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
  * General: New reserved keywords: ``virtual``.
+ * General: Split unnamed fallback functions into two cases defined using ``fallback()`` and ``receive()``.
  * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * Syntax: ``push(element)`` for dynamic storage arrays do not return the new length anymore.
  * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.

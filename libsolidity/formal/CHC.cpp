@@ -636,12 +636,9 @@ string CHC::predicateName(ASTNode const* _node)
 	string prefix;
 	if (auto funDef = dynamic_cast<FunctionDefinition const*>(_node))
 	{
-		prefix = funDef->isConstructor() ?
-			"constructor" :
-			funDef->isFallback() ?
-				"fallback" :
-				"function_" + funDef->name();
-		prefix += "_";
+		prefix += TokenTraits::toString(funDef->kind());
+		if (!funDef->name().empty())
+			prefix += "_" + funDef->name() + "_";
 	}
 	return prefix + to_string(_node->id());
 }

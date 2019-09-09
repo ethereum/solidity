@@ -1,0 +1,72 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      5
+    ]
+  },
+  "id": 6,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 5,
+      "linearizedBaseContracts":
+      [
+        5
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 3,
+            "nodeType": "Block",
+            "src": "42:5:1",
+            "statements": []
+          },
+          "documentation": null,
+          "id": 4,
+          "implemented": true,
+          "kind": "receive",
+          "modifiers": [],
+          "name": "",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "22:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "42:0:1"
+          },
+          "scope": 5,
+          "src": "15:32:1",
+          "stateMutability": "payable",
+          "superFunction": null,
+          "visibility": "external"
+        }
+      ],
+      "scope": 6,
+      "src": "0:49:1"
+    }
+  ],
+  "src": "0:50:1"
+}

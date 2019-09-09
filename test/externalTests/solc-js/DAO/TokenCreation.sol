@@ -151,6 +151,6 @@ override returns (bool success) {
             return 30;
         }
     }
-    function() external payable {
+    receive() external payable {
     }
 }

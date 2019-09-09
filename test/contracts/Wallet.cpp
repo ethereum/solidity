@@ -382,9 +382,9 @@ contract Wallet is multisig, multiowned, daylimit {
 		selfdestruct(_to);
 	}
 
-	// gets called when no other function matches
-	function() external payable {
-		// just being sent some cash?
+	// gets called for plain ether transfers
+	receive() external payable {
+		// did we actually receive value?
 		if (msg.value > 0)
 			emit Deposit(msg.sender, msg.value);
 	}

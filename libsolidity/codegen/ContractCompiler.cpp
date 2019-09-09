@@ -336,6 +336,9 @@ namespace
 // Helper function to check if any function is payable
 bool hasPayableFunctions(ContractDefinition const& _contract)
 {
+	if (_contract.receiveFunction())
+		return true;
+
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
 	if (fallback && fallback->isPayable())
 		return true;
@@ -362,6 +365,9 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
 	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have fallback functions");
 
+	FunctionDefinition const* etherReceiver = _contract.receiveFunction();
+	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have ether receiver functions");
+
 	bool needToAddCallvalueCheck = true;
 	if (!hasPayableFunctions(_contract) && !interfaceFunctions.empty() && !_contract.isLibrary())
 	{
@@ -369,11 +375,15 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		needToAddCallvalueCheck = false;
 	}
 
-	eth::AssemblyItem notFound = m_context.newTag();
-	// directly jump to fallback if the data is too short to contain a function selector
+	eth::AssemblyItem notFoundOrReceiveEther = m_context.newTag();
+	// If there is neither a fallback nor a receive ether function, we only need one label to jump to, which
+	// always reverts.
+	eth::AssemblyItem notFound = (!fallback && !etherReceiver) ? notFoundOrReceiveEther : m_context.newTag();
+
+	// directly jump to fallback or ether receiver if the data is too short to contain a function selector
 	// also guards against short data
 	m_context << u256(4) << Instruction::CALLDATASIZE << Instruction::LT;
-	m_context.appendConditionalJumpTo(notFound);
+	m_context.appendConditionalJumpTo(notFoundOrReceiveEther);
 
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
@@ -391,23 +401,44 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimiserSettings.expectedExecutionsPerDeployment);
 	}
 
-	m_context << notFound;
+	m_context << notFoundOrReceiveEther;
 
-	if (fallback)
-	{
-		solAssert(!_contract.isLibrary(), "");
-		if (!fallback->isPayable() && needToAddCallvalueCheck)
-			appendCallValueCheck();
-
-		solAssert(fallback->isFallback(), "");
-		solAssert(FunctionType(*fallback).parameterTypes().empty(), "");
-		solAssert(FunctionType(*fallback).returnParameterTypes().empty(), "");
-		fallback->accept(*this);
-		m_context << Instruction::STOP;
-	}
-	else
-		// TODO: error message here?
+	if (!fallback && !etherReceiver)
 		m_context.appendRevert();
+	else
+	{
+		if (etherReceiver)
+		{
+			// directly jump to fallback, if there is calldata
+			m_context << Instruction::CALLDATASIZE;
+			m_context.appendConditionalJumpTo(notFound);
+
+			solAssert(!_contract.isLibrary(), "");
+			solAssert(etherReceiver->isReceive(), "");
+			solAssert(FunctionType(*etherReceiver).parameterTypes().empty(), "");
+			solAssert(FunctionType(*etherReceiver).returnParameterTypes().empty(), "");
+			etherReceiver->accept(*this);
+			m_context << Instruction::STOP;
+		}
+
+		m_context << notFound;
+		if (fallback)
+		{
+			solAssert(!_contract.isLibrary(), "");
+			if (!fallback->isPayable() && needToAddCallvalueCheck)
+				appendCallValueCheck();
+
+			solAssert(fallback->isFallback(), "");
+			solAssert(FunctionType(*fallback).parameterTypes().empty(), "");
+			solAssert(FunctionType(*fallback).returnParameterTypes().empty(), "");
+			fallback->accept(*this);
+			m_context << Instruction::STOP;
+		}
+		else
+			// TODO: error message here?
+			m_context.appendRevert();
+	}
+
 
 	for (auto const& it: interfaceFunctions)
 	{
@@ -582,7 +613,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	if (!_function.isConstructor())
 	{
 		solAssert(m_context.numberOfLocalVariables() == 0, "");
-		if (!_function.isFallback())
+		if (!_function.isFallback() && !_function.isReceive())
 			m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 	}
 

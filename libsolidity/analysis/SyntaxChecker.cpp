@@ -295,7 +295,7 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
 	if (_function.noVisibilitySpecified())
 	{
-		string suggestedVisibility = _function.isFallback() || m_isInterface ? "external" : "public";
+		string suggestedVisibility = _function.isFallback() || _function.isReceive() || m_isInterface ? "external" : "public";
 		m_errorReporter.syntaxError(
 			_function.location(),
 			"No visibility specified. Did you intend to add \"" + suggestedVisibility + "\"?"

@@ -174,7 +174,7 @@ abstract contract DAOInterface {
     //  );
 
     /// @notice Create Token with `msg.sender` as the beneficiary
-    function () external payable;
+    receive() external payable;
 
 
     /// @dev This function is used to send ether back
@@ -389,7 +389,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         allowedRecipients[curator] = true;
     }
 
-    function () external payable {
+    receive() external payable override(DAOInterface, TokenCreation) {
         if (now < closingTime + creationGracePeriod && msg.sender != address(extraBalance))
             createTokenProxy(msg.sender);
         else

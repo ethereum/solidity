@@ -50,7 +50,7 @@ contract ManagedAccount is ManagedAccountInterface{
     // When the contract receives a transaction without data this is called.
     // It counts the amount of ether it receives and stores it in
     // accumulatedInput.
-    function() external payable {
+    receive() external payable {
         accumulatedInput += msg.value;
     }
 

@@ -1,4 +1,4 @@
 contract c {
-    function() external { }
+    fallback() external { }
 }
 // ----
