@@ -31,5 +31,5 @@
 //     mstore8(calldataload(_5), 4)
 //     sstore(_5, mload(_2))
 //     mstore(_2, _17)
-//     sstore(_5, mload(_2))
+//     sstore(_5, _17)
 // }

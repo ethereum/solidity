@@ -51,8 +51,12 @@ SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Statement co
 	visit(_statement);
 }
 
-SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Block const& _ast):
-	SideEffectsCollector(_dialect)
+SideEffectsCollector::SideEffectsCollector(
+	Dialect const& _dialect,
+	Block const& _ast,
+	map<YulString, SideEffects> const* _functionSideEffects
+):
+	SideEffectsCollector(_dialect, _functionSideEffects)
 {
 	operator()(_ast);
 }
