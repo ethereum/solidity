@@ -17,6 +17,8 @@ This section lists purely syntactic changes that do not affect the behavior of e
 * Conversions from external function types to ``address`` are now disallowed. Instead external
   function types have a member called ``address``, similar to the existing ``selector`` member.
 
+* New reserved keywords: ``virtual``.
+
 Semantic Only Changes
 =====================
 
