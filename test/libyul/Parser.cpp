@@ -61,7 +61,6 @@ bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorR
 			return (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
-				boost::none,
 				_dialect
 			)).analyze(*parserResult);
 		}

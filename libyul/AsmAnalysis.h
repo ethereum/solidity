@@ -59,7 +59,6 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
-		boost::optional<langutil::Error::Type> _errorTypeForLoose,
 		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver(),
 		std::set<YulString> const& _dataNames = {}
@@ -68,7 +67,6 @@ public:
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
 		m_dialect(_dialect),
-		m_errorTypeForLoose(_errorTypeForLoose),
 		m_dataNames(_dataNames)
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
@@ -120,7 +118,6 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
 	Dialect const& m_dialect;
-	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<YulString> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;
