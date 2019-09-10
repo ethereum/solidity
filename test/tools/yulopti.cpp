@@ -106,7 +106,6 @@ public:
 		AsmAnalyzer analyzer(
 			*m_analysisInfo,
 			errorReporter,
-			langutil::Error::Type::SyntaxError,
 			m_dialect
 		);
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())

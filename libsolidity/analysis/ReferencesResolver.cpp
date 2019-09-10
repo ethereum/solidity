@@ -323,11 +323,9 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// Will be re-generated later with correct information
 	// We use the latest EVM version because we will re-run it anyway.
 	yul::AsmAnalysisInfo analysisInfo;
-	boost::optional<Error::Type> errorTypeForLoose = Error::Type::SyntaxError;
 	yul::AsmAnalyzer(
 		analysisInfo,
 		errorsIgnored,
-		errorTypeForLoose,
 		yul::EVMDialect::strictAssemblyForEVM(EVMVersion{}),
 		resolver
 	).analyze(_inlineAssembly.operations());

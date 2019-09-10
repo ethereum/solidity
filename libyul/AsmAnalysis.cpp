@@ -78,7 +78,6 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 	bool success = yul::AsmAnalyzer(
 		analysisInfo,
 		errors,
-		Error::Type::SyntaxError,
 		_dialect,
 		{},
 		_object.dataNames()

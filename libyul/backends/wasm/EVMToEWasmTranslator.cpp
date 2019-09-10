@@ -658,7 +658,7 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, boost::none, WasmDialect::instance(), {}, _object.dataNames());
+	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, WasmDialect::instance(), {}, _object.dataNames());
 	if (!analyzer.analyze(*ret.code))
 	{
 		// TODO the errors here are "wrong" because they have invalid source references!
