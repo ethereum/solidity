@@ -732,6 +732,14 @@ void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 	{
 		errorForVM("only available for Constantinople-compatible");
 	}
+	else if (_instr == dev::eth::Instruction::CHAINID && !m_evmVersion.hasChainID())
+	{
+		errorForVM("only available for Istanbul-compatible");
+	}
+	else if (_instr == dev::eth::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
+	{
+		errorForVM("only available for Istanbul-compatible");
+	}
 	else if (
 		_instr == dev::eth::Instruction::JUMP ||
 		_instr == dev::eth::Instruction::JUMPI ||

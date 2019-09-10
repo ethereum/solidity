@@ -180,6 +180,8 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.address;
 	case Instruction::BALANCE:
 		return m_state.balance;
+	case Instruction::SELFBALANCE:
+		return m_state.selfbalance;
 	case Instruction::ORIGIN:
 		return m_state.origin;
 	case Instruction::CALLER:
@@ -208,6 +210,8 @@ u256 EVMInstructionInterpreter::eval(
 		return 0;
 	case Instruction::GASPRICE:
 		return m_state.gasprice;
+	case Instruction::CHAINID:
+		return m_state.chainid;
 	case Instruction::EXTCODESIZE:
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODEHASH:

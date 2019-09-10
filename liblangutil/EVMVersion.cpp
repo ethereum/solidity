@@ -40,6 +40,10 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 		return hasCreate2();
 	case Instruction::EXTCODEHASH:
 		return hasExtCodeHash();
+	case Instruction::CHAINID:
+		return hasChainID();
+	case Instruction::SELFBALANCE:
+		return hasSelfBalance();
 	default:
 		return true;
 	}
