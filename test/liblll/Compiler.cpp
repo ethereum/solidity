@@ -299,6 +299,8 @@ BOOST_AUTO_TEST_CASE(valid_opcodes_functional)
 		"(NUMBER)",
 		"(DIFFICULTY)",
 		"(GASLIMIT)",
+		"(CHAINID)",
+		"(SELFBALANCE)",
 		"(POP 0)",
 		"(MLOAD 0)",
 		"(MSTORE 0 0)",

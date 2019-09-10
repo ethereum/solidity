@@ -23,6 +23,8 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/SideEffects.h>
 #include <libyul/AsmData.h>
 
 using namespace std;
@@ -32,35 +34,53 @@ using namespace yul;
 void LoadResolver::run(Dialect const& _dialect, Block& _ast)
 {
 	bool containsMSize = MSizeFinder::containsMSize(_dialect, _ast);
-	LoadResolver{_dialect, !containsMSize}(_ast);
+	LoadResolver{
+		_dialect,
+		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast)),
+		!containsMSize
+	}(_ast);
 }
 
 void LoadResolver::visit(Expression& _e)
 {
+	DataFlowAnalyzer::visit(_e);
+
+	if (!dynamic_cast<EVMDialect const*>(&m_dialect))
+		return;
+
 	if (_e.type() == typeid(FunctionCall))
 	{
 		FunctionCall const& funCall = boost::get<FunctionCall>(_e);
 		if (auto const* builtin = dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
-			if (!builtin->parameters.empty() && funCall.arguments.at(0).type() == typeid(Identifier))
-			{
-				YulString key = boost::get<Identifier>(funCall.arguments.at(0)).name;
-				if (
-					builtin->instruction == dev::eth::Instruction::SLOAD &&
-					m_storage.values.count(key)
-				)
-				{
-					_e = Identifier{locationOf(_e), m_storage.values[key]};
-					return;
-				}
-				else if (
-					m_optimizeMLoad &&
-					builtin->instruction == dev::eth::Instruction::MLOAD &&
-					m_memory.values.count(key)
-				)
-				{
-					_e = Identifier{locationOf(_e), m_memory.values[key]};
-					return;
-				}
-			}
+			if (builtin->instruction)
+				tryResolve(_e, *builtin->instruction, funCall.arguments);
 	}
+	else if (_e.type() == typeid(FunctionalInstruction))
+	{
+		FunctionalInstruction const& instruction = boost::get<FunctionalInstruction>(_e);
+		tryResolve(_e, instruction.instruction, instruction.arguments);
+	}
+}
+
+void LoadResolver::tryResolve(
+	Expression& _e,
+	dev::eth::Instruction _instruction,
+	vector<Expression> const& _arguments
+)
+{
+	if (_arguments.empty() || _arguments.at(0).type() != typeid(Identifier))
+		return;
+
+	YulString key = boost::get<Identifier>(_arguments.at(0)).name;
+	if (
+		_instruction == dev::eth::Instruction::SLOAD &&
+		m_storage.values.count(key)
+	)
+		_e = Identifier{locationOf(_e), m_storage.values[key]};
+	else if (
+		m_optimizeMLoad &&
+		_instruction == dev::eth::Instruction::MLOAD &&
+		m_memory.values.count(key)
+	)
+		_e = Identifier{locationOf(_e), m_memory.values[key]};
 }

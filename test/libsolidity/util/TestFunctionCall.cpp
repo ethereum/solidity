@@ -126,8 +126,11 @@ string TestFunctionCall::format(
 			{
 				boost::optional<ParameterList> abiParams;
 
-				if (isFailure && !output.empty())
-					abiParams = boost::make_optional(ContractABIUtils::failureParameters(output));
+				if (isFailure)
+				{
+					if (!output.empty())
+						abiParams = boost::make_optional(ContractABIUtils::failureParameters(output));
+				}
 				else
 					abiParams = ContractABIUtils::parametersFromJsonOutputs(
 						_errorReporter,

@@ -22,11 +22,13 @@
 #pragma once
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libevmasm/Instruction.h>
 
 namespace yul
 {
 
 struct EVMDialect;
+struct BuiltinFunctionForEVM;
 
 /**
  * Optimisation stage that replaces expressions of type ``sload(x)`` and ``mload(x)`` by the value
@@ -39,17 +41,28 @@ struct EVMDialect;
 class LoadResolver: public DataFlowAnalyzer
 {
 public:
+	/// Run the load resolver on the given complete AST.
 	static void run(Dialect const& _dialect, Block& _ast);
 
 private:
-	LoadResolver(Dialect const& _dialect, bool _optimizeMLoad):
-		DataFlowAnalyzer(_dialect),
+	LoadResolver(
+		Dialect const& _dialect,
+		std::map<YulString, SideEffects> _functionSideEffects,
+		bool _optimizeMLoad
+	):
+		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)),
 		m_optimizeMLoad(_optimizeMLoad)
 	{}
 
 protected:
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;
+
+	void tryResolve(
+		Expression& _e,
+		dev::eth::Instruction _instruction,
+		std::vector<Expression> const& _arguments
+	);
 
 	bool m_optimizeMLoad = false;
 };

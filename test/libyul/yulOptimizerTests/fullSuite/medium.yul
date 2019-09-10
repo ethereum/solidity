@@ -21,11 +21,10 @@
 // ----
 // {
 //     {
-//         let _1 := 0x40
-//         mstore(_1, add(mload(_1), 0x20))
-//         let p := mload(_1)
-//         mstore(_1, add(p, _1))
-//         mstore(add(p, 96), 2)
-//         mstore(_1, 0x20)
+//         let _1 := mload(0x40)
+//         mstore(0x40, add(_1, 0x20))
+//         mstore(0x40, add(_1, 96))
+//         mstore(add(_1, 128), 2)
+//         mstore(0x40, 0x20)
 //     }
 // }
