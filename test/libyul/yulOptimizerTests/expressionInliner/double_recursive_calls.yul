@@ -3,13 +3,12 @@
 	function g(b, s) -> y { y := f(b, f(s, s)) }
 	let y := g(calldatasize(), 7)
 }
+// ====
+// step: expressionInliner
 // ----
-// expressionInliner
 // {
 //     function f(a, r) -> x
-//     {
-//         x := g(a, f(r, f(r, r)))
-//     }
+//     { x := g(a, f(r, f(r, r))) }
 //     function g(b, s) -> y
 //     {
 //         y := f(b, g(s, f(s, f(s, s))))

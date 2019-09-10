@@ -140,6 +140,8 @@ namespace langutil
 	T(Dec, "--", 0)                                                    \
 	K(Delete, "delete", 0)                                             \
 	\
+	/* Inline Assembly Operators */                                    \
+	T(AssemblyAssign, ":=", 2)                                         \
 	/* Keywords */                                                     \
 	K(Anonymous, "anonymous", 0)                                       \
 	K(As, "as", 0)                                                     \
@@ -191,6 +193,8 @@ namespace langutil
 	K(SubSzabo, "szabo", 0)                                            \
 	K(SubFinney, "finney", 0)                                          \
 	K(SubEther, "ether", 0)                                            \
+	K(SubSun, "sun", 0)                                          \
+	K(SubTrx, "trx", 0)                                            \
 	K(SubSecond, "seconds", 0)                                         \
 	K(SubMinute, "minutes", 0)                                         \
 	K(SubHour, "hours", 0)                                             \
@@ -204,6 +208,7 @@ namespace langutil
 	K(Byte, "byte", 0)                                                 \
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
+	K(GrcToken, "grcToken", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(Fixed, "fixed", 0)                                               \
 	K(UFixed, "ufixed", 0)                                             \
@@ -287,7 +292,7 @@ namespace TokenTraits
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
 	constexpr bool isCommutativeOp(Token op) { return op == Token::BitOr || op == Token::BitXor || op == Token::BitAnd ||
-		 op == Token::Add || op == Token::Mul || op == Token::Equal || op == Token::NotEqual; }
+		op == Token::Add || op == Token::Mul || op == Token::Equal || op == Token::NotEqual; }
 	constexpr bool isArithmeticOp(Token op) { return Token::Add <= op && op <= Token::Exp; }
 	constexpr bool isCompareOp(Token op) { return Token::Equal <= op && op <= Token::GreaterThanOrEqual; }
 
@@ -307,6 +312,7 @@ namespace TokenTraits
 	}
 
 	constexpr bool isEtherSubdenomination(Token op) { return op == Token::SubWei || op == Token::SubSzabo || op == Token::SubFinney || op == Token::SubEther; }
+	constexpr bool isTronSubdenomination(Token op) { return op == Token::SubTrx || op == Token::SubSun; }
 	constexpr bool isTimeSubdenomination(Token op) { return op == Token::SubSecond || op == Token::SubMinute || op == Token::SubHour || op == Token::SubDay || op == Token::SubWeek || op == Token::SubYear; }
 	constexpr bool isReservedKeyword(Token op) { return (Token::Abstract <= op && op <= Token::Unchecked); }
 

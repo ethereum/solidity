@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -43,6 +43,7 @@ namespace yul
 {
 // Forward-declaration to <yul/AsmData.h>
 struct Block;
+struct Dialect;
 }
 
 namespace dev
@@ -160,6 +161,9 @@ public:
 
 	/// @returns the source unit this scopable is present in.
 	SourceUnit const& sourceUnit() const;
+
+	/// @returns the function or modifier definition this scopable is present in or nullptr.
+	CallableDeclaration const* functionOrModifierDefinition() const;
 
 	/// @returns the source name this scopable is present in.
 	/// Can be combined with annotation().canonicalName (if present) to form a globally unique name.
@@ -429,7 +433,6 @@ private:
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 	ContractKind m_contractKind;
 
-	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
 	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
@@ -589,6 +592,7 @@ public:
 	}
 
 	std::vector<ASTPointer<VariableDeclaration>> const& parameters() const { return m_parameters->parameters(); }
+	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	ParameterList const& parameterList() const { return *m_parameters; }
 	ASTPointer<ParameterList> const& returnParameterList() const { return m_returnParameters; }
 
@@ -629,7 +633,6 @@ public:
 	bool isFallback() const { return !m_isConstructor && name().empty(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
-	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 	bool isVisibleInContract() const override
 	{
@@ -849,8 +852,9 @@ private:
 class MagicVariableDeclaration: public Declaration
 {
 public:
-	MagicVariableDeclaration(ASTString const& _name, std::shared_ptr<Type const> const& _type):
+	MagicVariableDeclaration(ASTString const& _name, Type const* _type):
 		Declaration(SourceLocation(), std::make_shared<ASTString>(_name)), m_type(_type) {}
+
 	void accept(ASTVisitor&) override
 	{
 		solAssert(false, "MagicVariableDeclaration used inside real AST.");
@@ -860,15 +864,15 @@ public:
 		solAssert(false, "MagicVariableDeclaration used inside real AST.");
 	}
 
-	FunctionTypePointer functionType(bool) const override
+	FunctionType const* functionType(bool) const override
 	{
 		solAssert(m_type->category() == Type::Category::Function, "");
-		return std::dynamic_pointer_cast<FunctionType const>(m_type);
+		return dynamic_cast<FunctionType const*>(m_type);
 	}
 	TypePointer type() const override { return m_type; }
 
 private:
-	std::shared_ptr<Type const> m_type;
+	Type const* m_type;
 };
 
 /// Types
@@ -1046,17 +1050,20 @@ public:
 	InlineAssembly(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
+		yul::Dialect const& _dialect,
 		std::shared_ptr<yul::Block> const& _operations
 	):
-		Statement(_location, _docString), m_operations(_operations) {}
+		Statement(_location, _docString), m_dialect(_dialect), m_operations(_operations) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
+	yul::Dialect const& dialect() const { return m_dialect; }
 	yul::Block const& operations() const { return *m_operations; }
 
 	InlineAssemblyAnnotation& annotation() const override;
 
 private:
+	yul::Dialect const& m_dialect;
 	std::shared_ptr<yul::Block> m_operations;
 };
 
@@ -1209,7 +1216,7 @@ private:
 class Continue: public Statement
 {
 public:
-	explicit Continue(SourceLocation const& _location, 	ASTPointer<ASTString> const& _docString):
+	explicit Continue(SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
 		Statement(_location, _docString) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -1576,7 +1583,7 @@ private:
 };
 
 /**
- * Index access to an array. Example: a[2]
+ * Index access to an array or mapping. Example: a[2]
  */
 class IndexAccess: public Expression
 {
@@ -1663,6 +1670,8 @@ public:
 		Szabo = static_cast<int>(Token::SubSzabo),
 		Finney = static_cast<int>(Token::SubFinney),
 		Ether = static_cast<int>(Token::SubEther),
+		Sun = static_cast<int>(Token::SubSun),
+		Trx = static_cast<int>(Token::SubTrx),
 		Second = static_cast<int>(Token::SubSecond),
 		Minute = static_cast<int>(Token::SubMinute),
 		Hour = static_cast<int>(Token::SubHour),

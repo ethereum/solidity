@@ -33,11 +33,8 @@ namespace solidity
 extern char const* VersionNumber;
 extern std::string const VersionString;
 extern std::string const VersionStringStrict;
-
-/// @returns a binary form of the version string, where A.B.C-HASH is encoded such that
-/// the first byte is zero, the following three bytes encode A B and C (interpreted as decimals)
-/// and HASH is interpreted as 8 hex digits and encoded into the last four bytes.
-bytes binaryVersion();
+extern bytes const VersionCompactBytes;
+extern bool const VersionIsRelease;
 
 }
 }

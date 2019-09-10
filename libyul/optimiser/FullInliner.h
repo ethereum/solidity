@@ -93,6 +93,7 @@ public:
 private:
 	void updateCodeSize(FunctionDefinition const& _fun);
 	void handleBlock(YulString _currentFunctionName, Block& _block);
+	bool recursive(FunctionDefinition const& _fun) const;
 
 	/// The AST to be modified. The root block itself will not be modified, because
 	/// we store pointers to functions.
@@ -140,11 +141,9 @@ class BodyCopier: public ASTCopier
 public:
 	BodyCopier(
 		NameDispenser& _nameDispenser,
-		YulString _varNamePrefix,
 		std::map<YulString, YulString> const& _variableReplacements
 	):
 		m_nameDispenser(_nameDispenser),
-		m_varNamePrefix(_varNamePrefix),
 		m_variableReplacements(_variableReplacements)
 	{}
 
@@ -156,7 +155,6 @@ public:
 	YulString translateIdentifier(YulString _name) override;
 
 	NameDispenser& m_nameDispenser;
-	YulString m_varNamePrefix;
 	std::map<YulString, YulString> m_variableReplacements;
 };
 

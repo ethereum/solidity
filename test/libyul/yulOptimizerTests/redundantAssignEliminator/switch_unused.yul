@@ -5,12 +5,11 @@
     switch calldataload(0)
     case 0 { mstore(0, 1) }
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
 // {
 //     let x
 //     switch calldataload(0)
-//     case 0 {
-//         mstore(0, 1)
-//     }
+//     case 0 { mstore(0, 1) }
 // }

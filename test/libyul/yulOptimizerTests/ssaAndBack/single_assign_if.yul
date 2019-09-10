@@ -6,13 +6,11 @@
     }
     mstore(a, 0)
 }
+// ====
+// step: ssaAndBack
 // ----
-// ssaAndBack
 // {
 //     let a := mload(0)
-//     if mload(1)
-//     {
-//         a := mload(1)
-//     }
+//     if mload(1) { a := mload(1) }
 //     mstore(a, 0)
 // }

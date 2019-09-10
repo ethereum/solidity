@@ -9,8 +9,9 @@
     let b := 0
     sstore(a, b)
 }
+// ====
+// step: commonSubexpressionEliminator
 // ----
-// commonSubexpressionEliminator
 // {
 //     function f() -> x
 //     {

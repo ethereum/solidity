@@ -17,63 +17,88 @@
 
 #include <libsolidity/formal/VariableUsage.h>
 
-#include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/formal/SMTChecker.h>
+
+#include <algorithm>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+using namespace dev::solidity::smt;
 
-VariableUsage::VariableUsage(ASTNode const& _node)
+set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<CallableDeclaration const*> const& _outerCallstack)
 {
-	auto nodeFun = [&](ASTNode const& n) -> bool
-	{
-		if (Identifier const* identifier = dynamic_cast<decltype(identifier)>(&n))
-		{
-			Declaration const* declaration = identifier->annotation().referencedDeclaration;
-			solAssert(declaration, "");
-			if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-				if (
-					identifier->annotation().lValueRequested &&
-					varDecl->annotation().type->isValueType()
-				)
-					m_touchedVariable[&n] = varDecl;
-		}
-		return true;
-	};
-	auto edgeFun = [&](ASTNode const& _parent, ASTNode const& _child)
-	{
-		if (m_touchedVariable.count(&_child) || m_children.count(&_child))
-			m_children[&_parent].push_back(&_child);
-	};
-
-	ASTReduce reducer(nodeFun, edgeFun);
-	_node.accept(reducer);
+	m_touchedVariables.clear();
+	m_callStack.clear();
+	m_callStack += _outerCallstack;
+	m_lastCall = m_callStack.back();
+	_node.accept(*this);
+	return m_touchedVariables;
 }
 
-vector<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node) const
+void VariableUsage::endVisit(Identifier const& _identifier)
 {
-	if (!m_children.count(&_node) && !m_touchedVariable.count(&_node))
-		return {};
+	if (_identifier.annotation().lValueRequested)
+		checkIdentifier(_identifier);
+}
 
-	set<VariableDeclaration const*> touched;
-	vector<ASTNode const*> toVisit;
-	toVisit.push_back(&_node);
-
-	while (!toVisit.empty())
+void VariableUsage::endVisit(IndexAccess const& _indexAccess)
+{
+	if (_indexAccess.annotation().lValueRequested)
 	{
-		ASTNode const* n = toVisit.back();
-		toVisit.pop_back();
-		if (m_children.count(n))
-		{
-			solAssert(!m_touchedVariable.count(n), "");
-			toVisit += m_children.at(n);
-		}
-		else
-		{
-			solAssert(m_touchedVariable.count(n), "");
-			touched.insert(m_touchedVariable.at(n));
-		}
+		/// identifier.annotation().lValueRequested == false, that's why we
+		/// need to check that before.
+		auto identifier = dynamic_cast<Identifier const*>(SMTChecker::leftmostBase(_indexAccess));
+		if (identifier)
+			checkIdentifier(*identifier);
 	}
+}
 
-	return {touched.begin(), touched.end()};
+void VariableUsage::endVisit(FunctionCall const& _funCall)
+{
+	if (auto const& funDef = SMTChecker::inlinedFunctionCallToDefinition(_funCall))
+		if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
+			funDef->accept(*this);
+}
+
+bool VariableUsage::visit(FunctionDefinition const& _function)
+{
+	m_callStack.push_back(&_function);
+	return true;
+}
+
+void VariableUsage::endVisit(FunctionDefinition const&)
+{
+	solAssert(!m_callStack.empty(), "");
+	m_callStack.pop_back();
+}
+
+void VariableUsage::endVisit(ModifierInvocation const& _modifierInv)
+{
+	auto const& modifierDef = dynamic_cast<ModifierDefinition const*>(_modifierInv.name()->annotation().referencedDeclaration);
+	if (modifierDef)
+		modifierDef->accept(*this);
+}
+
+void VariableUsage::endVisit(PlaceholderStatement const&)
+{
+	solAssert(!m_callStack.empty(), "");
+	FunctionDefinition const* funDef = nullptr;
+	for (auto it = m_callStack.rbegin(); it != m_callStack.rend() && !funDef; ++it)
+		funDef = dynamic_cast<FunctionDefinition const*>(*it);
+	solAssert(funDef, "");
+	if (funDef->isImplemented())
+		funDef->body().accept(*this);
+}
+
+void VariableUsage::checkIdentifier(Identifier const& _identifier)
+{
+	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
+	solAssert(declaration, "");
+	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
+	{
+		solAssert(m_lastCall, "");
+		if (!varDecl->isLocalVariable() || varDecl->functionOrModifierDefinition() == m_lastCall)
+			m_touchedVariables.insert(varDecl);
+	}
 }

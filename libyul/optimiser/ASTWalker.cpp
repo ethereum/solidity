@@ -27,8 +27,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
-
 
 void ASTWalker::operator()(FunctionalInstruction const& _instr)
 {
@@ -159,6 +157,14 @@ void ASTModifier::operator()(ForLoop& _for)
 	visit(*_for.condition);
 	(*this)(_for.post);
 	(*this)(_for.body);
+}
+
+void ASTModifier::operator()(Break&)
+{
+}
+
+void ASTModifier::operator()(Continue&)
+{
 }
 
 void ASTModifier::operator()(Block& _block)

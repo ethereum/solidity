@@ -4,11 +4,10 @@
     	let y := add(d, add(c, 7))
     }
 }
+// ====
+// step: expressionSimplifier
 // ----
-// expressionSimplifier
 // {
 //     function f() -> c, d
-//     {
-//         let y := 7
-//     }
+//     { let y := 7 }
 // }

@@ -28,11 +28,13 @@
 #include <libyul/AsmDataForward.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
 #include <functional>
+#include <list>
 #include <memory>
 
 namespace langutil
@@ -57,26 +59,23 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
-		dev::solidity::EVMVersion _evmVersion,
 		boost::optional<langutil::Error::Type> _errorTypeForLoose,
-		std::shared_ptr<Dialect> _dialect,
+		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver()
 	):
 		m_resolver(_resolver),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
-		m_evmVersion(_evmVersion),
-		m_dialect(std::move(_dialect)),
+		m_dialect(_dialect),
 		m_errorTypeForLoose(_errorTypeForLoose)
-	{}
+	{
+		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+			m_evmVersion = evmDialect->evmVersion();
+	}
 
 	bool analyze(Block const& _block);
 
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(
-		std::shared_ptr<Dialect> _dialect,
-		dev::solidity::EVMVersion _evmVersion,
-		Block const& _ast
-	);
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Block const& _ast);
 
 	bool operator()(Instruction const&);
 	bool operator()(Literal const& _literal);
@@ -92,6 +91,8 @@ public:
 	bool operator()(If const& _if);
 	bool operator()(Switch const& _switch);
 	bool operator()(ForLoop const& _forLoop);
+	bool operator()(Break const&);
+	bool operator()(Continue const&);
 	bool operator()(Block const& _block);
 
 private:
@@ -105,7 +106,7 @@ private:
 
 	Scope& scope(Block const* _block);
 	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
-	void warnOnInstructions(dev::solidity::Instruction _instr, langutil::SourceLocation const& _location);
+	void warnOnInstructions(dev::eth::Instruction _instr, langutil::SourceLocation const& _location);
 
 	/// Depending on @a m_flavour and @a m_errorTypeForLoose, throws an internal compiler
 	/// exception (if the flavour is not Loose), reports an error/warning
@@ -120,9 +121,10 @@ private:
 	std::set<Scope::Variable const*> m_activeVariables;
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
-	dev::solidity::EVMVersion m_evmVersion;
-	std::shared_ptr<Dialect> m_dialect;
+	langutil::EVMVersion m_evmVersion;
+	Dialect const& m_dialect;
 	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
+	ForLoop const* m_currentForLoop = nullptr;
 };
 
 }

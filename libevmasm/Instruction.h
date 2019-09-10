@@ -21,14 +21,14 @@
 
 #pragma once
 
-#include <functional>
+#include <libevmasm/Exceptions.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
-#include "Exceptions.h"
+#include <functional>
 
 namespace dev
 {
-namespace solidity
+namespace eth
 {
 
 DEV_SIMPLE_EXCEPTION(InvalidDeposit);
@@ -187,6 +187,11 @@ enum class Instruction: uint8_t
 	RETURNSUB,          ///< return to subroutine jumped from -- not part of Instructions.cpp
 	PUTLOCAL,           ///< pop top of stack to local variable -- not part of Instructions.cpp
 	GETLOCAL,           ///< push local variable to top of stack -- not part of Instructions.cpp
+
+	CALLTOKEN = 0xd0,
+	TOKENBALANCE,
+	CALLTOKENVALUE,
+	CALLTOKENID,
 
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account

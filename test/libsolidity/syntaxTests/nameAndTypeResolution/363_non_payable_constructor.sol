@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError: (106-119): Member "value" not found or not visible after argument-dependent lookup in function () returns (contract C) - did you forget the "payable" modifier?
+// TypeError: (106-119): Constructor for contract C must be payable for member "value" to be available.

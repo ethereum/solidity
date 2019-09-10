@@ -35,7 +35,7 @@ struct SourceLocation;
 
 namespace dev
 {
-namespace solidity
+namespace eth
 {
 enum class Instruction: uint8_t;
 }
@@ -63,7 +63,7 @@ public:
 	/// at the beginning.
 	virtual int stackHeight() const = 0;
 	/// Append an EVM instruction.
-	virtual void appendInstruction(dev::solidity::Instruction _instruction) = 0;
+	virtual void appendInstruction(dev::eth::Instruction _instruction) = 0;
 	/// Append a constant.
 	virtual void appendConstant(dev::u256 const& _constant) = 0;
 	/// Append a label.

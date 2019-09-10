@@ -11,8 +11,9 @@
     datacopy("abc", x, y)
     mstore(a, x)
 }
+// ====
+// step: commonSubexpressionEliminator
 // ----
-// commonSubexpressionEliminator
 // {
 //     let r := "abc"
 //     let a := datasize("abc")

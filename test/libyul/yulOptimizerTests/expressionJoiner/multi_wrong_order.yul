@@ -7,8 +7,9 @@
 	let x := mul(a, add(2, b))
 	sstore(x, 3)
 }
+// ====
+// step: expressionJoiner
 // ----
-// expressionJoiner
 // {
 //     let a := mload(2)
 //     sstore(mul(a, add(2, mload(6))), 3)

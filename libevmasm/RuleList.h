@@ -21,17 +21,20 @@
 
 #pragma once
 
-#include <vector>
-#include <functional>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SimplificationRule.h>
 
 #include <libdevcore/CommonData.h>
 
+#include <boost/multiprecision/detail/min_max.hpp>
+
+#include <vector>
+#include <functional>
+
 namespace dev
 {
-namespace solidity
+namespace eth
 {
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
@@ -42,6 +45,13 @@ template <class S> S divWorkaround(S const& _a, S const& _b)
 template <class S> S modWorkaround(S const& _a, S const& _b)
 {
 	return (S)(bigint(_a) % bigint(_b));
+}
+
+// This works around a bug fixed with Boost 1.64.
+// https://www.boost.org/doc/libs/1_68_0/libs/multiprecision/doc/html/boost_multiprecision/map/hist.html#boost_multiprecision.map.hist.multiprecision_2_3_1_boost_1_64
+inline u256 shlWorkaround(u256 const& _x, unsigned _amount)
+{
+	return u256((bigint(_x) << _amount) & u256(-1));
 }
 
 // simplificationRuleList below was split up into parts to prevent
@@ -85,12 +95,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 				return B.d();
 			unsigned testBit = unsigned(A.d()) * 8 + 7;
 			u256 mask = (u256(1) << testBit) - 1;
-			return u256(boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask);
+			return boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask;
 		}, false},
 		{{Instruction::SHL, {A, B}}, [=]{
 			if (A.d() > 255)
 				return u256(0);
-			return u256(bigint(B.d()) << unsigned(A.d()));
+			return shlWorkaround(B.d(), unsigned(A.d()));
 		}, false},
 		{{Instruction::SHR, {A, B}}, [=]{
 			if (A.d() > 255)
@@ -106,7 +116,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 	Pattern,
 	Pattern,
 	Pattern X,
-	Pattern
+	Pattern Y
 )
 {
 	return std::vector<SimplificationRule<Pattern>> {
@@ -140,6 +150,18 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }, true},
 		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
 		{{Instruction::EQ, {0, X}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
+		{{Instruction::SHL, {0, X}}, [=]{ return X; }, false},
+		{{Instruction::SHR, {0, X}}, [=]{ return X; }, false},
+		{{Instruction::SHL, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Instruction::SHR, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Instruction::GT, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}; }, false},
+		{{Instruction::LT, {0, X}}, [=]() -> Pattern { return {Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}; }, false},
+		{{Instruction::GT, {X, ~u256(0)}}, [=]{ return u256(0); }, true},
+		{{Instruction::LT, {~u256(0), X}}, [=]{ return u256(0); }, true},
+		{{Instruction::GT, {0, X}}, [=]{ return u256(0); }, true},
+		{{Instruction::LT, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Instruction::AND, {{Instruction::BYTE, {X, Y}}, {u256(0xff)}}}, [=]() -> Pattern { return {Instruction::BYTE, {X, Y}}; }, false},
+		{{Instruction::BYTE, {31, X}}, [=]() -> Pattern { return {Instruction::AND, {X, u256(0xff)}}; }, false}
 	};
 }
 
@@ -201,7 +223,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 
 template <class Pattern>
 std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
-	Pattern,
+	Pattern A,
 	Pattern,
 	Pattern,
 	Pattern X,
@@ -221,11 +243,29 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		});
 	}
 
+	// Replace SHL >=256, X with 0
+	rules.push_back({
+		{Instruction::SHL, {A, X}},
+		[=]() -> Pattern { return u256(0); },
+		true,
+		[=]() { return A.d() >= 256; }
+	});
+
+	// Replace SHR >=256, X with 0
+	rules.push_back({
+		{Instruction::SHR, {A, X}},
+		[=]() -> Pattern { return u256(0); },
+		true,
+		[=]() { return A.d() >= 256; }
+	});
+
 	for (auto const& op: std::vector<Instruction>{
 		Instruction::ADDRESS,
 		Instruction::CALLER,
 		Instruction::ORIGIN,
-		Instruction::COINBASE
+		Instruction::COINBASE,
+		Instruction::CREATE,
+		Instruction::CREATE2
 	})
 	{
 		u256 const mask = (u256(1) << 160) - 1;
@@ -331,6 +371,145 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 			}};
 		}
 	}
+
+	// Combine two SHL by constant
+	rules.push_back({
+		// SHL(B, SHL(A, X)) -> SHL(min(A+B, 256), X)
+		{Instruction::SHL, {{B}, {Instruction::SHL, {{A}, {X}}}}},
+		[=]() -> Pattern {
+			bigint sum = bigint(A.d()) + B.d();
+			if (sum >= 256)
+				return {Instruction::AND, {X, u256(0)}};
+			else
+				return {Instruction::SHL, {u256(sum), X}};
+		},
+		false
+	});
+
+	// Combine two SHR by constant
+	rules.push_back({
+		// SHR(B, SHR(A, X)) -> SHR(min(A+B, 256), X)
+		{Instruction::SHR, {{B}, {Instruction::SHR, {{A}, {X}}}}},
+		[=]() -> Pattern {
+			bigint sum = bigint(A.d()) + B.d();
+			if (sum >= 256)
+				return {Instruction::AND, {X, u256(0)}};
+			else
+				return {Instruction::SHR, {u256(sum), X}};
+		},
+		false
+	});
+
+	// Combine SHL-SHR by constant
+	rules.push_back({
+		// SHR(B, SHL(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
+		{Instruction::SHR, {{B}, {Instruction::SHL, {{A}, {X}}}}},
+		[=]() -> Pattern {
+			u256 mask = shlWorkaround(u256(-1), unsigned(A.d())) >> unsigned(B.d());
+
+			if (A.d() > B.d())
+				return {Instruction::AND, {{Instruction::SHL, {A.d() - B.d(), X}}, mask}};
+			else if (B.d() > A.d())
+				return {Instruction::AND, {{Instruction::SHR, {B.d() - A.d(), X}}, mask}};
+			else
+				return {Instruction::AND, {X, mask}};
+		},
+		false,
+		[=] { return A.d() < 256 && B.d() < 256; }
+	});
+
+	// Combine SHR-SHL by constant
+	rules.push_back({
+		// SHL(B, SHR(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
+		{Instruction::SHL, {{B}, {Instruction::SHR, {{A}, {X}}}}},
+		[=]() -> Pattern {
+			u256 mask = shlWorkaround(u256(-1) >> unsigned(A.d()), unsigned(B.d()));
+
+			if (A.d() > B.d())
+				return {Instruction::AND, {{Instruction::SHR, {A.d() - B.d(), X}}, mask}};
+			else if (B.d() > A.d())
+				return {Instruction::AND, {{Instruction::SHL, {B.d() - A.d(), X}}, mask}};
+			else
+				return {Instruction::AND, {X, mask}};
+		},
+		false,
+		[=] { return A.d() < 256 && B.d() < 256; }
+	});
+
+	// Move AND with constant across SHL and SHR by constant
+	for (auto shiftOp: {Instruction::SHL, Instruction::SHR})
+	{
+		auto replacement = [=]() -> Pattern {
+			u256 mask =
+				shiftOp == Instruction::SHL ?
+				shlWorkaround(A.d(), unsigned(B.d())) :
+				A.d() >> unsigned(B.d());
+			return {Instruction::AND, {{shiftOp, {B.d(), X}}, std::move(mask)}};
+		};
+		rules.push_back({
+			// SH[L/R](B, AND(X, A)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
+			{shiftOp, {{B}, {Instruction::AND, {{X}, {A}}}}},
+			replacement,
+			false,
+			[=] { return B.d() < 256; }
+		});
+		rules.push_back({
+			// SH[L/R](B, AND(A, X)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
+			{shiftOp, {{B}, {Instruction::AND, {{A}, {X}}}}},
+			replacement,
+			false,
+			[=] { return B.d() < 256; }
+		});
+	}
+
+	rules.push_back({
+		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
+		{Instruction::MUL, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		[=]() -> Pattern {
+			return {Instruction::SHL, {Y, X}};
+		},
+		false
+	});
+	rules.push_back({
+		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
+		{Instruction::MUL, {{Instruction::SHL, {X, u256(1)}}, Y}},
+		[=]() -> Pattern {
+			return {Instruction::SHL, {X, Y}};
+		},
+		false
+	});
+
+	rules.push_back({
+		// DIV(X, SHL(Y, 1)) -> SHR(Y, X)
+		{Instruction::DIV, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		[=]() -> Pattern {
+			return {Instruction::SHR, {Y, X}};
+		},
+		false
+	});
+
+	std::function<bool()> feasibilityFunction = [=]() {
+		if (B.d() > 256)
+			return false;
+		unsigned bAsUint = static_cast<unsigned>(B.d());
+		return (A.d() & (u256(-1) >> bAsUint)) == (u256(-1) >> bAsUint);
+	};
+
+	rules.push_back({
+		// AND(A, SHR(B, X)) -> A & ((2^256-1) >> B) == ((2^256-1) >> B)
+		{Instruction::AND, {A, {Instruction::SHR, {B, X}}}},
+		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		false,
+		feasibilityFunction
+	});
+
+	rules.push_back({
+		// AND(SHR(B, X), A) -> ((2^256-1) >> B) & A == ((2^256-1) >> B)
+		{Instruction::AND, {{Instruction::SHR, {B, X}}, A}},
+		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		false,
+		feasibilityFunction
+	});
 
 	return rules;
 }

@@ -137,11 +137,18 @@ string IPCSocket::sendRequest(string const& _req)
 #endif
 }
 
-RPCSession& RPCSession::instance(const string& _path)
+RPCSession& RPCSession::instance(string const& _path)
 {
-	static RPCSession session(_path);
-	BOOST_REQUIRE_EQUAL(session.m_ipcSocket.path(), _path);
-	return session;
+	try
+	{
+		static RPCSession session(_path);
+		BOOST_REQUIRE_EQUAL(session.m_ipcSocket.path(), _path);
+		return session;
+	}
+	catch (std::exception const&)
+	{
+		BOOST_THROW_EXCEPTION(std::runtime_error("Error creating RPC session for socket: " + _path));
+	}
 }
 
 string RPCSession::eth_getCode(string const& _address, string const& _blockNumber)
@@ -159,7 +166,6 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 {
 	TransactionReceipt receipt;
 	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
-	BOOST_REQUIRE(!result.isNull());
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
 	receipt.blockNumber = result["blockNumber"].asString();
@@ -230,17 +236,19 @@ string RPCSession::personal_newAccount(string const& _password)
 void RPCSession::test_setChainParams(vector<string> const& _accounts)
 {
 	string forks;
-	if (test::Options::get().evmVersion() >= solidity::EVMVersion::tangerineWhistle())
+	if (test::Options::get().evmVersion() >= langutil::EVMVersion::tangerineWhistle())
 		forks += "\"EIP150ForkBlock\": \"0x00\",\n";
-	if (test::Options::get().evmVersion() >= solidity::EVMVersion::spuriousDragon())
+	if (test::Options::get().evmVersion() >= langutil::EVMVersion::spuriousDragon())
 		forks += "\"EIP158ForkBlock\": \"0x00\",\n";
-	if (test::Options::get().evmVersion() >= solidity::EVMVersion::byzantium())
+	if (test::Options::get().evmVersion() >= langutil::EVMVersion::byzantium())
 	{
 		forks += "\"byzantiumForkBlock\": \"0x00\",\n";
 		m_receiptHasStatusField = true;
 	}
-	if (test::Options::get().evmVersion() >= solidity::EVMVersion::constantinople())
+	if (test::Options::get().evmVersion() >= langutil::EVMVersion::constantinople())
 		forks += "\"constantinopleForkBlock\": \"0x00\",\n";
+	if (test::Options::get().evmVersion() >= langutil::EVMVersion::petersburg())
+		forks += "\"constantinopleFixForkBlock\": \"0x00\",\n";
 	static string const c_configString = R"(
 	{
 		"sealEngine": "NoProof",
@@ -263,14 +271,14 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 			"difficulty": "131072"
         },
 		"accounts": {
-			"0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
-			"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
-			"0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-			"0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-			"0000000000000000000000000000000000000005": { "wei": "1", "precompiled": { "name": "modexp" } },
-			"0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
-			"0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
-			"0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product" } }
+			"0000000000000000000000000000000000000001": { "sun": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
+			"0000000000000000000000000000000000000002": { "sun": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
+			"0000000000000000000000000000000000000003": { "sun": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
+			"0000000000000000000000000000000000000004": { "sun": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
+			"0000000000000000000000000000000000000005": { "sun": "1", "precompiled": { "name": "modexp" } },
+			"0000000000000000000000000000000000000006": { "sun": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
+			"0000000000000000000000000000000000000007": { "sun": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
+			"0000000000000000000000000000000000000008": { "sun": "1", "precompiled": { "name": "alt_bn128_pairing_product" } }
 		}
 	}
 	)";
@@ -278,7 +286,7 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	Json::Value config;
 	BOOST_REQUIRE(jsonParseStrict(c_configString, config));
 	for (auto const& account: _accounts)
-		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
+		config["accounts"][account]["sun"] = "0x100000000000000000000000000000000000000000";
 	test_setChainParams(jsonCompactPrint(config));
 }
 
@@ -341,6 +349,15 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 
 		BOOST_FAIL("Error on JSON-RPC call: " + result["error"]["message"].asString());
 	}
+
+	if (!result.isMember("result") || result["result"].isNull())
+		BOOST_FAIL(
+			"Missing result for JSON-RPC call: " +
+			result.toStyledString() +
+			"\nRequest was " +
+			request
+		);
+
 	return result["result"];
 }
 
@@ -358,7 +375,7 @@ string const& RPCSession::accountCreateIfNotExists(size_t _id)
 	return m_accounts[_id];
 }
 
-RPCSession::RPCSession(const string& _path):
+RPCSession::RPCSession(string const& _path):
 	m_ipcSocket(_path)
 {
 	accountCreate();

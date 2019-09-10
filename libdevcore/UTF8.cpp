@@ -21,12 +21,10 @@
  * UTF-8 related helpers
  */
 
-#include "UTF8.h"
-
+#include <libdevcore/UTF8.h>
 
 namespace dev
 {
-
 namespace
 {
 
@@ -77,7 +75,9 @@ bool isWellFormed(unsigned char byte1, unsigned char byte2)
 	return false;
 }
 
-bool validateUTF8(const unsigned char *_input, size_t _length, size_t& _invalidPosition)
+}
+
+bool validateUTF8(unsigned char const* _input, size_t _length, size_t& _invalidPosition)
 {
 	bool valid = true;
 	size_t i = 0;
@@ -131,8 +131,6 @@ bool validateUTF8(const unsigned char *_input, size_t _length, size_t& _invalidP
 
 	_invalidPosition = i;
 	return false;
-}
-
 }
 
 bool validateUTF8(std::string const& _input, size_t& _invalidPosition)

@@ -19,7 +19,11 @@
  * @date 2014
  */
 
-#include "CodeFragment.h"
+#include <liblll/CodeFragment.h>
+#include <liblll/CompilerState.h>
+#include <liblll/Parser.h>
+#include <libevmasm/Instruction.h>
+#include <libdevcore/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -34,13 +38,10 @@
 #pragma GCC diagnostic pop
 #endif // defined(__GNUC__)
 
-#include <libdevcore/CommonIO.h>
-#include <libevmasm/Instruction.h>
-#include "CompilerState.h"
-#include "Parser.h"
 
 using namespace std;
 using namespace dev;
+using namespace dev::eth;
 using namespace dev::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
@@ -66,7 +67,7 @@ bool validAssemblyInstruction(string us)
 	auto it = c_instructions.find(us);
 	return !(
 		it == c_instructions.end() ||
-		solidity::isPushInstruction(it->second)
+		isPushInstruction(it->second)
 	);
 }
 
@@ -76,10 +77,10 @@ bool validFunctionalInstruction(string us)
 	auto it = c_instructions.find(us);
 	return !(
 		it == c_instructions.end() ||
-		solidity::isPushInstruction(it->second) ||
-		solidity::isDupInstruction(it->second) ||
-		solidity::isSwapInstruction(it->second) ||
-		it->second == solidity::Instruction::JUMPDEST
+		isPushInstruction(it->second) ||
+		isDupInstruction(it->second) ||
+		isSwapInstruction(it->second) ||
+		it->second == Instruction::JUMPDEST
 	);
 }
 }
@@ -255,7 +256,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			string contents = m_readFile(fileName);
 			if (contents.empty())
 				error<InvalidName>(std::string("File not found (or empty): ") + fileName);
-			m_asm.append(CodeFragment::compile(contents, _s, m_readFile).m_asm);
+			m_asm.append(CodeFragment::compile(std::move(contents), _s, m_readFile).m_asm);
 		}
 		else if (us == "SET")
 		{
@@ -649,22 +650,22 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 
 			auto end = m_asm.newTag();
 			m_asm.append(Instruction::MSIZE); // Result will be original top of memory
-			m_asm.append(code[0].m_asm, 1);	  // The alloc argument N
+			m_asm.append(code[0].m_asm, 1);   // The alloc argument N
 			m_asm.append(Instruction::DUP1);
 			m_asm.append(Instruction::ISZERO);// (alloc 0) does not change MSIZE
 			m_asm.appendJumpI(end);
 			m_asm.append(u256(1));
 			m_asm.append(Instruction::DUP2);  // Copy N
-			m_asm.append(Instruction::SUB);	  // N-1
+			m_asm.append(Instruction::SUB);   // N-1
 			m_asm.append(u256(0x1f));         // Bit mask
-			m_asm.append(Instruction::NOT);	  // Invert
-			m_asm.append(Instruction::AND);	  // Align N-1 on 32 byte boundary
+			m_asm.append(Instruction::NOT);   // Invert
+			m_asm.append(Instruction::AND);   // Align N-1 on 32 byte boundary
 			m_asm.append(Instruction::MSIZE); // MSIZE is cheap
 			m_asm.append(Instruction::ADD);
 			m_asm.append(Instruction::MLOAD); // Updates MSIZE
-			m_asm.append(Instruction::POP);	  // Discard the result of the MLOAD
+			m_asm.append(Instruction::POP);   // Discard the result of the MLOAD
 			m_asm.append(end);
-			m_asm.append(Instruction::POP);	  // Discard duplicate N
+			m_asm.append(Instruction::POP);   // Discard duplicate N
 
 			_s.usedAlloc = true;
 		}
@@ -744,11 +745,11 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 	}
 }
 
-CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s, ReadCallback const& _readFile)
+CodeFragment CodeFragment::compile(string _src, CompilerState& _s, ReadCallback const& _readFile)
 {
 	CodeFragment ret;
 	sp::utree o;
-	parseTreeLLL(_src, o);
+	parseTreeLLL(std::move(_src), o);
 	if (!o.empty())
 		ret = CodeFragment(o, _s, _readFile);
 	_s.treesToKill.push_back(o);

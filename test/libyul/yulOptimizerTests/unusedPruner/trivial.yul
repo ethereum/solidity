@@ -3,8 +3,7 @@
     let b := 1
     mstore(0, 1)
 }
+// ====
+// step: unusedPruner
 // ----
-// unusedPruner
-// {
-//     mstore(0, 1)
-// }
+// { mstore(0, 1) }

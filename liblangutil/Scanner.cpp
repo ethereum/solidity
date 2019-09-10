@@ -1,48 +1,48 @@
 /*
-	This file is part of solidity.
-
-	solidity is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	solidity is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
-
-	This file is derived from the file "scanner.cc", which was part of the
-	V8 project. The original copyright header follows:
-
-	Copyright 2006-2012, the V8 project authors. All rights reserved.
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are
-	met:
-
-	* Redistributions of source code must retain the above copyright
-	  notice, this list of conditions and the following disclaimer.
-	* Redistributions in binary form must reproduce the above
-	  copyright notice, this list of conditions and the following
-	  disclaimer in the documentation and/or other materials provided
-	  with the distribution.
-	* Neither the name of Google Inc. nor the names of its
-	  contributors may be used to endorse or promote products derived
-	  from this software without specific prior written permission.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-	"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-	LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-	A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-	OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-	LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-	THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * This file is part of solidity.
+ *
+ * solidity is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * solidity is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * This file is derived from the file "scanner.cc", which was part of the
+ * V8 project. The original copyright header follows:
+ *
+ * Copyright 2006-2012, the V8 project authors. All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * * Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above
+ *   copyright notice, this list of conditions and the following
+ *   disclaimer in the documentation and/or other materials provided
+ *   with the distribution.
+ * * Neither the name of Google Inc. nor the names of its
+ *   contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -50,58 +50,18 @@
  * Solidity scanner.
  */
 
+#include <liblangutil/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
+#include <boost/optional.hpp>
 #include <algorithm>
 #include <ostream>
 #include <tuple>
 
 using namespace std;
+using namespace langutil;
 
-namespace langutil
-{
-
-namespace
-{
-bool isDecimalDigit(char c)
-{
-	return '0' <= c && c <= '9';
-}
-bool isHexDigit(char c)
-{
-	return isDecimalDigit(c)
-		   || ('a' <= c && c <= 'f')
-		   || ('A' <= c && c <= 'F');
-}
-bool isLineTerminator(char c)
-{
-	return c == '\n';
-}
-bool isWhiteSpace(char c)
-{
-	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
-}
-bool isIdentifierStart(char c)
-{
-	return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-}
-bool isIdentifierPart(char c)
-{
-	return isIdentifierStart(c) || isDecimalDigit(c);
-}
-int hexValue(char c)
-{
-	if (c >= '0' && c <= '9')
-		return c - '0';
-	else if (c >= 'a' && c <= 'f')
-		return c - 'a' + 10;
-	else if (c >= 'A' && c <= 'F')
-		return c - 'A' + 10;
-	else return -1;
-}
-} // end anonymous namespace
-
-std::string to_string(ScannerError _errorCode)
+string langutil::to_string(ScannerError _errorCode)
 {
 	switch (_errorCode)
 	{
@@ -122,15 +82,19 @@ std::string to_string(ScannerError _errorCode)
 	}
 }
 
-std::ostream& operator<<(std::ostream& os, ScannerError _errorCode)
+
+ostream& langutil::operator<<(ostream& os, ScannerError _errorCode)
 {
-	os << to_string(_errorCode);
-	return os;
+	return os << to_string(_errorCode);
 }
+
+namespace langutil
+{
 
 /// Scoped helper for literal recording. Automatically drops the literal
 /// if aborting the scanning before it's complete.
-enum LiteralType {
+enum LiteralType
+{
 	LITERAL_TYPE_STRING,
 	LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
 	LITERAL_TYPE_COMMENT
@@ -139,9 +103,10 @@ enum LiteralType {
 class LiteralScope
 {
 public:
-	explicit LiteralScope(Scanner* _self, enum LiteralType _type): m_type(_type)
-	, m_scanner(_self)
-	, m_complete(false)
+	explicit LiteralScope(Scanner* _self, enum LiteralType _type):
+		m_type(_type),
+		m_scanner(_self),
+		m_complete(false)
 	{
 		if (_type == LITERAL_TYPE_COMMENT)
 			m_scanner->m_nextSkippedComment.literal.clear();
@@ -164,8 +129,9 @@ private:
 	enum LiteralType m_type;
 	Scanner* m_scanner;
 	bool m_complete;
-}; // end of LiteralScope class
+};
 
+}
 
 void Scanner::reset(CharStream _source)
 {
@@ -173,20 +139,27 @@ void Scanner::reset(CharStream _source)
 	reset();
 }
 
-void Scanner::reset(std::shared_ptr<CharStream> _source)
+void Scanner::reset(shared_ptr<CharStream> _source)
 {
 	solAssert(_source.get() != nullptr, "You MUST provide a CharStream when resetting.");
-	m_source = _source;
+	m_source = std::move(_source);
 	reset();
 }
 
 void Scanner::reset()
 {
 	m_source->reset();
+	m_supportPeriodInIdentifier = false;
 	m_char = m_source->get();
 	skipWhitespace();
-	scanToken();
 	next();
+	next();
+}
+
+void Scanner::supportPeriodInIdentifier(bool _value)
+{
+	m_supportPeriodInIdentifier = _value;
+	rescan();
 }
 
 bool Scanner::scanHexByte(char& o_scannedByte)
@@ -207,7 +180,7 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 	return true;
 }
 
-bool Scanner::scanUnicode(unsigned & o_codepoint)
+boost::optional<unsigned> Scanner::scanUnicode()
 {
 	unsigned x = 0;
 	for (int i = 0; i < 4; i++)
@@ -216,13 +189,12 @@ bool Scanner::scanUnicode(unsigned & o_codepoint)
 		if (d < 0)
 		{
 			rollback(i);
-			return false;
+			return {};
 		}
 		x = x * 16 + d;
 		advance();
 	}
-	o_codepoint = x;
-	return true;
+	return x;
 }
 
 // This supports codepoints between 0000 and FFFF.
@@ -241,6 +213,18 @@ void Scanner::addUnicodeAsUTF8(unsigned codepoint)
 		addLiteralChar(0x80 | ((codepoint >> 6) & 0x3f));
 		addLiteralChar(0x80 | (codepoint & 0x3f));
 	}
+}
+
+void Scanner::rescan()
+{
+	size_t rollbackTo = 0;
+	if (m_skippedComment.literal.empty())
+		rollbackTo = m_currentToken.location.start;
+	else
+		rollbackTo = m_skippedComment.location.start;
+	m_char = m_source->rollback(size_t(m_source->position()) - rollbackTo);
+	next();
+	next();
 }
 
 // Ensure that tokens can be stored in a byte.
@@ -595,7 +579,12 @@ void Scanner::scanToken()
 				token = Token::Period;
 			break;
 		case ':':
-			token = selectToken(Token::Colon);
+			// : :=
+			advance();
+			if (m_char == '=')
+				token = selectToken(Token::AssemblyAssign);
+			else
+				token = Token::Colon;
 			break;
 		case ';':
 			token = selectToken(Token::Semicolon);
@@ -698,10 +687,10 @@ bool Scanner::scanEscape()
 		break;
 	case 'u':
 	{
-		unsigned codepoint;
-		if (!scanUnicode(codepoint))
+		if (boost::optional<unsigned> codepoint = scanUnicode())
+			addUnicodeAsUTF8(*codepoint);
+		else
 			return false;
-		addUnicodeAsUTF8(codepoint);
 		return true;
 	}
 	case 'x':
@@ -788,7 +777,8 @@ void Scanner::scanDecimalDigits()
 		return;
 
 	// May continue with decimal digit or underscore for grouping.
-	do addLiteralCharAndAdvance();
+	do
+		addLiteralCharAndAdvance();
 	while (!m_source->isPastEndOfInput() && (isDecimalDigit(m_char) || m_char == '_'));
 
 	// Defer further validation of underscore to SyntaxChecker.
@@ -894,11 +884,8 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	while (isIdentifierPart(m_char)) //get full literal
+	while (isIdentifierPart(m_char) || (m_char == '.' && m_supportPeriodInIdentifier))
 		addLiteralCharAndAdvance();
 	literal.complete();
 	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);
-}
-
-
 }

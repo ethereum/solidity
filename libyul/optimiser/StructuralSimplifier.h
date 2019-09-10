@@ -18,20 +18,19 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libdevcore/Common.h>
 
 namespace yul
 {
 
 /**
  * Structural simplifier. Performs the following simplification steps:
- * - replace if with empty body with pop(condition)
  * - replace if with true condition with its body
  * - remove if with false condition
- * - turn switch with single case into if
- * - replace switch with only default case with pop(expression) and body
- * - remove for with false condition
+ * - replace switch with const expr with matching case body
+ * - replace for with false condition by its initialization part
  *
- * Prerequisites: Disambiguator
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
  *
  * Important: Can only be used on EVM code.
  */
@@ -44,8 +43,9 @@ public:
 	void operator()(Block& _block) override;
 private:
 	void simplify(std::vector<Statement>& _statements);
-	bool expressionAlwaysTrue(Expression const &_expression);
-	bool expressionAlwaysFalse(Expression const &_expression);
+	bool expressionAlwaysTrue(Expression const& _expression);
+	bool expressionAlwaysFalse(Expression const& _expression);
+	boost::optional<dev::u256> hasLiteralValue(Expression const& _expression) const;
 };
 
 }

@@ -31,6 +31,8 @@ set -e
 REPO_ROOT="$(dirname "$0")"/..
 
 WORKDIR=`mktemp -d`
+# Will be printed in case of a test failure
+ALETH_TMP_OUT=`mktemp`
 IPC_ENABLED=true
 ALETH_PID=
 CMDLINE_PID=
@@ -71,8 +73,8 @@ safe_kill() {
 }
 
 cleanup() {
-	# ensure failing commands don't cause termination during cleanup (especially within safe_kill)
-	set +e
+    # ensure failing commands don't cause termination during cleanup (especially within safe_kill)
+    set +e
 
     if [[ "$IPC_ENABLED" = true ]] && [[ -n "${ALETH_PID}" ]]
     then
@@ -85,6 +87,7 @@ cleanup() {
 
     echo "Cleaning up working directory ${WORKDIR} ..."
     rm -rf "$WORKDIR" || true
+    rm $ALETH_TMP_OUT
 }
 trap cleanup INT TERM
 
@@ -131,9 +134,9 @@ function download_aleth()
         ALETH_PATH="aleth"
     else
         mkdir -p /tmp/test
-        # Any time the hash is updated here, the "Running compiler tests" section should also be updated.
-        ALETH_HASH="8ce2f00539d2fd8b5f093d854c6999424f7494ff"
-        ALETH_VERSION=1.5.0-alpha.7
+        # Any time the hash is updated here, the "Running the compiler tests" section in contributing.rst should also be updated.
+        ALETH_HASH="7f7004e1563299bc57882e32b32e4a195747dfb6"
+        ALETH_VERSION=1.6.0
         wget -q -O /tmp/test/aleth.tar.gz https://github.com/ethereum/aleth/releases/download/v${ALETH_VERSION}/aleth-${ALETH_VERSION}-linux-x86_64.tar.gz
         test "$(shasum /tmp/test/aleth.tar.gz)" = "$ALETH_HASH  /tmp/test/aleth.tar.gz"
         tar -xf /tmp/test/aleth.tar.gz -C /tmp/test
@@ -149,7 +152,9 @@ function download_aleth()
 # echos the PID
 function run_aleth()
 {
-    $ALETH_PATH --db memorydb --test -d "${WORKDIR}" >/dev/null 2>&1 &
+    # Use this to have aleth log output
+    #$REPO_ROOT/scripts/aleth_with_log.sh $ALETH_PATH $ALETH_TMP_OUT --log-verbosity 3 --db memorydb --test -d "${WORKDIR}" &> /dev/null &
+    $ALETH_PATH --db memorydb --test -d "${WORKDIR}" &> /dev/null &
     echo $!
     # Wait until the IPC endpoint is available.
     while [ ! -S "${WORKDIR}/geth.ipc" ] ; do sleep 1; done
@@ -181,7 +186,7 @@ EVM_VERSIONS="homestead byzantium"
 
 if [ "$CIRCLECI" ] || [ -z "$CI" ]
 then
-EVM_VERSIONS+=" constantinople"
+EVM_VERSIONS+=" constantinople petersburg"
 fi
 
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
@@ -190,18 +195,47 @@ for optimize in "" "--optimize"
 do
   for vm in $EVM_VERSIONS
   do
-    printTask "--> Running tests using "$optimize" --evm-version "$vm"..."
-    log=""
-    if [ -n "$log_directory" ]
+    FORCE_ABIV2_RUNS="no"
+    if [[ "$vm" == "constantinople" ]]
     then
-      if [ -n "$optimize" ]
-      then
-        log=--logger=JUNIT,test_suite,$log_directory/opt_$vm.xml $testargs
-      else
-        log=--logger=JUNIT,test_suite,$log_directory/noopt_$vm.xml $testargs_no_opt
-      fi
+      FORCE_ABIV2_RUNS="no yes" # run both in constantinople
     fi
-    "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS  --ipcpath "${WORKDIR}/geth.ipc"
+    for abiv2 in $FORCE_ABIV2_RUNS
+    do
+        force_abiv2_flag=""
+        if [[ "$abiv2" == "yes" ]]
+        then
+            force_abiv2_flag="--abiencoderv2 --optimize-yul"
+        fi
+        printTask "--> Running tests using "$optimize" --evm-version "$vm" $force_abiv2_flag..."
+
+        log=""
+        if [ -n "$log_directory" ]
+        then
+        if [ -n "$optimize" ]
+        then
+            log=--logger=JUNIT,error,$log_directory/opt_$vm.xml $testargs
+        else
+            log=--logger=JUNIT,error,$log_directory/noopt_$vm.xml $testargs_no_opt
+        fi
+        fi
+
+        set +e
+        "$REPO_ROOT"/build/test/soltest $progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $IPC_FLAGS $force_abiv2_flag --ipcpath "${WORKDIR}/geth.ipc"
+
+        if test "0" -ne "$?"; then
+            if [ -n "$log_directory" ]
+            then
+                # Need to kill aleth first so the log is written
+                safe_kill $ALETH_PID $ALETH_PATH
+                cp $ALETH_TMP_OUT $log_directory/aleth.log
+                printError "Some test failed, wrote aleth.log"
+            fi
+            exit 1
+        fi
+        set -e
+
+    done
   done
 done
 

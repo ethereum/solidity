@@ -29,12 +29,10 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
-{
+namespace dev {
+    namespace solidity {
 
-class Type; // forward
+        class Type; // forward
 
 /**
  * Container for all global objects which look like AST nodes, but are not part of the AST
@@ -42,23 +40,25 @@ class Type; // forward
  * @note must not be destroyed or moved during compilation as its objects can be referenced from
  * other objects.
  */
-class GlobalContext: private boost::noncopyable
-{
-public:
-	GlobalContext();
-	void setCurrentContract(ContractDefinition const& _contract);
-	MagicVariableDeclaration const* currentThis() const;
-	MagicVariableDeclaration const* currentSuper() const;
+        class GlobalContext : private boost::noncopyable {
+        public:
+            GlobalContext();
 
-	/// @returns a vector of all implicit global declarations excluding "this".
-	std::vector<Declaration const*> declarations() const;
+            void setCurrentContract(ContractDefinition const &_contract);
 
-private:
-	std::vector<std::shared_ptr<MagicVariableDeclaration const>> m_magicVariables;
-	ContractDefinition const* m_currentContract = nullptr;
-	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration const>> mutable m_thisPointer;
-	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration const>> mutable m_superPointer;
-};
+            MagicVariableDeclaration const *currentThis() const;
 
-}
+            MagicVariableDeclaration const *currentSuper() const;
+
+            /// @returns a vector of all implicit global declarations excluding "this".
+            std::vector<Declaration const *> declarations() const;
+
+        private:
+            std::vector<std::shared_ptr<MagicVariableDeclaration const>> m_magicVariables;
+            ContractDefinition const *m_currentContract = nullptr;
+            std::map<ContractDefinition const *, std::shared_ptr<MagicVariableDeclaration const>> mutable m_thisPointer;
+            std::map<ContractDefinition const *, std::shared_ptr<MagicVariableDeclaration const>> mutable m_superPointer;
+        };
+
+    }
 }

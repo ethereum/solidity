@@ -56,8 +56,8 @@ struct Scope
 	bool registerLabel(YulString _name);
 	bool registerFunction(
 		YulString _name,
-		std::vector<YulType> const& _arguments,
-		std::vector<YulType> const& _returns
+		std::vector<YulType> _arguments,
+		std::vector<YulType> _returns
 	);
 
 	/// Looks up the identifier in this or super scopes and returns a valid pointer if found

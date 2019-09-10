@@ -5,12 +5,12 @@
     let c := a
     mstore(add(a, b), c)
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     function f(x) -> y
-//     {
-//     }
+//     { }
 //     let a := 1
 //     let b := f(1)
 //     let c := 1

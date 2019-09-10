@@ -17,6 +17,10 @@
 
 #include <string>
 
+/**
+ * Functions to be used for fuzz-testing of various components.
+ * They throw exceptions or error.
+ */
 struct FuzzerUtil
 {
 	static void runCompiler(std::string const& _input, bool _quiet);

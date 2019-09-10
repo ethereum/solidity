@@ -120,7 +120,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 		vector<VariableOccurrence const*> uninitializedAccessesOrdered(
 			exitInfo.uninitializedVariableAccesses.begin(),
 			exitInfo.uninitializedVariableAccesses.end()
-		 );
+		);
 		boost::range::sort(
 			uninitializedAccessesOrdered,
 			[](VariableOccurrence const* lhs, VariableOccurrence const* rhs) -> bool

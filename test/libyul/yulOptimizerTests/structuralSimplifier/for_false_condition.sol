@@ -3,8 +3,7 @@
         let b := a
     }
 }
+// ====
+// step: structuralSimplifier
 // ----
-// structuralSimplifier
-// {
-//     let a := 42
-// }
+// { let a := 42 }

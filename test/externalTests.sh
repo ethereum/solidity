@@ -35,63 +35,14 @@ then
 fi
 
 SOLJSON="$1"
+REPO_ROOT="$(dirname "$0")"
 
-function test_truffle
-{
-    name="$1"
-    repo="$2"
-    branch="$3"
-    echo "Running $name tests..."
-    DIR=$(mktemp -d)
-    (
-      if [ -n "$branch" ]
-      then
-        echo "Cloning $branch of $repo..."
-        git clone --depth 1 "$repo" -b "$branch" "$DIR"
-      else
-        echo "Cloning $repo..."
-        git clone --depth 1 "$repo" "$DIR"
-      fi
-      cd "$DIR"
-      echo "Current commit hash: `git rev-parse HEAD`"
-      npm install
-      # Replace solc package by v0.5.0
-      for d in node_modules node_modules/truffle/node_modules
-      do
-      (
-        if [ -d "$d" ]
-        then
-          cd $d
-          rm -rf solc
-          git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
-          cp "$SOLJSON" solc/
-        fi
-      )
-      done
-      if [ "$name" == "Zeppelin" -o "$name" == "Gnosis" ]; then
-        echo "Replaced fixed-version pragmas..."
-        # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
-        find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
-      fi
-      assertsol="node_modules/truffle/build/Assert.sol"
-      if [ -f "$assertsol" ]
-      then
-        echo "Replace Truffle's Assert.sol with a known good version"
-        rm "$assertsol"
-        wget https://raw.githubusercontent.com/trufflesuite/truffle-core/ef31bcaa15dbd9bd0f6a0070a5c63f271cde2dbc/lib/testing/Assert.sol -o "$assertsol"
-      fi
-      # Change "compileStandard" to "compile"
-      sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
-      npx truffle compile
-      npm run test
-    )
-    rm -rf "$DIR"
-}
+source test/externalTests/common.sh
 
-# Since Zeppelin 2.1.1 it supports Solidity 0.5.0.
-test_truffle Zeppelin https://github.com/OpenZeppelin/openzeppelin-solidity.git master
+printTask "Running external tests..."
+
+$REPO_ROOT/externalTests/zeppelin.sh "$SOLJSON"
+$REPO_ROOT/externalTests/gnosis.sh "$SOLJSON"
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
-
-test_truffle GnosisSafe https://github.com/gnosis/safe-contracts.git development

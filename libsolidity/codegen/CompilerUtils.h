@@ -23,6 +23,8 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerContext.h>
 
 namespace dev {
@@ -49,6 +51,10 @@ public:
 	/// Stack pre: <size>
 	/// Stack post: <mem_start>
 	void allocateMemory();
+	/// Allocates a number of bytes in memory as given on the stack.
+	/// Stack pre:
+	/// Stack post: <mem_start>
+	void allocateMemory(u256 const& size);
 	/// Appends code that transforms memptr to (memptr - free_memptr) memptr
 	/// Stack pre: <mem_end>
 	/// Stack post: <size> <mem_start>
@@ -61,6 +67,13 @@ public:
 	/// Stack post:
 	void revertWithStringData(Type const& _argumentType);
 
+	/// Computes the absolute calldata offset of a tail given a base reference and the (absolute)
+	/// offset of the tail pointer. Performs bounds checks. If @a _type is a dynamically sized array it also
+	/// returns the array length on the stack.
+	/// Stack pre: base_ref tail_ptr
+	/// Stack post: tail_ref [length]
+	void accessCalldataTail(Type const& _type);
+
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
 	/// @param _type data type to load
@@ -69,7 +82,7 @@ public:
 	/// @returns the number of bytes consumed in memory.
 	unsigned loadFromMemory(
 		unsigned _offset,
-		Type const& _type = IntegerType::uint256(),
+		Type const& _type = *TypeProvider::uint256(),
 		bool _fromCalldata = false,
 		bool _padToWords = false
 	);
@@ -84,7 +97,6 @@ public:
 	);
 	/// Stores a 256 bit integer from stack in memory.
 	/// @param _offset offset in memory
-	/// @param _type type of the data on the stack
 	void storeInMemory(unsigned _offset);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that. For reference types, only copies the data pointer. Fails for
@@ -187,6 +199,11 @@ public:
 	/// Stack post:
 	void memoryCopy();
 
+	/// Stores the given string in memory.
+	/// Stack pre: mempos
+	/// Stack post:
+	void storeStringData(bytesConstRef _data);
+
 	/// Converts the combined and left-aligned (right-aligned if @a _rightAligned is true)
 	/// external function type <address><function identifier> into two stack slots:
 	/// address (right aligned), function identifier (right aligned)
@@ -249,7 +266,7 @@ public:
 
 	template <class T>
 	static unsigned sizeOnStack(std::vector<T> const& _variables);
-	static unsigned sizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
+	static unsigned sizeOnStack(std::vector<Type const*> const& _variableTypes);
 
 	/// Helper function to shift top value on the stack to the left.
 	/// Stack pre: <value> <shift_by_bits>
@@ -273,24 +290,16 @@ public:
 
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
-	static const unsigned dataStartOffset;
+	static unsigned const dataStartOffset;
 
 	/// Position of the free-memory-pointer in memory;
-	static const size_t freeMemoryPointer;
+	static size_t const freeMemoryPointer;
 	/// Position of the memory slot that is always zero.
-	static const size_t zeroPointer;
+	static size_t const zeroPointer;
 	/// Starting offset for memory available to the user (aka the contract).
-	static const size_t generalPurposeMemoryStart;
+	static size_t const generalPurposeMemoryStart;
 
 private:
-	/// Address of the precompiled identity contract.
-	static const unsigned identityContractAddress;
-
-	/// Stores the given string in memory.
-	/// Stack pre: mempos
-	/// Stack post:
-	void storeStringData(bytesConstRef _data);
-
 	/// Appends code that cleans higher-order bits for integer types.
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
 

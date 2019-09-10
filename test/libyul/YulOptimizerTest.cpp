@@ -21,6 +21,10 @@
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
+#include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/ControlFlowSimplifier.h>
+#include <libyul/optimiser/ConstantOptimiser.h>
+#include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -30,6 +34,7 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -42,10 +47,13 @@
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/optimiser/Metrics.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
+#include <libyul/AssemblyStack.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -75,19 +83,23 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
 
 	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
+	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
 	file.exceptions(ios::badbit);
 
-	string line;
-	while (getline(file, line))
+	m_source = parseSourceAndSettings(file);
+	if (m_settings.count("yul"))
 	{
-		if (boost::algorithm::starts_with(line, "// ----"))
-			break;
-		if (m_source.empty() && boost::algorithm::starts_with(line, "// yul"))
-			m_yul = true;
-		m_source += line + "\n";
+		m_yul = true;
+		m_validatedSettings["yul"] = "true";
+		m_settings.erase("yul");
 	}
+	if (m_settings.count("step"))
+	{
+		m_validatedSettings["step"] = m_settings["step"];
+		m_settings.erase("step");
+	}
+
+	string line;
 	while (getline(file, line))
 		if (boost::algorithm::starts_with(line, "// "))
 			m_expectation += line.substr(3) + "\n";
@@ -95,14 +107,12 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 			m_expectation += line + "\n";
 }
 
-bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	yul::AsmPrinter printer{m_yul};
-	shared_ptr<Block> ast;
-	shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 	if (!parse(_stream, _linePrefix, _formatted))
-		return false;
+		return TestResult::FatalError;
 
+	soltestAssert(m_dialect, "Dialect not set.");
 	if (m_optimizerStep == "disambiguator")
 		disambiguate();
 	else if (m_optimizerStep == "blockFlattener")
@@ -110,8 +120,20 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		disambiguate();
 		BlockFlattener{}(*m_ast);
 	}
+	else if (m_optimizerStep == "constantOptimiser")
+	{
+		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+		ConstantOptimiser{dynamic_cast<EVMDialect const&>(*m_dialect), meter}(*m_ast);
+	}
 	else if (m_optimizerStep == "varDeclInitializer")
 		VarDeclInitializer{}(*m_ast);
+	else if (m_optimizerStep == "varNameCleaner")
+		VarNameCleaner{*m_ast, *m_dialect}(*m_ast);
+	else if (m_optimizerStep == "forLoopConditionIntoBody")
+	{
+		disambiguate();
+		ForLoopConditionIntoBody{}(*m_ast);
+	}
 	else if (m_optimizerStep == "forLoopInitRewriter")
 	{
 		disambiguate();
@@ -180,15 +202,19 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
+		ExpressionSimplifier::run(*m_dialect, *m_ast);
+		ExpressionSimplifier::run(*m_dialect, *m_ast);
 	}
 	else if (m_optimizerStep == "fullSimplify")
 	{
 		disambiguate();
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
+		ForLoopInitRewriter{}(*m_ast);
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+		DeadCodeEliminator{*m_dialect}(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 		ExpressionJoiner::run(*m_ast);
 	}
@@ -196,6 +222,12 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
+	}
+	else if (m_optimizerStep == "deadCodeEliminator")
+	{
+		disambiguate();
+		ForLoopInitRewriter{}(*m_ast);
+		DeadCodeEliminator{*m_dialect}(*m_ast);
 	}
 	else if (m_optimizerStep == "ssaTransform")
 	{
@@ -214,6 +246,11 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		NameDispenser nameDispenser{*m_dialect, *m_ast};
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
+	}
+	else if (m_optimizerStep == "controlFlowSimplifier")
+	{
+		disambiguate();
+		ControlFlowSimplifier{*m_dialect}(*m_ast);
 	}
 	else if (m_optimizerStep == "structuralSimplifier")
 	{
@@ -246,19 +283,43 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 	{
 		disambiguate();
 		(FunctionGrouper{})(*m_ast);
-		StackCompressor::run(m_dialect, *m_ast);
+		size_t maxIterations = 16;
+		StackCompressor::run(*m_dialect, *m_ast, true, maxIterations);
 		(BlockFlattener{})(*m_ast);
 	}
+	else if (m_optimizerStep == "wordSizeTransform")
+	{
+		disambiguate();
+		NameDispenser nameDispenser{*m_dialect, *m_ast};
+		ExpressionSplitter{*m_dialect, nameDispenser}(*m_ast);
+		WordSizeTransform::run(*m_ast, nameDispenser);
+	}
 	else if (m_optimizerStep == "fullSuite")
-		OptimiserSuite::run(m_dialect, *m_ast, *m_analysisInfo);
+	{
+		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+		OptimiserSuite::run(*m_dialect, meter, *m_ast, *m_analysisInfo, true);
+	}
 	else
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
-		return false;
+		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = m_optimizerStep + "\n" + printer(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{m_yul}(*m_ast) + "\n";
 
+	if (m_optimizerStep != m_validatedSettings["step"])
+	{
+		string nextIndentLevel = _linePrefix + "  ";
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) <<
+			_linePrefix <<
+			"Invalid optimizer step. Given: \"" <<
+			m_validatedSettings["step"] <<
+			"\", should be: \"" <<
+			m_optimizerStep <<
+			"\"." <<
+			endl;
+		return TestResult::FatalError;
+	}
 	if (m_expectation != m_obtainedResult)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
@@ -267,14 +328,20 @@ bool YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool con
 		printIndented(_stream, m_expectation, nextIndentLevel);
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return false;
+		return TestResult::Failure;
 	}
-	return true;
+	return TestResult::Success;
 }
 
 void YulOptimizerTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
 {
 	printIndented(_stream, m_source, _linePrefix);
+}
+
+void YulOptimizerTest::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool _formatted)
+{
+	m_validatedSettings["step"] = m_optimizerStep;
+	EVMVersionRestrictedTestCase::printUpdatedSettings(_stream, _linePrefix, _formatted);
 }
 
 void YulOptimizerTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
@@ -292,31 +359,20 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	m_dialect = m_yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVMObjects();
-	ErrorList errors;
-	ErrorReporter errorReporter(errors);
-	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(m_source, ""));
-	m_ast = yul::Parser(errorReporter, m_dialect).parse(scanner, false);
-	if (!m_ast || !errorReporter.errors().empty())
+	AssemblyStack stack(
+		dev::test::Options::get().evmVersion(),
+		m_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::none()
+	);
+	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, errorReporter.errors());
+		printErrors(_stream, stack.errors());
 		return false;
 	}
-	m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-	yul::AsmAnalyzer analyzer(
-		*m_analysisInfo,
-		errorReporter,
-		dev::test::Options::get().evmVersion(),
-		boost::none,
-		m_dialect
-	);
-	if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
-	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error analyzing source." << endl;
-		printErrors(_stream, errorReporter.errors());
-		return false;
-	}
+	m_dialect = m_yul ? &Dialect::yul() : &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
+	m_ast = stack.parserResult()->code;
+	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;
 }
 
@@ -331,8 +387,5 @@ void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 	SourceReferenceFormatter formatter(_stream);
 
 	for (auto const& error: _errors)
-		formatter.printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+		formatter.printErrorInformation(*error);
 }

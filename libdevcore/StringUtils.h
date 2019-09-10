@@ -74,6 +74,22 @@ std::string joinHumanReadable
 	return result;
 }
 
+/// Joins collection of strings just like joinHumanReadable, but prepends the separator
+/// unless the collection is empty.
+template<class T>
+std::string joinHumanReadablePrefixed
+(
+	T const& _list,
+	std::string const& _separator = ", ",
+	std::string const& _lastSeparator = ""
+)
+{
+	if (begin(_list) == end(_list))
+		return {};
+	else
+		return _separator + joinHumanReadable(_list, _separator, _lastSeparator);
+}
+
 /// Formats large numbers to be easily readable by humans.
 /// Returns decimal representation for smaller numbers; hex for large numbers.
 /// "Special" numbers, powers-of-two and powers-of-two minus 1, are returned in
@@ -139,8 +155,8 @@ inline std::string formatNumberReadable(
 		if (len < 24)
 			return str;
 
-		const int initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
-		const int finalChars = 4;
+		int const initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
+		int const finalChars = 4;
 		int numSkipped = len - initialChars - finalChars;
 
 		return str.substr(0, initialChars) +

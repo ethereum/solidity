@@ -47,21 +47,21 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	bool _allowMultipleErrors
 )
 {
-	m_compiler.reset();
-	m_compiler.addSource("", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source);
-	m_compiler.setEVMVersion(dev::test::Options::get().evmVersion());
-	if (!m_compiler.parse())
+	compiler().reset();
+	compiler().setSources({{"", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source}});
+	compiler().setEVMVersion(dev::test::Options::get().evmVersion());
+	if (!compiler().parse())
 	{
 		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors());
 	}
 
-	m_compiler.analyze();
+	compiler().analyze();
 
-	ErrorList errors = filterErrors(m_compiler.errors(), _reportWarnings);
+	ErrorList errors = filterErrors(compiler().errors(), _reportWarnings);
 	if (errors.size() > 1 && !_allowMultipleErrors)
 		BOOST_FAIL("Multiple errors found: " + formatErrors());
 
-	return make_pair(&m_compiler.ast(""), std::move(errors));
+	return make_pair(&compiler().ast(""), std::move(errors));
 }
 
 ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarnings) const
@@ -118,17 +118,14 @@ ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warni
 string AnalysisFramework::formatErrors() const
 {
 	string message;
-	for (auto const& error: m_compiler.errors())
+	for (auto const& error: compiler().errors())
 		message += formatError(*error);
 	return message;
 }
 
 string AnalysisFramework::formatError(Error const& _error) const
 {
-	return SourceReferenceFormatter::formatExceptionInformation(
-			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+	return SourceReferenceFormatter::formatErrorInformation(_error);
 }
 
 ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)

@@ -43,7 +43,7 @@ struct TypedName { langutil::SourceLocation location; YulString name; Type type;
 using TypedNameList = std::vector<TypedName>;
 
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
-struct Instruction { langutil::SourceLocation location; dev::solidity::Instruction instruction; };
+struct Instruction { langutil::SourceLocation location; dev::eth::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
 struct Literal { langutil::SourceLocation location; LiteralKind kind; YulString value; Type type; };
@@ -61,7 +61,7 @@ struct StackAssignment { langutil::SourceLocation location; Identifier variableN
 /// the same amount of items as the number of variables.
 struct Assignment { langutil::SourceLocation location; std::vector<Identifier> variableNames; std::unique_ptr<Expression> value; };
 /// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
-struct FunctionalInstruction { langutil::SourceLocation location; dev::solidity::Instruction instruction; std::vector<Expression> arguments; };
+struct FunctionalInstruction { langutil::SourceLocation location; dev::eth::Instruction instruction; std::vector<Expression> arguments; };
 struct FunctionCall { langutil::SourceLocation location; Identifier functionName; std::vector<Expression> arguments; };
 /// Statement that contains only a single expression
 struct ExpressionStatement { langutil::SourceLocation location; Expression expression; };
@@ -78,6 +78,10 @@ struct Case { langutil::SourceLocation location; std::unique_ptr<Literal> value;
 /// Switch statement
 struct Switch { langutil::SourceLocation location; std::unique_ptr<Expression> expression; std::vector<Case> cases; };
 struct ForLoop { langutil::SourceLocation location; Block pre; std::unique_ptr<Expression> condition; Block post; Block body; };
+/// Break statement (valid within for loop)
+struct Break { langutil::SourceLocation location; };
+/// Continue statement (valid within for loop)
+struct Continue { langutil::SourceLocation location; };
 
 struct LocationExtractor: boost::static_visitor<langutil::SourceLocation>
 {

@@ -18,6 +18,7 @@
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 #include <libyul/AsmData.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libevmasm/SemanticInformation.h>
 #include <functional>
@@ -33,7 +34,11 @@ namespace
 class AssemblyViewPureChecker: public boost::static_visitor<void>
 {
 public:
-	explicit AssemblyViewPureChecker(std::function<void(StateMutability, SourceLocation const&)> _reportMutability):
+	explicit AssemblyViewPureChecker(
+		yul::Dialect const& _dialect,
+		std::function<void(StateMutability, SourceLocation const&)> _reportMutability
+	):
+		m_dialect(_dialect),
 		m_reportMutability(_reportMutability) {}
 
 	void operator()(yul::Label const&) { }
@@ -69,6 +74,11 @@ public:
 	}
 	void operator()(yul::FunctionCall const& _funCall)
 	{
+		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
+			if (yul::BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
+				if (fun->instruction)
+					checkInstruction(_funCall.location, *fun->instruction);
+
 		for (auto const& arg: _funCall.arguments)
 			boost::apply_visitor(*this, arg);
 	}
@@ -94,6 +104,12 @@ public:
 		(*this)(_for.body);
 		(*this)(_for.post);
 	}
+	void operator()(yul::Break const&)
+	{
+	}
+	void operator()(yul::Continue const&)
+	{
+	}
 	void operator()(yul::Block const& _block)
 	{
 		for (auto const& s: _block.statements)
@@ -101,14 +117,16 @@ public:
 	}
 
 private:
-	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
-	void checkInstruction(SourceLocation _location, solidity::Instruction _instruction)
+	void checkInstruction(SourceLocation _location, dev::eth::Instruction _instruction)
 	{
 		if (eth::SemanticInformation::invalidInViewFunctions(_instruction))
 			m_reportMutability(StateMutability::NonPayable, _location);
 		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction))
 			m_reportMutability(StateMutability::View, _location);
 	}
+
+	yul::Dialect const& m_dialect;
+	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
 };
 
 }
@@ -215,6 +233,7 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
+		_inlineAssembly.dialect(),
 		[=](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
 	}(_inlineAssembly.operations());
 }
@@ -264,13 +283,13 @@ void ViewPureChecker::reportMutability(
 			if (_nestedLocation)
 				m_errorReporter.typeError(
 					_location,
-					SecondarySourceLocation().append("\"msg.value\" appears here inside the modifier.", *_nestedLocation),
-					"This modifier uses \"msg.value\" and thus the function has to be payable or internal."
+					SecondarySourceLocation().append("\"msg.value\" or \"callvalue()\" appear here inside the modifier.", *_nestedLocation),
+					"This modifier uses \"msg.value\" or \"callvalue()\" and thus the function has to be payable or internal."
 				);
 			else
 				m_errorReporter.typeError(
 					_location,
-					"\"msg.value\" can only be used in payable public functions. Make the function "
+					"\"msg.value\" and \"callvalue()\" can only be used in payable public functions. Make the function "
 					"\"payable\" or use an internal function to avoid this error."
 				);
 			m_errors = true;
@@ -340,10 +359,13 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			{MagicType::Kind::Message, "data"},
 			{MagicType::Kind::Message, "sig"},
 			{MagicType::Kind::MetaType, "creationCode"},
-			{MagicType::Kind::MetaType, "runtimeCode"}
+			{MagicType::Kind::MetaType, "runtimeCode"},
+			{MagicType::Kind::MetaType, "name"},
 		};
 		set<MagicMember> static const payableMembers{
-			{MagicType::Kind::Message, "value"}
+			{MagicType::Kind::Message, "value"},
+			{MagicType::Kind::Message, "tokenvalue"},
+			{MagicType::Kind::Message, "tokenid"}
 		};
 
 		auto const& type = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type);

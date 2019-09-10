@@ -38,19 +38,20 @@ namespace yul
 namespace test
 {
 
-class YulOptimizerTest: public dev::solidity::test::TestCase
+class YulOptimizerTest: public dev::solidity::test::EVMVersionRestrictedTestCase
 {
 public:
-	static std::unique_ptr<TestCase> create(std::string const& _filename)
+	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::unique_ptr<TestCase>(new YulOptimizerTest(_filename));
+		return std::unique_ptr<TestCase>(new YulOptimizerTest(_config.filename));
 	}
 
 	explicit YulOptimizerTest(std::string const& _filename);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
+	void printUpdatedSettings(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
 private:
@@ -65,7 +66,7 @@ private:
 	std::string m_optimizerStep;
 	std::string m_expectation;
 
-	std::shared_ptr<Dialect> m_dialect;
+	Dialect const* m_dialect = nullptr;
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;

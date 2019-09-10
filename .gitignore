@@ -32,6 +32,7 @@ prerelease.txt
 
 # Build directory
 build/
+cmake-build-debug/
 docs/_build
 docs/utils/__pycache__
 docs/utils/*.pyc

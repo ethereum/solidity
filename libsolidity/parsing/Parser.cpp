@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -22,13 +22,14 @@
 
 #include <libsolidity/parsing/Parser.h>
 
-#include <libsolidity/analysis/SemVerHandler.h>
 #include <libsolidity/interface/Version.h>
 #include <libyul/AsmParser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceLocation.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <cctype>
 #include <vector>
 
@@ -64,6 +65,8 @@ public:
 			markEndPosition();
 		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
 	}
+
+	SourceLocation const& location() const noexcept { return m_location; }
 
 private:
 	Parser const& m_parser;
@@ -108,14 +111,15 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 }
 
-void Parser::parsePragmaVersion(vector<Token> const& tokens, vector<string> const& literals)
+void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> const& _tokens, vector<string> const& _literals)
 {
-	SemVerMatchExpressionParser parser(tokens, literals);
+	SemVerMatchExpressionParser parser(_tokens, _literals);
 	auto matchExpression = parser.parse();
 	static SemVerVersion const currentVersion{string(VersionString)};
 	// FIXME: only match for major version incompatibility
 	if (!matchExpression.matches(currentVersion))
-		fatalParserError(
+		m_errorReporter.fatalParserError(
+			_location,
 			"Source file requires different compiler version (current compiler is " +
 			string(VersionString) + " - note that nightly builds are considered to be "
 			"strictly less than the released version"
@@ -154,6 +158,7 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 	if (literals.size() >= 2 && literals[0] == "solidity")
 	{
 		parsePragmaVersion(
+			nodeFactory.location(),
 			vector<Token>(tokens.begin() + 1, tokens.end()),
 			vector<string>(literals.begin() + 1, literals.end())
 		);
@@ -1032,19 +1037,25 @@ ASTPointer<Statement> Parser::parseStatement()
 ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> const& _docString)
 {
 	RecursionGuard recursionGuard(*this);
-	ASTNodeFactory nodeFactory(*this);
+	SourceLocation location{position(), -1, source()};
+
 	expectToken(Token::Assembly);
+	yul::Dialect const& dialect = yul::EVMDialect::looseAssemblyForEVM(m_evmVersion);
 	if (m_scanner->currentToken() == Token::StringLiteral)
 	{
 		if (m_scanner->currentLiteral() != "evmasm")
 			fatalParserError("Only \"evmasm\" supported.");
+		// This can be used in the future to set the dialect.
 		m_scanner->next();
 	}
 
-	yul::Parser asmParser(m_errorReporter, yul::EVMDialect::looseAssemblyForEVM());
+	yul::Parser asmParser(m_errorReporter, dialect);
 	shared_ptr<yul::Block> block = asmParser.parse(m_scanner, true);
-	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<InlineAssembly>(_docString, block);
+	if (block == nullptr)
+		BOOST_THROW_EXCEPTION(FatalError());
+
+	location.end = block->location.end;
+	return make_shared<InlineAssembly>(location, _docString, dialect, block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)
@@ -1525,6 +1536,9 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	case Token::Number:
 		if (TokenTraits::isEtherSubdenomination(m_scanner->peekNextToken()))
 		{
+			fatalParserError(string("Ether unit denomination is not supported by the compiler"));
+		}
+		else if (TokenTraits::isTronSubdenomination(m_scanner->peekNextToken())) {
 			ASTPointer<ASTString> literal = getLiteralAndAdvance();
 			nodeFactory.markEndPosition();
 			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());

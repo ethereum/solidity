@@ -18,5 +18,4 @@ contract C
 	}
 }
 // ----
-// Warning: (146-149): Assertion checker does not yet support the type of this variable.
 // Warning: (338-362): Assertion violation happens here

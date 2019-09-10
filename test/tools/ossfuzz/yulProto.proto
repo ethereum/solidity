@@ -1,0 +1,369 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+syntax = "proto2";
+
+message VarDecl {
+  required Expression expr = 1;
+}
+
+message FunctionCallNoReturnVal {
+  // Indexes a function that does not return anything
+  required uint32 func_index = 1;
+  required Expression in_param1 = 2;
+  required Expression in_param2 = 3;
+  required Expression in_param3 = 4;
+  required Expression in_param4 = 5;
+}
+
+// Used by Expression
+message FunctionCallSingleReturnVal {
+  // Indexes a function that returns exactly one value
+  required uint32 func_index = 1;
+  required Expression in_param1 = 2;
+  required Expression in_param2 = 3;
+  required Expression in_param3 = 4;
+  required Expression in_param4 = 5;
+}
+
+message MultiVarDecl {
+  // Indexes a function that returns more than one value
+  required uint32 func_index = 1;
+  required Expression in_param1 = 2;
+  required Expression in_param2 = 3;
+  required Expression in_param3 = 4;
+  required Expression in_param4 = 5;
+}
+
+message MultiAssignment {
+  // Indexes a function that returns more than one value
+  required uint32 func_index = 1;
+  required Expression in_param1 = 2;
+  required Expression in_param2 = 3;
+  required Expression in_param3 = 4;
+  required Expression in_param4 = 5;
+  required VarRef out_param1 = 6;
+  required VarRef out_param2 = 7;
+  required VarRef out_param3 = 8;
+  required VarRef out_param4 = 9;
+}
+
+// We exclude function calls with single return value here and use them as expressions
+message FunctionCall {
+  oneof functioncall_oneof {
+    FunctionCallNoReturnVal call_zero = 1;
+    MultiVarDecl call_multidecl = 2;
+    MultiAssignment call_multiassign = 3;
+  }
+}
+
+message TypedVarDecl {
+  enum TypeName {
+    BOOL = 1;
+    U8 = 2;
+    U32 = 3;
+    U64 = 4;
+    U128 = 5;
+    U256 = 6;
+    S8 = 7;
+    S32 = 8;
+    S64 = 9;
+    S128 = 10;
+    S256 = 11;
+  };
+  required int32 id = 1;
+  required TypeName type = 2;
+  required Expression expr = 3;
+}
+
+message VarRef {
+  required int32 varnum = 1;
+}
+
+message Literal {
+  oneof literal_oneof {
+    uint64 intval = 1;
+    string hexval = 2;
+    string strval = 3;
+  }
+}
+
+message TypedLiteral {
+  enum TypeName {
+    BOOL = 1;
+    U8 = 2;
+    U32 = 3;
+    U64 = 4;
+    U128 = 5;
+    U256 = 6;
+    S8 = 7;
+    S32 = 8;
+    S64 = 9;
+    S128 = 10;
+    S256 = 11;
+  };
+  required int32 val = 1;
+  required TypeName type = 2;
+}
+
+message BinaryOp {
+  enum BOp {
+    ADD = 0;
+    SUB = 1;
+    MUL = 2;
+    DIV = 3;
+    MOD = 4;
+    XOR = 5;
+    AND = 6;
+    OR = 7;
+    EQ = 8;
+    LT = 9;
+    GT = 10;
+    SHR = 11;
+    SHL = 12;
+    SAR = 13;
+    SDIV = 14;
+    SMOD = 15;
+    EXP = 16;
+    SLT = 17;
+    SGT = 18;
+    BYTE = 19;
+    SI = 20;
+    KECCAK = 21;
+  };
+  required BOp op = 1;
+  required Expression left = 2;
+  required Expression right = 3;
+}
+
+message UnaryOp {
+  enum UOp {
+    NOT = 0;
+    MLOAD = 1;
+    SLOAD = 2;
+    ISZERO = 3;
+    CALLDATALOAD = 4;
+    EXTCODESIZE = 5;
+    EXTCODEHASH = 6;
+  }
+  required UOp op = 1;
+  required Expression operand = 2;
+}
+
+message TernaryOp {
+  enum TOp {
+    ADDM = 0;
+    MULM = 1;
+  }
+  required TOp op = 1;
+  required Expression arg1 = 2;
+  required Expression arg2 = 3;
+  required Expression arg3 = 4;
+}
+
+message CopyFunc {
+  enum CopyType {
+    CALLDATA = 0;
+    CODE = 1;
+    RETURNDATA = 2;
+  }
+  required CopyType ct = 1;
+  required Expression target = 2;
+  required Expression source = 3;
+  required Expression size = 4;
+}
+
+message ExtCodeCopy {
+  required Expression addr = 1;
+  required Expression target = 2;
+  required Expression source = 3;
+  required Expression size = 4;
+}
+
+message NullaryOp {
+  enum NOp {
+    PC = 1;
+    MSIZE = 2;
+    GAS = 3;
+    CALLDATASIZE = 4;
+    CODESIZE = 5;
+    RETURNDATASIZE = 6;
+  }
+  required NOp op = 1;
+}
+
+message StoreFunc {
+  enum Storage {
+    MSTORE = 0;
+    SSTORE = 1;
+    MSTORE8 = 2;
+  }
+  required Expression loc = 1;
+  required Expression val = 2;
+  required Storage st = 3;
+}
+
+message LogFunc {
+  enum NumTopics {
+    ZERO = 0;
+    ONE = 1;
+    TWO = 2;
+    THREE = 3;
+    FOUR = 4;
+  }
+  required Expression pos = 1;
+  required Expression size = 2;
+  required NumTopics num_topics = 3;
+  required Expression t1 = 4;
+  required Expression t2 = 5;
+  required Expression t3 = 6;
+  required Expression t4 = 7;
+}
+
+message Expression {
+  oneof expr_oneof {
+    VarRef varref = 1;
+    Literal cons = 2;
+    BinaryOp binop = 3;
+    UnaryOp unop = 4;
+    TernaryOp top = 5;
+    NullaryOp nop = 6;
+    FunctionCallSingleReturnVal func_expr = 7;
+  }
+}
+
+message AssignmentStatement {
+  required VarRef ref_id = 1;
+  required Expression expr = 2;
+}
+
+message IfStmt {
+  required Expression cond = 1;
+  required Block if_body = 2;
+}
+
+message ForStmt {
+  required Block for_body = 1;
+}
+
+message CaseStmt {
+  required Literal case_lit = 1;
+  required Block case_block = 2;
+}
+
+message SwitchStmt {
+  required Expression switch_expr = 1;
+  repeated CaseStmt case_stmt = 2;
+  optional Block default_block = 3;
+}
+
+message BreakStmt {}
+message ContinueStmt {}
+
+message StopInvalidStmt {
+  enum Type {
+    STOP = 0;
+    INVALID = 1;
+  }
+  required Type stmt = 1;
+}
+
+message RetRevStmt {
+  enum Type {
+    RETURN = 0;
+    REVERT = 1;
+  }
+  required Type stmt = 1;
+  required Expression pos = 2;
+  required Expression size = 3;
+}
+
+message SelfDestructStmt {
+  required Expression addr = 1;
+}
+
+message TerminatingStmt {
+  oneof term_oneof {
+    StopInvalidStmt   stop_invalid = 1;
+    RetRevStmt        ret_rev = 2;
+    SelfDestructStmt  self_des = 3;
+  }
+}
+
+// Stub for a VarDecl without an Expression on the RHS
+message EmptyVarDecl {}
+
+// TODO: Make Function definition a Statement
+message Statement {
+  oneof stmt_oneof {
+    VarDecl             decl            = 1;
+    AssignmentStatement assignment      = 2;
+    IfStmt              ifstmt          = 3;
+    StoreFunc           storage_func    = 4;
+    Block               blockstmt       = 5;
+    ForStmt             forstmt         = 6;
+    SwitchStmt          switchstmt      = 7;
+    BreakStmt           breakstmt       = 8;
+    ContinueStmt        contstmt        = 9;
+    LogFunc             log_func        = 10;
+    CopyFunc            copy_func       = 11;
+    ExtCodeCopy         extcode_copy    = 12;
+    TerminatingStmt     terminatestmt   = 13;
+    FunctionCall        functioncall    = 14;
+  }
+}
+
+message Block {
+  repeated Statement statements = 1;
+}
+
+// Identical to Block with the addition of an empty var right at the top
+// Used by FunctionDefinitionNoReturnVal only.
+message SpecialBlock {
+  required EmptyVarDecl var = 1;
+  repeated Statement statements = 2;
+}
+
+// This ensures that proto mutator generates at least one of each type if it creates at least 1 functiondef message.
+message FunctionDefinition {
+  required FunctionDefinitionNoReturnVal fd_zero = 1;
+  required FunctionDefinitionSingleReturnVal fd_one = 2;
+  required FunctionDefinitionMultiReturnVal fd_multi = 3;
+}
+
+// Since this function can have 0 parameters, we hoist an empty var decl at the top via SpecialBlock.
+message FunctionDefinitionNoReturnVal {
+  required uint32 num_input_params = 1;
+  required SpecialBlock statements = 2;
+}
+
+message FunctionDefinitionSingleReturnVal {
+  required uint32 num_input_params = 1;
+  required Block statements = 2;
+}
+
+message FunctionDefinitionMultiReturnVal {
+  required uint32 num_input_params = 1;
+  required uint32 num_output_params = 2;
+  required Block statements = 3;
+}
+
+message Program {
+  repeated FunctionDefinition funcs = 1;
+}
+
+package yul.test.yul_fuzzer;

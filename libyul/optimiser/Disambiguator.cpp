@@ -28,7 +28,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
 
 YulString Disambiguator::translateIdentifier(YulString _originalName)
 {

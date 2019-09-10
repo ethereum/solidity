@@ -22,11 +22,16 @@
 
 #include <test/Options.h>
 
-#include <libsolidity/interface/AssemblyStack.h>
+#include <test/libsolidity/ErrorCheck.h>
+
+#include <libsolidity/ast/AST.h>
+
+#include <libyul/AssemblyStack.h>
+
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
-#include <libsolidity/ast/AST.h>
-#include <test/libsolidity/ErrorCheck.h>
+#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libevmasm/Assembly.h>
 
 #include <boost/optional.hpp>
@@ -37,6 +42,7 @@
 
 using namespace std;
 using namespace langutil;
+using namespace yul;
 
 namespace dev
 {
@@ -56,7 +62,7 @@ boost::optional<Error> parseAndReturnFirstError(
 	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
 )
 {
-	AssemblyStack stack(dev::test::Options::get().evmVersion(), _language);
+	AssemblyStack stack(dev::test::Options::get().evmVersion(), _language, dev::solidity::OptimiserSettings::none());
 	bool success = false;
 	try
 	{
@@ -75,7 +81,12 @@ boost::optional<Error> parseAndReturnFirstError(
 		if (_allowWarnings && e->type() == Error::Type::Warning)
 			continue;
 		if (error)
-			BOOST_FAIL("Found more than one error.");
+		{
+			string errors;
+			for (auto const& err: stack.errors())
+				errors += SourceReferenceFormatter::formatErrorInformation(*err);
+			BOOST_FAIL("Found more than one error:\n" + errors);
+		}
 		error = e;
 	}
 	if (!success)
@@ -118,7 +129,7 @@ Error expectError(
 
 void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
-	AssemblyStack stack(dev::test::Options::get().evmVersion());
+	AssemblyStack stack(dev::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	if (_canWarn)
 		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
@@ -294,7 +305,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
 	BOOST_CHECK("{ if calldatasize() {}");
-	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected '{' but got reserved keyword 'let'");
 }
 
@@ -323,7 +334,7 @@ BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
 	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
-	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
@@ -359,7 +370,7 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
-	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", ParserError, "Instruction \"mstore\" not allowed in this context");
+	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 }
 
 BOOST_AUTO_TEST_CASE(for_visibility)
@@ -412,18 +423,42 @@ BOOST_AUTO_TEST_CASE(function_calls)
 
 BOOST_AUTO_TEST_CASE(opcode_for_functions)
 {
-	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use builtin");
 }
 
 BOOST_AUTO_TEST_CASE(opcode_for_function_args)
 {
-	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use instruction names for identifier names.");
-	CHECK_PARSE_ERROR("{ function f() -> gas { } }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use builtin");
+	CHECK_PARSE_ERROR("{ function f() -> gas { } }", ParserError, "Cannot use builtin");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes)
 {
-	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Function name g already taken in this scope");
+	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Variable name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_subscope)
+{
+	CHECK_PARSE_ERROR("{ function g() { function g() {} } }", DeclarationError, "Function name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_subscope_reverse)
+{
+	CHECK_PARSE_ERROR("{ { function g() {} } function g() { } }", DeclarationError, "Function name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope)
+{
+	CHECK_PARSE_ERROR("{ function g() { let g := 0 } }", DeclarationError, "Variable name g already taken in this scope");
+}
+
+BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope_reverse)
+{
+	CHECK_PARSE_ERROR("{ { let g := 0 } function g() { } }", DeclarationError, "Variable name g already taken in this scope");
+}
+BOOST_AUTO_TEST_CASE(functions_in_parallel_scopes)
+{
+	BOOST_CHECK(successParse("{ { function g() {} } { function g() {} } }"));
 }
 
 BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
@@ -438,13 +473,13 @@ BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
 
 BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
 {
-	CHECK_PARSE_ERROR("{ mul() }", ParserError, "Expected expression (instruction \"mul\" expects 2 arguments)");
-	CHECK_PARSE_ERROR("{ mul(1) }", ParserError, "Expected ',' (instruction \"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ pop(mul()) }", TypeError, "Function expects 2 arguments but got 0.");
+	CHECK_PARSE_ERROR("{ pop(mul(1)) }", TypeError, "Function expects 2 arguments but got 1.");
 }
 
 BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
 {
-	CHECK_PARSE_ERROR("{ mul(1, 2, 3) }", ParserError, "Expected ')' (instruction \"mul\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ pop(mul(1, 2, 3)) }", TypeError, "Function expects 2 arguments but got 3");
 }
 
 BOOST_AUTO_TEST_CASE(recursion_depth)
@@ -461,8 +496,8 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Label name / variable name must precede \",\" (multiple assignment).");
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name expected in multiple assignment.");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name must precede \":=\" in assignment.");
 
 	/// NOTE: Travis hiccups if not having a variable
 	char const* text = R"(
@@ -487,11 +522,11 @@ BOOST_AUTO_TEST_CASE(no_opcodes_in_strict)
 {
 	BOOST_CHECK(successParse("{ pop(callvalue) }"));
 	BOOST_CHECK(successParse("{ callvalue pop }"));
-	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Non-functional instructions are not allowed in this context.");
+	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Expected '(' but got ')'");
 	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Call or assignment expected");
 	SUCCESS_STRICT("{ pop(callvalue()) }");
 	BOOST_CHECK(successParse("{ switch callvalue case 0 {} }"));
-	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Non-functional instructions are not allowed in this context.");
+	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Expected '(' but got reserved keyword 'case'");
 }
 
 BOOST_AUTO_TEST_CASE(no_labels_in_strict)
@@ -517,7 +552,6 @@ BOOST_AUTO_TEST_CASE(no_dup_swap_in_strict)
 	BOOST_CHECK(successParse("{ dup2 pop }"));
 	CHECK_STRICT_ERROR("{ dup2 pop }", ParserError, "Call or assignment expected.");
 	CHECK_PARSE_ERROR("{ switch dup1 case 0 {} }", ParserError, "Instruction \"dup1\" not allowed in this context");
-	CHECK_STRICT_ERROR("{ switch dup1 case 0 {} }", ParserError, "Instruction \"dup1\" not allowed in this context");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -526,7 +560,7 @@ BOOST_AUTO_TEST_SUITE(Printing)
 
 BOOST_AUTO_TEST_CASE(print_smoke)
 {
-	parsePrintCompare("{\n}");
+	parsePrintCompare("{ }");
 }
 
 BOOST_AUTO_TEST_CASE(print_instructions)
@@ -541,7 +575,7 @@ BOOST_AUTO_TEST_CASE(print_subblock)
 
 BOOST_AUTO_TEST_CASE(print_functional)
 {
-	parsePrintCompare("{\n    let x := mul(sload(0x12), 7)\n}");
+	parsePrintCompare("{ let x := mul(sload(0x12), 7) }");
 }
 
 BOOST_AUTO_TEST_CASE(print_label)
@@ -556,7 +590,7 @@ BOOST_AUTO_TEST_CASE(print_assignments)
 
 BOOST_AUTO_TEST_CASE(print_multi_assignments)
 {
-	parsePrintCompare("{\n    function f() -> x, y\n    {\n    }\n    let x, y := f()\n}");
+	parsePrintCompare("{\n    function f() -> x, y\n    { }\n    let x, y := f()\n}");
 }
 
 BOOST_AUTO_TEST_CASE(print_string_literals)
@@ -567,48 +601,45 @@ BOOST_AUTO_TEST_CASE(print_string_literals)
 BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
-	string parsed = "object \"object\" {\n    code {\n        let x := \"\\xe1\\xae\\xac\"\n    }\n}\n";
-	AssemblyStack stack(dev::test::Options::get().evmVersion());
+	string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
+	AssemblyStack stack(dev::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
 
-	string parsedInner = "{\n    let x := \"\\xe1\\xae\\xac\"\n}";
+	string parsedInner = "{ let x := \"\\xe1\\xae\\xac\" }";
 	parsePrintCompare(parsedInner);
 }
 
 BOOST_AUTO_TEST_CASE(print_if)
 {
-	parsePrintCompare("{\n    if 2\n    {\n        pop(mload(0))\n    }\n}");
+	parsePrintCompare("{ if 2 { pop(mload(0)) } }");
 }
 
 BOOST_AUTO_TEST_CASE(print_switch)
 {
-	parsePrintCompare("{\n    switch 42\n    case 1 {\n    }\n    case 2 {\n    }\n    default {\n    }\n}");
+	parsePrintCompare("{\n    switch 42\n    case 1 { }\n    case 2 { }\n    default { }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(print_for)
 {
-	parsePrintCompare("{\n    let ret := 5\n    for {\n        let i := 1\n    }\n    lt(i, 15)\n    {\n        i := add(i, 1)\n    }\n    {\n        ret := mul(ret, i)\n    }\n}");
+	parsePrintCompare("{\n    let ret := 5\n    for { let i := 1 } lt(i, 15) { i := add(i, 1) }\n    { ret := mul(ret, i) }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 {
-	parsePrintCompare("{\n    function f(a, d)\n    {\n        mstore(a, d)\n    }\n    function g(a, d) -> x, y\n    {\n    }\n}");
+	parsePrintCompare("{\n    function f(a, d)\n    { mstore(a, d) }\n    function g(a, d) -> x, y\n    { }\n}");
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
 	string source = R"({
 	function y()
-	{
-	}
+	{ }
 	function f(a) -> b
-	{
-	}
+	{ }
 	function g(a, b, c)
-	{
-	}
+	{ }
 	g(1, mul(2, address()), f(mul(2, caller())))
 	y()
 })";
@@ -667,17 +698,17 @@ BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 {
-	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use instruction names for identifier names.");
+	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use builtin");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
 {
-	CHECK_ASSEMBLE_ERROR("{ 2 =: gas }", ParserError, "Identifier expected, got instruction name.");
+	CHECK_ASSEMBLE_ERROR("{ 2 =: gas }", ParserError, "Identifier expected, got builtin symbol");
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
 {
-	CHECK_ASSEMBLE_ERROR("{ gas := 2 }", ParserError, "Label name / variable name must precede \":\"");
+	CHECK_ASSEMBLE_ERROR("{ gas := 2 }", ParserError, "Variable name must precede \":=\"");
 }
 
 BOOST_AUTO_TEST_CASE(revert)
@@ -747,36 +778,50 @@ BOOST_AUTO_TEST_CASE(keccak256)
 
 BOOST_AUTO_TEST_CASE(returndatasize)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ let r := returndatasize }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatasize_functional)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ let r := returndatasize() }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ 64 32 0 returndatacopy }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy_functional)
 {
+	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+		return;
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(staticcall)
 {
+	if (!dev::test::Options::get().evmVersion().hasStaticCall())
+		return;
 	BOOST_CHECK(successAssemble("{ pop(staticcall(10000, 0x123, 64, 0x10, 128, 0x10)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(create2)
 {
+	if (!dev::test::Options::get().evmVersion().hasCreate2())
+		return;
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(shift)
 {
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
 	BOOST_CHECK(successAssemble("{ pop(shl(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(shr(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(sar(10, 32)) }"));
@@ -786,9 +831,9 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 {
 	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
 		return;
-	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", Warning, "The \"shl\" instruction is only available for Constantinople-compatible VMs.");
-	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", Warning, "The \"shr\" instruction is only available for Constantinople-compatible VMs.");
-	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", Warning, "The \"sar\" instruction is only available for Constantinople-compatible VMs.");
+	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
 BOOST_AUTO_TEST_CASE(jump_warning)

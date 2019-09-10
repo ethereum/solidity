@@ -39,57 +39,147 @@ using namespace yul;
 namespace
 {
 
-template <typename ASTNode>
-void eliminateVariables(shared_ptr<Dialect> const& _dialect, ASTNode& _node, size_t _numVariables)
+/**
+ * Class that discovers all variables that can be fully eliminated by rematerialization,
+ * and the corresponding approximate costs.
+ */
+class RematCandidateSelector: public DataFlowAnalyzer
 {
-	SSAValueTracker ssaValues;
-	ssaValues(_node);
+public:
+	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 
-	map<YulString, size_t> references = ReferencesCounter::countReferences(_node);
-
-	set<pair<size_t, YulString>> rematCosts;
-	for (auto const& ssa: ssaValues.values())
+	/// @returns a set of tuples of rematerialisation costs, variable to rematerialise
+	/// and variables that occur in its expression.
+	/// Note that this set is sorted by cost.
+	set<tuple<size_t, YulString, set<YulString>>> candidates()
 	{
-		if (!MovableChecker{*_dialect, *ssa.second}.movable())
-			continue;
-		size_t numRef = references[ssa.first];
-		size_t cost = 0;
-		if (numRef > 1)
-			cost = CodeCost::codeCost(*ssa.second) * (numRef - 1);
-		rematCosts.insert(make_pair(cost, ssa.first));
+		set<tuple<size_t, YulString, set<YulString>>> cand;
+		for (auto const& codeCost: m_expressionCodeCost)
+		{
+			size_t numRef = m_numReferences[codeCost.first];
+			cand.emplace(make_tuple(codeCost.second * numRef, codeCost.first, m_references[codeCost.first]));
+		}
+		return cand;
 	}
+
+	using DataFlowAnalyzer::operator();
+	void operator()(VariableDeclaration& _varDecl) override
+	{
+		DataFlowAnalyzer::operator()(_varDecl);
+		if (_varDecl.variables.size() == 1)
+		{
+			YulString varName = _varDecl.variables.front().name;
+			if (m_value.count(varName))
+				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *m_value[varName]);
+		}
+	}
+
+	void operator()(Assignment& _assignment) override
+	{
+		for (auto const& var: _assignment.variableNames)
+			rematImpossible(var.name);
+		DataFlowAnalyzer::operator()(_assignment);
+	}
+
+	// We use visit(Expression) because operator()(Identifier) would also
+	// get called on left-hand-sides of assignments.
+	void visit(Expression& _e) override
+	{
+		if (_e.type() == typeid(Identifier))
+		{
+			YulString name = boost::get<Identifier>(_e).name;
+			if (m_expressionCodeCost.count(name))
+			{
+				if (!m_value.count(name))
+					rematImpossible(name);
+				else
+					++m_numReferences[name];
+			}
+		}
+		DataFlowAnalyzer::visit(_e);
+	}
+
+	/// Remove the variable from the candidate set.
+	void rematImpossible(YulString _variable)
+	{
+		m_numReferences.erase(_variable);
+		m_expressionCodeCost.erase(_variable);
+	}
+
+	/// Candidate variables and the code cost of their value.
+	map<YulString, size_t> m_expressionCodeCost;
+	/// Number of references to each candidate variable.
+	map<YulString, size_t> m_numReferences;
+};
+
+template <typename ASTNode>
+void eliminateVariables(
+	Dialect const& _dialect,
+	ASTNode& _node,
+	size_t _numVariables,
+	bool _allowMSizeOptimization
+)
+{
+	RematCandidateSelector selector{_dialect};
+	selector(_node);
 
 	// Select at most _numVariables
 	set<YulString> varsToEliminate;
-	for (auto const& costs: rematCosts)
+	for (auto const& costs: selector.candidates())
 	{
 		if (varsToEliminate.size() >= _numVariables)
 			break;
-		varsToEliminate.insert(costs.second);
+		// If a variable we would like to eliminate references another one
+		// we already selected for elimination, then stop selecting
+		// candidates. If we would add that variable, then the cost calculation
+		// for the previous variable would be off. Furthermore, we
+		// do not skip the variable because it would be better to properly re-compute
+		// the costs of all other variables instead.
+		bool referencesVarToEliminate = false;
+		for (YulString const& referencedVar: get<2>(costs))
+			if (varsToEliminate.count(referencedVar))
+			{
+				referencesVarToEliminate = true;
+				break;
+			}
+		if (referencesVarToEliminate)
+			break;
+		varsToEliminate.insert(get<1>(costs));
 	}
 
-	Rematerialiser::run(*_dialect, _node, std::move(varsToEliminate));
-	UnusedPruner::runUntilStabilised(*_dialect, _node);
+	Rematerialiser::run(_dialect, _node, std::move(varsToEliminate));
+	UnusedPruner::runUntilStabilised(_dialect, _node, _allowMSizeOptimization);
 }
 
 }
 
-bool StackCompressor::run(shared_ptr<Dialect> const& _dialect, Block& _ast)
+bool StackCompressor::run(
+	Dialect const& _dialect,
+	Block& _ast,
+	bool _optimizeStackAllocation,
+	size_t _maxIterations
+)
 {
 	yulAssert(
 		_ast.statements.size() > 0 && _ast.statements.at(0).type() == typeid(Block),
 		"Need to run the function grouper before the stack compressor."
 	);
-	for (size_t iterations = 0; iterations < 4; iterations++)
+	bool allowMSizeOptimzation = !SideEffectsCollector(_dialect, _ast).containsMSize();
+	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 	{
-		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _ast);
+		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _ast, _optimizeStackAllocation);
 		if (stackSurplus.empty())
 			return true;
 
 		if (stackSurplus.count(YulString{}))
 		{
 			yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
-			eliminateVariables(_dialect, boost::get<Block>(_ast.statements.at(0)), stackSurplus.at({}));
+			eliminateVariables(
+				_dialect,
+				boost::get<Block>(_ast.statements.at(0)),
+				stackSurplus.at({}),
+				allowMSizeOptimzation
+			);
 		}
 
 		for (size_t i = 1; i < _ast.statements.size(); ++i)
@@ -99,7 +189,12 @@ bool StackCompressor::run(shared_ptr<Dialect> const& _dialect, Block& _ast)
 				continue;
 
 			yulAssert(stackSurplus.at(fun.name) > 0, "Invalid surplus value.");
-			eliminateVariables(_dialect, fun, stackSurplus.at(fun.name));
+			eliminateVariables(
+				_dialect,
+				fun,
+				stackSurplus.at(fun.name),
+				allowMSizeOptimzation
+			);
 		}
 	}
 	return false;

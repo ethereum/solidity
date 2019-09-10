@@ -23,6 +23,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/ArrayUtils.h>
 #include <libsolidity/codegen/LValue.h>
@@ -31,17 +32,14 @@
 
 using namespace std;
 using namespace langutil;
+using namespace dev;
+using namespace dev::eth;
+using namespace dev::solidity;
 
-namespace dev
-{
-namespace solidity
-{
-
-const unsigned CompilerUtils::dataStartOffset = 4;
-const size_t CompilerUtils::freeMemoryPointer = 64;
-const size_t CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
-const size_t CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
-const unsigned CompilerUtils::identityContractAddress = 4;
+unsigned const CompilerUtils::dataStartOffset = 4;
+size_t const CompilerUtils::freeMemoryPointer = 64;
+size_t const CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
+size_t const CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
 
 static_assert(CompilerUtils::freeMemoryPointer >= 64, "Free memory pointer must not overlap with scratch area.");
 static_assert(CompilerUtils::zeroPointer >= CompilerUtils::freeMemoryPointer + 32, "Zero pointer must not overlap with free memory pointer.");
@@ -70,6 +68,13 @@ void CompilerUtils::allocateMemory()
 	storeFreeMemoryPointer();
 }
 
+void CompilerUtils::allocateMemory(u256 const& size)
+{
+	fetchFreeMemoryPointer();
+	m_context << Instruction::DUP1 << size << Instruction::ADD;
+	storeFreeMemoryPointer();
+}
+
 void CompilerUtils::toSizeAfterFreeMemoryPointer()
 {
 	fetchFreeMemoryPointer();
@@ -79,15 +84,62 @@ void CompilerUtils::toSizeAfterFreeMemoryPointer()
 
 void CompilerUtils::revertWithStringData(Type const& _argumentType)
 {
-	solAssert(_argumentType.isImplicitlyConvertibleTo(*Type::fromElementaryTypeName("string memory")), "");
+	solAssert(_argumentType.isImplicitlyConvertibleTo(*TypeProvider::fromElementaryTypeName("string memory")), "");
 	fetchFreeMemoryPointer();
 	m_context << (u256(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256("Error(string)")))) << (256 - 32));
 	m_context << Instruction::DUP2 << Instruction::MSTORE;
 	m_context << u256(4) << Instruction::ADD;
 	// Stack: <string data> <mem pos of encoding start>
-	abiEncode({_argumentType.shared_from_this()}, {make_shared<ArrayType>(DataLocation::Memory, true)});
+	abiEncode({&_argumentType}, {TypeProvider::array(DataLocation::Memory, true)});
 	toSizeAfterFreeMemoryPointer();
 	m_context << Instruction::REVERT;
+}
+
+void CompilerUtils::accessCalldataTail(Type const& _type)
+{
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+
+	unsigned int baseEncodedSize = _type.calldataEncodedSize();
+	solAssert(baseEncodedSize > 1, "");
+
+	// returns the absolute offset of the tail in "base_ref"
+	m_context.appendInlineAssembly(Whiskers(R"({
+		let rel_offset_of_tail := calldataload(ptr_to_tail)
+		if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
+		base_ref := add(base_ref, rel_offset_of_tail)
+	})")("neededLength", toCompactHexWithPrefix(baseEncodedSize)).render(), {"base_ref", "ptr_to_tail"});
+	// stack layout: <absolute_offset_of_tail> <garbage>
+
+	if (!_type.isDynamicallySized())
+	{
+		m_context << Instruction::POP;
+		// stack layout: <absolute_offset_of_tail>
+		solAssert(
+			_type.category() == Type::Category::Struct ||
+			_type.category() == Type::Category::Array,
+			"Invalid dynamically encoded base type on tail access."
+		);
+	}
+	else
+	{
+		auto const* arrayType = dynamic_cast<ArrayType const*>(&_type);
+		solAssert(!!arrayType, "Invalid dynamically sized type.");
+		unsigned int calldataStride = arrayType->calldataStride();
+		solAssert(calldataStride > 0, "");
+
+		// returns the absolute offset of the tail in "base_ref"
+		// and the length of the tail in "length"
+		m_context.appendInlineAssembly(
+			Whiskers(R"({
+				length := calldataload(base_ref)
+				base_ref := add(base_ref, 0x20)
+				if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+				if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
+			})")("calldataStride", toCompactHexWithPrefix(calldataStride)).render(),
+			{"base_ref", "length"}
+		);
+		// stack layout: <absolute_offset_of_tail> <length>
+	}
 }
 
 unsigned CompilerUtils::loadFromMemory(
@@ -134,7 +186,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 
 void CompilerUtils::storeInMemory(unsigned _offset)
 {
-	unsigned numBytes = prepareMemoryStore(IntegerType::uint256(), true);
+	unsigned numBytes = prepareMemoryStore(*TypeProvider::uint256(), true);
 	if (numBytes > 0)
 		m_context << u256(_offset) << Instruction::MSTORE;
 }
@@ -148,7 +200,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 			ref->location() == DataLocation::Memory,
 			"Only in-memory reference type can be stored."
 		);
-		storeInMemoryDynamic(IntegerType::uint256(), _padToWordBoundaries);
+		storeInMemoryDynamic(*TypeProvider::uint256(), _padToWordBoundaries);
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
 	{
@@ -243,7 +295,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 							gt(add(array_data_start, mul(array_length, <item_size>)), input_end)
 						) { revert(0, 0) }
 					})");
-					templ("item_size", to_string(arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true)));
+					templ("item_size", to_string(arrayType.calldataStride()));
 					m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr"});
 					// stack: v1 v2 ... v(k-1) input_end base_offset current_offset v(k)
 					moveIntoStack(3);
@@ -260,11 +312,11 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 			else
 			{
 				// first load from calldata and potentially convert to memory if arrayType is memory
-				TypePointer calldataType = arrayType.copyForLocation(DataLocation::CallData, false);
+				TypePointer calldataType = TypeProvider::withLocation(&arrayType, DataLocation::CallData, false);
 				if (calldataType->isDynamicallySized())
 				{
 					// put on stack: data_pointer length
-					loadFromMemoryDynamic(IntegerType::uint256(), !_fromMemory);
+					loadFromMemoryDynamic(*TypeProvider::uint256(), !_fromMemory);
 					m_context << Instruction::SWAP1;
 					// stack: input_end base_offset next_pointer data_offset
 					m_context.appendInlineAssembly("{ if gt(data_offset, 0x100000000) { revert(0, 0) } }", {"data_offset"});
@@ -275,15 +327,14 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 						{"input_end", "base_offset", "next_ptr", "array_head_ptr"}
 					);
 					// retrieve length
-					loadFromMemoryDynamic(IntegerType::uint256(), !_fromMemory, true);
+					loadFromMemoryDynamic(*TypeProvider::uint256(), !_fromMemory, true);
 					// stack: input_end base_offset next_pointer array_length data_pointer
 					m_context << Instruction::SWAP2;
 					// stack: input_end base_offset data_pointer array_length next_pointer
-					unsigned itemSize = arrayType.isByteArray() ? 1 : arrayType.baseType()->calldataEncodedSize(true);
 					m_context.appendInlineAssembly(R"({
 						if or(
 							gt(array_length, 0x100000000),
-							gt(add(data_ptr, mul(array_length, )" + to_string(itemSize) + R"()), input_end)
+							gt(add(data_ptr, mul(array_length, )" + to_string(arrayType.calldataStride()) + R"()), input_end)
 						) { revert(0, 0) }
 					})", {"input_end", "base_offset", "data_ptr", "array_length", "next_ptr"});
 				}
@@ -404,7 +455,7 @@ void CompilerUtils::encodeToMemory(
 				type = _givenTypes[i]; // delay conversion
 			else
 				convertType(*_givenTypes[i], *targetType, true);
-			if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
+			if (auto arrayType = dynamic_cast<ArrayType const*>(type))
 				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
 			else
 				storeInMemoryDynamic(*type, _padToWordBoundaries);
@@ -432,7 +483,7 @@ void CompilerUtils::encodeToMemory(
 			{
 				auto const& strType = dynamic_cast<StringLiteralType const&>(*_givenTypes[i]);
 				m_context << u256(strType.value().size());
-				storeInMemoryDynamic(IntegerType::uint256(), true);
+				storeInMemoryDynamic(*TypeProvider::uint256(), true);
 				// stack: ... <end_of_mem'>
 				storeInMemoryDynamic(strType, _padToWordBoundaries);
 			}
@@ -447,7 +498,7 @@ void CompilerUtils::encodeToMemory(
 				m_context << dupInstruction(1 + arrayType.sizeOnStack());
 				ArrayUtils(m_context).retrieveLength(arrayType, 1);
 				// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
-				storeInMemoryDynamic(IntegerType::uint256(), true);
+				storeInMemoryDynamic(*TypeProvider::uint256(), true);
 				// stack: ... <end_of_mem> <value...> <end_of_mem''>
 				// copy the new memory pointer
 				m_context << swapInstruction(arrayType.sizeOnStack() + 1) << Instruction::POP;
@@ -517,7 +568,7 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 			codecopy(memptr, codesize(), size)
 			memptr := add(memptr, size)
 		})");
-		templ("element_size", to_string(_type.isByteArray() ? 1 : _type.baseType()->memoryHeadSize()));
+		templ("element_size", to_string(_type.memoryStride()));
 		m_context.appendInlineAssembly(templ.render(), {"length", "memptr"});
 	}
 	else
@@ -653,9 +704,12 @@ void CompilerUtils::convertType(
 	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
 	if (chopSignBitsPending)
 	{
-		const IntegerType& targetIntegerType = dynamic_cast<const IntegerType &>(_targetType);
+		IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
 		chopSignBitsPending = targetIntegerType.isSigned();
 	}
+
+	if (targetTypeCategory == Type::Category::FixedPoint)
+		solUnimplemented("Not yet implemented - FixedPointType.");
 
 	switch (stackTypeCategory)
 	{
@@ -811,12 +865,11 @@ void CompilerUtils::convertType(
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(_targetType);
 			solAssert(arrayType.isByteArray(), "");
-			u256 storageSize(32 + ((data.size() + 31) / 32) * 32);
-			m_context << storageSize;
-			allocateMemory();
+			unsigned storageSize = 32 + ((data.size() + 31) / 32) * 32;
+			allocateMemory(storageSize);
 			// stack: mempos
 			m_context << Instruction::DUP1 << u256(data.size());
-			storeInMemoryDynamic(IntegerType::uint256());
+			storeInMemoryDynamic(*TypeProvider::uint256());
 			// stack: mempos datapos
 			storeStringData(data);
 		}
@@ -865,7 +918,7 @@ void CompilerUtils::convertType(
 				if (targetType.isDynamicallySized())
 				{
 					m_context << Instruction::DUP2;
-					storeInMemoryDynamic(IntegerType::uint256());
+					storeInMemoryDynamic(*TypeProvider::uint256());
 				}
 				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos>
 				if (targetType.baseType()->isValueType())
@@ -935,33 +988,48 @@ void CompilerUtils::convertType(
 			switch (typeOnStack.location())
 			{
 			case DataLocation::Storage:
-				// stack: <source ref>
-				m_context << typeOnStack.memorySize();
-				allocateMemory();
-				m_context << Instruction::SWAP1 << Instruction::DUP2;
-				// stack: <memory ptr> <source ref> <memory ptr>
-				for (auto const& member: typeOnStack.members(nullptr))
+			{
+				auto conversionImpl =
+					[typeOnStack = &typeOnStack, targetType = &targetType](CompilerContext& _context)
 				{
-					if (!member.type->canLiveOutsideStorage())
-						continue;
-					pair<u256, unsigned> const& offsets = typeOnStack.storageOffsetsOfMember(member.name);
-					m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
-					m_context << u256(offsets.second);
-					StorageItem(m_context, *member.type).retrieveValue(SourceLocation(), true);
-					TypePointer targetMemberType = targetType.memberType(member.name);
-					solAssert(!!targetMemberType, "Member not found in target type.");
-					convertType(*member.type, *targetMemberType, true);
-					storeInMemoryDynamic(*targetMemberType, true);
-				}
-				m_context << Instruction::POP << Instruction::POP;
+					CompilerUtils utils(_context);
+					// stack: <source ref>
+					utils.allocateMemory(typeOnStack->memorySize());
+					_context << Instruction::SWAP1 << Instruction::DUP2;
+					// stack: <memory ptr> <source ref> <memory ptr>
+					for (auto const& member: typeOnStack->members(nullptr))
+					{
+						if (!member.type->canLiveOutsideStorage())
+							continue;
+						pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
+						_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
+						_context << u256(offsets.second);
+						StorageItem(_context, *member.type).retrieveValue(SourceLocation(), true);
+						TypePointer targetMemberType = targetType->memberType(member.name);
+						solAssert(!!targetMemberType, "Member not found in target type.");
+						utils.convertType(*member.type, *targetMemberType, true);
+						utils.storeInMemoryDynamic(*targetMemberType, true);
+					}
+					_context << Instruction::POP << Instruction::POP;
+				};
+				if (typeOnStack.recursive())
+					m_context.callLowLevelFunction(
+						"$convertRecursiveArrayStorageToMemory_" + typeOnStack.identifier() + "_to_" + targetType.identifier(),
+						1,
+						1,
+						conversionImpl
+					);
+				else
+					conversionImpl(m_context);
 				break;
+			}
 			case DataLocation::CallData:
 			{
 				solUnimplementedAssert(!typeOnStack.isDynamicallyEncoded(), "");
 				m_context << Instruction::DUP1;
 				m_context << Instruction::CALLDATASIZE;
 				m_context << Instruction::SUB;
-				abiDecode({targetType.shared_from_this()}, false);
+				abiDecode({&targetType}, false);
 				break;
 			}
 			case DataLocation::Memory:
@@ -1075,6 +1143,14 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 			m_context << m_context.lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
 				_context.appendInvalid();
 			});
+			if (CompilerContext* runCon = m_context.runtimeContext())
+			{
+				leftShiftNumberOnStack(32);
+				m_context << runCon->lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
+					_context.appendInvalid();
+				}).toSubAssemblyTag(m_context.runtimeSub());
+				m_context << Instruction::OR;
+			}
 			return;
 		}
 	}
@@ -1094,24 +1170,23 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 			return;
 		}
 
-	TypePointer type = _type.shared_from_this();
+	TypePointer type = &_type;
 	m_context.callLowLevelFunction(
 		"$pushZeroValue_" + referenceType->identifier(),
 		0,
 		1,
 		[type](CompilerContext& _context) {
 			CompilerUtils utils(_context);
-			_context << u256(max(32u, type->calldataEncodedSize()));
-			utils.allocateMemory();
+			utils.allocateMemory(max(32u, type->calldataEncodedSize()));
 			_context << Instruction::DUP1;
 
-			if (auto structType = dynamic_cast<StructType const*>(type.get()))
+			if (auto structType = dynamic_cast<StructType const*>(type))
 				for (auto const& member: structType->members(nullptr))
 				{
 					utils.pushZeroValue(*member.type);
 					utils.storeInMemoryDynamic(*member.type);
 				}
-			else if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
+			else if (auto arrayType = dynamic_cast<ArrayType const*>(type))
 			{
 				solAssert(!arrayType->isDynamicallySized(), "");
 				if (arrayType->length() > 0)
@@ -1208,10 +1283,10 @@ void CompilerUtils::popAndJump(unsigned _toHeight, eth::AssemblyItem const& _jum
 	m_context.adjustStackOffset(amount);
 }
 
-unsigned CompilerUtils::sizeOnStack(vector<shared_ptr<Type const>> const& _variableTypes)
+unsigned CompilerUtils::sizeOnStack(vector<Type const*> const& _variableTypes)
 {
 	unsigned size = 0;
-	for (shared_ptr<Type const> const& type: _variableTypes)
+	for (Type const* const& type: _variableTypes)
 		size += type->sizeOnStack();
 	return size;
 }
@@ -1254,7 +1329,7 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 		for (unsigned i = 0; i < _data.size(); i += 32)
 		{
 			m_context << h256::Arith(h256(_data.cropped(i), h256::AlignLeft));
-			storeInMemoryDynamic(IntegerType::uint256());
+			storeInMemoryDynamic(*TypeProvider::uint256());
 		}
 		m_context << Instruction::POP;
 	}
@@ -1361,7 +1436,4 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 		leftShiftNumberOnStack((32 - numBytes) * 8);
 
 	return numBytes;
-}
-
-}
 }

@@ -30,7 +30,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
 
 void ExpressionInliner::run()
 {
@@ -56,7 +55,7 @@ void ExpressionInliner::visit(Expression& _expression)
 
 		bool movable = boost::algorithm::all_of(
 			funCall.arguments,
-			[=](Expression const& _arg) { return MovableChecker(m_dialect, _arg).movable(); }
+			[=](Expression const& _arg) { return SideEffectsCollector(m_dialect, _arg).movable(); }
 		);
 		if (m_inlinableFunctions.count(funCall.functionName.name) && movable)
 		{

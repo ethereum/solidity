@@ -17,14 +17,20 @@ fi
 
 FORMATERROR=$(
 (
-git grep -nIE "\<(if|for)\(" -- '*.h' '*.cpp'
-git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp'
-) | egrep -v "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" | egrep -v "^test/"
+	git grep -nIE "\<(if|for)\(" -- '*.h' '*.cpp' # no space after "if" or "for"
+	git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp' # "{\n" on same line as "if" / "for"
+	git grep -nIE "[,\(<]\s*const " -- '*.h' '*.cpp' # const on left side of type
+	git grep -nIE "^\s*(static)?\s*const " -- '*.h' '*.cpp' # const on left side of type (beginning of line)
+	git grep -nIE "^ [^*]|[^*] 	|	 [^*]" -- '*.h' '*.cpp' # uses spaces for indentation or mixes spaces and tabs
+	git grep -nIE "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
+	# right-aligned reference pointer star (needs to exclude return and comments)
+	git grep -nIE "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v -e "return [*]" -e "^* [*]" -e "^*//.*"
+) | egrep -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/"
 )
 
 if [[ "$FORMATERROR" != "" ]]
 then
-	echo "Error: Format error for if/for:" | tee -a $ERROR_LOG
+	echo "Coding style error:" | tee -a $ERROR_LOG
 	echo "$FORMATERROR" | tee -a $ERROR_LOG
 	exit 1
 fi

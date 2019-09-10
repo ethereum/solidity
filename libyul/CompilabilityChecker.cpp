@@ -31,22 +31,27 @@
 using namespace std;
 using namespace yul;
 using namespace dev;
-using namespace dev::solidity;
 
-std::map<YulString, int> CompilabilityChecker::run(std::shared_ptr<Dialect> _dialect, Block const& _ast)
+map<YulString, int> CompilabilityChecker::run(
+	Dialect const& _dialect,
+	Block const& _ast,
+	bool _optimizeStackAllocation
+)
 {
-	if (_dialect->flavour == AsmFlavour::Yul)
+	if (_dialect.flavour == AsmFlavour::Yul)
 		return {};
 
-	solAssert(_dialect->flavour == AsmFlavour::Strict, "");
+	solAssert(_dialect.flavour == AsmFlavour::Strict, "");
 
-	EVMDialect const& evmDialect = dynamic_cast<EVMDialect const&>(*_dialect);
+	solAssert(dynamic_cast<EVMDialect const*>(&_dialect), "");
+	NoOutputEVMDialect noOutputDialect(dynamic_cast<EVMDialect const&>(_dialect));
+	BuiltinContext builtinContext;
 
-	bool optimize = true;
 	yul::AsmAnalysisInfo analysisInfo =
-		yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, EVMVersion(), _ast);
+		yul::AsmAnalyzer::analyzeStrictAssertCorrect(noOutputDialect, _ast);
+
 	NoOutputAssembly assembly;
-	CodeTransform transform(assembly, analysisInfo, _ast, evmDialect, optimize);
+	CodeTransform transform(assembly, analysisInfo, _ast, noOutputDialect, builtinContext, _optimizeStackAllocation);
 	try
 	{
 		transform(_ast);

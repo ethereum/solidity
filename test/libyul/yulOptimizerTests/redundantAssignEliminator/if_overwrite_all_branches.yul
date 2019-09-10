@@ -10,15 +10,14 @@
     d := 3
     mstore(0, d)
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
 // {
 //     let c
 //     let d
 //     c := calldataload(0)
-//     if c
-//     {
-//     }
+//     if c { }
 //     d := 3
 //     mstore(0, d)
 // }

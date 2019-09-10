@@ -6,8 +6,9 @@
     }
     mstore(0, a)
 }
+// ====
+// step: ssaTransform
 // ----
-// ssaTransform
 // {
 //     let a_1 := mload(0)
 //     let a := a_1
@@ -16,11 +17,7 @@
 //         a := a_2
 //     }
 //     a
-//     {
-//         mstore(0, a)
-//     }
-//     {
-//         mstore(0, a)
-//     }
+//     { mstore(0, a) }
+//     { mstore(0, a) }
 //     mstore(0, a)
 // }

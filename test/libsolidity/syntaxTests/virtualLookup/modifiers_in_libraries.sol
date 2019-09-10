@@ -1,5 +1,5 @@
 library WithModifier {
-    modifier mod() { require(msg.value > 10 ether); _; }
+    modifier mod() { require(msg.value > 10 trx); _; }
     function withMod(uint self) mod() internal view { require(self > 0); }
 }
 

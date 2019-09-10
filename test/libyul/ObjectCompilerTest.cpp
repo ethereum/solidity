@@ -19,7 +19,7 @@
 
 #include <libdevcore/AnsiColorized.h>
 
-#include <libsolidity/interface/AssemblyStack.h>
+#include <libyul/AssemblyStack.h>
 
 #include <libevmasm/Instruction.h>
 
@@ -62,17 +62,20 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
 			m_expectation += line + "\n";
 }
 
-bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(EVMVersion(), AssemblyStack::Language::StrictAssembly);
+	AssemblyStack stack(
+		EVMVersion(),
+		AssemblyStack::Language::StrictAssembly,
+		m_optimize ? OptimiserSettings::full() : OptimiserSettings::minimal()
+	);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, stack.errors());
-		return false;
+		return TestResult::FatalError;
 	}
-	if (m_optimize)
-		stack.optimize();
+	stack.optimize();
 
 	MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
 	solAssert(obj.bytecode, "");
@@ -85,7 +88,7 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 			"Bytecode: " +
 			toHex(obj.bytecode->bytecode) +
 			"\nOpcodes: " +
-			boost::trim_copy(solidity::disassemble(obj.bytecode->bytecode)) +
+			boost::trim_copy(dev::eth::disassemble(obj.bytecode->bytecode)) +
 			"\n";
 
 	if (m_expectation != m_obtainedResult)
@@ -95,9 +98,9 @@ bool ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool c
 		printIndented(_stream, m_expectation, nextIndentLevel);
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
 		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return false;
+		return TestResult::Failure;
 	}
-	return true;
+	return TestResult::Success;
 }
 
 void ObjectCompilerTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
@@ -127,8 +130,5 @@ void ObjectCompilerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 	SourceReferenceFormatter formatter(_stream);
 
 	for (auto const& error: _errors)
-		formatter.printExceptionInformation(
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
-		);
+		formatter.printErrorInformation(*error);
 }

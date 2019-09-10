@@ -78,6 +78,8 @@ private:
 	void checkHashCollisions(ContractDefinition const& _contract);
 	/// Checks that all requirements for a library are fulfilled if this is a library.
 	void checkLibraryRequirements(ContractDefinition const& _contract);
+	/// Checks base contracts for ABI compatibility
+	void checkBaseABICompatibility(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 };

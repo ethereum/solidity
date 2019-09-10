@@ -34,6 +34,54 @@
 #include <set>
 #include <functional>
 
+/// Operators need to stay in the global namespace.
+
+/// Concatenate the contents of a container onto a vector
+template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
+{
+	for (auto const& i: _b)
+		_a.push_back(i);
+	return _a;
+}
+/// Concatenate the contents of a container onto a vector, move variant.
+template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _b)
+{
+	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
+	return _a;
+}
+/// Concatenate the contents of a container onto a set
+template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
+{
+	_a.insert(_b.begin(), _b.end());
+	return _a;
+}
+/// Concatenate the contents of a container onto a set, move variant.
+template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U&& _b)
+{
+	for (auto&& x: _b)
+		_a.insert(std::move(x));
+	return _a;
+}
+/// Concatenate two vectors of elements.
+template <class T>
+inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& _b)
+{
+	std::vector<T> ret(_a);
+	ret += _b;
+	return ret;
+}
+/// Concatenate two vectors of elements, moving them.
+template <class T>
+inline std::vector<T> operator+(std::vector<T>&& _a, std::vector<T>&& _b)
+{
+	std::vector<T> ret(std::move(_a));
+	if (&_a == &_b)
+		ret += ret;
+	else
+		ret += std::move(_b);
+	return ret;
+}
+
 namespace dev
 {
 
@@ -63,7 +111,7 @@ enum class HexCase
 /// @example toHex("A\x69") == "4169"
 std::string toHex(bytes const& _data, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower);
 
-/// Converts a (printable) ASCII hex character into the correspnding integer value.
+/// Converts a (printable) ASCII hex character into the corresponding integer value.
 /// @example fromHex('A') == 10 && fromHex('f') == 15 && fromHex('5') == 5
 int fromHex(char _i, WhenError _throw);
 
@@ -175,9 +223,6 @@ inline std::string toCompactHexWithPrefix(u256 val)
 
 // Algorithms for string and string-like collections.
 
-/// Escapes a string into the C-string representation.
-/// @p _all if true will escape all characters, not just the unprintable ones.
-std::string escaped(std::string const& _s, bool _all = true);
 /// Determine bytes required to encode the given integer value. @returns 0 if @a _i is zero.
 template <class T>
 inline unsigned bytesRequired(T _i)
@@ -187,51 +232,11 @@ inline unsigned bytesRequired(T _i)
 	for (; _i != 0; ++i, _i >>= 8) {}
 	return i;
 }
-/// Concatenate the contents of a container onto a vector
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
-{
-	for (auto const& i: _b)
-		_a.push_back(i);
-	return _a;
-}
-/// Concatenate the contents of a container onto a vector, move variant.
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _b)
-{
-	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
-	return _a;
-}
-/// Concatenate the contents of a container onto a set
-template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
-{
-	_a.insert(_b.begin(), _b.end());
-	return _a;
-}
-/// Concatenate two vectors of elements.
-template <class T>
-inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& _b)
-{
-	std::vector<T> ret(_a);
-	ret += _b;
-	return ret;
-}
-/// Concatenate two vectors of elements, moving them.
-template <class T>
-inline std::vector<T> operator+(std::vector<T>&& _a, std::vector<T>&& _b)
-{
-	std::vector<T> ret(std::move(_a));
-	if (&_a == &_b)
-		ret += ret;
-	else
-		ret += std::move(_b);
-	return ret;
-}
-
 template <class T, class V>
 bool contains(T const& _t, V const& _v)
 {
 	return std::end(_t) != std::find(std::begin(_t), std::end(_t), _v);
 }
-
 
 /// Function that iterates over a vector, calling a function on each of its
 /// elements. If that function returns a vector, the element is replaced by
@@ -240,7 +245,7 @@ bool contains(T const& _t, V const& _v)
 /// place at the end, but already visited elements might be invalidated.
 /// If nothing is replaced, no copy is performed.
 template <typename T, typename F>
-void iterateReplacing(std::vector<T>& _vector, const F& _f)
+void iterateReplacing(std::vector<T>& _vector, F const& _f)
 {
 	// Concept: _f must be Callable, must accept param T&, must return optional<vector<T>>
 	bool useModified = false;
@@ -341,4 +346,27 @@ inline std::string findAnyOf(std::string const& _haystack, std::vector<std::stri
 			return needle;
 	return "";
 }
+
+
+namespace detail
+{
+template<typename T>
+void variadicEmplaceBack(std::vector<T>&) {}
+template<typename T, typename A, typename... Args>
+void variadicEmplaceBack(std::vector<T>& _vector, A&& _a, Args&&... _args)
+{
+	_vector.emplace_back(std::forward<A>(_a));
+	variadicEmplaceBack(_vector, std::forward<Args>(_args)...);
+}
+}
+
+template<typename T, typename... Args>
+std::vector<T> make_vector(Args&&... _args)
+{
+	std::vector<T> result;
+	result.reserve(sizeof...(_args));
+	detail::variadicEmplaceBack(result, std::forward<Args>(_args)...);
+	return result;
+}
+
 }

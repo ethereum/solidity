@@ -29,6 +29,7 @@
 #include <memory>
 
 using namespace std;
+using namespace dev::test;
 
 namespace dev
 {
@@ -973,7 +974,7 @@ BOOST_AUTO_TEST_CASE(wei_szabo_finney_ether)
 {
 	char const* sourceCode = R"(
 		(returnlll
-			(return (+ wei (+ szabo (+ finney ether)))))
+			(return (+ sun trx)))
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callFallback() == encodeArgs(u256(1001001000000000001)));
@@ -1011,6 +1012,16 @@ BOOST_AUTO_TEST_CASE(sub_assemblies)
 	u256 rVal = u256(toHex(ret, HexPrefix::Add));
 	BOOST_CHECK(rVal != 0);
 	BOOST_CHECK(rVal < u256("0x10000000000000000000000000000000000000000"));
+}
+
+BOOST_AUTO_TEST_CASE(string_literal)
+{
+	char const* sourceCode = R"(
+		(returnlll
+			(return "hello"))
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFallback() == encodeArgs(u256("0x68656c6c6f000000000000000000000000000000000000000000000000000000")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

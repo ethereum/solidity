@@ -23,7 +23,10 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
+
+#include <boost/optional.hpp>
 
 #include <map>
 #include <memory>
@@ -32,8 +35,9 @@
 
 namespace yul
 {
-	struct AsmAnalysisInfo;
-	struct Identifier;
+struct AsmAnalysisInfo;
+struct Identifier;
+struct Dialect;
 }
 
 namespace dev
@@ -42,7 +46,7 @@ namespace solidity
 {
 
 class Type;
-using TypePointer = std::shared_ptr<Type const>;
+using TypePointer = Type const*;
 
 struct ASTAnnotation
 {
@@ -119,7 +123,7 @@ struct ModifierDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
 struct VariableDeclarationAnnotation: ASTAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
-	TypePointer type;
+	TypePointer type = nullptr;
 };
 
 struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
@@ -152,7 +156,7 @@ struct TypeNameAnnotation: ASTAnnotation
 {
 	/// Type declared by this type name, i.e. type of a variable where this type name is used.
 	/// Set during reference resolution stage.
-	TypePointer type;
+	TypePointer type = nullptr;
 };
 
 struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
@@ -167,7 +171,7 @@ struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
 struct ExpressionAnnotation: ASTAnnotation
 {
 	/// Inferred type of the expression.
-	TypePointer type;
+	TypePointer type = nullptr;
 	/// Whether the expression is a constant variable
 	bool isConstant = false;
 	/// Whether the expression is pure, i.e. compile-time constant.
@@ -176,9 +180,10 @@ struct ExpressionAnnotation: ASTAnnotation
 	bool isLValue = false;
 	/// Whether the expression is used in a context where the LValue is actually required.
 	bool lValueRequested = false;
-	/// Types of arguments if the expression is a function that is called - used
-	/// for overload resolution.
-	std::shared_ptr<std::vector<TypePointer>> argumentTypes;
+
+	/// Types and - if given - names of arguments if the expr. is a function
+	/// that is called, used for overload resoultion
+	boost::optional<FuncCallArguments> arguments;
 };
 
 struct IdentifierAnnotation: ExpressionAnnotation
@@ -199,7 +204,7 @@ struct BinaryOperationAnnotation: ExpressionAnnotation
 {
 	/// The common type that is used for the operation, not necessarily the result type (which
 	/// e.g. for comparisons is bool).
-	TypePointer commonType;
+	TypePointer commonType = nullptr;
 };
 
 enum class FunctionCallKind

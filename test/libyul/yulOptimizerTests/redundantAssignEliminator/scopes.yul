@@ -6,11 +6,10 @@
         a := 2
     }
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
 // {
 //     let a
-//     {
-//         let b
-//     }
+//     { let b }
 // }

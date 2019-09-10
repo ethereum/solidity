@@ -11,8 +11,9 @@
   let b := 2
   let x, y := f()
 }
+// ====
+// step: varDeclInitializer
 // ----
-// varDeclInitializer
 // {
 //     function f() -> x, y
 //     {

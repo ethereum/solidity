@@ -34,45 +34,63 @@ namespace dev
 
 DEV_SIMPLE_EXCEPTION(WhiskersError);
 
-///
-/// Moustache-like templates.
-///
-/// Usage:
-///     std::vector<std::map<std::string, std::string>> listValues(2);
-///     listValues[0]["k"] = "key1";
-///     listValues[0]["v"] = "value1";
-///     listValues[1]["k"] = "key2";
-///     listValues[1]["v"] = "value2";
-///     auto s = Whiskers("<p1>\n<#list><k> -> <v>\n</list>")
-///         ("p1", "HEAD")
-///         ("list", listValues)
-///         .render();
-///
-/// results in s == "HEAD\nkey1 -> value1\nkey2 -> value2\n"
-///
-/// Note that lists cannot themselves contain lists - this would be a future feature.
+/**
+ * Moustache-like templates.
+ *
+ * Usage:
+ *     std::vector<std::map<std::string, std::string>> listValues(2);
+ *     listValues[0]["k"] = "key1";
+ *     listValues[0]["v"] = "value1";
+ *     listValues[1]["k"] = "key2";
+ *     listValues[1]["v"] = "value2";
+ *     auto s = Whiskers("<?c><p1><!c>y</c>\n<#list><k> -> <v>\n</list>")
+ *         ("p1", "HEAD")
+ *         ("c", true)
+ *         ("list", listValues)
+ *         .render();
+ *
+ * results in s == "HEAD\nkey1 -> value1\nkey2 -> value2\n"
+ *
+ * Note that lists cannot themselves contain lists - this would be a future feature.
+ *
+ * The elements are:
+ *  - Regular parameter: <name>
+ *    just replaced
+ *  - Condition parameter: <?name>...<!name>...</name>, where "<!name>" is optional
+ *    replaced (and recursively expanded) by the first part if the condition is true
+ *    and by the second (or empty string if missing) if the condition is false
+ *  - List parameter: <#list>...</list>
+ *    The part between the tags is repeated as often as values are provided
+ *    in the mapping. Each list element can have its own parameter -> value mapping.
+ */
 class Whiskers
 {
 public:
 	using StringMap = std::map<std::string, std::string>;
 	using StringListMap = std::map<std::string, std::vector<StringMap>>;
 
-	explicit Whiskers(std::string const& _template);
+	explicit Whiskers(std::string _template);
 
-	/// Sets a single parameter, <paramName>.
-	Whiskers& operator()(std::string const& _parameter, std::string const& _value);
+	/// Sets a single regular parameter, <paramName>.
+	Whiskers& operator()(std::string _parameter, std::string _value);
+	Whiskers& operator()(std::string _parameter, char const* _value) { return (*this)(_parameter, std::string{_value}); }
+	/// Sets a condition parameter, <?paramName>...<!paramName>...</paramName>
+	Whiskers& operator()(std::string _parameter, bool _value);
 	/// Sets a list parameter, <#listName> </listName>.
 	Whiskers& operator()(
-		std::string const& _listParameter,
-		std::vector<StringMap> const& _values
+		std::string _listParameter,
+		std::vector<StringMap> _values
 	);
 
 	std::string render() const;
 
 private:
+	void checkParameterUnknown(std::string const& _parameter);
+
 	static std::string replace(
 		std::string const& _template,
 		StringMap const& _parameters,
+		std::map<std::string, bool> const& _conditions,
 		StringListMap const& _listParameters = StringListMap()
 	);
 
@@ -81,6 +99,7 @@ private:
 
 	std::string m_template;
 	StringMap m_parameters;
+	std::map<std::string, bool> m_conditions;
 	StringListMap m_listParameters;
 };
 

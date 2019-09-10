@@ -22,6 +22,8 @@
 #include <libsolidity/analysis/ContractLevelChecker.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -44,6 +46,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkExternalTypeClashes(_contract);
 	checkHashCollisions(_contract);
 	checkLibraryRequirements(_contract);
+	checkBaseABICompatibility(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -242,13 +245,13 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 	{
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
-				registerFunction(*v, make_shared<FunctionType>(*v), true);
+				registerFunction(*v, TypeProvider::function(*v), true);
 
 		for (FunctionDefinition const* function: contract->definedFunctions())
 			if (!function->isConstructor())
 				registerFunction(
 					*function,
-					make_shared<FunctionType>(*function)->asCallableFunction(false),
+					TypeProvider::function(*function)->asCallableFunction(false),
 					function->isImplemented()
 				);
 	}
@@ -405,7 +408,7 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->isPartOfExternalInterface())
 			{
-				auto functionType = make_shared<FunctionType>(*f);
+				auto functionType = TypeProvider::function(*f);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(
@@ -415,7 +418,7 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
 			{
-				auto functionType = make_shared<FunctionType>(*v);
+				auto functionType = TypeProvider::function(*v);
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(
@@ -459,4 +462,51 @@ void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _c
 	for (auto const& var: _contract.stateVariables())
 		if (!var->isConstant())
 			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables");
+}
+
+void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _contract)
+{
+	if (_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+		return;
+
+	if (_contract.isLibrary())
+	{
+		solAssert(
+			_contract.baseContracts().empty() || m_errorReporter.hasErrors(),
+			"Library is not allowed to inherit"
+		);
+		return;
+	}
+
+	SecondarySourceLocation errors;
+
+	// interfaceFunctionList contains all inherited functions as well
+	for (auto const& func: _contract.interfaceFunctionList())
+	{
+		solAssert(func.second->hasDeclaration(), "Function has no declaration?!");
+
+		if (!func.second->declaration().sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+			continue;
+
+		auto const& currentLoc = func.second->declaration().location();
+
+		for (TypePointer const& paramType: func.second->parameterTypes() + func.second->parameterTypes())
+			if (!TypeChecker::typeSupportedByOldABIEncoder(*paramType, false))
+			{
+				errors.append("Type only supported by the new experimental ABI encoder", currentLoc);
+				break;
+			}
+	}
+
+	if (!errors.infos.empty())
+		m_errorReporter.fatalTypeError(
+			_contract.location(),
+			errors,
+			std::string("Contract \"") +
+			_contract.name() +
+			"\" does not use the new experimental ABI encoder but wants to inherit from a contract " +
+			"which uses types that require it. " +
+			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
+		);
+
 }

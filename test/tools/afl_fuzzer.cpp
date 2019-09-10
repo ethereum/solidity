@@ -60,6 +60,10 @@ Allowed options)",
 			"input-file",
 			po::value<string>(),
 			"input file"
+		)(
+			"input-files",
+			po::value<std::vector<string>>()->multitoken(),
+			"input files"
 		)
 		(
 			"without-optimizer",
@@ -84,23 +88,56 @@ Allowed options)",
 		return 1;
 	}
 
-	string input;
-	if (arguments.count("input-file"))
-		input = readFileAsString(arguments["input-file"].as<string>());
-	else
-		input = readStandardInput();
-
 	if (arguments.count("quiet"))
 		quiet = true;
 
 	if (arguments.count("help"))
+	{
 		cout << options;
-	else if (arguments.count("const-opt"))
-		FuzzerUtil::testConstantOptimizer(input, quiet);
-	else if (arguments.count("standard-json"))
-		FuzzerUtil::testStandardCompiler(input, quiet);
-	else
-		FuzzerUtil::testCompiler(input, !arguments.count("without-optimizer"), quiet);
+		return 0;
+	}
 
-	return 0;
+	vector<string> inputs;
+	if (arguments.count("input-file"))
+		inputs.push_back(arguments["input-file"].as<string>());
+	else if (arguments.count("input-files"))
+		inputs = arguments["input-files"].as<vector<string>>();
+	else
+		inputs.push_back("");
+
+	bool optimize = !arguments.count("without-optimizer");
+	int retResult = 0;
+
+	for (string const& inputFile: inputs)
+	{
+		string input;
+		if (inputFile.size() == 0)
+			input = readStandardInput();
+		else
+			input = readFileAsString(inputFile);
+
+		try
+		{
+			if (arguments.count("const-opt"))
+				FuzzerUtil::testConstantOptimizer(input, quiet);
+			else if (arguments.count("standard-json"))
+				FuzzerUtil::testStandardCompiler(input, quiet);
+			else
+				FuzzerUtil::testCompiler(input, optimize, quiet);
+		}
+		catch (...)
+		{
+			retResult = 1;
+
+			if (inputFile.size() == 0)
+				throw;
+
+			cerr << "Fuzzer "
+				<< (optimize ? "" : "(without optimizer) ")
+				<< "failed on "
+				<< inputFile;
+		}
+	}
+
+	return retResult;
 }

@@ -3,8 +3,7 @@
     a := 1
     a := 2
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
-// {
-//     let a
-// }
+// { let a }

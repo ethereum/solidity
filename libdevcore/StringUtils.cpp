@@ -21,7 +21,7 @@
  * String routines
  */
 
-#include "StringUtils.h"
+#include <libdevcore/StringUtils.h>
 #include <algorithm>
 #include <string>
 #include <vector>

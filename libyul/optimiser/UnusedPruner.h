@@ -32,7 +32,7 @@ struct Dialect;
 
 /**
  * Optimisation stage that removes unused variables and functions and also
- * removes movable expression statements.
+ * removes side-effect-free expression statements.
  *
  * Note that this does not remove circular references.
  *
@@ -44,11 +44,13 @@ public:
 	UnusedPruner(
 		Dialect const& _dialect,
 		Block& _ast,
+		bool _allowMSizeOptimization,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 	UnusedPruner(
 		Dialect const& _dialect,
 		FunctionDefinition& _function,
+		bool _allowMSizeOptimization,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 
@@ -62,14 +64,25 @@ public:
 	static void runUntilStabilised(
 		Dialect const& _dialect,
 		Block& _ast,
+		bool _allowMSizeOptization,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	);
+
+	static void runUntilStabilised(
+		Dialect const& _dialect,
+		Block& _ast,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 
 	// Run the pruner until the code does not change anymore.
 	// Only run on the given function.
+	// @param _allowMSizeOptimization if true, allows to remove instructions
+	//        whose only side-effect is a potential change of the return value of
+	//        the msize instruction.
 	static void runUntilStabilised(
 		Dialect const& _dialect,
 		FunctionDefinition& _functionDefinition,
+		bool _allowMSizeOptimization,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 
@@ -78,6 +91,7 @@ private:
 	void subtractReferences(std::map<YulString, size_t> const& _subtrahend);
 
 	Dialect const& m_dialect;
+	bool m_allowMSizeOptimization = false;
 	bool m_shouldRunAgain = false;
 	std::map<YulString, size_t> m_references;
 };

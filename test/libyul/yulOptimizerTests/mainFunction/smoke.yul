@@ -1,9 +1,9 @@
-// yul
 {}
+// ====
+// step: mainFunction
+// yul: true
 // ----
-// mainFunction
 // {
 //     function main()
-//     {
-//     }
+//     { }
 // }

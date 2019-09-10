@@ -40,8 +40,8 @@ class JSONInterfaceChecker
 public:
 	void checkInterface(std::string const& _code, std::string const& _contractName, std::string const& _expectedInterfaceString)
 	{
-		m_compilerStack.reset(false);
-		m_compilerStack.addSource("", "pragma solidity >=0.0;\n" + _code);
+		m_compilerStack.reset();
+		m_compilerStack.setSources({{"", "pragma solidity >=0.0;\n" + _code}});
 		m_compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
 		m_compilerStack.setOptimiserSettings(dev::test::Options::get().optimize);
 		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
@@ -755,24 +755,23 @@ BOOST_AUTO_TEST_CASE(library_function)
 		library test {
 			struct StructType { uint a; }
 			function f(StructType storage b, uint[] storage c, test d) public returns (uint[] memory e, StructType storage f) { f = f; }
+			function f1(uint[] memory c, test d) public pure returns (uint[] memory e) {  }
 		}
 	)";
 
 	char const* interface = R"(
 	[
 		{
-			"constant" : false,
+			"constant" : true,
 			"payable" : false,
-			"stateMutability": "nonpayable",
-			"name": "f",
+			"stateMutability": "pure",
+			"name": "f1",
 			"inputs": [
-				{ "name": "b", "type": "test.StructType storage" },
-				{ "name": "c", "type": "uint256[] storage" },
+				{ "name": "c", "type": "uint256[]" },
 				{ "name": "d", "type": "test" }
 			],
 			"outputs": [
-				{ "name": "e", "type": "uint256[]" },
-				{ "name": "f", "type": "test.StructType storage" }
+				{ "name": "e", "type": "uint256[]" }
 			],
 			"type" : "function"
 		}
@@ -1040,13 +1039,13 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 		library L {
 			struct S { uint a; T[] sub; bytes b; }
 			struct T { uint[2] x; }
-			function f(L.S storage s) public {}
-			function g(L.S memory s) public {}
+			function f(L.S storage s) public view {}
+			function g(L.S memory s) public view {}
 		}
 	)";
 	char const* interface = R"(
 	[{
-		"constant": false,
+		"constant": true,
 		"inputs": [
 			{
 				"components": [
@@ -1076,24 +1075,9 @@ BOOST_AUTO_TEST_CASE(structs_in_libraries)
 		"name": "g",
 		"outputs": [],
 		"payable": false,
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "s",
-				"type": "L.S storage"
-			}
-		],
-		"name": "f",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}]
-	)";
+	}])";
 	checkInterface(sourceCode, "L", interface);
 }
 

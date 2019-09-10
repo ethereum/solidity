@@ -10,16 +10,13 @@
     }
     x := 3
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
 // {
 //     let x
 //     x := 1
-//     for {
-//     }
-//     calldataload(0)
-//     {
-//     }
+//     for { } calldataload(0) { }
 //     {
 //         mstore(x, 2)
 //         x := 2

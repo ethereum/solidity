@@ -96,14 +96,14 @@ bool SemanticInformation::isDupInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return solidity::isDupInstruction(_item.instruction());
+	return dev::eth::isDupInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return solidity::isSwapInstruction(_item.instruction());
+	return dev::eth::isSwapInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
@@ -132,6 +132,28 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	}
 }
 
+bool SemanticInformation::terminatesControlFlow(AssemblyItem const& _item)
+{
+	if (_item.type() != Operation)
+		return false;
+	else
+		return terminatesControlFlow(_item.instruction());
+}
+
+bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::RETURN:
+	case Instruction::SELFDESTRUCT:
+	case Instruction::STOP:
+	case Instruction::INVALID:
+	case Instruction::REVERT:
+		return true;
+	default:
+		return false;
+	}
+}
 
 bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 {
@@ -140,6 +162,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 
 	switch (_item.instruction())
 	{
+	case Instruction::CALLTOKEN:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
@@ -150,6 +173,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	case Instruction::PC:
 	case Instruction::MSIZE: // depends on previous writes and reads, not only on content
 	case Instruction::BALANCE: // depends on previous calls
+	case Instruction::TOKENBALANCE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODEHASH:
 	case Instruction::RETURNDATACOPY: // depends on previous calls
@@ -172,6 +196,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	{
 	case Instruction::KECCAK256:
 	case Instruction::BALANCE:
+	case Instruction::TOKENBALANCE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODEHASH:
 	case Instruction::RETURNDATASIZE:
@@ -186,6 +211,22 @@ bool SemanticInformation::movable(Instruction _instruction)
 	return true;
 }
 
+bool SemanticInformation::sideEffectFree(Instruction _instruction)
+{
+	// These are not really functional.
+	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
+
+	return !instructionInfo(_instruction).sideEffects;
+}
+
+bool SemanticInformation::sideEffectFreeIfNoMSize(Instruction _instruction)
+{
+	if (_instruction == Instruction::KECCAK256 || _instruction == Instruction::MLOAD)
+		return true;
+	else
+		return sideEffectFree(_instruction);
+}
+
 bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 {
 	switch (_instruction)
@@ -197,6 +238,7 @@ bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 	case Instruction::MSTORE:
 	case Instruction::MSTORE8:
 	case Instruction::CALL:
+	case Instruction::CALLTOKEN:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
@@ -210,6 +252,7 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 {
 	switch (_instruction)
 	{
+	case Instruction::CALLTOKEN:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
@@ -228,9 +271,12 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	{
 	case Instruction::ADDRESS:
 	case Instruction::BALANCE:
+	case Instruction::TOKENBALANCE:
 	case Instruction::ORIGIN:
 	case Instruction::CALLER:
 	case Instruction::CALLVALUE:
+	case Instruction::CALLTOKENVALUE:
+	case Instruction::CALLTOKENID:
 	case Instruction::GAS:
 	case Instruction::GASPRICE:
 	case Instruction::EXTCODESIZE:
@@ -263,6 +309,7 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::LOG2:
 	case Instruction::LOG3:
 	case Instruction::LOG4:
+	case Instruction::CALLTOKEN:
 	case Instruction::CREATE:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:

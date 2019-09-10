@@ -20,8 +20,9 @@
      let a,b := abi_decode_t_bytes_calldata_ptr(mload(0),mload(1))
      mstore(a,b)
 }
+// ====
+// step: ssaAndBack
 // ----
-// ssaAndBack
 // {
 //     function abi_decode_t_bytes_calldata_ptr(offset_12, end_13) -> arrayPos_14, length_15
 //     {
@@ -35,10 +36,7 @@
 //             revert(arrayPos_14, arrayPos_14)
 //         }
 //         arrayPos_14 := add(offset_12, 0x20)
-//         if gt(add(add(offset_12, length_15), 0x20), end_13)
-//         {
-//             revert(0, 0)
-//         }
+//         if gt(add(add(offset_12, length_15), 0x20), end_13) { revert(0, 0) }
 //     }
 //     let a, b := abi_decode_t_bytes_calldata_ptr(mload(0), mload(1))
 //     mstore(a, b)

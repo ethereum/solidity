@@ -1,0 +1,4 @@
+Warning: Yul and its optimizer are still experimental. Please use the output with care.
+strict_asm_jump/input.sol:1:3: Error: Function not found.
+{ jump(1) }
+  ^--^

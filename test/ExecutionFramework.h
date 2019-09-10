@@ -25,6 +25,8 @@
 #include <test/Options.h>
 #include <test/RPCSession.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <liblangutil/EVMVersion.h>
 
 #include <libdevcore/FixedHash.h>
@@ -42,17 +44,15 @@ namespace test
 	using Address = h160;
 
 	// The various denominations; here for ease of use where needed within code.
-	static const u256 wei = 1;
-	static const u256 shannon = u256("1000000000");
-	static const u256 szabo = shannon * 1000;
-	static const u256 finney = szabo * 1000;
-	static const u256 ether = finney * 1000;
+	static const u256 sun = 1;
+	static const u256 trx = sun * 1000000;
 
 class ExecutionFramework
 {
 
 public:
 	ExecutionFramework();
+	explicit ExecutionFramework(std::string const& _ipcPath, langutil::EVMVersion _evmVersion);
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
@@ -201,6 +201,31 @@ public:
 		return m_blockNumber;
 	}
 
+	template<typename Range>
+	static bytes encodeArray(bool _dynamicallySized, bool _dynamicallyEncoded, Range const& _elements)
+	{
+		bytes result;
+		if (_dynamicallySized)
+			result += encode(u256(_elements.size()));
+		if (_dynamicallyEncoded)
+		{
+			u256 offset = u256(_elements.size()) * 32;
+			std::vector<bytes> subEncodings;
+			for (auto const& element: _elements)
+			{
+				result += encode(offset);
+				subEncodings.emplace_back(encode(element));
+				offset += subEncodings.back().size();
+			}
+			for (auto const& subEncoding: subEncodings)
+				result += subEncoding;
+		}
+		else
+			for (auto const& element: _elements)
+				result += encode(element);
+		return result;
+	}
+
 private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
@@ -238,15 +263,14 @@ protected:
 		bytes data;
 	};
 
-	solidity::EVMVersion m_evmVersion;
-	unsigned m_optimizeRuns = 200;
-	bool m_optimize = false;
+	langutil::EVMVersion m_evmVersion;
+	solidity::OptimiserSettings m_optimiserSettings = solidity::OptimiserSettings::minimal();
 	bool m_showMessages = false;
 	bool m_transactionSuccessful = true;
 	Address m_sender;
 	Address m_contractAddress;
 	u256 m_blockNumber;
-	u256 const m_gasPrice = 100 * szabo;
+	u256 const m_gasPrice = 10000 * sun;
 	u256 const m_gas = 100000000;
 	bytes m_output;
 	std::vector<LogEntry> m_logs;

@@ -23,6 +23,7 @@
 #include <libyul/Dialect.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <map>
 
@@ -34,13 +35,25 @@ using Type = YulString;
 struct FunctionCall;
 struct Object;
 
+/**
+ * Context used during code generation.
+ */
+struct BuiltinContext
+{
+	Object const* currentObject = nullptr;
+	/// Mapping from named objects to abstract assembly sub IDs.
+	std::map<YulString, AbstractAssembly::SubID> subIDs;
+};
+
 struct BuiltinFunctionForEVM: BuiltinFunction
 {
+	boost::optional<dev::eth::Instruction> instruction;
 	/// Function to generate code for the given function call and append it to the abstract
-	/// assembly. The third parameter is called to visit (and generate code for) the arguments
+	/// assembly. The fourth parameter is called to visit (and generate code for) the arguments
 	/// from right to left.
-	std::function<void(FunctionCall const&, AbstractAssembly&, std::function<void()>)> generateCode;
+	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void()>)> generateCode;
 };
+
 
 /**
  * Yul dialect for EVM as a backend.
@@ -49,37 +62,24 @@ struct BuiltinFunctionForEVM: BuiltinFunction
  */
 struct EVMDialect: public Dialect
 {
-	EVMDialect(AsmFlavour _flavour, bool _objectAccess);
+	/// Constructor, should only be used internally. Use the factory functions below.
+	EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	static std::shared_ptr<EVMDialect> looseAssemblyForEVM();
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVM();
-	static std::shared_ptr<EVMDialect> strictAssemblyForEVMObjects();
-	static std::shared_ptr<EVMDialect> yulForEVM();
+	static EVMDialect const& looseAssemblyForEVM(langutil::EVMVersion _version);
+	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
+	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
+	static EVMDialect const& yulForEVM(langutil::EVMVersion _version);
+
+	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
-	/// Sets the mapping of current sub assembly IDs. Used during code generation.
-	void setSubIDs(std::map<YulString, AbstractAssembly::SubID> _subIDs);
-	/// Sets the current object. Used during code generation.
-	void setCurrentObject(Object const* _object);
-
-private:
-	void addFunction(
-		std::string _name,
-		size_t _params,
-		size_t _returns,
-		bool _movable,
-		bool _literalArguments,
-		std::function<void(FunctionCall const&, AbstractAssembly&, std::function<void()>)> _generateCode
-	);
-
-	bool m_objectAccess;
-	Object const* m_currentObject = nullptr;
-	/// Mapping from named objects to abstract assembly sub IDs.
-	std::map<YulString, AbstractAssembly::SubID> m_subIDs;
+protected:
+	bool const m_objectAccess;
+	langutil::EVMVersion const m_evmVersion;
 	std::map<YulString, BuiltinFunctionForEVM> m_functions;
 };
 

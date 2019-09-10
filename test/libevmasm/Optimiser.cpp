@@ -238,6 +238,56 @@ BOOST_AUTO_TEST_CASE(cse_associativity2)
 	checkCSE(input, {Instruction::DUP2, Instruction::DUP2, Instruction::ADD, u256(5), Instruction::ADD});
 }
 
+BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
+{
+	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	{
+		AssemblyItems input{
+			Instruction::CALLVALUE,
+			u256(2),
+			Instruction::SHR,
+			u256(-1),
+			Instruction::SHR
+		};
+		checkCSE(input, {u256(0)});
+	}
+}
+
+BOOST_AUTO_TEST_CASE(cse_double_shift_left_overflow)
+{
+	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	{
+		AssemblyItems input{
+			Instruction::DUP1,
+			u256(2),
+			Instruction::SHL,
+			u256(-1),
+			Instruction::SHL
+		};
+		checkCSE(input, {u256(0)});
+	}
+}
+
+BOOST_AUTO_TEST_CASE(cse_byte_ordering_bug)
+{
+	AssemblyItems input{
+		u256(31),
+		Instruction::CALLVALUE,
+		Instruction::BYTE
+	};
+	checkCSE(input, {u256(31), Instruction::CALLVALUE, Instruction::BYTE});
+}
+
+BOOST_AUTO_TEST_CASE(cse_byte_ordering_fix)
+{
+	AssemblyItems input{
+		Instruction::CALLVALUE,
+		u256(31),
+		Instruction::BYTE
+	};
+	checkCSE(input, {u256(0xff), Instruction::CALLVALUE, Instruction::AND});
+}
+
 BOOST_AUTO_TEST_CASE(cse_storage)
 {
 	AssemblyItems input{
@@ -969,27 +1019,60 @@ BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
 
 BOOST_AUTO_TEST_CASE(peephole_truthy_and)
 {
-  AssemblyItems items{
-    AssemblyItem(Tag, 1),
-    Instruction::BALANCE,
-    u256(0),
-    Instruction::NOT,
-    Instruction::AND,
-    AssemblyItem(PushTag, 1),
-    Instruction::JUMPI
-  };
-  AssemblyItems expectation{
-    AssemblyItem(Tag, 1),
-    Instruction::BALANCE,
-    AssemblyItem(PushTag, 1),
-    Instruction::JUMPI
-  };
-  PeepholeOptimiser peepOpt(items);
-  BOOST_REQUIRE(peepOpt.optimise());
-  BOOST_CHECK_EQUAL_COLLECTIONS(
-    items.begin(), items.end(),
-    expectation.begin(), expectation.end()
-  );
+	AssemblyItems items{
+		AssemblyItem(Tag, 1),
+		Instruction::BALANCE,
+		u256(0),
+		Instruction::NOT,
+		Instruction::AND,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	AssemblyItems expectation{
+		AssemblyItem(Tag, 1),
+		Instruction::BALANCE,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+
+BOOST_AUTO_TEST_CASE(peephole_iszero_iszero_jumpi)
+{
+	AssemblyItems items{
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::CALLDATALOAD,
+		Instruction::ISZERO,
+		Instruction::ISZERO,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI,
+		u256(0),
+		u256(0x20),
+		Instruction::RETURN
+	};
+	AssemblyItems expectation{
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::CALLDATALOAD,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI,
+		u256(0),
+		u256(0x20),
+		Instruction::RETURN
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+	  items.begin(), items.end(),
+	  expectation.begin(), expectation.end()
+	);
 }
 
 BOOST_AUTO_TEST_CASE(jumpdest_removal)
@@ -1053,7 +1136,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
 
-	main.optimise(true, dev::test::Options::get().evmVersion());
+	main.optimise(true, dev::test::Options::get().evmVersion(), false, 200);
 
 	AssemblyItems expectationMain{
 		AssemblyItem(PushSubSize, 0),
@@ -1094,6 +1177,84 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 		Instruction::DUP2,
 		Instruction::SWAP1,
 		Instruction::SUB
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
+{
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
+
+	for (int i = 1; i < 256; i++)
+	{
+		checkCSE({
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+			Instruction::AND
+		}, {
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+		});
+
+		checkCSE({
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::AND
+		}, {
+			Instruction::CALLVALUE,
+			u256(256-i),
+			Instruction::SHR,
+		});
+	}
+
+	// Check that opt. does NOT trigger
+	for (int i = 1; i < 255; i++)
+	{
+		checkCSE({
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			Instruction::AND
+		}, { // Opt. did some reordering
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::AND
+		});
+
+		checkCSE({
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::AND
+		}, { // Opt. did some reordering
+			u256(boost::multiprecision::pow(u256(2), i)-1),
+			Instruction::CALLVALUE,
+			u256(255-i),
+			Instruction::SHR,
+			Instruction::AND
+		});
+	}
+
+	//(x >> (31*8)) & 0xffffffff
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(31*8),
+		Instruction::SHR,
+		u256(0xffffffff),
+		Instruction::AND
+	}, {
+		Instruction::CALLVALUE,
+		u256(31*8),
+		Instruction::SHR
 	});
 }
 
@@ -1164,6 +1325,48 @@ BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 		u256("0xffffffffffffffffffffffffffffffffffffffff"),
 		Instruction::CALLVALUE,
 		Instruction::AND
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
+{
+	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+		return;
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(299),
+		Instruction::SHL
+	}, {
+		u256(0)
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(299),
+		Instruction::SHR
+	}, {
+		u256(0)
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHL
+	}, {
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHL
+	});
+
+	checkCSE({
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHR
+	}, {
+		Instruction::CALLVALUE,
+		u256(255),
+		Instruction::SHR
 	});
 }
 

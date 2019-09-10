@@ -56,7 +56,8 @@ void testFunctionCall(
 		bytes _expectations = bytes{},
 		u256 _value = 0,
 		string _argumentComment = "",
-		string _expectationComment = ""
+		string _expectationComment = "",
+		vector<string> _rawArguments = vector<string>{}
 )
 {
 	BOOST_REQUIRE_EQUAL(_call.expectations.failure, _failure);
@@ -67,6 +68,17 @@ void testFunctionCall(
 	BOOST_REQUIRE_EQUAL(_call.value, _value);
 	BOOST_REQUIRE_EQUAL(_call.arguments.comment, _argumentComment);
 	BOOST_REQUIRE_EQUAL(_call.expectations.comment, _expectationComment);
+
+	if (!_rawArguments.empty())
+	{
+		BOOST_REQUIRE_EQUAL(_call.arguments.parameters.size(), _rawArguments.size());
+		size_t index = 0;
+		for (Parameter const& param: _call.arguments.parameters)
+		{
+			BOOST_REQUIRE_EQUAL(param.rawString, _rawArguments[index]);
+			++index;
+		}
+	}
 }
 
 BOOST_AUTO_TEST_SUITE(TestFileParserTest)
@@ -112,11 +124,16 @@ BOOST_AUTO_TEST_CASE(call_arguments_comments_success)
 {
 	char const* source = R"(
 		// f(uint256, uint256): 1, 1
+		// # Comment on the parameters. #
 		// ->
 		// # This call should not return a value, but still succeed. #
+		// f()
+		// # Comment on no parameters. #
+		// -> 1
+		// # This comment should be parsed. #
 	)";
 	auto const calls = parse(source);
-	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	BOOST_REQUIRE_EQUAL(calls.size(), 2);
 	testFunctionCall(
 		calls.at(0),
 		Mode::MultiLine,
@@ -125,8 +142,19 @@ BOOST_AUTO_TEST_CASE(call_arguments_comments_success)
 		fmt::encodeArgs(1, 1),
 		fmt::encodeArgs(),
 		0,
-		"",
+		" Comment on the parameters. ",
 		" This call should not return a value, but still succeed. "
+	);
+	testFunctionCall(
+		calls.at(1),
+		Mode::MultiLine,
+		"f()",
+		false,
+		fmt::encodeArgs(),
+		fmt::encodeArgs(1),
+		0,
+		" Comment on no parameters. ",
+		" This comment should be parsed. "
 	);
 }
 
@@ -265,6 +293,90 @@ BOOST_AUTO_TEST_CASE(call_arguments)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(call_arguments_bool)
+{
+	char const* source = R"(
+		// f(bool): true -> false
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(bool)",
+		false,
+		fmt::encodeArgs(true),
+		fmt::encodeArgs(false)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_hex_string)
+{
+	char const* source = R"(
+		// f(bytes): hex"4200ef" -> hex"ab0023"
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(bytes)",
+		false,
+		fromHex("4200ef"),
+		fromHex("ab0023")
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_hex_string_lowercase)
+{
+	char const* source = R"(
+		// f(bytes): hex"4200ef" -> hex"23ef00"
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(bytes)",
+		false,
+		fromHex("4200EF"),
+		fromHex("23EF00")
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_string)
+{
+	char const* source = R"(
+		// f(string): 0x20, 3, "any" ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(string)",
+		false,
+		fmt::encodeDyn(string{"any"})
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_return_string)
+{
+	char const* source = R"(
+		// f() -> 0x20, 3, "any"
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f()",
+		false,
+		fmt::encodeArgs(),
+		fmt::encodeDyn(string{"any"})
+	);
+}
+
 BOOST_AUTO_TEST_CASE(call_arguments_tuple)
 {
 	char const* source = R"(
@@ -275,6 +387,38 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple)
 	BOOST_REQUIRE_EQUAL(calls.size(), 2);
 	testFunctionCall(calls.at(0), Mode::SingleLine, "f((uint256,bytes32),uint256)", false);
 	testFunctionCall(calls.at(1), Mode::SingleLine, "f((uint8),uint8)", false);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_left_aligned)
+{
+	char const* source = R"(
+		// f(bytes32, bytes32): 0x6161, 0x420000EF -> 1
+		// g(bytes32, bytes32): 0x0616, 0x0042EF00 -> 1
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 2);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(bytes32,bytes32)",
+		false,
+		fmt::encodeArgs(
+			fromHex("0x6161"),
+			fromHex("0x420000EF")
+		),
+		fmt::encodeArgs(1)
+	);
+	testFunctionCall(
+		calls.at(1),
+		Mode::SingleLine,
+		"g(bytes32,bytes32)",
+		false,
+		fmt::encodeArgs(
+			fromHex("0x0616"),
+			fromHex("0x0042EF00")
+		),
+		fmt::encodeArgs(1)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_tuple_of_tuples)
@@ -383,7 +527,38 @@ BOOST_AUTO_TEST_CASE(call_multiple_arguments_mixed_format)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(call_signature)
+BOOST_AUTO_TEST_CASE(call_signature_array)
+{
+	char const* source = R"(
+		// f(uint256[]) ->
+		// f(uint256[3]) ->
+		// f(uint256[3][][], uint8[9]) ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 3);
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256[])", false);
+	testFunctionCall(calls.at(1), Mode::SingleLine, "f(uint256[3])", false);
+	testFunctionCall(calls.at(2), Mode::SingleLine, "f(uint256[3][][],uint8[9])", false);
+}
+
+BOOST_AUTO_TEST_CASE(call_signature_struct_array)
+{
+	char const* source = R"(
+		// f((uint256)[]) ->
+		// f((uint256)[3]) ->
+		// f((uint256, uint8)[3]) ->
+		// f((uint256)[3][][], (uint8, bool)[9]) ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 4);
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f((uint256)[])", false);
+	testFunctionCall(calls.at(1), Mode::SingleLine, "f((uint256)[3])", false);
+	testFunctionCall(calls.at(2), Mode::SingleLine, "f((uint256,uint8)[3])", false);
+	testFunctionCall(calls.at(3), Mode::SingleLine, "f((uint256)[3][][],(uint8,bool)[9])", false);
+
+}
+
+BOOST_AUTO_TEST_CASE(call_signature_valid)
 {
 	char const* source = R"(
 		// f(uint256, uint8, string) -> FAILURE
@@ -393,6 +568,83 @@ BOOST_AUTO_TEST_CASE(call_signature)
 	BOOST_REQUIRE_EQUAL(calls.size(), 2);
 	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256,uint8,string)", true);
 	testFunctionCall(calls.at(1), Mode::SingleLine, "f(invalid,xyz,foo)", true);
+}
+
+BOOST_AUTO_TEST_CASE(call_raw_arguments)
+{
+	char const* source = R"(
+		// f(): 1, -2, -3 ->
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f()",
+		false,
+		fmt::encodeArgs(1, -2, -3),
+		fmt::encodeArgs(),
+		0,
+		"",
+		"",
+		{"1", "-2", "-3"}
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_builtin_left_decimal)
+{
+	char const* source = R"(
+		// f(): left(1), left(0x20) -> left(-2), left(true)
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f()",
+		false,
+		fmt::encodeArgs(
+			fmt::encode(toCompactBigEndian(u256{1}), false),
+			fmt::encode(fromHex("0x20"), false)
+		),
+		fmt::encodeArgs(
+			fmt::encode(toCompactBigEndian(u256{-2}), false),
+			fmt::encode(bytes{true}, false)
+		)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_builtin_right_decimal)
+{
+	char const* source = R"(
+		// f(): right(1), right(0x20) -> right(-2), right(true)
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f()",
+		false,
+		fmt::encodeArgs(1, fromHex("0x20")),
+		fmt::encodeArgs(-2, true)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_hex_string_left_align)
+{
+	char const* source = R"(
+		// f(bytes): left(hex"4200ef") ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_hex_string_right_align)
+{
+	char const* source = R"(
+		// f(bytes): right(hex"4200ef") ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
 
 BOOST_AUTO_TEST_CASE(call_newline_invalid)
@@ -497,6 +749,38 @@ BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
 
+BOOST_AUTO_TEST_CASE(call_hex_number_invalid)
+{
+	char const* source = R"(
+		// f(bytes32, bytes32): 0x616, 0x042 -> 1
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_signed_bool_invalid)
+{
+	char const* source = R"(
+		// f() -> -true
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_signed_failure_invalid)
+{
+	char const* source = R"(
+		// f() -> -FAILURE
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_signed_hex_number_invalid)
+{
+	char const* source = R"(
+		// f() -> -0x42
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
 BOOST_AUTO_TEST_CASE(call_arguments_colon)
 {
 	char const* source = R"(
@@ -520,6 +804,14 @@ BOOST_AUTO_TEST_CASE(call_arrow_missing)
 {
 	char const* source = R"(
 		// h256()
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_unexpected_character)
+{
+	char const* source = R"(
+		// f() -> ??
 	)";
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }

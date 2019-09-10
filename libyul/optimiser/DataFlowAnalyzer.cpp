@@ -112,10 +112,12 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 
 void DataFlowAnalyzer::operator()(ForLoop& _for)
 {
-	// Special scope handling of the pre block.
-	pushScope(false);
-	for (auto& statement: _for.pre.statements)
-		visit(statement);
+	// If the pre block was not empty,
+	// we would have to deal with more complicated scoping rules.
+	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
+
+	AssignmentsSinceContinue assignmentsSinceCont;
+	assignmentsSinceCont(_for.body);
 
 	Assignments assignments;
 	assignments(_for.body);
@@ -124,10 +126,9 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 
 	visit(*_for.condition);
 	(*this)(_for.body);
+	clearValues(assignmentsSinceCont.names());
 	(*this)(_for.post);
-
 	clearValues(assignments.names());
-	popScope();
 }
 
 void DataFlowAnalyzer::operator()(Block& _block)
@@ -141,7 +142,6 @@ void DataFlowAnalyzer::operator()(Block& _block)
 
 void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expression* _value)
 {
-	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	clearValues(_variables);
 
 	MovableChecker movableChecker{m_dialect};
@@ -149,7 +149,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		movableChecker.visit(*_value);
 	else
 		for (auto const& var: _variables)
-			m_value[var] = &zero;
+			m_value[var] = &m_zero;
 
 	if (_value && _variables.size() == 1)
 	{

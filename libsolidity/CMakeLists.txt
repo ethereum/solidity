@@ -22,8 +22,6 @@ set(sources
 	analysis/PostTypeChecker.h
 	analysis/ReferencesResolver.cpp
 	analysis/ReferencesResolver.h
-	analysis/SemVerHandler.cpp
-	analysis/SemVerHandler.h
 	analysis/StaticAnalyzer.cpp
 	analysis/StaticAnalyzer.h
 	analysis/SyntaxChecker.cpp
@@ -47,12 +45,12 @@ set(sources
 	ast/ExperimentalFeatures.h
 	ast/Types.cpp
 	ast/Types.h
+	ast/TypeProvider.cpp
+	ast/TypeProvider.h
 	codegen/ABIFunctions.cpp
 	codegen/ABIFunctions.h
 	codegen/ArrayUtils.cpp
 	codegen/ArrayUtils.h
-	codegen/AsmCodeGen.cpp
-	codegen/AsmCodeGen.h
 	codegen/Compiler.cpp
 	codegen/Compiler.h
 	codegen/CompilerContext.cpp
@@ -65,6 +63,20 @@ set(sources
 	codegen/ExpressionCompiler.h
 	codegen/LValue.cpp
 	codegen/LValue.h
+	codegen/MultiUseYulFunctionCollector.h
+	codegen/MultiUseYulFunctionCollector.cpp
+	codegen/YulUtilFunctions.h
+	codegen/YulUtilFunctions.cpp
+	codegen/ir/IRGenerator.cpp
+	codegen/ir/IRGenerator.h
+	codegen/ir/IRGeneratorForStatements.cpp
+	codegen/ir/IRGeneratorForStatements.h
+	codegen/ir/IRGenerationContext.cpp
+	codegen/ir/IRGenerationContext.h
+	codegen/ir/IRLValue.cpp
+	codegen/ir/IRLValue.h
+	formal/EncodingContext.cpp
+	formal/EncodingContext.h
 	formal/SMTChecker.cpp
 	formal/SMTChecker.h
 	formal/SMTLib2Interface.cpp
@@ -82,14 +94,13 @@ set(sources
 	formal/VariableUsage.h
 	interface/ABI.cpp
 	interface/ABI.h
-	interface/AssemblyStack.cpp
-	interface/AssemblyStack.h
 	interface/CompilerStack.cpp
 	interface/CompilerStack.h
 	interface/GasEstimator.cpp
 	interface/GasEstimator.h
 	interface/Natspec.cpp
 	interface/Natspec.h
+	interface/OptimiserSettings.h
 	interface/ReadFile.h
 	interface/StandardCompiler.cpp
 	interface/StandardCompiler.h

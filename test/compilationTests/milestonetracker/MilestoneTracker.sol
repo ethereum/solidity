@@ -50,7 +50,7 @@ contract MilestoneTracker {
         address reviewer;       // Can reject the completion of this milestone
         uint reviewTime;        // How many seconds the reviewer has to review
         address paymentSource;  // Where the milestone payment is sent from
-        bytes payData;          // Data defining how much ether is sent where
+        bytes payData;          // Data defining how much trx is sent where
 
         MilestoneStatus status; // Current status of the milestone
                                 // (Completed, AuthorizedForPayment...)

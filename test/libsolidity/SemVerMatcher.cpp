@@ -24,7 +24,7 @@
 #include <vector>
 #include <tuple>
 #include <liblangutil/Scanner.h>
-#include <libsolidity/analysis/SemVerHandler.h>
+#include <liblangutil/SemVerHandler.h>
 #include <test/Options.h>
 
 using namespace std;

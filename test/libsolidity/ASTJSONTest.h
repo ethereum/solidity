@@ -35,11 +35,11 @@ namespace test
 class ASTJSONTest: public TestCase
 {
 public:
-	static std::unique_ptr<TestCase> create(std::string const& _filename)
-	{ return std::unique_ptr<TestCase>(new ASTJSONTest(_filename)); }
+	static std::unique_ptr<TestCase> create(Config const& _config)
+	{ return std::unique_ptr<TestCase>(new ASTJSONTest(_config.filename)); }
 	ASTJSONTest(std::string const& _filename);
 
-	bool run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 	void printSource(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;

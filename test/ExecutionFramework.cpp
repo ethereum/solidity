@@ -29,6 +29,9 @@
 
 #include <cstdlib>
 
+#include <chrono>
+#include <thread>
+
 using namespace std;
 using namespace dev;
 using namespace dev::test;
@@ -40,7 +43,7 @@ h256 const EmptyTrie("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5
 
 string getIPCSocketPath()
 {
-	string ipcPath = dev::test::Options::get().ipcPath;
+	string ipcPath = dev::test::Options::get().ipcPath.string();
 	if (ipcPath.empty())
 		BOOST_FAIL("ERROR: ipcPath not set! (use --ipcpath <path> or the environment variable ETH_TEST_IPC)");
 
@@ -49,13 +52,22 @@ string getIPCSocketPath()
 
 }
 
-ExecutionFramework::ExecutionFramework() :
-	m_rpc(RPCSession::instance(getIPCSocketPath())),
-	m_evmVersion(dev::test::Options::get().evmVersion()),
-	m_optimize(dev::test::Options::get().optimize),
+ExecutionFramework::ExecutionFramework():
+	ExecutionFramework(getIPCSocketPath(), dev::test::Options::get().evmVersion())
+{
+}
+
+ExecutionFramework::ExecutionFramework(string const& _ipcPath, langutil::EVMVersion _evmVersion):
+	m_rpc(RPCSession::instance(_ipcPath)),
+	m_evmVersion(_evmVersion),
+	m_optimiserSettings(solidity::OptimiserSettings::minimal()),
 	m_showMessages(dev::test::Options::get().showMessages),
 	m_sender(m_rpc.account(0))
 {
+	if (dev::test::Options::get().optimizeYul)
+		m_optimiserSettings = solidity::OptimiserSettings::full();
+	else if (dev::test::Options::get().optimize)
+		m_optimiserSettings = solidity::OptimiserSettings::standard();
 	m_rpc.test_rewindToBlock(0);
 }
 
@@ -128,6 +140,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	}
 
 	string txHash = m_rpc.eth_sendTransaction(d);
+	m_rpc.rpcCall("eth_flush");
 	m_rpc.test_mineBlocks(1);
 	RPCSession::TransactionReceipt receipt(m_rpc.eth_getTransactionReceipt(txHash));
 

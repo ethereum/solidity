@@ -4,8 +4,9 @@
     if b { pop(b) b := a }
     let c := b
 }
+// ====
+// step: rematerialiser
 // ----
-// rematerialiser
 // {
 //     let a := caller()
 //     let b := address()

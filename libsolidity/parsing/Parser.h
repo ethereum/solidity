@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -24,6 +24,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ParserBase.h>
+#include <liblangutil/EVMVersion.h>
 
 namespace langutil
 {
@@ -38,7 +39,13 @@ namespace solidity
 class Parser: public langutil::ParserBase
 {
 public:
-	explicit Parser(langutil::ErrorReporter& _errorReporter): ParserBase(_errorReporter) {}
+	explicit Parser(
+		langutil::ErrorReporter& _errorReporter,
+		langutil::EVMVersion _evmVersion
+	):
+		ParserBase(_errorReporter),
+		m_evmVersion(_evmVersion)
+	{}
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<langutil::Scanner> const& _scanner);
 
@@ -73,7 +80,7 @@ private:
 
 	///@{
 	///@name Parsing functions for the AST nodes
-	void parsePragmaVersion(std::vector<Token> const& tokens, std::vector<std::string> const& literals);
+	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
 	ContractDefinition::ContractKind parseContractKind();
@@ -181,6 +188,7 @@ private:
 
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
+	langutil::EVMVersion m_evmVersion;
 };
 
 }

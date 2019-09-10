@@ -1,0 +1,3 @@
+contract C {
+    constructor() public {}
+}

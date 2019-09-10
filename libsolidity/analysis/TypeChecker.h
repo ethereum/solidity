@@ -48,7 +48,7 @@ class TypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	TypeChecker(EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter):
+	TypeChecker(langutil::EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter):
 		m_evmVersion(_evmVersion),
 		m_errorReporter(_errorReporter)
 	{}
@@ -62,6 +62,8 @@ public:
 	/// @returns the type of the given variable and throws if the type is not present
 	/// (this can happen for variables with non-explicit types before their types are resolved)
 	TypePointer const& type(VariableDeclaration const& _variable) const;
+
+	static bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall);
 
 private:
 
@@ -156,7 +158,7 @@ private:
 
 	ContractDefinition const* m_scope = nullptr;
 
-	EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 
 	/// Flag indicating whether we are currently inside an EmitStatement.
 	bool m_insideEmitStatement = false;

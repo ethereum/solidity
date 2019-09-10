@@ -21,14 +21,17 @@
  */
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/codegen/AsmCodeGen.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
+#include <libyul/backends/evm/AsmCodeGen.h>
+
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
+
 #include <liblangutil/ErrorReporter.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -37,6 +40,7 @@
 using namespace std;
 using namespace dev;
 using namespace langutil;
+using namespace dev::eth;
 using namespace dev::solidity;
 
 namespace
@@ -109,8 +113,16 @@ void ContractCompiler::initializeContext(
 
 void ContractCompiler::appendCallValueCheck()
 {
-	// Throw if function is not payable but call contained ether.
+	// Throw if function is not payable but call contained trx.
 	m_context << Instruction::CALLVALUE;
+	// TODO: error message?
+	m_context.appendConditionalRevert();
+
+	m_context << Instruction::CALLTOKENID;
+	// TODO: error message?
+	m_context.appendConditionalRevert();
+
+	m_context << Instruction::CALLTOKENVALUE;
 	// TODO: error message?
 	m_context.appendConditionalRevert();
 }
@@ -175,6 +187,7 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
 	m_context.pushSubroutineSize(m_context.runtimeSub());
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
+	// This code replaces the address added by appendDeployTimeAddress().
 	m_context.appendInlineAssembly(R"(
 	{
 		// If code starts at 11, an mstore(0) writes to the full PUSH20 plus data
@@ -182,8 +195,7 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 		let codepos := 11
 		codecopy(codepos, subOffset, subSize)
 		// Check that the first opcode is a PUSH20
-		switch eq(0x73, byte(0, mload(codepos)))
-		case 0 { invalid() }
+		if iszero(eq(0x73, byte(0, mload(codepos)))) { invalid() }
 		mstore(0, address())
 		mstore8(codepos, 0x73)
 		return(codepos, subSize)
@@ -224,34 +236,21 @@ void ContractCompiler::appendConstructor(FunctionDefinition const& _constructor)
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	if (!_constructor.parameters().empty())
 	{
-		unsigned argumentSize = 0;
-		for (ASTPointer<VariableDeclaration> const& var: _constructor.parameters())
-			if (var->annotation().type->isDynamicallySized())
-			{
-				argumentSize = 0;
-				break;
-			}
-			else
-				argumentSize += var->annotation().type->calldataEncodedSize();
-
 		CompilerUtils(m_context).fetchFreeMemoryPointer();
-		if (argumentSize == 0)
-		{
-			// argument size is dynamic, use CODESIZE to determine it
-			m_context.appendProgramSize(); // program itself
-			// CODESIZE is program plus manually added arguments
-			m_context << Instruction::CODESIZE << Instruction::SUB;
-		}
-		else
-			m_context << u256(argumentSize);
+		// CODESIZE returns the actual size of the code,
+		// which is the size of the generated code (``programSize``)
+		// plus the constructor arguments added to the transaction payload.
+		m_context.appendProgramSize();
+		m_context << Instruction::CODESIZE << Instruction::SUB;
 		// stack: <memptr> <argument size>
 		m_context << Instruction::DUP1;
 		m_context.appendProgramSize();
 		m_context << Instruction::DUP4 << Instruction::CODECOPY;
-		m_context << Instruction::DUP2 << Instruction::ADD;
-		m_context << Instruction::DUP1;
+		// stack: <memptr> <argument size>
+		m_context << Instruction::DUP2 << Instruction::DUP2 << Instruction::ADD;
+		// stack: <memptr> <argument size> <mem end>
 		CompilerUtils(m_context).storeFreeMemoryPointer();
-		// stack: <memptr>
+		// stack: <memptr> <argument size>
 		CompilerUtils(m_context).abiDecode(FunctionType(_constructor).parameterTypes(), true);
 	}
 	_constructor.accept(*this);
@@ -353,7 +352,7 @@ bool hasPayableFunctions(ContractDefinition const& _contract)
 void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
 	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
-	map<FixedHash<4>, const eth::AssemblyItem> callDataUnpackerEntryPoints;
+	map<FixedHash<4>, eth::AssemblyItem const> callDataUnpackerEntryPoints;
 
 	if (_contract.isLibrary())
 	{
@@ -389,7 +388,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			sortedIDs.emplace_back(it.first);
 		}
 		std::sort(sortedIDs.begin(), sortedIDs.end());
-		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimise_runs);
+		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimiserSettings.expectedExecutionsPerDeployment);
 	}
 
 	m_context << notFound;
@@ -482,7 +481,7 @@ void ContractCompiler::initializeStateVariables(ContractDefinition const& _contr
 	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
 		if (variable->value() && !variable->isConstant())
-			ExpressionCompiler(m_context, m_optimise).appendStateVariableInitialization(*variable);
+			ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
 }
 
 bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
@@ -495,9 +494,9 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_continueTags.clear();
 
 	if (_variableDeclaration.isConstant())
-		ExpressionCompiler(m_context, m_optimise).appendConstStateVariableAccessor(_variableDeclaration);
+		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendConstStateVariableAccessor(_variableDeclaration);
 	else
-		ExpressionCompiler(m_context, m_optimise).appendStateVariableAccessor(_variableDeclaration);
+		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableAccessor(_variableDeclaration);
 
 	return false;
 }
@@ -713,11 +712,14 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 	solAssert(_inlineAssembly.annotation().analysisInfo, "");
-	CodeGenerator::assemble(
+	yul::CodeGenerator::assemble(
 		_inlineAssembly.operations(),
 		*_inlineAssembly.annotation().analysisInfo,
 		*m_context.assemblyPtr(),
-		identifierAccess
+		m_context.evmVersion(),
+		identifierAccess,
+		false,
+		m_optimiserSettings.optimizeStackAllocation
 	);
 	m_context.setStackOffset(startStackHeight);
 	return false;
@@ -865,7 +867,7 @@ bool ContractCompiler::visit(Return const& _return)
 
 		TypePointer expectedType;
 		if (expression->annotation().type->category() == Type::Category::Tuple || types.size() != 1)
-			expectedType = make_shared<TupleType>(types);
+			expectedType = TypeProvider::tuple(move(types));
 		else
 			expectedType = types.front();
 		compileExpression(*expression, expectedType);
@@ -909,7 +911,7 @@ bool ContractCompiler::visit(VariableDeclarationStatement const& _variableDeclar
 		CompilerUtils utils(m_context);
 		compileExpression(*expression);
 		TypePointers valueTypes;
-		if (auto tupleType = dynamic_cast<TupleType const*>(expression->annotation().type.get()))
+		if (auto tupleType = dynamic_cast<TupleType const*>(expression->annotation().type))
 			valueTypes = tupleType->components();
 		else
 			valueTypes = TypePointers{expression->annotation().type};
@@ -975,7 +977,13 @@ void ContractCompiler::appendMissingFunctions()
 	m_context.appendMissingLowLevelFunctions();
 	auto abiFunctions = m_context.abiFunctions().requestedFunctions();
 	if (!abiFunctions.first.empty())
-		m_context.appendInlineAssembly("{" + move(abiFunctions.first) + "}", {}, abiFunctions.second, true);
+		m_context.appendInlineAssembly(
+			"{" + move(abiFunctions.first) + "}",
+			{},
+			abiFunctions.second,
+			true,
+			m_optimiserSettings
+		);
 }
 
 void ContractCompiler::appendModifierOrFunctionCode()
@@ -1050,7 +1058,7 @@ void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration con
 
 void ContractCompiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
 {
-	ExpressionCompiler expressionCompiler(m_context, m_optimise);
+	ExpressionCompiler expressionCompiler(m_context, m_optimiserSettings.runOrderLiterals);
 	expressionCompiler.compile(_expression);
 	if (_targetType)
 		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);

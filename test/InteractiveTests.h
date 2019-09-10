@@ -19,9 +19,12 @@
 
 #include <test/TestCase.h>
 #include <test/libsolidity/ASTJSONTest.h>
+#include <test/libsolidity/GasTest.h>
 #include <test/libsolidity/SyntaxTest.h>
+#include <test/libsolidity/SemanticTest.h>
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/YulOptimizerTest.h>
+#include <test/libyul/YulInterpreterTest.h>
 #include <test/libyul/ObjectCompilerTest.h>
 
 #include <boost/filesystem.hpp>
@@ -50,11 +53,14 @@ Testsuite const g_interactiveTestsuites[] = {
 /*
 	Title                  Path            Subpath                SMT    IPC    Creator function */
 	{"Yul Optimizer",       "libyul",      "yulOptimizerTests",   false, false, &yul::test::YulOptimizerTest::create},
+	{"Yul Interpreter",     "libyul",      "yulInterpreterTests", false, false, &yul::test::YulInterpreterTest::create},
 	{"Yul Object Compiler", "libyul",      "objectCompiler",      false, false, &yul::test::ObjectCompilerTest::create},
 	{"Syntax",              "libsolidity", "syntaxTests",         false, false, &SyntaxTest::create},
+	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
 	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
 	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SyntaxTest::create},
-	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerTest::create}
+	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerTest::create},
+	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
 };
 
 }

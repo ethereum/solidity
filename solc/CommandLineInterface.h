@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/AssemblyStack.h>
+#include <libyul/AssemblyStack.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <boost/program_options.hpp>
@@ -57,7 +57,7 @@ private:
 	/// @returns the full object with library placeholder hints in hex.
 	static std::string objectWithLinkRefsHex(eth::LinkerObject const& _obj);
 
-	bool assemble(AssemblyStack::Language _language, AssemblyStack::Machine _targetMachine, bool _optimize);
+	bool assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine, bool _optimize);
 
 	void outputCompilationResults();
 
@@ -65,6 +65,7 @@ private:
 	void handleAst(std::string const& _argStr);
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
+	void handleIR(std::string const& _contract);
 	void handleBytecode(std::string const& _contract);
 	void handleSignatureHashes(std::string const& _contract);
 	void handleMetadata(std::string const& _contract);
@@ -108,7 +109,7 @@ private:
 	/// Solidity compiler stack
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
 	/// EVM version to use
-	EVMVersion m_evmVersion;
+	langutil::EVMVersion m_evmVersion;
 	/// Whether or not to colorize diagnostics output.
 	bool m_coloredOutput = true;
 };

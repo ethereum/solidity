@@ -37,7 +37,6 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
-using namespace dev::solidity;
 
 FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 	m_ast(_ast), m_nameDispenser(_dispenser)
@@ -80,16 +79,6 @@ void FullInliner::run()
 	}
 }
 
-void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
-{
-	m_functionSizes[_fun.name] = CodeSize::codeSize(_fun.body);
-}
-
-void FullInliner::handleBlock(YulString _currentFunctionName, Block& _block)
-{
-	InlineModifier{*this, m_nameDispenser, _currentFunctionName}(_block);
-}
-
 bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 {
 	// No recursive inlining
@@ -98,6 +87,9 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 
 	FunctionDefinition* calledFunction = function(_funCall.functionName.name);
 	if (!calledFunction)
+		return false;
+
+	if (recursive(*calledFunction))
 		return false;
 
 	// Inline really, really tiny functions
@@ -132,6 +124,21 @@ void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _call
 	m_functionSizes.at(_callSite) += m_functionSizes.at(_function);
 }
 
+void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
+{
+	m_functionSizes[_fun.name] = CodeSize::codeSize(_fun.body);
+}
+
+void FullInliner::handleBlock(YulString _currentFunctionName, Block& _block)
+{
+	InlineModifier{*this, m_nameDispenser, _currentFunctionName}(_block);
+}
+
+bool FullInliner::recursive(FunctionDefinition const& _fun) const
+{
+	map<YulString, size_t> references = ReferencesCounter::countReferences(_fun);
+	return references[_fun.name] > 0;
+}
 
 void InlineModifier::operator()(Block& _block)
 {
@@ -172,18 +179,16 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 
 	m_driver.tentativelyUpdateCodeSize(function->name, m_currentFunction);
 
-	static Expression const zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
-
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
-		YulString newName = m_nameDispenser.newName(_existingVariable.name, function->name);
+		YulString newName = m_nameDispenser.newName(_existingVariable.name);
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
 		if (_value)
 			varDecl.value = make_unique<Expression>(std::move(*_value));
 		else
-			varDecl.value = make_unique<Expression>(zero);
+			varDecl.value = make_unique<Expression>(Literal{{}, LiteralKind::Number, YulString{"0"}, {}});
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
@@ -192,7 +197,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	for (auto const& var: function->returnVariables)
 		newVariable(var, nullptr);
 
-	Statement newBody = BodyCopier(m_nameDispenser, function->name, variableReplacements)(function->body);
+	Statement newBody = BodyCopier(m_nameDispenser, variableReplacements)(function->body);
 	newStatements += std::move(boost::get<Block>(newBody).statements);
 
 	boost::apply_visitor(GenericFallbackVisitor<Assignment, VariableDeclaration>{
@@ -228,7 +233,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)
 {
 	for (auto const& var: _varDecl.variables)
-		m_variableReplacements[var.name] = m_nameDispenser.newName(var.name, m_varNamePrefix);
+		m_variableReplacements[var.name] = m_nameDispenser.newName(var.name);
 	return ASTCopier::operator()(_varDecl);
 }
 

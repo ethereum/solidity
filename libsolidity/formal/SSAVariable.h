@@ -23,6 +23,8 @@ namespace dev
 {
 namespace solidity
 {
+namespace smt
+{
 
 /**
  * This class represents the SSA representation of a program variable.
@@ -44,10 +46,9 @@ public:
 
 private:
 	unsigned m_currentIndex;
-	/// The next free index is a shared pointer because we want
-	/// the copy and the copied to share it.
-	std::shared_ptr<unsigned> m_nextFreeIndex;
+	std::unique_ptr<unsigned> m_nextFreeIndex;
 };
 
+}
 }
 }

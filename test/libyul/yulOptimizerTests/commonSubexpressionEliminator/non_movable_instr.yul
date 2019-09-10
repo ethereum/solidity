@@ -2,8 +2,9 @@
     let a := mload(1)
     let b := mload(1)
 }
+// ====
+// step: commonSubexpressionEliminator
 // ----
-// commonSubexpressionEliminator
 // {
 //     let a := mload(1)
 //     let b := mload(1)

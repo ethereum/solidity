@@ -1,8 +1,7 @@
 {
   let a
 }
+// ====
+// step: varDeclInitializer
 // ----
-// varDeclInitializer
-// {
-//     let a := 0
-// }
+// { let a := 0 }

@@ -31,7 +31,7 @@ namespace dev
 /// Base class for all exceptions.
 struct Exception: virtual std::exception, virtual boost::exception
 {
-	const char* what() const noexcept override;
+	char const* what() const noexcept override;
 
 	/// @returns "FileName:LineNumber" referring to the point where the exception was thrown.
 	std::string lineInfo() const;
@@ -47,6 +47,7 @@ private:
 DEV_SIMPLE_EXCEPTION(InvalidAddress);
 DEV_SIMPLE_EXCEPTION(BadHexCharacter);
 DEV_SIMPLE_EXCEPTION(FileError);
+DEV_SIMPLE_EXCEPTION(DataTooLong);
 
 // error information to be added to exceptions
 using errinfo_invalidSymbol = boost::error_info<struct tag_invalidSymbol, char>;

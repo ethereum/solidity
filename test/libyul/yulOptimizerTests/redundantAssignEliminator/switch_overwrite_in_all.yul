@@ -7,16 +7,13 @@
     default { x := 3 }
     mstore(x, 0)
 }
+// ====
+// step: redundantAssignEliminator
 // ----
-// redundantAssignEliminator
 // {
 //     let x
 //     switch calldataload(0)
-//     case 0 {
-//         x := 2
-//     }
-//     default {
-//         x := 3
-//     }
+//     case 0 { x := 2 }
+//     default { x := 3 }
 //     mstore(x, 0)
 // }
