@@ -54,7 +54,7 @@ Dialect const& languageToDialect(AssemblyStack::Language _language, EVMVersion _
 	switch (_language)
 	{
 	case AssemblyStack::Language::Assembly:
-		return EVMDialect::looseAssemblyForEVM(_version);
+		return EVMDialect::strictAssemblyForEVM(_version);
 	case AssemblyStack::Language::StrictAssembly:
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case AssemblyStack::Language::Yul:
@@ -135,7 +135,7 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _o
 	EVMDialect const* dialect = nullptr;
 
 	if (m_language == Language::Assembly)
-		dialect = &EVMDialect::looseAssemblyForEVM(m_evmVersion);
+		dialect = &EVMDialect::strictAssemblyForEVM(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::StrictAssembly)
 		dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
 	else if (m_language == AssemblyStack::Language::Yul)
