@@ -108,12 +108,6 @@ wasm::Expression EWasmCodeTransform::operator()(Assignment const& _assignment)
 	return generateMultiAssignment(move(variableNames), visit(*_assignment.value));
 }
 
-wasm::Expression EWasmCodeTransform::operator()(StackAssignment const&)
-{
-	yulAssert(false, "");
-	return {};
-}
-
 wasm::Expression EWasmCodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	return visitReturnByValue(_statement.expression);

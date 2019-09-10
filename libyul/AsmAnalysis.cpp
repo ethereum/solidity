@@ -232,17 +232,6 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(StackAssignment const& _assignment)
-{
-	checkLooseFeature(
-		_assignment.location,
-		"The use of stack assignment is disallowed. Please use assignment in functional notation instead."
-	);
-	bool success = checkAssignment(_assignment.variableName, size_t(-1));
-	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
-	return success;
-}
-
 bool AsmAnalyzer::operator()(Assignment const& _assignment)
 {
 	solAssert(_assignment.value, "");

@@ -58,7 +58,6 @@ public:
 	{
 		boost::apply_visitor(*this, _expr.expression);
 	}
-	void operator()(yul::StackAssignment const&) {}
 	void operator()(yul::Assignment const& _assignment)
 	{
 		boost::apply_visitor(*this, *_assignment.value);

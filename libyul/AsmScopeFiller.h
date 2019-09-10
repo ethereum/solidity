@@ -55,7 +55,6 @@ public:
 	bool operator()(FunctionalInstruction const&) { return true; }
 	bool operator()(ExpressionStatement const& _expr);
 	bool operator()(Label const& _label);
-	bool operator()(StackAssignment const&) { return true; }
 	bool operator()(Assignment const&) { return true; }
 	bool operator()(VariableDeclaration const& _variableDeclaration);
 	bool operator()(FunctionDefinition const& _functionDefinition);

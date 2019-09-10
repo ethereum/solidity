@@ -250,14 +250,6 @@ void CodeTransform::operator()(Assignment const& _assignment)
 	checkStackHeight(&_assignment);
 }
 
-void CodeTransform::operator()(StackAssignment const& _assignment)
-{
-	solAssert(!m_allowStackOpt, "");
-	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName);
-	checkStackHeight(&_assignment);
-}
-
 void CodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	m_assembly.setSourceLocation(_statement.location);

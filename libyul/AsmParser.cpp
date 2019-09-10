@@ -144,23 +144,6 @@ Statement Parser::parseStatement()
 		m_scanner->next();
 		return stmt;
 	}
-	case Token::Assign:
-	{
-		if (m_dialect.flavour != AsmFlavour::Loose)
-			break;
-		StackAssignment assignment = createWithLocation<StackAssignment>();
-		advance();
-		expectToken(Token::Colon);
-		assignment.variableName.location = location();
-		assignment.variableName.name = YulString(currentLiteral());
-		if (m_dialect.builtin(assignment.variableName.name))
-			fatalParserError("Identifier expected, got builtin symbol.");
-		else if (instructions().count(assignment.variableName.name.str()))
-			fatalParserError("Identifier expected, got instruction name.");
-		assignment.location.end = endPosition();
-		expectToken(Token::Identifier);
-		return Statement{move(assignment)};
-	}
 	default:
 		break;
 	}

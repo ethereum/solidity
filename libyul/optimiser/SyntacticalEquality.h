@@ -61,7 +61,6 @@ public:
 private:
 	bool statementEqual(Instruction const& _lhs, Instruction const& _rhs);
 	bool statementEqual(Label const& _lhs, Label const& _rhs);
-	bool statementEqual(StackAssignment const& _lhs, StackAssignment const& _rhs);
 
 	bool visitDeclaration(TypedName const& _lhs, TypedName const& _rhs);
 

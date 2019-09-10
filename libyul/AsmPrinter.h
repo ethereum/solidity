@@ -42,7 +42,6 @@ public:
 	std::string operator()(FunctionalInstruction const& _functionalInstruction) const;
 	std::string operator()(ExpressionStatement const& _expr) const;
 	std::string operator()(Label const& _label) const;
-	std::string operator()(StackAssignment const& _assignment) const;
 	std::string operator()(Assignment const& _assignment) const;
 	std::string operator()(VariableDeclaration const& _variableDeclaration) const;
 	std::string operator()(FunctionDefinition const& _functionDefinition) const;
