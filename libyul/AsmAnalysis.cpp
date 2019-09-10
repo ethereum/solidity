@@ -87,18 +87,6 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 	return analysisInfo;
 }
 
-bool AsmAnalyzer::operator()(Label const& _label)
-{
-	solAssert(!_label.name.empty(), "");
-	checkLooseFeature(
-		_label.location,
-		"The use of labels is disallowed. Please use \"if\", \"switch\", \"for\" or function calls instead."
-	);
-	m_info.stackHeightInfo[&_label] = m_stackHeight;
-	warnOnInstructions(dev::eth::Instruction::JUMPDEST, _label.location);
-	return true;
-}
-
 bool AsmAnalyzer::operator()(yul::Instruction const& _instruction)
 {
 	checkLooseFeature(
