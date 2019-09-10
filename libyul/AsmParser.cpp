@@ -205,23 +205,6 @@ Statement Parser::parseStatement()
 
 		return Statement{std::move(assignment)};
 	}
-	case Token::Colon:
-	{
-		if (elementary.type() != typeid(Identifier))
-			fatalParserError("Label name must precede \":\".");
-
-		Identifier const& identifier = boost::get<Identifier>(elementary);
-
-		advance();
-
-		// label
-		if (m_dialect.flavour != AsmFlavour::Loose)
-			fatalParserError("Labels are not supported.");
-
-		Label label = createWithLocation<Label>(identifier.location);
-		label.name = identifier.name;
-		return label;
-	}
 	default:
 		if (m_dialect.flavour != AsmFlavour::Loose)
 			fatalParserError("Call or assignment expected.");
