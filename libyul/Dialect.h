@@ -55,7 +55,7 @@ struct BuiltinFunction
 
 struct Dialect: boost::noncopyable
 {
-	AsmFlavour const flavour = AsmFlavour::Loose;
+	AsmFlavour const flavour = AsmFlavour::Strict;
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
