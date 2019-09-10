@@ -203,18 +203,16 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
-	if (m_stackHeight != initialStackHeight && (m_dialect.flavour != AsmFlavour::Loose || m_errorTypeForLoose))
+	if (m_stackHeight != initialStackHeight)
 	{
-		Error::Type errorType = m_dialect.flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
 			to_string(m_stackHeight - initialStackHeight) +
 			" value" +
 			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
 			"). Use ``pop()`` or assign them.";
-		m_errorReporter.error(errorType, _statement.location, msg);
-		if (errorType != Error::Type::Warning)
-			success = false;
+		m_errorReporter.error(Error::Type::TypeError, _statement.location, msg);
+		success = false;
 	}
 	m_info.stackHeightInfo[&_statement] = m_stackHeight;
 	return success;
@@ -723,22 +721,13 @@ void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 		_instr == dev::eth::Instruction::JUMPDEST
 	)
 	{
-		if (m_dialect.flavour == AsmFlavour::Loose)
-			m_errorReporter.error(
-				m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
-				_location,
-				"Jump instructions and labels are low-level EVM features that can lead to "
-				"incorrect stack access. Because of that they are discouraged. "
-				"Please consider using \"switch\", \"if\" or \"for\" statements instead."
-			);
-		else
-			m_errorReporter.error(
-				Error::Type::SyntaxError,
-				_location,
-				"Jump instructions and labels are low-level EVM features that can lead to "
-				"incorrect stack access. Because of that they are disallowed in strict assembly. "
-				"Use functions, \"switch\", \"if\" or \"for\" statements instead."
-			);
+		m_errorReporter.error(
+			Error::Type::SyntaxError,
+			_location,
+			"Jump instructions and labels are low-level EVM features that can lead to "
+			"incorrect stack access. Because of that they are disallowed in strict assembly. "
+			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
+		);
 	}
 }
 
