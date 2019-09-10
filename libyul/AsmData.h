@@ -51,8 +51,6 @@ struct Literal { langutil::SourceLocation location; LiteralKind kind; YulString 
 struct Identifier { langutil::SourceLocation location; YulString name; };
 /// Jump label ("name:")
 struct Label { langutil::SourceLocation location; YulString name; };
-/// Assignment from stack (":= x", moves stack top into x, potentially multiple slots)
-struct StackAssignment { langutil::SourceLocation location; Identifier variableName; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 ///

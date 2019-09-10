@@ -45,7 +45,6 @@ public:
 	wasm::Expression operator()(yul::FunctionCall const&);
 	wasm::Expression operator()(yul::ExpressionStatement const& _statement);
 	wasm::Expression operator()(yul::Label const& _label);
-	wasm::Expression operator()(yul::StackAssignment const& _assignment);
 	wasm::Expression operator()(yul::Assignment const& _assignment);
 	wasm::Expression operator()(yul::VariableDeclaration const& _varDecl);
 	wasm::Expression operator()(yul::If const& _if);

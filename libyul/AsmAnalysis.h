@@ -87,7 +87,6 @@ public:
 	bool operator()(FunctionalInstruction const& _functionalInstruction);
 	bool operator()(Label const& _label);
 	bool operator()(ExpressionStatement const&);
-	bool operator()(StackAssignment const&);
 	bool operator()(Assignment const& _assignment);
 	bool operator()(VariableDeclaration const& _variableDeclaration);
 	bool operator()(FunctionDefinition const& _functionDefinition);

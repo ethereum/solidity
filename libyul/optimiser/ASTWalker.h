@@ -49,7 +49,6 @@ public:
 	virtual void operator()(FunctionCall const& _funCall);
 	virtual void operator()(ExpressionStatement const& _statement);
 	virtual void operator()(Label const&) { assertThrow(false, OptimizerException, ""); }
-	virtual void operator()(StackAssignment const&) { assertThrow(false, OptimizerException, ""); }
 	virtual void operator()(Assignment const& _assignment);
 	virtual void operator()(VariableDeclaration const& _varDecl);
 	virtual void operator()(If const& _if);
@@ -86,7 +85,6 @@ public:
 	virtual void operator()(FunctionCall& _funCall);
 	virtual void operator()(ExpressionStatement& _statement);
 	virtual void operator()(Label&) { assertThrow(false, OptimizerException, ""); }
-	virtual void operator()(StackAssignment&) { assertThrow(false, OptimizerException, ""); }
 	virtual void operator()(Assignment& _assignment);
 	virtual void operator()(VariableDeclaration& _varDecl);
 	virtual void operator()(If& _if);

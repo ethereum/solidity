@@ -169,11 +169,6 @@ bool SyntacticallyEqual::statementEqual(Label const&, Label const&)
 	assertThrow(false, OptimizerException, "");
 }
 
-bool SyntacticallyEqual::statementEqual(StackAssignment const&, StackAssignment const&)
-{
-	assertThrow(false, OptimizerException, "");
-}
-
 bool SyntacticallyEqual::statementEqual(Block const& _lhs, Block const& _rhs)
 {
 	return containerEqual(_lhs.statements, _rhs.statements, [this](Statement const& _lhsStmt, Statement const& _rhsStmt) -> bool {

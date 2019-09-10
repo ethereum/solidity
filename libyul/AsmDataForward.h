@@ -30,7 +30,6 @@ namespace yul
 struct Instruction;
 struct Literal;
 struct Label;
-struct StackAssignment;
 struct Identifier;
 struct Assignment;
 struct VariableDeclaration;
@@ -49,6 +48,6 @@ struct Block;
 struct TypedName;
 
 using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
-using Statement = boost::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block>;
+using Statement = boost::variant<ExpressionStatement, Instruction, Label, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block>;
 
 }
