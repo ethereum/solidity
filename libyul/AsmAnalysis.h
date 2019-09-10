@@ -110,11 +110,6 @@ private:
 	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
 	void warnOnInstructions(dev::eth::Instruction _instr, langutil::SourceLocation const& _location);
 
-	/// Depending on @a m_flavour and @a m_errorTypeForLoose, throws an internal compiler
-	/// exception (if the flavour is not Loose), reports an error/warning
-	/// (if m_errorTypeForLoose is set) or does nothing.
-	void checkLooseFeature(langutil::SourceLocation const& _location, std::string const& _description);
-
 	int m_stackHeight = 0;
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
