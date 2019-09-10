@@ -407,7 +407,7 @@ should:
 * open on the same line as the declaration
 * close on their own line at the same indentation level as the beginning of the
   declaration.
-* The opening brace should be proceeded by a single space.
+* The opening brace should be preceded by a single space.
 
 Yes::
 
