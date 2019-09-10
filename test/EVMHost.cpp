@@ -61,7 +61,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
 {
 	if (!m_vm)
 	{
-		cerr << "Unable to find library libevmone.so" << endl;
+		cerr << "Unable to find evmone library" << endl;
 		assertThrow(false, Exception, "");
 	}
 

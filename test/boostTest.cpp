@@ -143,9 +143,9 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	bool disableSemantics = !dev::test::EVMHost::getVM(dev::test::Options::get().evmonePath.string());
 	if (disableSemantics)
 	{
-		cout << "Unable to find libevmone.so. Please provide the path using -- --evmonepath <path>." << endl;
+		cout << "Unable to find " EVMONE_FILENAME ". Please provide the path using -- --evmonepath <path>." << endl;
 		cout << "You can download it at" << endl;
-		cout << "https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz" << endl;
+		cout << EVMONE_DOWNLOADLINK << endl;
 		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 	}
 	// Include the interactive tests in the automatic tests as well

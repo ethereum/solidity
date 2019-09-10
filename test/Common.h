@@ -24,6 +24,17 @@
 #include <boost/program_options.hpp>
 #include <boost/noncopyable.hpp>
 
+#ifdef _WIN32
+#define EVMONE_FILENAME "evmone.dll"
+#define EVMONE_DOWNLOADLINK "https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-windows-amd64.zip"
+#elif defined(__APPLE__)
+#define EVMONE_FILENAME "libevmone.dylib"
+#define EVMONE_DOWNLOADLINK "https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-darwin-x86_64.tar.gz"
+#else
+#define EVMONE_FILENAME "libevmone.so"
+#define EVMONE_DOWNLOADLINK "https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz"
+#endif
+
 namespace dev
 {
 
