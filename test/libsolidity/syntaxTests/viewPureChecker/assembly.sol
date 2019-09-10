@@ -9,7 +9,7 @@ contract C {
         assembly { x := 7 }
     }
     function g() view public {
-        assembly { for {} 1 { pop(sload(0)) } { } pop(gas) }
+        assembly { for {} 1 { pop(sload(0)) } { } pop(gas()) }
     }
     function h() view public {
         assembly { function g() { pop(blockhash(20)) } }
@@ -18,6 +18,6 @@ contract C {
         assembly { pop(call(0, 1, 2, 3, 4, 5, 6)) }
     }
     function k() public {
-        assembly { pop(call(gas, 1, 2, 3, 4, 5, 6)) }
+        assembly { pop(call(gas(), 1, 2, 3, 4, 5, 6)) }
     }
 }
