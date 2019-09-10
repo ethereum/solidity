@@ -89,10 +89,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 
 bool AsmAnalyzer::operator()(yul::Instruction const& _instruction)
 {
-	checkLooseFeature(
-		_instruction.location,
-		"The use of non-functional instructions is disallowed. Please use functional notation instead."
-	);
+	solAssert(false, "The use of non-functional instructions is disallowed. Please use functional notation instead.");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -729,12 +726,4 @@ void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
 		);
 	}
-}
-
-void AsmAnalyzer::checkLooseFeature(SourceLocation const& _location, string const& _description)
-{
-	if (m_dialect.flavour != AsmFlavour::Loose)
-		solAssert(false, _description);
-	else if (m_errorTypeForLoose)
-		m_errorReporter.error(*m_errorTypeForLoose, _location, _description);
 }
