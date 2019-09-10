@@ -6,7 +6,7 @@
 		{
 			"C" : 
 			[
-				37
+				39
 			]
 		}
 	},
@@ -28,10 +28,10 @@
 				"fullyImplemented" : true,
 				"linearizedBaseContracts" : 
 				[
-					37
+					39
 				],
 				"name" : "C",
-				"scope" : 38
+				"scope" : 40
 			},
 			"children" : 
 			[
@@ -41,7 +41,7 @@
 						"constant" : false,
 						"name" : "m",
 						"overrides" : null,
-						"scope" : 37,
+						"scope" : 39,
 						"stateVariable" : true,
 						"storageLocation" : "default",
 						"type" : "mapping(address => address payable)",
@@ -101,7 +101,7 @@
 						],
 						"name" : "f",
 						"overrides" : null,
-						"scope" : 37,
+						"scope" : 39,
 						"stateMutability" : "nonpayable",
 						"superFunction" : null,
 						"visibility" : "public"
@@ -117,7 +117,7 @@
 										"constant" : false,
 										"name" : "arg",
 										"overrides" : null,
-										"scope" : 36,
+										"scope" : 38,
 										"stateVariable" : false,
 										"storageLocation" : "default",
 										"type" : "address payable",
@@ -156,7 +156,7 @@
 										"constant" : false,
 										"name" : "r",
 										"overrides" : null,
-										"scope" : 36,
+										"scope" : 38,
 										"stateVariable" : false,
 										"storageLocation" : "default",
 										"type" : "address payable",
@@ -205,7 +205,7 @@
 												"constant" : false,
 												"name" : "a",
 												"overrides" : null,
-												"scope" : 35,
+												"scope" : 37,
 												"stateVariable" : false,
 												"storageLocation" : "default",
 												"type" : "address payable",
@@ -358,7 +358,7 @@
 												"constant" : false,
 												"name" : "c",
 												"overrides" : null,
-												"scope" : 35,
+												"scope" : 37,
 												"stateVariable" : false,
 												"storageLocation" : "default",
 												"type" : "address",
@@ -407,7 +407,7 @@
 														"argumentTypes" : 
 														[
 															{
-																"typeIdentifier" : "t_contract$_C_$37",
+																"typeIdentifier" : "t_contract$_C_$39",
 																"typeString" : "contract C"
 															}
 														],
@@ -418,7 +418,7 @@
 														"type" : "type(address)",
 														"value" : "address"
 													},
-													"id" : 23,
+													"id" : 24,
 													"name" : "ElementaryTypeNameExpression",
 													"src" : "209:7:1"
 												},
@@ -430,21 +430,21 @@
 														[
 															null
 														],
-														"referencedDeclaration" : 66,
+														"referencedDeclaration" : 68,
 														"type" : "contract C",
 														"value" : "this"
 													},
-													"id" : 24,
+													"id" : 25,
 													"name" : "Identifier",
 													"src" : "217:4:1"
 												}
 											],
-											"id" : 25,
+											"id" : 26,
 											"name" : "FunctionCall",
 											"src" : "209:13:1"
 										}
 									],
-									"id" : 26,
+									"id" : 27,
 									"name" : "VariableDeclarationStatement",
 									"src" : "197:25:1"
 								},
@@ -488,7 +488,7 @@
 																"type" : "mapping(address => address payable)",
 																"value" : "m"
 															},
-															"id" : 27,
+															"id" : 28,
 															"name" : "Identifier",
 															"src" : "232:1:1"
 														},
@@ -504,12 +504,12 @@
 																"type" : "address",
 																"value" : "c"
 															},
-															"id" : 28,
+															"id" : 29,
 															"name" : "Identifier",
 															"src" : "234:1:1"
 														}
 													],
-													"id" : 29,
+													"id" : 30,
 													"name" : "IndexAccess",
 													"src" : "232:4:1"
 												},
@@ -548,7 +548,7 @@
 																"type" : "type(address)",
 																"value" : "address"
 															},
-															"id" : 30,
+															"id" : 32,
 															"name" : "ElementaryTypeNameExpression",
 															"src" : "239:7:1"
 														},
@@ -566,42 +566,42 @@
 																"type" : "int_const 0",
 																"value" : "0"
 															},
-															"id" : 31,
+															"id" : 33,
 															"name" : "Literal",
 															"src" : "247:1:1"
 														}
 													],
-													"id" : 32,
+													"id" : 34,
 													"name" : "FunctionCall",
 													"src" : "239:10:1"
 												}
 											],
-											"id" : 33,
+											"id" : 35,
 											"name" : "Assignment",
 											"src" : "232:17:1"
 										}
 									],
-									"id" : 34,
+									"id" : 36,
 									"name" : "ExpressionStatement",
 									"src" : "232:17:1"
 								}
 							],
-							"id" : 35,
+							"id" : 37,
 							"name" : "Block",
 							"src" : "134:122:1"
 						}
 					],
-					"id" : 36,
+					"id" : 38,
 					"name" : "FunctionDefinition",
 					"src" : "67:189:1"
 				}
 			],
-			"id" : 37,
+			"id" : 39,
 			"name" : "ContractDefinition",
 			"src" : "0:258:1"
 		}
 	],
-	"id" : 38,
+	"id" : 40,
 	"name" : "SourceUnit",
 	"src" : "0:259:1"
 }

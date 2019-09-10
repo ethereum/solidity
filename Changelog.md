@@ -13,6 +13,7 @@ Breaking changes:
 Language Features:
  * Allow global enums and structs.
  * Allow underscores as delimiters in hex strings.
+ * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
 
 
 Compiler Features:

@@ -4,10 +4,10 @@
 	{
 		"c" : 
 		[
-			14
+			15
 		]
 	},
-	"id" : 15,
+	"id" : 16,
 	"nodeType" : "SourceUnit",
 	"nodes" : 
 	[
@@ -17,10 +17,10 @@
 			"contractKind" : "contract",
 			"documentation" : null,
 			"fullyImplemented" : true,
-			"id" : 14,
+			"id" : 15,
 			"linearizedBaseContracts" : 
 			[
-				14
+				15
 			],
 			"name" : "c",
 			"nodeType" : "ContractDefinition",
@@ -32,7 +32,7 @@
 					"name" : "a",
 					"nodeType" : "VariableDeclaration",
 					"overrides" : null,
-					"scope" : 14,
+					"scope" : 15,
 					"src" : "13:8:1",
 					"stateVariable" : true,
 					"storageLocation" : "default",
@@ -71,7 +71,7 @@
 				{
 					"body" : 
 					{
-						"id" : 12,
+						"id" : 13,
 						"nodeType" : "Block",
 						"src" : "43:25:1",
 						"statements" : 
@@ -79,17 +79,17 @@
 							{
 								"assignments" : 
 								[
-									9
+									10
 								],
 								"declarations" : 
 								[
 									{
 										"constant" : false,
-										"id" : 9,
+										"id" : 10,
 										"name" : "b",
 										"nodeType" : "VariableDeclaration",
 										"overrides" : null,
-										"scope" : 12,
+										"scope" : 13,
 										"src" : "45:16:1",
 										"stateVariable" : false,
 										"storageLocation" : "storage",
@@ -102,7 +102,7 @@
 										{
 											"baseType" : 
 											{
-												"id" : 7,
+												"id" : 8,
 												"name" : "uint",
 												"nodeType" : "ElementaryTypeName",
 												"src" : "45:4:1",
@@ -112,7 +112,7 @@
 													"typeString" : "uint256"
 												}
 											},
-											"id" : 8,
+											"id" : 9,
 											"length" : null,
 											"nodeType" : "ArrayTypeName",
 											"src" : "45:6:1",
@@ -126,11 +126,11 @@
 										"visibility" : "internal"
 									}
 								],
-								"id" : 11,
+								"id" : 12,
 								"initialValue" : 
 								{
 									"argumentTypes" : null,
-									"id" : 10,
+									"id" : 11,
 									"name" : "a",
 									"nodeType" : "Identifier",
 									"overloadedDeclarations" : [],
@@ -148,7 +148,7 @@
 						]
 					},
 					"documentation" : null,
-					"id" : 13,
+					"id" : 14,
 					"implemented" : true,
 					"kind" : "function",
 					"modifiers" : [],
@@ -169,14 +169,14 @@
 						"parameters" : [],
 						"src" : "43:0:1"
 					},
-					"scope" : 14,
+					"scope" : 15,
 					"src" : "23:45:1",
 					"stateMutability" : "nonpayable",
 					"superFunction" : null,
 					"visibility" : "public"
 				}
 			],
-			"scope" : 15,
+			"scope" : 16,
 			"src" : "0:70:1"
 		}
 	],

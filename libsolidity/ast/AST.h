@@ -1682,16 +1682,21 @@ private:
 class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
-	ElementaryTypeNameExpression(SourceLocation const& _location, ElementaryTypeNameToken const& _type):
-		PrimaryExpression(_location), m_typeToken(_type)
-	{}
+	ElementaryTypeNameExpression(
+		SourceLocation const& _location,
+		ASTPointer<ElementaryTypeName> const& _type
+	):
+		PrimaryExpression(_location),
+		m_type(_type)
+	{
+	}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	ElementaryTypeNameToken const& typeName() const { return m_typeToken; }
+	ElementaryTypeName const& type() const { return *m_type; }
 
 private:
-	ElementaryTypeNameToken m_typeToken;
+	ASTPointer<ElementaryTypeName> m_type;
 };
 
 /**
