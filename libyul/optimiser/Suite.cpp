@@ -25,6 +25,7 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
+#include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -36,6 +37,7 @@
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
@@ -96,6 +98,7 @@ void OptimiserSuite::run(
 		EquivalentFunctionCombiner::name,
 		UnusedPruner::name,
 		BlockFlattener::name,
+		ConditionalSimplifier::name,
 		ControlFlowSimplifier::name,
 		LiteralRematerialiser::name,
 		StructuralSimplifier::name,
@@ -130,9 +133,12 @@ void OptimiserSuite::run(
 		}
 
 		{
-			// still in SSA, perform structural simplification
+			// perform structural simplification
 			suite.runSequence({
+				CommonSubexpressionEliminator::name,
+				ConditionalSimplifier::name,
 				LiteralRematerialiser::name,
+				StructuralSimplifier::name,
 				ForLoopConditionOutOfBody::name,
 				ControlFlowSimplifier::name,
 				StructuralSimplifier::name,
@@ -200,6 +206,8 @@ void OptimiserSuite::run(
 		{
 			// SSA plus simplify
 			suite.runSequence({
+				ConditionalSimplifier::name,
+				CommonSubexpressionEliminator::name,
 				SSATransform::name,
 				RedundantAssignEliminator::name,
 				RedundantAssignEliminator::name,
@@ -315,6 +323,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 		instance = optimiserStepCollection<
 			BlockFlattener,
 			CommonSubexpressionEliminator,
+			ConditionalSimplifier,
 			ControlFlowSimplifier,
 			DeadCodeEliminator,
 			EquivalentFunctionCombiner,

@@ -26,6 +26,7 @@ Compiler Features:
  * SMTChecker: Add loop support to the CHC engine.
  * Yul Optimizer: Take side-effect-freeness of user-defined functions into account.
  * Yul Optimizer: Remove redundant mload/sload operations.
+ * Yul Optimizer: Use the fact that branch conditions have certain value inside the branch.
 
 
 Bugfixes:
