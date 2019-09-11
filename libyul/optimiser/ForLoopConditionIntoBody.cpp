@@ -25,7 +25,7 @@ using namespace yul;
 
 void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 {
-	if (_forLoop.condition->type() != typeid(Literal))
+	if (m_dialect.booleanNegationFunction() && _forLoop.condition->type() != typeid(Literal))
 	{
 		langutil::SourceLocation loc = locationOf(*_forLoop.condition);
 		_forLoop.body.statements.insert(
@@ -33,9 +33,9 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 			If {
 				loc,
 				make_unique<Expression>(
-					FunctionalInstruction {
+					FunctionCall {
 						loc,
-						eth::Instruction::ISZERO,
+						{loc, m_dialect.booleanNegationFunction()->name},
 						make_vector<Expression>(std::move(*_forLoop.condition))
 					}
 				),
