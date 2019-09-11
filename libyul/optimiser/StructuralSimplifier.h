@@ -30,16 +30,16 @@ namespace yul
  * - replace switch with const expr with matching case body
  * - replace for with false condition by its initialization part
  *
- * Prerequisite: Disambiguator, ForLoopInitRewriter.
+ * The LiteralRematerialiser should be run before this.
+ *
+ * Prerequisite: Disambiguator.
  *
  * Important: Can only be used on EVM code.
  */
-class StructuralSimplifier: public DataFlowAnalyzer
+class StructuralSimplifier: public ASTModifier
 {
 public:
-	explicit StructuralSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
-
-	using DataFlowAnalyzer::operator();
+	using ASTModifier::operator();
 	void operator()(Block& _block) override;
 private:
 	void simplify(std::vector<Statement>& _statements);

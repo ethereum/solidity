@@ -68,4 +68,25 @@ protected:
 	std::set<YulString> m_varsToAlwaysRematerialize;
 };
 
+/**
+ * If a variable is referenced that is known to have a literal
+ * value at that point, replace it by a literal.
+ *
+ * This is mostly used so that other components do not have to rely
+ * on the data flow analyzer.
+ *
+ * Prerequisite: Disambiguator, ForLoopInitRewriter.
+ */
+class LiteralRematerialiser: public DataFlowAnalyzer
+{
+public:
+	LiteralRematerialiser(Dialect const& _dialect):
+		DataFlowAnalyzer(_dialect)
+	{}
+
+	using ASTModifier::visit;
+	void visit(Expression& _e) override;
+};
+
+
 }
