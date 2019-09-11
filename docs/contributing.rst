@@ -93,7 +93,7 @@ Some tests require the ``libevmone.so`` library, others require ``libz3``.
 The test system will automatically try to discover the location of ``libevmone.so``
 starting from the current directory. If it does not find it, the relevant tests
 are skipped. To run all tests, download the library from
-`Github <https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz>`_
+`Github <https://github.com/ethereum/evmone/releases/tag/v0.1.0>`_
 and either place it in the project root path or inside the ``deps`` folder.
 
 If you do not have libz3 installed on your system, you should disable the SMT tests:
