@@ -34,6 +34,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
+#include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
@@ -139,7 +140,8 @@ public:
 			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/for-loop-condition-(I)nto-body/" << endl;
 			cout << "  for-loop-condition-(O)ut-of-body/s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/" << endl;
-			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/? " << endl;
+			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/ " << endl;
+			cout << "  (C)onditional simplifier?" << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -163,6 +165,9 @@ public:
 				break;
 			case 'c':
 				CommonSubexpressionEliminator::run(context, *m_ast);
+				break;
+			case 'C':
+				ConditionalSimplifier::run(context, *m_ast);
 				break;
 			case 'd':
 				VarDeclInitializer::run(context, *m_ast);
