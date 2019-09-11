@@ -21,7 +21,6 @@
 #include <libyul/Exceptions.h>
 
 #include <libdevcore/StringUtils.h>
-#include <libdevcore/Whiskers.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -1385,6 +1384,14 @@ void ProtoConverter::visit(PopStmt const& _x)
 	m_output << ")\n";
 }
 
+string ProtoConverter::getObjectIdentifier(ObjectId const& _x)
+{
+	unsigned currentId = currentObjectId();
+	yulAssert(m_objectScopeTree.size() > currentId, "Proto fuzzer: Error referencing object");
+	std::vector<std::string> objectIdsInScope = m_objectScopeTree[currentId];
+	return objectIdsInScope[_x.id() % objectIdsInScope.size()];
+}
+
 void ProtoConverter::visit(Code const& _x)
 {
 	m_output << "code {\n";
@@ -1394,7 +1401,8 @@ void ProtoConverter::visit(Code const& _x)
 
 void ProtoConverter::visit(Data const& _x)
 {
-	m_output << "data \"datablock\" hex\"" << createHex(_x.hex()) << "\"\n";
+	// TODO: Generate random data block identifier
+	m_output << "data \"" << s_dataIdentifier << "\" hex\"" << createHex(_x.hex()) << "\"\n";
 }
 
 void ProtoConverter::visit(Object const& _x)
@@ -1406,9 +1414,31 @@ void ProtoConverter::visit(Object const& _x)
 	visit(_x.code());
 	if (_x.has_data())
 		visit(_x.data());
-	if (_x.has_obj())
-		visit(_x.obj());
+	if (_x.has_sub_obj())
+		visit(_x.sub_obj());
 	m_output << "}\n";
+}
+
+void ProtoConverter::buildObjectScopeTree(Object const& _x)
+{
+	// Identifies object being visited
+	string objectId = newObjectId(false);
+	vector<string> node{objectId};
+	if (_x.has_data())
+		node.push_back(s_dataIdentifier);
+	if (_x.has_sub_obj())
+	{
+		// Identifies sub object whose numeric suffix is
+		// m_objectId
+		string subObjectId = "object" + to_string(m_objectId);
+		node.push_back(subObjectId);
+		// TODO: Add sub-object to object's ancestors once
+		// nested access is implemented.
+		m_objectScopeTree.push_back(node);
+		buildObjectScopeTree(_x.sub_obj());
+	}
+	else
+		m_objectScopeTree.push_back(node);
 }
 
 void ProtoConverter::visit(Program const& _x)
@@ -1427,6 +1457,9 @@ void ProtoConverter::visit(Program const& _x)
 		break;
 	case Program::kObj:
 		m_isObject = true;
+		buildObjectScopeTree(_x.obj());
+		// Reset object id counter
+		m_objectId = 0;
 		visit(_x.obj());
 		break;
 	case Program::PROGRAM_ONEOF_NOT_SET:

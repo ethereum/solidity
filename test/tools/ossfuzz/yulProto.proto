@@ -207,9 +207,9 @@ message ExtCodeCopy {
   required Expression size = 4;
 }
 
-/// TODO: Add a field that may be used for referencing
-/// a pseudo random object identifier at run time.
-message ObjectId {}
+message ObjectId {
+  required uint64 id = 1;
+}
 
 message DataSize {
   required ObjectId identifier = 1;
@@ -388,7 +388,7 @@ message Block {
 message Object {
   required Code code = 1;
   optional Data data = 2;
-  optional Object obj = 3;
+  optional Object sub_obj = 3;
 }
 
 message Code {

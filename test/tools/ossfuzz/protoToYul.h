@@ -26,8 +26,10 @@
 #include <tuple>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
+
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
+#include <libdevcore/Whiskers.h>
 
 namespace yul
 {
@@ -240,6 +242,11 @@ private:
 	/// Removes entry from m_functionMap and m_functionName
 	void updateFunctionMaps(std::string const& _x);
 
+	/// Build a tree of objects that contains the object/data
+	/// identifiers that are in scope in a given object.
+	/// @param _x root object of the yul protobuf specification.
+	void buildObjectScopeTree(Object const& _x);
+
 	/// Returns a pseudo-random dictionary token.
 	/// @param _p Enum that decides if the returned token is hex prefixed ("0x") or not
 	/// @return Dictionary token at the index computed using a
@@ -263,23 +270,28 @@ private:
 		return "foo_" + functionTypeToString(_type) + "_" + std::to_string(counter());
 	}
 
-	/// Returns current object identifier as string. Input parameter
-	/// is ignored.
-	std::string getObjectIdentifier(ObjectId const&)
-	{
-		// TODO: Return a pseudo randomly chosen object identifier
-		// that is in scope as string.
-		// At the moment, we simply return the identifier that
-		// corresponds to the currently visited object.
-		return "object" + std::to_string(m_objectId - 1);
-	}
+	/// Returns a pseudo-randomly chosen object identifier that is in the
+	/// scope of the Yul object being visited.
+	std::string getObjectIdentifier(ObjectId const& _x);
 
 	/// Return new object identifier as string. Identifier string
 	/// is a template of the form "\"object<n>\"" where <n> is
 	/// a monotonically increasing object ID counter.
-	std::string newObjectId()
+	/// @param _decorate If true (default value), object ID is
+	/// enclosed within double quotes.
+	std::string newObjectId(bool _decorate = true)
 	{
-		return "\"object" + std::to_string(m_objectId++) + "\"";
+		return dev::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
+			("decorate", _decorate)
+			("id", std::to_string(m_objectId++))
+			.render();
+	}
+
+	/// Returns the object counter value corresponding to the object
+	/// being visited.
+	unsigned currentObjectId()
+	{
+		return m_objectId - 1;
 	}
 
 	std::ostringstream m_output;
@@ -297,9 +309,13 @@ private:
 	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
 	// Look-up table per function type that holds the number of input (output) function parameters
 	std::map<std::string, std::pair<unsigned, unsigned>> m_functionSigMap;
+	/// Tree of objects and their scopes
+	std::vector<std::vector<std::string>> m_objectScopeTree;
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
 	static unsigned constexpr s_modInputParams = 5;
 	static unsigned constexpr s_modOutputParams = 5;
+	/// Hard-coded identifier for a Yul object's data block
+	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If true, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;
