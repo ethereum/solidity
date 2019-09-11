@@ -417,9 +417,9 @@ int main(int argc, char const *argv[])
 	bool disableSemantics = !dev::test::EVMHost::getVM(options.evmonePath.string());
 	if (disableSemantics)
 	{
-		cout << "Unable to find " EVMONE_FILENAME ". Please provide the path using --evmonepath <path>." << endl;
+		cout << "Unable to find " << dev::test::evmoneFilename << ". Please provide the path using --evmonepath <path>." << endl;
 		cout << "You can download it at" << endl;
-		cout << EVMONE_DOWNLOADLINK << endl;
+		cout << dev::test::evmoneDownloadLink << endl;
 		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 	}
 
@@ -462,7 +462,7 @@ int main(int argc, char const *argv[])
 	cout << "." << endl;
 
 	if (disableSemantics)
-		cout << "\nNOTE: Skipped semantics tests because " EVMONE_FILENAME " could not be found.\n" << endl;
+		cout << "\nNOTE: Skipped semantics tests because " << dev::test::evmoneFilename << " could not be found.\n" << endl;
 
 	return global_stats ? 0 : 1;
 }
