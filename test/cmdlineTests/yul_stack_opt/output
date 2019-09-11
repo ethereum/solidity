@@ -11,20 +11,20 @@ object "object" {
         }
         function fun() -> a3, b3, c3, d3, e3, f3, g3, h3, i3, j3, k3, l3, m3, n3, o3, p3
         {
-            let a := 1
-            sstore(a, a)
-            sstore(2, a)
-            sstore(3, a)
-            sstore(4, a)
-            sstore(5, a)
-            sstore(6, a)
-            sstore(7, a)
-            sstore(8, a)
-            sstore(9, a)
-            sstore(10, a)
-            sstore(11, a)
-            sstore(12, a)
-            sstore(13, a)
+            let _1 := 1
+            sstore(_1, _1)
+            sstore(2, _1)
+            sstore(3, _1)
+            sstore(4, _1)
+            sstore(5, _1)
+            sstore(6, _1)
+            sstore(7, _1)
+            sstore(8, _1)
+            sstore(9, _1)
+            sstore(10, _1)
+            sstore(11, _1)
+            sstore(12, _1)
+            sstore(13, _1)
         }
     }
 }
@@ -103,79 +103,77 @@ tag_2:
   0x00
     /* "yul_stack_opt/input.sol":98:99   */
   0x01
-    /* "yul_stack_opt/input.sol":139:140   */
   dup1
-    /* "yul_stack_opt/input.sol":136:137   */
   dup2
     /* "yul_stack_opt/input.sol":129:141   */
   sstore
-    /* "yul_stack_opt/input.sol":162:163   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":151:160   */
   0x02
     /* "yul_stack_opt/input.sol":144:164   */
   sstore
-    /* "yul_stack_opt/input.sol":185:186   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":174:183   */
   0x03
     /* "yul_stack_opt/input.sol":167:187   */
   sstore
-    /* "yul_stack_opt/input.sol":208:209   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":197:206   */
   0x04
     /* "yul_stack_opt/input.sol":190:210   */
   sstore
-    /* "yul_stack_opt/input.sol":231:232   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":220:229   */
   0x05
     /* "yul_stack_opt/input.sol":213:233   */
   sstore
-    /* "yul_stack_opt/input.sol":254:255   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":243:252   */
   0x06
     /* "yul_stack_opt/input.sol":236:256   */
   sstore
-    /* "yul_stack_opt/input.sol":277:278   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":266:275   */
   0x07
     /* "yul_stack_opt/input.sol":259:279   */
   sstore
-    /* "yul_stack_opt/input.sol":300:301   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":289:298   */
   0x08
     /* "yul_stack_opt/input.sol":282:302   */
   sstore
-    /* "yul_stack_opt/input.sol":323:324   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":312:321   */
   0x09
     /* "yul_stack_opt/input.sol":305:325   */
   sstore
-    /* "yul_stack_opt/input.sol":346:347   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":335:344   */
   0x0a
     /* "yul_stack_opt/input.sol":328:348   */
   sstore
-    /* "yul_stack_opt/input.sol":370:371   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":358:368   */
   0x0b
     /* "yul_stack_opt/input.sol":351:372   */
   sstore
-    /* "yul_stack_opt/input.sol":394:395   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":382:392   */
   0x0c
     /* "yul_stack_opt/input.sol":375:396   */
   sstore
-    /* "yul_stack_opt/input.sol":418:419   */
+    /* "yul_stack_opt/input.sol":98:99   */
   dup1
     /* "yul_stack_opt/input.sol":406:416   */
   0x0d

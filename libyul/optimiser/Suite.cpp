@@ -91,7 +91,8 @@ void OptimiserSuite::run(
 	UnusedPruner::runUntilStabilisedOnFullAST(_dialect, ast, reservedIdentifiers);
 	BlockFlattener{}(ast);
 	ControlFlowSimplifier{_dialect}(ast);
-	StructuralSimplifier{_dialect}(ast);
+	LiteralRematerialiser{_dialect}(ast);
+	StructuralSimplifier{}(ast);
 	ControlFlowSimplifier{_dialect}(ast);
 	BlockFlattener{}(ast);
 
@@ -125,7 +126,8 @@ void OptimiserSuite::run(
 		{
 			// still in SSA, perform structural simplification
 			ControlFlowSimplifier{_dialect}(ast);
-			StructuralSimplifier{_dialect}(ast);
+			LiteralRematerialiser{_dialect}(ast);
+			StructuralSimplifier{}(ast);
 			ControlFlowSimplifier{_dialect}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{_dialect}(ast);
@@ -182,7 +184,8 @@ void OptimiserSuite::run(
 			RedundantAssignEliminator::run(_dialect, ast);
 			LoadResolver::run(_dialect, ast);
 			ExpressionSimplifier::run(_dialect, ast);
-			StructuralSimplifier{_dialect}(ast);
+			LiteralRematerialiser{_dialect}(ast);
+			StructuralSimplifier{}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{_dialect}(ast);
 			ControlFlowSimplifier{_dialect}(ast);

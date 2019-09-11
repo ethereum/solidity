@@ -184,7 +184,7 @@ public:
 				ExpressionSimplifier::run(m_dialect, *m_ast);
 				break;
 			case 't':
-				(StructuralSimplifier{m_dialect})(*m_ast);
+				StructuralSimplifier{}(*m_ast);
 				break;
 			case 'n':
 				(ControlFlowSimplifier{m_dialect})(*m_ast);
