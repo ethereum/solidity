@@ -76,7 +76,7 @@ std::string EVMOneEnvOrDefaultPath()
 	};
 	for (auto const& basePath: searchPath)
 	{
-		fs::path p = basePath / "libevmone.so";
+		fs::path p = basePath / evmoneFilename;
 		if (fs::exists(p))
 			return p.string();
 	}
@@ -92,7 +92,7 @@ CommonOptions::CommonOptions(std::string _caption):
 	options.add_options()
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(dev::test::testPath()), "path to test files")
-		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to libevmone.so")
+		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to evmone library")
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker");
 }
 
