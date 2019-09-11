@@ -34,6 +34,7 @@
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
+#include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -127,12 +128,14 @@ void OptimiserSuite::run(
 
 		{
 			// still in SSA, perform structural simplification
-			ControlFlowSimplifier{_dialect}(ast);
 			LiteralRematerialiser{_dialect}(ast);
+			ForLoopConditionOutOfBody{_dialect}(ast);
+			ControlFlowSimplifier{_dialect}(ast);
 			StructuralSimplifier{}(ast);
 			ControlFlowSimplifier{_dialect}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{_dialect}(ast);
+			ForLoopConditionIntoBody{_dialect}(ast);
 			UnusedPruner::runUntilStabilisedOnFullAST(_dialect, ast, reservedIdentifiers);
 		}
 
@@ -187,6 +190,7 @@ void OptimiserSuite::run(
 			LoadResolver::run(_dialect, ast);
 			ExpressionSimplifier::run(_dialect, ast);
 			LiteralRematerialiser{_dialect}(ast);
+			ForLoopConditionOutOfBody{_dialect}(ast);
 			StructuralSimplifier{}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{_dialect}(ast);
@@ -195,6 +199,7 @@ void OptimiserSuite::run(
 			SSATransform::run(ast, dispenser);
 			RedundantAssignEliminator::run(_dialect, ast);
 			RedundantAssignEliminator::run(_dialect, ast);
+			ForLoopConditionIntoBody{_dialect}(ast);
 			UnusedPruner::runUntilStabilisedOnFullAST(_dialect, ast, reservedIdentifiers);
 			CommonSubexpressionEliminator::run(_dialect, ast);
 		}
@@ -211,6 +216,9 @@ void OptimiserSuite::run(
 	UnusedPruner::runUntilStabilisedOnFullAST(_dialect, ast, reservedIdentifiers);
 
 	SSAReverser::run(ast);
+	CommonSubexpressionEliminator::run(_dialect, ast);
+	LiteralRematerialiser{_dialect}(ast);
+	ForLoopConditionOutOfBody{_dialect}(ast);
 	CommonSubexpressionEliminator::run(_dialect, ast);
 	UnusedPruner::runUntilStabilisedOnFullAST(_dialect, ast, reservedIdentifiers);
 
@@ -232,6 +240,9 @@ void OptimiserSuite::run(
 	BlockFlattener{}(ast);
 	DeadCodeEliminator{_dialect}(ast);
 	ControlFlowSimplifier{_dialect}(ast);
+	LiteralRematerialiser{_dialect}(ast);
+	ForLoopConditionOutOfBody{_dialect}(ast);
+	CommonSubexpressionEliminator::run(_dialect, ast);
 
 	FunctionGrouper{}(ast);
 
