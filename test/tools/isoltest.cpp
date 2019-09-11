@@ -287,7 +287,7 @@ TestStats TestTool::processPath(
 				_testCaseCreator,
 				_options,
 				fullpath,
-				currentPath.string()
+				currentPath.generic_path().string()
 			);
 			auto result = testTool.process();
 

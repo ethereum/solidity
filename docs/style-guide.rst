@@ -953,7 +953,7 @@ naming styles.
 * ``mixedCase`` (differs from CapitalizedWords by initial lowercase character!)
 * ``Capitalized_Words_With_Underscores``
 
-.. note:: When using initialisms in CapWords, capitalize all the letters of the initialisms. Thus HTTPServerError is better than HttpServerError. When using initialisms is mixedCase, capitalize all the letters of the initialisms, except keep the first one lower case if it is the beginning of the name. Thus xmlHTTPRequest is better than XMLHTTPRequest.
+.. note:: When using initialisms in CapWords, capitalize all the letters of the initialisms. Thus HTTPServerError is better than HttpServerError. When using initialisms in mixedCase, capitalize all the letters of the initialisms, except keep the first one lower case if it is the beginning of the name. Thus xmlHTTPRequest is better than XMLHTTPRequest.
 
 
 Names to Avoid
@@ -1139,6 +1139,6 @@ added looks like the one below::
         }
     }
 
-It is recommended that Solidity contracts are fully annontated using `NatSpec <natspec>`_ for all public interfaces (everything in the ABI).
+It is recommended that Solidity contracts are fully annotated using `NatSpec <natspec>`_ for all public interfaces (everything in the ABI).
 
 Please see the section about `NatSpec <natspec>`_ for a detailed explanation.
