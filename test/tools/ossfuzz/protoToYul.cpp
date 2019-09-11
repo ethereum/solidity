@@ -54,6 +54,10 @@ string ProtoConverter::createHex(string const& _hexBytes)
 	// Use a dictionary token.
 	if (tmp.empty())
 		tmp = dictionaryToken(HexPrefix::DontAdd);
+	// Hex literals must have even number of digits
+	if (tmp.size() % 2)
+		tmp.insert(0, "0");
+
 	yulAssert(tmp.size() <= 64, "Proto Fuzzer: Dictionary token too large");
 	return tmp;
 }
@@ -157,6 +161,12 @@ void ProtoConverter::visit(Expression const& _x)
 		break;
 	case Expression::kCreate:
 		visit(_x.create());
+		break;
+	case Expression::kUnopdata:
+		if (m_isObject)
+			visit(_x.unopdata());
+		else
+			m_output << dictionaryToken();
 		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
 		m_output << dictionaryToken();
@@ -432,7 +442,14 @@ void ProtoConverter::visit(NullaryOp const& _x)
 
 void ProtoConverter::visit(CopyFunc const& _x)
 {
-	switch (_x.ct())
+	CopyFunc_CopyType type = _x.ct();
+
+	// datacopy() is valid only if we are inside
+	// a yul object.
+	if (type == CopyFunc::DATA && !m_isObject)
+		return;
+
+	switch (type)
 	{
 	case CopyFunc::CALLDATA:
 		m_output << "calldatacopy";
@@ -442,6 +459,9 @@ void ProtoConverter::visit(CopyFunc const& _x)
 		break;
 	case CopyFunc::RETURNDATA:
 		m_output << "returndatacopy";
+		break;
+	case CopyFunc::DATA:
+		m_output << "datacopy";
 		break;
 	}
 	m_output << "(";
@@ -988,6 +1008,23 @@ void ProtoConverter::visit(TerminatingStmt const& _x)
 	}
 }
 
+void ProtoConverter::visit(UnaryOpData const& _x)
+{
+	switch (_x.op())
+	{
+	case UnaryOpData::SIZE:
+		m_output << Whiskers(R"(datasize("<id>"))")
+			("id", getObjectIdentifier(_x.identifier()))
+			.render();
+		break;
+	case UnaryOpData::OFFSET:
+		m_output << Whiskers(R"(dataoffset("<id>"))")
+			("id", getObjectIdentifier(_x.identifier()))
+			.render();
+		break;
+	}
+}
+
 void ProtoConverter::visit(Statement const& _x)
 {
 	switch (_x.stmt_oneof_case())
@@ -1347,21 +1384,89 @@ void ProtoConverter::visit(PopStmt const& _x)
 	m_output << ")\n";
 }
 
+string ProtoConverter::getObjectIdentifier(ObjectId const& _x)
+{
+	unsigned currentId = currentObjectId();
+	yulAssert(m_objectScopeTree.size() > currentId, "Proto fuzzer: Error referencing object");
+	std::vector<std::string> objectIdsInScope = m_objectScopeTree[currentId];
+	return objectIdsInScope[_x.id() % objectIdsInScope.size()];
+}
+
+void ProtoConverter::visit(Code const& _x)
+{
+	m_output << "code {\n";
+	visit(_x.block());
+	m_output << "}\n";
+}
+
+void ProtoConverter::visit(Data const& _x)
+{
+	// TODO: Generate random data block identifier
+	m_output << "data \"" << s_dataIdentifier << "\" hex\"" << createHex(_x.hex()) << "\"\n";
+}
+
+void ProtoConverter::visit(Object const& _x)
+{
+	// object "object<n>" {
+	// ...
+	// }
+	m_output << "object " << newObjectId() << " {\n";
+	visit(_x.code());
+	if (_x.has_data())
+		visit(_x.data());
+	if (_x.has_sub_obj())
+		visit(_x.sub_obj());
+	m_output << "}\n";
+}
+
+void ProtoConverter::buildObjectScopeTree(Object const& _x)
+{
+	// Identifies object being visited
+	string objectId = newObjectId(false);
+	vector<string> node{objectId};
+	if (_x.has_data())
+		node.push_back(s_dataIdentifier);
+	if (_x.has_sub_obj())
+	{
+		// Identifies sub object whose numeric suffix is
+		// m_objectId
+		string subObjectId = "object" + to_string(m_objectId);
+		node.push_back(subObjectId);
+		// TODO: Add sub-object to object's ancestors once
+		// nested access is implemented.
+		m_objectScopeTree.push_back(node);
+		buildObjectScopeTree(_x.sub_obj());
+	}
+	else
+		m_objectScopeTree.push_back(node);
+}
+
 void ProtoConverter::visit(Program const& _x)
 {
 	// Initialize input size
 	m_inputSize = _x.ByteSizeLong();
 
-	/* Program template is as follows
-	 *      Zero or more statements. If function definition is present, it is
-	 *      called post definition.
-	 *          Example: function foo(x_0) -> x_1 {}
-	 *                   x_2 := foo(calldataload(0))
-	 *                   sstore(0, x_2)
-	 */
-	m_output << "{\n";
-	visit(_x.block());
-	m_output << "}\n";
+	// Program is either a yul object or a block of
+	// statements.
+	switch (_x.program_oneof_case())
+	{
+	case Program::kBlock:
+		m_output << "{\n";
+		visit(_x.block());
+		m_output << "}\n";
+		break;
+	case Program::kObj:
+		m_isObject = true;
+		buildObjectScopeTree(_x.obj());
+		// Reset object id counter
+		m_objectId = 0;
+		visit(_x.obj());
+		break;
+	case Program::PROGRAM_ONEOF_NOT_SET:
+		// {} is a trivial yul program
+		m_output << "{}";
+		break;
+	}
 }
 
 string ProtoConverter::programToString(Program const& _input)
