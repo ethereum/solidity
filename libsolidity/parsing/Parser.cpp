@@ -44,9 +44,9 @@ namespace solidity::frontend
 class Parser::ASTNodeFactory
 {
 public:
-	explicit ASTNodeFactory(Parser const& _parser):
+	explicit ASTNodeFactory(Parser& _parser):
 		m_parser(_parser), m_location{_parser.position(), -1, _parser.source()} {}
-	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
+	ASTNodeFactory(Parser& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location{_childNode->location()} {}
 
 	void markEndPosition() { m_location.end = m_parser.endPosition(); }
@@ -61,18 +61,19 @@ public:
 		solAssert(m_location.source, "");
 		if (m_location.end < 0)
 			markEndPosition();
-		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
+		return make_shared<NodeType>(m_parser.nextID(), m_location, std::forward<Args>(_args)...);
 	}
 
 	SourceLocation const& location() const noexcept { return m_location; }
 
 private:
-	Parser const& m_parser;
+	Parser& m_parser;
 	SourceLocation m_location;
 };
 
 ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 {
+	solAssert(!m_insideModifier, "");
 	try
 	{
 		m_recursionDepth = 0;
@@ -1193,7 +1194,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		BOOST_THROW_EXCEPTION(FatalError());
 
 	location.end = block->location.end;
-	return make_shared<InlineAssembly>(location, _docString, dialect, block);
+	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)

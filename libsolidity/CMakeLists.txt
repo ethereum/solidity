@@ -39,10 +39,14 @@ set(sources
 	ast/ASTAnnotations.h
 	ast/ASTEnums.h
 	ast/ASTForward.h
+	ast/AsmJsonImporter.cpp
+	ast/AsmJsonImporter.h
 	ast/ASTJsonConverter.cpp
 	ast/ASTJsonConverter.h
 	ast/ASTUtils.cpp
 	ast/ASTUtils.h
+	ast/ASTJsonImporter.cpp
+	ast/ASTJsonImporter.h
 	ast/ASTVisitor.h
 	ast/ExperimentalFeatures.h
 	ast/Types.cpp

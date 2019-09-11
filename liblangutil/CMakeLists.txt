@@ -16,6 +16,7 @@ set(sources
 	SemVerHandler.cpp
 	SemVerHandler.h
 	SourceLocation.h
+	SourceLocation.cpp
 	SourceReferenceExtractor.cpp
 	SourceReferenceExtractor.h
 	SourceReferenceFormatter.cpp

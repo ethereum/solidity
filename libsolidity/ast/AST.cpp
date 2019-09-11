@@ -35,29 +35,10 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-class IDDispenser
-{
-public:
-	static size_t next() { return ++instance(); }
-	static void reset() { instance() = 0; }
-private:
-	static size_t& instance()
-	{
-		static IDDispenser dispenser;
-		return dispenser.id;
-	}
-	size_t id = 0;
-};
-
-ASTNode::ASTNode(SourceLocation const& _location):
-	m_id(IDDispenser::next()),
+ASTNode::ASTNode(int64_t _id, SourceLocation const& _location):
+	m_id(_id),
 	m_location(_location)
 {
-}
-
-void ASTNode::resetID()
-{
-	IDDispenser::reset();
 }
 
 ASTAnnotation& ASTNode::annotation() const

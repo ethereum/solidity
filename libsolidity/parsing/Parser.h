@@ -173,6 +173,9 @@ private:
 		bool empty() const;
 	};
 
+	/// Returns the next AST node ID
+	int64_t nextID() { return ++m_currentNodeID; }
+
 	std::pair<LookAheadInfo, IndexAccessedPath> tryParseIndexAccessedPath();
 	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
 	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
@@ -198,6 +201,8 @@ private:
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
 	langutil::EVMVersion m_evmVersion;
+	/// Counter for the next AST node ID
+	int64_t m_currentNodeID = 0;
 };
 
 }

@@ -38,6 +38,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/interface/ABI.h>
@@ -233,10 +234,11 @@ bool CompilerStack::parse()
 	if (m_stackState != SourcesSet)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call parse only after the SourcesSet state."));
 	m_errorReporter.clear();
-	ASTNode::resetID();
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
 		m_errorReporter.warning("This is a pre-release compiler version, please do not use it in production.");
+
+	Parser parser{m_errorReporter, m_evmVersion, m_parserErrorRecovery};
 
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
@@ -246,7 +248,7 @@ bool CompilerStack::parse()
 		string const& path = sourcesToParse[i];
 		Source& source = m_sources[path];
 		source.scanner->reset();
-		source.ast = Parser(m_errorReporter, m_evmVersion, m_parserErrorRecovery).parse(source.scanner);
+		source.ast = parser.parse(source.scanner);
 		if (!source.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
@@ -266,6 +268,26 @@ bool CompilerStack::parse()
 	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
 		m_hasError = true;
 	return !m_hasError;
+}
+
+void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
+{
+	if (m_stackState != Empty)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call importASTs only before the SourcesSet state."));
+	m_sourceJsons = _sources;
+	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_evmVersion).jsonToSourceUnit(m_sourceJsons);
+	for (auto& src: reconstructedSources)
+	{
+		string const& path = src.first;
+		Source source;
+		source.ast = src.second;
+		string srcString = util::jsonCompactPrint(m_sourceJsons[src.first]);
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(langutil::CharStream(srcString, src.first));
+		source.scanner = scanner;
+		m_sources[path] = source;
+	}
+	m_stackState = ParsingPerformed;
+	m_importedSources = true;
 }
 
 bool CompilerStack::analyze()
@@ -1158,7 +1180,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
 	meta["version"] = 1;
-	meta["language"] = "Solidity";
+	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	/// All the source files (including self), which should be included in the metadata.

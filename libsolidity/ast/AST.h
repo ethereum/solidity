@@ -64,13 +64,11 @@ class ASTNode: private boost::noncopyable
 public:
 	using SourceLocation = langutil::SourceLocation;
 
-	explicit ASTNode(SourceLocation const& _location);
+	explicit ASTNode(int64_t _id, SourceLocation const& _location);
 	virtual ~ASTNode() {}
 
 	/// @returns an identifier of this AST node that is unique for a single compilation run.
-	size_t id() const { return m_id; }
-	/// Resets the global ID counter. This invalidates all previous IDs.
-	static void resetID();
+	int64_t id() const { return m_id; }
 
 	virtual void accept(ASTVisitor& _visitor) = 0;
 	virtual void accept(ASTConstVisitor& _visitor) const = 0;
@@ -139,8 +137,8 @@ std::vector<_T const*> ASTNode::filteredNodes(std::vector<ASTPointer<ASTNode>> c
 class SourceUnit: public ASTNode
 {
 public:
-	SourceUnit(SourceLocation const& _location, std::vector<ASTPointer<ASTNode>> const& _nodes):
-		ASTNode(_location), m_nodes(_nodes) {}
+	SourceUnit(int64_t _id, SourceLocation const& _location, std::vector<ASTPointer<ASTNode>> const& _nodes):
+		ASTNode(_id, _location), m_nodes(_nodes) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -206,11 +204,12 @@ public:
 	}
 
 	Declaration(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		Visibility _visibility = Visibility::Default
 	):
-		ASTNode(_location), m_name(_name), m_visibility(_visibility) {}
+		ASTNode(_id, _location), m_name(_name), m_visibility(_visibility) {}
 
 	/// @returns the declared name.
 	ASTString const& name() const { return *m_name; }
@@ -253,10 +252,11 @@ class PragmaDirective: public ASTNode
 {
 public:
 	PragmaDirective(
+		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<Token> const& _tokens,
 		std::vector<ASTString> const& _literals
-	): ASTNode(_location), m_tokens(_tokens), m_literals(_literals)
+	): ASTNode(_id, _location), m_tokens(_tokens), m_literals(_literals)
 	{}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -295,12 +295,13 @@ public:
 	using SymbolAliasList = std::vector<SymbolAlias>;
 
 	ImportDirective(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _path,
 		ASTPointer<ASTString> const& _unitAlias,
 		SymbolAliasList _symbolAliases
 	):
-		Declaration(_location, _unitAlias),
+		Declaration(_id, _location, _unitAlias),
 		m_path(_path),
 		m_symbolAliases(move(_symbolAliases))
 	{ }
@@ -385,6 +386,7 @@ class ContractDefinition: public Declaration, public Documented
 {
 public:
 	ContractDefinition(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
@@ -393,7 +395,7 @@ public:
 		ContractKind _contractKind = ContractKind::Contract,
 		bool _abstract = false
 	):
-		Declaration(_location, _name),
+		Declaration(_id, _location, _name),
 		Documented(_documentation),
 		m_baseContracts(_baseContracts),
 		m_subNodes(_subNodes),
@@ -465,11 +467,12 @@ class InheritanceSpecifier: public ASTNode
 {
 public:
 	InheritanceSpecifier(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<UserDefinedTypeName> const& _baseName,
 		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_baseName(_baseName), m_arguments(std::move(_arguments)) {}
+		ASTNode(_id, _location), m_baseName(_baseName), m_arguments(std::move(_arguments)) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -494,11 +497,12 @@ class UsingForDirective: public ASTNode
 {
 public:
 	UsingForDirective(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<UserDefinedTypeName> const& _libraryName,
 		ASTPointer<TypeName> const& _typeName
 	):
-		ASTNode(_location), m_libraryName(_libraryName), m_typeName(_typeName) {}
+		ASTNode(_id, _location), m_libraryName(_libraryName), m_typeName(_typeName) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -516,11 +520,12 @@ class StructDefinition: public Declaration
 {
 public:
 	StructDefinition(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		std::vector<ASTPointer<VariableDeclaration>> const& _members
 	):
-		Declaration(_location, _name), m_members(_members) {}
+		Declaration(_id, _location, _name), m_members(_members) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -539,11 +544,12 @@ class EnumDefinition: public Declaration
 {
 public:
 	EnumDefinition(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		std::vector<ASTPointer<EnumValue>> const& _members
 	):
-		Declaration(_location, _name), m_members(_members) {}
+		Declaration(_id, _location, _name), m_members(_members) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -563,8 +569,8 @@ private:
 class EnumValue: public Declaration
 {
 public:
-	EnumValue(SourceLocation const& _location, ASTPointer<ASTString> const& _name):
-		Declaration(_location, _name) {}
+	EnumValue(int64_t _id, SourceLocation const& _location, ASTPointer<ASTString> const& _name):
+		Declaration(_id, _location, _name) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -581,10 +587,11 @@ class ParameterList: public ASTNode
 {
 public:
 	ParameterList(
+		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<ASTPointer<VariableDeclaration>> const& _parameters
 	):
-		ASTNode(_location), m_parameters(_parameters) {}
+		ASTNode(_id, _location), m_parameters(_parameters) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -602,6 +609,7 @@ class CallableDeclaration: public Declaration, public VariableScope
 {
 public:
 	CallableDeclaration(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		Visibility _visibility,
@@ -610,7 +618,7 @@ public:
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		ASTPointer<ParameterList> const& _returnParameters = ASTPointer<ParameterList>()
 	):
-		Declaration(_location, _name, _visibility),
+		Declaration(_id, _location, _name, _visibility),
 		m_parameters(_parameters),
 		m_overrides(_overrides),
 		m_returnParameters(_returnParameters),
@@ -643,10 +651,11 @@ class OverrideSpecifier: public ASTNode
 {
 public:
 	OverrideSpecifier(
+		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<ASTPointer<UserDefinedTypeName>> const& _overrides
 	):
-		ASTNode(_location),
+		ASTNode(_id, _location),
 		m_overrides(_overrides)
 	{
 	}
@@ -665,6 +674,7 @@ class FunctionDefinition: public CallableDeclaration, public Documented, public 
 {
 public:
 	FunctionDefinition(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		Visibility _visibility,
@@ -678,7 +688,7 @@ public:
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
+		CallableDeclaration(_id, _location, _name, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
 		Documented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
@@ -748,7 +758,8 @@ public:
 	enum Location { Unspecified, Storage, Memory, CallData };
 
 	VariableDeclaration(
-		SourceLocation const& _sourceLocation,
+		int64_t _id,
+		SourceLocation const& _location,
 		ASTPointer<TypeName> const& _type,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<Expression> _value,
@@ -759,7 +770,7 @@ public:
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		Location _referenceLocation = Location::Unspecified
 	):
-		Declaration(_sourceLocation, _name, _visibility),
+		Declaration(_id, _location, _name, _visibility),
 		m_typeName(_type),
 		m_value(_value),
 		m_isStateVariable(_isStateVar),
@@ -847,6 +858,7 @@ class ModifierDefinition: public CallableDeclaration, public Documented
 {
 public:
 	ModifierDefinition(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
@@ -855,7 +867,7 @@ public:
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, Visibility::Internal, _parameters, _isVirtual, _overrides),
+		CallableDeclaration(_id, _location, _name, Visibility::Internal, _parameters, _isVirtual, _overrides),
 		Documented(_documentation),
 		m_body(_body)
 	{
@@ -881,11 +893,12 @@ class ModifierInvocation: public ASTNode
 {
 public:
 	ModifierInvocation(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Identifier> const& _name,
 		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_location), m_modifierName(_name), m_arguments(std::move(_arguments)) {}
+		ASTNode(_id, _location), m_modifierName(_name), m_arguments(std::move(_arguments)) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -908,13 +921,14 @@ class EventDefinition: public CallableDeclaration, public Documented
 {
 public:
 	EventDefinition(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
 		bool _anonymous = false
 	):
-		CallableDeclaration(_location, _name, Visibility::Default, _parameters),
+		CallableDeclaration(_id, _location, _name, Visibility::Default, _parameters),
 		Documented(_documentation),
 		m_anonymous(_anonymous)
 	{
@@ -936,13 +950,13 @@ private:
 
 /**
  * Pseudo AST node that is used as declaration for "this", "msg", "tx", "block" and the global
- * functions when such an identifier is encountered. Will never have a valid location in the source code.
+ * functions when such an identifier is encountered. Will never have a valid location in the source code
  */
 class MagicVariableDeclaration: public Declaration
 {
 public:
-	MagicVariableDeclaration(ASTString const& _name, Type const* _type):
-		Declaration(SourceLocation(), std::make_shared<ASTString>(_name)), m_type(_type) {}
+	MagicVariableDeclaration(int _id, ASTString const& _name, Type const* _type):
+		Declaration(_id, SourceLocation(), std::make_shared<ASTString>(_name)), m_type(_type) { }
 
 	void accept(ASTVisitor&) override
 	{
@@ -973,7 +987,7 @@ private:
 class TypeName: public ASTNode
 {
 protected:
-	explicit TypeName(SourceLocation const& _location): ASTNode(_location) {}
+	explicit TypeName(int64_t _id, SourceLocation const& _location): ASTNode(_id, _location) {}
 
 public:
 	TypeNameAnnotation& annotation() const override;
@@ -987,10 +1001,11 @@ class ElementaryTypeName: public TypeName
 {
 public:
 	ElementaryTypeName(
+		int64_t _id,
 		SourceLocation const& _location,
 		ElementaryTypeNameToken const& _elem,
 		std::optional<StateMutability> _stateMutability = {}
-	): TypeName(_location), m_type(_elem), m_stateMutability(_stateMutability)
+	): TypeName(_id, _location), m_type(_elem), m_stateMutability(_stateMutability)
 	{
 		solAssert(!_stateMutability.has_value() || _elem.token() == Token::Address, "");
 	}
@@ -1013,8 +1028,8 @@ private:
 class UserDefinedTypeName: public TypeName
 {
 public:
-	UserDefinedTypeName(SourceLocation const& _location, std::vector<ASTString> const& _namePath):
-		TypeName(_location), m_namePath(_namePath) {}
+	UserDefinedTypeName(int64_t _id, SourceLocation const& _location, std::vector<ASTString> const& _namePath):
+		TypeName(_id, _location), m_namePath(_namePath) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1033,13 +1048,14 @@ class FunctionTypeName: public TypeName
 {
 public:
 	FunctionTypeName(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ParameterList> const& _parameterTypes,
 		ASTPointer<ParameterList> const& _returnTypes,
 		Visibility _visibility,
 		StateMutability _stateMutability
 	):
-		TypeName(_location), m_parameterTypes(_parameterTypes), m_returnTypes(_returnTypes),
+		TypeName(_id, _location), m_parameterTypes(_parameterTypes), m_returnTypes(_returnTypes),
 		m_visibility(_visibility), m_stateMutability(_stateMutability)
 	{}
 	void accept(ASTVisitor& _visitor) override;
@@ -1071,11 +1087,12 @@ class Mapping: public TypeName
 {
 public:
 	Mapping(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ElementaryTypeName> const& _keyType,
 		ASTPointer<TypeName> const& _valueType
 	):
-		TypeName(_location), m_keyType(_keyType), m_valueType(_valueType) {}
+		TypeName(_id, _location), m_keyType(_keyType), m_valueType(_valueType) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1094,11 +1111,12 @@ class ArrayTypeName: public TypeName
 {
 public:
 	ArrayTypeName(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<TypeName> const& _baseType,
 		ASTPointer<Expression> const& _length
 	):
-		TypeName(_location), m_baseType(_baseType), m_length(_length) {}
+		TypeName(_id, _location), m_baseType(_baseType), m_length(_length) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1123,9 +1141,10 @@ class Statement: public ASTNode, public Documented
 {
 public:
 	explicit Statement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString
-	): ASTNode(_location), Documented(_docString) {}
+	): ASTNode(_id, _location), Documented(_docString) {}
 
 	StatementAnnotation& annotation() const override;
 };
@@ -1137,12 +1156,13 @@ class InlineAssembly: public Statement
 {
 public:
 	InlineAssembly(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		yul::Dialect const& _dialect,
 		std::shared_ptr<yul::Block> const& _operations
 	):
-		Statement(_location, _docString), m_dialect(_dialect), m_operations(_operations) {}
+		Statement(_id, _location, _docString), m_dialect(_dialect), m_operations(_operations) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1163,11 +1183,12 @@ class Block: public Statement, public Scopable
 {
 public:
 	Block(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		std::vector<ASTPointer<Statement>> const& _statements
 	):
-		Statement(_location, _docString), m_statements(_statements) {}
+		Statement(_id, _location, _docString), m_statements(_statements) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1187,9 +1208,10 @@ class PlaceholderStatement: public Statement
 {
 public:
 	explicit PlaceholderStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString
-	): Statement(_location, _docString) {}
+	): Statement(_id, _location, _docString) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -1203,13 +1225,14 @@ class IfStatement: public Statement
 {
 public:
 	IfStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _condition,
 		ASTPointer<Statement> const& _trueBody,
 		ASTPointer<Statement> const& _falseBody
 	):
-		Statement(_location, _docString),
+		Statement(_id, _location, _docString),
 		m_condition(_condition),
 		m_trueBody(_trueBody),
 		m_falseBody(_falseBody)
@@ -1237,12 +1260,13 @@ class TryCatchClause: public ASTNode, public Scopable
 {
 public:
 	TryCatchClause(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _errorName,
 		ASTPointer<ParameterList> const& _parameters,
 		ASTPointer<Block> const& _block
 	):
-		ASTNode(_location),
+		ASTNode(_id, _location),
 		m_errorName(_errorName),
 		m_parameters(_parameters),
 		m_block(_block)
@@ -1280,12 +1304,13 @@ class TryStatement: public Statement
 {
 public:
 	TryStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _externalCall,
 		std::vector<ASTPointer<TryCatchClause>> const& _clauses
 	):
-		Statement(_location, _docString),
+		Statement(_id, _location, _docString),
 		m_externalCall(_externalCall),
 		m_clauses(_clauses)
 	{}
@@ -1307,22 +1332,24 @@ class BreakableStatement: public Statement
 {
 public:
 	explicit BreakableStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString
-	): Statement(_location, _docString) {}
+	): Statement(_id, _location, _docString) {}
 };
 
 class WhileStatement: public BreakableStatement
 {
 public:
 	WhileStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _condition,
 		ASTPointer<Statement> const& _body,
 		bool _isDoWhile
 	):
-		BreakableStatement(_location, _docString), m_condition(_condition), m_body(_body),
+		BreakableStatement(_id, _location, _docString), m_condition(_condition), m_body(_body),
 		m_isDoWhile(_isDoWhile) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -1344,6 +1371,7 @@ class ForStatement: public BreakableStatement, public Scopable
 {
 public:
 	ForStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Statement> const& _initExpression,
@@ -1351,7 +1379,7 @@ public:
 		ASTPointer<ExpressionStatement> const& _loopExpression,
 		ASTPointer<Statement> const& _body
 	):
-		BreakableStatement(_location, _docString),
+		BreakableStatement(_id, _location, _docString),
 		m_initExpression(_initExpression),
 		m_condExpression(_conditionExpression),
 		m_loopExpression(_loopExpression),
@@ -1381,8 +1409,8 @@ private:
 class Continue: public Statement
 {
 public:
-	explicit Continue(SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
-		Statement(_location, _docString) {}
+	explicit Continue(int64_t _id, SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
+		Statement(_id, _location, _docString) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 };
@@ -1390,8 +1418,8 @@ public:
 class Break: public Statement
 {
 public:
-	explicit Break(SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
-		Statement(_location, _docString) {}
+	explicit Break(int64_t _id, SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
+		Statement(_id, _location, _docString) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 };
@@ -1400,10 +1428,11 @@ class Return: public Statement
 {
 public:
 	Return(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> _expression
-	): Statement(_location, _docString), m_expression(_expression) {}
+	): Statement(_id, _location, _docString), m_expression(_expression) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1421,8 +1450,8 @@ private:
 class Throw: public Statement
 {
 public:
-	explicit Throw(SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
-		Statement(_location, _docString) {}
+	explicit Throw(int64_t _id, SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
+		Statement(_id, _location, _docString) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 };
@@ -1434,11 +1463,12 @@ class EmitStatement: public Statement
 {
 public:
 	explicit EmitStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<FunctionCall> const& _functionCall
 	):
-		Statement(_location, _docString), m_eventCall(_functionCall) {}
+		Statement(_id, _location, _docString), m_eventCall(_functionCall) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1460,12 +1490,13 @@ class VariableDeclarationStatement: public Statement
 {
 public:
 	VariableDeclarationStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		std::vector<ASTPointer<VariableDeclaration>> const& _variables,
 		ASTPointer<Expression> const& _initialValue
 	):
-		Statement(_location, _docString), m_variables(_variables), m_initialValue(_initialValue) {}
+		Statement(_id, _location, _docString), m_variables(_variables), m_initialValue(_initialValue) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1489,11 +1520,12 @@ class ExpressionStatement: public Statement
 {
 public:
 	ExpressionStatement(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> _expression
 	):
-		Statement(_location, _docString), m_expression(_expression) {}
+		Statement(_id, _location, _docString), m_expression(_expression) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1516,7 +1548,7 @@ private:
 class Expression: public ASTNode
 {
 public:
-	explicit Expression(SourceLocation const& _location): ASTNode(_location) {}
+	explicit Expression(int64_t _id, SourceLocation const& _location): ASTNode(_id, _location) {}
 
 	ExpressionAnnotation& annotation() const override;
 };
@@ -1525,12 +1557,13 @@ class Conditional: public Expression
 {
 public:
 	Conditional(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _condition,
 		ASTPointer<Expression> const& _trueExpression,
 		ASTPointer<Expression> const& _falseExpression
 	):
-		Expression(_location),
+		Expression(_id, _location),
 		m_condition(_condition),
 		m_trueExpression(_trueExpression),
 		m_falseExpression(_falseExpression)
@@ -1554,12 +1587,13 @@ class Assignment: public Expression
 {
 public:
 	Assignment(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _leftHandSide,
 		Token _assignmentOperator,
 		ASTPointer<Expression> const& _rightHandSide
 	):
-		Expression(_location),
+		Expression(_id, _location),
 		m_leftHandSide(_leftHandSide),
 		m_assigmentOperator(_assignmentOperator),
 		m_rightHandSide(_rightHandSide)
@@ -1591,11 +1625,12 @@ class TupleExpression: public Expression
 {
 public:
 	TupleExpression(
+		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<ASTPointer<Expression>> const& _components,
 		bool _isArray
 	):
-		Expression(_location),
+		Expression(_id, _location),
 		m_components(_components),
 		m_isArray(_isArray) {}
 	void accept(ASTVisitor& _visitor) override;
@@ -1617,12 +1652,13 @@ class UnaryOperation: public Expression
 {
 public:
 	UnaryOperation(
+		int64_t _id,
 		SourceLocation const& _location,
 		Token _operator,
 		ASTPointer<Expression> const& _subExpression,
 		bool _isPrefix
 	):
-		Expression(_location),
+		Expression(_id, _location),
 		m_operator(_operator),
 		m_subExpression(_subExpression),
 		m_isPrefix(_isPrefix)
@@ -1650,12 +1686,13 @@ class BinaryOperation: public Expression
 {
 public:
 	BinaryOperation(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _left,
 		Token _operator,
 		ASTPointer<Expression> const& _right
 	):
-		Expression(_location), m_left(_left), m_operator(_operator), m_right(_right)
+		Expression(_id, _location), m_left(_left), m_operator(_operator), m_right(_right)
 	{
 		solAssert(TokenTraits::isBinaryOp(_operator) || TokenTraits::isCompareOp(_operator), "");
 	}
@@ -1681,12 +1718,13 @@ class FunctionCall: public Expression
 {
 public:
 	FunctionCall(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _expression,
 		std::vector<ASTPointer<Expression>> const& _arguments,
 		std::vector<ASTPointer<ASTString>> const& _names
 	):
-		Expression(_location), m_expression(_expression), m_arguments(_arguments), m_names(_names) {}
+		Expression(_id, _location), m_expression(_expression), m_arguments(_arguments), m_names(_names) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1710,10 +1748,11 @@ class NewExpression: public Expression
 {
 public:
 	NewExpression(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<TypeName> const& _typeName
 	):
-		Expression(_location), m_typeName(_typeName) {}
+		Expression(_id, _location), m_typeName(_typeName) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1730,11 +1769,12 @@ class MemberAccess: public Expression
 {
 public:
 	MemberAccess(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> _expression,
 		ASTPointer<ASTString> const& _memberName
 	):
-		Expression(_location), m_expression(_expression), m_memberName(_memberName) {}
+		Expression(_id, _location), m_expression(_expression), m_memberName(_memberName) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 	Expression const& expression() const { return *m_expression; }
@@ -1754,11 +1794,12 @@ class IndexAccess: public Expression
 {
 public:
 	IndexAccess(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _base,
 		ASTPointer<Expression> const& _index
 	):
-		Expression(_location), m_base(_base), m_index(_index) {}
+		Expression(_id, _location), m_base(_base), m_index(_index) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1777,12 +1818,13 @@ class IndexRangeAccess: public Expression
 {
 public:
 	IndexRangeAccess(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<Expression> const& _base,
 		ASTPointer<Expression> const& _start,
 		ASTPointer<Expression> const& _end
 	):
-		Expression(_location), m_base(_base), m_start(_start), m_end(_end) {}
+		Expression(_id, _location), m_base(_base), m_start(_start), m_end(_end) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1803,7 +1845,7 @@ private:
 class PrimaryExpression: public Expression
 {
 public:
-	PrimaryExpression(SourceLocation const& _location): Expression(_location) {}
+	PrimaryExpression(int64_t _id, SourceLocation const& _location): Expression(_id, _location) {}
 };
 
 /**
@@ -1813,10 +1855,11 @@ class Identifier: public PrimaryExpression
 {
 public:
 	Identifier(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name
 	):
-		PrimaryExpression(_location), m_name(_name) {}
+		PrimaryExpression(_id, _location), m_name(_name) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1837,10 +1880,11 @@ class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
 	ElementaryTypeNameExpression(
+		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ElementaryTypeName> const& _type
 	):
-		PrimaryExpression(_location),
+		PrimaryExpression(_id, _location),
 		m_type(_type)
 	{
 	}
@@ -1874,12 +1918,13 @@ public:
 		Year = static_cast<int>(Token::SubYear)
 	};
 	Literal(
+		int64_t _id,
 		SourceLocation const& _location,
 		Token _token,
 		ASTPointer<ASTString> const& _value,
 		SubDenomination _sub = SubDenomination::None
 	):
-		PrimaryExpression(_location), m_token(_token), m_value(_value), m_subDenomination(_sub) {}
+		PrimaryExpression(_id, _location), m_token(_token), m_value(_value), m_subDenomination(_sub) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
