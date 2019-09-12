@@ -40,6 +40,13 @@ class AssignmentCounter;
  * 		a := E
  * 		let a_1 := a
  *
+ * 	In the special case
+ * 		let a := E
+ * 		a := a
+ *
+ * 	the redundant assignment "a := a" is removed.
+ *
+ *
  * Secondly, the SSA transform will rewrite
  *
  * 		let a := E
