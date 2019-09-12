@@ -75,22 +75,7 @@ class NameDispenser;
 class SSATransform: public ASTModifier
 {
 public:
-	void operator()(Identifier&) override;
-	void operator()(ForLoop&) override;
-	void operator()(Block& _block) override;
-
 	static void run(Block& _ast, NameDispenser& _nameDispenser);
-
-private:
-	explicit SSATransform(NameDispenser& _nameDispenser, std::set<YulString> const& _variablesToReplace):
-		m_nameDispenser(_nameDispenser), m_variablesToReplace(_variablesToReplace)
-	{ }
-
-	NameDispenser& m_nameDispenser;
-	/// This is a set of all variables that are assigned to anywhere in the code.
-	/// Variables that are only declared but never re-assigned are not touched.
-	std::set<YulString> const& m_variablesToReplace;
-	std::map<YulString, YulString> m_currentVariableValues;
 };
 
 }
