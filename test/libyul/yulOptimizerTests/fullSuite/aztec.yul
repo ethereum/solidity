@@ -254,8 +254,9 @@
 //         let b := add(0x300, mul(n, 0x80))
 //         let i := 0
 //         let i_1 := i
-//         for { } lt(i, n) { i := add(i, 0x01) }
+//         for { } 1 { i := add(i, 0x01) }
 //         {
+//             if iszero(lt(i, n)) { break }
 //             let _2 := add(calldataload(0x04), mul(i, 0xc0))
 //             let noteIndex := add(_2, 0x24)
 //             let k := i_1
@@ -373,8 +374,9 @@
 //     function hashCommitments(notes, n)
 //     {
 //         let i := 0
-//         for { } lt(i, n) { i := add(i, 0x01) }
+//         for { } 1 { i := add(i, 0x01) }
 //         {
+//             if iszero(lt(i, n)) { break }
 //             calldatacopy(add(0x300, mul(i, 0x80)), add(add(notes, mul(i, 0xc0)), 0x60), 0x80)
 //         }
 //         mstore(0, keccak256(0x300, mul(n, 0x80)))

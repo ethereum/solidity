@@ -17,6 +17,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/Dialect.h>
 
 namespace yul
 {
@@ -29,17 +30,22 @@ namespace yul
  * By moving the iteration check part into the ForLoop body, we can apply expression splitter
  * to the condition expression.
  *
- * This rewritter will skip loops that already have literal constant as iteration condition.
+ * This rewriter will skip loops that already have literal constant as iteration condition.
  *
  * Requirements:
  * - The Disambiguator must be run upfront.
  * - To avoid unnecessary rewrite, it is recommended to run this rewriter after StructuralSimplifier.
+ * - Only works for dialects with a builtin boolean negation function.
  */
 class ForLoopConditionIntoBody: public ASTModifier
 {
 public:
+	ForLoopConditionIntoBody(Dialect const& _dialect): m_dialect(_dialect) {}
 	using ASTModifier::operator();
 	void operator()(ForLoop& _forLoop) override;
+
+private:
+	Dialect const& m_dialect;
 };
 
 }

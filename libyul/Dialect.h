@@ -61,6 +61,7 @@ struct Dialect: boost::noncopyable
 
 	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
 	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
+	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 

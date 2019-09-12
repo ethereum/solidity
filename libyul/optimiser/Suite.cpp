@@ -33,6 +33,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -94,6 +95,7 @@ void OptimiserSuite::run(
 	LiteralRematerialiser{_dialect}(ast);
 	StructuralSimplifier{}(ast);
 	ControlFlowSimplifier{_dialect}(ast);
+	ForLoopConditionIntoBody{_dialect}(ast);
 	BlockFlattener{}(ast);
 
 	// None of the above can make stack problems worse.

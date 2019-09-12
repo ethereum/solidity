@@ -151,7 +151,7 @@ public:
 				ForLoopInitRewriter{}(*m_ast);
 				break;
 			case 'O':
-				ForLoopConditionIntoBody{}(*m_ast);
+				ForLoopConditionIntoBody{m_dialect}(*m_ast);
 				break;
 			case 'c':
 				CommonSubexpressionEliminator::run(m_dialect, *m_ast);
