@@ -208,21 +208,21 @@ string BytesUtils::formatRawBytes(
 	dev::solidity::test::ParameterList const& _parameters,
 	string _linePrefix)
 {
-	soltestAssert(
-		_bytes.size() == ContractABIUtils::encodingSize(_parameters),
-		"Got " + to_string(_bytes.size()) + " bytes, but expected " +
-		to_string(ContractABIUtils::encodingSize(_parameters)) + " bytes."
-	);
-
 	stringstream os;
+	ParameterList parameters;
 	auto it = _bytes.begin();
 
-	for (auto const& parameter: _parameters)
+	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
+		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+	else
+		parameters = _parameters;
+
+	for (auto const& parameter: parameters)
 	{
 		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
 
 		os << _linePrefix << byteRange;
-		if (&parameter != &_parameters.back())
+		if (&parameter != &parameters.back())
 			os << endl;
 
 		it += static_cast<long>(parameter.abiType.size);
@@ -279,16 +279,17 @@ string BytesUtils::formatBytesRange(
 	bool _highlight
 )
 {
-	soltestAssert(
-		_bytes.size() == ContractABIUtils::encodingSize(_parameters),
-		"Got " + to_string(_bytes.size()) + " bytes, but expected " +
-		to_string(ContractABIUtils::encodingSize(_parameters)) + " bytes."
-	);
-
 	stringstream os;
+	ParameterList parameters;
 	auto it = _bytes.begin();
 
-	for (auto const& parameter: _parameters)
+	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
+		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+	else
+		parameters = _parameters;
+
+
+	for (auto const& parameter: parameters)
 	{
 		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
 
@@ -301,7 +302,7 @@ string BytesUtils::formatBytesRange(
 		else
 			os << parameter.rawString;
 
-		if (&parameter != &_parameters.back())
+		if (&parameter != &parameters.back())
 			os << ", ";
 
 		it += static_cast<long>(parameter.abiType.size);

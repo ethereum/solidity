@@ -33,6 +33,7 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -91,8 +92,10 @@ void OptimiserSuite::run(
 	UnusedPruner::runUntilStabilisedOnFullAST(_dialect, ast, reservedIdentifiers);
 	BlockFlattener{}(ast);
 	ControlFlowSimplifier{_dialect}(ast);
-	StructuralSimplifier{_dialect}(ast);
+	LiteralRematerialiser{_dialect}(ast);
+	StructuralSimplifier{}(ast);
 	ControlFlowSimplifier{_dialect}(ast);
+	ForLoopConditionIntoBody{_dialect}(ast);
 	BlockFlattener{}(ast);
 
 	// None of the above can make stack problems worse.
@@ -125,7 +128,8 @@ void OptimiserSuite::run(
 		{
 			// still in SSA, perform structural simplification
 			ControlFlowSimplifier{_dialect}(ast);
-			StructuralSimplifier{_dialect}(ast);
+			LiteralRematerialiser{_dialect}(ast);
+			StructuralSimplifier{}(ast);
 			ControlFlowSimplifier{_dialect}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{_dialect}(ast);
@@ -182,7 +186,8 @@ void OptimiserSuite::run(
 			RedundantAssignEliminator::run(_dialect, ast);
 			LoadResolver::run(_dialect, ast);
 			ExpressionSimplifier::run(_dialect, ast);
-			StructuralSimplifier{_dialect}(ast);
+			LiteralRematerialiser{_dialect}(ast);
+			StructuralSimplifier{}(ast);
 			BlockFlattener{}(ast);
 			DeadCodeEliminator{_dialect}(ast);
 			ControlFlowSimplifier{_dialect}(ast);

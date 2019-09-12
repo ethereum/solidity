@@ -151,7 +151,7 @@ public:
 				ForLoopInitRewriter{}(*m_ast);
 				break;
 			case 'O':
-				ForLoopConditionIntoBody{}(*m_ast);
+				ForLoopConditionIntoBody{m_dialect}(*m_ast);
 				break;
 			case 'c':
 				CommonSubexpressionEliminator::run(m_dialect, *m_ast);
@@ -184,7 +184,7 @@ public:
 				ExpressionSimplifier::run(m_dialect, *m_ast);
 				break;
 			case 't':
-				(StructuralSimplifier{m_dialect})(*m_ast);
+				StructuralSimplifier{}(*m_ast);
 				break;
 			case 'n':
 				(ControlFlowSimplifier{m_dialect})(*m_ast);

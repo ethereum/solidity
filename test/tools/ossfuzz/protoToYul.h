@@ -26,8 +26,10 @@
 #include <tuple>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
+
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
+#include <libdevcore/Whiskers.h>
 
 namespace yul
 {
@@ -46,6 +48,8 @@ public:
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
+		m_objectId = 0;
+		m_isObject = false;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -88,6 +92,10 @@ private:
 	void visit(PopStmt const&);
 	void visit(LowLevelCall const&);
 	void visit(Create const&);
+	void visit(UnaryOpData const&);
+	void visit(Object const&);
+	void visit(Data const&);
+	void visit(Code const&);
 	void visit(Program const&);
 
 	/// Creates a new scope, and adds @a _funcParams to it if it
@@ -109,6 +117,7 @@ private:
 	/// Accepts an arbitrary string, removes all characters that are neither
 	/// alphabets nor digits from it and returns the said string.
 	std::string createAlphaNum(std::string const& _strBytes);
+
 	enum class NumFunctionReturns
 	{
 		None,
@@ -233,6 +242,11 @@ private:
 	/// Removes entry from m_functionMap and m_functionName
 	void updateFunctionMaps(std::string const& _x);
 
+	/// Build a tree of objects that contains the object/data
+	/// identifiers that are in scope in a given object.
+	/// @param _x root object of the yul protobuf specification.
+	void buildObjectScopeTree(Object const& _x);
+
 	/// Returns a pseudo-random dictionary token.
 	/// @param _p Enum that decides if the returned token is hex prefixed ("0x") or not
 	/// @return Dictionary token at the index computed using a
@@ -256,6 +270,30 @@ private:
 		return "foo_" + functionTypeToString(_type) + "_" + std::to_string(counter());
 	}
 
+	/// Returns a pseudo-randomly chosen object identifier that is in the
+	/// scope of the Yul object being visited.
+	std::string getObjectIdentifier(ObjectId const& _x);
+
+	/// Return new object identifier as string. Identifier string
+	/// is a template of the form "\"object<n>\"" where <n> is
+	/// a monotonically increasing object ID counter.
+	/// @param _decorate If true (default value), object ID is
+	/// enclosed within double quotes.
+	std::string newObjectId(bool _decorate = true)
+	{
+		return dev::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
+			("decorate", _decorate)
+			("id", std::to_string(m_objectId++))
+			.render();
+	}
+
+	/// Returns the object counter value corresponding to the object
+	/// being visited.
+	unsigned currentObjectId()
+	{
+		return m_objectId - 1;
+	}
+
 	std::ostringstream m_output;
 	/// Variables in current scope
 	std::stack<std::vector<std::string>> m_scopeVars;
@@ -271,9 +309,13 @@ private:
 	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
 	// Look-up table per function type that holds the number of input (output) function parameters
 	std::map<std::string, std::pair<unsigned, unsigned>> m_functionSigMap;
+	/// Tree of objects and their scopes
+	std::vector<std::vector<std::string>> m_objectScopeTree;
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
 	static unsigned constexpr s_modInputParams = 5;
 	static unsigned constexpr s_modOutputParams = 5;
+	/// Hard-coded identifier for a Yul object's data block
+	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If true, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;
@@ -288,6 +330,11 @@ private:
 	unsigned m_inputSize;
 	/// Predicate that is true if inside function definition, false otherwise
 	bool m_inFunctionDef;
+	/// Index used for naming objects
+	unsigned m_objectId;
+	/// Flag to track whether program is an object (true) or a statement block
+	/// (false: default value)
+	bool m_isObject;
 };
 }
 }

@@ -71,9 +71,9 @@ void Rematerialiser::visit(Expression& _e)
 	if (_e.type() == typeid(Identifier))
 	{
 		Identifier& identifier = boost::get<Identifier>(_e);
-		if (m_value.count(identifier.name))
+		YulString name = identifier.name;
+		if (m_value.count(name))
 		{
-			YulString name = identifier.name;
 			assertThrow(m_value.at(name), OptimizerException, "");
 			auto const& value = *m_value.at(name);
 			size_t refs = m_referenceCounts[name];
@@ -89,6 +89,23 @@ void Rematerialiser::visit(Expression& _e)
 					m_referenceCounts[ref.first] += ref.second;
 				_e = (ASTCopier{}).translate(value);
 			}
+		}
+	}
+	DataFlowAnalyzer::visit(_e);
+}
+
+void LiteralRematerialiser::visit(Expression& _e)
+{
+	if (_e.type() == typeid(Identifier))
+	{
+		Identifier& identifier = boost::get<Identifier>(_e);
+		YulString name = identifier.name;
+		if (m_value.count(name))
+		{
+			Expression const* value = m_value.at(name);
+			assertThrow(value, OptimizerException, "");
+			if (value->type() == typeid(Literal))
+				_e = *value;
 		}
 	}
 	DataFlowAnalyzer::visit(_e);

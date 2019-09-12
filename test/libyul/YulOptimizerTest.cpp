@@ -141,7 +141,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "forLoopConditionIntoBody")
 	{
 		disambiguate();
-		ForLoopConditionIntoBody{}(*m_ast);
+		ForLoopConditionIntoBody{*m_dialect}(*m_ast);
 	}
 	else if (m_optimizerStep == "forLoopInitRewriter")
 	{
@@ -279,7 +279,9 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "structuralSimplifier")
 	{
 		disambiguate();
-		StructuralSimplifier{*m_dialect}(*m_ast);
+		ForLoopInitRewriter{}(*m_ast);
+		LiteralRematerialiser{*m_dialect}(*m_ast);
+		StructuralSimplifier{}(*m_ast);
 	}
 	else if (m_optimizerStep == "equivalentFunctionCombiner")
 	{

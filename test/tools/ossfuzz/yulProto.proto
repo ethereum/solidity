@@ -167,6 +167,15 @@ message UnaryOp {
   required Expression operand = 2;
 }
 
+message UnaryOpData {
+  enum UOpData {
+    SIZE = 1;
+    OFFSET = 2;
+  }
+  required UOpData op = 1;
+  required ObjectId identifier = 2;
+}
+
 message TernaryOp {
   enum TOp {
     ADDM = 0;
@@ -183,6 +192,7 @@ message CopyFunc {
     CALLDATA = 0;
     CODE = 1;
     RETURNDATA = 2;
+    DATA = 3;
   }
   required CopyType ct = 1;
   required Expression target = 2;
@@ -195,6 +205,18 @@ message ExtCodeCopy {
   required Expression target = 2;
   required Expression source = 3;
   required Expression size = 4;
+}
+
+message ObjectId {
+  required uint64 id = 1;
+}
+
+message DataSize {
+  required ObjectId identifier = 1;
+}
+
+message DataOffset {
+  required ObjectId identifier = 1;
 }
 
 message NullaryOp {
@@ -258,6 +280,7 @@ message Expression {
     FunctionCall func_expr = 7;
     LowLevelCall lowcall = 8;
     Create create = 9;
+    UnaryOpData unopdata = 10;
   }
 }
 
@@ -362,8 +385,25 @@ message Block {
   repeated Statement statements = 1;
 }
 
-message Program {
+message Object {
+  required Code code = 1;
+  optional Data data = 2;
+  optional Object sub_obj = 3;
+}
+
+message Code {
   required Block block = 1;
+}
+
+message Data {
+  required string hex = 1;
+}
+
+message Program {
+  oneof program_oneof {
+    Block block = 1;
+    Object obj = 2;
+  }
 }
 
 package yul.test.yul_fuzzer;
