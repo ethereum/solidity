@@ -244,14 +244,14 @@ We will use a destructuring notation for the AST nodes.
                 G1, L1, mode
     E(G, L, FunctionDefinition) =
         G, L, regular
-    E(G, L, <let var1, ..., varn := rhs>: VariableDeclaration) =
-        E(G, L, <var1, ..., varn := rhs>: Assignment)
-    E(G, L, <let var1, ..., varn>: VariableDeclaration) =
-        let L1 be a copy of L where L1[$vari] = 0 for i = 1, ..., n
+    E(G, L, <let var_1, ..., var_n := rhs>: VariableDeclaration) =
+        E(G, L, <var_1, ..., var_n := rhs>: Assignment)
+    E(G, L, <let var_1, ..., var_n>: VariableDeclaration) =
+        let L1 be a copy of L where L1[$var_i] = 0 for i = 1, ..., n
         G, L1, regular
-    E(G, L, <var1, ..., varn := rhs>: Assignment) =
+    E(G, L, <var_1, ..., var_n := rhs>: Assignment) =
         let G1, L1, v1, ..., vn = E(G, L, rhs)
-        let L2 be a copy of L1 where L2[$vari] = vi for i = 1, ..., n
+        let L2 be a copy of L1 where L2[$var_i] = vi for i = 1, ..., n
         G, L2, regular
     E(G, L, <for { i1, ..., in } condition post body>: ForLoop) =
         if n >= 1:
