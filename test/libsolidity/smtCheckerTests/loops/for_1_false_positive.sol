@@ -8,10 +8,12 @@ contract C
 			// Overflows due to resetting x.
 			x = x + 1;
 		}
-		// The assertion is true but x is touched and reset.
+		// Assertion is safe but current solver version cannot solve it.
+		// Keep test for next solver release.
 		assert(x > 0);
 	}
 }
 // ----
+// Warning: (296-309): Error trying to invoke SMT solver.
 // Warning: (176-181): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (244-257): Assertion violation happens here
+// Warning: (296-309): Assertion violation happens here

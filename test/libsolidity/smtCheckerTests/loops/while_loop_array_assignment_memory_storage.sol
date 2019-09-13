@@ -13,11 +13,13 @@ contract LoopFor2 {
 			c[i] = b[i];
 			++i;
 		}
+		// Fails due to aliasing, since both b and c are
+		// memory references of same type.
 		assert(b[0] == c[0]);
 		assert(a[0] == 900);
 		assert(b[0] == 900);
 	}
 }
 // ----
-// Warning: (274-294): Assertion violation happens here
-// Warning: (321-340): Assertion violation happens here
+// Warning: (362-382): Assertion violation happens here
+// Warning: (409-428): Assertion violation happens here

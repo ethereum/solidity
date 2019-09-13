@@ -41,6 +41,7 @@ Z3CHCInterface::Z3CHCInterface():
 	// These are useful for solving problems with arrays and loops.
 	// Use quantified lemma generalizer.
 	p.set("fp.spacer.q3.use_qgen", true);
+	p.set("fp.spacer.mbqi", false);
 	// Ground pobs by using values from a model.
 	p.set("fp.spacer.ground_pobs", false);
 	m_solver.set(p);
@@ -100,7 +101,7 @@ pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
 		}
 		// TODO retrieve model / invariants
 	}
-	catch (z3::exception const& _e)
+	catch (z3::exception const&)
 	{
 		result = CheckResult::ERROR;
 		values.clear();
