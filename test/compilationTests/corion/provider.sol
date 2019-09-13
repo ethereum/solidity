@@ -149,7 +149,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     function getUserDetails(address payable addr, uint256 schellingRound) public view returns (address ProviderAddress, uint256 ProviderHeight, uint256 ConnectedOn, uint256 value) {
         /*
-            Collecting the datas of the client.
+            Collecting the data of the client.
 
             @addr               Address of the client.
             @schellingRound     Number of the schelling round. If it is not defined then the current one.
@@ -272,7 +272,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     function setProviderDetails(address payable addr, string calldata website, string calldata country, string calldata info, uint8 rate, address payable admin) isReady external {
         /*
-            Modifying the datas of the provider.
+            Modifying the data of the provider.
             This can only be invited by the provider’s admin.
             The emission rate is only valid for the next schelling round for this one it is not.
             The admin can only be changed by the address of the provider.
@@ -323,7 +323,7 @@ contract provider is module, safeMath, announcementTypes {
     }
     function getProviderDetails(address payable addr, uint256 height) public view returns (uint8 rate, bool isForRent, uint256 clientsCount, bool priv, bool getInterest, bool valid) {
         /*
-            Asking for the datas of the provider.
+            Asking for the data of the provider.
             In case the height is unknown then the system will use the last known height.
 
             @addr           Address of the provider
